@@ -109,7 +109,7 @@ public class DualityInterface
 	private final ConfigManager cm = new ConfigManager( this );
 	private final AppEngInternalAEInventory config = new AppEngInternalAEInventory( this, NUMBER_OF_CONFIG_SLOTS );
 	private final AppEngInternalInventory storage = new AppEngInternalInventory( this, NUMBER_OF_STORAGE_SLOTS );
-	private final AppEngInternalInventory patterns = new AppEngInternalInventory( this, NUMBER_OF_PATTERN_SLOTS );
+	private final AppEngInternalInventory patterns = new AppEngInternalInventory( this, NUMBER_OF_PATTERN_SLOTS*4 );
 	private final WrapperInvSlot slotInv = new WrapperInvSlot( this.storage );
 	private final MEMonitorPassThrough<IAEItemStack> items = new MEMonitorPassThrough<IAEItemStack>( new NullInventory<IAEItemStack>(), StorageChannel.ITEMS );
 	private final MEMonitorPassThrough<IAEFluidStack> fluids = new MEMonitorPassThrough<IAEFluidStack>( new NullInventory<IAEFluidStack>(), StorageChannel.FLUIDS );
@@ -126,7 +126,7 @@ public class DualityInterface
 		this.gridProxy = networkProxy;
 		this.gridProxy.setFlags( GridFlags.REQUIRE_CHANNEL );
 
-		this.upgrades = new StackUpgradeInventory( this.gridProxy.getMachineRepresentation(), this, 1 );
+		this.upgrades = new StackUpgradeInventory( this.gridProxy.getMachineRepresentation(), this, 4 );
 		this.cm.registerSetting( Settings.BLOCK, YesNo.NO );
 		this.cm.registerSetting( Settings.INTERFACE_TERMINAL, YesNo.YES );
 
@@ -313,9 +313,8 @@ public class DualityInterface
 
 	private void updateCraftingList()
 	{
-		final Boolean[] accountedFor = { false, false, false, false, false, false, false, false, false }; // 9...
 
-		assert ( accountedFor.length == this.patterns.getSizeInventory() );
+		final boolean[] accountedFor = new boolean[patterns.getSizeInventory()];
 
 		if( !this.gridProxy.isReady() )
 		{

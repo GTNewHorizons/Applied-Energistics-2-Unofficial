@@ -55,6 +55,7 @@ public class SlotCraftingTerm extends AppEngCraftingSlot
 	private final IEnergySource energySrc;
 	private final IStorageMonitorable storage;
 	private final IContainerCraftingPacket container;
+	private static IRecipe lastUsedRecipe = null;
 
 	public SlotCraftingTerm( final EntityPlayer player, final BaseActionSource mySrc, final IEnergySource energySrc, final IStorageMonitorable storage, final IInventory cMatrix, final IInventory secondMatrix, final IInventory output, final int x, final int y, final IContainerCraftingPacket ccp )
 	{
@@ -169,7 +170,9 @@ public class SlotCraftingTerm extends AppEngCraftingSlot
 					ic.setInventorySlotContents( x, this.getPattern().getStackInSlot( x ) );
 				}
 
-				final IRecipe r = Platform.findMatchingRecipe(ic, p.worldObj);
+				if (lastUsedRecipe == null || !lastUsedRecipe.matches(ic, p.worldObj))
+					lastUsedRecipe = Platform.findMatchingRecipe(ic, p.worldObj);
+				final IRecipe r = lastUsedRecipe;
 
 				if( r == null )
 				{

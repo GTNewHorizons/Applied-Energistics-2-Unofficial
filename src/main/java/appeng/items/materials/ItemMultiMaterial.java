@@ -147,6 +147,8 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 	{
 		switch( this.getTypeByStack( itemstack ) )
 		{
+			case CardPatternCapacity:
+				return Upgrades.PATTERN_CAPACITY;
 			case CardCapacity:
 				return Upgrades.CAPACITY;
 			case CardFuzzy:

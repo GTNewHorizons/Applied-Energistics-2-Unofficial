@@ -147,6 +147,22 @@ public class PacketValueConfig extends AppEngPacket
 				cpt.getPatternTerminal().setSubstitution( this.Value.equals( "1" ) );
 			}
 		}
+		else if( this.Name.startsWith( "PatternTerminalEx." ) && c instanceof ContainerPatternTermEx )
+		{
+			final ContainerPatternTermEx cpt = (ContainerPatternTermEx) c;
+			if( this.Name.equals( "PatternTerminalEx.Encode" ) )
+			{
+				cpt.encode();
+			}
+			else if( this.Name.equals( "PatternTerminalEx.Clear" ) )
+			{
+				cpt.clear();
+			}
+			else if( this.Name.equals( "PatternTerminalEx.Substitute" ) )
+			{
+				cpt.getPatternTerminal().setSubstitution( this.Value.equals( "1" ) );
+			}
+		}
 		else if( this.Name.startsWith( "StorageBus." ) && c instanceof ContainerStorageBus )
 		{
 			final ContainerStorageBus ccw = (ContainerStorageBus) c;

@@ -136,4 +136,6 @@ public interface IMaterials
 	IItemDefinition qESingularity();
 
 	IItemDefinition blankPattern();
+
+	IItemDefinition cardPatternCapacity();
 }

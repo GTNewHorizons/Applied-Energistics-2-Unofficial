@@ -45,6 +45,7 @@ import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartPatternTerminal;
+import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
 import appeng.util.Platform;
 import com.google.common.collect.ImmutableSet;
@@ -340,6 +341,11 @@ public class ContainerCraftConfirm extends AEBaseContainer
 		if( ah instanceof PartPatternTerminal )
 		{
 			originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
+		}
+
+		if( ah instanceof PartPatternTerminalEx)
+		{
+			originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
 		}
 
 		if( this.result != null && !this.isSimulation() )

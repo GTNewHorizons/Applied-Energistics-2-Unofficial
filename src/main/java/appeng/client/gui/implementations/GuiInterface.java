@@ -76,17 +76,20 @@ public class GuiInterface extends GuiUpgradeable
 		}
 
 		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Interface.getLocal() ), 8, 6, 4210752 );
-
-		this.fontRendererObj.drawString( GuiText.Config.getLocal(), 18, 6 + 11 + 7, 4210752 );
-		this.fontRendererObj.drawString( GuiText.StoredItems.getLocal(), 18, 6 + 60 + 7, 4210752 );
-		this.fontRendererObj.drawString( GuiText.Patterns.getLocal(), 8, 6 + 73 + 7, 4210752 );
-
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
 	}
 
 	@Override
 	protected String getBackground()
 	{
+		switch (((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled())
+		{
+			case 1:
+				return "guis/interface2.png";
+			case 2:
+				return "guis/interface3.png";
+			case 3:
+				return "guis/interface4.png";
+		}
 		return "guis/interface.png";
 	}
 

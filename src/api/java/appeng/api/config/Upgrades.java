@@ -43,7 +43,7 @@ public enum Upgrades
 	/**
 	 * Diamond Tier Upgrades.
 	 */
-	FUZZY( 1 ), SPEED( 1 ), INVERTER( 1 );
+	FUZZY( 1 ), SPEED( 1 ), INVERTER( 1 ), PATTERN_CAPACITY(1);
 
 	/**
 	 * @deprecated use {@link Upgrades#getTier()}

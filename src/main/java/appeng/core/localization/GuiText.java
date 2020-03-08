@@ -91,6 +91,9 @@ public enum GuiText
 	// Used in a terminal to indicate that an item is craftable
 	SmallFontCraft, LargeFontCraft,
 
+	// processing pattern terminal
+	PatternTerminalEx,
+
 	// Used in a ME Interface when no appropriate TileEntity was detected near it
 	Nothing;
 

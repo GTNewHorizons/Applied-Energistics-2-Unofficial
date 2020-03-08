@@ -38,6 +38,7 @@ import appeng.helpers.Reflected;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartPatternTerminal;
+import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -130,6 +131,15 @@ public class GuiCraftAmount extends AEBaseGui
 				myIcon = stack;
 			}
 			this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
+		}
+
+		if( target instanceof PartPatternTerminalEx)
+		{
+			for( final ItemStack stack : parts.patternTerminalEx().maybeStack( 1 ).asSet() )
+			{
+				myIcon = stack;
+			}
+			this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
 		}
 
 		if( this.originalGui != null && myIcon != null )

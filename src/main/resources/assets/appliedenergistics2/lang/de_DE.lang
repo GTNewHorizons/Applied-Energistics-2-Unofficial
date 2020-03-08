@@ -170,6 +170,7 @@ gui.appliedenergistics2.Linked=Verbunden
 gui.appliedenergistics2.StoredSize=Gespeicherte Größe
 gui.appliedenergistics2.SkyChest=Himmelssteintruhe
 gui.appliedenergistics2.PatternTerminal=Schablonenkonsole
+gui.appliedenergistics2.PatternTerminalEx=Schablonenkonsole
 gui.appliedenergistics2.CraftingPattern=Fertigungsschablone
 gui.appliedenergistics2.MolecularAssembler=Molekularassembler
 gui.appliedenergistics2.ProcessingPattern=Processing Pattern

@@ -141,6 +141,7 @@ gui.appliedenergistics2.Linked=Spárovaný
 gui.appliedenergistics2.StoredSize=Uskladněná velikost
 gui.appliedenergistics2.SkyChest=Nebeská kamenná truhla
 gui.appliedenergistics2.PatternTerminal=Terminál schémat
+gui.appliedenergistics2.PatternTerminalEx=Terminál schémat
 gui.appliedenergistics2.CraftingPattern=Výrobní schéma
 gui.appliedenergistics2.MolecularAssembler=Molekulární sestavovač
 gui.appliedenergistics2.ProcessingPattern=Procesní schéma

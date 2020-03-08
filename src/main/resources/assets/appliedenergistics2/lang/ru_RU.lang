@@ -158,6 +158,7 @@ gui.appliedenergistics2.Linked=Связанный
 gui.appliedenergistics2.StoredSize=Хранящиеся количество
 gui.appliedenergistics2.SkyChest=Сундук из небесного камня
 gui.appliedenergistics2.PatternTerminal=Терминал шаблонов
+gui.appliedenergistics2.PatternTerminalEx=Терминал шаблонов обработки
 gui.appliedenergistics2.CraftingPattern=Создание шаблонов
 gui.appliedenergistics2.MolecularAssembler=Молекулярный сборщик
 gui.appliedenergistics2.ProcessingPattern=Обработка шаблона

@@ -54,6 +54,7 @@ import appeng.parts.misc.PartStorageBus;
 import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.parts.reporting.PartPatternTerminal;
+import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.crafting.TileMolecularAssembler;
 import appeng.tile.grindstone.TileGrinder;
@@ -132,6 +133,8 @@ public enum GuiBridge implements IGuiHandler
 	GUI_CRAFTING_TERMINAL( ContainerCraftingTerm.class, PartCraftingTerminal.class, GuiHostType.WORLD, SecurityPermissions.CRAFT ),
 
 	GUI_PATTERN_TERMINAL( ContainerPatternTerm.class, PartPatternTerminal.class, GuiHostType.WORLD, SecurityPermissions.CRAFT ),
+
+	GUI_PATTERN_TERMINAL_EX( ContainerPatternTermEx.class, PartPatternTerminalEx.class, GuiHostType.WORLD, SecurityPermissions.CRAFT ),
 
 	// extends (Container/Gui) + Bus
 	GUI_LEVEL_EMITTER( ContainerLevelEmitter.class, PartLevelEmitter.class, GuiHostType.WORLD, SecurityPermissions.BUILD ),

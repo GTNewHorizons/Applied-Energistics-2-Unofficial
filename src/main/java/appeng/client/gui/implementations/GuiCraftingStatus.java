@@ -38,6 +38,7 @@ import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartPatternTerminal;
+import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -101,6 +102,14 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 				this.myIcon = stack;
 			}
 			this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
+		}
+		if( target instanceof PartPatternTerminalEx)
+		{
+			for( final ItemStack stack : parts.patternTerminalEx().maybeStack( 1 ).asSet() )
+			{
+				this.myIcon = stack;
+			}
+			this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
 		}
 	}
 

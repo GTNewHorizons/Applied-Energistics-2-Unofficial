@@ -35,6 +35,7 @@ import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartPatternTerminal;
+import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
 import appeng.util.Platform;
 import com.google.common.base.Joiner;
@@ -100,6 +101,11 @@ public class GuiCraftConfirm extends AEBaseGui
 		if( te instanceof PartPatternTerminal )
 		{
 			this.OriginalGui = GuiBridge.GUI_PATTERN_TERMINAL;
+		}
+
+		if( te instanceof PartPatternTerminalEx)
+		{
+			this.OriginalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
 		}
 	}
 

@@ -624,16 +624,11 @@ public class Platform
 		}
 	}
 
-	private static IRecipe lastUsedRecipe = null;
-
 	/*
 	 * The usual version of this returns an ItemStack, this version returns the recipe.
 	 */
 	public static IRecipe findMatchingRecipe( final InventoryCrafting inventoryCrafting, final World par2World )
 	{
-		if (lastUsedRecipe != null && lastUsedRecipe.matches(inventoryCrafting, par2World))
-			return lastUsedRecipe;
-
 		final CraftingManager cm = CraftingManager.getInstance();
 		final List<IRecipe> rl = cm.getRecipeList();
 
@@ -641,7 +636,6 @@ public class Platform
 		{
 			if( r.matches( inventoryCrafting, par2World ) )
 			{
-				lastUsedRecipe = r;
 				return r;
 			}
 		}
