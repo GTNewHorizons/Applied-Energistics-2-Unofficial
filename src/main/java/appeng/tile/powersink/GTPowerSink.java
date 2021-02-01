@@ -41,12 +41,12 @@ public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyCo
 
     @Override
     public byte getColorization() {
-        return 0;
+        return -1;
     }
 
     @Override
     public byte setColorization(byte b) {
-        return 0;
+        return -1;
     }
 
     @Override
