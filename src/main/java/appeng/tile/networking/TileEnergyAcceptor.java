@@ -19,8 +19,11 @@
 package appeng.tile.networking;
 
 
+import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
+import appeng.api.config.PowerMultiplier;
 import appeng.api.networking.energy.IEnergyGrid;
+import appeng.api.networking.events.MENetworkPowerStorage;
 import appeng.api.util.AECableType;
 import appeng.me.GridAccessException;
 import appeng.tile.grid.AENetworkPowerTile;
@@ -41,12 +44,15 @@ public class TileEnergyAcceptor extends AENetworkPowerTile
 	public TileEnergyAcceptor()
 	{
 		this.getProxy().setIdlePowerUsage( 0.0 );
-		this.setInternalMaxPower( 0 );
+		this.setInternalMaxPower( 8000 );
+		this.setInternalPublicPowerStorage(true);
+		this.setInternalPowerFlow(AccessRestriction.READ_WRITE);
 	}
 
 	@Override
 	public void readFromNBT_AENetwork( final NBTTagCompound data )
 	{
+		this.setInternalCurrentPower( data.getDouble( "internalCurrentPower" ) );
 		/**
 		 * Does nothing here since the NBT tag in the parent is not needed anymore
 		 */
@@ -55,6 +61,7 @@ public class TileEnergyAcceptor extends AENetworkPowerTile
 	@Override
 	public void writeToNBT_AENetwork( final NBTTagCompound data )
 	{
+		data.setDouble( "internalCurrentPower", this.getInternalCurrentPower() );
 		/**
 		 * Does nothing here since the NBT tag in the parent is not needed anymore
 		 */
@@ -97,6 +104,21 @@ public class TileEnergyAcceptor extends AENetworkPowerTile
 		{
 			return super.funnelPowerIntoStorage( power, mode );
 		}
+	}
+	@Override
+	protected double extractAEPower( double amt, final Actionable mode )
+	{
+		double res = super.extractAEPower(amt, mode);
+		try
+		{
+			if (getInternalCurrentPower() < getInternalMaxPower())
+				this.getProxy().getGrid().postEvent(new MENetworkPowerStorage(this, MENetworkPowerStorage.PowerEventType.REQUEST_POWER));
+		}
+		catch( final GridAccessException ignored )
+		{
+
+		}
+		return res;
 	}
 
 	@Override
