@@ -33,7 +33,7 @@ import java.util.EnumSet;
 
 
 @Interface( iname = IntegrationType.IC2, iface = "ic2.api.energy.tile.IEnergySink" )
-public abstract class IC2 extends GTPowerSink implements IEnergySink
+public abstract class IC2 extends AERootPoweredTile implements IEnergySink
 {
 
 	private boolean isInIC2 = false;
