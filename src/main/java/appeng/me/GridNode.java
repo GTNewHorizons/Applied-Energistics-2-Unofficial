@@ -29,6 +29,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IReadOnlyCollection;
 import appeng.core.worlddata.WorldData;
 import appeng.hooks.TickHandler;
+import appeng.me.cache.CraftingGridCache;
 import appeng.me.pathfinding.IPathItem;
 import appeng.util.IWorldCallable;
 import appeng.util.ReadOnlyCollection;
@@ -146,6 +147,7 @@ public class GridNode implements IGridNode, IPathItem
 
 		LinkedList<GridNode> nextRun = new LinkedList<GridNode>();
 		nextRun.add( this );
+		CraftingGridCache.pauseRebuilds();
 
 		this.visitorIterationNumber = tracker;
 
@@ -183,6 +185,7 @@ public class GridNode implements IGridNode, IPathItem
 				}
 			}
 		}
+		CraftingGridCache.unpauseRebuilds();
 	}
 
 	@Override

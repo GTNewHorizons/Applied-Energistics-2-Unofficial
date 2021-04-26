@@ -31,7 +31,7 @@ buildscript {
 
         maven {
             name = "forge"
-            url = "http://files.minecraftforge.net/maven"
+            url = "http://gregtech.overminddl1.com/"
         }
 
         maven {

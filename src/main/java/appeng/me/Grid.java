@@ -30,6 +30,7 @@ import appeng.util.ReadOnlyCollection;
 
 import java.util.*;
 import java.util.Map.Entry;
+import appeng.me.cache.CraftingGridCache;
 
 
 public class Grid implements IGrid
@@ -216,7 +217,10 @@ public class Grid implements IGrid
 	@Override
 	public MENetworkEvent postEventTo( final IGridNode node, final MENetworkEvent ev )
 	{
-		return this.eventBus.postEventTo( this, (GridNode) node, ev );
+		CraftingGridCache.pauseRebuilds();
+		final MENetworkEvent ret = this.eventBus.postEvent( this, ev );
+		CraftingGridCache.unpauseRebuilds();
+		return ret;
 	}
 
 	@Override
