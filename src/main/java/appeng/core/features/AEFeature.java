@@ -136,6 +136,8 @@ public enum AEFeature
 	MolecularAssembler( Constants.CATEGORY_CRAFTING_FEATURES ),
 	Patterns( Constants.CATEGORY_CRAFTING_FEATURES ),
 	CraftingCPU( Constants.CATEGORY_CRAFTING_FEATURES ),
+	
+	maxchannels( Constants.CATEGORY_MAX_CHANNELS),
 
 	ChunkLoggerTrace( Constants.CATEGORY_COMMANDS, false );
 
@@ -184,5 +186,6 @@ public enum AEFeature
 		private static final String CATEGORY_FACADES = "Facades";
 		private static final String CATEGORY_NETWORK_TOOL = "NetworkTool";
 		private static final String CATEGORY_PORTABLE_CELL = "PortableCell";
+		private static final String CATEGORY_MAX_CHANNELS = "maxchannels";
 	}
 }

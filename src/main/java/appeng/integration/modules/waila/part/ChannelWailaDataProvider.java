@@ -31,6 +31,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import appeng.core.AEConfig;
 
 import java.util.List;
 
@@ -76,7 +77,7 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider
 			final NBTTagCompound tag = accessor.getNBTData();
 
 			final byte usedChannels = this.getUsedChannels( part, tag, this.cache );
-			final byte maxChannels = (byte) ( ( part instanceof PartDenseCable ) ? 32 : 8 );
+			final byte maxChannels = (byte) ( ( part instanceof PartDenseCable ) ? AEConfig.instance.denseCableChannelMax : AEConfig.instance.cableChannelMax );
 
 			final String formattedToolTip = String.format( WailaText.Channels.getLocal(), usedChannels, maxChannels );
 			currentToolTip.add( formattedToolTip );

@@ -37,6 +37,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import appeng.core.AEConfig;
 
 import java.util.*;
 
@@ -44,7 +45,7 @@ import java.util.*;
 public class GridNode implements IGridNode, IPathItem
 {
 	private static final MENetworkChannelsChanged EVENT = new MENetworkChannelsChanged();
-	private static final int[] CHANNEL_COUNT = { 0, 8, 32 };
+	private static final int[] CHANNEL_COUNT = { 0, AEConfig.instance.cableChannelMax, AEConfig.instance.denseCableChannelMax };
 
 	private final List<IGridConnection> connections = new LinkedList<IGridConnection>();
 	private final IGridBlock gridProxy;

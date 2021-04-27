@@ -211,16 +211,16 @@ public class Grid implements IGrid
 	@Override
 	public MENetworkEvent postEvent( final MENetworkEvent ev )
 	{
-		return this.eventBus.postEvent( this, ev );
+		CraftingGridCache.pauseRebuilds();
+		final MENetworkEvent ret = this.eventBus.postEvent( this, ev );
+		CraftingGridCache.unpauseRebuilds();
+		return ret;
 	}
 
 	@Override
 	public MENetworkEvent postEventTo( final IGridNode node, final MENetworkEvent ev )
 	{
-		CraftingGridCache.pauseRebuilds();
-		final MENetworkEvent ret = this.eventBus.postEvent( this, ev );
-		CraftingGridCache.unpauseRebuilds();
-		return ret;
+		return this.eventBus.postEventTo( this, (GridNode) node, ev );
 	}
 
 	@Override

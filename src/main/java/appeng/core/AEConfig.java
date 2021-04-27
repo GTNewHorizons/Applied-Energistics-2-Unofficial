@@ -66,6 +66,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 	public int minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
 	public double spatialPowerExponent = 1.35;
 	public double spatialPowerMultiplier = 1250.0;
+	public int cableChannelMax = 8;
+	public int denseCableChannelMax = 32;
 	public String[] grinderOres = {
 			// Vanilla Items
 			"Obsidian", "Ender", "EnderPearl", "Coal", "Iron", "Gold", "Charcoal", "NetherQuartz",
@@ -214,6 +216,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 		{
 			this.craftingCalculationTimePerTick = this.get( "craftingCPU", "craftingCalculationTimePerTick", this.craftingCalculationTimePerTick ).getInt( this.craftingCalculationTimePerTick );
 		}
+		this.cableChannelMax = this.get( "maxchannels", "cableChannelMax", this.cableChannelMax).getInt(this.cableChannelMax);
+		this.denseCableChannelMax = this.get( "maxchannels", "denseCableChannelMax", this.denseCableChannelMax).getInt(this.denseCableChannelMax);
 
 		this.updatable = true;
 	}
