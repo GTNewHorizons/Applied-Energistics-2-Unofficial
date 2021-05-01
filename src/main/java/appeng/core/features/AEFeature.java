@@ -137,7 +137,7 @@ public enum AEFeature
 	Patterns( Constants.CATEGORY_CRAFTING_FEATURES ),
 	CraftingCPU( Constants.CATEGORY_CRAFTING_FEATURES ),
 	
-	maxchannels( Constants.CATEGORY_MAX_CHANNELS),
+	maxchannels( Constants.CATEGORY_MAX_CHANNELS, false),
 
 	ChunkLoggerTrace( Constants.CATEGORY_COMMANDS, false );
 
