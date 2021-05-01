@@ -67,7 +67,9 @@ public enum IntegrationType
 
 	PneumaticCraft( IntegrationSide.BOTH, "PneumaticCraft", "PneumaticCraft" ),
 
-	GT( IntegrationSide.BOTH, "GregTech", "gregtech" );
+	GT( IntegrationSide.BOTH, "GregTech", "gregtech" ),
+
+	Chisel(IntegrationSide.BOTH, "Chisel", "chisel");
 
 	public final IntegrationSide side;
 	public final String dspName;

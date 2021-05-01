@@ -232,7 +232,9 @@ public class PartP2PTunnelME extends PartP2PTunnel<PartP2PTunnelME> implements I
 					{
 						final TileEntity start = this.getTile();
 						final TileEntity end = me.getTile();
-						AELog.warn( "Failed to establish a ME P2P Tunnel between the tunnels at [x=%d, y=%d, z=%d] and [x=%d, y=%d, z=%d]", start.xCoord, start.yCoord, start.zCoord, end.xCoord, end.yCoord, end.zCoord );
+						AELog.warn( "Failed to establish a ME P2P Tunnel between the tunnels at [x=%d, y=%d, z=%d, dim=%d] and [x=%d, y=%d, z=%d, dim=%d]",
+								start.xCoord, start.yCoord, start.zCoord, start.hasWorldObj() ? start.getWorldObj().provider.dimensionId : Integer.MAX_VALUE,
+								end.xCoord, end.yCoord, end.zCoord, end.hasWorldObj() ? end.getWorldObj().provider.dimensionId : Integer.MAX_VALUE );
 						// :(
 					}
 				}
