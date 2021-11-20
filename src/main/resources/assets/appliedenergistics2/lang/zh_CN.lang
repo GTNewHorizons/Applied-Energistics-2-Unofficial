@@ -87,7 +87,10 @@ chat.appliedenergistics2.SavedSettings=成功保存设定.
 chat.appliedenergistics2.AmmoDepleted=弹药告罄.
 chat.appliedenergistics2.isNowLocked=监控器已锁定.
 chat.appliedenergistics2.isNowUnlocked=监控器已解锁.
-
+chat.appliedenergistics2.TunnelNotConnected=通道未连接.
+chat.appliedenergistics2.TunnelInputIsAt=通道入口位于(%d, %d, %d)
+chat.appliedenergistics2.TunnelHasNoOutputs=通道无出口.
+chat.appliedenergistics2.TunnelOutputsAreAt=通道出口位于:
 # Creative Tabs
 itemGroup.appliedenergistics2=应用能源2
 itemGroup.appliedenergistics2.facades=应用能源2-伪装板
@@ -236,6 +239,7 @@ gui.appliedenergistics2.SmallFontCraft=合成
 gui.appliedenergistics2.LargeFontCraft=+
 gui.appliedenergistics2.Renamer=自定义名称: (回车保存设置)
 gui.appliedenergistics2.OreFilterLabel=矿典过滤卡
+gui.appliedenergistics2.HoldShiftForTooltip=按住Shift以查看拓展tooltip
 gui.appliedenergistics2.Nothing=无
 
 # GUI Tooltips
@@ -333,6 +337,12 @@ gui.tooltips.appliedenergistics2.ItemsRequestable=可请求: %s
 gui.tooltips.appliedenergistics2.P2PFrequency=频率: %s
 gui.tooltips.appliedenergistics2.OreFilterHint=使用矿典名
 gui.tooltips.appliedenergistics2.OreFilter=过滤物品
+gui.tooltips.appliedenergistics2.SearchStringTooltip=右键以清空搜索栏
+gui.tooltips.appliedenergistics2.SaveSearchString=保存搜索字符串
+gui.tooltips.appliedenergistics2.SaveSearchStringYes=是
+gui.tooltips.appliedenergistics2.SaveSearchStringNo=否
+gui.tooltips.appliedenergistics2.DoublePattern=双倍样板
+gui.tooltips.appliedenergistics2.DoublePatternHint=样板输入/输出物品堆叠同时x2
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
@@ -453,7 +463,8 @@ item.appliedenergistics2.ItemPart.CableAnchor.name=线缆锚
 item.appliedenergistics2.ItemPart.CableCovered.name=ME包层线缆
 item.appliedenergistics2.ItemPart.CableGlass.name=ME玻璃线缆
 item.appliedenergistics2.ItemPart.CableSmart.name=ME智能线缆
-item.appliedenergistics2.ItemPart.CableDense.name=ME致密线缆
+item.appliedenergistics2.ItemPart.CableDense.name=ME致密智能线缆
+item.appliedenergistics2.ItemPart.CableDenseCovered.name=ME致密包层线缆
 item.appliedenergistics2.ItemPart.StorageMonitor.name=ME存储监控器
 item.appliedenergistics2.ItemPart.ConversionMonitor.name=ME交换监控器
 item.appliedenergistics2.ItemPart.CraftingTerminal.name=ME合成终端

@@ -158,7 +158,7 @@ public class PacketValueConfig extends AppEngPacket
 			}
 			else if( this.Name.equals( "PatternTerminal.Double" ) )
 			{
-				cpt.doubleStacks();
+				cpt.doubleStacks(Value.equals( "1" ));
 			}
 		}
 		else if( this.Name.startsWith( "PatternTerminalEx." ) && c instanceof ContainerPatternTermEx )
@@ -182,7 +182,7 @@ public class PacketValueConfig extends AppEngPacket
 			}
 			else if( this.Name.equals( "PatternTerminalEx.Double" ) )
 			{
-				cpt.doubleStacks();
+				cpt.doubleStacks(Value.equals( "1" ));
 			}
 		}
 		else if( this.Name.startsWith( "StorageBus." ) && c instanceof ContainerStorageBus )

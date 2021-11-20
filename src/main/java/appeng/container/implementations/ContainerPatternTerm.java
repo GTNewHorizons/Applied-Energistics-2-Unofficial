@@ -54,6 +54,8 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -192,7 +194,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 		else if( output == null )
 		{
 			output = this.patternSlotIN.getStack();
-			if( output == null || !this.isPattern( output ) )
+			if (!this.isPattern( output ))
 			{
 				return; // no blanks.
 			}
@@ -271,7 +273,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 		}
 		else
 		{
-			final List<ItemStack> list = new ArrayList<ItemStack>( 3 );
+			final List<ItemStack> list = new ArrayList<>( 3 );
 			boolean hasValue = false;
 
 			for( final OptionalSlotFake outputSlot : this.outputSlots )
@@ -553,46 +555,65 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 		this.substitute = substitute;
 	}
 
-	boolean canDoubleStacks()
+	static boolean canDoubleStacks(SlotFake[] craftingSlots)
 	{
-		for (final Slot s : this.craftingSlots)
+		long emptyCraftingStots = Arrays.stream(craftingSlots).filter(s -> s.getStack() == null).count();
+		for (final Slot s : craftingSlots)
 		{
-			final ItemStack st =  s.getStack();
-			if (st != null && (st.stackSize*2 > 127))
-				return false;
-		}
-
-		for (final Slot s : this.outputSlots)
-		{
-			final ItemStack st =  s.getStack();
-			if (st != null && (st.stackSize*2 > 127))
-				return false;
+			final ItemStack st = s.getStack();
+			if (st != null && st.stackSize * 2 > 127)
+			{
+				if (emptyCraftingStots == 0)
+					return false;
+				--emptyCraftingStots;
+			}
 		}
 		return true;
 	}
 
-	public void doubleStacks()
+	static void doubleStacksInternal(SlotFake[] craftingSlots)
 	{
-		if (!isCraftingMode() && canDoubleStacks())
+		List<ItemStack> overFlowStacks = new ArrayList<>();
+		for (final Slot s : craftingSlots)
 		{
-			for (final Slot s : this.craftingSlots)
+			ItemStack st = s.getStack();
+			if (st == null)
+				continue;
+			if (st.stackSize * 2 > 127)
 			{
-				ItemStack st = s.getStack();
-				if (st == null)
-					continue;
+				overFlowStacks.add(st.copy());
+			}
+			else
+			{
 				st.stackSize *= 2;
 				s.putStack(st);
 			}
+		}
+		Iterator<ItemStack> ow = overFlowStacks.iterator();
+		for (final Slot s : craftingSlots) {
+			if (!ow.hasNext())
+				break;
+			if (s.getStack() != null)
+				continue;
+			s.putStack(ow.next());
+		}
+		assert !ow.hasNext();
+	}
 
-			for (final Slot s : this.outputSlots)
+	public void doubleStacks(boolean isShift)
+	{
+		if (!isCraftingMode() && canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots))
+		{
+			doubleStacksInternal(this.craftingSlots);
+			doubleStacksInternal(this.outputSlots);
+			if (isShift)
 			{
-				ItemStack st = s.getStack();
-				if (st == null)
-					continue;
-				st.stackSize *= 2;
-				s.putStack(st);
+				while (canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots))
+				{
+					doubleStacksInternal(this.craftingSlots);
+					doubleStacksInternal(this.outputSlots);
+				}
 			}
-
 			this.detectAndSendChanges();
 		}
 	}

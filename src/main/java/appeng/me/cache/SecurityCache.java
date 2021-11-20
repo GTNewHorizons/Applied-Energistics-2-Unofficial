@@ -42,11 +42,12 @@ import java.util.List;
 
 public class SecurityCache implements ISecurityGrid
 {
-
 	private final IGrid myGrid;
 	private final List<ISecurityProvider> securityProvider = new ArrayList<ISecurityProvider>();
 	private final HashMap<Integer, EnumSet<SecurityPermissions>> playerPerms = new HashMap<Integer, EnumSet<SecurityPermissions>>();
 	private long securityKey = -1;
+	static final int STARTUP_DELAY = 20;
+	private int startupTicks = 0;
 
 	public SecurityCache( final IGrid g )
 	{
@@ -73,7 +74,8 @@ public class SecurityCache implements ISecurityGrid
 	@Override
 	public void onUpdateTick()
 	{
-
+		if (startupTicks < STARTUP_DELAY)
+			startupTicks++;
 	}
 
 	@Override
@@ -144,7 +146,7 @@ public class SecurityCache implements ISecurityGrid
 	@Override
 	public boolean isAvailable()
 	{
-		return this.securityProvider.size() == 1 && this.securityProvider.get( 0 ).isSecurityEnabled();
+		return startupTicks >= STARTUP_DELAY && this.securityProvider.size() == 1 && this.securityProvider.get( 0 ).isSecurityEnabled();
 	}
 
 	@Override

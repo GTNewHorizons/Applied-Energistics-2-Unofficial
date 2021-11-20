@@ -34,6 +34,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 
@@ -89,7 +90,7 @@ public class GuiPatternTerm extends GuiMEMonitorable
 			}
 			else if (doubleBtn == btn)
 			{
-				NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminal.Double",  "") );
+				NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminal.Double",  Keyboard.isKeyDown( Keyboard.KEY_LSHIFT ) ? "1": "0") );
 			}
 		}
 		catch( final IOException e )

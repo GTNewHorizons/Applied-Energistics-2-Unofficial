@@ -4,10 +4,7 @@ import appeng.api.AEApi;
 import appeng.api.definitions.IDefinitions;
 import appeng.api.storage.ITerminalHost;
 import appeng.container.guisync.GuiSync;
-import appeng.container.slot.IOptionalSlotHost;
-import appeng.container.slot.OptionalSlotFake;
-import appeng.container.slot.SlotFakeCraftingMatrix;
-import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.slot.*;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.util.Platform;
@@ -23,6 +20,9 @@ import net.minecraft.nbt.NBTTagList;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static appeng.container.implementations.ContainerPatternTerm.canDoubleStacks;
+import static appeng.container.implementations.ContainerPatternTerm.doubleStacksInternal;
 
 public class ContainerPatternTermEx extends ContainerMEMonitorable implements IOptionalSlotHost, IContainerCraftingPacket {
     private final PartPatternTerminalEx patternTerminal;
@@ -155,7 +155,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
 
     private ItemStack[] getOutputs()
     {
-        final List<ItemStack> list = new ArrayList<ItemStack>(16);
+        final List<ItemStack> list = new ArrayList<>(16);
         boolean hasValue = false;
 
         for (final OptionalSlotFake outputSlot : this.outputSlots) {
@@ -327,46 +327,20 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
         this.substitute = substitute;
     }
 
-    boolean canDoubleStacks()
+    public void doubleStacks(boolean isShift)
     {
-        for (final Slot s : this.craftingSlots)
+        if (canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots))
         {
-            final ItemStack st =  s.getStack();
-            if (st != null && (st.stackSize*2 > 127))
-                return false;
-        }
-
-        for (final Slot s : this.outputSlots)
-        {
-            final ItemStack st =  s.getStack();
-            if (st != null && (st.stackSize*2 > 127))
-                return false;
-        }
-        return true;
-    }
-
-    public void doubleStacks()
-    {
-        if (canDoubleStacks())
-        {
-            for (final Slot s : this.craftingSlots)
+            doubleStacksInternal(this.craftingSlots);
+            doubleStacksInternal(this.outputSlots);
+            if (isShift)
             {
-                ItemStack st = s.getStack();
-                if (st == null)
-                    continue;
-                st.stackSize *= 2;
-                s.putStack(st);
+                while (canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots))
+                {
+                    doubleStacksInternal(this.craftingSlots);
+                    doubleStacksInternal(this.outputSlots);
+                }
             }
-
-            for (final Slot s : this.outputSlots)
-            {
-                ItemStack st = s.getStack();
-                if (st == null)
-                    continue;
-                st.stackSize *= 2;
-                s.putStack(st);
-            }
-
             this.detectAndSendChanges();
         }
     }

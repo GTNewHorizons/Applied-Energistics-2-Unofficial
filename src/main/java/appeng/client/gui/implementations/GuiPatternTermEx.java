@@ -13,6 +13,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
+import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 
@@ -63,7 +64,7 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
             }
             else if (doubleBtn == btn)
             {
-                NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminalEx.Double",  "") );
+                NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminalEx.Double",  Keyboard.isKeyDown( Keyboard.KEY_LSHIFT ) ? "1": "0") );
             }
         }
         catch( final IOException e )
