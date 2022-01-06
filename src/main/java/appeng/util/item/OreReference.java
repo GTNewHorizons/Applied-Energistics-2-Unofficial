@@ -59,7 +59,7 @@ public class OreReference
 		return this.aeOtherOptions;
 	}
 
-	Collection<Integer> getOres()
+	Set<Integer> getOres()
 	{
 		return this.ores;
 	}

@@ -44,8 +44,7 @@ import java.util.List;
 public final class AEConfig extends Configuration implements IConfigurableObject, IConfigManagerHost
 {
 	public static double TUNNEL_POWER_LOSS = 0.05;
-	public static final String VERSION = "@version@";
-	public static final String CHANNEL = "@aechannel@";
+	public static final String VERSION = "GRADLETOKEN_VERSION";
 	public static final String PACKET_CHANNEL = "AE";
 	public static AEConfig instance;
 	public final IConfigManager settings = new ConfigManager( this );
@@ -133,6 +132,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 		this.settings.registerSetting( Settings.TERMINAL_STYLE, TerminalStyle.TALL );
 		this.settings.registerSetting( Settings.SEARCH_MODE, SearchBoxMode.AUTOSEARCH );
 		this.settings.registerSetting( Settings.SAVE_SEARCH, YesNo.NO );
+		this.settings.registerSetting( Settings.CRAFTING_STATUS, CraftingStatus.TILE);
 
 		this.spawnChargedChance = (float) ( 1.0 - this.get( "worldGen", "spawnChargedChance", 1.0 - this.spawnChargedChance ).getDouble( 1.0 - this.spawnChargedChance ) );
 		this.minMeteoriteDistance = this.get( "worldGen", "minMeteoriteDistance", this.minMeteoriteDistance ).getInt( this.minMeteoriteDistance );

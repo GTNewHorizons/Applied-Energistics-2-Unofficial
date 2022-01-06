@@ -105,14 +105,15 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack>
 	public IAEItemStack extractItems( final IAEItemStack request, final Actionable type, final BaseActionSource src )
 	{
 		ItemStack out = null;
+		int toExtract = (int)Math.min(Integer.MAX_VALUE, request.getStackSize());
 
 		if( type == Actionable.SIMULATE )
 		{
-			out = this.adaptor.simulateRemove( (int) request.getStackSize(), request.getItemStack(), null );
+			out = this.adaptor.simulateRemove( toExtract, request.getItemStack(), null );
 		}
 		else
 		{
-			out = this.adaptor.removeItems( (int) request.getStackSize(), request.getItemStack(), null );
+			out = this.adaptor.removeItems( toExtract, request.getItemStack(), null );
 		}
 
 		if( out == null )

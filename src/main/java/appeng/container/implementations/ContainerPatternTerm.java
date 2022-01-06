@@ -57,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEAppEngInventory, IOptionalSlotHost, IContainerCraftingPacket
@@ -555,26 +556,19 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 		this.substitute = substitute;
 	}
 
-	static boolean canDoubleStacks(SlotFake[] craftingSlots)
+	static boolean canDoubleStacks(SlotFake[] slots)
 	{
-		long emptyCraftingStots = Arrays.stream(craftingSlots).filter(s -> s.getStack() == null).count();
-		for (final Slot s : craftingSlots)
-		{
-			final ItemStack st = s.getStack();
-			if (st != null && st.stackSize * 2 > 127)
-			{
-				if (emptyCraftingStots == 0)
-					return false;
-				--emptyCraftingStots;
-			}
-		}
-		return true;
+		List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
+		long emptyStots = enabledSlots.stream().filter(s -> s.getStack() == null).count();
+		long fullSlots = enabledSlots.stream().filter(s-> s.getStack() != null && s.getStack().stackSize * 2 > 127).count();
+		return fullSlots <= emptyStots;
 	}
 
-	static void doubleStacksInternal(SlotFake[] craftingSlots)
+	static void doubleStacksInternal(SlotFake[] slots)
 	{
 		List<ItemStack> overFlowStacks = new ArrayList<>();
-		for (final Slot s : craftingSlots)
+		List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
+		for (final Slot s : enabledSlots)
 		{
 			ItemStack st = s.getStack();
 			if (st == null)
@@ -590,7 +584,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 			}
 		}
 		Iterator<ItemStack> ow = overFlowStacks.iterator();
-		for (final Slot s : craftingSlots) {
+		for (final Slot s : enabledSlots) {
 			if (!ow.hasNext())
 				break;
 			if (s.getStack() != null)

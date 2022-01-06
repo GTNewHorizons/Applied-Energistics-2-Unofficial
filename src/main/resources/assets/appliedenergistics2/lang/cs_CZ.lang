@@ -278,6 +278,7 @@ gui.tooltips.appliedenergistics2.EmitWhenCrafting=Vyšle ruditový signál pokud
 gui.tooltips.appliedenergistics2.ReportInaccessibleItems=Nahlásí nepřístupné předměty
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=Ano: Předměty, které nemohou být vyextraktovány budou vidět.
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=Ne: Vidět budou pouze předměty, které mohou být vyextrahovány.
+gui.tooltips.appliedenergistics2.CraftingStatus=Status výroby
 
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=Jednotky energie

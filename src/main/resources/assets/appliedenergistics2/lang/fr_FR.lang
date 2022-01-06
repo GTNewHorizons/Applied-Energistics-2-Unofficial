@@ -325,6 +325,7 @@ gui.tooltips.appliedenergistics2.SchedulingModeRoundRobin=Exporte les éléments
 gui.tooltips.appliedenergistics2.SchedulingModeRandom=Exporte les éléments aléatoirement.
 gui.tooltips.appliedenergistics2.ItemsStored=Eléments stockés: %s
 gui.tooltips.appliedenergistics2.ItemsRequestable=Eléments recherchable: %s
+gui.tooltips.appliedenergistics2.CraftingStatus=Etat de fabrication
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE

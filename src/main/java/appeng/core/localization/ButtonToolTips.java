@@ -66,7 +66,8 @@ public enum ButtonToolTips
 
 	SchedulingMode, SchedulingModeDefault, SchedulingModeRoundRobin, SchedulingModeRandom, OreFilter, OreFilterHint, DoublePattern, DoublePatternHint,
 
-	SaveSearchString, SaveSearchStringYes, SaveSearchStringNo;
+	SaveSearchString, SaveSearchStringYes, SaveSearchStringNo,
+	CraftingStatus, CraftingStatusDesc;
 
 	private final String root;
 
