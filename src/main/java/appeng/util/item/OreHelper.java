@@ -23,6 +23,7 @@ import appeng.api.storage.data.IAEItemStack;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Sets;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
@@ -65,30 +66,10 @@ public class OreHelper
 			final Collection<Integer> ores = ref.getOres();
 			final Collection<String> set = ref.getEquivalents();
 
-			final Set<String> toAdd = new HashSet<String>();
-
-			for( final String ore : OreDictionary.getOreNames() )
+			for( final int id : OreDictionary.getOreIDs(itemStack) )
 			{
-				// skip ore if it is a match already or null.
-				if( ore == null || toAdd.contains( ore ) )
-				{
-					continue;
-				}
-
-				for( final ItemStack oreItem : this.oreDictCache.getUnchecked( ore ) )
-				{
-					if( OreDictionary.itemMatches( oreItem, itemStack, false ) )
-					{
-						toAdd.add( ore );
-						break;
-					}
-				}
-			}
-
-			for( final String ore : toAdd )
-			{
-				set.add( ore );
-				ores.add( OreDictionary.getOreID( ore ) );
+				ores.add(id);
+				set.add(OreDictionary.getOreName(id));
 			}
 
 			if( !set.isEmpty() )
@@ -106,10 +87,12 @@ public class OreHelper
 
 	boolean sameOre( final AEItemStack aeItemStack, final IAEItemStack is )
 	{
-		final OreReference a = aeItemStack.getDefinition().getIsOre();
-		final OreReference b = aeItemStack.getDefinition().getIsOre();
+		if( is instanceof AEItemStack )
+		{
+			return this.sameOre(aeItemStack.getDefinition().getIsOre(), ((AEItemStack) is).getDefinition().getIsOre());
+		}
 
-		return this.sameOre( a, b );
+		return this.sameOre( aeItemStack, is.getItemStack() );
 	}
 
 	public boolean sameOre( final OreReference a, final OreReference b )
@@ -124,38 +107,20 @@ public class OreHelper
 			return true;
 		}
 
-		final Collection<Integer> bOres = b.getOres();
-		for( final Integer ore : a.getOres() )
-		{
-			if( bOres.contains( ore ) )
-			{
-				return true;
-			}
-		}
-
-		return false;
+		return !Sets.intersection(a.getOres(), b.getOres()).isEmpty();
 	}
 
 	boolean sameOre( final AEItemStack aeItemStack, final ItemStack o )
 	{
 		final OreReference a = aeItemStack.getDefinition().getIsOre();
-		if( a == null )
+
+		HashSet<Integer> set = new HashSet<>();
+		for( final int id : OreDictionary.getOreIDs(o) )
 		{
-			return false;
+			set.add(id);
 		}
 
-		for( final String oreName : a.getEquivalents() )
-		{
-			for( final ItemStack oreItem : this.oreDictCache.getUnchecked( oreName ) )
-			{
-				if( OreDictionary.itemMatches( oreItem, o, false ) )
-				{
-					return true;
-				}
-			}
-		}
-
-		return false;
+		return !Sets.intersection(a.getOres(), set).isEmpty();
 	}
 
 	List<ItemStack> getCachedOres( final String oreName )

@@ -25,6 +25,8 @@ import appeng.api.exceptions.RecipeError;
 import appeng.api.exceptions.RegistrationError;
 import appeng.api.recipes.ICraftHandler;
 import appeng.api.recipes.IIngredient;
+import appeng.core.AEConfig;
+import appeng.core.features.AEFeature;
 import appeng.recipes.RecipeHandler;
 import appeng.util.Platform;
 import net.minecraft.item.ItemStack;
@@ -57,9 +59,12 @@ public class Grind implements ICraftHandler, IWebsiteSerializer
 	@Override
 	public void register() throws RegistrationError, MissingIngredientError
 	{
-		for( final ItemStack is : this.pro_input.getItemStackSet() )
+		if ( AEConfig.instance.isFeatureEnabled( AEFeature.GrindStone ) )
 		{
-			AEApi.instance().registries().grinder().addRecipe( is, this.pro_output[0].getItemStack(), 8 );
+			for (final ItemStack is : this.pro_input.getItemStackSet())
+			{
+				AEApi.instance().registries().grinder().addRecipe(is, this.pro_output[0].getItemStack(), 8);
+			}
 		}
 	}
 

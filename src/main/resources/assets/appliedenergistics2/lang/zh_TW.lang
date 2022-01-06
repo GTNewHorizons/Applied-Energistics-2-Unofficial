@@ -255,6 +255,7 @@ gui.tooltips.appliedenergistics2.TerminalStyle=終端風格
 gui.tooltips.appliedenergistics2.TerminalStyle_Full=全屏
 gui.tooltips.appliedenergistics2.TerminalStyle_Tall=長
 gui.tooltips.appliedenergistics2.TerminalStyle_Small=短
+gui.tooltips.appliedenergistics2.CraftingStatus=合成狀態
 
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=EU

@@ -41,7 +41,7 @@ import java.util.Stack;
 public class PartP2PLiquids extends PartP2PTunnel<PartP2PLiquids> implements IFluidHandler
 {
 
-	private static final ThreadLocal<Stack<PartP2PLiquids>> DEPTH = new ThreadLocal<Stack<PartP2PLiquids>>();
+	private static final ThreadLocal<Stack<PartP2PLiquids>> DEPTH = new ThreadLocal<>();
 	private static final FluidTankInfo[] ACTIVE_TANK = { new FluidTankInfo( null, 10000 ) };
 	private static final FluidTankInfo[] INACTIVE_TANK = { new FluidTankInfo( null, 0 ) };
 	private IFluidHandler cachedTank;
@@ -50,11 +50,6 @@ public class PartP2PLiquids extends PartP2PTunnel<PartP2PLiquids> implements IFl
 	public PartP2PLiquids( final ItemStack is )
 	{
 		super( is );
-	}
-
-	public float getPowerDrainPerTick()
-	{
-		return 2.0f;
 	}
 
 	@Override
@@ -87,6 +82,9 @@ public class PartP2PLiquids extends PartP2PTunnel<PartP2PLiquids> implements IFl
 	@Override
 	public int fill( final ForgeDirection from, final FluidStack resource, final boolean doFill )
 	{
+		if  (resource == null || resource.getFluid() == null)
+			return 0;
+
 		final Stack<PartP2PLiquids> stack = this.getDepth();
 
 		for( final PartP2PLiquids t : stack )
@@ -100,12 +98,19 @@ public class PartP2PLiquids extends PartP2PTunnel<PartP2PLiquids> implements IFl
 		stack.push( this );
 
 		final List<PartP2PLiquids> list = this.getOutputs( resource.getFluid() );
+		PartP2PLiquids input = getInput();
+			if (input != null) {
+  			list.add(input);
+		}
+
 		int requestTotal = 0;
 
 		Iterator<PartP2PLiquids> i = list.iterator();
 		while( i.hasNext() )
 		{
 			final PartP2PLiquids l = i.next();
+			if (l == this)
+				continue;
 			final IFluidHandler tank = l.getTarget();
 			if( tank != null )
 			{
@@ -153,6 +158,8 @@ public class PartP2PLiquids extends PartP2PTunnel<PartP2PLiquids> implements IFl
 		while( i.hasNext() )
 		{
 			final PartP2PLiquids l = i.next();
+			if (l == this)
+				continue;
 
 			final FluidStack insert = resource.copy();
 			insert.amount = (int) Math.ceil( insert.amount * ( (double) l.tmpUsed / (double) requestTotal ) );
@@ -189,7 +196,7 @@ public class PartP2PLiquids extends PartP2PTunnel<PartP2PLiquids> implements IFl
 
 		if( s == null )
 		{
-			DEPTH.set( s = new Stack<PartP2PLiquids>() );
+			DEPTH.set( s = new Stack<>() );
 		}
 
 		return s;
@@ -197,12 +204,15 @@ public class PartP2PLiquids extends PartP2PTunnel<PartP2PLiquids> implements IFl
 
 	private List<PartP2PLiquids> getOutputs( final Fluid input )
 	{
-		final List<PartP2PLiquids> outs = new LinkedList<PartP2PLiquids>();
-
+		final List<PartP2PLiquids> outs = new LinkedList<>();
+		if (input == null)
+			return outs;
 		try
 		{
 			for( final PartP2PLiquids l : this.getOutputs() )
 			{
+				if (l == this)
+					continue;
 				final IFluidHandler handler = l.getTarget();
 				if( handler != null )
 				{
@@ -254,10 +264,19 @@ public class PartP2PLiquids extends PartP2PTunnel<PartP2PLiquids> implements IFl
 		return null;
 	}
 
+	private boolean inputAcceptsFluid(Fluid input)
+	{
+		PartP2PLiquids l = getInput();
+		if (l == null || l == this || input == null)
+			return false;
+		final IFluidHandler handler = l.getTarget();
+		return handler != null && handler.canFill(l.getSide().getOpposite(), input);
+	}
+
 	@Override
 	public boolean canFill( final ForgeDirection from, final Fluid fluid )
 	{
-		return !this.isOutput() && from == this.getSide() && !this.getOutputs( fluid ).isEmpty();
+		return from == this.getSide() && (!this.getOutputs( fluid ).isEmpty() || inputAcceptsFluid(fluid));
 	}
 
 	@Override

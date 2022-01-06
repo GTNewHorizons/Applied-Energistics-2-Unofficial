@@ -54,7 +54,9 @@ package appeng.core.api.imc;
 
 
 import appeng.api.AEApi;
+import appeng.core.AEConfig;
 import appeng.core.api.IIMCProcessor;
+import appeng.core.features.AEFeature;
 import cpw.mods.fml.common.event.FMLInterModComms.IMCMessage;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -65,6 +67,8 @@ public class IMCGrinder implements IIMCProcessor
 	@Override
 	public void process( final IMCMessage m )
 	{
+		if ( !AEConfig.instance.isFeatureEnabled( AEFeature.GrindStone ) )
+			throw new IllegalStateException( "Grindstone is disabled" );
 		final NBTTagCompound msg = m.getNBTValue();
 		final NBTTagCompound inTag = (NBTTagCompound) msg.getTag( "in" );
 		final NBTTagCompound outTag = (NBTTagCompound) msg.getTag( "out" );

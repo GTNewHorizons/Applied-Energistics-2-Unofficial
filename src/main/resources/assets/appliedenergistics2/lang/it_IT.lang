@@ -303,6 +303,7 @@ gui.tooltips.appliedenergistics2.BlockPlacementYes=I blocchi saranno piazzati co
 gui.tooltips.appliedenergistics2.BlockPlacementNo=I blocchi saranno fatti cadere come oggetti.
 gui.tooltips.appliedenergistics2.ItemsStored=Oggetti contenuti: %s
 gui.tooltips.appliedenergistics2.ItemsRequestable=Oggetti richiedibili: %s
+gui.tooltips.appliedenergistics2.CraftingStatus=Stato della fabbricazione
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE

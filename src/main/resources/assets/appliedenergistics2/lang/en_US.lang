@@ -343,6 +343,8 @@ gui.tooltips.appliedenergistics2.SaveSearchStringYes=Yes
 gui.tooltips.appliedenergistics2.SaveSearchStringNo=No
 gui.tooltips.appliedenergistics2.DoublePattern=Double pattern
 gui.tooltips.appliedenergistics2.DoublePatternHint=Double stack sizes of pattern inputs and output(s)
+gui.tooltips.appliedenergistics2.CraftingStatus=Crafting Status
+gui.tooltips.appliedenergistics2.CraftingStatusDesc=Opens crafting status window
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE

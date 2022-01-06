@@ -287,6 +287,7 @@ gui.tooltips.appliedenergistics2.EmitWhenCrafting=Emit Redstone while item is cr
 gui.tooltips.appliedenergistics2.ReportInaccessibleItems=Report Inaccessible Items
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=Yes: Items that cannot be extracted will be visible.
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=No: Only extractable items will be visible.
+gui.tooltips.appliedenergistics2.CraftingStatus=제작 상황
 
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=에너지 단위(EU)

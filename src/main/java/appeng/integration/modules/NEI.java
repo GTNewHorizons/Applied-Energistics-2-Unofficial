@@ -29,6 +29,7 @@ import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
 import appeng.integration.abstraction.INEI;
 import appeng.integration.modules.NEIHelpers.*;
+import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.IStackPositioner;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.guihook.IContainerTooltipHandler;
@@ -55,6 +56,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule
 	// recipe handler...
 	private Method registerRecipeHandler;
 	private Method registerUsageHandler;
+	private Method registerNEIGuiHandler;
 
 	@Reflected
 	public NEI() throws ClassNotFoundException
@@ -74,13 +76,17 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule
 	{
 		this.registerRecipeHandler = this.apiClass.getDeclaredMethod( "registerRecipeHandler", codechicken.nei.recipe.ICraftingHandler.class );
 		this.registerUsageHandler = this.apiClass.getDeclaredMethod( "registerUsageHandler", codechicken.nei.recipe.IUsageHandler.class );
+		this.registerNEIGuiHandler = this.apiClass.getDeclaredMethod("registerNEIGuiHandler", INEIGuiHandler.class);
+		registerNEIGuiHandler.invoke(apiClass, new NEIGuiHandler());
 
 		this.registerRecipeHandler( new NEIAEShapedRecipeHandler() );
 		this.registerRecipeHandler( new NEIAEShapelessRecipeHandler() );
 		this.registerRecipeHandler( new NEIInscriberRecipeHandler() );
 		this.registerRecipeHandler( new NEIWorldCraftingHandler() );
-		this.registerRecipeHandler( new NEIGrinderRecipeHandler() );
-
+		if ( AEConfig.instance.isFeatureEnabled( AEFeature.GrindStone ) )
+		{
+			this.registerRecipeHandler(new NEIGrinderRecipeHandler());
+		}
 		if( AEConfig.instance.isFeatureEnabled( AEFeature.Facades ) && AEConfig.instance.isFeatureEnabled( AEFeature.EnableFacadeCrafting ) )
 		{
 			this.registerRecipeHandler( new NEIFacadeRecipeHandler() );

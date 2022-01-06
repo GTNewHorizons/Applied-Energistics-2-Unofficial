@@ -326,6 +326,7 @@ gui.tooltips.appliedenergistics2.SchedulingModeRoundRobin=Eltávolítás körkö
 gui.tooltips.appliedenergistics2.SchedulingModeRandom=Eltávolítás véletlenszerűen.
 gui.tooltips.appliedenergistics2.ItemsStored=Tárolt tárgyak száma: %s
 gui.tooltips.appliedenergistics2.ItemsRequestable=Kérhető Tárgyak száma: %s
+gui.tooltips.appliedenergistics2.CraftingStatus=Barkácsolási Státusz
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE

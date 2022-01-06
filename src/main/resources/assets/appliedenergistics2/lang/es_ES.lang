@@ -261,6 +261,7 @@ gui.tooltips.appliedenergistics2.TerminalStyle=Estilo de Terminal
 gui.tooltips.appliedenergistics2.TerminalStyle_Full=Terminal Pantalla Completa
 gui.tooltips.appliedenergistics2.TerminalStyle_Tall=Terminal Centrada Alta
 gui.tooltips.appliedenergistics2.TerminalStyle_Small=Terminal Centrada Pequeña
+gui.tooltips.appliedenergistics2.CraftingStatus=Estado de Creación
 
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=Energy Units

@@ -19,10 +19,7 @@
 package appeng.client.gui.implementations;
 
 
-import appeng.api.config.SearchBoxMode;
-import appeng.api.config.Settings;
-import appeng.api.config.TerminalStyle;
-import appeng.api.config.YesNo;
+import appeng.api.config.*;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.implementations.tiles.IMEChest;
 import appeng.api.implementations.tiles.IViewCellStorage;
@@ -79,6 +76,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	private final ItemStack[] myCurrentViewCells = new ItemStack[5];
 	private final ContainerMEMonitorable monitorableContainer;
 	private GuiTabButton craftingStatusBtn;
+	private GuiImgButton craftingStatusImgBtn;
 	private MEGuiTextField searchField;
 	private GuiText myName;
 	private int perRow = 9;
@@ -165,7 +163,8 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	@Override
 	protected void actionPerformed( final GuiButton btn )
 	{
-		if( btn == this.craftingStatusBtn )
+
+		if(  btn == this.craftingStatusBtn || btn == this.craftingStatusImgBtn )
 		{
 			NetworkHandler.instance.sendToServer( new PacketSwitchGuis( GuiBridge.GUI_CRAFTING_STATUS ) );
 		}
@@ -307,6 +306,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		if( !( this instanceof GuiMEPortableCell ) || this instanceof GuiWirelessTerm )
 		{
 			this.buttonList.add( this.terminalStyleBox = new GuiImgButton( this.guiLeft - 18, offset, Settings.TERMINAL_STYLE, AEConfig.instance.settings.getSetting( Settings.TERMINAL_STYLE ) ) );
+			offset += 20;
 		}
 
 		this.searchField = new MEGuiTextField( this.fontRendererObj, this.guiLeft + Math.max( 80, this.offsetX ), this.guiTop + 4, 90, 12 );
@@ -318,8 +318,12 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 
 		if( this.viewCell || this instanceof GuiWirelessTerm )
 		{
-			this.buttonList.add( this.craftingStatusBtn = new GuiTabButton( this.guiLeft + 170, this.guiTop - 4, 2 + 11 * 16, GuiText.CraftingStatus.getLocal(), itemRender ) );
-			this.craftingStatusBtn.setHideEdge( 13 );
+			if (AEConfig.instance.getConfigManager().getSetting(Settings.CRAFTING_STATUS).equals(CraftingStatus.BUTTON)) {
+				this.buttonList.add(this.craftingStatusImgBtn = new GuiImgButton(this.guiLeft - 18, offset, Settings.CRAFTING_STATUS, AEConfig.instance.settings.getSetting(Settings.CRAFTING_STATUS)));
+			} else {
+				this.buttonList.add(this.craftingStatusBtn = new GuiTabButton(this.guiLeft + 170, this.guiTop - 4, 2 + 11 * 16, GuiText.CraftingStatus.getLocal(), itemRender));
+				this.craftingStatusBtn.setHideEdge( 13 ); // GuiTabButton implementation //
+			}
 		}
 
 		// Enum setting = AEConfig.INSTANCE.getSetting( "Terminal", SearchBoxMode.class, SearchBoxMode.AUTOSEARCH );
@@ -328,8 +332,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 
 		if (AEConfig.instance.preserveSearchBar || this.isSubGui())
 		{
-			this.searchField.setText(memoryText);
-			this.repo.setSearchString(memoryText);
+			setSearchString(memoryText, false);
 		}
 		if( this.isSubGui() )
 		{
@@ -365,6 +368,17 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		craftingGridOffsetY -= 6;
 	}
 
+	public void setSearchString(String memoryText, boolean updateView)
+	{
+		this.searchField.setText(memoryText);
+		this.repo.setSearchString(memoryText);
+		if (updateView)
+		{
+			this.repo.updateView();
+			this.setScrollBar();
+		}
+	}
+
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
@@ -384,10 +398,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 
 		if( btn == 1 && this.searchField.isMouseIn( xCoord, yCoord ) )
 		{
-			this.searchField.setText( "" );
-			this.repo.setSearchString( "" );
-			this.repo.updateView();
-			this.setScrollBar();
+			setSearchString("", true);
 		}
 
 		super.mouseClicked( xCoord, yCoord, btn );
@@ -570,5 +581,9 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		super.drawScreen(mouseX, mouseY, btn);
 		if (AEConfig.instance.preserveSearchBar && searchField != null)
 			handleTooltip(mouseX, mouseY, searchField.new TooltipProvider());
+	}
+	public boolean isOverSearchField(int x, int y)
+	{
+		return searchField.isMouseIn(x,y);
 	}
 }

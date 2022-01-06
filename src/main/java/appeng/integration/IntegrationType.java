@@ -69,7 +69,10 @@ public enum IntegrationType
 
 	GT( IntegrationSide.BOTH, "GregTech", "gregtech" ),
 
-	Chisel(IntegrationSide.BOTH, "Chisel", "chisel");
+	Chisel(IntegrationSide.BOTH, "Chisel", "chisel"),
+
+	Jabba(IntegrationSide.BOTH, "Jabba", "JABBA")
+	;
 
 	public final IntegrationSide side;
 	public final String dspName;
