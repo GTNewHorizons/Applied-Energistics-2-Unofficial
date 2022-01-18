@@ -504,7 +504,7 @@ publishing {
 
             groupId = System.getenv("ARTIFACT_GROUP_ID") ?: "com.github.GTNewHorizons"
             artifactId = System.getenv("ARTIFACT_ID") ?: project.name
-            // Using the identified version, not project.version, as it have the pre-pended 1.7.10
+            // Using the identified version, not project.version as it has the prepended 1.7.10
             version = System.getenv("ARTIFACT_VERSION") ?: identifiedVersion
         }
     }
