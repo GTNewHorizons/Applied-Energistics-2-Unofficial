@@ -10,6 +10,10 @@ repositories {
         }
     }
     maven {
+        name = "GTNH"
+        url = "http://jenkins.usrv.eu:8081/nexus/content/groups/public/"
+    }
+    maven {
         name = "MM repo"
         url = "http://maven.k-4u.nl/"
     }
