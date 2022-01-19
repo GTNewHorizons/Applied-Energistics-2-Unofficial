@@ -515,25 +515,23 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 
 			Collections.sort( validCpusClusters, new Comparator<CraftingCPUCluster>()
 			{
+				private int compareInternal(CraftingCPUCluster firstCluster, CraftingCPUCluster nextCluster)
+				{
+					int comparison = ItemSorters.compareLong( nextCluster.getCoProcessors(), firstCluster.getCoProcessors() );
+					if( comparison == 0 )
+						comparison = ItemSorters.compareLong( nextCluster.getAvailableStorage(), firstCluster.getAvailableStorage() );
+					if( comparison == 0 )
+						return nextCluster.getName().compareTo(firstCluster.getName());
+					else
+						return comparison;
+				}
 				@Override
 				public int compare( final CraftingCPUCluster firstCluster, final CraftingCPUCluster nextCluster )
 				{
 					if( prioritizePower )
-					{
-						final int comparison = ItemSorters.compareLong( nextCluster.getCoProcessors(), firstCluster.getCoProcessors() );
-						if( comparison != 0 )
-						{
-							return comparison;
-						}
-						return ItemSorters.compareLong( nextCluster.getAvailableStorage(), firstCluster.getAvailableStorage() );
-					}
-
-					final int comparison = ItemSorters.compareLong( firstCluster.getCoProcessors(), nextCluster.getCoProcessors() );
-					if( comparison != 0 )
-					{
-						return comparison;
-					}
-					return ItemSorters.compareLong( firstCluster.getAvailableStorage(), nextCluster.getAvailableStorage() );
+						return compareInternal(firstCluster, nextCluster);
+					else
+						return compareInternal(nextCluster, firstCluster);
 				}
 			} );
 

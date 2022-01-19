@@ -558,7 +558,7 @@ public class AEBaseTile extends TileEntity implements IOrientable, ICommonTile, 
 
 	@Override
 	public void setCustomName(String name) {
-		this.customName = name;
+		setName(name);
 	}
 
 	public void securityBreak()
