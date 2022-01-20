@@ -1,0 +1,95 @@
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeWhite ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.White
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeBlack ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Black
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeRed ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Red
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeGreen ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Green
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeBrown ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Brown
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeBlue ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Blue
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyePurple ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Purple
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeCyan ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Cyan
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeLightGray ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.LightGray
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeGray ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Gray
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyePink ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Pink
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeLime ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Lime
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeYellow ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Yellow
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeLightBlue ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.LightBlue
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeMagenta ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Magenta
+
+shaped=
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered oredictionary:dyeOrange ae2:CableUltraDenseCovered,
+    ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered ae2:CableUltraDenseCovered
+    -> 8 ae2:CableUltraDenseCovered.Orange
