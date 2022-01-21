@@ -109,6 +109,12 @@ public class AEItemResolver implements ISubItemResolver
 			{
 				return this.cableItem( parts.cableDenseCovered(), itemName.substring( itemName.indexOf( '.' ) + 1 ) );
 			}
+
+			if( itemName.equals( "CableUltraDenseSmart" ) )
+			{
+				return new ResolverResultSet( "CableUltraDenseSmart", parts.cableDense().allStacks( 1 ) );
+			}
+
 			if( itemName.startsWith( "CableUltraDenseSmart." ) )
 			{
 				return this.cableItem( parts.cableDense(), itemName.substring( itemName.indexOf( '.' ) + 1 ) );
