@@ -112,22 +112,22 @@ public class AEItemResolver implements ISubItemResolver
 
 			if( itemName.equals( "CableUltraDenseSmart" ) )
 			{
-				return new ResolverResultSet( "CableUltraDenseSmart", parts.cableDense().allStacks( 1 ) );
+				return new ResolverResultSet( "CableUltraDenseSmart", parts.cableUltraDenseSmart().allStacks( 1 ) );
 			}
 
 			if( itemName.startsWith( "CableUltraDenseSmart." ) )
 			{
-				return this.cableItem( parts.cableDense(), itemName.substring( itemName.indexOf( '.' ) + 1 ) );
+				return this.cableItem( parts.cableUltraDenseSmart(), itemName.substring( itemName.indexOf( '.' ) + 1 ) );
 			}
 
 			if( itemName.equals( "CableUltraDenseCovered" ) )
 			{
-				return new ResolverResultSet( "CableUltraDenseCovered", parts.cableDenseCovered().allStacks( 1 ) );
+				return new ResolverResultSet( "CableUltraDenseCovered", parts.cableUltraDenseCovered().allStacks( 1 ) );
 			}
 
 			if( itemName.startsWith( "CableUltraDenseCovered." ) )
 			{
-				return this.cableItem( parts.cableDenseCovered(), itemName.substring( itemName.indexOf( '.' ) + 1 ) );
+				return this.cableItem( parts.cableUltraDenseCovered(), itemName.substring( itemName.indexOf( '.' ) + 1 ) );
 			}
 
 			if( itemName.startsWith( "ItemCrystalSeed." ) )
