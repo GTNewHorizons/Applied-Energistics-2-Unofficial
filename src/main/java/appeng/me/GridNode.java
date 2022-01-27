@@ -505,6 +505,12 @@ public class GridNode implements IGridNode, IPathItem
 			return false;
 		}
 
+		// only connect ultra dense cable to dense cables
+		if (hasFlag(GridFlags.ULTRA_DENSE_CAPACITY) &&
+			!(from.hasFlag(GridFlags.ULTRA_DENSE_CAPACITY) ||
+					(from.hasFlag(GridFlags.DENSE_CAPACITY) && !from.hasFlag(GridFlags.CANNOT_CARRY))))
+			return false;
+
 		return from.getColor().matches( this.getColor() );
 	}
 
@@ -576,6 +582,31 @@ public class GridNode implements IGridNode, IPathItem
 		this.usedChannels = 0;
 		this.lastUsedChannels = 0;
 	}
+
+	public boolean findAlternativePathToController()
+	{
+		for (IGridConnection c: connections)
+		{
+			if (!c.hasDirection() || ((IPathItem)c).getControllerRoute() == this)
+				continue;
+			boolean pathBlocked = false;
+			for (IPathItem pi = (IPathItem)c; pi != null; pi = pi.getControllerRoute())
+			{
+				if (!pi.canSupportMoreChannels())
+				{
+					pathBlocked = true;
+					break;
+				}
+			}
+			if (!pathBlocked)
+			{
+				setControllerRoute((IPathItem) c, false);
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	@Override
 	public IPathItem getControllerRoute()
