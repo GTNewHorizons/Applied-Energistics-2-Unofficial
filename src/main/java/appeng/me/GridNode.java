@@ -506,7 +506,7 @@ public class GridNode implements IGridNode, IPathItem
 		}
 
 		// only connect ultra dense cable to dense cables
-		if (hasFlag(GridFlags.ULTRA_DENSE_CAPACITY) &&
+		if (hasFlag(GridFlags.ULTRA_DENSE_CAPACITY) && !hasFlag(GridFlags.DENSE_CAPACITY) &&
 			!(from.hasFlag(GridFlags.ULTRA_DENSE_CAPACITY) ||
 					(from.hasFlag(GridFlags.DENSE_CAPACITY) && !from.hasFlag(GridFlags.CANNOT_CARRY))))
 			return false;
