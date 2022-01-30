@@ -583,31 +583,6 @@ public class GridNode implements IGridNode, IPathItem
 		this.lastUsedChannels = 0;
 	}
 
-	public boolean findAlternativePathToController()
-	{
-		for (IGridConnection c: connections)
-		{
-			if (!c.hasDirection() || ((IPathItem)c).getControllerRoute() == this)
-				continue;
-			boolean pathBlocked = false;
-			for (IPathItem pi = (IPathItem)c; pi != null; pi = pi.getControllerRoute())
-			{
-				if (!pi.canSupportMoreChannels())
-				{
-					pathBlocked = true;
-					break;
-				}
-			}
-			if (!pathBlocked)
-			{
-				setControllerRoute((IPathItem) c, false);
-				return true;
-			}
-		}
-		return false;
-	}
-
-
 	@Override
 	public IPathItem getControllerRoute()
 	{

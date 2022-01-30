@@ -22,7 +22,6 @@ package appeng.me.pathfinding;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridMultiblock;
 import appeng.api.networking.IGridNode;
-import appeng.me.GridNode;
 import appeng.me.cache.PathGridCache;
 
 import java.util.*;
@@ -33,9 +32,9 @@ public class PathSegment
 
 	private final PathGridCache pgc;
 	private final Set<IPathItem> semiOpen;
-	private final Set<IPathItem> closed;
+	protected final Set<IPathItem> closed;
 	private boolean isDead;
-	private List<IPathItem> open;
+	protected List<IPathItem> open;
 
 	public PathSegment( final PathGridCache myPGC, final List<IPathItem> open, final Set<IPathItem> semiOpen, final Set<IPathItem> closed )
 	{
@@ -46,22 +45,27 @@ public class PathSegment
 		this.setDead( false );
 	}
 
-	public boolean step()
+	public boolean step(Map<IPathItem, BackbonePathSegment> backbone, TopologyStage stage)
 	{
 		final List<IPathItem> oldOpen = this.open;
-		this.open = new LinkedList<IPathItem>();
+		this.open = new LinkedList<>();
 
 		for( final IPathItem i : oldOpen )
 		{
 			for( final IPathItem pi : i.getPossibleOptions() )
 			{
 				final EnumSet<GridFlags> flags = pi.getFlags();
-
 				if( !this.closed.contains( pi ) )
 				{
+					boolean stopHere = false;
+					if (flags.contains(GridFlags.ULTRA_DENSE_CAPACITY) && stage == TopologyStage.CONTROLLER_TO_BACKBONE)
+					{
+						backbone.computeIfAbsent(pi, k -> new BackbonePathSegment(pi, pgc, semiOpen, closed)).addControllerRoute(i);
+						stopHere = true;
+					}
 					pi.setControllerRoute( i, true );
 
-					if( flags.contains( GridFlags.REQUIRE_CHANNEL ) )
+					if( flags.contains( GridFlags.REQUIRE_CHANNEL ) && stage != TopologyStage.BACKBONE)
 					{
 						// close the semi open.
 						if( !this.semiOpen.contains( pi ) )
@@ -88,8 +92,18 @@ public class PathSegment
 						}
 					}
 
-					this.closed.add( pi );
-					this.open.add( pi );
+					if (!stopHere)
+					{
+						this.closed.add( pi );
+						this.open.add(pi);
+					}
+				}
+				else if (stage == TopologyStage.BACKBONE)
+				{
+					BackbonePathSegment bb = backbone.get(pi);
+					if (bb != null && bb != this) {
+						bb.addPathToNeighbour((BackbonePathSegment) this, i);
+					}
 				}
 			}
 		}
@@ -105,26 +119,20 @@ public class PathSegment
 				return false;
 		}
 
-		Stack<GridNode> backtrack = new Stack<>();
 		boolean haveBlockingNode = false;
+		IPathItem lastBackboneConnection = null;
 		for (IPathItem pi = start; pi != null; pi = pi.getControllerRoute())
 		{
 			this.pgc.setChannelsByBlocks( this.pgc.getChannelsByBlocks() + 1 );
 			pi.incrementChannelCount( 1 );
 			if (!pi.canSupportMoreChannels())
 				haveBlockingNode = true;
-			if (!haveBlockingNode && pi instanceof GridNode)
-				backtrack.push((GridNode)pi);
+			if (pgc.isValidBackboneConnection(pi))
+				lastBackboneConnection = pi;
 		}
 
-		if (haveBlockingNode)
-		{
-			while (!backtrack.empty())
-			{
-				if (backtrack.pop().findAlternativePathToController())
-					break;
-			}
-		}
+		if (haveBlockingNode && lastBackboneConnection != null)
+			pgc.repathBackboneConnection(lastBackboneConnection);
 
 		this.pgc.setChannelsInUse( this.pgc.getChannelsInUse() + 1 );
 		return true;
