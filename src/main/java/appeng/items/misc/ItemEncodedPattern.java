@@ -53,7 +53,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
 	public ItemEncodedPattern()
 	{
 		this.setFeature( EnumSet.of( AEFeature.Patterns ) );
-		this.setMaxStackSize( 1 );
+		this.setMaxStackSize( 64 );
 		if( Platform.isClient() )
 		{
 			MinecraftForgeClient.registerItemRenderer( this, new ItemEncodedPatternRenderer() );

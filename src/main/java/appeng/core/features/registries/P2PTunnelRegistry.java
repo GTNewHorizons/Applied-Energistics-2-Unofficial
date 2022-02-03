@@ -112,6 +112,8 @@ public final class P2PTunnelRegistry implements IP2PTunnelRegistry
 			this.addNewAttunement( parts.cableSmart().stack( c, 1 ), TunnelType.ME );
 			this.addNewAttunement( parts.cableDense().stack( c, 1 ), TunnelType.ME );
 			this.addNewAttunement( parts.cableDenseCovered().stack( c, 1 ), TunnelType.ME );
+			this.addNewAttunement( parts.cableUltraDenseCovered().stack( c, 1 ), TunnelType.ME );
+			this.addNewAttunement( parts.cableUltraDenseSmart().stack( c, 1 ), TunnelType.ME );
 		}
 	}
 

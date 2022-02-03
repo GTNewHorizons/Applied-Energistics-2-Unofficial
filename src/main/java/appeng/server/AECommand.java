@@ -25,6 +25,10 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.server.MinecraftServer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 
 public final class AECommand extends CommandBase
 {
@@ -60,6 +64,19 @@ public final class AECommand extends CommandBase
 	public String getCommandUsage( final ICommandSender icommandsender )
 	{
 		return "commands.ae2.usage";
+	}
+
+	@Override
+	public List addTabCompletionOptions(ICommandSender sender, String[] ss) {
+		List<String> l = new ArrayList<>();
+		String test = ss.length == 0 ? "" : ss[0].trim();
+		if (ss.length == 0
+				|| ss.length == 1 && (test.isEmpty() || Arrays.stream(Commands.values()).anyMatch(c -> c.toString().startsWith(test))))
+			Arrays.stream(Commands.values())
+					.map(Commands::toString)
+					.filter(c -> test.isEmpty() || c.startsWith(test))
+					.forEach(l::add);
+		return l;
 	}
 
 	@Override

@@ -43,6 +43,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
 import appeng.api.util.IConfigManager;
 import appeng.client.texture.CableBusTextures;
+import appeng.core.AEConfig;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
@@ -58,6 +59,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
@@ -87,6 +89,8 @@ public class PartLevelEmitter extends PartUpgradeable
 	private double centerX;
 	private double centerY;
 	private double centerZ;
+
+	private int lastWorkingTick = 0;
 
 	@Reflected
 	public PartLevelEmitter( final ItemStack is )
@@ -369,7 +373,12 @@ public class PartLevelEmitter extends PartUpgradeable
 	@Override
 	public void postChange( final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change, final BaseActionSource actionSource )
 	{
-		this.updateReportingValue( (IMEMonitor<IAEItemStack>) monitor );
+		int currentTick = MinecraftServer.getServer().getTickCounter();
+		if (currentTick - lastWorkingTick > AEConfig.instance.levelEmitterDelay)
+		{
+			this.updateReportingValue((IMEMonitor<IAEItemStack>) monitor);
+			lastWorkingTick = currentTick;
+		}
 	}
 
 	@Override

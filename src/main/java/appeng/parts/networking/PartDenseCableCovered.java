@@ -334,7 +334,7 @@ public class PartDenseCableCovered extends PartCable
 		rh.setFacesToRender( EnumSet.allOf( ForgeDirection.class ) );
 	}
 
-	private IIcon getDenseCoveredTexture(final AEColor c )
+	protected IIcon getDenseCoveredTexture(final AEColor c )
 	{
 		switch( c )
 		{
@@ -382,7 +382,7 @@ public class PartDenseCableCovered extends PartCable
 		if( te instanceof IGridHost )
 		{
 			final AECableType t = ( (IGridHost) te ).getCableConnectionType( of.getOpposite() );
-			return t == AECableType.DENSE || t == AECableType.DENSE_COVERED;
+			return t == AECableType.DENSE || t == AECableType.DENSE_COVERED || t == AECableType.ULTRA_DENSE || t == AECableType.ULTRA_DENSE_SMART ;
 		}
 		return false;
 	}

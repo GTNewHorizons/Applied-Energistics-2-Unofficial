@@ -23,8 +23,9 @@ import appeng.api.parts.IPart;
 import appeng.core.localization.WailaText;
 import appeng.parts.networking.PartCableSmart;
 import appeng.parts.networking.PartDenseCable;
-import gnu.trove.map.TObjectByteMap;
-import gnu.trove.map.hash.TObjectByteHashMap;
+import appeng.parts.networking.PartUltraDenseCableSmart;
+import gnu.trove.map.TObjectShortMap;
+import gnu.trove.map.hash.TObjectShortHashMap;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -57,7 +58,7 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider
 	 * <p/>
 	 * The cache will be updated from the server.
 	 */
-	private final TObjectByteMap<IPart> cache = new TObjectByteHashMap<IPart>();
+	private final TObjectShortMap<IPart> cache = new TObjectShortHashMap<>();
 
 	/**
 	 * Adds the used and max channel to the tool tip
@@ -71,12 +72,10 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider
 	@Override
 	public List<String> getWailaBody( final IPart part, final List<String> currentToolTip, final IWailaDataAccessor accessor, final IWailaConfigHandler config )
 	{
-		if( part instanceof PartCableSmart || part instanceof PartDenseCable )
+		if( part instanceof PartCableSmart || part instanceof PartDenseCable)
 		{
-			final NBTTagCompound tag = accessor.getNBTData();
-
-			final byte usedChannels = this.getUsedChannels( part, tag, this.cache );
-			final byte maxChannels = (byte) ( ( part instanceof PartDenseCable ) ? 32 : 8 );
+			final short usedChannels = this.getUsedChannels(part, accessor.getNBTData());
+			final int maxChannels = ((part instanceof PartUltraDenseCableSmart) ? 128 : (( part instanceof PartDenseCable ) ? 32 : 8 ));
 
 			final String formattedToolTip = String.format( WailaText.Channels.getLocal(), usedChannels, maxChannels );
 			currentToolTip.add( formattedToolTip );
@@ -93,16 +92,15 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider
 	 *
 	 * @param part  part to be looked at
 	 * @param tag   tag maybe containing the channel information
-	 * @param cache cache with previous knowledge
 	 * @return used channels on the cable
 	 */
-	private byte getUsedChannels( final IPart part, final NBTTagCompound tag, final TObjectByteMap<IPart> cache )
+	private short getUsedChannels( final IPart part, final NBTTagCompound tag)
 	{
-		final byte usedChannels;
+		final short usedChannels;
 
 		if( tag.hasKey( ID_USED_CHANNELS ) )
 		{
-			usedChannels = tag.getByte( ID_USED_CHANNELS );
+			usedChannels = tag.getShort( ID_USED_CHANNELS );
 			this.cache.put( part, usedChannels );
 		}
 		else if( this.cache.containsKey( part ) )
@@ -136,7 +134,7 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider
 	@Override
 	public NBTTagCompound getNBTData( final EntityPlayerMP player, final IPart part, final TileEntity te, final NBTTagCompound tag, final World world, final int x, final int y, final int z )
 	{
-		if( part instanceof PartCableSmart || part instanceof PartDenseCable )
+		if( part instanceof PartCableSmart || part instanceof PartDenseCable)
 		{
 			final NBTTagCompound tempTag = new NBTTagCompound();
 
@@ -144,9 +142,9 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider
 
 			if( tempTag.hasKey( ID_USED_CHANNELS ) )
 			{
-				final byte usedChannels = tempTag.getByte( ID_USED_CHANNELS );
+				final short usedChannels = tempTag.getShort( ID_USED_CHANNELS );
 
-				tag.setByte( ID_USED_CHANNELS, usedChannels );
+				tag.setShort( ID_USED_CHANNELS, usedChannels );
 			}
 		}
 

@@ -21,12 +21,13 @@ package appeng.server;
 
 import appeng.server.subcommands.ChunkLogger;
 import appeng.server.subcommands.Supporters;
-
+import appeng.server.subcommands.Profile;
 
 public enum Commands
 {
 	Chunklogger( 4, new ChunkLogger() ),
-	Supporters( 0, new Supporters() );
+	Supporters( 0, new Supporters() ),
+	profile(2, new Profile() );
 
 	public final int level;
 	public final ISubCommand command;
@@ -42,5 +43,4 @@ public enum Commands
 	{
 		return this.name();
 	}
-
 }

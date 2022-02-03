@@ -39,6 +39,7 @@ import appeng.entity.EntityFloatingItem;
 import appeng.entity.EntityTinyTNTPrimed;
 import appeng.entity.RenderFloatingItem;
 import appeng.entity.RenderTinyTNTPrimed;
+import appeng.helpers.HighlighterHandler;
 import appeng.helpers.IMouseWheelItem;
 import appeng.hooks.TickHandler;
 import appeng.hooks.TickHandler.PlayerColor;
@@ -67,6 +68,7 @@ import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.opengl.GL11;
@@ -102,6 +104,11 @@ public class ClientHelper extends ServerHelper
 	public void init()
 	{
 		MinecraftForge.EVENT_BUS.register( this );
+	}
+
+	@SubscribeEvent
+	public void renderWorldLastEvent( RenderWorldLastEvent event) {
+		HighlighterHandler.tick(event);
 	}
 
 	@Override

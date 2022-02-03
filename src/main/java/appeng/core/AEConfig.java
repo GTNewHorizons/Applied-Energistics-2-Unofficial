@@ -98,6 +98,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 	private double WirelessBaseRange = 16;
 	private double WirelessBoosterRangeMultiplier = 1;
 	private double WirelessBoosterExp = 1.5;
+	public int levelEmitterDelay = 40;
 
 	public AEConfig( final File configFile )
 	{
@@ -162,6 +163,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 		this.portableCellBattery = this.get( "battery", "portableCell", this.portableCellBattery ).getInt( this.portableCellBattery );
 		this.colorApplicatorBattery = this.get( "battery", "colorApplicator", this.colorApplicatorBattery ).getInt( this.colorApplicatorBattery );
 		this.matterCannonBattery = this.get( "battery", "matterCannon", this.matterCannonBattery ).getInt( this.matterCannonBattery );
+
+		this.levelEmitterDelay = this.get( "tickrates", "LevelEmitterDelay", this.levelEmitterDelay ).getInt( this.levelEmitterDelay );
 
 		this.clientSync();
 

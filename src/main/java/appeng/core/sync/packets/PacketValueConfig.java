@@ -146,7 +146,10 @@ public class PacketValueConfig extends AppEngPacket
 			}
 			else if( this.Name.equals( "PatternTerminal.Encode" ) )
 			{
-				cpt.encode();
+				if (this.Value.equals( "2" ))
+					cpt.encodeAndMoveToInventory();
+				else
+					cpt.encode();
 			}
 			else if( this.Name.equals( "PatternTerminal.Clear" ) )
 			{
@@ -166,7 +169,10 @@ public class PacketValueConfig extends AppEngPacket
 			final ContainerPatternTermEx cpt = (ContainerPatternTermEx) c;
 			if( this.Name.equals( "PatternTerminalEx.Encode" ) )
 			{
-				cpt.encode();
+				if (this.Value.equals( "2" ))
+					cpt.encodeAndMoveToInventory();
+				else
+					cpt.encode();
 			}
 			else if( this.Name.equals( "PatternTerminalEx.Clear" ) )
 			{

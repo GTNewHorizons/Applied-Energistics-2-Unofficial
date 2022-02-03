@@ -39,6 +39,7 @@ import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
+import appeng.tile.inventory.AppEngInternalInventory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
@@ -50,6 +51,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -364,6 +366,42 @@ public abstract class AEBaseGui extends GuiContainer
 				}
 			}
 		}
+		else if( slot instanceof SlotDisconnected )
+		{
+			this.drag_click.add( slot );
+			if( this.drag_click.size() > 1 )
+			{
+				if( itemstack != null )
+				{
+					for( final Slot dr : this.drag_click )
+					{
+						if( slot.getStack() == null)
+						{
+							InventoryAction action = InventoryAction.SPLIT_OR_PLACE_SINGLE;
+							final PacketInventoryAction p = new PacketInventoryAction( action, dr.getSlotIndex(), ( (SlotDisconnected) slot ).getSlot().getId() );
+							NetworkHandler.instance.sendToServer( p );
+						}
+					}
+				}
+
+				else if( isShiftKeyDown() )
+				{
+					for( final Slot dr : this.drag_click )
+					{
+						InventoryAction action = null;
+						if( slot.getStack() != null )
+						{
+							action = InventoryAction.SHIFT_CLICK;
+						}
+						if( action != null )
+						{
+							final PacketInventoryAction p = new PacketInventoryAction( action, dr.getSlotIndex(), ( (SlotDisconnected) slot ).getSlot().getId() );
+							NetworkHandler.instance.sendToServer( p );
+						}
+					}
+				}
+			}
+		}
 		else
 		{
 			super.mouseClickMove( x, y, c, d );
@@ -456,12 +494,23 @@ public abstract class AEBaseGui extends GuiContainer
 
 		if( slot instanceof SlotDisconnected )
 		{
+			if( this.drag_click.size() > 1 )
+			{
+				return;
+			}
+
 			InventoryAction action = null;
 
 			switch( mouseButton )
 			{
 				case 0: // pickup / set-down.
-					action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE : InventoryAction.PICKUP_OR_SET_DOWN;
+				{
+					ItemStack heldStack = player.inventory.getItemStack();
+					if (slot.getStack() == null && heldStack != null)
+						action = InventoryAction.SPLIT_OR_PLACE_SINGLE;
+					else if (slot.getStack() != null && (heldStack == null || heldStack.stackSize <= 1))
+						action = InventoryAction.PICKUP_OR_SET_DOWN;
+				}
 					break;
 				case 1:
 					action = ctrlDown == 1 ? InventoryAction.PICKUP_SINGLE : InventoryAction.SHIFT_CLICK;

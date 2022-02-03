@@ -43,9 +43,9 @@ import java.util.*;
 public class GridNode implements IGridNode, IPathItem
 {
 	private static final MENetworkChannelsChanged EVENT = new MENetworkChannelsChanged();
-	private static final int[] CHANNEL_COUNT = { 0, 8, 32 };
+	private static final int[] CHANNEL_COUNT = { 0, 8, 32, 128 };
 
-	private final List<IGridConnection> connections = new LinkedList<IGridConnection>();
+	private final List<IGridConnection> connections = new LinkedList<>();
 	private final IGridBlock gridProxy;
 	// old power draw, used to diff
 	private double previousDraw = 0.0;
@@ -188,9 +188,7 @@ public class GridNode implements IGridNode, IPathItem
 	@Override
 	public void updateState()
 	{
-		final EnumSet<GridFlags> set = this.gridProxy.getFlags();
-
-		this.compressedData = set.contains( GridFlags.CANNOT_CARRY ) ? 0 : ( set.contains( GridFlags.DENSE_CAPACITY ) ? 2 : 1 );
+		this.compressedData = getCompressedChannelsIndex(this.gridProxy.getFlags());
 
 		this.compressedData |= ( this.gridProxy.getGridColor().ordinal() << 3 );
 
@@ -201,6 +199,16 @@ public class GridNode implements IGridNode, IPathItem
 
 		this.FindConnections();
 		this.getInternalGrid();
+	}
+
+	private int getCompressedChannelsIndex(final EnumSet<GridFlags> set) {
+		if (set.contains(GridFlags.CANNOT_CARRY))
+			return 0;
+		else if (set.contains(GridFlags.ULTRA_DENSE_CAPACITY))
+			return 3;
+		else if (set.contains(GridFlags.DENSE_CAPACITY))
+			return 2;
+		return 1;
 	}
 
 	@Override
@@ -497,6 +505,12 @@ public class GridNode implements IGridNode, IPathItem
 			return false;
 		}
 
+		// only connect ultra dense cable to dense cables
+		if (hasFlag(GridFlags.ULTRA_DENSE_CAPACITY) && !hasFlag(GridFlags.DENSE_CAPACITY) &&
+			!(from.hasFlag(GridFlags.ULTRA_DENSE_CAPACITY) ||
+					(from.hasFlag(GridFlags.DENSE_CAPACITY) && !from.hasFlag(GridFlags.CANNOT_CARRY))))
+			return false;
+
 		return from.getColor().matches( this.getColor() );
 	}
 
@@ -604,7 +618,7 @@ public class GridNode implements IGridNode, IPathItem
 
 	private int getMaxChannels()
 	{
-		return CHANNEL_COUNT[this.compressedData & 0x03];
+		return CHANNEL_COUNT[this.compressedData & 0x3];
 	}
 
 	@Override

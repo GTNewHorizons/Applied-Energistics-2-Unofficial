@@ -31,7 +31,8 @@ public enum PlayerMessages
 	AmmoDepleted,
 	CommunicationError, OutOfRange, DeviceNotPowered, DeviceNotWirelessTerminal, DeviceNotLinked, StationCanNotBeLocated,
 	SettingCleared,
-	TunnelNotConnected,	TunnelInputIsAt, TunnelHasNoOutputs, TunnelOutputsAreAt
+	TunnelNotConnected,	TunnelInputIsAt, TunnelHasNoOutputs, TunnelOutputsAreAt,
+	InterfaceInOtherDim, InterfaceHighlighted
 	;
 
 	public IChatComponent get()

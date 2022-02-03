@@ -137,6 +137,22 @@ public class WorldCoord
 		return null;
 	}
 
+	public double distanceTo( final WorldCoord c )
+	{
+		double dx = c.x - x;
+		double dy = c.y - y;
+		double dz = c.z - z;
+		return Math.sqrt(dx*dx + dy*dy + dz*dz);
+	}
+
+	public static long getTaxicabDistance( WorldCoord blockPos, WorldCoord blockPos2 )
+	{
+		long dx = Math.abs(blockPos.x - blockPos2.x);
+		long dy = Math.abs(blockPos.y - blockPos2.y);
+		long dz = Math.abs(blockPos.z - blockPos2.z);
+		return dx + dy + dz;
+	}
+
 	public boolean isEqual( final WorldCoord c )
 	{
 		return this.x == c.x && this.y == c.y && this.z == c.z;

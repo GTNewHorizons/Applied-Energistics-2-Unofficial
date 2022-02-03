@@ -61,7 +61,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 			for (int x = 0; x < DualityInterface.NUMBER_OF_PATTERN_SLOTS; x++) {
 				this.addSlotToContainer(new OptionalSlotRestrictedInput(
 						SlotRestrictedInput.PlacableItemType.ENCODED_PATTERN, this.myDuality.getPatterns(), this,
-						x + row*DualityInterface.NUMBER_OF_PATTERN_SLOTS, 8 + 18 * x, 108 - row * 18, row, this.getInventoryPlayer()));
+						x + row*DualityInterface.NUMBER_OF_PATTERN_SLOTS, 8 + 18 * x, 108 - row * 18, row, this.getInventoryPlayer()).setStackLimit( 1 ) );
 			}
 		}
 

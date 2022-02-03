@@ -58,6 +58,13 @@ public class DimensionalCoord extends WorldCoord
 		this.dimId = _w.provider.dimensionId;
 	}
 
+	public DimensionalCoord( final int _x, final int _y, final int _z, final int _dim )
+	{
+		super( _x, _y, _z );
+		this.w = null;
+		this.dimId = _dim;
+	}
+
 	@Override
 	public DimensionalCoord copy()
 	{
@@ -96,4 +103,6 @@ public class DimensionalCoord extends WorldCoord
 	{
 		return this.w;
 	}
+
+	public int getDimension() { return dimId; }
 }

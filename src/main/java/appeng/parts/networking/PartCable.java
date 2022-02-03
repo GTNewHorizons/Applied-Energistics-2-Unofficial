@@ -120,6 +120,14 @@ public class PartCable extends AEBasePart implements IPartCable
 			{
 				newPart = parts.cableDenseCovered().stack( newColor, 1 );
 			}
+			else if( this.getCableConnectionType() == AECableType.ULTRA_DENSE )
+			{
+				newPart = parts.cableDense().stack( newColor, 1 );
+			}
+			else if( this.getCableConnectionType() == AECableType.ULTRA_DENSE_SMART )
+			{
+				newPart = parts.cableDenseCovered().stack( newColor, 1 );
+			}
 
 			boolean hasPermission = true;
 
@@ -462,7 +470,7 @@ public class PartCable extends AEBasePart implements IPartCable
 					howMany = Math.max( gc.getUsedChannels(), howMany );
 				}
 
-				data.setByte( "usedChannels", (byte) howMany );
+				data.setShort( "usedChannels", (short) howMany );
 			}
 		}
 	}
@@ -486,7 +494,11 @@ public class PartCable extends AEBasePart implements IPartCable
 						final IReadOnlyCollection<IGridConnection> set = part.getGridNode().getConnections();
 						for( final IGridConnection gc : set )
 						{
-							if( this.getProxy().getNode().hasFlag( GridFlags.DENSE_CAPACITY ) && gc.getOtherSide( this.getProxy().getNode() ).hasFlag( GridFlags.DENSE_CAPACITY ) )
+							if( this.getProxy().getNode().hasFlag( GridFlags.ULTRA_DENSE_CAPACITY ) && gc.getOtherSide( this.getProxy().getNode() ).hasFlag( GridFlags.ULTRA_DENSE_CAPACITY ) )
+							{
+								sideOut |= ( gc.getUsedChannels() / 16 ) << ( 4 * thisSide.ordinal() );
+							}
+							else if( this.getProxy().getNode().hasFlag( GridFlags.DENSE_CAPACITY ) && gc.getOtherSide( this.getProxy().getNode() ).hasFlag( GridFlags.DENSE_CAPACITY ) )
 							{
 								sideOut |= ( gc.getUsedChannels() / 4 ) << ( 4 * thisSide.ordinal() );
 							}
@@ -504,10 +516,17 @@ public class PartCable extends AEBasePart implements IPartCable
 				final ForgeDirection side = gc.getDirection( n );
 				if( side != ForgeDirection.UNKNOWN )
 				{
+					final boolean isTier3a = this.getProxy().getNode().hasFlag( GridFlags.ULTRA_DENSE_CAPACITY );
+					final boolean isTier3b = gc.getOtherSide( this.getProxy().getNode() ).hasFlag( GridFlags.ULTRA_DENSE_CAPACITY );
+
 					final boolean isTier2a = this.getProxy().getNode().hasFlag( GridFlags.DENSE_CAPACITY );
 					final boolean isTier2b = gc.getOtherSide( this.getProxy().getNode() ).hasFlag( GridFlags.DENSE_CAPACITY );
 
-					if( isTier2a && isTier2b )
+					if (isTier3a && isTier3b)
+					{
+						sideOut |= ( gc.getUsedChannels() / 16 ) << ( 4 * side.ordinal() );
+					}
+					else if( (isTier3a || isTier2a) && (isTier2b || isTier3b) )
 					{
 						sideOut |= ( gc.getUsedChannels() / 4 ) << ( 4 * side.ordinal() );
 					}

@@ -56,6 +56,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T>
 
 	private boolean sendEvent = false;
 	private boolean hasChanged = false;
+	private boolean ticked = true;
 	@Nonnegative
 	private int localDepthSemaphore = 0;
 
@@ -133,9 +134,10 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T>
 	@Override
 	public IItemList<T> getStorageList()
 	{
-		if( this.hasChanged )
+		if( hasChanged && ticked )
 		{
 			this.hasChanged = false;
+			ticked = false;
 			this.cachedList.resetStatus();
 			return this.getAvailableItems( this.cachedList );
 		}
@@ -329,6 +331,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T>
 
 	void onTick()
 	{
+		ticked = true;
 		if( this.sendEvent )
 		{
 			this.sendEvent = false;

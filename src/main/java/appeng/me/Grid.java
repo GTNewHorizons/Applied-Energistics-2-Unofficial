@@ -40,6 +40,10 @@ public class Grid implements IGrid
 	private GridNode pivot;
 	private int priority; // how import is this network?
 	private GridStorage myStorage;
+	private int[] timeStatistics = null;
+	private static final int PROFILING_SAMPLE_COUNT = 200;
+	private int timeStatisticsIndex = 0;
+	private boolean profilingPassedFullCycle = false;
 
 	public Grid( final GridNode center )
 	{
@@ -261,8 +265,34 @@ public class Grid implements IGrid
 		this.pivot = pivot;
 	}
 
+	public void startProfiling()
+	{
+		timeStatistics = new int[PROFILING_SAMPLE_COUNT];
+		profilingPassedFullCycle = false;
+	}
+
+	public int stopProfiling()
+	{
+		if( timeStatistics == null )
+			return 0;
+		long sum = 0;
+		int N = profilingPassedFullCycle ? PROFILING_SAMPLE_COUNT : timeStatisticsIndex;
+		for (int i = 0; i < N; ++i)
+			sum += timeStatistics[i];
+		timeStatistics = null;
+		return (int)(sum / N);
+	}
+
+	public boolean isProfiling()
+	{
+		return timeStatistics != null;
+	}
+
 	public void update()
 	{
+		long time = 0;
+		if( isProfiling() )
+			time = System.nanoTime();
 		for( final IGridCache gc : this.caches.values() )
 		{
 			// are there any nodes left?
@@ -270,6 +300,15 @@ public class Grid implements IGrid
 			{
 				gc.onUpdateTick();
 			}
+		}
+		if( isProfiling() )
+		{
+			++timeStatisticsIndex;
+			if (timeStatisticsIndex == PROFILING_SAMPLE_COUNT) {
+				profilingPassedFullCycle = true;
+				timeStatisticsIndex = 0;
+			}
+			timeStatistics[timeStatisticsIndex] = (int) (System.nanoTime() - time);
 		}
 	}
 

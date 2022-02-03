@@ -154,6 +154,12 @@ public class GuiImgButton extends GuiButton implements ITooltip
 			this.registerApp( 70, Settings.ACTIONS, ActionItems.ORE_FILTER, ButtonToolTips.OreFilter, ButtonToolTips.OreFilterHint );
 			this.registerApp( 71, Settings.ACTIONS, ActionItems.DOUBLE, ButtonToolTips.DoublePattern, ButtonToolTips.DoublePatternHint );
 			this.registerApp( 16 * 14 + 2, Settings.CRAFTING_STATUS, CraftingStatus.BUTTON, ButtonToolTips.CraftingStatus, ButtonToolTips.CraftingStatusDesc );
+
+			this.registerApp( 6 + 5 * 16, Settings.ACTIONS, ActionItems.MOLECULAR_ASSEMBLEERS_ON, ButtonToolTips.ToggleMolecularAssemblers, ButtonToolTips.ToggleMolecularAssemblersDescOn );
+			this.registerApp( 7 + 5 * 16, Settings.ACTIONS, ActionItems.TOGGLE_SHOW_FULL_INTERFACES_ON, ButtonToolTips.ToggleShowFullInterfaces, ButtonToolTips.ToggleShowFullInterfacesOnDesc );
+			this.registerApp( 8 + 5 * 16, Settings.ACTIONS, ActionItems.TOGGLE_SHOW_FULL_INTERFACES_OFF, ButtonToolTips.ToggleShowFullInterfaces, ButtonToolTips.ToggleShowFullInterfacesOffDesc );
+			this.registerApp( 9 + 5 * 16, Settings.ACTIONS, ActionItems.MOLECULAR_ASSEMBLEERS_OFF, ButtonToolTips.ToggleMolecularAssemblers, ButtonToolTips.ToggleMolecularAssemblersDescOff );
+			this.registerApp( 6 + 6 * 16, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE, ButtonToolTips.HighlightInterface, "" );
 		}
 	}
 

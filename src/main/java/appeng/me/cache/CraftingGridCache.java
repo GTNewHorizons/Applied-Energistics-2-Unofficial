@@ -57,6 +57,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 
 public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper, ICellProvider, IMEInventoryHandler<IAEStack>
@@ -279,17 +281,20 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 	{
 		this.craftingCPUClusters.clear();
 
-		for( final IGridNode cst : this.grid.getMachines( TileCraftingStorageTile.class ) )
+		for (Object cls: StreamSupport.stream(grid.getMachinesClasses().spliterator(),false).filter(c -> TileCraftingStorageTile.class.isAssignableFrom(c)).toArray())
 		{
-			final TileCraftingStorageTile tile = (TileCraftingStorageTile) cst.getMachine();
-			final CraftingCPUCluster cluster = (CraftingCPUCluster) tile.getCluster();
-			if( cluster != null )
+			for( final IGridNode cst : this.grid.getMachines( (Class<? extends IGridHost>) cls ) )
 			{
-				this.craftingCPUClusters.add( cluster );
-
-				if( cluster.getLastCraftingLink() != null )
+				final TileCraftingStorageTile tile = (TileCraftingStorageTile) cst.getMachine();
+				final CraftingCPUCluster cluster = (CraftingCPUCluster) tile.getCluster();
+				if( cluster != null )
 				{
-					this.addLink( (CraftingLink) cluster.getLastCraftingLink() );
+					this.craftingCPUClusters.add( cluster );
+
+					if( cluster.getLastCraftingLink() != null )
+					{
+						this.addLink( (CraftingLink) cluster.getLastCraftingLink() );
+					}
 				}
 			}
 		}
@@ -510,25 +515,23 @@ public class CraftingGridCache implements ICraftingGrid, ICraftingProviderHelper
 
 			Collections.sort( validCpusClusters, new Comparator<CraftingCPUCluster>()
 			{
+				private int compareInternal(CraftingCPUCluster firstCluster, CraftingCPUCluster nextCluster)
+				{
+					int comparison = ItemSorters.compareLong( nextCluster.getCoProcessors(), firstCluster.getCoProcessors() );
+					if( comparison == 0 )
+						comparison = ItemSorters.compareLong( nextCluster.getAvailableStorage(), firstCluster.getAvailableStorage() );
+					if( comparison == 0 )
+						return nextCluster.getName().compareTo(firstCluster.getName());
+					else
+						return comparison;
+				}
 				@Override
 				public int compare( final CraftingCPUCluster firstCluster, final CraftingCPUCluster nextCluster )
 				{
 					if( prioritizePower )
-					{
-						final int comparison = ItemSorters.compareLong( nextCluster.getCoProcessors(), firstCluster.getCoProcessors() );
-						if( comparison != 0 )
-						{
-							return comparison;
-						}
-						return ItemSorters.compareLong( nextCluster.getAvailableStorage(), firstCluster.getAvailableStorage() );
-					}
-
-					final int comparison = ItemSorters.compareLong( firstCluster.getCoProcessors(), nextCluster.getCoProcessors() );
-					if( comparison != 0 )
-					{
-						return comparison;
-					}
-					return ItemSorters.compareLong( firstCluster.getAvailableStorage(), nextCluster.getAvailableStorage() );
+						return compareInternal(firstCluster, nextCluster);
+					else
+						return compareInternal(nextCluster, firstCluster);
 				}
 			} );
 

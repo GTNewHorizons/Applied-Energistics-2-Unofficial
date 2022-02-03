@@ -106,24 +106,42 @@ public class ContainerCraftingStatus extends ContainerCraftingCPU
 	{
 		return c.isBusy();
 	}
+	
+	private void findByName()
+	{
+		int index = 0;
+		for (CraftingCPURecord c: cpus)
+		{
+			if (this.myName.equals(c.getName()))
+			{
+				this.selectedCpu = index;
+				break;
+			}
+			++index;
+		}
+	}
 
 	private void sendCPUs()
 	{
 		Collections.sort( this.cpus );
 
 		if( this.selectedCpu >= this.cpus.size() )
-		{
 			this.selectedCpu = -1;
+
+		if( this.selectedCpu == -1 )
 			this.myName = "";
-		}
-		else if( this.selectedCpu != -1 )
-		{
-			this.myName = this.cpus.get( this.selectedCpu ).getName();
-		}
+
+		if( this.myName != "" )
+			findByName();
 
 		if( this.selectedCpu == -1 && this.cpus.size() > 0 )
 		{
 			this.selectedCpu = 0;
+		}
+
+		if( this.selectedCpu != -1 )
+		{
+			this.myName = this.cpus.get( this.selectedCpu ).getName();
 		}
 
 		if( this.selectedCpu != -1 )

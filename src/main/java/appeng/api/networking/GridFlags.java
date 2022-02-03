@@ -65,5 +65,10 @@ public enum GridFlags
 	 * Indicates which path might be preferred, this only matters if two routes of equal length exist, ad only changes
 	 * the order they are processed in.
 	 */
-	PREFERRED
+	PREFERRED,
+
+	/**
+	 * This node can transmit 128 signals, this should only apply to Tier3 Cables only.
+	 */
+	ULTRA_DENSE_CAPACITY
 }

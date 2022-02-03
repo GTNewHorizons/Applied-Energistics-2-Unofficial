@@ -174,6 +174,19 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 
 	}
 
+	public void encodeAndMoveToInventory()
+	{
+		encode();
+		ItemStack output = this.patternSlotOUT.getStack();
+		if ( output != null )
+		{
+			if (!getPlayerInv().addItemStackToInventory( output )){
+				getPlayerInv().player.entityDropItem(output, 0);
+			}
+			this.patternSlotOUT.putStack( null );
+		}
+	}
+
 	public void encode()
 	{
 		ItemStack output = this.patternSlotOUT.getStack();
