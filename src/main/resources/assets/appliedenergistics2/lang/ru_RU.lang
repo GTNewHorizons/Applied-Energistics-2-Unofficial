@@ -62,14 +62,14 @@ tile.appliedenergistics2.SkyStoneSmallBrickStairBlock.name=Ступеньки и
 tile.appliedenergistics2.SkyStoneStairBlock.name=Ступеньки из небесного камня
 
 # Slabs
-tile.appliedenergistics2.ChiseledQuartzSlabBlock.name=Chiseled Certus Quartz Slabs
-tile.appliedenergistics2.FluixSlabBlock.name=Fluix Slabs
-tile.appliedenergistics2.QuartzPillarSlabBlock.name=Certus Quartz Pillar Slabs
-tile.appliedenergistics2.QuartzSlabBlock.name=Certus Quartz Slabs
-tile.appliedenergistics2.SkyStoneBlockSlabBlock.name=Sky Stone Block Slabs
-tile.appliedenergistics2.SkyStoneBrickSlabBlock.name=Sky Stone Brick Slabs
-tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.name=Sky Stone Small Brick Slabs
-tile.appliedenergistics2.SkyStoneSlabBlock.name=Sky Stone Slabs
+tile.appliedenergistics2.ChiseledQuartzSlabBlock.name=Плита из резного истинного кварца
+tile.appliedenergistics2.FluixSlabBlock.name=Изменьчивая плита
+tile.appliedenergistics2.QuartzPillarSlabBlock.name=Плита из колонны истинного кварца
+tile.appliedenergistics2.QuartzSlabBlock.name=Плита из истинного кварца
+tile.appliedenergistics2.SkyStoneBlockSlabBlock.name=Плита из блока небесного камня
+tile.appliedenergistics2.SkyStoneBrickSlabBlock.name=Плита из кирпича небесного камня
+tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.name=Плита из малого кирпича небесного камня
+tile.appliedenergistics2.SkyStoneSlabBlock.name=Плита из небесного камня
 
 # Chat Messages
 chat.appliedenergistics2.ChestCannotReadStorageCell=МЭ сундук не может прочитать ячейку хранения.
