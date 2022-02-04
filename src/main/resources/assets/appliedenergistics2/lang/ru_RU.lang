@@ -436,7 +436,7 @@ item.appliedenergistics2.ItemMaterial.AdvCard.name=Продвинутая кар
 
 
 item.appliedenergistics2.ItemMaterial.CardCapacity.name=Карта ёмкости
-item.appliedenergistics2.ItemMaterial.CardPatternCapacity.name=Карта ёмкости шаблона
+item.appliedenergistics2.ItemMaterial.CardPatternCapacity.name=Карта ёмкости интерфейса
 item.appliedenergistics2.ItemMaterial.CardFuzzy.name=Карта нечёткости
 item.appliedenergistics2.ItemMaterial.CardInverter.name=Карта инвертирования
 item.appliedenergistics2.ItemMaterial.CardRedstone.name=Карта красного камня
