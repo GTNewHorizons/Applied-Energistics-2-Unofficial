@@ -250,15 +250,18 @@ gui.tooltips.appliedenergistics2.StashDesc=Return items on the crafting grid to 
 gui.tooltips.appliedenergistics2.Substitutions=Ore-Dict Substitutions
 gui.tooltips.appliedenergistics2.SubstitutionsDescEnabled=Allow substitutions of input components.
 gui.tooltips.appliedenergistics2.SubstitutionsDescDisabled=Prevent substitutions of input components.
+
 gui.tooltips.appliedenergistics2.PatternSlotConfigTitle=Switch Terminal Mode
 gui.tooltips.appliedenergistics2.PatternSlotConfigInfo=Switch slot pattern mode beween (16 -> 4) and (4 -> 16)
 gui.tooltips.appliedenergistics2.Encode=Encode Pattern
 gui.tooltips.appliedenergistics2.EncodeDescription=Write the entered pattern to the current encoded pattern, or to available blank pattern. Hold Shift to transfer directly to your inventory
+
 gui.tooltips.appliedenergistics2.FuzzyMode=Fuzzy Comparison
 gui.tooltips.appliedenergistics2.FZPercent_25=Split Damage at 25%
 gui.tooltips.appliedenergistics2.FZPercent_50=Split Damage at 50%
 gui.tooltips.appliedenergistics2.FZPercent_75=Split Damage at 75%
 gui.tooltips.appliedenergistics2.FZPercent_99=Split Damage at 99%
+
 gui.tooltips.appliedenergistics2.SortOrder=Sort Order
 gui.tooltips.appliedenergistics2.SortBy=Sort By
 gui.tooltips.appliedenergistics2.FZIgnoreAll=Match Any
@@ -266,6 +269,7 @@ gui.tooltips.appliedenergistics2.TransferDirection=Transfer Direction
 gui.tooltips.appliedenergistics2.TransferToNetwork=Transfer data to Network
 gui.tooltips.appliedenergistics2.TransferToStorageCell=Transfer data to Storage Cell
 gui.tooltips.appliedenergistics2.ToggleSortDirection=Toggle sorting direction
+
 gui.tooltips.appliedenergistics2.StoredItems=Stored Items
 gui.tooltips.appliedenergistics2.StoredCraftable=Stored / Craftable
 gui.tooltips.appliedenergistics2.View=View
@@ -279,6 +283,7 @@ gui.tooltips.appliedenergistics2.CondenserOutput=ME Condenser - Output
 gui.tooltips.appliedenergistics2.PartitionStorage=Partition Storage
 gui.tooltips.appliedenergistics2.Clear=Clear
 gui.tooltips.appliedenergistics2.TrashController=Deletion via Shift / Space Clicking.
+
 gui.tooltips.appliedenergistics2.InterfaceBlockingMode=Blocking Mode
 gui.tooltips.appliedenergistics2.InterfaceCraftingMode=Crafting Mode
 gui.tooltips.appliedenergistics2.Trash=Destroy Items
@@ -287,17 +292,20 @@ gui.tooltips.appliedenergistics2.Singularity=Condense Into Singularities\n%s per
 gui.tooltips.appliedenergistics2.Read=Extract Only
 gui.tooltips.appliedenergistics2.Write=Insert Only
 gui.tooltips.appliedenergistics2.ReadWrite=Bi-Directional
+
 gui.tooltips.appliedenergistics2.AlwaysActive=Always active
 gui.tooltips.appliedenergistics2.ActiveWithoutSignal=Active without signal
 gui.tooltips.appliedenergistics2.ActiveWithSignal=Active with signal
 gui.tooltips.appliedenergistics2.ActiveOnPulse=Activate once per pulse
 gui.tooltips.appliedenergistics2.EmitLevelsBelow=Emit when levels are below limit.
 gui.tooltips.appliedenergistics2.EmitLevelAbove=Emit when levels are above or equal to limit.
+
 gui.tooltips.appliedenergistics2.SearchMode_Auto=Auto Search
 gui.tooltips.appliedenergistics2.SearchMode_Standard=Standard Search
 gui.tooltips.appliedenergistics2.SearchMode_NEIAuto=NEI Synchronized Auto
 gui.tooltips.appliedenergistics2.SearchMode_NEIStandard=NEI Synchronized Standard
 gui.tooltips.appliedenergistics2.SearchMode=Search Box Mode
+
 gui.tooltips.appliedenergistics2.PartitionStorageHint=Configures Partition based on currently stored items.
 gui.tooltips.appliedenergistics2.ClearSettings=Clear Config/Settings
 gui.tooltips.appliedenergistics2.Craftable=Craftable
@@ -320,20 +328,25 @@ gui.tooltips.appliedenergistics2.TerminalStyle=Terminal Style
 gui.tooltips.appliedenergistics2.TerminalStyle_Full=Full Screen Terminal
 gui.tooltips.appliedenergistics2.TerminalStyle_Tall=Tall Centered Terminal
 gui.tooltips.appliedenergistics2.TerminalStyle_Small=Small Centered Terminal
+
 gui.tooltips.appliedenergistics2.DoesntDespawn=This item won't de-spawn.
 gui.tooltips.appliedenergistics2.EmitterMode=Crafting Emitter Mode
 gui.tooltips.appliedenergistics2.CraftViaRedstone=Emit Redstone to craft item.
 gui.tooltips.appliedenergistics2.EmitWhenCrafting=Emit Redstone while item is crafting.
+
 gui.tooltips.appliedenergistics2.ReportInaccessibleItems=Report Inaccessible Items
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=Yes: Items that cannot be extracted will be visible.
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=No: Only extractable items will be visible.
+
 gui.tooltips.appliedenergistics2.BlockPlacement=Block Placement
 gui.tooltips.appliedenergistics2.BlockPlacementYes=Blocks will be placed as block.
 gui.tooltips.appliedenergistics2.BlockPlacementNo=Blocks will be dropped as item.
+
 gui.tooltips.appliedenergistics2.SchedulingMode=Scheduling Mode
 gui.tooltips.appliedenergistics2.SchedulingModeDefault=Export the first item until the network is empty, then try the next ones.
 gui.tooltips.appliedenergistics2.SchedulingModeRoundRobin=Export using round robin mode.
 gui.tooltips.appliedenergistics2.SchedulingModeRandom=Export items in random mode.
+
 gui.tooltips.appliedenergistics2.ItemsStored=Items Stored: %s
 gui.tooltips.appliedenergistics2.ItemsRequestable=Items Requestable: %s
 gui.tooltips.appliedenergistics2.P2PFrequency=Frequency: %s
@@ -411,12 +424,17 @@ item.appliedenergistics2.ItemFacade.name=Cable Facade
 item.appliedenergistics2.ItemCrystalSeed.Certus.name=Certus Quartz Seed
 item.appliedenergistics2.ItemCrystalSeed.Nether.name=Nether Quartz Seed
 item.appliedenergistics2.ItemCrystalSeed.Fluix.name=Fluix Seed
+
+item.appliedenergistics2.ItemPart.InvalidType.name=Disabled Item
 item.appliedenergistics2.ItemMaterial.InvalidType.name=This Item Is Disabled.
-item.appliedenergistics2.ItemMaterial.AdvCard.name=Advanced Card
+
+item.appliedenergistics2.ItemMaterial.BlankPattern.name=Blank Pattern
+item.appliedenergistics2.ItemMaterial.FormationCore.name=Formation Core
 item.appliedenergistics2.ItemMaterial.AnnihilationCore.name=Annihilation Core
 item.appliedenergistics2.ItemMaterial.BasicCard.name=Basic Card
-item.appliedenergistics2.ItemMaterial.BlankPattern.name=Blank Pattern
-item.appliedenergistics2.ItemMaterial.CalcProcessor.name=Calculation Processor
+item.appliedenergistics2.ItemMaterial.AdvCard.name=Advanced Card
+
+
 item.appliedenergistics2.ItemMaterial.CardCapacity.name=Capacity Card
 item.appliedenergistics2.ItemMaterial.CardPatternCapacity.name=Pattern Capacity Card
 item.appliedenergistics2.ItemMaterial.CardFuzzy.name=Fuzzy Card
@@ -424,29 +442,32 @@ item.appliedenergistics2.ItemMaterial.CardInverter.name=Inverter Card
 item.appliedenergistics2.ItemMaterial.CardRedstone.name=Redstone Card
 item.appliedenergistics2.ItemMaterial.CardSpeed.name=Acceleration Card
 item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Oredictionary Filter Card
+
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³ Spatial Component
 item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=16³ Spatial Component
 item.appliedenergistics2.ItemMaterial.Cell128SpatialPart.name=128³ Spatial Component
+
 item.appliedenergistics2.ItemMaterial.Cell1kPart.name=1k ME Storage Component
 item.appliedenergistics2.ItemMaterial.Cell4kPart.name=4k ME Storage Component
 item.appliedenergistics2.ItemMaterial.Cell16kPart.name=16k ME Storage Component
 item.appliedenergistics2.ItemMaterial.Cell64kPart.name=64k ME Storage Component
+
 item.appliedenergistics2.ItemMaterial.CertusQuartzCrystal.name=Certus Quartz Crystal
 item.appliedenergistics2.ItemMaterial.CertusQuartzCrystalCharged.name=Charged Certus Quartz Crystal
 item.appliedenergistics2.ItemMaterial.CertusQuartzDust.name=Certus Quartz Dust
 item.appliedenergistics2.ItemMaterial.EmptyStorageCell.name=ME Storage Housing
 item.appliedenergistics2.ItemMaterial.EnderDust.name=Ender Dust
-item.appliedenergistics2.ItemMaterial.EngProcessor.name=Engineering Processor
+
 item.appliedenergistics2.ItemMaterial.Flour.name=Flour
 item.appliedenergistics2.ItemMaterial.FluixCrystal.name=Fluix Crystal
 item.appliedenergistics2.ItemMaterial.FluixDust.name=Fluix Dust
 item.appliedenergistics2.ItemMaterial.FluixPearl.name=Fluix Pearl
-item.appliedenergistics2.ItemMaterial.FormationCore.name=Formation Core
+
 item.appliedenergistics2.ItemMaterial.GoldDust.name=Gold Dust
 item.appliedenergistics2.ItemMaterial.IronDust.name=Iron Dust
 item.appliedenergistics2.ItemMaterial.IronNugget.name=Iron Nugget
-item.appliedenergistics2.ItemMaterial.LogicProcessor.name=Logic Processor
-item.appliedenergistics2.ItemMaterial.LogicProcessorAsm.name=Unfinished Logic Processor
+
+
 item.appliedenergistics2.ItemMaterial.MatterBall.name=Matter Ball
 item.appliedenergistics2.ItemMaterial.NetherQuartzDust.name=Nether Quartz Dust
 item.appliedenergistics2.ItemMaterial.PurifiedCertusQuartzCrystal.name=Pure Certus Quartz Crystal
@@ -458,18 +479,27 @@ item.appliedenergistics2.ItemMaterial.Singularity.name=Singularity
 item.appliedenergistics2.ItemMaterial.Wireless.name=Wireless Receiver
 item.appliedenergistics2.ItemMaterial.WirelessBooster.name=Wireless Booster
 item.appliedenergistics2.ItemMaterial.WoodenGear.name=Wooden Gear
+
+item.appliedenergistics2.ItemMaterial.NamePress.name=Inscriber Name Press
 item.appliedenergistics2.ItemMaterial.EngProcessorPress.name=Inscriber Engineering Press
 item.appliedenergistics2.ItemMaterial.CalcProcessorPress.name=Inscriber Calculation Press
 item.appliedenergistics2.ItemMaterial.LogicProcessorPress.name=Inscriber Logic Press
+item.appliedenergistics2.ItemMaterial.SiliconPress.name=Inscriber Silicon Press
+
 item.appliedenergistics2.ItemMaterial.EngProcessorPrint.name=Printed Engineering Circuit
 item.appliedenergistics2.ItemMaterial.CalcProcessorPrint.name=Printed Calculation Circuit
 item.appliedenergistics2.ItemMaterial.LogicProcessorPrint.name=Printed Logic Circuit
-item.appliedenergistics2.ItemMaterial.SiliconPress.name=Inscriber Silicon Press
 item.appliedenergistics2.ItemMaterial.SiliconPrint.name=Printed Silicon
-item.appliedenergistics2.ItemMaterial.NamePress.name=Inscriber Name Press
+
+item.appliedenergistics2.ItemMaterial.EngProcessor.name=Engineering Processor
+item.appliedenergistics2.ItemMaterial.CalcProcessor.name=Calculation Processor
+item.appliedenergistics2.ItemMaterial.LogicProcessor.name=Logic Processor
+item.appliedenergistics2.ItemMaterial.LogicProcessorAsm.name=Unfinished Logic Processor
+
 item.appliedenergistics2.ItemMaterial.SkyDust.name=Sky Stone Dust
 item.appliedenergistics2.ItemMaterial.CardCrafting.name=Crafting Card
 
+item.appliedenergistics2.ItemPart.FormationPlane.name=ME Formation Plane
 item.appliedenergistics2.ItemPart.AnnihilationPlane.name=ME Annihilation Plane
 item.appliedenergistics2.ItemPart.IdentityAnnihilationPlane.name=ME Identity Annihilation Plane
 item.appliedenergistics2.ItemPart.CableAnchor.name=Cable Anchor
@@ -482,12 +512,11 @@ item.appliedenergistics2.ItemPart.CableUltraDenseCovered.name=ME Backbone Covere
 item.appliedenergistics2.ItemPart.CableUltraDenseSmart.name=ME Backbone Smart Cable
 item.appliedenergistics2.ItemPart.StorageMonitor.name=ME Storage Monitor
 item.appliedenergistics2.ItemPart.ConversionMonitor.name=ME Conversion Monitor
-item.appliedenergistics2.ItemPart.CraftingTerminal.name=ME Crafting Terminal
 item.appliedenergistics2.ItemPart.SemiDarkMonitor.name=Illuminated Panel
 item.appliedenergistics2.ItemPart.Monitor.name=Bright Illuminated Panel
 item.appliedenergistics2.ItemPart.DarkMonitor.name=Dark Illuminated Panel
+
 item.appliedenergistics2.ItemPart.ExportBus.name=ME Export Bus
-item.appliedenergistics2.ItemPart.FormationPlane.name=ME Formation Plane
 item.appliedenergistics2.ItemPart.ImportBus.name=ME Import Bus
 item.appliedenergistics2.ItemPart.Interface.name=ME Interface
 item.appliedenergistics2.ItemPart.LevelEmitter.name=ME Level Emitter
@@ -497,11 +526,11 @@ item.appliedenergistics2.ItemPart.PatternTerminalEx.name=ME Processing Pattern T
 item.appliedenergistics2.ItemPart.QuartzFiber.name=Quartz Fiber
 item.appliedenergistics2.ItemPart.StorageBus.name=ME Storage Bus
 item.appliedenergistics2.ItemPart.Terminal.name=ME Terminal
+item.appliedenergistics2.ItemPart.CraftingTerminal.name=ME Crafting Terminal
+item.appliedenergistics2.ItemPart.InterfaceTerminal.name=ME Interface Terminal
 item.appliedenergistics2.ItemPart.InvertedToggleBus.name=ME Inverted Toggle Bus
 item.appliedenergistics2.ItemPart.ToggleBus.name=ME Toggle Bus
 item.appliedenergistics2.ItemPart.CraftingMonitor.name=ME Crafting Monitor
-item.appliedenergistics2.ItemPart.InterfaceTerminal.name=ME Interface Terminal
-item.appliedenergistics2.ItemPart.InvalidType.name=Disabled Item
 
 item.appliedenergistics2.ItemSpatialStorageCell.128Cubed.name=128³ Spatial Storage Cell
 item.appliedenergistics2.ItemSpatialStorageCell.16Cubed.name=16³ Spatial Storage Cell
