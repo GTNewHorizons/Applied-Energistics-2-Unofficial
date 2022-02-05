@@ -20,6 +20,8 @@ package appeng.integration.modules;
 
 
 import appeng.client.gui.AEBaseMEGui;
+import appeng.client.gui.implementations.GuiCraftConfirm;
+import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiCraftingTerm;
 import appeng.client.gui.implementations.GuiPatternTerm;
 import appeng.core.AEConfig;
@@ -33,6 +35,7 @@ import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.IStackPositioner;
 import codechicken.nei.guihook.GuiContainerManager;
 import codechicken.nei.guihook.IContainerTooltipHandler;
+import codechicken.nei.guihook.IContainerObjectHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -46,7 +49,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 
-public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule
+public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, IContainerObjectHandler
 {
 	@Reflected
 	public static NEI instance;
@@ -94,6 +97,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule
 
 		// large stack tooltips
 		GuiContainerManager.addTooltipHandler( this );
+		GuiContainerManager.addObjectHandler(this);
 
 		// crafting terminal...
 		final Method registerGuiOverlay = this.apiClass.getDeclaredMethod( "registerGuiOverlay", Class.class, String.class, IStackPositioner.class );
@@ -181,5 +185,38 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule
 		}
 
 		return currentToolTip;
+	}
+	@Override
+	public void guiTick(GuiContainer gui) {
+
+	}
+
+	@Override
+	public void refresh(GuiContainer gui) {
+
+	}
+
+	@Override
+	public void load(GuiContainer gui) {
+
+	}
+
+	@Override
+	public ItemStack getStackUnderMouse(GuiContainer gui, int mousex, int mousey) {
+		if (gui instanceof GuiCraftConfirm)
+			return ((GuiCraftConfirm)gui).getStackUnderMouse(mousex, mousey);
+		else if (gui instanceof GuiCraftingCPU)
+			return ((GuiCraftingCPU)gui).getStackUnderMouse(mousex, mousey);
+		return null;
+	}
+
+	@Override
+	public boolean objectUnderMouse(GuiContainer gui, int mousex, int mousey) {
+		return false;
+	}
+
+	@Override
+	public boolean shouldShowTooltip(GuiContainer gui) {
+		return true;
 	}
 }

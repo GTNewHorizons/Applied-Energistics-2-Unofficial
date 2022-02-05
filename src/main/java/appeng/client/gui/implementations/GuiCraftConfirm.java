@@ -71,6 +71,7 @@ public class GuiCraftConfirm extends AEBaseGui
 	private GuiButton start;
 	private GuiButton selectCPU;
 	private int tooltip = -1;
+	private ItemStack hoveredStack;
 
 	public GuiCraftConfirm( final InventoryPlayer inventoryPlayer, final ITerminalHost te )
 	{
@@ -241,6 +242,7 @@ public class GuiCraftConfirm extends AEBaseGui
 		final List<String> lineList = new LinkedList<String>();
 		int toolPosX = 0;
 		int toolPosY = 0;
+		hoveredStack = null;
 
 		final int offY = 23;
 
@@ -363,6 +365,8 @@ public class GuiCraftConfirm extends AEBaseGui
 
 					toolPosX = x * ( 1 + sectionLength ) + xo + sectionLength - 8;
 					toolPosY = y * offY + yo;
+
+					hoveredStack = is;
 				}
 
 				this.drawItem( posX, posY, is );
@@ -579,5 +583,8 @@ public class GuiCraftConfirm extends AEBaseGui
 				AELog.debug( e );
 			}
 		}
+	}
+	public ItemStack getStackUnderMouse(int mousex, int mousey) {
+		return hoveredStack;
 	}
 }
