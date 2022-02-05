@@ -154,6 +154,7 @@ public class GuiCraftAmount extends AEBaseGui
 		this.amountToCraft.setVisible( true );
 		this.amountToCraft.setFocused( true );
 		this.amountToCraft.setText( "1" );
+		this.amountToCraft.setSelectionPos(0);
 	}
 
 	@Override
