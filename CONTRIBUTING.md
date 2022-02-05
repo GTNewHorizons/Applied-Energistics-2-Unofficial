@@ -12,7 +12,7 @@ top of things.
 Applied Energistics 2 crashing, have a suggestion, found a bug?  Create an issue now!
 
 1. Make sure your issue has not already been answered or fixed and you are using the latest version. Also think about whether your issue is a valid one before submitting it.
-2. Go to [the issues page](https://github.com/AppliedEnergistics/Applied-Energistics-2/issues) and click [new issue](https://github.com/AppliedEnergistics/Applied-Energistics-2/issues/new)
+2. Go to [the issues page](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/issues) and click [new issue](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/issues/new)
 3. Enter your a title of your issue (something that summarizes your issue), and then create a detailed description of the issue.
     * Do not tag it with something like `[Feature]` or `[Bug]`. When it is applicable, we will take care of it.
     * The following details are required. Not including them can cause the issue to be closed.

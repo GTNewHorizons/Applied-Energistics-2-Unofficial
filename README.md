@@ -22,14 +22,13 @@
 
 >A Mod about Matter, Energy and using them to conquer the world..
 
-This project is to fix some bugs in Applied Energistics 2 that are no longer maintained for version 1.7.10. This project will also be discontinued after the vast majority of players have transitioned to over MC1.7.10.
+This project is a GTNH fork of Applied Energistics 2 for Minecraft 1.7.10
 
 ## Contacts
 
-* [Website](http://ae-mod.info/) _This website will contain nothing about this unofficial version._
-* [IRC #appliedenergistics on esper.net](http://webchat.esper.net/?channels=appliedenergistics&prompt=1)
-* [Original GitHub](https://github.com/xsun2001/Applied-Energistics-2-Unofficial)
-* [GitHub](https://github.com/AppliedEnergistics/Applied-Energistics-2)
+* [Website](https://appliedenergistics.github.io) _This website will contain nothing about this unofficial version._
+* [GitHub](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial)
+* [GTNH Discord](https://discord.gg/gtnh)
 
 ## License
 
@@ -47,9 +46,7 @@ This project is to fix some bugs in Applied Energistics 2 that are no longer mai
 
 ## Downloads
 
-You can find its download address at [GitHub releases](https://github.com/xsun2001/Applied-Energistics-2-Unofficial/releases).
-
-The early build will be find at [AppVeyor](https://ci.appveyor.com/project/xsun2001/applied-energistics-2-unofficial/build/artifacts).
+CI builds are available at [Jenkins](http://jenkins.usrv.eu:8080/job/Applied-Energistics).
 
 ## Installation
 
@@ -60,11 +57,10 @@ You install this mod by putting it into the `minecraft/mods/` folder. It has no 
 Applied Energistics 2 crashing, have a suggestion, found a bug?  Create an issue now!
 
 1. Make sure your issue has not already been answered or fixed and you are using the latest version. Also think about whether your issue is a valid one before submitting it.
-2. Go to [the issues page](https://github.com/xsun2001/Applied-Energistics-2-Unofficial/issues) and click [new issue](https://github.com/xsun2001/Applied-Energistics-2-Unofficial/issues/new)
+2. Go to [the issues page](https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/issues) and click [new issue](https://github.com/GTNewHorizons/GT-New-Horizons-Modpack/issues/new)
+2.1 Alternatively, if you use AE2 outside of GTNH go to [the AE issues page](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/issues) and click [new issue](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/issues/new)
 3. Enter your a title of your issue (something that summarizes your issue), and then create a detailed description of the issue.
-    * Do not tag it with something like `[Feature]` or `[Bug]`. When it is applicable, we will take care of it.
     * The following details are required. Not including them can cause the issue to be closed.
-        * Forge version
         * AE2 version
         * Crash log, when reporting a crash (Please make sure to use [pastebin](http://pastebin.com/))
             * Do not post an excerpt of what you consider important, instead:
@@ -88,12 +84,11 @@ Providing as many details as possible does help us to find and resolve the issue
 ## Building
 
 1. Clone this repository via 
-  - SSH `git clone git@github.com:xsun2001/Applied-Energistics-2-Unofficial.git` or 
-  - HTTPS `git clone https://github.com/xsun2001/Applied-Energistics-2-Unofficial.git`
+  - SSH `git clone git@github.com:GTNewHorizons/Applied-Energistics-2-Unofficial.git` or 
+  - HTTPS `git clone https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial.git`
 2. Setup workspace 
   - Decompiled source `gradlew setupDecompWorkspace`
   - Obfuscated source `gradlew setupDevWorkspace`
-  - CI server `gradlew setupCIWorkspace`
 3. Build `gradlew build`. Jar will be in `build/libs`
 4. For core developer: Setup IDE
   - IntelliJ: Import into IDE and execute `gradlew genIntellijRuns` afterwards
@@ -107,7 +102,7 @@ Providing as many details as possible does help us to find and resolve the issue
 Before you want to add major changes, you might want to discuss them with us first, before wasting your time.
 If you are still willing to contribute to this project, you can contribute via [Pull-Request](https://help.github.com/articles/creating-a-pull-request).
 
-The [guidelines for contributing](https://github.com/xsun2001/Applied-Energistics-2-Unofficial/blob/master/CONTRIBUTING.md) contain more detailed information about topics like the used code style and should also be considered.
+The [guidelines for contributing](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/blob/master/CONTRIBUTING.md) contain more detailed information about topics like the used code style and should also be considered.
 
 Here are a few things to keep in mind that will help get your PR approved.
 
@@ -139,7 +134,7 @@ If you are only doing single file pull requests, GitHub supports using a quick w
 
 The API for Applied Energistics 2. It is open source to discuss changes, improve documentation, and provide better add-on support in general.
 
-Development and standard builds can be obtained at [GitHub releases](https://github.com/xsun2001/Applied-Energistics-2-Unofficial/releases) too.
+Development and standard builds can be obtained at [GTNH Jenkins](http://jenkins.usrv.eu:8080/job/Applied-Energistics) too.
 
 ### Maven
 
@@ -190,4 +185,4 @@ Thanks to
 * Notch et al for Minecraft
 * Lex et al for MinecraftForge
 * AlgorithmX2 for AppliedEnergistics2
-* all [contributors](https://github.com/xsun2001/Applied-Energistics-2-Unofficial/graphs/contributors)
+* all [contributors](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/graphs/contributors)
