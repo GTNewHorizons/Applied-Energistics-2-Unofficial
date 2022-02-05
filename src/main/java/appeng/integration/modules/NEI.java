@@ -204,9 +204,9 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
 	@Override
 	public ItemStack getStackUnderMouse(GuiContainer gui, int mousex, int mousey) {
 		if (gui instanceof GuiCraftConfirm)
-			return ((GuiCraftConfirm)gui).getStackUnderMouse(mousex, mousey);
+			return ((GuiCraftConfirm)gui).getHoveredStack();
 		else if (gui instanceof GuiCraftingCPU)
-			return ((GuiCraftingCPU)gui).getStackUnderMouse(mousex, mousey);
+			return ((GuiCraftingCPU)gui).getHoveredStack();
 		return null;
 	}
 
@@ -217,6 +217,10 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
 
 	@Override
 	public boolean shouldShowTooltip(GuiContainer gui) {
+		if (gui instanceof GuiCraftConfirm)
+			return ((GuiCraftConfirm)gui).getHoveredStack() == null;
+		if (gui instanceof GuiCraftingCPU)
+			return ((GuiCraftingCPU)gui).getHoveredStack() == null;
 		return true;
 	}
 }

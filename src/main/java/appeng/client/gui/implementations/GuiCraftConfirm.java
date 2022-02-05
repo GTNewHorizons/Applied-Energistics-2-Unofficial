@@ -584,7 +584,7 @@ public class GuiCraftConfirm extends AEBaseGui
 			}
 		}
 	}
-	public ItemStack getStackUnderMouse(int mousex, int mousey) {
+	public ItemStack getHoveredStack() {
 		return hoveredStack;
 	}
 }

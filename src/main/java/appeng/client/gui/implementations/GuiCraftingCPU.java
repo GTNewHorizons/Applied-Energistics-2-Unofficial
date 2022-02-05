@@ -493,7 +493,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource
 		return ViewItems.ALL;
 	}
 
-	public ItemStack getStackUnderMouse(int mousex, int mousey) {
+	public ItemStack getHoveredStack() {
 		return hoveredStack;
 	}
 }
