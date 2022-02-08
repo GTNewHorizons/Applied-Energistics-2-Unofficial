@@ -27,7 +27,7 @@ dependencies {
         transitive = false
     }
 
-    compileOnly("com.mod-buildcraft:buildcraft:7.1.23:dev") {
+    compileOnly("com.github.GTNewHorizons:BuildCraft:7.1.26:dev") {
         transitive = false
     }
     compile("curse.maven:cofh-core-69162:2388751") {
