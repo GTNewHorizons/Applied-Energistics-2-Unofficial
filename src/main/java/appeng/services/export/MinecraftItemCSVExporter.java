@@ -24,7 +24,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.registry.FMLControlledNamespacedRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
@@ -210,70 +209,76 @@ final class MinecraftItemCSVExporter implements Exporter
 
 		@Nullable
 		@Override
-		public String apply( @Nullable final Item input ) {
-			if (FMLCommonHandler.instance().getSide().isClient()) {
-				if (input == null) {
-					AELog.debug(EXPORTING_NOTHING_MESSAGE);
+		public String apply( @Nullable final Item input )
+		{
+			if( input == null )
+			{
+				AELog.debug( EXPORTING_NOTHING_MESSAGE );
 
-					return null;
-				} else {
-					AELog.debug(EXPORTING_SUBTYPES_MESSAGE, input.getUnlocalizedName(), input.getHasSubtypes());
-				}
-
-				final String itemName = this.itemRegistry.getNameForObject(input);
-				final boolean hasSubtypes = input.getHasSubtypes();
-				if (hasSubtypes) {
-
-					final CreativeTabs creativeTab = input.getCreativeTab();
-					final List<ItemStack> stacks = Lists.newArrayList();
-
-					// modifies the stacks list and adds the different sub types to it
-					try {
-						input.getSubItems(input, creativeTab, stacks);
-					} catch (final Exception ignored) {
-						AELog.warn(EXPORTING_SUBTYPES_FAILED_MESSAGE, input.getUnlocalizedName());
-						AELog.debug(ignored);
-
-						// ignore if mods do bullshit in their code
-						return null;
-					}
-
-					// list can be empty, no clue why
-					if (stacks.isEmpty()) {
-						return null;
-					}
-
-					final Joiner newLineJoiner = Joiner.on('\n');
-					final Joiner typeJoiner = newLineJoiner.skipNulls();
-					final List<String> transformedTypes = Lists.transform(stacks, new TypeExtractFunction(itemName, this.mode));
-
-					return typeJoiner.join(transformedTypes);
-				}
-
-				final List<String> joinedBlockAttributes = Lists.newArrayListWithCapacity(5);
-				final String unlocalizedItem = input.getUnlocalizedName();
-				final String localization = StatCollector.translateToLocal(unlocalizedItem + LOCALIZATION_NAME_EXTENSION);
-
-				joinedBlockAttributes.add(itemName);
-				joinedBlockAttributes.add(localization);
-
-				if (this.mode == ExportMode.VERBOSE) {
-					final Block block = Block.getBlockFromItem(input);
-					final boolean isBlock = !block.equals(Blocks.air);
-					final Class<? extends Item> itemClass = input.getClass();
-					final String itemClassName = itemClass.getName();
-
-					joinedBlockAttributes.add(unlocalizedItem);
-					joinedBlockAttributes.add(Boolean.toString(isBlock));
-					joinedBlockAttributes.add(itemClassName);
-				}
-
-				final Joiner csvJoiner = Joiner.on(", ");
-				final Joiner csvJoinerIgnoringNulls = csvJoiner.skipNulls();
-
-				return csvJoinerIgnoringNulls.join(joinedBlockAttributes);
+				return null;
 			}
-			else return null;
+			else
+			{
+				AELog.debug( EXPORTING_SUBTYPES_MESSAGE, input.getUnlocalizedName(), input.getHasSubtypes() );
+			}
+
+			final String itemName = this.itemRegistry.getNameForObject( input );
+			final boolean hasSubtypes = input.getHasSubtypes();
+			if( hasSubtypes )
+			{
+				final CreativeTabs creativeTab = input.getCreativeTab();
+				final List<ItemStack> stacks = Lists.newArrayList();
+
+				// modifies the stacks list and adds the different sub types to it
+				try
+				{
+					input.getSubItems( input, creativeTab, stacks );
+				}
+				catch( final Exception ignored )
+				{
+					AELog.warn( EXPORTING_SUBTYPES_FAILED_MESSAGE, input.getUnlocalizedName() );
+					AELog.debug( ignored );
+
+					// ignore if mods do bullshit in their code
+					return null;
+				}
+
+				// list can be empty, no clue why
+				if( stacks.isEmpty() )
+				{
+					return null;
+				}
+
+				final Joiner newLineJoiner = Joiner.on( '\n' );
+				final Joiner typeJoiner = newLineJoiner.skipNulls();
+				final List<String> transformedTypes = Lists.transform( stacks, new TypeExtractFunction( itemName, this.mode ) );
+
+				return typeJoiner.join( transformedTypes );
+			}
+
+			final List<String> joinedBlockAttributes = Lists.newArrayListWithCapacity( 5 );
+			final String unlocalizedItem = input.getUnlocalizedName();
+			final String localization = StatCollector.translateToLocal( unlocalizedItem + LOCALIZATION_NAME_EXTENSION );
+
+			joinedBlockAttributes.add( itemName );
+			joinedBlockAttributes.add( localization );
+
+			if( this.mode == ExportMode.VERBOSE )
+			{
+				final Block block = Block.getBlockFromItem( input );
+				final boolean isBlock = !block.equals( Blocks.air );
+				final Class<? extends Item> itemClass = input.getClass();
+				final String itemClassName = itemClass.getName();
+
+				joinedBlockAttributes.add( unlocalizedItem );
+				joinedBlockAttributes.add( Boolean.toString( isBlock ) );
+				joinedBlockAttributes.add( itemClassName );
+			}
+
+			final Joiner csvJoiner = Joiner.on( ", " );
+			final Joiner csvJoinerIgnoringNulls = csvJoiner.skipNulls();
+
+			return csvJoinerIgnoringNulls.join( joinedBlockAttributes );
 		}
 	}
 }
