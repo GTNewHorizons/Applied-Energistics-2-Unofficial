@@ -16,7 +16,7 @@ dependencies {
 
     compileOnly('net.industrial-craft:industrialcraft-2:2.2.828-experimental:api')
     compileOnly('curse.maven:minefactory-reloaded-66672:2366150')
-    compileOnly('pneumaticCraft:PneumaticCraft-1.7.10:1.12.7-152:api')
+    compileOnly('pneumaticCraft:PneumaticCraft-1.7.10:1.12.7-152:api') {transitive = false}
     compileOnly('curse.maven:better-storage-232919:2731636')
     compileOnly('api:immibis:1')
 
