@@ -59,8 +59,13 @@ public final class PowerStateWailaDataProvider extends BaseWailaDataProvider
 
 			final boolean isActive = state.isActive();
 			final boolean isPowered = state.isPowered();
+			final boolean isBooting = state.isBooting();
 
-			if( isActive && isPowered )
+			if (isBooting)
+			{
+				currentToolTip.add( WailaText.Booting.getLocal() );
+			}
+			else if( isActive && isPowered )
 			{
 				currentToolTip.add( WailaText.DeviceOnline.getLocal() );
 			}

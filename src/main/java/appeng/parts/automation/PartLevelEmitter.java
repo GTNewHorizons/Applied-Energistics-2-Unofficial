@@ -74,7 +74,7 @@ public class PartLevelEmitter extends PartUpgradeable
 		implements IEnergyWatcherHost, IStackWatcherHost, ICraftingWatcherHost, IMEMonitorHandlerReceiver<IAEItemStack>, ICraftingProvider
 {
 
-	private static final int FLAG_ON = 4;
+	private static final int FLAG_ON = 8;
 
 	private final AppEngInternalAEInventory config = new AppEngInternalAEInventory( this, 1 );
 

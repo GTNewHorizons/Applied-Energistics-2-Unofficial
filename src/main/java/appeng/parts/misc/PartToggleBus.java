@@ -50,7 +50,7 @@ import java.util.List;
 
 public class PartToggleBus extends PartBasicState
 {
-	private static final int REDSTONE_FLAG = 4;
+	private static final int REDSTONE_FLAG = 8;
 	private final AENetworkProxy outerProxy = new AENetworkProxy( this, "outer", null, true );
 	private IGridConnection connection;
 	private boolean hasRedstone = false;

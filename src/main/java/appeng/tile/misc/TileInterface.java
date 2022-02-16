@@ -21,6 +21,7 @@ package appeng.tile.misc;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
+import appeng.api.implementations.IPowerChannelState;
 import appeng.api.implementations.tiles.ITileStorageMonitorable;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingLink;
@@ -43,6 +44,7 @@ import appeng.api.util.IConfigManager;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPriorityHost;
+import appeng.me.GridAccessException;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkInvTile;
@@ -50,6 +52,7 @@ import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.inv.IInventoryDestination;
 import com.google.common.collect.ImmutableSet;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
@@ -63,22 +66,30 @@ import java.util.List;
 
 
 public class TileInterface extends AENetworkInvTile
-		implements IGridTickable, ITileStorageMonitorable, IStorageMonitorable, IInventoryDestination, IInterfaceHost, IPriorityHost
+		implements IGridTickable, ITileStorageMonitorable, IStorageMonitorable, IInventoryDestination, IInterfaceHost, IPriorityHost, IPowerChannelState
 {
 
 	private final DualityInterface duality = new DualityInterface( this.getProxy(), this );
 	private ForgeDirection pointAt = ForgeDirection.UNKNOWN;
 
+	private static final int POWERED_FLAG = 1;
+	private static final int CHANNEL_FLAG = 2;
+	private static final int BOOTING_FLAG = 4;
+	private int clientFlags = 0; // sent as byte.
+
+
 	@MENetworkEventSubscribe
 	public void stateChange( final MENetworkChannelsChanged c )
 	{
 		this.duality.notifyNeighbors();
+		markForUpdate();
 	}
 
 	@MENetworkEventSubscribe
 	public void stateChange( final MENetworkPowerStatusChange c )
 	{
 		this.duality.notifyNeighbors();
+		markForUpdate();
 	}
 
 	public void setSide( final ForgeDirection axis )
@@ -321,5 +332,59 @@ public class TileInterface extends AENetworkInvTile
 	public void setPriority( final int newValue )
 	{
 		this.duality.setPriority( newValue );
+	}
+
+	@TileEvent( TileEventType.NETWORK_READ )
+	public boolean readFromStream_TileInterface( final ByteBuf data )
+	{
+		int newState = data.readByte();
+		if (newState != clientFlags)
+		{
+			clientFlags = newState;
+			this.markForUpdate();
+			return true;
+		}
+		return false;
+	}
+
+	@TileEvent( TileEventType.NETWORK_WRITE )
+	public void writeToStream_TileInterface( final ByteBuf data )
+	{
+		clientFlags = 0;
+		try
+		{
+			if( this.getProxy().getEnergy().isNetworkPowered() )
+				clientFlags |= POWERED_FLAG;
+
+			if( this.getProxy().getNode().meetsChannelRequirements() )
+				clientFlags |= CHANNEL_FLAG;
+
+			if( this.getProxy().getPath().isNetworkBooting() )
+				clientFlags |= BOOTING_FLAG;
+		}
+		catch( final GridAccessException e )
+		{
+			// meh
+		}
+
+		data.writeByte( clientFlags );
+	}
+
+	@Override
+	public boolean isPowered()
+	{
+		return ( clientFlags & POWERED_FLAG ) == POWERED_FLAG;
+	}
+
+	@Override
+	public boolean isActive()
+	{
+		return ( clientFlags & CHANNEL_FLAG ) == CHANNEL_FLAG;
+	}
+
+	@Override
+	public boolean isBooting()
+	{
+		return ( clientFlags & BOOTING_FLAG ) == BOOTING_FLAG;
 	}
 }

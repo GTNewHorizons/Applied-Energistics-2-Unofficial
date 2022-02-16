@@ -410,6 +410,7 @@ waila.appliedenergistics2.P2PUnlinked=Unlinked
 waila.appliedenergistics2.P2PInputOneOutput=Linked (Input Side)
 waila.appliedenergistics2.P2PInputManyOutputs=Linked (Input Side) - %d Outputs
 waila.appliedenergistics2.P2POutput=Linked (Output Side)
+waila.appliedenergistics2.Booting=Network is booting
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=1k ME Storage Cell
