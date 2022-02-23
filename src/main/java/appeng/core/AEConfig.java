@@ -79,6 +79,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 	public boolean useLargeFonts = false;
 	public boolean useColoredCraftingStatus;
 	public boolean preserveSearchBar = true;
+	public boolean debugLogTiming = false;
 	public int wirelessTerminalBattery = 1600000;
 	public int entropyManipulatorBattery = 200000;
 	public int matterCannonBattery = 200000;
@@ -165,6 +166,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 		this.matterCannonBattery = this.get( "battery", "matterCannon", this.matterCannonBattery ).getInt( this.matterCannonBattery );
 
 		this.levelEmitterDelay = this.get( "tickrates", "LevelEmitterDelay", this.levelEmitterDelay ).getInt( this.levelEmitterDelay );
+		this.debugLogTiming = this.get("debug", "LogTiming", this.debugLogTiming).getBoolean(this.debugLogTiming);
 
 		this.clientSync();
 
