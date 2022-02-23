@@ -903,7 +903,8 @@ public class DualityInterface
 	}
 	private boolean inventoryCountsAsEmpty(TileEntity te, InventoryAdaptor ad)
 	{
-		return te.getBlockType().getUnlocalizedName().equals("gt.blockmachines") && gtMachineHasOnlyCircuit(ad);
+		String name = te.getBlockType().getUnlocalizedName();
+		return (name.equals("gt.blockmachines") || name.equals("tile.interface")) && gtMachineHasOnlyCircuit(ad);
 	}
 
 	@Override
