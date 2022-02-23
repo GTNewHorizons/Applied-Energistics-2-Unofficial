@@ -229,7 +229,8 @@ public final class AppEng
 	@EventHandler
 	private void serverStopped( final FMLServerStoppedEvent event )
 	{
-		WorldData.instance().onServerStoppped();
+		if (WorldData.instance() != null)
+			WorldData.instance().onServerStoppped();
 		TickHandler.INSTANCE.shutdown();
 	}
 
