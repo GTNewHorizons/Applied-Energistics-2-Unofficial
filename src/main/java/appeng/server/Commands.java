@@ -22,12 +22,14 @@ package appeng.server;
 import appeng.server.subcommands.ChunkLogger;
 import appeng.server.subcommands.Supporters;
 import appeng.server.subcommands.Profile;
+import appeng.server.subcommands.ToggleFullAccess;
 
 public enum Commands
 {
 	Chunklogger( 4, new ChunkLogger() ),
 	Supporters( 0, new Supporters() ),
-	profile(2, new Profile() );
+	profile(2, new Profile() ),
+	toggleFullAccess(2, new ToggleFullAccess());
 
 	public final int level;
 	public final ISubCommand command;

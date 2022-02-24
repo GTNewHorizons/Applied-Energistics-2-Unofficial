@@ -580,6 +580,7 @@ commands.ae2.ProfilerFailed=No AE tile here
 commands.ae2.ProfilerGridDown=This grid is offline
 commands.ae2.ProfilerStop=Average nanoseconds taken by this grid per tick:
 commands.ae2.ProfilerFailedDim=No such dimension
+commands.ae2.ToggleFullAccess=Toggle OP full AE access ignoring security terminal settings
 
 # Achievements
 achievement.ae2.Compass=Meteorite Hunter

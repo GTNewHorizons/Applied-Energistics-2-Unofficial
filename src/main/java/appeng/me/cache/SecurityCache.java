@@ -34,20 +34,18 @@ import com.google.common.base.Preconditions;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.entity.player.EntityPlayer;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 public class SecurityCache implements ISecurityGrid
 {
 	private final IGrid myGrid;
-	private final List<ISecurityProvider> securityProvider = new ArrayList<ISecurityProvider>();
-	private final HashMap<Integer, EnumSet<SecurityPermissions>> playerPerms = new HashMap<Integer, EnumSet<SecurityPermissions>>();
+	private final List<ISecurityProvider> securityProvider = new ArrayList<>();
+	private final HashMap<Integer, EnumSet<SecurityPermissions>> playerPerms = new HashMap<>();
 	private long securityKey = -1;
 	static final int STARTUP_DELAY = 20;
 	private int startupTicks = 0;
+	private final static Set<GameProfile> opPlayers = new HashSet<>();
 
 	public SecurityCache( final IGrid g )
 	{
@@ -156,9 +154,9 @@ public class SecurityCache implements ISecurityGrid
 		Preconditions.checkNotNull( perm );
 
 		final GameProfile profile = player.getGameProfile();
-		final int playerID = WorldData.instance().playerData().getPlayerID( profile );
-
-		return this.hasPermission( playerID, perm );
+		if (isPlayerOP(profile))
+			return true;
+		return this.hasPermission( WorldData.instance().playerData().getPlayerID( profile ), perm );
 	}
 
 	@Override
@@ -198,5 +196,20 @@ public class SecurityCache implements ISecurityGrid
 	public IGrid getGrid()
 	{
 		return this.myGrid;
+	}
+
+	public static void registerOpPlayer(GameProfile profile)
+	{
+		opPlayers.add(profile);
+	}
+
+	public static void unregisterOpPlayer(GameProfile profile)
+	{
+		opPlayers.remove(profile);
+	}
+
+	public static boolean isPlayerOP(GameProfile profile)
+	{
+		return opPlayers.contains(profile);
 	}
 }
