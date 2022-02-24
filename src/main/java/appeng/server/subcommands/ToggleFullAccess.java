@@ -31,6 +31,6 @@ public class ToggleFullAccess  implements ISubCommand {
             }
         }
         else
-            sender.addChatMessage(new ChatComponentText("You are not on server?"));
+            sender.addChatMessage(new ChatComponentText("The command is intended to be used in game, not from the server console"));
     }
 }
