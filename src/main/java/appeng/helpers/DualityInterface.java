@@ -52,6 +52,8 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
+import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.core.settings.TickRates;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
@@ -570,7 +572,12 @@ public class DualityInterface
 	{
 		if( !this.gridProxy.isActive() )
 		{
-			return TickRateModulation.SLEEP;
+			if (AEConfig.instance.debugLogTiming)
+			{
+				TileEntity te = iHost.getTileEntity();
+				AELog.debug("Timing: interface at (%d %d %d) is ticking while the grid is booting", te.xCoord, te.yCoord, te.zCoord);
+			}
+			return this.hasWorkToDo() ? TickRateModulation.SLOWER : TickRateModulation.SLEEP;
 		}
 
 		if( this.hasItemsToSend() )
