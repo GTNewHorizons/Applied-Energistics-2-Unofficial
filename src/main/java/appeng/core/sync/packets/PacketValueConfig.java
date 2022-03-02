@@ -147,7 +147,9 @@ public class PacketValueConfig extends AppEngPacket
 			else if( this.Name.equals( "PatternTerminal.Encode" ) )
 			{
 				if (this.Value.equals( "2" ))
-					cpt.encodeAndMoveToInventory();
+					cpt.encodeAndMoveToInventory(false);
+				else if (this.Value.equals( "6" ))
+					cpt.encodeAndMoveToInventory(true);
 				else
 					cpt.encode();
 			}
