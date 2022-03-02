@@ -52,6 +52,9 @@ import appeng.parts.reporting.AbstractPartTerminal;
 import appeng.tile.misc.TileSecurity;
 import appeng.util.IConfigManagerHost;
 import appeng.util.Platform;
+import codechicken.nei.TextField;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
@@ -60,6 +63,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.List;
 
 
@@ -491,6 +495,11 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	{
 		if( !this.checkHotbarKeys( key ) )
 		{
+			if( isNEIFocused() )
+			{
+				return;
+			}
+
 			if( CommonHelper.proxy.isActionKey( ActionKey.TOGGLE_FOCUS, key ) )
 			{
 				this.searchField.setFocused( !this.searchField.isFocused() );
@@ -580,6 +589,21 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		pointX -= i;
 		pointY -= j;
 		return pointX >= rectX - 1 && pointX < rectX + rectWidth + 1 && pointY >= rectY - 1 && pointY < rectY + rectHeight + 1;
+	}
+
+	private boolean isNEIFocused() {
+		if (!Loader.isModLoaded("NotEnoughItems")) {
+			return false;
+		}
+		try {
+			final Class<? super Object> c = ReflectionHelper.getClass( this.getClass().getClassLoader(), "codechicken.nei.LayoutManager" );
+			final Field fldSearchField = c.getField( "searchField" );
+			final TextField searchField = (TextField) fldSearchField.get( c );
+			return searchField.focused();
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	int getReservedSpace()
