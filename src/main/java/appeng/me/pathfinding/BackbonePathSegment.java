@@ -38,6 +38,8 @@ public class BackbonePathSegment extends PathSegment
     {
         if (controllerRoutes.isEmpty())
             return false;
+        if (startNode.getControllerRoute().getControllerRoute().canSupportMoreChannels())
+            return true;
         controllerRoutes.remove(startNode.getControllerRoute());
         if (controllerRoutes.isEmpty())
             return false;
