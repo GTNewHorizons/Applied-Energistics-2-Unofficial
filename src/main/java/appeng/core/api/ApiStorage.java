@@ -67,9 +67,9 @@ public class ApiStorage implements IStorageHelper
 	}
 
 	@Override
-	public IItemList<IAEItemStack> createDumbItemList()
+	public IItemList<IAEItemStack> createPrimitiveItemList()
 	{
-		return new ItemListDumb();
+		return new HashBasedItemList();
 	}
 
 	@Override

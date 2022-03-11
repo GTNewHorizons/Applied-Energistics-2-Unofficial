@@ -26,7 +26,7 @@ import appeng.api.storage.data.IItemList;
 import java.util.*;
 
 
-public final class ItemListDumb implements IItemList<IAEItemStack>
+public final class HashBasedItemList implements IItemList<IAEItemStack>
 {
 
 	private final Map<IAEItemStack, IAEItemStack> records = new LinkedHashMap<>();
