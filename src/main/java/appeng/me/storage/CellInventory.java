@@ -441,7 +441,7 @@ public class CellInventory implements ICellInventory
 	{
 		if( this.cellItems == null )
 		{
-			this.cellItems = AEApi.instance().storage().createItemList();
+			this.cellItems = AEApi.instance().storage().createDumbItemList();
 		}
 
 		this.cellItems.resetStatus(); // clears totals and stuff.

@@ -30,10 +30,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.crafting.CraftingLink;
 import appeng.util.Platform;
-import appeng.util.item.AEFluidStack;
-import appeng.util.item.AEItemStack;
-import appeng.util.item.FluidList;
-import appeng.util.item.ItemList;
+import appeng.util.item.*;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -67,6 +64,12 @@ public class ApiStorage implements IStorageHelper
 	public IItemList<IAEItemStack> createItemList()
 	{
 		return new ItemList();
+	}
+
+	@Override
+	public IItemList<IAEItemStack> createDumbItemList()
+	{
+		return new ItemListDumb();
 	}
 
 	@Override
