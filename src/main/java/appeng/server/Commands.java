@@ -19,17 +19,16 @@
 package appeng.server;
 
 
-import appeng.server.subcommands.ChunkLogger;
-import appeng.server.subcommands.Supporters;
-import appeng.server.subcommands.Profile;
-import appeng.server.subcommands.ToggleFullAccess;
+import appeng.server.subcommands.*;
 
 public enum Commands
 {
 	Chunklogger( 4, new ChunkLogger() ),
 	Supporters( 0, new Supporters() ),
 	profile(2, new Profile() ),
-	toggleFullAccess(2, new ToggleFullAccess());
+	toggleFullAccess(2, new ToggleFullAccess()),
+	toggleDebugPaths(2, new ToggleDebugPathfinding()),
+	toggleDebugTiming(2, new ToggleDebugTiming());
 
 	public final int level;
 	public final ISubCommand command;

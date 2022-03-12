@@ -581,6 +581,8 @@ commands.ae2.ProfilerGridDown=This grid is offline
 commands.ae2.ProfilerStop=Average nanoseconds taken by this grid per tick:
 commands.ae2.ProfilerFailedDim=No such dimension
 commands.ae2.ToggleFullAccess=Toggle OP full AE access ignoring security terminal settings
+commands.ae2.ToggleDebugTiming=Toggle debug tick manager logging
+commands.ae2.ToggleDebugPathfinding=Toggle pathfinding debug logging
 
 # Achievements
 achievement.ae2.Compass=Meteorite Hunter
