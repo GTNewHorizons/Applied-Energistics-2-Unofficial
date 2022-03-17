@@ -254,7 +254,7 @@ gui.tooltips.appliedenergistics2.SubstitutionsDescDisabled=Prevent substitutions
 gui.tooltips.appliedenergistics2.PatternSlotConfigTitle=Switch Terminal Mode
 gui.tooltips.appliedenergistics2.PatternSlotConfigInfo=Switch slot pattern mode beween (16 -> 4) and (4 -> 16)
 gui.tooltips.appliedenergistics2.Encode=Encode Pattern
-gui.tooltips.appliedenergistics2.EncodeDescription=Write the entered pattern to the current encoded pattern, or to available blank pattern. Hold Shift to transfer directly to your inventory
+gui.tooltips.appliedenergistics2.EncodeDescription=Write the entered pattern to the current encoded pattern, or to available blank pattern. Hold Shift to transfer directly to your inventory. Hold Shift+Control to encode whole stack.
 
 gui.tooltips.appliedenergistics2.FuzzyMode=Fuzzy Comparison
 gui.tooltips.appliedenergistics2.FZPercent_25=Split Damage at 25%
