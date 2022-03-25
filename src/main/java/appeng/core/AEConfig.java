@@ -81,6 +81,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 	public boolean preserveSearchBar = true;
 	public boolean debugLogTiming = false;
 	public boolean debugPathFinding = false;
+	public boolean p2pBackboneTransfer = true;
+	public boolean quantumBridgeBackboneTransfer = true;
 	public int wirelessTerminalBattery = 1600000;
 	public int entropyManipulatorBattery = 200000;
 	public int matterCannonBattery = 200000;
@@ -169,6 +171,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 		this.levelEmitterDelay = this.get( "tickrates", "LevelEmitterDelay", this.levelEmitterDelay ).getInt( this.levelEmitterDelay );
 		this.debugLogTiming = this.get("debug", "LogTiming", this.debugLogTiming).getBoolean(this.debugLogTiming);
 		this.debugPathFinding = this.get("debug", "LogPathFinding", this.debugPathFinding).getBoolean(this.debugPathFinding);
+		this.p2pBackboneTransfer = this.get("debug", "EnableP2pBackboneTransfer", this.p2pBackboneTransfer).getBoolean(this.p2pBackboneTransfer);
+		this.quantumBridgeBackboneTransfer = this.get("debug", "EnableQuantumBridgeBackboneTransfer", this.quantumBridgeBackboneTransfer).getBoolean(this.quantumBridgeBackboneTransfer);
 		this.clientSync();
 
 		for( final AEFeature feature : AEFeature.values() )
