@@ -81,8 +81,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 	public boolean preserveSearchBar = true;
 	public boolean debugLogTiming = false;
 	public boolean debugPathFinding = false;
-	public boolean p2pBackboneTransfer = true;
-	public boolean quantumBridgeBackboneTransfer = true;
+	public boolean p2pBackboneTransfer = false;
+	public boolean quantumBridgeBackboneTransfer = false;
 	public int wirelessTerminalBattery = 1600000;
 	public int entropyManipulatorBattery = 200000;
 	public int matterCannonBattery = 200000;
