@@ -77,7 +77,8 @@ public enum ButtonToolTips
 	HighlightInterface,
 	HighlightInterfaceDesc,
 	SearchFieldInputs,
-	SearchFieldOutputs
+	SearchFieldOutputs,
+	SearchFieldNames
 
 	;
 
