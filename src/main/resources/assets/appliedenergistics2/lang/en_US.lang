@@ -373,9 +373,9 @@ gui.tooltips.appliedenergistics2.SearchFieldNames=Interface Names
 
 gui.tooltips.appliedenergistics2.InsertionModeDefault=Default Insertion Mode
 gui.tooltips.appliedenergistics2.InsertionModeDefaultDesc=First to last, merge stacks as necessary
-gui.tooltips.appliedenergistics2.InsertionModePreferEmpty=Prefer empty slots
+gui.tooltips.appliedenergistics2.InsertionModePreferEmpty=Insertion prefer empty slots
 gui.tooltips.appliedenergistics2.InsertionModePreferEmptyDesc=Same as default, but try empty slots first
-gui.tooltips.appliedenergistics2.InsertionModeOnlyEmpty=Only empty slots
+gui.tooltips.appliedenergistics2.InsertionModeOnlyEmpty=Insert to empty slots only
 gui.tooltips.appliedenergistics2.InsertionModeOnlyEmptyDesc=First to last, does not merge stacks
 
 # Units
