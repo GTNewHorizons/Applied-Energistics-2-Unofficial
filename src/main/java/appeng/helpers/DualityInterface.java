@@ -20,10 +20,7 @@ package appeng.helpers;
 
 
 import appeng.api.AEApi;
-import appeng.api.config.Actionable;
-import appeng.api.config.Settings;
-import appeng.api.config.Upgrades;
-import appeng.api.config.YesNo;
+import appeng.api.config.*;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.tiles.ICraftingMachine;
@@ -133,6 +130,7 @@ public class DualityInterface
 		this.upgrades = new StackUpgradeInventory( this.gridProxy.getMachineRepresentation(), this, 4 );
 		this.cm.registerSetting( Settings.BLOCK, YesNo.NO );
 		this.cm.registerSetting( Settings.INTERFACE_TERMINAL, YesNo.YES );
+		this.cm.registerSetting( Settings.INSERTION_MODE, InsertionMode.DEFAULT );
 
 		this.iHost = ih;
 		this.craftingTracker = new MultiCraftingTracker( this.iHost, 9 );
@@ -616,7 +614,7 @@ public class DualityInterface
 				ItemStack Result = whatToSend;
 				if( ad != null )
 				{
-					Result = ad.addItems( whatToSend );
+					Result = ad.addItems( whatToSend, getInsertionMode() );
 				}
 				else if (te instanceof IItemDuct)
 				{
@@ -963,14 +961,14 @@ public class DualityInterface
 				if (this.isBlocking() && ad.containsItems() && !inventoryCountsAsEmpty(te, ad))
 					continue;
 
-				if( this.acceptsItems( ad, table ) )
+				if( acceptsItems( ad, table, getInsertionMode() ) )
 				{
 					for( int x = 0; x < table.getSizeInventory(); x++ )
 					{
 						final ItemStack is = table.getStackInSlot( x );
 						if( is != null )
 						{
-							this.addToSendList( ad.addItems( is ) );
+							this.addToSendList( ad.addItems( is, getInsertionMode() ) );
 						}
 					}
 					this.pushItemsOut( possibleDirections );
@@ -1052,7 +1050,12 @@ public class DualityInterface
 		return this.cm.getSetting( Settings.BLOCK ) == YesNo.YES;
 	}
 
-	private boolean acceptsItems( final InventoryAdaptor ad, final InventoryCrafting table )
+	private InsertionMode getInsertionMode()
+	{
+		return (InsertionMode) cm.getSetting( Settings.INSERTION_MODE );
+	}
+
+	private static boolean acceptsItems( final InventoryAdaptor ad, final InventoryCrafting table, final InsertionMode insertionMode )
 	{
 		for( int x = 0; x < table.getSizeInventory(); x++ )
 		{
@@ -1062,7 +1065,7 @@ public class DualityInterface
 				continue;
 			}
 
-			if( ad.simulateAdd( is.copy() ) != null )
+			if( ad.simulateAdd( is.copy(), insertionMode ) != null )
 			{
 				return false;
 			}

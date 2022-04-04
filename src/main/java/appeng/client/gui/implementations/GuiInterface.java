@@ -19,6 +19,7 @@
 package appeng.client.gui.implementations;
 
 
+import appeng.api.config.InsertionMode;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -42,6 +43,7 @@ public class GuiInterface extends GuiUpgradeable
 	private GuiTabButton priority;
 	private GuiImgButton BlockMode;
 	private GuiToggleButton interfaceMode;
+	private GuiImgButton insertionMode;
 
 	public GuiInterface( final InventoryPlayer inventoryPlayer, final IInterfaceHost te )
 	{
@@ -60,6 +62,9 @@ public class GuiInterface extends GuiUpgradeable
 
 		this.interfaceMode = new GuiToggleButton( this.guiLeft - 18, this.guiTop + 26, 84, 85, GuiText.InterfaceTerminal.getLocal(), GuiText.InterfaceTerminalHint.getLocal() );
 		this.buttonList.add( this.interfaceMode );
+
+		this.insertionMode = new GuiImgButton( this.guiLeft - 18, this.guiTop + 44,  Settings.INSERTION_MODE, InsertionMode.DEFAULT );
+		this.buttonList.add( this.insertionMode );
 	}
 
 	@Override
@@ -73,6 +78,11 @@ public class GuiInterface extends GuiUpgradeable
 		if( this.interfaceMode != null )
 		{
 			this.interfaceMode.setState( ( (ContainerInterface) this.cvb ).getInterfaceTerminalMode() == YesNo.YES );
+		}
+
+		if( this.insertionMode != null )
+		{
+			this.insertionMode.set( ( (ContainerInterface) this.cvb ).getInsertionMode());
 		}
 
 		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Interface.getLocal() ), 8, 6, 4210752 );
@@ -113,6 +123,11 @@ public class GuiInterface extends GuiUpgradeable
 		if( btn == this.BlockMode )
 		{
 			NetworkHandler.instance.sendToServer( new PacketConfigButton( this.BlockMode.getSetting(), backwards ) );
+		}
+
+		if( btn == this.insertionMode )
+		{
+			NetworkHandler.instance.sendToServer( new PacketConfigButton( this.insertionMode.getSetting(), backwards ) );
 		}
 	}
 }

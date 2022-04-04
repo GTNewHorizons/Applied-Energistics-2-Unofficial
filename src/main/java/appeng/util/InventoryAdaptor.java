@@ -20,6 +20,7 @@ package appeng.util;
 
 
 import appeng.api.config.FuzzyMode;
+import appeng.api.config.InsertionMode;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBetterStorage;
@@ -99,7 +100,21 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot>
 	// return what isn't used...
 	public abstract ItemStack addItems( ItemStack toBeAdded );
 
+	/**
+	 * @param insertionMode advice implementation on how ItemStacks should be inserted. Might not has an effect whatsoever!
+	 */
+	public ItemStack addItems( ItemStack toBeAdded, InsertionMode insertionMode ) {
+		return addItems( toBeAdded );
+	}
+
 	public abstract ItemStack simulateAdd( ItemStack toBeSimulated );
+
+	/**
+	 * @param insertionMode advice implementation on how ItemStacks should be inserted. Might not has an effect whatsoever!
+	 */
+	public ItemStack simulateAdd( ItemStack toBeSimulated, InsertionMode insertionMode ) {
+		return simulateAdd( toBeSimulated );
+	}
 
 	public abstract boolean containsItems();
 }

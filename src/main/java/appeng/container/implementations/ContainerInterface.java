@@ -19,10 +19,7 @@
 package appeng.container.implementations;
 
 
-import appeng.api.config.SecurityPermissions;
-import appeng.api.config.Settings;
-import appeng.api.config.Upgrades;
-import appeng.api.config.YesNo;
+import appeng.api.config.*;
 import appeng.api.util.IConfigManager;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.*;
@@ -41,13 +38,16 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 
 	private final DualityInterface myDuality;
 
-	@GuiSync( 3 )
+	@GuiSync(3)
 	public YesNo bMode = YesNo.NO;
 
-	@GuiSync( 4 )
+	@GuiSync(4)
 	public YesNo iTermMode = YesNo.YES;
 
-	@GuiSync( 7 )
+	@GuiSync(8)
+	public InsertionMode insertionMode = InsertionMode.DEFAULT;
+
+	@GuiSync(7)
 	public int patternRows;
 
 	public ContainerInterface( final InventoryPlayer ip, final IInterfaceHost te )
@@ -138,6 +138,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 	{
 		this.setBlockingMode( (YesNo) cm.getSetting( Settings.BLOCK ) );
 		this.setInterfaceTerminalMode( (YesNo) cm.getSetting( Settings.INTERFACE_TERMINAL ) );
+		this.setInsertionMode( (InsertionMode) cm.getSetting( Settings.INSERTION_MODE ) );
 	}
 
 	public YesNo getBlockingMode()
@@ -159,10 +160,22 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 	{
 		this.iTermMode = iTermMode;
 	}
-	public int getPatternCapacityCardsInstalled() {
-		if (myDuality == null)
+
+	public InsertionMode getInsertionMode()
+	{
+		return this.insertionMode;
+	}
+
+	private void setInsertionMode( final InsertionMode insertionMode )
+	{
+		this.insertionMode = insertionMode;
+	}
+
+	public int getPatternCapacityCardsInstalled()
+	{
+		if( myDuality == null )
 			return 0;
-		return myDuality.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY);
+		return myDuality.getInstalledUpgrades( Upgrades.PATTERN_CAPACITY );
 	}
 
 	@Override

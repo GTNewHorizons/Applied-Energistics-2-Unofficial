@@ -20,6 +20,7 @@ package appeng.util.inv;
 
 
 import appeng.api.config.FuzzyMode;
+import appeng.api.config.InsertionMode;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import net.minecraft.inventory.IInventory;
@@ -222,13 +223,25 @@ public class AdaptorIInventory extends InventoryAdaptor
 	@Override
 	public ItemStack addItems( final ItemStack toBeAdded )
 	{
-		return this.addItems( toBeAdded, true );
+		return this.addItems( toBeAdded, true, InsertionMode.DEFAULT );
+	}
+
+	@Override
+	public ItemStack addItems( ItemStack toBeAdded, InsertionMode insertionMode )
+	{
+		return this.addItems( toBeAdded, true, insertionMode );
 	}
 
 	@Override
 	public ItemStack simulateAdd( final ItemStack toBeSimulated )
 	{
-		return this.addItems( toBeSimulated, false );
+		return this.addItems( toBeSimulated, false, InsertionMode.DEFAULT );
+	}
+
+	@Override
+	public ItemStack simulateAdd( ItemStack toBeSimulated, InsertionMode insertionMode )
+	{
+		return this.addItems( toBeSimulated, false, insertionMode );
 	}
 
 	@Override
@@ -254,9 +267,10 @@ public class AdaptorIInventory extends InventoryAdaptor
 	 *
 	 * @param itemsToAdd itemStack to add to the inventory
 	 * @param modulate   true to modulate, false for simulate
+	 * @param insertionMode
 	 * @return the left itemstack, which could not be added
 	 */
-	private ItemStack addItems( final ItemStack itemsToAdd, final boolean modulate )
+	private ItemStack addItems( final ItemStack itemsToAdd, final boolean modulate, final InsertionMode insertionMode )
 	{
 		if( itemsToAdd == null || itemsToAdd.stackSize == 0 )
 		{
@@ -267,6 +281,37 @@ public class AdaptorIInventory extends InventoryAdaptor
 		final int stackLimit = itemsToAdd.getMaxStackSize();
 		final int perOperationLimit = Math.min( this.i.getInventoryStackLimit(), stackLimit );
 		final int inventorySize = this.i.getSizeInventory();
+
+		// go over empty slots first if needed
+		if (insertionMode != InsertionMode.DEFAULT)
+		{
+			for( int slot = 0; slot < inventorySize; slot++ )
+			{
+				final ItemStack next = left.copy();
+				next.stackSize = Math.min( perOperationLimit, next.stackSize );
+
+				if( this.i.isItemValidForSlot( slot, next ) && this.i.getStackInSlot( slot ) == null )
+				{
+					if( modulate )
+					{
+						this.i.setInventorySlotContents( slot, next );
+						this.i.markDirty();
+					}
+					left.stackSize -= next.stackSize;
+
+					if( left.stackSize <= 0 )
+					{
+						return null;
+					}
+				}
+			}
+		}
+
+		// exit early if only empty slots are desired
+		if (insertionMode == InsertionMode.ONLY_EMPTY)
+		{
+			return left;
+		}
 
 		for( int slot = 0; slot < inventorySize; slot++ )
 		{
