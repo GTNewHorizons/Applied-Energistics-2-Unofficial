@@ -161,16 +161,9 @@ public class GuiImgButton extends GuiButton implements ITooltip
 			this.registerApp( 9 + 5 * 16, Settings.ACTIONS, ActionItems.MOLECULAR_ASSEMBLEERS_OFF, ButtonToolTips.ToggleMolecularAssemblers, ButtonToolTips.ToggleMolecularAssemblersDescOff );
 			this.registerApp( 6 + 6 * 16, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE, ButtonToolTips.HighlightInterface, "" );
 
-			// TODO fix icon index
-			this.registerApp( 255, Settings.INSERTION_MODE, InsertionMode.DEFAULT,
-					ButtonToolTips.InsertionModeDefault,
-					ButtonToolTips.InsertionModeDefaultDesc);
-			this.registerApp( 255, Settings.INSERTION_MODE, InsertionMode.PREFER_EMPTY,
-					ButtonToolTips.InsertionModePreferEmpty,
-					ButtonToolTips.InsertionModePreferEmptyDesc);
-			this.registerApp( 255, Settings.INSERTION_MODE, InsertionMode.ONLY_EMPTY,
-					ButtonToolTips.InsertionModeOnlyEmpty,
-					ButtonToolTips.InsertionModeOnlyEmptyDesc);
+            this.registerApp( 16 * 9 + 3, Settings.INSERTION_MODE, InsertionMode.DEFAULT, ButtonToolTips.InsertionModeDefault, ButtonToolTips.InsertionModeDefaultDesc );
+            this.registerApp( 16 * 9 + 4, Settings.INSERTION_MODE, InsertionMode.PREFER_EMPTY, ButtonToolTips.InsertionModePreferEmpty, ButtonToolTips.InsertionModePreferEmptyDesc );
+            this.registerApp( 16 * 9 + 5, Settings.INSERTION_MODE, InsertionMode.ONLY_EMPTY, ButtonToolTips.InsertionModeOnlyEmpty, ButtonToolTips.InsertionModeOnlyEmptyDesc );
 		}
 	}
 
