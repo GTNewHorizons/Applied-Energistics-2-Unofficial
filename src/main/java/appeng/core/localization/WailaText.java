@@ -32,7 +32,7 @@ public enum WailaText
 
 	Locked, Unlocked, Showing,
 
-	Contains, Channels;
+	Contains, Channels, Booting;
 
 	private final String root;
 

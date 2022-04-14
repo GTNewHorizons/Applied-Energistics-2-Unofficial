@@ -68,6 +68,12 @@ public interface IStorageHelper
 	IItemList<IAEItemStack> createItemList();
 
 	/**
+	 * @return a new INSTANCE of {@link IItemList} for items that does not support sorted output, fuzzy lookup
+	 * (findFuzzy would raise UnsupportedOperationException!) nor concurrent access, but does work much faster
+	 */
+	IItemList<IAEItemStack> createPrimitiveItemList();
+
+	/**
 	 * @return a new INSTANCE of {@link IItemList} for fluids
 	 */
 	IItemList<IAEFluidStack> createFluidList();

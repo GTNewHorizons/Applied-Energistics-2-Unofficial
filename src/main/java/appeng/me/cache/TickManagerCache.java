@@ -27,7 +27,11 @@ import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.ITickManager;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
+import appeng.api.util.DimensionalCoord;
+import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.me.cache.helpers.TickTracker;
+import appeng.util.ConfigManager;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.util.ReportedException;
@@ -88,8 +92,15 @@ public class TickManagerCache implements ITickManager
 				{
 					// remove tt..
 					this.upcomingTicks.poll();
+					long tickStartTime = 0;
+					if (AEConfig.instance.debugLogTiming)
+						tickStartTime = System.nanoTime();
 					final TickRateModulation mod = tt.getGridTickable().tickingRequest( tt.getNode(), diff );
-
+					if (AEConfig.instance.debugLogTiming)
+					{
+						DimensionalCoord c = tt.getNode().getGridBlock().getLocation();
+						AELog.debug("Timing: machine tick at (%d %d %d) took %d ns, new state is %s", c.x, c.y, c.z, System.nanoTime() - tickStartTime, mod.toString());
+					}
 					switch( mod )
 					{
 						case FASTER:

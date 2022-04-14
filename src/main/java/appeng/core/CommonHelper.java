@@ -21,6 +21,7 @@ package appeng.core;
 
 import appeng.api.parts.CableRenderMode;
 import appeng.block.AEBaseBlock;
+import appeng.client.ActionKey;
 import appeng.client.EffectType;
 import appeng.core.sync.AppEngPacket;
 import cpw.mods.fml.common.SidedProxy;
@@ -29,6 +30,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Random;
 
@@ -66,4 +68,14 @@ public abstract class CommonHelper
 	public abstract void updateRenderMode( EntityPlayer player );
 
 	public abstract void missingCoreMod();
+
+	public boolean isKeyPressed( ActionKey key )
+	{
+		return false;
+	}
+
+	public boolean isActionKey( ActionKey key, int pressedKeyCode )
+	{
+		return false;
+	}
 }

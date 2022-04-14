@@ -78,6 +78,13 @@ public class IC2 implements IIC2, IIntegrationModule
 		reg.addNewAttunement( this.getItem( "detectorCableItem" ), TunnelType.IC2_POWER );
 		reg.addNewAttunement( this.getItem( "splitterCableItem" ), TunnelType.IC2_POWER );
 
+		try
+		{
+			AEApi.instance().registries().movable().whiteListTileEntity((Class<? extends TileEntity>) Class.forName("ic2.core.crop.TileEntityCrop"));
+		}
+		catch (ClassNotFoundException ignored)
+		{
+		}
 		// this is gone?
 		// AEApi.INSTANCE().registries().matterCannon().registerAmmo( getItem( "uraniumDrop" ), 238.0289 );
 	}

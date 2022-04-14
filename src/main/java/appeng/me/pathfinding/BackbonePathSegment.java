@@ -36,8 +36,10 @@ public class BackbonePathSegment extends PathSegment
 
     public boolean switchControllerRoute()
     {
-        if (controllerRoutes.isEmpty())
+        if (controllerRoutes.isEmpty() || startNode.getControllerRoute() == null)
             return false;
+        if (startNode.getControllerRoute().getControllerRoute() != null && startNode.getControllerRoute().getControllerRoute().canSupportMoreChannels())
+            return true;
         controllerRoutes.remove(startNode.getControllerRoute());
         if (controllerRoutes.isEmpty())
             return false;

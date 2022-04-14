@@ -55,6 +55,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -75,12 +76,16 @@ import org.lwjgl.opengl.GL11;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Random;
 
 
 public class ClientHelper extends ServerHelper
 {
+	private final static String KEY_CATEGORY = "key.appliedenergistics2.category";
+
+	private final EnumMap<ActionKey, KeyBinding> bindings = new EnumMap<>( ActionKey.class );
 
 	private static final RenderItem ITEM_RENDERER = new RenderItem();
 	private static final RenderBlocks BLOCK_RENDERER = new RenderBlocks();
@@ -104,6 +109,13 @@ public class ClientHelper extends ServerHelper
 	public void init()
 	{
 		MinecraftForge.EVENT_BUS.register( this );
+
+		for( ActionKey key : ActionKey.values() )
+		{
+			final KeyBinding binding = new KeyBinding( key.getTranslationKey(), key.getDefaultKey(), KEY_CATEGORY );
+			ClientRegistry.registerKeyBinding( binding );
+			this.bindings.put( key, binding );
+		}
 	}
 
 	@SubscribeEvent
@@ -440,5 +452,22 @@ public class ClientHelper extends ServerHelper
 				cb.registerIcon( ev.map );
 			}
 		}
+	}
+
+	@Override
+	public boolean isKeyPressed( ActionKey key )
+	{
+		return this.bindings.get( key ).isPressed();
+	}
+
+	@Override
+	public boolean isActionKey( ActionKey key, int pressedKeyCode )
+	{
+		return isActiveAndMatches( this.bindings.get( key ), pressedKeyCode );
+	}
+
+	private boolean isActiveAndMatches(KeyBinding keyBinding, int keyCode) {
+//		return keyCode != 0 && keyCode == keyBinding.getKeyCode() && keyBinding.getKeyConflictContext().isActive() && keyBinding.getKeyModifier().isActive(keyBinding.getKeyConflictContext());
+		return keyCode != 0 && keyCode == keyBinding.getKeyCode();
 	}
 }

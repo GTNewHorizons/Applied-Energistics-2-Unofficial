@@ -19,6 +19,7 @@
 package appeng.core.localization;
 
 
+import appeng.api.config.InsertionMode;
 import appeng.api.config.SchedulingMode;
 import net.minecraft.util.StatCollector;
 
@@ -77,8 +78,15 @@ public enum ButtonToolTips
 	HighlightInterface,
 	HighlightInterfaceDesc,
 	SearchFieldInputs,
-	SearchFieldOutputs
+	SearchFieldOutputs,
+	SearchFieldNames,
 
+	InsertionModeDefault,
+	InsertionModeDefaultDesc,
+	InsertionModePreferEmpty,
+	InsertionModePreferEmptyDesc,
+	InsertionModeOnlyEmpty,
+	InsertionModeOnlyEmptyDesc,
 	;
 
 	private final String root;

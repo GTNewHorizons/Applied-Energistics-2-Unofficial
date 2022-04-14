@@ -27,6 +27,7 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
+import appeng.client.ActionKey;
 import appeng.client.gui.AEBaseMEGui;
 import appeng.client.gui.widgets.*;
 import appeng.client.me.InternalSlotME;
@@ -37,6 +38,7 @@ import appeng.container.slot.SlotCraftingMatrix;
 import appeng.container.slot.SlotFakeCraftingMatrix;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
+import appeng.core.CommonHelper;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
@@ -50,6 +52,9 @@ import appeng.parts.reporting.AbstractPartTerminal;
 import appeng.tile.misc.TileSecurity;
 import appeng.util.IConfigManagerHost;
 import appeng.util.Platform;
+import codechicken.nei.TextField;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
@@ -58,6 +63,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.List;
 
 
@@ -91,6 +97,9 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	private GuiImgButton searchBoxSettings;
 	private GuiImgButton terminalStyleBox;
 	private GuiImgButton searchStringSave;
+	private boolean isAutoFocus = false;
+	private int currentMouseX = 0;
+	private int currentMouseY = 0;
 
 	public GuiMEMonitorable( final InventoryPlayer inventoryPlayer, final ITerminalHost te )
 	{
@@ -327,8 +336,10 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		}
 
 		// Enum setting = AEConfig.INSTANCE.getSetting( "Terminal", SearchBoxMode.class, SearchBoxMode.AUTOSEARCH );
-		final Enum setting = AEConfig.instance.settings.getSetting( Settings.SEARCH_MODE );
-		this.searchField.setFocused( SearchBoxMode.AUTOSEARCH == setting || SearchBoxMode.NEI_AUTOSEARCH == setting );
+		final Enum searchMode = AEConfig.instance.settings.getSetting( Settings.SEARCH_MODE );
+		this.isAutoFocus = SearchBoxMode.AUTOSEARCH == searchMode || SearchBoxMode.NEI_AUTOSEARCH == searchMode;
+
+		this.searchField.setFocused( this.isAutoFocus );
 
 		if (AEConfig.instance.preserveSearchBar || this.isSubGui())
 		{
@@ -384,14 +395,15 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	{
 		this.fontRendererObj.drawString( this.getGuiDisplayName( this.myName.getLocal() ), 8, 6, 4210752 );
 		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+
+		this.currentMouseX = mouseX;
+		this.currentMouseY = mouseY;
 	}
 
 	@Override
 	protected void mouseClicked( final int xCoord, final int yCoord, final int btn )
 	{
-		final Enum searchMode = AEConfig.instance.settings.getSetting( Settings.SEARCH_MODE );
-
-		if( searchMode != SearchBoxMode.AUTOSEARCH && searchMode != SearchBoxMode.NEI_AUTOSEARCH )
+		if( !this.isAutoFocus )
 		{
 			this.searchField.mouseClicked( xCoord, yCoord, btn );
 		}
@@ -483,9 +495,32 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	{
 		if( !this.checkHotbarKeys( key ) )
 		{
+			if( isNEIFocused() )
+			{
+				return;
+			}
+
+			if( CommonHelper.proxy.isActionKey( ActionKey.TOGGLE_FOCUS, key ) )
+			{
+				this.searchField.setFocused( !this.searchField.isFocused() );
+				return;
+			}
+
+			if( this.searchField.isFocused() && key == Keyboard.KEY_RETURN )
+			{
+				this.searchField.setFocused( false );
+				return;
+			}
+
 			if( character == ' ' && this.searchField.getText().isEmpty() )
 			{
 				return;
+			}
+
+			final boolean mouseInGui = this.isPointInRegion( 0, 0, this.xSize, this.ySize, this.currentMouseX, this.currentMouseY );
+			if( this.isAutoFocus && !this.searchField.isFocused() && mouseInGui )
+			{
+				this.searchField.setFocused( true );
 			}
 
 			if( this.searchField.textboxKeyTyped( character, key ) )
@@ -545,6 +580,30 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		}
 
 		this.repo.updateView();
+	}
+
+	@SuppressWarnings("SameParameterValue")
+	protected boolean isPointInRegion(int rectX, int rectY, int rectWidth, int rectHeight, int pointX, int pointY) {
+		int i = this.guiLeft;
+		int j = this.guiTop;
+		pointX -= i;
+		pointY -= j;
+		return pointX >= rectX - 1 && pointX < rectX + rectWidth + 1 && pointY >= rectY - 1 && pointY < rectY + rectHeight + 1;
+	}
+
+	private boolean isNEIFocused() {
+		if (!Loader.isModLoaded("NotEnoughItems")) {
+			return false;
+		}
+		try {
+			final Class<? super Object> c = ReflectionHelper.getClass( this.getClass().getClassLoader(), "codechicken.nei.LayoutManager" );
+			final Field fldSearchField = c.getField( "searchField" );
+			final TextField searchField = (TextField) fldSearchField.get( c );
+			return searchField.focused();
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 
 	int getReservedSpace()

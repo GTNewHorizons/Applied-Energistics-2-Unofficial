@@ -24,6 +24,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.registry.FMLControlledNamespacedRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
@@ -211,6 +212,7 @@ final class MinecraftItemCSVExporter implements Exporter
 		@Override
 		public String apply( @Nullable final Item input )
 		{
+			if (!FMLCommonHandler.instance().getSide().isClient()) return null;
 			if( input == null )
 			{
 				AELog.debug( EXPORTING_NOTHING_MESSAGE );

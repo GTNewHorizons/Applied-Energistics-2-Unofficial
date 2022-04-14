@@ -79,6 +79,11 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 	public boolean useLargeFonts = false;
 	public boolean useColoredCraftingStatus;
 	public boolean preserveSearchBar = true;
+	public boolean showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = false;
+	public boolean debugLogTiming = false;
+	public boolean debugPathFinding = false;
+	public boolean p2pBackboneTransfer = false;
+	public boolean quantumBridgeBackboneTransfer = false;
 	public int wirelessTerminalBattery = 1600000;
 	public int entropyManipulatorBattery = 200000;
 	public int matterCannonBattery = 200000;
@@ -165,7 +170,10 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 		this.matterCannonBattery = this.get( "battery", "matterCannon", this.matterCannonBattery ).getInt( this.matterCannonBattery );
 
 		this.levelEmitterDelay = this.get( "tickrates", "LevelEmitterDelay", this.levelEmitterDelay ).getInt( this.levelEmitterDelay );
-
+		this.debugLogTiming = this.get("debug", "LogTiming", this.debugLogTiming).getBoolean(this.debugLogTiming);
+		this.debugPathFinding = this.get("debug", "LogPathFinding", this.debugPathFinding).getBoolean(this.debugPathFinding);
+		this.p2pBackboneTransfer = this.get("debug", "EnableP2pBackboneTransfer", this.p2pBackboneTransfer).getBoolean(this.p2pBackboneTransfer);
+		this.quantumBridgeBackboneTransfer = this.get("debug", "EnableQuantumBridgeBackboneTransfer", this.quantumBridgeBackboneTransfer).getBoolean(this.quantumBridgeBackboneTransfer);
 		this.clientSync();
 
 		for( final AEFeature feature : AEFeature.values() )
@@ -230,6 +238,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 		this.useLargeFonts = this.get( "Client", "useTerminalUseLargeFont", false ).getBoolean( false );
 		this.useColoredCraftingStatus = this.get( "Client", "useColoredCraftingStatus", true ).getBoolean( true );
 		this.preserveSearchBar = this.get( "Client", "preserveSearchBar", true ).getBoolean( true );
+		this.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = this.get( "Client", "showOnlyInterfacesWithFreeSlotsInInterfaceTerminal", false ).getBoolean( false );
 		// load buttons..
 		for( int btnNum = 0; btnNum < 4; btnNum++ )
 		{

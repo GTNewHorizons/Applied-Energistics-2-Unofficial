@@ -44,6 +44,7 @@ public abstract class PartBasicState extends AEBasePart implements IPowerChannel
 
 	protected static final int POWERED_FLAG = 1;
 	protected static final int CHANNEL_FLAG = 2;
+	protected static final int BOOTING_FLAG = 4;
 
 	private int clientFlags = 0; // sent as byte.
 
@@ -116,6 +117,11 @@ public abstract class PartBasicState extends AEBasePart implements IPowerChannel
 				this.setClientFlags( this.getClientFlags() | CHANNEL_FLAG );
 			}
 
+			if( this.getProxy().getPath().isNetworkBooting() )
+			{
+				this.setClientFlags( this.getClientFlags() | BOOTING_FLAG );
+			}
+
 			this.setClientFlags( this.populateFlags( this.getClientFlags() ) );
 		}
 		catch( final GridAccessException e )
@@ -159,6 +165,12 @@ public abstract class PartBasicState extends AEBasePart implements IPowerChannel
 	public boolean isActive()
 	{
 		return ( this.getClientFlags() & CHANNEL_FLAG ) == CHANNEL_FLAG;
+	}
+
+	@Override
+	public boolean isBooting()
+	{
+		return ( this.getClientFlags() & BOOTING_FLAG ) == BOOTING_FLAG;
 	}
 
 	public int getClientFlags()

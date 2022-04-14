@@ -21,6 +21,7 @@ package appeng.server;
 
 import appeng.api.parts.CableRenderMode;
 import appeng.block.AEBaseBlock;
+import appeng.client.ActionKey;
 import appeng.client.EffectType;
 import appeng.core.CommonHelper;
 import appeng.core.sync.AppEngPacket;
@@ -186,5 +187,17 @@ public class ServerHelper extends CommonHelper
 	public void missingCoreMod()
 	{
 		throw new IllegalStateException( "Unable to Load Core Mod, please verify that AE2 is properly install in the mods folder, with a .jar extension." );
+	}
+
+	@Override
+	public boolean isKeyPressed( ActionKey key )
+	{
+		return false;
+	}
+
+	@Override
+	public boolean isActionKey( ActionKey key, int pressedKeyCode )
+	{
+		return false;
 	}
 }

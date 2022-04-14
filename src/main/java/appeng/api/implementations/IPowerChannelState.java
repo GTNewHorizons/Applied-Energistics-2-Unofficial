@@ -39,4 +39,6 @@ public interface IPowerChannelState
 	 * @return true if the part/tile isActive
 	 */
 	boolean isActive();
+
+	default boolean isBooting(){ return false; }
 }

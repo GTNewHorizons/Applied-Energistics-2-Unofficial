@@ -39,6 +39,7 @@ public class MEGuiTextField extends GuiTextField {
 	private final int _yPos;
 	private final int _width;
 	private final int _height;
+	private final int _fontPad;
 
 	/**
 	 * Uses the values to instantiate a padded version of a text field.
@@ -57,6 +58,7 @@ public class MEGuiTextField extends GuiTextField {
 		this._yPos = yPos;
 		this._width = width;
 		this._height = height;
+		this._fontPad = fontRenderer.getCharWidth( '_' );
 	}
 
 	@Override
@@ -80,6 +82,25 @@ public class MEGuiTextField extends GuiTextField {
 		final boolean withinYRange = this._yPos <= yCoord && yCoord < this._yPos + this._height;
 
 		return withinXRange && withinYRange;
+	}
+
+	@Override
+	public void drawTextBox()
+	{
+		if( this.getVisible() )
+		{
+			if( this.isFocused() )
+			{
+				drawRect( this.xPosition - PADDING + 1, this.yPosition - PADDING + 1, this.xPosition + this.width + this._fontPad + PADDING - 1, this.yPosition + this.height + PADDING - 1,
+						0xFF606060 );
+			}
+			else
+			{
+				drawRect( this.xPosition - PADDING + 1, this.yPosition - PADDING + 1, this.xPosition + this.width + this._fontPad + PADDING - 1, this.yPosition + this.height + PADDING - 1,
+						0xFFA8A8A8 );
+			}
+			super.drawTextBox();
+		}
 	}
 
 	public void setMessage(String t)

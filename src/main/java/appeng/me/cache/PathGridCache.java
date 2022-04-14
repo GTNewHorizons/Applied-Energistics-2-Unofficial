@@ -28,6 +28,7 @@ import appeng.api.networking.pathing.ControllerState;
 import appeng.api.networking.pathing.IPathingGrid;
 import appeng.api.util.DimensionalCoord;
 import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.core.features.AEFeature;
 import appeng.core.stats.Achievements;
 import appeng.me.GridConnection;
@@ -181,6 +182,10 @@ public class PathGridCache implements IPathingGrid
 						hasAliveSegments = true;
 						if( pat.step(backbone, TopologyStage.PERIPHERALS) )
 							pat.setDead( true );
+					}
+					if (AEConfig.instance.debugPathFinding)
+					{
+						AELog.debug("Pathfinding: Backbone 2nd phase, hasAliveSegments = %b", hasAliveSegments);
 					}
 					if (!hasAliveSegments)
 						backbone.clear();

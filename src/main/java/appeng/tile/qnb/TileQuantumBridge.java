@@ -26,6 +26,8 @@ import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
+import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.me.GridAccessException;
 import appeng.me.cluster.IAECluster;
 import appeng.me.cluster.IAEMultiBlock;
@@ -66,7 +68,10 @@ public class TileQuantumBridge extends AENetworkInvTile implements IAEMultiBlock
 	public TileQuantumBridge()
 	{
 		this.getProxy().setValidSides( EnumSet.noneOf( ForgeDirection.class ) );
-		this.getProxy().setFlags( GridFlags.DENSE_CAPACITY, GridFlags.ULTRA_DENSE_CAPACITY );
+		if (AEConfig.instance.quantumBridgeBackboneTransfer)
+			this.getProxy().setFlags( GridFlags.DENSE_CAPACITY, GridFlags.ULTRA_DENSE_CAPACITY );
+		else
+			this.getProxy().setFlags( GridFlags.DENSE_CAPACITY);
 		this.getProxy().setIdlePowerUsage( 22 );
 		this.internalInventory.setMaxStackSize( 1 );
 	}
@@ -76,6 +81,10 @@ public class TileQuantumBridge extends AENetworkInvTile implements IAEMultiBlock
 	{
 		if( this.updateStatus )
 		{
+			if (AEConfig.instance.debugPathFinding)
+			{
+				AELog.debug("Pathfinding: QNB at (%d %d %d) is reforming", xCoord, yCoord, zCoord);
+			}
 			this.updateStatus = false;
 			if( this.cluster != null )
 			{
@@ -190,6 +199,10 @@ public class TileQuantumBridge extends AENetworkInvTile implements IAEMultiBlock
 	{
 		if( this.cluster != null )
 		{
+			if (AEConfig.instance.debugPathFinding)
+			{
+				AELog.debug("Pathfinding: QNB at (%d %d %d) is disconnecting, affectWorld = %b", xCoord, yCoord, zCoord, affectWorld);
+			}
 			if( !affectWorld )
 			{
 				this.cluster.setUpdateStatus( false );
@@ -220,6 +233,10 @@ public class TileQuantumBridge extends AENetworkInvTile implements IAEMultiBlock
 
 	public void updateStatus( final QuantumCluster c, final byte flags, final boolean affectWorld )
 	{
+		if (AEConfig.instance.debugPathFinding)
+		{
+			AELog.debug("Pathfinding: QNB at (%d %d %d) is updating, affectWorld = %b, flags = %d", xCoord, yCoord, zCoord, affectWorld, (int)flags);
+		}
 		this.cluster = c;
 
 		if( affectWorld )
