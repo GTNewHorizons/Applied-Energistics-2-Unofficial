@@ -65,7 +65,7 @@ public class PartP2PGT5Power extends PartP2PTunnel<PartP2PGT5Power> implements I
                 inputLoc = "no input";
             } else {
                 TileEntity te = input.getHost().getTile();
-                inputLoc = "[" + te.getWorldObj().provider.dimensionId + "](" + te.xCoord + ", " + te.zCoord + ", " + te.zCoord + ")";
+                inputLoc = "[" + te.getWorldObj().provider.dimensionId + "](" + te.xCoord + ", " + te.yCoord + ", " + te.zCoord + ")";
             }
 
             player.addChatMessage(chatComponent("------", ""));
