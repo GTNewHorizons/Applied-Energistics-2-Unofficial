@@ -106,6 +106,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU
 		this.max = max;
 	}
 
+    @Override
+    public IAEItemStack getFinalOutput()
+    {
+        return finalOutput;
+    }
+
 	public boolean isDestroyed()
 	{
 		return this.isDestroyed;
@@ -1316,11 +1322,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU
 		return this.elapsedTime;
 	}
 
+    @Override
 	public long getRemainingItemCount()
 	{
 		return this.remainingItemCount;
 	}
 
+    @Override
 	public long getStartItemCount()
 	{
 		return this.startItemCount;

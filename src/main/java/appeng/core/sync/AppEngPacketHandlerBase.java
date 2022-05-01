@@ -81,7 +81,9 @@ public class AppEngPacketHandlerBase
 
 		PACKET_COMPRESSED_NBT( PacketCompressedNBT.class ),
 
-		PACKET_PAINTED_ENTITY( PacketPaintedEntity.class );
+		PACKET_PAINTED_ENTITY( PacketPaintedEntity.class ),
+
+        PACKET_CRAFTING_CPUS_UPDATE( PacketCraftingCPUsUpdate.class );
 
 		private final Class<? extends AppEngPacket> packetClass;
 		private final Constructor<? extends AppEngPacket> packetConstructor;
