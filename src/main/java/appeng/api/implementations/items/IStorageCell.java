@@ -28,6 +28,8 @@ import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.data.IAEItemStack;
 import net.minecraft.item.ItemStack;
 
+import javax.annotation.Nullable;
+
 
 /**
  * Any item which implements this can be treated as an IMEInventory via
@@ -110,7 +112,17 @@ public interface IStorageCell extends ICellWorkbenchItem
 	boolean isStorageCell( ItemStack i );
 
 	/**
+     * @param i item
 	 * @return drain in ae/t this storage cell will use.
 	 */
-	double getIdleDrain();
+	default double getIdleDrain( @Nullable ItemStack i ) {
+        // provided for API backwards compatibility
+        return getIdleDrain();
+    }
+
+    /**
+     * The old idle drain API that didn't accept an ItemStack. Unused in base AE2.
+     * @return drain in ae/t this storage cell will use.
+     */
+    double getIdleDrain();
 }

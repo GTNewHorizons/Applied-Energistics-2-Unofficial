@@ -492,7 +492,7 @@ public class CellInventory implements ICellInventory
 	@Override
 	public double getIdleDrain()
 	{
-		return this.cellType.getIdleDrain();
+		return this.cellType.getIdleDrain(this.cellItem);
 	}
 
 	@Override
