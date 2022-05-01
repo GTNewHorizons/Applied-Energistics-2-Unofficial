@@ -1,5 +1,6 @@
 package appeng.integration.modules.NEIHelpers;
 
+import appeng.client.gui.implementations.GuiCraftingStatus;
 import appeng.client.gui.implementations.GuiMEMonitorable;
 import codechicken.nei.api.INEIGuiAdapter;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -23,5 +24,15 @@ public class NEIGuiHandler extends INEIGuiAdapter {
             }
         }
         return super.handleDragNDrop(gui, mousex, mousey, draggedStack, button);
+    }
+
+    @Override
+    public boolean hideItemPanelSlot( GuiContainer gui, int x, int y, int w, int h )
+    {
+        if (gui instanceof GuiCraftingStatus )
+        {
+            return ( (GuiCraftingStatus) gui ).hideItemPanelSlot( x, y, w, h );
+        }
+        return false;
     }
 }

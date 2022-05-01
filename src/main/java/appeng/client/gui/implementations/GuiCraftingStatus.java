@@ -392,6 +392,25 @@ public class GuiCraftingStatus extends GuiCraftingCPU
         super.handleMouseInput();
     }
 
+    public boolean hideItemPanelSlot( int x, int y, int w, int h )
+    {
+        x -= guiLeft - CPU_TABLE_WIDTH;
+        y -= guiTop;
+        boolean xInside =
+                ( x >= 0 && x < CPU_TABLE_SLOT_WIDTH + 9 )
+                        || ( x + w >= 0 && x + w < CPU_TABLE_SLOT_WIDTH + 9 )
+                        || ( x <= 0 && x + w >= CPU_TABLE_SLOT_WIDTH + 9 );
+        boolean yInside =
+                ( y >= 0 && y < 19 + 6 * CPU_TABLE_SLOT_HEIGHT )
+                        || ( y + h >= 0 && y + h < 19 + 6 * CPU_TABLE_SLOT_HEIGHT )
+                        || ( y < 0 && y + h >= 19 + 6 * CPU_TABLE_SLOT_HEIGHT );
+        if( xInside && yInside )
+        {
+            return true;
+        }
+        return false;
+    }
+
     private CraftingCPUStatus hitCpu( int x, int y )
     {
         x -= guiLeft - CPU_TABLE_WIDTH;
