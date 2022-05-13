@@ -81,6 +81,7 @@ public class OreFilteredList implements IPartitionList<IAEItemStack>{
                 } else {
                     int endLast = f.indexOf(lastFilter) + lastFilter.length();
                     int startThis = f.indexOf(filter);
+                    lastFilter = filter;
                     if (startThis <= endLast)
                         continue;
                     boolean or = f.substring(endLast, startThis).contains("|");
