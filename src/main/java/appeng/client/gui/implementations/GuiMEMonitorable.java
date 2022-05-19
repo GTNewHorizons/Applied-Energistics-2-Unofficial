@@ -67,7 +67,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 
-public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfigManagerHost
+public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfigManagerHost, IDropToFillTextField
 {
 
 	public static int craftingGridOffsetX;
@@ -76,6 +76,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	private static String memoryText = "";
 	private final ItemRepo repo;
 	private final int offsetX = 9;
+	private final int MAGIC_HEIGHT_NUMBER = 114 + 1;
 	private final int lowerTextureOffset = 0;
 	private final IConfigManager configSrc;
 	private final boolean viewCell;
@@ -83,13 +84,13 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	private final ContainerMEMonitorable monitorableContainer;
 	private GuiTabButton craftingStatusBtn;
 	private GuiImgButton craftingStatusImgBtn;
-	private MEGuiTextField searchField;
+	private final MEGuiTextField searchField;
+	private TextField NEISearchField;
 	private GuiText myName;
 	private int perRow = 9;
 	private int reservedSpace = 0;
 	private boolean customSortOrder = true;
 	private int rows = 0;
-	private int maxRows = Integer.MAX_VALUE;
 	private int standardSize;
 	private GuiImgButton ViewBox;
 	private GuiImgButton SortByBox;
@@ -150,6 +151,31 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		{
 			this.myName = GuiText.Terminal;
 		}
+
+		this.searchField = new MEGuiTextField( 90, 12, ButtonToolTips.SearchStringTooltip.getLocal())
+		{
+			@Override
+			public void onTextChange(final String oldText)
+			{
+				final String text = getText();
+				repo.setSearchString(text);
+				repo.updateView();
+				setScrollBar();
+			}
+		};
+
+		if (Loader.isModLoaded("NotEnoughItems")) {
+
+			try {
+				final Class<? super Object> clazz = ReflectionHelper.getClass(this.getClass().getClassLoader(), "codechicken.nei.LayoutManager");
+				final Field fldSearchField = clazz.getField("searchField");
+				this.NEISearchField = (TextField) fldSearchField.get(clazz);
+			} catch (NoSuchFieldException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+
+		}
+
 	}
 
 	public void postUpdate( final List<IAEItemStack> list )
@@ -180,12 +206,11 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 
 		if( btn instanceof GuiImgButton )
 		{
-			final boolean backwards = Mouse.isButtonDown( 1 );
-
 			final GuiImgButton iBtn = (GuiImgButton) btn;
 			if( iBtn.getSetting() != Settings.ACTIONS )
 			{
 				final Enum cv = iBtn.getCurrentValue();
+				final boolean backwards = Mouse.isButtonDown( 1 );
 				final Enum next = Platform.rotateEnum( cv, backwards, iBtn.getSetting().getPossibleValues() );
 
 				if( btn == this.terminalStyleBox )
@@ -233,33 +258,8 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	{
 		Keyboard.enableRepeatEvents( true );
 
-		this.maxRows = this.getMaxRows();
 		this.perRow = AEConfig.instance.getConfigManager().getSetting( Settings.TERMINAL_STYLE ) != TerminalStyle.FULL ? 9 : 9 + ( ( this.width - this.standardSize ) / 18 );
-
-		final boolean hasNEI = IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.NEI );
-
-		final int NEI = hasNEI ? 0 : 0;
-		int top = hasNEI ? 22 : 0;
-
-		final int magicNumber = 114 + 1;
-		final int extraSpace = this.height - magicNumber - NEI - top - this.reservedSpace;
-
-		this.rows = (int) Math.floor( extraSpace / 18 );
-		if( this.rows > this.maxRows )
-		{
-			top += ( this.rows - this.maxRows ) * 18 / 2;
-			this.rows = this.maxRows;
-		}
-
-		if( hasNEI )
-		{
-			this.rows--;
-		}
-
-		if( this.rows < 3 )
-		{
-			this.rows = 3;
-		}
+		this.rows = calculateRowsCount();
 
 		this.getMeSlots().clear();
 		for( int y = 0; y < this.rows; y++ )
@@ -284,8 +284,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		// extra slots : 72
 		// slot 18
 
-		this.ySize = magicNumber + this.rows * 18 + this.reservedSpace;
-		// this.guiTop = top;
+		this.ySize = MAGIC_HEIGHT_NUMBER + this.rows * 18 + this.reservedSpace;
 		final int unusedSpace = this.height - this.ySize;
 		this.guiTop = (int) Math.floor( unusedSpace / ( unusedSpace < 0 ? 3.8f : 2.0f ) );
 
@@ -318,13 +317,6 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 			offset += 20;
 		}
 
-		this.searchField = new MEGuiTextField( this.fontRendererObj, this.guiLeft + Math.max( 80, this.offsetX ), this.guiTop + 4, 90, 12 );
-		this.searchField.setEnableBackgroundDrawing( false );
-		this.searchField.setMaxStringLength( 25 );
-		this.searchField.setTextColor( 0xFFFFFF );
-		this.searchField.setVisible( true );
-		searchField.setMessage(ButtonToolTips.SearchStringTooltip.getLocal());
-
 		if( this.viewCell || this instanceof GuiWirelessTerm )
 		{
 			if (AEConfig.instance.getConfigManager().getSetting(Settings.CRAFTING_STATUS).equals(CraftingStatus.BUTTON)) {
@@ -339,16 +331,15 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		final Enum searchMode = AEConfig.instance.settings.getSetting( Settings.SEARCH_MODE );
 		this.isAutoFocus = SearchBoxMode.AUTOSEARCH == searchMode || SearchBoxMode.NEI_AUTOSEARCH == searchMode;
 
+		this.searchField.x = this.guiLeft + Math.max( 80, this.offsetX );
+		this.searchField.y = this.guiTop + 4;
 		this.searchField.setFocused( this.isAutoFocus );
 
-		if (AEConfig.instance.preserveSearchBar || this.isSubGui())
-		{
-			setSearchString(memoryText, false);
-		}
-		if( this.isSubGui() )
-		{
-			this.repo.updateView();
-			this.setScrollBar();
+		if (this.isSubGui()) {
+			this.searchField.setText(memoryText);
+		} else if (AEConfig.instance.preserveSearchBar) {
+			this.searchField.setText(memoryText, true);
+			repo.setSearchString(memoryText);
 		}
 
 		craftingGridOffsetX = Integer.MAX_VALUE;
@@ -379,15 +370,13 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		craftingGridOffsetY -= 6;
 	}
 
-	public void setSearchString(String memoryText, boolean updateView)
+	protected int calculateRowsCount()
 	{
-		this.searchField.setText(memoryText);
-		this.repo.setSearchString(memoryText);
-		if (updateView)
-		{
-			this.repo.updateView();
-			this.setScrollBar();
-		}
+		final boolean hasNEI = IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.NEI );
+		final int NEIPadding = hasNEI? 22 /** input */ + 20 /** top panel */: 0;
+		final int extraSpace = this.height - MAGIC_HEIGHT_NUMBER - NEIPadding - this.reservedSpace;
+
+		return Math.max(3, Math.min(this.getMaxRows(), (int) Math.floor( extraSpace / 18 )));
 	}
 
 	@Override
@@ -403,16 +392,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	@Override
 	protected void mouseClicked( final int xCoord, final int yCoord, final int btn )
 	{
-		if( !this.isAutoFocus )
-		{
-			this.searchField.mouseClicked( xCoord, yCoord, btn );
-		}
-
-		if( btn == 1 && this.searchField.isMouseIn( xCoord, yCoord ) )
-		{
-			setSearchString("", true);
-		}
-
+		searchField.mouseClicked( xCoord, yCoord, btn );
 		super.mouseClicked( xCoord, yCoord, btn );
 	}
 
@@ -463,10 +443,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 			}
 		}
 
-		if( this.searchField != null )
-		{
-			this.searchField.drawTextBox();
-		}
+		searchField.drawTextBox();
 	}
 
 	protected String getBackground()
@@ -482,7 +459,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 
 	int getMaxRows()
 	{
-		return AEConfig.instance.getConfigManager().getSetting( Settings.TERMINAL_STYLE ) == TerminalStyle.SMALL ? 6 : Integer.MAX_VALUE;
+		return AEConfig.instance.getConfigManager().getSetting( Settings.TERMINAL_STYLE ) == TerminalStyle.SMALL ? AEConfig.instance.MEMonitorableSmallSize : Integer.MAX_VALUE;
 	}
 
 	protected void repositionSlot( final AppEngSlot s )
@@ -495,44 +472,44 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	{
 		if( !this.checkHotbarKeys( key ) )
 		{
-			if( isNEIFocused() )
+
+			if (NEISearchField != null && (NEISearchField.focused() || searchField.isFocused()) && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key))
+			{
+				final boolean focused = searchField.isFocused();
+				searchField.setFocused(!focused);
+				NEISearchField.setFocus(focused);
+				return;
+			}
+
+			if (NEISearchField != null && NEISearchField.focused())
 			{
 				return;
 			}
 
-			if( CommonHelper.proxy.isActionKey( ActionKey.TOGGLE_FOCUS, key ) )
+			if (searchField.isFocused() && key == Keyboard.KEY_RETURN)
 			{
-				this.searchField.setFocused( !this.searchField.isFocused() );
+				searchField.setFocused( false );
 				return;
 			}
 
-			if( this.searchField.isFocused() && key == Keyboard.KEY_RETURN )
-			{
-				this.searchField.setFocused( false );
-				return;
-			}
 
-			if( character == ' ' && this.searchField.getText().isEmpty() )
+			if (character == ' ' && searchField.getText().isEmpty())
 			{
 				return;
 			}
 
 			final boolean mouseInGui = this.isPointInRegion( 0, 0, this.xSize, this.ySize, this.currentMouseX, this.currentMouseY );
-			if( this.isAutoFocus && !this.searchField.isFocused() && mouseInGui )
+
+			if (this.isAutoFocus && !searchField.isFocused() && mouseInGui)
 			{
-				this.searchField.setFocused( true );
+				searchField.setFocused( true );
 			}
 
-			if( this.searchField.textboxKeyTyped( character, key ) )
-			{
-				this.repo.setSearchString( this.searchField.getText() );
-				this.repo.updateView();
-				this.setScrollBar();
-			}
-			else
+			if (!searchField.textboxKeyTyped(character, key))
 			{
 				super.keyTyped( character, key );
 			}
+
 		}
 	}
 
@@ -583,27 +560,11 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	}
 
 	@SuppressWarnings("SameParameterValue")
-	protected boolean isPointInRegion(int rectX, int rectY, int rectWidth, int rectHeight, int pointX, int pointY) {
-		int i = this.guiLeft;
-		int j = this.guiTop;
-		pointX -= i;
-		pointY -= j;
+	protected boolean isPointInRegion(int rectX, int rectY, int rectWidth, int rectHeight, int pointX, int pointY)
+	{
+		pointX -= this.guiLeft;
+		pointY -= this.guiTop;
 		return pointX >= rectX - 1 && pointX < rectX + rectWidth + 1 && pointY >= rectY - 1 && pointY < rectY + rectHeight + 1;
-	}
-
-	private boolean isNEIFocused() {
-		if (!Loader.isModLoaded("NotEnoughItems")) {
-			return false;
-		}
-		try {
-			final Class<? super Object> c = ReflectionHelper.getClass( this.getClass().getClassLoader(), "codechicken.nei.LayoutManager" );
-			final Field fldSearchField = c.getField( "searchField" );
-			final TextField searchField = (TextField) fldSearchField.get( c );
-			return searchField.focused();
-		} catch (NoSuchFieldException | IllegalAccessException e) {
-			e.printStackTrace();
-		}
-		return false;
 	}
 
 	int getReservedSpace()
@@ -635,14 +596,23 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	{
 		this.standardSize = standardSize;
 	}
+
 	@Override
-	public void drawScreen( final int mouseX, final int mouseY, final float btn ) {
-		super.drawScreen(mouseX, mouseY, btn);
-		if (AEConfig.instance.preserveSearchBar && searchField != null)
-			handleTooltip(mouseX, mouseY, searchField.new TooltipProvider());
-	}
-	public boolean isOverSearchField(int x, int y)
+	public void drawScreen( final int mouseX, final int mouseY, final float btn )
 	{
-		return searchField.isMouseIn(x,y);
+		super.drawScreen(mouseX, mouseY, btn);
+
+		handleTooltip(mouseX, mouseY, searchField);
 	}
+
+	public boolean isOverTextField(final int mousex, final int mousey)
+	{
+		return searchField.isMouseIn(mousex, mousey);
+	}
+	
+	public void setTextFieldValue(final String displayName, final int mousex, final int mousey, final ItemStack stack)
+	{
+		searchField.setText(displayName);
+	}
+
 }

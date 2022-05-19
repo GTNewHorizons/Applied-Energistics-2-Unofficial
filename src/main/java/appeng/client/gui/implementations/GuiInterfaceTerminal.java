@@ -22,39 +22,50 @@ package appeng.client.gui.implementations;
 import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
+import appeng.api.config.TerminalStyle;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
+import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.me.ClientDCInternalInv;
 import appeng.client.me.SlotDisconnected;
 import appeng.client.render.BlockPosHighlighter;
 import appeng.container.implementations.ContainerInterfaceTerminal;
+import appeng.container.slot.AppEngSlot;
 import appeng.core.AEConfig;
+import appeng.core.CommonHelper;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
+import appeng.helpers.PatternHelper;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.util.Platform;
+
 import com.google.common.collect.HashMultimap;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.world.World;
+
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import java.util.*;
 
 
-public class GuiInterfaceTerminal extends AEBaseGui
+public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextField
 {
 
-	private static final int LINES_ON_PAGE = 6;
+	private static final int MAGIC_HEIGHT_NUMBER = 52 + 99;
 	private static final int offsetX = 21;
 
 	private final HashMap<Long, ClientDCInternalInv> byId = new HashMap<>();
@@ -70,74 +81,135 @@ public class GuiInterfaceTerminal extends AEBaseGui
 	private MEGuiTextField searchFieldOutputs;
 	private MEGuiTextField searchFieldInputs;
 	private MEGuiTextField searchFieldNames;
-	private GuiButton guiButtonHideFull;
-	private GuiButton guiButtonAssemblersOnly;
+	private GuiImgButton guiButtonHideFull;
+	private GuiImgButton guiButtonAssemblersOnly;
+	private GuiImgButton guiButtonBrokenRecipes;
+	private GuiImgButton terminalStyleBox;
 	private boolean refreshList = false;
 	private boolean onlyMolecularAssemblers = false;
+	private boolean onlyBrokenRecipes = false;
 
-	private static final String MOLECULAR_ASSEMBLER = "molecular assembler";
+	// private final IConfigManager configSrc;
+	private int rows = 3;
+
+	private static final String MOLECULAR_ASSEMBLER = "tile.appliedenergistics2.BlockMolecularAssembler";
 
 	public GuiInterfaceTerminal( final InventoryPlayer inventoryPlayer, final PartInterfaceTerminal te )
 	{
 		super( new ContainerInterfaceTerminal( inventoryPlayer, te ) );
 
-		final GuiScrollbar scrollbar = new GuiScrollbar();
-		this.setScrollBar( scrollbar );
+		this.setScrollBar( new GuiScrollbar() );
 		this.xSize = 208;
 		this.ySize = 255;
+
+
+		searchFieldInputs = new MEGuiTextField( 86, 12, ButtonToolTips.SearchFieldInputs.getLocal() )
+		{
+			@Override
+			public void onTextChange(final String oldText)
+			{
+				refreshList();
+			}
+		};
+
+		searchFieldOutputs = new MEGuiTextField( 86, 12, ButtonToolTips.SearchFieldOutputs.getLocal() )
+		{
+			@Override
+			public void onTextChange(final String oldText)
+			{
+				refreshList();
+			}
+		};
+
+		searchFieldNames = new MEGuiTextField( 71, 12, ButtonToolTips.SearchFieldNames.getLocal() )
+		{
+			@Override
+			public void onTextChange(final String oldText)
+			{
+				refreshList();
+			}
+		};
+		searchFieldNames.setFocused(true);
+
+		guiButtonAssemblersOnly = new GuiImgButton(0, 0, Settings.ACTIONS, null );
+		guiButtonHideFull = new GuiImgButton( 0, 0, Settings.ACTIONS, null );
+		guiButtonBrokenRecipes = new GuiImgButton( 0, 0, Settings.ACTIONS,  null );
+
+		terminalStyleBox = new GuiImgButton( 0, 0, Settings.TERMINAL_STYLE, null );
+	}
+
+	private void setScrollBar()
+	{
+		this.getScrollBar().setTop( 52 ).setLeft( 189 ).setHeight( this.rows * 18 - 2 );
+		this.getScrollBar().setRange( 0, this.lines.size() - this.rows, 2 );
 	}
 
 	@Override
 	public void initGui()
 	{
+		this.rows = calculateRowsCount();
+
 		super.initGui();
 
-		this.getScrollBar().setLeft( 189 );
-		this.getScrollBar().setHeight( 106 );
-		this.getScrollBar().setTop( 51 );
+		this.ySize = MAGIC_HEIGHT_NUMBER + this.rows * 18;
+		final int unusedSpace = this.height - this.ySize;
+		this.guiTop = (int) Math.floor( unusedSpace / ( unusedSpace < 0 ? 3.8f : 2.0f ) );
 
-		this.searchFieldInputs = new MEGuiTextField( this.fontRendererObj, this.guiLeft + Math.max( 32, this.offsetX ), this.guiTop + 25, 85, 12 );
-		this.searchFieldInputs.setEnableBackgroundDrawing( false );
-		this.searchFieldInputs.setMaxStringLength( 25 );
-		this.searchFieldInputs.setTextColor( 0xFFFFFF );
-		this.searchFieldInputs.setVisible( true );
-		this.searchFieldInputs.setFocused( false );
+		searchFieldInputs.x = guiLeft + Math.max( 32, offsetX );
+		searchFieldInputs.y = guiTop + 25;
 
-		this.searchFieldOutputs = new MEGuiTextField( this.fontRendererObj, this.guiLeft + Math.max( 32, this.offsetX ), this.guiTop + 38, 85, 12 );
-		this.searchFieldOutputs.setEnableBackgroundDrawing( false );
-		this.searchFieldOutputs.setMaxStringLength( 25 );
-		this.searchFieldOutputs.setTextColor( 0xFFFFFF );
-		this.searchFieldOutputs.setVisible( true );
-		this.searchFieldOutputs.setFocused( false );
+		searchFieldOutputs.x = guiLeft + Math.max( 32, offsetX );
+		searchFieldOutputs.y = guiTop + 38;
 
-		this.searchFieldNames = new MEGuiTextField( this.fontRendererObj, this.guiLeft + Math.max( 32, this.offsetX ) + 99, this.guiTop + 38, 70, 12 );
-		this.searchFieldNames.setEnableBackgroundDrawing( false );
-		this.searchFieldNames.setMaxStringLength( 25 );
-		this.searchFieldNames.setTextColor( 0xFFFFFF );
-		this.searchFieldNames.setVisible( true );
-		this.searchFieldNames.setFocused( true );
+		searchFieldNames.x = guiLeft + Math.max( 32, offsetX ) + 99;
+		searchFieldNames.y = guiTop + 38;
+
+		guiButtonAssemblersOnly.xPosition = guiLeft + Math.max( 32, offsetX ) + 99;
+		guiButtonAssemblersOnly.yPosition = guiTop + 20;
+
+		guiButtonHideFull.xPosition = guiButtonAssemblersOnly.xPosition + 18;
+		guiButtonHideFull.yPosition = guiTop + 20;
+
+		guiButtonBrokenRecipes.xPosition = guiButtonHideFull.xPosition + 18;
+		guiButtonBrokenRecipes.yPosition = guiTop + 20;
+
+		terminalStyleBox.xPosition = guiLeft - 18;
+		terminalStyleBox.yPosition = guiTop + 8;
+
+		this.setScrollBar();
+		this.repositionSlots();
+	}
+	
+	protected void repositionSlots()
+	{
+		for (final Object obj : this.inventorySlots.inventorySlots) {
+			if (obj instanceof AppEngSlot) {
+				final AppEngSlot slot = (AppEngSlot) obj;
+				slot.yDisplayPosition = this.ySize + slot.getY() - 78 - 7;
+			}
+		}
+	
+	}
+
+	protected int calculateRowsCount()
+	{
+		final int maxRows = this.getMaxRows();
+		final boolean hasNEI = IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.NEI );
+		final int NEIPadding = hasNEI? 22 /** input */ + 18 /** top panel */: 0;
+		final int extraSpace = this.height - MAGIC_HEIGHT_NUMBER - NEIPadding;
+
+		return Math.max(3, Math.min(maxRows, (int) Math.floor( extraSpace / 18 )));
 	}
 
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.buttonList.clear();
-
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.InterfaceTerminal.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), this.offsetX + 2, this.ySize - 96 + 3, 4210752 );
-
-		final int ex = this.getScrollBar().getCurrentScroll();
-
-		this.guiButtonAssemblersOnly = new GuiImgButton(guiLeft + 123, guiTop + 20, Settings.ACTIONS, onlyMolecularAssemblers ? ActionItems.MOLECULAR_ASSEMBLEERS_ON : ActionItems.MOLECULAR_ASSEMBLEERS_OFF);
-		this.buttonList.add(guiButtonAssemblersOnly);
-
-		guiButtonHideFull = new GuiImgButton( guiLeft + 141, guiTop + 20, Settings.ACTIONS, AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal ? ActionItems.TOGGLE_SHOW_FULL_INTERFACES_OFF : ActionItems.TOGGLE_SHOW_FULL_INTERFACES_ON );
-		this.buttonList.add(guiButtonHideFull);
-
-		this.inventorySlots.inventorySlots.removeIf( slot -> slot instanceof SlotDisconnected );
+		fontRendererObj.drawString( getGuiDisplayName( GuiText.InterfaceTerminal.getLocal() ), 8, 6, 4210752 );
+		fontRendererObj.drawString( GuiText.inventory.getLocal(), this.offsetX + 2, this.ySize - 96, 4210752 );
 
 		int offset = 51;
-		for( int x = 0; x < LINES_ON_PAGE && ex + x < this.lines.size(); x++ )
+		final int ex = getScrollBar().getCurrentScroll();
+		for( int x = 0; x < this.rows && ex + x < this.lines.size(); x++ )
 		{
 			final Object lineObj = this.lines.get( ex + x );
 			if( lineObj instanceof ClientDCInternalInv )
@@ -145,68 +217,87 @@ public class GuiInterfaceTerminal extends AEBaseGui
 				final ClientDCInternalInv inv = (ClientDCInternalInv) lineObj;
 				for( int z = 0; z < inv.getInventory().getSizeInventory(); z++ )
 				{
-					this.inventorySlots.inventorySlots.add( new SlotDisconnected( inv, z, z * 18 + 22, 1 + offset ) );
 					if (this.matchedStacks.contains(inv.getInventory().getStackInSlot(z)))
 						drawRect( z * 18 + 22, 1 + offset, z * 18 + 22 + 16, 1 + offset + 16, 0x2A00FF00 );
 				}
-				GuiButton guiButton = new GuiImgButton(guiLeft + 4, guiTop + offset + 1, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
-				guiButtonHashMap.put( guiButton , inv);
-				this.buttonList.add( guiButton );
 			}
 			else if( lineObj instanceof String )
 			{
 				String name = (String) lineObj;
 				final int rows = this.byName.get( name ).size();
+				String postfix = "";
+
 				if( rows > 1 )
 				{
-					name = name + " (" + rows + ')';
+					postfix = " (" + rows + ')';
 				}
 
-				while( name.length() > 2 && this.fontRendererObj.getStringWidth( name ) > 155 )
+				while( name.length() > 2 && this.fontRendererObj.getStringWidth( name + postfix ) > 158 )
 				{
 					name = name.substring( 0, name.length() - 1 );
 				}
 
-				this.fontRendererObj.drawString( name, this.offsetX + 2, 6 + offset, 4210752 );
+				this.fontRendererObj.drawString( name + postfix, this.offsetX + 3, 6 + offset, 4210752 );
 			}
+
 			offset += 18;
 		}
 
-		if( searchFieldInputs.isMouseIn( mouseX , mouseY ) )
-			drawTooltip( Mouse.getEventX() * this.width / this.mc.displayWidth - offsetX, mouseY - guiTop, 0, ButtonToolTips.SearchFieldInputs.getLocal() );
-		else if( searchFieldOutputs.isMouseIn( mouseX, mouseY ) )
-			drawTooltip( Mouse.getEventX() * this.width / this.mc.displayWidth - offsetX, mouseY - guiTop, 0, ButtonToolTips.SearchFieldOutputs.getLocal() );
-		else if( searchFieldNames.isMouseIn( mouseX, mouseY ) )
-			drawTooltip( Mouse.getEventX() * this.width / this.mc.displayWidth - offsetX, mouseY - guiTop, 0, ButtonToolTips.SearchFieldNames.getLocal() );
+	}
+
+	@Override
+	public void drawScreen( final int mouseX, final int mouseY, final float btn )
+	{
+
+		buttonList.clear();
+		inventorySlots.inventorySlots.removeIf( slot -> slot instanceof SlotDisconnected );
+
+		guiButtonAssemblersOnly.set( onlyMolecularAssemblers ? ActionItems.MOLECULAR_ASSEMBLEERS_ON : ActionItems.MOLECULAR_ASSEMBLEERS_OFF );
+		guiButtonHideFull.set( AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal ? ActionItems.TOGGLE_SHOW_FULL_INTERFACES_OFF : ActionItems.TOGGLE_SHOW_FULL_INTERFACES_ON );
+		guiButtonBrokenRecipes.set( onlyBrokenRecipes? ActionItems.TOGGLE_SHOW_ONLY_INVALID_PATTERN_OFF : ActionItems.TOGGLE_SHOW_ONLY_INVALID_PATTERN_ON );
+
+		terminalStyleBox.set( AEConfig.instance.settings.getSetting(Settings.TERMINAL_STYLE) );
+
+		buttonList.add(guiButtonAssemblersOnly);
+		buttonList.add(guiButtonHideFull);
+		buttonList.add(guiButtonBrokenRecipes);
+
+		buttonList.add(terminalStyleBox);
+
+		int offset = 51;
+		final int ex = this.getScrollBar().getCurrentScroll();
+		for( int x = 0; x < this.rows && ex + x < this.lines.size(); x++ )
+		{
+			final Object lineObj = this.lines.get( ex + x );
+			if( lineObj instanceof ClientDCInternalInv )
+			{
+				final ClientDCInternalInv inv = (ClientDCInternalInv) lineObj;
+				for( int z = 0; z < inv.getInventory().getSizeInventory(); z++ )
+				{
+					inventorySlots.inventorySlots.add( new SlotDisconnected( inv, z, z * 18 + 22, 1 + offset ) );
+				}
+
+				GuiButton guiButton = new GuiImgButton(guiLeft + 4, guiTop + offset + 1, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
+				guiButtonHashMap.put( guiButton , inv);
+				buttonList.add( guiButton );
+			}
+
+			offset += 18;
+		}
+
+		super.drawScreen(mouseX, mouseY, btn);
+		
+		handleTooltip(mouseX, mouseY, searchFieldInputs);
+		handleTooltip(mouseX, mouseY, searchFieldOutputs);
+		handleTooltip(mouseX, mouseY, searchFieldNames);
 	}
 
 	@Override
 	protected void mouseClicked( final int xCoord, final int yCoord, final int btn )
 	{
-		this.searchFieldInputs.mouseClicked( xCoord, yCoord, btn );
-
-		if( btn == 1 && this.searchFieldInputs.isMouseIn( xCoord, yCoord ) )
-		{
-			this.searchFieldInputs.setText( "" );
-			this.refreshList();
-		}
-
-		this.searchFieldOutputs.mouseClicked( xCoord, yCoord, btn );
-
-		if( btn == 1 && this.searchFieldOutputs.isMouseIn( xCoord, yCoord ) )
-		{
-			this.searchFieldOutputs.setText( "" );
-			this.refreshList();
-		}
-
-		this.searchFieldNames.mouseClicked( xCoord, yCoord, btn );
-
-		if( btn == 1 && this.searchFieldNames.isMouseIn( xCoord, yCoord ) )
-		{
-			onlyMolecularAssemblers = false;
-			this.searchFieldNames.setText( "" );
-			this.refreshList();
-		}
+		searchFieldInputs.mouseClicked( xCoord, yCoord, btn );
+		searchFieldOutputs.mouseClicked( xCoord, yCoord, btn );
+		searchFieldNames.mouseClicked( xCoord, yCoord, btn );
 
 		super.mouseClicked( xCoord, yCoord, btn );
 	}
@@ -229,84 +320,106 @@ public class GuiInterfaceTerminal extends AEBaseGui
 			}
 			mc.thePlayer.closeScreen();
 		}
-
-		if (btn == guiButtonHideFull)
+		else if (btn == guiButtonHideFull)
 		{
 			AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = !AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal;
 			this.refreshList();
 		}
-
-		if (btn == guiButtonAssemblersOnly)
+		else if (btn == guiButtonAssemblersOnly)
 		{
 			onlyMolecularAssemblers = !onlyMolecularAssemblers;
-			searchFieldNames.setText(onlyMolecularAssemblers ? MOLECULAR_ASSEMBLER : "");
 			this.refreshList();
 		}
+		else if (btn == guiButtonBrokenRecipes)
+		{
+			onlyBrokenRecipes = !onlyBrokenRecipes;
+			this.refreshList();
+		}
+		else if ( btn instanceof GuiImgButton )
+		{
+			final GuiImgButton iBtn = (GuiImgButton) btn;
+			if( iBtn.getSetting() != Settings.ACTIONS )
+			{
+				final Enum cv = iBtn.getCurrentValue();
+				final boolean backwards = Mouse.isButtonDown( 1 );
+				final Enum next = Platform.rotateEnum( cv, backwards, iBtn.getSetting().getPossibleValues() );
+
+				if( btn == this.terminalStyleBox )
+				{
+					AEConfig.instance.settings.putSetting( iBtn.getSetting(), next );
+
+					this.reinitalize();
+				}
+
+				iBtn.set( next );
+			}
+		}
+
+	}
+
+	private void reinitalize()
+	{
+		this.buttonList.clear();
+		this.initGui();
 	}
 
 	@Override
 	public void drawBG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
 		this.bindTexture( "guis/newinterfaceterminal.png" );
-		this.drawTexturedModalRect( offsetX, offsetY, 0, 0, this.xSize, this.ySize );
+		this.drawTexturedModalRect( offsetX, offsetY, 0, 0, this.xSize, 53 );
 
 		int offset = 51;
 		final int ex = this.getScrollBar().getCurrentScroll();
 
-		for( int x = 0; x < LINES_ON_PAGE && ex + x < this.lines.size(); x++ )
-		{
+		for (int x = 0; x < this.rows; x++) {
+			this.drawTexturedModalRect( offsetX, offsetY + 53 + x * 18, 0, 52, this.xSize, 18);
+		}
+
+		for (int x = 0; x < this.rows && ex + x < this.lines.size(); x++) {
+
 			final Object lineObj = this.lines.get( ex + x );
-			if( lineObj instanceof ClientDCInternalInv )
-			{
+			if (lineObj instanceof ClientDCInternalInv) {
 				final ClientDCInternalInv inv = (ClientDCInternalInv) lineObj;
 
 				GL11.glColor4f( 1, 1, 1, 1 );
 				final int width = inv.getInventory().getSizeInventory() * 18;
 				this.drawTexturedModalRect( offsetX + 20, offsetY + offset, 20, 173, width, 18 );
 			}
+
 			offset += 18;
 		}
 
-		if( this.searchFieldInputs != null )
-		{
-			this.searchFieldInputs.drawTextBox();
-		}
+		this.drawTexturedModalRect( offsetX, offsetY + 50 + this.rows * 18, 0, 158, this.xSize, 99);
 
-		if( this.searchFieldOutputs != null )
-		{
-			this.searchFieldOutputs.drawTextBox();
-		}
-
-		if( this.searchFieldNames != null )
-		{
-			this.searchFieldNames.drawTextBox();
-		}
+		searchFieldInputs.drawTextBox();
+		searchFieldOutputs.drawTextBox();
+		searchFieldNames.drawTextBox();
 	}
 
 	@Override
 	protected void keyTyped( final char character, final int key )
 	{
-		if( !this.checkHotbarKeys( key ) )
-		{
-			if( character == ' ')
-			{
-				if ((this.searchFieldInputs.getText().isEmpty() && this.searchFieldInputs.isFocused())
-						|| (this.searchFieldOutputs.getText().isEmpty() && this.searchFieldOutputs.isFocused())
-						|| (this.searchFieldNames.getText().isEmpty() && this.searchFieldNames.isFocused()))
-					return;
+		if (!checkHotbarKeys(key)) {
+
+			if (character == ' ') {
+				if (
+					(searchFieldInputs.getText().isEmpty() && searchFieldInputs.isFocused()) || 
+					(searchFieldOutputs.getText().isEmpty() && searchFieldOutputs.isFocused()) || 
+					(searchFieldNames.getText().isEmpty() && searchFieldNames.isFocused())
+				) return;
 			}
 
-			if( this.searchFieldInputs.textboxKeyTyped( character, key )
-					|| this.searchFieldOutputs.textboxKeyTyped( character, key )
-					|| this.searchFieldNames.textboxKeyTyped( character, key ))
-			{
-				onlyMolecularAssemblers = searchFieldNames.getText().toLowerCase().equals(MOLECULAR_ASSEMBLER);
-				this.refreshList();
-			}
-			else
-			{
+			if (
+				searchFieldInputs.textboxKeyTyped(character, key) ||
+				searchFieldOutputs.textboxKeyTyped(character, key) ||
+				searchFieldNames.textboxKeyTyped(character, key)
+			) {
+				refreshList();
+			} else {
 				super.keyTyped( character, key );
 			}
+
 		}
 	}
 
@@ -332,7 +445,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 					int Y = invData.getInteger( "y" );
 					int Z = invData.getInteger( "z" );
 					int dim = invData.getInteger( "dim" );
-					blockPosHashMap.put( current, new DimensionalCoord(X,Y,Z,dim));
+					blockPosHashMap.put( current, new DimensionalCoord( X, Y, Z, dim ) );
 
 					for( int x = 0; x < current.getInventory().getSizeInventory(); x++ )
 					{
@@ -354,7 +467,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
 			this.refreshList = false;
 			// invalid caches on refresh
 			this.cachedSearches.clear();
-			onlyMolecularAssemblers = false;
 			this.refreshList();
 		}
 	}
@@ -374,8 +486,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
 		final String searchFieldOutputs = this.searchFieldOutputs.getText().toLowerCase();
 		final String searchFieldNames = this.searchFieldNames.getText().toLowerCase();
 
-		final Set<Object> cachedSearch = this.getCacheForSearchTerm( "IN:" + searchFieldInputs + " OUT:" + searchFieldOutputs
-				+ "NAME:" + searchFieldNames + AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal);
+		final Set<Object> cachedSearch = this.getCacheForSearchTerm(
+			 	"IN:" + searchFieldInputs + 
+				"OUT:" + searchFieldOutputs + 
+				"NAME:" + searchFieldNames + 
+				AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal + 
+				onlyMolecularAssemblers +
+				onlyBrokenRecipes
+		);
 		final boolean rebuild = cachedSearch.isEmpty();
 
 		for( final ClientDCInternalInv entry : this.byId.values() )
@@ -389,49 +507,52 @@ public class GuiInterfaceTerminal extends AEBaseGui
 			// Shortcut to skip any filter if search term is ""/empty
 			boolean found = searchFieldInputs.isEmpty() && searchFieldOutputs.isEmpty();
 			boolean interfaceHasFreeSlots = false;
+			boolean interfaceHasBrokenRecipes = false;
 
 			// Search if the current inventory holds a pattern containing the search term.
-			if( !found || AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal)
+			if( !found || AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal || onlyBrokenRecipes)
 			{
 				for( final ItemStack itemStack : entry.getInventory() )
 				{
-					if( !searchFieldInputs.isEmpty() && !searchFieldOutputs.isEmpty() ) {
-						if (this.itemStackMatchesSearchTerm(itemStack, searchFieldInputs, 0) || this.itemStackMatchesSearchTerm(itemStack, searchFieldOutputs, 1)) {
-							found = true;
-							matchedStacks.add(itemStack);
-						}
-					}
-					else if( !searchFieldInputs.isEmpty() ) {
-						if (this.itemStackMatchesSearchTerm(itemStack, searchFieldInputs, 0)) {
-							found = true;
-							matchedStacks.add(itemStack);
-						}
-					}
-					else if( !searchFieldOutputs.isEmpty() ) {
-						if (this.itemStackMatchesSearchTerm(itemStack, searchFieldOutputs, 1)) {
-							found = true;
-							matchedStacks.add(itemStack);
-						}
-					}
 					// If only Interfaces with empty slots should be shown, check that here
 					if( itemStack == null )
+					{
 						interfaceHasFreeSlots = true;
+						continue;
+					}
+
+					if (onlyBrokenRecipes && recipeIsBroken(itemStack))
+					{
+						interfaceHasBrokenRecipes = true;
+					}
+
+					if (
+						(!searchFieldInputs.isEmpty() && itemStackMatchesSearchTerm(itemStack, searchFieldInputs, 0)) ||
+						(!searchFieldOutputs.isEmpty() && itemStackMatchesSearchTerm(itemStack, searchFieldOutputs, 1))
+					)
+					{
+						found = true;
+						matchedStacks.add( itemStack );
+					}
+
 				}
 			}
 
-			String name = entry.getName().toLowerCase();
-			if (found && name.contains( searchFieldNames ))
+			if (
+				(found && entry.getName().toLowerCase().contains( searchFieldNames )) && 
+				(!onlyMolecularAssemblers || entry.getUnlocalizedName().contains(MOLECULAR_ASSEMBLER)) &&
+				(!AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal || interfaceHasFreeSlots) &&
+				(!onlyBrokenRecipes || interfaceHasBrokenRecipes)
+			)
 			{
-				if (!AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal || interfaceHasFreeSlots)
-				{
-					this.byName.put(entry.getName(), entry);
-					cachedSearch.add(entry);
-				}
+				this.byName.put( entry.getName(), entry );
+				cachedSearch.add( entry );
 			}
 			else
 			{
 				cachedSearch.remove( entry );
 			}
+
 		}
 
 		this.names.clear();
@@ -440,17 +561,17 @@ public class GuiInterfaceTerminal extends AEBaseGui
 		Collections.sort( this.names );
 
 		this.lines.clear();
-		this.lines.ensureCapacity( this.getMaxRows() );
+		this.lines.ensureCapacity( this.names.size() + this.byId.size() );
 
 		for( final String n : this.names )
 		{
 			this.lines.add( n );
-			final ArrayList<ClientDCInternalInv> clientInventories = new ArrayList<>(this.byName.get(n));
+			final ArrayList<ClientDCInternalInv> clientInventories = new ArrayList<>( this.byName.get( n ) );
 			Collections.sort( clientInventories );
 			this.lines.addAll( clientInventories );
 		}
 
-		this.getScrollBar().setRange( 0, this.lines.size() - LINES_ON_PAGE, 2 );
+		this.setScrollBar();
 	}
 
 	private boolean itemStackMatchesSearchTerm( final ItemStack itemStack, final String searchTerm, int pass )
@@ -467,11 +588,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
 			return false;
 		}
 
-		NBTTagList tag = encodedValue.getTagList( pass == 0 ? "in" : "out", 10 );
+		final NBTTagList tags = encodedValue.getTagList( pass == 0 ? "in" : "out", 10 );
+		final boolean containsInvalidDisplayName = GuiText.UnknownItem.getLocal().toLowerCase().contains(searchTerm);
 
-		for( int i = 0; i < tag.tagCount(); i++ )
+		for( int i = 0; i < tags.tagCount(); i++ )
 		{
-			final ItemStack parsedItemStack = ItemStack.loadItemStackFromNBT( tag.getCompoundTagAt( i ) );
+			final NBTTagCompound tag = tags.getCompoundTagAt( i );
+			final ItemStack parsedItemStack = ItemStack.loadItemStackFromNBT( tag );
+
 			if( parsedItemStack != null )
 			{
 				final String displayName = Platform.getItemDisplayName( AEApi.instance().storage().createItemStack( parsedItemStack ) ).toLowerCase();
@@ -480,8 +604,44 @@ public class GuiInterfaceTerminal extends AEBaseGui
 					return true;
 				}
 			}
+			else if (containsInvalidDisplayName && tag != null && !tag.hasNoTags())
+			{
+				return true;
+			}
 		}
+
 		return false;
+	}
+
+	private boolean recipeIsBroken( final ItemStack itemStack )
+	{
+
+		if( itemStack == null )
+		{
+			return false;
+		}
+
+		final NBTTagCompound encodedValue = itemStack.getTagCompound();
+		if( encodedValue == null )
+		{
+			return true;
+		}
+		
+		final World w = CommonHelper.proxy.getWorld();
+		if( w == null )
+		{
+			return false;
+		}
+
+		try
+		{
+			new PatternHelper(itemStack, w);
+			return false;
+		}
+		catch( final Throwable t )
+		{
+			return true;
+		}
 	}
 
 	/**
@@ -511,26 +671,40 @@ public class GuiInterfaceTerminal extends AEBaseGui
 		return cache;
 	}
 
-	/**
-	 * The max amount of unique names and each inv row. Not affected by the filtering.
-	 *
-	 * @return max amount of unique names and each inv row
-	 */
 	private int getMaxRows()
 	{
-		return this.names.size() + this.byId.size();
+		return AEConfig.instance.getConfigManager().getSetting( Settings.TERMINAL_STYLE ) == TerminalStyle.SMALL ? AEConfig.instance.InterfaceTerminalSmallSize : Integer.MAX_VALUE;
 	}
 
-	private ClientDCInternalInv getById( final long id, final long sortBy, final String string )
+	private ClientDCInternalInv getById( final long id, final long sortBy, final String unlocalizedName )
 	{
 		ClientDCInternalInv o = this.byId.get( id );
 
 		if( o == null )
 		{
-			this.byId.put( id, o = new ClientDCInternalInv( 9, id, sortBy, string ) );
+			this.byId.put( id, o = new ClientDCInternalInv( 9, id, sortBy, unlocalizedName ) );
 			this.refreshList = true;
 		}
 
 		return o;
 	}
+
+	public boolean isOverTextField(final int mousex, final int mousey)
+	{
+		return searchFieldInputs.isMouseIn(mousex, mousey) || searchFieldOutputs.isMouseIn(mousex, mousey) || searchFieldNames.isMouseIn(mousex, mousey);
+	}
+
+    public void setTextFieldValue(final String displayName, final int mousex, final int mousey, final ItemStack stack)
+	{
+
+		if (searchFieldInputs.isMouseIn(mousex, mousey)) {
+			searchFieldInputs.setText(displayName);
+		} else if (searchFieldOutputs.isMouseIn(mousex, mousey)) {
+			searchFieldOutputs.setText(displayName);
+		} else if (searchFieldNames.isMouseIn(mousex, mousey)) {
+			searchFieldNames.setText(displayName);
+		}
+
+	}
+
 }

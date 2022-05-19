@@ -19,6 +19,9 @@
 package appeng.client.gui.widgets;
 
 
+import org.lwjgl.input.Keyboard;
+
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiTextField;
 
@@ -31,43 +34,91 @@ import net.minecraft.client.gui.GuiTextField;
  * <p>
  * The rendering does pay attention to the size of the '_' caret.
  */
-public class MEGuiTextField extends GuiTextField {
-	private static final int PADDING = 2;
-	private String tooltip;
+public class MEGuiTextField implements ITooltip
+{
+	protected GuiTextField field;
 
-	private final int _xPos;
-	private final int _yPos;
-	private final int _width;
-	private final int _height;
-	private final int _fontPad;
+	private static final int PADDING = 2;
+	private static final int MAX_INPUT_LENGTH = 25;
+	private static boolean previousKeyboardRepeatEnabled;
+	private static MEGuiTextField previousKeyboardRepeatEnabledField;
+	private String tooltip;
+	private int fontPad;
+
+	public int x;
+	public int y;
+	public int w;
+	public int h;
 
 	/**
 	 * Uses the values to instantiate a padded version of a text field.
 	 * Pays attention to the '_' caret.
 	 *
-	 * @param fontRenderer renderer for the strings
-	 * @param xPos         absolute left position
-	 * @param yPos         absolute top position
 	 * @param width        absolute width
 	 * @param height       absolute height
+	 * @param tooltip      tooltip message
 	 */
-	public MEGuiTextField(final FontRenderer fontRenderer, final int xPos, final int yPos, final int width, final int height) {
-		super(fontRenderer, xPos + PADDING, yPos + PADDING, width - 2 * PADDING - fontRenderer.getCharWidth('_'), height - 2 * PADDING);
+	public MEGuiTextField(final int width, final int height, final String tooltip)
+	{
+		final FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+		field = new GuiTextField(fontRenderer, 0, 0, 0, 0);
 
-		this._xPos = xPos;
-		this._yPos = yPos;
-		this._width = width;
-		this._height = height;
-		this._fontPad = fontRenderer.getCharWidth( '_' );
+		w = width;
+		h = height;
+
+		field.setEnableBackgroundDrawing( false );
+		field.setMaxStringLength( MAX_INPUT_LENGTH );
+		field.setTextColor( 0xFFFFFF );
+        field.setCursorPositionZero();
+
+		setMessage(tooltip);
+
+		this.fontPad = fontRenderer.getCharWidth( '_' );
+
+		setDimensionsAndColor();
+
 	}
 
-	@Override
-	public void mouseClicked(final int xPos, final int yPos, final int button) {
-		super.mouseClicked(xPos, yPos, button);
+	public MEGuiTextField(final int width, final int height)
+	{
+		this(width, height, "");
+	}
 
-		final boolean requiresFocus = this.isMouseIn(xPos, yPos);
+	public MEGuiTextField()
+	{
+		this(0, 0);
+	}
 
-		this.setFocused(requiresFocus);
+	protected void setDimensionsAndColor()
+	{
+		field.xPosition = this.x + PADDING;
+		field.yPosition = this.y + PADDING;
+		field.width = this.w - PADDING * 2 - this.fontPad;
+		field.height = this.h - PADDING * 2;
+    }
+
+	public void onTextChange(final String oldText)
+	{
+	}
+
+	public void mouseClicked(final int xPos, final int yPos, final int button)
+	{
+
+		if (!this.isMouseIn(xPos, yPos)) {
+			setFocused(false);
+			return;
+		}
+
+		field.setCanLoseFocus(false);
+		setFocused(true);
+
+		if (button == 1) {
+			setText("");
+		} else {
+			field.mouseClicked(xPos, yPos, button);
+		}
+
+		field.setCanLoseFocus(true);
 	}
 
 	/**
@@ -75,67 +126,144 @@ public class MEGuiTextField extends GuiTextField {
 	 *
 	 * @param xCoord current x coord of the mouse
 	 * @param yCoord current y coord of the mouse
-	 * @return true if mouse position is within the text field area
+	 * @return true if mouse position is within the getText field area
 	 */
-	public boolean isMouseIn(final int xCoord, final int yCoord) {
-		final boolean withinXRange = this._xPos <= xCoord && xCoord < this._xPos + this._width;
-		final boolean withinYRange = this._yPos <= yCoord && yCoord < this._yPos + this._height;
+	public boolean isMouseIn(final int xCoord, final int yCoord)
+	{
+		final boolean withinXRange = this.x <= xCoord && xCoord < this.x + this.w;
+		final boolean withinYRange = this.y <= yCoord && yCoord < this.y + this.h;
 
 		return withinXRange && withinYRange;
 	}
 
-	@Override
+    public boolean textboxKeyTyped(final char keyChar, final int keyID)
+	{
+		if (!isFocused()) {
+			return false;
+		}
+
+		final String oldText = getText();
+		boolean handled = field.textboxKeyTyped(keyChar, keyID);
+
+		if (!handled && (keyID == Keyboard.KEY_RETURN || keyID == Keyboard.KEY_NUMPADENTER || keyID == Keyboard.KEY_ESCAPE)) {
+			setFocused(false);
+		}
+
+		if (handled) {
+			onTextChange(oldText);
+		}
+
+		return handled;
+	}
+
 	public void drawTextBox()
 	{
-		if( this.getVisible() )
-		{
-			if( this.isFocused() )
-			{
-				drawRect( this.xPosition - PADDING + 1, this.yPosition - PADDING + 1, this.xPosition + this.width + this._fontPad + PADDING - 1, this.yPosition + this.height + PADDING - 1,
-						0xFF606060 );
-			}
-			else
-			{
-				drawRect( this.xPosition - PADDING + 1, this.yPosition - PADDING + 1, this.xPosition + this.width + this._fontPad + PADDING - 1, this.yPosition + this.height + PADDING - 1,
-						0xFFA8A8A8 );
-			}
-			super.drawTextBox();
+		if (field.getVisible()) {
+			setDimensionsAndColor();
+			GuiTextField.drawRect(this.x + 1, this.y + 1, this.x + this.w - 1, this.y + this.h - 1, isFocused() ? 0xFF606060 : 0xFFA8A8A8);
+			field.drawTextBox();
 		}
 	}
 
+	public void setText(String text, boolean ignoreTrigger)
+	{
+        final String oldText = getText();
+		
+		field.setText(text);
+		field.setCursorPositionEnd();
+
+		if (!ignoreTrigger) {
+			onTextChange(oldText);
+		}
+
+    }
+
+	public void setText(String text)
+	{
+        setText(text, false);
+    }
+
+    public void setFocused(boolean focus)
+	{
+        if (field.isFocused() == focus) {
+			return;
+		}
+
+		field.setFocused(focus);
+
+		if (focus) {
+
+			if (previousKeyboardRepeatEnabledField == null) {
+				previousKeyboardRepeatEnabled = Keyboard.areRepeatEventsEnabled();
+			}
+
+			previousKeyboardRepeatEnabledField = this;
+			Keyboard.enableRepeatEvents(true);
+		} else {
+
+			if (previousKeyboardRepeatEnabledField == this) {
+				previousKeyboardRepeatEnabledField = null;
+				Keyboard.enableRepeatEvents(previousKeyboardRepeatEnabled);
+			}
+			
+		}
+
+    }
+
+	public void setMaxStringLength(final int size)
+	{
+		field.setMaxStringLength(size);
+	}
+
+	public boolean isFocused()
+	{
+        return field.isFocused();
+    }
+
+    public String getText()
+	{
+        return field.getText();
+    }
+	
 	public void setMessage(String t)
 	{
 		tooltip = t;
 	}
 
-	public class TooltipProvider implements ITooltip
+	@Override
+	public String getMessage()
 	{
-		@Override
-		public String getMessage() {
-			return tooltip;
-		}
-
-		@Override
-		public int xPos() {
-			return _xPos;
-		}
-
-		@Override
-		public int yPos() {
-			return _yPos;
-		}
-
-		@Override
-		public int getHeight() {
-			return _height;
-		}
-
-		@Override
-		public int getWidth() { return _width; }
-
-		@Override
-		public boolean isVisible() {
-			return getVisible();
-		}
+		return tooltip;
 	}
+
+	@Override
+	public boolean isVisible()
+	{
+		return field.getVisible();
+	}
+
+	@Override
+	public int xPos()
+	{
+		return x;
+	}
+
+	@Override
+	public int yPos()
+	{
+		return y;
+	}
+
+	@Override
+	public int getWidth()
+	{
+		return w;
+	}
+
+	@Override
+	public int getHeight()
+	{
+		return h;
+	}
+
 }

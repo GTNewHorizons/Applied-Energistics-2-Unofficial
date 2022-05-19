@@ -80,6 +80,9 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 	public boolean useColoredCraftingStatus;
 	public boolean preserveSearchBar = true;
 	public boolean showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = false;
+	public int MEMonitorableSmallSize = 6;
+	public int InterfaceTerminalSmallSize = 6;
+
 	public boolean debugLogTiming = false;
 	public boolean debugPathFinding = false;
 	public boolean p2pBackboneTransfer = false;
@@ -239,6 +242,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 		this.useColoredCraftingStatus = this.get( "Client", "useColoredCraftingStatus", true ).getBoolean( true );
 		this.preserveSearchBar = this.get( "Client", "preserveSearchBar", true ).getBoolean( true );
 		this.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = this.get( "Client", "showOnlyInterfacesWithFreeSlotsInInterfaceTerminal", false ).getBoolean( false );
+		this.MEMonitorableSmallSize = this.get( "Client", "MEMonitorableSmallSize", 6 ).getInt( 6 );
+		this.InterfaceTerminalSmallSize = this.get( "Client", "InterfaceTerminalSmallSize", 6 ).getInt( 6 );
 		// load buttons..
 		for( int btnNum = 0; btnNum < 4; btnNum++ )
 		{

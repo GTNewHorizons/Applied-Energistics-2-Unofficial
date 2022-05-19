@@ -154,8 +154,7 @@ public abstract class AEBaseGui extends GuiContainer
 		}
 	}
 
-	protected void handleTooltip(int mouseX, int mouseY, ITooltip c) {
-		final ITooltip tooltip = c;
+	protected void handleTooltip(int mouseX, int mouseY, ITooltip tooltip) {
 		final int x = tooltip.xPos(); // ((GuiImgButton) c).xPosition;
 		int y = tooltip.yPos(); // ((GuiImgButton) c).yPosition;
 
@@ -169,7 +168,7 @@ public abstract class AEBaseGui extends GuiContainer
 				}
 
 				final String msg = tooltip.getMessage();
-				if( msg != null )
+				if( msg != null && !"".equals(msg))
 				{
 					this.drawTooltip( x + 11, y + 4, 0, msg );
 				}

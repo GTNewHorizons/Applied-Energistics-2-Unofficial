@@ -80,7 +80,7 @@ public enum GuiText
 
 	CraftingCPU, Automatic, CoProcessors, Simulation, Missing,
 
-	InterfaceTerminal, NoCraftingCPUs, Clean, InvalidPattern,
+	InterfaceTerminal, NoCraftingCPUs, Clean, InvalidPattern, UnknownItem,
 
 	InterfaceTerminalHint, Range, TransparentFacades, TransparentFacadesHint,
 

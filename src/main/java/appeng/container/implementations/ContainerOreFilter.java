@@ -1,15 +1,13 @@
 package appeng.container.implementations;
 
-import appeng.api.config.SecurityPermissions;
 import appeng.api.parts.IPart;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.helpers.IOreFilterable;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.tileentity.TileEntity;
 
@@ -17,7 +15,7 @@ public class ContainerOreFilter extends AEBaseContainer
 {
     private final IOreFilterable filterHost;
     @SideOnly( Side.CLIENT )
-    private GuiTextField textField;
+    private MEGuiTextField textField;
     @GuiSync( 2 )
     public String filter = "";
 
@@ -28,7 +26,7 @@ public class ContainerOreFilter extends AEBaseContainer
     }
 
     @SideOnly( Side.CLIENT )
-    public void setTextField( final GuiTextField f )
+    public void setTextField( final MEGuiTextField f )
     {
         this.textField = f;
         this.textField.setText(filter);

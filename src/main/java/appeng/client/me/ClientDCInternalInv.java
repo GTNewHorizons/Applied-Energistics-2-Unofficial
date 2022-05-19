@@ -53,6 +53,11 @@ public class ClientDCInternalInv implements Comparable<ClientDCInternalInv>
 		return s;
 	}
 
+	public String getUnlocalizedName()
+	{
+		return unlocalizedName;
+	}
+
 	@Override
 	public int compareTo( @Nonnull final ClientDCInternalInv o )
 	{

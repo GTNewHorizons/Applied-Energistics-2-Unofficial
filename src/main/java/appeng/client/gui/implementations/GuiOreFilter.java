@@ -1,6 +1,8 @@
 package appeng.client.gui.implementations;
 
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.widgets.IDropToFillTextField;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.core.AELog;
@@ -13,52 +15,79 @@ import appeng.helpers.IOreFilterable;
 import appeng.parts.automation.PartSharedItemBus;
 import appeng.parts.misc.PartStorageBus;
 import appeng.tile.misc.TileCellWorkbench;
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.oredict.OreDictionary;
 
 import java.io.IOException;
 
-public class GuiOreFilter extends AEBaseGui {
-    private GuiTextField filter;
-    public GuiOreFilter(InventoryPlayer ip, IOreFilterable obj) {
+public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField
+{
+    private MEGuiTextField textField;
+
+    public GuiOreFilter(InventoryPlayer ip, IOreFilterable obj)
+    {
         super(new ContainerOreFilter(ip, obj));
         this.xSize = 256;
+
+        this.textField = new MEGuiTextField(231, 12)
+        {
+
+			@Override
+			public void onTextChange(final String oldText)
+            {
+                final String text = getText();
+
+                if (!text.equals(oldText)) {
+                    ((ContainerOreFilter) inventorySlots).setFilter(text);
+                }
+			}
+
+		};
+
+        this.textField.setMaxStringLength(120);
     }
 
     @Override
-    public void initGui() {
+    public void initGui()
+    {
         super.initGui();
-        this.filter = new GuiTextField(this.fontRendererObj, this.guiLeft + 13, this.guiTop + 36, 250, this.fontRendererObj.FONT_HEIGHT);
-        this.filter.setEnableBackgroundDrawing(false);
-        this.filter.setMaxStringLength(100);
-        this.filter.setTextColor(0xFFFFFF);
-        this.filter.setVisible(true);
-        this.filter.setFocused(true);
-        ((ContainerOreFilter) this.inventorySlots).setTextField(this.filter);
+
+        this.textField.x = this.guiLeft + 12;
+        this.textField.y = this.guiTop + 35;
+        this.textField.setFocused(true);
+
+        ((ContainerOreFilter) this.inventorySlots).setTextField(this.textField);
     }
 
     @Override
-    public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
+    public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY)
+    {
         this.fontRendererObj.drawString( GuiText.OreFilterLabel.getLocal(), 12, 8, 4210752 );
     }
 
     @Override
-    public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {
+    public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY)
+    {
         this.bindTexture( "guis/renamer.png" );
         this.drawTexturedModalRect( offsetX, offsetY, 0, 0, this.xSize, this.ySize );
-        this.filter.drawTextBox();
+        this.textField.drawTextBox();
     }
 
     @Override
-    protected void keyTyped(final char character, final int key) {
-        if (key == 28) // Enter
-        {
-            try
-            {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("OreFilter", this.filter.getText()));
-            }
-            catch (IOException e)
-            {
+	protected void mouseClicked( final int xCoord, final int yCoord, final int btn )
+    {
+		this.textField.mouseClicked( xCoord, yCoord, btn );
+		super.mouseClicked( xCoord, yCoord, btn );
+	}
+
+    @Override
+    protected void keyTyped(final char character, final int key)
+    {
+        if (key == 28) {// Enter
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("OreFilter", this.textField.getText()));
+            } catch (IOException e) {
                 AELog.debug(e);
             }
             final Object target = ( (AEBaseContainer) this.inventorySlots ).getTarget();
@@ -74,12 +103,28 @@ public class GuiOreFilter extends AEBaseGui {
                 NetworkHandler.instance.sendToServer( new PacketSwitchGuis( OriginalGui ) );
             else
                 this.mc.thePlayer.closeScreen();
-        }
-        else if (this.filter.textboxKeyTyped(character, key))
-        {
-            ((ContainerOreFilter) this.inventorySlots).setFilter(filter.getText());
-        }
-        else
+
+        } else if (!this.textField.textboxKeyTyped(character, key)) {
             super.keyTyped(character, key);
+        }
+            
     }
+
+    public boolean isOverTextField(final int mousex, final int mousey)
+	{
+		return textField.isMouseIn(mousex, mousey);
+	}
+
+    public void setTextFieldValue(final String displayName, final int mousex, final int mousey, final ItemStack stack)
+	{
+        final int[] ores = OreDictionary.getOreIDs(stack);
+
+        if (ores.length > 0) {
+            textField.setText(OreDictionary.getOreName(ores[0]));
+        } else {
+            textField.setText(displayName);
+        }
+
+	}
+
 }
