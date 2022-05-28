@@ -57,6 +57,7 @@ public class GuiPatternTerm extends GuiMEMonitorable
 	private GuiImgButton encodeBtn;
 	private GuiImgButton clearBtn;
 	private GuiImgButton doubleBtn;
+    private GuiImgButton loadPatternBtn;
 
 	public GuiPatternTerm( final InventoryPlayer inventoryPlayer, final ITerminalHost te )
 	{
@@ -93,6 +94,10 @@ public class GuiPatternTerm extends GuiMEMonitorable
 			{
 				NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminal.Double",  Keyboard.isKeyDown( Keyboard.KEY_LSHIFT ) ? "1": "0") );
 			}
+            else if( this.loadPatternBtn == btn )
+            {
+                NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminal.LoadPattern",  Keyboard.isKeyDown( Keyboard.KEY_LSHIFT ) ? "1": "0") );
+            }
 		}
 		catch( final IOException e )
 		{
@@ -129,6 +134,9 @@ public class GuiPatternTerm extends GuiMEMonitorable
 		this.doubleBtn = new GuiImgButton( this.guiLeft + 74, this.guiTop + this.ySize - 153, Settings.ACTIONS, ActionItems.DOUBLE );
 		this.doubleBtn.setHalfSize( true );
 		this.buttonList.add( this.doubleBtn );
+
+        this.loadPatternBtn = new GuiImgButton( this.guiLeft + 80, this.guiTop + this.ySize - 129, Settings.ACTIONS, ActionItems.LOAD_PATTERN );
+        this.buttonList.add( this.loadPatternBtn );
 	}
 
 	@Override

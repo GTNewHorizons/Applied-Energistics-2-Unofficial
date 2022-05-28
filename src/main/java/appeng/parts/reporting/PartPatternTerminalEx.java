@@ -22,7 +22,7 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
 
     private final AppEngInternalInventory crafting = new AppEngInternalInventory( this, 16 );
     private final AppEngInternalInventory output = new AppEngInternalInventory( this, 16 );
-    private final AppEngInternalInventory pattern = new AppEngInternalInventory( this, 2 );
+    private final AppEngInternalInventory pattern = new AppEngInternalInventory( this, 3 );
 
     private boolean substitute = false;
     private boolean inverted = false;

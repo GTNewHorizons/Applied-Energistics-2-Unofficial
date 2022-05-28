@@ -19,8 +19,6 @@
 package appeng.core.localization;
 
 
-import appeng.api.config.InsertionMode;
-import appeng.api.config.SchedulingMode;
 import net.minecraft.util.StatCollector;
 
 
@@ -56,7 +54,7 @@ public enum ButtonToolTips
 
 	LevelType, LevelType_Energy, LevelType_Item, InventoryTweaks, TerminalStyle, TerminalStyle_Full, TerminalStyle_Tall, TerminalStyle_Small,
 
-	Stash, StashDesc, Encode, EncodeDescription, Substitutions, PatternSlotConfigTitle, PatternSlotConfigInfo, SubstitutionsDescEnabled, SubstitutionsDescDisabled, CraftOnly, CraftEither,
+	Stash, StashDesc, Encode, EncodeDescription, Substitutions, PatternSlotConfigTitle, PatternSlotConfigInfo, SubstitutionsDescEnabled, SubstitutionsDescDisabled, CraftOnly, CraftEither, LoadPattern, LoadPatternDescription,
 
 	Craft, Mod, DoesntDespawn, EmitterMode, CraftViaRedstone, EmitWhenCrafting, ReportInaccessibleItems, ReportInaccessibleItemsYes, ReportInaccessibleItemsNo,
 

@@ -165,6 +165,10 @@ public class PacketValueConfig extends AppEngPacket
 			{
 				cpt.doubleStacks(Value.equals( "1" ));
 			}
+            else if( this.Name.equals( "PatternTerminal.LoadPattern" ) )
+            {
+                cpt.loadPattern( this.Value.equals( "1" ) );
+            }
 		}
 		else if( this.Name.startsWith( "PatternTerminalEx." ) && c instanceof ContainerPatternTermEx )
 		{
@@ -194,6 +198,10 @@ public class PacketValueConfig extends AppEngPacket
 			{
 				cpt.doubleStacks(Value.equals( "1" ));
 			}
+            else if( this.Name.equals( "PatternTerminalEx.LoadPattern" ) )
+            {
+                cpt.loadPattern( this.Value.equals( "1" ) );
+            }
 		}
 		else if( this.Name.startsWith( "StorageBus." ) && c instanceof ContainerStorageBus )
 		{

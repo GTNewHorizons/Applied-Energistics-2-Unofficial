@@ -22,6 +22,7 @@ package appeng.container.implementations;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.definitions.IDefinitions;
+import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalHost;
@@ -51,6 +52,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import java.util.ArrayList;
@@ -71,6 +73,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 	private final SlotPatternTerm craftSlot;
 	private final SlotRestrictedInput patternSlotIN;
 	private final SlotRestrictedInput patternSlotOUT;
+    private final SlotRestrictedInput patternSlotLoad;
 	@GuiSync( 97 )
 	public boolean craftingMode = true;
 	@GuiSync( 96 )
@@ -105,6 +108,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 
 		this.addSlotToContainer( this.patternSlotIN = new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.BLANK_PATTERN, patternInv, 0, 147, -72 - 9, this.getInventoryPlayer() ) );
 		this.addSlotToContainer( this.patternSlotOUT = new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.ENCODED_PATTERN, patternInv, 1, 147, -72 + 34, this.getInventoryPlayer() ) );
+        this.addSlotToContainer( this.patternSlotLoad = new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.ENCODED_PATTERN, patternInv, 2, 80, -29, this.getInventoryPlayer() ) );
 
 		this.patternSlotOUT.setStackLimit( 1 );
 
@@ -344,6 +348,93 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 
 		return c;
 	}
+
+    public void loadPattern(boolean clearPattern) {
+        // use modified version of PatternHelper to load pattern, since we want to load even invalid patterns
+        ItemStack is = this.patternSlotLoad.getStack();
+        if( is == null || !( is.getItem() instanceof ICraftingPatternItem ) )
+        {
+            return;
+        }
+        final NBTTagCompound encodedValue = is.getTagCompound();
+        if( encodedValue == null )
+        {
+            return;
+        }
+        final NBTTagList inTag = encodedValue.getTagList( "in", NBT.TAG_COMPOUND );
+        final NBTTagList outTag = encodedValue.getTagList( "out", NBT.TAG_COMPOUND );
+        final boolean isCrafting = encodedValue.getBoolean( "crafting" );
+        final boolean substitute = encodedValue.getBoolean( "substitute" );
+        final List<ItemStack> inputs = new ArrayList<>();
+        final List<ItemStack> outputs = new ArrayList<>();
+
+        for( int x = 0; x < inTag.tagCount(); x++ )
+        {
+            final NBTTagCompound tag = inTag.getCompoundTagAt( x );
+            final ItemStack stack = ItemStack.loadItemStackFromNBT( tag );
+            inputs.add( stack );
+        }
+
+        for( int x = 0; x < outTag.tagCount(); x++ )
+        {
+            final NBTTagCompound tag = outTag.getCompoundTagAt( x );
+            final ItemStack stack = ItemStack.loadItemStackFromNBT( tag );
+            outputs.add( stack );
+        }
+
+        this.setCraftingMode( isCrafting );
+        this.getPatternTerminal().setCraftingRecipe( isCrafting );
+        this.setSubstitute( substitute );
+        this.getPatternTerminal().setSubstitution( substitute );
+
+        for( int x = 0; x < this.craftingSlots.length; x++ )
+        {
+            this.craftingSlots[x].putStack( null );
+            if( inputs.size() - 1 >= x )
+            {
+                if( inputs.get( x ) != null )
+                {
+                    this.craftingSlots[x].putStack( inputs.get( x ) );
+                }
+            }
+        }
+
+        if( this.isCraftingMode() )
+        {
+            this.cOut.setInventorySlotContents( 0, outputs.get( 0 ) );
+        }
+        else
+        {
+            for( int x = 0; x < this.outputSlots.length; x++ ) {
+                this.outputSlots[x].putStack( null );
+                if( outputs.size() - 1 >= x )
+                {
+                    if( outputs.get( x ) != null )
+                    {
+                        this.outputSlots[x].putStack( outputs.get( x ) );
+                    }
+                }
+            }
+        }
+
+        if( clearPattern ) {
+            clearPatternAtLoadSlot();
+        }
+    }
+
+    private void clearPatternAtLoadSlot() {
+        final int stackSize = this.patternSlotLoad.getStack().stackSize;
+        for( final ItemStack blankPatternStack : AEApi.instance().definitions().materials().blankPattern().maybeStack( stackSize ).asSet() )
+        {
+            this.patternSlotLoad.putStack( blankPatternStack );
+            break;
+        }
+
+        // move blank patterns to pattern input slot
+        int toMove = Math.min( stackSize, this.patternSlotIN.getSlotStackLimit() - this.patternSlotIN.getStack().stackSize );
+        this.patternSlotIN.getStack().stackSize += toMove;
+        this.patternSlotLoad.decrStackSize( toMove );
+    }
 
 	@Override
 	public boolean isSlotEnabled( final int idx )

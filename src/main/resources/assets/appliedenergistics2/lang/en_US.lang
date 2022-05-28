@@ -382,6 +382,9 @@ gui.tooltips.appliedenergistics2.InsertionModePreferEmptyDesc=Same as default, b
 gui.tooltips.appliedenergistics2.InsertionModeOnlyEmpty=Insert to empty slots only
 gui.tooltips.appliedenergistics2.InsertionModeOnlyEmptyDesc=First to last, does not merge stacks
 
+gui.tooltips.appliedenergistics2.LoadPattern=Load Pattern
+gui.tooltips.appliedenergistics2.LoadPatternDescription=Load from existing pattern. Hold Shift to also clear this pattern.
+
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=Energy Units
