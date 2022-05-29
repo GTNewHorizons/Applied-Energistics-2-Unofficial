@@ -21,10 +21,10 @@ public class ArithHelper {
         return b1.add(b2).doubleValue();
     }
 
-    public static double add(String v1, String v2) {
+    public static java.math.BigDecimal add(String v1, String v2) {
         java.math.BigDecimal b1 = new java.math.BigDecimal(v1);
         java.math.BigDecimal b2 = new java.math.BigDecimal(v2);
-        return b1.add(b2).doubleValue();
+        return b1.add(b2);
     }
 
     /**
@@ -41,10 +41,10 @@ public class ArithHelper {
         return b1.subtract(b2).doubleValue();
     }
 
-    public static double sub(String v1, String v2) {
+    public static java.math.BigDecimal sub(String v1, String v2) {
         java.math.BigDecimal b1 = new java.math.BigDecimal(v1);
         java.math.BigDecimal b2 = new java.math.BigDecimal(v2);
-        return b1.subtract(b2).doubleValue();
+        return b1.subtract(b2);
     }
 
     /**
@@ -63,10 +63,10 @@ public class ArithHelper {
         return b1.multiply(b2).doubleValue();
     }
 
-    public static double mul(String v1, String v2) {
+    public static java.math.BigDecimal mul(String v1, String v2) {
         java.math.BigDecimal b1 = new java.math.BigDecimal(v1);
         java.math.BigDecimal b2 = new java.math.BigDecimal(v2);
-        return b1.multiply(b2).doubleValue();
+        return b1.multiply(b2);
     }
 
     /**
@@ -83,10 +83,10 @@ public class ArithHelper {
         return div(v1, v2, DEF_DIV_SCALE);
     }
 
-    public static double div(String v1, String v2) {
+    public static java.math.BigDecimal div(String v1, String v2) {
         java.math.BigDecimal b1 = new java.math.BigDecimal(v1);
         java.math.BigDecimal b2 = new java.math.BigDecimal(v2);
-        return b1.divide(b2, DEF_DIV_SCALE, java.math.BigDecimal.ROUND_HALF_UP).doubleValue();
+        return b1.divide(b2, DEF_DIV_SCALE, java.math.BigDecimal.ROUND_HALF_UP);
     }
 
     /**
@@ -124,13 +124,13 @@ public class ArithHelper {
         return b.divide(one, scale, java.math.BigDecimal.ROUND_HALF_UP).doubleValue();
     }
 
-    public static double round(String v, int scale) {
+    public static java.math.BigDecimal round(String v, int scale) {
         if (scale < 0) {
             throw new IllegalArgumentException("The scale must be a positive integer or zero");
         }
         java.math.BigDecimal b = new java.math.BigDecimal(v);
         java.math.BigDecimal one = new java.math.BigDecimal("1");
-        return b.divide(one, scale, java.math.BigDecimal.ROUND_HALF_UP).doubleValue();
+        return b.divide(one, scale, java.math.BigDecimal.ROUND_HALF_UP);
     }
 
 }
