@@ -194,6 +194,10 @@ public class PacketValueConfig extends AppEngPacket
 			{
 				cpt.doubleStacks(Value.equals( "1" ));
 			}
+			else if( this.Name.equals( "PatternTerminalEx.ActivePage" ) )
+			{
+				cpt.getPatternTerminal().setActivePage(Integer.parseInt( Value ));
+			}
 		}
 		else if( this.Name.startsWith( "StorageBus." ) && c instanceof ContainerStorageBus )
 		{

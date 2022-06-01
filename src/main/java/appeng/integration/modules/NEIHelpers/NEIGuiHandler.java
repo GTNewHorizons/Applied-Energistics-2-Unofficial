@@ -1,6 +1,7 @@
 package appeng.integration.modules.NEIHelpers;
 
 import appeng.client.gui.implementations.GuiCraftingStatus;
+import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import codechicken.nei.api.INEIGuiAdapter;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -36,6 +37,8 @@ public class NEIGuiHandler extends INEIGuiAdapter
     {
         if (gui instanceof GuiCraftingStatus) {
             return ((GuiCraftingStatus) gui).hideItemPanelSlot(x, y, w, h);
+        } else if (gui instanceof GuiMEMonitorable) {
+            return ((GuiMEMonitorable) gui).hideItemPanelSlot(x, y, w, h);
         }
 
         return false;

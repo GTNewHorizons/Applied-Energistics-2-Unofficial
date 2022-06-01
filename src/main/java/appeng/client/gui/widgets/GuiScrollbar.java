@@ -25,6 +25,10 @@ import org.lwjgl.opengl.GL11;
 
 public class GuiScrollbar implements IScrollSource
 {
+	private String txtBase = "minecraft";
+	private String txtFile = "gui/container/creative_inventory/tabs.png";
+	private int txtShiftX = 232;
+	private int txtShiftY = 0;
 
 	private int displayX = 0;
 	private int displayY = 0;
@@ -36,20 +40,26 @@ public class GuiScrollbar implements IScrollSource
 	private int minScroll = 0;
 	private int currentScroll = 0;
 
+	public void setTexture(final String base, final String file, final int shiftX, final int shiftY)
+	{
+		txtBase = base;
+		txtFile = file;
+		txtShiftX = shiftX;
+		txtShiftY = shiftY;
+	}
+
 	public void draw( final AEBaseGui g )
 	{
-		g.bindTexture( "minecraft", "gui/container/creative_inventory/tabs.png" );
+		g.bindTexture( txtBase, txtFile );
 		GL11.glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
 
-		if( this.getRange() == 0 )
-		{
-			g.drawTexturedModalRect( this.displayX, this.displayY, 232 + this.width, 0, this.width, 15 );
-		}
-		else
-		{
+		if (this.getRange() == 0) {
+			g.drawTexturedModalRect( this.displayX, this.displayY, txtShiftX + this.width, txtShiftY, this.width, 15 );
+		} else {
 			final int offset = ( this.currentScroll - this.minScroll ) * ( this.height - 15 ) / this.getRange();
-			g.drawTexturedModalRect( this.displayX, offset + this.displayY, 232, 0, this.width, 15 );
+			g.drawTexturedModalRect( this.displayX, offset + this.displayY, txtShiftX, txtShiftY, this.width, 15 );
 		}
+
 	}
 
 	private int getRange()
@@ -107,8 +117,7 @@ public class GuiScrollbar implements IScrollSource
 		this.maxScroll = max;
 		this.pageSize = pageSize;
 
-		if( this.minScroll > this.maxScroll )
-		{
+		if (this.minScroll > this.maxScroll) {
 			this.maxScroll = this.minScroll;
 		}
 
@@ -126,22 +135,27 @@ public class GuiScrollbar implements IScrollSource
 		return this.currentScroll;
 	}
 
-	public void click( final AEBaseGui aeBaseGui, final int x, final int y )
+	public void setCurrentScroll(final int currentScroll)
 	{
-		if( this.getRange() == 0 )
-		{
+		this.currentScroll = Math.max( Math.min( currentScroll, this.maxScroll ), this.minScroll );
+	}
+
+	public boolean contains(final int x, final int y)
+	{
+		return x >= this.displayX && y >= this.displayY && x <= this.displayX + this.width && y <= this.displayY + this.height;
+	}
+
+	public void click(final AEBaseGui aeBaseGui, final int x, final int y)
+	{
+		if (this.getRange() == 0) {
 			return;
 		}
 
-		if( x > this.displayX && x <= this.displayX + this.width )
-		{
-			if( y > this.displayY && y <= this.displayY + this.height )
-			{
-				this.currentScroll = ( y - this.displayY );
-				this.currentScroll = this.minScroll + ( ( this.currentScroll * 2 * this.getRange() / this.height ) );
-				this.currentScroll = ( this.currentScroll + 1 ) >> 1;
-				this.applyRange();
-			}
+		if (this.contains(x, y)) {
+			this.currentScroll = ( y - this.displayY );
+			this.currentScroll = this.minScroll + ( ( this.currentScroll * 2 * this.getRange() / this.height ) );
+			this.currentScroll = ( this.currentScroll + 1 ) >> 1;
+			this.applyRange();
 		}
 	}
 

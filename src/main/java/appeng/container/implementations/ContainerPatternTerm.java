@@ -582,7 +582,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 		List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
 		long emptyStots = enabledSlots.stream().filter(s -> s.getStack() == null).count();
 		long fullSlots = enabledSlots.stream().filter(s-> s.getStack() != null && s.getStack().stackSize * 2 > 127).count();
-		return fullSlots <= emptyStots;
+		return fullSlots <= emptyStots && emptyStots < enabledSlots.size();
 	}
 
 	static void doubleStacksInternal(SlotFake[] slots)

@@ -116,13 +116,8 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 		this.setScrollBar( scrollbar );
 		this.repo = new ItemRepo( scrollbar, this );
 
-		this.xSize = 185;
+		this.xSize = 195;
 		this.ySize = 204;
-
-		if( te instanceof IViewCellStorage )
-		{
-			this.xSize += 33;
-		}
 
 		this.standardSize = this.xSize;
 
@@ -342,6 +337,8 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 			repo.setSearchString(memoryText);
 		}
 
+		this.setScrollBar();
+
 		craftingGridOffsetX = Integer.MAX_VALUE;
 		craftingGridOffsetY = Integer.MAX_VALUE;
 
@@ -409,7 +406,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	{
 
 		this.bindTexture( this.getBackground() );
-		final int x_width = 197;
+		final int x_width = 195;
 		this.drawTexturedModalRect( offsetX, offsetY, 0, 0, x_width, 18 );
 
 		if( this.viewCell || ( this instanceof GuiSecurity ) )
@@ -614,5 +611,43 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	{
 		searchField.setText(displayName);
 	}
+
+    @Override
+    protected void handleMouseClick(Slot p_146984_1_, int p_146984_2_, int p_146984_3_, int p_146984_4_)
+    {
+
+        //Hack for view cells, because they are outside the container
+        if (p_146984_1_ != null && p_146984_4_ == 4 && p_146984_1_.xDisplayPosition > this.xSize) {
+            p_146984_4_ = 0;
+        }
+
+        super.handleMouseClick(p_146984_1_, p_146984_2_, p_146984_3_, p_146984_4_);
+    }
+
+	public boolean hideItemPanelSlot(int tx, int ty, int tw, int th)
+    {
+
+		if (this.viewCell) {
+			int rw = 33;
+			int rh = 14 + myCurrentViewCells.length * 18;
+	
+			if (rw <= 0 || rh <= 0 || tw <= 0 || th <= 0) {
+				return false;
+			}
+	
+			int rx = this.guiLeft + this.xSize;
+			int ry = this.guiTop + 0;
+	
+			rw += rx;
+			rh += ry;
+			tw += tx;
+			th += ty;
+	
+			//      overflow || intersect
+			return (rw < rx || rw > tx) && (rh < ry || rh > ty) && (tw < tx || tw > rx) && (th < ty || th > ry);
+		}
+
+        return false;
+    }
 
 }

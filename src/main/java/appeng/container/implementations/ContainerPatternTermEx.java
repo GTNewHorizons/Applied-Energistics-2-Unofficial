@@ -24,17 +24,50 @@ import java.util.List;
 import static appeng.container.implementations.ContainerPatternTerm.canDoubleStacks;
 import static appeng.container.implementations.ContainerPatternTerm.doubleStacksInternal;
 
-public class ContainerPatternTermEx extends ContainerMEMonitorable implements IOptionalSlotHost, IContainerCraftingPacket {
+public class ContainerPatternTermEx extends ContainerMEMonitorable implements IOptionalSlotHost, IContainerCraftingPacket
+{
+    private static final int CRAFTING_GRID_PAGES = 2;
+    private static final int CRAFTING_GRID_WIDTH = 4;
+    private static final int CRAFTING_GRID_HEIGHT = 4;
+    private static final int CRAFTING_GRID_SLOTS = CRAFTING_GRID_WIDTH * CRAFTING_GRID_HEIGHT;
+
+    private static class ProcessingSlotFake extends OptionalSlotFake
+    {
+
+        private static final int POSITION_SHIFT = 9000;
+        private boolean hidden = false;
+
+        public ProcessingSlotFake(IInventory inv, IOptionalSlotHost containerBus, int idx, int x, int y, int offX, int offY, int groupNum)
+        {
+            super(inv, containerBus, idx, x, y, offX, offY, groupNum);
+            this.setRenderDisabled(false);
+        }
+
+        public void setHidden(boolean hide)
+        {
+            if (this.hidden != hide) {
+                this.hidden = hide;
+                this.xDisplayPosition += (hide? -1: 1) * POSITION_SHIFT;
+            }
+        }
+
+    }
+    
     private final PartPatternTerminalEx patternTerminal;
-    private final OptionalSlotFake[] craftingSlots = new OptionalSlotFake[16];
-    private final OptionalSlotFake[] outputSlots = new OptionalSlotFake[16];
+
+    private final ProcessingSlotFake[] craftingSlots = new ProcessingSlotFake[CRAFTING_GRID_SLOTS * CRAFTING_GRID_PAGES];
+    private final ProcessingSlotFake[] outputSlots = new ProcessingSlotFake[CRAFTING_GRID_SLOTS * CRAFTING_GRID_PAGES];
+
     private final SlotRestrictedInput patternSlotIN;
     private final SlotRestrictedInput patternSlotOUT;
+
     @GuiSync( 96 + (17-9) + 12 )
     public boolean substitute = false;
     @GuiSync( 96 + (17-9) + 16 )
     public boolean inverted;
-    public boolean initialUpdatePassed = false;
+    @GuiSync( 96 + (17-9) + 17 )
+    public int activePage = 0;
+
     public ContainerPatternTermEx(final InventoryPlayer ip, final ITerminalHost monitorable )
     {
         super( ip, monitorable, false );
@@ -44,20 +77,17 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
         final IInventory output = this.getPatternTerminal().getInventoryByName( "output" );
         final IInventory crafting = this.getPatternTerminal().getInventoryByName("crafting");
 
-        for( int y = 0; y < 4; y++ )
-        {
-            for( int x = 0; x < 4; x++ )
-            {
-                this.addSlotToContainer( this.craftingSlots[x + y * 4] = new OptionalSlotFake(crafting, this, x + y * 4, 15, -83, x, y, x + 4 ) );
-                this.craftingSlots[x + y * 4].setRenderDisabled(false);
+        for (int page = 0; page < CRAFTING_GRID_PAGES; page++) {
+            for (int y = 0; y < CRAFTING_GRID_HEIGHT; y++) {
+                for (int x = 0; x < CRAFTING_GRID_WIDTH; x++) {
+                    this.addSlotToContainer(this.craftingSlots[x + y * CRAFTING_GRID_WIDTH + page * CRAFTING_GRID_SLOTS] = new ProcessingSlotFake(crafting, this, x + y * CRAFTING_GRID_WIDTH + page * CRAFTING_GRID_SLOTS, 15, -83, x, y, x + 4 ));
+                }
             }
-        }
-        for( int x = 0; x < 4; x++ )
-        {
-            for( int y = 0; y < 4; y++ )
-            {
-                this.addSlotToContainer( this.outputSlots[x*4 + y] = new OptionalSlotFake( output, this, x*4 + y, 112, -83, -x, y, x ) );
-                this.outputSlots[x*4 + y].setRenderDisabled(false);
+
+            for (int x = 0; x < CRAFTING_GRID_WIDTH; x++) {
+                for (int y = 0; y < CRAFTING_GRID_HEIGHT; y++) {
+                    this.addSlotToContainer( this.outputSlots[x * CRAFTING_GRID_HEIGHT + y + page * CRAFTING_GRID_SLOTS] = new ProcessingSlotFake( output, this, x * CRAFTING_GRID_HEIGHT + y + page * CRAFTING_GRID_SLOTS, 112, -83, -x, y, x ) );
+                }
             }
         }
 
@@ -154,7 +184,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
 
     private ItemStack[] getInputs()
     {
-        final ItemStack[] input = new ItemStack[16];
+        final ItemStack[] input = new ItemStack[CRAFTING_GRID_SLOTS * CRAFTING_GRID_PAGES];
         boolean hasValue = false;
 
         for( int x = 0; x < this.craftingSlots.length; x++ )
@@ -176,7 +206,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
 
     private ItemStack[] getOutputs()
     {
-        final List<ItemStack> list = new ArrayList<>(16);
+        final List<ItemStack> list = new ArrayList<>(CRAFTING_GRID_SLOTS * CRAFTING_GRID_PAGES);
         boolean hasValue = false;
 
         for (final OptionalSlotFake outputSlot : this.outputSlots) {
@@ -225,6 +255,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
     @Override
     public boolean isSlotEnabled( final int idx )
     {
+
         if (idx < 4) // outputs
         {
             return inverted || idx == 0;
@@ -233,49 +264,48 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
         {
             return !inverted || idx == 4;
         }
+
     }
 
     @Override
     public void detectAndSendChanges()
     {
         super.detectAndSendChanges();
-        if( Platform.isServer() )
-        {
+
+        if (Platform.isServer()) {
             substitute = patternTerminal.isSubstitution();
-            if (inverted != patternTerminal.isInverted()) {
+
+            if (inverted != patternTerminal.isInverted() || activePage != patternTerminal.getActivePage()) {
                 inverted = patternTerminal.isInverted();
-                offsetSlots(!initialUpdatePassed);
-                initialUpdatePassed = true;
+                activePage = patternTerminal.getActivePage();
+                offsetSlots();
             }
+
         }
+
     }
 
-    private void offsetSlots(boolean initial) {
-        int offset = inverted ? 9000 : - 9000;
-        if (!initial || inverted) {
-            for (int y = 0; y < 4; y++) {
-                for (int x = 1; x < 4; x++) {
-                    craftingSlots[x + y * 4].xDisplayPosition -= offset;
+    private void offsetSlots()
+    {
+
+        for (int page = 0; page < CRAFTING_GRID_PAGES; page++) {
+            for (int y = 0; y < CRAFTING_GRID_HEIGHT; y++) {
+                for (int x = 0; x < CRAFTING_GRID_WIDTH; x++) {
+                    this.craftingSlots[x + y * CRAFTING_GRID_WIDTH + page * CRAFTING_GRID_SLOTS].setHidden(page != activePage || x > 0 && inverted);
+                    this.outputSlots[x * CRAFTING_GRID_HEIGHT + y + page * CRAFTING_GRID_SLOTS].setHidden(page != activePage || x > 0 && !inverted);
                 }
             }
         }
-        if (!initial || !inverted) {
-            for (int x = 1; x < 4; x++) {
-                for (int y = 0; y < 4; y++) {
-                    outputSlots[x * 4 + y].xDisplayPosition += offset;
-                }
-            }
-        }
+
     }
+
     @Override
     public void onUpdate( final String field, final Object oldValue, final Object newValue )
     {
         super.onUpdate( field, oldValue, newValue );
 
-        if( field.equals( "inverted" ) )
-        {
-            offsetSlots(!initialUpdatePassed);
-            initialUpdatePassed = true;
+        if (field.equals( "inverted" ) || field.equals( "activePage" )) {
+            offsetSlots();
         }
     }
 
@@ -284,6 +314,8 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
     {
         if( s == this.patternSlotOUT && Platform.isServer() )
         {
+            inverted = patternTerminal.isInverted();
+
             for( final Object crafter : this.crafters )
             {
                 final ICrafting icrafting = (ICrafting) crafter;
@@ -298,6 +330,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
                 }
                 ( (EntityPlayerMP) icrafting ).isChangingQuantityOnly = false;
             }
+
             this.detectAndSendChanges();
         }
     }
@@ -348,6 +381,16 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
         this.substitute = substitute;
     }
 
+    public void setActivePage( final int activePage )
+    {
+        this.activePage = activePage;
+    }
+
+    public int getActivePage()
+    {
+        return this.activePage;
+    }
+
     public void doubleStacks(boolean isShift)
     {
         if (canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots))
@@ -365,4 +408,5 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
             this.detectAndSendChanges();
         }
     }
+
 }

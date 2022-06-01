@@ -142,70 +142,13 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 		this.outputs = out.toArray( new IAEItemStack[out.size()] );
 		this.inputs = in.toArray( new IAEItemStack[in.size()] );
 
-		final Map<IAEItemStack, IAEItemStack> tmpOutputs = new HashMap<IAEItemStack, IAEItemStack>();
+		this.condensedInputs = convertToCondensedList(this.inputs);
+		this.condensedOutputs = convertToCondensedList(this.outputs);
 
-		for( final IAEItemStack io : this.outputs )
-		{
-			if( io == null )
-			{
-				continue;
-			}
-
-			final IAEItemStack g = tmpOutputs.get( io );
-
-			if( g == null )
-			{
-				tmpOutputs.put( io, io.copy() );
-			}
-			else
-			{
-				g.add( io );
-			}
-		}
-
-		final Map<IAEItemStack, IAEItemStack> tmpInputs = new HashMap<IAEItemStack, IAEItemStack>();
-
-		for( final IAEItemStack io : this.inputs )
-		{
-			if( io == null )
-			{
-				continue;
-			}
-
-			final IAEItemStack g = tmpInputs.get( io );
-
-			if( g == null )
-			{
-				tmpInputs.put( io, io.copy() );
-			}
-			else
-			{
-				g.add( io );
-			}
-		}
-
-		if( tmpOutputs.isEmpty() || tmpInputs.isEmpty() )
-		{
+		if (condensedInputs.length == 0 || condensedOutputs.length == 0) {
 			throw new IllegalStateException( "No pattern here!" );
 		}
 
-		this.condensedInputs = new IAEItemStack[tmpInputs.size()];
-		int offset = 0;
-
-		for( final IAEItemStack io : tmpInputs.values() )
-		{
-			this.condensedInputs[offset] = io;
-			offset++;
-		}
-
-		offset = 0;
-		this.condensedOutputs = new IAEItemStack[tmpOutputs.size()];
-
-		for( final IAEItemStack io : tmpOutputs.values() )
-		{
-			this.condensedOutputs[offset] = io;
-			offset++;
-		}
 	}
 
 	private void markItemAs( final int slotIndex, final ItemStack i, final TestStatus b )
@@ -465,4 +408,57 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 			return equality;
 		}
 	}
+
+
+	public static IAEItemStack[] loadIAEItemStackFromNBT(final NBTTagList tags, boolean saveOrder, final ItemStack unknownItem)
+	{
+        final List<IAEItemStack> items = new ArrayList<IAEItemStack>();
+
+		for (int x = 0; x < tags.tagCount(); x++) {
+			final NBTTagCompound tag = tags.getCompoundTagAt(x);
+
+			if (tag.hasNoTags()) {
+				continue;
+			}
+
+			ItemStack gs = ItemStack.loadItemStackFromNBT(tag);
+
+			if (gs == null && unknownItem != null) {
+				gs = unknownItem.copy();
+			}
+
+            final IAEItemStack ae = AEApi.instance().storage().createItemStack(gs);
+
+            if (ae != null || saveOrder) {
+                items.add(ae);
+            }
+
+		}
+
+		return items.toArray( new IAEItemStack[items.size()] );
+	}
+
+	public static IAEItemStack[] convertToCondensedList(final IAEItemStack[] items)
+	{
+		final Map<IAEItemStack, IAEItemStack> tmp = new HashMap<IAEItemStack, IAEItemStack>();
+
+		for (final IAEItemStack io : items) {
+
+			if (io == null) {
+				continue;
+			}
+
+			final IAEItemStack g = tmp.get(io);
+
+			if (g == null) {
+				tmp.put(io, io.copy());
+			} else {
+				g.add(io);
+			}
+
+		}
+
+		return tmp.values().toArray(new IAEItemStack[tmp.size()]);
+	}
+
 }

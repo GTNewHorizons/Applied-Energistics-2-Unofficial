@@ -24,6 +24,7 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.PatternHelper;
 import appeng.helpers.Reflected;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
@@ -111,30 +112,54 @@ public class PartPatternTerminal extends AbstractPartTerminal
 	@Override
 	public void onChangeInventory( final IInventory inv, final int slot, final InvOperation mc, final ItemStack removedStack, final ItemStack newStack )
 	{
-		if( inv == this.pattern && slot == 1 )
-		{
-			final ItemStack is = this.pattern.getStackInSlot( 1 );
-			if( is != null && is.getItem() instanceof ICraftingPatternItem )
-			{
-				final ICraftingPatternItem pattern = (ICraftingPatternItem) is.getItem();
-				final ICraftingPatternDetails details = pattern.getPatternForItem( is, this.getHost().getTile().getWorldObj() );
-				if( details != null )
-				{
-					this.setCraftingRecipe( details.isCraftable() );
-					this.setSubstitution( details.canSubstitute() );
+		if (inv == this.pattern && slot == 1) {
 
-					for( int x = 0; x < this.crafting.getSizeInventory() && x < details.getInputs().length; x++ )
-					{
-						final IAEItemStack item = details.getInputs()[x];
-						this.crafting.setInventorySlotContents( x, item == null ? null : item.getItemStack() );
+			final ItemStack stack = this.pattern.getStackInSlot( 1 );
+
+			if (stack != null && stack.getItem() instanceof ICraftingPatternItem) {
+                final ICraftingPatternItem pattern = (ICraftingPatternItem) stack.getItem();
+                final NBTTagCompound encodedValue = stack.getTagCompound();
+
+				if (encodedValue != null) {
+                    final ICraftingPatternDetails details = pattern.getPatternForItem( stack, this.getHost().getTile().getWorldObj() );
+                    final boolean substitute = encodedValue.getBoolean("substitute");
+					final boolean isCrafting = encodedValue.getBoolean( "crafting" );
+                    final IAEItemStack[] inItems;
+                    final IAEItemStack[] outItems;
+       
+                    if (details == null) {
+                        inItems = PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10), true, null);
+                        outItems = PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10), true, null);
+                    } else {
+                        inItems = details.getInputs();
+                        outItems = details.getOutputs();
+                    }
+
+					this.setCraftingRecipe(isCrafting);
+					this.setSubstitution(substitute);
+
+                    for (int x = 0; x < this.crafting.getSizeInventory(); x++) {
+                        this.crafting.setInventorySlotContents(x, null);
+                    }
+                    
+                    for (int x = 0; x < this.output.getSizeInventory(); x++) {
+                        this.output.setInventorySlotContents(x, null);
+                    }
+
+                    for (int x = 0; x < this.crafting.getSizeInventory() && x < inItems.length; x++) {
+                        if (inItems[x] != null) {
+                            this.crafting.setInventorySlotContents(x, inItems[x].getItemStack());
+                        }
+                    }
+					
+                    for (int x = 0; x < this.output.getSizeInventory() && x < outItems.length; x++) {
+						if (outItems[x] != null) {
+							this.output.setInventorySlotContents(x, outItems[x].getItemStack());
+						}
 					}
 
-					for( int x = 0; x < this.output.getSizeInventory() && x < details.getOutputs().length; x++ )
-					{
-						final IAEItemStack item = details.getOutputs()[x];
-						this.output.setInventorySlotContents( x, item == null ? null : item.getItemStack() );
-					}
 				}
+
 			}
 		}
 		else if( inv == this.crafting )
@@ -219,4 +244,5 @@ public class PartPatternTerminal extends AbstractPartTerminal
 	{
 		return FRONT_DARK_ICON;
 	}
+
 }

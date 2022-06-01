@@ -5,6 +5,7 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.PatternHelper;
 import appeng.helpers.Reflected;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
@@ -20,12 +21,13 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
     private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
     private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
 
-    private final AppEngInternalInventory crafting = new AppEngInternalInventory( this, 16 );
-    private final AppEngInternalInventory output = new AppEngInternalInventory( this, 16 );
+    private final AppEngInternalInventory crafting = new AppEngInternalInventory( this, 32 );
+    private final AppEngInternalInventory output = new AppEngInternalInventory( this, 32 );
     private final AppEngInternalInventory pattern = new AppEngInternalInventory( this, 2 );
 
     private boolean substitute = false;
     private boolean inverted = false;
+    private int activePage = 0;
 
     @Reflected
     public PartPatternTerminalEx( final ItemStack is )
@@ -49,22 +51,29 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
     public void readFromNBT( final NBTTagCompound data )
     {
         super.readFromNBT( data );
-        this.setSubstitution( data.getBoolean( "substitute" ) );
+        
         this.pattern.readFromNBT( data, "pattern" );
         this.output.readFromNBT( data, "outputList" );
         this.crafting.readFromNBT( data, "craftingGrid" );
-        inverted = data.getBoolean( "inverted" );
+
+        this.setSubstitution( data.getBoolean( "substitute" ) );
+        this.setInverted( data.getBoolean( "inverted" ) );
+        this.setActivePage( data.getInteger( "activePage" ) );
+
     }
 
     @Override
     public void writeToNBT( final NBTTagCompound data )
     {
         super.writeToNBT( data );
-        data.setBoolean( "substitute", this.substitute );
+
         this.pattern.writeToNBT( data, "pattern" );
         this.output.writeToNBT( data, "outputList" );
         this.crafting.writeToNBT( data, "craftingGrid" );
-        data.setBoolean("inverted", inverted);
+
+        data.setBoolean( "substitute", this.substitute );
+        data.setBoolean( "inverted", this.inverted );
+        data.setInteger( "activePage", this.activePage );
     }
 
     @Override
@@ -90,31 +99,76 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
     @Override
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc, final ItemStack removedStack, final ItemStack newStack )
     {
-        if( inv == this.pattern && slot == 1 )
-        {
-            final ItemStack is = this.pattern.getStackInSlot( 1 );
-            if( is != null && is.getItem() instanceof ICraftingPatternItem)
-            {
-                final ICraftingPatternItem pattern = (ICraftingPatternItem) is.getItem();
-                final ICraftingPatternDetails details = pattern.getPatternForItem( is, this.getHost().getTile().getWorldObj() );
-                if( details != null )
-                {
-                    this.setSubstitution( details.canSubstitute() );
+        if (inv == this.pattern && slot == 1) {
+            final ItemStack stack = this.pattern.getStackInSlot( 1 );
 
-                    for( int x = 0; x < this.crafting.getSizeInventory() && x < details.getInputs().length; x++ )
-                    {
-                        final IAEItemStack item = details.getInputs()[x];
-                        this.crafting.setInventorySlotContents( x, item == null ? null : item.getItemStack() );
+            if (stack != null && stack.getItem() instanceof ICraftingPatternItem) {
+                final ICraftingPatternItem pattern = (ICraftingPatternItem) stack.getItem();
+                final NBTTagCompound encodedValue = stack.getTagCompound();
+
+                if (encodedValue != null) {
+                    final ICraftingPatternDetails details = pattern.getPatternForItem( stack, this.getHost().getTile().getWorldObj() );
+                    final boolean substitute = encodedValue.getBoolean("substitute");
+                    final IAEItemStack[] inItems;
+                    final IAEItemStack[] outItems;
+                    int inputsCount = 0;
+                    int outputCount = 0;
+       
+                    if (details == null) {
+                        inItems = PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10), true, null);
+                        outItems = PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10), false, null);
+                    } else {
+                        inItems = details.getInputs();
+                        outItems = details.getOutputs();
                     }
 
-                    for( int x = 0; x < this.output.getSizeInventory() && x < details.getOutputs().length; x++ )
-                    {
-                        final IAEItemStack item = details.getOutputs()[x];
-                        this.output.setInventorySlotContents( x, item == null ? null : item.getItemStack() );
+                    for (int x = 0; x < inItems.length; x++) {
+                        if (inItems[x] != null) {
+                            inputsCount ++;
+                        }
                     }
+
+                    for (int x = 0; x < outItems.length; x++) {
+                        if (outItems[x] != null) {
+                            outputCount ++;
+                        }
+                    }
+
+                    this.setSubstitution(substitute);
+                    this.setInverted(inputsCount <= 8 && outputCount >= 8);
+                    this.setActivePage(0);
+
+                    for (int x = 0; x < this.crafting.getSizeInventory(); x++) {
+                        this.crafting.setInventorySlotContents(x, null);
+                    }
+                    
+                    for (int x = 0; x < this.output.getSizeInventory(); x++) {
+                        this.output.setInventorySlotContents(x, null);
+                    }
+
+                    for (int x = 0; x < this.crafting.getSizeInventory() && x < inItems.length; x++) {
+                        if (inItems[x] != null) {
+                            this.crafting.setInventorySlotContents(x, inItems[x].getItemStack());
+                        }
+                    }
+                    
+                    if (inverted) {
+                        for (int x = 0; x < this.output.getSizeInventory() && x < outItems.length; x++) {
+                            if (outItems[x] != null) {
+                                this.output.setInventorySlotContents(x, outItems[x].getItemStack());
+                            }
+                        }
+                    } else {
+                        for (int x = 0; x < outItems.length && x < 8; x++) {
+                            this.output.setInventorySlotContents(x >= 4? 12 + x : x, outItems[x].getItemStack());
+                        }
+                    }
+
                 }
+
             }
         }
+        
         this.getHost().markForSave();
     }
 
@@ -167,11 +221,24 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
         return FRONT_DARK_ICON;
     }
 
-    public boolean isInverted() {
+    public boolean isInverted()
+    {
         return inverted;
     }
 
-    public void setInverted(boolean inverted) {
+    public void setInverted(boolean inverted)
+    {
         this.inverted = inverted;
     }
+
+    public int getActivePage()
+    {
+        return this.activePage;
+    }
+
+    public void setActivePage(int activePage)
+    {
+        this.activePage = activePage;
+    }
+
 }

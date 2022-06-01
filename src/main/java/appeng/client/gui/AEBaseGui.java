@@ -39,7 +39,6 @@ import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
-import appeng.tile.inventory.AppEngInternalInventory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
@@ -51,7 +50,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -716,17 +714,30 @@ public abstract class AEBaseGui extends GuiContainer
 	{
 		super.handleMouseInput();
 
-		final int i = Mouse.getEventDWheel();
-		if( i != 0 && isShiftKeyDown() )
-		{
+		final int wheel = Mouse.getEventDWheel();
+
+		if (wheel != 0) {
 			final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
 			final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
-			this.mouseWheelEvent( x, y, i / Math.abs( i ) );
+
+			if (isShiftKeyDown()) {
+				this.mouseWheelEvent(x, y, wheel / Math.abs(wheel));
+			} else if (this.getScrollBar() != null) {
+				final GuiScrollbar scrollBar = this.getScrollBar();
+
+				if (
+					x > this.guiLeft && 
+					y - this.guiTop > scrollBar.getTop() && 
+					x <= this.guiLeft + this.xSize && 
+					y - this.guiTop <= scrollBar.getTop() + scrollBar.getHeight()
+				) {
+					this.getScrollBar().wheel(wheel);
+				}
+	
+			}
+
 		}
-		else if( i != 0 && this.getScrollBar() != null )
-		{
-			this.getScrollBar().wheel( i );
-		}
+
 	}
 
 	private void mouseWheelEvent( final int x, final int y, final int wheel )

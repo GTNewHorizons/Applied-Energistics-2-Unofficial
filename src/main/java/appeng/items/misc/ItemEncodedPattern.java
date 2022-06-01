@@ -127,8 +127,11 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
 		IAEItemStack[] outItems;
 
 		if (details == null) {
-			inItems = loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10));
-			outItems = loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10));
+			final ItemStack unknownItem = new ItemStack(Blocks.fire);
+			unknownItem.setStackDisplayName(GuiText.UnknownItem.getLocal());
+
+			inItems = PatternHelper.convertToCondensedList(PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10), false, unknownItem));
+			outItems = PatternHelper.convertToCondensedList(PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10), false, unknownItem));
 		} else {
 			inItems = details.getCondensedInputs();
 			outItems = details.getCondensedOutputs();
@@ -219,39 +222,6 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
 		}
 
 		return recipeIsBroken;
-	}
-
-	private IAEItemStack[] loadIAEItemStackFromNBT(final NBTTagList tags)
-	{
-		final Map<IAEItemStack, IAEItemStack> items = new HashMap<IAEItemStack, IAEItemStack>();
-		final ItemStack unknownItem = new ItemStack(Blocks.fire);
-		unknownItem.setStackDisplayName(GuiText.UnknownItem.getLocal());
-
-		for (int x = 0; x < tags.tagCount(); x++) {
-			final NBTTagCompound tag = tags.getCompoundTagAt(x);
-
-			if (tag.hasNoTags()) {
-				continue;
-			}
-
-			ItemStack gs = ItemStack.loadItemStackFromNBT(tag);
-
-			if (gs == null) {
-				gs = unknownItem.copy();
-			}
-
-			final IAEItemStack ae = AEApi.instance().storage().createItemStack(gs);
-			final IAEItemStack g = items.get(ae);
-
-			if (g == null) {
-				items.put(ae, ae.copy());
-			} else {
-				g.add(ae);
-			}
-
-		}
-
-		return items.values().toArray(new IAEItemStack[items.size()]);
 	}
 
 }
