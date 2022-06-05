@@ -1,5 +1,6 @@
 package appeng.util.calculators;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Stack;
 
@@ -83,8 +84,8 @@ public class Calculator {
                 firstValue = firstValue.replace("~", "-");
                 secondValue = secondValue.replace("~", "-");
 
-                String tempResult = calculate(firstValue, secondValue, currentValue.charAt(0));
-                resultStack.push(tempResult);
+                BigDecimal tempResult = calculate(firstValue, secondValue, currentValue.charAt(0));
+                resultStack.push(String.valueOf(tempResult));
             }
         }
         return Double.parseDouble(resultStack.pop());
@@ -168,20 +169,20 @@ public class Calculator {
      * @param currentOp
      * @return
      */
-    private String calculate(String firstValue, String secondValue, char currentOp) {
-        String result = "";
+    private BigDecimal calculate(String firstValue, String secondValue, char currentOp) {
+        BigDecimal result = BigDecimal.ZERO;
         switch (currentOp) {
             case '+':
-                result = String.valueOf(ArithHelper.add(firstValue, secondValue));
+                result = ArithHelper.add(firstValue, secondValue);
                 break;
             case '-':
-                result = String.valueOf(ArithHelper.sub(firstValue, secondValue));
+                result = ArithHelper.sub(firstValue, secondValue);
                 break;
             case '*':
-                result = String.valueOf(ArithHelper.mul(firstValue, secondValue));
+                result = ArithHelper.mul(firstValue, secondValue);
                 break;
             case '/':
-                result = String.valueOf(ArithHelper.div(firstValue, secondValue));
+                result = ArithHelper.div(firstValue, secondValue);
                 break;
         }
         return result;
