@@ -84,7 +84,7 @@ public class Calculator {
                 firstValue = firstValue.replace("~", "-");
                 secondValue = secondValue.replace("~", "-");
 
-                BigDecimal tempResult = calculate(firstValue, secondValue, currentValue.charAt(0));
+                String tempResult = calculate(firstValue, secondValue, currentValue.charAt(0));
                 resultStack.push(String.valueOf(tempResult));
             }
         }
@@ -169,8 +169,8 @@ public class Calculator {
      * @param currentOp
      * @return
      */
-    private BigDecimal calculate(String firstValue, String secondValue, char currentOp) {
-        BigDecimal result = BigDecimal.ZERO;
+    private String calculate(String firstValue, String secondValue, char currentOp) {
+        String result = "";
         switch (currentOp) {
             case '+':
                 result = ArithHelper.add(firstValue, secondValue);
