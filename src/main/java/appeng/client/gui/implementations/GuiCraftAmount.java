@@ -265,10 +265,14 @@ public class GuiCraftAmount extends AEBaseGui
             int resultI;
 
             if( resultD <= 0 || Double.isNaN( resultD ) ) {
-                resultI = 1;
+                resultI = 0;
             }
             else {
                 resultI = (int) ArithHelper.round(resultD, 0);
+            }
+
+            if (resultI == 1 && i > 0) {
+                resultI = 0;
             }
 
             resultI += i;
