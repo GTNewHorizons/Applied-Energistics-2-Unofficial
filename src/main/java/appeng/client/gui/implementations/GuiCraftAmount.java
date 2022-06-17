@@ -271,7 +271,7 @@ public class GuiCraftAmount extends AEBaseGui
                 resultI = (int) ArithHelper.round(resultD, 0);
             }
 
-            if (resultI == 1 && i > 0) {
+            if (resultI == 1 && i > 1) {
                 resultI = 0;
             }
 
