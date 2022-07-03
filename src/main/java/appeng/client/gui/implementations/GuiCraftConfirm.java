@@ -38,6 +38,7 @@ import appeng.parts.reporting.PartPatternTerminal;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
 import appeng.util.Platform;
+import appeng.util.ReadableNumberConverter;
 import com.google.common.base.Joiner;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -243,7 +244,7 @@ public class GuiCraftConfirm extends AEBaseGui
 		int toolPosX = 0;
 		int toolPosY = 0;
 		hoveredStack = null;
-
+        final ReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
 		final int offY = 23;
 
 		for( int z = viewStart; z < Math.min( viewEnd, this.visual.size() ); z++ )
@@ -278,21 +279,7 @@ public class GuiCraftConfirm extends AEBaseGui
 
 				if( stored != null && stored.getStackSize() > 0 )
 				{
-					String str = Long.toString( stored.getStackSize() );
-					if( stored.getStackSize() >= 10000 )
-					{
-						str = Long.toString( stored.getStackSize() / 1000 ) + 'k';
-					}
-					if( stored.getStackSize() >= 10000000 )
-					{
-						str = Long.toString( stored.getStackSize() / 1000000 ) + 'm';
-					}
-                    if( stored.getStackSize() >= 10000000000L )
-                    {
-                        str = Long.toString( stored.getStackSize() / 1000000000L ) + 'b';
-                    }
-
-					str = GuiText.FromStorage.getLocal() + ": " + str;
+					String str = GuiText.FromStorage.getLocal() + ": " + converter.toWideReadableForm(stored.getStackSize());
 					final int w = 4 + this.fontRendererObj.getStringWidth( str );
 					this.fontRendererObj.drawString( str, (int) ( ( x * ( 1 + sectionLength ) + xo + sectionLength - 19 - ( w * 0.5 ) ) * 2 ), ( y * offY + yo + 6 - negY + downY ) * 2, 4210752 );
 
@@ -307,21 +294,7 @@ public class GuiCraftConfirm extends AEBaseGui
 				boolean red = false;
 				if( missingStack != null && missingStack.getStackSize() > 0 )
 				{
-					String str = Long.toString( missingStack.getStackSize() );
-					if( missingStack.getStackSize() >= 10000 )
-					{
-						str = Long.toString( missingStack.getStackSize() / 1000 ) + 'k';
-					}
-					if( missingStack.getStackSize() >= 10000000 )
-					{
-						str = Long.toString( missingStack.getStackSize() / 1000000 ) + 'm';
-					}
-                    if( missingStack.getStackSize() >= 10000000000L )
-                    {
-                        str = Long.toString( missingStack.getStackSize() / 1000000000 ) + 'b';
-                    }
-
-					str = GuiText.Missing.getLocal() + ": " + str;
+					String str = GuiText.Missing.getLocal() + ": " + converter.toWideReadableForm( missingStack.getStackSize() );
 					final int w = 4 + this.fontRendererObj.getStringWidth( str );
 					this.fontRendererObj.drawString( str, (int) ( ( x * ( 1 + sectionLength ) + xo + sectionLength - 19 - ( w * 0.5 ) ) * 2 ), ( y * offY + yo + 6 - negY + downY ) * 2, 4210752 );
 
@@ -336,21 +309,7 @@ public class GuiCraftConfirm extends AEBaseGui
 
 				if( pendingStack != null && pendingStack.getStackSize() > 0 )
 				{
-					String str = Long.toString( pendingStack.getStackSize() );
-					if( pendingStack.getStackSize() >= 10000 )
-					{
-						str = Long.toString( pendingStack.getStackSize() / 1000 ) + 'k';
-					}
-					if( pendingStack.getStackSize() >= 10000000 )
-					{
-						str = Long.toString( pendingStack.getStackSize() / 1000000 ) + 'm';
-					}
-                    if( pendingStack.getStackSize() >= 10000000000L )
-                    {
-                        str = Long.toString( pendingStack.getStackSize() / 1000000000 ) + 'b';
-                    }
-
-					str = GuiText.ToCraft.getLocal() + ": " + str;
+					String str = GuiText.ToCraft.getLocal() + ": " + converter.toWideReadableForm( pendingStack.getStackSize() );
 					final int w = 4 + this.fontRendererObj.getStringWidth( str );
 					this.fontRendererObj.drawString( str, (int) ( ( x * ( 1 + sectionLength ) + xo + sectionLength - 19 - ( w * 0.5 ) ) * 2 ), ( y * offY + yo + 6 - negY + downY ) * 2, 4210752 );
 
