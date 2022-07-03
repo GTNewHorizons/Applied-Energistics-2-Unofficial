@@ -287,6 +287,10 @@ public class GuiCraftConfirm extends AEBaseGui
 					{
 						str = Long.toString( stored.getStackSize() / 1000000 ) + 'm';
 					}
+                    if( stored.getStackSize() >= 10000000000L )
+                    {
+                        str = Long.toString( stored.getStackSize() / 1000000000L ) + 'b';
+                    }
 
 					str = GuiText.FromStorage.getLocal() + ": " + str;
 					final int w = 4 + this.fontRendererObj.getStringWidth( str );
@@ -294,7 +298,7 @@ public class GuiCraftConfirm extends AEBaseGui
 
 					if( this.tooltip == z - viewStart )
 					{
-						lineList.add( GuiText.FromStorage.getLocal() + ": " + Long.toString( stored.getStackSize() ) );
+						lineList.add( GuiText.FromStorage.getLocal() + ": " + NumberFormat.getInstance().format( stored.getStackSize() ) );
 					}
 
 					downY += 5;
@@ -312,6 +316,10 @@ public class GuiCraftConfirm extends AEBaseGui
 					{
 						str = Long.toString( missingStack.getStackSize() / 1000000 ) + 'm';
 					}
+                    if( missingStack.getStackSize() >= 10000000000L )
+                    {
+                        str = Long.toString( missingStack.getStackSize() / 1000000000 ) + 'b';
+                    }
 
 					str = GuiText.Missing.getLocal() + ": " + str;
 					final int w = 4 + this.fontRendererObj.getStringWidth( str );
@@ -319,7 +327,7 @@ public class GuiCraftConfirm extends AEBaseGui
 
 					if( this.tooltip == z - viewStart )
 					{
-						lineList.add( GuiText.Missing.getLocal() + ": " + Long.toString( missingStack.getStackSize() ) );
+						lineList.add( GuiText.Missing.getLocal() + ": " + NumberFormat.getInstance().format( missingStack.getStackSize() ) );
 					}
 
 					red = true;
@@ -337,6 +345,10 @@ public class GuiCraftConfirm extends AEBaseGui
 					{
 						str = Long.toString( pendingStack.getStackSize() / 1000000 ) + 'm';
 					}
+                    if( pendingStack.getStackSize() >= 10000000000L )
+                    {
+                        str = Long.toString( pendingStack.getStackSize() / 1000000000 ) + 'b';
+                    }
 
 					str = GuiText.ToCraft.getLocal() + ": " + str;
 					final int w = 4 + this.fontRendererObj.getStringWidth( str );
@@ -344,7 +356,7 @@ public class GuiCraftConfirm extends AEBaseGui
 
 					if( this.tooltip == z - viewStart )
 					{
-						lineList.add( GuiText.ToCraft.getLocal() + ": " + Long.toString( pendingStack.getStackSize() ) );
+						lineList.add( GuiText.ToCraft.getLocal() + ": " + NumberFormat.getInstance().format( pendingStack.getStackSize() ) );
 					}
 				}
 
