@@ -1299,7 +1299,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU
 		this.getListOfItem( list, CraftingItemList.ACTIVE );
 		this.getListOfItem( list, CraftingItemList.PENDING );
 
-		int itemCount = 0;
+		long itemCount = 0;
 		for( final IAEItemStack ge : list )
 		{
 			itemCount += ge.getStackSize();
