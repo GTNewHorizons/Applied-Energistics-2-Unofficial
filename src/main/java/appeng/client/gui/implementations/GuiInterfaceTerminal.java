@@ -45,9 +45,7 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.util.Platform;
-
 import com.google.common.collect.HashMultimap;
-
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -55,7 +53,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
-
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
@@ -78,13 +75,13 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 
 	private final Map<String, Set<Object>> cachedSearches = new WeakHashMap<>();
 
-	private MEGuiTextField searchFieldOutputs;
-	private MEGuiTextField searchFieldInputs;
-	private MEGuiTextField searchFieldNames;
-	private GuiImgButton guiButtonHideFull;
-	private GuiImgButton guiButtonAssemblersOnly;
-	private GuiImgButton guiButtonBrokenRecipes;
-	private GuiImgButton terminalStyleBox;
+    private final MEGuiTextField searchFieldOutputs;
+    private final MEGuiTextField searchFieldInputs;
+    private final MEGuiTextField searchFieldNames;
+    private final GuiImgButton guiButtonHideFull;
+    private final GuiImgButton guiButtonAssemblersOnly;
+    private final GuiImgButton guiButtonBrokenRecipes;
+    private final GuiImgButton terminalStyleBox;
 	private boolean refreshList = false;
 	private boolean onlyMolecularAssemblers = false;
 	private boolean onlyBrokenRecipes = false;
@@ -195,17 +192,17 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 	{
 		final int maxRows = this.getMaxRows();
 		final boolean hasNEI = IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.NEI );
-		final int NEIPadding = hasNEI? 22 /** input */ + 18 /** top panel */: 0;
+		final int NEIPadding = hasNEI? 22 /* input */ + 18 /* top panel */: 0;
 		final int extraSpace = this.height - MAGIC_HEIGHT_NUMBER - NEIPadding;
 
-		return Math.max(3, Math.min(maxRows, (int) Math.floor( extraSpace / 18 )));
+		return Math.max(3, Math.min(maxRows, extraSpace / 18));
 	}
 
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
 		fontRendererObj.drawString( getGuiDisplayName( GuiText.InterfaceTerminal.getLocal() ), 8, 6, 4210752 );
-		fontRendererObj.drawString( GuiText.inventory.getLocal(), this.offsetX + 2, this.ySize - 96, 4210752 );
+		fontRendererObj.drawString( GuiText.inventory.getLocal(), GuiInterfaceTerminal.offsetX + 2, this.ySize - 96, 4210752 );
 
 		int offset = 51;
 		final int ex = getScrollBar().getCurrentScroll();
@@ -237,7 +234,7 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 					name = name.substring( 0, name.length() - 1 );
 				}
 
-				this.fontRendererObj.drawString( name + postfix, this.offsetX + 3, 6 + offset, 4210752 );
+				this.fontRendererObj.drawString( name + postfix, GuiInterfaceTerminal.offsetX + 3, 6 + offset, 4210752 );
 			}
 
 			offset += 18;
@@ -348,7 +345,7 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 				{
 					AEConfig.instance.settings.putSetting( iBtn.getSetting(), next );
 
-					this.reinitalize();
+					this.reinitialize();
 				}
 
 				iBtn.set( next );
@@ -357,7 +354,7 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 
 	}
 
-	private void reinitalize()
+	private void reinitialize()
 	{
 		this.buttonList.clear();
 		this.initGui();
@@ -400,30 +397,62 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 	@Override
 	protected void keyTyped( final char character, final int key )
 	{
-		if (!checkHotbarKeys(key)) {
+        if( !checkHotbarKeys( key ) )
+        {
+            if( character == ' ' )
+            {
+                if( ( searchFieldInputs.getText().isEmpty() && searchFieldInputs.isFocused() ) ||
+                        ( searchFieldOutputs.getText().isEmpty() && searchFieldOutputs.isFocused() ) ||
+                        ( searchFieldNames.getText().isEmpty() && searchFieldNames.isFocused() ) )
+                    return;
+            } else if( character == '\t' )
+            {
+                if( handleTab() )
+                    return;
+            }
+            if( searchFieldInputs.textboxKeyTyped( character, key ) ||
+                    searchFieldOutputs.textboxKeyTyped( character, key ) ||
+                    searchFieldNames.textboxKeyTyped( character, key ) )
+            {
+                refreshList();
+            } else
+            {
+                super.keyTyped( character, key );
+            }
+        }
+    }
 
-			if (character == ' ') {
-				if (
-					(searchFieldInputs.getText().isEmpty() && searchFieldInputs.isFocused()) || 
-					(searchFieldOutputs.getText().isEmpty() && searchFieldOutputs.isFocused()) || 
-					(searchFieldNames.getText().isEmpty() && searchFieldNames.isFocused())
-				) return;
-			}
+    private boolean handleTab()
+    {
+        if( searchFieldInputs.isFocused() )
+        {
+            searchFieldInputs.setFocused( false );
+            if (isShiftKeyDown())
+                searchFieldNames.setFocused( true );
+            else
+                searchFieldOutputs.setFocused( true );
+            return true;
+        } else if( searchFieldOutputs.isFocused() )
+        {
+            searchFieldOutputs.setFocused( false );
+            if (isShiftKeyDown())
+                searchFieldInputs.setFocused( true );
+            else
+                searchFieldNames.setFocused( true );
+            return true;
+        } else if( searchFieldNames.isFocused() )
+        {
+            searchFieldNames.setFocused( false );
+            if (isShiftKeyDown())
+                searchFieldOutputs.setFocused( true );
+            else
+                searchFieldInputs.setFocused( true );
+            return true;
+        }
+        return false;
+    }
 
-			if (
-				searchFieldInputs.textboxKeyTyped(character, key) ||
-				searchFieldOutputs.textboxKeyTyped(character, key) ||
-				searchFieldNames.textboxKeyTyped(character, key)
-			) {
-				refreshList();
-			} else {
-				super.keyTyped( character, key );
-			}
-
-		}
-	}
-
-	public void postUpdate( final NBTTagCompound in )
+    public void postUpdate( final NBTTagCompound in )
 	{
 		if( in.getBoolean( "clear" ) )
 		{
@@ -604,7 +633,7 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 					return true;
 				}
 			}
-			else if (containsInvalidDisplayName && tag != null && !tag.hasNoTags())
+			else if (containsInvalidDisplayName && !tag.hasNoTags())
 			{
 				return true;
 			}
