@@ -954,6 +954,8 @@ public class DualityInterface
 					continue;
 				}
 			}
+            if (te != null && te.getClass().getName().equals( "li.cil.oc.common.tileentity.Adapter" ))
+                continue;
 
 			final InventoryAdaptor ad = InventoryAdaptor.getAdaptor( te, s.getOpposite() );
 			if( ad != null )
@@ -1022,7 +1024,8 @@ public class DualityInterface
 			for( final ForgeDirection s : possibleDirections )
 			{
 				final TileEntity te = w.getTileEntity( tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ );
-
+				if (te != null && te.getClass().getName().equals( "li.cil.oc.common.tileentity.Adapter" ))
+				    continue;
 				final InventoryAdaptor ad = InventoryAdaptor.getAdaptor( te, s.getOpposite() );
 				if( ad != null )
 				{
