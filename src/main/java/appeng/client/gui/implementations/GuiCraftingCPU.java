@@ -33,6 +33,7 @@ import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
@@ -250,7 +251,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource
 
 				if( AEConfig.instance.useColoredCraftingStatus && ( active || scheduled ) )
 				{
-					final int bgColor = ( active ? AEColor.Green.blackVariant : AEColor.Yellow.blackVariant ) | BACKGROUND_ALPHA;
+					final int bgColor = active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUScheduled.getColor();
 					final int startX = ( x * ( 1 + SECTION_LENGTH ) + ITEMSTACK_LEFT_OFFSET ) * 2;
 					final int startY = ( ( y * offY + ITEMSTACK_TOP_OFFSET ) - 3 ) * 2;
 					drawRect( startX, startY, startX + ( SECTION_LENGTH * 2 ), startY + ( offY * 2 ) - 2, bgColor );

@@ -39,6 +39,7 @@ import appeng.core.AEConfig;
 import appeng.core.CommonHelper;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.localization.PlayerMessages;
 import appeng.helpers.PatternHelper;
 import appeng.integration.IntegrationRegistry;
@@ -215,7 +216,7 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 				for( int z = 0; z < inv.getInventory().getSizeInventory(); z++ )
 				{
 					if (this.matchedStacks.contains(inv.getInventory().getStackInSlot(z)))
-						drawRect( z * 18 + 22, 1 + offset, z * 18 + 22 + 16, 1 + offset + 16, 0x2A00FF00 );
+						drawRect( z * 18 + 22, 1 + offset, z * 18 + 22 + 16, 1 + offset + 16, GuiColors.InterfaceTerminalMatch.getColor() );
 				}
 			}
 			else if( lineObj instanceof String )

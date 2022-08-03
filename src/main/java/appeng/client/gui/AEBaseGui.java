@@ -32,6 +32,7 @@ import appeng.container.slot.AppEngSlot.hasCalculatedValidness;
 import appeng.core.AELog;
 import appeng.core.AppEng;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketSwapSlots;
@@ -821,7 +822,7 @@ public abstract class AEBaseGui extends GuiContainer
 				if( !this.isPowered() )
 				{
 					GL11.glDisable( GL11.GL_LIGHTING );
-					drawRect( s.xDisplayPosition, s.yDisplayPosition, 16 + s.xDisplayPosition, 16 + s.yDisplayPosition, 0x66111111 );
+					drawRect( s.xDisplayPosition, s.yDisplayPosition, 16 + s.xDisplayPosition, 16 + s.yDisplayPosition, GuiColors.ItemSlotOverlayUnpowered.getColor() );
 					GL11.glEnable( GL11.GL_LIGHTING );
 				}
 
@@ -915,7 +916,7 @@ public abstract class AEBaseGui extends GuiContainer
 						itemRender.zLevel = 100.0F;
 
 						GL11.glDisable( GL11.GL_LIGHTING );
-						drawRect( s.xDisplayPosition, s.yDisplayPosition, 16 + s.xDisplayPosition, 16 + s.yDisplayPosition, 0x66ff6666 );
+						drawRect( s.xDisplayPosition, s.yDisplayPosition, 16 + s.xDisplayPosition, 16 + s.yDisplayPosition, GuiColors.ItemSlotOverlayInvalid.getColor() );
 						GL11.glEnable( GL11.GL_LIGHTING );
 
 						this.zLevel = 0.0F;

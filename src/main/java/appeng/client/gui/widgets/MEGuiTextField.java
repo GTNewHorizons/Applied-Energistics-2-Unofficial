@@ -21,6 +21,7 @@ package appeng.client.gui.widgets;
 
 import org.lwjgl.input.Keyboard;
 
+import appeng.core.localization.GuiColors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiTextField;
@@ -160,7 +161,7 @@ public class MEGuiTextField implements ITooltip
 	{
 		if (field.getVisible()) {
 			setDimensionsAndColor();
-			GuiTextField.drawRect(this.x + 1, this.y + 1, this.x + this.w - 1, this.y + this.h - 1, isFocused() ? 0xFF606060 : 0xFFA8A8A8);
+			GuiTextField.drawRect(this.x + 1, this.y + 1, this.x + this.w - 1, this.y + this.h - 1, isFocused() ? GuiColors.SearchboxFocused.getColor() : GuiColors.SearchboxUnfocused.getColor());
 			field.drawTextBox();
 		}
 	}

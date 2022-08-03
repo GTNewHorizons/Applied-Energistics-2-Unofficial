@@ -28,6 +28,7 @@ import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -346,7 +347,7 @@ public class GuiCraftConfirm extends AEBaseGui
 				{
 					final int startX = x * ( 1 + sectionLength ) + xo;
 					final int startY = posY - 4;
-					drawRect( startX, startY, startX + sectionLength, startY + offY, 0x1AFF0000 );
+					drawRect( startX, startY, startX + sectionLength, startY + offY, GuiColors.CraftConfirmMissingItem.getColor() );
 				}
 
 				x++;
