@@ -22,6 +22,7 @@ package appeng.client.gui.implementations;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerSkyChest;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.tile.storage.TileSkyChest;
@@ -40,8 +41,8 @@ public class GuiSkyChest extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.SkyChest.getLocal() ), 8, 8, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 2, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.SkyChest.getLocal() ), 8, 8, GuiColors.SkyChestTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 2, GuiColors.SkyChestInventory.getColor() );
 	}
 
 	@Override

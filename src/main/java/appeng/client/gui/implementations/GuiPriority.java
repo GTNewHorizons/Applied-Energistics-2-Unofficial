@@ -31,6 +31,7 @@ import appeng.container.implementations.ContainerPriority;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -162,7 +163,7 @@ public class GuiPriority extends AEBaseGui
 		this.priority = new GuiNumberBox( this.fontRendererObj, this.guiLeft + 62, this.guiTop + 57, 59, this.fontRendererObj.FONT_HEIGHT, Long.class );
 		this.priority.setEnableBackgroundDrawing( false );
 		this.priority.setMaxStringLength( 16 );
-		this.priority.setTextColor( 0xFFFFFF );
+		this.priority.setTextColor( GuiColors.PriorityValue.getColor() );
 		this.priority.setVisible( true );
 		this.priority.setFocused( true );
 		( (ContainerPriority) this.inventorySlots ).setTextField( this.priority );
@@ -171,7 +172,7 @@ public class GuiPriority extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( GuiText.Priority.getLocal(), 8, 6, 4210752 );
+		this.fontRendererObj.drawString( GuiText.Priority.getLocal(), 8, 6, GuiColors.PriorityTitle.getColor() );
 	}
 
 	@Override

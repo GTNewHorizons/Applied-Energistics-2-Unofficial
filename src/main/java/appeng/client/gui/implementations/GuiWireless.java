@@ -25,6 +25,7 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerWireless;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.tile.networking.TileWireless;
 import appeng.util.Platform;
 import net.minecraft.client.gui.GuiButton;
@@ -69,8 +70,8 @@ public class GuiWireless extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Wireless.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Wireless.getLocal() ), 8, 6, GuiColors.WirelessTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.WirelessInventory.getColor() );
 
 		final ContainerWireless cw = (ContainerWireless) this.inventorySlots;
 
@@ -81,8 +82,8 @@ public class GuiWireless extends AEBaseGui
 
 			final int strWidth = Math.max( this.fontRendererObj.getStringWidth( firstMessage ), this.fontRendererObj.getStringWidth( secondMessage ) );
 			final int cOffset = ( this.xSize / 2 ) - ( strWidth / 2 );
-			this.fontRendererObj.drawString( firstMessage, cOffset, 20, 4210752 );
-			this.fontRendererObj.drawString( secondMessage, cOffset, 20 + 12, 4210752 );
+			this.fontRendererObj.drawString( firstMessage, cOffset, 20, GuiColors.WirelessRange.getColor() );
+			this.fontRendererObj.drawString( secondMessage, cOffset, 20 + 12, GuiColors.WirelessPowerUsageRate.getColor() );
 		}
 	}
 

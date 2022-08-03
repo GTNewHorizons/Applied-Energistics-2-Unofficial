@@ -60,9 +60,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource
 
 	private static final int DISPLAYED_ROWS = 6;
 
-	private static final int TEXT_COLOR = 0x404040;
-	private static final int BACKGROUND_ALPHA = 0x5A000000;
-
 	private static final int SECTION_LENGTH = 67;
 
 	private static final int SCROLLBAR_TOP = 19;
@@ -201,7 +198,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource
 			title += " - " + etaTimeText;
 		}
 
-		this.fontRendererObj.drawString( title, TITLE_LEFT_OFFSET, TITLE_TOP_OFFSET, TEXT_COLOR );
+		this.fontRendererObj.drawString( title, TITLE_LEFT_OFFSET, TITLE_TOP_OFFSET, GuiColors.CraftingCPUTitle.getColor() );
 
 		int x = 0;
 		int y = 0;
@@ -251,7 +248,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource
 
 				if( AEConfig.instance.useColoredCraftingStatus && ( active || scheduled ) )
 				{
-					final int bgColor = active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUScheduled.getColor();
+					final int bgColor = active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUInactive.getColor();
 					final int startX = ( x * ( 1 + SECTION_LENGTH ) + ITEMSTACK_LEFT_OFFSET ) * 2;
 					final int startY = ( ( y * offY + ITEMSTACK_TOP_OFFSET ) - 3 ) * 2;
 					drawRect( startX, startY, startX + ( SECTION_LENGTH * 2 ), startY + ( offY * 2 ) - 2, bgColor );
@@ -264,7 +261,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource
 				{
 					final String str = GuiText.Stored.getLocal() + ": " + converter.toWideReadableForm( stored.getStackSize() );
 					final int w = 4 + this.fontRendererObj.getStringWidth( str );
-					this.fontRendererObj.drawString( str, (int) ( ( x * ( 1 + SECTION_LENGTH ) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - ( w * 0.5 ) ) * 2 ), ( y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY ) * 2, TEXT_COLOR );
+					this.fontRendererObj.drawString( str, (int) ( ( x * ( 1 + SECTION_LENGTH ) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - ( w * 0.5 ) ) * 2 ), ( y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY ) * 2, GuiColors.CraftingCPUStored.getColor() );
 
 					if( this.tooltip == z - viewStart )
 					{
@@ -279,7 +276,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource
 					final String str = GuiText.Crafting.getLocal() + ": " + converter.toWideReadableForm( activeStack.getStackSize() );
 					final int w = 4 + this.fontRendererObj.getStringWidth( str );
 
-					this.fontRendererObj.drawString( str, (int) ( ( x * ( 1 + SECTION_LENGTH ) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - ( w * 0.5 ) ) * 2 ), ( y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY ) * 2, TEXT_COLOR );
+					this.fontRendererObj.drawString( str, (int) ( ( x * ( 1 + SECTION_LENGTH ) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - ( w * 0.5 ) ) * 2 ), ( y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY ) * 2, GuiColors.CraftingCPUAmount.getColor() );
 
 					if( this.tooltip == z - viewStart )
 					{
@@ -294,7 +291,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource
 					final String str = GuiText.Scheduled.getLocal() + ": " + converter.toWideReadableForm( pendingStack.getStackSize() );
 					final int w = 4 + this.fontRendererObj.getStringWidth( str );
 
-					this.fontRendererObj.drawString( str, (int) ( ( x * ( 1 + SECTION_LENGTH ) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - ( w * 0.5 ) ) * 2 ), ( y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY ) * 2, TEXT_COLOR );
+					this.fontRendererObj.drawString( str, (int) ( ( x * ( 1 + SECTION_LENGTH ) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - ( w * 0.5 ) ) * 2 ), ( y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY ) * 2, GuiColors.CraftingCPUScheduled.getColor() );
 
 					if( this.tooltip == z - viewStart )
 					{

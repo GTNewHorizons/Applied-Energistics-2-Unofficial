@@ -25,6 +25,7 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerSpatialIOPort;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.tile.spatial.TileSpatialIOPort;
 import appeng.util.Platform;
 import net.minecraft.client.gui.GuiButton;
@@ -71,13 +72,13 @@ public class GuiSpatialIOPort extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( GuiText.StoredPower.getLocal() + ": " + Platform.formatPowerLong( this.container.getCurrentPower(), false ), 13, 21, 4210752 );
-		this.fontRendererObj.drawString( GuiText.MaxPower.getLocal() + ": " + Platform.formatPowerLong( this.container.getMaxPower(), false ), 13, 31, 4210752 );
-		this.fontRendererObj.drawString( GuiText.RequiredPower.getLocal() + ": " + Platform.formatPowerLong( this.container.getRequiredPower(), false ), 13, 78, 4210752 );
-		this.fontRendererObj.drawString( GuiText.Efficiency.getLocal() + ": " + ( ( (float) this.container.getEfficency() ) / 100 ) + '%', 13, 88, 4210752 );
+		this.fontRendererObj.drawString( GuiText.StoredPower.getLocal() + ": " + Platform.formatPowerLong( this.container.getCurrentPower(), false ), 13, 21, GuiColors.SpatialIOStoredPower.getColor() );
+		this.fontRendererObj.drawString( GuiText.MaxPower.getLocal() + ": " + Platform.formatPowerLong( this.container.getMaxPower(), false ), 13, 31, GuiColors.SpatialIOMaxPower.getColor() );
+		this.fontRendererObj.drawString( GuiText.RequiredPower.getLocal() + ": " + Platform.formatPowerLong( this.container.getRequiredPower(), false ), 13, 78, GuiColors.SpatialIORequiredPower.getColor() );
+		this.fontRendererObj.drawString( GuiText.Efficiency.getLocal() + ": " + ( ( (float) this.container.getEfficency() ) / 100 ) + '%', 13, 88, GuiColors.SpatialIOEfficiency.getColor() );
 
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.SpatialIOPort.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.SpatialIOPort.getLocal() ), 8, 6, GuiColors.SpatialIOTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96, GuiColors.SpatialIOInventory.getColor() );
 	}
 
 	@Override

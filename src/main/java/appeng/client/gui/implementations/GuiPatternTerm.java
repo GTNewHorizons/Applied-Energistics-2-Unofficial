@@ -28,6 +28,7 @@ import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerPatternTerm;
 import appeng.container.slot.AppEngSlot;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import net.minecraft.client.gui.GuiButton;
@@ -159,7 +160,7 @@ public class GuiPatternTerm extends GuiMEMonitorable
 		}
 
 		super.drawFG( offsetX, offsetY, mouseX, mouseY );
-		this.fontRendererObj.drawString( GuiText.PatternTerminal.getLocal(), 8, this.ySize - 96 + 2 - this.getReservedSpace(), 4210752 );
+		this.fontRendererObj.drawString( GuiText.PatternTerminal.getLocal(), 8, this.ySize - 96 + 2 - this.getReservedSpace(), GuiColors.PatternTerminalTitle.getColor() );
 	}
 
 	@Override

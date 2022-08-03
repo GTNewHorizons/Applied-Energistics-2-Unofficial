@@ -21,11 +21,10 @@ package appeng.client.gui.widgets;
 
 import org.lwjgl.input.Keyboard;
 
-import appeng.core.localization.GuiColors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiTextField;
-
+import appeng.core.localization.GuiColors;
 
 /**
  * A modified version of the Minecraft text field.
@@ -69,7 +68,7 @@ public class MEGuiTextField implements ITooltip
 
 		field.setEnableBackgroundDrawing( false );
 		field.setMaxStringLength( MAX_INPUT_LENGTH );
-		field.setTextColor( 0xFFFFFF );
+		field.setTextColor( GuiColors.SearchboxText.getColor() );
         field.setCursorPositionZero();
 
 		setMessage(tooltip);

@@ -11,6 +11,7 @@ import appeng.container.implementations.ContainerPatternTermEx;
 import appeng.container.slot.AppEngSlot;
 import appeng.core.AppEng;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import net.minecraft.client.gui.GuiButton;
@@ -115,7 +116,7 @@ public class GuiPatternTermEx extends GuiMEMonitorable
     public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
     {
         super.drawFG( offsetX, offsetY, mouseX, mouseY );
-        this.fontRendererObj.drawString( GuiText.PatternTerminalEx.getLocal(), 8, this.ySize - 96 + 2 - this.getReservedSpace(), 4210752 );
+        this.fontRendererObj.drawString( GuiText.PatternTerminalEx.getLocal(), 8, this.ySize - 96 + 2 - this.getReservedSpace(), GuiColors.PatternTerminalEx.getColor() );
         this.processingScrollBar.draw(this);
     }
 

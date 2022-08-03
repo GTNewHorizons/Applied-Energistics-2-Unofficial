@@ -7,6 +7,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -63,7 +64,7 @@ public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY)
     {
-        this.fontRendererObj.drawString( GuiText.OreFilterLabel.getLocal(), 12, 8, 4210752 );
+        this.fontRendererObj.drawString( GuiText.OreFilterLabel.getLocal(), 12, 8, GuiColors.OreFilterLabel.getColor() );
     }
 
     @Override

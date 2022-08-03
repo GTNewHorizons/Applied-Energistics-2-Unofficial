@@ -29,6 +29,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftRequest;
@@ -153,7 +154,7 @@ public class GuiCraftAmount extends AEBaseGui
 		this.amountToCraft = new GuiTextField( this.fontRendererObj, this.guiLeft + 62, this.guiTop + 57, 59, this.fontRendererObj.FONT_HEIGHT);
 		this.amountToCraft.setEnableBackgroundDrawing( false );
 		this.amountToCraft.setMaxStringLength( 16 );
-		this.amountToCraft.setTextColor( 0xFFFFFF );
+		this.amountToCraft.setTextColor( GuiColors.CraftAmountToCraft.getColor() );
 		this.amountToCraft.setVisible( true );
 		this.amountToCraft.setFocused( true );
 		this.amountToCraft.setText( "1" );
@@ -163,7 +164,7 @@ public class GuiCraftAmount extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( GuiText.SelectAmount.getLocal(), 8, 6, 4210752 );
+		this.fontRendererObj.drawString( GuiText.SelectAmount.getLocal(), 8, 6, GuiColors.CraftAmountSelectAmount.getColor() );
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerRenamer;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
@@ -55,7 +56,7 @@ public class GuiRenamer extends AEBaseGui implements IDropToFillTextField
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY)
     {
-        this.fontRendererObj.drawString( GuiText.Renamer.getLocal(), 12, 8, 4210752 );
+        this.fontRendererObj.drawString( GuiText.Renamer.getLocal(), 12, 8, GuiColors.RenamerTitle.getColor() );
     }
 
     @Override

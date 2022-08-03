@@ -25,6 +25,7 @@ import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerStorageBus;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
@@ -76,8 +77,8 @@ public class GuiStorageBus extends GuiUpgradeable
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.StorageBus.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.StorageBus.getLocal() ), 8, 6, GuiColors.StorageBusTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.StorageBusInventory.getColor() );
 
 		if( this.fuzzyMode != null )
 		{

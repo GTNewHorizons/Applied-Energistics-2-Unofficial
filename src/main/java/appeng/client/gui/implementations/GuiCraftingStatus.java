@@ -34,6 +34,7 @@ import appeng.container.implementations.ContainerCraftingStatus;
 import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -194,7 +195,6 @@ public class GuiCraftingStatus extends GuiCraftingCPU
         CraftingCPUStatus hoveredCpu = hitCpu( mouseX, mouseY );
         {
             FontRenderer font = Minecraft.getMinecraft().fontRenderer;
-            final int TEXT_COLOR = 0x202020;
             for( int i = firstCpu; i < firstCpu + 6; i++ )
             {
                 if( i < 0 || i >= cpus.size() )
@@ -235,7 +235,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU
                 GL11.glPushMatrix();
                 GL11.glTranslatef( x + 3, y + 3, 0 );
                 GL11.glScalef( 0.8f, 0.8f, 1.0f );
-                font.drawString( name, 0, 0, TEXT_COLOR );
+                font.drawString( name, 0, 0, GuiColors.CraftingStatusCPUName.getColor() );
                 GL11.glPopMatrix();
 
                 GL11.glPushMatrix();
@@ -258,7 +258,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU
                         amount = amount.substring( 0, 5 ) + "..";
                     }
                     GL11.glScalef( 1.5f, 1.5f, 1.0f );
-                    font.drawString( amount, 0, 0, 0x009000 );
+                    font.drawString( amount, 0, 0, GuiColors.CraftingStatusCPUAmount.getColor() );
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
                     GL11.glTranslatef( x + CPU_TABLE_SLOT_WIDTH - 19, y + 3, 0 );
@@ -276,7 +276,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU
                     this.drawTexturedModalRect( 0, 0, uv_x * 16, uv_y * 16, 16, 16 );
                     GL11.glTranslatef( 18.0f, 2.0f, 0.0f );
                     GL11.glScalef( 1.5f, 1.5f, 1.0f );
-                    font.drawString( cpu.formatStorage(), 0, 0, TEXT_COLOR );
+                    font.drawString( cpu.formatStorage(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor() );
                 }
                 GL11.glPopMatrix();
             }

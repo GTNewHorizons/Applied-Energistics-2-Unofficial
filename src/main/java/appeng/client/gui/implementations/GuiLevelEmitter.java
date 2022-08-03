@@ -26,6 +26,7 @@ import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -67,7 +68,7 @@ public class GuiLevelEmitter extends GuiUpgradeable
 		this.level = new GuiNumberBox( this.fontRendererObj, this.guiLeft + 24, this.guiTop + 43, 79, this.fontRendererObj.FONT_HEIGHT, Long.class );
 		this.level.setEnableBackgroundDrawing( false );
 		this.level.setMaxStringLength( 16 );
-		this.level.setTextColor( 0xFFFFFF );
+		this.level.setTextColor( GuiColors.LevelEmitterValue.getColor() );
 		this.level.setVisible( true );
 		this.level.setFocused( true );
 		( (ContainerLevelEmitter) this.inventorySlots ).setTextField( this.level );

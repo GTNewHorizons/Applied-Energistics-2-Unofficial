@@ -25,6 +25,7 @@ import appeng.client.gui.widgets.GuiProgressBar.Direction;
 import appeng.container.implementations.ContainerInscriber;
 import appeng.container.implementations.ContainerUpgradeable;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.tile.misc.TileInscriber;
 import net.minecraft.entity.player.InventoryPlayer;
 
@@ -62,8 +63,8 @@ public class GuiInscriber extends AEBaseGui
 	{
 		this.pb.setFullMsg( this.cvc.getCurrentProgress() * 100 / this.cvc.getMaxProgress() + "%" );
 
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Inscriber.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Inscriber.getLocal() ), 8, 6, GuiColors.InscriberTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.InscriberInventory.getColor() );
 	}
 
 	@Override

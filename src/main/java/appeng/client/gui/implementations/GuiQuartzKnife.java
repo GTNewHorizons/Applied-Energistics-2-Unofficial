@@ -25,6 +25,7 @@ import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerQuartzKnife;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.items.contents.QuartzKnifeObj;
@@ -76,8 +77,8 @@ public class GuiQuartzKnife extends AEBaseGui implements IDropToFillTextField
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.QuartzCuttingKnife.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.QuartzCuttingKnife.getLocal() ), 8, 6, GuiColors.QuartzCuttingKnifeTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.QuartzCuttingKnifeInventory.getColor() );
 	}
 
 	@Override

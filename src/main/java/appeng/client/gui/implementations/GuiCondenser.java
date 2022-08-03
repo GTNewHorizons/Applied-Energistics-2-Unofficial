@@ -26,6 +26,7 @@ import appeng.client.gui.widgets.GuiProgressBar;
 import appeng.client.gui.widgets.GuiProgressBar.Direction;
 import appeng.container.implementations.ContainerCondenser;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.tile.misc.TileCondenser;
@@ -77,8 +78,8 @@ public class GuiCondenser extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Condenser.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Condenser.getLocal() ), 8, 6, GuiColors.CondenserTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.CondenserInventory.getColor() );
 
 		this.mode.set( this.cvc.getOutput() );
 		this.mode.setFillVar( String.valueOf( this.cvc.getOutput().requiredPower ) );

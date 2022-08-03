@@ -41,6 +41,7 @@ import appeng.core.AELog;
 import appeng.core.CommonHelper;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -379,8 +380,8 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( this.myName.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( this.myName.getLocal() ), 8, 6, GuiColors.MEMonitorableTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.MEMonitorableInventory.getColor() );
 
 		this.currentMouseX = mouseX;
 		this.currentMouseY = mouseY;

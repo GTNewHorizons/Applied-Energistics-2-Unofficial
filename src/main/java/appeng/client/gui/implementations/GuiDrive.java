@@ -23,6 +23,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerDrive;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -64,8 +65,8 @@ public class GuiDrive extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Drive.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Drive.getLocal() ), 8, 6, GuiColors.DriveTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.DriveInventory.getColor() );
 	}
 
 	@Override

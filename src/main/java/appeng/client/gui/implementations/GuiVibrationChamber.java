@@ -24,6 +24,7 @@ import appeng.client.gui.widgets.GuiProgressBar;
 import appeng.client.gui.widgets.GuiProgressBar.Direction;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.tile.misc.TileVibrationChamber;
 import net.minecraft.entity.player.InventoryPlayer;
 import org.lwjgl.opengl.GL11;
@@ -54,8 +55,8 @@ public class GuiVibrationChamber extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.VibrationChamber.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.VibrationChamber.getLocal() ), 8, 6, GuiColors.VibrationChamberTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.VibrationChamberInventory.getColor() );
 
 		this.pb.setFullMsg( this.cvc.getAePerTick() * this.cvc.getCurrentProgress() / 100 + " AE/t" );
 

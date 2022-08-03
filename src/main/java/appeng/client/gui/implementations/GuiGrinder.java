@@ -22,6 +22,7 @@ package appeng.client.gui.implementations;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerGrinder;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.tile.grindstone.TileGrinder;
 import net.minecraft.entity.player.InventoryPlayer;
 
@@ -38,8 +39,8 @@ public class GuiGrinder extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.GrindStone.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.GrindStone.getLocal() ), 8, 6, GuiColors.GrindStoneTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.GrindStoneInventory.getColor() );
 	}
 
 	@Override

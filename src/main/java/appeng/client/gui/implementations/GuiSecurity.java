@@ -26,6 +26,7 @@ import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerSecurity;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -115,7 +116,7 @@ public class GuiSecurity extends GuiMEMonitorable
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
 		super.drawFG( offsetX, offsetY, mouseX, mouseY );
-		this.fontRendererObj.drawString( GuiText.SecurityCardEditor.getLocal(), 8, this.ySize - 96 + 1 - this.getReservedSpace(), 4210752 );
+		this.fontRendererObj.drawString( GuiText.SecurityCardEditor.getLocal(), 8, this.ySize - 96 + 1 - this.getReservedSpace(), GuiColors.SecurityCardEditorTitle.getColor() );
 	}
 
 	@Override

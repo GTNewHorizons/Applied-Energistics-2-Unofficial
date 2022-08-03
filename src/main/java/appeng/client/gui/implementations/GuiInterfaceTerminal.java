@@ -202,8 +202,8 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
-		fontRendererObj.drawString( getGuiDisplayName( GuiText.InterfaceTerminal.getLocal() ), 8, 6, 4210752 );
-		fontRendererObj.drawString( GuiText.inventory.getLocal(), GuiInterfaceTerminal.offsetX + 2, this.ySize - 96, 4210752 );
+		fontRendererObj.drawString( getGuiDisplayName( GuiText.InterfaceTerminal.getLocal() ), 8, 6, GuiColors.InterfaceTerminalTitle.getColor() );
+		fontRendererObj.drawString( GuiText.inventory.getLocal(), GuiInterfaceTerminal.offsetX + 2, this.ySize - 96, GuiColors.InterfaceTerminalInventory.getColor() );
 
 		int offset = 51;
 		final int ex = getScrollBar().getCurrentScroll();
@@ -235,7 +235,7 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 					name = name.substring( 0, name.length() - 1 );
 				}
 
-				this.fontRendererObj.drawString( name + postfix, GuiInterfaceTerminal.offsetX + 3, 6 + offset, 4210752 );
+				this.fontRendererObj.drawString( name + postfix, GuiInterfaceTerminal.offsetX + 3, 6 + offset, GuiColors.InterfaceTerminalName.getColor() );
 			}
 
 			offset += 18;

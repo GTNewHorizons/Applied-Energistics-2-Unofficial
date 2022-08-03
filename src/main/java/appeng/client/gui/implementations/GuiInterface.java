@@ -27,6 +27,7 @@ import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerInterface;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
@@ -85,7 +86,7 @@ public class GuiInterface extends GuiUpgradeable
 			this.insertionMode.set( ( (ContainerInterface) this.cvb ).getInsertionMode());
 		}
 
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Interface.getLocal() ), 8, 6, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Interface.getLocal() ), 8, 6, GuiColors.InterfaceTitle.getColor() );
 	}
 
 	@Override

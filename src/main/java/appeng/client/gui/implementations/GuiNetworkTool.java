@@ -25,6 +25,7 @@ import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import net.minecraft.client.gui.GuiButton;
@@ -80,8 +81,8 @@ public class GuiNetworkTool extends AEBaseGui
 			this.tFacades.setState( ( (ContainerNetworkTool) this.inventorySlots ).isFacadeMode() );
 		}
 
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.NetworkTool.getLocal() ), 8, 6, 4210752 );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, 4210752 );
+		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.NetworkTool.getLocal() ), 8, 6, GuiColors.NetworkToolTitle.getColor() );
+		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.NetworkToolInventory.getColor() );
 	}
 
 	@Override
