@@ -245,6 +245,18 @@ gui.appliedenergistics2.OreFilterLabel=Ore dictionary filter
 gui.appliedenergistics2.HoldShiftForTooltip=Hold shift for extended tooltip
 gui.appliedenergistics2.Nothing=Nothing
 
+# GUI Colors - ARGB
+gui.color.appliedenergistics2.SearchboxFocused=6E000000
+gui.color.appliedenergistics2.SearchboxUnfocused=00000000
+gui.color.appliedenergistics2.SearchboxFocused=6E000000
+gui.color.appliedenergistics2.SearchboxUnfocused=00000000
+gui.color.appliedenergistics2.ItemSlotOverlayUnpowered=66111111
+gui.color.appliedenergistics2.ItemSlotOverlayInvalid=66ff6666
+gui.color.appliedenergistics2.CraftConfirmMissingItem=1AFF0000
+gui.color.appliedenergistics2.CraftingCPUActive=5A45A021
+gui.color.appliedenergistics2.CraftingCPUScheduled=5AFFF7AA
+gui.color.appliedenergistics2.InterfaceTerminalMatch=2A00FF00
+
 # GUI Tooltips
 gui.tooltips.appliedenergistics2.Stash=Store Items
 gui.tooltips.appliedenergistics2.StashDesc=Return items on the crafting grid to network storage.
