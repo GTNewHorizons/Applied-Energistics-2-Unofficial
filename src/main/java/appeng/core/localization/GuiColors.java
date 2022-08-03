@@ -168,16 +168,17 @@ public enum GuiColors
 		String hex = StatCollector.translateToLocal( this.getUnlocalized() );
 		int color = this.color;
 
-		try
-		{	
-			color = Integer.parseUnsignedInt( hex, 16 );
-		}
-
-		catch ( final NumberFormatException e )
+		if ( hex.length() <= 8 )
 		{
-			AELog.warn( "Couldn't format color correctly for: " + this.root );
+			try
+			{	
+				color = Integer.parseUnsignedInt( hex, 16 );
+			}
+			catch ( final NumberFormatException e )
+			{
+				AELog.warn( "Couldn't format color correctly for: " + this.root + " -> " + hex);
+			}
 		}
-
 		return color;
 	}
 	
