@@ -33,7 +33,7 @@ import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.parts.automation.PartExportBus;
 import appeng.parts.automation.PartImportBus;
-import appeng.util.Pair;
+import akka.japi.Pair;
 import codechicken.nei.VisiblityData;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.TaggedInventoryArea;
@@ -258,11 +258,11 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler
         }
         for( Pair<SlotFake, Integer> fakeSlotPair : slots )
         {
-            SlotFake fakeSlot = fakeSlotPair.getKey();
+            SlotFake fakeSlot = fakeSlotPair.first();
             if( fakeSlot.isEnabled() && getSlotArea( fakeSlot ).contains( mouseX, mouseY ) )
             {
                 fakeSlot.putStack( draggedStack );
-                NetworkHandler.instance.sendToServer( new PacketNEIDragClick( draggedStack, fakeSlotPair.getValue() ) );
+                NetworkHandler.instance.sendToServer( new PacketNEIDragClick( draggedStack, fakeSlotPair.second() ) );
                 if( draggedStack != null )
                 {
                     draggedStack.stackSize = 0;
