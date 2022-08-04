@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class AppEngPacketHandlerBase
 {
-	private static final Map<Class<? extends AppEngPacket>, PacketTypes> REVERSE_LOOKUP = new HashMap<Class<? extends AppEngPacket>, AppEngPacketHandlerBase.PacketTypes>();
+	private static final Map<Class<? extends AppEngPacket>, PacketTypes> REVERSE_LOOKUP = new HashMap<>();
 
 
 	public enum PacketTypes
@@ -83,7 +83,9 @@ public class AppEngPacketHandlerBase
 
 		PACKET_PAINTED_ENTITY( PacketPaintedEntity.class ),
 
-        PACKET_CRAFTING_CPUS_UPDATE( PacketCraftingCPUsUpdate.class );
+        PACKET_CRAFTING_CPUS_UPDATE( PacketCraftingCPUsUpdate.class ),
+
+        PACKET_NEI_DRAG( PacketNEIDragClick.class );
 
 		private final Class<? extends AppEngPacket> packetClass;
 		private final Constructor<? extends AppEngPacket> packetConstructor;
@@ -97,14 +99,11 @@ public class AppEngPacketHandlerBase
 			{
 				x = this.packetClass.getConstructor( ByteBuf.class );
 			}
-			catch( final NoSuchMethodException ignored )
-			{
-			}
-			catch( final SecurityException ignored )
+			catch( final NoSuchMethodException | SecurityException ignored )
 			{
 			}
 
-			this.packetConstructor = x;
+            this.packetConstructor = x;
 			REVERSE_LOOKUP.put( this.packetClass, this );
 
 			if( this.packetConstructor == null )

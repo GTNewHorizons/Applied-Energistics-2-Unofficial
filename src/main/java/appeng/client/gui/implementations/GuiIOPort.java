@@ -50,6 +50,7 @@ public class GuiIOPort extends GuiUpgradeable
 	}
 
 	@Override
+    @SuppressWarnings( "unchecked" )
 	protected void addButtons()
 	{
 		this.redstoneMode = new GuiImgButton( this.guiLeft - 18, this.guiTop + 28, Settings.REDSTONE_CONTROLLED, RedstoneMode.IGNORE );

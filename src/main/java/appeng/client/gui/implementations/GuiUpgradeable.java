@@ -24,19 +24,34 @@ import appeng.api.implementations.IUpgradeableHost;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerUpgradeable;
+import appeng.container.slot.SlotFake;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
+import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.parts.automation.PartExportBus;
 import appeng.parts.automation.PartImportBus;
+import appeng.util.Pair;
+import codechicken.nei.VisiblityData;
+import codechicken.nei.api.INEIGuiHandler;
+import codechicken.nei.api.TaggedInventoryArea;
+import cpw.mods.fml.common.Optional;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Mouse;
 
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-public class GuiUpgradeable extends AEBaseGui
+
+@Optional.Interface(modid = "NotEnoughItems", iface = "codechicken.nei.api.INEIGuiHandler")
+public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler
 {
 
 	protected final ContainerUpgradeable cvb;
@@ -75,6 +90,7 @@ public class GuiUpgradeable extends AEBaseGui
 		this.addButtons();
 	}
 
+    @SuppressWarnings( "unchecked" )
 	protected void addButtons()
 	{
 		this.redstoneMode = new GuiImgButton( this.guiLeft - 18, this.guiTop + 8, Settings.REDSTONE_CONTROLLED, RedstoneMode.IGNORE );
@@ -205,4 +221,70 @@ public class GuiUpgradeable extends AEBaseGui
 			NetworkHandler.instance.sendToServer( new PacketSwitchGuis( GuiBridge.GUI_ORE_FILTER ) );
 		}
 	}
+
+    @Override
+    public VisiblityData modifyVisiblity( GuiContainer gui, VisiblityData currentVisibility )
+    {
+        return currentVisibility;
+    }
+
+    @Override
+    public Iterable<Integer> getItemSpawnSlots( GuiContainer gui, ItemStack item )
+    {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<TaggedInventoryArea> getInventoryAreas( GuiContainer gui )
+    {
+        return null;
+    }
+
+    @Override
+    public boolean handleDragNDrop( GuiContainer gui, int mouseX, int mouseY, ItemStack draggedStack, int button )
+    {
+        List<Pair<SlotFake, Integer>> slots = new ArrayList<>();
+
+        if( this.inventorySlots.inventorySlots.size() > 0 )
+        {
+            for( int i = 0; i < this.inventorySlots.inventorySlots.size(); i ++ )
+            {
+                Object slot = this.inventorySlots.inventorySlots.get( i );
+                if( slot instanceof SlotFake )
+                {
+                    slots.add( new Pair<> ( (SlotFake) slot, i ) );
+                }
+            }
+        }
+        for( Pair<SlotFake, Integer> fakeSlotPair : slots )
+        {
+            SlotFake fakeSlot = fakeSlotPair.getKey();
+            if( fakeSlot.isEnabled() && getSlotArea( fakeSlot ).contains( mouseX, mouseY ) )
+            {
+                fakeSlot.putStack( draggedStack );
+                NetworkHandler.instance.sendToServer( new PacketNEIDragClick( draggedStack, fakeSlotPair.getValue() ) );
+                if( draggedStack != null )
+                {
+                    draggedStack.stackSize = 0;
+                }
+                return true;
+            }
+        }
+        if( draggedStack != null )
+        {
+            draggedStack.stackSize = 0;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean hideItemPanelSlot( GuiContainer gui, int x, int y, int w, int h )
+    {
+        return false;
+    }
+
+    private Rectangle getSlotArea( SlotFake slot )
+    {
+        return new Rectangle( guiLeft + slot.getX(), guiTop + slot.getY(), 16, 16);
+    }
 }

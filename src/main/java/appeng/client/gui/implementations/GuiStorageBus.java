@@ -54,6 +54,7 @@ public class GuiStorageBus extends GuiUpgradeable
 	}
 
 	@Override
+    @SuppressWarnings( "unchecked" )
 	protected void addButtons()
 	{
 		this.clear = new GuiImgButton( this.guiLeft - 18, this.guiTop + 8, Settings.ACTIONS, ActionItems.CLOSE );

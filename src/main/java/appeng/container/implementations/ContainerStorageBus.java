@@ -72,7 +72,6 @@ public class ContainerStorageBus extends ContainerUpgradeable
 		{
 			for( int x = 0; x < 9; x++ )
 			{
-//				this.addSlotToContainer( new SlotFakeTypeOnly( config, y * 9 + x, xo + x * 18, yo + y * 18 ) );
 				this.addSlotToContainer( new OptionalSlotFakeTypeOnly( config, this, y * 9 + x, xo, yo, x, y, y ) );
 			}
 		}
