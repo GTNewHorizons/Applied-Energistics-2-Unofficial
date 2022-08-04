@@ -123,6 +123,14 @@ public class GridConnection implements IGridConnection, IPathItem
 
 		// a connection was destroyed RE-PATH!!
 		final IPathingGrid p = this.sideA.getInternalGrid().getCache( IPathingGrid.class );
+		if (AEConfig.instance.debugPathFinding)
+        {
+            final String aCoordinates = a.getGridBlock().getLocation().toString();
+            final String bCoordinates = b.getGridBlock().getLocation().toString();
+            AELog.info( "Repath is triggered by adding connection from [%s] to [%s]", aCoordinates, bCoordinates );
+            Exception ex = new Exception();
+            ex.printStackTrace();
+        }
 		p.repath();
 
 		this.sideA.addConnection( this );
@@ -170,6 +178,15 @@ public class GridConnection implements IGridConnection, IPathItem
 	@Override
 	public void destroy()
 	{
+        if (AEConfig.instance.debugPathFinding)
+        {
+            final String aCoordinates = sideA.getGridBlock().getLocation().toString();
+            final String bCoordinates = sideB.getGridBlock().getLocation().toString();
+            AELog.info( "Repath is triggered by destroying connection from [%s] to [%s]", aCoordinates, bCoordinates );
+            Exception ex = new Exception();
+            ex.printStackTrace();
+        }
+
 		// a connection was destroyed RE-PATH!!
 		final IPathingGrid p = this.sideA.getInternalGrid().getCache( IPathingGrid.class );
 		p.repath();
