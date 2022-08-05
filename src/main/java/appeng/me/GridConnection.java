@@ -37,6 +37,7 @@ import appeng.me.pathfinding.IPathItem;
 import appeng.util.Platform;
 import appeng.util.ReadOnlyCollection;
 import net.minecraftforge.common.util.ForgeDirection;
+import org.apache.logging.log4j.Level;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -128,8 +129,7 @@ public class GridConnection implements IGridConnection, IPathItem
             final String aCoordinates = a.getGridBlock().getLocation().toString();
             final String bCoordinates = b.getGridBlock().getLocation().toString();
             AELog.info( "Repath is triggered by adding connection from [%s] to [%s]", aCoordinates, bCoordinates );
-            Exception ex = new Exception();
-            ex.printStackTrace();
+            AELog.printStackTrace( Level.INFO );
         }
 		p.repath();
 
@@ -183,8 +183,7 @@ public class GridConnection implements IGridConnection, IPathItem
             final String aCoordinates = sideA.getGridBlock().getLocation().toString();
             final String bCoordinates = sideB.getGridBlock().getLocation().toString();
             AELog.info( "Repath is triggered by destroying connection from [%s] to [%s]", aCoordinates, bCoordinates );
-            Exception ex = new Exception();
-            ex.printStackTrace();
+            AELog.printStackTrace( Level.INFO );
         }
 
 		// a connection was destroyed RE-PATH!!

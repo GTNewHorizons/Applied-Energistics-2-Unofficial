@@ -379,4 +379,16 @@ public final class AELog
 			log( Level.DEBUG, message, params );
 		}
 	}
+
+    /**
+     * Print current stack trace for debug purposes
+     *
+     * @param level Log level
+     */
+	public static void printStackTrace(Level level)
+    {
+        log(level, "Stack trace:");
+        for (StackTraceElement traceElement : Thread.currentThread().getStackTrace())
+            log(level, "\t " + traceElement.toString());
+    }
 }
