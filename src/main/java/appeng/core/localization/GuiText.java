@@ -76,7 +76,7 @@ public enum GuiText
 
 	ConfirmCrafting, Stored, Crafting, Scheduled, CraftingStatus, Cancel, ETA, ETAFormat,
 
-	FromStorage, ToCraft, CraftingPlan, CalculatingWait, Start, Bytes,
+	FromStorage, ToCraft, CraftingPlan, CalculatingWait, Start, Bytes,Set,
 
 	CraftingCPU, Automatic, CoProcessors, Simulation, Missing,
 

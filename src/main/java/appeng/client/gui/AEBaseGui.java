@@ -40,6 +40,7 @@ import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
+import appeng.util.item.AEItemStack;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
@@ -411,20 +412,41 @@ public abstract class AEBaseGui extends GuiContainer
 	{
 		final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 
-		if( slot instanceof SlotFake )
-		{
-			final InventoryAction action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE : InventoryAction.PICKUP_OR_SET_DOWN;
+        if( mouseButton == 3)
+        {
+            if( slot instanceof OptionalSlotFake || slot instanceof SlotFakeCraftingMatrix )
+            {
+                if( slot.getHasStack() )
+                {
+                    InventoryAction action = InventoryAction.SET_PATTERN_VALUE;
+                    IAEItemStack stack = AEItemStack.create(slot.getStack());
 
-			if( this.drag_click.size() > 1 )
-			{
-				return;
-			}
+                    ( (AEBaseContainer) this.inventorySlots ).setTargetStack( stack );
+                    final PacketInventoryAction p = new PacketInventoryAction( action, slotIdx, 0 );
+                    NetworkHandler.instance.sendToServer( p );
 
-			final PacketInventoryAction p = new PacketInventoryAction( action, slotIdx, 0 );
-			NetworkHandler.instance.sendToServer( p );
+                    return;
+                }
+            }
 
-			return;
-		}
+        }else {
+
+            if( slot instanceof SlotFake )
+            {
+                final InventoryAction action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE : InventoryAction.PICKUP_OR_SET_DOWN;
+
+                if( this.drag_click.size() > 1 )
+                {
+                    return;
+                }
+
+                final PacketInventoryAction p = new PacketInventoryAction( action, slotIdx, 0 );
+                NetworkHandler.instance.sendToServer( p );
+
+                return;
+            }
+
+        }
 
 		if( slot instanceof SlotPatternTerm )
 		{
@@ -811,7 +833,7 @@ public abstract class AEBaseGui extends GuiContainer
 
 	private void drawSlot( final Slot s )
 	{
-		if( s instanceof SlotME )
+		if( s instanceof SlotME || s instanceof SlotFake)
 		{
 			final RenderItem pIR = this.setItemRender( this.aeRenderItem );
 			try
@@ -829,7 +851,7 @@ public abstract class AEBaseGui extends GuiContainer
 				this.zLevel = 0.0F;
 				itemRender.zLevel = 0.0F;
 
-				this.aeRenderItem.setAeStack( ( (SlotME) s ).getAEStack() );
+                this.aeRenderItem.setAeStack( s instanceof SlotME ? ( (SlotME) s ).getAEStack() : ( (SlotFake) s ).getAEStack() );
 
 				this.safeDrawSlot( s );
 			}

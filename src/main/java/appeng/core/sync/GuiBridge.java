@@ -147,6 +147,8 @@ public enum GuiBridge implements IGuiHandler
 
 	GUI_CRAFTING_AMOUNT( ContainerCraftAmount.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, SecurityPermissions.CRAFT ),
 
+    GUI_PATTERN_VALUE_AMOUNT( ContainerPatternValueAmount.class, ITerminalHost.class, GuiHostType.WORLD, SecurityPermissions.CRAFT ),
+
 	GUI_CRAFTING_CONFIRM( ContainerCraftConfirm.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, SecurityPermissions.CRAFT ),
 
 	GUI_INTERFACE_TERMINAL( ContainerInterfaceTerminal.class, PartInterfaceTerminal.class, GuiHostType.WORLD, SecurityPermissions.BUILD ),

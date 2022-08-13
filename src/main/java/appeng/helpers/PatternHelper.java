@@ -80,7 +80,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 		for( int x = 0; x < inTag.tagCount(); x++ )
 		{
 			final NBTTagCompound tag = inTag.getCompoundTagAt( x );
-			final ItemStack gs = ItemStack.loadItemStackFromNBT( tag );
+			final ItemStack gs = Platform.loadItemStackFromNBT( tag );
 
 			if ( gs == null && !tag.hasNoTags() )
 			{
@@ -126,7 +126,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 			for( int x = 0; x < outTag.tagCount(); x++ )
 			{
 				final NBTTagCompound tag = outTag.getCompoundTagAt(x);
-				final ItemStack gs = ItemStack.loadItemStackFromNBT( tag );
+				final ItemStack gs = Platform.loadItemStackFromNBT( tag );
 
 				if( gs != null )
 				{
@@ -421,7 +421,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 				continue;
 			}
 
-			ItemStack gs = ItemStack.loadItemStackFromNBT(tag);
+			ItemStack gs = Platform.loadItemStackFromNBT(tag);
 
 			if (gs == null && unknownItem != null) {
 				gs = unknownItem.copy();

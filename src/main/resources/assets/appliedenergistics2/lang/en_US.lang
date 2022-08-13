@@ -217,6 +217,7 @@ gui.appliedenergistics2.Automatic=Automatic
 gui.appliedenergistics2.Start=Start
 gui.appliedenergistics2.Missing=Missing
 gui.appliedenergistics2.Bytes=Storage
+gui.appliedenergistics2.Set=Set
 gui.appliedenergistics2.Simulation=Simulation
 gui.appliedenergistics2.CoProcessors=Co Processors
 gui.appliedenergistics2.CraftingCPU=Crafting CPU
@@ -361,6 +362,7 @@ gui.tooltips.appliedenergistics2.SchedulingModeRoundRobin=Export using round rob
 gui.tooltips.appliedenergistics2.SchedulingModeRandom=Export items in random mode.
 
 gui.tooltips.appliedenergistics2.ItemsStored=Items Stored: %s
+gui.tooltips.appliedenergistics2.ItemCount=Items Count: %s
 gui.tooltips.appliedenergistics2.ItemsRequestable=Items Requestable: %s
 gui.tooltips.appliedenergistics2.P2PFrequency=Frequency: %s
 gui.tooltips.appliedenergistics2.OreFilterHint=Filter items using ore dictionary names

@@ -2048,4 +2048,21 @@ public class Platform
 
 		return isPurified;
 	}
+
+    public static ItemStack loadItemStackFromNBT(NBTTagCompound tagCompound){
+        ItemStack stack = ItemStack.loadItemStackFromNBT( tagCompound );
+        if( stack != null )
+        {
+            stack.stackSize = tagCompound.getInteger( "Count" );
+        }
+        return stack;
+    }
+
+    public static NBTTagCompound writeItemStackToNBT(ItemStack is, NBTTagCompound tagCompound)
+    {
+        is.writeToNBT( tagCompound );
+        tagCompound.setInteger( "Count" , is.stackSize);
+        return tagCompound;
+    }
+
 }

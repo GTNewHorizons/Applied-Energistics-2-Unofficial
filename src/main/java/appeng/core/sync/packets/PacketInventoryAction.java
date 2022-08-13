@@ -24,6 +24,7 @@ import appeng.client.ClientHelper;
 import appeng.container.AEBaseContainer;
 import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerCraftAmount;
+import appeng.container.implementations.ContainerPatternValueAmount;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
@@ -146,6 +147,25 @@ public class PacketInventoryAction extends AppEngPacket
 					}
 				}
 			}
+            else if( this.action == InventoryAction.SET_PATTERN_VALUE )
+            {
+                final ContainerOpenContext context = baseContainer.getOpenContext();
+                if( context != null )
+                {
+                    final TileEntity te = context.getTile();
+                    Platform.openGUI( sender, te, baseContainer.getOpenContext().getSide(), GuiBridge.GUI_PATTERN_VALUE_AMOUNT );
+                    if( sender.openContainer instanceof ContainerPatternValueAmount )
+                    {
+                        final ContainerPatternValueAmount cpv = (ContainerPatternValueAmount) sender.openContainer;
+                        if( baseContainer.getTargetStack() != null )
+                        {
+                            cpv.setValueIndex( this.slot );
+                            cpv.getPatternValue().putStack( baseContainer.getTargetStack().getItemStack() );
+                        }
+                        cpv.detectAndSendChanges();
+                    }
+                }
+            }
 			else
 			{
 				baseContainer.doAction( sender, this.action, this.slot, this.id );

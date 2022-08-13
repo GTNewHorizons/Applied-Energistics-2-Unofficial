@@ -36,7 +36,7 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack>
 {
 
 	private final int size;
-	private final ItemStack[] inv;
+	protected final ItemStack[] inv;
 	private boolean enableClientEvents = false;
 	private IAEAppEngInventory te;
 	private int maxStack;
@@ -231,7 +231,7 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack>
 		data.setTag( name, c );
 	}
 
-	private void writeToNBT( final NBTTagCompound target )
+	protected void writeToNBT( final NBTTagCompound target )
 	{
 		for( int x = 0; x < this.size; x++ )
 		{

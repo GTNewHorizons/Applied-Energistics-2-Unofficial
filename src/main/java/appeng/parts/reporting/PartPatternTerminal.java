@@ -23,11 +23,15 @@ import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.texture.CableBusTextures;
+import appeng.core.AELog;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.PatternHelper;
 import appeng.helpers.Reflected;
 import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.tile.inventory.BiggerAppEngInventory;
+import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
+import appeng.util.Platform;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -42,8 +46,12 @@ public class PartPatternTerminal extends AbstractPartTerminal
 	private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
 	private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
 
-	private final AppEngInternalInventory crafting = new AppEngInternalInventory( this, 9 );
-	private final AppEngInternalInventory output = new AppEngInternalInventory( this, 3 );
+	private final AppEngInternalInventory crafting = new BiggerAppEngInventory( this, 9 ){
+
+    };
+	private final AppEngInternalInventory output = new BiggerAppEngInventory( this, 3 ){
+
+    };
 	private final AppEngInternalInventory pattern = new AppEngInternalInventory( this, 2 );
 
 	private boolean craftingMode = true;

@@ -85,7 +85,9 @@ public class AppEngPacketHandlerBase
 
         PACKET_CRAFTING_CPUS_UPDATE( PacketCraftingCPUsUpdate.class ),
 
-        PACKET_NEI_DRAG( PacketNEIDragClick.class );
+        PACKET_NEI_DRAG( PacketNEIDragClick.class ),
+
+        PACKET_PATTERN_VALUE( PacketPatternValueSet.class );
 
 		private final Class<? extends AppEngPacket> packetClass;
 		private final Constructor<? extends AppEngPacket> packetConstructor;

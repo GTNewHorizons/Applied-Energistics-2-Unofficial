@@ -340,6 +340,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 		if( i != null )
 		{
 			i.writeToNBT( c );
+            c.setInteger( "Count", i.stackSize );
 		}
 
 		return c;

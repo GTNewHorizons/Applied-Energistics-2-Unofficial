@@ -19,6 +19,8 @@
 package appeng.container.slot;
 
 
+import appeng.api.storage.data.IAEItemStack;
+import appeng.util.item.AEItemStack;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -26,6 +28,8 @@ import net.minecraft.item.ItemStack;
 
 public class SlotFake extends AppEngSlot
 {
+
+    private IAEItemStack aeStack;
 
 	public SlotFake( final IInventory inv, final int idx, final int x, final int y )
 	{
@@ -56,7 +60,7 @@ public class SlotFake extends AppEngSlot
 		{
 			is = is.copy();
 		}
-
+        this.aeStack = AEItemStack.create( is );
 		super.putStack( is );
 	}
 
@@ -65,4 +69,10 @@ public class SlotFake extends AppEngSlot
 	{
 		return false;
 	}
+
+    public IAEItemStack getAEStack()
+    {
+        return aeStack;
+    }
+
 }

@@ -247,6 +247,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable implements IO
         if( i != null )
         {
             i.writeToNBT( c );
+            c.setInteger( "Count", i.stackSize );
         }
 
         return c;

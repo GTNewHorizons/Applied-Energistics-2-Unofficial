@@ -8,6 +8,7 @@ import appeng.core.sync.GuiBridge;
 import appeng.helpers.PatternHelper;
 import appeng.helpers.Reflected;
 import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.tile.inventory.BiggerAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -21,8 +22,8 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
     private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
     private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
 
-    private final AppEngInternalInventory crafting = new AppEngInternalInventory( this, 32 );
-    private final AppEngInternalInventory output = new AppEngInternalInventory( this, 32 );
+    private final AppEngInternalInventory crafting = new BiggerAppEngInventory( this, 32 );
+    private final AppEngInternalInventory output = new BiggerAppEngInventory( this, 32 );
     private final AppEngInternalInventory pattern = new AppEngInternalInventory( this, 2 );
 
     private boolean substitute = false;
