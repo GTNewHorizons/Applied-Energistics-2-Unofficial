@@ -95,16 +95,6 @@ public class GuiPatternValueAmount extends AEBaseGui
         final IDefinitions definitions = AEApi.instance().definitions();
         final IParts parts = definitions.parts();
 
-        if( target instanceof WirelessTerminalGuiObject )
-        {
-            for( final ItemStack wirelessTerminalStack : definitions.items().wirelessTerminal().maybeStack( 1 ).asSet() )
-            {
-                myIcon = wirelessTerminalStack;
-            }
-
-            this.originalGui = GuiBridge.GUI_WIRELESS_TERM;
-        }
-
         if( target instanceof PartPatternTerminal )
         {
             for( final ItemStack stack : parts.patternTerminal().maybeStack( 1 ).asSet() )

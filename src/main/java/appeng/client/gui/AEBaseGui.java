@@ -40,6 +40,7 @@ import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
+import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
@@ -851,7 +852,7 @@ public abstract class AEBaseGui extends GuiContainer
 				this.zLevel = 0.0F;
 				itemRender.zLevel = 0.0F;
 
-                this.aeRenderItem.setAeStack( s instanceof SlotME ? ( (SlotME) s ).getAEStack() : ( (SlotFake) s ).getAEStack() );
+                this.aeRenderItem.setAeStack( Platform.getAEStackInSlot( s ) );
 
 				this.safeDrawSlot( s );
 			}

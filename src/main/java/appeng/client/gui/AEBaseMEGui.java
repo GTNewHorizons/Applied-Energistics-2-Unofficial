@@ -24,6 +24,7 @@ import appeng.client.me.SlotME;
 import appeng.container.slot.SlotFake;
 import appeng.core.AEConfig;
 import appeng.core.localization.ButtonToolTips;
+import appeng.util.Platform;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -108,7 +109,7 @@ public abstract class AEBaseMEGui extends AEBaseGui
 
 			try
 			{
-				myStack = s instanceof SlotME ? ( (SlotME) s ).getAEStack() : ( (SlotFake) s ).getAEStack();
+				myStack = Platform.getAEStackInSlot( s );
 			}
 			catch( final Throwable ignore )
 			{

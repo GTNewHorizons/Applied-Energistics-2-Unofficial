@@ -40,6 +40,8 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.*;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
+import appeng.client.me.SlotME;
+import appeng.container.slot.SlotFake;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.AppEng;
@@ -74,10 +76,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.ISidedInventory;
-import net.minecraft.inventory.InventoryCrafting;
-import net.minecraft.inventory.InventoryLargeChest;
+import net.minecraft.inventory.*;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
@@ -2049,7 +2048,8 @@ public class Platform
 		return isPurified;
 	}
 
-    public static ItemStack loadItemStackFromNBT(NBTTagCompound tagCompound){
+    public static ItemStack loadItemStackFromNBT( NBTTagCompound tagCompound )
+    {
         ItemStack stack = ItemStack.loadItemStackFromNBT( tagCompound );
         if( stack != null )
         {
@@ -2058,11 +2058,31 @@ public class Platform
         return stack;
     }
 
-    public static NBTTagCompound writeItemStackToNBT(ItemStack is, NBTTagCompound tagCompound)
+    public static NBTTagCompound writeItemStackToNBT( ItemStack is, NBTTagCompound tagCompound )
     {
         is.writeToNBT( tagCompound );
         tagCompound.setInteger( "Count" , is.stackSize);
         return tagCompound;
+    }
+
+    public static IAEItemStack getAEStackInSlot( Slot slot )
+    {
+        if( slot == null || !slot.getHasStack() )
+        {
+            return null;
+        }
+
+        if( slot instanceof SlotME )
+        {
+            return ( (SlotME) slot ).getAEStack();
+        }
+
+        if(slot instanceof SlotFake )
+        {
+           return  ( (SlotFake) slot ).getAEStack();
+        }
+
+        return AEItemStack.create( slot.getStack() );
     }
 
 }
