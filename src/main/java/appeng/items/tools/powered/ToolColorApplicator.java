@@ -53,6 +53,8 @@ import appeng.util.ItemSorters;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import com.google.common.base.Optional;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.entity.player.EntityPlayer;
@@ -420,6 +422,7 @@ public class ToolColorApplicator extends AEBasePoweredItem implements IStorageCe
 		}
 	}
 
+    @SideOnly(Side.CLIENT)
 	@Override
 	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
 	{

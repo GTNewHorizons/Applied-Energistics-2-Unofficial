@@ -31,6 +31,8 @@ import appeng.entity.EntityIds;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
 import cpw.mods.fml.common.registry.EntityRegistry;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -161,6 +163,7 @@ public class ItemCrystalSeed extends AEBaseItem implements IGrowableCrystal
 		return 0.5f;
 	}
 
+    @SideOnly(Side.CLIENT)
 	@Override
 	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
 	{

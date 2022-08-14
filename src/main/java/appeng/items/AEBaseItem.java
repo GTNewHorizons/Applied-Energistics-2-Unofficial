@@ -21,6 +21,8 @@ package appeng.items;
 
 import appeng.core.features.*;
 import com.google.common.base.Optional;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -71,6 +73,7 @@ public abstract class AEBaseItem extends Item implements IAEFeature
 		this.feature = new ItemFeatureHandler( f, this, this, this.subName );
 	}
 
+    @SideOnly(Side.CLIENT)
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public final void addInformation( final ItemStack stack, final EntityPlayer player, final List lines, final boolean displayMoreInfo )
@@ -91,6 +94,7 @@ public abstract class AEBaseItem extends Item implements IAEFeature
 		return false;
 	}
 
+    @SideOnly(Side.CLIENT)
 	protected void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
 	{
 		super.addInformation( stack, player, lines, displayMoreInfo );

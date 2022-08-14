@@ -76,6 +76,7 @@ public class ToolPortableCell extends AEBasePoweredItem implements IStorageCell,
 		return false;
 	}
 
+    @SideOnly(Side.CLIENT)
 	@Override
 	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
 	{

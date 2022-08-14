@@ -53,6 +53,8 @@ import appeng.me.storage.CellInventoryHandler;
 import appeng.tile.misc.TilePaint;
 import appeng.util.Platform;
 import com.google.common.base.Optional;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.entity.Entity;
@@ -89,6 +91,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell
 		BlockDispenser.dispenseBehaviorRegistry.putObject( this, new DispenserMatterCannon() );
 	}
 
+    @SideOnly(Side.CLIENT)
 	@Override
 	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
 	{

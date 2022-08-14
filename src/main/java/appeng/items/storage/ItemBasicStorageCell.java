@@ -42,6 +42,10 @@ import appeng.items.materials.MaterialType;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import com.google.common.base.Optional;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import net.java.games.input.Keyboard;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
@@ -95,6 +99,7 @@ public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCe
 		}
 	}
 
+    @SideOnly(Side.CLIENT)
 	@Override
 	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
 	{
@@ -114,6 +119,7 @@ public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCe
 				if( handler.isPreformatted() )
 				{
 					String filter = cellInventory.getOreFilter();
+
 					if (filter.isEmpty()) {
 						final String list = (handler.getIncludeExcludeMode() == IncludeExclude.WHITELIST ? GuiText.Included : GuiText.Excluded).getLocal();
 
@@ -122,6 +128,14 @@ public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCe
 						} else {
 							lines.add(GuiText.Partitioned.getLocal() + " - " + list + ' ' + GuiText.Precise.getLocal());
 						}
+                        if (GuiScreen.isShiftKeyDown()) {
+                            lines.add(GuiText.Filter.getLocal() + ": ");
+                            for (int i = 0; i < cellInventory.getConfigInventory().getSizeInventory(); ++i) {
+                                ItemStack s = cellInventory.getConfigInventory().getStackInSlot(i);
+                                if (s != null)
+                                    lines.add(s.getDisplayName());
+                            }
+                        }
 					}
 					else {
 						lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);

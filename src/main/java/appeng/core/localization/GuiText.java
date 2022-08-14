@@ -86,7 +86,7 @@ public enum GuiText
 
 	NoCraftingJobs, CPUs, FacadeCrafting, inWorldCraftingPresses, ChargedQuartzFind,
 
-	Included, Excluded, Partitioned, PartitionedOre, Precise, Fuzzy,
+	Included, Excluded, Partitioned, PartitionedOre, Precise, Fuzzy, Filter,
 
 	// Used in a terminal to indicate that an item is craftable
 	SmallFontCraft, LargeFontCraft,
