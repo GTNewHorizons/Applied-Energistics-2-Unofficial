@@ -56,7 +56,7 @@ public abstract class AEBaseMEGui extends AEBaseGui
 
 				try
 				{
-                    myStack = isSlotME ? ( (SlotME) s ).getAEStack() : ( (SlotFake) s ).getAEStack();
+                    myStack = Platform.getAEStackInSlot( s );
 				}
 				catch( final Throwable ignore )
 				{
