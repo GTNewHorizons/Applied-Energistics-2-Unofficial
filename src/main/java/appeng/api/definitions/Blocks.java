@@ -113,6 +113,12 @@ public class Blocks
 
 	public AEItemDefinition blockCraftingAccelerator;
 
+    public AEItemDefinition blockCraftingAccelerator4x;
+
+    public AEItemDefinition blockCraftingAccelerator16x;
+
+    public AEItemDefinition blockCraftingAccelerator64x;
+
 	public AEItemDefinition blockCraftingStorage1k;
 
 	public AEItemDefinition blockCraftingStorage4k;

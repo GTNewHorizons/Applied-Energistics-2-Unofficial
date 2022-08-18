@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Arrays;
 
 
 public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IPowerChannelState
@@ -61,6 +62,7 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
 	private NBTTagCompound previousState = null;
 	private boolean isCoreBlock = false;
 	private CraftingCPUCluster cluster;
+	private static final int ACCELERATOR_SCALE_FACTOR = 4;
 
 	public TileCraftingTile()
 	{
@@ -111,8 +113,14 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
 		{
 			return false;
 		}
-		return ( this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 3 ) == 1;
+		return Arrays.asList( 1, 2, 3, 4 ).contains(this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 3);
 	}
+
+	public int acceleratorValue()
+    {
+        int meta = this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 3;
+        return (int) Math.pow( ACCELERATOR_SCALE_FACTOR, meta - 1 );
+    }
 
 	@Override
 	public void onReady()

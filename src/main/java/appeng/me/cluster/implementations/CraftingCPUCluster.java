@@ -210,7 +210,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU
 		}
 		else if( te.isAccelerator() )
 		{
-			this.accelerator++;
+			this.accelerator += te.acceleratorValue();
 		}
 	}
 

@@ -128,10 +128,19 @@ public class BlockCraftingUnit extends AEBaseTileBlock
 	@Override
 	public String getUnlocalizedName( final ItemStack is )
 	{
-		if( is.getItemDamage() == 1 )
-		{
-			return "tile.appliedenergistics2.BlockCraftingAccelerator";
-		}
+        if( is.getItemDamage() == 1 )
+        {
+            return "tile.appliedenergistics2.BlockCraftingAccelerator";
+        } else if( is.getItemDamage() == 2 )
+        {
+            return "tile.appliedenergistics2.BlockCraftingAccelerator4x";
+        } else if( is.getItemDamage() == 3 )
+        {
+            return "tile.appliedenergistics2.BlockCraftingAccelerator16x";
+        } else if( is.getItemDamage() == 4 )
+        {
+            return "tile.appliedenergistics2.BlockCraftingAccelerator64x";
+        }
 
 		return this.getItemUnlocalizedName( is );
 	}
