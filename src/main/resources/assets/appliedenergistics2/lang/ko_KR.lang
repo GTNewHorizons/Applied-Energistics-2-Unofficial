@@ -47,6 +47,9 @@ tile.appliedenergistics2.BlockCraftingStorage4k.name=4k 조합법 저장고
 tile.appliedenergistics2.BlockCraftingStorage16k.name=16k 조합법 저장고
 tile.appliedenergistics2.BlockCraftingStorage64k.name=64k 조합법 저장고
 tile.appliedenergistics2.BlockCraftingAccelerator.name=조합 공처리 유닛
+tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4핵심 조합 공처리 유닛
+tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16핵심 조합 공처리 유닛
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64핵심 조합 공처리 유닛
 tile.appliedenergistics2.BlockCraftingUnit.name=조합 유닛
 tile.appliedenergistics2.BlockMolecularAssembler.name=분자 조합기
 

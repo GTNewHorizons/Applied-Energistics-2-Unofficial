@@ -47,6 +47,9 @@ tile.appliedenergistics2.BlockCraftingStorage4k.name=4k合成存儲器
 tile.appliedenergistics2.BlockCraftingStorage16k.name=16k合成存儲器
 tile.appliedenergistics2.BlockCraftingStorage64k.name=64k合成存儲器
 tile.appliedenergistics2.BlockCraftingAccelerator.name=合成并行處理器
+tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4核心合成并行處理器
+tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16核心合成并行處理器
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64核心合成并行處理器
 tile.appliedenergistics2.BlockCraftingUnit.name=合成處理器
 tile.appliedenergistics2.BlockMolecularAssembler.name=分子集成室
 

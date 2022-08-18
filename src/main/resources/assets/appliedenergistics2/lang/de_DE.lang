@@ -48,6 +48,9 @@ tile.appliedenergistics2.BlockCraftingStorage4k.name=4k-Fertigungsspeicher
 tile.appliedenergistics2.BlockCraftingStorage16k.name=16k-Fertigungsspeicher
 tile.appliedenergistics2.BlockCraftingStorage64k.name=64k-Fertigungsspeicher
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Fertigungs-Prozessoreinheit
+tile.appliedenergistics2.BlockCraftingAccelerator4x.name=Quad Kern Fertigungs-Prozessoreinheit
+tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 Kern Fertigungs-Prozessoreinheit
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 Kern Fertigungs-Prozessoreinheit
 tile.appliedenergistics2.BlockCraftingUnit.name=Fertigungseinheit
 tile.appliedenergistics2.BlockMolecularAssembler.name=Molekularassembler
 

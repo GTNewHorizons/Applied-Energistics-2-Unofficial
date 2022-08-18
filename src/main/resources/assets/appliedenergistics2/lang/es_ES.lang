@@ -47,6 +47,9 @@ tile.appliedenergistics2.BlockCraftingStorage4k.name=4k Almacén de Trabajo
 tile.appliedenergistics2.BlockCraftingStorage16k.name=16k Almacén de Trabajo
 tile.appliedenergistics2.BlockCraftingStorage64k.name=64k Almacén de Trabajo
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Unidad de Coprocesador
+tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4 Centro Unidad de Coprocesador
+tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 Centro Unidad de Coprocesador
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 Centro Unidad de Coprocesador
 tile.appliedenergistics2.BlockCraftingUnit.name=Unidad de Creación
 tile.appliedenergistics2.BlockMolecularAssembler.name=Ensambladora Molecular
 

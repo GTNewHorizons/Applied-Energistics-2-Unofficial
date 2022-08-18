@@ -48,6 +48,9 @@ tile.appliedenergistics2.BlockCraftingStorage4k.name=Deposito per fabbricazione 
 tile.appliedenergistics2.BlockCraftingStorage16k.name=Deposito per fabbricazione da 16k
 tile.appliedenergistics2.BlockCraftingStorage64k.name=Deposito per fabbricazione da 64k
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Unità co-processore per fabbricazione
+tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4 Nucleo Unità co-processore per fabbricazione
+tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 Nucleo Unità co-processore per fabbricazione
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 Nucleo Unità co-processore per fabbricazione
 tile.appliedenergistics2.BlockCraftingUnit.name=Unità di fabbricazione
 tile.appliedenergistics2.BlockMolecularAssembler.name=Assemblatore moleculare
 
