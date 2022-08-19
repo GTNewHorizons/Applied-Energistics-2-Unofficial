@@ -11,6 +11,20 @@ shapeless=
     -> ae2:BlockCraftingUnit:1
 
 shapeless=
+    ae2:BlockCraftingUnit:1
+    ae2:BlockCraftingUnit:1
+    ae2:BlockCraftingUnit:1
+    ae2:BlockCraftingUnit:1
+    -> ae2:BlockCraftingUnit:2
+
+shapeless=
+    ae2:BlockCraftingUnit:2
+    ae2:BlockCraftingUnit:2
+    ae2:BlockCraftingUnit:2
+    ae2:BlockCraftingUnit:2
+    -> ae2:BlockCraftingUnit:3
+
+shapeless=
     ae2:BlockCraftingUnit:0
     ae2:ItemPart.StorageMonitor
     -> ae2:BlockCraftingMonitor
