@@ -70,12 +70,20 @@ public class BlockCraftingUnit extends AEBaseTileBlock
 			default:
 			case 0:
 				return super.getIcon( 0, 0 );
-			case 1:
-				return ExtraBlockTextures.BlockCraftingAccelerator.getIcon();
-			case FLAG_FORMED:
-				return ExtraBlockTextures.BlockCraftingUnitFit.getIcon();
-			case 1 | FLAG_FORMED:
-				return ExtraBlockTextures.BlockCraftingAcceleratorFit.getIcon();
+            case 1:
+                return ExtraBlockTextures.BlockCraftingAccelerator.getIcon();
+            case FLAG_FORMED:
+                return ExtraBlockTextures.BlockCraftingUnitFit.getIcon();
+            case 1 | FLAG_FORMED:
+                return ExtraBlockTextures.BlockCraftingAcceleratorFit.getIcon();
+            case 2:
+                return ExtraBlockTextures.BlockCraftingAccelerator4x.getIcon();
+            case 2 | FLAG_FORMED:
+                return ExtraBlockTextures.BlockCraftingAccelerator4xFit.getIcon();
+            case 3:
+                return ExtraBlockTextures.BlockCraftingAccelerator16x.getIcon();
+            case 3 | FLAG_FORMED:
+                return ExtraBlockTextures.BlockCraftingAccelerator16xFit.getIcon();
 		}
 	}
 

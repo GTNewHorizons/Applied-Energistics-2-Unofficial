@@ -71,11 +71,11 @@ public enum ExtraBlockTextures
 
 	BlockWirelessInside( "BlockWirelessInside" ),
 
-	BlockCraftingAccelerator( "BlockCraftingAccelerator" ), BlockCraftingMonitor( "BlockCraftingMonitor" ),
+	BlockCraftingAccelerator( "BlockCraftingAccelerator" ), BlockCraftingAccelerator4x( "BlockCraftingAccelerator4x" ), BlockCraftingAccelerator16x( "BlockCraftingAccelerator16x" ), BlockCraftingMonitor( "BlockCraftingMonitor" ),
 
 	BlockCraftingStorage1k( "BlockCraftingStorage" ), BlockCraftingStorage4k( "BlockCraftingStorage4k" ), BlockCraftingStorage16k( "BlockCraftingStorage16k" ), BlockCraftingStorage64k( "BlockCraftingStorage64k" ),
 
-	BlockCraftingAcceleratorFit( "BlockCraftingAcceleratorFit" ),
+    BlockCraftingAcceleratorFit( "BlockCraftingAcceleratorFit" ), BlockCraftingAccelerator4xFit( "BlockCraftingAccelerator4xFit" ), BlockCraftingAccelerator16xFit( "BlockCraftingAccelerator16xFit" ),
 
 	BlockCraftingMonitorFit_Light( "BlockCraftingMonitorFit_Light" ), BlockCraftingMonitorFit_Dark( "BlockCraftingMonitorFit_Dark" ), BlockCraftingMonitorFit_Medium( "BlockCraftingMonitorFit_Medium" ),
 
