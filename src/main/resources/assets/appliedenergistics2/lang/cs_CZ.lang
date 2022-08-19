@@ -49,7 +49,6 @@ tile.appliedenergistics2.BlockCraftingStorage64k.name=64k výrobní úložiště
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Výrobní re-procesní jednotka
 tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4 Jádro re-procesní jednotka
 tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 Jádro re-procesní jednotka
-tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 Jádro re-procesní jednotka
 tile.appliedenergistics2.BlockCraftingUnit.name=Výrobní jednotka
 tile.appliedenergistics2.BlockMolecularAssembler.name=Molekulární sestavovač
 

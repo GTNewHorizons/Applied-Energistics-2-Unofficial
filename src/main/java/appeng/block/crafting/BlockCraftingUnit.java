@@ -137,9 +137,6 @@ public class BlockCraftingUnit extends AEBaseTileBlock
         } else if( is.getItemDamage() == 3 )
         {
             return "tile.appliedenergistics2.BlockCraftingAccelerator16x";
-        } else if( is.getItemDamage() == 4 )
-        {
-            return "tile.appliedenergistics2.BlockCraftingAccelerator64x";
         }
 
 		return this.getItemUnlocalizedName( is );

@@ -50,7 +50,6 @@ tile.appliedenergistics2.BlockCraftingStorage64k.name=Disque 64k pour la fabrica
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Unité de co-traitement
 tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4 Cœur Unité de co-traitement
 tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 Cœur Unité de co-traitement
-tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 Cœur Unité de co-traitement
 tile.appliedenergistics2.BlockCraftingUnit.name=Unité de fabrication
 tile.appliedenergistics2.BlockMolecularAssembler.name=Assembleur moléculaire
 

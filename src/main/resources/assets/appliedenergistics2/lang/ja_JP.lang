@@ -52,7 +52,6 @@ tile.appliedenergistics2.BlockCraftingStorage64k.name=64k クラフティング�
 tile.appliedenergistics2.BlockCraftingAccelerator.name=MEクラフティングCPU
 tile.appliedenergistics2.BlockCraftingAccelerator4x.name=ME4芯クラフティングCPU
 tile.appliedenergistics2.BlockCraftingAccelerator16x.name=ME16芯クラフティングCPU
-tile.appliedenergistics2.BlockCraftingAccelerator64x.name=ME64芯クラフティングCPU
 tile.appliedenergistics2.BlockCraftingUnit.name=ME分子分子組立室
 
 chat.appliedenergistics2.ChestCannotReadStorageCell=MEチェストがストレージセルを読み取れませんでした

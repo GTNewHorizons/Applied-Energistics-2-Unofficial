@@ -50,7 +50,6 @@ tile.appliedenergistics2.BlockCraftingStorage64k.name=64К хранилище с
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Блок обработки создания
 tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4 ядро Блок обработки создания
 tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 ядро Блок обработки создания
-tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 ядро Блок обработки создания
 tile.appliedenergistics2.BlockCraftingUnit.name=Блок создания
 tile.appliedenergistics2.BlockMolecularAssembler.name=Молекулярный сборщик
 

@@ -50,7 +50,6 @@ tile.appliedenergistics2.BlockCraftingStorage64k.name=64k Barkács Tároló
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Barkács Segédfeldolgozó Egység
 tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4 Mag Barkács Segédfeldolgozó Egység
 tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 Mag Barkács Segédfeldolgozó Egység
-tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 Mag Barkács Segédfeldolgozó Egység
 tile.appliedenergistics2.BlockCraftingUnit.name=Barkácsoló Egység
 tile.appliedenergistics2.BlockMolecularAssembler.name=Molekuláris Összeállító
 

@@ -50,7 +50,6 @@ tile.appliedenergistics2.BlockCraftingStorage64k.name=Armazenamento de Fabricaç
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Unidade de Co-Processamento de Fabricação
 tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4 Núcleos Unidade de Co-Processamento de Fabricação
 tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 Núcleos Unidade de Co-Processamento de Fabricação
-tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 Núcleos Unidade de Co-Processamento de Fabricação
 tile.appliedenergistics2.BlockCraftingUnit.name=Unidade de Fabricação
 tile.appliedenergistics2.BlockMolecularAssembler.name=Montador Molecular
 

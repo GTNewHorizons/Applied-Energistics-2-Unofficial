@@ -102,7 +102,6 @@ public final class ApiBlocks implements IBlocks
 	private final ITileDefinition craftingAccelerator;
     private final ITileDefinition craftingAccelerator4x;
     private final ITileDefinition craftingAccelerator16x;
-    private final ITileDefinition craftingAccelerator64x;
 	private final ITileDefinition craftingStorage1k;
 	private final ITileDefinition craftingStorage4k;
 	private final ITileDefinition craftingStorage16k;
@@ -190,7 +189,6 @@ public final class ApiBlocks implements IBlocks
 		this.craftingAccelerator = new WrappedDamageItemDefinition( this.craftingUnit, 1 );
         this.craftingAccelerator4x = new WrappedDamageItemDefinition( this.craftingUnit, 2 );
         this.craftingAccelerator16x = new WrappedDamageItemDefinition( this.craftingUnit, 3 );
-        this.craftingAccelerator64x = new WrappedDamageItemDefinition( this.craftingUnit, 4 );
         this.craftingStorage1k = constructor.registerTileDefinition( new BlockCraftingStorage() );
         this.craftingStorage4k = new WrappedDamageItemDefinition( this.craftingStorage1k, 1 );
 		this.craftingStorage16k = new WrappedDamageItemDefinition( this.craftingStorage1k, 2 );
@@ -574,12 +572,6 @@ public final class ApiBlocks implements IBlocks
     public ITileDefinition craftingAccelerator16x()
     {
         return this.craftingAccelerator16x;
-    }
-
-    @Override
-    public ITileDefinition craftingAccelerator64x()
-    {
-        return this.craftingAccelerator64x;
     }
 
 	@Override
