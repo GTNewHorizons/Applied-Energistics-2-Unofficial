@@ -111,6 +111,8 @@ public class BlockCraftingUnit extends AEBaseTileBlock
 	{
 		itemStacks.add( new ItemStack( this, 1, 0 ) );
 		itemStacks.add( new ItemStack( this, 1, 1 ) );
+        itemStacks.add( new ItemStack( this, 1, 2 ) );
+        itemStacks.add( new ItemStack( this, 1, 3 ) );
 	}
 
 	@Override
