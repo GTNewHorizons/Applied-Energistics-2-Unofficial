@@ -113,7 +113,7 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
 		{
 			return false;
 		}
-		return Arrays.asList( 1, 2, 3, 4 ).contains(this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 3);
+		return Arrays.asList( 1, 2, 3 ).contains(this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 3);
 	}
 
 	public int acceleratorValue()
