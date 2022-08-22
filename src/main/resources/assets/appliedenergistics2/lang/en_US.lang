@@ -258,7 +258,7 @@ gui.color.appliedenergistics2.ItemSlotOverlayUnpowered=66111111
 gui.color.appliedenergistics2.ItemSlotOverlayInvalid=66ff6666
 gui.color.appliedenergistics2.CraftConfirmMissingItem=1AFF0000
 gui.color.appliedenergistics2.CraftingCPUActive=5A45A021
-gui.color.appliedenergistics2.CraftingCPUScheduled=FF0000FF
+gui.color.appliedenergistics2.CraftingCPUScheduled=FF787878
 gui.color.appliedenergistics2.InterfaceTerminalMatch=2A00FF00
 
 # GUI Tooltips
