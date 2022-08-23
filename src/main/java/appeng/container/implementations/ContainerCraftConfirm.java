@@ -37,6 +37,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
+import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.AELog;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
@@ -64,10 +65,9 @@ import java.util.Collections;
 import java.util.concurrent.Future;
 
 
-public class ContainerCraftConfirm extends AEBaseContainer
+public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingCPUSelectorContainer
 {
 
-	private final ArrayList<CraftingCPURecord> cpus = new ArrayList<CraftingCPURecord>();
 	private Future<ICraftingJob> job;
 	private ICraftingJob result;
 	@GuiSync( 0 )
@@ -80,39 +80,28 @@ public class ContainerCraftConfirm extends AEBaseContainer
 	public boolean autoStart = false;
 	@GuiSync( 4 )
 	public boolean simulation = true;
-	@GuiSync( 5 )
-	public int selectedCpu = -1;
 	@GuiSync( 6 )
 	public boolean noCPU = true;
 	@GuiSync( 7 )
 	public String myName = "";
+    @GuiSync.Recurse( 8 )
+    public final ContainerCPUTable cpuTable;
 
 	public ContainerCraftConfirm( final InventoryPlayer ip, final ITerminalHost te )
 	{
 		super( ip, te );
+        this.cpuTable = new ContainerCPUTable( this, this::onCPUUpdate, false, this::cpuMatches );
 	}
 
-	public void cycleCpu( final boolean next )
+    @Override
+    public void selectCPU( int cpu )
+    {
+        this.cpuTable.selectCPU( cpu );
+    }
+
+    public void onCPUUpdate( ICraftingCPU cpu )
 	{
-		if( next )
-		{
-			this.setSelectedCpu( this.getSelectedCpu() + 1 );
-		}
-		else
-		{
-			this.setSelectedCpu( this.getSelectedCpu() - 1 );
-		}
-
-		if( this.getSelectedCpu() < -1 )
-		{
-			this.setSelectedCpu( this.cpus.size() - 1 );
-		}
-		else if( this.getSelectedCpu() >= this.cpus.size() )
-		{
-			this.setSelectedCpu( -1 );
-		}
-
-		if( this.getSelectedCpu() == -1 )
+		if( cpu == null )
 		{
 			this.setCpuAvailableBytes( 0 );
 			this.setCpuCoProcessors( 0 );
@@ -120,66 +109,26 @@ public class ContainerCraftConfirm extends AEBaseContainer
 		}
 		else
 		{
-			this.setName( this.cpus.get( this.getSelectedCpu() ).getName() );
-			this.setCpuAvailableBytes( this.cpus.get( this.getSelectedCpu() ).getSize() );
-			this.setCpuCoProcessors( this.cpus.get( this.getSelectedCpu() ).getProcessors() );
+			this.setName( cpu.getName() );
+			this.setCpuAvailableBytes( cpu.getAvailableStorage() );
+			this.setCpuCoProcessors( cpu.getCoProcessors() );
 		}
 	}
 
 	@Override
 	public void detectAndSendChanges()
 	{
+        // Wait with CPU selection until job bytes are retrieved
+        if (this.bytesUsed != 0)
+        {
+            cpuTable.detectAndSendChanges( getGrid(), crafters );
+        }
 		if( Platform.isClient() )
 		{
 			return;
 		}
-		if (getGrid() == null)
-			return;
 
-		final ICraftingGrid cc = this.getGrid().getCache( ICraftingGrid.class );
-		final ImmutableSet<ICraftingCPU> cpuSet = cc.getCpus();
-
-		int matches = 0;
-		boolean changed = false;
-		for( final ICraftingCPU c : cpuSet )
-		{
-			boolean found = false;
-			for( final CraftingCPURecord ccr : this.cpus )
-			{
-				if( ccr.getCpu() == c )
-				{
-					found = true;
-				}
-			}
-
-			final boolean matched = this.cpuMatches( c );
-
-			if( matched )
-			{
-				matches++;
-			}
-
-			if( found == !matched )
-			{
-				changed = true;
-			}
-		}
-
-		if( changed || this.cpus.size() != matches )
-		{
-			this.cpus.clear();
-			for( final ICraftingCPU c : cpuSet )
-			{
-				if( this.cpuMatches( c ) )
-				{
-					this.cpus.add( new CraftingCPURecord( c.getAvailableStorage(), c.getCoProcessors(), c ) );
-				}
-			}
-
-			this.sendCPUs();
-		}
-
-		this.setNoCPU( this.cpus.isEmpty() );
+		this.setNoCPU( this.cpuTable.getCPUs().isEmpty() );
 
 		super.detectAndSendChanges();
 
@@ -298,28 +247,9 @@ public class ContainerCraftConfirm extends AEBaseContainer
 		return h.getActionableNode().getGrid();
 	}
 
-	private boolean cpuMatches( final ICraftingCPU c )
+	private boolean cpuMatches( final CraftingCPUStatus c )
 	{
-		return c.getAvailableStorage() >= this.getUsedBytes() && !c.isBusy();
-	}
-
-	private void sendCPUs()
-	{
-		Collections.sort( this.cpus );
-
-		if( this.getSelectedCpu() >= this.cpus.size() )
-		{
-			this.setSelectedCpu( -1 );
-			this.setCpuAvailableBytes( 0 );
-			this.setCpuCoProcessors( 0 );
-			this.setName( "" );
-		}
-		else if( this.getSelectedCpu() != -1 )
-		{
-			this.setName( this.cpus.get( this.getSelectedCpu() ).getName() );
-			this.setCpuAvailableBytes( this.cpus.get( this.getSelectedCpu() ).getSize() );
-			this.setCpuCoProcessors( this.cpus.get( this.getSelectedCpu() ).getProcessors() );
-		}
+		return c.getStorage() >= this.getUsedBytes() && !c.isBusy();
 	}
 
 	public void startJob()
@@ -355,7 +285,8 @@ public class ContainerCraftConfirm extends AEBaseContainer
 		if( this.result != null && !this.isSimulation() && getGrid() != null)
 		{
 			final ICraftingGrid cc = this.getGrid().getCache( ICraftingGrid.class );
-			final ICraftingLink g = cc.submitJob( this.result, null, this.getSelectedCpu() == -1 ? null : this.cpus.get( this.getSelectedCpu() ).getCpu(), true, this.getActionSrc() );
+            CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
+			final ICraftingLink g = cc.submitJob( this.result, null, (selected == null) ? null : selected.getServerCluster(), true, this.getActionSrc() );
 			this.setAutoStart( false );
 			if( g != null && originalGui != null && this.getOpenContext() != null )
 			{
@@ -441,12 +372,7 @@ public class ContainerCraftConfirm extends AEBaseContainer
 
 	public int getSelectedCpu()
 	{
-		return this.selectedCpu;
-	}
-
-	private void setSelectedCpu( final int selectedCpu )
-	{
-		this.selectedCpu = selectedCpu;
+		return this.cpuTable.selectedCpuSerial;
 	}
 
 	public String getName()

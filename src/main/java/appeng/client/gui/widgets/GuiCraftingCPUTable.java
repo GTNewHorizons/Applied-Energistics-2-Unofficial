@@ -55,7 +55,7 @@ public class GuiCraftingCPUTable
         return selectedCPUName;
     }
 
-    public void drawScreen( final int mouseX, final int mouseY, final float btn )
+    public void drawScreen(  )
     {
         final List<CraftingCPUStatus> cpus = container.getCPUs();
         final int selectedCpuSerial = container.selectedCpuSerial;
@@ -71,7 +71,7 @@ public class GuiCraftingCPUTable
         }
     }
 
-    public void drawFG( int offsetX, int offsetY, int mouseX, int mouseY )
+    public void drawFG( int offsetX, int offsetY, int mouseX, int mouseY, int guiLeft, int guiTop )
     {
         if( this.cpuScrollbar != null )
         {
@@ -80,7 +80,7 @@ public class GuiCraftingCPUTable
         final List<CraftingCPUStatus> cpus = container.getCPUs();
         final int selectedCpuSerial = container.selectedCpuSerial;
         final int firstCpu = this.cpuScrollbar.getCurrentScroll();
-        CraftingCPUStatus hoveredCpu = hitCpu( mouseX, mouseY );
+        CraftingCPUStatus hoveredCpu = hitCpu( mouseX - guiLeft, mouseY - guiTop );
         {
             FontRenderer font = Minecraft.getMinecraft().fontRenderer;
             for( int i = firstCpu; i < firstCpu + CPU_TABLE_SLOTS; i++ )
@@ -98,10 +98,19 @@ public class GuiCraftingCPUTable
                 int y = 19 + ( i - firstCpu ) * CPU_TABLE_SLOT_HEIGHT;
                 if( cpu.getSerial() == selectedCpuSerial )
                 {
-                    GL11.glColor4f( 0.0F, 0.8352F, 1.0F, 1.0F );
+                    if( !container.getCpuFilter().test( cpu ) )
+                    {
+                        GL11.glColor4f( 1.0F, 0.25F, 0.25F, 1.0F );
+                    } else
+                    {
+                        GL11.glColor4f( 0.0F, 0.8352F, 1.0F, 1.0F );
+                    }
                 } else if( hoveredCpu != null && hoveredCpu.getSerial() == cpu.getSerial() )
                 {
                     GL11.glColor4f( 0.65F, 0.9F, 1.0F, 1.0F );
+                } else if( !container.getCpuFilter().test( cpu ) )
+                {
+                    GL11.glColor4f( 0.9F, 0.65F, 0.65F, 1.0F );
                 } else
                 {
                     GL11.glColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
@@ -218,7 +227,7 @@ public class GuiCraftingCPUTable
         }
     }
 
-    public void drawBG( int offsetX, int offsetY, int mouseX, int mouseY )
+    public void drawBG( int offsetX, int offsetY )
     {
         parent.bindTexture( "guis/cpu_selector.png" );
         parent.drawTexturedModalRect( offsetX - CPU_TABLE_WIDTH, offsetY, 0, 0, CPU_TABLE_WIDTH, CPU_TABLE_HEIGHT );
@@ -270,7 +279,7 @@ public class GuiCraftingCPUTable
     /**
      * Subtract guiLeft, guiTop from x, y before calling
      */
-    public void mouseClickMove( int xCoord, int yCoord, int btn )
+    public void mouseClickMove( int xCoord, int yCoord )
     {
         if( cpuScrollbar != null )
         {
@@ -313,10 +322,11 @@ public class GuiCraftingCPUTable
         return xInside && yInside;
     }
 
-    public void cycleCPU()
+    public void cycleCPU(boolean backwards)
     {
         int current = container.selectedCpuSerial;
         List<CraftingCPUStatus> cpus = container.getCPUs();
+        final int next_increment = backwards ? (cpus.size() - 1) : 1;
         if( cpus.isEmpty() )
         {
             return;
@@ -326,7 +336,7 @@ public class GuiCraftingCPUTable
         {
             if( cpus.get( i ).getSerial() == current )
             {
-                next = i + 1;
+                next = i + next_increment;
                 break;
             }
         }
@@ -334,14 +344,14 @@ public class GuiCraftingCPUTable
         for (int i = 0; i < cpus.size(); i++)
         {
             next = next % cpus.size();
-            final boolean cpuBusy = cpus.get(next).getRemainingItems() > 0;
-            if (cpuBusy == preferBusy)
+            CraftingCPUStatus cpu = cpus.get(next);
+            if (cpu.isBusy() == preferBusy && container.getCpuFilter().test(cpu))
             {
                 break;
             }
             else
             {
-                next++;
+                next += next_increment;
             }
         }
         next = next % cpus.size();

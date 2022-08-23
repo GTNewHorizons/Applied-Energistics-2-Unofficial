@@ -53,7 +53,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
 {
 	private final ContainerCraftingStatus status;
 	private GuiButton selectCPU;
-    private GuiCraftingCPUTable cpuTable;
+    private final GuiCraftingCPUTable cpuTable;
 
 	private GuiTabButton originalGuiBtn;
 	private GuiBridge originalGui;
@@ -67,6 +67,8 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
 		final Object target = this.status.getTarget();
 		final IDefinitions definitions = AEApi.instance().definitions();
 		final IParts parts = definitions.parts();
+
+        cpuTable = new GuiCraftingCPUTable(this, this.status.getCPUTable() );
 
 		if( target instanceof WirelessTerminalGuiObject )
 		{
@@ -129,7 +131,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
 
         if( btn == this.selectCPU )
         {
-            cpuTable.cycleCPU();
+            cpuTable.cycleCPU(backwards);
         }
 
 		if( btn == this.originalGuiBtn )
@@ -146,8 +148,6 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
 		this.selectCPU = new GuiButton( 0, this.guiLeft + 8, this.guiTop + this.ySize - 25, 150, 20, GuiText.CraftingCPU.getLocal() + ": " + GuiText.NoCraftingCPUs );
 		this.buttonList.add( this.selectCPU );
 
-        cpuTable = new GuiCraftingCPUTable(this, this.status.getCPUTable() );
-
 		if( this.myIcon != null )
 		{
 			this.buttonList.add( this.originalGuiBtn = new GuiTabButton( this.guiLeft + 213, this.guiTop - 4, this.myIcon, this.myIcon.getDisplayName(), itemRender ) );
@@ -158,10 +158,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
 	@Override
 	public void drawScreen( final int mouseX, final int mouseY, final float btn )
 	{
-        if (this.cpuTable != null)
-        {
-            this.cpuTable.drawScreen( mouseX, mouseY, btn );
-        }
+        this.cpuTable.drawScreen(  );
 		this.updateCPUButtonText();
 		super.drawScreen( mouseX, mouseY, btn );
 	}
@@ -170,36 +167,28 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
     public void drawFG( int offsetX, int offsetY, int mouseX, int mouseY )
     {
         super.drawFG( offsetX, offsetY, mouseX, mouseY );
-        if (this.cpuTable != null) {
-            this.cpuTable.drawFG( offsetX, offsetY, mouseX, mouseY );
-        }
+        this.cpuTable.drawFG( offsetX, offsetY, mouseX, mouseY, guiLeft, guiTop );
     }
 
     @Override
     public void drawBG( int offsetX, int offsetY, int mouseX, int mouseY )
     {
         super.drawBG( offsetX, offsetY, mouseX, mouseY );
-        if (this.cpuTable != null) {
-            this.cpuTable.drawBG( offsetX, offsetY, mouseX, mouseY );
-        }
+        this.cpuTable.drawBG( offsetX, offsetY );
     }
 
     @Override
     protected void mouseClicked( int xCoord, int yCoord, int btn )
     {
         super.mouseClicked( xCoord, yCoord, btn );
-        if (cpuTable != null) {
-            cpuTable.mouseClicked( xCoord - guiLeft, yCoord - guiTop, btn );
-        }
+        cpuTable.mouseClicked( xCoord - guiLeft, yCoord - guiTop, btn );
     }
 
     @Override
     protected void mouseClickMove( int x, int y, int c, long d )
     {
         super.mouseClickMove( x, y, c, d );
-        if( cpuTable != null ) {
-            cpuTable.mouseClickMove( x - guiLeft, y - guiTop, c );
-        }
+        cpuTable.mouseClickMove( x - guiLeft, y - guiTop );
     }
 
     @Override

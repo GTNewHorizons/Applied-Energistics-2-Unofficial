@@ -16,20 +16,22 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class ContainerCPUTable implements ICraftingCPUSelectorContainer
 {
-    AEBaseContainer parent;
+    private final AEBaseContainer parent;
 
     private ImmutableSet<ICraftingCPU> lastCpuSet = null;
     private List<CraftingCPUStatus> cpus = new ArrayList<CraftingCPUStatus>();
     private final WeakHashMap<ICraftingCPU, Integer> cpuSerialMap = new WeakHashMap<>();
     private int nextCpuSerial = 1;
     private int lastUpdate = 0;
-    @GuiSync( 5 )
+    @GuiSync( 0 )
     public int selectedCpuSerial = -1;
-    private Consumer<ICraftingCPU> onCPUChange;
-    private boolean preferBusyCPUs;
+    private final Consumer<ICraftingCPU> onCPUChange;
+    private final boolean preferBusyCPUs;
+    private final Predicate<CraftingCPUStatus> cpuFilter;
 
     private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR = Comparator
             .comparing((CraftingCPUStatus e) -> e.getName() == null || e.getName().isEmpty())
@@ -41,16 +43,22 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer
      * @param onCPUChange Called whenever the current CPU is changed
      * @param preferBusyCPUs Whether busy CPUs should be picked first (e.g. crafting status vs. picking a CPU for a job)
      */
-    public ContainerCPUTable(AEBaseContainer parent, Consumer<ICraftingCPU> onCPUChange, boolean preferBusyCPUs)
+    public ContainerCPUTable(AEBaseContainer parent, Consumer<ICraftingCPU> onCPUChange, boolean preferBusyCPUs, Predicate<CraftingCPUStatus> cpuFilter)
     {
         this.parent = parent;
         this.onCPUChange = onCPUChange;
         this.preferBusyCPUs = preferBusyCPUs;
+        this.cpuFilter = cpuFilter;
     }
 
     public boolean isBusyCPUsPreferred()
     {
         return preferBusyCPUs;
+    }
+
+    public Predicate<CraftingCPUStatus> getCpuFilter()
+    {
+        return cpuFilter;
     }
 
     public void detectAndSendChanges( IGrid network, List<?> crafters) {
@@ -79,7 +87,7 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer
         if (selectedCpuSerial == -1) {
             // Try preferred CPUs first
             for (CraftingCPUStatus cpu : cpus) {
-                if (preferBusyCPUs ? (cpu.getRemainingItems() > 0) : (cpu.getRemainingItems() == 0)) {
+                if ( preferBusyCPUs == cpu.isBusy() && cpuFilter.test(cpu) ) {
                     selectCPU(cpu.getSerial());
                     break;
                 }
@@ -166,6 +174,11 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer
     public List<CraftingCPUStatus> getCPUs()
     {
         return Collections.unmodifiableList( cpus );
+    }
+
+    public CraftingCPUStatus getSelectedCPU()
+    {
+        return this.cpus.stream().filter(c -> c.getSerial() == selectedCpuSerial).findFirst().orElse(null);
     }
 
     public void handleCPUUpdate( CraftingCPUStatus[] cpus )

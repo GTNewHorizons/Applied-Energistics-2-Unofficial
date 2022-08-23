@@ -45,7 +45,7 @@ public class ContainerCraftingStatus extends ContainerCraftingCPU implements ICr
 	public ContainerCraftingStatus( final InventoryPlayer ip, final ITerminalHost te )
 	{
 		super( ip, te );
-        cpuTable = new ContainerCPUTable( this, this::setCPU, true );
+        cpuTable = new ContainerCPUTable( this, this::setCPU, true, c -> true );
 	}
 
     public ContainerCPUTable getCPUTable()

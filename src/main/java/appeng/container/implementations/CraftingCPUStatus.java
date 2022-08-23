@@ -22,6 +22,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus>
     private final int serial;
     private final long storage;
     private final long coprocessors;
+    private final boolean isBusy;
     private final long totalItems;
     private final long remainingItems;
     private final IAEItemStack crafting;
@@ -33,6 +34,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus>
         this.serial = 0;
         this.storage = 0;
         this.coprocessors = 0;
+        this.isBusy = false;
         this.totalItems = 0;
         this.remainingItems = 0;
         this.crafting = null;
@@ -43,7 +45,8 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus>
         this.serverCluster = cluster;
         this.name = cluster.getName();
         this.serial = serial;
-        if (cluster.isBusy())
+        this.isBusy = cluster.isBusy();
+        if (isBusy)
         {
             crafting = cluster.getFinalOutput();
             totalItems = cluster.getStartItemCount();
@@ -66,6 +69,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus>
         this.serial = i.getInteger( "serial" );
         this.storage = i.getLong("storage");
         this.coprocessors = i.getLong("coprocessors");
+        this.isBusy = i.getBoolean("isBusy");
         this.totalItems = i.getLong("totalItems");
         this.remainingItems = i.getLong("remainingItems");
         this.crafting = i.hasKey( "crafting" ) ? AEItemStack.loadItemStackFromNBT( i.getCompoundTag( "crafting" ) ) : null;
@@ -94,6 +98,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus>
         i.setInteger( "serial", serial );
         i.setLong( "storage", storage );
         i.setLong( "coprocessors", coprocessors );
+        i.setBoolean( "isBusy", isBusy );
         i.setLong( "totalItems", totalItems );
         i.setLong( "remainingItems", remainingItems );
         if (crafting != null)
@@ -159,6 +164,11 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus>
     public IAEItemStack getCrafting()
     {
         return crafting;
+    }
+
+    public boolean isBusy()
+    {
+        return isBusy;
     }
 
     @Override

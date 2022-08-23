@@ -24,8 +24,11 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.widgets.GuiCraftingCPUTable;
 import appeng.client.gui.widgets.GuiScrollbar;
+import appeng.client.gui.widgets.ICraftingCPUTableHolder;
 import appeng.container.implementations.ContainerCraftConfirm;
+import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.GuiColors;
@@ -55,10 +58,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class GuiCraftConfirm extends AEBaseGui
+public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolder
 {
 
 	private final ContainerCraftConfirm ccc;
+    private final GuiCraftingCPUTable cpuTable;
 
 	private final int rows = 5;
 
@@ -83,6 +87,8 @@ public class GuiCraftConfirm extends AEBaseGui
 
 		final GuiScrollbar scrollbar = new GuiScrollbar();
 		this.setScrollBar( scrollbar );
+
+        this.cpuTable = new GuiCraftingCPUTable( this, ((ContainerCraftConfirm) inventorySlots).cpuTable );
 
 		this.ccc = (ContainerCraftConfirm) this.inventorySlots;
 
@@ -112,7 +118,13 @@ public class GuiCraftConfirm extends AEBaseGui
 		}
 	}
 
-	boolean isAutoStart()
+    @Override
+    public GuiCraftingCPUTable getCPUTable()
+    {
+        return cpuTable;
+    }
+
+    boolean isAutoStart()
 	{
 		return ( (ContainerCraftConfirm) this.inventorySlots ).isAutoStart();
 	}
@@ -143,7 +155,15 @@ public class GuiCraftConfirm extends AEBaseGui
 	{
 		this.updateCPUButtonText();
 
+        cpuTable.drawScreen(  );
+
 		this.start.enabled = !( this.ccc.hasNoCPU() || this.isSimulation() );
+        if (this.start.enabled) {
+            CraftingCPUStatus selected = this.cpuTable.getContainer().getSelectedCPU();
+            if (selected == null || selected.getStorage() < this.ccc.getUsedBytes() || selected.isBusy()) {
+                this.start.enabled = false;
+            }
+        }
 		this.selectCPU.enabled = !this.isSimulation();
 
 		final int gx = ( this.width - this.xSize ) / 2;
@@ -212,6 +232,8 @@ public class GuiCraftConfirm extends AEBaseGui
 	@Override
 	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
+        cpuTable.drawFG( offsetX, offsetY, mouseX, mouseY, guiLeft, guiTop );
+
 		final long BytesUsed = this.ccc.getUsedBytes();
 		final String byteUsed = NumberFormat.getInstance().format( BytesUsed );
 		final String Add = BytesUsed > 0 ? ( byteUsed + ' ' + GuiText.BytesUsed.getLocal() ) : GuiText.CalculatingWait.getLocal();
@@ -369,6 +391,7 @@ public class GuiCraftConfirm extends AEBaseGui
 	@Override
 	public void drawBG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
 	{
+        cpuTable.drawBG( offsetX, offsetY );
 		this.setScrollBar();
 		this.bindTexture( "guis/craftingreport.png" );
 		this.drawTexturedModalRect( offsetX, offsetY, 0, 0, this.xSize, this.ySize );
@@ -529,14 +552,7 @@ public class GuiCraftConfirm extends AEBaseGui
 
 		if( btn == this.selectCPU )
 		{
-			try
-			{
-				NetworkHandler.instance.sendToServer( new PacketValueConfig( "Terminal.Cpu", backwards ? "Prev" : "Next" ) );
-			}
-			catch( final IOException e )
-			{
-				AELog.debug( e );
-			}
+			cpuTable.cycleCPU(backwards);
 		}
 
 		if( btn == this.cancel )
@@ -559,4 +575,33 @@ public class GuiCraftConfirm extends AEBaseGui
 	public ItemStack getHoveredStack() {
 		return hoveredStack;
 	}
+
+    @Override
+    protected void mouseClicked( int xCoord, int yCoord, int btn )
+    {
+        super.mouseClicked( xCoord, yCoord, btn );
+        cpuTable.mouseClicked( xCoord - guiLeft, yCoord - guiTop, btn );
+    }
+
+    @Override
+    protected void mouseClickMove( int x, int y, int c, long d )
+    {
+        super.mouseClickMove( x, y, c, d );
+        cpuTable.mouseClickMove( x - guiLeft, y - guiTop );
+    }
+
+    @Override
+    public void handleMouseInput()
+    {
+        if ( cpuTable.handleMouseInput(guiLeft, guiTop) )
+        {
+            return;
+        }
+        super.handleMouseInput();
+    }
+
+    public boolean hideItemPanelSlot( int x, int y, int w, int h )
+    {
+        return cpuTable.hideItemPanelSlot(x - guiLeft, y - guiTop, w, h );
+    }
 }

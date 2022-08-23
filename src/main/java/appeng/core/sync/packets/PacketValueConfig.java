@@ -93,11 +93,6 @@ public class PacketValueConfig extends AppEngPacket
 			final ICraftingCPUSelectorContainer qk = (ICraftingCPUSelectorContainer) c;
 			qk.selectCPU( Integer.parseInt( this.Value ) );
 		}
-		else if( this.Name.equals( "Terminal.Cpu" ) && c instanceof ContainerCraftConfirm )
-		{
-			final ContainerCraftConfirm qk = (ContainerCraftConfirm) c;
-			qk.cycleCpu( this.Value.equals( "Next" ) );
-		}
 		else if( this.Name.equals( "Terminal.Start" ) && c instanceof ContainerCraftConfirm )
 		{
 			final ContainerCraftConfirm qk = (ContainerCraftConfirm) c;
