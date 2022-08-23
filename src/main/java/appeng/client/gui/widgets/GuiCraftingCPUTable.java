@@ -2,24 +2,29 @@ package appeng.client.gui.widgets;
 
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.AEBaseGui;
+import appeng.container.implementations.ContainerCPUTable;
 import appeng.container.implementations.CraftingCPUStatus;
+import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketValueConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
-public class GuiCraftingCpuTable
+public class GuiCraftingCPUTable
 {
-    public AEBaseGui parent;
+    private final AEBaseGui parent;
+    private final ContainerCPUTable container;
 
     public static final int CPU_TABLE_WIDTH = 94;
     public static final int CPU_TABLE_HEIGHT = 164;
+    public static final int CPU_TABLE_SLOTS = 6;
     public static final int CPU_TABLE_SLOT_XOFF = 100;
     public static final int CPU_TABLE_SLOT_YOFF = 0;
     public static final int CPU_TABLE_SLOT_WIDTH = 67;
@@ -28,20 +33,21 @@ public class GuiCraftingCpuTable
     private final GuiScrollbar cpuScrollbar;
 
     private String selectedCPUName = "";
-    private final IntSupplier selectedCpuSerialProvider;
-    private final Supplier<List<CraftingCPUStatus>> cpuListProvider;
 
-    public GuiCraftingCpuTable( AEBaseGui parent, IntSupplier selectedCpuSerialProvider, Supplier<List<CraftingCPUStatus>> cpuListProvider )
+    public GuiCraftingCPUTable( AEBaseGui parent, ContainerCPUTable container )
     {
         this.parent = parent;
+        this.container = container;
         this.cpuScrollbar = new GuiScrollbar();
         this.cpuScrollbar.setLeft( -16 );
         this.cpuScrollbar.setTop( 19 );
         this.cpuScrollbar.setWidth( 12 );
         this.cpuScrollbar.setHeight( 137 );
+    }
 
-        this.selectedCpuSerialProvider = selectedCpuSerialProvider;
-        this.cpuListProvider = cpuListProvider;
+    public ContainerCPUTable getContainer()
+    {
+        return container;
     }
 
     public String getSelectedCPUName()
@@ -51,11 +57,11 @@ public class GuiCraftingCpuTable
 
     public void drawScreen( final int mouseX, final int mouseY, final float btn )
     {
-        final List<CraftingCPUStatus> cpus = cpuListProvider.get();
-        final int selectedCpuSerial = selectedCpuSerialProvider.getAsInt();
+        final List<CraftingCPUStatus> cpus = container.getCPUs();
+        final int selectedCpuSerial = container.selectedCpuSerial;
 
         this.selectedCPUName = null;
-        this.cpuScrollbar.setRange( 0, Integer.max( 0, cpus.size() - 6 ), 1 );
+        this.cpuScrollbar.setRange( 0, Integer.max( 0, cpus.size() - CPU_TABLE_SLOTS ), 1 );
         for( CraftingCPUStatus cpu : cpus )
         {
             if( cpu.getSerial() == selectedCpuSerial )
@@ -71,13 +77,13 @@ public class GuiCraftingCpuTable
         {
             this.cpuScrollbar.draw( parent );
         }
-        final List<CraftingCPUStatus> cpus = cpuListProvider.get();
-        final int selectedCpuSerial = selectedCpuSerialProvider.getAsInt();
+        final List<CraftingCPUStatus> cpus = container.getCPUs();
+        final int selectedCpuSerial = container.selectedCpuSerial;
         final int firstCpu = this.cpuScrollbar.getCurrentScroll();
         CraftingCPUStatus hoveredCpu = hitCpu( mouseX, mouseY );
         {
             FontRenderer font = Minecraft.getMinecraft().fontRenderer;
-            for( int i = firstCpu; i < firstCpu + 6; i++ )
+            for( int i = firstCpu; i < firstCpu + CPU_TABLE_SLOTS; i++ )
             {
                 if( i < 0 || i >= cpus.size() )
                 {
@@ -224,13 +230,13 @@ public class GuiCraftingCpuTable
     public CraftingCPUStatus hitCpu( int x, int y )
     {
         x -= -CPU_TABLE_WIDTH;
-        if( !( x >= 9 && x < CPU_TABLE_SLOT_WIDTH + 9 && y >= 19 && y < 19 + 6 * CPU_TABLE_SLOT_HEIGHT ) )
+        if( !( x >= 9 && x < CPU_TABLE_SLOT_WIDTH + 9 && y >= 19 && y < 19 + CPU_TABLE_SLOTS * CPU_TABLE_SLOT_HEIGHT ) )
         {
             return null;
         }
         int scrollOffset = this.cpuScrollbar != null ? this.cpuScrollbar.getCurrentScroll() : 0;
         int cpuId = scrollOffset + ( y - 19 ) / CPU_TABLE_SLOT_HEIGHT;
-        List<CraftingCPUStatus> cpus = cpuListProvider.get();
+        List<CraftingCPUStatus> cpus = container.getCPUs();
         return ( cpuId >= 0 && cpuId < cpus.size() ) ? cpus.get( cpuId ) : null;
     }
 
@@ -238,6 +244,33 @@ public class GuiCraftingCpuTable
      * Subtract guiLeft, guiTop from x, y before calling
      */
     public void mouseClicked( int xCoord, int yCoord, int btn )
+    {
+        if( cpuScrollbar != null )
+        {
+            cpuScrollbar.click( parent, xCoord, yCoord );
+        }
+        CraftingCPUStatus hit = hitCpu( xCoord, yCoord );
+        if( hit != null )
+        {
+            sendCPUSwitch( hit.getSerial() );
+        }
+    }
+
+    public void sendCPUSwitch( int serial )
+    {
+        try
+        {
+            NetworkHandler.instance.sendToServer( new PacketValueConfig( "CPUTable.Cpu.Set", Integer.toString( serial ) ) );
+        } catch( final IOException e )
+        {
+            AELog.warn( e );
+        }
+    }
+
+    /**
+     * Subtract guiLeft, guiTop from x, y before calling
+     */
+    public void mouseClickMove( int xCoord, int yCoord, int btn )
     {
         if( cpuScrollbar != null )
         {
@@ -255,7 +288,7 @@ public class GuiCraftingCpuTable
         x -= guiLeft - CPU_TABLE_WIDTH;
         y -= guiTop;
         int dwheel = Mouse.getEventDWheel();
-        if( x >= 9 && x < CPU_TABLE_SLOT_WIDTH + 9 && y >= 19 && y < 19 + 6 * CPU_TABLE_SLOT_HEIGHT )
+        if( x >= 9 && x < CPU_TABLE_SLOT_WIDTH + 9 && y >= 19 && y < 19 + CPU_TABLE_SLOTS * CPU_TABLE_SLOT_HEIGHT )
         {
             if( this.cpuScrollbar != null && dwheel != 0 )
             {
@@ -274,9 +307,34 @@ public class GuiCraftingCpuTable
                         || ( x + w >= 0 && x + w < CPU_TABLE_SLOT_WIDTH + 9 )
                         || ( x <= 0 && x + w >= CPU_TABLE_SLOT_WIDTH + 9 );
         boolean yInside =
-                ( y >= 0 && y < 19 + 6 * CPU_TABLE_SLOT_HEIGHT )
-                        || ( y + h >= 0 && y + h < 19 + 6 * CPU_TABLE_SLOT_HEIGHT )
-                        || ( y < 0 && y + h >= 19 + 6 * CPU_TABLE_SLOT_HEIGHT );
+                ( y >= 0 && y < 19 + CPU_TABLE_SLOTS * CPU_TABLE_SLOT_HEIGHT )
+                        || ( y + h >= 0 && y + h < 19 + CPU_TABLE_SLOTS * CPU_TABLE_SLOT_HEIGHT )
+                        || ( y < 0 && y + h >= 19 + CPU_TABLE_SLOTS * CPU_TABLE_SLOT_HEIGHT );
         return xInside && yInside;
+    }
+
+    public void cycleCPU()
+    {
+        int current = container.selectedCpuSerial;
+        List<CraftingCPUStatus> cpus = container.getCPUs();
+        if( cpus.isEmpty() )
+        {
+            return;
+        }
+        int next = 0;
+        for( int i = 0; i < cpus.size(); i++ )
+        {
+            if( cpus.get( i ).getSerial() == current )
+            {
+                next = i + 1;
+                break;
+            }
+        }
+        next = next % cpus.size();
+        sendCPUSwitch( cpus.get( next ).getSerial() );
+        if( next < cpuScrollbar.getCurrentScroll() || next >= cpuScrollbar.getCurrentScroll() + CPU_TABLE_SLOTS )
+        {
+            cpuScrollbar.setCurrentScroll( next );
+        }
     }
 }

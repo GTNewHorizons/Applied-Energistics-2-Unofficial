@@ -26,6 +26,7 @@ import appeng.api.util.IConfigurableObject;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.AEBaseContainer;
 import appeng.container.implementations.*;
+import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.IMouseWheelItem;
@@ -87,9 +88,9 @@ public class PacketValueConfig extends AppEngPacket
 			final IMouseWheelItem si = (IMouseWheelItem) is.getItem();
 			si.onWheel( is, this.Value.equals( "WheelUp" ) );
 		}
-		else if( this.Name.equals( "Terminal.Cpu.Set" ) && c instanceof ContainerCraftingStatus )
+		else if( this.Name.equals( "CPUTable.Cpu.Set" ) && c instanceof ICraftingCPUSelectorContainer )
 		{
-			final ContainerCraftingStatus qk = (ContainerCraftingStatus) c;
+			final ICraftingCPUSelectorContainer qk = (ICraftingCPUSelectorContainer) c;
 			qk.selectCPU( Integer.parseInt( this.Value ) );
 		}
 		else if( this.Name.equals( "Terminal.Cpu" ) && c instanceof ContainerCraftConfirm )

@@ -1,6 +1,7 @@
 package appeng.core.sync.packets;
 
 import appeng.client.gui.implementations.GuiCraftingStatus;
+import appeng.client.gui.widgets.ICraftingCPUTableHolder;
 import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -53,10 +54,10 @@ public class PacketCraftingCPUsUpdate extends AppEngPacket
     {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
-        if( gs instanceof GuiCraftingStatus )
+        if( gs instanceof ICraftingCPUTableHolder )
         {
-            GuiCraftingStatus gui = (GuiCraftingStatus) gs;
-            gui.postCPUUpdate( this.cpus );
+            ICraftingCPUTableHolder gui = (ICraftingCPUTableHolder) gs;
+            gui.getCPUTable().getContainer().handleCPUUpdate( this.cpus );
         }
 
     }

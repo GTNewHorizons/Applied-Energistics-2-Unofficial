@@ -27,41 +27,33 @@ import appeng.api.AEApi;
 import appeng.api.definitions.IDefinitions;
 import appeng.api.definitions.IParts;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEItemStack;
-import appeng.client.gui.widgets.GuiCraftingCpuTable;
-import appeng.client.gui.widgets.GuiScrollbar;
+import appeng.client.gui.widgets.GuiCraftingCPUTable;
 import appeng.client.gui.widgets.GuiTabButton;
+import appeng.client.gui.widgets.ICraftingCPUTableHolder;
 import appeng.container.implementations.ContainerCraftingStatus;
 import appeng.container.implementations.CraftingCPUStatus;
-import appeng.core.AELog;
 import appeng.core.localization.GuiText;
-import appeng.core.localization.GuiColors;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
-import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartPatternTerminal;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
 
-import java.io.IOException;
 import java.util.List;
 
 
-public class GuiCraftingStatus extends GuiCraftingCPU
+public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTableHolder
 {
 	private final ContainerCraftingStatus status;
 	private GuiButton selectCPU;
-    private GuiCraftingCpuTable cpuTable;
+    private GuiCraftingCPUTable cpuTable;
 
 	private GuiTabButton originalGuiBtn;
 	private GuiBridge originalGui;
@@ -122,12 +114,23 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 		}
 	}
 
-	@Override
+    @Override
+    public GuiCraftingCPUTable getCPUTable()
+    {
+        return cpuTable;
+    }
+
+    @Override
 	protected void actionPerformed( final GuiButton btn )
 	{
 		super.actionPerformed( btn );
 
 		final boolean backwards = Mouse.isButtonDown( 1 );
+
+        if( btn == this.selectCPU )
+        {
+            cpuTable.cycleCPU();
+        }
 
 		if( btn == this.originalGuiBtn )
 		{
@@ -141,10 +144,9 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 		super.initGui();
 
 		this.selectCPU = new GuiButton( 0, this.guiLeft + 8, this.guiTop + this.ySize - 25, 150, 20, GuiText.CraftingCPU.getLocal() + ": " + GuiText.NoCraftingCPUs );
-		this.selectCPU.enabled = false;
 		this.buttonList.add( this.selectCPU );
 
-        cpuTable = new GuiCraftingCpuTable(this, () -> status.selectedCpuSerial, status::getCPUs );
+        cpuTable = new GuiCraftingCPUTable(this, this.status.getCPUTable() );
 
 		if( this.myIcon != null )
 		{
@@ -156,7 +158,6 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 	@Override
 	public void drawScreen( final int mouseX, final int mouseY, final float btn )
 	{
-        List<CraftingCPUStatus> cpus = this.status.getCPUs();
         if (this.cpuTable != null)
         {
             this.cpuTable.drawScreen( mouseX, mouseY, btn );
@@ -187,18 +188,8 @@ public class GuiCraftingStatus extends GuiCraftingCPU
     protected void mouseClicked( int xCoord, int yCoord, int btn )
     {
         super.mouseClicked( xCoord, yCoord, btn );
-
-        CraftingCPUStatus hit = this.cpuTable.hitCpu( xCoord - guiLeft, yCoord - guiTop );
-        if (hit != null)
-        {
-			try
-			{
-				NetworkHandler.instance.sendToServer( new PacketValueConfig( "Terminal.Cpu.Set", Integer.toString( hit.getSerial() ) ) );
-			}
-			catch( final IOException e )
-			{
-				AELog.debug( e );
-			}
+        if (cpuTable != null) {
+            cpuTable.mouseClicked( xCoord - guiLeft, yCoord - guiTop, btn );
         }
     }
 
@@ -207,7 +198,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU
     {
         super.mouseClickMove( x, y, c, d );
         if( cpuTable != null ) {
-            cpuTable.mouseClicked( x - guiLeft, y - guiTop, c );
+            cpuTable.mouseClickMove( x - guiLeft, y - guiTop, c );
         }
     }
 
@@ -229,7 +220,8 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 	{
 		String btnTextText = GuiText.NoCraftingJobs.getLocal();
 
-		if( this.status.selectedCpuSerial >= 0 )
+        final int selectedSerial = this.cpuTable.getContainer().selectedCpuSerial;
+		if( selectedSerial >= 0 )
 		{
             String selectedCPUName = cpuTable.getSelectedCPUName();
 			if( selectedCPUName != null && selectedCPUName.length() > 0 )
@@ -239,7 +231,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 			}
 			else
 			{
-				btnTextText = GuiText.CPUs.getLocal() + ": #" + this.status.selectedCpuSerial;
+				btnTextText = GuiText.CPUs.getLocal() + ": #" + selectedSerial;
 			}
 		}
 
@@ -256,9 +248,4 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 	{
 		return in; // the cup name is on the button
 	}
-
-    public void postCPUUpdate( CraftingCPUStatus[] cpus )
-    {
-        this.status.postCPUUpdate(cpus);
-    }
 }
