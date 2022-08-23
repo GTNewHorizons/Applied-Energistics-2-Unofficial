@@ -330,6 +330,20 @@ public class GuiCraftingCPUTable
                 break;
             }
         }
+        final boolean preferBusy = container.isBusyCPUsPreferred();
+        for (int i = 0; i < cpus.size(); i++)
+        {
+            next = next % cpus.size();
+            final boolean cpuBusy = cpus.get(next).getRemainingItems() > 0;
+            if (cpuBusy == preferBusy)
+            {
+                break;
+            }
+            else
+            {
+                next++;
+            }
+        }
         next = next % cpus.size();
         sendCPUSwitch( cpus.get( next ).getSerial() );
         if( next < cpuScrollbar.getCurrentScroll() || next >= cpuScrollbar.getCurrentScroll() + CPU_TABLE_SLOTS )

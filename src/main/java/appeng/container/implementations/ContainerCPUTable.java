@@ -29,19 +29,31 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer
     @GuiSync( 5 )
     public int selectedCpuSerial = -1;
     private Consumer<ICraftingCPU> onCPUChange;
+    private boolean preferBusyCPUs;
 
     private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR = Comparator
             .comparing((CraftingCPUStatus e) -> e.getName() == null || e.getName().isEmpty())
             .thenComparing(e -> e.getName() != null ? e.getName() : "")
             .thenComparingInt(CraftingCPUStatus::getSerial);
 
-    public ContainerCPUTable(ContainerCraftingCPU parent, Consumer<ICraftingCPU> onCPUChange)
+    /**
+     * @param parent Container parent, of which this is a field
+     * @param onCPUChange Called whenever the current CPU is changed
+     * @param preferBusyCPUs Whether busy CPUs should be picked first (e.g. crafting status vs. picking a CPU for a job)
+     */
+    public ContainerCPUTable(AEBaseContainer parent, Consumer<ICraftingCPU> onCPUChange, boolean preferBusyCPUs)
     {
         this.parent = parent;
         this.onCPUChange = onCPUChange;
+        this.preferBusyCPUs = preferBusyCPUs;
     }
 
-    public void detectAndSendChanges(IGrid network, List<?> crafters) {
+    public boolean isBusyCPUsPreferred()
+    {
+        return preferBusyCPUs;
+    }
+
+    public void detectAndSendChanges( IGrid network, List<?> crafters) {
         if( Platform.isServer() && network != null )
         {
             final ICraftingGrid cc = network.getCache( ICraftingGrid.class );
@@ -65,14 +77,14 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer
 
         // Select a suitable CPU if none is selected
         if (selectedCpuSerial == -1) {
-            // Try busy CPUs first
+            // Try preferred CPUs first
             for (CraftingCPUStatus cpu : cpus) {
-                if (cpu.getRemainingItems() > 0) {
+                if (preferBusyCPUs ? (cpu.getRemainingItems() > 0) : (cpu.getRemainingItems() == 0)) {
                     selectCPU(cpu.getSerial());
                     break;
                 }
             }
-            // If we couldn't find a busy one, just select the first
+            // If we couldn't find a preferred one, just select the first
             if (selectedCpuSerial == -1 && !cpus.isEmpty()) {
                 selectCPU(cpus.get(0).getSerial());
             }
