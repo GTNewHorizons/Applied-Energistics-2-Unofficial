@@ -62,6 +62,7 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -127,22 +128,32 @@ public abstract class AEBaseContainer extends Container
 
 	private void prepareSync()
 	{
-		for( final Field f : this.getClass().getFields() )
-		{
-			if( f.isAnnotationPresent( GuiSync.class ) )
-			{
-				final GuiSync annotation = f.getAnnotation( GuiSync.class );
-				if( this.syncData.containsKey( annotation.value() ) )
-				{
-					AELog.warn( "Channel already in use: " + annotation.value() + " for " + f.getName() );
-				}
-				else
-				{
-					this.syncData.put( annotation.value(), new SyncData( this, f, annotation ) );
-				}
-			}
-		}
+		walkSyncFields( 0, this.getClass().getFields(), new Field[0] );
 	}
+
+    private void walkSyncFields(int offset, final Field[] fields, final Field[] currentIndirections) {
+        for( final Field f : fields )
+        {
+            if (f.isAnnotationPresent( GuiSync.Recurse.class ))
+            {
+                final GuiSync.Recurse annotation = f.getAnnotation( GuiSync.Recurse.class );
+                walkSyncFields( offset + annotation.value(), f.getType().getFields(), ArrayUtils.add( currentIndirections, f ) );
+            }
+            if( f.isAnnotationPresent( GuiSync.class ) )
+            {
+                final GuiSync annotation = f.getAnnotation( GuiSync.class );
+                final int channel = offset + annotation.value();
+                if( this.syncData.containsKey( channel ) )
+                {
+                    AELog.warn( "Channel already in use: " + channel + " for " + f.getName() );
+                }
+                else
+                {
+                    this.syncData.put( channel, new SyncData( this, currentIndirections, f, channel ) );
+                }
+            }
+        }
+    }
 
 	public AEBaseContainer( final InventoryPlayer ip, final Object anchor )
 	{

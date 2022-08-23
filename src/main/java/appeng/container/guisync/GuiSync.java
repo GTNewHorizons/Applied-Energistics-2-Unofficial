@@ -29,10 +29,20 @@ import java.lang.annotation.Target;
  * Annotates that this field should be synchronized between the server and client.
  * Requires the field to be public.
  */
-@Retention( RetentionPolicy.RUNTIME )
-@Target( ElementType.FIELD )
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
 public @interface GuiSync
 {
 
-	int value();
+    int value();
+
+    /**
+     * Recurse into the class in search of more @GuiSync-ed values. The child IDs are offset by the value.
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.FIELD)
+    public static @interface Recurse
+    {
+        int value();
+    }
 }
