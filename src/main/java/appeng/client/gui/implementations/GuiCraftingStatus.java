@@ -28,6 +28,7 @@ import appeng.api.definitions.IDefinitions;
 import appeng.api.definitions.IParts;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.client.gui.widgets.GuiCraftingCpuTable;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerCraftingStatus;
@@ -58,21 +59,13 @@ import java.util.List;
 
 public class GuiCraftingStatus extends GuiCraftingCPU
 {
-    private static final int CPU_TABLE_WIDTH = 94;
-    private static final int CPU_TABLE_HEIGHT = 164;
-    private static final int CPU_TABLE_SLOT_XOFF = 100;
-    private static final int CPU_TABLE_SLOT_YOFF = 0;
-    private static final int CPU_TABLE_SLOT_WIDTH = 67;
-    private static final int CPU_TABLE_SLOT_HEIGHT = 23;
-
 	private final ContainerCraftingStatus status;
 	private GuiButton selectCPU;
-    private GuiScrollbar cpuScrollbar;
+    private GuiCraftingCpuTable cpuTable;
 
 	private GuiTabButton originalGuiBtn;
 	private GuiBridge originalGui;
 	private ItemStack myIcon = null;
-    private String selectedCPUName = "";
 
 	public GuiCraftingStatus( final InventoryPlayer inventoryPlayer, final ITerminalHost te )
 	{
@@ -151,11 +144,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 		this.selectCPU.enabled = false;
 		this.buttonList.add( this.selectCPU );
 
-        this.cpuScrollbar = new GuiScrollbar();
-        this.cpuScrollbar.setLeft( -16 );
-        this.cpuScrollbar.setTop( 19 );
-        this.cpuScrollbar.setWidth( 12 );
-        this.cpuScrollbar.setHeight( 137 );
+        cpuTable = new GuiCraftingCpuTable(this, () -> status.selectedCpuSerial, status::getCPUs );
 
 		if( this.myIcon != null )
 		{
@@ -168,14 +157,9 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 	public void drawScreen( final int mouseX, final int mouseY, final float btn )
 	{
         List<CraftingCPUStatus> cpus = this.status.getCPUs();
-        this.selectedCPUName = null;
-        this.cpuScrollbar.setRange( 0, Integer.max(0, cpus.size() - 6), 1 );
-        for (CraftingCPUStatus cpu : cpus)
+        if (this.cpuTable != null)
         {
-            if (cpu.getSerial() == this.status.selectedCpuSerial)
-            {
-                this.selectedCPUName = cpu.getName();
-            }
+            this.cpuTable.drawScreen( mouseX, mouseY, btn );
         }
 		this.updateCPUButtonText();
 		super.drawScreen( mouseX, mouseY, btn );
@@ -185,151 +169,8 @@ public class GuiCraftingStatus extends GuiCraftingCPU
     public void drawFG( int offsetX, int offsetY, int mouseX, int mouseY )
     {
         super.drawFG( offsetX, offsetY, mouseX, mouseY );
-        if (this.cpuScrollbar != null)
-        {
-            this.cpuScrollbar.draw( this );
-        }
-
-        List<CraftingCPUStatus> cpus = this.status.getCPUs();
-        final int firstCpu = this.cpuScrollbar.getCurrentScroll();
-        CraftingCPUStatus hoveredCpu = hitCpu( mouseX, mouseY );
-        {
-            FontRenderer font = Minecraft.getMinecraft().fontRenderer;
-            for( int i = firstCpu; i < firstCpu + 6; i++ )
-            {
-                if( i < 0 || i >= cpus.size() )
-                {
-                    continue;
-                }
-                CraftingCPUStatus cpu = cpus.get( i );
-                if( cpu == null )
-                {
-                    continue;
-                }
-                int x = -CPU_TABLE_WIDTH + 9;
-                int y = 19 + ( i - firstCpu ) * CPU_TABLE_SLOT_HEIGHT;
-                if( cpu.getSerial() == this.status.selectedCpuSerial )
-                {
-                    GL11.glColor4f( 0.0F, 0.8352F, 1.0F, 1.0F );
-                }
-                else if( hoveredCpu != null && hoveredCpu.getSerial() == cpu.getSerial() )
-                {
-                    GL11.glColor4f( 0.65F, 0.9F, 1.0F, 1.0F );
-                } else
-                {
-                    GL11.glColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
-                }
-                this.bindTexture( "guis/cpu_selector.png" );
-                this.drawTexturedModalRect( x, y, CPU_TABLE_SLOT_XOFF, CPU_TABLE_SLOT_YOFF, CPU_TABLE_SLOT_WIDTH, CPU_TABLE_SLOT_HEIGHT );
-                GL11.glColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
-
-                String name = cpu.getName();
-                if( name == null || name.isEmpty() )
-                {
-                    name = GuiText.CPUs.getLocal() + " #" + cpu.getSerial();
-                }
-                if( name.length() > 12 )
-                {
-                    name = name.substring( 0, 11 ) + "..";
-                }
-                GL11.glPushMatrix();
-                GL11.glTranslatef( x + 3, y + 3, 0 );
-                GL11.glScalef( 0.8f, 0.8f, 1.0f );
-                font.drawString( name, 0, 0, GuiColors.CraftingStatusCPUName.getColor() );
-                GL11.glPopMatrix();
-
-                GL11.glPushMatrix();
-                GL11.glTranslatef( x + 3, y + 11, 0 );
-                final IAEItemStack craftingStack = cpu.getCrafting();
-                if( craftingStack != null )
-                {
-                    final int iconIndex = 16 * 11 + 2;
-                    this.bindTexture( "guis/states.png" );
-                    final int uv_y = iconIndex / 16;
-                    final int uv_x = iconIndex - uv_y * 16;
-
-                    GL11.glScalef( 0.5f, 0.5f, 1.0f );
-                    GL11.glColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
-                    this.drawTexturedModalRect( 0, 0, uv_x * 16, uv_y * 16, 16, 16 );
-                    GL11.glTranslatef( 18.0f, 2.0f, 0.0f );
-                    String amount = Long.toString( craftingStack.getStackSize() );
-                    if( amount.length() > 5 )
-                    {
-                        amount = amount.substring( 0, 5 ) + "..";
-                    }
-                    GL11.glScalef( 1.5f, 1.5f, 1.0f );
-                    font.drawString( amount, 0, 0, GuiColors.CraftingStatusCPUAmount.getColor() );
-                    GL11.glPopMatrix();
-                    GL11.glPushMatrix();
-                    GL11.glTranslatef( x + CPU_TABLE_SLOT_WIDTH - 19, y + 3, 0 );
-                    this.drawItem( 0, 0, craftingStack.getItemStack() );
-                }
-                else
-                {
-                    final int iconIndex = 16 * 4 + 3;
-                    this.bindTexture( "guis/states.png" );
-                    final int uv_y = iconIndex / 16;
-                    final int uv_x = iconIndex - uv_y * 16;
-
-                    GL11.glScalef( 0.5f, 0.5f, 1.0f );
-                    GL11.glColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
-                    this.drawTexturedModalRect( 0, 0, uv_x * 16, uv_y * 16, 16, 16 );
-                    GL11.glTranslatef( 18.0f, 2.0f, 0.0f );
-                    GL11.glScalef( 1.5f, 1.5f, 1.0f );
-                    font.drawString( cpu.formatStorage(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor() );
-                }
-                GL11.glPopMatrix();
-            }
-            GL11.glColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
-        }
-        if( hoveredCpu != null )
-        {
-            StringBuilder tooltip = new StringBuilder();
-            String name = hoveredCpu.getName();
-            if( name != null && !name.isEmpty() )
-            {
-                tooltip.append( name );
-                tooltip.append( '\n' );
-            }
-            else
-            {
-                tooltip.append ( GuiText.CPUs.getLocal() );
-                tooltip.append ( " #" );
-                tooltip.append ( hoveredCpu.getSerial() );
-                tooltip.append ( '\n' );
-            }
-            IAEItemStack crafting = hoveredCpu.getCrafting();
-            if( crafting != null && crafting.getStackSize() > 0 )
-            {
-                tooltip.append( GuiText.Crafting.getLocal() );
-                tooltip.append( ": " );
-                tooltip.append( crafting.getStackSize() );
-                tooltip.append( ' ' );
-                tooltip.append( crafting.getItemStack().getDisplayName() );
-                tooltip.append( '\n' );
-                tooltip.append( hoveredCpu.getRemainingItems() );
-                tooltip.append( " / " );
-                tooltip.append( hoveredCpu.getTotalItems() );
-                tooltip.append( '\n' );
-            }
-            if ( hoveredCpu.getStorage() > 0 )
-            {
-                tooltip.append( GuiText.Bytes.getLocal() );
-                tooltip.append( ": " );
-                tooltip.append( hoveredCpu.formatStorage() );
-                tooltip.append( '\n' );
-            }
-            if ( hoveredCpu.getCoprocessors() > 0 )
-            {
-                tooltip.append( GuiText.CoProcessors.getLocal() );
-                tooltip.append( ": " );
-                tooltip.append( hoveredCpu.getCoprocessors() );
-                tooltip.append( '\n' );
-            }
-            if (tooltip.length() > 0)
-            {
-                this.drawTooltip( mouseX - offsetX, mouseY - offsetY, 0, tooltip.toString() );
-            }
+        if (this.cpuTable != null) {
+            this.cpuTable.drawFG( offsetX, offsetY, mouseX, mouseY );
         }
     }
 
@@ -337,19 +178,17 @@ public class GuiCraftingStatus extends GuiCraftingCPU
     public void drawBG( int offsetX, int offsetY, int mouseX, int mouseY )
     {
         super.drawBG( offsetX, offsetY, mouseX, mouseY );
-        this.bindTexture( "guis/cpu_selector.png" );
-        this.drawTexturedModalRect( offsetX - CPU_TABLE_WIDTH, offsetY, 0, 0, CPU_TABLE_WIDTH, CPU_TABLE_HEIGHT );
+        if (this.cpuTable != null) {
+            this.cpuTable.drawBG( offsetX, offsetY, mouseX, mouseY );
+        }
     }
 
     @Override
     protected void mouseClicked( int xCoord, int yCoord, int btn )
     {
         super.mouseClicked( xCoord, yCoord, btn );
-        if( cpuScrollbar != null )
-        {
-            cpuScrollbar.click( this, xCoord - this.guiLeft, yCoord - this.guiTop );
-        }
-        CraftingCPUStatus hit = hitCpu( xCoord, yCoord );
+
+        CraftingCPUStatus hit = this.cpuTable.hitCpu( xCoord - guiLeft, yCoord - guiTop );
         if (hit != null)
         {
 			try
@@ -367,62 +206,23 @@ public class GuiCraftingStatus extends GuiCraftingCPU
     protected void mouseClickMove( int x, int y, int c, long d )
     {
         super.mouseClickMove( x, y, c, d );
-        if( cpuScrollbar != null )
-        {
-            cpuScrollbar.click( this, x - this.guiLeft, y - this.guiTop );
+        if( cpuTable != null ) {
+            cpuTable.mouseClicked( x - guiLeft, y - guiTop, c );
         }
     }
 
     @Override
     public void handleMouseInput()
     {
-        int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
-        int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
-        x -= guiLeft - CPU_TABLE_WIDTH;
-        y -= guiTop;
-        int dwheel = Mouse.getEventDWheel();
-        if (x >= 9 && x < CPU_TABLE_SLOT_WIDTH + 9 && y >= 19 && y < 19 + 6 * CPU_TABLE_SLOT_HEIGHT)
-        {
-            if (this.cpuScrollbar != null && dwheel != 0)
-            {
-                this.cpuScrollbar.wheel( dwheel );
-                return;
-            }
+        if ( cpuTable.handleMouseInput(guiLeft, guiTop) ) {
+            return;
         }
         super.handleMouseInput();
     }
 
     public boolean hideItemPanelSlot( int x, int y, int w, int h )
     {
-        x -= guiLeft - CPU_TABLE_WIDTH;
-        y -= guiTop;
-        boolean xInside =
-                ( x >= 0 && x < CPU_TABLE_SLOT_WIDTH + 9 )
-                        || ( x + w >= 0 && x + w < CPU_TABLE_SLOT_WIDTH + 9 )
-                        || ( x <= 0 && x + w >= CPU_TABLE_SLOT_WIDTH + 9 );
-        boolean yInside =
-                ( y >= 0 && y < 19 + 6 * CPU_TABLE_SLOT_HEIGHT )
-                        || ( y + h >= 0 && y + h < 19 + 6 * CPU_TABLE_SLOT_HEIGHT )
-                        || ( y < 0 && y + h >= 19 + 6 * CPU_TABLE_SLOT_HEIGHT );
-        if( xInside && yInside )
-        {
-            return true;
-        }
-        return false;
-    }
-
-    private CraftingCPUStatus hitCpu( int x, int y )
-    {
-        x -= guiLeft - CPU_TABLE_WIDTH;
-        y -= guiTop;
-        if (!(x >= 9 && x < CPU_TABLE_SLOT_WIDTH + 9 && y >= 19 && y < 19 + 6 * CPU_TABLE_SLOT_HEIGHT))
-        {
-            return null;
-        }
-        int scrollOffset = this.cpuScrollbar != null ? this.cpuScrollbar.getCurrentScroll() : 0;
-        int cpuId = scrollOffset + (y - 19) / CPU_TABLE_SLOT_HEIGHT;
-        List<CraftingCPUStatus> cpus = this.status.getCPUs();
-        return (cpuId >= 0 && cpuId < cpus.size()) ? cpus.get(cpuId) : null;
+        return cpuTable.hideItemPanelSlot(x - guiLeft, y - guiTop, w, h );
     }
 
     private void updateCPUButtonText()
@@ -431,9 +231,10 @@ public class GuiCraftingStatus extends GuiCraftingCPU
 
 		if( this.status.selectedCpuSerial >= 0 )
 		{
-			if( this.selectedCPUName != null && this.selectedCPUName.length() > 0 )
+            String selectedCPUName = cpuTable.getSelectedCPUName();
+			if( selectedCPUName != null && selectedCPUName.length() > 0 )
 			{
-				final String name = this.selectedCPUName.substring( 0, Math.min( 20, this.selectedCPUName.length() ) );
+				final String name = selectedCPUName.substring( 0, Math.min( 20, selectedCPUName.length() ) );
 				btnTextText = GuiText.CPUs.getLocal() + ": " + name;
 			}
 			else
