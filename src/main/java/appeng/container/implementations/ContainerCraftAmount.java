@@ -28,9 +28,13 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.container.AEBaseContainer;
 import appeng.container.slot.SlotInaccessible;
+import appeng.core.sync.GuiBridge;
 import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.util.Platform;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
@@ -87,4 +91,9 @@ public class ContainerCraftAmount extends AEBaseContainer
 	{
 		this.itemToCreate = itemToCreate;
 	}
+
+    public void openConfirmationGUI( EntityPlayer player, TileEntity te )
+    {
+        Platform.openGUI( player, te, this.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_CONFIRM );
+    }
 }

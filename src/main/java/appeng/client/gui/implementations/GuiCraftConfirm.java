@@ -142,11 +142,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 		this.selectCPU.enabled = false;
 		this.buttonList.add( this.selectCPU );
 
-		if( this.OriginalGui != null )
-		{
-			this.cancel = new GuiButton( 0, this.guiLeft + 6, this.guiTop + this.ySize - 25, 50, 20, GuiText.Cancel.getLocal() );
-		}
-
+        this.cancel = new GuiButton( 0, this.guiLeft + 6, this.guiTop + this.ySize - 25, 50, 20, GuiText.Cancel.getLocal() );
 		this.buttonList.add( this.cancel );
 	}
 
@@ -557,7 +553,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
 		if( btn == this.cancel )
 		{
-			NetworkHandler.instance.sendToServer( new PacketSwitchGuis( this.OriginalGui ) );
+			switchToOriginalGUI();
 		}
 
 		if( btn == this.start )
@@ -572,6 +568,12 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 			}
 		}
 	}
+
+    public void switchToOriginalGUI()
+    {
+        NetworkHandler.instance.sendToServer( new PacketSwitchGuis( this.OriginalGui ) );
+    }
+
 	public ItemStack getHoveredStack() {
 		return hoveredStack;
 	}

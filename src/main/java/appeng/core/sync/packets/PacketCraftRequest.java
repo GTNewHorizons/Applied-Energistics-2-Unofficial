@@ -102,9 +102,9 @@ public class PacketCraftRequest extends AppEngPacket
 					if( context != null )
 					{
 						final TileEntity te = context.getTile();
-						Platform.openGUI( player, te, cca.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_CONFIRM );
+                        cca.openConfirmationGUI( player, te );
 
-						if( player.openContainer instanceof ContainerCraftConfirm )
+                        if( player.openContainer instanceof ContainerCraftConfirm )
 						{
 							final ContainerCraftConfirm ccc = (ContainerCraftConfirm) player.openContainer;
 							ccc.setAutoStart( this.heldShift );

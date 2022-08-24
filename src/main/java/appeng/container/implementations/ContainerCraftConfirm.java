@@ -254,49 +254,57 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
 	public void startJob()
 	{
-		GuiBridge originalGui = null;
-
-		final IActionHost ah = this.getActionHost();
-		if( ah instanceof WirelessTerminalGuiObject )
-		{
-			originalGui = GuiBridge.GUI_WIRELESS_TERM;
-		}
-
-		if( ah instanceof PartTerminal )
-		{
-			originalGui = GuiBridge.GUI_ME;
-		}
-
-		if( ah instanceof PartCraftingTerminal )
-		{
-			originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
-		}
-
-		if( ah instanceof PartPatternTerminal )
-		{
-			originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-		}
-
-		if( ah instanceof PartPatternTerminalEx)
-		{
-			originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-		}
-
 		if( this.result != null && !this.isSimulation() && getGrid() != null)
 		{
 			final ICraftingGrid cc = this.getGrid().getCache( ICraftingGrid.class );
             CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
 			final ICraftingLink g = cc.submitJob( this.result, null, (selected == null) ? null : selected.getServerCluster(), true, this.getActionSrc() );
 			this.setAutoStart( false );
-			if( g != null && originalGui != null && this.getOpenContext() != null )
+			if( g != null )
 			{
-				NetworkHandler.instance.sendTo( new PacketSwitchGuis( originalGui ), (EntityPlayerMP) this.getInventoryPlayer().player );
-
-				final TileEntity te = this.getOpenContext().getTile();
-				Platform.openGUI( this.getInventoryPlayer().player, te, this.getOpenContext().getSide(), originalGui );
+				this.switchToOriginalGUI();
 			}
 		}
 	}
+
+    public void switchToOriginalGUI()
+    {
+        GuiBridge originalGui = null;
+
+        final IActionHost ah = this.getActionHost();
+        if( ah instanceof WirelessTerminalGuiObject )
+        {
+            originalGui = GuiBridge.GUI_WIRELESS_TERM;
+        }
+
+        if( ah instanceof PartTerminal )
+        {
+            originalGui = GuiBridge.GUI_ME;
+        }
+
+        if( ah instanceof PartCraftingTerminal )
+        {
+            originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
+        }
+
+        if( ah instanceof PartPatternTerminal )
+        {
+            originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
+        }
+
+        if( ah instanceof PartPatternTerminalEx)
+        {
+            originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
+        }
+
+        if (originalGui != null && this.getOpenContext() != null)
+        {
+            NetworkHandler.instance.sendTo( new PacketSwitchGuis( originalGui ), (EntityPlayerMP) this.getInventoryPlayer().player );
+
+            final TileEntity te = this.getOpenContext().getTile();
+            Platform.openGUI( this.getInventoryPlayer().player, te, this.getOpenContext().getSide(), originalGui );
+        }
+    }
 
 	private BaseActionSource getActionSrc()
 	{
