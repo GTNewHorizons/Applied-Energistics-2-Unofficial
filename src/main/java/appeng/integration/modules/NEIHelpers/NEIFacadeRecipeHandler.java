@@ -129,7 +129,7 @@ public class NEIFacadeRecipeHandler extends TemplateRecipeHandler
 	@Override
 	public String getOverlayIdentifier()
 	{
-		return "crafting";
+		return "AEFacadeCrafting";
 	}
 
 	@Override
