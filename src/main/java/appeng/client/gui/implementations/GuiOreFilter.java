@@ -1,6 +1,7 @@
 package appeng.client.gui.implementations;
 
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.IFocusableGui;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
@@ -22,7 +23,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import java.io.IOException;
 
-public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField
+public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField, IFocusableGui
 {
     private MEGuiTextField textField;
 
@@ -128,4 +129,9 @@ public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField
 
 	}
 
+    @Override
+    public boolean hasFocused()
+    {
+        return textField.isFocused();
+    }
 }
