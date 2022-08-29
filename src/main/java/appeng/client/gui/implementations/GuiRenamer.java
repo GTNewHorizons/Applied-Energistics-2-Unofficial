@@ -1,7 +1,6 @@
 package appeng.client.gui.implementations;
 
 import appeng.client.gui.AEBaseGui;
-import appeng.client.gui.IFocusableGui;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerRenamer;
@@ -16,7 +15,7 @@ import net.minecraft.item.ItemStack;
 
 import java.io.IOException;
 
-public class GuiRenamer extends AEBaseGui implements IDropToFillTextField, IFocusableGui
+public class GuiRenamer extends AEBaseGui implements IDropToFillTextField
 {
     private MEGuiTextField textField;
 
@@ -101,9 +100,4 @@ public class GuiRenamer extends AEBaseGui implements IDropToFillTextField, IFocu
 		textField.setText(displayName);
 	}
 
-    @Override
-    public boolean hasFocused()
-    {
-        return textField.isFocused();
-    }
 }

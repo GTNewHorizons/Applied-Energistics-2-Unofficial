@@ -29,7 +29,6 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.ActionKey;
 import appeng.client.gui.AEBaseMEGui;
-import appeng.client.gui.IFocusableGui;
 import appeng.client.gui.widgets.*;
 import appeng.client.me.InternalSlotME;
 import appeng.client.me.ItemRepo;
@@ -69,7 +68,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 
-public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfigManagerHost, IDropToFillTextField, IFocusableGui
+public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfigManagerHost, IDropToFillTextField
 {
 
 	public static int craftingGridOffsetX;
@@ -652,9 +651,4 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
         return false;
     }
 
-    @Override
-    public boolean hasFocused()
-    {
-        return searchField.isFocused();
-    }
 }

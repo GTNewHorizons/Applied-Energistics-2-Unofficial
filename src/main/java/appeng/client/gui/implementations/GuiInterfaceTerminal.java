@@ -26,7 +26,6 @@ import appeng.api.config.TerminalStyle;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
-import appeng.client.gui.IFocusableGui;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.IDropToFillTextField;
@@ -61,7 +60,7 @@ import org.lwjgl.opengl.GL11;
 import java.util.*;
 
 
-public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextField, IFocusableGui
+public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextField
 {
 
 	private static final int MAGIC_HEIGHT_NUMBER = 52 + 99;
@@ -738,9 +737,4 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
 
 	}
 
-    @Override
-    public boolean hasFocused()
-    {
-        return searchFieldInputs.isFocused() || searchFieldOutputs.isFocused() || searchFieldNames.isFocused();
-    }
 }
