@@ -20,6 +20,7 @@ package appeng.parts.automation;
 
 
 import appeng.api.config.*;
+import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.*;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergyWatcher;
@@ -32,6 +33,9 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.networking.storage.IStackWatcher;
 import appeng.api.networking.storage.IStackWatcherHost;
+import appeng.api.networking.ticking.IGridTickable;
+import appeng.api.networking.ticking.TickRateModulation;
+import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.IMEMonitor;
@@ -44,6 +48,7 @@ import appeng.api.util.AECableType;
 import appeng.api.util.IConfigManager;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
@@ -71,7 +76,7 @@ import java.util.Random;
 
 
 public class PartLevelEmitter extends PartUpgradeable
-		implements IEnergyWatcherHost, IStackWatcherHost, ICraftingWatcherHost, IMEMonitorHandlerReceiver<IAEItemStack>, ICraftingProvider
+		implements IEnergyWatcherHost, IStackWatcherHost, ICraftingWatcherHost, IMEMonitorHandlerReceiver<IAEItemStack>, ICraftingProvider, IGridTickable
 {
 
 	private static final int FLAG_ON = 8;
@@ -90,7 +95,8 @@ public class PartLevelEmitter extends PartUpgradeable
 	private double centerY;
 	private double centerZ;
 
-	private int lastWorkingTick = 0;
+    private int lastWorkingTick = 0;
+    private boolean delayedUpdatesQueued = false;
 
 	@Reflected
 	public PartLevelEmitter( final ItemStack is )
@@ -370,16 +376,60 @@ public class PartLevelEmitter extends PartUpgradeable
 		}
 	}
 
-	@Override
-	public void postChange( final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change, final BaseActionSource actionSource )
-	{
-		int currentTick = MinecraftServer.getServer().getTickCounter();
-		if (currentTick - lastWorkingTick > AEConfig.instance.levelEmitterDelay)
-		{
-			this.updateReportingValue((IMEMonitor<IAEItemStack>) monitor);
-			lastWorkingTick = currentTick;
-		}
-	}
+    @Override
+    public TickingRequest getTickingRequest( IGridNode node )
+    {
+        return new TickingRequest( AEConfig.instance.levelEmitterDelay / 2, AEConfig.instance.levelEmitterDelay, !delayedUpdatesQueued, true );
+    }
+
+    private boolean canDoWork()
+    {
+        int currentTick = MinecraftServer.getServer().getTickCounter();
+        return ( currentTick - lastWorkingTick ) > AEConfig.instance.levelEmitterDelay;
+    }
+
+    @Override
+    public TickRateModulation tickingRequest( IGridNode node, int TicksSinceLastCall )
+    {
+        if( delayedUpdatesQueued && canDoWork() )
+        {
+            delayedUpdatesQueued = false;
+            lastWorkingTick = MinecraftServer.getServer().getTickCounter();
+            this.onListUpdate();
+        }
+        return delayedUpdatesQueued ? TickRateModulation.IDLE : TickRateModulation.SLEEP;
+    }
+
+    @Override
+    public void postChange( final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change, final BaseActionSource actionSource )
+    {
+        if( canDoWork() )
+        {
+            if ( delayedUpdatesQueued )
+            {
+                delayedUpdatesQueued = false;
+                try
+                {
+                    this.getProxy().getTick().sleepDevice( this.getProxy().getNode() );
+                } catch( GridAccessException e )
+                {
+                    AELog.error( e, "Couldn't put level emitter to sleep after cancelling delayed updates" );
+                }
+            }
+            lastWorkingTick = MinecraftServer.getServer().getTickCounter();
+            this.updateReportingValue( (IMEMonitor<IAEItemStack>) monitor );
+        } else if( !delayedUpdatesQueued )
+        {
+            delayedUpdatesQueued = true;
+            try
+            {
+                this.getProxy().getTick().alertDevice( this.getProxy().getNode() );
+            } catch( GridAccessException e )
+            {
+                AELog.error( e, "Couldn't wake up level emitter for delayed updates" );
+            }
+        }
+    }
 
 	@Override
 	public void onListUpdate()
