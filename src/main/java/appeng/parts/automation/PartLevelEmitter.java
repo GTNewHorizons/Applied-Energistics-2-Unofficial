@@ -107,6 +107,10 @@ public class PartLevelEmitter extends PartUpgradeable
 		this.getConfigManager().registerSetting( Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL );
 		this.getConfigManager().registerSetting( Settings.LEVEL_TYPE, LevelType.ITEM_LEVEL );
 		this.getConfigManager().registerSetting( Settings.CRAFT_VIA_REDSTONE, YesNo.NO );
+
+        // Workaround the emitter randomly breaking on world load
+        delayedUpdatesQueued = true;
+        lastWorkingTick = MinecraftServer.getServer().getTickCounter();
 	}
 
 	public long getReportingValue()
