@@ -95,8 +95,8 @@ public class PartLevelEmitter extends PartUpgradeable
 	private double centerY;
 	private double centerZ;
 
-    private int lastWorkingTick = 0;
-    private boolean delayedUpdatesQueued = false;
+	private int lastWorkingTick = 0;
+	private boolean delayedUpdatesQueued = false;
 
 	@Reflected
 	public PartLevelEmitter( final ItemStack is )
@@ -108,9 +108,9 @@ public class PartLevelEmitter extends PartUpgradeable
 		this.getConfigManager().registerSetting( Settings.LEVEL_TYPE, LevelType.ITEM_LEVEL );
 		this.getConfigManager().registerSetting( Settings.CRAFT_VIA_REDSTONE, YesNo.NO );
 
-        // Workaround the emitter randomly breaking on world load
-        delayedUpdatesQueued = true;
-        lastWorkingTick = MinecraftServer.getServer().getTickCounter();
+		// Workaround the emitter randomly breaking on world load
+		delayedUpdatesQueued = true;
+		lastWorkingTick = MinecraftServer.getServer().getTickCounter();
 	}
 
 	public long getReportingValue()
@@ -380,60 +380,60 @@ public class PartLevelEmitter extends PartUpgradeable
 		}
 	}
 
-    @Override
-    public TickingRequest getTickingRequest( IGridNode node )
-    {
-        return new TickingRequest( AEConfig.instance.levelEmitterDelay / 2, AEConfig.instance.levelEmitterDelay, !delayedUpdatesQueued, true );
-    }
+	@Override
+	public TickingRequest getTickingRequest( IGridNode node )
+	{
+		return new TickingRequest( AEConfig.instance.levelEmitterDelay / 2, AEConfig.instance.levelEmitterDelay, !delayedUpdatesQueued, true );
+	}
 
-    private boolean canDoWork()
-    {
-        int currentTick = MinecraftServer.getServer().getTickCounter();
-        return ( currentTick - lastWorkingTick ) > AEConfig.instance.levelEmitterDelay;
-    }
+	private boolean canDoWork()
+	{
+		int currentTick = MinecraftServer.getServer().getTickCounter();
+		return ( currentTick - lastWorkingTick ) > AEConfig.instance.levelEmitterDelay;
+	}
 
-    @Override
-    public TickRateModulation tickingRequest( IGridNode node, int TicksSinceLastCall )
-    {
-        if( delayedUpdatesQueued && canDoWork() )
-        {
-            delayedUpdatesQueued = false;
-            lastWorkingTick = MinecraftServer.getServer().getTickCounter();
-            this.onListUpdate();
-        }
-        return delayedUpdatesQueued ? TickRateModulation.IDLE : TickRateModulation.SLEEP;
-    }
+	@Override
+	public TickRateModulation tickingRequest( IGridNode node, int TicksSinceLastCall )
+	{
+		if( delayedUpdatesQueued && canDoWork() )
+		{
+			delayedUpdatesQueued = false;
+			lastWorkingTick = MinecraftServer.getServer().getTickCounter();
+			this.onListUpdate();
+		}
+		return delayedUpdatesQueued ? TickRateModulation.IDLE : TickRateModulation.SLEEP;
+	}
 
-    @Override
-    public void postChange( final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change, final BaseActionSource actionSource )
-    {
-        if( canDoWork() )
-        {
-            if ( delayedUpdatesQueued )
-            {
-                delayedUpdatesQueued = false;
-                try
-                {
-                    this.getProxy().getTick().sleepDevice( this.getProxy().getNode() );
-                } catch( GridAccessException e )
-                {
-                    AELog.error( e, "Couldn't put level emitter to sleep after cancelling delayed updates" );
-                }
-            }
-            lastWorkingTick = MinecraftServer.getServer().getTickCounter();
-            this.updateReportingValue( (IMEMonitor<IAEItemStack>) monitor );
-        } else if( !delayedUpdatesQueued )
-        {
-            delayedUpdatesQueued = true;
-            try
-            {
-                this.getProxy().getTick().alertDevice( this.getProxy().getNode() );
-            } catch( GridAccessException e )
-            {
-                AELog.error( e, "Couldn't wake up level emitter for delayed updates" );
-            }
-        }
-    }
+	@Override
+	public void postChange( final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change, final BaseActionSource actionSource )
+	{
+		if( canDoWork() )
+		{
+			if ( delayedUpdatesQueued )
+			{
+				delayedUpdatesQueued = false;
+				try
+				{
+					this.getProxy().getTick().sleepDevice( this.getProxy().getNode() );
+				} catch( GridAccessException e )
+				{
+					AELog.error( e, "Couldn't put level emitter to sleep after cancelling delayed updates" );
+				}
+			}
+			lastWorkingTick = MinecraftServer.getServer().getTickCounter();
+			this.updateReportingValue( (IMEMonitor<IAEItemStack>) monitor );
+		} else if( !delayedUpdatesQueued )
+		{
+			delayedUpdatesQueued = true;
+			try
+			{
+				this.getProxy().getTick().alertDevice( this.getProxy().getNode() );
+			} catch( GridAccessException e )
+			{
+				AELog.error( e, "Couldn't wake up level emitter for delayed updates" );
+			}
+		}
+	}
 
 	@Override
 	public void onListUpdate()
