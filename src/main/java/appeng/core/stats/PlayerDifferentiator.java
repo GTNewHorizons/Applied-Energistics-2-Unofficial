@@ -18,10 +18,8 @@
 
 package appeng.core.stats;
 
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.util.FakePlayer;
-
 
 /**
  * Can differentiate if a {@link net.minecraft.entity.player.EntityPlayer} is a real player or not
@@ -29,20 +27,18 @@ import net.minecraftforge.common.util.FakePlayer;
  * @author thatsIch
  * @since rv2
  */
-public class PlayerDifferentiator
-{
-	/**
-	 * Can determine if an {@link net.minecraft.entity.player.EntityPlayer} is not a real player.
-	 * This is based on if the {@param player} is:
-	 * - null
-	 * - dead
-	 * - fake
-	 *
-	 * @param player to be checked player
-	 * @return true if {@param player} is not a real player
-	 */
-	boolean isNoPlayer( final EntityPlayer player )
-	{
-		return player == null || player.isDead || player instanceof FakePlayer;
-	}
+public class PlayerDifferentiator {
+    /**
+     * Can determine if an {@link net.minecraft.entity.player.EntityPlayer} is not a real player.
+     * This is based on if the {@param player} is:
+     * - null
+     * - dead
+     * - fake
+     *
+     * @param player to be checked player
+     * @return true if {@param player} is not a real player
+     */
+    boolean isNoPlayer(final EntityPlayer player) {
+        return player == null || player.isDead || player instanceof FakePlayer;
+    }
 }

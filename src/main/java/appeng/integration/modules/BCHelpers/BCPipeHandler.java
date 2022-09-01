@@ -18,7 +18,6 @@
 
 package appeng.integration.modules.BCHelpers;
 
-
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
@@ -29,30 +28,27 @@ import appeng.integration.abstraction.IBuildCraftTransport;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public class BCPipeHandler implements IExternalStorageHandler {
 
-public class BCPipeHandler implements IExternalStorageHandler
-{
+    @Override
+    public boolean canHandle(
+            final TileEntity te, final ForgeDirection d, final StorageChannel chan, final BaseActionSource mySrc) {
+        if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.BuildCraftTransport)) {
+            final IBuildCraftTransport bc = (IBuildCraftTransport)
+                    IntegrationRegistry.INSTANCE.getInstance(IntegrationType.BuildCraftTransport);
 
-	@Override
-	public boolean canHandle( final TileEntity te, final ForgeDirection d, final StorageChannel chan, final BaseActionSource mySrc )
-	{
-		if( IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.BuildCraftTransport ) )
-		{
-			final IBuildCraftTransport bc = (IBuildCraftTransport) IntegrationRegistry.INSTANCE.getInstance( IntegrationType.BuildCraftTransport );
+            return chan == StorageChannel.ITEMS && bc.isPipe(te, d);
+        }
 
-			return chan == StorageChannel.ITEMS && bc.isPipe( te, d );
-		}
+        return false;
+    }
 
-		return false;
-	}
-
-	@Override
-	public IMEInventory getInventory( final TileEntity te, final ForgeDirection d, final StorageChannel chan, final BaseActionSource src )
-	{
-		if( chan == StorageChannel.ITEMS )
-		{
-			return new BCPipeInventory( te, d );
-		}
-		return null;
-	}
+    @Override
+    public IMEInventory getInventory(
+            final TileEntity te, final ForgeDirection d, final StorageChannel chan, final BaseActionSource src) {
+        if (chan == StorageChannel.ITEMS) {
+            return new BCPipeInventory(te, d);
+        }
+        return null;
+    }
 }

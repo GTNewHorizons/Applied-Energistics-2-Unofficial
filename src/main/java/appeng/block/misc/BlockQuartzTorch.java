@@ -18,7 +18,6 @@
 
 package appeng.block.misc;
 
-
 import appeng.api.util.IOrientable;
 import appeng.api.util.IOrientableBlock;
 import appeng.block.AEBaseBlock;
@@ -31,6 +30,10 @@ import appeng.helpers.ICustomCollision;
 import appeng.helpers.MetaRotation;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -40,130 +43,121 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Random;
+public class BlockQuartzTorch extends AEBaseBlock implements IOrientableBlock, ICustomCollision {
+    public BlockQuartzTorch() {
+        super(Material.circuits);
 
+        this.setFeature(EnumSet.of(AEFeature.DecorativeLights));
+        this.setLightLevel(0.9375F);
+        this.setLightOpacity(0);
+        this.isFullSize = false;
+        this.isOpaque = false;
+    }
 
-public class BlockQuartzTorch extends AEBaseBlock implements IOrientableBlock, ICustomCollision
-{
-	public BlockQuartzTorch()
-	{
-		super( Material.circuits );
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RenderQuartzTorch getRenderer() {
+        return new RenderQuartzTorch();
+    }
 
-		this.setFeature( EnumSet.of( AEFeature.DecorativeLights ) );
-		this.setLightLevel( 0.9375F );
-		this.setLightOpacity( 0 );
-		this.isFullSize = false;
-		this.isOpaque = false;
-	}
+    @Override
+    public boolean isValidOrientation(
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final ForgeDirection forward,
+            final ForgeDirection up) {
+        return this.canPlaceAt(w, x, y, z, up.getOpposite());
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected RenderQuartzTorch getRenderer()
-	{
-		return new RenderQuartzTorch();
-	}
+    private boolean canPlaceAt(final World w, final int x, final int y, final int z, final ForgeDirection dir) {
+        return w.isSideSolid(x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ, dir.getOpposite(), false);
+    }
 
-	@Override
-	public boolean isValidOrientation( final World w, final int x, final int y, final int z, final ForgeDirection forward, final ForgeDirection up )
-	{
-		return this.canPlaceAt( w, x, y, z, up.getOpposite() );
-	}
+    @Override
+    public Iterable<AxisAlignedBB> getSelectedBoundingBoxesFromPool(
+            final World w, final int x, final int y, final int z, final Entity e, final boolean isVisual) {
+        final ForgeDirection up = this.getOrientable(w, x, y, z).getUp();
+        final double xOff = -0.3 * up.offsetX;
+        final double yOff = -0.3 * up.offsetY;
+        final double zOff = -0.3 * up.offsetZ;
+        return Collections.singletonList(
+                AxisAlignedBB.getBoundingBox(xOff + 0.3, yOff + 0.3, zOff + 0.3, xOff + 0.7, yOff + 0.7, zOff + 0.7));
+    }
 
-	private boolean canPlaceAt( final World w, final int x, final int y, final int z, final ForgeDirection dir )
-	{
-		return w.isSideSolid( x + dir.offsetX, y + dir.offsetY, z + dir.offsetZ, dir.getOpposite(), false );
-	}
+    @Override
+    public void addCollidingBlockToList(
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final AxisAlignedBB bb,
+            final List out,
+            final Entity e) {
+        /*
+         * double xOff = -0.15 * getUp().offsetX; double yOff = -0.15 * getUp().offsetY; double zOff = -0.15 *
+         * getUp().offsetZ; out.add( AxisAlignedBB.getBoundingBox( xOff + (double) x + 0.15, yOff + (double) y + 0.15, zOff
+         * + (double) z + 0.15,// ahh xOff + (double) x + 0.85, yOff + (double) y + 0.85, zOff + (double) z + 0.85 ) );
+         */
+    }
 
-	@Override
-	public Iterable<AxisAlignedBB> getSelectedBoundingBoxesFromPool( final World w, final int x, final int y, final int z, final Entity e, final boolean isVisual )
-	{
-		final ForgeDirection up = this.getOrientable( w, x, y, z ).getUp();
-		final double xOff = -0.3 * up.offsetX;
-		final double yOff = -0.3 * up.offsetY;
-		final double zOff = -0.3 * up.offsetZ;
-		return Collections.singletonList( AxisAlignedBB.getBoundingBox( xOff + 0.3, yOff + 0.3, zOff + 0.3, xOff + 0.7, yOff + 0.7, zOff + 0.7 ) );
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void randomDisplayTick(final World w, final int x, final int y, final int z, final Random r) {
+        if (!AEConfig.instance.enableEffects) {
+            return;
+        }
 
-	@Override
-	public void addCollidingBlockToList( final World w, final int x, final int y, final int z, final AxisAlignedBB bb, final List out, final Entity e )
-	{/*
-	 * double xOff = -0.15 * getUp().offsetX; double yOff = -0.15 * getUp().offsetY; double zOff = -0.15 *
-	 * getUp().offsetZ; out.add( AxisAlignedBB.getBoundingBox( xOff + (double) x + 0.15, yOff + (double) y + 0.15, zOff
-	 * + (double) z + 0.15,// ahh xOff + (double) x + 0.85, yOff + (double) y + 0.85, zOff + (double) z + 0.85 ) );
-	 */
-	}
+        if (r.nextFloat() < 0.98) {
+            return;
+        }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void randomDisplayTick( final World w, final int x, final int y, final int z, final Random r )
-	{
-		if( !AEConfig.instance.enableEffects )
-		{
-			return;
-		}
+        final ForgeDirection up = this.getOrientable(w, x, y, z).getUp();
+        final double xOff = -0.3 * up.offsetX;
+        final double yOff = -0.3 * up.offsetY;
+        final double zOff = -0.3 * up.offsetZ;
+        for (int bolts = 0; bolts < 3; bolts++) {
+            if (CommonHelper.proxy.shouldAddParticles(r)) {
+                final LightningFX fx =
+                        new LightningFX(w, xOff + 0.5 + x, yOff + 0.5 + y, zOff + 0.5 + z, 0.0D, 0.0D, 0.0D);
 
-		if( r.nextFloat() < 0.98 )
-		{
-			return;
-		}
+                Minecraft.getMinecraft().effectRenderer.addEffect(fx);
+            }
+        }
+    }
 
-		final ForgeDirection up = this.getOrientable( w, x, y, z ).getUp();
-		final double xOff = -0.3 * up.offsetX;
-		final double yOff = -0.3 * up.offsetY;
-		final double zOff = -0.3 * up.offsetZ;
-		for( int bolts = 0; bolts < 3; bolts++ )
-		{
-			if( CommonHelper.proxy.shouldAddParticles( r ) )
-			{
-				final LightningFX fx = new LightningFX( w, xOff + 0.5 + x, yOff + 0.5 + y, zOff + 0.5 + z, 0.0D, 0.0D, 0.0D );
+    @Override
+    public void onNeighborBlockChange(final World w, final int x, final int y, final int z, final Block id) {
+        final ForgeDirection up = this.getOrientable(w, x, y, z).getUp();
+        if (!this.canPlaceAt(w, x, y, z, up.getOpposite())) {
+            this.dropTorch(w, x, y, z);
+        }
+    }
 
-				Minecraft.getMinecraft().effectRenderer.addEffect( fx );
-			}
-		}
-	}
+    private void dropTorch(final World w, final int x, final int y, final int z) {
+        w.func_147480_a(x, y, z, true);
+        // w.destroyBlock( x, y, z, true );
+        w.markBlockForUpdate(x, y, z);
+    }
 
-	@Override
-	public void onNeighborBlockChange( final World w, final int x, final int y, final int z, final Block id )
-	{
-		final ForgeDirection up = this.getOrientable( w, x, y, z ).getUp();
-		if( !this.canPlaceAt( w, x, y, z, up.getOpposite() ) )
-		{
-			this.dropTorch( w, x, y, z );
-		}
-	}
+    @Override
+    public boolean canPlaceBlockAt(final World w, final int x, final int y, final int z) {
+        for (final ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
+            if (this.canPlaceAt(w, x, y, z, dir)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	private void dropTorch( final World w, final int x, final int y, final int z )
-	{
-		w.func_147480_a( x, y, z, true );
-		// w.destroyBlock( x, y, z, true );
-		w.markBlockForUpdate( x, y, z );
-	}
+    @Override
+    public boolean usesMetadata() {
+        return true;
+    }
 
-	@Override
-	public boolean canPlaceBlockAt( final World w, final int x, final int y, final int z )
-	{
-		for( final ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS )
-		{
-			if( this.canPlaceAt( w, x, y, z, dir ) )
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public boolean usesMetadata()
-	{
-		return true;
-	}
-
-	@Override
-	public IOrientable getOrientable( final IBlockAccess w, final int x, final int y, final int z )
-	{
-		return new MetaRotation( w, x, y, z );
-	}
+    @Override
+    public IOrientable getOrientable(final IBlockAccess w, final int x, final int y, final int z) {
+        return new MetaRotation(w, x, y, z);
+    }
 }

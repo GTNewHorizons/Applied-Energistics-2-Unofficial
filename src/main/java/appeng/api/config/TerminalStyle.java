@@ -23,14 +23,10 @@
 
 package appeng.api.config;
 
+public enum TerminalStyle {
+    TALL,
 
-public enum TerminalStyle
-{
+    FULL,
 
-	TALL,
-
-	FULL,
-
-	SMALL
-
+    SMALL
 }

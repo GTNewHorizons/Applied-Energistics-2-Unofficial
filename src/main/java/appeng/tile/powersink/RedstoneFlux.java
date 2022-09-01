@@ -18,46 +18,38 @@
 
 package appeng.tile.powersink;
 
-
 import appeng.api.config.PowerUnits;
 import appeng.integration.IntegrationType;
 import appeng.transformer.annotations.Integration.Interface;
 import cofh.api.energy.IEnergyReceiver;
 import net.minecraftforge.common.util.ForgeDirection;
 
+@Interface(iname = IntegrationType.RF, iface = "cofh.api.energy.IEnergyReceiver")
+public abstract class RedstoneFlux extends IC2 implements IEnergyReceiver {
+    @Override
+    public final int receiveEnergy(final ForgeDirection from, final int maxReceive, final boolean simulate) {
+        final int networkRFDemand = (int) Math.floor(this.getExternalPowerDemand(PowerUnits.RF, maxReceive));
+        final int usedRF = Math.min(maxReceive, networkRFDemand);
 
-@Interface( iname = IntegrationType.RF, iface = "cofh.api.energy.IEnergyReceiver" )
-public abstract class RedstoneFlux extends IC2 implements IEnergyReceiver
-{
-	@Override
-	public final int receiveEnergy( final ForgeDirection from, final int maxReceive, final boolean simulate )
-	{
-		final int networkRFDemand = (int) Math.floor( this.getExternalPowerDemand( PowerUnits.RF, maxReceive ) );
-		final int usedRF = Math.min( maxReceive, networkRFDemand );
+        if (!simulate) {
+            this.injectExternalPower(PowerUnits.RF, usedRF);
+        }
 
-		if( !simulate )
-		{
-			this.injectExternalPower( PowerUnits.RF, usedRF );
-		}
+        return usedRF;
+    }
 
-		return usedRF;
-	}
+    @Override
+    public final int getEnergyStored(final ForgeDirection from) {
+        return (int) Math.floor(PowerUnits.AE.convertTo(PowerUnits.RF, this.getAECurrentPower()));
+    }
 
-	@Override
-	public final int getEnergyStored( final ForgeDirection from )
-	{
-		return (int) Math.floor( PowerUnits.AE.convertTo( PowerUnits.RF, this.getAECurrentPower() ) );
-	}
+    @Override
+    public final int getMaxEnergyStored(final ForgeDirection from) {
+        return (int) Math.floor(PowerUnits.AE.convertTo(PowerUnits.RF, this.getAEMaxPower()));
+    }
 
-	@Override
-	public final int getMaxEnergyStored( final ForgeDirection from )
-	{
-		return (int) Math.floor( PowerUnits.AE.convertTo( PowerUnits.RF, this.getAEMaxPower() ) );
-	}
-
-	@Override
-	public final boolean canConnectEnergy( final ForgeDirection from )
-	{
-		return this.getPowerSides().contains( from );
-	}
+    @Override
+    public final boolean canConnectEnergy(final ForgeDirection from) {
+        return this.getPowerSides().contains(from);
+    }
 }

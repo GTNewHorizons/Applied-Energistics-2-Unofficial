@@ -18,35 +18,31 @@
 
 package appeng.client.gui.implementations;
 
-
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerGrinder;
-import appeng.core.localization.GuiText;
 import appeng.core.localization.GuiColors;
+import appeng.core.localization.GuiText;
 import appeng.tile.grindstone.TileGrinder;
 import net.minecraft.entity.player.InventoryPlayer;
 
+public class GuiGrinder extends AEBaseGui {
 
-public class GuiGrinder extends AEBaseGui
-{
+    public GuiGrinder(final InventoryPlayer inventoryPlayer, final TileGrinder te) {
+        super(new ContainerGrinder(inventoryPlayer, te));
+        this.ySize = 176;
+    }
 
-	public GuiGrinder( final InventoryPlayer inventoryPlayer, final TileGrinder te )
-	{
-		super( new ContainerGrinder( inventoryPlayer, te ) );
-		this.ySize = 176;
-	}
+    @Override
+    public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        this.fontRendererObj.drawString(
+                this.getGuiDisplayName(GuiText.GrindStone.getLocal()), 8, 6, GuiColors.GrindStoneTitle.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.GrindStoneInventory.getColor());
+    }
 
-	@Override
-	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
-	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.GrindStone.getLocal() ), 8, 6, GuiColors.GrindStoneTitle.getColor() );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.GrindStoneInventory.getColor() );
-	}
-
-	@Override
-	public void drawBG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
-	{
-		this.bindTexture( "guis/grinder.png" );
-		this.drawTexturedModalRect( offsetX, offsetY, 0, 0, this.xSize, this.ySize );
-	}
+    @Override
+    public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        this.bindTexture("guis/grinder.png");
+        this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
+    }
 }

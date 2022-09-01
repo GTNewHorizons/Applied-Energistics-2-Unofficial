@@ -23,12 +23,8 @@
 
 package appeng.api.config;
 
+public enum LevelEmitterMode {
+    STORED_AMOUNT,
 
-public enum LevelEmitterMode
-{
-
-	STORED_AMOUNT,
-
-	STORABLE_AMOUNT
-
+    STORABLE_AMOUNT
 }

@@ -18,10 +18,8 @@
 
 package appeng.core.features;
 
+public interface IAEFeature {
+    IFeatureHandler handler();
 
-public interface IAEFeature
-{
-	IFeatureHandler handler();
-
-	void postInit();
+    void postInit();
 }

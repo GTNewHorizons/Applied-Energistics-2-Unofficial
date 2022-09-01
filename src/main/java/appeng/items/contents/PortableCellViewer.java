@@ -18,7 +18,6 @@
 
 package appeng.items.contents;
 
-
 import appeng.api.config.*;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.implementations.items.IAEItemPowerStorage;
@@ -35,78 +34,66 @@ import appeng.util.Platform;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+public class PortableCellViewer extends MEMonitorHandler<IAEItemStack> implements IPortableCell, IInventorySlotAware {
 
-public class PortableCellViewer extends MEMonitorHandler<IAEItemStack> implements IPortableCell, IInventorySlotAware
-{
+    private final ItemStack target;
+    private final IAEItemPowerStorage ips;
+    private final int inventorySlot;
 
-	private final ItemStack target;
-	private final IAEItemPowerStorage ips;
-	private final int inventorySlot;
+    public PortableCellViewer(final ItemStack is, final int slot) {
+        super(CellInventory.getCell(is, null));
+        this.ips = (IAEItemPowerStorage) is.getItem();
+        this.target = is;
+        this.inventorySlot = slot;
+    }
 
-	public PortableCellViewer( final ItemStack is, final int slot )
-	{
-		super( CellInventory.getCell( is, null ) );
-		this.ips = (IAEItemPowerStorage) is.getItem();
-		this.target = is;
-		this.inventorySlot = slot;
-	}
+    @Override
+    public int getInventorySlot() {
+        return this.inventorySlot;
+    }
 
-	@Override
-	public int getInventorySlot()
-	{
-		return this.inventorySlot;
-	}
+    @Override
+    public ItemStack getItemStack() {
+        return this.target;
+    }
 
-	@Override
-	public ItemStack getItemStack()
-	{
-		return this.target;
-	}
+    @Override
+    public double extractAEPower(double amt, final Actionable mode, final PowerMultiplier usePowerMultiplier) {
+        amt = usePowerMultiplier.multiply(amt);
 
-	@Override
-	public double extractAEPower( double amt, final Actionable mode, final PowerMultiplier usePowerMultiplier )
-	{
-		amt = usePowerMultiplier.multiply( amt );
+        if (mode == Actionable.SIMULATE) {
+            return usePowerMultiplier.divide(Math.min(amt, this.ips.getAECurrentPower(this.target)));
+        }
 
-		if( mode == Actionable.SIMULATE )
-		{
-			return usePowerMultiplier.divide( Math.min( amt, this.ips.getAECurrentPower( this.target ) ) );
-		}
+        return usePowerMultiplier.divide(this.ips.extractAEPower(this.target, amt));
+    }
 
-		return usePowerMultiplier.divide( this.ips.extractAEPower( this.target, amt ) );
-	}
+    @Override
+    public IMEMonitor<IAEItemStack> getItemInventory() {
+        return this;
+    }
 
-	@Override
-	public IMEMonitor<IAEItemStack> getItemInventory()
-	{
-		return this;
-	}
+    @Override
+    public IMEMonitor<IAEFluidStack> getFluidInventory() {
+        return null;
+    }
 
-	@Override
-	public IMEMonitor<IAEFluidStack> getFluidInventory()
-	{
-		return null;
-	}
+    @Override
+    public IConfigManager getConfigManager() {
+        final ConfigManager out = new ConfigManager(new IConfigManagerHost() {
 
-	@Override
-	public IConfigManager getConfigManager()
-	{
-		final ConfigManager out = new ConfigManager( new IConfigManagerHost()
-		{
+            @Override
+            public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
+                final NBTTagCompound data = Platform.openNbtData(PortableCellViewer.this.target);
+                manager.writeToNBT(data);
+            }
+        });
 
-			@Override
-			public void updateSetting( final IConfigManager manager, final Enum settingName, final Enum newValue )
-			{
-				final NBTTagCompound data = Platform.openNbtData( PortableCellViewer.this.target );
-				manager.writeToNBT( data );
-			}
-		} );
+        out.registerSetting(Settings.SORT_BY, SortOrder.NAME);
+        out.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
+        out.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
 
-		out.registerSetting( Settings.SORT_BY, SortOrder.NAME );
-		out.registerSetting( Settings.VIEW_MODE, ViewItems.ALL );
-		out.registerSetting( Settings.SORT_DIRECTION, SortDir.ASCENDING );
-
-		out.readFromNBT( (NBTTagCompound) Platform.openNbtData( this.target ).copy() );
-		return out;
-	}
+        out.readFromNBT((NBTTagCompound) Platform.openNbtData(this.target).copy());
+        return out;
+    }
 }

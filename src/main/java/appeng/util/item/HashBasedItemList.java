@@ -18,170 +18,143 @@
 
 package appeng.util.item;
 
-
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
-
 import java.util.*;
 
+public final class HashBasedItemList implements IItemList<IAEItemStack> {
 
-public final class HashBasedItemList implements IItemList<IAEItemStack>
-{
+    private final Map<IAEItemStack, IAEItemStack> records = new LinkedHashMap<>();
 
-	private final Map<IAEItemStack, IAEItemStack> records = new LinkedHashMap<>();
+    @Override
+    public void add(final IAEItemStack option) {
+        if (option == null) {
+            return;
+        }
 
-	@Override
-	public void add( final IAEItemStack option )
-	{
-		if( option == null )
-		{
-			return;
-		}
+        final IAEItemStack st = this.records.get(option);
 
-		final IAEItemStack st = this.records.get( option );
+        if (st != null) {
+            st.add(option);
+            return;
+        }
 
-		if( st != null )
-		{
-			st.add( option );
-			return;
-		}
+        final IAEItemStack opt = option.copy();
 
-		final IAEItemStack opt = option.copy();
+        this.putItemRecord(opt);
+    }
 
-		this.putItemRecord( opt );
-	}
+    @Override
+    public IAEItemStack findPrecise(final IAEItemStack itemStack) {
+        if (itemStack == null) {
+            return null;
+        }
 
-	@Override
-	public IAEItemStack findPrecise( final IAEItemStack itemStack )
-	{
-		if( itemStack == null )
-		{
-			return null;
-		}
+        return this.records.get(itemStack);
+    }
 
-		return this.records.get( itemStack );
-	}
+    @Override
+    public Collection<IAEItemStack> findFuzzy(final IAEItemStack filter, final FuzzyMode fuzzy) {
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public Collection<IAEItemStack> findFuzzy( final IAEItemStack filter, final FuzzyMode fuzzy )
-	{
-		throw new UnsupportedOperationException();
-	}
+    @Override
+    public boolean isEmpty() {
+        return !this.iterator().hasNext();
+    }
 
-	@Override
-	public boolean isEmpty()
-	{
-		return !this.iterator().hasNext();
-	}
+    @Override
+    public void addStorage(final IAEItemStack option) {
+        if (option == null) {
+            return;
+        }
 
-	@Override
-	public void addStorage( final IAEItemStack option )
-	{
-		if( option == null )
-		{
-			return;
-		}
+        final IAEItemStack st = this.records.get(option);
 
-		final IAEItemStack st = this.records.get( option );
+        if (st != null) {
+            st.incStackSize(option.getStackSize());
+            return;
+        }
 
-		if( st != null )
-		{
-			st.incStackSize( option.getStackSize() );
-			return;
-		}
+        final IAEItemStack opt = option.copy();
 
-		final IAEItemStack opt = option.copy();
+        this.putItemRecord(opt);
+    }
 
-		this.putItemRecord( opt );
-	}
+    /*
+     * public void clean() { Iterator<StackType> i = iterator(); while (i.hasNext()) { StackType AEI =
+     * i.next(); if ( !AEI.isMeaningful() ) i.remove(); } }
+     */
 
-	/*
-	 * public void clean() { Iterator<StackType> i = iterator(); while (i.hasNext()) { StackType AEI =
-	 * i.next(); if ( !AEI.isMeaningful() ) i.remove(); } }
-	 */
+    @Override
+    public void addCrafting(final IAEItemStack option) {
+        if (option == null) {
+            return;
+        }
 
-	@Override
-	public void addCrafting( final IAEItemStack option )
-	{
-		if( option == null )
-		{
-			return;
-		}
+        final IAEItemStack st = this.records.get(option);
 
-		final IAEItemStack st = this.records.get( option );
+        if (st != null) {
+            st.setCraftable(true);
+            return;
+        }
 
-		if( st != null )
-		{
-			st.setCraftable( true );
-			return;
-		}
+        final IAEItemStack opt = option.copy();
+        opt.setStackSize(0);
+        opt.setCraftable(true);
 
-		final IAEItemStack opt = option.copy();
-		opt.setStackSize( 0 );
-		opt.setCraftable( true );
+        this.putItemRecord(opt);
+    }
 
-		this.putItemRecord( opt );
-	}
+    @Override
+    public void addRequestable(final IAEItemStack option) {
+        if (option == null) {
+            return;
+        }
 
-	@Override
-	public void addRequestable( final IAEItemStack option )
-	{
-		if( option == null )
-		{
-			return;
-		}
+        final IAEItemStack st = this.records.get(option);
 
-		final IAEItemStack st = this.records.get( option );
+        if (st != null) {
+            st.setCountRequestable(st.getCountRequestable() + option.getCountRequestable());
+            return;
+        }
 
-		if( st != null )
-		{
-			st.setCountRequestable( st.getCountRequestable() + option.getCountRequestable() );
-			return;
-		}
+        final IAEItemStack opt = option.copy();
+        opt.setStackSize(0);
+        opt.setCraftable(false);
+        opt.setCountRequestable(option.getCountRequestable());
 
-		final IAEItemStack opt = option.copy();
-		opt.setStackSize( 0 );
-		opt.setCraftable( false );
-		opt.setCountRequestable( option.getCountRequestable() );
+        this.putItemRecord(opt);
+    }
 
-		this.putItemRecord( opt );
-	}
+    @Override
+    public IAEItemStack getFirstItem() {
+        for (final IAEItemStack stackType : this) {
+            return stackType;
+        }
 
-	@Override
-	public IAEItemStack getFirstItem()
-	{
-		for( final IAEItemStack stackType : this )
-		{
-			return stackType;
-		}
+        return null;
+    }
 
-		return null;
-	}
+    @Override
+    public int size() {
+        return this.records.size();
+    }
 
-	@Override
-	public int size()
-	{
-		return this.records.size();
-	}
+    @Override
+    public Iterator<IAEItemStack> iterator() {
+        return new MeaningfulItemIterator<>(this.records.values().iterator());
+    }
 
-	@Override
-	public Iterator<IAEItemStack> iterator()
-	{
-		return new MeaningfulItemIterator<>(this.records.values().iterator());
-	}
+    @Override
+    public void resetStatus() {
+        for (final IAEItemStack i : this) {
+            i.reset();
+        }
+    }
 
-	@Override
-	public void resetStatus()
-	{
-		for( final IAEItemStack i : this )
-		{
-			i.reset();
-		}
-	}
-
-	private void putItemRecord( final IAEItemStack itemStack )
-	{
-		this.records.put( itemStack, itemStack );
-	}
+    private void putItemRecord(final IAEItemStack itemStack) {
+        this.records.put(itemStack, itemStack);
+    }
 }

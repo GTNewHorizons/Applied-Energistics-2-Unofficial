@@ -18,38 +18,31 @@
 
 package appeng.parts.reporting;
 
-
 import appeng.client.texture.CableBusTextures;
 import net.minecraft.item.ItemStack;
 
+public class PartTerminal extends AbstractPartTerminal {
 
-public class PartTerminal extends AbstractPartTerminal
-{
+    public PartTerminal(final ItemStack is) {
+        super(is);
+    }
 
-	public PartTerminal( final ItemStack is )
-	{
-		super( is );
-	}
+    private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartTerminal_Bright;
+    private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartTerminal_Dark;
+    private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartTerminal_Colored;
 
-	private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartTerminal_Bright;
-	private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartTerminal_Dark;
-	private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartTerminal_Colored;
+    @Override
+    public CableBusTextures getFrontBright() {
+        return FRONT_BRIGHT_ICON;
+    }
 
-	@Override
-	public CableBusTextures getFrontBright()
-	{
-		return FRONT_BRIGHT_ICON;
-	}
+    @Override
+    public CableBusTextures getFrontColored() {
+        return FRONT_COLORED_ICON;
+    }
 
-	@Override
-	public CableBusTextures getFrontColored()
-	{
-		return FRONT_COLORED_ICON;
-	}
-
-	@Override
-	public CableBusTextures getFrontDark()
-	{
-		return FRONT_DARK_ICON;
-	}
+    @Override
+    public CableBusTextures getFrontDark() {
+        return FRONT_DARK_ICON;
+    }
 }

@@ -9,37 +9,35 @@ import appeng.helpers.Reflected;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 
-public class PartUltraDenseCableCovered extends PartDenseCableCovered
-{
+public class PartUltraDenseCableCovered extends PartDenseCableCovered {
     @Reflected
-    public PartUltraDenseCableCovered(final ItemStack is )
-    {
-        super( is );
-        this.getProxy().setFlags( GridFlags.ULTRA_DENSE_CAPACITY, GridFlags.PREFERRED );
+    public PartUltraDenseCableCovered(final ItemStack is) {
+        super(is);
+        this.getProxy().setFlags(GridFlags.ULTRA_DENSE_CAPACITY, GridFlags.PREFERRED);
     }
 
     @Override
-    public AECableType getCableConnectionType()
-    {
+    public AECableType getCableConnectionType() {
         return AECableType.ULTRA_DENSE;
     }
 
     @Override
-    public IIcon getTexture(final AEColor c )
-    {
-        if( c == AEColor.Transparent )
-        {
-            return AEApi.instance().definitions().parts().cableUltraDenseCovered().stack( AEColor.Transparent, 1 ).getIconIndex();
+    public IIcon getTexture(final AEColor c) {
+        if (c == AEColor.Transparent) {
+            return AEApi.instance()
+                    .definitions()
+                    .parts()
+                    .cableUltraDenseCovered()
+                    .stack(AEColor.Transparent, 1)
+                    .getIconIndex();
         }
 
-        return this.getDenseCoveredTexture( c );
+        return this.getDenseCoveredTexture(c);
     }
 
     @Override
-    protected IIcon getDenseCoveredTexture(final AEColor c )
-    {
-        switch( c )
-        {
+    protected IIcon getDenseCoveredTexture(final AEColor c) {
+        switch (c) {
             case Black:
                 return CableBusTextures.MEUltraDenseCovered_Black.getIcon();
             case Blue:

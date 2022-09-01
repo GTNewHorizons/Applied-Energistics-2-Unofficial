@@ -23,8 +23,8 @@
 
 package appeng.api.config;
 
-
-public enum SchedulingMode
-{
-	DEFAULT, ROUNDROBIN, RANDOM
+public enum SchedulingMode {
+    DEFAULT,
+    ROUNDROBIN,
+    RANDOM
 }

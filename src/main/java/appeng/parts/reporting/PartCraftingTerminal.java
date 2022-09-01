@@ -18,106 +18,88 @@
 
 package appeng.parts.reporting;
 
-
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.Reflected;
 import appeng.tile.inventory.AppEngInternalInventory;
+import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.util.List;
+public class PartCraftingTerminal extends AbstractPartTerminal {
+    private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartCraftingTerm_Bright;
+    private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartCraftingTerm_Dark;
+    private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartCraftingTerm_Colored;
 
+    private final AppEngInternalInventory craftingGrid = new AppEngInternalInventory(this, 9);
 
-public class PartCraftingTerminal extends AbstractPartTerminal
-{
-	private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartCraftingTerm_Bright;
-	private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartCraftingTerm_Dark;
-	private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartCraftingTerm_Colored;
+    @Reflected
+    public PartCraftingTerminal(final ItemStack is) {
+        super(is);
+    }
 
-	private final AppEngInternalInventory craftingGrid = new AppEngInternalInventory( this, 9 );
+    @Override
+    public void getDrops(final List<ItemStack> drops, final boolean wrenched) {
+        super.getDrops(drops, wrenched);
 
-	@Reflected
-	public PartCraftingTerminal( final ItemStack is )
-	{
-		super( is );
-	}
+        for (final ItemStack is : this.craftingGrid) {
+            if (is != null) {
+                drops.add(is);
+            }
+        }
+    }
 
-	@Override
-	public void getDrops( final List<ItemStack> drops, final boolean wrenched )
-	{
-		super.getDrops( drops, wrenched );
+    @Override
+    public void readFromNBT(final NBTTagCompound data) {
+        super.readFromNBT(data);
+        this.craftingGrid.readFromNBT(data, "craftingGrid");
+    }
 
-		for( final ItemStack is : this.craftingGrid )
-		{
-			if( is != null )
-			{
-				drops.add( is );
-			}
-		}
-	}
+    @Override
+    public void writeToNBT(final NBTTagCompound data) {
+        super.writeToNBT(data);
+        this.craftingGrid.writeToNBT(data, "craftingGrid");
+    }
 
-	@Override
-	public void readFromNBT( final NBTTagCompound data )
-	{
-		super.readFromNBT( data );
-		this.craftingGrid.readFromNBT( data, "craftingGrid" );
-	}
+    @Override
+    public GuiBridge getGui(final EntityPlayer p) {
+        int x = (int) p.posX;
+        int y = (int) p.posY;
+        int z = (int) p.posZ;
+        if (this.getHost().getTile() != null) {
+            x = this.getTile().xCoord;
+            y = this.getTile().yCoord;
+            z = this.getTile().zCoord;
+        }
 
-	@Override
-	public void writeToNBT( final NBTTagCompound data )
-	{
-		super.writeToNBT( data );
-		this.craftingGrid.writeToNBT( data, "craftingGrid" );
-	}
+        if (GuiBridge.GUI_CRAFTING_TERMINAL.hasPermissions(this.getHost().getTile(), x, y, z, this.getSide(), p)) {
+            return GuiBridge.GUI_CRAFTING_TERMINAL;
+        }
+        return GuiBridge.GUI_ME;
+    }
 
-	@Override
-	public GuiBridge getGui( final EntityPlayer p )
-	{
-		int x = (int) p.posX;
-		int y = (int) p.posY;
-		int z = (int) p.posZ;
-		if( this.getHost().getTile() != null )
-		{
-			x = this.getTile().xCoord;
-			y = this.getTile().yCoord;
-			z = this.getTile().zCoord;
-		}
+    @Override
+    public IInventory getInventoryByName(final String name) {
+        if (name.equals("crafting")) {
+            return this.craftingGrid;
+        }
+        return super.getInventoryByName(name);
+    }
 
-		if( GuiBridge.GUI_CRAFTING_TERMINAL.hasPermissions( this.getHost().getTile(), x, y, z, this.getSide(), p ) )
-		{
-			return GuiBridge.GUI_CRAFTING_TERMINAL;
-		}
-		return GuiBridge.GUI_ME;
-	}
+    @Override
+    public CableBusTextures getFrontBright() {
+        return FRONT_BRIGHT_ICON;
+    }
 
-	@Override
-	public IInventory getInventoryByName( final String name )
-	{
-		if( name.equals( "crafting" ) )
-		{
-			return this.craftingGrid;
-		}
-		return super.getInventoryByName( name );
-	}
+    @Override
+    public CableBusTextures getFrontColored() {
+        return FRONT_COLORED_ICON;
+    }
 
-	@Override
-	public CableBusTextures getFrontBright()
-	{
-		return FRONT_BRIGHT_ICON;
-	}
-
-	@Override
-	public CableBusTextures getFrontColored()
-	{
-		return FRONT_COLORED_ICON;
-	}
-
-	@Override
-	public CableBusTextures getFrontDark()
-	{
-		return FRONT_DARK_ICON;
-	}
+    @Override
+    public CableBusTextures getFrontDark() {
+        return FRONT_DARK_ICON;
+    }
 }

@@ -18,128 +18,103 @@
 
 package appeng.parts.layers;
 
-
+import java.util.List;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 
-import java.util.List;
+public class InvLayerData {
 
+    // a simple empty array for empty stuff..
+    private static final int[] NULL_SIDES = {};
 
-public class InvLayerData
-{
+    // cache of inventory state.
+    private final int[][] sides;
+    private final List<ISidedInventory> inventories;
+    private final List<InvSot> slots;
 
-	// a simple empty array for empty stuff..
-	private static final int[] NULL_SIDES = {};
+    public InvLayerData(final int[][] a, final List<ISidedInventory> b, final List<InvSot> c) {
+        this.sides = a;
+        this.inventories = b;
+        this.slots = c;
+    }
 
-	// cache of inventory state.
-	private final int[][] sides;
-	private final List<ISidedInventory> inventories;
-	private final List<InvSot> slots;
+    ItemStack decreaseStackSize(final int slot, final int amount) {
+        if (this.isSlotValid(slot)) {
+            return this.slots.get(slot).decreaseStackSize(amount);
+        }
 
-	public InvLayerData( final int[][] a, final List<ISidedInventory> b, final List<InvSot> c )
-	{
-		this.sides = a;
-		this.inventories = b;
-		this.slots = c;
-	}
+        return null;
+    }
 
-	ItemStack decreaseStackSize( final int slot, final int amount )
-	{
-		if( this.isSlotValid( slot ) )
-		{
-			return this.slots.get( slot ).decreaseStackSize( amount );
-		}
+    /**
+     * check if a slot index is valid, prevent crashes from bad code :)
+     *
+     * @param slot slot index
+     * @return true, if the slot exists.
+     */
+    private boolean isSlotValid(final int slot) {
+        return this.slots != null && slot >= 0 && slot < this.slots.size();
+    }
 
-		return null;
-	}
+    int getSizeInventory() {
+        if (this.slots == null) {
+            return 0;
+        }
 
-	/**
-	 * check if a slot index is valid, prevent crashes from bad code :)
-	 *
-	 * @param slot slot index
-	 * @return true, if the slot exists.
-	 */
-	private boolean isSlotValid( final int slot )
-	{
-		return this.slots != null && slot >= 0 && slot < this.slots.size();
-	}
+        return this.slots.size();
+    }
 
-	int getSizeInventory()
-	{
-		if( this.slots == null )
-		{
-			return 0;
-		}
+    ItemStack getStackInSlot(final int slot) {
+        if (this.isSlotValid(slot)) {
+            return this.slots.get(slot).getStackInSlot();
+        }
 
-		return this.slots.size();
-	}
+        return null;
+    }
 
-	ItemStack getStackInSlot( final int slot )
-	{
-		if( this.isSlotValid( slot ) )
-		{
-			return this.slots.get( slot ).getStackInSlot();
-		}
+    boolean isItemValidForSlot(final int slot, final ItemStack itemstack) {
+        if (this.isSlotValid(slot)) {
+            return this.slots.get(slot).isItemValidForSlot(itemstack);
+        }
 
-		return null;
-	}
+        return false;
+    }
 
-	boolean isItemValidForSlot( final int slot, final ItemStack itemstack )
-	{
-		if( this.isSlotValid( slot ) )
-		{
-			return this.slots.get( slot ).isItemValidForSlot( itemstack );
-		}
+    void setInventorySlotContents(final int slot, final ItemStack itemstack) {
+        if (this.isSlotValid(slot)) {
+            this.slots.get(slot).setInventorySlotContents(itemstack);
+        }
+    }
 
-		return false;
-	}
+    boolean canExtractItem(final int slot, final ItemStack itemstack, final int side) {
+        if (this.isSlotValid(slot)) {
+            return this.slots.get(slot).canExtractItem(itemstack, side);
+        }
 
-	void setInventorySlotContents( final int slot, final ItemStack itemstack )
-	{
-		if( this.isSlotValid( slot ) )
-		{
-			this.slots.get( slot ).setInventorySlotContents( itemstack );
-		}
-	}
+        return false;
+    }
 
-	boolean canExtractItem( final int slot, final ItemStack itemstack, final int side )
-	{
-		if( this.isSlotValid( slot ) )
-		{
-			return this.slots.get( slot ).canExtractItem( itemstack, side );
-		}
+    boolean canInsertItem(final int slot, final ItemStack itemstack, final int side) {
+        if (this.isSlotValid(slot)) {
+            return this.slots.get(slot).canInsertItem(itemstack, side);
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	boolean canInsertItem( final int slot, final ItemStack itemstack, final int side )
-	{
-		if( this.isSlotValid( slot ) )
-		{
-			return this.slots.get( slot ).canInsertItem( itemstack, side );
-		}
+    void markDirty() {
+        if (this.inventories != null) {
+            for (final IInventory inv : this.inventories) {
+                inv.markDirty();
+            }
+        }
+    }
 
-		return false;
-	}
-
-	void markDirty()
-	{
-		if( this.inventories != null )
-		{
-			for( final IInventory inv : this.inventories )
-			{
-				inv.markDirty();
-			}
-		}
-	}
-
-	int[] getAccessibleSlotsFromSide( final int side )
-	{
-		if( this.sides == null || side < 0 || side > 5 )
-		{
-			return NULL_SIDES;
-		}
-		return this.sides[side];
-	}
+    int[] getAccessibleSlotsFromSide(final int side) {
+        if (this.sides == null || side < 0 || side > 5) {
+            return NULL_SIDES;
+        }
+        return this.sides[side];
+    }
 }

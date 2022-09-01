@@ -18,56 +18,37 @@
 
 package appeng.container.implementations;
 
-
-import appeng.api.networking.IGrid;
-import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.storage.ITerminalHost;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.ICraftingCPUSelectorContainer;
-import appeng.core.AELog;
-import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
-import appeng.util.Platform;
-import com.google.common.collect.ImmutableSet;
-import net.minecraft.entity.player.EntityPlayerMP;
+import java.util.*;
 import net.minecraft.entity.player.InventoryPlayer;
 
-import java.io.IOException;
-import java.util.*;
-
-
-public class ContainerCraftingStatus extends ContainerCraftingCPU implements ICraftingCPUSelectorContainer
-{
-    @GuiSync.Recurse( 5 )
+public class ContainerCraftingStatus extends ContainerCraftingCPU implements ICraftingCPUSelectorContainer {
+    @GuiSync.Recurse(5)
     public ContainerCPUTable cpuTable;
 
-	public ContainerCraftingStatus( final InventoryPlayer ip, final ITerminalHost te )
-	{
-		super( ip, te );
-        cpuTable = new ContainerCPUTable( this, this::setCPU, true, c -> true );
-	}
+    public ContainerCraftingStatus(final InventoryPlayer ip, final ITerminalHost te) {
+        super(ip, te);
+        cpuTable = new ContainerCPUTable(this, this::setCPU, true, c -> true);
+    }
 
-    public ContainerCPUTable getCPUTable()
-    {
+    public ContainerCPUTable getCPUTable() {
         return cpuTable;
     }
 
     @Override
-	public void detectAndSendChanges()
-	{
+    public void detectAndSendChanges() {
         cpuTable.detectAndSendChanges(getNetwork(), crafters);
-		super.detectAndSendChanges();
-	}
+        super.detectAndSendChanges();
+    }
 
     @Override
-	public void selectCPU( int serial )
-	{
-        cpuTable.selectCPU( serial );
-	}
+    public void selectCPU(int serial) {
+        cpuTable.selectCPU(serial);
+    }
 
-    public List<CraftingCPUStatus> getCPUs()
-    {
+    public List<CraftingCPUStatus> getCPUs() {
         return cpuTable.getCPUs();
     }
 }

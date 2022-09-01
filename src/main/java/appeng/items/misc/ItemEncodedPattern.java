@@ -18,7 +18,6 @@
 
 package appeng.items.misc;
 
-
 import appeng.api.AEApi;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
@@ -30,198 +29,201 @@ import appeng.core.localization.GuiText;
 import appeng.helpers.PatternHelper;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.event.ForgeEventFactory;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternItem {
+    // rather simple client side caching.
+    private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<ItemStack, ItemStack>();
 
+    public ItemEncodedPattern() {
+        this.setFeature(EnumSet.of(AEFeature.Patterns));
+        this.setMaxStackSize(64);
+        if (Platform.isClient()) {
+            MinecraftForgeClient.registerItemRenderer(this, new ItemEncodedPatternRenderer());
+        }
+    }
 
-public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternItem
-{
-	// rather simple client side caching.
-	private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<ItemStack, ItemStack>();
+    @Override
+    public ItemStack onItemRightClick(final ItemStack stack, final World w, final EntityPlayer player) {
+        this.clearPattern(stack, player);
 
-	public ItemEncodedPattern()
-	{
-		this.setFeature( EnumSet.of( AEFeature.Patterns ) );
-		this.setMaxStackSize( 64 );
-		if( Platform.isClient() )
-		{
-			MinecraftForgeClient.registerItemRenderer( this, new ItemEncodedPatternRenderer() );
-		}
-	}
+        return stack;
+    }
 
-	@Override
-	public ItemStack onItemRightClick( final ItemStack stack, final World w, final EntityPlayer player )
-	{
-		this.clearPattern( stack, player );
+    @Override
+    public boolean onItemUseFirst(
+            final ItemStack stack,
+            final EntityPlayer player,
+            final World world,
+            final int x,
+            final int y,
+            final int z,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (ForgeEventFactory.onItemUseStart(player, stack, 1) <= 0) return true;
 
-		return stack;
-	}
+        return this.clearPattern(stack, player);
+    }
 
-	@Override
-	public boolean onItemUseFirst( final ItemStack stack, final EntityPlayer player, final World world, final int x, final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( ForgeEventFactory.onItemUseStart( player, stack, 1 ) <= 0 )
-			return true;
+    private boolean clearPattern(final ItemStack stack, final EntityPlayer player) {
+        if (player.isSneaking()) {
+            if (Platform.isClient()) {
+                return false;
+            }
 
-		return this.clearPattern( stack, player );
-	}
+            final InventoryPlayer inv = player.inventory;
 
-	private boolean clearPattern( final ItemStack stack, final EntityPlayer player )
-	{
-		if( player.isSneaking() )
-		{
-			if( Platform.isClient() )
-			{
-				return false;
-			}
+            for (int s = 0; s < player.inventory.getSizeInventory(); s++) {
+                if (inv.getStackInSlot(s) == stack) {
+                    for (final ItemStack blankPattern : AEApi.instance()
+                            .definitions()
+                            .materials()
+                            .blankPattern()
+                            .maybeStack(stack.stackSize)
+                            .asSet()) {
+                        inv.setInventorySlotContents(s, blankPattern);
+                    }
 
-			final InventoryPlayer inv = player.inventory;
+                    return true;
+                }
+            }
+        }
 
-			for( int s = 0; s < player.inventory.getSizeInventory(); s++ )
-			{
-				if( inv.getStackInSlot( s ) == stack )
-				{
-					for( final ItemStack blankPattern : AEApi.instance().definitions().materials().blankPattern().maybeStack( stack.stackSize ).asSet() )
-					{
-						inv.setInventorySlotContents( s, blankPattern );
-					}
+        return false;
+    }
 
-					return true;
-				}
-			}
-		}
+    @Override
+    public void addCheckedInformation(
+            final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo) {
+        final NBTTagCompound encodedValue = stack.getTagCompound();
 
-		return false;
-	}
+        if (encodedValue == null) {
+            lines.add(EnumChatFormatting.RED + GuiText.InvalidPattern.getLocal());
+            return;
+        }
 
-	@Override
-	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
-	{
-		final NBTTagCompound encodedValue = stack.getTagCompound();
+        final ICraftingPatternDetails details = this.getPatternForItem(stack, player.worldObj);
+        final boolean isCrafting = encodedValue.getBoolean("crafting");
+        final boolean substitute = encodedValue.getBoolean("substitute");
+        IAEItemStack[] inItems;
+        IAEItemStack[] outItems;
 
-		if (encodedValue == null) {
-			lines.add(EnumChatFormatting.RED + GuiText.InvalidPattern.getLocal());
-			return;
-		}
+        if (details == null) {
+            final ItemStack unknownItem = new ItemStack(Blocks.fire);
+            unknownItem.setStackDisplayName(GuiText.UnknownItem.getLocal());
 
-		final ICraftingPatternDetails details = this.getPatternForItem( stack, player.worldObj );
-		final boolean isCrafting = encodedValue.getBoolean("crafting");
-		final boolean substitute = encodedValue.getBoolean("substitute");
-		IAEItemStack[] inItems;
-		IAEItemStack[] outItems;
+            inItems = PatternHelper.convertToCondensedList(
+                    PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10), false, unknownItem));
+            outItems = PatternHelper.convertToCondensedList(
+                    PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10), false, unknownItem));
+        } else {
+            inItems = details.getCondensedInputs();
+            outItems = details.getCondensedOutputs();
+        }
 
-		if (details == null) {
-			final ItemStack unknownItem = new ItemStack(Blocks.fire);
-			unknownItem.setStackDisplayName(GuiText.UnknownItem.getLocal());
+        boolean recipeIsBroken = details == null;
+        final List<String> in = new ArrayList<>();
+        final List<String> out = new ArrayList<>();
 
-			inItems = PatternHelper.convertToCondensedList(PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10), false, unknownItem));
-			outItems = PatternHelper.convertToCondensedList(PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10), false, unknownItem));
-		} else {
-			inItems = details.getCondensedInputs();
-			outItems = details.getCondensedOutputs();
-		}
+        final String substitutionLabel = GuiText.Substitute.getLocal() + " ";
+        final String canSubstitute = substitute ? GuiText.Yes.getLocal() : GuiText.No.getLocal();
+        final String label = (isCrafting ? GuiText.Crafts.getLocal() : GuiText.Creates.getLocal()) + ": ";
+        final String and = " " + GuiText.And.getLocal() + " ";
+        final String with = GuiText.With.getLocal() + ": ";
 
-		boolean recipeIsBroken = details == null;
-		final List<String> in = new ArrayList<>();
-		final List<String> out = new ArrayList<>();
+        recipeIsBroken = addInformation(player, inItems, in, with, and, displayMoreInfo) || recipeIsBroken;
+        recipeIsBroken = addInformation(player, outItems, out, label, and, displayMoreInfo) || recipeIsBroken;
 
-		final String substitutionLabel = GuiText.Substitute.getLocal() + " ";
-		final String canSubstitute = substitute ? GuiText.Yes.getLocal() : GuiText.No.getLocal();
-		final String label = ( isCrafting ? GuiText.Crafts.getLocal() : GuiText.Creates.getLocal() ) + ": ";
-		final String and = " " + GuiText.And.getLocal() + " ";
-		final String with = GuiText.With.getLocal() + ": ";
+        if (recipeIsBroken) {
+            lines.add(EnumChatFormatting.RED + GuiText.InvalidPattern.getLocal());
+        }
 
-		recipeIsBroken = addInformation(player, inItems, in, with, and, displayMoreInfo) || recipeIsBroken;
-		recipeIsBroken = addInformation(player, outItems, out, label, and, displayMoreInfo) || recipeIsBroken;
+        lines.addAll(out);
+        lines.addAll(in);
 
-		if (recipeIsBroken) {
-			lines.add(EnumChatFormatting.RED + GuiText.InvalidPattern.getLocal());
-		}
+        lines.add(substitutionLabel + canSubstitute);
+    }
 
-		lines.addAll(out);
-		lines.addAll(in);
+    @Override
+    public ICraftingPatternDetails getPatternForItem(final ItemStack is, final World w) {
+        try {
+            return new PatternHelper(is, w);
+        } catch (final Throwable t) {
+            return null;
+        }
+    }
 
-		lines.add(substitutionLabel + canSubstitute);
-	}
+    public ItemStack getOutput(final ItemStack item) {
+        ItemStack out = SIMPLE_CACHE.get(item);
 
-	@Override
-	public ICraftingPatternDetails getPatternForItem( final ItemStack is, final World w )
-	{
-		try {
-			return new PatternHelper( is, w );
-		} catch(final Throwable t) {
-			return null;
-		}
-	}
+        if (out != null) {
+            return out;
+        }
 
-	public ItemStack getOutput( final ItemStack item )
-	{
-		ItemStack out = SIMPLE_CACHE.get( item );
+        final World w = CommonHelper.proxy.getWorld();
 
-		if (out != null) {
-			return out;
-		}
+        if (w == null) {
+            return null;
+        }
 
-		final World w = CommonHelper.proxy.getWorld();
+        final ICraftingPatternDetails details = this.getPatternForItem(item, w);
 
-		if (w == null) {
-			return null;
-		}
+        if (details == null) {
+            return null;
+        }
 
-		final ICraftingPatternDetails details = this.getPatternForItem( item, w );
+        SIMPLE_CACHE.put(item, out = details.getCondensedOutputs()[0].getItemStack());
+        return out;
+    }
 
-		if (details == null) {
-			return null;
-		}
+    private boolean addInformation(
+            final EntityPlayer player,
+            final IAEItemStack[] items,
+            final List<String> lines,
+            final String label,
+            final String and,
+            final boolean displayMoreInfo) {
+        final ItemStack unknownItem = new ItemStack(Blocks.fire);
+        boolean recipeIsBroken = false;
+        boolean first = true;
 
-		SIMPLE_CACHE.put( item, out = details.getCondensedOutputs()[0].getItemStack() );
-		return out;
-	}
+        for (final IAEItemStack item : items) {
 
-	private boolean addInformation(final EntityPlayer player, final IAEItemStack[] items, final List<String> lines, final String label, final String and, final boolean displayMoreInfo)
-	{
-		final ItemStack unknownItem = new ItemStack(Blocks.fire);
-		boolean recipeIsBroken = false;
-		boolean first = true;
+            if (!recipeIsBroken && item.equals(unknownItem)) {
+                recipeIsBroken = true;
+            }
 
-		for (final IAEItemStack item: items) {
+            lines.add((first ? label : and) + item.getStackSize() + " " + Platform.getItemDisplayName(item));
 
-			if (!recipeIsBroken && item.equals(unknownItem)) {
-				recipeIsBroken = true;
-			}
+            if (GuiScreen.isShiftKeyDown()) {
+                final List l = item.getItemStack().getTooltip(player, displayMoreInfo);
 
-			lines.add((first ? label : and) + item.getStackSize() + " " + Platform.getItemDisplayName(item));
+                if (!l.isEmpty()) {
+                    l.remove(0);
+                }
 
-			if (GuiScreen.isShiftKeyDown()) {
-				final List l = item.getItemStack().getTooltip(player, displayMoreInfo);
+                lines.addAll(l);
+            }
 
-				if (!l.isEmpty()) {
-					l.remove(0);
-				}
+            first = false;
+        }
 
-				lines.addAll(l);
-			}
-
-			first = false;
-		}
-
-		return recipeIsBroken;
-	}
-
+        return recipeIsBroken;
+    }
 }

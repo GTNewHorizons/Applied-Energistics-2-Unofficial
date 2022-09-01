@@ -18,7 +18,6 @@
 
 package appeng.entity;
 
-
 import appeng.api.AEApi;
 import appeng.api.definitions.IMaterials;
 import appeng.client.EffectType;
@@ -27,6 +26,7 @@ import appeng.core.CommonHelper;
 import appeng.core.features.AEFeature;
 import appeng.helpers.Reflected;
 import appeng.util.Platform;
+import java.util.List;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
@@ -36,130 +36,107 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
-import java.util.List;
+public final class EntityChargedQuartz extends AEBaseEntityItem {
 
+    private int delay = 0;
+    private int transformTime = 0;
 
-public final class EntityChargedQuartz extends AEBaseEntityItem
-{
+    @Reflected
+    public EntityChargedQuartz(final World w) {
+        super(w);
+    }
 
-	private int delay = 0;
-	private int transformTime = 0;
+    public EntityChargedQuartz(final World w, final double x, final double y, final double z, final ItemStack is) {
+        super(w, x, y, z, is);
+    }
 
-	@Reflected
-	public EntityChargedQuartz( final World w )
-	{
-		super( w );
-	}
+    @Override
+    public void onUpdate() {
+        super.onUpdate();
 
-	public EntityChargedQuartz( final World w, final double x, final double y, final double z, final ItemStack is )
-	{
-		super( w, x, y, z, is );
-	}
+        if (!AEConfig.instance.isFeatureEnabled(AEFeature.InWorldFluix)) {
+            return;
+        }
 
-	@Override
-	public void onUpdate()
-	{
-		super.onUpdate();
+        if (Platform.isClient() && this.delay > 30 && AEConfig.instance.enableEffects) {
+            CommonHelper.proxy.spawnEffect(EffectType.Lightning, this.worldObj, this.posX, this.posY, this.posZ, null);
+            this.delay = 0;
+        }
+        this.delay++;
 
-		if( !AEConfig.instance.isFeatureEnabled( AEFeature.InWorldFluix ) )
-		{
-			return;
-		}
+        final int j = MathHelper.floor_double(this.posX);
+        final int i = MathHelper.floor_double(this.posY);
+        final int k = MathHelper.floor_double(this.posZ);
 
-		if( Platform.isClient() && this.delay > 30 && AEConfig.instance.enableEffects )
-		{
-			CommonHelper.proxy.spawnEffect( EffectType.Lightning, this.worldObj, this.posX, this.posY, this.posZ, null );
-			this.delay = 0;
-		}
-		this.delay++;
+        final Material mat = this.worldObj.getBlock(j, i, k).getMaterial();
+        if (Platform.isServer() && mat.isLiquid()) {
+            this.transformTime++;
+            if (this.transformTime > 60) {
+                if (!this.transform()) {
+                    this.transformTime = 0;
+                }
+            }
+        } else {
+            this.transformTime = 0;
+        }
+    }
 
-		final int j = MathHelper.floor_double( this.posX );
-		final int i = MathHelper.floor_double( this.posY );
-		final int k = MathHelper.floor_double( this.posZ );
+    private boolean transform() {
+        final ItemStack item = this.getEntityItem();
+        final IMaterials materials = AEApi.instance().definitions().materials();
 
-		final Material mat = this.worldObj.getBlock( j, i, k ).getMaterial();
-		if( Platform.isServer() && mat.isLiquid() )
-		{
-			this.transformTime++;
-			if( this.transformTime > 60 )
-			{
-				if( !this.transform() )
-				{
-					this.transformTime = 0;
-				}
-			}
-		}
-		else
-		{
-			this.transformTime = 0;
-		}
-	}
+        if (materials.certusQuartzCrystalCharged().isSameAs(item)) {
+            final AxisAlignedBB region = AxisAlignedBB.getBoundingBox(
+                    this.posX - 1, this.posY - 1, this.posZ - 1, this.posX + 1, this.posY + 1, this.posZ + 1);
+            final List<Entity> l = this.getCheckedEntitiesWithinAABBExcludingEntity(region);
 
-	private boolean transform()
-	{
-		final ItemStack item = this.getEntityItem();
-		final IMaterials materials = AEApi.instance().definitions().materials();
+            EntityItem redstone = null;
+            EntityItem netherQuartz = null;
 
-		if( materials.certusQuartzCrystalCharged().isSameAs( item ) )
-		{
-			final AxisAlignedBB region = AxisAlignedBB.getBoundingBox( this.posX - 1, this.posY - 1, this.posZ - 1, this.posX + 1, this.posY + 1, this.posZ + 1 );
-			final List<Entity> l = this.getCheckedEntitiesWithinAABBExcludingEntity( region );
+            for (final Entity e : l) {
+                if (e instanceof EntityItem && !e.isDead) {
+                    final ItemStack other = ((EntityItem) e).getEntityItem();
+                    if (other != null && other.stackSize > 0) {
+                        if (Platform.isSameItem(other, new ItemStack(Items.redstone))) {
+                            redstone = (EntityItem) e;
+                        }
 
-			EntityItem redstone = null;
-			EntityItem netherQuartz = null;
+                        if (Platform.isSameItem(other, new ItemStack(Items.quartz))) {
+                            netherQuartz = (EntityItem) e;
+                        }
+                    }
+                }
+            }
 
-			for( final Entity e : l )
-			{
-				if( e instanceof EntityItem && !e.isDead )
-				{
-					final ItemStack other = ( (EntityItem) e ).getEntityItem();
-					if( other != null && other.stackSize > 0 )
-					{
-						if( Platform.isSameItem( other, new ItemStack( Items.redstone ) ) )
-						{
-							redstone = (EntityItem) e;
-						}
+            if (redstone != null && netherQuartz != null) {
+                this.getEntityItem().stackSize--;
+                redstone.getEntityItem().stackSize--;
+                netherQuartz.getEntityItem().stackSize--;
 
-						if( Platform.isSameItem( other, new ItemStack( Items.quartz ) ) )
-						{
-							netherQuartz = (EntityItem) e;
-						}
-					}
-				}
-			}
+                if (this.getEntityItem().stackSize <= 0) {
+                    this.setDead();
+                }
 
-			if( redstone != null && netherQuartz != null )
-			{
-				this.getEntityItem().stackSize--;
-				redstone.getEntityItem().stackSize--;
-				netherQuartz.getEntityItem().stackSize--;
+                if (redstone.getEntityItem().stackSize <= 0) {
+                    redstone.setDead();
+                }
 
-				if( this.getEntityItem().stackSize <= 0 )
-				{
-					this.setDead();
-				}
+                if (netherQuartz.getEntityItem().stackSize <= 0) {
+                    netherQuartz.setDead();
+                }
 
-				if( redstone.getEntityItem().stackSize <= 0 )
-				{
-					redstone.setDead();
-				}
+                for (final ItemStack fluixCrystalStack :
+                        materials.fluixCrystal().maybeStack(2).asSet()) {
+                    final EntityItem entity =
+                            new EntityItem(this.worldObj, this.posX, this.posY, this.posZ, fluixCrystalStack);
 
-				if( netherQuartz.getEntityItem().stackSize <= 0 )
-				{
-					netherQuartz.setDead();
-				}
+                    this.worldObj.spawnEntityInWorld(entity);
+                }
 
-				for( final ItemStack fluixCrystalStack : materials.fluixCrystal().maybeStack( 2 ).asSet() )
-				{
-					final EntityItem entity = new EntityItem( this.worldObj, this.posX, this.posY, this.posZ, fluixCrystalStack );
+                return true;
+            }
+        }
 
-					this.worldObj.spawnEntityInWorld( entity );
-				}
-
-				return true;
-			}
-		}
-
-		return false;
-	}
+        return false;
+    }
 }

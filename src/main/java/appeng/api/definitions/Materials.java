@@ -23,121 +23,118 @@
 
 package appeng.api.definitions;
 
-
 import appeng.api.util.AEItemDefinition;
-
 
 /**
  * @deprecated use {@link IMaterials}
  */
 @Deprecated
-public class Materials
-{
-	public AEItemDefinition materialCell2SpatialPart;
+public class Materials {
+    public AEItemDefinition materialCell2SpatialPart;
 
-	public AEItemDefinition materialCell16SpatialPart;
+    public AEItemDefinition materialCell16SpatialPart;
 
-	public AEItemDefinition materialCell128SpatialPart;
+    public AEItemDefinition materialCell128SpatialPart;
 
-	public AEItemDefinition materialSilicon;
+    public AEItemDefinition materialSilicon;
 
-	public AEItemDefinition materialSkyDust;
+    public AEItemDefinition materialSkyDust;
 
-	public AEItemDefinition materialCalcProcessorPress;
+    public AEItemDefinition materialCalcProcessorPress;
 
-	public AEItemDefinition materialEngProcessorPress;
+    public AEItemDefinition materialEngProcessorPress;
 
-	public AEItemDefinition materialLogicProcessorPress;
+    public AEItemDefinition materialLogicProcessorPress;
 
-	public AEItemDefinition materialCalcProcessorPrint;
+    public AEItemDefinition materialCalcProcessorPrint;
 
-	public AEItemDefinition materialEngProcessorPrint;
+    public AEItemDefinition materialEngProcessorPrint;
 
-	public AEItemDefinition materialLogicProcessorPrint;
+    public AEItemDefinition materialLogicProcessorPrint;
 
-	public AEItemDefinition materialSiliconPress;
+    public AEItemDefinition materialSiliconPress;
 
-	public AEItemDefinition materialSiliconPrint;
+    public AEItemDefinition materialSiliconPrint;
 
-	public AEItemDefinition materialNamePress;
+    public AEItemDefinition materialNamePress;
 
-	public AEItemDefinition materialLogicProcessor;
+    public AEItemDefinition materialLogicProcessor;
 
-	public AEItemDefinition materialCalcProcessor;
+    public AEItemDefinition materialCalcProcessor;
 
-	public AEItemDefinition materialEngProcessor;
+    public AEItemDefinition materialEngProcessor;
 
-	public AEItemDefinition materialBasicCard;
+    public AEItemDefinition materialBasicCard;
 
-	public AEItemDefinition materialAdvCard;
+    public AEItemDefinition materialAdvCard;
 
-	public AEItemDefinition materialPurifiedCertusQuartzCrystal;
+    public AEItemDefinition materialPurifiedCertusQuartzCrystal;
 
-	public AEItemDefinition materialPurifiedNetherQuartzCrystal;
+    public AEItemDefinition materialPurifiedNetherQuartzCrystal;
 
-	public AEItemDefinition materialPurifiedFluixCrystal;
+    public AEItemDefinition materialPurifiedFluixCrystal;
 
-	public AEItemDefinition materialCell1kPart;
+    public AEItemDefinition materialCell1kPart;
 
-	public AEItemDefinition materialCell4kPart;
+    public AEItemDefinition materialCell4kPart;
 
-	public AEItemDefinition materialCell16kPart;
+    public AEItemDefinition materialCell16kPart;
 
-	public AEItemDefinition materialCell64kPart;
+    public AEItemDefinition materialCell64kPart;
 
-	public AEItemDefinition materialEmptyStorageCell;
+    public AEItemDefinition materialEmptyStorageCell;
 
-	public AEItemDefinition materialCardRedstone;
+    public AEItemDefinition materialCardRedstone;
 
-	public AEItemDefinition materialCardSpeed;
+    public AEItemDefinition materialCardSpeed;
 
-	public AEItemDefinition materialCardCapacity;
+    public AEItemDefinition materialCardCapacity;
 
-	public AEItemDefinition materialCardFuzzy;
+    public AEItemDefinition materialCardFuzzy;
 
-	public AEItemDefinition materialCardInverter;
+    public AEItemDefinition materialCardInverter;
 
-	public AEItemDefinition materialCardCrafting;
+    public AEItemDefinition materialCardCrafting;
 
-	public AEItemDefinition materialEnderDust;
+    public AEItemDefinition materialEnderDust;
 
-	public AEItemDefinition materialFlour;
+    public AEItemDefinition materialFlour;
 
-	public AEItemDefinition materialGoldDust;
+    public AEItemDefinition materialGoldDust;
 
-	public AEItemDefinition materialIronDust;
+    public AEItemDefinition materialIronDust;
 
-	public AEItemDefinition materialFluixDust;
+    public AEItemDefinition materialFluixDust;
 
-	public AEItemDefinition materialCertusQuartzDust;
+    public AEItemDefinition materialCertusQuartzDust;
 
-	public AEItemDefinition materialNetherQuartzDust;
+    public AEItemDefinition materialNetherQuartzDust;
 
-	public AEItemDefinition materialMatterBall;
+    public AEItemDefinition materialMatterBall;
 
-	public AEItemDefinition materialIronNugget;
+    public AEItemDefinition materialIronNugget;
 
-	public AEItemDefinition materialCertusQuartzCrystal;
+    public AEItemDefinition materialCertusQuartzCrystal;
 
-	public AEItemDefinition materialCertusQuartzCrystalCharged;
+    public AEItemDefinition materialCertusQuartzCrystalCharged;
 
-	public AEItemDefinition materialFluixCrystal;
+    public AEItemDefinition materialFluixCrystal;
 
-	public AEItemDefinition materialFluixPearl;
+    public AEItemDefinition materialFluixPearl;
 
-	public AEItemDefinition materialWoodenGear;
+    public AEItemDefinition materialWoodenGear;
 
-	public AEItemDefinition materialWireless;
+    public AEItemDefinition materialWireless;
 
-	public AEItemDefinition materialWirelessBooster;
+    public AEItemDefinition materialWirelessBooster;
 
-	public AEItemDefinition materialAnnihilationCore;
+    public AEItemDefinition materialAnnihilationCore;
 
-	public AEItemDefinition materialFormationCore;
+    public AEItemDefinition materialFormationCore;
 
-	public AEItemDefinition materialSingularity;
+    public AEItemDefinition materialSingularity;
 
-	public AEItemDefinition materialQESingularity;
+    public AEItemDefinition materialQESingularity;
 
-	public AEItemDefinition materialBlankPattern;
+    public AEItemDefinition materialBlankPattern;
 }

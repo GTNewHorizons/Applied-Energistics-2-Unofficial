@@ -18,65 +18,53 @@
 
 package appeng.integration.modules;
 
-
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
-import appeng.integration.IntegrationHelper;
 import appeng.integration.abstraction.IMekanism;
 import cpw.mods.fml.common.event.FMLInterModComms;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+public final class Mekanism implements IMekanism, IIntegrationModule {
+    @Reflected
+    public static Mekanism instance;
 
-public final class Mekanism implements IMekanism, IIntegrationModule
-{
-	@Reflected
-	public static Mekanism instance;
+    @Reflected
+    public Mekanism() {
+        // IntegrationHelper.testClassExistence( this, mekanism.api.energy.IStrictEnergyAcceptor.class );
+    }
 
-	@Reflected
-	public Mekanism()
-	{
-		//IntegrationHelper.testClassExistence( this, mekanism.api.energy.IStrictEnergyAcceptor.class );
-	}
+    @Override
+    public void init() throws Throwable {}
 
-	@Override
-	public void init() throws Throwable
-	{
-	}
+    @Override
+    public void postInit() {}
 
-	@Override
-	public void postInit()
-	{
-	}
+    @Override
+    public void addCrusherRecipe(final ItemStack in, final ItemStack out) {
+        final NBTTagCompound sendTag = this.convertToSimpleRecipe(in, out);
 
-	@Override
-	public void addCrusherRecipe( final ItemStack in, final ItemStack out )
-	{
-		final NBTTagCompound sendTag = this.convertToSimpleRecipe( in, out );
+        FMLInterModComms.sendMessage("mekanism", "CrusherRecipe", sendTag);
+    }
 
-		FMLInterModComms.sendMessage( "mekanism", "CrusherRecipe", sendTag );
-	}
+    @Override
+    public void addEnrichmentChamberRecipe(final ItemStack in, final ItemStack out) {
+        final NBTTagCompound sendTag = this.convertToSimpleRecipe(in, out);
 
-	@Override
-	public void addEnrichmentChamberRecipe( final ItemStack in, final ItemStack out )
-	{
-		final NBTTagCompound sendTag = this.convertToSimpleRecipe( in, out );
+        FMLInterModComms.sendMessage("mekanism", "EnrichmentChamberRecipe", sendTag);
+    }
 
-		FMLInterModComms.sendMessage( "mekanism", "EnrichmentChamberRecipe", sendTag );
-	}
+    private NBTTagCompound convertToSimpleRecipe(final ItemStack in, final ItemStack out) {
+        final NBTTagCompound sendTag = new NBTTagCompound();
+        final NBTTagCompound inputTagDummy = new NBTTagCompound();
+        final NBTTagCompound outputTagDummy = new NBTTagCompound();
 
-	private NBTTagCompound convertToSimpleRecipe( final ItemStack in, final ItemStack out )
-	{
-		final NBTTagCompound sendTag = new NBTTagCompound();
-		final NBTTagCompound inputTagDummy = new NBTTagCompound();
-		final NBTTagCompound outputTagDummy = new NBTTagCompound();
+        final NBTTagCompound inputTag = in.writeToNBT(inputTagDummy);
+        final NBTTagCompound outputTag = out.writeToNBT(outputTagDummy);
 
-		final NBTTagCompound inputTag = in.writeToNBT( inputTagDummy );
-		final NBTTagCompound outputTag = out.writeToNBT( outputTagDummy );
+        sendTag.setTag("input", inputTag);
+        sendTag.setTag("output", outputTag);
 
-		sendTag.setTag( "input", inputTag );
-		sendTag.setTag( "output", outputTag );
-
-		return sendTag;
-	}
+        return sendTag;
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.core.features;
 
-
 import appeng.api.definitions.ITileDefinition;
 import appeng.block.AEBaseTileBlock;
 import appeng.core.CommonHelper;
@@ -27,61 +26,55 @@ import appeng.tile.AEBaseTile;
 import appeng.util.Platform;
 import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.GameRegistry;
-
 import java.util.EnumSet;
 
+public final class AETileBlockFeatureHandler implements IFeatureHandler {
+    private final AEBaseTileBlock featured;
+    private final FeatureNameExtractor extractor;
+    private final boolean enabled;
+    private final TileDefinition definition;
 
-public final class AETileBlockFeatureHandler implements IFeatureHandler
-{
-	private final AEBaseTileBlock featured;
-	private final FeatureNameExtractor extractor;
-	private final boolean enabled;
-	private final TileDefinition definition;
+    public AETileBlockFeatureHandler(
+            final EnumSet<AEFeature> features, final AEBaseTileBlock featured, final Optional<String> subName) {
+        final ActivityState state = new FeaturedActiveChecker(features).getActivityState();
 
-	public AETileBlockFeatureHandler( final EnumSet<AEFeature> features, final AEBaseTileBlock featured, final Optional<String> subName )
-	{
-		final ActivityState state = new FeaturedActiveChecker( features ).getActivityState();
+        this.featured = featured;
+        this.extractor = new FeatureNameExtractor(featured.getClass(), subName);
+        this.enabled = state == ActivityState.Enabled;
+        this.definition = new TileDefinition(featured, state);
+    }
 
-		this.featured = featured;
-		this.extractor = new FeatureNameExtractor( featured.getClass(), subName );
-		this.enabled = state == ActivityState.Enabled;
-		this.definition = new TileDefinition( featured, state );
-	}
+    @Override
+    public boolean isFeatureAvailable() {
+        return this.enabled;
+    }
 
-	@Override
-	public boolean isFeatureAvailable()
-	{
-		return this.enabled;
-	}
+    @Override
+    public ITileDefinition getDefinition() {
+        return this.definition;
+    }
 
-	@Override
-	public ITileDefinition getDefinition()
-	{
-		return this.definition;
-	}
+    @Override
+    public void register() {
+        if (this.enabled) {
+            final String name = this.extractor.get();
+            this.featured.setCreativeTab(CreativeTab.instance);
+            this.featured.setBlockName(/* "tile." */ "appliedenergistics2." + name);
+            this.featured.setBlockTextureName("appliedenergistics2:" + name);
 
-	@Override
-	public void register()
-	{
-		if( this.enabled )
-		{
-			final String name = this.extractor.get();
-			this.featured.setCreativeTab( CreativeTab.instance );
-			this.featured.setBlockName( /* "tile." */"appliedenergistics2." + name );
-			this.featured.setBlockTextureName( "appliedenergistics2:" + name );
+            if (Platform.isClient()) {
+                CommonHelper.proxy.bindTileEntitySpecialRenderer(this.featured.getTileEntityClass(), this.featured);
+            }
 
-			if( Platform.isClient() )
-			{
-				CommonHelper.proxy.bindTileEntitySpecialRenderer( this.featured.getTileEntityClass(), this.featured );
-			}
+            final String registryName = "tile." + name;
 
-			final String registryName = "tile." + name;
-
-			// Bypass the forge magic with null to register our own itemblock later.
-			GameRegistry.registerBlock( this.featured, null, registryName );
-			GameRegistry.registerItem( this.definition.maybeItem().get(), registryName );
-			GameRegistry.registerTileEntity( this.featured.getTileEntityClass(), this.featured.toString() );
-			AEBaseTile.registerTileItem( this.featured.getTileEntityClass(), new BlockStackSrc( this.featured, 0, ActivityState.from( this.isFeatureAvailable() ) ) );
-		}
-	}
+            // Bypass the forge magic with null to register our own itemblock later.
+            GameRegistry.registerBlock(this.featured, null, registryName);
+            GameRegistry.registerItem(this.definition.maybeItem().get(), registryName);
+            GameRegistry.registerTileEntity(this.featured.getTileEntityClass(), this.featured.toString());
+            AEBaseTile.registerTileItem(
+                    this.featured.getTileEntityClass(),
+                    new BlockStackSrc(this.featured, 0, ActivityState.from(this.isFeatureAvailable())));
+        }
+    }
 }

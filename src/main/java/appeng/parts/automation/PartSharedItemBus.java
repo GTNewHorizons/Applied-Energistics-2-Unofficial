@@ -18,7 +18,6 @@
 
 package appeng.parts.automation;
 
-
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Upgrades;
 import appeng.api.networking.ticking.IGridTickable;
@@ -29,183 +28,161 @@ import appeng.me.GridAccessException;
 import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
+import java.util.function.Predicate;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-import java.util.function.Predicate;
+public abstract class PartSharedItemBus extends PartUpgradeable implements IGridTickable, IOreFilterable {
+    private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, 9);
+    private int adaptorHash = 0;
+    private InventoryAdaptor adaptor;
+    private boolean lastRedstone = false;
+    protected String oreFilterString = "";
+    protected Predicate<IAEItemStack> filterPredicate = null;
 
+    public PartSharedItemBus(final ItemStack is) {
+        super(is);
+    }
 
-public abstract class PartSharedItemBus extends PartUpgradeable implements IGridTickable, IOreFilterable
-{
-	private final AppEngInternalAEInventory config = new AppEngInternalAEInventory( this, 9 );
-	private int adaptorHash = 0;
-	private InventoryAdaptor adaptor;
-	private boolean lastRedstone = false;
-	protected String oreFilterString = "";
-	protected Predicate<IAEItemStack> filterPredicate = null;
+    @Override
+    public void upgradesChanged() {
+        if (getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
+            oreFilterString = "";
+            filterPredicate = null;
+        }
+        this.updateState();
+    }
 
-	public PartSharedItemBus( final ItemStack is )
-	{
-		super( is );
-	}
+    @Override
+    public void readFromNBT(final net.minecraft.nbt.NBTTagCompound extra) {
+        super.readFromNBT(extra);
+        this.getConfig().readFromNBT(extra, "config");
+        this.oreFilterString = extra.getString("filter");
+    }
 
-	@Override
-	public void upgradesChanged()
-	{
-		if (getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
-			oreFilterString = "";
-			filterPredicate = null;
-		}
-		this.updateState();
-	}
+    @Override
+    public void writeToNBT(final net.minecraft.nbt.NBTTagCompound extra) {
+        super.writeToNBT(extra);
+        this.getConfig().writeToNBT(extra, "config");
+        extra.setString("filter", this.oreFilterString);
+    }
 
-	@Override
-	public void readFromNBT( final net.minecraft.nbt.NBTTagCompound extra )
-	{
-		super.readFromNBT( extra );
-		this.getConfig().readFromNBT( extra, "config" );
-		this.oreFilterString = extra.getString("filter");
-	}
+    @Override
+    public IInventory getInventoryByName(final String name) {
+        if (name.equals("config")) {
+            return this.getConfig();
+        }
 
-	@Override
-	public void writeToNBT( final net.minecraft.nbt.NBTTagCompound extra )
-	{
-		super.writeToNBT( extra );
-		this.getConfig().writeToNBT( extra, "config" );
-		extra.setString("filter", this.oreFilterString);
-	}
+        return super.getInventoryByName(name);
+    }
 
-	@Override
-	public IInventory getInventoryByName( final String name )
-	{
-		if( name.equals( "config" ) )
-		{
-			return this.getConfig();
-		}
+    @Override
+    public void onNeighborChanged() {
+        this.updateState();
+        if (this.lastRedstone != this.getHost().hasRedstone(this.getSide())) {
+            this.lastRedstone = !this.lastRedstone;
+            if (this.lastRedstone && this.getRSMode() == RedstoneMode.SIGNAL_PULSE) {
+                this.doBusWork();
+            }
+        }
+    }
 
-		return super.getInventoryByName( name );
-	}
+    protected InventoryAdaptor getHandler() {
+        final TileEntity self = this.getHost().getTile();
+        final TileEntity target = this.getTileEntity(
+                self,
+                self.xCoord + this.getSide().offsetX,
+                self.yCoord + this.getSide().offsetY,
+                self.zCoord + this.getSide().offsetZ);
 
-	@Override
-	public void onNeighborChanged()
-	{
-		this.updateState();
-		if( this.lastRedstone != this.getHost().hasRedstone( this.getSide() ) )
-		{
-			this.lastRedstone = !this.lastRedstone;
-			if( this.lastRedstone && this.getRSMode() == RedstoneMode.SIGNAL_PULSE )
-			{
-				this.doBusWork();
-			}
-		}
-	}
+        final int newAdaptorHash = Platform.generateTileHash(target);
 
-	protected InventoryAdaptor getHandler()
-	{
-		final TileEntity self = this.getHost().getTile();
-		final TileEntity target = this.getTileEntity( self, self.xCoord + this.getSide().offsetX, self.yCoord + this.getSide().offsetY, self.zCoord + this.getSide().offsetZ );
+        if (this.adaptorHash == newAdaptorHash && newAdaptorHash != 0) {
+            return this.adaptor;
+        }
 
-		final int newAdaptorHash = Platform.generateTileHash( target );
+        this.adaptorHash = newAdaptorHash;
+        this.adaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite());
 
-		if( this.adaptorHash == newAdaptorHash && newAdaptorHash != 0 )
-		{
-			return this.adaptor;
-		}
+        return this.adaptor;
+    }
 
-		this.adaptorHash = newAdaptorHash;
-		this.adaptor = InventoryAdaptor.getAdaptor( target, this.getSide().getOpposite() );
+    protected int availableSlots() {
+        return Math.min(
+                1 + this.getInstalledUpgrades(Upgrades.CAPACITY) * 4,
+                this.getConfig().getSizeInventory());
+    }
 
-		return this.adaptor;
-	}
+    protected int calculateItemsToSend() {
+        switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
+            default:
+            case 0:
+                return 1;
+            case 1:
+                return 8;
+            case 2:
+                return 32;
+            case 3:
+                return 64;
+            case 4:
+                return 96;
+        }
+    }
 
-	protected int availableSlots()
-	{
-		return Math.min( 1 + this.getInstalledUpgrades( Upgrades.CAPACITY ) * 4, this.getConfig().getSizeInventory() );
-	}
+    /**
+     * Checks if the bus can actually do something.
+     * <p>
+     * Currently this tests if the chunk for the target is actually loaded.
+     *
+     * @return true, if the the bus should do its work.
+     */
+    protected boolean canDoBusWork() {
+        final TileEntity self = this.getHost().getTile();
+        final World world = self.getWorldObj();
+        final int xCoordinate = self.xCoord + this.getSide().offsetX;
+        final int zCoordinate = self.zCoord + this.getSide().offsetZ;
 
-	protected int calculateItemsToSend()
-	{
-		switch( this.getInstalledUpgrades( Upgrades.SPEED ) )
-		{
-			default:
-			case 0:
-				return 1;
-			case 1:
-				return 8;
-			case 2:
-				return 32;
-			case 3:
-				return 64;
-			case 4:
-				return 96;
-		}
-	}
+        return world != null && world.getChunkProvider().chunkExists(xCoordinate >> 4, zCoordinate >> 4);
+    }
 
-	/**
-	 * Checks if the bus can actually do something.
-	 * <p>
-	 * Currently this tests if the chunk for the target is actually loaded.
-	 *
-	 * @return true, if the the bus should do its work.
-	 */
-	protected boolean canDoBusWork()
-	{
-		final TileEntity self = this.getHost().getTile();
-		final World world = self.getWorldObj();
-		final int xCoordinate = self.xCoord + this.getSide().offsetX;
-		final int zCoordinate = self.zCoord + this.getSide().offsetZ;
+    private void updateState() {
+        try {
+            if (!this.isSleeping()) {
+                this.getProxy().getTick().wakeDevice(this.getProxy().getNode());
+            } else {
+                this.getProxy().getTick().sleepDevice(this.getProxy().getNode());
+            }
+        } catch (final GridAccessException e) {
+            // :P
+        }
+    }
 
-		return world != null && world.getChunkProvider().chunkExists( xCoordinate >> 4, zCoordinate >> 4 );
-	}
+    private TileEntity getTileEntity(final TileEntity self, final int x, final int y, final int z) {
+        final World w = self.getWorldObj();
 
-	private void updateState()
-	{
-		try
-		{
-			if( !this.isSleeping() )
-			{
-				this.getProxy().getTick().wakeDevice( this.getProxy().getNode() );
-			}
-			else
-			{
-				this.getProxy().getTick().sleepDevice( this.getProxy().getNode() );
-			}
-		}
-		catch( final GridAccessException e )
-		{
-			// :P
-		}
-	}
+        if (w.getChunkProvider().chunkExists(x >> 4, z >> 4)) {
+            return w.getTileEntity(x, y, z);
+        }
 
-	private TileEntity getTileEntity( final TileEntity self, final int x, final int y, final int z )
-	{
-		final World w = self.getWorldObj();
+        return null;
+    }
 
-		if( w.getChunkProvider().chunkExists( x >> 4, z >> 4 ) )
-		{
-			return w.getTileEntity( x, y, z );
-		}
+    protected abstract TickRateModulation doBusWork();
 
-		return null;
-	}
+    AppEngInternalAEInventory getConfig() {
+        return this.config;
+    }
 
-	protected abstract TickRateModulation doBusWork();
+    @Override
+    public String getFilter() {
+        return oreFilterString;
+    }
 
-	AppEngInternalAEInventory getConfig()
-	{
-		return this.config;
-	}
-
-	@Override
-	public String getFilter() {
-		return oreFilterString;
-	}
-
-	@Override
-	public void setFilter(String filter) {
-		oreFilterString = filter;
-		filterPredicate = null;
-	}
+    @Override
+    public void setFilter(String filter) {
+        oreFilterString = filter;
+        filterPredicate = null;
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.parts.p2p;
 
-
 import appeng.api.config.PowerUnits;
 import appeng.integration.IntegrationType;
 import appeng.me.GridAccessException;
@@ -28,6 +27,7 @@ import appeng.transformer.annotations.Integration.InterfaceList;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.LinkedList;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -35,229 +35,189 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.LinkedList;
+@InterfaceList(
+        value = {
+            @Interface(iface = "ic2.api.energy.tile.IEnergySink", iname = IntegrationType.IC2),
+            @Interface(iface = "ic2.api.energy.tile.IEnergySource", iname = IntegrationType.IC2)
+        })
+public class PartP2PIC2Power extends PartP2PTunnel<PartP2PIC2Power>
+        implements ic2.api.energy.tile.IEnergySink, ic2.api.energy.tile.IEnergySource {
 
+    // two packet buffering...
+    private double OutputEnergyA;
+    private double OutputEnergyB;
+    // two packet buffering...
+    private double OutputVoltageA;
+    private double OutputVoltageB;
 
-@InterfaceList( value = { @Interface( iface = "ic2.api.energy.tile.IEnergySink", iname = IntegrationType.IC2 ), @Interface( iface = "ic2.api.energy.tile.IEnergySource", iname = IntegrationType.IC2 ) } )
-public class PartP2PIC2Power extends PartP2PTunnel<PartP2PIC2Power> implements ic2.api.energy.tile.IEnergySink, ic2.api.energy.tile.IEnergySource
-{
+    public PartP2PIC2Power(final ItemStack is) {
+        super(is);
+    }
 
-	// two packet buffering...
-	private double OutputEnergyA;
-	private double OutputEnergyB;
-	// two packet buffering...
-	private double OutputVoltageA;
-	private double OutputVoltageB;
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IIcon getTypeTexture() {
+        return Blocks.diamond_block.getBlockTextureFromSide(0);
+    }
 
-	public PartP2PIC2Power( final ItemStack is )
-	{
-		super( is );
-	}
+    @Override
+    public void readFromNBT(final NBTTagCompound tag) {
+        super.readFromNBT(tag);
+        this.OutputEnergyA = tag.getDouble("OutputPacket");
+        this.OutputEnergyB = tag.getDouble("OutputPacket2");
+        this.OutputVoltageA = tag.getDouble("OutputVoltageA");
+        this.OutputVoltageB = tag.getDouble("OutputVoltageB");
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public IIcon getTypeTexture()
-	{
-		return Blocks.diamond_block.getBlockTextureFromSide( 0 );
-	}
+    @Override
+    public void writeToNBT(final NBTTagCompound tag) {
+        super.writeToNBT(tag);
+        tag.setDouble("OutputPacket", this.OutputEnergyA);
+        tag.setDouble("OutputPacket2", this.OutputEnergyB);
+        tag.setDouble("OutputVoltageA", this.OutputVoltageA);
+        tag.setDouble("OutputVoltageB", this.OutputVoltageB);
+    }
 
-	@Override
-	public void readFromNBT( final NBTTagCompound tag )
-	{
-		super.readFromNBT( tag );
-		this.OutputEnergyA = tag.getDouble( "OutputPacket" );
-		this.OutputEnergyB = tag.getDouble( "OutputPacket2" );
-		this.OutputVoltageA = tag.getDouble( "OutputVoltageA" );
-		this.OutputVoltageB = tag.getDouble( "OutputVoltageB" );
-	}
+    @Override
+    public void onTunnelConfigChange() {
+        this.getHost().partChanged();
+    }
 
-	@Override
-	public void writeToNBT( final NBTTagCompound tag )
-	{
-		super.writeToNBT( tag );
-		tag.setDouble( "OutputPacket", this.OutputEnergyA );
-		tag.setDouble( "OutputPacket2", this.OutputEnergyB );
-		tag.setDouble( "OutputVoltageA", this.OutputVoltageA );
-		tag.setDouble( "OutputVoltageB", this.OutputVoltageB );
-	}
+    @Override
+    public void onTunnelNetworkChange() {
+        this.getHost().notifyNeighbors();
+    }
 
-	@Override
-	public void onTunnelConfigChange()
-	{
-		this.getHost().partChanged();
-	}
+    @Override
+    public boolean acceptsEnergyFrom(final TileEntity emitter, final ForgeDirection direction) {
+        if (!this.isOutput()) {
+            return direction == this.getSide();
+        }
+        return false;
+    }
 
-	@Override
-	public void onTunnelNetworkChange()
-	{
-		this.getHost().notifyNeighbors();
-	}
+    @Override
+    public boolean emitsEnergyTo(final TileEntity receiver, final ForgeDirection direction) {
+        if (this.isOutput()) {
+            return direction == this.getSide();
+        }
+        return false;
+    }
 
-	@Override
-	public boolean acceptsEnergyFrom( final TileEntity emitter, final ForgeDirection direction )
-	{
-		if( !this.isOutput() )
-		{
-			return direction == this.getSide();
-		}
-		return false;
-	}
+    @Override
+    public double getDemandedEnergy() {
+        if (this.isOutput()) {
+            return 0;
+        }
 
-	@Override
-	public boolean emitsEnergyTo( final TileEntity receiver, final ForgeDirection direction )
-	{
-		if( this.isOutput() )
-		{
-			return direction == this.getSide();
-		}
-		return false;
-	}
+        try {
+            for (final PartP2PIC2Power t : this.getOutputs()) {
+                if (t.OutputEnergyA <= 0.0001 || t.OutputEnergyB <= 0.0001) {
+                    return 2048;
+                }
+            }
+        } catch (final GridAccessException e) {
+            return 0;
+        }
 
-	@Override
-	public double getDemandedEnergy()
-	{
-		if( this.isOutput() )
-		{
-			return 0;
-		}
+        return 0;
+    }
 
-		try
-		{
-			for( final PartP2PIC2Power t : this.getOutputs() )
-			{
-				if( t.OutputEnergyA <= 0.0001 || t.OutputEnergyB <= 0.0001 )
-				{
-					return 2048;
-				}
-			}
-		}
-		catch( final GridAccessException e )
-		{
-			return 0;
-		}
+    @Override
+    public int getSinkTier() {
+        return 4;
+    }
 
-		return 0;
-	}
+    @Override
+    public double injectEnergy(final ForgeDirection directionFrom, final double amount, final double voltage) {
+        final TunnelCollection<PartP2PIC2Power> outs;
+        try {
+            outs = this.getOutputs();
+        } catch (final GridAccessException e) {
+            return amount;
+        }
 
-	@Override
-	public int getSinkTier()
-	{
-		return 4;
-	}
+        if (outs.isEmpty()) {
+            return amount;
+        }
 
-	@Override
-	public double injectEnergy( final ForgeDirection directionFrom, final double amount, final double voltage )
-	{
-		final TunnelCollection<PartP2PIC2Power> outs;
-		try
-		{
-			outs = this.getOutputs();
-		}
-		catch( final GridAccessException e )
-		{
-			return amount;
-		}
+        final LinkedList<PartP2PIC2Power> options = new LinkedList<PartP2PIC2Power>();
+        for (final PartP2PIC2Power o : outs) {
+            if (o.OutputEnergyA <= 0.01) {
+                options.add(o);
+            }
+        }
 
-		if( outs.isEmpty() )
-		{
-			return amount;
-		}
+        if (options.isEmpty()) {
+            for (final PartP2PIC2Power o : outs) {
+                if (o.OutputEnergyB <= 0.01) {
+                    options.add(o);
+                }
+            }
+        }
 
-		final LinkedList<PartP2PIC2Power> options = new LinkedList<PartP2PIC2Power>();
-		for( final PartP2PIC2Power o : outs )
-		{
-			if( o.OutputEnergyA <= 0.01 )
-			{
-				options.add( o );
-			}
-		}
+        if (options.isEmpty()) {
+            for (final PartP2PIC2Power o : outs) {
+                options.add(o);
+            }
+        }
 
-		if( options.isEmpty() )
-		{
-			for( final PartP2PIC2Power o : outs )
-			{
-				if( o.OutputEnergyB <= 0.01 )
-				{
-					options.add( o );
-				}
-			}
-		}
+        if (options.isEmpty()) {
+            return amount;
+        }
 
-		if( options.isEmpty() )
-		{
-			for( final PartP2PIC2Power o : outs )
-			{
-				options.add( o );
-			}
-		}
+        final PartP2PIC2Power x = Platform.pickRandom(options);
 
-		if( options.isEmpty() )
-		{
-			return amount;
-		}
+        if (x != null && x.OutputEnergyA <= 0.001) {
+            this.queueTunnelDrain(PowerUnits.EU, amount);
+            x.OutputEnergyA = amount;
+            x.OutputVoltageA = voltage;
+            return 0;
+        }
 
-		final PartP2PIC2Power x = Platform.pickRandom( options );
+        if (x != null && x.OutputEnergyB <= 0.001) {
+            this.queueTunnelDrain(PowerUnits.EU, amount);
+            x.OutputEnergyB = amount;
+            x.OutputVoltageB = voltage;
+            return 0;
+        }
 
-		if( x != null && x.OutputEnergyA <= 0.001 )
-		{
-			this.queueTunnelDrain( PowerUnits.EU, amount );
-			x.OutputEnergyA = amount;
-			x.OutputVoltageA = voltage;
-			return 0;
-		}
+        return amount;
+    }
 
-		if( x != null && x.OutputEnergyB <= 0.001 )
-		{
-			this.queueTunnelDrain( PowerUnits.EU, amount );
-			x.OutputEnergyB = amount;
-			x.OutputVoltageB = voltage;
-			return 0;
-		}
+    public float getPowerDrainPerTick() {
+        return 0.5f;
+    }
 
-		return amount;
-	}
+    @Override
+    public double getOfferedEnergy() {
+        if (this.isOutput()) {
+            return this.OutputEnergyA;
+        }
+        return 0;
+    }
 
-	public float getPowerDrainPerTick()
-	{
-		return 0.5f;
-	}
+    @Override
+    public void drawEnergy(final double amount) {
+        this.OutputEnergyA -= amount;
+        if (this.OutputEnergyA < 0.001) {
+            this.OutputEnergyA = this.OutputEnergyB;
+            this.OutputEnergyB = 0;
 
-	@Override
-	public double getOfferedEnergy()
-	{
-		if( this.isOutput() )
-		{
-			return this.OutputEnergyA;
-		}
-		return 0;
-	}
+            this.OutputVoltageA = this.OutputVoltageB;
+            this.OutputVoltageB = 0;
+        }
+    }
 
-	@Override
-	public void drawEnergy( final double amount )
-	{
-		this.OutputEnergyA -= amount;
-		if( this.OutputEnergyA < 0.001 )
-		{
-			this.OutputEnergyA = this.OutputEnergyB;
-			this.OutputEnergyB = 0;
+    @Override
+    public int getSourceTier() {
+        if (this.isOutput()) {
+            return this.calculateTierFromVoltage(this.OutputVoltageA);
+        }
+        return 4;
+    }
 
-			this.OutputVoltageA = this.OutputVoltageB;
-			this.OutputVoltageB = 0;
-		}
-	}
-
-	@Override
-	public int getSourceTier()
-	{
-		if( this.isOutput() )
-		{
-			return this.calculateTierFromVoltage( this.OutputVoltageA );
-		}
-		return 4;
-	}
-
-	private int calculateTierFromVoltage( final double voltage )
-	{
-		return ic2.api.energy.EnergyNet.instance.getTierFromPower( voltage );
-	}
+    private int calculateTierFromVoltage(final double voltage) {
+        return ic2.api.energy.EnergyNet.instance.getTierFromPower(voltage);
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.items.tools.powered;
 
-
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.implementations.guiobjects.IGuiItem;
@@ -43,163 +42,140 @@ import appeng.util.Platform;
 import com.google.common.base.Optional;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
+public class ToolPortableCell extends AEBasePoweredItem implements IStorageCell, IGuiItem, IItemGroup {
+    public ToolPortableCell() {
+        super(AEConfig.instance.portableCellBattery, Optional.<String>absent());
+        this.setFeature(EnumSet.of(AEFeature.PortableCell, AEFeature.StorageCells, AEFeature.PoweredTools));
+    }
 
-
-public class ToolPortableCell extends AEBasePoweredItem implements IStorageCell, IGuiItem, IItemGroup
-{
-	public ToolPortableCell()
-	{
-		super( AEConfig.instance.portableCellBattery, Optional.<String>absent() );
-		this.setFeature( EnumSet.of( AEFeature.PortableCell, AEFeature.StorageCells, AEFeature.PoweredTools ) );
-	}
-
-	@Override
-	public ItemStack onItemRightClick( final ItemStack item, final World w, final EntityPlayer player )
-	{
-		Platform.openGUI( player, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_PORTABLE_CELL );
-		return item;
-	}
-
-	@SideOnly( Side.CLIENT )
-	@Override
-	public boolean isFull3D()
-	{
-		return false;
-	}
+    @Override
+    public ItemStack onItemRightClick(final ItemStack item, final World w, final EntityPlayer player) {
+        Platform.openGUI(player, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_PORTABLE_CELL);
+        return item;
+    }
 
     @SideOnly(Side.CLIENT)
-	@Override
-	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
-	{
-		super.addCheckedInformation( stack, player, lines, displayMoreInfo );
+    @Override
+    public boolean isFull3D() {
+        return false;
+    }
 
-		final IMEInventory<IAEItemStack> cdi = AEApi.instance().registries().cell().getCellInventory( stack, null, StorageChannel.ITEMS );
+    @SideOnly(Side.CLIENT)
+    @Override
+    public void addCheckedInformation(
+            final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo) {
+        super.addCheckedInformation(stack, player, lines, displayMoreInfo);
 
-		if( cdi instanceof CellInventoryHandler )
-		{
-			final ICellInventory cd = ( (ICellInventoryHandler) cdi ).getCellInv();
-			if( cd != null )
-			{
-				lines.add( cd.getUsedBytes() + " " + GuiText.Of.getLocal() + ' ' + cd.getTotalBytes() + ' ' + GuiText.BytesUsed.getLocal() );
-				lines.add( cd.getStoredItemTypes() + " " + GuiText.Of.getLocal() + ' ' + cd.getTotalItemTypes() + ' ' + GuiText.Types.getLocal() );
-			}
-		}
-	}
+        final IMEInventory<IAEItemStack> cdi =
+                AEApi.instance().registries().cell().getCellInventory(stack, null, StorageChannel.ITEMS);
 
-	@Override
-	public int getBytes( final ItemStack cellItem )
-	{
-		return 512;
-	}
+        if (cdi instanceof CellInventoryHandler) {
+            final ICellInventory cd = ((ICellInventoryHandler) cdi).getCellInv();
+            if (cd != null) {
+                lines.add(cd.getUsedBytes() + " " + GuiText.Of.getLocal() + ' ' + cd.getTotalBytes() + ' '
+                        + GuiText.BytesUsed.getLocal());
+                lines.add(cd.getStoredItemTypes() + " " + GuiText.Of.getLocal() + ' ' + cd.getTotalItemTypes() + ' '
+                        + GuiText.Types.getLocal());
+            }
+        }
+    }
 
-	@Override
-	public int BytePerType( final ItemStack cell )
-	{
-		return 8;
-	}
+    @Override
+    public int getBytes(final ItemStack cellItem) {
+        return 512;
+    }
 
-	@Override
-	public int getBytesPerType( final ItemStack cellItem )
-	{
-		return 8;
-	}
+    @Override
+    public int BytePerType(final ItemStack cell) {
+        return 8;
+    }
 
-	@Override
-	public int getTotalTypes( final ItemStack cellItem )
-	{
-		return 27;
-	}
+    @Override
+    public int getBytesPerType(final ItemStack cellItem) {
+        return 8;
+    }
 
-	@Override
-	public boolean isBlackListed( final ItemStack cellItem, final IAEItemStack requestedAddition )
-	{
-		return false;
-	}
+    @Override
+    public int getTotalTypes(final ItemStack cellItem) {
+        return 27;
+    }
 
-	@Override
-	public boolean storableInStorageCell()
-	{
-		return false;
-	}
+    @Override
+    public boolean isBlackListed(final ItemStack cellItem, final IAEItemStack requestedAddition) {
+        return false;
+    }
 
-	@Override
-	public boolean isStorageCell( final ItemStack i )
-	{
-		return true;
-	}
+    @Override
+    public boolean storableInStorageCell() {
+        return false;
+    }
 
-	@Override
-	public double getIdleDrain()
-	{
-		return 0.5;
-	}
+    @Override
+    public boolean isStorageCell(final ItemStack i) {
+        return true;
+    }
 
-	@Override
-	public String getUnlocalizedGroupName( final Set<ItemStack> others, final ItemStack is )
-	{
-		return GuiText.StorageCells.getUnlocalized();
-	}
+    @Override
+    public double getIdleDrain() {
+        return 0.5;
+    }
 
-	@Override
-	public boolean isEditable( final ItemStack is )
-	{
-		return true;
-	}
+    @Override
+    public String getUnlocalizedGroupName(final Set<ItemStack> others, final ItemStack is) {
+        return GuiText.StorageCells.getUnlocalized();
+    }
 
-	@Override
-	public IInventory getUpgradesInventory( final ItemStack is )
-	{
-		return new CellUpgrades( is, 2 );
-	}
+    @Override
+    public boolean isEditable(final ItemStack is) {
+        return true;
+    }
 
-	@Override
-	public IInventory getConfigInventory( final ItemStack is )
-	{
-		return new CellConfig( is );
-	}
+    @Override
+    public IInventory getUpgradesInventory(final ItemStack is) {
+        return new CellUpgrades(is, 2);
+    }
 
-	@Override
-	public FuzzyMode getFuzzyMode( final ItemStack is )
-	{
-		final String fz = Platform.openNbtData( is ).getString( "FuzzyMode" );
-		try
-		{
-			return FuzzyMode.valueOf( fz );
-		}
-		catch( final Throwable t )
-		{
-			return FuzzyMode.IGNORE_ALL;
-		}
-	}
+    @Override
+    public IInventory getConfigInventory(final ItemStack is) {
+        return new CellConfig(is);
+    }
 
-	@Override
-	public void setFuzzyMode( final ItemStack is, final FuzzyMode fzMode )
-	{
-		Platform.openNbtData( is ).setString( "FuzzyMode", fzMode.name() );
-	}
+    @Override
+    public FuzzyMode getFuzzyMode(final ItemStack is) {
+        final String fz = Platform.openNbtData(is).getString("FuzzyMode");
+        try {
+            return FuzzyMode.valueOf(fz);
+        } catch (final Throwable t) {
+            return FuzzyMode.IGNORE_ALL;
+        }
+    }
 
-	@Override
-	public IGuiItemObject getGuiObject( final ItemStack is, final World w, final int x, final int y, final int z )
-	{
-		return new PortableCellViewer( is, x );
-	}
+    @Override
+    public void setFuzzyMode(final ItemStack is, final FuzzyMode fzMode) {
+        Platform.openNbtData(is).setString("FuzzyMode", fzMode.name());
+    }
 
-	@Override
-	public String getOreFilter(ItemStack is) {
-		return Platform.openNbtData( is ).getString( "OreFilter" );
-	}
+    @Override
+    public IGuiItemObject getGuiObject(final ItemStack is, final World w, final int x, final int y, final int z) {
+        return new PortableCellViewer(is, x);
+    }
 
-	@Override
-	public void setOreFilter(ItemStack is, String filter) {
-		Platform.openNbtData( is ).setString("OreFilter", filter);
-	}
+    @Override
+    public String getOreFilter(ItemStack is) {
+        return Platform.openNbtData(is).getString("OreFilter");
+    }
+
+    @Override
+    public void setOreFilter(ItemStack is, String filter) {
+        Platform.openNbtData(is).setString("OreFilter", filter);
+    }
 }

@@ -21,169 +21,159 @@ package appeng.core.localization;
 import appeng.core.AELog;
 import net.minecraft.util.StatCollector;
 
-public enum GuiColors
-{	
-	//ARGB Colors: Name and default value
-	SearchboxFocused			(0x6E000000),
-	SearchboxUnfocused			(0x00000000),
+public enum GuiColors {
+    // ARGB Colors: Name and default value
+    SearchboxFocused(0x6E000000),
+    SearchboxUnfocused(0x00000000),
 
-	ItemSlotOverlayUnpowered	(0x66111111),
-	ItemSlotOverlayInvalid		(0x66ff6666),
+    ItemSlotOverlayUnpowered(0x66111111),
+    ItemSlotOverlayInvalid(0x66ff6666),
 
-	CraftConfirmMissingItem		(0x1AFF0000),
+    CraftConfirmMissingItem(0x1AFF0000),
 
-	CraftingCPUActive			(0x5A45A021),
-	CraftingCPUInactive			(0x5AFFF7AA),
+    CraftingCPUActive(0x5A45A021),
+    CraftingCPUInactive(0x5AFFF7AA),
 
-	InterfaceTerminalMatch		(0x2A00FF00),
-	
-	//RGB Colors: Name and default value
-	SearchboxText				(0xFFFFFF),
+    InterfaceTerminalMatch(0x2A00FF00),
 
-	CraftingCPUTitle			(0x404040),
-	CraftingCPUStored			(0x404040),
-	CraftingCPUAmount			(0x404040),
-	CraftingCPUScheduled		(0x404040),
+    // RGB Colors: Name and default value
+    SearchboxText(0xFFFFFF),
 
-	CraftingStatusCPUName		(0x202020),
-	CraftingStatusCPUStorage	(0x202020),
-	CraftingStatusCPUAmount		(0x202020),
+    CraftingCPUTitle(0x404040),
+    CraftingCPUStored(0x404040),
+    CraftingCPUAmount(0x404040),
+    CraftingCPUScheduled(0x404040),
 
-	CraftAmountToCraft			(0xFFFFFF),
-	CraftAmountSelectAmount		(0x404040),
+    CraftingStatusCPUName(0x202020),
+    CraftingStatusCPUStorage(0x202020),
+    CraftingStatusCPUAmount(0x202020),
 
-	LevelEmitterValue			(0xFFFFFF),
+    CraftAmountToCraft(0xFFFFFF),
+    CraftAmountSelectAmount(0x404040),
 
-	PriorityTitle				(0x404040),
-	PriorityValue				(0xFFFFFF),
+    LevelEmitterValue(0xFFFFFF),
 
-	ChestTitle					(0x404040),
-	ChestInventory				(0x404040),
+    PriorityTitle(0x404040),
+    PriorityValue(0xFFFFFF),
 
-	CondenserTitle				(0x404040),
-	CondenserInventory			(0x404040),
+    ChestTitle(0x404040),
+    ChestInventory(0x404040),
 
-	CraftConfirmCraftingPlan	(0x404040),
-	CraftConfirmSimulation		(0x404040),
-	CraftConfirmFromStorage		(0x404040),
-	CraftConfirmMissing			(0x404040),
-	CraftConfirmToCraft			(0x404040),
+    CondenserTitle(0x404040),
+    CondenserInventory(0x404040),
 
-	CraftingTerminalTitle		(0x404040),
+    CraftConfirmCraftingPlan(0x404040),
+    CraftConfirmSimulation(0x404040),
+    CraftConfirmFromStorage(0x404040),
+    CraftConfirmMissing(0x404040),
+    CraftConfirmToCraft(0x404040),
 
-	DriveTitle					(0x404040),
-	DriveInventory				(0x404040),
+    CraftingTerminalTitle(0x404040),
 
-	FormationPlaneTitle			(0x404040),
-	FormationPlaneInventory		(0x404040),
+    DriveTitle(0x404040),
+    DriveInventory(0x404040),
 
-	GrindStoneTitle				(0x404040),
-	GrindStoneInventory			(0x404040),
+    FormationPlaneTitle(0x404040),
+    FormationPlaneInventory(0x404040),
 
-	InscriberTitle				(0x404040),
-	InscriberInventory			(0x404040),
+    GrindStoneTitle(0x404040),
+    GrindStoneInventory(0x404040),
 
-	InterfaceTitle				(0x404040),
+    InscriberTitle(0x404040),
+    InscriberInventory(0x404040),
 
-	InterfaceTerminalTitle		(0x404040),
-	InterfaceTerminalInventory	(0x404040),
-	InterfaceTerminalName		(0x404040),
+    InterfaceTitle(0x404040),
 
-	IOPortTitle					(0x404040),
-	IOPortInventory				(0x404040),
+    InterfaceTerminalTitle(0x404040),
+    InterfaceTerminalInventory(0x404040),
+    InterfaceTerminalName(0x404040),
 
-	NetworkStatusDetails		(0x404040),
-	NetworkStatusStoredPower	(0x404040),
-	NetworkStatusMaxPower		(0x404040),
-	NetworkStatusPowerInputRate	(0x404040),
-	NetworkStatusPowerUsageRate	(0x404040),
-	NetworkStatusItemCount		(0x404040),
-	
-	NetworkToolTitle			(0x404040),
-	NetworkToolInventory		(0x404040),
+    IOPortTitle(0x404040),
+    IOPortInventory(0x404040),
 
-	OreFilterLabel				(0x404040),
+    NetworkStatusDetails(0x404040),
+    NetworkStatusStoredPower(0x404040),
+    NetworkStatusMaxPower(0x404040),
+    NetworkStatusPowerInputRate(0x404040),
+    NetworkStatusPowerUsageRate(0x404040),
+    NetworkStatusItemCount(0x404040),
 
-	PatternTerminalTitle		(0x404040),
-	PatternTerminalEx			(0x404040),
+    NetworkToolTitle(0x404040),
+    NetworkToolInventory(0x404040),
 
-	QuantumLinkChamberTitle		(0x404040),
-	QuantumLinkChamberInventory	(0x404040),
+    OreFilterLabel(0x404040),
 
-	QuartzCuttingKnifeTitle		(0x404040),
-	QuartzCuttingKnifeInventory	(0x404040),
+    PatternTerminalTitle(0x404040),
+    PatternTerminalEx(0x404040),
 
-	RenamerTitle				(0x404040),
+    QuantumLinkChamberTitle(0x404040),
+    QuantumLinkChamberInventory(0x404040),
 
-	SecurityCardEditorTitle		(0x404040),
+    QuartzCuttingKnifeTitle(0x404040),
+    QuartzCuttingKnifeInventory(0x404040),
 
-	SkyChestTitle				(0x404040),
-	SkyChestInventory			(0x404040),
-	
-	SpatialIOTitle				(0x404040),
-	SpatialIOInventory			(0x404040),
-	SpatialIOStoredPower		(0x404040),
-	SpatialIOMaxPower			(0x404040),
-	SpatialIORequiredPower		(0x404040),
-	SpatialIOEfficiency			(0x404040),
+    RenamerTitle(0x404040),
 
-	StorageBusTitle				(0x404040),
-	StorageBusInventory			(0x404040),
+    SecurityCardEditorTitle(0x404040),
 
-	UpgradableTitle				(0x404040),
-	UpgradableInventory			(0x404040),
+    SkyChestTitle(0x404040),
+    SkyChestInventory(0x404040),
 
-	VibrationChamberTitle		(0x404040),
-	VibrationChamberInventory	(0x404040),
+    SpatialIOTitle(0x404040),
+    SpatialIOInventory(0x404040),
+    SpatialIOStoredPower(0x404040),
+    SpatialIOMaxPower(0x404040),
+    SpatialIORequiredPower(0x404040),
+    SpatialIOEfficiency(0x404040),
 
-	WirelessTitle				(0x404040),
-	WirelessInventory			(0x404040),
-	WirelessRange				(0x404040),
-	WirelessPowerUsageRate		(0x404040),
-	
-	NEIGrindstoneRecipeChance	(0x000000),
-	NEIGrindstoneNoSecondOutput	(0x000000),
+    StorageBusTitle(0x404040),
+    StorageBusInventory(0x404040),
 
-	MEMonitorableTitle			(0x404040),
-	MEMonitorableInventory		(0x404040)
-	;
+    UpgradableTitle(0x404040),
+    UpgradableInventory(0x404040),
 
-	private final String root;
-	private final int color;
+    VibrationChamberTitle(0x404040),
+    VibrationChamberInventory(0x404040),
 
-	GuiColors()
-	{
-		this.root = "gui.color.appliedenergistics2";
-		this.color = 0x000000;
-	}
+    WirelessTitle(0x404040),
+    WirelessInventory(0x404040),
+    WirelessRange(0x404040),
+    WirelessPowerUsageRate(0x404040),
 
-	GuiColors( final int hex )
-	{
-		this.root = "gui.color.appliedenergistics2";
-		this.color = hex;
-	}
+    NEIGrindstoneRecipeChance(0x000000),
+    NEIGrindstoneNoSecondOutput(0x000000),
 
-	public int getColor()
-	{
-		String hex = StatCollector.translateToLocal( this.getUnlocalized() );
-		int color = this.color;
+    MEMonitorableTitle(0x404040),
+    MEMonitorableInventory(0x404040);
 
-		if ( hex.length() <= 8 )
-		{
-			try
-			{	
-				color = Integer.parseUnsignedInt( hex, 16 );
-			}
-			catch ( final NumberFormatException e )
-			{
-				AELog.warn( "Couldn't format color correctly for: " + this.root + " -> " + hex);
-			}
-		}
-		return color;
-	}
-	
-	public String getUnlocalized()
-	{
-		return this.root + '.' + this.toString();
-	}
+    private final String root;
+    private final int color;
+
+    GuiColors() {
+        this.root = "gui.color.appliedenergistics2";
+        this.color = 0x000000;
+    }
+
+    GuiColors(final int hex) {
+        this.root = "gui.color.appliedenergistics2";
+        this.color = hex;
+    }
+
+    public int getColor() {
+        String hex = StatCollector.translateToLocal(this.getUnlocalized());
+        int color = this.color;
+
+        if (hex.length() <= 8) {
+            try {
+                color = Integer.parseUnsignedInt(hex, 16);
+            } catch (final NumberFormatException e) {
+                AELog.warn("Couldn't format color correctly for: " + this.root + " -> " + hex);
+            }
+        }
+        return color;
+    }
+
+    public String getUnlocalized() {
+        return this.root + '.' + this.toString();
+    }
 }

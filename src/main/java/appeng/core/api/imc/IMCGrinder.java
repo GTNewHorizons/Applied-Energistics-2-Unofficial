@@ -18,40 +18,39 @@
 
 /* Example:
 
- NBTTagCompound msg = new NBTTagCompound();
- NBTTagCompound in = new NBTTagCompound();
- NBTTagCompound out = new NBTTagCompound();
+NBTTagCompound msg = new NBTTagCompound();
+NBTTagCompound in = new NBTTagCompound();
+NBTTagCompound out = new NBTTagCompound();
 
- new ItemStack( Blocks.iron_ore ).writeToNBT( in );
- new ItemStack( Items.iron_ingot ).writeToNBT( out );
- msg.setTag( "in", in );
- msg.setTag( "out", out );
- msg.setInteger( "turns", 8 );
+new ItemStack( Blocks.iron_ore ).writeToNBT( in );
+new ItemStack( Items.iron_ingot ).writeToNBT( out );
+msg.setTag( "in", in );
+msg.setTag( "out", out );
+msg.setInteger( "turns", 8 );
 
- FMLInterModComms.sendMessage( "appliedenergistics2", "add-grindable", msg );
+FMLInterModComms.sendMessage( "appliedenergistics2", "add-grindable", msg );
 
- -- or --
+-- or --
 
- NBTTagCompound msg = new NBTTagCompound();
- NBTTagCompound in = new NBTTagCompound();
- NBTTagCompound out = new NBTTagCompound();
- NBTTagCompound optional = new NBTTagCompound();
+NBTTagCompound msg = new NBTTagCompound();
+NBTTagCompound in = new NBTTagCompound();
+NBTTagCompound out = new NBTTagCompound();
+NBTTagCompound optional = new NBTTagCompound();
 
- new ItemStack( Blocks.iron_ore ).writeToNBT( in );
- new ItemStack( Items.iron_ingot ).writeToNBT( out );
- new ItemStack( Blocks.gravel ).writeToNBT( optional );
- msg.setTag( "in", in );
- msg.setTag( "out", out );
- msg.setTag( "optional", optional );
- msg.setFloat( "chance", 0.5 );
- msg.setInteger( "turns", 8 );
+new ItemStack( Blocks.iron_ore ).writeToNBT( in );
+new ItemStack( Items.iron_ingot ).writeToNBT( out );
+new ItemStack( Blocks.gravel ).writeToNBT( optional );
+msg.setTag( "in", in );
+msg.setTag( "out", out );
+msg.setTag( "optional", optional );
+msg.setFloat( "chance", 0.5 );
+msg.setInteger( "turns", 8 );
 
- FMLInterModComms.sendMessage( "appliedenergistics2", "add-grindable", msg );
+FMLInterModComms.sendMessage( "appliedenergistics2", "add-grindable", msg );
 
- */
+*/
 
 package appeng.core.api.imc;
-
 
 import appeng.api.AEApi;
 import appeng.core.AEConfig;
@@ -61,50 +60,41 @@ import cpw.mods.fml.common.event.FMLInterModComms.IMCMessage;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+public class IMCGrinder implements IIMCProcessor {
+    @Override
+    public void process(final IMCMessage m) {
+        if (!AEConfig.instance.isFeatureEnabled(AEFeature.GrindStone))
+            throw new IllegalStateException("Grindstone is disabled");
+        final NBTTagCompound msg = m.getNBTValue();
+        final NBTTagCompound inTag = (NBTTagCompound) msg.getTag("in");
+        final NBTTagCompound outTag = (NBTTagCompound) msg.getTag("out");
 
-public class IMCGrinder implements IIMCProcessor
-{
-	@Override
-	public void process( final IMCMessage m )
-	{
-		if ( !AEConfig.instance.isFeatureEnabled( AEFeature.GrindStone ) )
-			throw new IllegalStateException( "Grindstone is disabled" );
-		final NBTTagCompound msg = m.getNBTValue();
-		final NBTTagCompound inTag = (NBTTagCompound) msg.getTag( "in" );
-		final NBTTagCompound outTag = (NBTTagCompound) msg.getTag( "out" );
+        final ItemStack in = ItemStack.loadItemStackFromNBT(inTag);
+        final ItemStack out = ItemStack.loadItemStackFromNBT(outTag);
 
-		final ItemStack in = ItemStack.loadItemStackFromNBT( inTag );
-		final ItemStack out = ItemStack.loadItemStackFromNBT( outTag );
+        final int turns = msg.getInteger("turns");
 
-		final int turns = msg.getInteger( "turns" );
+        if (in == null) {
+            throw new IllegalStateException("invalid input");
+        }
 
-		if( in == null )
-		{
-			throw new IllegalStateException( "invalid input" );
-		}
+        if (out == null) {
+            throw new IllegalStateException("invalid output");
+        }
 
-		if( out == null )
-		{
-			throw new IllegalStateException( "invalid output" );
-		}
+        if (msg.hasKey("optional")) {
+            final NBTTagCompound optionalTag = (NBTTagCompound) msg.getTag("optional");
+            final ItemStack optional = ItemStack.loadItemStackFromNBT(optionalTag);
 
-		if( msg.hasKey( "optional" ) )
-		{
-			final NBTTagCompound optionalTag = (NBTTagCompound) msg.getTag( "optional" );
-			final ItemStack optional = ItemStack.loadItemStackFromNBT( optionalTag );
+            if (optional == null) {
+                throw new IllegalStateException("invalid optional");
+            }
 
-			if( optional == null )
-			{
-				throw new IllegalStateException( "invalid optional" );
-			}
+            final float chance = msg.getFloat("chance");
 
-			final float chance = msg.getFloat( "chance" );
-
-			AEApi.instance().registries().grinder().addRecipe( in, out, optional, chance, turns );
-		}
-		else
-		{
-			AEApi.instance().registries().grinder().addRecipe( in, out, turns );
-		}
-	}
+            AEApi.instance().registries().grinder().addRecipe(in, out, optional, chance, turns);
+        } else {
+            AEApi.instance().registries().grinder().addRecipe(in, out, turns);
+        }
+    }
 }

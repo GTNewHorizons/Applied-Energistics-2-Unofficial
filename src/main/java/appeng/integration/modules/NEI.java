@@ -18,7 +18,6 @@
 
 package appeng.integration.modules;
 
-
 import appeng.client.gui.AEBaseMEGui;
 import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingCPU;
@@ -34,8 +33,12 @@ import appeng.integration.modules.NEIHelpers.*;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.IStackPositioner;
 import codechicken.nei.guihook.GuiContainerManager;
-import codechicken.nei.guihook.IContainerTooltipHandler;
 import codechicken.nei.guihook.IContainerObjectHandler;
+import codechicken.nei.guihook.IContainerTooltipHandler;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -43,184 +46,163 @@ import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.List;
+public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, IContainerObjectHandler {
+    @Reflected
+    public static NEI instance;
 
+    private final Class<?> apiClass;
 
-public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, IContainerObjectHandler
-{
-	@Reflected
-	public static NEI instance;
+    // recipe handler...
+    private Method registerRecipeHandler;
+    private Method registerUsageHandler;
+    private Method registerNEIGuiHandler;
 
-	private final Class<?> apiClass;
+    @Reflected
+    public NEI() throws ClassNotFoundException {
+        IntegrationHelper.testClassExistence(this, codechicken.nei.api.API.class);
+        IntegrationHelper.testClassExistence(this, codechicken.nei.api.IStackPositioner.class);
+        IntegrationHelper.testClassExistence(this, codechicken.nei.guihook.GuiContainerManager.class);
+        IntegrationHelper.testClassExistence(this, codechicken.nei.guihook.IContainerTooltipHandler.class);
+        IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.ICraftingHandler.class);
+        IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.IUsageHandler.class);
 
-	// recipe handler...
-	private Method registerRecipeHandler;
-	private Method registerUsageHandler;
-	private Method registerNEIGuiHandler;
+        this.apiClass = Class.forName("codechicken.nei.api.API");
+    }
 
-	@Reflected
-	public NEI() throws ClassNotFoundException
-	{
-		IntegrationHelper.testClassExistence( this, codechicken.nei.api.API.class );
-		IntegrationHelper.testClassExistence( this, codechicken.nei.api.IStackPositioner.class );
-		IntegrationHelper.testClassExistence( this, codechicken.nei.guihook.GuiContainerManager.class );
-		IntegrationHelper.testClassExistence( this, codechicken.nei.guihook.IContainerTooltipHandler.class );
-		IntegrationHelper.testClassExistence( this, codechicken.nei.recipe.ICraftingHandler.class );
-		IntegrationHelper.testClassExistence( this, codechicken.nei.recipe.IUsageHandler.class );
+    @Override
+    public void init() throws Throwable {
+        this.registerRecipeHandler =
+                this.apiClass.getDeclaredMethod("registerRecipeHandler", codechicken.nei.recipe.ICraftingHandler.class);
+        this.registerUsageHandler =
+                this.apiClass.getDeclaredMethod("registerUsageHandler", codechicken.nei.recipe.IUsageHandler.class);
+        this.registerNEIGuiHandler = this.apiClass.getDeclaredMethod("registerNEIGuiHandler", INEIGuiHandler.class);
+        registerNEIGuiHandler.invoke(apiClass, new NEIGuiHandler());
 
-		this.apiClass = Class.forName( "codechicken.nei.api.API" );
-	}
+        this.registerRecipeHandler(new NEIAEShapedRecipeHandler());
+        this.registerRecipeHandler(new NEIAEShapelessRecipeHandler());
+        this.registerRecipeHandler(new NEIInscriberRecipeHandler());
+        this.registerRecipeHandler(new NEIWorldCraftingHandler());
+        if (AEConfig.instance.isFeatureEnabled(AEFeature.GrindStone)) {
+            this.registerRecipeHandler(new NEIGrinderRecipeHandler());
+        }
+        if (AEConfig.instance.isFeatureEnabled(AEFeature.Facades)
+                && AEConfig.instance.isFeatureEnabled(AEFeature.EnableFacadeCrafting)) {
+            this.registerRecipeHandler(new NEIFacadeRecipeHandler());
+        }
 
-	@Override
-	public void init() throws Throwable
-	{
-		this.registerRecipeHandler = this.apiClass.getDeclaredMethod( "registerRecipeHandler", codechicken.nei.recipe.ICraftingHandler.class );
-		this.registerUsageHandler = this.apiClass.getDeclaredMethod( "registerUsageHandler", codechicken.nei.recipe.IUsageHandler.class );
-		this.registerNEIGuiHandler = this.apiClass.getDeclaredMethod("registerNEIGuiHandler", INEIGuiHandler.class);
-		registerNEIGuiHandler.invoke(apiClass, new NEIGuiHandler());
+        // large stack tooltips
+        GuiContainerManager.addTooltipHandler(this);
+        GuiContainerManager.addObjectHandler(this);
 
-		this.registerRecipeHandler( new NEIAEShapedRecipeHandler() );
-		this.registerRecipeHandler( new NEIAEShapelessRecipeHandler() );
-		this.registerRecipeHandler( new NEIInscriberRecipeHandler() );
-		this.registerRecipeHandler( new NEIWorldCraftingHandler() );
-		if ( AEConfig.instance.isFeatureEnabled( AEFeature.GrindStone ) )
-		{
-			this.registerRecipeHandler(new NEIGrinderRecipeHandler());
-		}
-		if( AEConfig.instance.isFeatureEnabled( AEFeature.Facades ) && AEConfig.instance.isFeatureEnabled( AEFeature.EnableFacadeCrafting ) )
-		{
-			this.registerRecipeHandler( new NEIFacadeRecipeHandler() );
-		}
+        // crafting terminal...
+        final Method registerGuiOverlay = this.apiClass.getDeclaredMethod(
+                "registerGuiOverlay", Class.class, String.class, IStackPositioner.class);
+        final Class overlayHandler = Class.forName("codechicken.nei.api.IOverlayHandler");
 
-		// large stack tooltips
-		GuiContainerManager.addTooltipHandler( this );
-		GuiContainerManager.addObjectHandler(this);
+        final Method registrar =
+                this.apiClass.getDeclaredMethod("registerGuiOverlayHandler", Class.class, overlayHandler, String.class);
+        registerGuiOverlay.invoke(this.apiClass, GuiCraftingTerm.class, "crafting", new TerminalCraftingSlotFinder());
+        registerGuiOverlay.invoke(this.apiClass, GuiPatternTerm.class, "crafting", new TerminalCraftingSlotFinder());
 
-		// crafting terminal...
-		final Method registerGuiOverlay = this.apiClass.getDeclaredMethod( "registerGuiOverlay", Class.class, String.class, IStackPositioner.class );
-		final Class overlayHandler = Class.forName( "codechicken.nei.api.IOverlayHandler" );
+        final Class<NEICraftingHandler> defaultHandler = NEICraftingHandler.class;
+        final Constructor defaultConstructor = defaultHandler.getConstructor(int.class, int.class);
+        registrar.invoke(this.apiClass, GuiCraftingTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
+        registrar.invoke(this.apiClass, GuiPatternTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
+    }
 
-		final Method registrar = this.apiClass.getDeclaredMethod( "registerGuiOverlayHandler", Class.class, overlayHandler, String.class );
-		registerGuiOverlay.invoke( this.apiClass, GuiCraftingTerm.class, "crafting", new TerminalCraftingSlotFinder() );
-		registerGuiOverlay.invoke( this.apiClass, GuiPatternTerm.class, "crafting", new TerminalCraftingSlotFinder() );
+    public void registerRecipeHandler(final Object o)
+            throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        this.registerRecipeHandler.invoke(this.apiClass, o);
+        this.registerUsageHandler.invoke(this.apiClass, o);
+    }
 
-		final Class<NEICraftingHandler> defaultHandler = NEICraftingHandler.class;
-		final Constructor defaultConstructor = defaultHandler.getConstructor( int.class, int.class );
-		registrar.invoke( this.apiClass, GuiCraftingTerm.class, defaultConstructor.newInstance( 6, 75 ), "crafting" );
-		registrar.invoke( this.apiClass, GuiPatternTerm.class, defaultConstructor.newInstance( 6, 75 ), "crafting" );
-	}
+    @Override
+    public void postInit() {}
 
-	public void registerRecipeHandler( final Object o ) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException
-	{
-		this.registerRecipeHandler.invoke( this.apiClass, o );
-		this.registerUsageHandler.invoke( this.apiClass, o );
-	}
+    @Override
+    public void drawSlot(final Slot s) {
+        if (s == null) {
+            return;
+        }
 
-	@Override
-	public void postInit()
-	{
+        final ItemStack stack = s.getStack();
 
-	}
+        if (stack == null) {
+            return;
+        }
 
-	@Override
-	public void drawSlot( final Slot s )
-	{
-		if( s == null )
-		{
-			return;
-		}
+        final Minecraft mc = Minecraft.getMinecraft();
+        final FontRenderer fontRenderer = mc.fontRenderer;
+        final int x = s.xDisplayPosition;
+        final int y = s.yDisplayPosition;
 
-		final ItemStack stack = s.getStack();
+        GuiContainerManager.drawItems.renderItemAndEffectIntoGUI(fontRenderer, mc.getTextureManager(), stack, x, y);
+        GuiContainerManager.drawItems.renderItemOverlayIntoGUI(
+                fontRenderer, mc.getTextureManager(), stack, x, y, String.valueOf(stack.stackSize));
+    }
 
-		if( stack == null )
-		{
-			return;
-		}
+    @Override
+    public RenderItem setItemRender(final RenderItem renderItem) {
+        try {
+            final RenderItem ri = GuiContainerManager.drawItems;
+            GuiContainerManager.drawItems = renderItem;
+            return ri;
+        } catch (final Throwable t) {
+            throw new IllegalStateException("Invalid version of NEI, please update", t);
+        }
+    }
 
-		final Minecraft mc = Minecraft.getMinecraft();
-		final FontRenderer fontRenderer = mc.fontRenderer;
-		final int x = s.xDisplayPosition;
-		final int y = s.yDisplayPosition;
+    @Override
+    public List<String> handleTooltip(
+            final GuiContainer arg0, final int arg1, final int arg2, final List<String> current) {
+        return current;
+    }
 
-		GuiContainerManager.drawItems.renderItemAndEffectIntoGUI( fontRenderer, mc.getTextureManager(), stack, x, y );
-		GuiContainerManager.drawItems.renderItemOverlayIntoGUI( fontRenderer, mc.getTextureManager(), stack, x, y, String.valueOf( stack.stackSize ) );
-	}
+    @Override
+    public List<String> handleItemDisplayName(
+            final GuiContainer arg0, final ItemStack arg1, final List<String> current) {
+        return current;
+    }
 
-	@Override
-	public RenderItem setItemRender( final RenderItem renderItem )
-	{
-		try
-		{
-			final RenderItem ri = GuiContainerManager.drawItems;
-			GuiContainerManager.drawItems = renderItem;
-			return ri;
-		}
-		catch( final Throwable t )
-		{
-			throw new IllegalStateException( "Invalid version of NEI, please update", t );
-		}
-	}
+    @Override
+    public List<String> handleItemTooltip(
+            final GuiContainer guiScreen,
+            final ItemStack stack,
+            final int mouseX,
+            final int mouseY,
+            final List<String> currentToolTip) {
+        if (guiScreen instanceof AEBaseMEGui) {
+            return ((AEBaseMEGui) guiScreen).handleItemTooltip(stack, mouseX, mouseY, currentToolTip);
+        }
 
-	@Override
-	public List<String> handleTooltip( final GuiContainer arg0, final int arg1, final int arg2, final List<String> current )
-	{
-		return current;
-	}
+        return currentToolTip;
+    }
 
-	@Override
-	public List<String> handleItemDisplayName( final GuiContainer arg0, final ItemStack arg1, final List<String> current )
-	{
-		return current;
-	}
+    @Override
+    public void guiTick(GuiContainer gui) {}
 
-	@Override
-	public List<String> handleItemTooltip( final GuiContainer guiScreen, final ItemStack stack, final int mouseX, final int mouseY, final List<String> currentToolTip )
-	{
-		if( guiScreen instanceof AEBaseMEGui )
-		{
-			return ( (AEBaseMEGui) guiScreen ).handleItemTooltip( stack, mouseX, mouseY, currentToolTip );
-		}
+    @Override
+    public void refresh(GuiContainer gui) {}
 
-		return currentToolTip;
-	}
-	@Override
-	public void guiTick(GuiContainer gui) {
+    @Override
+    public void load(GuiContainer gui) {}
 
-	}
+    @Override
+    public ItemStack getStackUnderMouse(GuiContainer gui, int mousex, int mousey) {
+        if (gui instanceof GuiCraftConfirm) return ((GuiCraftConfirm) gui).getHoveredStack();
+        else if (gui instanceof GuiCraftingCPU) return ((GuiCraftingCPU) gui).getHoveredStack();
+        return null;
+    }
 
-	@Override
-	public void refresh(GuiContainer gui) {
+    @Override
+    public boolean objectUnderMouse(GuiContainer gui, int mousex, int mousey) {
+        return false;
+    }
 
-	}
-
-	@Override
-	public void load(GuiContainer gui) {
-
-	}
-
-	@Override
-	public ItemStack getStackUnderMouse(GuiContainer gui, int mousex, int mousey) {
-		if (gui instanceof GuiCraftConfirm)
-			return ((GuiCraftConfirm)gui).getHoveredStack();
-		else if (gui instanceof GuiCraftingCPU)
-			return ((GuiCraftingCPU)gui).getHoveredStack();
-		return null;
-	}
-
-	@Override
-	public boolean objectUnderMouse(GuiContainer gui, int mousex, int mousey) {
-		return false;
-	}
-
-	@Override
-	public boolean shouldShowTooltip(GuiContainer gui) {
-		if (gui instanceof GuiCraftConfirm)
-			return ((GuiCraftConfirm)gui).getHoveredStack() == null;
-		if (gui instanceof GuiCraftingCPU)
-			return ((GuiCraftingCPU)gui).getHoveredStack() == null;
-		return true;
-	}
+    @Override
+    public boolean shouldShowTooltip(GuiContainer gui) {
+        if (gui instanceof GuiCraftConfirm) return ((GuiCraftConfirm) gui).getHoveredStack() == null;
+        if (gui instanceof GuiCraftingCPU) return ((GuiCraftingCPU) gui).getHoveredStack() == null;
+        return true;
+    }
 }

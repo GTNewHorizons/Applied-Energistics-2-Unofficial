@@ -18,30 +18,26 @@
 
 package appeng.server;
 
-
 import appeng.server.subcommands.*;
 
-public enum Commands
-{
-	Chunklogger( 4, new ChunkLogger() ),
-	Supporters( 0, new Supporters() ),
-	profile(2, new Profile() ),
-	toggleFullAccess(2, new ToggleFullAccess()),
-	toggleDebugPaths(2, new ToggleDebugPathfinding()),
-	toggleDebugTiming(2, new ToggleDebugTiming());
+public enum Commands {
+    Chunklogger(4, new ChunkLogger()),
+    Supporters(0, new Supporters()),
+    profile(2, new Profile()),
+    toggleFullAccess(2, new ToggleFullAccess()),
+    toggleDebugPaths(2, new ToggleDebugPathfinding()),
+    toggleDebugTiming(2, new ToggleDebugTiming());
 
-	public final int level;
-	public final ISubCommand command;
+    public final int level;
+    public final ISubCommand command;
 
-	Commands( final int level, final ISubCommand w )
-	{
-		this.level = level;
-		this.command = w;
-	}
+    Commands(final int level, final ISubCommand w) {
+        this.level = level;
+        this.command = w;
+    }
 
-	@Override
-	public String toString()
-	{
-		return this.name();
-	}
+    @Override
+    public String toString() {
+        return this.name();
+    }
 }

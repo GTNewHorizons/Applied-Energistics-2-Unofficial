@@ -18,7 +18,6 @@
 
 package appeng.client.gui.implementations;
 
-
 import appeng.api.config.InsertionMode;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
@@ -26,8 +25,8 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerInterface;
-import appeng.core.localization.GuiText;
 import appeng.core.localization.GuiColors;
+import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
@@ -37,98 +36,92 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import org.lwjgl.input.Mouse;
 
+public class GuiInterface extends GuiUpgradeable {
 
-public class GuiInterface extends GuiUpgradeable
-{
+    private GuiTabButton priority;
+    private GuiImgButton BlockMode;
+    private GuiToggleButton interfaceMode;
+    private GuiImgButton insertionMode;
 
-	private GuiTabButton priority;
-	private GuiImgButton BlockMode;
-	private GuiToggleButton interfaceMode;
-	private GuiImgButton insertionMode;
+    public GuiInterface(final InventoryPlayer inventoryPlayer, final IInterfaceHost te) {
+        super(new ContainerInterface(inventoryPlayer, te));
+        this.ySize = 211;
+    }
 
-	public GuiInterface( final InventoryPlayer inventoryPlayer, final IInterfaceHost te )
-	{
-		super( new ContainerInterface( inventoryPlayer, te ) );
-		this.ySize = 211;
-	}
+    @Override
+    protected void addButtons() {
+        this.priority =
+                new GuiTabButton(this.guiLeft + 154, this.guiTop, 2 + 4 * 16, GuiText.Priority.getLocal(), itemRender);
+        this.buttonList.add(this.priority);
 
-	@Override
-	protected void addButtons()
-	{
-		this.priority = new GuiTabButton( this.guiLeft + 154, this.guiTop, 2 + 4 * 16, GuiText.Priority.getLocal(), itemRender );
-		this.buttonList.add( this.priority );
+        this.BlockMode = new GuiImgButton(this.guiLeft - 18, this.guiTop + 8, Settings.BLOCK, YesNo.NO);
+        this.buttonList.add(this.BlockMode);
 
-		this.BlockMode = new GuiImgButton( this.guiLeft - 18, this.guiTop + 8, Settings.BLOCK, YesNo.NO );
-		this.buttonList.add( this.BlockMode );
+        this.interfaceMode = new GuiToggleButton(
+                this.guiLeft - 18,
+                this.guiTop + 26,
+                84,
+                85,
+                GuiText.InterfaceTerminal.getLocal(),
+                GuiText.InterfaceTerminalHint.getLocal());
+        this.buttonList.add(this.interfaceMode);
 
-		this.interfaceMode = new GuiToggleButton( this.guiLeft - 18, this.guiTop + 26, 84, 85, GuiText.InterfaceTerminal.getLocal(), GuiText.InterfaceTerminalHint.getLocal() );
-		this.buttonList.add( this.interfaceMode );
+        this.insertionMode =
+                new GuiImgButton(this.guiLeft - 18, this.guiTop + 44, Settings.INSERTION_MODE, InsertionMode.DEFAULT);
+        this.buttonList.add(this.insertionMode);
+    }
 
-		this.insertionMode = new GuiImgButton( this.guiLeft - 18, this.guiTop + 44,  Settings.INSERTION_MODE, InsertionMode.DEFAULT );
-		this.buttonList.add( this.insertionMode );
-	}
+    @Override
+    public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        if (this.BlockMode != null) {
+            this.BlockMode.set(((ContainerInterface) this.cvb).getBlockingMode());
+        }
 
-	@Override
-	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
-	{
-		if( this.BlockMode != null )
-		{
-			this.BlockMode.set( ( (ContainerInterface) this.cvb ).getBlockingMode() );
-		}
+        if (this.interfaceMode != null) {
+            this.interfaceMode.setState(((ContainerInterface) this.cvb).getInterfaceTerminalMode() == YesNo.YES);
+        }
 
-		if( this.interfaceMode != null )
-		{
-			this.interfaceMode.setState( ( (ContainerInterface) this.cvb ).getInterfaceTerminalMode() == YesNo.YES );
-		}
+        if (this.insertionMode != null) {
+            this.insertionMode.set(((ContainerInterface) this.cvb).getInsertionMode());
+        }
 
-		if( this.insertionMode != null )
-		{
-			this.insertionMode.set( ( (ContainerInterface) this.cvb ).getInsertionMode());
-		}
+        this.fontRendererObj.drawString(
+                this.getGuiDisplayName(GuiText.Interface.getLocal()), 8, 6, GuiColors.InterfaceTitle.getColor());
+    }
 
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.Interface.getLocal() ), 8, 6, GuiColors.InterfaceTitle.getColor() );
-	}
+    @Override
+    protected String getBackground() {
+        switch (((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled()) {
+            case 1:
+                return "guis/interface2.png";
+            case 2:
+                return "guis/interface3.png";
+            case 3:
+                return "guis/interface4.png";
+        }
+        return "guis/interface.png";
+    }
 
-	@Override
-	protected String getBackground()
-	{
-		switch (((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled())
-		{
-			case 1:
-				return "guis/interface2.png";
-			case 2:
-				return "guis/interface3.png";
-			case 3:
-				return "guis/interface4.png";
-		}
-		return "guis/interface.png";
-	}
+    @Override
+    protected void actionPerformed(final GuiButton btn) {
+        super.actionPerformed(btn);
 
-	@Override
-	protected void actionPerformed( final GuiButton btn )
-	{
-		super.actionPerformed( btn );
+        final boolean backwards = Mouse.isButtonDown(1);
 
-		final boolean backwards = Mouse.isButtonDown( 1 );
+        if (btn == this.priority) {
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_PRIORITY));
+        }
 
-		if( btn == this.priority )
-		{
-			NetworkHandler.instance.sendToServer( new PacketSwitchGuis( GuiBridge.GUI_PRIORITY ) );
-		}
+        if (btn == this.interfaceMode) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(Settings.INTERFACE_TERMINAL, backwards));
+        }
 
-		if( btn == this.interfaceMode )
-		{
-			NetworkHandler.instance.sendToServer( new PacketConfigButton( Settings.INTERFACE_TERMINAL, backwards ) );
-		}
+        if (btn == this.BlockMode) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.BlockMode.getSetting(), backwards));
+        }
 
-		if( btn == this.BlockMode )
-		{
-			NetworkHandler.instance.sendToServer( new PacketConfigButton( this.BlockMode.getSetting(), backwards ) );
-		}
-
-		if( btn == this.insertionMode )
-		{
-			NetworkHandler.instance.sendToServer( new PacketConfigButton( this.insertionMode.getSetting(), backwards ) );
-		}
-	}
+        if (btn == this.insertionMode) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.insertionMode.getSetting(), backwards));
+        }
+    }
 }

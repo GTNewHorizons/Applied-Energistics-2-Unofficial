@@ -18,12 +18,9 @@
 
 package appeng.util.inv;
 
-
 import net.minecraft.item.ItemStack;
 
+public interface IInventoryWrapper {
 
-public interface IInventoryWrapper
-{
-
-	boolean canRemoveItemFromSlot( int x, ItemStack is );
+    boolean canRemoveItemFromSlot(int x, ItemStack is);
 }

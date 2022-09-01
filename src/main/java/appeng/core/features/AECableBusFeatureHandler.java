@@ -18,7 +18,6 @@
 
 package appeng.core.features;
 
-
 import appeng.api.definitions.ITileDefinition;
 import appeng.block.AEBaseTileBlock;
 import appeng.block.networking.BlockCableBus;
@@ -27,63 +26,55 @@ import appeng.core.CreativeTab;
 import appeng.util.Platform;
 import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.GameRegistry;
+import java.util.EnumSet;
 import net.minecraft.tileentity.TileEntity;
 
-import java.util.EnumSet;
+public final class AECableBusFeatureHandler implements IFeatureHandler {
+    private final AEBaseTileBlock featured;
+    private final FeatureNameExtractor extractor;
+    private final boolean enabled;
+    private final TileDefinition definition;
 
+    public AECableBusFeatureHandler(
+            final EnumSet<AEFeature> features, final BlockCableBus featured, final Optional<String> subName) {
+        final ActivityState state = new FeaturedActiveChecker(features).getActivityState();
 
-public final class AECableBusFeatureHandler implements IFeatureHandler
-{
-	private final AEBaseTileBlock featured;
-	private final FeatureNameExtractor extractor;
-	private final boolean enabled;
-	private final TileDefinition definition;
+        this.featured = featured;
+        this.extractor = new FeatureNameExtractor(featured.getClass(), subName);
+        this.enabled = state == ActivityState.Enabled;
+        this.definition = new TileDefinition(featured, state);
+    }
 
-	public AECableBusFeatureHandler( final EnumSet<AEFeature> features, final BlockCableBus featured, final Optional<String> subName )
-	{
-		final ActivityState state = new FeaturedActiveChecker( features ).getActivityState();
+    @Override
+    public boolean isFeatureAvailable() {
+        return this.enabled;
+    }
 
-		this.featured = featured;
-		this.extractor = new FeatureNameExtractor( featured.getClass(), subName );
-		this.enabled = state == ActivityState.Enabled;
-		this.definition = new TileDefinition( featured, state );
-	}
+    @Override
+    public ITileDefinition getDefinition() {
+        return this.definition;
+    }
 
-	@Override
-	public boolean isFeatureAvailable()
-	{
-		return this.enabled;
-	}
+    /**
+     * Registration of the {@link TileEntity} will actually be handled by {@link BlockCableBus#setupTile()}.
+     */
+    @Override
+    public void register() {
+        if (this.enabled) {
+            final String name = this.extractor.get();
+            this.featured.setCreativeTab(CreativeTab.instance);
+            this.featured.setBlockName(/* "tile." */ "appliedenergistics2." + name);
+            this.featured.setBlockTextureName("appliedenergistics2:" + name);
 
-	@Override
-	public ITileDefinition getDefinition()
-	{
-		return this.definition;
-	}
+            if (Platform.isClient()) {
+                CommonHelper.proxy.bindTileEntitySpecialRenderer(this.featured.getTileEntityClass(), this.featured);
+            }
 
-	/**
-	 * Registration of the {@link TileEntity} will actually be handled by {@link BlockCableBus#setupTile()}.
-	 */
-	@Override
-	public void register()
-	{
-		if( this.enabled )
-		{
-			final String name = this.extractor.get();
-			this.featured.setCreativeTab( CreativeTab.instance );
-			this.featured.setBlockName( /* "tile." */"appliedenergistics2." + name );
-			this.featured.setBlockTextureName( "appliedenergistics2:" + name );
+            final String registryName = "tile." + name;
 
-			if( Platform.isClient() )
-			{
-				CommonHelper.proxy.bindTileEntitySpecialRenderer( this.featured.getTileEntityClass(), this.featured );
-			}
-
-			final String registryName = "tile." + name;
-
-			// Bypass the forge magic with null to register our own itemblock later.
-			GameRegistry.registerBlock( this.featured, null, registryName );
-			GameRegistry.registerItem( this.definition.maybeItem().get(), registryName );
-		}
-	}
+            // Bypass the forge magic with null to register our own itemblock later.
+            GameRegistry.registerBlock(this.featured, null, registryName);
+            GameRegistry.registerItem(this.definition.maybeItem().get(), registryName);
+        }
+    }
 }

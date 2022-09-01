@@ -18,16 +18,13 @@
 
 package appeng.transformer.asm;
 
-
 import appeng.helpers.Reflected;
 import cpw.mods.fml.relauncher.FMLRelaunchLog;
+import java.net.URL;
+import java.net.URLConnection;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 import org.apache.logging.log4j.Level;
-
-import java.net.URL;
-import java.net.URLConnection;
-
 
 /*
  * It is a ClassTransformer which can transformer the older AE2 api class that some addons including,
@@ -35,48 +32,48 @@ import java.net.URLConnection;
  * See also : https://github.com/xsun2001/Applied-Energistics-2-Unofficial/issues/1
  */
 @Reflected
-public class ApiRepairer implements IClassTransformer
-{
+public class ApiRepairer implements IClassTransformer {
 
-	private LaunchClassLoader launchClassLoader;
+    private LaunchClassLoader launchClassLoader;
 
-	public ApiRepairer()
-	{
-		launchClassLoader = (LaunchClassLoader) this.getClass().getClassLoader();
-		FMLRelaunchLog.log( "AE2-ApiRepairer", Level.INFO, "AE2 ApiFixer Installed" );
-	}
+    public ApiRepairer() {
+        launchClassLoader = (LaunchClassLoader) this.getClass().getClassLoader();
+        FMLRelaunchLog.log("AE2-ApiRepairer", Level.INFO, "AE2 ApiFixer Installed");
+    }
 
-	@Override public byte[] transform( String name, String transformedName, byte[] basicClass )
-	{
-		if( transformedName.startsWith( "appeng.api" ) )
-		{
-			try
-			{
-				String clazzurl = getClass().getResource( "" ).toString();
-				clazzurl = clazzurl.substring( 0, clazzurl.length() - 23 ) + transformedName.replace( '.', '/' ) + ".class";
-				//23 is "appeng/transformer/asm"'s length + 1
-				URL url = new URL( clazzurl );
-				URLConnection connection = url.openConnection();
-				byte[] bytes = new byte[connection.getContentLength()];
-				if( connection.getInputStream().read( bytes ) == -1 )
-				{
-					FMLRelaunchLog.log( "AE2-ApiRepairer", Level.ERROR, "Failed to fix api class [%s] because the new class couldn't be read", transformedName );
-					return basicClass;
-				}
-				for( IClassTransformer ct : launchClassLoader.getTransformers() )
-				{
-					if( ct == this )
-						continue;
-					bytes = ct.transform( name, transformedName, bytes );
-				}
-				return bytes;
-			}
-			catch( Exception e )
-			{
-				FMLRelaunchLog.log( "AE2-ApiRepairer", Level.ERROR, "Failed to fix api class [%s] because of [%s]", transformedName, e.getClass().getName() );
-				return basicClass;
-			}
-		}
-		return basicClass;
-	}
+    @Override
+    public byte[] transform(String name, String transformedName, byte[] basicClass) {
+        if (transformedName.startsWith("appeng.api")) {
+            try {
+                String clazzurl = getClass().getResource("").toString();
+                clazzurl = clazzurl.substring(0, clazzurl.length() - 23) + transformedName.replace('.', '/') + ".class";
+                // 23 is "appeng/transformer/asm"'s length + 1
+                URL url = new URL(clazzurl);
+                URLConnection connection = url.openConnection();
+                byte[] bytes = new byte[connection.getContentLength()];
+                if (connection.getInputStream().read(bytes) == -1) {
+                    FMLRelaunchLog.log(
+                            "AE2-ApiRepairer",
+                            Level.ERROR,
+                            "Failed to fix api class [%s] because the new class couldn't be read",
+                            transformedName);
+                    return basicClass;
+                }
+                for (IClassTransformer ct : launchClassLoader.getTransformers()) {
+                    if (ct == this) continue;
+                    bytes = ct.transform(name, transformedName, bytes);
+                }
+                return bytes;
+            } catch (Exception e) {
+                FMLRelaunchLog.log(
+                        "AE2-ApiRepairer",
+                        Level.ERROR,
+                        "Failed to fix api class [%s] because of [%s]",
+                        transformedName,
+                        e.getClass().getName());
+                return basicClass;
+            }
+        }
+        return basicClass;
+    }
 }

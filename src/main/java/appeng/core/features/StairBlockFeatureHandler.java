@@ -18,56 +18,48 @@
 
 package appeng.core.features;
 
-
 import appeng.api.definitions.IBlockDefinition;
 import appeng.core.CreativeTab;
 import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.GameRegistry;
+import java.util.EnumSet;
 import net.minecraft.block.BlockStairs;
 
-import java.util.EnumSet;
+public class StairBlockFeatureHandler implements IFeatureHandler {
+    private final BlockStairs stairs;
+    private final FeatureNameExtractor extractor;
+    private final boolean enabled;
+    private final BlockDefinition definition;
 
+    public StairBlockFeatureHandler(
+            final EnumSet<AEFeature> features, final BlockStairs stairs, final Optional<String> subName) {
+        final ActivityState state = new FeaturedActiveChecker(features).getActivityState();
 
-public class StairBlockFeatureHandler implements IFeatureHandler
-{
-	private final BlockStairs stairs;
-	private final FeatureNameExtractor extractor;
-	private final boolean enabled;
-	private final BlockDefinition definition;
+        this.stairs = stairs;
+        this.extractor = new FeatureNameExtractor(stairs.getClass(), subName);
+        this.enabled = state == ActivityState.Enabled;
+        this.definition = new BlockDefinition(stairs, state);
+    }
 
-	public StairBlockFeatureHandler( final EnumSet<AEFeature> features, final BlockStairs stairs, final Optional<String> subName )
-	{
-		final ActivityState state = new FeaturedActiveChecker( features ).getActivityState();
+    @Override
+    public final boolean isFeatureAvailable() {
+        return this.enabled;
+    }
 
-		this.stairs = stairs;
-		this.extractor = new FeatureNameExtractor( stairs.getClass(), subName );
-		this.enabled = state == ActivityState.Enabled;
-		this.definition = new BlockDefinition( stairs, state );
-	}
+    @Override
+    public final IBlockDefinition getDefinition() {
+        return this.definition;
+    }
 
-	@Override
-	public final boolean isFeatureAvailable()
-	{
-		return this.enabled;
-	}
+    @Override
+    public final void register() {
+        if (this.enabled) {
+            final String name = this.extractor.get();
+            this.stairs.setCreativeTab(CreativeTab.instance);
+            this.stairs.setBlockName("appliedenergistics2." + name);
+            this.stairs.setBlockTextureName("appliedenergistics2:" + name);
 
-	@Override
-	public final IBlockDefinition getDefinition()
-	{
-		return this.definition;
-	}
-
-	@Override
-	public final void register()
-	{
-		if( this.enabled )
-		{
-			final String name = this.extractor.get();
-			this.stairs.setCreativeTab( CreativeTab.instance );
-			this.stairs.setBlockName( "appliedenergistics2." + name );
-			this.stairs.setBlockTextureName( "appliedenergistics2:" + name );
-
-			GameRegistry.registerBlock( this.stairs, "tile." + name );
-		}
-	}
+            GameRegistry.registerBlock(this.stairs, "tile." + name);
+        }
+    }
 }

@@ -23,10 +23,8 @@
 
 package appeng.api.movable;
 
-
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
-
 
 /**
  * Used to determine if a tile is marked as movable, a block will be considered movable, if...
@@ -55,67 +53,66 @@ import net.minecraft.tileentity.TileEntity;
  * <p>
  * If you need a build of deobf build of AE for testing, do not hesitate to ask.
  */
-public interface IMovableRegistry
-{
+public interface IMovableRegistry {
 
-	/**
-	 * Black list a block from movement, please only use this to prevent exploits.
-	 * <p>
-	 * You can also use the IMC, FMLInterModComms.sendMessage( "appliedenergistics2", "whitelist-spatial",
-	 * "appeng.common.AppEngTile" );
-	 *
-	 * @param blk block
-	 */
-	void blacklistBlock( Block blk );
+    /**
+     * Black list a block from movement, please only use this to prevent exploits.
+     * <p>
+     * You can also use the IMC, FMLInterModComms.sendMessage( "appliedenergistics2", "whitelist-spatial",
+     * "appeng.common.AppEngTile" );
+     *
+     * @param blk block
+     */
+    void blacklistBlock(Block blk);
 
-	/**
-	 * White list your tile entity with the registry.
-	 * <p>
-	 * You can also use the IMC, FMLInterModComms.sendMessage( "appliedenergistics2", "blacklist-block-spatial", new
-	 * ItemStack(...) );
-	 * <p>
-	 * If you tile is handled with IMovableHandler or IMovableTile you do not need to white list it.
-	 */
-	void whiteListTileEntity( Class<? extends TileEntity> c );
+    /**
+     * White list your tile entity with the registry.
+     * <p>
+     * You can also use the IMC, FMLInterModComms.sendMessage( "appliedenergistics2", "blacklist-block-spatial", new
+     * ItemStack(...) );
+     * <p>
+     * If you tile is handled with IMovableHandler or IMovableTile you do not need to white list it.
+     */
+    void whiteListTileEntity(Class<? extends TileEntity> c);
 
-	/**
-	 * @param te to be moved tile entity
-	 * @return true if the tile has accepted your request to move it
-	 */
-	boolean askToMove( TileEntity te );
+    /**
+     * @param te to be moved tile entity
+     * @return true if the tile has accepted your request to move it
+     */
+    boolean askToMove(TileEntity te);
 
-	/**
-	 * tells the tile you are done moving it.
-	 *
-	 * @param te moved tile entity
-	 */
-	void doneMoving( TileEntity te );
+    /**
+     * tells the tile you are done moving it.
+     *
+     * @param te moved tile entity
+     */
+    void doneMoving(TileEntity te);
 
-	/**
-	 * add a new handler movable handler.
-	 *
-	 * @param handler moving handler
-	 */
-	void addHandler( IMovableHandler handler );
+    /**
+     * add a new handler movable handler.
+     *
+     * @param handler moving handler
+     */
+    void addHandler(IMovableHandler handler);
 
-	/**
-	 * handlers are used to perform movement, this allows you to override AE's internal version.
-	 * <p>
-	 * only valid after askToMove(...) = true
-	 *
-	 * @param te tile entity
-	 * @return moving handler of tile entity
-	 */
-	IMovableHandler getHandler( TileEntity te );
+    /**
+     * handlers are used to perform movement, this allows you to override AE's internal version.
+     * <p>
+     * only valid after askToMove(...) = true
+     *
+     * @param te tile entity
+     * @return moving handler of tile entity
+     */
+    IMovableHandler getHandler(TileEntity te);
 
-	/**
-	 * @return a copy of the default handler
-	 */
-	IMovableHandler getDefaultHandler();
+    /**
+     * @return a copy of the default handler
+     */
+    IMovableHandler getDefaultHandler();
 
-	/**
-	 * @param blk block
-	 * @return true if this block is blacklisted
-	 */
-	boolean isBlacklisted( Block blk );
+    /**
+     * @param blk block
+     * @return true if this block is blacklisted
+     */
+    boolean isBlacklisted(Block blk);
 }

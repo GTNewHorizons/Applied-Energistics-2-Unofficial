@@ -18,7 +18,6 @@
 
 package appeng.me.cache;
 
-
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
@@ -31,236 +30,193 @@ import appeng.api.util.DimensionalCoord;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.me.cache.helpers.TickTracker;
-import appeng.util.ConfigManager;
+import java.util.HashMap;
+import java.util.PriorityQueue;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.util.ReportedException;
 
-import java.util.HashMap;
-import java.util.PriorityQueue;
+public class TickManagerCache implements ITickManager {
 
+    private final IGrid myGrid;
+    private final HashMap<IGridNode, TickTracker> alertable = new HashMap<IGridNode, TickTracker>();
+    private final HashMap<IGridNode, TickTracker> sleeping = new HashMap<IGridNode, TickTracker>();
+    private final HashMap<IGridNode, TickTracker> awake = new HashMap<IGridNode, TickTracker>();
+    private final PriorityQueue<TickTracker> upcomingTicks = new PriorityQueue<TickTracker>();
+    private long currentTick = 0;
 
-public class TickManagerCache implements ITickManager
-{
+    public TickManagerCache(final IGrid g) {
+        this.myGrid = g;
+    }
 
-	private final IGrid myGrid;
-	private final HashMap<IGridNode, TickTracker> alertable = new HashMap<IGridNode, TickTracker>();
-	private final HashMap<IGridNode, TickTracker> sleeping = new HashMap<IGridNode, TickTracker>();
-	private final HashMap<IGridNode, TickTracker> awake = new HashMap<IGridNode, TickTracker>();
-	private final PriorityQueue<TickTracker> upcomingTicks = new PriorityQueue<TickTracker>();
-	private long currentTick = 0;
+    public long getCurrentTick() {
+        return this.currentTick;
+    }
 
-	public TickManagerCache( final IGrid g )
-	{
-		this.myGrid = g;
-	}
+    public long getAvgNanoTime(final IGridNode node) {
+        TickTracker tt = this.awake.get(node);
 
-	public long getCurrentTick()
-	{
-		return this.currentTick;
-	}
+        if (tt == null) {
+            tt = this.sleeping.get(node);
+        }
 
-	public long getAvgNanoTime( final IGridNode node )
-	{
-		TickTracker tt = this.awake.get( node );
+        if (tt == null) {
+            return -1;
+        }
 
-		if( tt == null )
-		{
-			tt = this.sleeping.get( node );
-		}
+        return tt.getAvgNanos();
+    }
 
-		if( tt == null )
-		{
-			return -1;
-		}
+    @Override
+    public void onUpdateTick() {
+        TickTracker tt = null;
+        try {
+            this.currentTick++;
+            while (!this.upcomingTicks.isEmpty()) {
+                tt = this.upcomingTicks.peek();
+                final int diff = (int) (this.currentTick - tt.getLastTick());
+                if (diff >= tt.getCurrentRate()) {
+                    // remove tt..
+                    this.upcomingTicks.poll();
+                    long tickStartTime = 0;
+                    if (AEConfig.instance.debugLogTiming) tickStartTime = System.nanoTime();
+                    final TickRateModulation mod = tt.getGridTickable().tickingRequest(tt.getNode(), diff);
+                    if (AEConfig.instance.debugLogTiming) {
+                        DimensionalCoord c = tt.getNode().getGridBlock().getLocation();
+                        AELog.debug(
+                                "Timing: machine tick at (%d %d %d) took %d ns, new state is %s",
+                                c.x, c.y, c.z, System.nanoTime() - tickStartTime, mod.toString());
+                    }
+                    switch (mod) {
+                        case FASTER:
+                            tt.setRate(tt.getCurrentRate() - 2);
+                            break;
+                        case IDLE:
+                            tt.setRate(tt.getRequest().maxTickRate);
+                            break;
+                        case SAME:
+                            break;
+                        case SLEEP:
+                            this.sleepDevice(tt.getNode());
+                            break;
+                        case SLOWER:
+                            tt.setRate(tt.getCurrentRate() + 1);
+                            break;
+                        case URGENT:
+                            tt.setRate(0);
+                            break;
+                        default:
+                            break;
+                    }
 
-		return tt.getAvgNanos();
-	}
+                    if (this.awake.containsKey(tt.getNode())) {
+                        this.addToQueue(tt);
+                    }
+                } else {
+                    return; // done!
+                }
+            }
+        } catch (final Throwable t) {
+            final CrashReport crashreport = CrashReport.makeCrashReport(t, "Ticking GridNode");
+            final CrashReportCategory crashreportcategory =
+                    crashreport.makeCategory(tt.getGridTickable().getClass().getSimpleName() + " being ticked.");
+            tt.addEntityCrashInfo(crashreportcategory);
+            throw new ReportedException(crashreport);
+        }
+    }
 
-	@Override
-	public void onUpdateTick()
-	{
-		TickTracker tt = null;
-		try
-		{
-			this.currentTick++;
-			while( !this.upcomingTicks.isEmpty() )
-			{
-				tt = this.upcomingTicks.peek();
-				final int diff = (int) ( this.currentTick - tt.getLastTick() );
-				if( diff >= tt.getCurrentRate() )
-				{
-					// remove tt..
-					this.upcomingTicks.poll();
-					long tickStartTime = 0;
-					if (AEConfig.instance.debugLogTiming)
-						tickStartTime = System.nanoTime();
-					final TickRateModulation mod = tt.getGridTickable().tickingRequest( tt.getNode(), diff );
-					if (AEConfig.instance.debugLogTiming)
-					{
-						DimensionalCoord c = tt.getNode().getGridBlock().getLocation();
-						AELog.debug("Timing: machine tick at (%d %d %d) took %d ns, new state is %s", c.x, c.y, c.z, System.nanoTime() - tickStartTime, mod.toString());
-					}
-					switch( mod )
-					{
-						case FASTER:
-							tt.setRate( tt.getCurrentRate() - 2 );
-							break;
-						case IDLE:
-							tt.setRate( tt.getRequest().maxTickRate );
-							break;
-						case SAME:
-							break;
-						case SLEEP:
-							this.sleepDevice( tt.getNode() );
-							break;
-						case SLOWER:
-							tt.setRate( tt.getCurrentRate() + 1 );
-							break;
-						case URGENT:
-							tt.setRate( 0 );
-							break;
-						default:
-							break;
-					}
+    private void addToQueue(final TickTracker tt) {
+        tt.setLastTick(this.currentTick);
+        this.upcomingTicks.add(tt);
+    }
 
-					if( this.awake.containsKey( tt.getNode() ) )
-					{
-						this.addToQueue( tt );
-					}
-				}
-				else
-				{
-					return; // done!
-				}
-			}
-		}
-		catch( final Throwable t )
-		{
-			final CrashReport crashreport = CrashReport.makeCrashReport( t, "Ticking GridNode" );
-			final CrashReportCategory crashreportcategory = crashreport.makeCategory( tt.getGridTickable().getClass().getSimpleName() + " being ticked." );
-			tt.addEntityCrashInfo( crashreportcategory );
-			throw new ReportedException( crashreport );
-		}
-	}
+    @Override
+    public void removeNode(final IGridNode gridNode, final IGridHost machine) {
+        if (machine instanceof IGridTickable) {
+            this.alertable.remove(gridNode);
+            this.sleeping.remove(gridNode);
+            this.awake.remove(gridNode);
+        }
+    }
 
-	private void addToQueue( final TickTracker tt )
-	{
-		tt.setLastTick( this.currentTick );
-		this.upcomingTicks.add( tt );
-	}
+    @Override
+    public void addNode(final IGridNode gridNode, final IGridHost machine) {
+        if (machine instanceof IGridTickable) {
+            final TickingRequest tr = ((IGridTickable) machine).getTickingRequest(gridNode);
+            if (tr != null) {
+                final TickTracker tt = new TickTracker(tr, gridNode, (IGridTickable) machine, this.currentTick, this);
 
-	@Override
-	public void removeNode( final IGridNode gridNode, final IGridHost machine )
-	{
-		if( machine instanceof IGridTickable )
-		{
-			this.alertable.remove( gridNode );
-			this.sleeping.remove( gridNode );
-			this.awake.remove( gridNode );
-		}
-	}
+                if (tr.canBeAlerted) {
+                    this.alertable.put(gridNode, tt);
+                }
 
-	@Override
-	public void addNode( final IGridNode gridNode, final IGridHost machine )
-	{
-		if( machine instanceof IGridTickable )
-		{
-			final TickingRequest tr = ( (IGridTickable) machine ).getTickingRequest( gridNode );
-			if( tr != null )
-			{
-				final TickTracker tt = new TickTracker( tr, gridNode, (IGridTickable) machine, this.currentTick, this );
+                if (tr.isSleeping) {
+                    this.sleeping.put(gridNode, tt);
+                } else {
+                    this.awake.put(gridNode, tt);
+                    this.addToQueue(tt);
+                }
+            }
+        }
+    }
 
-				if( tr.canBeAlerted )
-				{
-					this.alertable.put( gridNode, tt );
-				}
+    @Override
+    public void onSplit(final IGridStorage storageB) {}
 
-				if( tr.isSleeping )
-				{
-					this.sleeping.put( gridNode, tt );
-				}
-				else
-				{
-					this.awake.put( gridNode, tt );
-					this.addToQueue( tt );
-				}
-			}
-		}
-	}
+    @Override
+    public void onJoin(final IGridStorage storageB) {}
 
-	@Override
-	public void onSplit( final IGridStorage storageB )
-	{
+    @Override
+    public void populateGridStorage(final IGridStorage storage) {}
 
-	}
+    @Override
+    public boolean alertDevice(final IGridNode node) {
+        final TickTracker tt = this.alertable.get(node);
+        if (tt == null) {
+            return false;
+        }
+        // throw new RuntimeException(
+        // "Invalid alerted device, this node is not marked as alertable, or part of this grid." );
 
-	@Override
-	public void onJoin( final IGridStorage storageB )
-	{
+        // set to awake, this is for sanity.
+        this.sleeping.remove(node);
+        this.awake.put(node, tt);
 
-	}
+        // configure sort.
+        tt.setLastTick(tt.getLastTick() - tt.getRequest().maxTickRate);
+        tt.setCurrentRate(tt.getRequest().minTickRate);
 
-	@Override
-	public void populateGridStorage( final IGridStorage storage )
-	{
+        // prevent dupes and tick build up.
+        this.upcomingTicks.remove(tt);
+        this.upcomingTicks.add(tt);
 
-	}
+        return true;
+    }
 
-	@Override
-	public boolean alertDevice( final IGridNode node )
-	{
-		final TickTracker tt = this.alertable.get( node );
-		if( tt == null )
-		{
-			return false;
-		}
-		// throw new RuntimeException(
-		// "Invalid alerted device, this node is not marked as alertable, or part of this grid." );
+    @Override
+    public boolean sleepDevice(final IGridNode node) {
+        if (this.awake.containsKey(node)) {
+            final TickTracker gt = this.awake.get(node);
+            this.awake.remove(node);
+            this.sleeping.put(node, gt);
 
-		// set to awake, this is for sanity.
-		this.sleeping.remove( node );
-		this.awake.put( node, tt );
+            return true;
+        }
 
-		// configure sort.
-		tt.setLastTick( tt.getLastTick() - tt.getRequest().maxTickRate );
-		tt.setCurrentRate( tt.getRequest().minTickRate );
+        return false;
+    }
 
-		// prevent dupes and tick build up.
-		this.upcomingTicks.remove( tt );
-		this.upcomingTicks.add( tt );
+    @Override
+    public boolean wakeDevice(final IGridNode node) {
+        if (this.sleeping.containsKey(node)) {
+            final TickTracker gt = this.sleeping.get(node);
+            this.sleeping.remove(node);
+            this.awake.put(node, gt);
+            this.addToQueue(gt);
 
-		return true;
-	}
+            return true;
+        }
 
-	@Override
-	public boolean sleepDevice( final IGridNode node )
-	{
-		if( this.awake.containsKey( node ) )
-		{
-			final TickTracker gt = this.awake.get( node );
-			this.awake.remove( node );
-			this.sleeping.put( node, gt );
-
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
-	public boolean wakeDevice( final IGridNode node )
-	{
-		if( this.sleeping.containsKey( node ) )
-		{
-			final TickTracker gt = this.sleeping.get( node );
-			this.sleeping.remove( node );
-			this.awake.put( node, gt );
-			this.addToQueue( gt );
-
-			return true;
-		}
-
-		return false;
-	}
+        return false;
+    }
 }

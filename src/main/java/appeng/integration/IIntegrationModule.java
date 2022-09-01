@@ -18,10 +18,8 @@
 
 package appeng.integration;
 
+public interface IIntegrationModule {
+    void init() throws Throwable;
 
-public interface IIntegrationModule
-{
-	void init() throws Throwable;
-
-	void postInit();
+    void postInit();
 }

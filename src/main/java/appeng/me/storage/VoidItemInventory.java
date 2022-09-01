@@ -18,7 +18,6 @@
 
 package appeng.me.storage;
 
-
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
@@ -28,83 +27,68 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.tile.misc.TileCondenser;
 
+public class VoidItemInventory implements IMEInventoryHandler<IAEItemStack> {
 
-public class VoidItemInventory implements IMEInventoryHandler<IAEItemStack>
-{
+    private final TileCondenser target;
 
-	private final TileCondenser target;
+    public VoidItemInventory(final TileCondenser te) {
+        this.target = te;
+    }
 
-	public VoidItemInventory( final TileCondenser te )
-	{
-		this.target = te;
-	}
+    @Override
+    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSource src) {
+        if (mode == Actionable.SIMULATE) {
+            return null;
+        }
 
-	@Override
-	public IAEItemStack injectItems( final IAEItemStack input, final Actionable mode, final BaseActionSource src )
-	{
-		if( mode == Actionable.SIMULATE )
-		{
-			return null;
-		}
+        if (input != null) {
+            this.target.addPower(input.getStackSize());
+        }
+        return null;
+    }
 
-		if( input != null )
-		{
-			this.target.addPower( input.getStackSize() );
-		}
-		return null;
-	}
+    @Override
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
+        return null;
+    }
 
-	@Override
-	public IAEItemStack extractItems( final IAEItemStack request, final Actionable mode, final BaseActionSource src )
-	{
-		return null;
-	}
+    @Override
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList out) {
+        return out;
+    }
 
-	@Override
-	public IItemList<IAEItemStack> getAvailableItems( final IItemList out )
-	{
-		return out;
-	}
+    @Override
+    public StorageChannel getChannel() {
+        return StorageChannel.ITEMS;
+    }
 
-	@Override
-	public StorageChannel getChannel()
-	{
-		return StorageChannel.ITEMS;
-	}
+    @Override
+    public AccessRestriction getAccess() {
+        return AccessRestriction.WRITE;
+    }
 
-	@Override
-	public AccessRestriction getAccess()
-	{
-		return AccessRestriction.WRITE;
-	}
+    @Override
+    public boolean isPrioritized(final IAEItemStack input) {
+        return false;
+    }
 
-	@Override
-	public boolean isPrioritized( final IAEItemStack input )
-	{
-		return false;
-	}
+    @Override
+    public boolean canAccept(final IAEItemStack input) {
+        return true;
+    }
 
-	@Override
-	public boolean canAccept( final IAEItemStack input )
-	{
-		return true;
-	}
+    @Override
+    public int getPriority() {
+        return 0;
+    }
 
-	@Override
-	public int getPriority()
-	{
-		return 0;
-	}
+    @Override
+    public int getSlot() {
+        return 0;
+    }
 
-	@Override
-	public int getSlot()
-	{
-		return 0;
-	}
-
-	@Override
-	public boolean validForPass( final int i )
-	{
-		return i == 2;
-	}
+    @Override
+    public boolean validForPass(final int i) {
+        return i == 2;
+    }
 }

@@ -23,10 +23,8 @@
 
 package appeng.api.networking.events;
 
-
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
-
 
 /**
  * Posted by the network when the power status of the network goes up or down,
@@ -35,7 +33,4 @@ import appeng.api.networking.energy.IEnergyGrid;
  * <p>
  * Note: Most machines just need to check {@link IGridNode}.isActive()
  */
-public class MENetworkPowerStatusChange extends MENetworkEvent
-{
-
-}
+public class MENetworkPowerStatusChange extends MENetworkEvent {}

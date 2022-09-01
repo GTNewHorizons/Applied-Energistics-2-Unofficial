@@ -23,31 +23,26 @@
 
 package appeng.api.events;
 
-
 import appeng.api.features.ILocatable;
 import cpw.mods.fml.common.eventhandler.Event;
-
 
 /**
  * Input Event:
  * <p>
  * Used to Notify the Location Registry of objects, and their availability.
  */
-public class LocatableEventAnnounce extends Event
-{
+public class LocatableEventAnnounce extends Event {
 
-	public final ILocatable target;
-	public final LocatableEvent change;
+    public final ILocatable target;
+    public final LocatableEvent change;
 
-	public LocatableEventAnnounce( final ILocatable o, final LocatableEvent ev )
-	{
-		this.target = o;
-		this.change = ev;
-	}
+    public LocatableEventAnnounce(final ILocatable o, final LocatableEvent ev) {
+        this.target = o;
+        this.change = ev;
+    }
 
-	public enum LocatableEvent
-	{
-		Register, // Adds the locatable to the registry
-		Unregister // Removes the locatable from the registry
-	}
+    public enum LocatableEvent {
+        Register, // Adds the locatable to the registry
+        Unregister // Removes the locatable from the registry
+    }
 }

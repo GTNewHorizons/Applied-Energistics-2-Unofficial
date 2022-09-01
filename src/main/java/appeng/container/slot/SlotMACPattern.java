@@ -18,26 +18,21 @@
 
 package appeng.container.slot;
 
-
 import appeng.container.implementations.ContainerMAC;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
+public class SlotMACPattern extends AppEngSlot {
 
-public class SlotMACPattern extends AppEngSlot
-{
+    private final ContainerMAC mac;
 
-	private final ContainerMAC mac;
+    public SlotMACPattern(final ContainerMAC mac, final IInventory i, final int slotIdx, final int x, final int y) {
+        super(i, slotIdx, x, y);
+        this.mac = mac;
+    }
 
-	public SlotMACPattern( final ContainerMAC mac, final IInventory i, final int slotIdx, final int x, final int y )
-	{
-		super( i, slotIdx, x, y );
-		this.mac = mac;
-	}
-
-	@Override
-	public boolean isItemValid( final ItemStack i )
-	{
-		return this.mac.isValidItemForSlot( this.getSlotIndex(), i );
-	}
+    @Override
+    public boolean isItemValid(final ItemStack i) {
+        return this.mac.isValidItemForSlot(this.getSlotIndex(), i);
+    }
 }

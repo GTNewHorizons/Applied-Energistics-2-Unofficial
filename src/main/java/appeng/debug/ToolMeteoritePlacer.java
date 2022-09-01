@@ -18,13 +18,13 @@
 
 package appeng.debug;
 
-
 import appeng.client.texture.MissingIcon;
 import appeng.core.features.AEFeature;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
 import appeng.worldgen.MeteoritePlacer;
 import appeng.worldgen.meteorite.StandardWorld;
+import java.util.EnumSet;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -32,41 +32,41 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
-import java.util.EnumSet;
+public class ToolMeteoritePlacer extends AEBaseItem {
+    public ToolMeteoritePlacer() {
+        this.setFeature(EnumSet.of(AEFeature.UnsupportedDeveloperTools, AEFeature.Creative));
+    }
 
+    @Override
+    public void registerIcons(final IIconRegister par1IconRegister) {
+        this.itemIcon = new MissingIcon(this);
+    }
 
-public class ToolMeteoritePlacer extends AEBaseItem
-{
-	public ToolMeteoritePlacer()
-	{
-		this.setFeature( EnumSet.of( AEFeature.UnsupportedDeveloperTools, AEFeature.Creative ) );
-	}
+    @Override
+    public boolean onItemUseFirst(
+            final ItemStack stack,
+            final EntityPlayer player,
+            final World world,
+            final int x,
+            final int y,
+            final int z,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (ForgeEventFactory.onItemUseStart(player, stack, 1) <= 0) return true;
 
-	@Override
-	public void registerIcons( final IIconRegister par1IconRegister )
-	{
-		this.itemIcon = new MissingIcon( this );
-	}
+        if (Platform.isClient()) {
+            return false;
+        }
 
-	@Override
-	public boolean onItemUseFirst( final ItemStack stack, final EntityPlayer player, final World world, final int x, final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( ForgeEventFactory.onItemUseStart( player, stack, 1 ) <= 0 )
-			return true;
+        final MeteoritePlacer mp = new MeteoritePlacer();
+        final boolean worked = mp.spawnMeteorite(new StandardWorld(world), x, y, z);
 
-		if( Platform.isClient() )
-		{
-			return false;
-		}
+        if (!worked) {
+            player.addChatMessage(new ChatComponentText("Un-suitable Location."));
+        }
 
-		final MeteoritePlacer mp = new MeteoritePlacer();
-		final boolean worked = mp.spawnMeteorite( new StandardWorld( world ), x, y, z );
-
-		if( !worked )
-		{
-			player.addChatMessage( new ChatComponentText( "Un-suitable Location." ) );
-		}
-
-		return true;
-	}
+        return true;
+    }
 }

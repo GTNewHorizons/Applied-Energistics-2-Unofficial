@@ -18,15 +18,11 @@
 
 package appeng.container.slot;
 
-
 import net.minecraft.inventory.IInventory;
 
+public class SlotNormal extends AppEngSlot {
 
-public class SlotNormal extends AppEngSlot
-{
-
-	public SlotNormal( final IInventory inv, final int slot, final int xPos, final int yPos )
-	{
-		super( inv, slot, xPos, yPos );
-	}
+    public SlotNormal(final IInventory inv, final int slot, final int xPos, final int yPos) {
+        super(inv, slot, xPos, yPos);
+    }
 }

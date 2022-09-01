@@ -18,7 +18,6 @@
 
 package appeng.recipes;
 
-
 import appeng.api.AEApi;
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RecipeError;
@@ -28,247 +27,203 @@ import appeng.api.recipes.ResolverResult;
 import appeng.api.recipes.ResolverResultSet;
 import com.google.common.base.Preconditions;
 import cpw.mods.fml.common.registry.GameRegistry;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.List;
+public class Ingredient implements IIngredient {
 
+    private final boolean isAir;
+    private final String nameSpace;
+    private final String itemName;
+    private final int meta;
+    private final int qty;
+    private NBTTagCompound nbt = null;
+    private ItemStack[] baked;
 
-public class Ingredient implements IIngredient
-{
+    public Ingredient(final RecipeHandler handler, final String input, final int qty)
+            throws RecipeError, MissedIngredientSet {
+        Preconditions.checkNotNull(handler);
+        Preconditions.checkNotNull(input);
+        Preconditions.checkState(qty > 0);
 
-	private final boolean isAir;
-	private final String nameSpace;
-	private final String itemName;
-	private final int meta;
-	private final int qty;
-	private NBTTagCompound nbt = null;
-	private ItemStack[] baked;
+        // works no matter wat!
+        this.qty = qty;
 
-	public Ingredient( final RecipeHandler handler, final String input, final int qty ) throws RecipeError, MissedIngredientSet
-	{
-		Preconditions.checkNotNull( handler );
-		Preconditions.checkNotNull( input );
-		Preconditions.checkState( qty > 0 );
+        if (input.equals("_")) {
+            this.isAir = true;
+            this.nameSpace = "";
+            this.itemName = "";
+            this.meta = OreDictionary.WILDCARD_VALUE;
+            return;
+        }
 
-		// works no matter wat!
-		this.qty = qty;
+        this.isAir = false;
+        final String[] parts = input.split(":");
+        if (parts.length >= 2) {
+            this.nameSpace = handler.alias(parts[0]);
+            String tmpName = handler.alias(parts[1]);
 
-		if( input.equals( "_" ) )
-		{
-			this.isAir = true;
-			this.nameSpace = "";
-			this.itemName = "";
-			this.meta = OreDictionary.WILDCARD_VALUE;
-			return;
-		}
+            if (parts.length != 3) {
+                int sel = 0;
 
-		this.isAir = false;
-		final String[] parts = input.split( ":" );
-		if( parts.length >= 2 )
-		{
-			this.nameSpace = handler.alias( parts[0] );
-			String tmpName = handler.alias( parts[1] );
+                if (this.nameSpace.equals("oreDictionary")) {
+                    if (parts.length == 3) {
+                        throw new RecipeError("Cannot specify meta when using ore dictionary.");
+                    }
+                    sel = OreDictionary.WILDCARD_VALUE;
+                } else {
+                    try {
+                        final Object ro =
+                                AEApi.instance().registries().recipes().resolveItem(this.nameSpace, tmpName);
+                        if (ro instanceof ResolverResult) {
+                            final ResolverResult rr = (ResolverResult) ro;
+                            tmpName = rr.itemName;
+                            sel = rr.damageValue;
+                            this.nbt = rr.compound;
+                        } else if (ro instanceof ResolverResultSet) {
+                            throw new MissedIngredientSet((ResolverResultSet) ro);
+                        }
+                    } catch (final IllegalArgumentException e) {
+                        throw new RecipeError(tmpName + " is not a valid ae2 item definition.");
+                    }
+                }
 
-			if( parts.length != 3 )
-			{
-				int sel = 0;
+                this.meta = sel;
+            } else {
+                if (parts[2].equals("*")) {
+                    this.meta = OreDictionary.WILDCARD_VALUE;
+                } else {
+                    try {
+                        this.meta = Integer.parseInt(parts[2]);
+                    } catch (final NumberFormatException e) {
+                        throw new RecipeError("Invalid Metadata.");
+                    }
+                }
+            }
+            this.itemName = tmpName;
+        } else {
+            throw new RecipeError(input + " : Needs at least Namespace and Name.");
+        }
 
-				if( this.nameSpace.equals( "oreDictionary" ) )
-				{
-					if( parts.length == 3 )
-					{
-						throw new RecipeError( "Cannot specify meta when using ore dictionary." );
-					}
-					sel = OreDictionary.WILDCARD_VALUE;
-				}
-				else
-				{
-					try
-					{
-						final Object ro = AEApi.instance().registries().recipes().resolveItem( this.nameSpace, tmpName );
-						if( ro instanceof ResolverResult )
-						{
-							final ResolverResult rr = (ResolverResult) ro;
-							tmpName = rr.itemName;
-							sel = rr.damageValue;
-							this.nbt = rr.compound;
-						}
-						else if( ro instanceof ResolverResultSet )
-						{
-							throw new MissedIngredientSet( (ResolverResultSet) ro );
-						}
-					}
-					catch( final IllegalArgumentException e )
-					{
-						throw new RecipeError( tmpName + " is not a valid ae2 item definition." );
-					}
-				}
+        handler.getData().knownItem.add(this.toString());
+    }
 
-				this.meta = sel;
-			}
-			else
-			{
-				if( parts[2].equals( "*" ) )
-				{
-					this.meta = OreDictionary.WILDCARD_VALUE;
-				}
-				else
-				{
-					try
-					{
-						this.meta = Integer.parseInt( parts[2] );
-					}
-					catch( final NumberFormatException e )
-					{
-						throw new RecipeError( "Invalid Metadata." );
-					}
-				}
-			}
-			this.itemName = tmpName;
-		}
-		else
-		{
-			throw new RecipeError( input + " : Needs at least Namespace and Name." );
-		}
+    @Override
+    public String toString() {
+        return this.nameSpace + ':' + this.itemName + ':' + this.meta;
+    }
 
-		handler.getData().knownItem.add( this.toString() );
-	}
+    @Override
+    public ItemStack getItemStack() throws RegistrationError, MissingIngredientError {
+        if (this.isAir) {
+            throw new RegistrationError("Found blank item and expected a real item.");
+        }
 
-	@Override
-	public String toString()
-	{
-		return this.nameSpace + ':' + this.itemName + ':' + this.meta;
-	}
+        if (this.nameSpace.equalsIgnoreCase("oreDictionary")) {
+            throw new RegistrationError("Recipe format expected a single item, but got a set of items.");
+        }
 
-	@Override
-	public ItemStack getItemStack() throws RegistrationError, MissingIngredientError
-	{
-		if( this.isAir )
-		{
-			throw new RegistrationError( "Found blank item and expected a real item." );
-		}
+        Block blk = GameRegistry.findBlock(this.nameSpace, this.itemName);
+        if (blk == null) {
+            blk = GameRegistry.findBlock(this.nameSpace, "tile." + this.itemName);
+        }
 
-		if( this.nameSpace.equalsIgnoreCase( "oreDictionary" ) )
-		{
-			throw new RegistrationError( "Recipe format expected a single item, but got a set of items." );
-		}
+        if (blk != null) {
+            final Item it = Item.getItemFromBlock(blk);
+            if (it != null) {
+                return this.makeItemStack(it, this.qty, this.meta, this.nbt);
+            }
+        }
 
-		Block blk = GameRegistry.findBlock( this.nameSpace, this.itemName );
-		if( blk == null )
-		{
-			blk = GameRegistry.findBlock( this.nameSpace, "tile." + this.itemName );
-		}
+        Item it = GameRegistry.findItem(this.nameSpace, this.itemName);
+        if (it == null) {
+            it = GameRegistry.findItem(this.nameSpace, "item." + this.itemName);
+        }
 
-		if( blk != null )
-		{
-			final Item it = Item.getItemFromBlock( blk );
-			if( it != null )
-			{
-				return this.makeItemStack( it, this.qty, this.meta, this.nbt );
-			}
-		}
+        if (it != null) {
+            return this.makeItemStack(it, this.qty, this.meta, this.nbt);
+        }
 
-		Item it = GameRegistry.findItem( this.nameSpace, this.itemName );
-		if( it == null )
-		{
-			it = GameRegistry.findItem( this.nameSpace, "item." + this.itemName );
-		}
+        /*
+         * Object o = Item.itemRegistry.getObject( nameSpace + ":" + itemName ); if ( o instanceof Item ) return new
+         * ItemStack( (Item) o, qty, meta );
+         * if ( o instanceof Block ) return new ItemStack( (Block) o, qty, meta );
+         * o = Item.itemRegistry.getObject( nameSpace + ":item." + itemName ); if ( o instanceof Item ) return new
+         * ItemStack( (Item) o, qty, meta );
+         * o = Block.blockRegistry.getObject( nameSpace + ":tile." + itemName ); if ( o instanceof Block && (!(o
+         * instanceof BlockAir)) ) return new ItemStack( (Block) o, qty, meta );
+         */
 
-		if( it != null )
-		{
-			return this.makeItemStack( it, this.qty, this.meta, this.nbt );
-		}
+        throw new MissingIngredientError("Unable to find item: " + this.toString());
+    }
 
-		/*
-		 * Object o = Item.itemRegistry.getObject( nameSpace + ":" + itemName ); if ( o instanceof Item ) return new
-		 * ItemStack( (Item) o, qty, meta );
-		 * if ( o instanceof Block ) return new ItemStack( (Block) o, qty, meta );
-		 * o = Item.itemRegistry.getObject( nameSpace + ":item." + itemName ); if ( o instanceof Item ) return new
-		 * ItemStack( (Item) o, qty, meta );
-		 * o = Block.blockRegistry.getObject( nameSpace + ":tile." + itemName ); if ( o instanceof Block && (!(o
-		 * instanceof BlockAir)) ) return new ItemStack( (Block) o, qty, meta );
-		 */
+    private ItemStack makeItemStack(
+            final Item it, final int quantity, final int damageValue, final NBTTagCompound compound) {
+        final ItemStack is = new ItemStack(it, quantity, damageValue);
+        is.setTagCompound(compound);
+        return is;
+    }
 
-		throw new MissingIngredientError( "Unable to find item: " + this.toString() );
-	}
+    @Override
+    public ItemStack[] getItemStackSet() throws RegistrationError, MissingIngredientError {
+        if (this.baked != null) {
+            return this.baked;
+        }
 
-	private ItemStack makeItemStack( final Item it, final int quantity, final int damageValue, final NBTTagCompound compound )
-	{
-		final ItemStack is = new ItemStack( it, quantity, damageValue );
-		is.setTagCompound( compound );
-		return is;
-	}
+        if (this.nameSpace.equalsIgnoreCase("oreDictionary")) {
+            final List<ItemStack> ores = OreDictionary.getOres(this.itemName);
+            final ItemStack[] set = ores.toArray(new ItemStack[ores.size()]);
 
-	@Override
-	public ItemStack[] getItemStackSet() throws RegistrationError, MissingIngredientError
-	{
-		if( this.baked != null )
-		{
-			return this.baked;
-		}
+            // clone and set qty.
+            for (int x = 0; x < set.length; x++) {
+                final ItemStack is = set[x].copy();
+                is.stackSize = this.qty;
+                set[x] = is;
+            }
 
-		if( this.nameSpace.equalsIgnoreCase( "oreDictionary" ) )
-		{
-			final List<ItemStack> ores = OreDictionary.getOres( this.itemName );
-			final ItemStack[] set = ores.toArray( new ItemStack[ores.size()] );
+            if (set.length == 0) {
+                throw new MissingIngredientError(
+                        this.itemName + " - ore dictionary could not be resolved to any items.");
+            }
 
-			// clone and set qty.
-			for( int x = 0; x < set.length; x++ )
-			{
-				final ItemStack is = set[x].copy();
-				is.stackSize = this.qty;
-				set[x] = is;
-			}
+            return set;
+        }
 
-			if( set.length == 0 )
-			{
-				throw new MissingIngredientError( this.itemName + " - ore dictionary could not be resolved to any items." );
-			}
+        return new ItemStack[] {this.getItemStack()};
+    }
 
-			return set;
-		}
+    @Override
+    public String getNameSpace() {
+        return this.nameSpace;
+    }
 
-		return new ItemStack[] { this.getItemStack() };
-	}
+    @Override
+    public String getItemName() {
+        return this.itemName;
+    }
 
-	@Override
-	public String getNameSpace()
-	{
-		return this.nameSpace;
-	}
+    @Override
+    public int getDamageValue() {
+        return this.meta;
+    }
 
-	@Override
-	public String getItemName()
-	{
-		return this.itemName;
-	}
+    @Override
+    public int getQty() {
+        return this.qty;
+    }
 
-	@Override
-	public int getDamageValue()
-	{
-		return this.meta;
-	}
+    @Override
+    public boolean isAir() {
+        return this.isAir;
+    }
 
-	@Override
-	public int getQty()
-	{
-		return this.qty;
-	}
-
-	@Override
-	public boolean isAir()
-	{
-		return this.isAir;
-	}
-
-	@Override
-	public void bake() throws RegistrationError, MissingIngredientError
-	{
-		this.baked = null;
-		this.baked = this.getItemStackSet();
-	}
+    @Override
+    public void bake() throws RegistrationError, MissingIngredientError {
+        this.baked = null;
+        this.baked = this.getItemStackSet();
+    }
 }

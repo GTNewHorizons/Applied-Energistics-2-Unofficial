@@ -18,27 +18,29 @@
 
 package appeng.container.slot;
 
-
 import net.minecraft.inventory.IInventory;
 
+public class SlotPatternOutputs extends OptionalSlotFake {
 
-public class SlotPatternOutputs extends OptionalSlotFake
-{
+    public SlotPatternOutputs(
+            final IInventory inv,
+            final IOptionalSlotHost containerBus,
+            final int idx,
+            final int x,
+            final int y,
+            final int offX,
+            final int offY,
+            final int groupNum) {
+        super(inv, containerBus, idx, x, y, offX, offY, groupNum);
+    }
 
-	public SlotPatternOutputs( final IInventory inv, final IOptionalSlotHost containerBus, final int idx, final int x, final int y, final int offX, final int offY, final int groupNum )
-	{
-		super( inv, containerBus, idx, x, y, offX, offY, groupNum );
-	}
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 
-	@Override
-	public boolean isEnabled()
-	{
-		return true;
-	}
-
-	@Override
-	public boolean shouldDisplay()
-	{
-		return super.isEnabled();
-	}
+    @Override
+    public boolean shouldDisplay() {
+        return super.isEnabled();
+    }
 }

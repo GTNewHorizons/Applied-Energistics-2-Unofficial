@@ -18,7 +18,6 @@
 
 package appeng.tile.powersink;
 
-
 /*
  * import net.minecraftforge.common.util.ForgeDirection;
  * import universalelectricity.core.block.IElectrical;

@@ -18,7 +18,6 @@
 
 package appeng.integration.modules;
 
-
 import appeng.api.AEApi;
 import appeng.api.IAppEngApi;
 import appeng.api.config.TunnelType;
@@ -33,51 +32,45 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
+public class PneumaticCraft implements IIntegrationModule {
+    @Reflected
+    public static PneumaticCraft instance;
 
-public class PneumaticCraft implements IIntegrationModule
-{
-	@Reflected
-	public static PneumaticCraft instance;
+    private static final String PNEUMATIC_CRAFT_MOD_ID = "PneumaticCraft";
 
-	private static final String PNEUMATIC_CRAFT_MOD_ID = "PneumaticCraft";
+    @Reflected
+    public PneumaticCraft() {
+        IntegrationHelper.testClassExistence(this, pneumaticCraft.api.block.BlockSupplier.class);
+        IntegrationHelper.testClassExistence(this, pneumaticCraft.api.tileentity.ISidedPneumaticMachine.class);
+        IntegrationHelper.testClassExistence(this, pneumaticCraft.api.tileentity.AirHandlerSupplier.class);
+        IntegrationHelper.testClassExistence(this, pneumaticCraft.api.tileentity.IAirHandler.class);
+    }
 
-	@Reflected
-	public PneumaticCraft()
-	{
-		IntegrationHelper.testClassExistence( this, pneumaticCraft.api.block.BlockSupplier.class );
-		IntegrationHelper.testClassExistence( this, pneumaticCraft.api.tileentity.ISidedPneumaticMachine.class );
-		IntegrationHelper.testClassExistence( this, pneumaticCraft.api.tileentity.AirHandlerSupplier.class );
-		IntegrationHelper.testClassExistence( this, pneumaticCraft.api.tileentity.IAirHandler.class );
-	}
+    @Override
+    public void init() {
+        final IAppEngApi api = AEApi.instance();
+        final IPartHelper partHelper = api.partHelper();
 
-	@Override
-	public void init()
-	{
-		final IAppEngApi api = AEApi.instance();
-		final IPartHelper partHelper = api.partHelper();
+        if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.PneumaticCraft)) {
+            partHelper.registerNewLayer(
+                    appeng.parts.layers.LayerPressure.class.getName(),
+                    pneumaticCraft.api.tileentity.ISidedPneumaticMachine.class.getName());
+        }
+    }
 
-		if( IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.PneumaticCraft ) )
-		{
-			partHelper.registerNewLayer( appeng.parts.layers.LayerPressure.class.getName(), pneumaticCraft.api.tileentity.ISidedPneumaticMachine.class.getName() );
-		}
-	}
+    @Override
+    public void postInit() {
+        this.registerPressureAttunement("pressureTube");
+        this.registerPressureAttunement("advancedPressureTube");
+    }
 
-	@Override
-	public void postInit()
-	{
-		this.registerPressureAttunement( "pressureTube" );
-		this.registerPressureAttunement( "advancedPressureTube" );
-	}
+    private void registerPressureAttunement(final String itemID) {
+        final IP2PTunnelRegistry registry = AEApi.instance().registries().p2pTunnel();
+        final ItemStack modItem = GameRegistry.findItemStack(PNEUMATIC_CRAFT_MOD_ID, itemID, 1);
 
-	private void registerPressureAttunement( final String itemID )
-	{
-		final IP2PTunnelRegistry registry = AEApi.instance().registries().p2pTunnel();
-		final ItemStack modItem = GameRegistry.findItemStack( PNEUMATIC_CRAFT_MOD_ID, itemID, 1 );
-
-		if( modItem != null )
-		{
-			modItem.setItemDamage( OreDictionary.WILDCARD_VALUE );
-			registry.addNewAttunement( modItem, TunnelType.PRESSURE );
-		}
-	}
+        if (modItem != null) {
+            modItem.setItemDamage(OreDictionary.WILDCARD_VALUE);
+            registry.addNewAttunement(modItem, TunnelType.PRESSURE);
+        }
+    }
 }

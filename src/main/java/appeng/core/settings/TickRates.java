@@ -18,73 +18,64 @@
 
 package appeng.core.settings;
 
-
 import appeng.core.AEConfig;
 
+public enum TickRates {
+    Interface(5, 120),
 
-public enum TickRates
-{
+    ImportBus(5, 40),
 
-	Interface( 5, 120 ),
+    ExportBus(5, 60),
 
-	ImportBus( 5, 40 ),
+    AnnihilationPlane(2, 120),
 
-	ExportBus( 5, 60 ),
+    METunnel(5, 20),
 
-	AnnihilationPlane( 2, 120 ),
+    Inscriber(1, 1),
 
-	METunnel( 5, 20 ),
+    IOPort(1, 5),
 
-	Inscriber( 1, 1 ),
+    VibrationChamber(10, 40),
 
-	IOPort( 1, 5 ),
+    StorageBus(5, 60),
 
-	VibrationChamber( 10, 40 ),
+    ItemTunnel(5, 60),
 
-	StorageBus( 5, 60 ),
+    LightTunnel(5, 120),
 
-	ItemTunnel( 5, 60 ),
+    OpenComputersTunnel(1, 5),
 
-	LightTunnel( 5, 120 ),
+    PressureTunnel(1, 120);
 
-	OpenComputersTunnel( 1, 5 ),
+    private int min;
+    private int max;
 
-	PressureTunnel( 1, 120 );
+    TickRates(final int min, final int max) {
+        this.setMin(min);
+        this.setMax(max);
+    }
 
-	private int min;
-	private int max;
+    public void Load(final AEConfig config) {
+        config.addCustomCategoryComment(
+                "TickRates",
+                " Min / Max Tickrates for dynamic ticking, most of these components also use sleeping, to prevent constant ticking, adjust with care, non standard rates are not supported or tested.");
+        this.setMin(config.get("TickRates", this.name() + ".min", this.getMin()).getInt(this.getMin()));
+        this.setMax(config.get("TickRates", this.name() + ".max", this.getMax()).getInt(this.getMax()));
+    }
 
-	TickRates( final int min, final int max )
-	{
-		this.setMin( min );
-		this.setMax( max );
-	}
+    public int getMax() {
+        return this.max;
+    }
 
-	public void Load( final AEConfig config )
-	{
-		config.addCustomCategoryComment( "TickRates", " Min / Max Tickrates for dynamic ticking, most of these components also use sleeping, to prevent constant ticking, adjust with care, non standard rates are not supported or tested." );
-		this.setMin( config.get( "TickRates", this.name() + ".min", this.getMin() ).getInt( this.getMin() ) );
-		this.setMax( config.get( "TickRates", this.name() + ".max", this.getMax() ).getInt( this.getMax() ) );
-	}
+    public void setMax(final int max) {
+        this.max = max;
+    }
 
-	public int getMax()
-	{
-		return this.max;
-	}
+    public int getMin() {
+        return this.min;
+    }
 
-	public void setMax( final int max )
-	{
-		this.max = max;
-	}
-
-	public int getMin()
-	{
-		return this.min;
-	}
-
-	public void setMin( final int min )
-	{
-		this.min = min;
-	}
-
+    public void setMin(final int min) {
+        this.min = min;
+    }
 }

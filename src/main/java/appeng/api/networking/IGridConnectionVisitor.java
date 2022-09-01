@@ -23,14 +23,12 @@
 
 package appeng.api.networking;
 
+public interface IGridConnectionVisitor extends IGridVisitor {
 
-public interface IGridConnectionVisitor extends IGridVisitor
-{
-
-	/**
-	 * Called for each connection on the network.
-	 *
-	 * @param n the connection.
-	 */
-	void visitConnection( IGridConnection n );
+    /**
+     * Called for each connection on the network.
+     *
+     * @param n the connection.
+     */
+    void visitConnection(IGridConnection n);
 }

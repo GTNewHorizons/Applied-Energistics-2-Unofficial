@@ -18,27 +18,25 @@
 
 package appeng.server.subcommands;
 
-
 import appeng.server.ISubCommand;
 import com.google.common.base.Joiner;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 
+public class Supporters implements ISubCommand {
 
-public class Supporters implements ISubCommand
-{
+    @Override
+    public String getHelp(final MinecraftServer srv) {
+        return "commands.ae2.Supporters";
+    }
 
-	@Override
-	public String getHelp( final MinecraftServer srv )
-	{
-		return "commands.ae2.Supporters";
-	}
-
-	@Override
-	public void call( final MinecraftServer srv, final String[] data, final ICommandSender sender )
-	{
-		final String[] who = { "Stig Halvorsen", "Josh Ricker", "Jenny \"Othlon\" Sutherland", "Hristo Bogdanov", "BevoLJ" };
-		sender.addChatMessage( new ChatComponentText( "Special thanks to " + Joiner.on( ", " ).join( who ) ) );
-	}
+    @Override
+    public void call(final MinecraftServer srv, final String[] data, final ICommandSender sender) {
+        final String[] who = {
+            "Stig Halvorsen", "Josh Ricker", "Jenny \"Othlon\" Sutherland", "Hristo Bogdanov", "BevoLJ"
+        };
+        sender.addChatMessage(
+                new ChatComponentText("Special thanks to " + Joiner.on(", ").join(who)));
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.parts.reporting;
 
-
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.util.AEColor;
 import appeng.client.texture.CableBusTextures;
@@ -30,7 +29,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
-
 /**
  * A very simple part for emitting light.
  * <p>
@@ -41,91 +39,84 @@ import net.minecraftforge.common.util.ForgeDirection;
  * @version rv3
  * @since rv3
  */
-public abstract class AbstractPartPanel extends AbstractPartReporting
-{
-	private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartMonitor_Bright;
-	private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartMonitor_Colored;
-	private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartMonitor_Colored;
+public abstract class AbstractPartPanel extends AbstractPartReporting {
+    private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartMonitor_Bright;
+    private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartMonitor_Colored;
+    private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartMonitor_Colored;
 
-	public AbstractPartPanel( final ItemStack is )
-	{
-		super( is, false );
-	}
+    public AbstractPartPanel(final ItemStack is) {
+        super(is, false);
+    }
 
-	@Override
-	public CableBusTextures getFrontBright()
-	{
-		return FRONT_BRIGHT_ICON;
-	}
+    @Override
+    public CableBusTextures getFrontBright() {
+        return FRONT_BRIGHT_ICON;
+    }
 
-	@Override
-	public CableBusTextures getFrontColored()
-	{
-		return FRONT_COLORED_ICON;
-	}
+    @Override
+    public CableBusTextures getFrontColored() {
+        return FRONT_COLORED_ICON;
+    }
 
-	@Override
-	public CableBusTextures getFrontDark()
-	{
-		return FRONT_DARK_ICON;
-	}
+    @Override
+    public CableBusTextures getFrontDark() {
+        return FRONT_DARK_ICON;
+    }
 
-	@Override
-	public boolean isLightSource()
-	{
-		return true;
-	}
+    @Override
+    public boolean isLightSource() {
+        return true;
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void renderInventory( final IPartRenderHelper rh, final RenderBlocks renderer )
-	{
-		rh.setBounds( 2, 2, 14, 14, 14, 16 );
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void renderInventory(final IPartRenderHelper rh, final RenderBlocks renderer) {
+        rh.setBounds(2, 2, 14, 14, 14, 16);
 
-		final IIcon sideTexture = CableBusTextures.PartMonitorSides.getIcon();
-		final IIcon backTexture = CableBusTextures.PartMonitorBack.getIcon();
+        final IIcon sideTexture = CableBusTextures.PartMonitorSides.getIcon();
+        final IIcon backTexture = CableBusTextures.PartMonitorBack.getIcon();
 
-		rh.setTexture( sideTexture, sideTexture, backTexture, this.getItemStack().getIconIndex(), sideTexture, sideTexture );
-		rh.renderInventoryBox( renderer );
+        rh.setTexture(
+                sideTexture, sideTexture, backTexture, this.getItemStack().getIconIndex(), sideTexture, sideTexture);
+        rh.renderInventoryBox(renderer);
 
-		rh.setInvColor( this.getBrightnessColor() );
-		rh.renderInventoryFace( this.getFrontBright().getIcon(), ForgeDirection.SOUTH, renderer );
+        rh.setInvColor(this.getBrightnessColor());
+        rh.renderInventoryFace(this.getFrontBright().getIcon(), ForgeDirection.SOUTH, renderer);
 
-		rh.setBounds( 4, 4, 13, 12, 12, 14 );
-		rh.renderInventoryBox( renderer );
-	}
+        rh.setBounds(4, 4, 13, 12, 12, 14);
+        rh.renderInventoryBox(renderer);
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void renderStatic( final int x, final int y, final int z, final IPartRenderHelper rh, final RenderBlocks renderer )
-	{
-		final IIcon sideTexture = CableBusTextures.PartMonitorSides.getIcon();
-		final IIcon backTexture = CableBusTextures.PartMonitorBack.getIcon();
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void renderStatic(
+            final int x, final int y, final int z, final IPartRenderHelper rh, final RenderBlocks renderer) {
+        final IIcon sideTexture = CableBusTextures.PartMonitorSides.getIcon();
+        final IIcon backTexture = CableBusTextures.PartMonitorBack.getIcon();
 
-		rh.setTexture( sideTexture, sideTexture, backTexture, this.getItemStack().getIconIndex(), sideTexture, sideTexture );
+        rh.setTexture(
+                sideTexture, sideTexture, backTexture, this.getItemStack().getIconIndex(), sideTexture, sideTexture);
 
-		rh.setBounds( 2, 2, 14, 14, 14, 16 );
-		rh.renderBlock( x, y, z, renderer );
+        rh.setBounds(2, 2, 14, 14, 14, 16);
+        rh.renderBlock(x, y, z, renderer);
 
-		if( this.getLightLevel() > 0 )
-		{
-			final int l = 13;
-			Tessellator.instance.setBrightness( l << 20 | l << 4 );
-		}
+        if (this.getLightLevel() > 0) {
+            final int l = 13;
+            Tessellator.instance.setBrightness(l << 20 | l << 4);
+        }
 
-		Tessellator.instance.setColorOpaque_I( this.getBrightnessColor() );
-		rh.renderFace( x, y, z, this.getFrontBright().getIcon(), ForgeDirection.SOUTH, renderer );
+        Tessellator.instance.setColorOpaque_I(this.getBrightnessColor());
+        rh.renderFace(x, y, z, this.getFrontBright().getIcon(), ForgeDirection.SOUTH, renderer);
 
-		rh.setBounds( 4, 4, 13, 12, 12, 14 );
-		rh.renderBlock( x, y, z, renderer );
-	}
+        rh.setBounds(4, 4, 13, 12, 12, 14);
+        rh.renderBlock(x, y, z, renderer);
+    }
 
-	/**
-	 * How bright the color the panel should appear. Usually it depends on a {@link AEColor} variant.
-	 * This does not affect the actual light level of the part.
-	 *
-	 * @return the brightness to be used.
-	 */
-	protected abstract int getBrightnessColor();
-
+    /**
+     * How bright the color the panel should appear. Usually it depends on a {@link AEColor} variant.
+     * This does not affect the actual light level of the part.
+     *
+     * @return the brightness to be used.
+     */
+    protected abstract int getBrightnessColor();
 }

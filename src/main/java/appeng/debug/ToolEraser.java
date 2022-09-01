@@ -18,13 +18,16 @@
 
 package appeng.debug;
 
-
 import appeng.api.util.WorldCoord;
 import appeng.client.texture.MissingIcon;
 import appeng.core.AELog;
 import appeng.core.features.AEFeature;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
@@ -33,81 +36,78 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.LinkedList;
-import java.util.List;
+public class ToolEraser extends AEBaseItem {
 
+    private static final int BLOCK_ERASE_LIMIT = 90000;
 
-public class ToolEraser extends AEBaseItem
-{
+    public ToolEraser() {
+        this.setFeature(EnumSet.of(AEFeature.UnsupportedDeveloperTools, AEFeature.Creative));
+    }
 
-	private static final int BLOCK_ERASE_LIMIT = 90000;
+    @Override
+    public void registerIcons(final IIconRegister par1IconRegister) {
+        this.itemIcon = new MissingIcon(this);
+    }
 
-	public ToolEraser()
-	{
-		this.setFeature( EnumSet.of( AEFeature.UnsupportedDeveloperTools, AEFeature.Creative ) );
-	}
+    @Override
+    public boolean onItemUseFirst(
+            final ItemStack stack,
+            final EntityPlayer player,
+            final World world,
+            final int x,
+            final int y,
+            final int z,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (ForgeEventFactory.onItemUseStart(player, stack, 1) <= 0) return true;
 
-	@Override
-	public void registerIcons( final IIconRegister par1IconRegister )
-	{
-		this.itemIcon = new MissingIcon( this );
-	}
+        if (Platform.isClient()) {
+            return false;
+        }
 
-	@Override
-	public boolean onItemUseFirst( final ItemStack stack, final EntityPlayer player, final World world, final int x, final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( ForgeEventFactory.onItemUseStart( player, stack, 1 ) <= 0 )
-			return true;
+        final Block blk = world.getBlock(x, y, z);
+        final int meta = world.getBlockMetadata(x, y, z);
 
-		if( Platform.isClient() )
-		{
-			return false;
-		}
+        if (blk != null
+                && ForgeEventFactory.onPlayerInteract(
+                                player, PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK, x, y, z, side, world)
+                        .isCanceled()) return true;
 
-		final Block blk = world.getBlock( x, y, z );
-		final int meta = world.getBlockMetadata( x, y, z );
+        List<WorldCoord> next = new LinkedList<WorldCoord>();
+        next.add(new WorldCoord(x, y, z));
 
-		if( blk != null && ForgeEventFactory.onPlayerInteract( player, PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK, x, y, z, side, world ).isCanceled() )
-			return true;
+        int blocks = 0;
+        while (blocks < BLOCK_ERASE_LIMIT && !next.isEmpty()) {
+            final List<WorldCoord> c = next;
+            next = new LinkedList<WorldCoord>();
 
-		List<WorldCoord> next = new LinkedList<WorldCoord>();
-		next.add( new WorldCoord( x, y, z ) );
+            for (final WorldCoord wc : c) {
+                final Block c_blk = world.getBlock(wc.x, wc.y, wc.z);
+                final int c_meta = world.getBlockMetadata(wc.x, wc.y, wc.z);
 
-		int blocks = 0;
-		while( blocks < BLOCK_ERASE_LIMIT && !next.isEmpty() )
-		{
-			final List<WorldCoord> c = next;
-			next = new LinkedList<WorldCoord>();
+                if (c_blk == blk && c_meta == meta) {
+                    blocks++;
+                    world.setBlock(wc.x, wc.y, wc.z, Platform.AIR_BLOCK);
 
-			for( final WorldCoord wc : c )
-			{
-				final Block c_blk = world.getBlock( wc.x, wc.y, wc.z );
-				final int c_meta = world.getBlockMetadata( wc.x, wc.y, wc.z );
+                    this.wrappedAdd(world, wc.x + 1, wc.y, wc.z, next);
+                    this.wrappedAdd(world, wc.x - 1, wc.y, wc.z, next);
+                    this.wrappedAdd(world, wc.x, wc.y + 1, wc.z, next);
+                    this.wrappedAdd(world, wc.x, wc.y - 1, wc.z, next);
+                    this.wrappedAdd(world, wc.x, wc.y, wc.z + 1, next);
+                    this.wrappedAdd(world, wc.x, wc.y, wc.z - 1, next);
+                }
+            }
+        }
 
-				if( c_blk == blk && c_meta == meta )
-				{
-					blocks++;
-					world.setBlock( wc.x, wc.y, wc.z, Platform.AIR_BLOCK );
+        AELog.info("Delete " + blocks + " blocks");
 
-					this.wrappedAdd( world, wc.x + 1, wc.y, wc.z, next );
-					this.wrappedAdd( world, wc.x - 1, wc.y, wc.z, next );
-					this.wrappedAdd( world, wc.x, wc.y + 1, wc.z, next );
-					this.wrappedAdd( world, wc.x, wc.y - 1, wc.z, next );
-					this.wrappedAdd( world, wc.x, wc.y, wc.z + 1, next );
-					this.wrappedAdd( world, wc.x, wc.y, wc.z - 1, next );
-				}
-			}
-		}
+        return true;
+    }
 
-		AELog.info( "Delete " + blocks + " blocks" );
-
-		return true;
-	}
-
-	private void wrappedAdd( final World world, final int i, final int y, final int z, final Collection<WorldCoord> next )
-	{
-		next.add( new WorldCoord( i, y, z ) );
-	}
+    private void wrappedAdd(
+            final World world, final int i, final int y, final int z, final Collection<WorldCoord> next) {
+        next.add(new WorldCoord(i, y, z));
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.block.misc;
 
-
 import appeng.api.util.IOrientable;
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderBlockInterface;
@@ -28,64 +27,61 @@ import appeng.tile.misc.TileInterface;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.EnumSet;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
+public class BlockInterface extends AEBaseTileBlock {
 
+    public BlockInterface() {
+        super(Material.iron);
 
-public class BlockInterface extends AEBaseTileBlock
-{
+        this.setTileEntity(TileInterface.class);
+        this.setFeature(EnumSet.of(AEFeature.Core));
+    }
 
-	public BlockInterface()
-	{
-		super( Material.iron );
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RenderBlockInterface getRenderer() {
+        return new RenderBlockInterface();
+    }
 
-		this.setTileEntity( TileInterface.class );
-		this.setFeature( EnumSet.of( AEFeature.Core ) );
-	}
+    @Override
+    public boolean onActivated(
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final EntityPlayer p,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (p.isSneaking()) {
+            return false;
+        }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected RenderBlockInterface getRenderer()
-	{
-		return new RenderBlockInterface();
-	}
+        final TileInterface tg = this.getTileEntity(w, x, y, z);
+        if (tg != null) {
+            if (Platform.isServer()) {
+                Platform.openGUI(p, tg, ForgeDirection.getOrientation(side), GuiBridge.GUI_INTERFACE);
+            }
+            return true;
+        }
+        return false;
+    }
 
-	@Override
-	public boolean onActivated( final World w, final int x, final int y, final int z, final EntityPlayer p, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( p.isSneaking() )
-		{
-			return false;
-		}
+    @Override
+    protected boolean hasCustomRotation() {
+        return true;
+    }
 
-		final TileInterface tg = this.getTileEntity( w, x, y, z );
-		if( tg != null )
-		{
-			if( Platform.isServer() )
-			{
-				Platform.openGUI( p, tg, ForgeDirection.getOrientation( side ), GuiBridge.GUI_INTERFACE );
-			}
-			return true;
-		}
-		return false;
-	}
-
-	@Override
-	protected boolean hasCustomRotation()
-	{
-		return true;
-	}
-
-	@Override
-	protected void customRotateBlock( final IOrientable rotatable, final ForgeDirection axis )
-	{
-		if( rotatable instanceof TileInterface )
-		{
-			( (TileInterface) rotatable ).setSide( axis );
-		}
-	}
+    @Override
+    protected void customRotateBlock(final IOrientable rotatable, final ForgeDirection axis) {
+        if (rotatable instanceof TileInterface) {
+            ((TileInterface) rotatable).setSide(axis);
+        }
+    }
 }

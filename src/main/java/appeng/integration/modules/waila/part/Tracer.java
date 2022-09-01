@@ -18,14 +18,12 @@
 
 package appeng.integration.modules.waila.part;
 
-
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
-
 
 /**
  * Tracer for players hitting blocks
@@ -34,62 +32,55 @@ import net.minecraft.world.World;
  * @version rv2
  * @since rv2
  */
-public final class Tracer
-{
-	/**
-	 * Trace view of players to blocks.
-	 * Ignore all which are out of reach.
-	 *
-	 * @param world  word of block
-	 * @param player player viewing block
-	 * @param x      x pos of block
-	 * @param y      y pos of block
-	 * @param z      z pos of block
-	 * @return trace movement. Can be null
-	 */
-	public MovingObjectPosition retraceBlock( final World world, final EntityPlayerMP player, final int x, final int y, final int z )
-	{
-		final Block block = world.getBlock( x, y, z );
+public final class Tracer {
+    /**
+     * Trace view of players to blocks.
+     * Ignore all which are out of reach.
+     *
+     * @param world  word of block
+     * @param player player viewing block
+     * @param x      x pos of block
+     * @param y      y pos of block
+     * @param z      z pos of block
+     * @return trace movement. Can be null
+     */
+    public MovingObjectPosition retraceBlock(
+            final World world, final EntityPlayerMP player, final int x, final int y, final int z) {
+        final Block block = world.getBlock(x, y, z);
 
-		final Vec3 headVec = this.getCorrectedHeadVec( player );
-		final Vec3 lookVec = player.getLook( 1.0F );
-		final double reach = this.getBlockReachDistance_server( player );
-		final Vec3 endVec = headVec.addVector( lookVec.xCoord * reach, lookVec.yCoord * reach, lookVec.zCoord * reach );
+        final Vec3 headVec = this.getCorrectedHeadVec(player);
+        final Vec3 lookVec = player.getLook(1.0F);
+        final double reach = this.getBlockReachDistance_server(player);
+        final Vec3 endVec = headVec.addVector(lookVec.xCoord * reach, lookVec.yCoord * reach, lookVec.zCoord * reach);
 
-		return block.collisionRayTrace( world, x, y, z, headVec, endVec );
-	}
+        return block.collisionRayTrace(world, x, y, z, headVec, endVec);
+    }
 
-	/**
-	 * Gets the view point of a player
-	 *
-	 * @param player player with head
-	 * @return view point of player
-	 */
-	private Vec3 getCorrectedHeadVec( final EntityPlayer player )
-	{
-		final Vec3 v = Vec3.createVectorHelper( player.posX, player.posY, player.posZ );
-		if( player.worldObj.isRemote )
-		{
-			// compatibility with eye height changing mods
-			v.yCoord += player.getEyeHeight() - player.getDefaultEyeHeight();
-		}
-		else
-		{
-			v.yCoord += player.getEyeHeight();
-			if( player instanceof EntityPlayerMP && player.isSneaking() )
-			{
-				v.yCoord -= 0.08;
-			}
-		}
-		return v;
-	}
+    /**
+     * Gets the view point of a player
+     *
+     * @param player player with head
+     * @return view point of player
+     */
+    private Vec3 getCorrectedHeadVec(final EntityPlayer player) {
+        final Vec3 v = Vec3.createVectorHelper(player.posX, player.posY, player.posZ);
+        if (player.worldObj.isRemote) {
+            // compatibility with eye height changing mods
+            v.yCoord += player.getEyeHeight() - player.getDefaultEyeHeight();
+        } else {
+            v.yCoord += player.getEyeHeight();
+            if (player instanceof EntityPlayerMP && player.isSneaking()) {
+                v.yCoord -= 0.08;
+            }
+        }
+        return v;
+    }
 
-	/**
-	 * @param player multi-player player
-	 * @return block reach distance of player
-	 */
-	private double getBlockReachDistance_server( final EntityPlayerMP player )
-	{
-		return player.theItemInWorldManager.getBlockReachDistance();
-	}
+    /**
+     * @param player multi-player player
+     * @return block reach distance of player
+     */
+    private double getBlockReachDistance_server(final EntityPlayerMP player) {
+        return player.theItemInWorldManager.getBlockReachDistance();
+    }
 }

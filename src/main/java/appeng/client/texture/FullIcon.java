@@ -18,93 +18,77 @@
 
 package appeng.client.texture;
 
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.util.IIcon;
 
+public class FullIcon implements IIcon {
 
-public class FullIcon implements IIcon
-{
+    private final IIcon p;
 
-	private final IIcon p;
+    public FullIcon(final IIcon o) {
+        if (o == null) {
+            throw new IllegalArgumentException("Cannot create a wrapper icon with a null icon.");
+        }
 
-	public FullIcon( final IIcon o )
-	{
-		if( o == null )
-		{
-			throw new IllegalArgumentException( "Cannot create a wrapper icon with a null icon." );
-		}
+        this.p = o;
+    }
 
-		this.p = o;
-	}
+    @Override
+    public int getIconWidth() {
+        return this.p.getIconWidth();
+    }
 
-	@Override
-	public int getIconWidth()
-	{
-		return this.p.getIconWidth();
-	}
+    @Override
+    public int getIconHeight() {
+        return this.p.getIconHeight();
+    }
 
-	@Override
-	public int getIconHeight()
-	{
-		return this.p.getIconHeight();
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public float getMinU() {
+        return this.p.getMinU();
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public float getMinU()
-	{
-		return this.p.getMinU();
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public float getMaxU() {
+        return this.p.getMaxU();
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public float getMaxU()
-	{
-		return this.p.getMaxU();
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public float getInterpolatedU(final double d0) {
+        if (d0 > 8.0) {
+            return this.p.getMaxU();
+        }
+        return this.p.getMinU();
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public float getInterpolatedU( final double d0 )
-	{
-		if( d0 > 8.0 )
-		{
-			return this.p.getMaxU();
-		}
-		return this.p.getMinU();
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public float getMinV() {
+        return this.p.getMinV();
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public float getMinV()
-	{
-		return this.p.getMinV();
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public float getMaxV() {
+        return this.p.getMaxV();
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public float getMaxV()
-	{
-		return this.p.getMaxV();
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public float getInterpolatedV(final double d0) {
+        if (d0 > 8.0) {
+            return this.p.getMaxV();
+        }
+        return this.p.getMinV();
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public float getInterpolatedV( final double d0 )
-	{
-		if( d0 > 8.0 )
-		{
-			return this.p.getMaxV();
-		}
-		return this.p.getMinV();
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	public String getIconName()
-	{
-		return this.p.getIconName();
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public String getIconName() {
+        return this.p.getIconName();
+    }
 }

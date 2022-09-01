@@ -18,7 +18,6 @@
 
 package appeng.tile.crafting;
 
-
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.implementations.IPowerChannelState;
@@ -41,345 +40,287 @@ import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
 import appeng.util.Platform;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Arrays;
+public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IPowerChannelState {
+    private final CraftingCPUCalculator calc = new CraftingCPUCalculator(this);
 
+    private ISimplifiedBundle lightCache;
 
-public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IPowerChannelState
-{
-	private final CraftingCPUCalculator calc = new CraftingCPUCalculator( this );
+    private NBTTagCompound previousState = null;
+    private boolean isCoreBlock = false;
+    private CraftingCPUCluster cluster;
+    private static final int ACCELERATOR_SCALE_FACTOR = 4;
 
-	private ISimplifiedBundle lightCache;
-
-	private NBTTagCompound previousState = null;
-	private boolean isCoreBlock = false;
-	private CraftingCPUCluster cluster;
-	private static final int ACCELERATOR_SCALE_FACTOR = 4;
-
-	public TileCraftingTile()
-	{
-		this.getProxy().setFlags( GridFlags.MULTIBLOCK, GridFlags.REQUIRE_CHANNEL );
-		this.getProxy().setValidSides( EnumSet.noneOf( ForgeDirection.class ) );
-	}
-
-	@Override
-	protected AENetworkProxy createProxy()
-	{
-		return new AENetworkProxyMultiblock( this, "proxy", this.getItemFromTile( this ), true );
-	}
-
-	@Override
-	protected ItemStack getItemFromTile( final Object obj )
-	{
-		if( ( (TileCraftingTile) obj ).isAccelerator() )
-		{
-			for( final ItemStack accelerator : AEApi.instance().definitions().blocks().craftingAccelerator().maybeStack( 1 ).asSet() )
-			{
-				return accelerator;
-			}
-		}
-
-		return super.getItemFromTile( obj );
-	}
-
-	@Override
-	public boolean canBeRotated()
-	{
-		return true;// return BlockCraftingUnit.checkType( worldObj.getBlockMetadata( xCoord, yCoord, zCoord ),
-		// BlockCraftingUnit.BASE_MONITOR );
-	}
-
-	@Override
-	public void setName( final String name )
-	{
-		super.setName( name );
-		if( this.cluster != null )
-		{
-			this.cluster.updateName();
-		}
-	}
-
-	public boolean isAccelerator()
-	{
-		if( this.worldObj == null )
-		{
-			return false;
-		}
-		return Arrays.asList( 1, 2, 3 ).contains(this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 3);
-	}
-
-	public int acceleratorValue()
-    {
-        int meta = this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 3;
-        return (int) Math.pow( ACCELERATOR_SCALE_FACTOR, meta - 1 );
+    public TileCraftingTile() {
+        this.getProxy().setFlags(GridFlags.MULTIBLOCK, GridFlags.REQUIRE_CHANNEL);
+        this.getProxy().setValidSides(EnumSet.noneOf(ForgeDirection.class));
     }
 
-	@Override
-	public void onReady()
-	{
-		super.onReady();
-		this.getProxy().setVisualRepresentation( this.getItemFromTile( this ) );
-		this.updateMultiBlock();
-	}
+    @Override
+    protected AENetworkProxy createProxy() {
+        return new AENetworkProxyMultiblock(this, "proxy", this.getItemFromTile(this), true);
+    }
 
-	public void updateMultiBlock()
-	{
-		this.calc.calculateMultiblock( this.worldObj, this.getLocation() );
-	}
+    @Override
+    protected ItemStack getItemFromTile(final Object obj) {
+        if (((TileCraftingTile) obj).isAccelerator()) {
+            for (final ItemStack accelerator : AEApi.instance()
+                    .definitions()
+                    .blocks()
+                    .craftingAccelerator()
+                    .maybeStack(1)
+                    .asSet()) {
+                return accelerator;
+            }
+        }
 
-	public void updateStatus( final CraftingCPUCluster c )
-	{
-		if( this.cluster != null && this.cluster != c )
-		{
-			this.cluster.breakCluster();
-		}
+        return super.getItemFromTile(obj);
+    }
 
-		this.cluster = c;
-		this.updateMeta( true );
-	}
+    @Override
+    public boolean canBeRotated() {
+        return true; // return BlockCraftingUnit.checkType( worldObj.getBlockMetadata( xCoord, yCoord, zCoord ),
+        // BlockCraftingUnit.BASE_MONITOR );
+    }
 
-	public void updateMeta( final boolean updateFormed )
-	{
-		if( this.worldObj == null || this.notLoaded() )
-		{
-			return;
-		}
+    @Override
+    public void setName(final String name) {
+        super.setName(name);
+        if (this.cluster != null) {
+            this.cluster.updateName();
+        }
+    }
 
-		final boolean formed = this.isFormed();
-		boolean power = false;
+    public boolean isAccelerator() {
+        if (this.worldObj == null) {
+            return false;
+        }
+        return Arrays.asList(1, 2, 3)
+                .contains(this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3);
+    }
 
-		if( this.getProxy().isReady() )
-		{
-			power = this.getProxy().isActive();
-		}
+    public int acceleratorValue() {
+        int meta = this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3;
+        return (int) Math.pow(ACCELERATOR_SCALE_FACTOR, meta - 1);
+    }
 
-		final int current = this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord );
-		final int newMeta = ( current & 3 ) | ( formed ? 8 : 0 ) | ( power ? 4 : 0 );
+    @Override
+    public void onReady() {
+        super.onReady();
+        this.getProxy().setVisualRepresentation(this.getItemFromTile(this));
+        this.updateMultiBlock();
+    }
 
-		if( current != newMeta )
-		{
-			this.worldObj.setBlockMetadataWithNotify( this.xCoord, this.yCoord, this.zCoord, newMeta, 2 );
-		}
+    public void updateMultiBlock() {
+        this.calc.calculateMultiblock(this.worldObj, this.getLocation());
+    }
 
-		if( updateFormed )
-		{
-			if( formed )
-			{
-				this.getProxy().setValidSides( EnumSet.allOf( ForgeDirection.class ) );
-			}
-			else
-			{
-				this.getProxy().setValidSides( EnumSet.noneOf( ForgeDirection.class ) );
-			}
-		}
-	}
+    public void updateStatus(final CraftingCPUCluster c) {
+        if (this.cluster != null && this.cluster != c) {
+            this.cluster.breakCluster();
+        }
 
-	public boolean isFormed()
-	{
-		if( Platform.isClient() )
-		{
-			return ( this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 8 ) == 8;
-		}
-		return this.cluster != null;
-	}
+        this.cluster = c;
+        this.updateMeta(true);
+    }
 
-	@TileEvent( TileEventType.WORLD_NBT_WRITE )
-	public void writeToNBT_TileCraftingTile( final NBTTagCompound data )
-	{
-		data.setBoolean( "core", this.isCoreBlock() );
-		if( this.isCoreBlock() && this.cluster != null )
-		{
-			this.cluster.writeToNBT( data );
-		}
-	}
+    public void updateMeta(final boolean updateFormed) {
+        if (this.worldObj == null || this.notLoaded()) {
+            return;
+        }
 
-	@TileEvent( TileEventType.WORLD_NBT_READ )
-	public void readFromNBT_TileCraftingTile( final NBTTagCompound data )
-	{
-		this.setCoreBlock( data.getBoolean( "core" ) );
-		if( this.isCoreBlock() )
-		{
-			if( this.cluster != null )
-			{
-				this.cluster.readFromNBT( data );
-			}
-			else
-			{
-				this.setPreviousState( (NBTTagCompound) data.copy() );
-			}
-		}
-	}
+        final boolean formed = this.isFormed();
+        boolean power = false;
 
-	@Override
-	public void disconnect( final boolean update )
-	{
-		if( this.cluster != null )
-		{
-			this.cluster.destroy();
-			if( update )
-			{
-				this.updateMeta( true );
-			}
-		}
-	}
+        if (this.getProxy().isReady()) {
+            power = this.getProxy().isActive();
+        }
 
-	@Override
-	public IAECluster getCluster()
-	{
-		return this.cluster;
-	}
+        final int current = this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord);
+        final int newMeta = (current & 3) | (formed ? 8 : 0) | (power ? 4 : 0);
 
-	@Override
-	public boolean isValid()
-	{
-		return true;
-	}
+        if (current != newMeta) {
+            this.worldObj.setBlockMetadataWithNotify(this.xCoord, this.yCoord, this.zCoord, newMeta, 2);
+        }
 
-	@MENetworkEventSubscribe
-	public void onPowerStateChange( final MENetworkChannelsChanged ev )
-	{
-		this.updateMeta( false );
-	}
+        if (updateFormed) {
+            if (formed) {
+                this.getProxy().setValidSides(EnumSet.allOf(ForgeDirection.class));
+            } else {
+                this.getProxy().setValidSides(EnumSet.noneOf(ForgeDirection.class));
+            }
+        }
+    }
 
-	@MENetworkEventSubscribe
-	public void onPowerStateChange( final MENetworkPowerStatusChange ev )
-	{
-		this.updateMeta( false );
-	}
+    public boolean isFormed() {
+        if (Platform.isClient()) {
+            return (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 8) == 8;
+        }
+        return this.cluster != null;
+    }
 
-	public boolean isStatus()
-	{
-		return false;
-	}
+    @TileEvent(TileEventType.WORLD_NBT_WRITE)
+    public void writeToNBT_TileCraftingTile(final NBTTagCompound data) {
+        data.setBoolean("core", this.isCoreBlock());
+        if (this.isCoreBlock() && this.cluster != null) {
+            this.cluster.writeToNBT(data);
+        }
+    }
 
-	public boolean isStorage()
-	{
-		return false;
-	}
+    @TileEvent(TileEventType.WORLD_NBT_READ)
+    public void readFromNBT_TileCraftingTile(final NBTTagCompound data) {
+        this.setCoreBlock(data.getBoolean("core"));
+        if (this.isCoreBlock()) {
+            if (this.cluster != null) {
+                this.cluster.readFromNBT(data);
+            } else {
+                this.setPreviousState((NBTTagCompound) data.copy());
+            }
+        }
+    }
 
-	public int getStorageBytes()
-	{
-		return 0;
-	}
+    @Override
+    public void disconnect(final boolean update) {
+        if (this.cluster != null) {
+            this.cluster.destroy();
+            if (update) {
+                this.updateMeta(true);
+            }
+        }
+    }
 
-	public void breakCluster()
-	{
-		if( this.cluster != null )
-		{
-			this.cluster.cancel();
-			final IMEInventory<IAEItemStack> inv = this.cluster.getInventory();
+    @Override
+    public IAECluster getCluster() {
+        return this.cluster;
+    }
 
-			final LinkedList<WorldCoord> places = new LinkedList<WorldCoord>();
+    @Override
+    public boolean isValid() {
+        return true;
+    }
 
-			final Iterator<IGridHost> i = this.cluster.getTiles();
-			while( i.hasNext() )
-			{
-				final IGridHost h = i.next();
-				if( h == this )
-				{
-					places.add( new WorldCoord( this ) );
-				}
-				else
-				{
-					final TileEntity te = (TileEntity) h;
+    @MENetworkEventSubscribe
+    public void onPowerStateChange(final MENetworkChannelsChanged ev) {
+        this.updateMeta(false);
+    }
 
-					for( final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS )
-					{
-						final WorldCoord wc = new WorldCoord( te );
-						wc.add( d, 1 );
-						if( this.worldObj.isAirBlock( wc.x, wc.y, wc.z ) )
-						{
-							places.add( wc );
-						}
-					}
-				}
-			}
+    @MENetworkEventSubscribe
+    public void onPowerStateChange(final MENetworkPowerStatusChange ev) {
+        this.updateMeta(false);
+    }
 
-			Collections.shuffle( places );
+    public boolean isStatus() {
+        return false;
+    }
 
-			if( places.isEmpty() )
-			{
-				throw new IllegalStateException( this.cluster + " does not contain any kind of blocks, which were destroyed." );
-			}
+    public boolean isStorage() {
+        return false;
+    }
 
-			for( IAEItemStack ais : inv.getAvailableItems( AEApi.instance().storage().createItemList() ) )
-			{
-				ais = ais.copy();
-				ais.setStackSize( ais.getItemStack().getMaxStackSize() );
-				while( true )
-				{
-					final IAEItemStack g = inv.extractItems( ais.copy(), Actionable.MODULATE, this.cluster.getActionSource() );
-					if( g == null )
-					{
-						break;
-					}
+    public int getStorageBytes() {
+        return 0;
+    }
 
-					final WorldCoord wc = places.poll();
-					places.add( wc );
+    public void breakCluster() {
+        if (this.cluster != null) {
+            this.cluster.cancel();
+            final IMEInventory<IAEItemStack> inv = this.cluster.getInventory();
 
-					Platform.spawnDrops( this.worldObj, wc.x, wc.y, wc.z, Collections.singletonList( g.getItemStack() ) );
-				}
-			}
+            final LinkedList<WorldCoord> places = new LinkedList<WorldCoord>();
 
-			this.cluster.destroy();
-		}
-	}
+            final Iterator<IGridHost> i = this.cluster.getTiles();
+            while (i.hasNext()) {
+                final IGridHost h = i.next();
+                if (h == this) {
+                    places.add(new WorldCoord(this));
+                } else {
+                    final TileEntity te = (TileEntity) h;
 
-	@Override
-	public boolean isPowered()
-	{
-		if( Platform.isClient() )
-		{
-			return ( this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 4 ) == 4;
-		}
-		return this.getProxy().isActive();
-	}
+                    for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
+                        final WorldCoord wc = new WorldCoord(te);
+                        wc.add(d, 1);
+                        if (this.worldObj.isAirBlock(wc.x, wc.y, wc.z)) {
+                            places.add(wc);
+                        }
+                    }
+                }
+            }
 
-	@Override
-	public boolean isActive()
-	{
-		if( Platform.isServer() )
-		{
-			return this.getProxy().isActive();
-		}
-		return this.isPowered() && this.isFormed();
-	}
+            Collections.shuffle(places);
 
-	public boolean isCoreBlock()
-	{
-		return this.isCoreBlock;
-	}
+            if (places.isEmpty()) {
+                throw new IllegalStateException(
+                        this.cluster + " does not contain any kind of blocks, which were destroyed.");
+            }
 
-	public void setCoreBlock( final boolean isCoreBlock )
-	{
-		this.isCoreBlock = isCoreBlock;
-	}
+            for (IAEItemStack ais :
+                    inv.getAvailableItems(AEApi.instance().storage().createItemList())) {
+                ais = ais.copy();
+                ais.setStackSize(ais.getItemStack().getMaxStackSize());
+                while (true) {
+                    final IAEItemStack g =
+                            inv.extractItems(ais.copy(), Actionable.MODULATE, this.cluster.getActionSource());
+                    if (g == null) {
+                        break;
+                    }
 
-	public ISimplifiedBundle getLightCache()
-	{
-		return this.lightCache;
-	}
+                    final WorldCoord wc = places.poll();
+                    places.add(wc);
 
-	public void setLightCache( final ISimplifiedBundle lightCache )
-	{
-		this.lightCache = lightCache;
-	}
+                    Platform.spawnDrops(this.worldObj, wc.x, wc.y, wc.z, Collections.singletonList(g.getItemStack()));
+                }
+            }
 
-	public NBTTagCompound getPreviousState()
-	{
-		return this.previousState;
-	}
+            this.cluster.destroy();
+        }
+    }
 
-	public void setPreviousState( final NBTTagCompound previousState )
-	{
-		this.previousState = previousState;
-	}
+    @Override
+    public boolean isPowered() {
+        if (Platform.isClient()) {
+            return (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 4) == 4;
+        }
+        return this.getProxy().isActive();
+    }
+
+    @Override
+    public boolean isActive() {
+        if (Platform.isServer()) {
+            return this.getProxy().isActive();
+        }
+        return this.isPowered() && this.isFormed();
+    }
+
+    public boolean isCoreBlock() {
+        return this.isCoreBlock;
+    }
+
+    public void setCoreBlock(final boolean isCoreBlock) {
+        this.isCoreBlock = isCoreBlock;
+    }
+
+    public ISimplifiedBundle getLightCache() {
+        return this.lightCache;
+    }
+
+    public void setLightCache(final ISimplifiedBundle lightCache) {
+        this.lightCache = lightCache;
+    }
+
+    public NBTTagCompound getPreviousState() {
+        return this.previousState;
+    }
+
+    public void setPreviousState(final NBTTagCompound previousState) {
+        this.previousState = previousState;
+    }
 }

@@ -18,23 +18,18 @@
 
 package appeng.parts.reporting;
 
-
 import appeng.helpers.Reflected;
 import net.minecraft.item.ItemStack;
 
+public class PartDarkPanel extends AbstractPartPanel {
 
-public class PartDarkPanel extends AbstractPartPanel
-{
+    @Reflected
+    public PartDarkPanel(final ItemStack is) {
+        super(is);
+    }
 
-	@Reflected
-	public PartDarkPanel( final ItemStack is )
-	{
-		super( is );
-	}
-
-	@Override
-	protected int getBrightnessColor()
-	{
-		return this.getColor().mediumVariant;
-	}
+    @Override
+    protected int getBrightnessColor() {
+        return this.getColor().mediumVariant;
+    }
 }

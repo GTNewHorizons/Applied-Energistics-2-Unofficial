@@ -18,7 +18,6 @@
 
 package appeng.container.implementations;
 
-
 import appeng.api.AEApi;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.implementations.guiobjects.INetworkTool;
@@ -35,157 +34,133 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
+import java.io.IOException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.io.IOException;
+public class ContainerNetworkStatus extends AEBaseContainer {
 
+    @GuiSync(0)
+    public long avgAddition;
 
-public class ContainerNetworkStatus extends AEBaseContainer
-{
+    @GuiSync(1)
+    public long powerUsage;
 
-	@GuiSync( 0 )
-	public long avgAddition;
-	@GuiSync( 1 )
-	public long powerUsage;
-	@GuiSync( 2 )
-	public long currentPower;
-	@GuiSync( 3 )
-	public long maxPower;
-	private IGrid network;
-	private int delay = 40;
+    @GuiSync(2)
+    public long currentPower;
 
-	public ContainerNetworkStatus( final InventoryPlayer ip, final INetworkTool te )
-	{
-		super( ip, null, null );
-		final IGridHost host = te.getGridHost();
+    @GuiSync(3)
+    public long maxPower;
 
-		if( host != null )
-		{
-			this.findNode( host, ForgeDirection.UNKNOWN );
-			for( final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS )
-			{
-				this.findNode( host, d );
-			}
-		}
+    private IGrid network;
+    private int delay = 40;
 
-		if( this.network == null && Platform.isServer() )
-		{
-			this.setValidContainer( false );
-		}
-	}
+    public ContainerNetworkStatus(final InventoryPlayer ip, final INetworkTool te) {
+        super(ip, null, null);
+        final IGridHost host = te.getGridHost();
 
-	private void findNode( final IGridHost host, final ForgeDirection d )
-	{
-		if( this.network == null )
-		{
-			final IGridNode node = host.getGridNode( d );
-			if( node != null )
-			{
-				this.network = node.getGrid();
-			}
-		}
-	}
+        if (host != null) {
+            this.findNode(host, ForgeDirection.UNKNOWN);
+            for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
+                this.findNode(host, d);
+            }
+        }
 
-	@Override
-	public void detectAndSendChanges()
-	{
-		this.delay++;
-		if( Platform.isServer() && this.delay > 15 && this.network != null )
-		{
-			this.delay = 0;
+        if (this.network == null && Platform.isServer()) {
+            this.setValidContainer(false);
+        }
+    }
 
-			final IEnergyGrid eg = this.network.getCache( IEnergyGrid.class );
-			if( eg != null )
-			{
-				this.setAverageAddition( (long) ( 100.0 * eg.getAvgPowerInjection() ) );
-				this.setPowerUsage( (long) ( 100.0 * eg.getAvgPowerUsage() ) );
-				this.setCurrentPower( (long) ( 100.0 * eg.getStoredPower() ) );
-				this.setMaxPower( (long) ( 100.0 * eg.getMaxStoredPower() ) );
-			}
+    private void findNode(final IGridHost host, final ForgeDirection d) {
+        if (this.network == null) {
+            final IGridNode node = host.getGridNode(d);
+            if (node != null) {
+                this.network = node.getGrid();
+            }
+        }
+    }
 
-			try
-			{
-				final PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
+    @Override
+    public void detectAndSendChanges() {
+        this.delay++;
+        if (Platform.isServer() && this.delay > 15 && this.network != null) {
+            this.delay = 0;
 
-				for( final Class<? extends IGridHost> machineClass : this.network.getMachinesClasses() )
-				{
-					final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
-					for( final IGridNode machine : this.network.getMachines( machineClass ) )
-					{
-						final IGridBlock blk = machine.getGridBlock();
-						final ItemStack is = blk.getMachineRepresentation();
-						if( is != null && is.getItem() != null )
-						{
-							final IAEItemStack ais = AEItemStack.create( is );
-							ais.setStackSize( 1 );
-							ais.setCountRequestable( (long) PowerMultiplier.CONFIG.multiply ( blk.getIdlePowerUsage() * 100.0 ) );
-							list.add( ais );
-						}
-					}
+            final IEnergyGrid eg = this.network.getCache(IEnergyGrid.class);
+            if (eg != null) {
+                this.setAverageAddition((long) (100.0 * eg.getAvgPowerInjection()));
+                this.setPowerUsage((long) (100.0 * eg.getAvgPowerUsage()));
+                this.setCurrentPower((long) (100.0 * eg.getStoredPower()));
+                this.setMaxPower((long) (100.0 * eg.getMaxStoredPower()));
+            }
 
-					for( final IAEItemStack ais : list )
-					{
-						piu.appendItem( ais );
-					}
-				}
+            try {
+                final PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
 
-				for( final Object c : this.crafters )
-				{
-					if( c instanceof EntityPlayer )
-					{
-						NetworkHandler.instance.sendTo( piu, (EntityPlayerMP) c );
-					}
-				}
-			}
-			catch( final IOException e )
-			{
-				// :P
-			}
-		}
-		super.detectAndSendChanges();
-	}
+                for (final Class<? extends IGridHost> machineClass : this.network.getMachinesClasses()) {
+                    final IItemList<IAEItemStack> list =
+                            AEApi.instance().storage().createItemList();
+                    for (final IGridNode machine : this.network.getMachines(machineClass)) {
+                        final IGridBlock blk = machine.getGridBlock();
+                        final ItemStack is = blk.getMachineRepresentation();
+                        if (is != null && is.getItem() != null) {
+                            final IAEItemStack ais = AEItemStack.create(is);
+                            ais.setStackSize(1);
+                            ais.setCountRequestable(
+                                    (long) PowerMultiplier.CONFIG.multiply(blk.getIdlePowerUsage() * 100.0));
+                            list.add(ais);
+                        }
+                    }
 
-	public long getCurrentPower()
-	{
-		return this.currentPower;
-	}
+                    for (final IAEItemStack ais : list) {
+                        piu.appendItem(ais);
+                    }
+                }
 
-	private void setCurrentPower( final long currentPower )
-	{
-		this.currentPower = currentPower;
-	}
+                for (final Object c : this.crafters) {
+                    if (c instanceof EntityPlayer) {
+                        NetworkHandler.instance.sendTo(piu, (EntityPlayerMP) c);
+                    }
+                }
+            } catch (final IOException e) {
+                // :P
+            }
+        }
+        super.detectAndSendChanges();
+    }
 
-	public long getMaxPower()
-	{
-		return this.maxPower;
-	}
+    public long getCurrentPower() {
+        return this.currentPower;
+    }
 
-	private void setMaxPower( final long maxPower )
-	{
-		this.maxPower = maxPower;
-	}
+    private void setCurrentPower(final long currentPower) {
+        this.currentPower = currentPower;
+    }
 
-	public long getAverageAddition()
-	{
-		return this.avgAddition;
-	}
+    public long getMaxPower() {
+        return this.maxPower;
+    }
 
-	private void setAverageAddition( final long avgAddition )
-	{
-		this.avgAddition = avgAddition;
-	}
+    private void setMaxPower(final long maxPower) {
+        this.maxPower = maxPower;
+    }
 
-	public long getPowerUsage()
-	{
-		return this.powerUsage;
-	}
+    public long getAverageAddition() {
+        return this.avgAddition;
+    }
 
-	private void setPowerUsage( final long powerUsage )
-	{
-		this.powerUsage = powerUsage;
-	}
+    private void setAverageAddition(final long avgAddition) {
+        this.avgAddition = avgAddition;
+    }
+
+    public long getPowerUsage() {
+        return this.powerUsage;
+    }
+
+    private void setPowerUsage(final long powerUsage) {
+        this.powerUsage = powerUsage;
+    }
 }

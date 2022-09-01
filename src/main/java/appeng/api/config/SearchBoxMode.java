@@ -23,13 +23,9 @@
 
 package appeng.api.config;
 
-
-public enum SearchBoxMode
-{
-
-	MANUAL_SEARCH, 		// -------
-	AUTOSEARCH, 		// autofocus
-	NEI_AUTOSEARCH, 	// autofocus + NEISync
-	NEI_MANUAL_SEARCH	// NEISync
-
+public enum SearchBoxMode {
+    MANUAL_SEARCH, // -------
+    AUTOSEARCH, // autofocus
+    NEI_AUTOSEARCH, // autofocus + NEISync
+    NEI_MANUAL_SEARCH // NEISync
 }

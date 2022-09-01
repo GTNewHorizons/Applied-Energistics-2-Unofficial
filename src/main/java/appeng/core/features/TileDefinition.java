@@ -18,7 +18,6 @@
 
 package appeng.core.features;
 
-
 import appeng.api.definitions.ITileDefinition;
 import appeng.block.AEBaseTileBlock;
 import com.google.common.base.Function;
@@ -26,44 +25,35 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import net.minecraft.tileentity.TileEntity;
 
+public final class TileDefinition extends BlockDefinition implements ITileDefinition {
+    private static final TileEntityTransformer TILEENTITY_TRANSFORMER = new TileEntityTransformer();
+    private final Optional<AEBaseTileBlock> block;
 
-public final class TileDefinition extends BlockDefinition implements ITileDefinition
-{
-	private static final TileEntityTransformer TILEENTITY_TRANSFORMER = new TileEntityTransformer();
-	private final Optional<AEBaseTileBlock> block;
+    public TileDefinition(final AEBaseTileBlock block, final ActivityState state) {
+        super(block, state);
 
-	public TileDefinition( final AEBaseTileBlock block, final ActivityState state )
-	{
-		super( block, state );
+        Preconditions.checkNotNull(block);
+        Preconditions.checkNotNull(state);
+        Preconditions.checkNotNull(block.getTileEntityClass());
 
-		Preconditions.checkNotNull( block );
-		Preconditions.checkNotNull( state );
-		Preconditions.checkNotNull( block.getTileEntityClass() );
+        if (state == ActivityState.Enabled) {
+            this.block = Optional.of(block);
+        } else {
+            this.block = Optional.absent();
+        }
+    }
 
-		if( state == ActivityState.Enabled )
-		{
-			this.block = Optional.of( block );
-		}
-		else
-		{
-			this.block = Optional.absent();
-		}
-	}
+    @Override
+    public Optional<? extends Class<? extends TileEntity>> maybeEntity() {
+        return this.block.transform(TILEENTITY_TRANSFORMER);
+    }
 
-	@Override
-	public Optional<? extends Class<? extends TileEntity>> maybeEntity()
-	{
-		return this.block.transform( TILEENTITY_TRANSFORMER );
-	}
+    private static class TileEntityTransformer implements Function<AEBaseTileBlock, Class<? extends TileEntity>> {
+        @Override
+        public Class<? extends TileEntity> apply(final AEBaseTileBlock input) {
+            final Class<? extends TileEntity> entity = input.getTileEntityClass();
 
-	private static class TileEntityTransformer implements Function<AEBaseTileBlock, Class<? extends TileEntity>>
-	{
-		@Override
-		public Class<? extends TileEntity> apply( final AEBaseTileBlock input )
-		{
-			final Class<? extends TileEntity> entity = input.getTileEntityClass();
-
-			return entity;
-		}
-	}
+            return entity;
+        }
+    }
 }

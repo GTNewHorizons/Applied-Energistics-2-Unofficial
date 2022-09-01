@@ -18,7 +18,6 @@
 
 package appeng.facade;
 
-
 import appeng.api.AEApi;
 import appeng.api.parts.IFacadeContainer;
 import appeng.api.parts.IFacadePart;
@@ -29,214 +28,180 @@ import appeng.integration.abstraction.IBuildCraftTransport;
 import appeng.items.parts.ItemFacade;
 import appeng.parts.CableBusStorage;
 import io.netty.buffer.ByteBuf;
+import java.io.IOException;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.io.IOException;
+public class FacadeContainer implements IFacadeContainer {
 
+    private final int facades = 6;
+    private final CableBusStorage storage;
 
-public class FacadeContainer implements IFacadeContainer
-{
+    public FacadeContainer(final CableBusStorage cbs) {
+        this.storage = cbs;
+    }
 
-	private final int facades = 6;
-	private final CableBusStorage storage;
+    @Override
+    public boolean addFacade(final IFacadePart a) {
+        if (this.getFacade(a.getSide()) == null) {
+            this.storage.setFacade(a.getSide().ordinal(), a);
+            return true;
+        }
+        return false;
+    }
 
-	public FacadeContainer( final CableBusStorage cbs )
-	{
-		this.storage = cbs;
-	}
+    @Override
+    public void removeFacade(final IPartHost host, final ForgeDirection side) {
+        if (side != null && side != ForgeDirection.UNKNOWN) {
+            if (this.storage.getFacade(side.ordinal()) != null) {
+                this.storage.setFacade(side.ordinal(), null);
+                if (host != null) {
+                    host.markForUpdate();
+                }
+            }
+        }
+    }
 
-	@Override
-	public boolean addFacade( final IFacadePart a )
-	{
-		if( this.getFacade( a.getSide() ) == null )
-		{
-			this.storage.setFacade( a.getSide().ordinal(), a );
-			return true;
-		}
-		return false;
-	}
+    @Override
+    public IFacadePart getFacade(final ForgeDirection s) {
+        return this.storage.getFacade(s.ordinal());
+    }
 
-	@Override
-	public void removeFacade( final IPartHost host, final ForgeDirection side )
-	{
-		if( side != null && side != ForgeDirection.UNKNOWN )
-		{
-			if( this.storage.getFacade( side.ordinal() ) != null )
-			{
-				this.storage.setFacade( side.ordinal(), null );
-				if( host != null )
-				{
-					host.markForUpdate();
-				}
-			}
-		}
-	}
+    @Override
+    public void rotateLeft() {
+        final IFacadePart[] newFacades = new FacadePart[6];
 
-	@Override
-	public IFacadePart getFacade( final ForgeDirection s )
-	{
-		return this.storage.getFacade( s.ordinal() );
-	}
+        newFacades[ForgeDirection.UP.ordinal()] = this.storage.getFacade(ForgeDirection.UP.ordinal());
+        newFacades[ForgeDirection.DOWN.ordinal()] = this.storage.getFacade(ForgeDirection.DOWN.ordinal());
 
-	@Override
-	public void rotateLeft()
-	{
-		final IFacadePart[] newFacades = new FacadePart[6];
+        newFacades[ForgeDirection.EAST.ordinal()] = this.storage.getFacade(ForgeDirection.NORTH.ordinal());
+        newFacades[ForgeDirection.SOUTH.ordinal()] = this.storage.getFacade(ForgeDirection.EAST.ordinal());
 
-		newFacades[ForgeDirection.UP.ordinal()] = this.storage.getFacade( ForgeDirection.UP.ordinal() );
-		newFacades[ForgeDirection.DOWN.ordinal()] = this.storage.getFacade( ForgeDirection.DOWN.ordinal() );
+        newFacades[ForgeDirection.WEST.ordinal()] = this.storage.getFacade(ForgeDirection.SOUTH.ordinal());
+        newFacades[ForgeDirection.NORTH.ordinal()] = this.storage.getFacade(ForgeDirection.WEST.ordinal());
 
-		newFacades[ForgeDirection.EAST.ordinal()] = this.storage.getFacade( ForgeDirection.NORTH.ordinal() );
-		newFacades[ForgeDirection.SOUTH.ordinal()] = this.storage.getFacade( ForgeDirection.EAST.ordinal() );
+        for (int x = 0; x < this.facades; x++) {
+            this.storage.setFacade(x, newFacades[x]);
+        }
+    }
 
-		newFacades[ForgeDirection.WEST.ordinal()] = this.storage.getFacade( ForgeDirection.SOUTH.ordinal() );
-		newFacades[ForgeDirection.NORTH.ordinal()] = this.storage.getFacade( ForgeDirection.WEST.ordinal() );
+    @Override
+    public void writeToNBT(final NBTTagCompound c) {
+        for (int x = 0; x < this.facades; x++) {
+            if (this.storage.getFacade(x) != null) {
+                final NBTTagCompound data = new NBTTagCompound();
+                this.storage.getFacade(x).getItemStack().writeToNBT(data);
+                c.setTag("facade:" + x, data);
+            }
+        }
+    }
 
-		for( int x = 0; x < this.facades; x++ )
-		{
-			this.storage.setFacade( x, newFacades[x] );
-		}
-	}
+    @Override
+    public boolean readFromStream(final ByteBuf out) throws IOException {
+        final int facadeSides = out.readByte();
 
-	@Override
-	public void writeToNBT( final NBTTagCompound c )
-	{
-		for( int x = 0; x < this.facades; x++ )
-		{
-			if( this.storage.getFacade( x ) != null )
-			{
-				final NBTTagCompound data = new NBTTagCompound();
-				this.storage.getFacade( x ).getItemStack().writeToNBT( data );
-				c.setTag( "facade:" + x, data );
-			}
-		}
-	}
+        boolean changed = false;
 
-	@Override
-	public boolean readFromStream( final ByteBuf out ) throws IOException
-	{
-		final int facadeSides = out.readByte();
+        final int[] ids = new int[2];
+        for (int x = 0; x < this.facades; x++) {
+            final ForgeDirection side = ForgeDirection.getOrientation(x);
+            final int ix = (1 << x);
+            if ((facadeSides & ix) == ix) {
+                ids[0] = out.readInt();
+                ids[1] = out.readInt();
+                final boolean isBC = ids[0] < 0;
+                ids[0] = Math.abs(ids[0]);
 
-		boolean changed = false;
+                if (isBC && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.BuildCraftTransport)) {
+                    final IBuildCraftTransport bc = (IBuildCraftTransport)
+                            IntegrationRegistry.INSTANCE.getInstance(IntegrationType.BuildCraftTransport);
+                    final IFacadePart created =
+                            bc.createFacadePart((Block) Block.blockRegistry.getObjectById(ids[0]), ids[1], side);
+                    changed = changed || this.storage.getFacade(x) == null;
 
-		final int[] ids = new int[2];
-		for( int x = 0; x < this.facades; x++ )
-		{
-			final ForgeDirection side = ForgeDirection.getOrientation( x );
-			final int ix = ( 1 << x );
-			if( ( facadeSides & ix ) == ix )
-			{
-				ids[0] = out.readInt();
-				ids[1] = out.readInt();
-				final boolean isBC = ids[0] < 0;
-				ids[0] = Math.abs( ids[0] );
+                    this.storage.setFacade(x, created);
+                } else if (!isBC) {
+                    for (final Item facadeItem : AEApi.instance()
+                            .definitions()
+                            .items()
+                            .facade()
+                            .maybeItem()
+                            .asSet()) {
+                        final ItemFacade ifa = (ItemFacade) facadeItem;
+                        final ItemStack facade = ifa.createFromIDs(ids);
+                        if (facade != null) {
+                            changed = changed || this.storage.getFacade(x) == null;
+                            this.storage.setFacade(x, ifa.createPartFromItemStack(facade, side));
+                        }
+                    }
+                }
+            } else {
+                changed = changed || this.storage.getFacade(x) != null;
+                this.storage.setFacade(x, null);
+            }
+        }
 
-				if( isBC && IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.BuildCraftTransport ) )
-				{
-					final IBuildCraftTransport bc = (IBuildCraftTransport) IntegrationRegistry.INSTANCE.getInstance( IntegrationType.BuildCraftTransport );
-					final IFacadePart created = bc.createFacadePart( (Block) Block.blockRegistry.getObjectById( ids[0] ), ids[1], side );
-					changed = changed || this.storage.getFacade( x ) == null;
+        return changed;
+    }
 
-					this.storage.setFacade( x, created );
-				}
-				else if( !isBC )
-				{
-					for( final Item facadeItem : AEApi.instance().definitions().items().facade().maybeItem().asSet() )
-					{
-						final ItemFacade ifa = (ItemFacade) facadeItem;
-						final ItemStack facade = ifa.createFromIDs( ids );
-						if( facade != null )
-						{
-							changed = changed || this.storage.getFacade( x ) == null;
-							this.storage.setFacade( x, ifa.createPartFromItemStack( facade, side ) );
-						}
-					}
-				}
-			}
-			else
-			{
-				changed = changed || this.storage.getFacade( x ) != null;
-				this.storage.setFacade( x, null );
-			}
-		}
+    @Override
+    public void readFromNBT(final NBTTagCompound c) {
+        for (int x = 0; x < this.facades; x++) {
+            this.storage.setFacade(x, null);
 
-		return changed;
-	}
+            final NBTTagCompound t = c.getCompoundTag("facade:" + x);
+            if (t != null) {
+                final ItemStack is = ItemStack.loadItemStackFromNBT(t);
+                if (is != null) {
+                    final Item i = is.getItem();
+                    if (i instanceof IFacadeItem) {
+                        this.storage.setFacade(
+                                x, ((IFacadeItem) i).createPartFromItemStack(is, ForgeDirection.getOrientation(x)));
+                    } else {
+                        if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.BuildCraftTransport)) {
+                            final IBuildCraftTransport bc = (IBuildCraftTransport)
+                                    IntegrationRegistry.INSTANCE.getInstance(IntegrationType.BuildCraftTransport);
+                            if (bc.isFacade(is)) {
+                                this.storage.setFacade(x, bc.createFacadePart(is, ForgeDirection.getOrientation(x)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	@Override
-	public void readFromNBT( final NBTTagCompound c )
-	{
-		for( int x = 0; x < this.facades; x++ )
-		{
-			this.storage.setFacade( x, null );
+    @Override
+    public void writeToStream(final ByteBuf out) throws IOException {
+        int facadeSides = 0;
+        for (int x = 0; x < this.facades; x++) {
+            if (this.getFacade(ForgeDirection.getOrientation(x)) != null) {
+                facadeSides |= (1 << x);
+            }
+        }
+        out.writeByte((byte) facadeSides);
 
-			final NBTTagCompound t = c.getCompoundTag( "facade:" + x );
-			if( t != null )
-			{
-				final ItemStack is = ItemStack.loadItemStackFromNBT( t );
-				if( is != null )
-				{
-					final Item i = is.getItem();
-					if( i instanceof IFacadeItem )
-					{
-						this.storage.setFacade( x, ( (IFacadeItem) i ).createPartFromItemStack( is, ForgeDirection.getOrientation( x ) ) );
-					}
-					else
-					{
-						if( IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.BuildCraftTransport ) )
-						{
-							final IBuildCraftTransport bc = (IBuildCraftTransport) IntegrationRegistry.INSTANCE.getInstance( IntegrationType.BuildCraftTransport );
-							if( bc.isFacade( is ) )
-							{
-								this.storage.setFacade( x, bc.createFacadePart( is, ForgeDirection.getOrientation( x ) ) );
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+        for (int x = 0; x < this.facades; x++) {
+            final IFacadePart part = this.getFacade(ForgeDirection.getOrientation(x));
+            if (part != null) {
+                final int itemID = Item.getIdFromItem(part.getItem());
+                final int dmgValue = part.getItemDamage();
+                out.writeInt(itemID * (part.notAEFacade() ? -1 : 1));
+                out.writeInt(dmgValue);
+            }
+        }
+    }
 
-	@Override
-	public void writeToStream( final ByteBuf out ) throws IOException
-	{
-		int facadeSides = 0;
-		for( int x = 0; x < this.facades; x++ )
-		{
-			if( this.getFacade( ForgeDirection.getOrientation( x ) ) != null )
-			{
-				facadeSides |= ( 1 << x );
-			}
-		}
-		out.writeByte( (byte) facadeSides );
-
-		for( int x = 0; x < this.facades; x++ )
-		{
-			final IFacadePart part = this.getFacade( ForgeDirection.getOrientation( x ) );
-			if( part != null )
-			{
-				final int itemID = Item.getIdFromItem( part.getItem() );
-				final int dmgValue = part.getItemDamage();
-				out.writeInt( itemID * ( part.notAEFacade() ? -1 : 1 ) );
-				out.writeInt( dmgValue );
-			}
-		}
-	}
-
-	@Override
-	public boolean isEmpty()
-	{
-		for( int x = 0; x < this.facades; x++ )
-		{
-			if( this.storage.getFacade( x ) != null )
-			{
-				return false;
-			}
-		}
-		return true;
-	}
+    @Override
+    public boolean isEmpty() {
+        for (int x = 0; x < this.facades; x++) {
+            if (this.storage.getFacade(x) != null) {
+                return false;
+            }
+        }
+        return true;
+    }
 }

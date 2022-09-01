@@ -18,49 +18,49 @@
 
 package appeng.block.misc;
 
-
 import appeng.block.AEBaseTileBlock;
 import appeng.core.features.AEFeature;
 import appeng.core.sync.GuiBridge;
 import appeng.tile.misc.TileCondenser;
 import appeng.util.Platform;
+import java.util.EnumSet;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
+public class BlockCondenser extends AEBaseTileBlock {
 
+    public BlockCondenser() {
+        super(Material.iron);
 
-public class BlockCondenser extends AEBaseTileBlock
-{
+        this.setTileEntity(TileCondenser.class);
+        this.setFeature(EnumSet.of(AEFeature.Core));
+    }
 
-	public BlockCondenser()
-	{
-		super( Material.iron );
+    @Override
+    public boolean onActivated(
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final EntityPlayer player,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (player.isSneaking()) {
+            return false;
+        }
 
-		this.setTileEntity( TileCondenser.class );
-		this.setFeature( EnumSet.of( AEFeature.Core ) );
-	}
+        if (Platform.isServer()) {
+            final TileCondenser tc = this.getTileEntity(w, x, y, z);
+            if (tc != null && !player.isSneaking()) {
+                Platform.openGUI(player, tc, ForgeDirection.getOrientation(side), GuiBridge.GUI_CONDENSER);
+                return true;
+            }
+        }
 
-	@Override
-	public boolean onActivated( final World w, final int x, final int y, final int z, final EntityPlayer player, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( player.isSneaking() )
-		{
-			return false;
-		}
-
-		if( Platform.isServer() )
-		{
-			final TileCondenser tc = this.getTileEntity( w, x, y, z );
-			if( tc != null && !player.isSneaking() )
-			{
-				Platform.openGUI( player, tc, ForgeDirection.getOrientation( side ), GuiBridge.GUI_CONDENSER );
-				return true;
-			}
-		}
-
-		return true;
-	}
+        return true;
+    }
 }

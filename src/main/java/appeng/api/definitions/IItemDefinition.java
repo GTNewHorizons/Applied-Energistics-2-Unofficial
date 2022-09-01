@@ -23,26 +23,23 @@
 
 package appeng.api.definitions;
 
-
 import com.google.common.base.Optional;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+public interface IItemDefinition extends IComparableDefinition {
+    /**
+     * @return the {@link Item} Implementation if applicable
+     */
+    Optional<Item> maybeItem();
 
-public interface IItemDefinition extends IComparableDefinition
-{
-	/**
-	 * @return the {@link Item} Implementation if applicable
-	 */
-	Optional<Item> maybeItem();
+    /**
+     * @return an {@link ItemStack} with specified quantity of this item.
+     */
+    Optional<ItemStack> maybeStack(int stackSize);
 
-	/**
-	 * @return an {@link ItemStack} with specified quantity of this item.
-	 */
-	Optional<ItemStack> maybeStack( int stackSize );
-
-	/**
-	 * @return <tt>true</tt> if definition is enabled
-	 */
-	boolean isEnabled();
+    /**
+     * @return <tt>true</tt> if definition is enabled
+     */
+    boolean isEnabled();
 }

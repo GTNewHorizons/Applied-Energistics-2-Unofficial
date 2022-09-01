@@ -3,8 +3,7 @@ package appeng.client.render;
 import appeng.api.util.DimensionalCoord;
 
 // taken from McJty's McJtyLib
-public class BlockPosHighlighter
-{
+public class BlockPosHighlighter {
     private static DimensionalCoord highlightedBlock;
     private static long expireHighlight;
 

@@ -18,7 +18,6 @@
 
 package appeng.tile.misc;
 
-
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IPowerChannelState;
@@ -53,6 +52,8 @@ import appeng.util.Platform;
 import appeng.util.inv.IInventoryDestination;
 import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.ByteBuf;
+import java.util.EnumSet;
+import java.util.List;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
@@ -61,330 +62,275 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
-import java.util.List;
-
-
 public class TileInterface extends AENetworkInvTile
-		implements IGridTickable, ITileStorageMonitorable, IStorageMonitorable, IInventoryDestination, IInterfaceHost, IPriorityHost, IPowerChannelState
-{
+        implements IGridTickable,
+                ITileStorageMonitorable,
+                IStorageMonitorable,
+                IInventoryDestination,
+                IInterfaceHost,
+                IPriorityHost,
+                IPowerChannelState {
 
-	private final DualityInterface duality = new DualityInterface( this.getProxy(), this );
-	private ForgeDirection pointAt = ForgeDirection.UNKNOWN;
+    private final DualityInterface duality = new DualityInterface(this.getProxy(), this);
+    private ForgeDirection pointAt = ForgeDirection.UNKNOWN;
 
-	private static final int POWERED_FLAG = 1;
-	private static final int CHANNEL_FLAG = 2;
-	private static final int BOOTING_FLAG = 4;
-	private int clientFlags = 0; // sent as byte.
+    private static final int POWERED_FLAG = 1;
+    private static final int CHANNEL_FLAG = 2;
+    private static final int BOOTING_FLAG = 4;
+    private int clientFlags = 0; // sent as byte.
 
+    @MENetworkEventSubscribe
+    public void stateChange(final MENetworkChannelsChanged c) {
+        this.duality.notifyNeighbors();
+        markForUpdate();
+    }
 
-	@MENetworkEventSubscribe
-	public void stateChange( final MENetworkChannelsChanged c )
-	{
-		this.duality.notifyNeighbors();
-		markForUpdate();
-	}
+    @MENetworkEventSubscribe
+    public void stateChange(final MENetworkPowerStatusChange c) {
+        this.duality.notifyNeighbors();
+        markForUpdate();
+    }
 
-	@MENetworkEventSubscribe
-	public void stateChange( final MENetworkPowerStatusChange c )
-	{
-		this.duality.notifyNeighbors();
-		markForUpdate();
-	}
+    public void setSide(final ForgeDirection axis) {
+        if (Platform.isClient()) {
+            return;
+        }
 
-	public void setSide( final ForgeDirection axis )
-	{
-		if( Platform.isClient() )
-		{
-			return;
-		}
+        if (this.pointAt == axis.getOpposite()) {
+            this.pointAt = axis;
+        } else if (this.pointAt == axis || this.pointAt == axis.getOpposite()) {
+            this.pointAt = ForgeDirection.UNKNOWN;
+        } else if (this.pointAt == ForgeDirection.UNKNOWN) {
+            this.pointAt = axis.getOpposite();
+        } else {
+            this.pointAt = Platform.rotateAround(this.pointAt, axis);
+        }
 
-		if( this.pointAt == axis.getOpposite() )
-		{
-			this.pointAt = axis;
-		}
-		else if( this.pointAt == axis || this.pointAt == axis.getOpposite() )
-		{
-			this.pointAt = ForgeDirection.UNKNOWN;
-		}
-		else if( this.pointAt == ForgeDirection.UNKNOWN )
-		{
-			this.pointAt = axis.getOpposite();
-		}
-		else
-		{
-			this.pointAt = Platform.rotateAround( this.pointAt, axis );
-		}
+        if (ForgeDirection.UNKNOWN == this.pointAt) {
+            this.setOrientation(this.pointAt, this.pointAt);
+        } else {
+            this.setOrientation(
+                    this.pointAt.offsetY != 0 ? ForgeDirection.SOUTH : ForgeDirection.UP, this.pointAt.getOpposite());
+        }
 
-		if( ForgeDirection.UNKNOWN == this.pointAt )
-		{
-			this.setOrientation( this.pointAt, this.pointAt );
-		}
-		else
-		{
-			this.setOrientation( this.pointAt.offsetY != 0 ? ForgeDirection.SOUTH : ForgeDirection.UP, this.pointAt.getOpposite() );
-		}
+        this.getProxy().setValidSides(EnumSet.complementOf(EnumSet.of(this.pointAt)));
+        this.markForUpdate();
+        this.markDirty();
+    }
 
-		this.getProxy().setValidSides( EnumSet.complementOf( EnumSet.of( this.pointAt ) ) );
-		this.markForUpdate();
-		this.markDirty();
-	}
+    @Override
+    public void markDirty() {
+        this.duality.markDirty();
+    }
 
-	@Override
-	public void markDirty()
-	{
-		this.duality.markDirty();
-	}
+    @Override
+    public void getDrops(final World w, final int x, final int y, final int z, final List<ItemStack> drops) {
+        this.duality.addDrops(drops);
+    }
 
-	@Override
-	public void getDrops( final World w, final int x, final int y, final int z, final List<ItemStack> drops )
-	{
-		this.duality.addDrops( drops );
-	}
+    @Override
+    public void gridChanged() {
+        this.duality.gridChanged();
+    }
 
-	@Override
-	public void gridChanged()
-	{
-		this.duality.gridChanged();
-	}
+    @Override
+    public void onReady() {
+        this.getProxy().setValidSides(EnumSet.complementOf(EnumSet.of(this.pointAt)));
+        super.onReady();
+        this.duality.initialize();
+    }
 
-	@Override
-	public void onReady()
-	{
-		this.getProxy().setValidSides( EnumSet.complementOf( EnumSet.of( this.pointAt ) ) );
-		super.onReady();
-		this.duality.initialize();
-	}
+    @TileEvent(TileEventType.WORLD_NBT_WRITE)
+    public void writeToNBT_TileInterface(final NBTTagCompound data) {
+        data.setInteger("pointAt", this.pointAt.ordinal());
+        this.duality.writeToNBT(data);
+    }
 
-	@TileEvent( TileEventType.WORLD_NBT_WRITE )
-	public void writeToNBT_TileInterface( final NBTTagCompound data )
-	{
-		data.setInteger( "pointAt", this.pointAt.ordinal() );
-		this.duality.writeToNBT( data );
-	}
+    @TileEvent(TileEventType.WORLD_NBT_READ)
+    public void readFromNBT_TileInterface(final NBTTagCompound data) {
+        final int val = data.getInteger("pointAt");
 
-	@TileEvent( TileEventType.WORLD_NBT_READ )
-	public void readFromNBT_TileInterface( final NBTTagCompound data )
-	{
-		final int val = data.getInteger( "pointAt" );
+        if (val >= 0 && val < ForgeDirection.values().length) {
+            this.pointAt = ForgeDirection.values()[val];
+        } else {
+            this.pointAt = ForgeDirection.UNKNOWN;
+        }
 
-		if( val >= 0 && val < ForgeDirection.values().length )
-		{
-			this.pointAt = ForgeDirection.values()[val];
-		}
-		else
-		{
-			this.pointAt = ForgeDirection.UNKNOWN;
-		}
+        this.duality.readFromNBT(data);
+    }
 
-		this.duality.readFromNBT( data );
-	}
+    @Override
+    public AECableType getCableConnectionType(final ForgeDirection dir) {
+        return this.duality.getCableConnectionType(dir);
+    }
 
-	@Override
-	public AECableType getCableConnectionType( final ForgeDirection dir )
-	{
-		return this.duality.getCableConnectionType( dir );
-	}
+    @Override
+    public DimensionalCoord getLocation() {
+        return this.duality.getLocation();
+    }
 
-	@Override
-	public DimensionalCoord getLocation()
-	{
-		return this.duality.getLocation();
-	}
+    @Override
+    public boolean canInsert(final ItemStack stack) {
+        return this.duality.canInsert(stack);
+    }
 
-	@Override
-	public boolean canInsert( final ItemStack stack )
-	{
-		return this.duality.canInsert( stack );
-	}
+    @Override
+    public IMEMonitor<IAEItemStack> getItemInventory() {
+        return this.duality.getItemInventory();
+    }
 
-	@Override
-	public IMEMonitor<IAEItemStack> getItemInventory()
-	{
-		return this.duality.getItemInventory();
-	}
+    @Override
+    public IMEMonitor<IAEFluidStack> getFluidInventory() {
+        return this.duality.getFluidInventory();
+    }
 
-	@Override
-	public IMEMonitor<IAEFluidStack> getFluidInventory()
-	{
-		return this.duality.getFluidInventory();
-	}
+    @Override
+    public IInventory getInventoryByName(final String name) {
+        return this.duality.getInventoryByName(name);
+    }
 
-	@Override
-	public IInventory getInventoryByName( final String name )
-	{
-		return this.duality.getInventoryByName( name );
-	}
+    @Override
+    public TickingRequest getTickingRequest(final IGridNode node) {
+        return this.duality.getTickingRequest(node);
+    }
 
-	@Override
-	public TickingRequest getTickingRequest( final IGridNode node )
-	{
-		return this.duality.getTickingRequest( node );
-	}
+    @Override
+    public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
+        return this.duality.tickingRequest(node, ticksSinceLastCall);
+    }
 
-	@Override
-	public TickRateModulation tickingRequest( final IGridNode node, final int ticksSinceLastCall )
-	{
-		return this.duality.tickingRequest( node, ticksSinceLastCall );
-	}
+    @Override
+    public IInventory getInternalInventory() {
+        return this.duality.getInternalInventory();
+    }
 
-	@Override
-	public IInventory getInternalInventory()
-	{
-		return this.duality.getInternalInventory();
-	}
+    @Override
+    public void onChangeInventory(
+            final IInventory inv,
+            final int slot,
+            final InvOperation mc,
+            final ItemStack removed,
+            final ItemStack added) {
+        this.duality.onChangeInventory(inv, slot, mc, removed, added);
+    }
 
-	@Override
-	public void onChangeInventory( final IInventory inv, final int slot, final InvOperation mc, final ItemStack removed, final ItemStack added )
-	{
-		this.duality.onChangeInventory( inv, slot, mc, removed, added );
-	}
+    @Override
+    public int[] getAccessibleSlotsBySide(final ForgeDirection side) {
+        return this.duality.getAccessibleSlotsFromSide(side.ordinal());
+    }
 
-	@Override
-	public int[] getAccessibleSlotsBySide( final ForgeDirection side )
-	{
-		return this.duality.getAccessibleSlotsFromSide( side.ordinal() );
-	}
+    @Override
+    public DualityInterface getInterfaceDuality() {
+        return this.duality;
+    }
 
-	@Override
-	public DualityInterface getInterfaceDuality()
-	{
-		return this.duality;
-	}
+    @Override
+    public EnumSet<ForgeDirection> getTargets() {
+        if (this.pointAt == null || this.pointAt == ForgeDirection.UNKNOWN) {
+            return EnumSet.complementOf(EnumSet.of(ForgeDirection.UNKNOWN));
+        }
+        return EnumSet.of(this.pointAt);
+    }
 
-	@Override
-	public EnumSet<ForgeDirection> getTargets()
-	{
-		if( this.pointAt == null || this.pointAt == ForgeDirection.UNKNOWN )
-		{
-			return EnumSet.complementOf( EnumSet.of( ForgeDirection.UNKNOWN ) );
-		}
-		return EnumSet.of( this.pointAt );
-	}
+    @Override
+    public TileEntity getTileEntity() {
+        return this;
+    }
 
-	@Override
-	public TileEntity getTileEntity()
-	{
-		return this;
-	}
+    @Override
+    public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSource src) {
+        return this.duality.getMonitorable(side, src, this);
+    }
 
-	@Override
-	public IStorageMonitorable getMonitorable( final ForgeDirection side, final BaseActionSource src )
-	{
-		return this.duality.getMonitorable( side, src, this );
-	}
+    @Override
+    public IConfigManager getConfigManager() {
+        return this.duality.getConfigManager();
+    }
 
-	@Override
-	public IConfigManager getConfigManager()
-	{
-		return this.duality.getConfigManager();
-	}
+    @Override
+    public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
+        return this.duality.pushPattern(patternDetails, table);
+    }
 
-	@Override
-	public boolean pushPattern( final ICraftingPatternDetails patternDetails, final InventoryCrafting table )
-	{
-		return this.duality.pushPattern( patternDetails, table );
-	}
+    @Override
+    public boolean isBusy() {
+        return this.duality.isBusy();
+    }
 
-	@Override
-	public boolean isBusy()
-	{
-		return this.duality.isBusy();
-	}
+    @Override
+    public void provideCrafting(final ICraftingProviderHelper craftingTracker) {
+        this.duality.provideCrafting(craftingTracker);
+    }
 
-	@Override
-	public void provideCrafting( final ICraftingProviderHelper craftingTracker )
-	{
-		this.duality.provideCrafting( craftingTracker );
-	}
+    @Override
+    public int getInstalledUpgrades(final Upgrades u) {
+        return this.duality.getInstalledUpgrades(u);
+    }
 
-	@Override
-	public int getInstalledUpgrades( final Upgrades u )
-	{
-		return this.duality.getInstalledUpgrades( u );
-	}
+    @Override
+    public ImmutableSet<ICraftingLink> getRequestedJobs() {
+        return this.duality.getRequestedJobs();
+    }
 
-	@Override
-	public ImmutableSet<ICraftingLink> getRequestedJobs()
-	{
-		return this.duality.getRequestedJobs();
-	}
+    @Override
+    public IAEItemStack injectCraftedItems(final ICraftingLink link, final IAEItemStack items, final Actionable mode) {
+        return this.duality.injectCraftedItems(link, items, mode);
+    }
 
-	@Override
-	public IAEItemStack injectCraftedItems( final ICraftingLink link, final IAEItemStack items, final Actionable mode )
-	{
-		return this.duality.injectCraftedItems( link, items, mode );
-	}
+    @Override
+    public void jobStateChange(final ICraftingLink link) {
+        this.duality.jobStateChange(link);
+    }
 
-	@Override
-	public void jobStateChange( final ICraftingLink link )
-	{
-		this.duality.jobStateChange( link );
-	}
+    @Override
+    public int getPriority() {
+        return this.duality.getPriority();
+    }
 
-	@Override
-	public int getPriority()
-	{
-		return this.duality.getPriority();
-	}
+    @Override
+    public void setPriority(final int newValue) {
+        this.duality.setPriority(newValue);
+    }
 
-	@Override
-	public void setPriority( final int newValue )
-	{
-		this.duality.setPriority( newValue );
-	}
+    @TileEvent(TileEventType.NETWORK_READ)
+    public boolean readFromStream_TileInterface(final ByteBuf data) {
+        int newState = data.readByte();
+        if (newState != clientFlags) {
+            clientFlags = newState;
+            this.markForUpdate();
+            return true;
+        }
+        return false;
+    }
 
-	@TileEvent( TileEventType.NETWORK_READ )
-	public boolean readFromStream_TileInterface( final ByteBuf data )
-	{
-		int newState = data.readByte();
-		if (newState != clientFlags)
-		{
-			clientFlags = newState;
-			this.markForUpdate();
-			return true;
-		}
-		return false;
-	}
+    @TileEvent(TileEventType.NETWORK_WRITE)
+    public void writeToStream_TileInterface(final ByteBuf data) {
+        clientFlags = 0;
+        try {
+            if (this.getProxy().getEnergy().isNetworkPowered()) clientFlags |= POWERED_FLAG;
 
-	@TileEvent( TileEventType.NETWORK_WRITE )
-	public void writeToStream_TileInterface( final ByteBuf data )
-	{
-		clientFlags = 0;
-		try
-		{
-			if( this.getProxy().getEnergy().isNetworkPowered() )
-				clientFlags |= POWERED_FLAG;
+            if (this.getProxy().getNode().meetsChannelRequirements()) clientFlags |= CHANNEL_FLAG;
 
-			if( this.getProxy().getNode().meetsChannelRequirements() )
-				clientFlags |= CHANNEL_FLAG;
+            if (this.getProxy().getPath().isNetworkBooting()) clientFlags |= BOOTING_FLAG;
+        } catch (final GridAccessException e) {
+            // meh
+        }
 
-			if( this.getProxy().getPath().isNetworkBooting() )
-				clientFlags |= BOOTING_FLAG;
-		}
-		catch( final GridAccessException e )
-		{
-			// meh
-		}
+        data.writeByte(clientFlags);
+    }
 
-		data.writeByte( clientFlags );
-	}
+    @Override
+    public boolean isPowered() {
+        return (clientFlags & POWERED_FLAG) == POWERED_FLAG;
+    }
 
-	@Override
-	public boolean isPowered()
-	{
-		return ( clientFlags & POWERED_FLAG ) == POWERED_FLAG;
-	}
+    @Override
+    public boolean isActive() {
+        return (clientFlags & CHANNEL_FLAG) == CHANNEL_FLAG;
+    }
 
-	@Override
-	public boolean isActive()
-	{
-		return ( clientFlags & CHANNEL_FLAG ) == CHANNEL_FLAG;
-	}
-
-	@Override
-	public boolean isBooting()
-	{
-		return ( clientFlags & BOOTING_FLAG ) == BOOTING_FLAG;
-	}
+    @Override
+    public boolean isBooting() {
+        return (clientFlags & BOOTING_FLAG) == BOOTING_FLAG;
+    }
 }

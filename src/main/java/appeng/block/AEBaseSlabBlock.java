@@ -18,11 +18,12 @@
 
 package appeng.block;
 
-
 import appeng.core.features.AEFeature;
 import appeng.core.features.IAEFeature;
 import appeng.core.features.IFeatureHandler;
 import appeng.core.features.SlabBlockFeatureHandler;
+import java.util.EnumSet;
+import java.util.Random;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.item.Item;
@@ -31,108 +32,93 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
-import java.util.EnumSet;
-import java.util.Random;
+public class AEBaseSlabBlock extends BlockSlab implements IAEFeature {
+    private final IFeatureHandler features;
+    private final AEBaseBlock block;
+    private final int meta;
+    private AEBaseSlabBlock slabs;
+    private AEBaseSlabBlock doubleSlabs;
+    private final String name;
 
+    public AEBaseSlabBlock(
+            final AEBaseBlock block,
+            final int meta,
+            final EnumSet<AEFeature> features,
+            final boolean isDoubleSlab,
+            final String name) {
+        super(isDoubleSlab, block.getMaterial());
+        this.block = block;
+        this.meta = meta;
+        this.name = name;
+        this.setBlockName("appliedenergistics2." + name);
+        this.setHardness(block.getBlockHardness(null, 0, 0, 0));
+        this.setResistance(block.getExplosionResistance(null) * 5.0F / 3.0F);
+        this.setStepSound(block.stepSound);
+        this.useNeighborBrightness = true;
+        if (!this.field_150004_a) {
+            this.doubleSlabs = new AEBaseSlabBlock(block, meta, features, true, name + ".double").setSlabs(this);
+        }
+        this.features = !this.field_150004_a ? new SlabBlockFeatureHandler(features, this) : null;
+    }
 
-public class AEBaseSlabBlock extends BlockSlab implements IAEFeature
-{
-	private final IFeatureHandler features;
-	private final AEBaseBlock block;
-	private final int meta;
-	private AEBaseSlabBlock slabs;
-	private AEBaseSlabBlock doubleSlabs;
-	private final String name;
+    private AEBaseSlabBlock setSlabs(final AEBaseSlabBlock slabs) {
+        this.slabs = slabs;
+        return this;
+    }
 
-	public AEBaseSlabBlock( final AEBaseBlock block, final int meta, final EnumSet<AEFeature> features, final boolean isDoubleSlab, final String name )
-	{
-		super( isDoubleSlab, block.getMaterial() );
-		this.block = block;
-		this.meta = meta;
-		this.name = name;
-		this.setBlockName( "appliedenergistics2." + name );
-		this.setHardness( block.getBlockHardness( null, 0, 0, 0 ) );
-		this.setResistance( block.getExplosionResistance( null ) * 5.0F / 3.0F );
-		this.setStepSound( block.stepSound );
-		this.useNeighborBrightness = true;
-		if( !this.field_150004_a )
-		{
-			this.doubleSlabs = new AEBaseSlabBlock( block, meta, features, true, name + ".double" ).setSlabs( this );
-		}
-		this.features = !this.field_150004_a ? new SlabBlockFeatureHandler( features, this ) : null;
-	}
+    public AEBaseSlabBlock slabs() {
+        return this.slabs;
+    }
 
-	private AEBaseSlabBlock setSlabs( final AEBaseSlabBlock slabs )
-	{
-		this.slabs = slabs;
-		return this;
-	}
+    public AEBaseSlabBlock doubleSlabs() {
+        return this.doubleSlabs;
+    }
 
-	public AEBaseSlabBlock slabs()
-	{
-		return this.slabs;
-	}
+    @Override
+    public IFeatureHandler handler() {
+        return this.features;
+    }
 
-	public AEBaseSlabBlock doubleSlabs()
-	{
-		return this.doubleSlabs;
-	}
+    @Override
+    public void postInit() {
+        // Override to do stuff
+    }
 
-	@Override
-	public IFeatureHandler handler()
-	{
-		return this.features;
-	}
+    @Override
+    public IIcon getIcon(final int dir, final int meta) {
+        return this.block.getIcon(dir, this.meta);
+    }
 
-	@Override
-	public void postInit()
-	{
-		// Override to do stuff
-	}
+    @Override
+    public String func_150002_b(final int p_150002_1_) {
+        return this.getUnlocalizedName();
+    }
 
-	@Override
-	public IIcon getIcon( final int dir, final int meta )
-	{
-		return this.block.getIcon( dir, this.meta );
-	}
+    @Override
+    public void registerBlockIcons(final IIconRegister reg) {}
 
-	@Override
-	public String func_150002_b( final int p_150002_1_ )
-	{
-		return this.getUnlocalizedName();
-	}
+    @Override
+    public Item getItemDropped(final int meta, final Random rand, final int fortune) {
+        return this.field_150004_a ? Item.getItemFromBlock(this.slabs) : Item.getItemFromBlock(this);
+    }
 
-	@Override
-	public void registerBlockIcons( final IIconRegister reg )
-	{
-	}
+    @Override
+    public ItemStack getPickBlock(
+            final MovingObjectPosition target, final World world, final int x, final int y, final int z) {
+        AEBaseSlabBlock block = (AEBaseSlabBlock) world.getBlock(x, y, z);
 
-	@Override
-	public Item getItemDropped( final int meta, final Random rand, final int fortune )
-	{
-		return this.field_150004_a ? Item.getItemFromBlock( this.slabs ) : Item.getItemFromBlock( this );
-	}
+        if (block == null) {
+            return null;
+        }
+        if (block.field_150004_a) {
+            block = this.slabs;
+        }
 
-	@Override
-	public ItemStack getPickBlock( final MovingObjectPosition target, final World world, final int x, final int y, final int z )
-	{
-		AEBaseSlabBlock block = (AEBaseSlabBlock) world.getBlock( x, y, z );
+        final int meta = world.getBlockMetadata(x, y, z) & 7;
+        return new ItemStack(block, 1, meta);
+    }
 
-		if( block == null )
-		{
-			return null;
-		}
-		if( block.field_150004_a )
-		{
-			block = this.slabs;
-		}
-
-		final int meta = world.getBlockMetadata( x, y, z ) & 7;
-		return new ItemStack( block, 1, meta );
-	}
-
-	public String name()
-	{
-		return this.name;
-	}
+    public String name() {
+        return this.name;
+    }
 }

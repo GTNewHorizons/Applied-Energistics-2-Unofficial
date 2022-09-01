@@ -18,7 +18,6 @@
 
 package appeng.integration.modules.waila.part;
 
-
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
@@ -27,7 +26,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
-
 /**
  * Accessor to access specific parts for WAILA
  *
@@ -35,32 +33,28 @@ import net.minecraft.util.Vec3;
  * @version rv2
  * @since rv2
  */
-public final class PartAccessor
-{
-	/**
-	 * Hits a {@link appeng.api.parts.IPartHost} with {@link net.minecraft.util.MovingObjectPosition}.
-	 * <p/>
-	 * You can derive the looked at {@link appeng.api.parts.IPart} by doing that. If a facade is being looked at, it is
-	 * defined as being absent.
-	 *
-	 * @param te  being looked at {@link net.minecraft.tileentity.TileEntity}
-	 * @param mop type of ray-trace
-	 * @return maybe the looked at {@link appeng.api.parts.IPart}
-	 */
-	public Optional<IPart> getMaybePart( final TileEntity te, final MovingObjectPosition mop )
-	{
-		if( te instanceof IPartHost )
-		{
-			final Vec3 position = mop.hitVec.addVector( -mop.blockX, -mop.blockY, -mop.blockZ );
-			final IPartHost host = (IPartHost) te;
-			final SelectedPart sp = host.selectPart( position );
+public final class PartAccessor {
+    /**
+     * Hits a {@link appeng.api.parts.IPartHost} with {@link net.minecraft.util.MovingObjectPosition}.
+     * <p/>
+     * You can derive the looked at {@link appeng.api.parts.IPart} by doing that. If a facade is being looked at, it is
+     * defined as being absent.
+     *
+     * @param te  being looked at {@link net.minecraft.tileentity.TileEntity}
+     * @param mop type of ray-trace
+     * @return maybe the looked at {@link appeng.api.parts.IPart}
+     */
+    public Optional<IPart> getMaybePart(final TileEntity te, final MovingObjectPosition mop) {
+        if (te instanceof IPartHost) {
+            final Vec3 position = mop.hitVec.addVector(-mop.blockX, -mop.blockY, -mop.blockZ);
+            final IPartHost host = (IPartHost) te;
+            final SelectedPart sp = host.selectPart(position);
 
-			if( sp.part != null )
-			{
-				return Optional.of( sp.part );
-			}
-		}
+            if (sp.part != null) {
+                return Optional.of(sp.part);
+            }
+        }
 
-		return Optional.absent();
-	}
+        return Optional.absent();
+    }
 }

@@ -23,16 +23,12 @@
 
 package appeng.api.config;
 
+public enum CondenserOutput {
+    TRASH, // 0
 
-public enum CondenserOutput
-{
+    MATTER_BALLS, // 256
 
-	TRASH, // 0
+    SINGULARITY; // 250,000
 
-	MATTER_BALLS, // 256
-
-	SINGULARITY; // 250,000
-
-	public int requiredPower = 0;
-
+    public int requiredPower = 0;
 }

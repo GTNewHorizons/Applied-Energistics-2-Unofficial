@@ -18,7 +18,6 @@
 
 package appeng.integration.modules.helpers;
 
-
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
@@ -29,59 +28,48 @@ import appeng.util.item.AEItemStack;
 import net.mcft.copy.betterstorage.api.crate.ICrateStorage;
 import net.minecraft.item.ItemStack;
 
+public class BSCrate implements IMEInventory<IAEItemStack> {
+    private final ICrateStorage crateStorage;
 
-public class BSCrate implements IMEInventory<IAEItemStack>
-{
-	private final ICrateStorage crateStorage;
+    public BSCrate(final Object object) {
+        this.crateStorage = (ICrateStorage) object;
+    }
 
-	public BSCrate( final Object object )
-	{
-		this.crateStorage = (ICrateStorage) object;
-	}
+    @Override
+    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSource src) {
+        if (mode == Actionable.SIMULATE) {
+            return null;
+        }
 
-	@Override
-	public IAEItemStack injectItems( final IAEItemStack input, final Actionable mode, final BaseActionSource src )
-	{
-		if( mode == Actionable.SIMULATE )
-		{
-			return null;
-		}
+        final ItemStack failed = this.crateStorage.insertItems(input.getItemStack());
+        if (failed == null) {
+            return null;
+        }
+        input.setStackSize(failed.stackSize);
+        return input;
+    }
 
-		final ItemStack failed = this.crateStorage.insertItems( input.getItemStack() );
-		if( failed == null )
-		{
-			return null;
-		}
-		input.setStackSize( failed.stackSize );
-		return input;
-	}
+    @Override
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
+        if (mode == Actionable.SIMULATE) {
+            final int howMany = this.crateStorage.getItemCount(request.getItemStack());
+            return howMany > request.getStackSize() ? request : request.copy().setStackSize(howMany);
+        }
 
-	@Override
-	public IAEItemStack extractItems( final IAEItemStack request, final Actionable mode, final BaseActionSource src )
-	{
-		if( mode == Actionable.SIMULATE )
-		{
-			final int howMany = this.crateStorage.getItemCount( request.getItemStack() );
-			return howMany > request.getStackSize() ? request : request.copy().setStackSize( howMany );
-		}
+        final ItemStack obtained = this.crateStorage.extractItems(request.getItemStack(), (int) request.getStackSize());
+        return AEItemStack.create(obtained);
+    }
 
-		final ItemStack obtained = this.crateStorage.extractItems( request.getItemStack(), (int) request.getStackSize() );
-		return AEItemStack.create( obtained );
-	}
+    @Override
+    public IItemList getAvailableItems(final IItemList out) {
+        for (final ItemStack is : this.crateStorage.getContents()) {
+            out.add(AEItemStack.create(is));
+        }
+        return out;
+    }
 
-	@Override
-	public IItemList getAvailableItems( final IItemList out )
-	{
-		for( final ItemStack is : this.crateStorage.getContents() )
-		{
-			out.add( AEItemStack.create( is ) );
-		}
-		return out;
-	}
-
-	@Override
-	public StorageChannel getChannel()
-	{
-		return StorageChannel.ITEMS;
-	}
+    @Override
+    public StorageChannel getChannel() {
+        return StorageChannel.ITEMS;
+    }
 }

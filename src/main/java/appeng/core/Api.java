@@ -18,7 +18,6 @@
 
 package appeng.core;
 
-
 import appeng.api.IAppEngApi;
 import appeng.api.definitions.Blocks;
 import appeng.api.definitions.Items;
@@ -38,96 +37,82 @@ import appeng.me.GridNode;
 import appeng.util.Platform;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public final class Api implements IAppEngApi {
+    public static final Api INSTANCE = new Api();
 
-public final class Api implements IAppEngApi
-{
-	public static final Api INSTANCE = new Api();
+    private final ApiPart partHelper;
 
-	private final ApiPart partHelper;
+    // private MovableTileRegistry MovableRegistry = new MovableTileRegistry();
+    private final IRegistryContainer registryContainer;
+    private final IStorageHelper storageHelper;
+    private final Materials materials;
+    private final Items items;
+    private final Blocks blocks;
+    private final Parts parts;
+    private final ApiDefinitions definitions;
 
-	// private MovableTileRegistry MovableRegistry = new MovableTileRegistry();
-	private final IRegistryContainer registryContainer;
-	private final IStorageHelper storageHelper;
-	private final Materials materials;
-	private final Items items;
-	private final Blocks blocks;
-	private final Parts parts;
-	private final ApiDefinitions definitions;
+    private Api() {
+        this.parts = new Parts();
+        this.blocks = new Blocks();
+        this.items = new Items();
+        this.materials = new Materials();
+        this.storageHelper = new ApiStorage();
+        this.registryContainer = new RegistryContainer();
+        this.partHelper = new ApiPart();
+        this.definitions = new ApiDefinitions(this.partHelper);
+    }
 
-	private Api()
-	{
-		this.parts = new Parts();
-		this.blocks = new Blocks();
-		this.items = new Items();
-		this.materials = new Materials();
-		this.storageHelper = new ApiStorage();
-		this.registryContainer = new RegistryContainer();
-		this.partHelper = new ApiPart();
-		this.definitions = new ApiDefinitions( this.partHelper );
-	}
+    @Override
+    public IRegistryContainer registries() {
+        return this.registryContainer;
+    }
 
-	@Override
-	public IRegistryContainer registries()
-	{
-		return this.registryContainer;
-	}
+    @Override
+    public IStorageHelper storage() {
+        return this.storageHelper;
+    }
 
-	@Override
-	public IStorageHelper storage()
-	{
-		return this.storageHelper;
-	}
+    @Override
+    public ApiPart partHelper() {
+        return this.partHelper;
+    }
 
-	@Override
-	public ApiPart partHelper()
-	{
-		return this.partHelper;
-	}
+    @Override
+    public Items items() {
+        return this.items;
+    }
 
-	@Override
-	public Items items()
-	{
-		return this.items;
-	}
+    @Override
+    public Materials materials() {
+        return this.materials;
+    }
 
-	@Override
-	public Materials materials()
-	{
-		return this.materials;
-	}
+    @Override
+    public Blocks blocks() {
+        return this.blocks;
+    }
 
-	@Override
-	public Blocks blocks()
-	{
-		return this.blocks;
-	}
+    @Override
+    public Parts parts() {
+        return this.parts;
+    }
 
-	@Override
-	public Parts parts()
-	{
-		return this.parts;
-	}
+    @Override
+    public ApiDefinitions definitions() {
+        return this.definitions;
+    }
 
-	@Override
-	public ApiDefinitions definitions()
-	{
-		return this.definitions;
-	}
+    @Override
+    public IGridNode createGridNode(final IGridBlock blk) {
+        if (Platform.isClient()) {
+            throw new IllegalStateException("Grid features for " + blk + " are server side only.");
+        }
 
-	@Override
-	public IGridNode createGridNode( final IGridBlock blk )
-	{
-		if( Platform.isClient() )
-		{
-			throw new IllegalStateException( "Grid features for " + blk + " are server side only." );
-		}
+        return new GridNode(blk);
+    }
 
-		return new GridNode( blk );
-	}
-
-	@Override
-	public IGridConnection createGridConnection( final IGridNode a, final IGridNode b ) throws FailedConnection
-	{
-		return new GridConnection( a, b, ForgeDirection.UNKNOWN );
-	}
+    @Override
+    public IGridConnection createGridConnection(final IGridNode a, final IGridNode b) throws FailedConnection {
+        return new GridConnection(a, b, ForgeDirection.UNKNOWN);
+    }
 }

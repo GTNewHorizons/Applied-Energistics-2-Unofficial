@@ -18,20 +18,16 @@
 
 package appeng.container;
 
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
-
 
 /*
  * Totally useless container that does nothing.
  */
-public class ContainerNull extends Container
-{
+public class ContainerNull extends Container {
 
-	@Override
-	public boolean canInteractWith( final EntityPlayer entityplayer )
-	{
-		return false;
-	}
+    @Override
+    public boolean canInteractWith(final EntityPlayer entityplayer) {
+        return false;
+    }
 }

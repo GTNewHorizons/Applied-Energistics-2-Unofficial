@@ -18,7 +18,6 @@
 
 package appeng.parts.reporting;
 
-
 import appeng.api.implementations.parts.IPartStorageMonitor;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IStackWatcher;
@@ -41,6 +40,7 @@ import appeng.util.item.AEItemStack;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
+import java.io.IOException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GLAllocation;
@@ -57,9 +57,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import java.io.IOException;
-
-
 /**
  * A basic subclass for any item monitor like display with an item icon and an amount.
  * <p>
@@ -71,364 +68,312 @@ import java.io.IOException;
  * @version rv3
  * @since rv3
  */
-public abstract class AbstractPartMonitor extends AbstractPartDisplay implements IPartStorageMonitor, IStackWatcherHost
-{
-	private static final IWideReadableNumberConverter NUMBER_CONVERTER = ReadableNumberConverter.INSTANCE;
-	private IAEItemStack configuredItem;
-	private String lastHumanReadableText;
-	private boolean isLocked;
-	private IStackWatcher myWatcher;
-	@SideOnly( Side.CLIENT )
-	private boolean updateList;
-	@SideOnly( Side.CLIENT )
-	private Integer dspList;
+public abstract class AbstractPartMonitor extends AbstractPartDisplay
+        implements IPartStorageMonitor, IStackWatcherHost {
+    private static final IWideReadableNumberConverter NUMBER_CONVERTER = ReadableNumberConverter.INSTANCE;
+    private IAEItemStack configuredItem;
+    private String lastHumanReadableText;
+    private boolean isLocked;
+    private IStackWatcher myWatcher;
 
-	@Reflected
-	public AbstractPartMonitor( final ItemStack is )
-	{
-		super( is );
-	}
+    @SideOnly(Side.CLIENT)
+    private boolean updateList;
 
-	@Override
-	public void readFromNBT( final NBTTagCompound data )
-	{
-		super.readFromNBT( data );
+    @SideOnly(Side.CLIENT)
+    private Integer dspList;
 
-		this.isLocked = data.getBoolean( "isLocked" );
+    @Reflected
+    public AbstractPartMonitor(final ItemStack is) {
+        super(is);
+    }
 
-		final NBTTagCompound myItem = data.getCompoundTag( "configuredItem" );
-		this.configuredItem = AEItemStack.loadItemStackFromNBT( myItem );
-	}
+    @Override
+    public void readFromNBT(final NBTTagCompound data) {
+        super.readFromNBT(data);
 
-	@Override
-	public void writeToNBT( final NBTTagCompound data )
-	{
-		super.writeToNBT( data );
+        this.isLocked = data.getBoolean("isLocked");
 
-		data.setBoolean( "isLocked", this.isLocked );
+        final NBTTagCompound myItem = data.getCompoundTag("configuredItem");
+        this.configuredItem = AEItemStack.loadItemStackFromNBT(myItem);
+    }
 
-		final NBTTagCompound myItem = new NBTTagCompound();
-		if( this.configuredItem != null )
-		{
-			this.configuredItem.writeToNBT( myItem );
-		}
+    @Override
+    public void writeToNBT(final NBTTagCompound data) {
+        super.writeToNBT(data);
 
-		data.setTag( "configuredItem", myItem );
-	}
+        data.setBoolean("isLocked", this.isLocked);
 
-	@Override
-	public void writeToStream( final ByteBuf data ) throws IOException
-	{
-		super.writeToStream( data );
+        final NBTTagCompound myItem = new NBTTagCompound();
+        if (this.configuredItem != null) {
+            this.configuredItem.writeToNBT(myItem);
+        }
 
-		data.writeBoolean( this.isLocked );
-		data.writeBoolean( this.configuredItem != null );
-		if( this.configuredItem != null )
-		{
-			this.configuredItem.writeToPacket( data );
-		}
-	}
+        data.setTag("configuredItem", myItem);
+    }
 
-	@Override
-	public boolean readFromStream( final ByteBuf data ) throws IOException
-	{
-		boolean needRedraw = super.readFromStream( data );
+    @Override
+    public void writeToStream(final ByteBuf data) throws IOException {
+        super.writeToStream(data);
 
-		final boolean isLocked = data.readBoolean();
-		needRedraw = this.isLocked != isLocked;
+        data.writeBoolean(this.isLocked);
+        data.writeBoolean(this.configuredItem != null);
+        if (this.configuredItem != null) {
+            this.configuredItem.writeToPacket(data);
+        }
+    }
 
-		this.isLocked = isLocked;
+    @Override
+    public boolean readFromStream(final ByteBuf data) throws IOException {
+        boolean needRedraw = super.readFromStream(data);
 
-		final boolean val = data.readBoolean();
-		if( val )
-		{
-			this.configuredItem = AEItemStack.loadItemStackFromPacket( data );
-		}
-		else
-		{
-			this.configuredItem = null;
-		}
+        final boolean isLocked = data.readBoolean();
+        needRedraw = this.isLocked != isLocked;
 
-		this.updateList = true;
+        this.isLocked = isLocked;
 
-		return needRedraw;
-	}
+        final boolean val = data.readBoolean();
+        if (val) {
+            this.configuredItem = AEItemStack.loadItemStackFromPacket(data);
+        } else {
+            this.configuredItem = null;
+        }
 
-	@Override
-	public boolean onPartActivate( final EntityPlayer player, final Vec3 pos )
-	{
-		if( Platform.isClient() )
-		{
-			return true;
-		}
+        this.updateList = true;
 
-		if( !this.getProxy().isActive() )
-		{
-			return false;
-		}
+        return needRedraw;
+    }
 
-		if( !Platform.hasPermissions( this.getLocation(), player ) )
-		{
-			return false;
-		}
+    @Override
+    public boolean onPartActivate(final EntityPlayer player, final Vec3 pos) {
+        if (Platform.isClient()) {
+            return true;
+        }
 
-		final TileEntity te = this.getTile();
-		final ItemStack eq = player.getCurrentEquippedItem();
+        if (!this.getProxy().isActive()) {
+            return false;
+        }
 
-		if( Platform.isWrench( player, eq, te.xCoord, te.yCoord, te.zCoord ) )
-		{
-			this.isLocked = !this.isLocked;
-			player.addChatMessage( ( this.isLocked ? PlayerMessages.isNowLocked : PlayerMessages.isNowUnlocked ).get() );
-			this.getHost().markForUpdate();
-		}
-		else if( !this.isLocked )
-		{
-			this.configuredItem = AEItemStack.create( eq );
-			this.configureWatchers();
-			this.getHost().markForUpdate();
-		}
-		else
-		{
-			this.extractItem( player );
-		}
+        if (!Platform.hasPermissions(this.getLocation(), player)) {
+            return false;
+        }
 
-		return true;
-	}
+        final TileEntity te = this.getTile();
+        final ItemStack eq = player.getCurrentEquippedItem();
 
-	// update the system...
-	private void configureWatchers()
-	{
-		if( this.myWatcher != null )
-		{
-			this.myWatcher.clear();
-		}
+        if (Platform.isWrench(player, eq, te.xCoord, te.yCoord, te.zCoord)) {
+            this.isLocked = !this.isLocked;
+            player.addChatMessage((this.isLocked ? PlayerMessages.isNowLocked : PlayerMessages.isNowUnlocked).get());
+            this.getHost().markForUpdate();
+        } else if (!this.isLocked) {
+            this.configuredItem = AEItemStack.create(eq);
+            this.configureWatchers();
+            this.getHost().markForUpdate();
+        } else {
+            this.extractItem(player);
+        }
 
-		try
-		{
-			if( this.configuredItem != null )
-			{
-				if( this.myWatcher != null )
-				{
-					this.myWatcher.add( this.configuredItem );
-				}
+        return true;
+    }
 
-				this.updateReportingValue( this.getProxy().getStorage().getItemInventory() );
-			}
-		}
-		catch( final GridAccessException e )
-		{
-			// >.>
-		}
-	}
+    // update the system...
+    private void configureWatchers() {
+        if (this.myWatcher != null) {
+            this.myWatcher.clear();
+        }
 
-	protected void extractItem( final EntityPlayer player )
-	{
+        try {
+            if (this.configuredItem != null) {
+                if (this.myWatcher != null) {
+                    this.myWatcher.add(this.configuredItem);
+                }
 
-	}
+                this.updateReportingValue(this.getProxy().getStorage().getItemInventory());
+            }
+        } catch (final GridAccessException e) {
+            // >.>
+        }
+    }
 
-	private void updateReportingValue( final IMEMonitor<IAEItemStack> itemInventory )
-	{
-		if( this.configuredItem != null )
-		{
-			final IAEItemStack result = itemInventory.getStorageList().findPrecise( this.configuredItem );
-			if( result == null )
-			{
-				this.configuredItem.setStackSize( 0 );
-			}
-			else
-			{
-				this.configuredItem.setStackSize( result.getStackSize() );
-			}
-		}
-	}
+    protected void extractItem(final EntityPlayer player) {}
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected void finalize() throws Throwable
-	{
-		super.finalize();
+    private void updateReportingValue(final IMEMonitor<IAEItemStack> itemInventory) {
+        if (this.configuredItem != null) {
+            final IAEItemStack result = itemInventory.getStorageList().findPrecise(this.configuredItem);
+            if (result == null) {
+                this.configuredItem.setStackSize(0);
+            } else {
+                this.configuredItem.setStackSize(result.getStackSize());
+            }
+        }
+    }
 
-		if( this.dspList != null )
-		{
-			GLAllocation.deleteDisplayLists( this.dspList );
-		}
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected void finalize() throws Throwable {
+        super.finalize();
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void renderDynamic( final double x, final double y, final double z, final IPartRenderHelper rh, final RenderBlocks renderer )
-	{
-		if( this.dspList == null )
-		{
-			this.dspList = GLAllocation.generateDisplayLists( 1 );
-		}
+        if (this.dspList != null) {
+            GLAllocation.deleteDisplayLists(this.dspList);
+        }
+    }
 
-		final Tessellator tess = Tessellator.instance;
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void renderDynamic(
+            final double x, final double y, final double z, final IPartRenderHelper rh, final RenderBlocks renderer) {
+        if (this.dspList == null) {
+            this.dspList = GLAllocation.generateDisplayLists(1);
+        }
 
-		if( ( this.getClientFlags() & ( PartPanel.POWERED_FLAG | PartPanel.CHANNEL_FLAG ) ) != ( PartPanel.POWERED_FLAG | PartPanel.CHANNEL_FLAG ) )
-		{
-			return;
-		}
+        final Tessellator tess = Tessellator.instance;
 
-		final IAEItemStack ais = (IAEItemStack) this.getDisplayed();
+        if ((this.getClientFlags() & (PartPanel.POWERED_FLAG | PartPanel.CHANNEL_FLAG))
+                != (PartPanel.POWERED_FLAG | PartPanel.CHANNEL_FLAG)) {
+            return;
+        }
 
-		if( ais != null )
-		{
-			GL11.glPushMatrix();
-			GL11.glTranslated( x + 0.5, y + 0.5, z + 0.5 );
+        final IAEItemStack ais = (IAEItemStack) this.getDisplayed();
 
-			if( this.updateList )
-			{
-				this.updateList = false;
-				GL11.glNewList( this.dspList, GL11.GL_COMPILE_AND_EXECUTE );
-				this.tesrRenderScreen( tess, ais );
-				GL11.glEndList();
-			}
-			else
-			{
-				GL11.glCallList( this.dspList );
-			}
+        if (ais != null) {
+            GL11.glPushMatrix();
+            GL11.glTranslated(x + 0.5, y + 0.5, z + 0.5);
 
-			GL11.glPopMatrix();
-		}
-	}
+            if (this.updateList) {
+                this.updateList = false;
+                GL11.glNewList(this.dspList, GL11.GL_COMPILE_AND_EXECUTE);
+                this.tesrRenderScreen(tess, ais);
+                GL11.glEndList();
+            } else {
+                GL11.glCallList(this.dspList);
+            }
 
-	@Override
-	public boolean requireDynamicRender()
-	{
-		return true;
-	}
+            GL11.glPopMatrix();
+        }
+    }
 
-	@Override
-	public IAEStack<?> getDisplayed()
-	{
-		return this.configuredItem;
-	}
+    @Override
+    public boolean requireDynamicRender() {
+        return true;
+    }
 
-	private void tesrRenderScreen( final Tessellator tess, final IAEItemStack ais )
-	{
-		// GL11.glPushAttrib( GL11.GL_ALL_ATTRIB_BITS );
+    @Override
+    public IAEStack<?> getDisplayed() {
+        return this.configuredItem;
+    }
 
-		final ForgeDirection d = this.getSide();
+    private void tesrRenderScreen(final Tessellator tess, final IAEItemStack ais) {
+        // GL11.glPushAttrib( GL11.GL_ALL_ATTRIB_BITS );
 
-		GL11.glTranslated( d.offsetX * 0.77, d.offsetY * 0.77, d.offsetZ * 0.77 );
+        final ForgeDirection d = this.getSide();
 
-		switch( d )
-		{
-			case UP:
-				GL11.glScalef( 1.0f, -1.0f, 1.0f );
-				GL11.glRotatef( 90.0f, 1.0f, 0.0f, 0.0f );
-				GL11.glRotatef( this.getSpin() * 90.0F, 0, 0, 1 );
-				break;
-			case DOWN:
-				GL11.glScalef( 1.0f, -1.0f, 1.0f );
-				GL11.glRotatef( -90.0f, 1.0f, 0.0f, 0.0f );
-				GL11.glRotatef( this.getSpin() * -90.0F, 0, 0, 1 );
-				break;
-			case EAST:
-				GL11.glScalef( -1.0f, -1.0f, -1.0f );
-				GL11.glRotatef( -90.0f, 0.0f, 1.0f, 0.0f );
-				break;
-			case WEST:
-				GL11.glScalef( -1.0f, -1.0f, -1.0f );
-				GL11.glRotatef( 90.0f, 0.0f, 1.0f, 0.0f );
-				break;
-			case NORTH:
-				GL11.glScalef( -1.0f, -1.0f, -1.0f );
-				break;
-			case SOUTH:
-				GL11.glScalef( -1.0f, -1.0f, -1.0f );
-				GL11.glRotatef( 180.0f, 0.0f, 1.0f, 0.0f );
-				break;
+        GL11.glTranslated(d.offsetX * 0.77, d.offsetY * 0.77, d.offsetZ * 0.77);
 
-			default:
-				break;
-		}
+        switch (d) {
+            case UP:
+                GL11.glScalef(1.0f, -1.0f, 1.0f);
+                GL11.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+                GL11.glRotatef(this.getSpin() * 90.0F, 0, 0, 1);
+                break;
+            case DOWN:
+                GL11.glScalef(1.0f, -1.0f, 1.0f);
+                GL11.glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+                GL11.glRotatef(this.getSpin() * -90.0F, 0, 0, 1);
+                break;
+            case EAST:
+                GL11.glScalef(-1.0f, -1.0f, -1.0f);
+                GL11.glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
+                break;
+            case WEST:
+                GL11.glScalef(-1.0f, -1.0f, -1.0f);
+                GL11.glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
+                break;
+            case NORTH:
+                GL11.glScalef(-1.0f, -1.0f, -1.0f);
+                break;
+            case SOUTH:
+                GL11.glScalef(-1.0f, -1.0f, -1.0f);
+                GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+                break;
 
-		try
-		{
-			final ItemStack sis = ais.getItemStack();
-			sis.stackSize = 1;
+            default:
+                break;
+        }
 
-			final int br = 16 << 20 | 16 << 4;
-			final int var11 = br % 65536;
-			final int var12 = br / 65536;
-			OpenGlHelper.setLightmapTextureCoords( OpenGlHelper.lightmapTexUnit, var11 * 0.8F, var12 * 0.8F );
+        try {
+            final ItemStack sis = ais.getItemStack();
+            sis.stackSize = 1;
 
-			GL11.glColor4f( 1.0F, 1.0F, 1.0F, 1.0F );
+            final int br = 16 << 20 | 16 << 4;
+            final int var11 = br % 65536;
+            final int var12 = br / 65536;
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, var11 * 0.8F, var12 * 0.8F);
 
-			GL11.glDisable( GL11.GL_LIGHTING );
-			GL11.glDisable( GL12.GL_RESCALE_NORMAL );
-			// RenderHelper.enableGUIStandardItemLighting();
-			tess.setColorOpaque_F( 1.0f, 1.0f, 1.0f );
+            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
-			ClientHelper.proxy.doRenderItem( sis, this.getTile().getWorldObj() );
-		}
-		catch( final Exception e )
-		{
-			AELog.debug( e );
-		}
-		finally
-		{
-			GL11.glEnable( GL11.GL_LIGHTING );
-			GL11.glEnable( GL12.GL_RESCALE_NORMAL );
-		}
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glDisable(GL12.GL_RESCALE_NORMAL);
+            // RenderHelper.enableGUIStandardItemLighting();
+            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
 
-		GL11.glTranslatef( 0.0f, 0.14f, -0.24f );
-		GL11.glScalef( 1.0f / 62.0f, 1.0f / 62.0f, 1.0f / 62.0f );
+            ClientHelper.proxy.doRenderItem(sis, this.getTile().getWorldObj());
+        } catch (final Exception e) {
+            AELog.debug(e);
+        } finally {
+            GL11.glEnable(GL11.GL_LIGHTING);
+            GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        }
 
-		final long stackSize = ais.getStackSize();
-		final String renderedStackSize = NUMBER_CONVERTER.toWideReadableForm( stackSize );
+        GL11.glTranslatef(0.0f, 0.14f, -0.24f);
+        GL11.glScalef(1.0f / 62.0f, 1.0f / 62.0f, 1.0f / 62.0f);
 
-		final FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
-		final int width = fr.getStringWidth( renderedStackSize );
-		GL11.glTranslatef( -0.5f * width, 0.0f, -1.0f );
-		fr.drawString( renderedStackSize, 0, 0, 0 );
+        final long stackSize = ais.getStackSize();
+        final String renderedStackSize = NUMBER_CONVERTER.toWideReadableForm(stackSize);
 
-		// GL11.glPopAttrib();
-	}
+        final FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
+        final int width = fr.getStringWidth(renderedStackSize);
+        GL11.glTranslatef(-0.5f * width, 0.0f, -1.0f);
+        fr.drawString(renderedStackSize, 0, 0, 0);
 
-	@Override
-	public boolean isLocked()
-	{
-		return this.isLocked;
-	}
+        // GL11.glPopAttrib();
+    }
 
-	@Override
-	public void updateWatcher( final IStackWatcher newWatcher )
-	{
-		this.myWatcher = newWatcher;
-		this.configureWatchers();
-	}
+    @Override
+    public boolean isLocked() {
+        return this.isLocked;
+    }
 
-	@Override
-	public void onStackChange( final IItemList o, final IAEStack fullStack, final IAEStack diffStack, final BaseActionSource src, final StorageChannel chan )
-	{
-		if( this.configuredItem != null )
-		{
-			if( fullStack == null )
-			{
-				this.configuredItem.setStackSize( 0 );
-			}
-			else
-			{
-				this.configuredItem.setStackSize( fullStack.getStackSize() );
-			}
+    @Override
+    public void updateWatcher(final IStackWatcher newWatcher) {
+        this.myWatcher = newWatcher;
+        this.configureWatchers();
+    }
 
-			final long stackSize = this.configuredItem.getStackSize();
-			final String humanReadableText = NUMBER_CONVERTER.toWideReadableForm( stackSize );
+    @Override
+    public void onStackChange(
+            final IItemList o,
+            final IAEStack fullStack,
+            final IAEStack diffStack,
+            final BaseActionSource src,
+            final StorageChannel chan) {
+        if (this.configuredItem != null) {
+            if (fullStack == null) {
+                this.configuredItem.setStackSize(0);
+            } else {
+                this.configuredItem.setStackSize(fullStack.getStackSize());
+            }
 
-			if( !humanReadableText.equals( this.lastHumanReadableText ) )
-			{
-				this.lastHumanReadableText = humanReadableText;
-				this.getHost().markForUpdate();
-			}
-		}
-	}
+            final long stackSize = this.configuredItem.getStackSize();
+            final String humanReadableText = NUMBER_CONVERTER.toWideReadableForm(stackSize);
 
-	@Override
-	public boolean showNetworkInfo( final MovingObjectPosition where )
-	{
-		return false;
-	}
+            if (!humanReadableText.equals(this.lastHumanReadableText)) {
+                this.lastHumanReadableText = humanReadableText;
+                this.getHost().markForUpdate();
+            }
+        }
+    }
+
+    @Override
+    public boolean showNetworkInfo(final MovingObjectPosition where) {
+        return false;
+    }
 }

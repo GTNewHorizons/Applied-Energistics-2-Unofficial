@@ -18,7 +18,6 @@
 
 package appeng.server;
 
-
 import appeng.api.parts.CableRenderMode;
 import appeng.block.AEBaseBlock;
 import appeng.client.ActionKey;
@@ -29,6 +28,9 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.items.tools.ToolNetworkTool;
 import appeng.util.Platform;
 import cpw.mods.fml.common.FMLCommonHandler;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -38,166 +40,138 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+public class ServerHelper extends CommonHelper {
 
+    private EntityPlayer renderModeBased;
 
-public class ServerHelper extends CommonHelper
-{
+    @Override
+    public void init() {}
 
-	private EntityPlayer renderModeBased;
+    @Override
+    public World getWorld() {
+        throw new UnsupportedOperationException("This is a server...");
+    }
 
-	@Override
-	public void init()
-	{
+    @Override
+    public void bindTileEntitySpecialRenderer(final Class tile, final AEBaseBlock blk) {
+        throw new UnsupportedOperationException("This is a server...");
+    }
 
-	}
+    @Override
+    public List<EntityPlayer> getPlayers() {
+        if (!Platform.isClient()) {
+            final MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
 
-	@Override
-	public World getWorld()
-	{
-		throw new UnsupportedOperationException( "This is a server..." );
-	}
+            if (server != null) {
+                return server.getConfigurationManager().playerEntityList;
+            }
+        }
 
-	@Override
-	public void bindTileEntitySpecialRenderer( final Class tile, final AEBaseBlock blk )
-	{
-		throw new UnsupportedOperationException( "This is a server..." );
-	}
+        return new ArrayList<EntityPlayer>();
+    }
 
-	@Override
-	public List<EntityPlayer> getPlayers()
-	{
-		if( !Platform.isClient() )
-		{
-			final MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+    @Override
+    public void sendToAllNearExcept(
+            final EntityPlayer p,
+            final double x,
+            final double y,
+            final double z,
+            final double dist,
+            final World w,
+            final AppEngPacket packet) {
+        if (Platform.isClient()) {
+            return;
+        }
 
-			if( server != null )
-			{
-				return server.getConfigurationManager().playerEntityList;
-			}
-		}
+        for (final EntityPlayer o : this.getPlayers()) {
+            final EntityPlayerMP entityplayermp = (EntityPlayerMP) o;
 
-		return new ArrayList<EntityPlayer>();
-	}
+            if (entityplayermp != p && entityplayermp.worldObj == w) {
+                final double dX = x - entityplayermp.posX;
+                final double dY = y - entityplayermp.posY;
+                final double dZ = z - entityplayermp.posZ;
 
-	@Override
-	public void sendToAllNearExcept( final EntityPlayer p, final double x, final double y, final double z, final double dist, final World w, final AppEngPacket packet )
-	{
-		if( Platform.isClient() )
-		{
-			return;
-		}
+                if (dX * dX + dY * dY + dZ * dZ < dist * dist) {
+                    NetworkHandler.instance.sendTo(packet, entityplayermp);
+                }
+            }
+        }
+    }
 
-		for( final EntityPlayer o : this.getPlayers() )
-		{
-			final EntityPlayerMP entityplayermp = (EntityPlayerMP) o;
+    @Override
+    public void spawnEffect(
+            final EffectType type,
+            final World worldObj,
+            final double posX,
+            final double posY,
+            final double posZ,
+            final Object o) {
+        // :P
+    }
 
-			if( entityplayermp != p && entityplayermp.worldObj == w )
-			{
-				final double dX = x - entityplayermp.posX;
-				final double dY = y - entityplayermp.posY;
-				final double dZ = z - entityplayermp.posZ;
+    @Override
+    public boolean shouldAddParticles(final Random r) {
+        return false;
+    }
 
-				if( dX * dX + dY * dY + dZ * dZ < dist * dist )
-				{
-					NetworkHandler.instance.sendTo( packet, entityplayermp );
-				}
-			}
-		}
-	}
+    @Override
+    public MovingObjectPosition getMOP() {
+        return null;
+    }
 
-	@Override
-	public void spawnEffect( final EffectType type, final World worldObj, final double posX, final double posY, final double posZ, final Object o )
-	{
-		// :P
-	}
+    @Override
+    public void doRenderItem(final ItemStack sis, final World tile) {}
 
-	@Override
-	public boolean shouldAddParticles( final Random r )
-	{
-		return false;
-	}
+    @Override
+    public void postInit() {}
 
-	@Override
-	public MovingObjectPosition getMOP()
-	{
-		return null;
-	}
+    @Override
+    public CableRenderMode getRenderMode() {
+        if (this.renderModeBased == null) {
+            return CableRenderMode.Standard;
+        }
 
-	@Override
-	public void doRenderItem( final ItemStack sis, final World tile )
-	{
+        return this.renderModeForPlayer(this.renderModeBased);
+    }
 
-	}
+    protected CableRenderMode renderModeForPlayer(final EntityPlayer player) {
+        if (player != null) {
+            for (int x = 0; x < InventoryPlayer.getHotbarSize(); x++) {
+                final ItemStack is = player.inventory.getStackInSlot(x);
 
-	@Override
-	public void postInit()
-	{
+                if (is != null && is.getItem() instanceof ToolNetworkTool) {
+                    final NBTTagCompound c = is.getTagCompound();
+                    if (c != null && c.getBoolean("hideFacades")) {
+                        return CableRenderMode.CableView;
+                    }
+                }
+            }
+        }
 
-	}
+        return CableRenderMode.Standard;
+    }
 
-	@Override
-	public CableRenderMode getRenderMode()
-	{
-		if( this.renderModeBased == null )
-		{
-			return CableRenderMode.Standard;
-		}
+    @Override
+    public void triggerUpdates() {}
 
-		return this.renderModeForPlayer( this.renderModeBased );
-	}
+    @Override
+    public void updateRenderMode(final EntityPlayer player) {
+        this.renderModeBased = player;
+    }
 
-	protected CableRenderMode renderModeForPlayer( final EntityPlayer player )
-	{
-		if( player != null )
-		{
-			for( int x = 0; x < InventoryPlayer.getHotbarSize(); x++ )
-			{
-				final ItemStack is = player.inventory.getStackInSlot( x );
+    @Override
+    public void missingCoreMod() {
+        throw new IllegalStateException(
+                "Unable to Load Core Mod, please verify that AE2 is properly install in the mods folder, with a .jar extension.");
+    }
 
-				if( is != null && is.getItem() instanceof ToolNetworkTool )
-				{
-					final NBTTagCompound c = is.getTagCompound();
-					if( c != null && c.getBoolean( "hideFacades" ) )
-					{
-						return CableRenderMode.CableView;
-					}
-				}
-			}
-		}
+    @Override
+    public boolean isKeyPressed(ActionKey key) {
+        return false;
+    }
 
-		return CableRenderMode.Standard;
-	}
-
-	@Override
-	public void triggerUpdates()
-	{
-
-	}
-
-	@Override
-	public void updateRenderMode( final EntityPlayer player )
-	{
-		this.renderModeBased = player;
-	}
-
-	@Override
-	public void missingCoreMod()
-	{
-		throw new IllegalStateException( "Unable to Load Core Mod, please verify that AE2 is properly install in the mods folder, with a .jar extension." );
-	}
-
-	@Override
-	public boolean isKeyPressed( ActionKey key )
-	{
-		return false;
-	}
-
-	@Override
-	public boolean isActionKey( ActionKey key, int pressedKeyCode )
-	{
-		return false;
-	}
+    @Override
+    public boolean isActionKey(ActionKey key, int pressedKeyCode) {
+        return false;
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.container.implementations;
 
-
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.SlotRestrictedInput;
@@ -26,55 +25,56 @@ import appeng.core.AEConfig;
 import appeng.tile.networking.TileWireless;
 import net.minecraft.entity.player.InventoryPlayer;
 
+public class ContainerWireless extends AEBaseContainer {
 
-public class ContainerWireless extends AEBaseContainer
-{
+    private final TileWireless wirelessTerminal;
+    private final SlotRestrictedInput boosterSlot;
 
-	private final TileWireless wirelessTerminal;
-	private final SlotRestrictedInput boosterSlot;
-	@GuiSync( 1 )
-	public long range = 0;
-	@GuiSync( 2 )
-	public long drain = 0;
+    @GuiSync(1)
+    public long range = 0;
 
-	public ContainerWireless( final InventoryPlayer ip, final TileWireless te )
-	{
-		super( ip, te, null );
-		this.wirelessTerminal = te;
+    @GuiSync(2)
+    public long drain = 0;
 
-		this.addSlotToContainer( this.boosterSlot = new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.RANGE_BOOSTER, this.wirelessTerminal, 0, 80, 47, this.getInventoryPlayer() ) );
+    public ContainerWireless(final InventoryPlayer ip, final TileWireless te) {
+        super(ip, te, null);
+        this.wirelessTerminal = te;
 
-		this.bindPlayerInventory( ip, 0, 166 - /* height of player inventory */82 );
-	}
+        this.addSlotToContainer(
+                this.boosterSlot = new SlotRestrictedInput(
+                        SlotRestrictedInput.PlacableItemType.RANGE_BOOSTER,
+                        this.wirelessTerminal,
+                        0,
+                        80,
+                        47,
+                        this.getInventoryPlayer()));
 
-	@Override
-	public void detectAndSendChanges()
-	{
-		final int boosters = this.boosterSlot.getStack() == null ? 0 : this.boosterSlot.getStack().stackSize;
+        this.bindPlayerInventory(ip, 0, 166 - /* height of player inventory */ 82);
+    }
 
-		this.setRange( (long) ( 10 * AEConfig.instance.wireless_getMaxRange( boosters ) ) );
-		this.setDrain( (long) ( 100 * AEConfig.instance.wireless_getPowerDrain( boosters ) ) );
+    @Override
+    public void detectAndSendChanges() {
+        final int boosters = this.boosterSlot.getStack() == null ? 0 : this.boosterSlot.getStack().stackSize;
 
-		super.detectAndSendChanges();
-	}
+        this.setRange((long) (10 * AEConfig.instance.wireless_getMaxRange(boosters)));
+        this.setDrain((long) (100 * AEConfig.instance.wireless_getPowerDrain(boosters)));
 
-	public long getRange()
-	{
-		return this.range;
-	}
+        super.detectAndSendChanges();
+    }
 
-	private void setRange( final long range )
-	{
-		this.range = range;
-	}
+    public long getRange() {
+        return this.range;
+    }
 
-	public long getDrain()
-	{
-		return this.drain;
-	}
+    private void setRange(final long range) {
+        this.range = range;
+    }
 
-	private void setDrain( final long drain )
-	{
-		this.drain = drain;
-	}
+    public long getDrain() {
+        return this.drain;
+    }
+
+    private void setDrain(final long drain) {
+        this.drain = drain;
+    }
 }

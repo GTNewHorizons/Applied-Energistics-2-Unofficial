@@ -18,7 +18,6 @@
 
 package appeng.client.render.blocks;
 
-
 import appeng.block.misc.BlockTinyTNT;
 import appeng.client.render.BaseBlockRender;
 import appeng.tile.AEBaseTile;
@@ -27,29 +26,35 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 
+public class RenderTinyTNT extends BaseBlockRender<BlockTinyTNT, AEBaseTile> {
 
-public class RenderTinyTNT extends BaseBlockRender<BlockTinyTNT, AEBaseTile>
-{
+    public RenderTinyTNT() {
+        super(false, 0);
+    }
 
-	public RenderTinyTNT()
-	{
-		super( false, 0 );
-	}
+    @Override
+    public void renderInventory(
+            final BlockTinyTNT block,
+            final ItemStack is,
+            final RenderBlocks renderer,
+            final ItemRenderType type,
+            final Object[] obj) {
+        renderer.setRenderBounds(0.25f, 0.0f, 0.25f, 0.75f, 0.5f, 0.75f);
+        super.renderInventory(block, is, renderer, type, obj);
+    }
 
-	@Override
-	public void renderInventory( final BlockTinyTNT block, final ItemStack is, final RenderBlocks renderer, final ItemRenderType type, final Object[] obj )
-	{
-		renderer.setRenderBounds( 0.25f, 0.0f, 0.25f, 0.75f, 0.5f, 0.75f );
-		super.renderInventory( block, is, renderer, type, obj );
-	}
-
-	@Override
-	public boolean renderInWorld( final BlockTinyTNT imb, final IBlockAccess world, final int x, final int y, final int z, final RenderBlocks renderer )
-	{
-		renderer.renderAllFaces = true;
-		renderer.setRenderBounds( 0.25f, 0.0f, 0.25f, 0.75f, 0.5f, 0.75f );
-		final boolean out = super.renderInWorld( imb, world, x, y, z, renderer );
-		renderer.renderAllFaces = false;
-		return out;
-	}
+    @Override
+    public boolean renderInWorld(
+            final BlockTinyTNT imb,
+            final IBlockAccess world,
+            final int x,
+            final int y,
+            final int z,
+            final RenderBlocks renderer) {
+        renderer.renderAllFaces = true;
+        renderer.setRenderBounds(0.25f, 0.0f, 0.25f, 0.75f, 0.5f, 0.75f);
+        final boolean out = super.renderInWorld(imb, world, x, y, z, renderer);
+        renderer.renderAllFaces = false;
+        return out;
+    }
 }

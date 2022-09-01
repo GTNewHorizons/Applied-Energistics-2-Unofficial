@@ -23,12 +23,8 @@
 
 package appeng.api.config;
 
+public enum LevelType {
+    ITEM_LEVEL,
 
-public enum LevelType
-{
-
-	ITEM_LEVEL,
-
-	ENERGY_LEVEL
-
+    ENERGY_LEVEL
 }

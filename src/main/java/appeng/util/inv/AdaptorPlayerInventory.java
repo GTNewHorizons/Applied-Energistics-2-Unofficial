@@ -18,107 +18,89 @@
 
 package appeng.util.inv;
 
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
+public class AdaptorPlayerInventory implements IInventory {
 
-public class AdaptorPlayerInventory implements IInventory
-{
+    private final IInventory src;
+    private final int min = 0;
+    private final int size = 36;
 
-	private final IInventory src;
-	private final int min = 0;
-	private final int size = 36;
+    public AdaptorPlayerInventory(final IInventory playerInv, final boolean swap) {
 
-	public AdaptorPlayerInventory( final IInventory playerInv, final boolean swap )
-	{
+        if (swap) {
+            this.src = new WrapperChainedInventory(
+                    new WrapperInventoryRange(playerInv, 9, this.size - 9, false),
+                    new WrapperInventoryRange(playerInv, 0, 9, false));
+        } else {
+            this.src = playerInv;
+        }
+    }
 
-		if( swap )
-		{
-			this.src = new WrapperChainedInventory( new WrapperInventoryRange( playerInv, 9, this.size - 9, false ), new WrapperInventoryRange( playerInv, 0, 9, false ) );
-		}
-		else
-		{
-			this.src = playerInv;
-		}
-	}
+    @Override
+    public int getSizeInventory() {
+        return this.size;
+    }
 
-	@Override
-	public int getSizeInventory()
-	{
-		return this.size;
-	}
+    @Override
+    public ItemStack getStackInSlot(final int var1) {
+        return this.src.getStackInSlot(var1 + this.min);
+    }
 
-	@Override
-	public ItemStack getStackInSlot( final int var1 )
-	{
-		return this.src.getStackInSlot( var1 + this.min );
-	}
+    @Override
+    public ItemStack decrStackSize(final int var1, final int var2) {
+        return this.src.decrStackSize(this.min + var1, var2);
+    }
 
-	@Override
-	public ItemStack decrStackSize( final int var1, final int var2 )
-	{
-		return this.src.decrStackSize( this.min + var1, var2 );
-	}
+    @Override
+    public ItemStack getStackInSlotOnClosing(final int var1) {
+        return this.src.getStackInSlotOnClosing(this.min + var1);
+    }
 
-	@Override
-	public ItemStack getStackInSlotOnClosing( final int var1 )
-	{
-		return this.src.getStackInSlotOnClosing( this.min + var1 );
-	}
+    @Override
+    public void setInventorySlotContents(final int var1, final ItemStack var2) {
+        this.src.setInventorySlotContents(var1 + this.min, var2);
+    }
 
-	@Override
-	public void setInventorySlotContents( final int var1, final ItemStack var2 )
-	{
-		this.src.setInventorySlotContents( var1 + this.min, var2 );
-	}
+    @Override
+    public String getInventoryName() {
+        return this.src.getInventoryName();
+    }
 
-	@Override
-	public String getInventoryName()
-	{
-		return this.src.getInventoryName();
-	}
+    @Override
+    public boolean hasCustomInventoryName() {
+        return false;
+    }
 
-	@Override
-	public boolean hasCustomInventoryName()
-	{
-		return false;
-	}
+    @Override
+    public int getInventoryStackLimit() {
+        return this.src.getInventoryStackLimit();
+    }
 
-	@Override
-	public int getInventoryStackLimit()
-	{
-		return this.src.getInventoryStackLimit();
-	}
+    @Override
+    public void markDirty() {
+        this.src.markDirty();
+    }
 
-	@Override
-	public void markDirty()
-	{
-		this.src.markDirty();
-	}
+    @Override
+    public boolean isUseableByPlayer(final EntityPlayer var1) {
+        return this.src.isUseableByPlayer(var1);
+    }
 
-	@Override
-	public boolean isUseableByPlayer( final EntityPlayer var1 )
-	{
-		return this.src.isUseableByPlayer( var1 );
-	}
+    @Override
+    public void openInventory() {
+        this.src.openInventory();
+    }
 
-	@Override
-	public void openInventory()
-	{
-		this.src.openInventory();
-	}
+    @Override
+    public void closeInventory() {
+        this.src.closeInventory();
+    }
 
-	@Override
-	public void closeInventory()
-	{
-		this.src.closeInventory();
-	}
-
-	@Override
-	public boolean isItemValidForSlot( final int i, final ItemStack itemstack )
-	{
-		return this.src.isItemValidForSlot( i, itemstack );
-	}
+    @Override
+    public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
+        return this.src.isItemValidForSlot(i, itemstack);
+    }
 }

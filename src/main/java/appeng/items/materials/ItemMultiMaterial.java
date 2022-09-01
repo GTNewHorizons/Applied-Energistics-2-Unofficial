@@ -18,7 +18,6 @@
 
 package appeng.items.materials;
 
-
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.items.IItemGroup;
@@ -38,6 +37,10 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
@@ -55,420 +58,352 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+public final class ItemMultiMaterial extends AEBaseItem implements IStorageComponent, IUpgradeModule {
+    public static ItemMultiMaterial instance;
 
+    private static final int KILO_SCALAR = 1024;
 
-public final class ItemMultiMaterial extends AEBaseItem implements IStorageComponent, IUpgradeModule
-{
-	public static ItemMultiMaterial instance;
+    private final Map<Integer, MaterialType> dmgToMaterial = new HashMap<Integer, MaterialType>();
+    private final NameResolver nameResolver;
 
-	private static final int KILO_SCALAR = 1024;
+    public ItemMultiMaterial() {
+        this.nameResolver = new NameResolver(this.getClass());
+        this.setFeature(EnumSet.of(AEFeature.Core));
+        this.setHasSubtypes(true);
+        instance = this;
+    }
 
-	private final Map<Integer, MaterialType> dmgToMaterial = new HashMap<Integer, MaterialType>();
-	private final NameResolver nameResolver;
+    @Override
+    public void addCheckedInformation(
+            final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo) {
+        super.addCheckedInformation(stack, player, lines, displayMoreInfo);
 
-	public ItemMultiMaterial()
-	{
-		this.nameResolver = new NameResolver( this.getClass() );
-		this.setFeature( EnumSet.of( AEFeature.Core ) );
-		this.setHasSubtypes( true );
-		instance = this;
-	}
+        final MaterialType mt = this.getTypeByStack(stack);
+        if (mt == null) {
+            return;
+        }
 
-	@Override
-	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
-	{
-		super.addCheckedInformation( stack, player, lines, displayMoreInfo );
+        if (mt == MaterialType.NamePress) {
+            final NBTTagCompound c = Platform.openNbtData(stack);
+            lines.add(c.getString("InscribeName"));
+        }
 
-		final MaterialType mt = this.getTypeByStack( stack );
-		if( mt == null )
-		{
-			return;
-		}
+        final Upgrades u = this.getType(stack);
+        if (u != null) {
+            final List<String> textList = new LinkedList<String>();
+            for (final Entry<ItemStack, Integer> j : u.getSupported().entrySet()) {
+                String name = null;
 
-		if( mt == MaterialType.NamePress )
-		{
-			final NBTTagCompound c = Platform.openNbtData( stack );
-			lines.add( c.getString( "InscribeName" ) );
-		}
+                final int limit = j.getValue();
 
-		final Upgrades u = this.getType( stack );
-		if( u != null )
-		{
-			final List<String> textList = new LinkedList<String>();
-			for( final Entry<ItemStack, Integer> j : u.getSupported().entrySet() )
-			{
-				String name = null;
+                if (j.getKey().getItem() instanceof IItemGroup) {
+                    final IItemGroup ig = (IItemGroup) j.getKey().getItem();
+                    final String str =
+                            ig.getUnlocalizedGroupName(u.getSupported().keySet(), j.getKey());
+                    if (str != null) {
+                        name = Platform.gui_localize(str) + (limit > 1 ? " (" + limit + ')' : "");
+                    }
+                }
 
-				final int limit = j.getValue();
+                if (name == null) {
+                    name = j.getKey().getDisplayName() + (limit > 1 ? " (" + limit + ')' : "");
+                }
 
-				if( j.getKey().getItem() instanceof IItemGroup )
-				{
-					final IItemGroup ig = (IItemGroup) j.getKey().getItem();
-					final String str = ig.getUnlocalizedGroupName( u.getSupported().keySet(), j.getKey() );
-					if( str != null )
-					{
-						name = Platform.gui_localize( str ) + ( limit > 1 ? " (" + limit + ')' : "" );
-					}
-				}
+                if (!textList.contains(name)) {
+                    textList.add(name);
+                }
+            }
 
-				if( name == null )
-				{
-					name = j.getKey().getDisplayName() + ( limit > 1 ? " (" + limit + ')' : "" );
-				}
+            final Pattern p = Pattern.compile("(\\d+)[^\\d]");
+            final SlightlyBetterSort s = new SlightlyBetterSort(p);
+            Collections.sort(textList, s);
+            lines.addAll(textList);
+        }
+    }
 
-				if( !textList.contains( name ) )
-				{
-					textList.add( name );
-				}
-			}
+    public MaterialType getTypeByStack(final ItemStack is) {
+        if (this.dmgToMaterial.containsKey(is.getItemDamage())) {
+            return this.dmgToMaterial.get(is.getItemDamage());
+        }
+        return MaterialType.InvalidType;
+    }
 
-			final Pattern p = Pattern.compile( "(\\d+)[^\\d]" );
-			final SlightlyBetterSort s = new SlightlyBetterSort( p );
-			Collections.sort( textList, s );
-			lines.addAll( textList );
-		}
-	}
+    @Override
+    public Upgrades getType(final ItemStack itemstack) {
+        switch (this.getTypeByStack(itemstack)) {
+            case CardOreFilter:
+                return Upgrades.ORE_FILTER;
+            case CardPatternCapacity:
+                return Upgrades.PATTERN_CAPACITY;
+            case CardCapacity:
+                return Upgrades.CAPACITY;
+            case CardFuzzy:
+                return Upgrades.FUZZY;
+            case CardRedstone:
+                return Upgrades.REDSTONE;
+            case CardSpeed:
+                return Upgrades.SPEED;
+            case CardInverter:
+                return Upgrades.INVERTER;
+            case CardCrafting:
+                return Upgrades.CRAFTING;
+            default:
+                return null;
+        }
+    }
 
-	public MaterialType getTypeByStack( final ItemStack is )
-	{
-		if( this.dmgToMaterial.containsKey( is.getItemDamage() ) )
-		{
-			return this.dmgToMaterial.get( is.getItemDamage() );
-		}
-		return MaterialType.InvalidType;
-	}
+    public IStackSrc createMaterial(final MaterialType mat) {
+        Preconditions.checkState(!mat.isRegistered(), "Cannot create the same material twice.");
 
-	@Override
-	public Upgrades getType( final ItemStack itemstack )
-	{
-		switch( this.getTypeByStack( itemstack ) )
-		{
-			case CardOreFilter:
-				return Upgrades.ORE_FILTER;
-			case CardPatternCapacity:
-				return Upgrades.PATTERN_CAPACITY;
-			case CardCapacity:
-				return Upgrades.CAPACITY;
-			case CardFuzzy:
-				return Upgrades.FUZZY;
-			case CardRedstone:
-				return Upgrades.REDSTONE;
-			case CardSpeed:
-				return Upgrades.SPEED;
-			case CardInverter:
-				return Upgrades.INVERTER;
-			case CardCrafting:
-				return Upgrades.CRAFTING;
-			default:
-				return null;
-		}
-	}
+        boolean enabled = true;
 
-	public IStackSrc createMaterial( final MaterialType mat )
-	{
-		Preconditions.checkState( !mat.isRegistered(), "Cannot create the same material twice." );
+        for (final AEFeature f : mat.getFeature()) {
+            enabled = enabled && AEConfig.instance.isFeatureEnabled(f);
+        }
 
-		boolean enabled = true;
+        mat.setStackSrc(new MaterialStackSrc(mat));
 
-		for( final AEFeature f : mat.getFeature() )
-		{
-			enabled = enabled && AEConfig.instance.isFeatureEnabled( f );
-		}
+        if (enabled) {
+            mat.setItemInstance(this);
+            mat.markReady();
+            final int newMaterialNum = mat.getDamageValue();
 
-		mat.setStackSrc( new MaterialStackSrc( mat ) );
+            if (this.dmgToMaterial.get(newMaterialNum) == null) {
+                this.dmgToMaterial.put(newMaterialNum, mat);
+            } else {
+                throw new IllegalStateException("Meta Overlap detected.");
+            }
+        }
 
-		if( enabled )
-		{
-			mat.setItemInstance( this );
-			mat.markReady();
-			final int newMaterialNum = mat.getDamageValue();
+        return mat.getStackSrc();
+    }
 
-			if( this.dmgToMaterial.get( newMaterialNum ) == null )
-			{
-				this.dmgToMaterial.put( newMaterialNum, mat );
-			}
-			else
+    public void makeUnique() {
+        for (final MaterialType mt : ImmutableSet.copyOf(this.dmgToMaterial.values())) {
+            if (mt.getOreName() != null) {
+                ItemStack replacement = null;
 
-			{
-				throw new IllegalStateException( "Meta Overlap detected." );
-			}
-		}
+                final String[] names = mt.getOreName().split(",");
 
-		return mat.getStackSrc();
-	}
+                for (final String name : names) {
+                    if (replacement != null) {
+                        break;
+                    }
 
-	public void makeUnique()
-	{
-		for( final MaterialType mt : ImmutableSet.copyOf( this.dmgToMaterial.values() ) )
-		{
-			if( mt.getOreName() != null )
-			{
-				ItemStack replacement = null;
+                    final List<ItemStack> options = OreDictionary.getOres(name);
+                    if (options != null && options.size() > 0) {
+                        for (final ItemStack is : options) {
+                            if (is != null && is.getItem() != null) {
+                                replacement = is.copy();
+                                break;
+                            }
+                        }
+                    }
+                }
 
-				final String[] names = mt.getOreName().split( "," );
+                if (replacement == null || AEConfig.instance.useAEVersion(mt)) {
+                    // continue using the AE2 item.
+                    for (final String name : names) {
+                        OreDictionary.registerOre(name, mt.stack(1));
+                    }
+                } else {
+                    if (mt.getItemInstance() == this) {
+                        this.dmgToMaterial.remove(mt.getDamageValue());
+                    }
 
-				for( final String name : names )
-				{
-					if( replacement != null )
-					{
-						break;
-					}
+                    mt.setItemInstance(replacement.getItem());
+                    mt.setDamageValue(replacement.getItemDamage());
+                }
+            }
+        }
+    }
 
-					final List<ItemStack> options = OreDictionary.getOres( name );
-					if( options != null && options.size() > 0 )
-					{
-						for( final ItemStack is : options )
-						{
-							if( is != null && is.getItem() != null )
-							{
-								replacement = is.copy();
-								break;
-							}
-						}
-					}
-				}
+    @Override
+    public IIcon getIconFromDamage(final int dmg) {
+        if (this.dmgToMaterial.containsKey(dmg)) {
+            return this.dmgToMaterial.get(dmg).getIIcon();
+        }
+        return new MissingIcon(this);
+    }
 
-				if( replacement == null || AEConfig.instance.useAEVersion( mt ) )
-				{
-					// continue using the AE2 item.
-					for( final String name : names )
-					{
-						OreDictionary.registerOre( name, mt.stack( 1 ) );
-					}
-				}
-				else
-				{
-					if( mt.getItemInstance() == this )
-					{
-						this.dmgToMaterial.remove( mt.getDamageValue() );
-					}
+    @Override
+    public String getUnlocalizedName(final ItemStack is) {
+        return "item.appliedenergistics2." + this.nameOf(is);
+    }
 
-					mt.setItemInstance( replacement.getItem() );
-					mt.setDamageValue( replacement.getItemDamage() );
-				}
-			}
-		}
-	}
+    private String nameOf(final ItemStack is) {
+        if (is == null) {
+            return "null";
+        }
 
-	@Override
-	public IIcon getIconFromDamage( final int dmg )
-	{
-		if( this.dmgToMaterial.containsKey( dmg ) )
-		{
-			return this.dmgToMaterial.get( dmg ).getIIcon();
-		}
-		return new MissingIcon( this );
-	}
+        final MaterialType mt = this.getTypeByStack(is);
+        if (mt == null) {
+            return "null";
+        }
 
-	@Override
-	public String getUnlocalizedName( final ItemStack is )
-	{
-		return "item.appliedenergistics2." + this.nameOf( is );
-	}
+        return this.nameResolver.getName(mt.name());
+    }
 
-	private String nameOf( final ItemStack is )
-	{
-		if( is == null )
-		{
-			return "null";
-		}
+    @Override
+    protected void getCheckedSubItems(
+            final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks) {
+        final List<MaterialType> types = Arrays.asList(MaterialType.values());
+        Collections.sort(types, new Comparator<MaterialType>() {
 
-		final MaterialType mt = this.getTypeByStack( is );
-		if( mt == null )
-		{
-			return "null";
-		}
+            @Override
+            public int compare(final MaterialType o1, final MaterialType o2) {
+                return o1.name().compareTo(o2.name());
+            }
+        });
 
-		return this.nameResolver.getName( mt.name() );
-	}
+        for (final MaterialType mat : types) {
+            if (mat.getDamageValue() >= 0 && mat.isRegistered() && mat.getItemInstance() == this) {
+                itemStacks.add(new ItemStack(this, 1, mat.getDamageValue()));
+            }
+        }
+    }
 
-	@Override
-	protected void getCheckedSubItems( final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks )
-	{
-		final List<MaterialType> types = Arrays.asList( MaterialType.values() );
-		Collections.sort( types, new Comparator<MaterialType>()
-		{
+    @Override
+    public void registerIcons(final IIconRegister icoRegister) {
+        for (final MaterialType mat : MaterialType.values()) {
+            if (mat.getDamageValue() != -1) {
+                final ItemStack what = new ItemStack(this, 1, mat.getDamageValue());
+                if (this.getTypeByStack(what) != MaterialType.InvalidType) {
+                    final String tex = "appliedenergistics2:" + this.nameOf(what);
+                    mat.setIIcon(icoRegister.registerIcon(tex));
+                }
+            }
+        }
+    }
 
-			@Override
-			public int compare( final MaterialType o1, final MaterialType o2 )
-			{
-				return o1.name().compareTo( o2.name() );
-			}
-		} );
+    @Override
+    public boolean onItemUseFirst(
+            final ItemStack is,
+            final EntityPlayer player,
+            final World world,
+            final int x,
+            final int y,
+            final int z,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return true;
 
-		for( final MaterialType mat : types )
-		{
-			if( mat.getDamageValue() >= 0 && mat.isRegistered() && mat.getItemInstance() == this )
-			{
-				itemStacks.add( new ItemStack( this, 1, mat.getDamageValue() ) );
-			}
-		}
-	}
+        if (player.isSneaking()) {
+            final TileEntity te = world.getTileEntity(x, y, z);
+            IInventory upgrades = null;
 
-	@Override
-	public void registerIcons( final IIconRegister icoRegister )
-	{
-		for( final MaterialType mat : MaterialType.values() )
-		{
-			if( mat.getDamageValue() != -1 )
-			{
-				final ItemStack what = new ItemStack( this, 1, mat.getDamageValue() );
-				if( this.getTypeByStack( what ) != MaterialType.InvalidType )
-				{
-					final String tex = "appliedenergistics2:" + this.nameOf( what );
-					mat.setIIcon( icoRegister.registerIcon( tex ) );
-				}
-			}
-		}
-	}
+            if (te instanceof IPartHost) {
+                final SelectedPart sp = ((IPartHost) te).selectPart(Vec3.createVectorHelper(hitX, hitY, hitZ));
+                if (sp.part instanceof IUpgradeableHost) {
+                    upgrades = ((ISegmentedInventory) sp.part).getInventoryByName("upgrades");
+                }
+            } else if (te instanceof IUpgradeableHost) {
+                upgrades = ((ISegmentedInventory) te).getInventoryByName("upgrades");
+            }
 
-	@Override
-	public boolean onItemUseFirst( final ItemStack is, final EntityPlayer player, final World world, final int x, final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( ForgeEventFactory.onItemUseStart( player, is, 1 ) <= 0 )
-			return true;
+            if (upgrades != null && is != null && is.getItem() instanceof IUpgradeModule) {
+                final IUpgradeModule um = (IUpgradeModule) is.getItem();
+                final Upgrades u = um.getType(is);
 
-		if( player.isSneaking() )
-		{
-			final TileEntity te = world.getTileEntity( x, y, z );
-			IInventory upgrades = null;
+                if (u != null) {
+                    final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(upgrades, ForgeDirection.UNKNOWN);
+                    if (ad != null) {
+                        if (player.worldObj.isRemote) {
+                            return false;
+                        }
 
-			if( te instanceof IPartHost )
-			{
-				final SelectedPart sp = ( (IPartHost) te ).selectPart( Vec3.createVectorHelper( hitX, hitY, hitZ ) );
-				if( sp.part instanceof IUpgradeableHost )
-				{
-					upgrades = ( (ISegmentedInventory) sp.part ).getInventoryByName( "upgrades" );
-				}
-			}
-			else if( te instanceof IUpgradeableHost )
-			{
-				upgrades = ( (ISegmentedInventory) te ).getInventoryByName( "upgrades" );
-			}
+                        player.inventory.setInventorySlotContents(player.inventory.currentItem, ad.addItems(is));
+                        return true;
+                    }
+                }
+            }
+        }
 
-			if( upgrades != null && is != null && is.getItem() instanceof IUpgradeModule )
-			{
-				final IUpgradeModule um = (IUpgradeModule) is.getItem();
-				final Upgrades u = um.getType( is );
+        return super.onItemUseFirst(is, player, world, x, y, z, side, hitX, hitY, hitZ);
+    }
 
-				if( u != null )
-				{
-					final InventoryAdaptor ad = InventoryAdaptor.getAdaptor( upgrades, ForgeDirection.UNKNOWN );
-					if( ad != null )
-					{
-						if( player.worldObj.isRemote )
-						{
-							return false;
-						}
+    @Override
+    public boolean hasCustomEntity(final ItemStack is) {
+        return this.getTypeByStack(is).hasCustomEntity();
+    }
 
-						player.inventory.setInventorySlotContents( player.inventory.currentItem, ad.addItems( is ) );
-						return true;
-					}
-				}
-			}
-		}
+    @Override
+    public Entity createEntity(final World w, final Entity location, final ItemStack itemstack) {
+        final Class<? extends Entity> droppedEntity =
+                this.getTypeByStack(itemstack).getCustomEntityClass();
+        final Entity eqi;
 
-		return super.onItemUseFirst( is, player, world, x, y, z, side, hitX, hitY, hitZ );
-	}
+        try {
+            eqi = droppedEntity
+                    .getConstructor(World.class, double.class, double.class, double.class, ItemStack.class)
+                    .newInstance(w, location.posX, location.posY, location.posZ, itemstack);
+        } catch (final Throwable t) {
+            throw new IllegalStateException(t);
+        }
 
-	@Override
-	public boolean hasCustomEntity( final ItemStack is )
-	{
-		return this.getTypeByStack( is ).hasCustomEntity();
-	}
+        eqi.motionX = location.motionX;
+        eqi.motionY = location.motionY;
+        eqi.motionZ = location.motionZ;
 
-	@Override
-	public Entity createEntity( final World w, final Entity location, final ItemStack itemstack )
-	{
-		final Class<? extends Entity> droppedEntity = this.getTypeByStack( itemstack ).getCustomEntityClass();
-		final Entity eqi;
+        if (location instanceof EntityItem && eqi instanceof EntityItem) {
+            ((EntityItem) eqi).delayBeforeCanPickup = ((EntityItem) location).delayBeforeCanPickup;
+        }
 
-		try
-		{
-			eqi = droppedEntity.getConstructor( World.class, double.class, double.class, double.class, ItemStack.class ).newInstance( w, location.posX, location.posY, location.posZ, itemstack );
-		}
-		catch( final Throwable t )
-		{
-			throw new IllegalStateException( t );
-		}
+        return eqi;
+    }
 
-		eqi.motionX = location.motionX;
-		eqi.motionY = location.motionY;
-		eqi.motionZ = location.motionZ;
+    @Override
+    public int getBytes(final ItemStack is) {
+        switch (this.getTypeByStack(is)) {
+            case Cell1kPart:
+                return KILO_SCALAR;
+            case Cell4kPart:
+                return KILO_SCALAR * 4;
+            case Cell16kPart:
+                return KILO_SCALAR * 16;
+            case Cell64kPart:
+                return KILO_SCALAR * 64;
+            default:
+        }
+        return 0;
+    }
 
-		if( location instanceof EntityItem && eqi instanceof EntityItem )
-		{
-			( (EntityItem) eqi ).delayBeforeCanPickup = ( (EntityItem) location ).delayBeforeCanPickup;
-		}
+    @Override
+    public boolean isStorageComponent(final ItemStack is) {
+        switch (this.getTypeByStack(is)) {
+            case Cell1kPart:
+            case Cell4kPart:
+            case Cell16kPart:
+            case Cell64kPart:
+                return true;
+            default:
+        }
+        return false;
+    }
 
-		return eqi;
-	}
+    private static class SlightlyBetterSort implements Comparator<String> {
+        private final Pattern pattern;
 
-	@Override
-	public int getBytes( final ItemStack is )
-	{
-		switch( this.getTypeByStack( is ) )
-		{
-			case Cell1kPart:
-				return KILO_SCALAR;
-			case Cell4kPart:
-				return KILO_SCALAR * 4;
-			case Cell16kPart:
-				return KILO_SCALAR * 16;
-			case Cell64kPart:
-				return KILO_SCALAR * 64;
-			default:
-		}
-		return 0;
-	}
+        public SlightlyBetterSort(final Pattern pattern) {
+            this.pattern = pattern;
+        }
 
-	@Override
-	public boolean isStorageComponent( final ItemStack is )
-	{
-		switch( this.getTypeByStack( is ) )
-		{
-			case Cell1kPart:
-			case Cell4kPart:
-			case Cell16kPart:
-			case Cell64kPart:
-				return true;
-			default:
-		}
-		return false;
-	}
-
-	private static class SlightlyBetterSort implements Comparator<String>
-	{
-		private final Pattern pattern;
-
-		public SlightlyBetterSort( final Pattern pattern )
-		{
-			this.pattern = pattern;
-		}
-
-		@Override
-		public int compare( final String o1, final String o2 )
-		{
-			try
-			{
-				final Matcher a = this.pattern.matcher( o1 );
-				final Matcher b = this.pattern.matcher( o2 );
-				if( a.find() && b.find() )
-				{
-					final int ia = Integer.parseInt( a.group( 1 ) );
-					final int ib = Integer.parseInt( b.group( 1 ) );
-					return Integer.compare( ia, ib );
-				}
-			}
-			catch( final Throwable t )
-			{
-				// ek!
-			}
-			return o1.compareTo( o2 );
-		}
-	}
+        @Override
+        public int compare(final String o1, final String o2) {
+            try {
+                final Matcher a = this.pattern.matcher(o1);
+                final Matcher b = this.pattern.matcher(o2);
+                if (a.find() && b.find()) {
+                    final int ia = Integer.parseInt(a.group(1));
+                    final int ib = Integer.parseInt(b.group(1));
+                    return Integer.compare(ia, ib);
+                }
+            } catch (final Throwable t) {
+                // ek!
+            }
+            return o1.compareTo(o2);
+        }
+    }
 }

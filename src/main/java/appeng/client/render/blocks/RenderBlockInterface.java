@@ -18,7 +18,6 @@
 
 package appeng.client.render.blocks;
 
-
 import appeng.block.misc.BlockInterface;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.render.BlockRenderInfo;
@@ -29,31 +28,33 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public class RenderBlockInterface extends BaseBlockRender<BlockInterface, TileInterface> {
 
-public class RenderBlockInterface extends BaseBlockRender<BlockInterface, TileInterface>
-{
+    public RenderBlockInterface() {
+        super(false, 20);
+    }
 
-	public RenderBlockInterface()
-	{
-		super( false, 20 );
-	}
+    @Override
+    public boolean renderInWorld(
+            final BlockInterface block,
+            final IBlockAccess world,
+            final int x,
+            final int y,
+            final int z,
+            final RenderBlocks renderer) {
+        final TileInterface ti = block.getTileEntity(world, x, y, z);
+        final BlockRenderInfo info = block.getRendererInstance();
 
-	@Override
-	public boolean renderInWorld( final BlockInterface block, final IBlockAccess world, final int x, final int y, final int z, final RenderBlocks renderer )
-	{
-		final TileInterface ti = block.getTileEntity( world, x, y, z );
-		final BlockRenderInfo info = block.getRendererInstance();
+        if (ti != null && ti.getForward() != ForgeDirection.UNKNOWN) {
+            final IIcon side = ExtraBlockTextures.BlockInterfaceAlternateArrow.getIcon();
+            info.setTemporaryRenderIcons(
+                    ExtraBlockTextures.BlockInterfaceAlternate.getIcon(), block.getIcon(0, 0), side, side, side, side);
+        }
 
-		if( ti != null && ti.getForward() != ForgeDirection.UNKNOWN )
-		{
-			final IIcon side = ExtraBlockTextures.BlockInterfaceAlternateArrow.getIcon();
-			info.setTemporaryRenderIcons( ExtraBlockTextures.BlockInterfaceAlternate.getIcon(), block.getIcon( 0, 0 ), side, side, side, side );
-		}
+        final boolean fz = super.renderInWorld(block, world, x, y, z, renderer);
 
-		final boolean fz = super.renderInWorld( block, world, x, y, z, renderer );
+        info.setTemporaryRenderIcon(null);
 
-		info.setTemporaryRenderIcon( null );
-
-		return fz;
-	}
+        return fz;
+    }
 }

@@ -23,9 +23,7 @@
 
 package appeng.api.networking.events;
 
-
 import appeng.api.networking.energy.IAEPowerStorage;
-
 
 /**
  * informs the network, that a {@link IAEPowerStorage} block that had either run,
@@ -36,28 +34,25 @@ import appeng.api.networking.energy.IAEPowerStorage;
  * <p>
  * you do not need to send this event when your node is added / removed from the grid.
  */
-public class MENetworkPowerStorage extends MENetworkEvent
-{
+public class MENetworkPowerStorage extends MENetworkEvent {
 
-	public final IAEPowerStorage storage;
-	public final PowerEventType type;
+    public final IAEPowerStorage storage;
+    public final PowerEventType type;
 
-	public MENetworkPowerStorage( final IAEPowerStorage t, final PowerEventType y )
-	{
-		this.storage = t;
-		this.type = y;
-	}
+    public MENetworkPowerStorage(final IAEPowerStorage t, final PowerEventType y) {
+        this.storage = t;
+        this.type = y;
+    }
 
-	public enum PowerEventType
-	{
-		/**
-		 * informs the network this tile is ready to receive power again.
-		 */
-		REQUEST_POWER,
+    public enum PowerEventType {
+        /**
+         * informs the network this tile is ready to receive power again.
+         */
+        REQUEST_POWER,
 
-		/**
-		 * informs the network this tile is ready to provide power again.
-		 */
-		PROVIDE_POWER
-	}
+        /**
+         * informs the network this tile is ready to provide power again.
+         */
+        PROVIDE_POWER
+    }
 }

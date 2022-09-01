@@ -18,7 +18,6 @@
 
 package appeng.crafting;
 
-
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGrid;
@@ -39,367 +38,305 @@ import appeng.api.util.DimensionalCoord;
 import appeng.core.AELog;
 import appeng.hooks.TickHandler;
 import com.google.common.base.Stopwatch;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
+public class CraftingJob implements Runnable, ICraftingJob {
+    private static final String LOG_CRAFTING_JOB =
+            "CraftingJob (%s) issued by %s requesting [%s] using %s bytes took %s ms";
+    private static final String LOG_MACHINE_SOURCE_DETAILS = "Machine[object=%s, %s]";
 
+    private final MECraftingInventory original;
+    private final World world;
+    private final IItemList<IAEItemStack> crafting = AEApi.instance().storage().createItemList();
+    private final IItemList<IAEItemStack> missing = AEApi.instance().storage().createItemList();
+    private final HashMap<String, TwoIntegers> opsAndMultiplier = new HashMap<String, TwoIntegers>();
+    private final Object monitor = new Object();
+    private final Stopwatch watch = Stopwatch.createUnstarted();
+    private CraftingTreeNode tree;
+    private final IAEItemStack output;
+    private boolean simulate = false;
+    private MECraftingInventory availableCheck;
+    private long bytes = 0;
+    private final BaseActionSource actionSrc;
+    private final ICraftingCallback callback;
+    private boolean running = false;
+    private boolean done = false;
+    private int time = 5;
+    private int incTime = Integer.MAX_VALUE;
 
-public class CraftingJob implements Runnable, ICraftingJob
-{
-	private static final String LOG_CRAFTING_JOB = "CraftingJob (%s) issued by %s requesting [%s] using %s bytes took %s ms";
-	private static final String LOG_MACHINE_SOURCE_DETAILS = "Machine[object=%s, %s]";
+    private World wrapWorld(final World w) {
+        return w;
+    }
 
-	private final MECraftingInventory original;
-	private final World world;
-	private final IItemList<IAEItemStack> crafting = AEApi.instance().storage().createItemList();
-	private final IItemList<IAEItemStack> missing = AEApi.instance().storage().createItemList();
-	private final HashMap<String, TwoIntegers> opsAndMultiplier = new HashMap<String, TwoIntegers>();
-	private final Object monitor = new Object();
-	private final Stopwatch watch = Stopwatch.createUnstarted();
-	private CraftingTreeNode tree;
-	private final IAEItemStack output;
-	private boolean simulate = false;
-	private MECraftingInventory availableCheck;
-	private long bytes = 0;
-	private final BaseActionSource actionSrc;
-	private final ICraftingCallback callback;
-	private boolean running = false;
-	private boolean done = false;
-	private int time = 5;
-	private int incTime = Integer.MAX_VALUE;
+    public CraftingJob(
+            final World w,
+            final IGrid grid,
+            final BaseActionSource actionSrc,
+            final IAEItemStack what,
+            final ICraftingCallback callback) {
+        this.world = this.wrapWorld(w);
+        this.output = what.copy();
+        this.actionSrc = actionSrc;
 
-	private World wrapWorld( final World w )
-	{
-		return w;
-	}
+        this.callback = callback;
+        final ICraftingGrid cc = grid.getCache(ICraftingGrid.class);
+        final IStorageGrid sg = grid.getCache(IStorageGrid.class);
+        this.original = new MECraftingInventory(sg.getItemInventory(), actionSrc, false, false, false);
 
-	public CraftingJob( final World w, final IGrid grid, final BaseActionSource actionSrc, final IAEItemStack what, final ICraftingCallback callback )
-	{
-		this.world = this.wrapWorld( w );
-		this.output = what.copy();
-		this.actionSrc = actionSrc;
+        this.setTree(this.getCraftingTree(cc, what));
+        this.availableCheck = null;
+    }
 
-		this.callback = callback;
-		final ICraftingGrid cc = grid.getCache( ICraftingGrid.class );
-		final IStorageGrid sg = grid.getCache( IStorageGrid.class );
-		this.original = new MECraftingInventory( sg.getItemInventory(), actionSrc, false, false, false );
+    private CraftingTreeNode getCraftingTree(final ICraftingGrid cc, final IAEItemStack what) {
+        return new CraftingTreeNode(cc, this, what, null, -1, 0);
+    }
 
-		this.setTree( this.getCraftingTree( cc, what ) );
-		this.availableCheck = null;
-	}
+    void refund(final IAEItemStack o) {
+        this.availableCheck.injectItems(o, Actionable.MODULATE, this.actionSrc);
+    }
 
-	private CraftingTreeNode getCraftingTree( final ICraftingGrid cc, final IAEItemStack what )
-	{
-		return new CraftingTreeNode( cc, this, what, null, -1, 0 );
-	}
+    IAEItemStack checkUse(final IAEItemStack available) {
+        return this.availableCheck.extractItems(available, Actionable.MODULATE, this.actionSrc);
+    }
 
-	void refund( final IAEItemStack o )
-	{
-		this.availableCheck.injectItems( o, Actionable.MODULATE, this.actionSrc );
-	}
+    public void writeToNBT(final NBTTagCompound out) {}
 
-	IAEItemStack checkUse( final IAEItemStack available )
-	{
-		return this.availableCheck.extractItems( available, Actionable.MODULATE, this.actionSrc );
-	}
+    void addTask(IAEItemStack what, final long crafts, final ICraftingPatternDetails details, final int depth) {
+        if (crafts > 0) {
+            what = what.copy();
+            what.setStackSize(what.getStackSize() * crafts);
+            this.crafting.add(what);
+        }
+    }
 
-	public void writeToNBT( final NBTTagCompound out )
-	{
+    void addMissing(IAEItemStack what) {
+        what = what.copy();
+        this.missing.add(what);
+    }
 
-	}
+    @Override
+    public void run() {
+        try {
+            try {
+                TickHandler.INSTANCE.registerCraftingSimulation(this.world, this);
+                this.handlePausing();
 
-	void addTask( IAEItemStack what, final long crafts, final ICraftingPatternDetails details, final int depth )
-	{
-		if( crafts > 0 )
-		{
-			what = what.copy();
-			what.setStackSize( what.getStackSize() * crafts );
-			this.crafting.add( what );
-		}
-	}
+                final Stopwatch timer = Stopwatch.createStarted();
 
-	void addMissing( IAEItemStack what )
-	{
-		what = what.copy();
-		this.missing.add( what );
-	}
+                final MECraftingInventory craftingInventory = new MECraftingInventory(this.original, true, false, true);
+                craftingInventory.ignore(this.output);
 
-	@Override
-	public void run()
-	{
-		try
-		{
-			try
-			{
-				TickHandler.INSTANCE.registerCraftingSimulation( this.world, this );
-				this.handlePausing();
+                this.availableCheck = new MECraftingInventory(this.original, false, false, false);
+                this.getTree().request(craftingInventory, this.output.getStackSize(), this.actionSrc);
+                this.getTree().dive(this);
 
-				final Stopwatch timer = Stopwatch.createStarted();
+                for (final String s : this.opsAndMultiplier.keySet()) {
+                    final TwoIntegers ti = this.opsAndMultiplier.get(s);
+                    AELog.crafting(s + " * " + ti.times + " = " + (ti.perOp * ti.times));
+                }
 
-				final MECraftingInventory craftingInventory = new MECraftingInventory( this.original, true, false, true );
-				craftingInventory.ignore( this.output );
+                this.logCraftingJob("real", timer);
+                // if ( mode == Actionable.MODULATE )
+                // craftingInventory.moveItemsToStorage( storage );
+            } catch (final CraftBranchFailure e) {
+                this.simulate = true;
 
-				this.availableCheck = new MECraftingInventory( this.original, false, false, false );
-				this.getTree().request( craftingInventory, this.output.getStackSize(), this.actionSrc );
-				this.getTree().dive( this );
+                try {
+                    final Stopwatch timer = Stopwatch.createStarted();
+                    final MECraftingInventory craftingInventory =
+                            new MECraftingInventory(this.original, true, false, true);
+                    craftingInventory.ignore(this.output);
 
-				for( final String s : this.opsAndMultiplier.keySet() )
-				{
-					final TwoIntegers ti = this.opsAndMultiplier.get( s );
-					AELog.crafting( s + " * " + ti.times + " = " + ( ti.perOp * ti.times ) );
-				}
+                    this.availableCheck = new MECraftingInventory(this.original, false, false, false);
 
-				this.logCraftingJob( "real", timer );
-				// if ( mode == Actionable.MODULATE )
-				// craftingInventory.moveItemsToStorage( storage );
-			}
-			catch( final CraftBranchFailure e )
-			{
-				this.simulate = true;
+                    this.getTree().setSimulate();
+                    this.getTree().request(craftingInventory, this.output.getStackSize(), this.actionSrc);
+                    this.getTree().dive(this);
 
-				try
-				{
-					final Stopwatch timer = Stopwatch.createStarted();
-					final MECraftingInventory craftingInventory = new MECraftingInventory( this.original, true, false, true );
-					craftingInventory.ignore( this.output );
+                    for (final String s : this.opsAndMultiplier.keySet()) {
+                        final TwoIntegers ti = this.opsAndMultiplier.get(s);
+                        AELog.crafting(s + " * " + ti.times + " = " + (ti.perOp * ti.times));
+                    }
 
-					this.availableCheck = new MECraftingInventory( this.original, false, false, false );
+                    this.logCraftingJob("simulate", timer);
+                } catch (final CraftBranchFailure e1) {
+                    AELog.debug(e1);
+                } catch (final CraftingCalculationFailure f) {
+                    AELog.debug(f);
+                } catch (final InterruptedException e1) {
+                    AELog.crafting("Crafting calculation canceled.");
+                    this.finish();
+                    return;
+                }
+            } catch (final CraftingCalculationFailure f) {
+                AELog.debug(f);
+            } catch (final InterruptedException e1) {
+                AELog.crafting("Crafting calculation canceled.");
+                this.finish();
+                return;
+            }
 
-					this.getTree().setSimulate();
-					this.getTree().request( craftingInventory, this.output.getStackSize(), this.actionSrc );
-					this.getTree().dive( this );
+            AELog.craftingDebug("crafting job now done");
+        } catch (final Throwable t) {
+            this.finish();
+            throw new IllegalStateException(t);
+        }
 
-					for( final String s : this.opsAndMultiplier.keySet() )
-					{
-						final TwoIntegers ti = this.opsAndMultiplier.get( s );
-						AELog.crafting( s + " * " + ti.times + " = " + ( ti.perOp * ti.times ) );
-					}
+        this.finish();
+    }
 
-					this.logCraftingJob( "simulate", timer );
-				}
-				catch( final CraftBranchFailure e1 )
-				{
-					AELog.debug( e1 );
-				}
-				catch( final CraftingCalculationFailure f )
-				{
-					AELog.debug( f );
-				}
-				catch( final InterruptedException e1 )
-				{
-					AELog.crafting( "Crafting calculation canceled." );
-					this.finish();
-					return;
-				}
-			}
-			catch( final CraftingCalculationFailure f )
-			{
-				AELog.debug( f );
-			}
-			catch( final InterruptedException e1 )
-			{
-				AELog.crafting( "Crafting calculation canceled." );
-				this.finish();
-				return;
-			}
+    void handlePausing() throws InterruptedException {
+        if (this.incTime > 100) {
+            this.incTime = 0;
 
-			AELog.craftingDebug( "crafting job now done" );
-		}
-		catch( final Throwable t )
-		{
-			this.finish();
-			throw new IllegalStateException( t );
-		}
+            synchronized (this.monitor) {
+                if (this.watch.elapsed(TimeUnit.MICROSECONDS) > this.time) {
+                    this.running = false;
+                    this.watch.stop();
+                    this.monitor.notify();
+                }
 
-		this.finish();
-	}
+                if (!this.running) {
+                    AELog.craftingDebug("crafting job will now sleep");
 
-	void handlePausing() throws InterruptedException
-	{
-		if( this.incTime > 100 )
-		{
-			this.incTime = 0;
+                    while (!this.running) {
+                        this.monitor.wait();
+                    }
 
-			synchronized( this.monitor )
-			{
-				if( this.watch.elapsed( TimeUnit.MICROSECONDS ) > this.time )
-				{
-					this.running = false;
-					this.watch.stop();
-					this.monitor.notify();
-				}
+                    AELog.craftingDebug("crafting job now active");
+                }
+            }
 
-				if( !this.running )
-				{
-					AELog.craftingDebug( "crafting job will now sleep" );
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+        }
+        this.incTime++;
+    }
 
-					while( !this.running )
-					{
-						this.monitor.wait();
-					}
+    private void finish() {
+        if (this.callback != null) {
+            this.callback.calculationComplete(this);
+        }
 
-					AELog.craftingDebug( "crafting job now active" );
-				}
-			}
+        this.availableCheck = null;
 
-			if( Thread.interrupted() )
-			{
-				throw new InterruptedException();
-			}
-		}
-		this.incTime++;
-	}
+        synchronized (this.monitor) {
+            this.running = false;
+            this.done = true;
+            this.monitor.notify();
+        }
+    }
 
-	private void finish()
-	{
-		if( this.callback != null )
-		{
-			this.callback.calculationComplete( this );
-		}
+    @Override
+    public boolean isSimulation() {
+        return this.simulate;
+    }
 
-		this.availableCheck = null;
+    @Override
+    public long getByteTotal() {
+        return this.bytes;
+    }
 
-		synchronized( this.monitor )
-		{
-			this.running = false;
-			this.done = true;
-			this.monitor.notify();
-		}
-	}
+    @Override
+    public void populatePlan(final IItemList<IAEItemStack> plan) {
+        if (this.getTree() != null) {
+            this.getTree().getPlan(plan);
+        }
+    }
 
-	@Override
-	public boolean isSimulation()
-	{
-		return this.simulate;
-	}
+    @Override
+    public IAEItemStack getOutput() {
+        return this.output;
+    }
 
-	@Override
-	public long getByteTotal()
-	{
-		return this.bytes;
-	}
+    public boolean isDone() {
+        return this.done;
+    }
 
-	@Override
-	public void populatePlan( final IItemList<IAEItemStack> plan )
-	{
-		if( this.getTree() != null )
-		{
-			this.getTree().getPlan( plan );
-		}
-	}
+    World getWorld() {
+        return this.world;
+    }
 
-	@Override
-	public IAEItemStack getOutput()
-	{
-		return this.output;
-	}
+    /**
+     * returns true if this needs more simulation.
+     *
+     * @param milli milliseconds of simulation
+     * @return true if this needs more simulation
+     */
+    public boolean simulateFor(final int milli) {
+        this.time = milli;
 
-	public boolean isDone()
-	{
-		return this.done;
-	}
+        synchronized (this.monitor) {
+            if (this.done) {
+                return false;
+            }
 
-	World getWorld()
-	{
-		return this.world;
-	}
+            this.watch.reset();
+            this.watch.start();
+            this.running = true;
 
-	/**
-	 * returns true if this needs more simulation.
-	 *
-	 * @param milli milliseconds of simulation
-	 * @return true if this needs more simulation
-	 */
-	public boolean simulateFor( final int milli )
-	{
-		this.time = milli;
+            AELog.craftingDebug("main thread is now going to sleep");
 
-		synchronized( this.monitor )
-		{
-			if( this.done )
-			{
-				return false;
-			}
+            this.monitor.notify();
 
-			this.watch.reset();
-			this.watch.start();
-			this.running = true;
+            while (this.running) {
+                try {
+                    this.monitor.wait();
+                } catch (final InterruptedException ignored) {
+                }
+            }
 
-			AELog.craftingDebug( "main thread is now going to sleep" );
+            AELog.craftingDebug("main thread is now active");
+        }
 
-			this.monitor.notify();
+        return true;
+    }
 
-			while( this.running )
-			{
-				try
-				{
-					this.monitor.wait();
-				}
-				catch( final InterruptedException ignored )
-				{
-				}
-			}
+    void addBytes(final long crafts) {
+        this.bytes += crafts;
+    }
 
-			AELog.craftingDebug( "main thread is now active" );
-		}
+    public CraftingTreeNode getTree() {
+        return this.tree;
+    }
 
-		return true;
-	}
+    private void setTree(final CraftingTreeNode tree) {
+        this.tree = tree;
+    }
 
-	void addBytes( final long crafts )
-	{
-		this.bytes += crafts;
-	}
+    private void logCraftingJob(String type, Stopwatch timer) {
+        if (AELog.isCraftingLogEnabled()) {
+            final String itemToOutput = this.output.toString();
+            final long elapsedTime = timer.elapsed(TimeUnit.MILLISECONDS);
+            final String actionSource;
 
-	public CraftingTreeNode getTree()
-	{
-		return this.tree;
-	}
+            if (this.actionSrc instanceof MachineSource) {
+                final IActionHost machineSource = ((MachineSource) this.actionSrc).via;
+                final IGridNode actionableNode = machineSource.getActionableNode();
+                final IGridHost machine = actionableNode.getMachine();
+                final DimensionalCoord location = actionableNode.getGridBlock().getLocation();
 
-	private void setTree( final CraftingTreeNode tree )
-	{
-		this.tree = tree;
-	}
+                actionSource = String.format(LOG_MACHINE_SOURCE_DETAILS, machine, location);
+            } else if (this.actionSrc instanceof PlayerSource) {
+                final PlayerSource source = (PlayerSource) this.actionSrc;
+                final EntityPlayer player = source.player;
 
-	private void logCraftingJob( String type, Stopwatch timer )
-	{
-		if( AELog.isCraftingLogEnabled() )
-		{
-			final String itemToOutput = this.output.toString();
-			final long elapsedTime = timer.elapsed( TimeUnit.MILLISECONDS );
-			final String actionSource;
+                actionSource = player.toString();
+            } else {
+                actionSource = "[unknown source]";
+            }
 
-			if( this.actionSrc instanceof MachineSource )
-			{
-				final IActionHost machineSource = ( (MachineSource) this.actionSrc ).via;
-				final IGridNode actionableNode = machineSource.getActionableNode();
-				final IGridHost machine = actionableNode.getMachine();
-				final DimensionalCoord location = actionableNode.getGridBlock().getLocation();
+            AELog.crafting(LOG_CRAFTING_JOB, type, actionSource, itemToOutput, this.bytes, elapsedTime);
+        }
+    }
 
-				actionSource = String.format( LOG_MACHINE_SOURCE_DETAILS, machine, location );
-			}
-			else if( this.actionSrc instanceof PlayerSource )
-			{
-				final PlayerSource source = (PlayerSource) this.actionSrc;
-				final EntityPlayer player = source.player;
-
-				actionSource = player.toString();
-			}
-			else
-			{
-				actionSource = "[unknown source]";
-			}
-
-			AELog.crafting( LOG_CRAFTING_JOB, type, actionSource, itemToOutput, this.bytes, elapsedTime );
-		}
-	}
-
-	private static class TwoIntegers
-	{
-		private final long perOp = 0;
-		private final long times = 0;
-	}
+    private static class TwoIntegers {
+        private final long perOp = 0;
+        private final long times = 0;
+    }
 }

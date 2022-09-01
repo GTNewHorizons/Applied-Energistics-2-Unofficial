@@ -18,7 +18,6 @@
 
 package appeng.me.helpers;
 
-
 import appeng.api.AEApi;
 import appeng.api.networking.*;
 import appeng.api.networking.crafting.ICraftingGrid;
@@ -39,405 +38,329 @@ import appeng.parts.networking.PartCable;
 import appeng.tile.AEBaseTile;
 import appeng.util.Platform;
 import com.mojang.authlib.GameProfile;
+import java.util.Collections;
+import java.util.EnumSet;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.Collections;
-import java.util.EnumSet;
+public class AENetworkProxy implements IGridBlock {
 
+    private final IGridProxyable gp;
+    private final boolean worldNode;
+    private final String nbtName; // name
+    private AEColor myColor = AEColor.Transparent;
+    private NBTTagCompound data = null; // input
+    private ItemStack myRepInstance;
+    private boolean isReady = false;
+    private IGridNode node = null;
+    private EnumSet<ForgeDirection> validSides;
+    private EnumSet<GridFlags> flags = EnumSet.noneOf(GridFlags.class);
+    private double idleDraw = 1.0;
+    private EntityPlayer owner;
 
-public class AENetworkProxy implements IGridBlock
-{
+    public AENetworkProxy(
+            final IGridProxyable te, final String nbtName, final ItemStack visual, final boolean inWorld) {
+        this.gp = te;
+        this.nbtName = nbtName;
+        this.worldNode = inWorld;
+        this.myRepInstance = visual;
+        this.validSides = EnumSet.allOf(ForgeDirection.class);
+    }
 
-	private final IGridProxyable gp;
-	private final boolean worldNode;
-	private final String nbtName; // name
-	private AEColor myColor = AEColor.Transparent;
-	private NBTTagCompound data = null; // input
-	private ItemStack myRepInstance;
-	private boolean isReady = false;
-	private IGridNode node = null;
-	private EnumSet<ForgeDirection> validSides;
-	private EnumSet<GridFlags> flags = EnumSet.noneOf( GridFlags.class );
-	private double idleDraw = 1.0;
-	private EntityPlayer owner;
+    public void setVisualRepresentation(final ItemStack is) {
+        this.myRepInstance = is;
+    }
 
-	public AENetworkProxy( final IGridProxyable te, final String nbtName, final ItemStack visual, final boolean inWorld )
-	{
-		this.gp = te;
-		this.nbtName = nbtName;
-		this.worldNode = inWorld;
-		this.myRepInstance = visual;
-		this.validSides = EnumSet.allOf( ForgeDirection.class );
-	}
+    public void writeToNBT(final NBTTagCompound tag) {
+        if (this.node != null) {
+            this.node.saveToNBT(this.nbtName, tag);
+        }
+    }
 
-	public void setVisualRepresentation( final ItemStack is )
-	{
-		this.myRepInstance = is;
-	}
+    public void setValidSides(final EnumSet<ForgeDirection> validSides) {
+        this.validSides = validSides;
+        if (this.node != null) {
+            this.node.updateState();
+        }
+    }
 
-	public void writeToNBT( final NBTTagCompound tag )
-	{
-		if( this.node != null )
-		{
-			this.node.saveToNBT( this.nbtName, tag );
-		}
-	}
+    public void validate() {
+        if (this.gp instanceof AEBaseTile) {
+            TickHandler.INSTANCE.addInit((AEBaseTile) this.gp);
+        }
+    }
 
-	public void setValidSides( final EnumSet<ForgeDirection> validSides )
-	{
-		this.validSides = validSides;
-		if( this.node != null )
-		{
-			this.node.updateState();
-		}
-	}
+    public void onChunkUnload() {
+        this.isReady = false;
+        this.invalidate();
+    }
 
-	public void validate()
-	{
-		if( this.gp instanceof AEBaseTile )
-		{
-			TickHandler.INSTANCE.addInit( (AEBaseTile) this.gp );
-		}
-	}
+    public void invalidate() {
+        this.isReady = false;
+        if (this.node != null) {
+            this.node.destroy();
+            this.node = null;
+        }
+    }
 
-	public void onChunkUnload()
-	{
-		this.isReady = false;
-		this.invalidate();
-	}
+    public void onReady() {
+        this.isReady = true;
 
-	public void invalidate()
-	{
-		this.isReady = false;
-		if( this.node != null )
-		{
-			this.node.destroy();
-			this.node = null;
-		}
-	}
+        // send orientation based directionality to the node.
+        if (this.gp instanceof IOrientable) {
+            final IOrientable ori = (IOrientable) this.gp;
+            if (ori.canBeRotated()) {
+                ori.setOrientation(ori.getForward(), ori.getUp());
+            }
+        }
 
-	public void onReady()
-	{
-		this.isReady = true;
+        this.getNode();
+    }
 
-		// send orientation based directionality to the node.
-		if( this.gp instanceof IOrientable )
-		{
-			final IOrientable ori = (IOrientable) this.gp;
-			if( ori.canBeRotated() )
-			{
-				ori.setOrientation( ori.getForward(), ori.getUp() );
-			}
-		}
+    public IGridNode getNode() {
+        if (this.node == null && Platform.isServer() && this.isReady) {
+            this.node = AEApi.instance().createGridNode(this);
+            this.readFromNBT(this.data);
+            this.node.updateState();
+        }
 
-		this.getNode();
-	}
+        return this.node;
+    }
 
-	public IGridNode getNode()
-	{
-		if( this.node == null && Platform.isServer() && this.isReady )
-		{
-			this.node = AEApi.instance().createGridNode( this );
-			this.readFromNBT( this.data );
-			this.node.updateState();
-		}
+    public void readFromNBT(final NBTTagCompound tag) {
+        this.data = tag;
+        if (this.node != null && this.data != null) {
+            this.node.loadFromNBT(this.nbtName, this.data);
+            this.data = null;
+        } else if (this.node != null && this.owner != null) {
+            final GameProfile profile = this.owner.getGameProfile();
+            final int playerID = WorldData.instance().playerData().getPlayerID(profile);
 
-		return this.node;
-	}
+            this.node.setPlayerID(playerID);
+            this.owner = null;
+        }
+    }
 
-	public void readFromNBT( final NBTTagCompound tag )
-	{
-		this.data = tag;
-		if( this.node != null && this.data != null )
-		{
-			this.node.loadFromNBT( this.nbtName, this.data );
-			this.data = null;
-		}
-		else if( this.node != null && this.owner != null )
-		{
-			final GameProfile profile = this.owner.getGameProfile();
-			final int playerID = WorldData.instance().playerData().getPlayerID( profile );
+    public IPathingGrid getPath() throws GridAccessException {
+        final IGrid grid = this.getGrid();
+        if (grid == null) {
+            throw new GridAccessException();
+        }
+        final IPathingGrid pg = grid.getCache(IPathingGrid.class);
+        if (pg == null) {
+            throw new GridAccessException();
+        }
+        return pg;
+    }
 
-			this.node.setPlayerID( playerID );
-			this.owner = null;
-		}
-	}
+    /**
+     * short cut!
+     *
+     * @return grid of node
+     * @throws GridAccessException of node or grid is null
+     */
+    public IGrid getGrid() throws GridAccessException {
+        if (this.node == null) {
+            throw new GridAccessException();
+        }
+        final IGrid grid = this.node.getGrid();
+        if (grid == null) {
+            throw new GridAccessException();
+        }
+        return grid;
+    }
 
-	public IPathingGrid getPath() throws GridAccessException
-	{
-		final IGrid grid = this.getGrid();
-		if( grid == null )
-		{
-			throw new GridAccessException();
-		}
-		final IPathingGrid pg = grid.getCache( IPathingGrid.class );
-		if( pg == null )
-		{
-			throw new GridAccessException();
-		}
-		return pg;
-	}
+    public ITickManager getTick() throws GridAccessException {
+        final IGrid grid = this.getGrid();
+        if (grid == null) {
+            throw new GridAccessException();
+        }
+        final ITickManager pg = grid.getCache(ITickManager.class);
+        if (pg == null) {
+            throw new GridAccessException();
+        }
+        return pg;
+    }
 
-	/**
-	 * short cut!
-	 *
-	 * @return grid of node
-	 * @throws GridAccessException of node or grid is null
-	 */
-	public IGrid getGrid() throws GridAccessException
-	{
-		if( this.node == null )
-		{
-			throw new GridAccessException();
-		}
-		final IGrid grid = this.node.getGrid();
-		if( grid == null )
-		{
-			throw new GridAccessException();
-		}
-		return grid;
-	}
+    public IStorageGrid getStorage() throws GridAccessException {
+        final IGrid grid = this.getGrid();
+        if (grid == null) {
+            throw new GridAccessException();
+        }
 
-	public ITickManager getTick() throws GridAccessException
-	{
-		final IGrid grid = this.getGrid();
-		if( grid == null )
-		{
-			throw new GridAccessException();
-		}
-		final ITickManager pg = grid.getCache( ITickManager.class );
-		if( pg == null )
-		{
-			throw new GridAccessException();
-		}
-		return pg;
-	}
+        final IStorageGrid pg = grid.getCache(IStorageGrid.class);
 
-	public IStorageGrid getStorage() throws GridAccessException
-	{
-		final IGrid grid = this.getGrid();
-		if( grid == null )
-		{
-			throw new GridAccessException();
-		}
+        if (pg == null) {
+            throw new GridAccessException();
+        }
 
-		final IStorageGrid pg = grid.getCache( IStorageGrid.class );
+        return pg;
+    }
 
-		if( pg == null )
-		{
-			throw new GridAccessException();
-		}
+    public P2PCache getP2P() throws GridAccessException {
+        final IGrid grid = this.getGrid();
+        if (grid == null) {
+            throw new GridAccessException();
+        }
 
-		return pg;
-	}
+        final P2PCache pg = grid.getCache(P2PCache.class);
 
-	public P2PCache getP2P() throws GridAccessException
-	{
-		final IGrid grid = this.getGrid();
-		if( grid == null )
-		{
-			throw new GridAccessException();
-		}
+        if (pg == null) {
+            throw new GridAccessException();
+        }
 
-		final P2PCache pg = grid.getCache( P2PCache.class );
+        return pg;
+    }
 
-		if( pg == null )
-		{
-			throw new GridAccessException();
-		}
+    public ISecurityGrid getSecurity() throws GridAccessException {
+        final IGrid grid = this.getGrid();
+        if (grid == null) {
+            throw new GridAccessException();
+        }
 
-		return pg;
-	}
+        final ISecurityGrid sg = grid.getCache(ISecurityGrid.class);
 
-	public ISecurityGrid getSecurity() throws GridAccessException
-	{
-		final IGrid grid = this.getGrid();
-		if( grid == null )
-		{
-			throw new GridAccessException();
-		}
+        if (sg == null) {
+            throw new GridAccessException();
+        }
 
-		final ISecurityGrid sg = grid.getCache( ISecurityGrid.class );
+        return sg;
+    }
 
-		if( sg == null )
-		{
-			throw new GridAccessException();
-		}
+    public ICraftingGrid getCrafting() throws GridAccessException {
+        final IGrid grid = this.getGrid();
+        if (grid == null) {
+            throw new GridAccessException();
+        }
 
-		return sg;
-	}
+        final ICraftingGrid sg = grid.getCache(ICraftingGrid.class);
 
-	public ICraftingGrid getCrafting() throws GridAccessException
-	{
-		final IGrid grid = this.getGrid();
-		if( grid == null )
-		{
-			throw new GridAccessException();
-		}
+        if (sg == null) {
+            throw new GridAccessException();
+        }
 
-		final ICraftingGrid sg = grid.getCache( ICraftingGrid.class );
+        return sg;
+    }
 
-		if( sg == null )
-		{
-			throw new GridAccessException();
-		}
+    @Override
+    public double getIdlePowerUsage() {
+        return this.idleDraw;
+    }
 
-		return sg;
-	}
+    @Override
+    public EnumSet<GridFlags> getFlags() {
+        return this.flags;
+    }
 
-	@Override
-	public double getIdlePowerUsage()
-	{
-		return this.idleDraw;
-	}
+    @Override
+    public boolean isWorldAccessible() {
+        return this.worldNode;
+    }
 
-	@Override
-	public EnumSet<GridFlags> getFlags()
-	{
-		return this.flags;
-	}
+    @Override
+    public DimensionalCoord getLocation() {
+        return this.gp.getLocation();
+    }
 
-	@Override
-	public boolean isWorldAccessible()
-	{
-		return this.worldNode;
-	}
+    @Override
+    public AEColor getGridColor() {
+        return this.getColor();
+    }
 
-	@Override
-	public DimensionalCoord getLocation()
-	{
-		return this.gp.getLocation();
-	}
+    @Override
+    public void onGridNotification(final GridNotification notification) {
+        if (this.gp instanceof PartCable) {
+            ((PartCable) this.gp).markForUpdate();
+        }
+    }
 
-	@Override
-	public AEColor getGridColor()
-	{
-		return this.getColor();
-	}
+    @Override
+    public void setNetworkStatus(final IGrid grid, final int channelsInUse) {}
 
-	@Override
-	public void onGridNotification( final GridNotification notification )
-	{
-		if( this.gp instanceof PartCable )
-		{
-			( (PartCable) this.gp ).markForUpdate();
-		}
-	}
+    @Override
+    public EnumSet<ForgeDirection> getConnectableSides() {
+        return this.validSides;
+    }
 
-	@Override
-	public void setNetworkStatus( final IGrid grid, final int channelsInUse )
-	{
+    @Override
+    public IGridHost getMachine() {
+        return this.gp;
+    }
 
-	}
+    @Override
+    public void gridChanged() {
+        this.gp.gridChanged();
+    }
 
-	@Override
-	public EnumSet<ForgeDirection> getConnectableSides()
-	{
-		return this.validSides;
-	}
+    @Override
+    public ItemStack getMachineRepresentation() {
+        return this.myRepInstance;
+    }
 
-	@Override
-	public IGridHost getMachine()
-	{
-		return this.gp;
-	}
+    public void setFlags(final GridFlags... requireChannel) {
+        final EnumSet<GridFlags> flags = EnumSet.noneOf(GridFlags.class);
 
-	@Override
-	public void gridChanged()
-	{
-		this.gp.gridChanged();
-	}
+        Collections.addAll(flags, requireChannel);
 
-	@Override
-	public ItemStack getMachineRepresentation()
-	{
-		return this.myRepInstance;
-	}
+        this.flags = flags;
+    }
 
-	public void setFlags( final GridFlags... requireChannel )
-	{
-		final EnumSet<GridFlags> flags = EnumSet.noneOf( GridFlags.class );
+    public void setIdlePowerUsage(final double idle) {
+        this.idleDraw = idle;
 
-		Collections.addAll( flags, requireChannel );
+        if (this.node != null) {
+            try {
+                final IGrid g = this.getGrid();
+                g.postEvent(new MENetworkPowerIdleChange(this.node));
+            } catch (final GridAccessException e) {
+                // not ready for this yet..
+            }
+        }
+    }
 
-		this.flags = flags;
-	}
+    public boolean isReady() {
+        return this.isReady;
+    }
 
-	public void setIdlePowerUsage( final double idle )
-	{
-		this.idleDraw = idle;
+    public boolean isActive() {
+        if (this.node == null) {
+            return false;
+        }
 
-		if( this.node != null )
-		{
-			try
-			{
-				final IGrid g = this.getGrid();
-				g.postEvent( new MENetworkPowerIdleChange( this.node ) );
-			}
-			catch( final GridAccessException e )
-			{
-				// not ready for this yet..
-			}
-		}
-	}
+        return this.node.isActive();
+    }
 
-	public boolean isReady()
-	{
-		return this.isReady;
-	}
+    public boolean isPowered() {
+        try {
+            return this.getEnergy().isNetworkPowered();
+        } catch (final GridAccessException e) {
+            return false;
+        }
+    }
 
-	public boolean isActive()
-	{
-		if( this.node == null )
-		{
-			return false;
-		}
+    public IEnergyGrid getEnergy() throws GridAccessException {
+        final IGrid grid = this.getGrid();
+        if (grid == null) {
+            throw new GridAccessException();
+        }
+        final IEnergyGrid eg = grid.getCache(IEnergyGrid.class);
+        if (eg == null) {
+            throw new GridAccessException();
+        }
+        return eg;
+    }
 
-		return this.node.isActive();
-	}
+    public void setOwner(final EntityPlayer player) {
+        this.owner = player;
+    }
 
-	public boolean isPowered()
-	{
-		try
-		{
-			return this.getEnergy().isNetworkPowered();
-		}
-		catch( final GridAccessException e )
-		{
-			return false;
-		}
-	}
+    public AEColor getColor() {
+        return this.myColor;
+    }
 
-	public IEnergyGrid getEnergy() throws GridAccessException
-	{
-		final IGrid grid = this.getGrid();
-		if( grid == null )
-		{
-			throw new GridAccessException();
-		}
-		final IEnergyGrid eg = grid.getCache( IEnergyGrid.class );
-		if( eg == null )
-		{
-			throw new GridAccessException();
-		}
-		return eg;
-	}
-
-	public void setOwner( final EntityPlayer player )
-	{
-		this.owner = player;
-	}
-
-	public AEColor getColor()
-	{
-		return this.myColor;
-	}
-
-	public void setColor( final AEColor myColor )
-	{
-		this.myColor = myColor;
-	}
+    public void setColor(final AEColor myColor) {
+        this.myColor = myColor;
+    }
 }

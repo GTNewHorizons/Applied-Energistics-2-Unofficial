@@ -18,7 +18,6 @@
 
 package appeng.core.sync.packets;
 
-
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.util.IConfigManager;
@@ -32,282 +31,190 @@ import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.IMouseWheelItem;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import java.io.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 
-import java.io.*;
+public class PacketValueConfig extends AppEngPacket {
 
+    private final String Name;
+    private final String Value;
 
-public class PacketValueConfig extends AppEngPacket
-{
+    // automatic.
+    public PacketValueConfig(final ByteBuf stream) throws IOException {
+        final DataInputStream dis = new DataInputStream(
+                new ByteArrayInputStream(stream.array(), stream.readerIndex(), stream.readableBytes()));
+        this.Name = dis.readUTF();
+        this.Value = dis.readUTF();
+        // dis.close();
+    }
 
-	private final String Name;
-	private final String Value;
+    // api
+    public PacketValueConfig(final String name, final String value) throws IOException {
+        this.Name = name;
+        this.Value = value;
 
-	// automatic.
-	public PacketValueConfig( final ByteBuf stream ) throws IOException
-	{
-		final DataInputStream dis = new DataInputStream( new ByteArrayInputStream( stream.array(), stream.readerIndex(), stream.readableBytes() ) );
-		this.Name = dis.readUTF();
-		this.Value = dis.readUTF();
-		// dis.close();
-	}
+        final ByteBuf data = Unpooled.buffer();
 
-	// api
-	public PacketValueConfig( final String name, final String value ) throws IOException
-	{
-		this.Name = name;
-		this.Value = value;
+        data.writeInt(this.getPacketID());
 
-		final ByteBuf data = Unpooled.buffer();
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final DataOutputStream dos = new DataOutputStream(bos);
+        dos.writeUTF(name);
+        dos.writeUTF(value);
+        // dos.close();
 
-		data.writeInt( this.getPacketID() );
+        data.writeBytes(bos.toByteArray());
 
-		final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-		final DataOutputStream dos = new DataOutputStream( bos );
-		dos.writeUTF( name );
-		dos.writeUTF( value );
-		// dos.close();
+        this.configureWrite(data);
+    }
 
-		data.writeBytes( bos.toByteArray() );
+    @Override
+    public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
+        final Container c = player.openContainer;
 
-		this.configureWrite( data );
-	}
+        if (this.Name.equals("Item")
+                && player.getHeldItem() != null
+                && player.getHeldItem().getItem() instanceof IMouseWheelItem) {
+            final ItemStack is = player.getHeldItem();
+            final IMouseWheelItem si = (IMouseWheelItem) is.getItem();
+            si.onWheel(is, this.Value.equals("WheelUp"));
+        } else if (this.Name.equals("CPUTable.Cpu.Set") && c instanceof ICraftingCPUSelectorContainer) {
+            final ICraftingCPUSelectorContainer qk = (ICraftingCPUSelectorContainer) c;
+            qk.selectCPU(Integer.parseInt(this.Value));
+        } else if (this.Name.equals("Terminal.Start") && c instanceof ContainerCraftConfirm) {
+            final ContainerCraftConfirm qk = (ContainerCraftConfirm) c;
+            qk.startJob();
+        } else if (this.Name.equals("TileCrafting.Cancel") && c instanceof ContainerCraftingCPU) {
+            final ContainerCraftingCPU qk = (ContainerCraftingCPU) c;
+            qk.cancelCrafting();
+        } else if (this.Name.equals("QuartzKnife.Name") && c instanceof ContainerQuartzKnife) {
+            final ContainerQuartzKnife qk = (ContainerQuartzKnife) c;
+            qk.setName(this.Value);
+        } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof ContainerRenamer) {
+            final ContainerRenamer qk = (ContainerRenamer) c;
+            qk.setNewName(this.Value);
+        } else if (this.Name.equals("TileSecurity.ToggleOption") && c instanceof ContainerSecurity) {
+            final ContainerSecurity sc = (ContainerSecurity) c;
+            sc.toggleSetting(this.Value, player);
+        } else if (this.Name.equals("PriorityHost.Priority") && c instanceof ContainerPriority) {
+            final ContainerPriority pc = (ContainerPriority) c;
+            pc.setPriority(Integer.parseInt(this.Value), player);
+        } else if (this.Name.equals("OreFilter") && c instanceof ContainerOreFilter) {
+            final ContainerOreFilter fc = (ContainerOreFilter) c;
+            fc.setFilter(this.Value);
+        } else if (this.Name.equals("LevelEmitter.Value") && c instanceof ContainerLevelEmitter) {
+            final ContainerLevelEmitter lvc = (ContainerLevelEmitter) c;
+            lvc.setLevel(Long.parseLong(this.Value), player);
+        } else if (this.Name.startsWith("PatternTerminal.") && c instanceof ContainerPatternTerm) {
+            final ContainerPatternTerm cpt = (ContainerPatternTerm) c;
+            if (this.Name.equals("PatternTerminal.CraftMode")) {
+                cpt.getPatternTerminal().setCraftingRecipe(this.Value.equals("1"));
+            } else if (this.Name.equals("PatternTerminal.Encode")) {
+                if (this.Value.equals("2")) cpt.encodeAndMoveToInventory(false);
+                else if (this.Value.equals("6")) cpt.encodeAndMoveToInventory(true);
+                else cpt.encode();
+            } else if (this.Name.equals("PatternTerminal.Clear")) {
+                cpt.clear();
+            } else if (this.Name.equals("PatternTerminal.Substitute")) {
+                cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
+            } else if (this.Name.equals("PatternTerminal.Double")) {
+                cpt.doubleStacks(Value.equals("1"));
+            }
+        } else if (this.Name.startsWith("PatternTerminalEx.") && c instanceof ContainerPatternTermEx) {
+            final ContainerPatternTermEx cpt = (ContainerPatternTermEx) c;
+            if (this.Name.equals("PatternTerminalEx.Encode")) {
+                if (this.Value.equals("2")) cpt.encodeAndMoveToInventory(false);
+                else if (this.Value.equals("6")) cpt.encodeAndMoveToInventory(true);
+                else cpt.encode();
+            } else if (this.Name.equals("PatternTerminalEx.Clear")) {
+                cpt.clear();
+            } else if (this.Name.equals("PatternTerminalEx.Substitute")) {
+                cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
+            } else if (this.Name.equals("PatternTerminalEx.Invert")) {
+                cpt.getPatternTerminal().setInverted(Value.equals("1"));
+            } else if (this.Name.equals("PatternTerminalEx.Double")) {
+                cpt.doubleStacks(Value.equals("1"));
+            } else if (this.Name.equals("PatternTerminalEx.ActivePage")) {
+                cpt.getPatternTerminal().setActivePage(Integer.parseInt(Value));
+            }
+        } else if (this.Name.startsWith("StorageBus.") && c instanceof ContainerStorageBus) {
+            final ContainerStorageBus ccw = (ContainerStorageBus) c;
+            if (this.Name.equals("StorageBus.Action")) {
+                if (this.Value.equals("Partition")) {
+                    ccw.partition();
+                } else if (this.Value.equals("Clear")) {
+                    ccw.clear();
+                }
+            }
+        } else if (this.Name.startsWith("CellWorkbench.") && c instanceof ContainerCellWorkbench) {
+            final ContainerCellWorkbench ccw = (ContainerCellWorkbench) c;
+            if (this.Name.equals("CellWorkbench.Action")) {
+                if (this.Value.equals("CopyMode")) {
+                    ccw.nextWorkBenchCopyMode();
+                } else if (this.Value.equals("Partition")) {
+                    ccw.partition();
+                } else if (this.Value.equals("Clear")) {
+                    ccw.clear();
+                }
+            } else if (this.Name.equals("CellWorkbench.Fuzzy")) {
+                ccw.setFuzzy(FuzzyMode.valueOf(this.Value));
+            }
+        } else if (c instanceof ContainerNetworkTool) {
+            if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
+                ((ContainerNetworkTool) c).toggleFacadeMode();
+            }
+        } else if (c instanceof IConfigurableObject) {
+            final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 
-	@Override
-	public void serverPacketData( final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player )
-	{
-		final Container c = player.openContainer;
+            for (final Settings e : cm.getSettings()) {
+                if (e.name().equals(this.Name)) {
+                    final Enum<?> def = cm.getSetting(e);
 
-		if( this.Name.equals( "Item" ) && player.getHeldItem() != null && player.getHeldItem().getItem() instanceof IMouseWheelItem )
-		{
-			final ItemStack is = player.getHeldItem();
-			final IMouseWheelItem si = (IMouseWheelItem) is.getItem();
-			si.onWheel( is, this.Value.equals( "WheelUp" ) );
-		}
-		else if( this.Name.equals( "CPUTable.Cpu.Set" ) && c instanceof ICraftingCPUSelectorContainer )
-		{
-			final ICraftingCPUSelectorContainer qk = (ICraftingCPUSelectorContainer) c;
-			qk.selectCPU( Integer.parseInt( this.Value ) );
-		}
-		else if( this.Name.equals( "Terminal.Start" ) && c instanceof ContainerCraftConfirm )
-		{
-			final ContainerCraftConfirm qk = (ContainerCraftConfirm) c;
-			qk.startJob();
-		}
-		else if( this.Name.equals( "TileCrafting.Cancel" ) && c instanceof ContainerCraftingCPU )
-		{
-			final ContainerCraftingCPU qk = (ContainerCraftingCPU) c;
-			qk.cancelCrafting();
-		}
-		else if( this.Name.equals( "QuartzKnife.Name" ) && c instanceof ContainerQuartzKnife )
-		{
-			final ContainerQuartzKnife qk = (ContainerQuartzKnife) c;
-			qk.setName( this.Value );
-		}
-		else if( this.Name.equals( "QuartzKnife.ReName" ) && c instanceof ContainerRenamer )
-		{
-			final ContainerRenamer qk = (ContainerRenamer) c;
-			qk.setNewName( this.Value );
-		}
-		else if( this.Name.equals( "TileSecurity.ToggleOption" ) && c instanceof ContainerSecurity )
-		{
-			final ContainerSecurity sc = (ContainerSecurity) c;
-			sc.toggleSetting( this.Value, player );
-		}
-		else if( this.Name.equals( "PriorityHost.Priority" ) && c instanceof ContainerPriority )
-		{
-			final ContainerPriority pc = (ContainerPriority) c;
-			pc.setPriority( Integer.parseInt( this.Value ), player );
-		}
-		else if( this.Name.equals( "OreFilter" ) && c instanceof ContainerOreFilter )
-		{
-			final ContainerOreFilter fc = (ContainerOreFilter) c;
-			fc.setFilter(this.Value);
-		}
-		else if( this.Name.equals( "LevelEmitter.Value" ) && c instanceof ContainerLevelEmitter )
-		{
-			final ContainerLevelEmitter lvc = (ContainerLevelEmitter) c;
-			lvc.setLevel( Long.parseLong( this.Value ), player );
-		}
-		else if( this.Name.startsWith( "PatternTerminal." ) && c instanceof ContainerPatternTerm )
-		{
-			final ContainerPatternTerm cpt = (ContainerPatternTerm) c;
-			if( this.Name.equals( "PatternTerminal.CraftMode" ) )
-			{
-				cpt.getPatternTerminal().setCraftingRecipe( this.Value.equals( "1" ) );
-			}
-			else if( this.Name.equals( "PatternTerminal.Encode" ) )
-			{
-				if (this.Value.equals( "2" ))
-					cpt.encodeAndMoveToInventory(false);
-				else if (this.Value.equals( "6" ))
-					cpt.encodeAndMoveToInventory(true);
-				else
-					cpt.encode();
-			}
-			else if( this.Name.equals( "PatternTerminal.Clear" ) )
-			{
-				cpt.clear();
-			}
-			else if( this.Name.equals( "PatternTerminal.Substitute" ) )
-			{
-				cpt.getPatternTerminal().setSubstitution( this.Value.equals( "1" ) );
-			}
-			else if( this.Name.equals( "PatternTerminal.Double" ) )
-			{
-				cpt.doubleStacks(Value.equals( "1" ));
-			}
-		}
-		else if( this.Name.startsWith( "PatternTerminalEx." ) && c instanceof ContainerPatternTermEx )
-		{
-			final ContainerPatternTermEx cpt = (ContainerPatternTermEx) c;
-			if( this.Name.equals( "PatternTerminalEx.Encode" ) )
-			{
-				if (this.Value.equals( "2" ))
-					cpt.encodeAndMoveToInventory(false);
-				else if (this.Value.equals( "6" ))
-					cpt.encodeAndMoveToInventory(true);
-				else
-					cpt.encode();
-			}
-			else if( this.Name.equals( "PatternTerminalEx.Clear" ) )
-			{
-				cpt.clear();
-			}
-			else if( this.Name.equals( "PatternTerminalEx.Substitute" ) )
-			{
-				cpt.getPatternTerminal().setSubstitution( this.Value.equals( "1" ) );
-			}
-			else if( this.Name.equals( "PatternTerminalEx.Invert" ) )
-			{
-				cpt.getPatternTerminal().setInverted( Value.equals( "1" ) );
-			}
-			else if( this.Name.equals( "PatternTerminalEx.Double" ) )
-			{
-				cpt.doubleStacks(Value.equals( "1" ));
-			}
-			else if( this.Name.equals( "PatternTerminalEx.ActivePage" ) )
-			{
-				cpt.getPatternTerminal().setActivePage(Integer.parseInt( Value ));
-			}
-		}
-		else if( this.Name.startsWith( "StorageBus." ) && c instanceof ContainerStorageBus )
-		{
-			final ContainerStorageBus ccw = (ContainerStorageBus) c;
-			if( this.Name.equals( "StorageBus.Action" ) )
-			{
-				if( this.Value.equals( "Partition" ) )
-				{
-					ccw.partition();
-				}
-				else if( this.Value.equals( "Clear" ) )
-				{
-					ccw.clear();
-				}
-			}
-		}
-		else if( this.Name.startsWith( "CellWorkbench." ) && c instanceof ContainerCellWorkbench )
-		{
-			final ContainerCellWorkbench ccw = (ContainerCellWorkbench) c;
-			if( this.Name.equals( "CellWorkbench.Action" ) )
-			{
-				if( this.Value.equals( "CopyMode" ) )
-				{
-					ccw.nextWorkBenchCopyMode();
-				}
-				else if( this.Value.equals( "Partition" ) )
-				{
-					ccw.partition();
-				}
-				else if( this.Value.equals( "Clear" ) )
-				{
-					ccw.clear();
-				}
-			}
-			else if( this.Name.equals( "CellWorkbench.Fuzzy" ) )
-			{
-				ccw.setFuzzy( FuzzyMode.valueOf( this.Value ) );
-			}
-		}
-		else if( c instanceof ContainerNetworkTool )
-		{
-			if( this.Name.equals( "NetworkTool" ) && this.Value.equals( "Toggle" ) )
-			{
-				( (ContainerNetworkTool) c ).toggleFacadeMode();
-			}
-		}
-		else if( c instanceof IConfigurableObject )
-		{
-			final IConfigManager cm = ( (IConfigurableObject) c ).getConfigManager();
+                    try {
+                        cm.putSetting(e, Enum.valueOf(def.getClass(), this.Value));
+                    } catch (final IllegalArgumentException err) {
+                        // :P
+                    }
 
-			for( final Settings e : cm.getSettings() )
-			{
-				if( e.name().equals( this.Name ) )
-				{
-					final Enum<?> def = cm.getSetting( e );
+                    break;
+                }
+            }
+        }
+    }
 
-					try
-					{
-						cm.putSetting( e, Enum.valueOf( def.getClass(), this.Value ) );
-					}
-					catch( final IllegalArgumentException err )
-					{
-						// :P
-					}
+    @Override
+    public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
+        final Container c = player.openContainer;
 
-					break;
-				}
-			}
-		}
-	}
+        if (this.Name.equals("CustomName") && c instanceof AEBaseContainer) {
+            ((AEBaseContainer) c).setCustomName(this.Value);
+        } else if (this.Name.startsWith("SyncDat.")) {
+            ((AEBaseContainer) c).stringSync(Integer.parseInt(this.Name.substring(8)), this.Value);
+        } else if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
+            final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
+            if (gs instanceof GuiCraftingCPU) {
+                ((GuiCraftingCPU) gs).clearItems();
+            }
+        } else if (c instanceof IConfigurableObject) {
+            final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 
-	@Override
-	public void clientPacketData( final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player )
-	{
-		final Container c = player.openContainer;
+            for (final Settings e : cm.getSettings()) {
+                if (e.name().equals(this.Name)) {
+                    final Enum<?> def = cm.getSetting(e);
 
-		if( this.Name.equals( "CustomName" ) && c instanceof AEBaseContainer )
-		{
-			( (AEBaseContainer) c ).setCustomName( this.Value );
-		}
-		else if( this.Name.startsWith( "SyncDat." ) )
-		{
-			( (AEBaseContainer) c ).stringSync( Integer.parseInt( this.Name.substring( 8 ) ), this.Value );
-		}
-		else if( this.Name.equals( "CraftingStatus" ) && this.Value.equals( "Clear" ) )
-		{
-			final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-			if( gs instanceof GuiCraftingCPU )
-			{
-				( (GuiCraftingCPU) gs ).clearItems();
-			}
-		}
-		else if( c instanceof IConfigurableObject )
-		{
-			final IConfigManager cm = ( (IConfigurableObject) c ).getConfigManager();
+                    try {
+                        cm.putSetting(e, Enum.valueOf(def.getClass(), this.Value));
+                    } catch (final IllegalArgumentException err) {
+                        // :P
+                    }
 
-			for( final Settings e : cm.getSettings() )
-			{
-				if( e.name().equals( this.Name ) )
-				{
-					final Enum<?> def = cm.getSetting( e );
-
-					try
-					{
-						cm.putSetting( e, Enum.valueOf( def.getClass(), this.Value ) );
-					}
-					catch( final IllegalArgumentException err )
-					{
-						// :P
-					}
-
-					break;
-				}
-			}
-		}
-	}
+                    break;
+                }
+            }
+        }
+    }
 }

@@ -18,46 +18,39 @@
 
 package appeng.client.gui.widgets;
 
-
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiTextField;
 
+public class GuiNumberBox extends GuiTextField {
 
-public class GuiNumberBox extends GuiTextField
-{
+    private final Class type;
 
-	private final Class type;
+    public GuiNumberBox(
+            final FontRenderer fontRenderer,
+            final int x,
+            final int y,
+            final int width,
+            final int height,
+            final Class type) {
+        super(fontRenderer, x, y, width, height);
+        this.type = type;
+    }
 
-	public GuiNumberBox( final FontRenderer fontRenderer, final int x, final int y, final int width, final int height, final Class type )
-	{
-		super( fontRenderer, x, y, width, height );
-		this.type = type;
-	}
+    @Override
+    public void writeText(final String selectedText) {
+        final String original = this.getText();
+        super.writeText(selectedText);
 
-	@Override
-	public void writeText( final String selectedText )
-	{
-		final String original = this.getText();
-		super.writeText( selectedText );
-
-		try
-		{
-			if( this.type == int.class || this.type == Integer.class )
-			{
-				Integer.parseInt( this.getText() );
-			}
-			else if( this.type == long.class || this.type == Long.class )
-			{
-				Long.parseLong( this.getText() );
-			}
-			else if( this.type == double.class || this.type == Double.class )
-			{
-				Double.parseDouble( this.getText() );
-			}
-		}
-		catch( final NumberFormatException e )
-		{
-			this.setText( original );
-		}
-	}
+        try {
+            if (this.type == int.class || this.type == Integer.class) {
+                Integer.parseInt(this.getText());
+            } else if (this.type == long.class || this.type == Long.class) {
+                Long.parseLong(this.getText());
+            } else if (this.type == double.class || this.type == Double.class) {
+                Double.parseDouble(this.getText());
+            }
+        } catch (final NumberFormatException e) {
+            this.setText(original);
+        }
+    }
 }

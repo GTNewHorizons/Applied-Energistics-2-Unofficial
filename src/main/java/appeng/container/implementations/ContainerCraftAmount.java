@@ -18,7 +18,6 @@
 
 package appeng.container.implementations;
 
-
 import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.security.BaseActionSource;
@@ -31,69 +30,57 @@ import appeng.container.slot.SlotInaccessible;
 import appeng.core.sync.GuiBridge;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
+import javax.annotation.Nonnull;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-import javax.annotation.Nonnull;
+public class ContainerCraftAmount extends AEBaseContainer {
 
+    private final Slot craftingItem;
+    private IAEItemStack itemToCreate;
 
-public class ContainerCraftAmount extends AEBaseContainer
-{
+    public ContainerCraftAmount(final InventoryPlayer ip, final ITerminalHost te) {
+        super(ip, te);
 
-	private final Slot craftingItem;
-	private IAEItemStack itemToCreate;
+        this.craftingItem = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 34, 53);
+        this.addSlotToContainer(this.getCraftingItem());
+    }
 
-	public ContainerCraftAmount( final InventoryPlayer ip, final ITerminalHost te )
-	{
-		super( ip, te );
+    @Override
+    public void detectAndSendChanges() {
+        super.detectAndSendChanges();
+        this.verifyPermissions(SecurityPermissions.CRAFT, false);
+    }
 
-		this.craftingItem = new SlotInaccessible( new AppEngInternalInventory( null, 1 ), 0, 34, 53 );
-		this.addSlotToContainer( this.getCraftingItem() );
-	}
+    public IGrid getGrid() {
+        final IActionHost h = ((IActionHost) this.getTarget());
+        return h.getActionableNode().getGrid();
+    }
 
-	@Override
-	public void detectAndSendChanges()
-	{
-		super.detectAndSendChanges();
-		this.verifyPermissions( SecurityPermissions.CRAFT, false );
-	}
+    public World getWorld() {
+        return this.getPlayerInv().player.worldObj;
+    }
 
-	public IGrid getGrid()
-	{
-		final IActionHost h = ( (IActionHost) this.getTarget() );
-		return h.getActionableNode().getGrid();
-	}
+    public BaseActionSource getActionSrc() {
+        return new PlayerSource(this.getPlayerInv().player, (IActionHost) this.getTarget());
+    }
 
-	public World getWorld()
-	{
-		return this.getPlayerInv().player.worldObj;
-	}
+    public Slot getCraftingItem() {
+        return this.craftingItem;
+    }
 
-	public BaseActionSource getActionSrc()
-	{
-		return new PlayerSource( this.getPlayerInv().player, (IActionHost) this.getTarget() );
-	}
+    public IAEItemStack getItemToCraft() {
+        return this.itemToCreate;
+    }
 
-	public Slot getCraftingItem()
-	{
-		return this.craftingItem;
-	}
+    public void setItemToCraft(@Nonnull final IAEItemStack itemToCreate) {
+        this.itemToCreate = itemToCreate;
+    }
 
-	public IAEItemStack getItemToCraft()
-	{
-		return this.itemToCreate;
-	}
-
-	public void setItemToCraft( @Nonnull final IAEItemStack itemToCreate )
-	{
-		this.itemToCreate = itemToCreate;
-	}
-
-    public void openConfirmationGUI( EntityPlayer player, TileEntity te )
-    {
-        Platform.openGUI( player, te, this.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_CONFIRM );
+    public void openConfirmationGUI(EntityPlayer player, TileEntity te) {
+        Platform.openGUI(player, te, this.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_CONFIRM);
     }
 }

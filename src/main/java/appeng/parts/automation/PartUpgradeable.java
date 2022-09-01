@@ -18,7 +18,6 @@
 
 package appeng.parts.automation;
 
-
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Upgrades;
 import appeng.api.util.IConfigManager;
@@ -27,145 +26,121 @@ import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
+import java.util.List;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-import java.util.List;
+public abstract class PartUpgradeable extends PartBasicState implements IAEAppEngInventory, IConfigManagerHost {
+    private final IConfigManager manager;
+    private final UpgradeInventory upgrades;
 
+    public PartUpgradeable(final ItemStack is) {
+        super(is);
+        this.upgrades = new StackUpgradeInventory(this.getItemStack(), this, this.getUpgradeSlots());
+        this.upgrades.setMaxStackSize(1);
+        this.manager = new ConfigManager(this);
+    }
 
-public abstract class PartUpgradeable extends PartBasicState implements IAEAppEngInventory, IConfigManagerHost
-{
-	private final IConfigManager manager;
-	private final UpgradeInventory upgrades;
+    protected int getUpgradeSlots() {
+        return 4;
+    }
 
-	public PartUpgradeable( final ItemStack is )
-	{
-		super( is );
-		this.upgrades = new StackUpgradeInventory( this.getItemStack(), this, this.getUpgradeSlots() );
-		this.upgrades.setMaxStackSize( 1 );
-		this.manager = new ConfigManager( this );
-	}
+    @Override
+    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {}
 
-	protected int getUpgradeSlots()
-	{
-		return 4;
-	}
+    @Override
+    public void onChangeInventory(
+            final IInventory inv,
+            final int slot,
+            final InvOperation mc,
+            final ItemStack removedStack,
+            final ItemStack newStack) {
+        if (inv == this.upgrades) {
+            this.upgradesChanged();
+        }
+    }
 
-	@Override
-	public void updateSetting( final IConfigManager manager, final Enum settingName, final Enum newValue )
-	{
+    public void upgradesChanged() {}
 
-	}
+    protected boolean isSleeping() {
+        if (this.getInstalledUpgrades(Upgrades.REDSTONE) > 0) {
+            switch (this.getRSMode()) {
+                case IGNORE:
+                    return false;
 
-	@Override
-	public void onChangeInventory( final IInventory inv, final int slot, final InvOperation mc, final ItemStack removedStack, final ItemStack newStack )
-	{
-		if( inv == this.upgrades )
-		{
-			this.upgradesChanged();
-		}
-	}
+                case HIGH_SIGNAL:
+                    if (this.getHost().hasRedstone(this.getSide())) {
+                        return false;
+                    }
 
-	public void upgradesChanged()
-	{
+                    break;
 
-	}
+                case LOW_SIGNAL:
+                    if (!this.getHost().hasRedstone(this.getSide())) {
+                        return false;
+                    }
 
-	protected boolean isSleeping()
-	{
-		if( this.getInstalledUpgrades( Upgrades.REDSTONE ) > 0 )
-		{
-			switch( this.getRSMode() )
-			{
-				case IGNORE:
-					return false;
+                    break;
 
-				case HIGH_SIGNAL:
-					if( this.getHost().hasRedstone( this.getSide() ) )
-					{
-						return false;
-					}
+                case SIGNAL_PULSE:
+                default:
+                    break;
+            }
 
-					break;
+            return true;
+        }
 
-				case LOW_SIGNAL:
-					if( !this.getHost().hasRedstone( this.getSide() ) )
-					{
-						return false;
-					}
+        return false;
+    }
 
-					break;
+    @Override
+    public int getInstalledUpgrades(final Upgrades u) {
+        return this.upgrades.getInstalledUpgrades(u);
+    }
 
-				case SIGNAL_PULSE:
-				default:
-					break;
-			}
+    @Override
+    public boolean canConnectRedstone() {
+        return this.upgrades.getMaxInstalled(Upgrades.REDSTONE) > 0;
+    }
 
-			return true;
-		}
+    @Override
+    public void readFromNBT(final net.minecraft.nbt.NBTTagCompound extra) {
+        super.readFromNBT(extra);
+        this.manager.readFromNBT(extra);
+        this.upgrades.readFromNBT(extra, "upgrades");
+    }
 
-		return false;
-	}
+    @Override
+    public void writeToNBT(final net.minecraft.nbt.NBTTagCompound extra) {
+        super.writeToNBT(extra);
+        this.manager.writeToNBT(extra);
+        this.upgrades.writeToNBT(extra, "upgrades");
+    }
 
-	@Override
-	public int getInstalledUpgrades( final Upgrades u )
-	{
-		return this.upgrades.getInstalledUpgrades( u );
-	}
+    @Override
+    public void getDrops(final List<ItemStack> drops, final boolean wrenched) {
+        for (final ItemStack is : this.upgrades) {
+            if (is != null) {
+                drops.add(is);
+            }
+        }
+    }
 
-	@Override
-	public boolean canConnectRedstone()
-	{
-		return this.upgrades.getMaxInstalled( Upgrades.REDSTONE ) > 0;
-	}
+    @Override
+    public IConfigManager getConfigManager() {
+        return this.manager;
+    }
 
-	@Override
-	public void readFromNBT( final net.minecraft.nbt.NBTTagCompound extra )
-	{
-		super.readFromNBT( extra );
-		this.manager.readFromNBT( extra );
-		this.upgrades.readFromNBT( extra, "upgrades" );
-	}
+    @Override
+    public IInventory getInventoryByName(final String name) {
+        if (name.equals("upgrades")) {
+            return this.upgrades;
+        }
 
-	@Override
-	public void writeToNBT( final net.minecraft.nbt.NBTTagCompound extra )
-	{
-		super.writeToNBT( extra );
-		this.manager.writeToNBT( extra );
-		this.upgrades.writeToNBT( extra, "upgrades" );
-	}
+        return null;
+    }
 
-	@Override
-	public void getDrops( final List<ItemStack> drops, final boolean wrenched )
-	{
-		for( final ItemStack is : this.upgrades )
-		{
-			if( is != null )
-			{
-				drops.add( is );
-			}
-		}
-	}
-
-	@Override
-	public IConfigManager getConfigManager()
-	{
-		return this.manager;
-	}
-
-	@Override
-	public IInventory getInventoryByName( final String name )
-	{
-		if( name.equals( "upgrades" ) )
-		{
-			return this.upgrades;
-		}
-
-		return null;
-	}
-
-	public RedstoneMode getRSMode()
-	{
-		return null;
-	}
+    public RedstoneMode getRSMode() {
+        return null;
+    }
 }

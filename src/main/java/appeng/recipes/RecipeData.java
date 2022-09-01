@@ -18,21 +18,17 @@
 
 package appeng.recipes;
 
-
 import appeng.api.recipes.ICraftHandler;
-
 import java.util.*;
 
+public class RecipeData {
 
-public class RecipeData
-{
+    final Map<String, String> aliases = new HashMap<String, String>();
+    final Map<String, GroupIngredient> groups = new HashMap<String, GroupIngredient>();
 
-	final Map<String, String> aliases = new HashMap<String, String>();
-	final Map<String, GroupIngredient> groups = new HashMap<String, GroupIngredient>();
-
-	final List<ICraftHandler> handlers = new LinkedList<ICraftHandler>();
-	final Set<String> knownItem = new HashSet<String>();
-	boolean crash = true;
-	boolean exceptions = true;
-	boolean errorOnMissing = true;
+    final List<ICraftHandler> handlers = new LinkedList<ICraftHandler>();
+    final Set<String> knownItem = new HashSet<String>();
+    boolean crash = true;
+    boolean exceptions = true;
+    boolean errorOnMissing = true;
 }

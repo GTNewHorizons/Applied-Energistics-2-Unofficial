@@ -18,7 +18,6 @@
 
 package appeng.client.gui.implementations;
 
-
 import appeng.api.config.*;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -29,181 +28,153 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.tile.misc.TileCellWorkbench;
 import appeng.util.Platform;
+import java.io.IOException;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Mouse;
 
-import java.io.IOException;
+public class GuiCellWorkbench extends GuiUpgradeable {
 
+    private final ContainerCellWorkbench workbench;
 
-public class GuiCellWorkbench extends GuiUpgradeable
-{
+    private GuiImgButton clear;
+    private GuiImgButton partition;
+    private GuiToggleButton copyMode;
 
-	private final ContainerCellWorkbench workbench;
+    public GuiCellWorkbench(final InventoryPlayer inventoryPlayer, final TileCellWorkbench te) {
+        super(new ContainerCellWorkbench(inventoryPlayer, te));
+        this.workbench = (ContainerCellWorkbench) this.inventorySlots;
+        this.ySize = 251;
+    }
 
-	private GuiImgButton clear;
-	private GuiImgButton partition;
-	private GuiToggleButton copyMode;
+    @Override
+    protected void addButtons() {
+        this.clear = new GuiImgButton(this.guiLeft - 18, this.guiTop + 8, Settings.ACTIONS, ActionItems.CLOSE);
+        this.partition = new GuiImgButton(this.guiLeft - 18, this.guiTop + 28, Settings.ACTIONS, ActionItems.WRENCH);
+        this.copyMode = new GuiToggleButton(
+                this.guiLeft - 18,
+                this.guiTop + 48,
+                11 * 16 + 5,
+                12 * 16 + 5,
+                GuiText.CopyMode.getLocal(),
+                GuiText.CopyModeDesc.getLocal());
+        this.fuzzyMode =
+                new GuiImgButton(this.guiLeft - 18, this.guiTop + 68, Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
+        this.oreFilter =
+                new GuiImgButton(this.guiLeft - 18, this.guiTop + 68, Settings.ACTIONS, ActionItems.ORE_FILTER);
 
-	public GuiCellWorkbench( final InventoryPlayer inventoryPlayer, final TileCellWorkbench te )
-	{
-		super( new ContainerCellWorkbench( inventoryPlayer, te ) );
-		this.workbench = (ContainerCellWorkbench) this.inventorySlots;
-		this.ySize = 251;
-	}
+        this.buttonList.add(this.fuzzyMode);
+        this.buttonList.add(this.partition);
+        this.buttonList.add(this.clear);
+        this.buttonList.add(this.copyMode);
+        this.buttonList.add(this.oreFilter);
+    }
 
-	@Override
-	protected void addButtons()
-	{
-		this.clear = new GuiImgButton( this.guiLeft - 18, this.guiTop + 8, Settings.ACTIONS, ActionItems.CLOSE );
-		this.partition = new GuiImgButton( this.guiLeft - 18, this.guiTop + 28, Settings.ACTIONS, ActionItems.WRENCH );
-		this.copyMode = new GuiToggleButton( this.guiLeft - 18, this.guiTop + 48, 11 * 16 + 5, 12 * 16 + 5, GuiText.CopyMode.getLocal(), GuiText.CopyModeDesc.getLocal() );
-		this.fuzzyMode = new GuiImgButton( this.guiLeft - 18, this.guiTop + 68, Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL );
-		this.oreFilter = new GuiImgButton( this.guiLeft - 18, this.guiTop + 68, Settings.ACTIONS, ActionItems.ORE_FILTER );
+    @Override
+    public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        this.handleButtonVisibility();
 
-		this.buttonList.add( this.fuzzyMode );
-		this.buttonList.add( this.partition );
-		this.buttonList.add( this.clear );
-		this.buttonList.add( this.copyMode );
-		this.buttonList.add( this.oreFilter );
-	}
+        this.bindTexture(this.getBackground());
+        this.drawTexturedModalRect(offsetX, offsetY, 0, 0, 211 - 34, this.ySize);
+        if (this.drawUpgrades()) {
+            if (this.workbench.availableUpgrades() <= 8) {
+                this.drawTexturedModalRect(
+                        offsetX + 177, offsetY, 177, 0, 35, 7 + this.workbench.availableUpgrades() * 18);
+                this.drawTexturedModalRect(
+                        offsetX + 177, offsetY + (7 + (this.workbench.availableUpgrades()) * 18), 177, 151, 35, 7);
+            } else if (this.workbench.availableUpgrades() <= 16) {
+                this.drawTexturedModalRect(offsetX + 177, offsetY, 177, 0, 35, 7 + 8 * 18);
+                this.drawTexturedModalRect(offsetX + 177, offsetY + (7 + (8) * 18), 177, 151, 35, 7);
 
-	@Override
-	public void drawBG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
-	{
-		this.handleButtonVisibility();
+                final int dx = this.workbench.availableUpgrades() - 8;
+                this.drawTexturedModalRect(offsetX + 177 + 27, offsetY, 186, 0, 35 - 8, 7 + dx * 18);
+                if (dx == 8) {
+                    this.drawTexturedModalRect(offsetX + 177 + 27, offsetY + (7 + (dx) * 18), 186, 151, 35 - 8, 7);
+                } else {
+                    this.drawTexturedModalRect(
+                            offsetX + 177 + 27 + 4, offsetY + (7 + (dx) * 18), 186 + 4, 151, 35 - 8, 7);
+                }
+            } else {
+                this.drawTexturedModalRect(offsetX + 177, offsetY, 177, 0, 35, 7 + 8 * 18);
+                this.drawTexturedModalRect(offsetX + 177, offsetY + (7 + (8) * 18), 177, 151, 35, 7);
 
-		this.bindTexture( this.getBackground() );
-		this.drawTexturedModalRect( offsetX, offsetY, 0, 0, 211 - 34, this.ySize );
-		if( this.drawUpgrades() )
-		{
-			if( this.workbench.availableUpgrades() <= 8 )
-			{
-				this.drawTexturedModalRect( offsetX + 177, offsetY, 177, 0, 35, 7 + this.workbench.availableUpgrades() * 18 );
-				this.drawTexturedModalRect( offsetX + 177, offsetY + ( 7 + ( this.workbench.availableUpgrades() ) * 18 ), 177, 151, 35, 7 );
-			}
-			else if( this.workbench.availableUpgrades() <= 16 )
-			{
-				this.drawTexturedModalRect( offsetX + 177, offsetY, 177, 0, 35, 7 + 8 * 18 );
-				this.drawTexturedModalRect( offsetX + 177, offsetY + ( 7 + ( 8 ) * 18 ), 177, 151, 35, 7 );
+                this.drawTexturedModalRect(offsetX + 177 + 27, offsetY, 186, 0, 35 - 8, 7 + 8 * 18);
+                this.drawTexturedModalRect(offsetX + 177 + 27, offsetY + (7 + (8) * 18), 186, 151, 35 - 8, 7);
 
-				final int dx = this.workbench.availableUpgrades() - 8;
-				this.drawTexturedModalRect( offsetX + 177 + 27, offsetY, 186, 0, 35 - 8, 7 + dx * 18 );
-				if( dx == 8 )
-				{
-					this.drawTexturedModalRect( offsetX + 177 + 27, offsetY + ( 7 + ( dx ) * 18 ), 186, 151, 35 - 8, 7 );
-				}
-				else
-				{
-					this.drawTexturedModalRect( offsetX + 177 + 27 + 4, offsetY + ( 7 + ( dx ) * 18 ), 186 + 4, 151, 35 - 8, 7 );
-				}
-			}
-			else
-			{
-				this.drawTexturedModalRect( offsetX + 177, offsetY, 177, 0, 35, 7 + 8 * 18 );
-				this.drawTexturedModalRect( offsetX + 177, offsetY + ( 7 + ( 8 ) * 18 ), 177, 151, 35, 7 );
+                final int dx = this.workbench.availableUpgrades() - 16;
+                this.drawTexturedModalRect(offsetX + 177 + 27 + 18, offsetY, 186, 0, 35 - 8, 7 + dx * 18);
+                if (dx == 8) {
+                    this.drawTexturedModalRect(offsetX + 177 + 27 + 18, offsetY + (7 + (dx) * 18), 186, 151, 35 - 8, 7);
+                } else {
+                    this.drawTexturedModalRect(
+                            offsetX + 177 + 27 + 18 + 4, offsetY + (7 + (dx) * 18), 186 + 4, 151, 35 - 8, 7);
+                }
+            }
+        }
+        if (this.hasToolbox()) {
+            this.drawTexturedModalRect(offsetX + 178, offsetY + this.ySize - 90, 178, 161, 68, 68);
+        }
+    }
 
-				this.drawTexturedModalRect( offsetX + 177 + 27, offsetY, 186, 0, 35 - 8, 7 + 8 * 18 );
-				this.drawTexturedModalRect( offsetX + 177 + 27, offsetY + ( 7 + ( 8 ) * 18 ), 186, 151, 35 - 8, 7 );
+    @Override
+    protected void handleButtonVisibility() {
+        this.copyMode.setState(this.workbench.getCopyMode() == CopyMode.CLEAR_ON_REMOVE);
 
-				final int dx = this.workbench.availableUpgrades() - 16;
-				this.drawTexturedModalRect( offsetX + 177 + 27 + 18, offsetY, 186, 0, 35 - 8, 7 + dx * 18 );
-				if( dx == 8 )
-				{
-					this.drawTexturedModalRect( offsetX + 177 + 27 + 18, offsetY + ( 7 + ( dx ) * 18 ), 186, 151, 35 - 8, 7 );
-				}
-				else
-				{
-					this.drawTexturedModalRect( offsetX + 177 + 27 + 18 + 4, offsetY + ( 7 + ( dx ) * 18 ), 186 + 4, 151, 35 - 8, 7 );
-				}
-			}
-		}
-		if( this.hasToolbox() )
-		{
-			this.drawTexturedModalRect( offsetX + 178, offsetY + this.ySize - 90, 178, 161, 68, 68 );
-		}
-	}
+        boolean hasFuzzy = false;
+        boolean hasOreFilter = false;
+        final IInventory inv = this.workbench.getCellUpgradeInventory();
+        for (int x = 0; x < inv.getSizeInventory(); x++) {
+            final ItemStack is = inv.getStackInSlot(x);
+            if (is != null && is.getItem() instanceof IUpgradeModule) {
+                if (((IUpgradeModule) is.getItem()).getType(is) == Upgrades.FUZZY) {
+                    hasFuzzy = true;
+                }
+                if (((IUpgradeModule) is.getItem()).getType(is) == Upgrades.ORE_FILTER) {
+                    hasOreFilter = true;
+                }
+            }
+        }
+        this.fuzzyMode.setVisibility(!hasOreFilter && hasFuzzy);
+        this.oreFilter.setVisibility(hasOreFilter);
+    }
 
-	@Override
-	protected void handleButtonVisibility()
-	{
-		this.copyMode.setState( this.workbench.getCopyMode() == CopyMode.CLEAR_ON_REMOVE );
+    @Override
+    protected String getBackground() {
+        return "guis/cellworkbench.png";
+    }
 
-		boolean hasFuzzy = false;
-		boolean hasOreFilter = false;
-		final IInventory inv = this.workbench.getCellUpgradeInventory();
-		for( int x = 0; x < inv.getSizeInventory(); x++ )
-		{
-			final ItemStack is = inv.getStackInSlot( x );
-			if( is != null && is.getItem() instanceof IUpgradeModule )
-			{
-				if( ( (IUpgradeModule) is.getItem() ).getType( is ) == Upgrades.FUZZY )
-				{
-					hasFuzzy = true;
-				}
-				if( ( (IUpgradeModule) is.getItem() ).getType( is ) == Upgrades.ORE_FILTER )
-				{
-					hasOreFilter = true;
-				}
-			}
-		}
-		this.fuzzyMode.setVisibility( !hasOreFilter && hasFuzzy );
-		this.oreFilter.setVisibility( hasOreFilter );
-	}
+    @Override
+    protected boolean drawUpgrades() {
+        return this.workbench.availableUpgrades() > 0;
+    }
 
-	@Override
-	protected String getBackground()
-	{
-		return "guis/cellworkbench.png";
-	}
+    @Override
+    protected GuiText getName() {
+        return GuiText.CellWorkbench;
+    }
 
-	@Override
-	protected boolean drawUpgrades()
-	{
-		return this.workbench.availableUpgrades() > 0;
-	}
+    @Override
+    protected void actionPerformed(final GuiButton btn) {
+        try {
+            if (btn == this.copyMode) {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("CellWorkbench.Action", "CopyMode"));
+            } else if (btn == this.partition) {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("CellWorkbench.Action", "Partition"));
+            } else if (btn == this.clear) {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("CellWorkbench.Action", "Clear"));
+            } else if (btn == this.fuzzyMode) {
+                final boolean backwards = Mouse.isButtonDown(1);
 
-	@Override
-	protected GuiText getName()
-	{
-		return GuiText.CellWorkbench;
-	}
+                FuzzyMode fz = (FuzzyMode) this.fuzzyMode.getCurrentValue();
+                fz = Platform.rotateEnum(fz, backwards, Settings.FUZZY_MODE.getPossibleValues());
 
-	@Override
-	protected void actionPerformed( final GuiButton btn )
-	{
-		try
-		{
-			if( btn == this.copyMode )
-			{
-				NetworkHandler.instance.sendToServer( new PacketValueConfig( "CellWorkbench.Action", "CopyMode" ) );
-			}
-			else if( btn == this.partition )
-			{
-				NetworkHandler.instance.sendToServer( new PacketValueConfig( "CellWorkbench.Action", "Partition" ) );
-			}
-			else if( btn == this.clear )
-			{
-				NetworkHandler.instance.sendToServer( new PacketValueConfig( "CellWorkbench.Action", "Clear" ) );
-			}
-			else if( btn == this.fuzzyMode )
-			{
-				final boolean backwards = Mouse.isButtonDown( 1 );
-
-				FuzzyMode fz = (FuzzyMode) this.fuzzyMode.getCurrentValue();
-				fz = Platform.rotateEnum( fz, backwards, Settings.FUZZY_MODE.getPossibleValues() );
-
-				NetworkHandler.instance.sendToServer( new PacketValueConfig( "CellWorkbench.Fuzzy", fz.name() ) );
-			}
-			else
-			{
-				super.actionPerformed( btn );
-			}
-		}
-		catch( final IOException ignored )
-		{
-		}
-	}
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("CellWorkbench.Fuzzy", fz.name()));
+            } else {
+                super.actionPerformed(btn);
+            }
+        } catch (final IOException ignored) {
+        }
+    }
 }

@@ -18,22 +18,17 @@
 
 package appeng.block.networking;
 
-
 import appeng.block.AEBaseTileBlock;
 import appeng.core.features.AEFeature;
 import appeng.tile.networking.TileEnergyAcceptor;
+import java.util.EnumSet;
 import net.minecraft.block.material.Material;
 
-import java.util.EnumSet;
+public class BlockEnergyAcceptor extends AEBaseTileBlock {
 
-
-public class BlockEnergyAcceptor extends AEBaseTileBlock
-{
-
-	public BlockEnergyAcceptor()
-	{
-		super( Material.iron );
-		this.setTileEntity( TileEnergyAcceptor.class );
-		this.setFeature( EnumSet.of( AEFeature.Core ) );
-	}
+    public BlockEnergyAcceptor() {
+        super(Material.iron);
+        this.setTileEntity(TileEnergyAcceptor.class);
+        this.setFeature(EnumSet.of(AEFeature.Core));
+    }
 }

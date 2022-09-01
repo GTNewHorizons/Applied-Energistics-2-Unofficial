@@ -13,54 +13,44 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.world.World;
 
-public class ContainerPatternValueAmount extends AEBaseContainer
-{
+public class ContainerPatternValueAmount extends AEBaseContainer {
     private final Slot patternValue;
     private int valueIndex;
 
-    public ContainerPatternValueAmount( final InventoryPlayer ip, final ITerminalHost te )
-    {
-        super( ip, te );
-        this.patternValue = new SlotInaccessible( new AppEngInternalInventory( null, 1 ), 0, 34, 53 );
-        this.addSlotToContainer( patternValue );
+    public ContainerPatternValueAmount(final InventoryPlayer ip, final ITerminalHost te) {
+        super(ip, te);
+        this.patternValue = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 34, 53);
+        this.addSlotToContainer(patternValue);
     }
 
     @Override
-    public void detectAndSendChanges()
-    {
+    public void detectAndSendChanges() {
         super.detectAndSendChanges();
-        this.verifyPermissions( SecurityPermissions.CRAFT, false );
+        this.verifyPermissions(SecurityPermissions.CRAFT, false);
     }
 
-    public IGrid getGrid()
-    {
-        final IActionHost h = ( (IActionHost) this.getTarget() );
+    public IGrid getGrid() {
+        final IActionHost h = ((IActionHost) this.getTarget());
         return h.getActionableNode().getGrid();
     }
 
-    public World getWorld()
-    {
+    public World getWorld() {
         return this.getPlayerInv().player.worldObj;
     }
 
-    public BaseActionSource getActionSrc()
-    {
-        return new PlayerSource( this.getPlayerInv().player, (IActionHost) this.getTarget() );
+    public BaseActionSource getActionSrc() {
+        return new PlayerSource(this.getPlayerInv().player, (IActionHost) this.getTarget());
     }
 
-    public Slot getPatternValue()
-    {
+    public Slot getPatternValue() {
         return patternValue;
     }
 
-    public int getValueIndex()
-    {
+    public int getValueIndex() {
         return valueIndex;
     }
 
-    public void setValueIndex( int valueIndex )
-    {
+    public void setValueIndex(int valueIndex) {
         this.valueIndex = valueIndex;
     }
-
 }

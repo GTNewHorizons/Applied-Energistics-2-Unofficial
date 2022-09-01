@@ -18,53 +18,56 @@
 
 package appeng.core.features;
 
-
 import appeng.api.definitions.IBlockDefinition;
 import appeng.block.AEBaseItemBlockSlab;
 import appeng.block.AEBaseSlabBlock;
 import appeng.core.CreativeTab;
 import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.GameRegistry;
-
 import java.util.EnumSet;
 
+public class SlabBlockFeatureHandler implements IFeatureHandler {
+    private final AEBaseSlabBlock slabs;
+    private final FeatureNameExtractor extractor;
+    private final boolean enabled;
+    private final BlockDefinition definition;
 
-public class SlabBlockFeatureHandler implements IFeatureHandler
-{
-	private final AEBaseSlabBlock slabs;
-	private final FeatureNameExtractor extractor;
-	private final boolean enabled;
-	private final BlockDefinition definition;
+    public SlabBlockFeatureHandler(final EnumSet<AEFeature> features, final AEBaseSlabBlock slabs) {
+        final ActivityState state = new FeaturedActiveChecker(features).getActivityState();
+        this.slabs = slabs;
+        this.extractor = new FeatureNameExtractor(slabs.getClass(), Optional.<String>absent());
+        this.enabled = state == ActivityState.Enabled;
+        this.definition = new BlockDefinition(slabs, state);
+    }
 
-	public SlabBlockFeatureHandler( final EnumSet<AEFeature> features, final AEBaseSlabBlock slabs )
-	{
-		final ActivityState state = new FeaturedActiveChecker( features ).getActivityState();
-		this.slabs = slabs;
-		this.extractor = new FeatureNameExtractor( slabs.getClass(), Optional.<String>absent() );
-		this.enabled = state == ActivityState.Enabled;
-		this.definition = new BlockDefinition( slabs, state );
-	}
+    @Override
+    public final boolean isFeatureAvailable() {
+        return this.enabled;
+    }
 
-	@Override
-	public final boolean isFeatureAvailable()
-	{
-		return this.enabled;
-	}
+    @Override
+    public final IBlockDefinition getDefinition() {
+        return this.definition;
+    }
 
-	@Override
-	public final IBlockDefinition getDefinition()
-	{
-		return this.definition;
-	}
-
-	@Override
-	public final void register()
-	{
-		if( this.enabled )
-		{
-			this.slabs.setCreativeTab( CreativeTab.instance );
-			GameRegistry.registerBlock( this.slabs, AEBaseItemBlockSlab.class, "tile." + this.slabs.name(), this.slabs, this.slabs.doubleSlabs(), false );
-			GameRegistry.registerBlock( this.slabs.doubleSlabs(), AEBaseItemBlockSlab.class, "tile." + this.slabs.name() + ".double", this.slabs, this.slabs.doubleSlabs(), true );
-		}
-	}
+    @Override
+    public final void register() {
+        if (this.enabled) {
+            this.slabs.setCreativeTab(CreativeTab.instance);
+            GameRegistry.registerBlock(
+                    this.slabs,
+                    AEBaseItemBlockSlab.class,
+                    "tile." + this.slabs.name(),
+                    this.slabs,
+                    this.slabs.doubleSlabs(),
+                    false);
+            GameRegistry.registerBlock(
+                    this.slabs.doubleSlabs(),
+                    AEBaseItemBlockSlab.class,
+                    "tile." + this.slabs.name() + ".double",
+                    this.slabs,
+                    this.slabs.doubleSlabs(),
+                    true);
+        }
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.block.misc;
 
-
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderBlockPaint;
 import appeng.core.features.AEFeature;
@@ -26,6 +25,9 @@ import appeng.tile.misc.TilePaint;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.MaterialLiquid;
@@ -36,105 +38,89 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Random;
+public class BlockPaint extends AEBaseTileBlock {
 
+    public BlockPaint() {
+        super(new MaterialLiquid(MapColor.airColor));
 
-public class BlockPaint extends AEBaseTileBlock
-{
+        this.setTileEntity(TilePaint.class);
+        this.setLightOpacity(0);
+        this.isFullSize = false;
+        this.isOpaque = false;
+        this.setFeature(EnumSet.of(AEFeature.PaintBalls));
+    }
 
-	public BlockPaint()
-	{
-		super( new MaterialLiquid( MapColor.airColor ) );
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RenderBlockPaint getRenderer() {
+        return new RenderBlockPaint();
+    }
 
-		this.setTileEntity( TilePaint.class );
-		this.setLightOpacity( 0 );
-		this.isFullSize = false;
-		this.isOpaque = false;
-		this.setFeature( EnumSet.of( AEFeature.PaintBalls ) );
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void getCheckedSubBlocks(final Item item, final CreativeTabs tabs, final List<ItemStack> itemStacks) {
+        // do nothing
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected RenderBlockPaint getRenderer()
-	{
-		return new RenderBlockPaint();
-	}
+    @Override
+    public AxisAlignedBB getCollisionBoundingBoxFromPool(final World world, final int x, final int y, final int z) {
+        return null;
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void getCheckedSubBlocks( final Item item, final CreativeTabs tabs, final List<ItemStack> itemStacks )
-	{
-		// do nothing
-	}
+    @Override
+    public boolean canCollideCheck(final int metadata, final boolean isHoldingRightClick) {
+        return false;
+    }
 
-	@Override
-	public AxisAlignedBB getCollisionBoundingBoxFromPool( final World world, final int x, final int y, final int z )
-	{
-		return null;
-	}
+    @Override
+    public void onNeighborBlockChange(final World w, final int x, final int y, final int z, final Block junk) {
+        final TilePaint tp = this.getTileEntity(w, x, y, z);
 
-	@Override
-	public boolean canCollideCheck( final int metadata, final boolean isHoldingRightClick )
-	{
-		return false;
-	}
+        if (tp != null) {
+            tp.onNeighborBlockChange();
+        }
+    }
 
-	@Override
-	public void onNeighborBlockChange( final World w, final int x, final int y, final int z, final Block junk )
-	{
-		final TilePaint tp = this.getTileEntity( w, x, y, z );
+    @Override
+    public Item getItemDropped(final int meta, final Random random, final int fortune) {
+        return null;
+    }
 
-		if( tp != null )
-		{
-			tp.onNeighborBlockChange();
-		}
-	}
+    @Override
+    public void dropBlockAsItemWithChance(
+            final World world,
+            final int x,
+            final int y,
+            final int z,
+            final int meta,
+            final float chance,
+            final int fortune) {}
 
-	@Override
-	public Item getItemDropped( final int meta, final Random random, final int fortune )
-	{
-		return null;
-	}
+    @Override
+    public void fillWithRain(final World w, final int x, final int y, final int z) {
+        if (Platform.isServer()) {
+            w.setBlock(x, y, z, Platform.AIR_BLOCK, 0, 3);
+        }
+    }
 
-	@Override
-	public void dropBlockAsItemWithChance( final World world, final int x, final int y, final int z, final int meta, final float chance, final int fortune )
-	{
+    @Override
+    public int getLightValue(final IBlockAccess w, final int x, final int y, final int z) {
+        final TilePaint tp = this.getTileEntity(w, x, y, z);
 
-	}
+        if (tp != null) {
+            return tp.getLightLevel();
+        }
 
-	@Override
-	public void fillWithRain( final World w, final int x, final int y, final int z )
-	{
-		if( Platform.isServer() )
-		{
-			w.setBlock( x, y, z, Platform.AIR_BLOCK, 0, 3 );
-		}
-	}
+        return 0;
+    }
 
-	@Override
-	public int getLightValue( final IBlockAccess w, final int x, final int y, final int z )
-	{
-		final TilePaint tp = this.getTileEntity( w, x, y, z );
+    @Override
+    public boolean isReplaceable(final IBlockAccess world, final int x, final int y, final int z) {
+        return true;
+    }
 
-		if( tp != null )
-		{
-			return tp.getLightLevel();
-		}
-
-		return 0;
-	}
-
-	@Override
-	public boolean isReplaceable( final IBlockAccess world, final int x, final int y, final int z )
-	{
-		return true;
-	}
-
-	@Override
-	public boolean isAir( final IBlockAccess world, final int x, final int y, final int z )
-	{
-		return true;
-	}
+    @Override
+    public boolean isAir(final IBlockAccess world, final int x, final int y, final int z) {
+        return true;
+    }
 }

@@ -18,113 +18,201 @@
 
 package appeng.core.localization;
 
-
 import net.minecraft.util.StatCollector;
 
+public enum GuiText {
+    inventory("container"), // mc's default Inventory localization.
 
-public enum GuiText
-{
-	inventory( "container" ), // mc's default Inventory localization.
+    Chest,
+    StoredEnergy,
+    Of,
+    Condenser,
+    Drive,
+    GrindStone,
+    SkyChest,
 
-	Chest, StoredEnergy, Of, Condenser, Drive, GrindStone, SkyChest,
+    VibrationChamber,
+    SpatialIOPort,
+    LevelEmitter,
+    Terminal,
 
-	VibrationChamber, SpatialIOPort, LevelEmitter, Terminal,
+    Interface,
+    Config,
+    StoredItems,
+    Patterns,
+    ImportBus,
+    ExportBus,
 
-	Interface, Config, StoredItems, Patterns, ImportBus, ExportBus,
+    CellWorkbench,
+    NetworkDetails,
+    StorageCells,
+    IOBuses,
 
-	CellWorkbench, NetworkDetails, StorageCells, IOBuses,
+    IOPort,
+    BytesUsed,
+    Types,
+    QuantumLinkChamber,
+    PortableCell,
 
-	IOPort, BytesUsed, Types, QuantumLinkChamber, PortableCell,
+    NetworkTool,
+    PowerUsageRate,
+    PowerInputRate,
+    Installed,
+    EnergyDrain,
 
-	NetworkTool, PowerUsageRate, PowerInputRate, Installed, EnergyDrain,
+    StorageBus,
+    Priority,
+    Security,
+    Encoded,
+    Blank,
+    Unlinked,
+    Linked,
 
-	StorageBus, Priority, Security, Encoded, Blank, Unlinked, Linked,
+    SecurityCardEditor,
+    NoPermissions,
+    WirelessTerminal,
+    Wireless,
 
-	SecurityCardEditor, NoPermissions, WirelessTerminal, Wireless,
+    CraftingTerminal,
+    FormationPlane,
+    Inscriber,
+    QuartzCuttingKnife,
 
-	CraftingTerminal, FormationPlane, Inscriber, QuartzCuttingKnife,
+    // tunnel names
+    METunnel,
+    ItemTunnel,
+    RedstoneTunnel,
+    EUTunnel,
+    FluidTunnel,
+    OCTunnel,
+    LightTunnel,
+    RFTunnel,
+    PressureTunnel,
+    GTTunnel,
 
-	// tunnel names
-	METunnel, ItemTunnel, RedstoneTunnel, EUTunnel, FluidTunnel, OCTunnel, LightTunnel, RFTunnel, PressureTunnel, GTTunnel,
+    StoredSize,
+    CopyMode,
+    CopyModeDesc,
+    PatternTerminal,
 
-	StoredSize, CopyMode, CopyModeDesc, PatternTerminal,
+    // Pattern tooltips
+    CraftingPattern,
+    ProcessingPattern,
+    Crafts,
+    Creates,
+    And,
+    With,
+    Substitute,
+    Yes,
+    No,
 
-	// Pattern tooltips
-	CraftingPattern,
-	ProcessingPattern,
-	Crafts,
-	Creates,
-	And,
-	With,
-	Substitute,
-	Yes,
-	No,
+    MolecularAssembler,
 
-	MolecularAssembler,
+    StoredPower,
+    MaxPower,
+    RequiredPower,
+    Efficiency,
+    InWorldCrafting,
 
-	StoredPower, MaxPower, RequiredPower, Efficiency, InWorldCrafting,
+    inWorldFluix,
+    inWorldPurificationCertus,
+    inWorldPurificationNether,
 
-	inWorldFluix, inWorldPurificationCertus, inWorldPurificationNether,
+    inWorldPurificationFluix,
+    inWorldSingularity,
+    ChargedQuartz,
 
-	inWorldPurificationFluix, inWorldSingularity, ChargedQuartz,
+    NoSecondOutput,
+    OfSecondOutput,
+    MultipleOutputs,
 
-	NoSecondOutput,
-	OfSecondOutput,
-	MultipleOutputs,
+    Stores,
+    Next,
+    SelectAmount,
+    Lumen,
+    Empty,
 
-	Stores, Next, SelectAmount, Lumen, Empty,
+    ConfirmCrafting,
+    Stored,
+    Crafting,
+    Scheduled,
+    CraftingStatus,
+    Cancel,
+    ETA,
+    ETAFormat,
 
-	ConfirmCrafting, Stored, Crafting, Scheduled, CraftingStatus, Cancel, ETA, ETAFormat,
+    FromStorage,
+    ToCraft,
+    CraftingPlan,
+    CalculatingWait,
+    Start,
+    Bytes,
+    Set,
 
-	FromStorage, ToCraft, CraftingPlan, CalculatingWait, Start, Bytes,Set,
+    CraftingCPU,
+    Automatic,
+    CoProcessors,
+    Simulation,
+    Missing,
 
-	CraftingCPU, Automatic, CoProcessors, Simulation, Missing,
+    InterfaceTerminal,
+    NoCraftingCPUs,
+    Clean,
+    InvalidPattern,
+    UnknownItem,
 
-	InterfaceTerminal, NoCraftingCPUs, Clean, InvalidPattern, UnknownItem,
+    InterfaceTerminalHint,
+    Range,
+    TransparentFacades,
+    TransparentFacadesHint,
 
-	InterfaceTerminalHint, Range, TransparentFacades, TransparentFacadesHint,
+    NoCraftingJobs,
+    CPUs,
+    FacadeCrafting,
+    inWorldCraftingPresses,
+    ChargedQuartzFind,
 
-	NoCraftingJobs, CPUs, FacadeCrafting, inWorldCraftingPresses, ChargedQuartzFind,
+    Included,
+    Excluded,
+    Partitioned,
+    PartitionedOre,
+    Precise,
+    Fuzzy,
+    Filter,
 
-	Included, Excluded, Partitioned, PartitionedOre, Precise, Fuzzy, Filter,
+    // Used in a terminal to indicate that an item is craftable
+    SmallFontCraft,
+    LargeFontCraft,
 
-	// Used in a terminal to indicate that an item is craftable
-	SmallFontCraft, LargeFontCraft,
+    // processing pattern terminal
+    PatternTerminalEx,
 
-	// processing pattern terminal
-	PatternTerminalEx,
+    // renaming GUI label
+    Renamer,
 
-	// renaming GUI label
-	Renamer,
+    // oredictionary filter GUI label
+    OreFilterLabel,
 
-	// oredictionary filter GUI label
-	OreFilterLabel,
+    HoldShiftForTooltip,
 
-	HoldShiftForTooltip,
+    // Used in a ME Interface when no appropriate TileEntity was detected near it
+    Nothing;
 
-	// Used in a ME Interface when no appropriate TileEntity was detected near it
-	Nothing;
+    private final String root;
 
-	private final String root;
+    GuiText() {
+        this.root = "gui.appliedenergistics2";
+    }
 
-	GuiText()
-	{
-		this.root = "gui.appliedenergistics2";
-	}
+    GuiText(final String r) {
+        this.root = r;
+    }
 
-	GuiText( final String r )
-	{
-		this.root = r;
-	}
+    public String getLocal() {
+        return StatCollector.translateToLocal(this.getUnlocalized());
+    }
 
-	public String getLocal()
-	{
-		return StatCollector.translateToLocal( this.getUnlocalized() );
-	}
-
-	public String getUnlocalized()
-	{
-		return this.root + '.' + this.toString();
-	}
-
+    public String getUnlocalized() {
+        return this.root + '.' + this.toString();
+    }
 }

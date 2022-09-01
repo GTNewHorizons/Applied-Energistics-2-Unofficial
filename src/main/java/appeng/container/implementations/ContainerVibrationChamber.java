@@ -18,7 +18,6 @@
 
 package appeng.container.implementations;
 
-
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.IProgressProvider;
@@ -27,54 +26,52 @@ import appeng.tile.misc.TileVibrationChamber;
 import appeng.util.Platform;
 import net.minecraft.entity.player.InventoryPlayer;
 
+public class ContainerVibrationChamber extends AEBaseContainer implements IProgressProvider {
 
-public class ContainerVibrationChamber extends AEBaseContainer implements IProgressProvider
-{
+    private static final int MAX_BURN_TIME = 200;
+    private final int aePerTick = 5;
+    private final TileVibrationChamber vibrationChamber;
 
-	private static final int MAX_BURN_TIME = 200;
-	private final int aePerTick = 5;
-	private final TileVibrationChamber vibrationChamber;
-	@GuiSync( 0 )
-	public int burnProgress = 0;
-	@GuiSync( 1 )
-	public int burnSpeed = 100;
+    @GuiSync(0)
+    public int burnProgress = 0;
 
-	public ContainerVibrationChamber( final InventoryPlayer ip, final TileVibrationChamber vibrationChamber )
-	{
-		super( ip, vibrationChamber, null );
-		this.vibrationChamber = vibrationChamber;
+    @GuiSync(1)
+    public int burnSpeed = 100;
 
-		this.addSlotToContainer( new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.FUEL, vibrationChamber, 0, 80, 37, this.getInventoryPlayer() ) );
+    public ContainerVibrationChamber(final InventoryPlayer ip, final TileVibrationChamber vibrationChamber) {
+        super(ip, vibrationChamber, null);
+        this.vibrationChamber = vibrationChamber;
 
-		this.bindPlayerInventory( ip, 0, 166 - /* height of player inventory */82 );
-	}
+        this.addSlotToContainer(new SlotRestrictedInput(
+                SlotRestrictedInput.PlacableItemType.FUEL, vibrationChamber, 0, 80, 37, this.getInventoryPlayer()));
 
-	@Override
-	public void detectAndSendChanges()
-	{
-		if( Platform.isServer() )
-		{
-			this.burnProgress = (int) ( this.vibrationChamber.getMaxBurnTime() <= 0 ? 0 : 12 * this.vibrationChamber.getBurnTime() / this.vibrationChamber.getMaxBurnTime() );
-			this.burnSpeed = this.vibrationChamber.getBurnSpeed();
-		}
+        this.bindPlayerInventory(ip, 0, 166 - /* height of player inventory */ 82);
+    }
 
-		super.detectAndSendChanges();
-	}
+    @Override
+    public void detectAndSendChanges() {
+        if (Platform.isServer()) {
+            this.burnProgress = (int)
+                    (this.vibrationChamber.getMaxBurnTime() <= 0
+                            ? 0
+                            : 12 * this.vibrationChamber.getBurnTime() / this.vibrationChamber.getMaxBurnTime());
+            this.burnSpeed = this.vibrationChamber.getBurnSpeed();
+        }
 
-	@Override
-	public int getCurrentProgress()
-	{
-		return this.burnProgress > 0 ? this.burnSpeed : 0;
-	}
+        super.detectAndSendChanges();
+    }
 
-	@Override
-	public int getMaxProgress()
-	{
-		return MAX_BURN_TIME;
-	}
+    @Override
+    public int getCurrentProgress() {
+        return this.burnProgress > 0 ? this.burnSpeed : 0;
+    }
 
-	public int getAePerTick()
-	{
-		return this.aePerTick;
-	}
+    @Override
+    public int getMaxProgress() {
+        return MAX_BURN_TIME;
+    }
+
+    public int getAePerTick() {
+        return this.aePerTick;
+    }
 }

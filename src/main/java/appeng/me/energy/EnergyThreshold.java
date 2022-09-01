@@ -18,52 +18,41 @@
 
 package appeng.me.energy;
 
-
 import appeng.api.networking.energy.IEnergyWatcher;
 import appeng.util.ItemSorters;
 
+public class EnergyThreshold implements Comparable<EnergyThreshold> {
 
-public class EnergyThreshold implements Comparable<EnergyThreshold>
-{
+    private final double Limit;
+    private final IEnergyWatcher watcher;
+    private final int hash;
 
-	private final double Limit;
-	private final IEnergyWatcher watcher;
-	private final int hash;
+    public EnergyThreshold(final double lim, final IEnergyWatcher wat) {
+        this.Limit = lim;
+        this.watcher = wat;
 
-	public EnergyThreshold( final double lim, final IEnergyWatcher wat )
-	{
-		this.Limit = lim;
-		this.watcher = wat;
+        if (this.getWatcher() != null) {
+            this.hash = this.getWatcher().hashCode() ^ ((Double) lim).hashCode();
+        } else {
+            this.hash = ((Double) lim).hashCode();
+        }
+    }
 
-		if( this.getWatcher() != null )
-		{
-			this.hash = this.getWatcher().hashCode() ^ ( (Double) lim ).hashCode();
-		}
-		else
-		{
-			this.hash = ( (Double) lim ).hashCode();
-		}
-	}
+    @Override
+    public int hashCode() {
+        return this.hash;
+    }
 
-	@Override
-	public int hashCode()
-	{
-		return this.hash;
-	}
+    @Override
+    public int compareTo(final EnergyThreshold o) {
+        return ItemSorters.compareDouble(this.getLimit(), o.getLimit());
+    }
 
-	@Override
-	public int compareTo( final EnergyThreshold o )
-	{
-		return ItemSorters.compareDouble( this.getLimit(), o.getLimit() );
-	}
+    double getLimit() {
+        return this.Limit;
+    }
 
-	double getLimit()
-	{
-		return this.Limit;
-	}
-
-	public IEnergyWatcher getWatcher()
-	{
-		return this.watcher;
-	}
+    public IEnergyWatcher getWatcher() {
+        return this.watcher;
+    }
 }

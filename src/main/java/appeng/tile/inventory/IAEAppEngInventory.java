@@ -18,15 +18,12 @@
 
 package appeng.tile.inventory;
 
-
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
+public interface IAEAppEngInventory {
 
-public interface IAEAppEngInventory
-{
+    void saveChanges();
 
-	void saveChanges();
-
-	void onChangeInventory( IInventory inv, int slot, InvOperation mc, ItemStack removedStack, ItemStack newStack );
+    void onChangeInventory(IInventory inv, int slot, InvOperation mc, ItemStack removedStack, ItemStack newStack);
 }

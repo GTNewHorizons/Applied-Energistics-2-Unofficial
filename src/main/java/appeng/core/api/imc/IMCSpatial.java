@@ -18,34 +18,27 @@
 
 /* Example:
 
- FMLInterModComms.sendMessage( "appliedenergistics2", "whitelist-spatial", "mymod.tileentities.MyTileEntity" );
+FMLInterModComms.sendMessage( "appliedenergistics2", "whitelist-spatial", "mymod.tileentities.MyTileEntity" );
 
- */
+*/
 
 package appeng.core.api.imc;
-
 
 import appeng.api.AEApi;
 import appeng.core.AELog;
 import appeng.core.api.IIMCProcessor;
 import cpw.mods.fml.common.event.FMLInterModComms.IMCMessage;
 
+public class IMCSpatial implements IIMCProcessor {
 
-public class IMCSpatial implements IIMCProcessor
-{
+    @Override
+    public void process(final IMCMessage m) {
 
-	@Override
-	public void process( final IMCMessage m )
-	{
-
-		try
-		{
-			final Class classInstance = Class.forName( m.getStringValue() );
-			AEApi.instance().registries().movable().whiteListTileEntity( classInstance );
-		}
-		catch( final ClassNotFoundException e )
-		{
-			AELog.info( "Bad Class Registered: " + m.getStringValue() + " by " + m.getSender() );
-		}
-	}
+        try {
+            final Class classInstance = Class.forName(m.getStringValue());
+            AEApi.instance().registries().movable().whiteListTileEntity(classInstance);
+        } catch (final ClassNotFoundException e) {
+            AELog.info("Bad Class Registered: " + m.getStringValue() + " by " + m.getSender());
+        }
+    }
 }

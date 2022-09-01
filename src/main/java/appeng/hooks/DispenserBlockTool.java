@@ -18,7 +18,6 @@
 
 package appeng.hooks;
 
-
 import appeng.util.Platform;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
@@ -29,29 +28,34 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
+public final class DispenserBlockTool extends BehaviorDefaultDispenseItem {
 
-public final class DispenserBlockTool extends BehaviorDefaultDispenseItem
-{
+    @Override
+    protected ItemStack dispenseStack(final IBlockSource dispenser, final ItemStack dispensedItem) {
+        final Item i = dispensedItem.getItem();
+        if (i instanceof IBlockTool) {
+            final EnumFacing enumfacing = BlockDispenser.func_149937_b(dispenser.getBlockMetadata());
+            final IBlockTool tm = (IBlockTool) i;
 
-	@Override
-	protected ItemStack dispenseStack( final IBlockSource dispenser, final ItemStack dispensedItem )
-	{
-		final Item i = dispensedItem.getItem();
-		if( i instanceof IBlockTool )
-		{
-			final EnumFacing enumfacing = BlockDispenser.func_149937_b( dispenser.getBlockMetadata() );
-			final IBlockTool tm = (IBlockTool) i;
+            final World w = dispenser.getWorld();
+            if (w instanceof WorldServer) {
+                final int x = dispenser.getXInt() + enumfacing.getFrontOffsetX();
+                final int y = dispenser.getYInt() + enumfacing.getFrontOffsetY();
+                final int z = dispenser.getZInt() + enumfacing.getFrontOffsetZ();
 
-			final World w = dispenser.getWorld();
-			if( w instanceof WorldServer )
-			{
-				final int x = dispenser.getXInt() + enumfacing.getFrontOffsetX();
-				final int y = dispenser.getYInt() + enumfacing.getFrontOffsetY();
-				final int z = dispenser.getZInt() + enumfacing.getFrontOffsetZ();
-
-				tm.onItemUse( dispensedItem, Platform.getPlayer( (WorldServer) w ), w, x, y, z, enumfacing.ordinal(), 0.5f, 0.5f, 0.5f );
-			}
-		}
-		return dispensedItem;
-	}
+                tm.onItemUse(
+                        dispensedItem,
+                        Platform.getPlayer((WorldServer) w),
+                        w,
+                        x,
+                        y,
+                        z,
+                        enumfacing.ordinal(),
+                        0.5f,
+                        0.5f,
+                        0.5f);
+            }
+        }
+        return dispensedItem;
+    }
 }

@@ -11,34 +11,33 @@ import net.minecraft.util.IIcon;
 
 public class PartUltraDenseCableSmart extends PartDenseCable {
     @Reflected
-    public PartUltraDenseCableSmart(final ItemStack is )
-    {
-        super( is );
-        this.getProxy().setFlags( GridFlags.ULTRA_DENSE_CAPACITY, GridFlags.PREFERRED );
+    public PartUltraDenseCableSmart(final ItemStack is) {
+        super(is);
+        this.getProxy().setFlags(GridFlags.ULTRA_DENSE_CAPACITY, GridFlags.PREFERRED);
     }
 
     @Override
-    public AECableType getCableConnectionType()
-    {
+    public AECableType getCableConnectionType() {
         return AECableType.ULTRA_DENSE;
     }
 
     @Override
-    public IIcon getTexture(final AEColor c )
-    {
-        if( c == AEColor.Transparent )
-        {
-            return AEApi.instance().definitions().parts().cableUltraDenseSmart().stack( AEColor.Transparent, 1 ).getIconIndex();
+    public IIcon getTexture(final AEColor c) {
+        if (c == AEColor.Transparent) {
+            return AEApi.instance()
+                    .definitions()
+                    .parts()
+                    .cableUltraDenseSmart()
+                    .stack(AEColor.Transparent, 1)
+                    .getIconIndex();
         }
 
-        return this.getDenseTexture( c );
+        return this.getDenseTexture(c);
     }
 
     @Override
-    protected IIcon getDenseTexture( final AEColor c )
-    {
-        switch( c )
-        {
+    protected IIcon getDenseTexture(final AEColor c) {
+        switch (c) {
             case Black:
                 return CableBusTextures.MEUltraDense_Black.getIcon();
             case Blue:

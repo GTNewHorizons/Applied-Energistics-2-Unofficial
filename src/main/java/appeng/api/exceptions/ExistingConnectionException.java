@@ -23,9 +23,7 @@
 
 package appeng.api.exceptions;
 
-
 import appeng.api.networking.IGridNode;
-
 
 /**
  * Exception occurred because of an already existing connection between the two {@link IGridNode}s
@@ -37,20 +35,16 @@ import appeng.api.networking.IGridNode;
  * @version rv3
  * @since rv3
  */
-public class ExistingConnectionException extends FailedConnection
-{
+public class ExistingConnectionException extends FailedConnection {
 
-	private static final long serialVersionUID = 2975450379720353182L;
-	private static final String DEFAULT_MESSAGE = "Connection between both nodes already exists.";
+    private static final long serialVersionUID = 2975450379720353182L;
+    private static final String DEFAULT_MESSAGE = "Connection between both nodes already exists.";
 
-	public ExistingConnectionException()
-	{
-		super( DEFAULT_MESSAGE );
-	}
+    public ExistingConnectionException() {
+        super(DEFAULT_MESSAGE);
+    }
 
-	public ExistingConnectionException( String message )
-	{
-		super( message );
-	}
-
+    public ExistingConnectionException(String message) {
+        super(message);
+    }
 }

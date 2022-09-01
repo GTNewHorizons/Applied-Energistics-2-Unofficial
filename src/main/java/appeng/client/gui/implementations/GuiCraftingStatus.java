@@ -19,9 +19,7 @@
 /**
  *
  */
-
 package appeng.client.gui.implementations;
-
 
 import appeng.api.AEApi;
 import appeng.api.definitions.IDefinitions;
@@ -31,7 +29,6 @@ import appeng.client.gui.widgets.GuiCraftingCPUTable;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.ICraftingCPUTableHolder;
 import appeng.container.implementations.ContainerCraftingStatus;
-import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
@@ -46,195 +43,173 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Mouse;
 
-import java.util.List;
-
-
-public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTableHolder
-{
-	private final ContainerCraftingStatus status;
-	private GuiButton selectCPU;
+public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTableHolder {
+    private final ContainerCraftingStatus status;
+    private GuiButton selectCPU;
     private final GuiCraftingCPUTable cpuTable;
 
-	private GuiTabButton originalGuiBtn;
-	private GuiBridge originalGui;
-	private ItemStack myIcon = null;
+    private GuiTabButton originalGuiBtn;
+    private GuiBridge originalGui;
+    private ItemStack myIcon = null;
 
-	public GuiCraftingStatus( final InventoryPlayer inventoryPlayer, final ITerminalHost te )
-	{
-		super( new ContainerCraftingStatus( inventoryPlayer, te ) );
+    public GuiCraftingStatus(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
+        super(new ContainerCraftingStatus(inventoryPlayer, te));
 
-		this.status = (ContainerCraftingStatus) this.inventorySlots;
-		final Object target = this.status.getTarget();
-		final IDefinitions definitions = AEApi.instance().definitions();
-		final IParts parts = definitions.parts();
+        this.status = (ContainerCraftingStatus) this.inventorySlots;
+        final Object target = this.status.getTarget();
+        final IDefinitions definitions = AEApi.instance().definitions();
+        final IParts parts = definitions.parts();
 
-        cpuTable = new GuiCraftingCPUTable(this, this.status.getCPUTable() );
+        cpuTable = new GuiCraftingCPUTable(this, this.status.getCPUTable());
 
-		if( target instanceof WirelessTerminalGuiObject )
-		{
-			for( final ItemStack wirelessTerminalStack : definitions.items().wirelessTerminal().maybeStack( 1 ).asSet() )
-			{
-				this.myIcon = wirelessTerminalStack;
-			}
+        if (target instanceof WirelessTerminalGuiObject) {
+            for (final ItemStack wirelessTerminalStack :
+                    definitions.items().wirelessTerminal().maybeStack(1).asSet()) {
+                this.myIcon = wirelessTerminalStack;
+            }
 
-			this.originalGui = GuiBridge.GUI_WIRELESS_TERM;
-		}
+            this.originalGui = GuiBridge.GUI_WIRELESS_TERM;
+        }
 
-		if( target instanceof PartTerminal )
-		{
-			for( final ItemStack stack : parts.terminal().maybeStack( 1 ).asSet() )
-			{
-				this.myIcon = stack;
-			}
-			this.originalGui = GuiBridge.GUI_ME;
-		}
+        if (target instanceof PartTerminal) {
+            for (final ItemStack stack : parts.terminal().maybeStack(1).asSet()) {
+                this.myIcon = stack;
+            }
+            this.originalGui = GuiBridge.GUI_ME;
+        }
 
-		if( target instanceof PartCraftingTerminal )
-		{
-			for( final ItemStack stack : parts.craftingTerminal().maybeStack( 1 ).asSet() )
-			{
-				this.myIcon = stack;
-			}
-			this.originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
-		}
+        if (target instanceof PartCraftingTerminal) {
+            for (final ItemStack stack : parts.craftingTerminal().maybeStack(1).asSet()) {
+                this.myIcon = stack;
+            }
+            this.originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
+        }
 
-		if( target instanceof PartPatternTerminal )
-		{
-			for( final ItemStack stack : parts.patternTerminal().maybeStack( 1 ).asSet() )
-			{
-				this.myIcon = stack;
-			}
-			this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-		}
-		if( target instanceof PartPatternTerminalEx)
-		{
-			for( final ItemStack stack : parts.patternTerminalEx().maybeStack( 1 ).asSet() )
-			{
-				this.myIcon = stack;
-			}
-			this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-		}
-	}
+        if (target instanceof PartPatternTerminal) {
+            for (final ItemStack stack : parts.patternTerminal().maybeStack(1).asSet()) {
+                this.myIcon = stack;
+            }
+            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
+        }
+        if (target instanceof PartPatternTerminalEx) {
+            for (final ItemStack stack : parts.patternTerminalEx().maybeStack(1).asSet()) {
+                this.myIcon = stack;
+            }
+            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
+        }
+    }
 
     @Override
-    public GuiCraftingCPUTable getCPUTable()
-    {
+    public GuiCraftingCPUTable getCPUTable() {
         return cpuTable;
     }
 
     @Override
-	protected void actionPerformed( final GuiButton btn )
-	{
-		super.actionPerformed( btn );
+    protected void actionPerformed(final GuiButton btn) {
+        super.actionPerformed(btn);
 
-		final boolean backwards = Mouse.isButtonDown( 1 );
+        final boolean backwards = Mouse.isButtonDown(1);
 
-        if( btn == this.selectCPU )
-        {
+        if (btn == this.selectCPU) {
             cpuTable.cycleCPU(backwards);
         }
 
-		if( btn == this.originalGuiBtn )
-		{
-			NetworkHandler.instance.sendToServer( new PacketSwitchGuis( this.originalGui ) );
-		}
-	}
-
-	@Override
-	public void initGui()
-	{
-		super.initGui();
-
-		this.selectCPU = new GuiButton( 0, this.guiLeft + 8, this.guiTop + this.ySize - 25, 150, 20, GuiText.CraftingCPU.getLocal() + ": " + GuiText.NoCraftingCPUs );
-		this.buttonList.add( this.selectCPU );
-
-		if( this.myIcon != null )
-		{
-			this.buttonList.add( this.originalGuiBtn = new GuiTabButton( this.guiLeft + 213, this.guiTop - 4, this.myIcon, this.myIcon.getDisplayName(), itemRender ) );
-			this.originalGuiBtn.setHideEdge( 13 );
-		}
-	}
-
-	@Override
-	public void drawScreen( final int mouseX, final int mouseY, final float btn )
-	{
-        this.cpuTable.drawScreen(  );
-		this.updateCPUButtonText();
-		super.drawScreen( mouseX, mouseY, btn );
-	}
-
-    @Override
-    public void drawFG( int offsetX, int offsetY, int mouseX, int mouseY )
-    {
-        super.drawFG( offsetX, offsetY, mouseX, mouseY );
-        this.cpuTable.drawFG( offsetX, offsetY, mouseX, mouseY, guiLeft, guiTop );
+        if (btn == this.originalGuiBtn) {
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(this.originalGui));
+        }
     }
 
     @Override
-    public void drawBG( int offsetX, int offsetY, int mouseX, int mouseY )
-    {
-        super.drawBG( offsetX, offsetY, mouseX, mouseY );
-        this.cpuTable.drawBG( offsetX, offsetY );
+    public void initGui() {
+        super.initGui();
+
+        this.selectCPU = new GuiButton(
+                0,
+                this.guiLeft + 8,
+                this.guiTop + this.ySize - 25,
+                150,
+                20,
+                GuiText.CraftingCPU.getLocal() + ": " + GuiText.NoCraftingCPUs);
+        this.buttonList.add(this.selectCPU);
+
+        if (this.myIcon != null) {
+            this.buttonList.add(
+                    this.originalGuiBtn = new GuiTabButton(
+                            this.guiLeft + 213,
+                            this.guiTop - 4,
+                            this.myIcon,
+                            this.myIcon.getDisplayName(),
+                            itemRender));
+            this.originalGuiBtn.setHideEdge(13);
+        }
     }
 
     @Override
-    protected void mouseClicked( int xCoord, int yCoord, int btn )
-    {
-        super.mouseClicked( xCoord, yCoord, btn );
-        cpuTable.mouseClicked( xCoord - guiLeft, yCoord - guiTop, btn );
+    public void drawScreen(final int mouseX, final int mouseY, final float btn) {
+        this.cpuTable.drawScreen();
+        this.updateCPUButtonText();
+        super.drawScreen(mouseX, mouseY, btn);
     }
 
     @Override
-    protected void mouseClickMove( int x, int y, int c, long d )
-    {
-        super.mouseClickMove( x, y, c, d );
-        cpuTable.mouseClickMove( x - guiLeft, y - guiTop );
+    public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
+        super.drawFG(offsetX, offsetY, mouseX, mouseY);
+        this.cpuTable.drawFG(offsetX, offsetY, mouseX, mouseY, guiLeft, guiTop);
     }
 
     @Override
-    public void handleMouseInput()
-    {
-        if ( cpuTable.handleMouseInput(guiLeft, guiTop) ) {
+    public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {
+        super.drawBG(offsetX, offsetY, mouseX, mouseY);
+        this.cpuTable.drawBG(offsetX, offsetY);
+    }
+
+    @Override
+    protected void mouseClicked(int xCoord, int yCoord, int btn) {
+        super.mouseClicked(xCoord, yCoord, btn);
+        cpuTable.mouseClicked(xCoord - guiLeft, yCoord - guiTop, btn);
+    }
+
+    @Override
+    protected void mouseClickMove(int x, int y, int c, long d) {
+        super.mouseClickMove(x, y, c, d);
+        cpuTable.mouseClickMove(x - guiLeft, y - guiTop);
+    }
+
+    @Override
+    public void handleMouseInput() {
+        if (cpuTable.handleMouseInput(guiLeft, guiTop)) {
             return;
         }
         super.handleMouseInput();
     }
 
-    public boolean hideItemPanelSlot( int x, int y, int w, int h )
-    {
-        return cpuTable.hideItemPanelSlot(x - guiLeft, y - guiTop, w, h );
+    public boolean hideItemPanelSlot(int x, int y, int w, int h) {
+        return cpuTable.hideItemPanelSlot(x - guiLeft, y - guiTop, w, h);
     }
 
-    private void updateCPUButtonText()
-	{
-		String btnTextText = GuiText.NoCraftingJobs.getLocal();
+    private void updateCPUButtonText() {
+        String btnTextText = GuiText.NoCraftingJobs.getLocal();
 
         final int selectedSerial = this.cpuTable.getContainer().selectedCpuSerial;
-		if( selectedSerial >= 0 )
-		{
+        if (selectedSerial >= 0) {
             String selectedCPUName = cpuTable.getSelectedCPUName();
-			if( selectedCPUName != null && selectedCPUName.length() > 0 )
-			{
-				final String name = selectedCPUName.substring( 0, Math.min( 20, selectedCPUName.length() ) );
-				btnTextText = GuiText.CPUs.getLocal() + ": " + name;
-			}
-			else
-			{
-				btnTextText = GuiText.CPUs.getLocal() + ": #" + selectedSerial;
-			}
-		}
+            if (selectedCPUName != null && selectedCPUName.length() > 0) {
+                final String name = selectedCPUName.substring(0, Math.min(20, selectedCPUName.length()));
+                btnTextText = GuiText.CPUs.getLocal() + ": " + name;
+            } else {
+                btnTextText = GuiText.CPUs.getLocal() + ": #" + selectedSerial;
+            }
+        }
 
-		if( this.status.getCPUs().isEmpty() )
-		{
-			btnTextText = GuiText.NoCraftingJobs.getLocal();
-		}
+        if (this.status.getCPUs().isEmpty()) {
+            btnTextText = GuiText.NoCraftingJobs.getLocal();
+        }
 
-		this.selectCPU.displayString = btnTextText;
-	}
+        this.selectCPU.displayString = btnTextText;
+    }
 
-	@Override
-	protected String getGuiDisplayName( final String in )
-	{
-		return in; // the cup name is on the button
-	}
+    @Override
+    protected String getGuiDisplayName(final String in) {
+        return in; // the cup name is on the button
+    }
 }

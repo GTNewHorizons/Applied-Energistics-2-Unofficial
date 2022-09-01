@@ -18,7 +18,6 @@
 
 package appeng.block.misc;
 
-
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RendererSecurity;
 import appeng.core.features.AEFeature;
@@ -27,51 +26,51 @@ import appeng.tile.misc.TileSecurity;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.EnumSet;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
+public class BlockSecurity extends AEBaseTileBlock {
 
+    public BlockSecurity() {
+        super(Material.iron);
 
-public class BlockSecurity extends AEBaseTileBlock
-{
+        this.setTileEntity(TileSecurity.class);
+        this.setFeature(EnumSet.of(AEFeature.Security));
+    }
 
-	public BlockSecurity()
-	{
-		super( Material.iron );
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RendererSecurity getRenderer() {
+        return new RendererSecurity();
+    }
 
-		this.setTileEntity( TileSecurity.class );
-		this.setFeature( EnumSet.of( AEFeature.Security ) );
-	}
+    @Override
+    public boolean onActivated(
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final EntityPlayer p,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (p.isSneaking()) {
+            return false;
+        }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected RendererSecurity getRenderer()
-	{
-		return new RendererSecurity();
-	}
+        final TileSecurity tg = this.getTileEntity(w, x, y, z);
+        if (tg != null) {
+            if (Platform.isClient()) {
+                return true;
+            }
 
-	@Override
-	public boolean onActivated( final World w, final int x, final int y, final int z, final EntityPlayer p, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( p.isSneaking() )
-		{
-			return false;
-		}
-
-		final TileSecurity tg = this.getTileEntity( w, x, y, z );
-		if( tg != null )
-		{
-			if( Platform.isClient() )
-			{
-				return true;
-			}
-
-			Platform.openGUI( p, tg, ForgeDirection.getOrientation( side ), GuiBridge.GUI_SECURITY );
-			return true;
-		}
-		return false;
-	}
+            Platform.openGUI(p, tg, ForgeDirection.getOrientation(side), GuiBridge.GUI_SECURITY);
+            return true;
+        }
+        return false;
+    }
 }

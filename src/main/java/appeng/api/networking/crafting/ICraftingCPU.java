@@ -23,65 +23,57 @@
 
 package appeng.api.networking.crafting;
 
-
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.util.WorldCoord;
-
 import javax.annotation.Nullable;
 
-
-public interface ICraftingCPU extends IBaseMonitor<IAEItemStack>
-{
+public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
 
     /**
-	 * @return true if the CPU currently has a job.
-	 */
-	boolean isBusy();
+     * @return true if the CPU currently has a job.
+     */
+    boolean isBusy();
 
-	/**
-	 * @return the action source for the CPU.
-	 */
-	BaseActionSource getActionSource();
+    /**
+     * @return the action source for the CPU.
+     */
+    BaseActionSource getActionSource();
 
-	/**
-	 * @return the available storage in bytes
-	 */
-	long getAvailableStorage();
+    /**
+     * @return the available storage in bytes
+     */
+    long getAvailableStorage();
 
-	/**
-	 * @return the number of co-processors in the CPU.
-	 */
-	int getCoProcessors();
+    /**
+     * @return the number of co-processors in the CPU.
+     */
+    int getCoProcessors();
 
-	/**
-	 * @return an empty string or the name of the cpu.
-	 */
-	String getName();
+    /**
+     * @return an empty string or the name of the cpu.
+     */
+    String getName();
 
     /**
      * @return final output of the current crafting operation, or null if not crafting
      */
     @Nullable
-    default IAEItemStack getFinalOutput()
-    {
+    default IAEItemStack getFinalOutput() {
         return null;
     }
 
     /**
      * @return remaining count of items (or other units of processing) for the current crafting job
      */
-    default long getRemainingItemCount()
-    {
+    default long getRemainingItemCount() {
         return 0;
     }
 
     /**
      * @return total count of items (or other units of processing) for the current crafting job
      */
-    default long getStartItemCount()
-    {
+    default long getStartItemCount() {
         return 0;
     }
 }

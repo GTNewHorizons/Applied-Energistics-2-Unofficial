@@ -18,7 +18,6 @@
 
 package appeng.integration.modules;
 
-
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
@@ -27,33 +26,25 @@ import mods.railcraft.api.crafting.IRockCrusherRecipe;
 import mods.railcraft.api.crafting.RailcraftCraftingManager;
 import net.minecraft.item.ItemStack;
 
+public class RC implements IRC, IIntegrationModule {
+    @Reflected
+    public static RC instance;
 
-public class RC implements IRC, IIntegrationModule
-{
-	@Reflected
-	public static RC instance;
+    @Reflected
+    public RC() {
+        IntegrationHelper.testClassExistence(this, mods.railcraft.api.crafting.RailcraftCraftingManager.class);
+        IntegrationHelper.testClassExistence(this, mods.railcraft.api.crafting.IRockCrusherRecipe.class);
+    }
 
-	@Reflected
-	public RC()
-	{
-		IntegrationHelper.testClassExistence( this, mods.railcraft.api.crafting.RailcraftCraftingManager.class );
-		IntegrationHelper.testClassExistence( this, mods.railcraft.api.crafting.IRockCrusherRecipe.class );
-	}
+    @Override
+    public void rockCrusher(final ItemStack input, final ItemStack output) {
+        final IRockCrusherRecipe re = RailcraftCraftingManager.rockCrusher.createNewRecipe(input, true, true);
+        re.addOutput(output, 1.0f);
+    }
 
-	@Override
-	public void rockCrusher( final ItemStack input, final ItemStack output )
-	{
-		final IRockCrusherRecipe re = RailcraftCraftingManager.rockCrusher.createNewRecipe( input, true, true );
-		re.addOutput( output, 1.0f );
-	}
+    @Override
+    public void init() {}
 
-	@Override
-	public void init()
-	{
-	}
-
-	@Override
-	public void postInit()
-	{
-	}
+    @Override
+    public void postInit() {}
 }

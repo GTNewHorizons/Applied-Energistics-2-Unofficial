@@ -23,98 +23,95 @@
 
 package appeng.api.definitions;
 
-
 import appeng.api.util.AEColoredItemDefinition;
-
 
 /**
  * A list of all parts in AE
  */
-public interface IParts
-{
-	AEColoredItemDefinition cableSmart();
+public interface IParts {
+    AEColoredItemDefinition cableSmart();
 
-	AEColoredItemDefinition cableCovered();
+    AEColoredItemDefinition cableCovered();
 
-	AEColoredItemDefinition cableGlass();
+    AEColoredItemDefinition cableGlass();
 
-	AEColoredItemDefinition cableDense();
+    AEColoredItemDefinition cableDense();
 
-	AEColoredItemDefinition cableDenseCovered();
+    AEColoredItemDefinition cableDenseCovered();
 
-	AEColoredItemDefinition cableUltraDenseCovered();
+    AEColoredItemDefinition cableUltraDenseCovered();
 
-	AEColoredItemDefinition cableUltraDenseSmart();
+    AEColoredItemDefinition cableUltraDenseSmart();
 
-	AEColoredItemDefinition lumenCableSmart();
+    AEColoredItemDefinition lumenCableSmart();
 
-	AEColoredItemDefinition lumenCableCovered();
+    AEColoredItemDefinition lumenCableCovered();
 
-	AEColoredItemDefinition lumenCableGlass();
+    AEColoredItemDefinition lumenCableGlass();
 
-	AEColoredItemDefinition lumenCableDense();
+    AEColoredItemDefinition lumenCableDense();
 
-	IItemDefinition quartzFiber();
+    IItemDefinition quartzFiber();
 
-	IItemDefinition toggleBus();
+    IItemDefinition toggleBus();
 
-	IItemDefinition invertedToggleBus();
+    IItemDefinition invertedToggleBus();
 
-	IItemDefinition storageBus();
+    IItemDefinition storageBus();
 
-	IItemDefinition importBus();
+    IItemDefinition importBus();
 
-	IItemDefinition exportBus();
+    IItemDefinition exportBus();
 
-	IItemDefinition iface();
+    IItemDefinition iface();
 
-	IItemDefinition levelEmitter();
+    IItemDefinition levelEmitter();
 
-	IItemDefinition annihilationPlane();
+    IItemDefinition annihilationPlane();
 
-	IItemDefinition identityAnnihilationPlane();
+    IItemDefinition identityAnnihilationPlane();
 
-	IItemDefinition formationPlane();
+    IItemDefinition formationPlane();
 
-	IItemDefinition p2PTunnelME();
+    IItemDefinition p2PTunnelME();
 
-	IItemDefinition p2PTunnelRedstone();
+    IItemDefinition p2PTunnelRedstone();
 
-	IItemDefinition p2PTunnelItems();
+    IItemDefinition p2PTunnelItems();
 
-	IItemDefinition p2PTunnelLiquids();
+    IItemDefinition p2PTunnelLiquids();
 
-	IItemDefinition p2PTunnelEU();
+    IItemDefinition p2PTunnelEU();
 
-	IItemDefinition p2PTunnelRF();
+    IItemDefinition p2PTunnelRF();
 
-	IItemDefinition p2PTunnelLight();
+    IItemDefinition p2PTunnelLight();
 
-	IItemDefinition p2PTunnelOpenComputers();
+    IItemDefinition p2PTunnelOpenComputers();
 
-	IItemDefinition p2PTunnelPneumaticCraft();
+    IItemDefinition p2PTunnelPneumaticCraft();
 
-	IItemDefinition cableAnchor();
+    IItemDefinition cableAnchor();
 
-	IItemDefinition monitor();
+    IItemDefinition monitor();
 
-	IItemDefinition semiDarkMonitor();
+    IItemDefinition semiDarkMonitor();
 
-	IItemDefinition darkMonitor();
+    IItemDefinition darkMonitor();
 
-	IItemDefinition interfaceTerminal();
+    IItemDefinition interfaceTerminal();
 
-	IItemDefinition patternTerminal();
+    IItemDefinition patternTerminal();
 
-	IItemDefinition craftingTerminal();
+    IItemDefinition craftingTerminal();
 
-	IItemDefinition terminal();
+    IItemDefinition terminal();
 
-	IItemDefinition storageMonitor();
+    IItemDefinition storageMonitor();
 
-	IItemDefinition conversionMonitor();
+    IItemDefinition conversionMonitor();
 
-	IItemDefinition patternTerminalEx();
+    IItemDefinition patternTerminalEx();
 
-	IItemDefinition p2PTunnelGregtech();
+    IItemDefinition p2PTunnelGregtech();
 }

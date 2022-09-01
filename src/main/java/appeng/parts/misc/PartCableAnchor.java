@@ -18,12 +18,14 @@
 
 package appeng.parts.misc;
 
-
 import appeng.api.networking.IGridNode;
 import appeng.api.parts.*;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
+import java.io.IOException;
+import java.util.List;
+import java.util.Random;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -36,234 +38,170 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Random;
+public class PartCableAnchor implements IPart {
 
+    private ISimplifiedBundle renderCache = null;
+    private ItemStack is = null;
+    private IPartHost host = null;
+    private ForgeDirection mySide = ForgeDirection.UP;
 
-public class PartCableAnchor implements IPart
-{
+    public PartCableAnchor(final ItemStack is) {
+        this.is = is;
+    }
 
-	private ISimplifiedBundle renderCache = null;
-	private ItemStack is = null;
-	private IPartHost host = null;
-	private ForgeDirection mySide = ForgeDirection.UP;
+    @Override
+    public void getBoxes(final IPartCollisionHelper bch) {
+        if (this.host != null && this.host.getFacadeContainer().getFacade(this.mySide) != null) {
+            bch.addBox(7, 7, 10, 9, 9, 14);
+        } else {
+            bch.addBox(7, 7, 10, 9, 9, 16);
+        }
+    }
 
-	public PartCableAnchor( final ItemStack is )
-	{
-		this.is = is;
-	}
+    @Override
+    public ItemStack getItemStack(final PartItemStack wrenched) {
+        return this.is;
+    }
 
-	@Override
-	public void getBoxes( final IPartCollisionHelper bch )
-	{
-		if( this.host != null && this.host.getFacadeContainer().getFacade( this.mySide ) != null )
-		{
-			bch.addBox( 7, 7, 10, 9, 9, 14 );
-		}
-		else
-		{
-			bch.addBox( 7, 7, 10, 9, 9, 16 );
-		}
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void renderInventory(final IPartRenderHelper instance, final RenderBlocks renderer) {
+        instance.setTexture(this.is.getIconIndex());
+        instance.setBounds(7, 7, 4, 9, 9, 14);
+        instance.renderInventoryBox(renderer);
+        instance.setTexture(null);
+    }
 
-	@Override
-	public ItemStack getItemStack( final PartItemStack wrenched )
-	{
-		return this.is;
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void renderStatic(
+            final int x, final int y, final int z, final IPartRenderHelper rh, final RenderBlocks renderer) {
+        this.renderCache = rh.useSimplifiedRendering(x, y, z, this, this.renderCache);
+        final IIcon myIcon = this.is.getIconIndex();
+        rh.setTexture(myIcon);
+        if (this.host != null && this.host.getFacadeContainer().getFacade(this.mySide) != null) {
+            rh.setBounds(7, 7, 10, 9, 9, 14);
+        } else {
+            rh.setBounds(7, 7, 10, 9, 9, 16);
+        }
+        rh.renderBlock(x, y, z, renderer);
+        rh.setTexture(null);
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void renderInventory( final IPartRenderHelper instance, final RenderBlocks renderer )
-	{
-		instance.setTexture( this.is.getIconIndex() );
-		instance.setBounds( 7, 7, 4, 9, 9, 14 );
-		instance.renderInventoryBox( renderer );
-		instance.setTexture( null );
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void renderDynamic(
+            final double x, final double y, final double z, final IPartRenderHelper rh, final RenderBlocks renderer) {}
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void renderStatic( final int x, final int y, final int z, final IPartRenderHelper rh, final RenderBlocks renderer )
-	{
-		this.renderCache = rh.useSimplifiedRendering( x, y, z, this, this.renderCache );
-		final IIcon myIcon = this.is.getIconIndex();
-		rh.setTexture( myIcon );
-		if( this.host != null && this.host.getFacadeContainer().getFacade( this.mySide ) != null )
-		{
-			rh.setBounds( 7, 7, 10, 9, 9, 14 );
-		}
-		else
-		{
-			rh.setBounds( 7, 7, 10, 9, 9, 16 );
-		}
-		rh.renderBlock( x, y, z, renderer );
-		rh.setTexture( null );
-	}
+    @Override
+    public IIcon getBreakingTexture() {
+        return null;
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void renderDynamic( final double x, final double y, final double z, final IPartRenderHelper rh, final RenderBlocks renderer )
-	{
+    @Override
+    public boolean requireDynamicRender() {
+        return false;
+    }
 
-	}
+    @Override
+    public boolean isSolid() {
+        return false;
+    }
 
-	@Override
-	public IIcon getBreakingTexture()
-	{
-		return null;
-	}
+    @Override
+    public boolean canConnectRedstone() {
+        return false;
+    }
 
-	@Override
-	public boolean requireDynamicRender()
-	{
-		return false;
-	}
+    @Override
+    public void writeToNBT(final NBTTagCompound data) {}
 
-	@Override
-	public boolean isSolid()
-	{
-		return false;
-	}
+    @Override
+    public void readFromNBT(final NBTTagCompound data) {}
 
-	@Override
-	public boolean canConnectRedstone()
-	{
-		return false;
-	}
+    @Override
+    public int getLightLevel() {
+        return 0;
+    }
 
-	@Override
-	public void writeToNBT( final NBTTagCompound data )
-	{
+    @Override
+    public boolean isLadder(final EntityLivingBase entity) {
+        return this.mySide.offsetY == 0 && (entity.isCollidedHorizontally || !entity.onGround);
+    }
 
-	}
+    @Override
+    public void onNeighborChanged() {}
 
-	@Override
-	public void readFromNBT( final NBTTagCompound data )
-	{
+    @Override
+    public int isProvidingStrongPower() {
+        return 0;
+    }
 
-	}
+    @Override
+    public int isProvidingWeakPower() {
+        return 0;
+    }
 
-	@Override
-	public int getLightLevel()
-	{
-		return 0;
-	}
+    @Override
+    public void writeToStream(final ByteBuf data) throws IOException {}
 
-	@Override
-	public boolean isLadder( final EntityLivingBase entity )
-	{
-		return this.mySide.offsetY == 0 && ( entity.isCollidedHorizontally || !entity.onGround );
-	}
+    @Override
+    public boolean readFromStream(final ByteBuf data) throws IOException {
+        return false;
+    }
 
-	@Override
-	public void onNeighborChanged()
-	{
+    @Override
+    public IGridNode getGridNode() {
+        return null;
+    }
 
-	}
+    @Override
+    public void onEntityCollision(final Entity entity) {}
 
-	@Override
-	public int isProvidingStrongPower()
-	{
-		return 0;
-	}
+    @Override
+    public void removeFromWorld() {}
 
-	@Override
-	public int isProvidingWeakPower()
-	{
-		return 0;
-	}
+    @Override
+    public void addToWorld() {}
 
-	@Override
-	public void writeToStream( final ByteBuf data ) throws IOException
-	{
+    @Override
+    public IGridNode getExternalFacingNode() {
+        return null;
+    }
 
-	}
+    @Override
+    public void setPartHostInfo(final ForgeDirection side, final IPartHost host, final TileEntity tile) {
+        this.host = host;
+        this.mySide = side;
+    }
 
-	@Override
-	public boolean readFromStream( final ByteBuf data ) throws IOException
-	{
-		return false;
-	}
+    @Override
+    public boolean onActivate(final EntityPlayer player, final Vec3 pos) {
+        return false;
+    }
 
-	@Override
-	public IGridNode getGridNode()
-	{
-		return null;
-	}
+    @Override
+    public boolean onShiftActivate(final EntityPlayer player, final Vec3 pos) {
+        return false;
+    }
 
-	@Override
-	public void onEntityCollision( final Entity entity )
-	{
+    @Override
+    public void getDrops(final List<ItemStack> drops, final boolean wrenched) {}
 
-	}
+    @Override
+    public int cableConnectionRenderTo() {
+        return 0;
+    }
 
-	@Override
-	public void removeFromWorld()
-	{
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void randomDisplayTick(final World world, final int x, final int y, final int z, final Random r) {}
 
-	}
+    @Override
+    public void onPlacement(final EntityPlayer player, final ItemStack held, final ForgeDirection side) {}
 
-	@Override
-	public void addToWorld()
-	{
-
-	}
-
-	@Override
-	public IGridNode getExternalFacingNode()
-	{
-		return null;
-	}
-
-	@Override
-	public void setPartHostInfo( final ForgeDirection side, final IPartHost host, final TileEntity tile )
-	{
-		this.host = host;
-		this.mySide = side;
-	}
-
-	@Override
-	public boolean onActivate( final EntityPlayer player, final Vec3 pos )
-	{
-		return false;
-	}
-
-	@Override
-	public boolean onShiftActivate( final EntityPlayer player, final Vec3 pos )
-	{
-		return false;
-	}
-
-	@Override
-	public void getDrops( final List<ItemStack> drops, final boolean wrenched )
-	{
-
-	}
-
-	@Override
-	public int cableConnectionRenderTo()
-	{
-		return 0;
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void randomDisplayTick( final World world, final int x, final int y, final int z, final Random r )
-	{
-
-	}
-
-	@Override
-	public void onPlacement( final EntityPlayer player, final ItemStack held, final ForgeDirection side )
-	{
-
-	}
-
-	@Override
-	public boolean canBePlacedOn( final BusSupport what )
-	{
-		return what == BusSupport.CABLE || what == BusSupport.DENSE_CABLE;
-	}
+    @Override
+    public boolean canBePlacedOn(final BusSupport what) {
+        return what == BusSupport.CABLE || what == BusSupport.DENSE_CABLE;
+    }
 }

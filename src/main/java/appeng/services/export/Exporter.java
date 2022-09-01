@@ -18,7 +18,6 @@
 
 package appeng.services.export;
 
-
 /**
  * General purpose interface to define an export operation with side effects
  *
@@ -26,10 +25,9 @@ package appeng.services.export;
  * @version rv3 - 19.08.2015
  * @since rv3 19.08.2015
  */
-interface Exporter
-{
-	/**
-	 * Will export something defined by the Exporter with side effects
-	 */
-	void export();
+interface Exporter {
+    /**
+     * Will export something defined by the Exporter with side effects
+     */
+    void export();
 }

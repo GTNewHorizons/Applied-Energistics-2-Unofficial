@@ -18,18 +18,15 @@
 
 package appeng.integration.modules.waila.tile;
 
-
 import appeng.api.storage.data.IAEItemStack;
 import appeng.core.localization.WailaText;
 import appeng.integration.modules.waila.BaseWailaDataProvider;
 import appeng.tile.crafting.TileCraftingMonitorTile;
+import java.util.List;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-
-import java.util.List;
-
 
 /**
  * Crafting-monitor provider for WAILA
@@ -38,34 +35,34 @@ import java.util.List;
  * @version rv2
  * @since rv2
  */
-public final class CraftingMonitorWailaDataProvider extends BaseWailaDataProvider
-{
-	/**
-	 * Displays the item currently crafted by the CPU cluster
-	 *
-	 * @param itemStack      stack of crafting monitor
-	 * @param currentToolTip unmodified tooltip
-	 * @param accessor       information wrapper
-	 * @param config         config option
-	 * @return modified tooltip
-	 */
-	@Override
-	public List<String> getWailaBody( final ItemStack itemStack, final List<String> currentToolTip, final IWailaDataAccessor accessor, final IWailaConfigHandler config )
-	{
-		final TileEntity te = accessor.getTileEntity();
-		if( te instanceof TileCraftingMonitorTile )
-		{
-			final TileCraftingMonitorTile monitor = (TileCraftingMonitorTile) te;
-			final IAEItemStack displayStack = monitor.getJobProgress();
+public final class CraftingMonitorWailaDataProvider extends BaseWailaDataProvider {
+    /**
+     * Displays the item currently crafted by the CPU cluster
+     *
+     * @param itemStack      stack of crafting monitor
+     * @param currentToolTip unmodified tooltip
+     * @param accessor       information wrapper
+     * @param config         config option
+     * @return modified tooltip
+     */
+    @Override
+    public List<String> getWailaBody(
+            final ItemStack itemStack,
+            final List<String> currentToolTip,
+            final IWailaDataAccessor accessor,
+            final IWailaConfigHandler config) {
+        final TileEntity te = accessor.getTileEntity();
+        if (te instanceof TileCraftingMonitorTile) {
+            final TileCraftingMonitorTile monitor = (TileCraftingMonitorTile) te;
+            final IAEItemStack displayStack = monitor.getJobProgress();
 
-			if( displayStack != null )
-			{
-				final String currentCrafting = displayStack.getItemStack().getDisplayName();
+            if (displayStack != null) {
+                final String currentCrafting = displayStack.getItemStack().getDisplayName();
 
-				currentToolTip.add( WailaText.Crafting.getLocal() + ": " + currentCrafting );
-			}
-		}
+                currentToolTip.add(WailaText.Crafting.getLocal() + ": " + currentCrafting);
+            }
+        }
 
-		return currentToolTip;
-	}
+        return currentToolTip;
+    }
 }

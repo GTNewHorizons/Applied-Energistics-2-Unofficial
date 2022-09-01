@@ -18,7 +18,6 @@
 
 package appeng.block.misc;
 
-
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderBlockInscriber;
 import appeng.core.features.AEFeature;
@@ -27,51 +26,51 @@ import appeng.tile.misc.TileInscriber;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.EnumSet;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
+public class BlockInscriber extends AEBaseTileBlock {
 
+    public BlockInscriber() {
+        super(Material.iron);
 
-public class BlockInscriber extends AEBaseTileBlock
-{
+        this.setTileEntity(TileInscriber.class);
+        this.setLightOpacity(2);
+        this.isFullSize = this.isOpaque = false;
+        this.setFeature(EnumSet.of(AEFeature.Inscriber));
+    }
 
-	public BlockInscriber()
-	{
-		super( Material.iron );
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RenderBlockInscriber getRenderer() {
+        return new RenderBlockInscriber();
+    }
 
-		this.setTileEntity( TileInscriber.class );
-		this.setLightOpacity( 2 );
-		this.isFullSize = this.isOpaque = false;
-		this.setFeature( EnumSet.of( AEFeature.Inscriber ) );
-	}
+    @Override
+    public boolean onActivated(
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final EntityPlayer p,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (p.isSneaking()) {
+            return false;
+        }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected RenderBlockInscriber getRenderer()
-	{
-		return new RenderBlockInscriber();
-	}
-
-	@Override
-	public boolean onActivated( final World w, final int x, final int y, final int z, final EntityPlayer p, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( p.isSneaking() )
-		{
-			return false;
-		}
-
-		final TileInscriber tg = this.getTileEntity( w, x, y, z );
-		if( tg != null )
-		{
-			if( Platform.isServer() )
-			{
-				Platform.openGUI( p, tg, ForgeDirection.getOrientation( side ), GuiBridge.GUI_INSCRIBER );
-			}
-			return true;
-		}
-		return false;
-	}
+        final TileInscriber tg = this.getTileEntity(w, x, y, z);
+        if (tg != null) {
+            if (Platform.isServer()) {
+                Platform.openGUI(p, tg, ForgeDirection.getOrientation(side), GuiBridge.GUI_INSCRIBER);
+            }
+            return true;
+        }
+        return false;
+    }
 }

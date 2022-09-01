@@ -18,27 +18,22 @@
 
 package appeng.items.contents;
 
-
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
 import net.minecraft.item.ItemStack;
 
+public class WirelessTerminalViewCells extends AppEngInternalInventory {
 
-public class WirelessTerminalViewCells extends AppEngInternalInventory
-{
+    private final ItemStack is;
 
-	private final ItemStack is;
+    public WirelessTerminalViewCells(final ItemStack is) {
+        super(null, 5);
+        this.is = is;
+        this.readFromNBT(Platform.openNbtData(is), "viewCell");
+    }
 
-	public WirelessTerminalViewCells( final ItemStack is )
-	{
-		super( null, 5 );
-		this.is = is;
-		this.readFromNBT( Platform.openNbtData( is ), "viewCell" );
-	}
-
-	@Override
-	public void markDirty()
-	{
-		this.writeToNBT( Platform.openNbtData( is ), "viewCell" );
-	}
+    @Override
+    public void markDirty() {
+        this.writeToNBT(Platform.openNbtData(is), "viewCell");
+    }
 }

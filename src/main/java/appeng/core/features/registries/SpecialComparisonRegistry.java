@@ -18,44 +18,35 @@
 
 package appeng.core.features.registries;
 
-
 import appeng.api.features.IItemComparison;
 import appeng.api.features.IItemComparisonProvider;
 import appeng.api.features.ISpecialComparisonRegistry;
-import net.minecraft.item.ItemStack;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.item.ItemStack;
 
+public class SpecialComparisonRegistry implements ISpecialComparisonRegistry {
 
-public class SpecialComparisonRegistry implements ISpecialComparisonRegistry
-{
+    private final List<IItemComparisonProvider> CompRegistry;
 
-	private final List<IItemComparisonProvider> CompRegistry;
+    public SpecialComparisonRegistry() {
+        this.CompRegistry = new ArrayList<IItemComparisonProvider>();
+    }
 
-	public SpecialComparisonRegistry()
-	{
-		this.CompRegistry = new ArrayList<IItemComparisonProvider>();
-	}
+    @Override
+    public IItemComparison getSpecialComparison(final ItemStack stack) {
+        for (final IItemComparisonProvider i : this.CompRegistry) {
+            final IItemComparison comp = i.getComparison(stack);
+            if (comp != null) {
+                return comp;
+            }
+        }
 
-	@Override
-	public IItemComparison getSpecialComparison( final ItemStack stack )
-	{
-		for( final IItemComparisonProvider i : this.CompRegistry )
-		{
-			final IItemComparison comp = i.getComparison( stack );
-			if( comp != null )
-			{
-				return comp;
-			}
-		}
+        return null;
+    }
 
-		return null;
-	}
-
-	@Override
-	public void addComparisonProvider( final IItemComparisonProvider prov )
-	{
-		this.CompRegistry.add( prov );
-	}
+    @Override
+    public void addComparisonProvider(final IItemComparisonProvider prov) {
+        this.CompRegistry.add(prov);
+    }
 }

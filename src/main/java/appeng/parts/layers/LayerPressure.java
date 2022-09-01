@@ -18,30 +18,23 @@
 
 package appeng.parts.layers;
 
-
 import appeng.api.parts.IPart;
 import appeng.api.parts.LayerBase;
+import javax.annotation.Nullable;
 import net.minecraftforge.common.util.ForgeDirection;
 import pneumaticCraft.api.tileentity.IAirHandler;
 import pneumaticCraft.api.tileentity.ISidedPneumaticMachine;
 
-import javax.annotation.Nullable;
+public class LayerPressure extends LayerBase implements ISidedPneumaticMachine {
 
+    @Nullable
+    @Override
+    public IAirHandler getAirHandler(final ForgeDirection side) {
+        final IPart part = this.getPart(side);
+        if (part instanceof ISidedPneumaticMachine) {
+            return ((ISidedPneumaticMachine) part).getAirHandler(side);
+        }
 
-public class LayerPressure extends LayerBase implements ISidedPneumaticMachine
-{
-
-	@Nullable
-	@Override
-	public IAirHandler getAirHandler( final ForgeDirection side )
-	{
-		final IPart part = this.getPart( side );
-		if( part instanceof ISidedPneumaticMachine )
-		{
-			return ( (ISidedPneumaticMachine) part ).getAirHandler( side );
-		}
-
-		return null;
-	}
-
+        return null;
+    }
 }

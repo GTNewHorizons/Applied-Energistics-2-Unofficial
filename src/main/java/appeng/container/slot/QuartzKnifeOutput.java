@@ -18,15 +18,11 @@
 
 package appeng.container.slot;
 
-
 import net.minecraft.inventory.IInventory;
 
+public class QuartzKnifeOutput extends SlotOutput {
 
-public class QuartzKnifeOutput extends SlotOutput
-{
-
-	public QuartzKnifeOutput( final IInventory a, final int b, final int c, final int d, final int i )
-	{
-		super( a, b, c, d, i );
-	}
+    public QuartzKnifeOutput(final IInventory a, final int b, final int c, final int d, final int i) {
+        super(a, b, c, d, i);
+    }
 }

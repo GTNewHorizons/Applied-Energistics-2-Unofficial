@@ -1,25 +1,23 @@
 package appeng.util.calculators;
 
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Stack;
 
 public class Calculator {
     private final Stack<String> postfixStack = new Stack<>();
     private final Stack<Character> opStack = new Stack<>();
-    private final int[] operatPriority = new int[] { 0, 3, 2, 1, -1, 1, 0, 2 };
+    private final int[] operatPriority = new int[] {0, 3, 2, 1, -1, 1, 0, 2};
 
     public static double conversion(String expression) {
         double result = 0;
 
-        if( expression == null )
-            return Double.NaN;
+        if (expression == null) return Double.NaN;
 
-        expression = expression.replace( " ", "" );
+        expression = expression.replace(" ", "");
 
         Calculator cal = new Calculator();
-        if( expression.length() == 1 && Character.isDigit( expression.charAt( 0 ) ) ) {
-            return expression.charAt( 0 ) - '0';
+        if (expression.length() == 1 && Character.isDigit(expression.charAt(0))) {
+            return expression.charAt(0) - '0';
         }
         try {
             expression = transform(expression);
@@ -52,8 +50,8 @@ public class Calculator {
                 }
             }
         }
-        if(arr[0]=='~'||arr[1]=='(') {
-            arr[0]='-';
+        if (arr[0] == '~' || arr[1] == '(') {
+            arr[0] = '-';
             return "0" + new String(arr);
         } else {
             return new String(arr);
@@ -187,5 +185,4 @@ public class Calculator {
         }
         return result;
     }
-
 }

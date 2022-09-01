@@ -18,7 +18,6 @@
 
 package appeng.tile.misc;
 
-
 import appeng.api.util.AEColor;
 import appeng.helpers.Splotch;
 import appeng.items.misc.ItemPaintBall;
@@ -28,6 +27,10 @@ import appeng.tile.events.TileEventType;
 import com.google.common.collect.ImmutableList;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -36,231 +39,196 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+public class TilePaint extends AEBaseTile {
 
+    private static final int LIGHT_PER_DOT = 12;
 
-public class TilePaint extends AEBaseTile
-{
+    private int isLit = 0;
+    private List<Splotch> dots = null;
 
-	private static final int LIGHT_PER_DOT = 12;
+    @TileEvent(TileEventType.WORLD_NBT_WRITE)
+    public void writeToNBT_TilePaint(final NBTTagCompound data) {
+        final ByteBuf myDat = Unpooled.buffer();
+        this.writeBuffer(myDat);
+        if (myDat.hasArray()) {
+            data.setByteArray("dots", myDat.array());
+        }
+    }
 
-	private int isLit = 0;
-	private List<Splotch> dots = null;
+    private void writeBuffer(final ByteBuf out) {
+        if (this.dots == null) {
+            out.writeByte(0);
+            return;
+        }
 
-	@TileEvent( TileEventType.WORLD_NBT_WRITE )
-	public void writeToNBT_TilePaint( final NBTTagCompound data )
-	{
-		final ByteBuf myDat = Unpooled.buffer();
-		this.writeBuffer( myDat );
-		if( myDat.hasArray() )
-		{
-			data.setByteArray( "dots", myDat.array() );
-		}
-	}
+        out.writeByte(this.dots.size());
 
-	private void writeBuffer( final ByteBuf out )
-	{
-		if( this.dots == null )
-		{
-			out.writeByte( 0 );
-			return;
-		}
+        for (final Splotch s : this.dots) {
+            s.writeToStream(out);
+        }
+    }
 
-		out.writeByte( this.dots.size() );
+    @TileEvent(TileEventType.WORLD_NBT_READ)
+    public void readFromNBT_TilePaint(final NBTTagCompound data) {
+        if (data.hasKey("dots")) {
+            this.readBuffer(Unpooled.copiedBuffer(data.getByteArray("dots")));
+        }
+    }
 
-		for( final Splotch s : this.dots )
-		{
-			s.writeToStream( out );
-		}
-	}
+    private void readBuffer(final ByteBuf in) {
+        final byte howMany = in.readByte();
 
-	@TileEvent( TileEventType.WORLD_NBT_READ )
-	public void readFromNBT_TilePaint( final NBTTagCompound data )
-	{
-		if( data.hasKey( "dots" ) )
-		{
-			this.readBuffer( Unpooled.copiedBuffer( data.getByteArray( "dots" ) ) );
-		}
-	}
+        if (howMany == 0) {
+            this.isLit = 0;
+            this.dots = null;
+            return;
+        }
 
-	private void readBuffer( final ByteBuf in )
-	{
-		final byte howMany = in.readByte();
+        this.dots = new ArrayList(howMany);
+        for (int x = 0; x < howMany; x++) {
+            this.dots.add(new Splotch(in));
+        }
 
-		if( howMany == 0 )
-		{
-			this.isLit = 0;
-			this.dots = null;
-			return;
-		}
+        this.isLit = 0;
+        for (final Splotch s : this.dots) {
+            if (s.isLumen()) {
+                this.isLit += LIGHT_PER_DOT;
+            }
+        }
 
-		this.dots = new ArrayList( howMany );
-		for( int x = 0; x < howMany; x++ )
-		{
-			this.dots.add( new Splotch( in ) );
-		}
+        this.maxLit();
+    }
 
-		this.isLit = 0;
-		for( final Splotch s : this.dots )
-		{
-			if( s.isLumen() )
-			{
-				this.isLit += LIGHT_PER_DOT;
-			}
-		}
+    private void maxLit() {
+        if (this.isLit > 14) {
+            this.isLit = 14;
+        }
 
-		this.maxLit();
-	}
+        if (this.worldObj != null) {
+            this.worldObj.updateLightByType(EnumSkyBlock.Block, this.xCoord, this.yCoord, this.zCoord);
+        }
+    }
 
-	private void maxLit()
-	{
-		if( this.isLit > 14 )
-		{
-			this.isLit = 14;
-		}
+    @TileEvent(TileEventType.NETWORK_WRITE)
+    public void writeToStream_TilePaint(final ByteBuf data) {
+        this.writeBuffer(data);
+    }
 
-		if( this.worldObj != null )
-		{
-			this.worldObj.updateLightByType( EnumSkyBlock.Block, this.xCoord, this.yCoord, this.zCoord );
-		}
-	}
+    @TileEvent(TileEventType.NETWORK_READ)
+    public boolean readFromStream_TilePaint(final ByteBuf data) {
+        this.readBuffer(data);
+        return true;
+    }
 
-	@TileEvent( TileEventType.NETWORK_WRITE )
-	public void writeToStream_TilePaint( final ByteBuf data )
-	{
-		this.writeBuffer( data );
-	}
+    public void onNeighborBlockChange() {
+        if (this.dots == null) {
+            return;
+        }
 
-	@TileEvent( TileEventType.NETWORK_READ )
-	public boolean readFromStream_TilePaint( final ByteBuf data )
-	{
-		this.readBuffer( data );
-		return true;
-	}
+        for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+            if (!this.isSideValid(side)) {
+                this.removeSide(side);
+            }
+        }
 
-	public void onNeighborBlockChange()
-	{
-		if( this.dots == null )
-		{
-			return;
-		}
+        this.updateData();
+    }
 
-		for( final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS )
-		{
-			if( !this.isSideValid( side ) )
-			{
-				this.removeSide( side );
-			}
-		}
+    public boolean isSideValid(final ForgeDirection side) {
+        final Block blk = this.worldObj.getBlock(
+                this.xCoord + side.offsetX, this.yCoord + side.offsetY, this.zCoord + side.offsetZ);
+        return blk.isSideSolid(
+                this.worldObj,
+                this.xCoord + side.offsetX,
+                this.yCoord + side.offsetY,
+                this.zCoord + side.offsetZ,
+                side.getOpposite());
+    }
 
-		this.updateData();
-	}
+    private void removeSide(final ForgeDirection side) {
+        final Iterator<Splotch> i = this.dots.iterator();
+        while (i.hasNext()) {
+            final Splotch s = i.next();
+            if (s.getSide() == side) {
+                i.remove();
+            }
+        }
 
-	public boolean isSideValid( final ForgeDirection side )
-	{
-		final Block blk = this.worldObj.getBlock( this.xCoord + side.offsetX, this.yCoord + side.offsetY, this.zCoord + side.offsetZ );
-		return blk.isSideSolid( this.worldObj, this.xCoord + side.offsetX, this.yCoord + side.offsetY, this.zCoord + side.offsetZ, side.getOpposite() );
-	}
+        this.markForUpdate();
+        this.markDirty();
+    }
 
-	private void removeSide( final ForgeDirection side )
-	{
-		final Iterator<Splotch> i = this.dots.iterator();
-		while( i.hasNext() )
-		{
-			final Splotch s = i.next();
-			if( s.getSide() == side )
-			{
-				i.remove();
-			}
-		}
+    private void updateData() {
+        this.isLit = 0;
+        for (final Splotch s : this.dots) {
+            if (s.isLumen()) {
+                this.isLit += LIGHT_PER_DOT;
+            }
+        }
 
-		this.markForUpdate();
-		this.markDirty();
-	}
+        this.maxLit();
 
-	private void updateData()
-	{
-		this.isLit = 0;
-		for( final Splotch s : this.dots )
-		{
-			if( s.isLumen() )
-			{
-				this.isLit += LIGHT_PER_DOT;
-			}
-		}
+        if (this.dots.isEmpty()) {
+            this.dots = null;
+        }
 
-		this.maxLit();
+        if (this.dots == null) {
+            this.worldObj.setBlock(this.xCoord, this.yCoord, this.zCoord, Blocks.air);
+        }
+    }
 
-		if( this.dots.isEmpty() )
-		{
-			this.dots = null;
-		}
+    public void cleanSide(final ForgeDirection side) {
+        if (this.dots == null) {
+            return;
+        }
 
-		if( this.dots == null )
-		{
-			this.worldObj.setBlock( this.xCoord, this.yCoord, this.zCoord, Blocks.air );
-		}
-	}
+        this.removeSide(side);
 
-	public void cleanSide( final ForgeDirection side )
-	{
-		if( this.dots == null )
-		{
-			return;
-		}
+        this.updateData();
+    }
 
-		this.removeSide( side );
+    public int getLightLevel() {
+        return this.isLit;
+    }
 
-		this.updateData();
-	}
+    public void addBlot(final ItemStack type, final ForgeDirection side, final Vec3 hitVec) {
+        final Block blk = this.worldObj.getBlock(
+                this.xCoord + side.offsetX, this.yCoord + side.offsetY, this.zCoord + side.offsetZ);
+        if (blk.isSideSolid(
+                this.worldObj,
+                this.xCoord + side.offsetX,
+                this.yCoord + side.offsetY,
+                this.zCoord + side.offsetZ,
+                side.getOpposite())) {
+            final ItemPaintBall ipb = (ItemPaintBall) type.getItem();
 
-	public int getLightLevel()
-	{
-		return this.isLit;
-	}
+            final AEColor col = ipb.getColor(type);
+            final boolean lit = ipb.isLumen(type);
 
-	public void addBlot( final ItemStack type, final ForgeDirection side, final Vec3 hitVec )
-	{
-		final Block blk = this.worldObj.getBlock( this.xCoord + side.offsetX, this.yCoord + side.offsetY, this.zCoord + side.offsetZ );
-		if( blk.isSideSolid( this.worldObj, this.xCoord + side.offsetX, this.yCoord + side.offsetY, this.zCoord + side.offsetZ, side.getOpposite() ) )
-		{
-			final ItemPaintBall ipb = (ItemPaintBall) type.getItem();
+            if (this.dots == null) {
+                this.dots = new ArrayList<Splotch>();
+            }
 
-			final AEColor col = ipb.getColor( type );
-			final boolean lit = ipb.isLumen( type );
+            if (this.dots.size() > 20) {
+                this.dots.remove(0);
+            }
 
-			if( this.dots == null )
-			{
-				this.dots = new ArrayList<Splotch>();
-			}
+            this.dots.add(new Splotch(col, lit, side, hitVec));
+            if (lit) {
+                this.isLit += LIGHT_PER_DOT;
+            }
 
-			if( this.dots.size() > 20 )
-			{
-				this.dots.remove( 0 );
-			}
+            this.maxLit();
+            this.markForUpdate();
+            this.markDirty();
+        }
+    }
 
-			this.dots.add( new Splotch( col, lit, side, hitVec ) );
-			if( lit )
-			{
-				this.isLit += LIGHT_PER_DOT;
-			}
+    public Collection<Splotch> getDots() {
+        if (this.dots == null) {
+            return ImmutableList.of();
+        }
 
-			this.maxLit();
-			this.markForUpdate();
-			this.markDirty();
-		}
-	}
-
-	public Collection<Splotch> getDots()
-	{
-		if( this.dots == null )
-		{
-			return ImmutableList.of();
-		}
-
-		return this.dots;
-	}
+        return this.dots;
+    }
 }

@@ -23,43 +23,38 @@
 
 package appeng.api.config;
 
+public enum PowerUnits {
+    AE("gui.appliedenergistics2.units.appliedenergstics"), // Native Units - AE Energy
+    EU("gui.appliedenergistics2.units.ic2"), // IndustrialCraft 2 - Energy Units
+    WA("gui.appliedenergistics2.units.rotarycraft"), // RotaryCraft - Watts
+    RF("gui.appliedenergistics2.units.thermalexpansion"), // ThermalExpansion - Redstone Flux
+    MK("gui.appliedenergistics2.units.mekanism"); // Mekanism - Joules
 
-public enum PowerUnits
-{
-	AE( "gui.appliedenergistics2.units.appliedenergstics" ), // Native Units - AE Energy
-	EU( "gui.appliedenergistics2.units.ic2" ), // IndustrialCraft 2 - Energy Units
-	WA( "gui.appliedenergistics2.units.rotarycraft" ), // RotaryCraft - Watts
-	RF( "gui.appliedenergistics2.units.thermalexpansion" ), // ThermalExpansion - Redstone Flux
-	MK( "gui.appliedenergistics2.units.mekanism" ); // Mekanism - Joules
+    /**
+     * unlocalized name for the power unit.
+     */
+    public final String unlocalizedName;
+    /**
+     * please do not edit this value, it is set when AE loads its config files.
+     */
+    public double conversionRatio = 1.0;
 
-	/**
-	 * unlocalized name for the power unit.
-	 */
-	public final String unlocalizedName;
-	/**
-	 * please do not edit this value, it is set when AE loads its config files.
-	 */
-	public double conversionRatio = 1.0;
+    PowerUnits(final String un) {
+        this.unlocalizedName = un;
+    }
 
-	PowerUnits( final String un )
-	{
-		this.unlocalizedName = un;
-	}
-
-	/**
-	 * do power conversion using AE's conversion rates.
-	 * <p>
-	 * Example: PowerUnits.EU.convertTo( PowerUnits.AE, 32 );
-	 * <p>
-	 * will normally returns 64, as it will convert the EU, to AE with AE's power settings.
-	 *
-	 * @param target target power unit
-	 * @param value  value
-	 * @return value converted to target units, from this units.
-	 */
-	public double convertTo( final PowerUnits target, final double value )
-	{
-		return ( value * this.conversionRatio ) / target.conversionRatio;
-	}
-
+    /**
+     * do power conversion using AE's conversion rates.
+     * <p>
+     * Example: PowerUnits.EU.convertTo( PowerUnits.AE, 32 );
+     * <p>
+     * will normally returns 64, as it will convert the EU, to AE with AE's power settings.
+     *
+     * @param target target power unit
+     * @param value  value
+     * @return value converted to target units, from this units.
+     */
+    public double convertTo(final PowerUnits target, final double value) {
+        return (value * this.conversionRatio) / target.conversionRatio;
+    }
 }

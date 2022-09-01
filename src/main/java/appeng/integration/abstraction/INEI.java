@@ -18,15 +18,12 @@
 
 package appeng.integration.abstraction;
 
-
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.inventory.Slot;
 
+public interface INEI {
 
-public interface INEI
-{
+    void drawSlot(Slot s);
 
-	void drawSlot( Slot s );
-
-	RenderItem setItemRender( RenderItem renderItem );
+    RenderItem setItemRender(RenderItem renderItem);
 }

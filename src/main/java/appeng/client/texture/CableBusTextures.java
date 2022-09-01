@@ -18,7 +18,6 @@
 
 package appeng.client.texture;
 
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
@@ -26,93 +25,225 @@ import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 
+public enum CableBusTextures {
+    Channels00("MECableSmart00"),
+    Channels01("MECableSmart01"),
+    Channels02("MECableSmart02"),
+    Channels03("MECableSmart03"),
+    Channels10("MECableSmart10"),
+    Channels11("MECableSmart11"),
+    Channels12("MECableSmart12"),
+    Channels13("MECableSmart13"),
+    Channels14("MECableSmart14"),
+    Channels04("MECableSmart04"),
 
-public enum CableBusTextures
-{
+    LevelEmitterTorchOn("ItemPart.LevelEmitterOn"),
+    BlockWirelessOn("BlockWirelessOn"),
 
-	Channels00( "MECableSmart00" ), Channels01( "MECableSmart01" ), Channels02( "MECableSmart02" ), Channels03( "MECableSmart03" ), Channels10( "MECableSmart10" ), Channels11( "MECableSmart11" ), Channels12( "MECableSmart12" ), Channels13( "MECableSmart13" ), Channels14( "MECableSmart14" ), Channels04( "MECableSmart04" ),
+    BlockP2PTunnel2("ItemPart.P2PTunnel2"),
+    BlockP2PTunnel3("ItemPart.P2PTunnel3"),
 
-	LevelEmitterTorchOn( "ItemPart.LevelEmitterOn" ), BlockWirelessOn( "BlockWirelessOn" ),
+    // MEWaiting("MEWaiting"),
 
-	BlockP2PTunnel2( "ItemPart.P2PTunnel2" ), BlockP2PTunnel3( "ItemPart.P2PTunnel3" ),
+    PartMonitorSides("PartMonitorSides"),
+    PartMonitorBack("PartMonitorBack"),
 
-	// MEWaiting("MEWaiting"),
+    Transparent("Transparent"),
+    PartMonitorSidesStatus("PartMonitorSidesStatus"),
+    PartMonitorSidesStatusLights("PartMonitorSidesStatusLights"),
 
-	PartMonitorSides( "PartMonitorSides" ), PartMonitorBack( "PartMonitorBack" ),
+    PartMonitor_Colored("PartMonitor_Colored"),
+    PartMonitor_Bright("PartMonitor_Bright"),
 
-	Transparent( "Transparent" ), PartMonitorSidesStatus( "PartMonitorSidesStatus" ), PartMonitorSidesStatusLights( "PartMonitorSidesStatusLights" ),
+    PartPatternTerm_Bright("PartPatternTerm_Bright"),
+    PartPatternTerm_Colored("PartPatternTerm_Colored"),
+    PartPatternTerm_Dark("PartPatternTerm_Dark"),
 
-	PartMonitor_Colored( "PartMonitor_Colored" ), PartMonitor_Bright( "PartMonitor_Bright" ),
+    PartConversionMonitor_Bright("PartConversionMonitor_Bright"),
+    PartConversionMonitor_Colored("PartConversionMonitor_Colored"),
+    PartConversionMonitor_Dark("PartConversionMonitor_Dark"),
+    PartConversionMonitor_Dark_Locked("PartConversionMonitor_Dark_Locked"),
 
-	PartPatternTerm_Bright( "PartPatternTerm_Bright" ), PartPatternTerm_Colored( "PartPatternTerm_Colored" ), PartPatternTerm_Dark( "PartPatternTerm_Dark" ),
+    PartInterfaceTerm_Bright("PartInterfaceTerm_Bright"),
+    PartInterfaceTerm_Colored("PartInterfaceTerm_Colored"),
+    PartInterfaceTerm_Dark("PartInterfaceTerm_Dark"),
 
-	PartConversionMonitor_Bright( "PartConversionMonitor_Bright" ), PartConversionMonitor_Colored( "PartConversionMonitor_Colored" ), PartConversionMonitor_Dark( "PartConversionMonitor_Dark" ), PartConversionMonitor_Dark_Locked( "PartConversionMonitor_Dark_Locked" ),
+    PartCraftingTerm_Bright("PartCraftingTerm_Bright"),
+    PartCraftingTerm_Colored("PartCraftingTerm_Colored"),
+    PartCraftingTerm_Dark("PartCraftingTerm_Dark"), //
 
-	PartInterfaceTerm_Bright( "PartInterfaceTerm_Bright" ), PartInterfaceTerm_Colored( "PartInterfaceTerm_Colored" ), PartInterfaceTerm_Dark( "PartInterfaceTerm_Dark" ),
+    PartStorageMonitor_Bright("PartStorageMonitor_Bright"),
+    PartStorageMonitor_Colored("PartStorageMonitor_Colored"),
+    PartStorageMonitor_Dark("PartStorageMonitor_Dark"),
+    PartStorageMonitor_Colored_Locked("PartStorageMonitor_Colored_Locked"),
 
-	PartCraftingTerm_Bright( "PartCraftingTerm_Bright" ), PartCraftingTerm_Colored( "PartCraftingTerm_Colored" ), PartCraftingTerm_Dark( "PartCraftingTerm_Dark" ), //
+    PartTerminal_Bright("PartTerminal_Bright"),
+    PartTerminal_Colored("PartTerminal_Colored"),
+    PartTerminal_Dark("PartTerminal_Dark"),
 
-	PartStorageMonitor_Bright( "PartStorageMonitor_Bright" ), PartStorageMonitor_Colored( "PartStorageMonitor_Colored" ), PartStorageMonitor_Dark( "PartStorageMonitor_Dark" ), PartStorageMonitor_Colored_Locked( "PartStorageMonitor_Colored_Locked" ),
+    MECable_Green("MECable_Green"),
+    MECable_Grey("MECable_Grey"),
+    MECable_LightBlue("MECable_LightBlue"),
+    MECable_LightGrey("MECable_LightGrey"),
+    MECable_Lime("MECable_Lime"),
+    MECable_Magenta("MECable_Magenta"),
+    MECable_Orange("MECable_Orange"),
+    MECable_Pink("MECable_Pink"),
+    MECable_Purple("MECable_Purple"),
+    MECable_Red("MECable_Red"),
+    MECable_White("MECable_White"),
+    MECable_Yellow("MECable_Yellow"),
+    MECable_Black("MECable_Black"),
+    MECable_Blue("MECable_Blue"),
+    MECable_Brown("MECable_Brown"),
+    MECable_Cyan("MECable_Cyan"),
 
-	PartTerminal_Bright( "PartTerminal_Bright" ), PartTerminal_Colored( "PartTerminal_Colored" ), PartTerminal_Dark( "PartTerminal_Dark" ),
+    MEDense_Black("MEDense_Black"),
+    MEDense_Blue("MEDense_Blue"),
+    MEDense_Brown("MEDense_Brown"),
+    MEDense_Cyan("MEDense_Cyan"),
+    MEDense_Gray("MEDense_Gray"),
+    MEDense_Green("MEDense_Green"),
+    MEDense_LightBlue("MEDense_LightBlue"),
+    MEDense_LightGrey("MEDense_LightGrey"),
+    MEDense_Lime("MEDense_Lime"),
+    MEDense_Magenta("MEDense_Magenta"),
+    MEDense_Orange("MEDense_Orange"),
+    MEDense_Pink("MEDense_Pink"),
+    MEDense_Purple("MEDense_Purple"),
+    MEDense_Red("MEDense_Red"),
+    MEDense_White("MEDense_White"),
+    MEDense_Yellow("MEDense_Yellow"),
 
-	MECable_Green( "MECable_Green" ), MECable_Grey( "MECable_Grey" ), MECable_LightBlue( "MECable_LightBlue" ), MECable_LightGrey( "MECable_LightGrey" ), MECable_Lime( "MECable_Lime" ), MECable_Magenta( "MECable_Magenta" ), MECable_Orange( "MECable_Orange" ), MECable_Pink( "MECable_Pink" ), MECable_Purple( "MECable_Purple" ), MECable_Red( "MECable_Red" ), MECable_White( "MECable_White" ), MECable_Yellow( "MECable_Yellow" ), MECable_Black( "MECable_Black" ), MECable_Blue( "MECable_Blue" ), MECable_Brown( "MECable_Brown" ), MECable_Cyan( "MECable_Cyan" ),
+    MEDenseCovered_Black("MEDenseCovered_Black"),
+    MEDenseCovered_Blue("MEDenseCovered_Blue"),
+    MEDenseCovered_Brown("MEDenseCovered_Brown"),
+    MEDenseCovered_Cyan("MEDenseCovered_Cyan"),
+    MEDenseCovered_Gray("MEDenseCovered_Gray"),
+    MEDenseCovered_Green("MEDenseCovered_Green"),
+    MEDenseCovered_LightBlue("MEDenseCovered_LightBlue"),
+    MEDenseCovered_LightGrey("MEDenseCovered_LightGrey"),
+    MEDenseCovered_Lime("MEDenseCovered_Lime"),
+    MEDenseCovered_Magenta("MEDenseCovered_Magenta"),
+    MEDenseCovered_Orange("MEDenseCovered_Orange"),
+    MEDenseCovered_Pink("MEDenseCovered_Pink"),
+    MEDenseCovered_Purple("MEDenseCovered_Purple"),
+    MEDenseCovered_Red("MEDenseCovered_Red"),
+    MEDenseCovered_White("MEDenseCovered_White"),
+    MEDenseCovered_Yellow("MEDenseCovered_Yellow"),
 
-	MEDense_Black( "MEDense_Black" ), MEDense_Blue( "MEDense_Blue" ), MEDense_Brown( "MEDense_Brown" ), MEDense_Cyan( "MEDense_Cyan" ), MEDense_Gray( "MEDense_Gray" ), MEDense_Green( "MEDense_Green" ), MEDense_LightBlue( "MEDense_LightBlue" ), MEDense_LightGrey( "MEDense_LightGrey" ), MEDense_Lime( "MEDense_Lime" ), MEDense_Magenta( "MEDense_Magenta" ), MEDense_Orange( "MEDense_Orange" ), MEDense_Pink( "MEDense_Pink" ), MEDense_Purple( "MEDense_Purple" ), MEDense_Red( "MEDense_Red" ), MEDense_White( "MEDense_White" ), MEDense_Yellow( "MEDense_Yellow" ),
+    MEUltraDense_Black("MEUltraDense_Black"),
+    MEUltraDense_Blue("MEUltraDense_Blue"),
+    MEUltraDense_Brown("MEUltraDense_Brown"),
+    MEUltraDense_Cyan("MEUltraDense_Cyan"),
+    MEUltraDense_Gray("MEUltraDense_Gray"),
+    MEUltraDense_Green("MEUltraDense_Green"),
+    MEUltraDense_LightBlue("MEUltraDense_LightBlue"),
+    MEUltraDense_LightGrey("MEUltraDense_LightGrey"),
+    MEUltraDense_Lime("MEUltraDense_Lime"),
+    MEUltraDense_Magenta("MEUltraDense_Magenta"),
+    MEUltraDense_Orange("MEUltraDense_Orange"),
+    MEUltraDense_Pink("MEUltraDense_Pink"),
+    MEUltraDense_Purple("MEUltraDense_Purple"),
+    MEUltraDense_Red("MEUltraDense_Red"),
+    MEUltraDense_White("MEUltraDense_White"),
+    MEUltraDense_Yellow("MEUltraDense_Yellow"),
 
-	MEDenseCovered_Black( "MEDenseCovered_Black" ), MEDenseCovered_Blue( "MEDenseCovered_Blue" ), MEDenseCovered_Brown( "MEDenseCovered_Brown" ), MEDenseCovered_Cyan( "MEDenseCovered_Cyan" ), MEDenseCovered_Gray( "MEDenseCovered_Gray" ), MEDenseCovered_Green( "MEDenseCovered_Green" ), MEDenseCovered_LightBlue( "MEDenseCovered_LightBlue" ), MEDenseCovered_LightGrey( "MEDenseCovered_LightGrey" ), MEDenseCovered_Lime( "MEDenseCovered_Lime" ), MEDenseCovered_Magenta( "MEDenseCovered_Magenta" ), MEDenseCovered_Orange( "MEDenseCovered_Orange" ), MEDenseCovered_Pink( "MEDenseCovered_Pink" ), MEDenseCovered_Purple( "MEDenseCovered_Purple" ), MEDenseCovered_Red( "MEDenseCovered_Red" ), MEDenseCovered_White( "MEDenseCovered_White" ), MEDenseCovered_Yellow( "MEDenseCovered_Yellow" ),
+    MEUltraDenseCovered_Black("MEUltraDenseCovered_Black"),
+    MEUltraDenseCovered_Blue("MEUltraDenseCovered_Blue"),
+    MEUltraDenseCovered_Brown("MEUltraDenseCovered_Brown"),
+    MEUltraDenseCovered_Cyan("MEUltraDenseCovered_Cyan"),
+    MEUltraDenseCovered_Gray("MEUltraDenseCovered_Gray"),
+    MEUltraDenseCovered_Green("MEUltraDenseCovered_Green"),
+    MEUltraDenseCovered_LightBlue("MEUltraDenseCovered_LightBlue"),
+    MEUltraDenseCovered_LightGrey("MEUltraDenseCovered_LightGrey"),
+    MEUltraDenseCovered_Lime("MEUltraDenseCovered_Lime"),
+    MEUltraDenseCovered_Magenta("MEUltraDenseCovered_Magenta"),
+    MEUltraDenseCovered_Orange("MEUltraDenseCovered_Orange"),
+    MEUltraDenseCovered_Pink("MEUltraDenseCovered_Pink"),
+    MEUltraDenseCovered_Purple("MEUltraDenseCovered_Purple"),
+    MEUltraDenseCovered_Red("MEUltraDenseCovered_Red"),
+    MEUltraDenseCovered_White("MEUltraDenseCovered_White"),
+    MEUltraDenseCovered_Yellow("MEUltraDenseCovered_Yellow"),
 
-	MEUltraDense_Black( "MEUltraDense_Black" ), MEUltraDense_Blue( "MEUltraDense_Blue" ), MEUltraDense_Brown( "MEUltraDense_Brown" ), MEUltraDense_Cyan( "MEUltraDense_Cyan" ), MEUltraDense_Gray( "MEUltraDense_Gray" ), MEUltraDense_Green( "MEUltraDense_Green" ), MEUltraDense_LightBlue( "MEUltraDense_LightBlue" ), MEUltraDense_LightGrey( "MEUltraDense_LightGrey" ), MEUltraDense_Lime( "MEUltraDense_Lime" ), MEUltraDense_Magenta( "MEUltraDense_Magenta" ), MEUltraDense_Orange( "MEUltraDense_Orange" ), MEUltraDense_Pink( "MEUltraDense_Pink" ), MEUltraDense_Purple( "MEUltraDense_Purple" ), MEUltraDense_Red( "MEUltraDense_Red" ), MEUltraDense_White( "MEUltraDense_White" ), MEUltraDense_Yellow( "MEUltraDense_Yellow" ),
+    MESmart_Black("MESmart_Black"),
+    MESmart_Blue("MESmart_Blue"),
+    MESmart_Brown("MESmart_Brown"),
+    MESmart_Cyan("MESmart_Cyan"),
+    MESmart_Gray("MESmart_Gray"),
+    MESmart_Green("MESmart_Green"),
+    MESmart_LightBlue("MESmart_LightBlue"),
+    MESmart_LightGrey("MESmart_LightGrey"),
+    MESmart_Lime("MESmart_Lime"),
+    MESmart_Magenta("MESmart_Magenta"),
+    MESmart_Orange("MESmart_Orange"),
+    MESmart_Pink("MESmart_Pink"),
+    MESmart_Purple("MESmart_Purple"),
+    MESmart_Red("MESmart_Red"),
+    MESmart_White("MESmart_White"),
+    MESmart_Yellow("MESmart_Yellow"),
 
-	MEUltraDenseCovered_Black( "MEUltraDenseCovered_Black" ), MEUltraDenseCovered_Blue( "MEUltraDenseCovered_Blue" ), MEUltraDenseCovered_Brown( "MEUltraDenseCovered_Brown" ), MEUltraDenseCovered_Cyan( "MEUltraDenseCovered_Cyan" ), MEUltraDenseCovered_Gray( "MEUltraDenseCovered_Gray" ), MEUltraDenseCovered_Green( "MEUltraDenseCovered_Green" ), MEUltraDenseCovered_LightBlue( "MEUltraDenseCovered_LightBlue" ), MEUltraDenseCovered_LightGrey( "MEUltraDenseCovered_LightGrey" ), MEUltraDenseCovered_Lime( "MEUltraDenseCovered_Lime" ), MEUltraDenseCovered_Magenta( "MEUltraDenseCovered_Magenta" ), MEUltraDenseCovered_Orange( "MEUltraDenseCovered_Orange" ), MEUltraDenseCovered_Pink( "MEUltraDenseCovered_Pink" ), MEUltraDenseCovered_Purple( "MEUltraDenseCovered_Purple" ), MEUltraDenseCovered_Red( "MEUltraDenseCovered_Red" ), MEUltraDenseCovered_White( "MEUltraDenseCovered_White" ), MEUltraDenseCovered_Yellow( "MEUltraDenseCovered_Yellow" ),
+    MECovered_Black("MECovered_Black"),
+    MECovered_Blue("MECovered_Blue"),
+    MECovered_Brown("MECovered_Brown"),
+    MECovered_Cyan("MECovered_Cyan"),
+    MECovered_Gray("MECovered_Gray"),
+    MECovered_Green("MECovered_Green"),
+    MECovered_LightBlue("MECovered_LightBlue"),
+    MECovered_LightGrey("MECovered_LightGrey"),
+    MECovered_Lime("MECovered_Lime"),
+    MECovered_Magenta("MECovered_Magenta"),
+    MECovered_Orange("MECovered_Orange"),
+    MECovered_Pink("MECovered_Pink"),
+    MECovered_Purple("MECovered_Purple"),
+    MECovered_Red("MECovered_Red"),
+    MECovered_White("MECovered_White"),
+    MECovered_Yellow("MECovered_Yellow"),
 
-	MESmart_Black( "MESmart_Black" ), MESmart_Blue( "MESmart_Blue" ), MESmart_Brown( "MESmart_Brown" ), MESmart_Cyan( "MESmart_Cyan" ), MESmart_Gray( "MESmart_Gray" ), MESmart_Green( "MESmart_Green" ), MESmart_LightBlue( "MESmart_LightBlue" ), MESmart_LightGrey( "MESmart_LightGrey" ), MESmart_Lime( "MESmart_Lime" ), MESmart_Magenta( "MESmart_Magenta" ), MESmart_Orange( "MESmart_Orange" ), MESmart_Pink( "MESmart_Pink" ), MESmart_Purple( "MESmart_Purple" ), MESmart_Red( "MESmart_Red" ), MESmart_White( "MESmart_White" ), MESmart_Yellow( "MESmart_Yellow" ),
+    BlockAnnihilationPlaneOn("BlockAnnihilationPlaneOn"),
 
-	MECovered_Black( "MECovered_Black" ), MECovered_Blue( "MECovered_Blue" ), MECovered_Brown( "MECovered_Brown" ), MECovered_Cyan( "MECovered_Cyan" ), MECovered_Gray( "MECovered_Gray" ), MECovered_Green( "MECovered_Green" ), MECovered_LightBlue( "MECovered_LightBlue" ), MECovered_LightGrey( "MECovered_LightGrey" ), MECovered_Lime( "MECovered_Lime" ), MECovered_Magenta( "MECovered_Magenta" ), MECovered_Orange( "MECovered_Orange" ), MECovered_Pink( "MECovered_Pink" ), MECovered_Purple( "MECovered_Purple" ), MECovered_Red( "MECovered_Red" ), MECovered_White( "MECovered_White" ), MECovered_Yellow( "MECovered_Yellow" ),
+    BlockFormPlaneOn("BlockFormPlaneOn"),
 
-	BlockAnnihilationPlaneOn( "BlockAnnihilationPlaneOn" ),
+    BlockIdentityAnnihilationPlaneOn("BlockIdentityAnnihilationPlaneOn"),
 
-	BlockFormPlaneOn( "BlockFormPlaneOn" ),
+    ItemPartLevelEmitterOn("ItemPart.LevelEmitterOn"),
+    PartTransitionPlaneBack("PartTransitionPlaneBack"),
 
-	BlockIdentityAnnihilationPlaneOn( "BlockIdentityAnnihilationPlaneOn" ),
+    PartTunnelSides("PartTunnelSides"),
+    PartPlaneSides("PartPlaneSides"),
+    PartExportSides("PartExportSides"),
+    PartImportSides("PartImportSides"),
 
-	ItemPartLevelEmitterOn( "ItemPart.LevelEmitterOn" ), PartTransitionPlaneBack( "PartTransitionPlaneBack" ),
+    PartWirelessSides("PartWirelessSides"),
+    PartStorageSides("PartStorageSides"),
+    PartStorageBack("PartStorageBack");
 
-	PartTunnelSides( "PartTunnelSides" ), PartPlaneSides( "PartPlaneSides" ), PartExportSides( "PartExportSides" ), PartImportSides( "PartImportSides" ),
+    private final String name;
+    public IIcon IIcon;
 
-	PartWirelessSides( "PartWirelessSides" ), PartStorageSides( "PartStorageSides" ), PartStorageBack( "PartStorageBack" );
+    CableBusTextures(final String name) {
+        this.name = name;
+    }
 
-	private final String name;
-	public IIcon IIcon;
+    public static ResourceLocation GuiTexture(final String string) {
+        return null;
+    }
 
-	CableBusTextures( final String name )
-	{
-		this.name = name;
-	}
+    @SideOnly(Side.CLIENT)
+    public static IIcon getMissing() {
+        return ((TextureMap) Minecraft.getMinecraft().getTextureManager().getTexture(TextureMap.locationBlocksTexture))
+                .getAtlasSprite("missingno");
+    }
 
-	public static ResourceLocation GuiTexture( final String string )
-	{
-		return null;
-	}
+    public String getName() {
+        return this.name;
+    }
 
-	@SideOnly( Side.CLIENT )
-	public static IIcon getMissing()
-	{
-		return ( (TextureMap) Minecraft.getMinecraft().getTextureManager().getTexture( TextureMap.locationBlocksTexture ) ).getAtlasSprite( "missingno" );
-	}
+    public IIcon getIcon() {
+        return this.IIcon;
+    }
 
-	public String getName()
-	{
-		return this.name;
-	}
-
-	public IIcon getIcon()
-	{
-		return this.IIcon;
-	}
-
-	public void registerIcon( final TextureMap map )
-	{
-		this.IIcon = map.registerIcon( "appliedenergistics2:" + this.name );
-	}
+    public void registerIcon(final TextureMap map) {
+        this.IIcon = map.registerIcon("appliedenergistics2:" + this.name);
+    }
 }

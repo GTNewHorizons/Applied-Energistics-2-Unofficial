@@ -18,59 +18,46 @@
 
 package appeng.util.item;
 
-
 import appeng.api.storage.data.IAEItemStack;
-
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+public class MeaningfulItemIterator<T extends IAEItemStack> implements Iterator<T> {
 
-public class MeaningfulItemIterator<T extends IAEItemStack> implements Iterator<T>
-{
+    private final Iterator<T> parent;
+    private T next;
 
-	private final Iterator<T> parent;
-	private T next;
+    public MeaningfulItemIterator(final Iterator<T> iterator) {
+        this.parent = iterator;
+    }
 
-	public MeaningfulItemIterator( final Iterator<T> iterator )
-	{
-		this.parent = iterator;
-	}
+    @Override
+    public boolean hasNext() {
+        while (this.parent.hasNext()) {
+            this.next = this.parent.next();
 
-	@Override
-	public boolean hasNext()
-	{
-		while( this.parent.hasNext() )
-		{
-			this.next = this.parent.next();
+            if (this.next.isMeaningful()) {
+                return true;
+            } else {
+                this.parent.remove(); // self cleaning :3
+            }
+        }
 
-			if( this.next.isMeaningful() )
-			{
-				return true;
-			}
-			else
-			{
-				this.parent.remove(); // self cleaning :3
-			}
-		}
+        this.next = null;
+        return false;
+    }
 
-		this.next = null;
-		return false;
-	}
+    @Override
+    public T next() {
+        if (this.next == null) {
+            throw new NoSuchElementException();
+        }
 
-	@Override
-	public T next()
-	{
-		if( this.next == null )
-		{
-			throw new NoSuchElementException();
-		}
+        return this.next;
+    }
 
-		return this.next;
-	}
-
-	@Override
-	public void remove()
-	{
-		this.parent.remove();
-	}
+    @Override
+    public void remove() {
+        this.parent.remove();
+    }
 }

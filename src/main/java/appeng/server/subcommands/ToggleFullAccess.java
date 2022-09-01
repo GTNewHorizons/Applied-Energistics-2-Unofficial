@@ -8,7 +8,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 
-public class ToggleFullAccess  implements ISubCommand {
+public class ToggleFullAccess implements ISubCommand {
     @Override
     public String getHelp(MinecraftServer srv) {
         return "commands.ae2.ToggleFullAccess";
@@ -16,21 +16,19 @@ public class ToggleFullAccess  implements ISubCommand {
 
     @Override
     public void call(MinecraftServer srv, String[] args, ICommandSender sender) {
-        if (sender instanceof EntityPlayerMP)
-        {
+        if (sender instanceof EntityPlayerMP) {
             GameProfile profile = ((EntityPlayerMP) sender).getGameProfile();
-            if (!SecurityCache.isPlayerOP(profile))
-            {
+            if (!SecurityCache.isPlayerOP(profile)) {
                 SecurityCache.registerOpPlayer(profile);
-                sender.addChatMessage(new ChatComponentText("Player " + profile.getName() + " has full admin access now"));
-            }
-            else
-            {
+                sender.addChatMessage(
+                        new ChatComponentText("Player " + profile.getName() + " has full admin access now"));
+            } else {
                 SecurityCache.unregisterOpPlayer(profile);
-                sender.addChatMessage(new ChatComponentText("Player " + profile.getName() + " has admin access revoked"));
+                sender.addChatMessage(
+                        new ChatComponentText("Player " + profile.getName() + " has admin access revoked"));
             }
-        }
-        else
-            sender.addChatMessage(new ChatComponentText("The command is intended to be used in game, not from the server console"));
+        } else
+            sender.addChatMessage(
+                    new ChatComponentText("The command is intended to be used in game, not from the server console"));
     }
 }

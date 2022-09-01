@@ -18,7 +18,6 @@
 
 package appeng.core;
 
-
 import appeng.api.AEApi;
 import appeng.items.parts.ItemFacade;
 import com.google.common.base.Optional;
@@ -27,37 +26,31 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+public final class CreativeTabFacade extends CreativeTabs {
 
-public final class CreativeTabFacade extends CreativeTabs
-{
+    public static CreativeTabFacade instance = null;
 
-	public static CreativeTabFacade instance = null;
+    public CreativeTabFacade() {
+        super("appliedenergistics2.facades");
+    }
 
-	public CreativeTabFacade()
-	{
-		super( "appliedenergistics2.facades" );
-	}
+    static void init() {
+        instance = new CreativeTabFacade();
+    }
 
-	static void init()
-	{
-		instance = new CreativeTabFacade();
-	}
+    @Override
+    public Item getTabIconItem() {
+        return this.getIconItemStack().getItem();
+    }
 
-	@Override
-	public Item getTabIconItem()
-	{
-		return this.getIconItemStack().getItem();
-	}
+    @Override
+    public ItemStack getIconItemStack() {
+        final Optional<Item> maybeFacade =
+                AEApi.instance().definitions().items().facade().maybeItem();
+        if (maybeFacade.isPresent()) {
+            return ((ItemFacade) maybeFacade.get()).getCreativeTabIcon();
+        }
 
-	@Override
-	public ItemStack getIconItemStack()
-	{
-		final Optional<Item> maybeFacade = AEApi.instance().definitions().items().facade().maybeItem();
-		if( maybeFacade.isPresent() )
-		{
-			return ( (ItemFacade) maybeFacade.get() ).getCreativeTabIcon();
-		}
-
-		return new ItemStack( Blocks.planks );
-	}
+        return new ItemStack(Blocks.planks);
+    }
 }

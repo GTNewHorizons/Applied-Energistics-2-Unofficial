@@ -18,50 +18,40 @@
 
 package appeng.parts.layers;
 
-
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 
+public class InvSot {
 
-public class InvSot
-{
+    private final ISidedInventory partInv;
+    private final int index;
 
-	private final ISidedInventory partInv;
-	private final int index;
+    public InvSot(final ISidedInventory part, final int slot) {
+        this.partInv = part;
+        this.index = slot;
+    }
 
-	public InvSot( final ISidedInventory part, final int slot )
-	{
-		this.partInv = part;
-		this.index = slot;
-	}
+    ItemStack decreaseStackSize(final int j) {
+        return this.partInv.decrStackSize(this.index, j);
+    }
 
-	ItemStack decreaseStackSize( final int j )
-	{
-		return this.partInv.decrStackSize( this.index, j );
-	}
+    ItemStack getStackInSlot() {
+        return this.partInv.getStackInSlot(this.index);
+    }
 
-	ItemStack getStackInSlot()
-	{
-		return this.partInv.getStackInSlot( this.index );
-	}
+    boolean isItemValidForSlot(final ItemStack itemstack) {
+        return this.partInv.isItemValidForSlot(this.index, itemstack);
+    }
 
-	boolean isItemValidForSlot( final ItemStack itemstack )
-	{
-		return this.partInv.isItemValidForSlot( this.index, itemstack );
-	}
+    void setInventorySlotContents(final ItemStack itemstack) {
+        this.partInv.setInventorySlotContents(this.index, itemstack);
+    }
 
-	void setInventorySlotContents( final ItemStack itemstack )
-	{
-		this.partInv.setInventorySlotContents( this.index, itemstack );
-	}
+    boolean canExtractItem(final ItemStack itemstack, final int side) {
+        return this.partInv.canExtractItem(this.index, itemstack, side);
+    }
 
-	boolean canExtractItem( final ItemStack itemstack, final int side )
-	{
-		return this.partInv.canExtractItem( this.index, itemstack, side );
-	}
-
-	boolean canInsertItem( final ItemStack itemstack, final int side )
-	{
-		return this.partInv.canInsertItem( this.index, itemstack, side );
-	}
+    boolean canInsertItem(final ItemStack itemstack, final int side) {
+        return this.partInv.canInsertItem(this.index, itemstack, side);
+    }
 }

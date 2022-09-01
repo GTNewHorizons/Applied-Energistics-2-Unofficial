@@ -18,7 +18,6 @@
 
 package appeng.recipes.handlers;
 
-
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RecipeError;
 import appeng.api.exceptions.RegistrationError;
@@ -30,63 +29,49 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IMekanism;
 import appeng.recipes.RecipeHandler;
 import appeng.util.Platform;
+import java.util.List;
 import net.minecraft.item.ItemStack;
 
-import java.util.List;
+public class MekCrusher implements ICraftHandler, IWebsiteSerializer {
 
+    private IIngredient pro_input;
+    private IIngredient[] pro_output;
 
-public class MekCrusher implements ICraftHandler, IWebsiteSerializer
-{
+    @Override
+    public void setup(final List<List<IIngredient>> input, final List<List<IIngredient>> output) throws RecipeError {
+        if (input.size() == 1 && output.size() == 1) {
+            final int outs = output.get(0).size();
+            if (input.get(0).size() == 1 && outs == 1) {
+                this.pro_input = input.get(0).get(0);
+                this.pro_output = output.get(0).toArray(new IIngredient[outs]);
+                return;
+            }
+        }
 
-	private IIngredient pro_input;
-	private IIngredient[] pro_output;
+        throw new RecipeError("MekCrusher must have a single input, and single output.");
+    }
 
-	@Override
-	public void setup( final List<List<IIngredient>> input, final List<List<IIngredient>> output ) throws RecipeError
-	{
-		if( input.size() == 1 && output.size() == 1 )
-		{
-			final int outs = output.get( 0 ).size();
-			if( input.get( 0 ).size() == 1 && outs == 1 )
-			{
-				this.pro_input = input.get( 0 ).get( 0 );
-				this.pro_output = output.get( 0 ).toArray( new IIngredient[outs] );
-				return;
-			}
-		}
+    @Override
+    public void register() throws RegistrationError, MissingIngredientError {
+        if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.Mekanism)) {
+            final IMekanism rc = (IMekanism) IntegrationRegistry.INSTANCE.getInstance(IntegrationType.Mekanism);
+            for (final ItemStack is : this.pro_input.getItemStackSet()) {
+                try {
+                    rc.addCrusherRecipe(is, this.pro_output[0].getItemStack());
+                } catch (final java.lang.RuntimeException err) {
+                    AELog.info("Mekanism not happy - " + err.getMessage());
+                }
+            }
+        }
+    }
 
-		throw new RecipeError( "MekCrusher must have a single input, and single output." );
-	}
+    @Override
+    public String getPattern(final RecipeHandler h) {
+        return null;
+    }
 
-	@Override
-	public void register() throws RegistrationError, MissingIngredientError
-	{
-		if( IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.Mekanism ) )
-		{
-			final IMekanism rc = (IMekanism) IntegrationRegistry.INSTANCE.getInstance( IntegrationType.Mekanism );
-			for( final ItemStack is : this.pro_input.getItemStackSet() )
-			{
-				try
-				{
-					rc.addCrusherRecipe( is, this.pro_output[0].getItemStack() );
-				}
-				catch( final java.lang.RuntimeException err )
-				{
-					AELog.info( "Mekanism not happy - " + err.getMessage() );
-				}
-			}
-		}
-	}
-
-	@Override
-	public String getPattern( final RecipeHandler h )
-	{
-		return null;
-	}
-
-	@Override
-	public boolean canCraft( final ItemStack output ) throws RegistrationError, MissingIngredientError
-	{
-		return Platform.isSameItemPrecise( this.pro_output[0].getItemStack(), output );
-	}
+    @Override
+    public boolean canCraft(final ItemStack output) throws RegistrationError, MissingIngredientError {
+        return Platform.isSameItemPrecise(this.pro_output[0].getItemStack(), output);
+    }
 }

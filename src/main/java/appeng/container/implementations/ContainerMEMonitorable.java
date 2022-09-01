@@ -18,7 +18,6 @@
 
 package appeng.container.implementations;
 
-
 import appeng.api.AEApi;
 import appeng.api.config.*;
 import appeng.api.implementations.guiobjects.IPortableCell;
@@ -51,6 +50,9 @@ import appeng.me.helpers.ChannelPowerSrc;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.Platform;
+import java.io.IOException;
+import java.nio.BufferOverflowException;
+import javax.annotation.Nonnull;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -59,384 +61,311 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.nio.BufferOverflowException;
+public class ContainerMEMonitorable extends AEBaseContainer
+        implements IConfigManagerHost, IConfigurableObject, IMEMonitorHandlerReceiver<IAEItemStack> {
 
+    private final SlotRestrictedInput[] cellView = new SlotRestrictedInput[5];
+    private final IMEMonitor<IAEItemStack> monitor;
+    private final IItemList<IAEItemStack> items = AEApi.instance().storage().createItemList();
+    private final IConfigManager clientCM;
+    private final ITerminalHost host;
 
-public class ContainerMEMonitorable extends AEBaseContainer implements IConfigManagerHost, IConfigurableObject, IMEMonitorHandlerReceiver<IAEItemStack>
-{
+    @GuiSync(99)
+    public boolean canAccessViewCells = false;
 
-	private final SlotRestrictedInput[] cellView = new SlotRestrictedInput[5];
-	private final IMEMonitor<IAEItemStack> monitor;
-	private final IItemList<IAEItemStack> items = AEApi.instance().storage().createItemList();
-	private final IConfigManager clientCM;
-	private final ITerminalHost host;
-	@GuiSync( 99 )
-	public boolean canAccessViewCells = false;
-	@GuiSync( 98 )
-	public boolean hasPower = false;
-	private IConfigManagerHost gui;
-	private IConfigManager serverCM;
-	private IGridNode networkNode;
+    @GuiSync(98)
+    public boolean hasPower = false;
 
-	public ContainerMEMonitorable( final InventoryPlayer ip, final ITerminalHost monitorable )
-	{
-		this( ip, monitorable, true );
-	}
+    private IConfigManagerHost gui;
+    private IConfigManager serverCM;
+    private IGridNode networkNode;
 
-	protected ContainerMEMonitorable( final InventoryPlayer ip, final ITerminalHost monitorable, final boolean bindInventory )
-	{
-		super( ip, monitorable instanceof TileEntity ? (TileEntity) monitorable : null, monitorable instanceof IPart ? (IPart) monitorable : null );
+    public ContainerMEMonitorable(final InventoryPlayer ip, final ITerminalHost monitorable) {
+        this(ip, monitorable, true);
+    }
 
-		this.host = monitorable;
-		this.clientCM = new ConfigManager( this );
+    protected ContainerMEMonitorable(
+            final InventoryPlayer ip, final ITerminalHost monitorable, final boolean bindInventory) {
+        super(
+                ip,
+                monitorable instanceof TileEntity ? (TileEntity) monitorable : null,
+                monitorable instanceof IPart ? (IPart) monitorable : null);
 
-		this.clientCM.registerSetting( Settings.SORT_BY, SortOrder.NAME );
-		this.clientCM.registerSetting( Settings.VIEW_MODE, ViewItems.ALL );
-		this.clientCM.registerSetting( Settings.SORT_DIRECTION, SortDir.ASCENDING );
+        this.host = monitorable;
+        this.clientCM = new ConfigManager(this);
 
-		if( Platform.isServer() )
-		{
-			this.serverCM = monitorable.getConfigManager();
+        this.clientCM.registerSetting(Settings.SORT_BY, SortOrder.NAME);
+        this.clientCM.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
+        this.clientCM.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
 
-			this.monitor = monitorable.getItemInventory();
-			if( this.monitor != null )
-			{
-				this.monitor.addListener( this, null );
+        if (Platform.isServer()) {
+            this.serverCM = monitorable.getConfigManager();
 
-				this.setCellInventory( this.monitor );
+            this.monitor = monitorable.getItemInventory();
+            if (this.monitor != null) {
+                this.monitor.addListener(this, null);
 
-				if( monitorable instanceof IPortableCell )
-				{
-					this.setPowerSource( (IEnergySource) monitorable );
-				}
-				else if( monitorable instanceof IMEChest )
-				{
-					this.setPowerSource( (IEnergySource) monitorable );
-				}
-				else if( monitorable instanceof IGridHost )
-				{
-					final IGridNode node = ( (IGridHost) monitorable ).getGridNode( ForgeDirection.UNKNOWN );
-					if( node != null )
-					{
-						this.networkNode = node;
-						final IGrid g = node.getGrid();
-						if( g != null )
-						{
-							this.setPowerSource( new ChannelPowerSrc( this.networkNode, (IEnergySource) g.getCache( IEnergyGrid.class ) ) );
-						}
-					}
-				}
-			}
-			else
-			{
-				this.setValidContainer( false );
-			}
-		}
-		else
-		{
-			this.monitor = null;
-		}
+                this.setCellInventory(this.monitor);
 
-		this.canAccessViewCells = false;
-		if( monitorable instanceof IViewCellStorage )
-		{
-			for( int y = 0; y < 5; y++ )
-			{
-				this.cellView[y] = new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.VIEW_CELL, ( (IViewCellStorage) monitorable ).getViewCellStorage(), y, 206, y * 18 + 8, this.getInventoryPlayer() );
-				this.cellView[y].setAllowEdit( this.canAccessViewCells );
-				this.addSlotToContainer( this.cellView[y] );
-			}
-		}
+                if (monitorable instanceof IPortableCell) {
+                    this.setPowerSource((IEnergySource) monitorable);
+                } else if (monitorable instanceof IMEChest) {
+                    this.setPowerSource((IEnergySource) monitorable);
+                } else if (monitorable instanceof IGridHost) {
+                    final IGridNode node = ((IGridHost) monitorable).getGridNode(ForgeDirection.UNKNOWN);
+                    if (node != null) {
+                        this.networkNode = node;
+                        final IGrid g = node.getGrid();
+                        if (g != null) {
+                            this.setPowerSource(new ChannelPowerSrc(
+                                    this.networkNode, (IEnergySource) g.getCache(IEnergyGrid.class)));
+                        }
+                    }
+                }
+            } else {
+                this.setValidContainer(false);
+            }
+        } else {
+            this.monitor = null;
+        }
 
-		if( bindInventory )
-		{
-			this.bindPlayerInventory( ip, 0, 0 );
-		}
-	}
+        this.canAccessViewCells = false;
+        if (monitorable instanceof IViewCellStorage) {
+            for (int y = 0; y < 5; y++) {
+                this.cellView[y] = new SlotRestrictedInput(
+                        SlotRestrictedInput.PlacableItemType.VIEW_CELL,
+                        ((IViewCellStorage) monitorable).getViewCellStorage(),
+                        y,
+                        206,
+                        y * 18 + 8,
+                        this.getInventoryPlayer());
+                this.cellView[y].setAllowEdit(this.canAccessViewCells);
+                this.addSlotToContainer(this.cellView[y]);
+            }
+        }
 
-	public IGridNode getNetworkNode()
-	{
-		return this.networkNode;
-	}
+        if (bindInventory) {
+            this.bindPlayerInventory(ip, 0, 0);
+        }
+    }
 
-	@Override
-	public void detectAndSendChanges()
-	{
-		if( Platform.isServer() )
-		{
-			if( this.monitor != this.host.getItemInventory() )
-			{
-				this.setValidContainer( false );
-			}
+    public IGridNode getNetworkNode() {
+        return this.networkNode;
+    }
 
-			for( final Settings set : this.serverCM.getSettings() )
-			{
-				final Enum<?> sideLocal = this.serverCM.getSetting( set );
-				final Enum<?> sideRemote = this.clientCM.getSetting( set );
+    @Override
+    public void detectAndSendChanges() {
+        if (Platform.isServer()) {
+            if (this.monitor != this.host.getItemInventory()) {
+                this.setValidContainer(false);
+            }
 
-				if( sideLocal != sideRemote )
-				{
-					this.clientCM.putSetting( set, sideLocal );
-					for( final Object crafter : this.crafters )
-					{
-						try
-						{
-							NetworkHandler.instance.sendTo( new PacketValueConfig( set.name(), sideLocal.name() ), (EntityPlayerMP) crafter );
-						}
-						catch( final IOException e )
-						{
-							AELog.debug( e );
-						}
-					}
-				}
-			}
+            for (final Settings set : this.serverCM.getSettings()) {
+                final Enum<?> sideLocal = this.serverCM.getSetting(set);
+                final Enum<?> sideRemote = this.clientCM.getSetting(set);
 
-			if( !this.items.isEmpty() )
-			{
-				try
-				{
-					final IItemList<IAEItemStack> monitorCache = this.monitor.getStorageList();
+                if (sideLocal != sideRemote) {
+                    this.clientCM.putSetting(set, sideLocal);
+                    for (final Object crafter : this.crafters) {
+                        try {
+                            NetworkHandler.instance.sendTo(
+                                    new PacketValueConfig(set.name(), sideLocal.name()), (EntityPlayerMP) crafter);
+                        } catch (final IOException e) {
+                            AELog.debug(e);
+                        }
+                    }
+                }
+            }
 
-					final PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
+            if (!this.items.isEmpty()) {
+                try {
+                    final IItemList<IAEItemStack> monitorCache = this.monitor.getStorageList();
 
-					for( final IAEItemStack is : this.items )
-					{
-						final IAEItemStack send = monitorCache.findPrecise( is );
-						if( send == null )
-						{
-							is.setStackSize( 0 );
-							piu.appendItem( is );
-						}
-						else
-						{
-							piu.appendItem( send );
-						}
-					}
+                    final PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
 
-					if( !piu.isEmpty() )
-					{
-						this.items.resetStatus();
+                    for (final IAEItemStack is : this.items) {
+                        final IAEItemStack send = monitorCache.findPrecise(is);
+                        if (send == null) {
+                            is.setStackSize(0);
+                            piu.appendItem(is);
+                        } else {
+                            piu.appendItem(send);
+                        }
+                    }
 
-						for( final Object c : this.crafters )
-						{
-							if( c instanceof EntityPlayer )
-							{
-								NetworkHandler.instance.sendTo( piu, (EntityPlayerMP) c );
-							}
-						}
-					}
-				}
-				catch( final IOException e )
-				{
-					AELog.debug( e );
-				}
-			}
+                    if (!piu.isEmpty()) {
+                        this.items.resetStatus();
 
-			this.updatePowerStatus();
+                        for (final Object c : this.crafters) {
+                            if (c instanceof EntityPlayer) {
+                                NetworkHandler.instance.sendTo(piu, (EntityPlayerMP) c);
+                            }
+                        }
+                    }
+                } catch (final IOException e) {
+                    AELog.debug(e);
+                }
+            }
 
-			final boolean oldAccessible = this.canAccessViewCells;
-			this.canAccessViewCells =
-					this.host instanceof WirelessTerminalGuiObject
-							|| this.hasAccess( SecurityPermissions.BUILD, false );
-			if( this.canAccessViewCells != oldAccessible )
-			{
-				for( int y = 0; y < 5; y++ )
-				{
-					if( this.cellView[y] != null )
-					{
-						this.cellView[y].setAllowEdit( this.canAccessViewCells );
-					}
-				}
-			}
+            this.updatePowerStatus();
 
-			super.detectAndSendChanges();
-		}
-	}
+            final boolean oldAccessible = this.canAccessViewCells;
+            this.canAccessViewCells =
+                    this.host instanceof WirelessTerminalGuiObject || this.hasAccess(SecurityPermissions.BUILD, false);
+            if (this.canAccessViewCells != oldAccessible) {
+                for (int y = 0; y < 5; y++) {
+                    if (this.cellView[y] != null) {
+                        this.cellView[y].setAllowEdit(this.canAccessViewCells);
+                    }
+                }
+            }
 
-	protected void updatePowerStatus()
-	{
-		try
-		{
-			if( this.networkNode != null )
-			{
-				this.setPowered( this.networkNode.isActive() );
-			}
-			else if( this.getPowerSource() instanceof IEnergyGrid )
-			{
-				this.setPowered( ( (IEnergyGrid) this.getPowerSource() ).isNetworkPowered() );
-			}
-			else
-			{
-				this.setPowered( this.getPowerSource().extractAEPower( 1, Actionable.SIMULATE, PowerMultiplier.CONFIG ) > 0.8 );
-			}
-		}
-		catch( final Throwable t )
-		{
-			// :P
-		}
-	}
+            super.detectAndSendChanges();
+        }
+    }
 
-	@Override
-	public void onUpdate( final String field, final Object oldValue, final Object newValue )
-	{
-		if( field.equals( "canAccessViewCells" ) )
-		{
-			for( int y = 0; y < 5; y++ )
-			{
-				if( this.cellView[y] != null )
-				{
-					this.cellView[y].setAllowEdit( this.canAccessViewCells );
-				}
-			}
-		}
+    protected void updatePowerStatus() {
+        try {
+            if (this.networkNode != null) {
+                this.setPowered(this.networkNode.isActive());
+            } else if (this.getPowerSource() instanceof IEnergyGrid) {
+                this.setPowered(((IEnergyGrid) this.getPowerSource()).isNetworkPowered());
+            } else {
+                this.setPowered(
+                        this.getPowerSource().extractAEPower(1, Actionable.SIMULATE, PowerMultiplier.CONFIG) > 0.8);
+            }
+        } catch (final Throwable t) {
+            // :P
+        }
+    }
 
-		super.onUpdate( field, oldValue, newValue );
-	}
+    @Override
+    public void onUpdate(final String field, final Object oldValue, final Object newValue) {
+        if (field.equals("canAccessViewCells")) {
+            for (int y = 0; y < 5; y++) {
+                if (this.cellView[y] != null) {
+                    this.cellView[y].setAllowEdit(this.canAccessViewCells);
+                }
+            }
+        }
 
-	@Override
-	public void addCraftingToCrafters( final ICrafting c )
-	{
-		super.addCraftingToCrafters( c );
-		this.queueInventory( c );
-	}
+        super.onUpdate(field, oldValue, newValue);
+    }
 
-	private void queueInventory( final ICrafting c )
-	{
-		if( Platform.isServer() && c instanceof EntityPlayer && this.monitor != null )
-		{
-			try
-			{
-				PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
-				final IItemList<IAEItemStack> monitorCache = this.monitor.getStorageList();
+    @Override
+    public void addCraftingToCrafters(final ICrafting c) {
+        super.addCraftingToCrafters(c);
+        this.queueInventory(c);
+    }
 
-				for( final IAEItemStack send : monitorCache )
-				{
-					try
-					{
-						piu.appendItem( send );
-					}
-					catch( final BufferOverflowException boe )
-					{
-						NetworkHandler.instance.sendTo( piu, (EntityPlayerMP) c );
+    private void queueInventory(final ICrafting c) {
+        if (Platform.isServer() && c instanceof EntityPlayer && this.monitor != null) {
+            try {
+                PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
+                final IItemList<IAEItemStack> monitorCache = this.monitor.getStorageList();
 
-						piu = new PacketMEInventoryUpdate();
-						piu.appendItem( send );
-					}
-				}
+                for (final IAEItemStack send : monitorCache) {
+                    try {
+                        piu.appendItem(send);
+                    } catch (final BufferOverflowException boe) {
+                        NetworkHandler.instance.sendTo(piu, (EntityPlayerMP) c);
 
-				NetworkHandler.instance.sendTo( piu, (EntityPlayerMP) c );
-			}
-			catch( final IOException e )
-			{
-				AELog.debug( e );
-			}
-		}
-	}
+                        piu = new PacketMEInventoryUpdate();
+                        piu.appendItem(send);
+                    }
+                }
 
-	@Override
-	public void removeCraftingFromCrafters( final ICrafting c )
-	{
-		super.removeCraftingFromCrafters( c );
+                NetworkHandler.instance.sendTo(piu, (EntityPlayerMP) c);
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
+        }
+    }
 
-		if( this.crafters.isEmpty() && this.monitor != null )
-		{
-			this.monitor.removeListener( this );
-		}
-	}
+    @Override
+    public void removeCraftingFromCrafters(final ICrafting c) {
+        super.removeCraftingFromCrafters(c);
 
-	@Override
-	public void onContainerClosed( final EntityPlayer player )
-	{
-		super.onContainerClosed( player );
-		if( this.monitor != null )
-		{
-			this.monitor.removeListener( this );
-		}
-	}
+        if (this.crafters.isEmpty() && this.monitor != null) {
+            this.monitor.removeListener(this);
+        }
+    }
 
-	@Override
-	public boolean isValid( final Object verificationToken )
-	{
-		return true;
-	}
+    @Override
+    public void onContainerClosed(final EntityPlayer player) {
+        super.onContainerClosed(player);
+        if (this.monitor != null) {
+            this.monitor.removeListener(this);
+        }
+    }
 
-	@Override
-	public void postChange( final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change, final BaseActionSource source )
-	{
-		for( final IAEItemStack is : change )
-		{
-			this.items.add( is );
-		}
-	}
+    @Override
+    public boolean isValid(final Object verificationToken) {
+        return true;
+    }
 
-	@Override
-	public void onListUpdate()
-	{
-		for( final Object c : this.crafters )
-		{
-			if( c instanceof ICrafting )
-			{
-				final ICrafting cr = (ICrafting) c;
-				this.queueInventory( cr );
-			}
-		}
-	}
+    @Override
+    public void postChange(
+            final IBaseMonitor<IAEItemStack> monitor,
+            final Iterable<IAEItemStack> change,
+            final BaseActionSource source) {
+        for (final IAEItemStack is : change) {
+            this.items.add(is);
+        }
+    }
 
-	@Override
-	public void updateSetting( final IConfigManager manager, final Enum settingName, final Enum newValue )
-	{
-		if( this.getGui() != null )
-		{
-			this.getGui().updateSetting( manager, settingName, newValue );
-		}
-	}
+    @Override
+    public void onListUpdate() {
+        for (final Object c : this.crafters) {
+            if (c instanceof ICrafting) {
+                final ICrafting cr = (ICrafting) c;
+                this.queueInventory(cr);
+            }
+        }
+    }
 
-	@Override
-	public IConfigManager getConfigManager()
-	{
-		if( Platform.isServer() )
-		{
-			return this.serverCM;
-		}
-		return this.clientCM;
-	}
+    @Override
+    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
+        if (this.getGui() != null) {
+            this.getGui().updateSetting(manager, settingName, newValue);
+        }
+    }
 
-	public ItemStack[] getViewCells()
-	{
-		final ItemStack[] list = new ItemStack[this.cellView.length];
+    @Override
+    public IConfigManager getConfigManager() {
+        if (Platform.isServer()) {
+            return this.serverCM;
+        }
+        return this.clientCM;
+    }
 
-		for( int x = 0; x < this.cellView.length; x++ )
-		{
-			list[x] = this.cellView[x].getStack();
-		}
+    public ItemStack[] getViewCells() {
+        final ItemStack[] list = new ItemStack[this.cellView.length];
 
-		return list;
-	}
+        for (int x = 0; x < this.cellView.length; x++) {
+            list[x] = this.cellView[x].getStack();
+        }
 
-	public SlotRestrictedInput getCellViewSlot( final int index )
-	{
-		return this.cellView[index];
-	}
+        return list;
+    }
 
-	public boolean isPowered()
-	{
-		return this.hasPower;
-	}
+    public SlotRestrictedInput getCellViewSlot(final int index) {
+        return this.cellView[index];
+    }
 
-	private void setPowered( final boolean isPowered )
-	{
-		this.hasPower = isPowered;
-	}
+    public boolean isPowered() {
+        return this.hasPower;
+    }
 
-	private IConfigManagerHost getGui()
-	{
-		return this.gui;
-	}
+    private void setPowered(final boolean isPowered) {
+        this.hasPower = isPowered;
+    }
 
-	public void setGui( @Nonnull final IConfigManagerHost gui )
-	{
-		this.gui = gui;
-	}
+    private IConfigManagerHost getGui() {
+        return this.gui;
+    }
+
+    public void setGui(@Nonnull final IConfigManagerHost gui) {
+        this.gui = gui;
+    }
 }

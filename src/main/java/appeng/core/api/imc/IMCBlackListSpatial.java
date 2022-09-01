@@ -18,7 +18,6 @@
 
 package appeng.core.api.imc;
 
-
 import appeng.api.AEApi;
 import appeng.core.AELog;
 import appeng.core.api.IIMCProcessor;
@@ -26,25 +25,20 @@ import cpw.mods.fml.common.event.FMLInterModComms.IMCMessage;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 
+public class IMCBlackListSpatial implements IIMCProcessor {
 
-public class IMCBlackListSpatial implements IIMCProcessor
-{
+    @Override
+    public void process(final IMCMessage m) {
 
-	@Override
-	public void process( final IMCMessage m )
-	{
+        final ItemStack is = m.getItemStackValue();
+        if (is != null) {
+            final Block blk = Block.getBlockFromItem(is.getItem());
+            if (blk != null) {
+                AEApi.instance().registries().movable().blacklistBlock(blk);
+                return;
+            }
+        }
 
-		final ItemStack is = m.getItemStackValue();
-		if( is != null )
-		{
-			final Block blk = Block.getBlockFromItem( is.getItem() );
-			if( blk != null )
-			{
-				AEApi.instance().registries().movable().blacklistBlock( blk );
-				return;
-			}
-		}
-
-		AELog.info( "Bad Block blacklisted by " + m.getSender() );
-	}
+        AELog.info("Bad Block blacklisted by " + m.getSender());
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.recipes.handlers;
 
-
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RecipeError;
 import appeng.api.exceptions.RegistrationError;
@@ -27,61 +26,48 @@ import appeng.api.recipes.IIngredient;
 import appeng.recipes.RecipeHandler;
 import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
+import java.util.List;
 import net.minecraft.item.ItemStack;
 
-import java.util.List;
+public class Smelt implements ICraftHandler, IWebsiteSerializer {
 
+    private IIngredient in;
+    private IIngredient out;
 
-public class Smelt implements ICraftHandler, IWebsiteSerializer
-{
+    @Override
+    public void setup(final List<List<IIngredient>> input, final List<List<IIngredient>> output) throws RecipeError {
+        if (input.size() == 1 && output.size() == 1) {
+            final List<IIngredient> inputList = input.get(0);
+            final List<IIngredient> outputList = output.get(0);
+            if (inputList.size() == 1 && outputList.size() == 1) {
+                this.in = inputList.get(0);
+                this.out = outputList.get(0);
+                return;
+            }
+        }
+        throw new RecipeError("Smelting recipe can only have a single input and output.");
+    }
 
-	private IIngredient in;
-	private IIngredient out;
+    @Override
+    public void register() throws RegistrationError, MissingIngredientError {
+        if (this.in.getItemStack().getItem() == null) {
+            throw new RegistrationError(this.in.toString() + ": Smelting Input is not a valid item.");
+        }
 
-	@Override
-	public void setup( final List<List<IIngredient>> input, final List<List<IIngredient>> output ) throws RecipeError
-	{
-		if( input.size() == 1 && output.size() == 1 )
-		{
-			final List<IIngredient> inputList = input.get( 0 );
-			final List<IIngredient> outputList = output.get( 0 );
-			if( inputList.size() == 1 && outputList.size() == 1 )
-			{
-				this.in = inputList.get( 0 );
-				this.out = outputList.get( 0 );
-				return;
-			}
-		}
-		throw new RecipeError( "Smelting recipe can only have a single input and output." );
-	}
+        if (this.out.getItemStack().getItem() == null) {
+            throw new RegistrationError(this.out.toString() + ": Smelting Output is not a valid item.");
+        }
 
-	@Override
-	public void register() throws RegistrationError, MissingIngredientError
-	{
-		if( this.in.getItemStack().getItem() == null )
-		{
-			throw new RegistrationError( this.in.toString() + ": Smelting Input is not a valid item." );
-		}
+        GameRegistry.addSmelting(this.in.getItemStack(), this.out.getItemStack(), 0);
+    }
 
-		if( this.out.getItemStack().getItem() == null )
-		{
-			throw new RegistrationError( this.out.toString() + ": Smelting Output is not a valid item." );
-		}
+    @Override
+    public String getPattern(final RecipeHandler h) {
+        return "smelt " + this.out.getQty() + '\n' + h.getName(this.out) + '\n' + h.getName(this.in);
+    }
 
-		GameRegistry.addSmelting( this.in.getItemStack(), this.out.getItemStack(), 0 );
-	}
-
-	@Override
-	public String getPattern( final RecipeHandler h )
-	{
-		return "smelt " + this.out.getQty() + '\n' +
-				h.getName( this.out ) + '\n' +
-				h.getName( this.in );
-	}
-
-	@Override
-	public boolean canCraft( final ItemStack reqOutput ) throws RegistrationError, MissingIngredientError
-	{
-		return Platform.isSameItemPrecise( this.out.getItemStack(), reqOutput );
-	}
+    @Override
+    public boolean canCraft(final ItemStack reqOutput) throws RegistrationError, MissingIngredientError {
+        return Platform.isSameItemPrecise(this.out.getItemStack(), reqOutput);
+    }
 }

@@ -23,24 +23,22 @@
 
 package appeng.api.features;
 
-
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 
+public interface IWorldGen {
 
-public interface IWorldGen
-{
+    void disableWorldGenForProviderID(WorldGenType type, Class<? extends WorldProvider> provider);
 
-	void disableWorldGenForProviderID( WorldGenType type, Class<? extends WorldProvider> provider );
+    void enableWorldGenForDimension(WorldGenType type, int dimID);
 
-	void enableWorldGenForDimension( WorldGenType type, int dimID );
+    void disableWorldGenForDimension(WorldGenType type, int dimID);
 
-	void disableWorldGenForDimension( WorldGenType type, int dimID );
+    boolean isWorldGenEnabled(WorldGenType type, World w);
 
-	boolean isWorldGenEnabled( WorldGenType type, World w );
-
-	enum WorldGenType
-	{
-		CertusQuartz, ChargedCertusQuartz, Meteorites
-	}
+    enum WorldGenType {
+        CertusQuartz,
+        ChargedCertusQuartz,
+        Meteorites
+    }
 }

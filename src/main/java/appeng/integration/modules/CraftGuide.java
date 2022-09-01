@@ -1,4 +1,4 @@
-///*
+/// *
 // * This file is part of Applied Energistics 2.
 // * Copyright (c) 2013 - 2015, AlgorithmX2, All rights reserved.
 // *
@@ -16,41 +16,41 @@
 // * along with Applied Energistics 2.  If not, see <http://www.gnu.org/licenses/lgpl>.
 // */
 //
-//package appeng.integration.modules;
+// package appeng.integration.modules;
 //
 //
-//import appeng.api.AEApi;
-//import appeng.api.IAppEngApi;
-//import appeng.api.definitions.IBlocks;
-//import appeng.api.exceptions.MissingIngredientError;
-//import appeng.api.exceptions.RegistrationError;
-//import appeng.api.features.IGrinderEntry;
-//import appeng.api.features.IInscriberRecipe;
-//import appeng.api.recipes.IIngredient;
-//import appeng.helpers.Reflected;
-//import appeng.integration.IIntegrationModule;
-//import appeng.integration.IntegrationHelper;
-//import appeng.recipes.game.ShapedRecipe;
-//import appeng.recipes.game.ShapelessRecipe;
-//import com.google.common.base.Optional;
-//import cpw.mods.fml.relauncher.ReflectionHelper;
-//import net.minecraft.item.ItemStack;
-//import net.minecraft.item.crafting.CraftingManager;
-//import net.minecraft.item.crafting.IRecipe;
-//import uristqwerty.CraftGuide.CraftGuideLog;
-//import uristqwerty.CraftGuide.DefaultRecipeTemplate;
-//import uristqwerty.CraftGuide.RecipeGeneratorImplementation;
-//import uristqwerty.CraftGuide.api.*;
-//import uristqwerty.gui_craftguide.texture.DynamicTexture;
-//import uristqwerty.gui_craftguide.texture.TextureClip;
+// import appeng.api.AEApi;
+// import appeng.api.IAppEngApi;
+// import appeng.api.definitions.IBlocks;
+// import appeng.api.exceptions.MissingIngredientError;
+// import appeng.api.exceptions.RegistrationError;
+// import appeng.api.features.IGrinderEntry;
+// import appeng.api.features.IInscriberRecipe;
+// import appeng.api.recipes.IIngredient;
+// import appeng.helpers.Reflected;
+// import appeng.integration.IIntegrationModule;
+// import appeng.integration.IntegrationHelper;
+// import appeng.recipes.game.ShapedRecipe;
+// import appeng.recipes.game.ShapelessRecipe;
+// import com.google.common.base.Optional;
+// import cpw.mods.fml.relauncher.ReflectionHelper;
+// import net.minecraft.item.ItemStack;
+// import net.minecraft.item.crafting.CraftingManager;
+// import net.minecraft.item.crafting.IRecipe;
+// import uristqwerty.CraftGuide.CraftGuideLog;
+// import uristqwerty.CraftGuide.DefaultRecipeTemplate;
+// import uristqwerty.CraftGuide.RecipeGeneratorImplementation;
+// import uristqwerty.CraftGuide.api.*;
+// import uristqwerty.gui_craftguide.texture.DynamicTexture;
+// import uristqwerty.gui_craftguide.texture.TextureClip;
 //
-//import javax.annotation.Nullable;
-//import java.util.Arrays;
-//import java.util.List;
+// import javax.annotation.Nullable;
+// import java.util.Arrays;
+// import java.util.List;
 //
 //
-//public final class CraftGuide extends CraftGuideAPIObject implements IIntegrationModule, RecipeProvider
-//{
+// public final class CraftGuide extends CraftGuideAPIObject implements IIntegrationModule, RecipeProvider
+// {
 //	private static final int SLOT_SIZE = 16;
 //	private static final int TEXTURE_WIDTH = 79;
 //	private static final int TEXTURE_HEIGHT = 58;
@@ -59,8 +59,10 @@
 //	private static final Slot[] GRINDER_SLOTS = {
 //			new ItemSlot( 3, 21, SLOT_SIZE, SLOT_SIZE ).drawOwnBackground(),
 //			new ItemSlot( 41, 21, SLOT_SIZE, SLOT_SIZE, true ).drawOwnBackground().setSlotType( SlotType.OUTPUT_SLOT ),
-//			new ChanceSlot( 59, 12, SLOT_SIZE, SLOT_SIZE, true ).setRatio( GRINDER_RATIO ).setFormatString( " (%1$.2f%% chance)" ).drawOwnBackground().setSlotType( SlotType.OUTPUT_SLOT ),
-//			new ChanceSlot( 59, 30, SLOT_SIZE, SLOT_SIZE, true ).setRatio( GRINDER_RATIO ).setFormatString( " (%1$.2f%% chance)" ).drawOwnBackground().setSlotType( SlotType.OUTPUT_SLOT ),
+//			new ChanceSlot( 59, 12, SLOT_SIZE, SLOT_SIZE, true ).setRatio( GRINDER_RATIO ).setFormatString( " (%1$.2f%%
+// chance)" ).drawOwnBackground().setSlotType( SlotType.OUTPUT_SLOT ),
+//			new ChanceSlot( 59, 30, SLOT_SIZE, SLOT_SIZE, true ).setRatio( GRINDER_RATIO ).setFormatString( " (%1$.2f%%
+// chance)" ).drawOwnBackground().setSlotType( SlotType.OUTPUT_SLOT ),
 //			new ItemSlot( 22, 12, SLOT_SIZE, SLOT_SIZE ).setSlotType( SlotType.MACHINE_SLOT ),
 //			new ItemSlot( 22, 30, SLOT_SIZE, SLOT_SIZE ).setSlotType( SlotType.MACHINE_SLOT )
 //	};
@@ -165,18 +167,27 @@
 //		}
 //		else
 //		{
-//			final TextureClip craftingBG = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 1, 1, TEXTURE_WIDTH, TEXTURE_HEIGHT );
-//			final TextureClip craftingSelected = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 82, 1, TEXTURE_WIDTH, TEXTURE_HEIGHT );
-//			craftingTemplate = new DefaultRecipeTemplate( CRTAFTING_SLOTS, RecipeGeneratorImplementation.workbench, craftingBG, craftingSelected );
+//			final TextureClip craftingBG = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 1, 1,
+// TEXTURE_WIDTH, TEXTURE_HEIGHT );
+//			final TextureClip craftingSelected = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 82, 1,
+// TEXTURE_WIDTH, TEXTURE_HEIGHT );
+//			craftingTemplate = new DefaultRecipeTemplate( CRTAFTING_SLOTS, RecipeGeneratorImplementation.workbench, craftingBG,
+// craftingSelected );
 //
-//			final TextureClip smallBG = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 1, 61, TEXTURE_WIDTH, TEXTURE_HEIGHT );
-//			final TextureClip smallSelected = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 82, 61, TEXTURE_WIDTH, TEXTURE_HEIGHT );
-//			smallTemplate = new DefaultRecipeTemplate( SMALL_CRAFTING_SLOTS, RecipeGeneratorImplementation.workbench, smallBG, smallSelected );
+//			final TextureClip smallBG = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 1, 61, TEXTURE_WIDTH,
+// TEXTURE_HEIGHT );
+//			final TextureClip smallSelected = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 82, 61,
+// TEXTURE_WIDTH, TEXTURE_HEIGHT );
+//			smallTemplate = new DefaultRecipeTemplate( SMALL_CRAFTING_SLOTS, RecipeGeneratorImplementation.workbench, smallBG,
+// smallSelected );
 //		}
 //
-//		final TextureClip shapelessBG = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 1, 121, TEXTURE_WIDTH, TEXTURE_HEIGHT );
-//		final TextureClip shapelessSelected = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 82, 121, TEXTURE_WIDTH, TEXTURE_HEIGHT );
-//		final RecipeTemplate shapelessTemplate = new DefaultRecipeTemplate( SHAPELESS_CRAFTING_SLOTS, RecipeGeneratorImplementation.workbench, shapelessBG, shapelessSelected );
+//		final TextureClip shapelessBG = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 1, 121,
+// TEXTURE_WIDTH, TEXTURE_HEIGHT );
+//		final TextureClip shapelessSelected = new TextureClip( DynamicTexture.instance( "recipe_backgrounds" ), 82, 121,
+// TEXTURE_WIDTH, TEXTURE_HEIGHT );
+//		final RecipeTemplate shapelessTemplate = new DefaultRecipeTemplate( SHAPELESS_CRAFTING_SLOTS,
+// RecipeGeneratorImplementation.workbench, shapelessBG, shapelessSelected );
 //
 //		this.addCraftingRecipes( craftingTemplate, smallTemplate, shapelessTemplate, generator );
 //
@@ -202,7 +213,8 @@
 //		return (List<IRecipe>) CraftingManager.getInstance().getRecipeList();
 //	}
 //
-//	private void addCraftingRecipes( final RecipeTemplate template, final RecipeTemplate templateSmall, final RecipeTemplate templateShapeless, final RecipeGenerator generator )
+//	private void addCraftingRecipes( final RecipeTemplate template, final RecipeTemplate templateSmall, final
+// RecipeTemplate templateShapeless, final RecipeGenerator generator )
 //	{
 //		final List<IRecipe> recipes = this.getUncheckedRecipes();
 //
@@ -235,7 +247,9 @@
 //			{
 //				if( errCount >= 5 )
 //				{
-//					CraftGuideLog.log( "AppEng CraftGuide integration: Stack trace limit reached, further stack traces from this invocation will not be logged to the console. They will still be logged to (.minecraft)/config/CraftGuide/CraftGuide.log", true );
+//					CraftGuideLog.log( "AppEng CraftGuide integration: Stack trace limit reached, further stack traces from this
+// invocation will not be logged to the console. They will still be logged to
+// (.minecraft)/config/CraftGuide/CraftGuide.log", true );
 //				}
 //				else
 //				{
@@ -323,7 +337,8 @@
 //		return output;
 //	}
 //
-//	private Object[] getSmallShapedRecipe( final int width, final int height, final Object[] items, final ItemStack recipeOutput )
+//	private Object[] getSmallShapedRecipe( final int width, final int height, final Object[] items, final ItemStack
+// recipeOutput )
 //	{
 //		final Object[] output = new Object[5];
 //
@@ -362,7 +377,8 @@
 //		return output;
 //	}
 //
-//	private Object[] getCraftingShapedRecipe( final int width, final int height, final Object[] items, final ItemStack recipeOutput )
+//	private Object[] getCraftingShapedRecipe( final int width, final int height, final Object[] items, final ItemStack
+// recipeOutput )
 //	{
 //		final Object[] output = new Object[10];
 //
@@ -422,7 +438,8 @@
 //	{
 //		if( recipe instanceof ShapelessRecipe )
 //		{
-//			final List<Object> items = ReflectionHelper.getPrivateValue( ShapelessRecipe.class, (ShapelessRecipe) recipe, "input" );
+//			final List<Object> items = ReflectionHelper.getPrivateValue( ShapelessRecipe.class, (ShapelessRecipe) recipe,
+// "input" );
 //
 //			return this.getCraftingShapelessRecipe( items, recipe.getRecipeOutput() );
 //		}
@@ -444,4 +461,4 @@
 //
 //		return null;
 //	}
-//}
+// }

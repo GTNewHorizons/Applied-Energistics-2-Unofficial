@@ -18,7 +18,6 @@
 
 package appeng.util.inv;
 
-
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBuildCraftTransport;
@@ -28,99 +27,76 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public class WrapperBCPipe implements IInventory {
 
-public class WrapperBCPipe implements IInventory
-{
+    private final IBuildCraftTransport bc;
+    private final TileEntity ad;
+    private final ForgeDirection dir;
 
-	private final IBuildCraftTransport bc;
-	private final TileEntity ad;
-	private final ForgeDirection dir;
+    public WrapperBCPipe(final TileEntity te, final ForgeDirection d) {
+        this.bc = (IBuildCraftTransport) IntegrationRegistry.INSTANCE.getInstance(IntegrationType.BuildCraftTransport);
+        this.ad = te;
+        this.dir = d;
+    }
 
-	public WrapperBCPipe( final TileEntity te, final ForgeDirection d )
-	{
-		this.bc = (IBuildCraftTransport) IntegrationRegistry.INSTANCE.getInstance( IntegrationType.BuildCraftTransport );
-		this.ad = te;
-		this.dir = d;
-	}
+    @Override
+    public int getSizeInventory() {
+        return 1;
+    }
 
-	@Override
-	public int getSizeInventory()
-	{
-		return 1;
-	}
+    @Override
+    public ItemStack getStackInSlot(final int i) {
+        return null;
+    }
 
-	@Override
-	public ItemStack getStackInSlot( final int i )
-	{
-		return null;
-	}
+    @Override
+    public ItemStack decrStackSize(final int i, final int j) {
+        return null;
+    }
 
-	@Override
-	public ItemStack decrStackSize( final int i, final int j )
-	{
-		return null;
-	}
+    @Override
+    public ItemStack getStackInSlotOnClosing(final int i) {
+        return null;
+    }
 
-	@Override
-	public ItemStack getStackInSlotOnClosing( final int i )
-	{
-		return null;
-	}
+    @Override
+    public void setInventorySlotContents(final int i, final ItemStack itemstack) {
+        if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.BuildCraftTransport)) {
+            this.bc.addItemsToPipe(this.ad, itemstack, this.dir);
+        }
+    }
 
-	@Override
-	public void setInventorySlotContents( final int i, final ItemStack itemstack )
-	{
-		if( IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.BuildCraftTransport ) )
-		{
-			this.bc.addItemsToPipe( this.ad, itemstack, this.dir );
-		}
-	}
+    @Override
+    public String getInventoryName() {
+        return "BC Pipe Wrapper";
+    }
 
-	@Override
-	public String getInventoryName()
-	{
-		return "BC Pipe Wrapper";
-	}
+    @Override
+    public boolean hasCustomInventoryName() {
+        return false;
+    }
 
-	@Override
-	public boolean hasCustomInventoryName()
-	{
-		return false;
-	}
+    @Override
+    public int getInventoryStackLimit() {
+        return 64;
+    }
 
-	@Override
-	public int getInventoryStackLimit()
-	{
-		return 64;
-	}
+    @Override
+    public void markDirty() {}
 
-	@Override
-	public void markDirty()
-	{
+    @Override
+    public boolean isUseableByPlayer(final EntityPlayer entityplayer) {
+        return false;
+    }
 
-	}
+    @Override
+    public void openInventory() {}
 
-	@Override
-	public boolean isUseableByPlayer( final EntityPlayer entityplayer )
-	{
-		return false;
-	}
+    @Override
+    public void closeInventory() {}
 
-	@Override
-	public void openInventory()
-	{
-
-	}
-
-	@Override
-	public void closeInventory()
-	{
-
-	}
-
-	@Override
-	public boolean isItemValidForSlot( final int i, final ItemStack itemstack )
-	{
-		return this.bc.canAddItemsToPipe( this.ad, itemstack, this.dir );
-	}
+    @Override
+    public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
+        return this.bc.canAddItemsToPipe(this.ad, itemstack, this.dir);
+    }
 }

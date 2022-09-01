@@ -18,7 +18,6 @@
 
 package appeng.core.sync.packets;
 
-
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.ClientHelper;
 import appeng.container.AEBaseContainer;
@@ -33,159 +32,133 @@ import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import java.io.IOException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 
-import java.io.IOException;
+public class PacketInventoryAction extends AppEngPacket {
 
+    private final InventoryAction action;
+    private final int slot;
+    private final long id;
+    private final IAEItemStack slotItem;
 
-public class PacketInventoryAction extends AppEngPacket
-{
+    // automatic.
+    public PacketInventoryAction(final ByteBuf stream) throws IOException {
+        this.action = InventoryAction.values()[stream.readInt()];
+        this.slot = stream.readInt();
+        this.id = stream.readLong();
+        final boolean hasItem = stream.readBoolean();
+        if (hasItem) {
+            this.slotItem = AEItemStack.loadItemStackFromPacket(stream);
+        } else {
+            this.slotItem = null;
+        }
+    }
 
-	private final InventoryAction action;
-	private final int slot;
-	private final long id;
-	private final IAEItemStack slotItem;
+    // api
+    public PacketInventoryAction(final InventoryAction action, final int slot, final IAEItemStack slotItem)
+            throws IOException {
 
-	// automatic.
-	public PacketInventoryAction( final ByteBuf stream ) throws IOException
-	{
-		this.action = InventoryAction.values()[stream.readInt()];
-		this.slot = stream.readInt();
-		this.id = stream.readLong();
-		final boolean hasItem = stream.readBoolean();
-		if( hasItem )
-		{
-			this.slotItem = AEItemStack.loadItemStackFromPacket( stream );
-		}
-		else
-		{
-			this.slotItem = null;
-		}
-	}
+        if (Platform.isClient()) {
+            throw new IllegalStateException("invalid packet, client cannot post inv actions with stacks.");
+        }
 
-	// api
-	public PacketInventoryAction( final InventoryAction action, final int slot, final IAEItemStack slotItem ) throws IOException
-	{
+        this.action = action;
+        this.slot = slot;
+        this.id = 0;
+        this.slotItem = slotItem;
 
-		if( Platform.isClient() )
-		{
-			throw new IllegalStateException( "invalid packet, client cannot post inv actions with stacks." );
-		}
+        final ByteBuf data = Unpooled.buffer();
 
-		this.action = action;
-		this.slot = slot;
-		this.id = 0;
-		this.slotItem = slotItem;
+        data.writeInt(this.getPacketID());
+        data.writeInt(action.ordinal());
+        data.writeInt(slot);
+        data.writeLong(this.id);
 
-		final ByteBuf data = Unpooled.buffer();
+        if (slotItem == null) {
+            data.writeBoolean(false);
+        } else {
+            data.writeBoolean(true);
+            slotItem.writeToPacket(data);
+        }
 
-		data.writeInt( this.getPacketID() );
-		data.writeInt( action.ordinal() );
-		data.writeInt( slot );
-		data.writeLong( this.id );
+        this.configureWrite(data);
+    }
 
-		if( slotItem == null )
-		{
-			data.writeBoolean( false );
-		}
-		else
-		{
-			data.writeBoolean( true );
-			slotItem.writeToPacket( data );
-		}
+    // api
+    public PacketInventoryAction(final InventoryAction action, final int slot, final long id) {
+        this.action = action;
+        this.slot = slot;
+        this.id = id;
+        this.slotItem = null;
 
-		this.configureWrite( data );
-	}
+        final ByteBuf data = Unpooled.buffer();
 
-	// api
-	public PacketInventoryAction( final InventoryAction action, final int slot, final long id )
-	{
-		this.action = action;
-		this.slot = slot;
-		this.id = id;
-		this.slotItem = null;
+        data.writeInt(this.getPacketID());
+        data.writeInt(action.ordinal());
+        data.writeInt(slot);
+        data.writeLong(id);
+        data.writeBoolean(false);
 
-		final ByteBuf data = Unpooled.buffer();
+        this.configureWrite(data);
+    }
 
-		data.writeInt( this.getPacketID() );
-		data.writeInt( action.ordinal() );
-		data.writeInt( slot );
-		data.writeLong( id );
-		data.writeBoolean( false );
-
-		this.configureWrite( data );
-	}
-
-	@Override
-	public void serverPacketData( final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player )
-	{
-		final EntityPlayerMP sender = (EntityPlayerMP) player;
-		if( sender.openContainer instanceof AEBaseContainer )
-		{
-			final AEBaseContainer baseContainer = (AEBaseContainer) sender.openContainer;
-			if( this.action == InventoryAction.AUTO_CRAFT )
-			{
-				final ContainerOpenContext context = baseContainer.getOpenContext();
-				if( context != null )
-				{
-					final TileEntity te = context.getTile();
-					Platform.openGUI( sender, te, baseContainer.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_AMOUNT );
-
-					if( sender.openContainer instanceof ContainerCraftAmount )
-					{
-						final ContainerCraftAmount cca = (ContainerCraftAmount) sender.openContainer;
-
-						if( baseContainer.getTargetStack() != null )
-						{
-							cca.getCraftingItem().putStack( baseContainer.getTargetStack().getItemStack() );
-							cca.setItemToCraft( baseContainer.getTargetStack() );
-						}
-
-						cca.detectAndSendChanges();
-					}
-				}
-			}
-            else if( this.action == InventoryAction.SET_PATTERN_VALUE )
-            {
+    @Override
+    public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
+        final EntityPlayerMP sender = (EntityPlayerMP) player;
+        if (sender.openContainer instanceof AEBaseContainer) {
+            final AEBaseContainer baseContainer = (AEBaseContainer) sender.openContainer;
+            if (this.action == InventoryAction.AUTO_CRAFT) {
                 final ContainerOpenContext context = baseContainer.getOpenContext();
-                if( context != null )
-                {
+                if (context != null) {
                     final TileEntity te = context.getTile();
-                    Platform.openGUI( sender, te, baseContainer.getOpenContext().getSide(), GuiBridge.GUI_PATTERN_VALUE_AMOUNT );
-                    if( sender.openContainer instanceof ContainerPatternValueAmount )
-                    {
+                    Platform.openGUI(
+                            sender, te, baseContainer.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_AMOUNT);
+
+                    if (sender.openContainer instanceof ContainerCraftAmount) {
+                        final ContainerCraftAmount cca = (ContainerCraftAmount) sender.openContainer;
+
+                        if (baseContainer.getTargetStack() != null) {
+                            cca.getCraftingItem()
+                                    .putStack(baseContainer.getTargetStack().getItemStack());
+                            cca.setItemToCraft(baseContainer.getTargetStack());
+                        }
+
+                        cca.detectAndSendChanges();
+                    }
+                }
+            } else if (this.action == InventoryAction.SET_PATTERN_VALUE) {
+                final ContainerOpenContext context = baseContainer.getOpenContext();
+                if (context != null) {
+                    final TileEntity te = context.getTile();
+                    Platform.openGUI(
+                            sender, te, baseContainer.getOpenContext().getSide(), GuiBridge.GUI_PATTERN_VALUE_AMOUNT);
+                    if (sender.openContainer instanceof ContainerPatternValueAmount) {
                         final ContainerPatternValueAmount cpv = (ContainerPatternValueAmount) sender.openContainer;
-                        if( baseContainer.getTargetStack() != null )
-                        {
-                            cpv.setValueIndex( this.slot );
-                            cpv.getPatternValue().putStack( baseContainer.getTargetStack().getItemStack() );
+                        if (baseContainer.getTargetStack() != null) {
+                            cpv.setValueIndex(this.slot);
+                            cpv.getPatternValue()
+                                    .putStack(baseContainer.getTargetStack().getItemStack());
                         }
                         cpv.detectAndSendChanges();
                     }
                 }
+            } else {
+                baseContainer.doAction(sender, this.action, this.slot, this.id);
             }
-			else
-			{
-				baseContainer.doAction( sender, this.action, this.slot, this.id );
-			}
-		}
-	}
+        }
+    }
 
-	@Override
-	public void clientPacketData( final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player )
-	{
-		if( this.action == InventoryAction.UPDATE_HAND )
-		{
-			if( this.slotItem == null )
-			{
-				ClientHelper.proxy.getPlayers().get( 0 ).inventory.setItemStack( null );
-			}
-			else
-			{
-				ClientHelper.proxy.getPlayers().get( 0 ).inventory.setItemStack( this.slotItem.getItemStack() );
-			}
-		}
-	}
+    @Override
+    public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
+        if (this.action == InventoryAction.UPDATE_HAND) {
+            if (this.slotItem == null) {
+                ClientHelper.proxy.getPlayers().get(0).inventory.setItemStack(null);
+            } else {
+                ClientHelper.proxy.getPlayers().get(0).inventory.setItemStack(this.slotItem.getItemStack());
+            }
+        }
+    }
 }

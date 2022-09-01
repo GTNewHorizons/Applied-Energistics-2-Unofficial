@@ -18,32 +18,26 @@
 
 package appeng.util;
 
-
 import net.minecraft.world.World;
 
+public class BlockUpdate implements IWorldCallable<Boolean> {
 
-public class BlockUpdate implements IWorldCallable<Boolean>
-{
+    private final int x;
+    private final int y;
+    private final int z;
 
-	private final int x;
-	private final int y;
-	private final int z;
+    public BlockUpdate(final int x, final int y, final int z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
 
-	public BlockUpdate( final int x, final int y, final int z )
-	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
-	}
+    @Override
+    public Boolean call(final World world) throws Exception {
+        if (world.blockExists(this.x, this.y, this.z)) {
+            world.notifyBlocksOfNeighborChange(this.x, this.y, this.z, Platform.AIR_BLOCK);
+        }
 
-	@Override
-	public Boolean call( final World world ) throws Exception
-	{
-		if( world.blockExists( this.x, this.y, this.z ) )
-		{
-			world.notifyBlocksOfNeighborChange( this.x, this.y, this.z, Platform.AIR_BLOCK );
-		}
-
-		return true;
-	}
+        return true;
+    }
 }

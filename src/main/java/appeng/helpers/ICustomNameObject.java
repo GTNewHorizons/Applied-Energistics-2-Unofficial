@@ -18,12 +18,10 @@
 
 package appeng.helpers;
 
+public interface ICustomNameObject {
+    String getCustomName();
 
-public interface ICustomNameObject
-{
-	String getCustomName();
+    boolean hasCustomName();
 
-	boolean hasCustomName();
-
-	void setCustomName(String name);
+    void setCustomName(String name);
 }

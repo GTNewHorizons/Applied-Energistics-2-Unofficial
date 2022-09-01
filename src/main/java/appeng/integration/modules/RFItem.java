@@ -18,30 +18,22 @@
 
 package appeng.integration.modules;
 
-
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
 
+public class RFItem implements IIntegrationModule {
+    @Reflected
+    public static RFItem instance;
 
-public class RFItem implements IIntegrationModule
-{
-	@Reflected
-	public static RFItem instance;
+    @Reflected
+    public RFItem() {
+        IntegrationHelper.testClassExistence(this, cofh.api.energy.IEnergyContainerItem.class);
+    }
 
-	@Reflected
-	public RFItem()
-	{
-		IntegrationHelper.testClassExistence( this, cofh.api.energy.IEnergyContainerItem.class );
-	}
+    @Override
+    public void init() {}
 
-	@Override
-	public void init()
-	{
-	}
-
-	@Override
-	public void postInit()
-	{
-	}
+    @Override
+    public void postInit() {}
 }

@@ -12,23 +12,27 @@ public class Chisel implements IIntegrationModule {
 
     @Reflected
     public static Chisel instance;
+
     @Reflected
-    public Chisel(){}
+    public Chisel() {}
 
     private static final String chiselModID = "chisel";
     private static final String addVariation = "variation:add";
     private static final String groupOre = "group:ore";
 
     static void registerBlock(final Block block, final int meta, final String blockGroupName) {
-        FMLInterModComms.sendMessage(chiselModID, addVariation, String.join("|",
-                blockGroupName,
-                GameRegistry.findUniqueIdentifierFor(block).toString(),
-                Integer.toString(meta)));
+        FMLInterModComms.sendMessage(
+                chiselModID,
+                addVariation,
+                String.join(
+                        "|",
+                        blockGroupName,
+                        GameRegistry.findUniqueIdentifierFor(block).toString(),
+                        Integer.toString(meta)));
     }
+
     static void registerOre(final String groupOreName, final String blockGroupName) {
-        FMLInterModComms.sendMessage(chiselModID, groupOre, String.join("|",
-                blockGroupName,
-                groupOreName));
+        FMLInterModComms.sendMessage(chiselModID, groupOre, String.join("|", blockGroupName, groupOreName));
     }
 
     @Override
@@ -52,7 +56,5 @@ public class Chisel implements IIntegrationModule {
     }
 
     @Override
-    public void postInit() {
-
-    }
+    public void postInit() {}
 }

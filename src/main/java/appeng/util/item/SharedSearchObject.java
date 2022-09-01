@@ -18,69 +18,56 @@
 
 package appeng.util.item;
 
-
 import appeng.util.Platform;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 
+public class SharedSearchObject {
 
-public class SharedSearchObject
-{
+    private final int def;
+    private final int hash;
+    private AESharedNBT shared;
+    private NBTTagCompound compound;
 
-	private final int def;
-	private final int hash;
-	private AESharedNBT shared;
-	private NBTTagCompound compound;
+    public SharedSearchObject(final Item itemID, final int damageValue, final NBTTagCompound tagCompound) {
+        this.def = (damageValue << Platform.DEF_OFFSET) | Item.itemRegistry.getIDForObject(itemID);
+        this.hash = Platform.NBTOrderlessHash(tagCompound);
+        this.setCompound(tagCompound);
+    }
 
-	public SharedSearchObject( final Item itemID, final int damageValue, final NBTTagCompound tagCompound )
-	{
-		this.def = ( damageValue << Platform.DEF_OFFSET ) | Item.itemRegistry.getIDForObject( itemID );
-		this.hash = Platform.NBTOrderlessHash( tagCompound );
-		this.setCompound( tagCompound );
-	}
+    @Override
+    public int hashCode() {
+        return this.def ^ this.hash;
+    }
 
-	@Override
-	public int hashCode()
-	{
-		return this.def ^ this.hash;
-	}
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (this.getClass() != obj.getClass()) {
+            return false;
+        }
+        final SharedSearchObject other = (SharedSearchObject) obj;
+        if (this.def == other.def && this.hash == other.hash) {
+            return Platform.NBTEqualityTest(this.getCompound(), other.getCompound());
+        }
+        return false;
+    }
 
-	@Override
-	public boolean equals( final Object obj )
-	{
-		if( obj == null )
-		{
-			return false;
-		}
-		if( this.getClass() != obj.getClass() )
-		{
-			return false;
-		}
-		final SharedSearchObject other = (SharedSearchObject) obj;
-		if( this.def == other.def && this.hash == other.hash )
-		{
-			return Platform.NBTEqualityTest( this.getCompound(), other.getCompound() );
-		}
-		return false;
-	}
+    AESharedNBT getShared() {
+        return this.shared;
+    }
 
-	AESharedNBT getShared()
-	{
-		return this.shared;
-	}
+    void setShared(final AESharedNBT shared) {
+        this.shared = shared;
+    }
 
-	void setShared( final AESharedNBT shared )
-	{
-		this.shared = shared;
-	}
+    NBTTagCompound getCompound() {
+        return this.compound;
+    }
 
-	NBTTagCompound getCompound()
-	{
-		return this.compound;
-	}
-
-	void setCompound( final NBTTagCompound compound )
-	{
-		this.compound = compound;
-	}
+    void setCompound(final NBTTagCompound compound) {
+        this.compound = compound;
+    }
 }

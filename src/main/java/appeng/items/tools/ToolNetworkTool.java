@@ -18,7 +18,6 @@
 
 package appeng.items.tools;
 
-
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.implementations.items.IAEWrench;
@@ -40,6 +39,7 @@ import appeng.transformer.annotations.Integration.Interface;
 import appeng.util.Platform;
 import buildcraft.api.tools.IToolWrench;
 import com.google.common.base.Optional;
+import java.util.EnumSet;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -51,180 +51,177 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
-import java.util.EnumSet;
+@Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore)
+public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, IToolWrench {
 
+    public ToolNetworkTool() {
+        super(Optional.<String>absent());
 
-@Interface( iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore )
-public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, IToolWrench
-{
+        this.setFeature(EnumSet.of(AEFeature.NetworkTool));
+        this.setMaxStackSize(1);
+        this.setHarvestLevel("wrench", 0);
+    }
 
-	public ToolNetworkTool()
-	{
-		super( Optional.<String>absent() );
+    @Override
+    public IGuiItemObject getGuiObject(final ItemStack is, final World world, final int x, final int y, final int z) {
+        final TileEntity te = world.getTileEntity(x, y, z);
+        return new NetworkToolViewer(is, (IGridHost) (te instanceof IGridHost ? te : null));
+    }
 
-		this.setFeature( EnumSet.of( AEFeature.NetworkTool ) );
-		this.setMaxStackSize( 1 );
-		this.setHarvestLevel( "wrench", 0 );
-	}
+    @Override
+    public ItemStack onItemRightClick(final ItemStack it, final World w, final EntityPlayer p) {
+        if (Platform.isClient()) {
+            final MovingObjectPosition mop = ClientHelper.proxy.getMOP();
 
-	@Override
-	public IGuiItemObject getGuiObject( final ItemStack is, final World world, final int x, final int y, final int z )
-	{
-		final TileEntity te = world.getTileEntity( x, y, z );
-		return new NetworkToolViewer( is, (IGridHost) ( te instanceof IGridHost ? te : null ) );
-	}
+            if (mop == null) {
+                this.onItemUseFirst(it, p, w, 0, 0, 0, -1, 0, 0, 0);
+            } else {
+                final int i = mop.blockX;
+                final int j = mop.blockY;
+                final int k = mop.blockZ;
 
-	@Override
-	public ItemStack onItemRightClick( final ItemStack it, final World w, final EntityPlayer p )
-	{
-		if( Platform.isClient() )
-		{
-			final MovingObjectPosition mop = ClientHelper.proxy.getMOP();
+                if (w.getBlock(i, j, k).isAir(w, i, j, k)) {
+                    this.onItemUseFirst(it, p, w, 0, 0, 0, -1, 0, 0, 0);
+                }
+            }
+        }
 
-			if( mop == null )
-			{
-				this.onItemUseFirst( it, p, w, 0, 0, 0, -1, 0, 0, 0 );
-			}
-			else
-			{
-				final int i = mop.blockX;
-				final int j = mop.blockY;
-				final int k = mop.blockZ;
+        return it;
+    }
 
-				if( w.getBlock( i, j, k ).isAir( w, i, j, k ) )
-				{
-					this.onItemUseFirst( it, p, w, 0, 0, 0, -1, 0, 0, 0 );
-				}
-			}
-		}
+    @Override
+    public boolean onItemUseFirst(
+            final ItemStack is,
+            final EntityPlayer player,
+            final World world,
+            final int x,
+            final int y,
+            final int z,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return true;
 
-		return it;
-	}
+        Block blk = world.getBlock(x, y, z);
+        if (blk != null)
+            if (ForgeEventFactory.onPlayerInteract(
+                            player,
+                            blk.isAir(world, x, y, z)
+                                    ? PlayerInteractEvent.Action.RIGHT_CLICK_AIR
+                                    : PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK,
+                            x,
+                            y,
+                            z,
+                            side,
+                            world)
+                    .isCanceled()) return true;
 
-	@Override
-	public boolean onItemUseFirst( final ItemStack is, final EntityPlayer player, final World world, final int x, final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( ForgeEventFactory.onItemUseStart( player, is, 1 ) <= 0 )
-			return true;
+        final MovingObjectPosition mop =
+                new MovingObjectPosition(x, y, z, side, Vec3.createVectorHelper(hitX, hitY, hitZ));
+        final TileEntity te = world.getTileEntity(x, y, z);
+        if (te instanceof IPartHost) {
+            final SelectedPart part = ((IPartHost) te).selectPart(mop.hitVec);
 
-		Block blk = world.getBlock( x, y, z );
-		if( blk != null )
-			if( ForgeEventFactory.onPlayerInteract( player,
-					blk.isAir( world, x, y, z ) ? PlayerInteractEvent.Action.RIGHT_CLICK_AIR : PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK,
-					x, y, z, side, world ).isCanceled() )
-				return true;
+            if (part.part != null || part.facade != null) {
+                if (part.part instanceof INetworkToolAgent && !((INetworkToolAgent) part.part).showNetworkInfo(mop)) {
+                    return false;
+                }
+            }
+        } else if (te instanceof INetworkToolAgent && !((INetworkToolAgent) te).showNetworkInfo(mop)) {
+            return false;
+        }
 
-		final MovingObjectPosition mop = new MovingObjectPosition( x, y, z, side, Vec3.createVectorHelper( hitX, hitY, hitZ ) );
-		final TileEntity te = world.getTileEntity( x, y, z );
-		if( te instanceof IPartHost )
-		{
-			final SelectedPart part = ( (IPartHost) te ).selectPart( mop.hitVec );
+        if (Platform.isClient()) {
+            NetworkHandler.instance.sendToServer(new PacketClick(x, y, z, side, hitX, hitY, hitZ));
+        }
+        return true;
+    }
 
-			if( part.part != null || part.facade != null )
-			{
-				if( part.part instanceof INetworkToolAgent && !( (INetworkToolAgent) part.part ).showNetworkInfo( mop ) )
-				{
-					return false;
-				}
-			}
-		}
-		else if( te instanceof INetworkToolAgent && !( (INetworkToolAgent) te ).showNetworkInfo( mop ) )
-		{
-			return false;
-		}
+    @Override
+    public boolean doesSneakBypassUse(
+            final World world, final int x, final int y, final int z, final EntityPlayer player) {
+        return true;
+    }
 
-		if( Platform.isClient() )
-		{
-			NetworkHandler.instance.sendToServer( new PacketClick( x, y, z, side, hitX, hitY, hitZ ) );
-		}
-		return true;
-	}
+    public boolean serverSideToolLogic(
+            final ItemStack is,
+            final EntityPlayer p,
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (side >= 0) {
+            if (!Platform.hasPermissions(new DimensionalCoord(w, x, y, z), p)) {
+                return false;
+            }
 
-	@Override
-	public boolean doesSneakBypassUse( final World world, final int x, final int y, final int z, final EntityPlayer player )
-	{
-		return true;
-	}
+            final Block b = w.getBlock(x, y, z);
 
-	public boolean serverSideToolLogic( final ItemStack is, final EntityPlayer p, final World w, final int x, final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( side >= 0 )
-		{
-			if( !Platform.hasPermissions( new DimensionalCoord( w, x, y, z ), p ) )
-			{
-				return false;
-			}
+            if (b != null)
+                if (ForgeEventFactory.onPlayerInteract(
+                                p,
+                                b.isAir(w, x, y, z)
+                                        ? PlayerInteractEvent.Action.RIGHT_CLICK_AIR
+                                        : PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK,
+                                x,
+                                y,
+                                z,
+                                side,
+                                w)
+                        .isCanceled()) return false;
 
-			final Block b = w.getBlock( x, y, z );
+            if (b != null && !p.isSneaking()) {
+                final TileEntity te = w.getTileEntity(x, y, z);
+                if (!(te instanceof IGridHost)) {
+                    if (b.rotateBlock(w, x, y, z, ForgeDirection.getOrientation(side))) {
+                        b.onNeighborBlockChange(w, x, y, z, Platform.AIR_BLOCK);
+                        p.swingItem();
+                        return !w.isRemote;
+                    }
+                }
+            }
 
-			if( b != null )
-				if( ForgeEventFactory.onPlayerInteract( p,
-						b.isAir( w, x, y, z ) ? PlayerInteractEvent.Action.RIGHT_CLICK_AIR : PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK,
-						x, y, z, side, w ).isCanceled() )
-					return false;
+            if (!p.isSneaking()) {
+                if (p.openContainer instanceof AEBaseContainer) {
+                    return true;
+                }
 
-			if( b != null && !p.isSneaking() )
-			{
-				final TileEntity te = w.getTileEntity( x, y, z );
-				if( !( te instanceof IGridHost ) )
-				{
-					if( b.rotateBlock( w, x, y, z, ForgeDirection.getOrientation( side ) ) )
-					{
-						b.onNeighborBlockChange( w, x, y, z, Platform.AIR_BLOCK );
-						p.swingItem();
-						return !w.isRemote;
-					}
-				}
-			}
+                final TileEntity te = w.getTileEntity(x, y, z);
 
-			if( !p.isSneaking() )
-			{
-				if( p.openContainer instanceof AEBaseContainer )
-				{
-					return true;
-				}
+                if (te instanceof IGridHost) {
+                    Platform.openGUI(p, te, ForgeDirection.getOrientation(side), GuiBridge.GUI_NETWORK_STATUS);
+                } else {
+                    Platform.openGUI(p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_NETWORK_TOOL);
+                }
 
-				final TileEntity te = w.getTileEntity( x, y, z );
+                return true;
+            } else {
+                b.onBlockActivated(w, x, y, z, p, side, hitX, hitY, hitZ);
+            }
+        } else {
+            Platform.openGUI(p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_NETWORK_TOOL);
+        }
 
-				if( te instanceof IGridHost )
-				{
-					Platform.openGUI( p, te, ForgeDirection.getOrientation( side ), GuiBridge.GUI_NETWORK_STATUS );
-				}
-				else
-				{
-					Platform.openGUI( p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_NETWORK_TOOL );
-				}
+        return false;
+    }
 
-				return true;
-			}
-			else
-			{
-				b.onBlockActivated( w, x, y, z, p, side, hitX, hitY, hitZ );
-			}
-		}
-		else
-		{
-			Platform.openGUI( p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_NETWORK_TOOL );
-		}
+    @Override
+    public boolean canWrench(final ItemStack is, final EntityPlayer player, final int x, final int y, final int z) {
+        return true;
+    }
 
-		return false;
-	}
+    @Override
+    public boolean canWrench(final EntityPlayer player, final int x, final int y, final int z) {
+        return true;
+    }
 
-	@Override
-	public boolean canWrench( final ItemStack is, final EntityPlayer player, final int x, final int y, final int z )
-	{
-		return true;
-	}
-
-	@Override
-	public boolean canWrench( final EntityPlayer player, final int x, final int y, final int z )
-	{
-		return true;
-	}
-
-	@Override
-	public void wrenchUsed( final EntityPlayer player, final int x, final int y, final int z )
-	{
-		player.swingItem();
-	}
+    @Override
+    public void wrenchUsed(final EntityPlayer player, final int x, final int y, final int z) {
+        player.swingItem();
+    }
 }

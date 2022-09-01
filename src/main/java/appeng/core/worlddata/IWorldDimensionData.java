@@ -18,25 +18,21 @@
 
 package appeng.core.worlddata;
 
-
 import appeng.api.util.WorldCoord;
-import net.minecraft.network.NetworkManager;
-
 import javax.annotation.Nullable;
-
+import net.minecraft.network.NetworkManager;
 
 /**
  * @author thatsIch
  * @version rv3 - 30.05.2015
  * @since rv3 30.05.2015
  */
-public interface IWorldDimensionData
-{
-	void addStorageCell( int newStorageCellID );
+public interface IWorldDimensionData {
+    void addStorageCell(int newStorageCellID);
 
-	WorldCoord getStoredSize( int dim );
+    WorldCoord getStoredSize(int dim);
 
-	void setStoredSize( int dim, int targetX, int targetY, int targetZ );
+    void setStoredSize(int dim, int targetX, int targetY, int targetZ);
 
-	void sendToPlayer( @Nullable NetworkManager manager );
+    void sendToPlayer(@Nullable NetworkManager manager);
 }

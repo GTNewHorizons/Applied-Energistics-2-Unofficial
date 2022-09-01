@@ -18,116 +18,104 @@
 
 package appeng.core.sync;
 
-
 import appeng.core.sync.packets.*;
 import io.netty.buffer.ByteBuf;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+public class AppEngPacketHandlerBase {
+    private static final Map<Class<? extends AppEngPacket>, PacketTypes> REVERSE_LOOKUP = new HashMap<>();
 
-public class AppEngPacketHandlerBase
-{
-	private static final Map<Class<? extends AppEngPacket>, PacketTypes> REVERSE_LOOKUP = new HashMap<>();
+    public enum PacketTypes {
+        PACKET_COMPASS_REQUEST(PacketCompassRequest.class),
 
+        PACKET_COMPASS_RESPONSE(PacketCompassResponse.class),
 
-	public enum PacketTypes
-	{
-		PACKET_COMPASS_REQUEST( PacketCompassRequest.class ),
+        PACKET_INVENTORY_ACTION(PacketInventoryAction.class),
 
-		PACKET_COMPASS_RESPONSE( PacketCompassResponse.class ),
+        PACKET_ME_INVENTORY_UPDATE(PacketMEInventoryUpdate.class),
 
-		PACKET_INVENTORY_ACTION( PacketInventoryAction.class ),
+        PACKET_CONFIG_BUTTON(PacketConfigButton.class),
 
-		PACKET_ME_INVENTORY_UPDATE( PacketMEInventoryUpdate.class ),
+        PACKET_MULTIPART(PacketMultiPart.class),
 
-		PACKET_CONFIG_BUTTON( PacketConfigButton.class ),
+        PACKET_PART_PLACEMENT(PacketPartPlacement.class),
 
-		PACKET_MULTIPART( PacketMultiPart.class ),
+        PACKET_LIGHTNING(PacketLightning.class),
 
-		PACKET_PART_PLACEMENT( PacketPartPlacement.class ),
+        PACKET_MATTER_CANNON(PacketMatterCannon.class),
 
-		PACKET_LIGHTNING( PacketLightning.class ),
+        PACKET_MOCK_EXPLOSION(PacketMockExplosion.class),
 
-		PACKET_MATTER_CANNON( PacketMatterCannon.class ),
+        PACKET_VALUE_CONFIG(PacketValueConfig.class),
 
-		PACKET_MOCK_EXPLOSION( PacketMockExplosion.class ),
+        PACKET_TRANSITION_EFFECT(PacketTransitionEffect.class),
 
-		PACKET_VALUE_CONFIG( PacketValueConfig.class ),
+        PACKET_PROGRESS_VALUE(PacketProgressBar.class),
 
-		PACKET_TRANSITION_EFFECT( PacketTransitionEffect.class ),
+        PACKET_CLICK(PacketClick.class),
 
-		PACKET_PROGRESS_VALUE( PacketProgressBar.class ),
+        PACKET_NEW_STORAGE_DIMENSION(PacketNewStorageDimension.class),
 
-		PACKET_CLICK( PacketClick.class ),
+        PACKET_SWITCH_GUIS(PacketSwitchGuis.class),
 
-		PACKET_NEW_STORAGE_DIMENSION( PacketNewStorageDimension.class ),
+        PACKET_SWAP_SLOTS(PacketSwapSlots.class),
 
-		PACKET_SWITCH_GUIS( PacketSwitchGuis.class ),
+        PACKET_PATTERN_SLOT(PacketPatternSlot.class),
 
-		PACKET_SWAP_SLOTS( PacketSwapSlots.class ),
+        PACKET_RECIPE_NEI(PacketNEIRecipe.class),
 
-		PACKET_PATTERN_SLOT( PacketPatternSlot.class ),
+        PACKET_PARTIAL_ITEM(PacketPartialItem.class),
 
-		PACKET_RECIPE_NEI( PacketNEIRecipe.class ),
+        PACKET_CRAFTING_REQUEST(PacketCraftRequest.class),
 
-		PACKET_PARTIAL_ITEM( PacketPartialItem.class ),
+        PACKET_ASSEMBLER_ANIMATION(PacketAssemblerAnimation.class),
 
-		PACKET_CRAFTING_REQUEST( PacketCraftRequest.class ),
+        PACKET_COMPRESSED_NBT(PacketCompressedNBT.class),
 
-		PACKET_ASSEMBLER_ANIMATION( PacketAssemblerAnimation.class ),
+        PACKET_PAINTED_ENTITY(PacketPaintedEntity.class),
 
-		PACKET_COMPRESSED_NBT( PacketCompressedNBT.class ),
+        PACKET_CRAFTING_CPUS_UPDATE(PacketCraftingCPUsUpdate.class),
 
-		PACKET_PAINTED_ENTITY( PacketPaintedEntity.class ),
+        PACKET_NEI_DRAG(PacketNEIDragClick.class),
 
-        PACKET_CRAFTING_CPUS_UPDATE( PacketCraftingCPUsUpdate.class ),
+        PACKET_PATTERN_VALUE(PacketPatternValueSet.class);
 
-        PACKET_NEI_DRAG( PacketNEIDragClick.class ),
+        private final Class<? extends AppEngPacket> packetClass;
+        private final Constructor<? extends AppEngPacket> packetConstructor;
 
-        PACKET_PATTERN_VALUE( PacketPatternValueSet.class );
+        PacketTypes(final Class<? extends AppEngPacket> c) {
+            this.packetClass = c;
 
-		private final Class<? extends AppEngPacket> packetClass;
-		private final Constructor<? extends AppEngPacket> packetConstructor;
-
-		PacketTypes( final Class<? extends AppEngPacket> c )
-		{
-			this.packetClass = c;
-
-			Constructor<? extends AppEngPacket> x = null;
-			try
-			{
-				x = this.packetClass.getConstructor( ByteBuf.class );
-			}
-			catch( final NoSuchMethodException | SecurityException ignored )
-			{
-			}
+            Constructor<? extends AppEngPacket> x = null;
+            try {
+                x = this.packetClass.getConstructor(ByteBuf.class);
+            } catch (final NoSuchMethodException | SecurityException ignored) {
+            }
 
             this.packetConstructor = x;
-			REVERSE_LOOKUP.put( this.packetClass, this );
+            REVERSE_LOOKUP.put(this.packetClass, this);
 
-			if( this.packetConstructor == null )
-			{
-				throw new IllegalStateException( "Invalid Packet Class " + c + ", must be constructable on DataInputStream" );
-			}
-		}
+            if (this.packetConstructor == null) {
+                throw new IllegalStateException(
+                        "Invalid Packet Class " + c + ", must be constructable on DataInputStream");
+            }
+        }
 
-		public static PacketTypes getPacket( final int id )
-		{
-			return ( values() )[id];
-		}
+        public static PacketTypes getPacket(final int id) {
+            return (values())[id];
+        }
 
-		static PacketTypes getID( final Class<? extends AppEngPacket> c )
-		{
-			return REVERSE_LOOKUP.get( c );
-		}
+        static PacketTypes getID(final Class<? extends AppEngPacket> c) {
+            return REVERSE_LOOKUP.get(c);
+        }
 
-		public AppEngPacket parsePacket( final ByteBuf in )
-				throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-		{
-			return this.packetConstructor.newInstance( in );
-		}
-	}
+        public AppEngPacket parsePacket(final ByteBuf in)
+                throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+                        InvocationTargetException {
+            return this.packetConstructor.newInstance(in);
+        }
+    }
 }

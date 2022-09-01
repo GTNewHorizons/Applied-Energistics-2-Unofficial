@@ -18,7 +18,6 @@
 
 package appeng.me;
 
-
 import appeng.api.exceptions.ExistingConnectionException;
 import appeng.api.exceptions.FailedConnection;
 import appeng.api.exceptions.NullNodeConnectionException;
@@ -36,274 +35,234 @@ import appeng.core.features.AEFeature;
 import appeng.me.pathfinding.IPathItem;
 import appeng.util.Platform;
 import appeng.util.ReadOnlyCollection;
+import java.util.Arrays;
+import java.util.EnumSet;
 import net.minecraftforge.common.util.ForgeDirection;
 import org.apache.logging.log4j.Level;
 
-import java.util.Arrays;
-import java.util.EnumSet;
+public class GridConnection implements IGridConnection, IPathItem {
 
+    private static final String EXISTING_CONNECTION_MESSAGE =
+            "Connection between node [machine=%s, %s] and [machine=%s, %s] on [%s] already exists.";
 
-public class GridConnection implements IGridConnection, IPathItem
-{
+    private static final MENetworkChannelsChanged EVENT = new MENetworkChannelsChanged();
+    private int channelData = 0;
+    private Object visitorIterationNumber = null;
+    private GridNode sideA;
+    private ForgeDirection fromAtoB;
+    private GridNode sideB;
 
-	private static final String EXISTING_CONNECTION_MESSAGE = "Connection between node [machine=%s, %s] and [machine=%s, %s] on [%s] already exists.";
+    public GridConnection(final IGridNode aNode, final IGridNode bNode, final ForgeDirection fromAtoB)
+            throws FailedConnection {
 
-	private static final MENetworkChannelsChanged EVENT = new MENetworkChannelsChanged();
-	private int channelData = 0;
-	private Object visitorIterationNumber = null;
-	private GridNode sideA;
-	private ForgeDirection fromAtoB;
-	private GridNode sideB;
+        final GridNode a = (GridNode) aNode;
+        final GridNode b = (GridNode) bNode;
 
-	public GridConnection( final IGridNode aNode, final IGridNode bNode, final ForgeDirection fromAtoB ) throws FailedConnection
-	{
+        if (Platform.securityCheck(a, b)) {
+            if (AEConfig.instance.isFeatureEnabled(AEFeature.LogSecurityAudits)) {
+                final DimensionalCoord aCoordinates = a.getGridBlock().getLocation();
+                final DimensionalCoord bCoordinates = b.getGridBlock().getLocation();
 
-		final GridNode a = (GridNode) aNode;
-		final GridNode b = (GridNode) bNode;
+                AELog.info(
+                        "Security audit 1 failed at [%s] belonging to player [id=%d]",
+                        aCoordinates.toString(), a.getPlayerID());
+                AELog.info(
+                        "Security audit 2 failed at [%s] belonging to player [id=%d]",
+                        bCoordinates.toString(), b.getPlayerID());
+            }
 
-		if( Platform.securityCheck( a, b ) )
-		{
-			if( AEConfig.instance.isFeatureEnabled( AEFeature.LogSecurityAudits ) )
-			{
-				final DimensionalCoord aCoordinates = a.getGridBlock().getLocation();
-				final DimensionalCoord bCoordinates = b.getGridBlock().getLocation();
+            throw new SecurityConnectionException();
+        }
 
-				AELog.info( "Security audit 1 failed at [%s] belonging to player [id=%d]", aCoordinates.toString(), a.getPlayerID() );
-				AELog.info( "Security audit 2 failed at [%s] belonging to player [id=%d]", bCoordinates.toString(), b.getPlayerID() );
-			}
+        if (a == null || b == null) {
+            throw new NullNodeConnectionException();
+        }
 
-			throw new SecurityConnectionException();
-		}
-
-		if( a == null || b == null )
-		{
-			throw new NullNodeConnectionException();
-		}
-
-		if( a.hasConnection( b ) || b.hasConnection( a ) )
-		{
-			final String aMachineClass = a.getGridBlock().getMachine().getClass().getSimpleName();
-			final String bMachineClass = b.getGridBlock().getMachine().getClass().getSimpleName();
-			final String aCoordinates = a.getGridBlock().getLocation().toString();
-			final String bCoordinates = b.getGridBlock().getLocation().toString();
-
-			throw new ExistingConnectionException( String.format( EXISTING_CONNECTION_MESSAGE, aMachineClass, aCoordinates, bMachineClass, bCoordinates, fromAtoB ) );
-		}
-
-		this.sideA = a;
-		this.fromAtoB = fromAtoB;
-		this.sideB = b;
-
-		if( b.getMyGrid() == null )
-		{
-			b.setGrid( a.getInternalGrid() );
-		}
-		else
-		{
-			if( a.getMyGrid() == null )
-			{
-				final GridPropagator gp = new GridPropagator( b.getInternalGrid() );
-				a.beginVisit( gp );
-			}
-			else if( b.getMyGrid() == null )
-			{
-				final GridPropagator gp = new GridPropagator( a.getInternalGrid() );
-				b.beginVisit( gp );
-			}
-			else if( this.isNetworkABetter( a, b ) )
-			{
-				final GridPropagator gp = new GridPropagator( a.getInternalGrid() );
-				b.beginVisit( gp );
-			}
-			else
-			{
-				final GridPropagator gp = new GridPropagator( b.getInternalGrid() );
-				a.beginVisit( gp );
-			}
-		}
-
-		// a connection was destroyed RE-PATH!!
-		final IPathingGrid p = this.sideA.getInternalGrid().getCache( IPathingGrid.class );
-		if (AEConfig.instance.debugPathFinding)
-        {
+        if (a.hasConnection(b) || b.hasConnection(a)) {
+            final String aMachineClass =
+                    a.getGridBlock().getMachine().getClass().getSimpleName();
+            final String bMachineClass =
+                    b.getGridBlock().getMachine().getClass().getSimpleName();
             final String aCoordinates = a.getGridBlock().getLocation().toString();
             final String bCoordinates = b.getGridBlock().getLocation().toString();
-            AELog.info( "Repath is triggered by adding connection from [%s] to [%s]", aCoordinates, bCoordinates );
-            AELog.printStackTrace( Level.INFO );
+
+            throw new ExistingConnectionException(String.format(
+                    EXISTING_CONNECTION_MESSAGE, aMachineClass, aCoordinates, bMachineClass, bCoordinates, fromAtoB));
         }
-		p.repath();
 
-		this.sideA.addConnection( this );
-		this.sideB.addConnection( this );
-	}
+        this.sideA = a;
+        this.fromAtoB = fromAtoB;
+        this.sideB = b;
 
-	private boolean isNetworkABetter( final GridNode a, final GridNode b )
-	{
-		return a.getMyGrid().getPriority() > b.getMyGrid().getPriority() || a.getMyGrid().size() > b.getMyGrid().size();
-	}
+        if (b.getMyGrid() == null) {
+            b.setGrid(a.getInternalGrid());
+        } else {
+            if (a.getMyGrid() == null) {
+                final GridPropagator gp = new GridPropagator(b.getInternalGrid());
+                a.beginVisit(gp);
+            } else if (b.getMyGrid() == null) {
+                final GridPropagator gp = new GridPropagator(a.getInternalGrid());
+                b.beginVisit(gp);
+            } else if (this.isNetworkABetter(a, b)) {
+                final GridPropagator gp = new GridPropagator(a.getInternalGrid());
+                b.beginVisit(gp);
+            } else {
+                final GridPropagator gp = new GridPropagator(b.getInternalGrid());
+                a.beginVisit(gp);
+            }
+        }
 
-	@Override
-	public IGridNode getOtherSide( final IGridNode gridNode )
-	{
-		if( gridNode == this.sideA )
-		{
-			return this.sideB;
-		}
-		if( gridNode == this.sideB )
-		{
-			return this.sideA;
-		}
+        // a connection was destroyed RE-PATH!!
+        final IPathingGrid p = this.sideA.getInternalGrid().getCache(IPathingGrid.class);
+        if (AEConfig.instance.debugPathFinding) {
+            final String aCoordinates = a.getGridBlock().getLocation().toString();
+            final String bCoordinates = b.getGridBlock().getLocation().toString();
+            AELog.info("Repath is triggered by adding connection from [%s] to [%s]", aCoordinates, bCoordinates);
+            AELog.printStackTrace(Level.INFO);
+        }
+        p.repath();
 
-		throw new GridException( "Invalid Side of Connection" );
-	}
+        this.sideA.addConnection(this);
+        this.sideB.addConnection(this);
+    }
 
-	@Override
-	public ForgeDirection getDirection( final IGridNode side )
-	{
-		if( this.fromAtoB == ForgeDirection.UNKNOWN )
-		{
-			return this.fromAtoB;
-		}
+    private boolean isNetworkABetter(final GridNode a, final GridNode b) {
+        return a.getMyGrid().getPriority() > b.getMyGrid().getPriority()
+                || a.getMyGrid().size() > b.getMyGrid().size();
+    }
 
-		if( this.sideA == side )
-		{
-			return this.fromAtoB;
-		}
-		else
-		{
-			return this.fromAtoB.getOpposite();
-		}
-	}
+    @Override
+    public IGridNode getOtherSide(final IGridNode gridNode) {
+        if (gridNode == this.sideA) {
+            return this.sideB;
+        }
+        if (gridNode == this.sideB) {
+            return this.sideA;
+        }
 
-	@Override
-	public void destroy()
-	{
-        if (AEConfig.instance.debugPathFinding)
-        {
+        throw new GridException("Invalid Side of Connection");
+    }
+
+    @Override
+    public ForgeDirection getDirection(final IGridNode side) {
+        if (this.fromAtoB == ForgeDirection.UNKNOWN) {
+            return this.fromAtoB;
+        }
+
+        if (this.sideA == side) {
+            return this.fromAtoB;
+        } else {
+            return this.fromAtoB.getOpposite();
+        }
+    }
+
+    @Override
+    public void destroy() {
+        if (AEConfig.instance.debugPathFinding) {
             final String aCoordinates = sideA.getGridBlock().getLocation().toString();
             final String bCoordinates = sideB.getGridBlock().getLocation().toString();
-            AELog.info( "Repath is triggered by destroying connection from [%s] to [%s]", aCoordinates, bCoordinates );
-            AELog.printStackTrace( Level.INFO );
+            AELog.info("Repath is triggered by destroying connection from [%s] to [%s]", aCoordinates, bCoordinates);
+            AELog.printStackTrace(Level.INFO);
         }
 
-		// a connection was destroyed RE-PATH!!
-		final IPathingGrid p = this.sideA.getInternalGrid().getCache( IPathingGrid.class );
-		p.repath();
+        // a connection was destroyed RE-PATH!!
+        final IPathingGrid p = this.sideA.getInternalGrid().getCache(IPathingGrid.class);
+        p.repath();
 
-		this.sideA.removeConnection( this );
-		this.sideB.removeConnection( this );
+        this.sideA.removeConnection(this);
+        this.sideB.removeConnection(this);
 
-		this.sideA.validateGrid();
-		this.sideB.validateGrid();
-	}
+        this.sideA.validateGrid();
+        this.sideB.validateGrid();
+    }
 
-	@Override
-	public IGridNode a()
-	{
-		return this.sideA;
-	}
+    @Override
+    public IGridNode a() {
+        return this.sideA;
+    }
 
-	@Override
-	public IGridNode b()
-	{
-		return this.sideB;
-	}
+    @Override
+    public IGridNode b() {
+        return this.sideB;
+    }
 
-	@Override
-	public boolean hasDirection()
-	{
-		return this.fromAtoB != ForgeDirection.UNKNOWN;
-	}
+    @Override
+    public boolean hasDirection() {
+        return this.fromAtoB != ForgeDirection.UNKNOWN;
+    }
 
-	@Override
-	public int getUsedChannels()
-	{
-		return ( this.channelData >> 8 ) & 0xff;
-	}
+    @Override
+    public int getUsedChannels() {
+        return (this.channelData >> 8) & 0xff;
+    }
 
-	@Override
-	public IPathItem getControllerRoute()
-	{
-		if( this.sideA.getFlags().contains( GridFlags.CANNOT_CARRY ) )
-		{
-			return null;
-		}
-		return this.sideA;
-	}
+    @Override
+    public IPathItem getControllerRoute() {
+        if (this.sideA.getFlags().contains(GridFlags.CANNOT_CARRY)) {
+            return null;
+        }
+        return this.sideA;
+    }
 
-	@Override
-	public void setControllerRoute( final IPathItem fast, final boolean zeroOut )
-	{
-		if( zeroOut )
-		{
-			this.channelData &= ~0xff;
-		}
+    @Override
+    public void setControllerRoute(final IPathItem fast, final boolean zeroOut) {
+        if (zeroOut) {
+            this.channelData &= ~0xff;
+        }
 
-		if( this.sideB == fast )
-		{
-			final GridNode tmp = this.sideA;
-			this.sideA = this.sideB;
-			this.sideB = tmp;
-			this.fromAtoB = this.fromAtoB.getOpposite();
-		}
-	}
+        if (this.sideB == fast) {
+            final GridNode tmp = this.sideA;
+            this.sideA = this.sideB;
+            this.sideB = tmp;
+            this.fromAtoB = this.fromAtoB.getOpposite();
+        }
+    }
 
-	@Override
-	public boolean canSupportMoreChannels()
-	{
-		return this.getLastUsedChannels() < 128; // max, PERIOD.
-	}
+    @Override
+    public boolean canSupportMoreChannels() {
+        return this.getLastUsedChannels() < 128; // max, PERIOD.
+    }
 
-	@Override
-	public IReadOnlyCollection<IPathItem> getPossibleOptions()
-	{
-		return new ReadOnlyCollection<IPathItem>( Arrays.asList( (IPathItem) this.a(), (IPathItem) this.b() ) );
-	}
+    @Override
+    public IReadOnlyCollection<IPathItem> getPossibleOptions() {
+        return new ReadOnlyCollection<IPathItem>(Arrays.asList((IPathItem) this.a(), (IPathItem) this.b()));
+    }
 
-	@Override
-	public void incrementChannelCount( final int usedChannels )
-	{
-		this.channelData += usedChannels;
-	}
+    @Override
+    public void incrementChannelCount(final int usedChannels) {
+        this.channelData += usedChannels;
+    }
 
-	@Override
-	public EnumSet<GridFlags> getFlags()
-	{
-		return EnumSet.noneOf( GridFlags.class );
-	}
+    @Override
+    public EnumSet<GridFlags> getFlags() {
+        return EnumSet.noneOf(GridFlags.class);
+    }
 
-	@Override
-	public void finalizeChannels()
-	{
-		if( this.getUsedChannels() != this.getLastUsedChannels() )
-		{
-			this.channelData &= 0xff;
-			this.channelData |= this.channelData << 8;
+    @Override
+    public void finalizeChannels() {
+        if (this.getUsedChannels() != this.getLastUsedChannels()) {
+            this.channelData &= 0xff;
+            this.channelData |= this.channelData << 8;
 
-			if( this.sideA.getInternalGrid() != null )
-			{
-				this.sideA.getInternalGrid().postEventTo( this.sideA, EVENT );
-			}
+            if (this.sideA.getInternalGrid() != null) {
+                this.sideA.getInternalGrid().postEventTo(this.sideA, EVENT);
+            }
 
-			if( this.sideB.getInternalGrid() != null )
-			{
-				this.sideB.getInternalGrid().postEventTo( this.sideB, EVENT );
-			}
-		}
-	}
+            if (this.sideB.getInternalGrid() != null) {
+                this.sideB.getInternalGrid().postEventTo(this.sideB, EVENT);
+            }
+        }
+    }
 
-	private int getLastUsedChannels()
-	{
-		return this.channelData & 0xff;
-	}
+    private int getLastUsedChannels() {
+        return this.channelData & 0xff;
+    }
 
-	Object getVisitorIterationNumber()
-	{
-		return this.visitorIterationNumber;
-	}
+    Object getVisitorIterationNumber() {
+        return this.visitorIterationNumber;
+    }
 
-	void setVisitorIterationNumber( final Object visitorIterationNumber )
-	{
-		this.visitorIterationNumber = visitorIterationNumber;
-	}
+    void setVisitorIterationNumber(final Object visitorIterationNumber) {
+        this.visitorIterationNumber = visitorIterationNumber;
+    }
 }

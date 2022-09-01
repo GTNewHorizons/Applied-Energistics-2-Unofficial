@@ -18,9 +18,10 @@
 
 package appeng.spatial;
 
-
 import appeng.api.AEApi;
 import appeng.core.AEConfig;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.world.World;
@@ -28,73 +29,61 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.gen.ChunkProviderGenerate;
 
-import java.util.ArrayList;
-import java.util.List;
+public class StorageChunkProvider extends ChunkProviderGenerate {
+    private static final int SQUARE_CHUNK_SIZE = 256;
+    private static final Block[] BLOCKS;
 
+    static {
+        BLOCKS = new Block[255 * SQUARE_CHUNK_SIZE];
 
-public class StorageChunkProvider extends ChunkProviderGenerate
-{
-	private static final int SQUARE_CHUNK_SIZE = 256;
-	private static final Block[] BLOCKS;
+        for (final Block matrixFrameBlock : AEApi.instance()
+                .definitions()
+                .blocks()
+                .matrixFrame()
+                .maybeBlock()
+                .asSet()) {
+            for (int x = 0; x < BLOCKS.length; x++) {
+                BLOCKS[x] = matrixFrameBlock;
+            }
+        }
+    }
 
-	static
-	{
-		BLOCKS = new Block[255 * SQUARE_CHUNK_SIZE];
+    private final World world;
 
-		for( final Block matrixFrameBlock : AEApi.instance().definitions().blocks().matrixFrame().maybeBlock().asSet() )
-		{
-			for( int x = 0; x < BLOCKS.length; x++ )
-			{
-				BLOCKS[x] = matrixFrameBlock;
-			}
-		}
-	}
+    public StorageChunkProvider(final World world, final long i) {
+        super(world, i, false);
+        this.world = world;
+    }
 
-	private final World world;
+    @Override
+    public Chunk provideChunk(final int x, final int z) {
+        final Chunk chunk = new Chunk(this.world, BLOCKS, x, z);
 
-	public StorageChunkProvider( final World world, final long i )
-	{
-		super( world, i, false );
-		this.world = world;
-	}
+        final byte[] biomes = chunk.getBiomeArray();
+        final AEConfig config = AEConfig.instance;
 
-	@Override
-	public Chunk provideChunk( final int x, final int z )
-	{
-		final Chunk chunk = new Chunk( this.world, BLOCKS, x, z );
+        for (int k = 0; k < biomes.length; ++k) {
+            biomes[k] = (byte) config.storageBiomeID;
+        }
 
-		final byte[] biomes = chunk.getBiomeArray();
-		final AEConfig config = AEConfig.instance;
+        if (!chunk.isTerrainPopulated) {
+            chunk.isTerrainPopulated = true;
+            chunk.resetRelightChecks();
+        }
 
-		for( int k = 0; k < biomes.length; ++k )
-		{
-			biomes[k] = (byte) config.storageBiomeID;
-		}
+        return chunk;
+    }
 
-		if( !chunk.isTerrainPopulated )
-		{
-			chunk.isTerrainPopulated = true;
-			chunk.resetRelightChecks();
-		}
+    @Override
+    public void populate(final IChunkProvider par1iChunkProvider, final int par2, final int par3) {}
 
-		return chunk;
-	}
+    @Override
+    public boolean unloadQueuedChunks() {
+        return true;
+    }
 
-	@Override
-	public void populate( final IChunkProvider par1iChunkProvider, final int par2, final int par3 )
-	{
-
-	}
-
-	@Override
-	public boolean unloadQueuedChunks()
-	{
-		return true;
-	}
-
-	@Override
-	public List getPossibleCreatures( final EnumCreatureType a, final int b, final int c, final int d )
-	{
-		return new ArrayList();
-	}
+    @Override
+    public List getPossibleCreatures(final EnumCreatureType a, final int b, final int c, final int d) {
+        return new ArrayList();
+    }
 }

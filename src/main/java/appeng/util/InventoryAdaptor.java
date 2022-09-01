@@ -18,13 +18,13 @@
 
 package appeng.util;
 
-
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBetterStorage;
 import appeng.util.inv.*;
+import java.util.ArrayList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -32,89 +32,76 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.ArrayList;
+public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
+    // returns an appropriate adaptor, or null
+    public static InventoryAdaptor getAdaptor(final Object te, final ForgeDirection d) {
+        if (te == null) {
+            return null;
+        }
 
-public abstract class InventoryAdaptor implements Iterable<ItemSlot>
-{
+        final IBetterStorage bs = (IBetterStorage)
+                (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.BetterStorage)
+                        ? IntegrationRegistry.INSTANCE.getInstance(IntegrationType.BetterStorage)
+                        : null);
 
-	// returns an appropriate adaptor, or null
-	public static InventoryAdaptor getAdaptor( final Object te, final ForgeDirection d )
-	{
-		if( te == null )
-		{
-			return null;
-		}
+        if (te instanceof EntityPlayer) {
+            return new AdaptorIInventory(new AdaptorPlayerInventory(((EntityPlayer) te).inventory, false));
+        } else if (te instanceof ArrayList) {
+            @SuppressWarnings("unchecked")
+            final ArrayList<ItemStack> list = (ArrayList<ItemStack>) te;
 
-		final IBetterStorage bs = (IBetterStorage) ( IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.BetterStorage ) ? IntegrationRegistry.INSTANCE.getInstance( IntegrationType.BetterStorage ) : null );
+            return new AdaptorList(list);
+        } else if (bs != null && bs.isStorageCrate(te)) {
+            return bs.getAdaptor(te, d);
+        } else if (te instanceof TileEntityChest) {
+            return new AdaptorIInventory(Platform.GetChestInv(te));
+        } else if (te instanceof ISidedInventory) {
+            final ISidedInventory si = (ISidedInventory) te;
+            final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
+            if (si.getSizeInventory() > 0 && slots != null && slots.length > 0) {
+                return new AdaptorIInventory(new WrapperMCISidedInventory(si, d));
+            }
+        } else if (te instanceof IInventory) {
+            final IInventory i = (IInventory) te;
+            if (i.getSizeInventory() > 0) {
+                return new AdaptorIInventory(i);
+            }
+        }
 
-		if( te instanceof EntityPlayer )
-		{
-			return new AdaptorIInventory( new AdaptorPlayerInventory( ( (EntityPlayer) te ).inventory, false ) );
-		}
-		else if( te instanceof ArrayList )
-		{
-			@SuppressWarnings( "unchecked" )            final ArrayList<ItemStack> list = (ArrayList<ItemStack>) te;
+        return null;
+    }
 
-			return new AdaptorList( list );
-		}
-		else if( bs != null && bs.isStorageCrate( te ) )
-		{
-			return bs.getAdaptor( te, d );
-		}
-		else if( te instanceof TileEntityChest )
-		{
-			return new AdaptorIInventory( Platform.GetChestInv( te ) );
-		}
-		else if( te instanceof ISidedInventory )
-		{
-			final ISidedInventory si = (ISidedInventory) te;
-			final int[] slots = si.getAccessibleSlotsFromSide( d.ordinal() );
-			if( si.getSizeInventory() > 0 && slots != null && slots.length > 0 )
-			{
-				return new AdaptorIInventory( new WrapperMCISidedInventory( si, d ) );
-			}
-		}
-		else if( te instanceof IInventory )
-		{
-			final IInventory i = (IInventory) te;
-			if( i.getSizeInventory() > 0 )
-			{
-				return new AdaptorIInventory( i );
-			}
-		}
+    // return what was extracted.
+    public abstract ItemStack removeItems(int amount, ItemStack filter, IInventoryDestination destination);
 
-		return null;
-	}
+    public abstract ItemStack simulateRemove(int amount, ItemStack filter, IInventoryDestination destination);
 
-	// return what was extracted.
-	public abstract ItemStack removeItems( int amount, ItemStack filter, IInventoryDestination destination );
+    // return what was extracted.
+    public abstract ItemStack removeSimilarItems(
+            int amount, ItemStack filter, FuzzyMode fuzzyMode, IInventoryDestination destination);
 
-	public abstract ItemStack simulateRemove( int amount, ItemStack filter, IInventoryDestination destination );
+    public abstract ItemStack simulateSimilarRemove(
+            int amount, ItemStack filter, FuzzyMode fuzzyMode, IInventoryDestination destination);
 
-	// return what was extracted.
-	public abstract ItemStack removeSimilarItems( int amount, ItemStack filter, FuzzyMode fuzzyMode, IInventoryDestination destination );
+    // return what isn't used...
+    public abstract ItemStack addItems(ItemStack toBeAdded);
 
-	public abstract ItemStack simulateSimilarRemove( int amount, ItemStack filter, FuzzyMode fuzzyMode, IInventoryDestination destination );
+    /**
+     * @param insertionMode advice implementation on how ItemStacks should be inserted. Might not has an effect whatsoever!
+     */
+    public ItemStack addItems(ItemStack toBeAdded, InsertionMode insertionMode) {
+        return addItems(toBeAdded);
+    }
 
-	// return what isn't used...
-	public abstract ItemStack addItems( ItemStack toBeAdded );
+    public abstract ItemStack simulateAdd(ItemStack toBeSimulated);
 
-	/**
-	 * @param insertionMode advice implementation on how ItemStacks should be inserted. Might not has an effect whatsoever!
-	 */
-	public ItemStack addItems( ItemStack toBeAdded, InsertionMode insertionMode ) {
-		return addItems( toBeAdded );
-	}
+    /**
+     * @param insertionMode advice implementation on how ItemStacks should be inserted. Might not has an effect whatsoever!
+     */
+    public ItemStack simulateAdd(ItemStack toBeSimulated, InsertionMode insertionMode) {
+        return simulateAdd(toBeSimulated);
+    }
 
-	public abstract ItemStack simulateAdd( ItemStack toBeSimulated );
-
-	/**
-	 * @param insertionMode advice implementation on how ItemStacks should be inserted. Might not has an effect whatsoever!
-	 */
-	public ItemStack simulateAdd( ItemStack toBeSimulated, InsertionMode insertionMode ) {
-		return simulateAdd( toBeSimulated );
-	}
-
-	public abstract boolean containsItems();
+    public abstract boolean containsItems();
 }

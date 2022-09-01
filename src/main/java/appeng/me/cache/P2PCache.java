@@ -18,7 +18,6 @@
 
 package appeng.me.cache;
 
-
 import appeng.api.networking.*;
 import appeng.api.networking.events.MENetworkBootingStatusChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -29,203 +28,152 @@ import appeng.parts.p2p.PartP2PTunnel;
 import appeng.parts.p2p.PartP2PTunnelME;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-
 import java.util.HashMap;
 
+public class P2PCache implements IGridCache {
 
-public class P2PCache implements IGridCache
-{
+    private final IGrid myGrid;
+    private final HashMap<Long, PartP2PTunnel> inputs = new HashMap<Long, PartP2PTunnel>();
+    private final Multimap<Long, PartP2PTunnel> outputs = LinkedHashMultimap.create();
+    private final TunnelCollection NullColl = new TunnelCollection<PartP2PTunnel>(null, null);
 
-	private final IGrid myGrid;
-	private final HashMap<Long, PartP2PTunnel> inputs = new HashMap<Long, PartP2PTunnel>();
-	private final Multimap<Long, PartP2PTunnel> outputs = LinkedHashMultimap.create();
-	private final TunnelCollection NullColl = new TunnelCollection<PartP2PTunnel>( null, null );
+    public P2PCache(final IGrid g) {
+        this.myGrid = g;
+    }
 
-	public P2PCache( final IGrid g )
-	{
-		this.myGrid = g;
-	}
+    @MENetworkEventSubscribe
+    public void bootComplete(final MENetworkBootingStatusChange bootStatus) {
+        final ITickManager tm = this.myGrid.getCache(ITickManager.class);
+        for (final PartP2PTunnel me : this.inputs.values()) {
+            if (me instanceof PartP2PTunnelME) {
+                tm.wakeDevice(me.getGridNode());
+            }
+        }
+    }
 
-	@MENetworkEventSubscribe
-	public void bootComplete( final MENetworkBootingStatusChange bootStatus )
-	{
-		final ITickManager tm = this.myGrid.getCache( ITickManager.class );
-		for( final PartP2PTunnel me : this.inputs.values() )
-		{
-			if( me instanceof PartP2PTunnelME )
-			{
-				tm.wakeDevice( me.getGridNode() );
-			}
-		}
-	}
+    @MENetworkEventSubscribe
+    public void bootComplete(final MENetworkPowerStatusChange power) {
+        final ITickManager tm = this.myGrid.getCache(ITickManager.class);
+        for (final PartP2PTunnel me : this.inputs.values()) {
+            if (me instanceof PartP2PTunnelME) {
+                tm.wakeDevice(me.getGridNode());
+            }
+        }
+    }
 
-	@MENetworkEventSubscribe
-	public void bootComplete( final MENetworkPowerStatusChange power )
-	{
-		final ITickManager tm = this.myGrid.getCache( ITickManager.class );
-		for( final PartP2PTunnel me : this.inputs.values() )
-		{
-			if( me instanceof PartP2PTunnelME )
-			{
-				tm.wakeDevice( me.getGridNode() );
-			}
-		}
-	}
+    @Override
+    public void onUpdateTick() {}
 
-	@Override
-	public void onUpdateTick()
-	{
+    @Override
+    public void removeNode(final IGridNode node, final IGridHost machine) {
+        if (machine instanceof PartP2PTunnel) {
+            if (machine instanceof PartP2PTunnelME) {
+                if (!node.hasFlag(GridFlags.REQUIRE_CHANNEL)) {
+                    return;
+                }
+            }
 
-	}
+            final PartP2PTunnel t = (PartP2PTunnel) machine;
+            // AELog.info( "rmv-" + (t.output ? "output: " : "input: ") + t.freq
+            // );
 
-	@Override
-	public void removeNode( final IGridNode node, final IGridHost machine )
-	{
-		if( machine instanceof PartP2PTunnel )
-		{
-			if( machine instanceof PartP2PTunnelME )
-			{
-				if( !node.hasFlag( GridFlags.REQUIRE_CHANNEL ) )
-				{
-					return;
-				}
-			}
+            if (t.isOutput()) {
+                this.outputs.remove(t.getFrequency(), t);
+            } else {
+                this.inputs.remove(t.getFrequency());
+            }
 
-			final PartP2PTunnel t = (PartP2PTunnel) machine;
-			// AELog.info( "rmv-" + (t.output ? "output: " : "input: ") + t.freq
-			// );
+            this.updateTunnel(t.getFrequency(), !t.isOutput(), false);
+        }
+    }
 
-			if( t.isOutput() )
-			{
-				this.outputs.remove( t.getFrequency(), t );
-			}
-			else
-			{
-				this.inputs.remove( t.getFrequency() );
-			}
+    @Override
+    public void addNode(final IGridNode node, final IGridHost machine) {
+        if (machine instanceof PartP2PTunnel) {
+            if (machine instanceof PartP2PTunnelME) {
+                if (!node.hasFlag(GridFlags.REQUIRE_CHANNEL)) {
+                    return;
+                }
+            }
 
-			this.updateTunnel( t.getFrequency(), !t.isOutput(), false );
-		}
-	}
+            final PartP2PTunnel t = (PartP2PTunnel) machine;
+            // AELog.info( "add-" + (t.output ? "output: " : "input: ") + t.freq
+            // );
 
-	@Override
-	public void addNode( final IGridNode node, final IGridHost machine )
-	{
-		if( machine instanceof PartP2PTunnel )
-		{
-			if( machine instanceof PartP2PTunnelME )
-			{
-				if( !node.hasFlag( GridFlags.REQUIRE_CHANNEL ) )
-				{
-					return;
-				}
-			}
+            if (t.isOutput()) {
+                this.outputs.put(t.getFrequency(), t);
+            } else {
+                this.inputs.put(t.getFrequency(), t);
+            }
 
-			final PartP2PTunnel t = (PartP2PTunnel) machine;
-			// AELog.info( "add-" + (t.output ? "output: " : "input: ") + t.freq
-			// );
+            this.updateTunnel(t.getFrequency(), !t.isOutput(), false);
+        }
+    }
 
-			if( t.isOutput() )
-			{
-				this.outputs.put( t.getFrequency(), t );
-			}
-			else
-			{
-				this.inputs.put( t.getFrequency(), t );
-			}
+    @Override
+    public void onSplit(final IGridStorage storageB) {}
 
-			this.updateTunnel( t.getFrequency(), !t.isOutput(), false );
-		}
-	}
+    @Override
+    public void onJoin(final IGridStorage storageB) {}
 
-	@Override
-	public void onSplit( final IGridStorage storageB )
-	{
+    @Override
+    public void populateGridStorage(final IGridStorage storage) {}
 
-	}
+    private void updateTunnel(final long freq, final boolean updateOutputs, final boolean configChange) {
+        for (final PartP2PTunnel p : this.outputs.get(freq)) {
+            if (configChange) {
+                p.onTunnelConfigChange();
+            }
+            p.onTunnelNetworkChange();
+        }
 
-	@Override
-	public void onJoin( final IGridStorage storageB )
-	{
+        final PartP2PTunnel in = this.inputs.get(freq);
+        if (in != null) {
+            if (configChange) {
+                in.onTunnelConfigChange();
+            }
+            in.onTunnelNetworkChange();
+        }
+    }
 
-	}
+    public void updateFreq(final PartP2PTunnel t, final long newFrequency) {
+        if (this.outputs.containsValue(t)) {
+            this.outputs.remove(t.getFrequency(), t);
+        }
 
-	@Override
-	public void populateGridStorage( final IGridStorage storage )
-	{
+        if (this.inputs.containsValue(t)) {
+            this.inputs.remove(t.getFrequency());
+        }
 
-	}
+        t.setFrequency(newFrequency);
 
-	private void updateTunnel( final long freq, final boolean updateOutputs, final boolean configChange )
-	{
-		for( final PartP2PTunnel p : this.outputs.get( freq ) )
-		{
-			if( configChange )
-			{
-				p.onTunnelConfigChange();
-			}
-			p.onTunnelNetworkChange();
-		}
+        if (t.isOutput()) {
+            this.outputs.put(t.getFrequency(), t);
+        } else {
+            this.inputs.put(t.getFrequency(), t);
+        }
 
-		final PartP2PTunnel in = this.inputs.get( freq );
-		if( in != null )
-		{
-			if( configChange )
-			{
-				in.onTunnelConfigChange();
-			}
-			in.onTunnelNetworkChange();
-		}
-	}
+        // AELog.info( "update-" + (t.output ? "output: " : "input: ") + t.freq
+        // );
+        this.updateTunnel(t.getFrequency(), t.isOutput(), true);
+        this.updateTunnel(t.getFrequency(), !t.isOutput(), true);
+    }
 
-	public void updateFreq( final PartP2PTunnel t, final long newFrequency )
-	{
-		if( this.outputs.containsValue( t ) )
-		{
-			this.outputs.remove( t.getFrequency(), t );
-		}
+    public TunnelCollection<PartP2PTunnel> getOutputs(final long freq, final Class<? extends PartP2PTunnel> c) {
+        final PartP2PTunnel in = this.inputs.get(freq);
+        if (in == null) {
+            return this.NullColl;
+        }
 
-		if( this.inputs.containsValue( t ) )
-		{
-			this.inputs.remove( t.getFrequency() );
-		}
+        final TunnelCollection<PartP2PTunnel> out = this.inputs.get(freq).getCollection(this.outputs.get(freq), c);
+        if (out == null) {
+            return this.NullColl;
+        }
 
-		t.setFrequency( newFrequency );
+        return out;
+    }
 
-		if( t.isOutput() )
-		{
-			this.outputs.put( t.getFrequency(), t );
-		}
-		else
-		{
-			this.inputs.put( t.getFrequency(), t );
-		}
-
-		// AELog.info( "update-" + (t.output ? "output: " : "input: ") + t.freq
-		// );
-		this.updateTunnel( t.getFrequency(), t.isOutput(), true );
-		this.updateTunnel( t.getFrequency(), !t.isOutput(), true );
-	}
-
-	public TunnelCollection<PartP2PTunnel> getOutputs( final long freq, final Class<? extends PartP2PTunnel> c )
-	{
-		final PartP2PTunnel in = this.inputs.get( freq );
-		if( in == null )
-		{
-			return this.NullColl;
-		}
-
-		final TunnelCollection<PartP2PTunnel> out = this.inputs.get( freq ).getCollection( this.outputs.get( freq ), c );
-		if( out == null )
-		{
-			return this.NullColl;
-		}
-
-		return out;
-	}
-
-	public PartP2PTunnel getInput( final long freq )
-	{
-		return this.inputs.get( freq );
-	}
+    public PartP2PTunnel getInput(final long freq) {
+        return this.inputs.get(freq);
+    }
 }

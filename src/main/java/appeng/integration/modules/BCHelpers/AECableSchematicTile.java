@@ -18,12 +18,12 @@
 
 package appeng.integration.modules.BCHelpers;
 
-
 import appeng.api.parts.*;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.parts.CableBusContainer;
 import buildcraft.api.blueprints.IBuilderContext;
+import java.util.Set;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -31,141 +31,102 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.Set;
+public class AECableSchematicTile extends AEGenericSchematicTile implements IPartHost {
 
+    @Override
+    public void rotateLeft(final IBuilderContext context) {
+        final CableBusContainer cbc = new CableBusContainer(this);
+        cbc.readFromNBT(this.tileNBT);
 
-public class AECableSchematicTile extends AEGenericSchematicTile implements IPartHost
-{
+        cbc.rotateLeft();
 
-	@Override
-	public void rotateLeft( final IBuilderContext context )
-	{
-		final CableBusContainer cbc = new CableBusContainer( this );
-		cbc.readFromNBT( this.tileNBT );
+        this.tileNBT = new NBTTagCompound();
+        cbc.writeToNBT(this.tileNBT);
+    }
 
-		cbc.rotateLeft();
+    @Override
+    public IFacadeContainer getFacadeContainer() {
+        return null;
+    }
 
-		this.tileNBT = new NBTTagCompound();
-		cbc.writeToNBT( this.tileNBT );
-	}
+    @Override
+    public boolean canAddPart(final ItemStack part, final ForgeDirection side) {
+        return false;
+    }
 
-	@Override
-	public IFacadeContainer getFacadeContainer()
-	{
-		return null;
-	}
+    @Override
+    public ForgeDirection addPart(final ItemStack is, final ForgeDirection side, final EntityPlayer owner) {
+        return null;
+    }
 
-	@Override
-	public boolean canAddPart( final ItemStack part, final ForgeDirection side )
-	{
-		return false;
-	}
+    @Override
+    public IPart getPart(final ForgeDirection side) {
+        return null;
+    }
 
-	@Override
-	public ForgeDirection addPart( final ItemStack is, final ForgeDirection side, final EntityPlayer owner )
-	{
-		return null;
-	}
+    @Override
+    public void removePart(final ForgeDirection side, final boolean suppressUpdate) {}
 
-	@Override
-	public IPart getPart( final ForgeDirection side )
-	{
-		return null;
-	}
+    @Override
+    public void markForUpdate() {}
 
-	@Override
-	public void removePart( final ForgeDirection side, final boolean suppressUpdate )
-	{
+    @Override
+    public DimensionalCoord getLocation() {
+        return null;
+    }
 
-	}
+    @Override
+    public TileEntity getTile() {
+        return null;
+    }
 
-	@Override
-	public void markForUpdate()
-	{
+    @Override
+    public AEColor getColor() {
+        return null;
+    }
 
-	}
+    @Override
+    public void clearContainer() {}
 
-	@Override
-	public DimensionalCoord getLocation()
-	{
-		return null;
-	}
+    @Override
+    public boolean isBlocked(final ForgeDirection side) {
+        return false;
+    }
 
-	@Override
-	public TileEntity getTile()
-	{
-		return null;
-	}
+    @Override
+    public SelectedPart selectPart(final Vec3 pos) {
+        return null;
+    }
 
-	@Override
-	public AEColor getColor()
-	{
-		return null;
-	}
+    @Override
+    public void markForSave() {}
 
-	@Override
-	public void clearContainer()
-	{
+    @Override
+    public void partChanged() {}
 
-	}
+    @Override
+    public boolean hasRedstone(final ForgeDirection side) {
+        return false;
+    }
 
-	@Override
-	public boolean isBlocked( final ForgeDirection side )
-	{
-		return false;
-	}
+    @Override
+    public boolean isEmpty() {
+        return false;
+    }
 
-	@Override
-	public SelectedPart selectPart( final Vec3 pos )
-	{
-		return null;
-	}
+    @Override
+    public Set<LayerFlags> getLayerFlags() {
+        return null;
+    }
 
-	@Override
-	public void markForSave()
-	{
+    @Override
+    public void cleanup() {}
 
-	}
+    @Override
+    public void notifyNeighbors() {}
 
-	@Override
-	public void partChanged()
-	{
-
-	}
-
-	@Override
-	public boolean hasRedstone( final ForgeDirection side )
-	{
-		return false;
-	}
-
-	@Override
-	public boolean isEmpty()
-	{
-		return false;
-	}
-
-	@Override
-	public Set<LayerFlags> getLayerFlags()
-	{
-		return null;
-	}
-
-	@Override
-	public void cleanup()
-	{
-
-	}
-
-	@Override
-	public void notifyNeighbors()
-	{
-
-	}
-
-	@Override
-	public boolean isInWorld()
-	{
-		return false;
-	}
+    @Override
+    public boolean isInWorld() {
+        return false;
+    }
 }

@@ -11,9 +11,11 @@ public class ToggleDebugPathfinding implements ISubCommand {
     public String getHelp(MinecraftServer srv) {
         return "commands.ae2.ToggleDebugPathfinding";
     }
+
     @Override
     public void call(MinecraftServer srv, String[] args, ICommandSender sender) {
         AEConfig.instance.debugPathFinding = !AEConfig.instance.debugPathFinding;
-        sender.addChatMessage(new ChatComponentText("Logging pathfinding is now " + (AEConfig.instance.debugPathFinding? "on" : "off")));
+        sender.addChatMessage(new ChatComponentText(
+                "Logging pathfinding is now " + (AEConfig.instance.debugPathFinding ? "on" : "off")));
     }
 }

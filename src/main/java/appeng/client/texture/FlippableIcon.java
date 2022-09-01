@@ -18,149 +18,120 @@
 
 package appeng.client.texture;
 
-
+import javax.annotation.Nonnull;
 import net.minecraft.util.IIcon;
 
-import javax.annotation.Nonnull;
+public class FlippableIcon implements IIcon {
 
+    private IIcon original;
+    private boolean flip_u;
+    private boolean flip_v;
 
-public class FlippableIcon implements IIcon
-{
+    public FlippableIcon(final IIcon o) {
+        if (o == null) {
+            throw new IllegalArgumentException("Cannot create a wrapper icon with a null icon.");
+        }
 
-	private IIcon original;
-	private boolean flip_u;
-	private boolean flip_v;
+        this.setOriginal(o);
+        this.setFlipU(false);
+        this.setFlipV(false);
+    }
 
-	public FlippableIcon( final IIcon o )
-	{
-		if( o == null )
-		{
-			throw new IllegalArgumentException( "Cannot create a wrapper icon with a null icon." );
-		}
+    @Override
+    public int getIconWidth() {
+        return this.getOriginal().getIconWidth();
+    }
 
-		this.setOriginal( o );
-		this.setFlipU( false );
-		this.setFlipV( false );
-	}
+    @Override
+    public int getIconHeight() {
+        return this.getOriginal().getIconHeight();
+    }
 
-	@Override
-	public int getIconWidth()
-	{
-		return this.getOriginal().getIconWidth();
-	}
+    @Override
+    public float getMinU() {
+        if (this.isFlipU()) {
+            return this.getOriginal().getMaxU();
+        }
+        return this.getOriginal().getMinU();
+    }
 
-	@Override
-	public int getIconHeight()
-	{
-		return this.getOriginal().getIconHeight();
-	}
+    @Override
+    public float getMaxU() {
+        if (this.isFlipU()) {
+            return this.getOriginal().getMinU();
+        }
+        return this.getOriginal().getMaxU();
+    }
 
-	@Override
-	public float getMinU()
-	{
-		if( this.isFlipU() )
-		{
-			return this.getOriginal().getMaxU();
-		}
-		return this.getOriginal().getMinU();
-	}
+    @Override
+    public float getInterpolatedU(final double px) {
+        if (this.isFlipU()) {
+            return this.getOriginal().getInterpolatedU(16 - px);
+        }
+        return this.getOriginal().getInterpolatedU(px);
+    }
 
-	@Override
-	public float getMaxU()
-	{
-		if( this.isFlipU() )
-		{
-			return this.getOriginal().getMinU();
-		}
-		return this.getOriginal().getMaxU();
-	}
+    @Override
+    public float getMinV() {
+        if (this.isFlipV()) {
+            return this.getOriginal().getMaxV();
+        }
+        return this.getOriginal().getMinV();
+    }
 
-	@Override
-	public float getInterpolatedU( final double px )
-	{
-		if( this.isFlipU() )
-		{
-			return this.getOriginal().getInterpolatedU( 16 - px );
-		}
-		return this.getOriginal().getInterpolatedU( px );
-	}
+    @Override
+    public float getMaxV() {
+        if (this.isFlipV()) {
+            return this.getOriginal().getMinV();
+        }
+        return this.getOriginal().getMaxV();
+    }
 
-	@Override
-	public float getMinV()
-	{
-		if( this.isFlipV() )
-		{
-			return this.getOriginal().getMaxV();
-		}
-		return this.getOriginal().getMinV();
-	}
+    @Override
+    public float getInterpolatedV(final double px) {
+        if (this.isFlipV()) {
+            return this.getOriginal().getInterpolatedV(16 - px);
+        }
+        return this.getOriginal().getInterpolatedV(px);
+    }
 
-	@Override
-	public float getMaxV()
-	{
-		if( this.isFlipV() )
-		{
-			return this.getOriginal().getMinV();
-		}
-		return this.getOriginal().getMaxV();
-	}
+    @Override
+    public String getIconName() {
+        return this.getOriginal().getIconName();
+    }
 
-	@Override
-	public float getInterpolatedV( final double px )
-	{
-		if( this.isFlipV() )
-		{
-			return this.getOriginal().getInterpolatedV( 16 - px );
-		}
-		return this.getOriginal().getInterpolatedV( px );
-	}
+    public IIcon getOriginal() {
+        return this.original;
+    }
 
-	@Override
-	public String getIconName()
-	{
-		return this.getOriginal().getIconName();
-	}
+    public void setFlip(final boolean u, final boolean v) {
+        this.setFlipU(u);
+        this.setFlipV(v);
+    }
 
-	public IIcon getOriginal()
-	{
-		return this.original;
-	}
+    public int setFlip(final int orientation) {
+        this.setFlipU((orientation & 8) == 8);
+        this.setFlipV((orientation & 16) == 16);
+        return orientation & 7;
+    }
 
-	public void setFlip( final boolean u, final boolean v )
-	{
-		this.setFlipU( u );
-		this.setFlipV( v );
-	}
+    boolean isFlipU() {
+        return this.flip_u;
+    }
 
-	public int setFlip( final int orientation )
-	{
-		this.setFlipU( ( orientation & 8 ) == 8 );
-		this.setFlipV( ( orientation & 16 ) == 16 );
-		return orientation & 7;
-	}
+    void setFlipU(final boolean flipU) {
+        this.flip_u = flipU;
+    }
 
-	boolean isFlipU()
-	{
-		return this.flip_u;
-	}
+    boolean isFlipV() {
+        return this.flip_v;
+    }
 
-	void setFlipU( final boolean flipU )
-	{
-		this.flip_u = flipU;
-	}
+    void setFlipV(final boolean flipV) {
+        this.flip_v = flipV;
+    }
 
-	boolean isFlipV()
-	{
-		return this.flip_v;
-	}
-
-	void setFlipV( final boolean flipV )
-	{
-		this.flip_v = flipV;
-	}
-
-	public void setOriginal( @Nonnull final IIcon original )
-	{
-		this.original = original;
-	}
+    public void setOriginal(@Nonnull final IIcon original) {
+        this.original = original;
+    }
 }

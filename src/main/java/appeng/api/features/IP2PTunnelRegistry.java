@@ -23,34 +23,30 @@
 
 package appeng.api.features;
 
-
 import appeng.api.config.TunnelType;
-import net.minecraft.item.ItemStack;
-
 import javax.annotation.Nullable;
-
+import net.minecraft.item.ItemStack;
 
 /**
  * A Registry for how p2p Tunnels are attuned
  */
-public interface IP2PTunnelRegistry
-{
+public interface IP2PTunnelRegistry {
 
-	/**
-	 * Allows third parties to register items from their mod as potential
-	 * attunements for AE's P2P Tunnels
-	 *
-	 * @param trigger - the item which triggers attunement. Nullable, but then ignored
-	 * @param type    - the type of tunnel. Nullable, but then ignored
-	 */
-	void addNewAttunement( @Nullable ItemStack trigger, @Nullable TunnelType type );
+    /**
+     * Allows third parties to register items from their mod as potential
+     * attunements for AE's P2P Tunnels
+     *
+     * @param trigger - the item which triggers attunement. Nullable, but then ignored
+     * @param type    - the type of tunnel. Nullable, but then ignored
+     */
+    void addNewAttunement(@Nullable ItemStack trigger, @Nullable TunnelType type);
 
-	/**
-	 * returns null if no attunement can be found.
-	 *
-	 * @param trigger attunement trigger
-	 * @return null if no attunement can be found or attunement
-	 */
-	@Nullable
-	TunnelType getTunnelTypeByItem( ItemStack trigger );
+    /**
+     * returns null if no attunement can be found.
+     *
+     * @param trigger attunement trigger
+     * @return null if no attunement can be found or attunement
+     */
+    @Nullable
+    TunnelType getTunnelTypeByItem(ItemStack trigger);
 }

@@ -18,30 +18,23 @@
 
 package appeng.integration.modules;
 
-
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
 
+public class MFR implements IIntegrationModule {
+    @Reflected
+    public static MFR instance;
 
-public class MFR implements IIntegrationModule
-{
-	@Reflected
-	public static MFR instance;
+    @Reflected
+    public MFR() {
+        IntegrationHelper.testClassExistence(
+                this, powercrystals.minefactoryreloaded.api.rednet.connectivity.IRedNetConnection.class);
+    }
 
-	@Reflected
-	public MFR()
-	{
-		IntegrationHelper.testClassExistence( this, powercrystals.minefactoryreloaded.api.rednet.connectivity.IRedNetConnection.class );
-	}
+    @Override
+    public void init() throws Throwable {}
 
-	@Override
-	public void init() throws Throwable
-	{
-	}
-
-	@Override
-	public void postInit()
-	{
-	}
+    @Override
+    public void postInit() {}
 }

@@ -18,7 +18,6 @@
 
 package appeng.integration.modules.helpers;
 
-
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
@@ -27,23 +26,20 @@ import net.mcft.copy.betterstorage.api.crate.ICrateStorage;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public class BSCrateHandler implements IExternalStorageHandler {
 
-public class BSCrateHandler implements IExternalStorageHandler
-{
+    @Override
+    public boolean canHandle(
+            final TileEntity te, final ForgeDirection d, final StorageChannel channel, final BaseActionSource mySrc) {
+        return channel == StorageChannel.ITEMS && te instanceof ICrateStorage;
+    }
 
-	@Override
-	public boolean canHandle( final TileEntity te, final ForgeDirection d, final StorageChannel channel, final BaseActionSource mySrc )
-	{
-		return channel == StorageChannel.ITEMS && te instanceof ICrateStorage;
-	}
-
-	@Override
-	public IMEInventory getInventory( final TileEntity te, final ForgeDirection d, final StorageChannel channel, final BaseActionSource src )
-	{
-		if( channel == StorageChannel.ITEMS )
-		{
-			return new BSCrate( te );
-		}
-		return null;
-	}
+    @Override
+    public IMEInventory getInventory(
+            final TileEntity te, final ForgeDirection d, final StorageChannel channel, final BaseActionSource src) {
+        if (channel == StorageChannel.ITEMS) {
+            return new BSCrate(te);
+        }
+        return null;
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.container.implementations;
 
-
 import appeng.api.config.*;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.guiobjects.IGuiItem;
@@ -37,274 +36,263 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSlotHost {
 
-public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSlotHost
-{
+    private final IUpgradeableHost upgradeable;
 
-	private final IUpgradeableHost upgradeable;
-	@GuiSync( 0 )
-	public RedstoneMode rsMode = RedstoneMode.IGNORE;
-	@GuiSync( 1 )
-	public FuzzyMode fzMode = FuzzyMode.IGNORE_ALL;
-	@GuiSync( 5 )
-	public YesNo cMode = YesNo.NO;
-	@GuiSync( 6 )
-	public SchedulingMode schedulingMode = SchedulingMode.DEFAULT;
-	private int tbSlot;
-	private NetworkToolViewer tbInventory;
+    @GuiSync(0)
+    public RedstoneMode rsMode = RedstoneMode.IGNORE;
 
-	public ContainerUpgradeable( final InventoryPlayer ip, final IUpgradeableHost te )
-	{
-		super( ip, (TileEntity) ( te instanceof TileEntity ? te : null ), (IPart) ( te instanceof IPart ? te : null ) );
-		this.upgradeable = te;
+    @GuiSync(1)
+    public FuzzyMode fzMode = FuzzyMode.IGNORE_ALL;
 
-		World w = null;
-		int xCoord = 0;
-		int yCoord = 0;
-		int zCoord = 0;
+    @GuiSync(5)
+    public YesNo cMode = YesNo.NO;
 
-		if( te instanceof TileEntity )
-		{
-			final TileEntity myTile = (TileEntity) te;
-			w = myTile.getWorldObj();
-			xCoord = myTile.xCoord;
-			yCoord = myTile.yCoord;
-			zCoord = myTile.zCoord;
-		}
+    @GuiSync(6)
+    public SchedulingMode schedulingMode = SchedulingMode.DEFAULT;
 
-		if( te instanceof IPart )
-		{
-			final TileEntity mk = te.getTile();
-			w = mk.getWorldObj();
-			xCoord = mk.xCoord;
-			yCoord = mk.yCoord;
-			zCoord = mk.zCoord;
-		}
+    private int tbSlot;
+    private NetworkToolViewer tbInventory;
 
-		final IInventory pi = this.getPlayerInv();
-		for( int x = 0; x < pi.getSizeInventory(); x++ )
-		{
-			final ItemStack pii = pi.getStackInSlot( x );
-			if( pii != null && pii.getItem() instanceof ToolNetworkTool )
-			{
-				this.lockPlayerInventorySlot( x );
-				this.tbSlot = x;
-				this.tbInventory = (NetworkToolViewer) ( (IGuiItem) pii.getItem() ).getGuiObject( pii, w, xCoord, yCoord, zCoord );
-				break;
-			}
-		}
+    public ContainerUpgradeable(final InventoryPlayer ip, final IUpgradeableHost te) {
+        super(ip, (TileEntity) (te instanceof TileEntity ? te : null), (IPart) (te instanceof IPart ? te : null));
+        this.upgradeable = te;
 
-		if( this.hasToolbox() )
-		{
-			for( int v = 0; v < 3; v++ )
-			{
-				for( int u = 0; u < 3; u++ )
-				{
-					this.addSlotToContainer( ( new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.UPGRADES, this.tbInventory, u + v * 3, 186 + u * 18, this.getHeight() - 82 + v * 18, this.getInventoryPlayer() ) ).setPlayerSide() );
-				}
-			}
-		}
+        World w = null;
+        int xCoord = 0;
+        int yCoord = 0;
+        int zCoord = 0;
 
-		this.setupConfig();
+        if (te instanceof TileEntity) {
+            final TileEntity myTile = (TileEntity) te;
+            w = myTile.getWorldObj();
+            xCoord = myTile.xCoord;
+            yCoord = myTile.yCoord;
+            zCoord = myTile.zCoord;
+        }
 
-		this.bindPlayerInventory( ip, 0, this.getHeight() - /* height of player inventory */82 );
-	}
+        if (te instanceof IPart) {
+            final TileEntity mk = te.getTile();
+            w = mk.getWorldObj();
+            xCoord = mk.xCoord;
+            yCoord = mk.yCoord;
+            zCoord = mk.zCoord;
+        }
 
-	public boolean hasToolbox()
-	{
-		return this.tbInventory != null;
-	}
+        final IInventory pi = this.getPlayerInv();
+        for (int x = 0; x < pi.getSizeInventory(); x++) {
+            final ItemStack pii = pi.getStackInSlot(x);
+            if (pii != null && pii.getItem() instanceof ToolNetworkTool) {
+                this.lockPlayerInventorySlot(x);
+                this.tbSlot = x;
+                this.tbInventory =
+                        (NetworkToolViewer) ((IGuiItem) pii.getItem()).getGuiObject(pii, w, xCoord, yCoord, zCoord);
+                break;
+            }
+        }
 
-	protected int getHeight()
-	{
-		return 184;
-	}
+        if (this.hasToolbox()) {
+            for (int v = 0; v < 3; v++) {
+                for (int u = 0; u < 3; u++) {
+                    this.addSlotToContainer((new SlotRestrictedInput(
+                                    SlotRestrictedInput.PlacableItemType.UPGRADES,
+                                    this.tbInventory,
+                                    u + v * 3,
+                                    186 + u * 18,
+                                    this.getHeight() - 82 + v * 18,
+                                    this.getInventoryPlayer()))
+                            .setPlayerSide());
+                }
+            }
+        }
 
-	protected void setupConfig()
-	{
-		this.setupUpgrades();
+        this.setupConfig();
 
-		final IInventory inv = this.getUpgradeable().getInventoryByName( "config" );
-		final int y = 40;
-		final int x = 80;
-		this.addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, 0, x, y, 0, 0, 0 ) );
-		if( this.supportCapacity() )
-		{
-			this.addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, 1, x, y, -1, 0, 1 ) );
-			this.addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, 2, x, y, 1, 0, 1 ) );
-			this.addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, 3, x, y, 0, -1, 1 ) );
-			this.addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, 4, x, y, 0, 1, 1 ) );
+        this.bindPlayerInventory(ip, 0, this.getHeight() - /* height of player inventory */ 82);
+    }
 
-			this.addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, 5, x, y, -1, -1, 2 ) );
-			this.addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, 6, x, y, 1, -1, 2 ) );
-			this.addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, 7, x, y, -1, 1, 2 ) );
-			this.addSlotToContainer( new OptionalSlotFakeTypeOnly( inv, this, 8, x, y, 1, 1, 2 ) );
-		}
-	}
+    public boolean hasToolbox() {
+        return this.tbInventory != null;
+    }
 
-	protected void setupUpgrades()
-	{
-		final IInventory upgrades = this.getUpgradeable().getInventoryByName( "upgrades" );
-		if( this.availableUpgrades() > 0 )
-		{
-			this.addSlotToContainer( ( new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.UPGRADES, upgrades, 0, 187, 8, this.getInventoryPlayer() ) ).setNotDraggable() );
-		}
-		if( this.availableUpgrades() > 1 )
-		{
-			this.addSlotToContainer( ( new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.UPGRADES, upgrades, 1, 187, 8 + 18, this.getInventoryPlayer() ) ).setNotDraggable() );
-		}
-		if( this.availableUpgrades() > 2 )
-		{
-			this.addSlotToContainer( ( new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.UPGRADES, upgrades, 2, 187, 8 + 18 * 2, this.getInventoryPlayer() ) ).setNotDraggable() );
-		}
-		if( this.availableUpgrades() > 3 )
-		{
-			this.addSlotToContainer( ( new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.UPGRADES, upgrades, 3, 187, 8 + 18 * 3, this.getInventoryPlayer() ) ).setNotDraggable() );
-		}
-	}
+    protected int getHeight() {
+        return 184;
+    }
 
-	protected boolean supportCapacity()
-	{
-		return true;
-	}
+    protected void setupConfig() {
+        this.setupUpgrades();
 
-	public int availableUpgrades()
-	{
-		return 4;
-	}
+        final IInventory inv = this.getUpgradeable().getInventoryByName("config");
+        final int y = 40;
+        final int x = 80;
+        this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 0, x, y, 0, 0, 0));
+        if (this.supportCapacity()) {
+            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 1, x, y, -1, 0, 1));
+            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 2, x, y, 1, 0, 1));
+            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 3, x, y, 0, -1, 1));
+            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 4, x, y, 0, 1, 1));
 
-	@Override
-	public void detectAndSendChanges()
-	{
-		this.verifyPermissions( SecurityPermissions.BUILD, false );
+            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 5, x, y, -1, -1, 2));
+            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 6, x, y, 1, -1, 2));
+            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 7, x, y, -1, 1, 2));
+            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 8, x, y, 1, 1, 2));
+        }
+    }
 
-		if( Platform.isServer() )
-		{
-			final IConfigManager cm = this.getUpgradeable().getConfigManager();
-			this.loadSettingsFromHost( cm );
-		}
+    protected void setupUpgrades() {
+        final IInventory upgrades = this.getUpgradeable().getInventoryByName("upgrades");
+        if (this.availableUpgrades() > 0) {
+            this.addSlotToContainer((new SlotRestrictedInput(
+                            SlotRestrictedInput.PlacableItemType.UPGRADES,
+                            upgrades,
+                            0,
+                            187,
+                            8,
+                            this.getInventoryPlayer()))
+                    .setNotDraggable());
+        }
+        if (this.availableUpgrades() > 1) {
+            this.addSlotToContainer((new SlotRestrictedInput(
+                            SlotRestrictedInput.PlacableItemType.UPGRADES,
+                            upgrades,
+                            1,
+                            187,
+                            8 + 18,
+                            this.getInventoryPlayer()))
+                    .setNotDraggable());
+        }
+        if (this.availableUpgrades() > 2) {
+            this.addSlotToContainer((new SlotRestrictedInput(
+                            SlotRestrictedInput.PlacableItemType.UPGRADES,
+                            upgrades,
+                            2,
+                            187,
+                            8 + 18 * 2,
+                            this.getInventoryPlayer()))
+                    .setNotDraggable());
+        }
+        if (this.availableUpgrades() > 3) {
+            this.addSlotToContainer((new SlotRestrictedInput(
+                            SlotRestrictedInput.PlacableItemType.UPGRADES,
+                            upgrades,
+                            3,
+                            187,
+                            8 + 18 * 3,
+                            this.getInventoryPlayer()))
+                    .setNotDraggable());
+        }
+    }
 
-		this.checkToolbox();
+    protected boolean supportCapacity() {
+        return true;
+    }
 
-		for( final Object o : this.inventorySlots )
-		{
-			if( o instanceof OptionalSlotFake )
-			{
-				final OptionalSlotFake fs = (OptionalSlotFake) o;
-				if( !fs.isEnabled() && fs.getDisplayStack() != null )
-				{
-					fs.clearStack();
-				}
-			}
-		}
+    public int availableUpgrades() {
+        return 4;
+    }
 
-		this.standardDetectAndSendChanges();
-	}
+    @Override
+    public void detectAndSendChanges() {
+        this.verifyPermissions(SecurityPermissions.BUILD, false);
 
-	protected void loadSettingsFromHost( final IConfigManager cm )
-	{
-		this.setFuzzyMode( (FuzzyMode) cm.getSetting( Settings.FUZZY_MODE ) );
-		this.setRedStoneMode( (RedstoneMode) cm.getSetting( Settings.REDSTONE_CONTROLLED ) );
-		if( this.getUpgradeable() instanceof PartExportBus )
-		{
-			this.setCraftingMode( (YesNo) cm.getSetting( Settings.CRAFT_ONLY ) );
-			this.setSchedulingMode( (SchedulingMode) cm.getSetting( Settings.SCHEDULING_MODE ) );
-		}
-	}
+        if (Platform.isServer()) {
+            final IConfigManager cm = this.getUpgradeable().getConfigManager();
+            this.loadSettingsFromHost(cm);
+        }
 
-	private void checkToolbox()
-	{
-		if( this.hasToolbox() )
-		{
-			final ItemStack currentItem = this.getPlayerInv().getStackInSlot( this.tbSlot );
+        this.checkToolbox();
 
-			if( currentItem != this.tbInventory.getItemStack() )
-			{
-				if( currentItem != null )
-				{
-					if( Platform.isSameItem( this.tbInventory.getItemStack(), currentItem ) )
-					{
-						this.getPlayerInv().setInventorySlotContents( this.tbSlot, this.tbInventory.getItemStack() );
-					}
-					else
-					{
-						this.setValidContainer( false );
-					}
-				}
-				else
-				{
-					this.setValidContainer( false );
-				}
-			}
-		}
-	}
+        for (final Object o : this.inventorySlots) {
+            if (o instanceof OptionalSlotFake) {
+                final OptionalSlotFake fs = (OptionalSlotFake) o;
+                if (!fs.isEnabled() && fs.getDisplayStack() != null) {
+                    fs.clearStack();
+                }
+            }
+        }
 
-	protected void standardDetectAndSendChanges()
-	{
-		super.detectAndSendChanges();
-	}
+        this.standardDetectAndSendChanges();
+    }
 
-	@Override
-	public boolean isSlotEnabled( final int idx )
-	{
-		if (this.getUpgradeable().getInstalledUpgrades( Upgrades.ORE_FILTER ) > 0)
-			return false;
+    protected void loadSettingsFromHost(final IConfigManager cm) {
+        this.setFuzzyMode((FuzzyMode) cm.getSetting(Settings.FUZZY_MODE));
+        this.setRedStoneMode((RedstoneMode) cm.getSetting(Settings.REDSTONE_CONTROLLED));
+        if (this.getUpgradeable() instanceof PartExportBus) {
+            this.setCraftingMode((YesNo) cm.getSetting(Settings.CRAFT_ONLY));
+            this.setSchedulingMode((SchedulingMode) cm.getSetting(Settings.SCHEDULING_MODE));
+        }
+    }
 
-		if (idx == 0)
-			return true;
+    private void checkToolbox() {
+        if (this.hasToolbox()) {
+            final ItemStack currentItem = this.getPlayerInv().getStackInSlot(this.tbSlot);
 
-		final int upgrades = this.getUpgradeable().getInstalledUpgrades( Upgrades.CAPACITY );
+            if (currentItem != this.tbInventory.getItemStack()) {
+                if (currentItem != null) {
+                    if (Platform.isSameItem(this.tbInventory.getItemStack(), currentItem)) {
+                        this.getPlayerInv().setInventorySlotContents(this.tbSlot, this.tbInventory.getItemStack());
+                    } else {
+                        this.setValidContainer(false);
+                    }
+                } else {
+                    this.setValidContainer(false);
+                }
+            }
+        }
+    }
 
-		if( idx == 1 && upgrades > 0 )
-		{
-			return true;
-		}
-		return idx == 2 && upgrades > 1;
+    protected void standardDetectAndSendChanges() {
+        super.detectAndSendChanges();
+    }
 
-	}
+    @Override
+    public boolean isSlotEnabled(final int idx) {
+        if (this.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER) > 0) return false;
 
-	public FuzzyMode getFuzzyMode()
-	{
-		return this.fzMode;
-	}
+        if (idx == 0) return true;
 
-	void setFuzzyMode( final FuzzyMode fzMode )
-	{
-		this.fzMode = fzMode;
-	}
+        final int upgrades = this.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
 
-	public YesNo getCraftingMode()
-	{
-		return this.cMode;
-	}
+        if (idx == 1 && upgrades > 0) {
+            return true;
+        }
+        return idx == 2 && upgrades > 1;
+    }
 
-	public void setCraftingMode( final YesNo cMode )
-	{
-		this.cMode = cMode;
-	}
+    public FuzzyMode getFuzzyMode() {
+        return this.fzMode;
+    }
 
-	public RedstoneMode getRedStoneMode()
-	{
-		return this.rsMode;
-	}
+    void setFuzzyMode(final FuzzyMode fzMode) {
+        this.fzMode = fzMode;
+    }
 
-	void setRedStoneMode( final RedstoneMode rsMode )
-	{
-		this.rsMode = rsMode;
-	}
+    public YesNo getCraftingMode() {
+        return this.cMode;
+    }
 
-	public SchedulingMode getSchedulingMode()
-	{
-		return this.schedulingMode;
-	}
+    public void setCraftingMode(final YesNo cMode) {
+        this.cMode = cMode;
+    }
 
-	private void setSchedulingMode( final SchedulingMode schedulingMode )
-	{
-		this.schedulingMode = schedulingMode;
-	}
+    public RedstoneMode getRedStoneMode() {
+        return this.rsMode;
+    }
 
-	IUpgradeableHost getUpgradeable()
-	{
-		return this.upgradeable;
-	}
+    void setRedStoneMode(final RedstoneMode rsMode) {
+        this.rsMode = rsMode;
+    }
+
+    public SchedulingMode getSchedulingMode() {
+        return this.schedulingMode;
+    }
+
+    private void setSchedulingMode(final SchedulingMode schedulingMode) {
+        this.schedulingMode = schedulingMode;
+    }
+
+    IUpgradeableHost getUpgradeable() {
+        return this.upgradeable;
+    }
 }

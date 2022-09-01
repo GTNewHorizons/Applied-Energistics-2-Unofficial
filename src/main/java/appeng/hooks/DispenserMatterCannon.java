@@ -18,7 +18,6 @@
 
 package appeng.hooks;
 
-
 import appeng.items.tools.powered.ToolMassCannon;
 import appeng.util.Platform;
 import net.minecraft.block.BlockDispenser;
@@ -32,41 +31,36 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public final class DispenserMatterCannon extends BehaviorDefaultDispenseItem {
 
-public final class DispenserMatterCannon extends BehaviorDefaultDispenseItem
-{
+    @Override
+    protected ItemStack dispenseStack(final IBlockSource dispenser, ItemStack dispensedItem) {
+        final Item i = dispensedItem.getItem();
+        if (i instanceof ToolMassCannon) {
+            final EnumFacing enumfacing = BlockDispenser.func_149937_b(dispenser.getBlockMetadata());
+            ForgeDirection dir = ForgeDirection.UNKNOWN;
+            for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
+                if (enumfacing.getFrontOffsetX() == d.offsetX
+                        && enumfacing.getFrontOffsetY() == d.offsetY
+                        && enumfacing.getFrontOffsetZ() == d.offsetZ) {
+                    dir = d;
+                }
+            }
 
-	@Override
-	protected ItemStack dispenseStack( final IBlockSource dispenser, ItemStack dispensedItem )
-	{
-		final Item i = dispensedItem.getItem();
-		if( i instanceof ToolMassCannon )
-		{
-			final EnumFacing enumfacing = BlockDispenser.func_149937_b( dispenser.getBlockMetadata() );
-			ForgeDirection dir = ForgeDirection.UNKNOWN;
-			for( final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS )
-			{
-				if( enumfacing.getFrontOffsetX() == d.offsetX && enumfacing.getFrontOffsetY() == d.offsetY && enumfacing.getFrontOffsetZ() == d.offsetZ )
-				{
-					dir = d;
-				}
-			}
+            final ToolMassCannon tm = (ToolMassCannon) i;
 
-			final ToolMassCannon tm = (ToolMassCannon) i;
+            final World w = dispenser.getWorld();
+            if (w instanceof WorldServer) {
+                final EntityPlayer p = Platform.getPlayer((WorldServer) w);
+                Platform.configurePlayer(p, dir, dispenser.getBlockTileEntity());
 
-			final World w = dispenser.getWorld();
-			if( w instanceof WorldServer )
-			{
-				final EntityPlayer p = Platform.getPlayer( (WorldServer) w );
-				Platform.configurePlayer( p, dir, dispenser.getBlockTileEntity() );
+                p.posX += dir.offsetX;
+                p.posY += dir.offsetY;
+                p.posZ += dir.offsetZ;
 
-				p.posX += dir.offsetX;
-				p.posY += dir.offsetY;
-				p.posZ += dir.offsetZ;
-
-				dispensedItem = tm.onItemRightClick( dispensedItem, w, p );
-			}
-		}
-		return dispensedItem;
-	}
+                dispensedItem = tm.onItemRightClick(dispensedItem, w, p);
+            }
+        }
+        return dispensedItem;
+    }
 }

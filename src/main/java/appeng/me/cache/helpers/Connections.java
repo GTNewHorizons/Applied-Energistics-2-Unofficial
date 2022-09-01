@@ -18,70 +18,57 @@
 
 package appeng.me.cache.helpers;
 
-
 import appeng.api.networking.IGridNode;
 import appeng.parts.p2p.PartP2PTunnelME;
 import appeng.util.IWorldCallable;
+import java.util.HashMap;
 import net.minecraft.world.World;
 
-import java.util.HashMap;
+public class Connections implements IWorldCallable<Void> {
 
+    private final HashMap<IGridNode, TunnelConnection> connections = new HashMap<IGridNode, TunnelConnection>();
+    private final PartP2PTunnelME me;
+    private boolean create = false;
+    private boolean destroy = false;
 
-public class Connections implements IWorldCallable<Void>
-{
+    public Connections(final PartP2PTunnelME o) {
+        this.me = o;
+    }
 
-	private final HashMap<IGridNode, TunnelConnection> connections = new HashMap<IGridNode, TunnelConnection>();
-	private final PartP2PTunnelME me;
-	private boolean create = false;
-	private boolean destroy = false;
+    @Override
+    public Void call(final World world) throws Exception {
+        this.me.updateConnections(this);
 
-	public Connections( final PartP2PTunnelME o )
-	{
-		this.me = o;
-	}
+        return null;
+    }
 
-	@Override
-	public Void call( final World world ) throws Exception
-	{
-		this.me.updateConnections( this );
+    public void markDestroy() {
+        this.setCreate(false);
+        this.setDestroy(true);
+    }
 
-		return null;
-	}
+    public void markCreate() {
+        this.setCreate(true);
+        this.setDestroy(false);
+    }
 
-	public void markDestroy()
-	{
-		this.setCreate( false );
-		this.setDestroy( true );
-	}
+    public HashMap<IGridNode, TunnelConnection> getConnections() {
+        return this.connections;
+    }
 
-	public void markCreate()
-	{
-		this.setCreate( true );
-		this.setDestroy( false );
-	}
+    public boolean isCreate() {
+        return this.create;
+    }
 
-	public HashMap<IGridNode, TunnelConnection> getConnections()
-	{
-		return this.connections;
-	}
+    private void setCreate(final boolean create) {
+        this.create = create;
+    }
 
-	public boolean isCreate()
-	{
-		return this.create;
-	}
+    public boolean isDestroy() {
+        return this.destroy;
+    }
 
-	private void setCreate( final boolean create )
-	{
-		this.create = create;
-	}
-
-	public boolean isDestroy()
-	{
-		return this.destroy;
-	}
-
-	private void setDestroy( final boolean destroy )
-	{
-		this.destroy = destroy;
-	}
+    private void setDestroy(final boolean destroy) {
+        this.destroy = destroy;
+    }
 }

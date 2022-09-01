@@ -18,12 +18,9 @@
 
 package appeng.integration.abstraction;
 
-
 import appeng.api.features.IItemComparisonProvider;
 
+public interface IForestry {
 
-public interface IForestry
-{
-
-	IItemComparisonProvider getGeneticsComparisonProvider();
+    IItemComparisonProvider getGeneticsComparisonProvider();
 }

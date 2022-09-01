@@ -18,32 +18,27 @@
 
 package appeng.recipes;
 
-
 import com.google.common.base.Preconditions;
-import net.minecraftforge.common.config.Configuration;
-
 import javax.annotation.Nonnull;
-
+import net.minecraftforge.common.config.Configuration;
 
 /**
  * @author thatsIch
  * @version rv3 - 23.08.2015
  * @since rv3 23.08.2015
  */
-public class CustomRecipeForgeConfiguration implements CustomRecipeConfig
-{
-	private final boolean isEnabled;
+public class CustomRecipeForgeConfiguration implements CustomRecipeConfig {
+    private final boolean isEnabled;
 
-	public CustomRecipeForgeConfiguration( @Nonnull final Configuration config )
-	{
-		Preconditions.checkNotNull( config );
+    public CustomRecipeForgeConfiguration(@Nonnull final Configuration config) {
+        Preconditions.checkNotNull(config);
 
-		this.isEnabled = config.getBoolean( "enabled", "general", true, "If true, the custom recipes are enabled. Acts as a master switch." );
-	}
+        this.isEnabled = config.getBoolean(
+                "enabled", "general", true, "If true, the custom recipes are enabled. Acts as a master switch.");
+    }
 
-	@Override
-	public final boolean isEnabled()
-	{
-		return this.isEnabled;
-	}
+    @Override
+    public final boolean isEnabled() {
+        return this.isEnabled;
+    }
 }

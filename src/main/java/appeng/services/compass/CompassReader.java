@@ -18,68 +18,57 @@
 
 package appeng.services.compass;
 
-
 import com.google.common.base.Preconditions;
-
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nonnull;
 
+public final class CompassReader {
+    private final Map<Long, CompassRegion> regions = new HashMap<Long, CompassRegion>(100);
+    private final int dimensionId;
+    private final File worldCompassFolder;
 
-public final class CompassReader
-{
-	private final Map<Long, CompassRegion> regions = new HashMap<Long, CompassRegion>( 100 );
-	private final int dimensionId;
-	private final File worldCompassFolder;
+    public CompassReader(final int dimensionId, @Nonnull final File worldCompassFolder) {
+        Preconditions.checkNotNull(worldCompassFolder);
+        Preconditions.checkArgument(worldCompassFolder.isDirectory());
 
-	public CompassReader( final int dimensionId, @Nonnull final File worldCompassFolder )
-	{
-		Preconditions.checkNotNull( worldCompassFolder );
-		Preconditions.checkArgument( worldCompassFolder.isDirectory() );
+        this.dimensionId = dimensionId;
+        this.worldCompassFolder = worldCompassFolder;
+    }
 
-		this.dimensionId = dimensionId;
-		this.worldCompassFolder = worldCompassFolder;
-	}
+    public void close() {
+        for (final CompassRegion r : this.regions.values()) {
+            r.close();
+        }
 
-	public void close()
-	{
-		for( final CompassRegion r : this.regions.values() )
-		{
-			r.close();
-		}
+        this.regions.clear();
+    }
 
-		this.regions.clear();
-	}
+    public void setHasBeacon(final int cx, final int cz, final int cdy, final boolean hasBeacon) {
+        final CompassRegion r = this.getRegion(cx, cz);
 
-	public void setHasBeacon( final int cx, final int cz, final int cdy, final boolean hasBeacon )
-	{
-		final CompassRegion r = this.getRegion( cx, cz );
+        r.setHasBeacon(cx, cz, cdy, hasBeacon);
+    }
 
-		r.setHasBeacon( cx, cz, cdy, hasBeacon );
-	}
+    public boolean hasBeacon(final int cx, final int cz) {
+        final CompassRegion r = this.getRegion(cx, cz);
 
-	public boolean hasBeacon( final int cx, final int cz )
-	{
-		final CompassRegion r = this.getRegion( cx, cz );
+        return r.hasBeacon(cx, cz);
+    }
 
-		return r.hasBeacon( cx, cz );
-	}
+    private CompassRegion getRegion(final int cx, final int cz) {
+        long pos = cx >> 10;
+        pos <<= 32;
+        pos |= (cz >> 10);
 
-	private CompassRegion getRegion( final int cx, final int cz )
-	{
-		long pos = cx >> 10;
-		pos <<= 32;
-		pos |= ( cz >> 10 );
+        CompassRegion cr = this.regions.get(pos);
 
-		CompassRegion cr = this.regions.get( pos );
+        if (cr == null) {
+            cr = new CompassRegion(cx, cz, this.dimensionId, this.worldCompassFolder);
+            this.regions.put(pos, cr);
+        }
 
-		if( cr == null )
-		{
-			cr = new CompassRegion( cx, cz, this.dimensionId, this.worldCompassFolder );
-			this.regions.put( pos, cr );
-		}
-
-		return cr;
-	}
+        return cr;
+    }
 }

@@ -18,63 +18,50 @@
 
 package appeng.items.storage;
 
-
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.core.features.AEFeature;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.CellConfig;
+import java.util.EnumSet;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-import java.util.EnumSet;
+public class ItemCreativeStorageCell extends AEBaseItem implements ICellWorkbenchItem {
 
+    public ItemCreativeStorageCell() {
+        this.setFeature(EnumSet.of(AEFeature.StorageCells, AEFeature.Creative));
+        this.setMaxStackSize(1);
+    }
 
-public class ItemCreativeStorageCell extends AEBaseItem implements ICellWorkbenchItem
-{
+    @Override
+    public boolean isEditable(final ItemStack is) {
+        return true;
+    }
 
-	public ItemCreativeStorageCell()
-	{
-		this.setFeature( EnumSet.of( AEFeature.StorageCells, AEFeature.Creative ) );
-		this.setMaxStackSize( 1 );
-	}
+    @Override
+    public IInventory getUpgradesInventory(final ItemStack is) {
+        return null;
+    }
 
-	@Override
-	public boolean isEditable( final ItemStack is )
-	{
-		return true;
-	}
+    @Override
+    public IInventory getConfigInventory(final ItemStack is) {
+        return new CellConfig(is);
+    }
 
-	@Override
-	public IInventory getUpgradesInventory( final ItemStack is )
-	{
-		return null;
-	}
+    @Override
+    public FuzzyMode getFuzzyMode(final ItemStack is) {
+        return FuzzyMode.IGNORE_ALL;
+    }
 
-	@Override
-	public IInventory getConfigInventory( final ItemStack is )
-	{
-		return new CellConfig( is );
-	}
+    @Override
+    public void setFuzzyMode(final ItemStack is, final FuzzyMode fzMode) {}
 
-	@Override
-	public FuzzyMode getFuzzyMode( final ItemStack is )
-	{
-		return FuzzyMode.IGNORE_ALL;
-	}
+    @Override
+    public String getOreFilter(ItemStack is) {
+        return "";
+    }
 
-	@Override
-	public void setFuzzyMode( final ItemStack is, final FuzzyMode fzMode )
-	{
-
-	}
-
-	@Override
-	public String getOreFilter(ItemStack is) {
-		return "";
-	}
-
-	@Override
-	public void setOreFilter(ItemStack is, String filter) {
-	}
+    @Override
+    public void setOreFilter(ItemStack is, String filter) {}
 }

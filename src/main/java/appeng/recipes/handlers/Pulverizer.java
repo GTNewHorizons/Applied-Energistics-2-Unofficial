@@ -18,7 +18,6 @@
 
 package appeng.recipes.handlers;
 
-
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RecipeError;
 import appeng.api.exceptions.RegistrationError;
@@ -27,60 +26,50 @@ import appeng.api.recipes.IIngredient;
 import appeng.recipes.RecipeHandler;
 import appeng.util.Platform;
 import cpw.mods.fml.common.event.FMLInterModComms;
+import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.util.List;
+public class Pulverizer implements ICraftHandler, IWebsiteSerializer {
 
+    private IIngredient pro_input;
+    private IIngredient[] pro_output;
 
-public class Pulverizer implements ICraftHandler, IWebsiteSerializer
-{
+    @Override
+    public void setup(final List<List<IIngredient>> input, final List<List<IIngredient>> output) throws RecipeError {
+        if (input.size() == 1 && output.size() == 1) {
+            final int outs = output.get(0).size();
+            if (input.get(0).size() == 1 && outs == 1) {
+                this.pro_input = input.get(0).get(0);
+                this.pro_output = output.get(0).toArray(new IIngredient[outs]);
+                return;
+            }
+        }
+        throw new RecipeError("Grind must have a single input, and single output.");
+    }
 
-	private IIngredient pro_input;
-	private IIngredient[] pro_output;
+    @Override
+    public void register() throws RegistrationError, MissingIngredientError {
+        final NBTTagCompound toSend = new NBTTagCompound();
+        toSend.setInteger("energy", 800);
+        toSend.setTag("primaryOutput", new NBTTagCompound());
 
-	@Override
-	public void setup( final List<List<IIngredient>> input, final List<List<IIngredient>> output ) throws RecipeError
-	{
-		if( input.size() == 1 && output.size() == 1 )
-		{
-			final int outs = output.get( 0 ).size();
-			if( input.get( 0 ).size() == 1 && outs == 1 )
-			{
-				this.pro_input = input.get( 0 ).get( 0 );
-				this.pro_output = output.get( 0 ).toArray( new IIngredient[outs] );
-				return;
-			}
-		}
-		throw new RecipeError( "Grind must have a single input, and single output." );
-	}
+        this.pro_output[0].getItemStack().writeToNBT(toSend.getCompoundTag("primaryOutput"));
 
-	@Override
-	public void register() throws RegistrationError, MissingIngredientError
-	{
-		final NBTTagCompound toSend = new NBTTagCompound();
-		toSend.setInteger( "energy", 800 );
-		toSend.setTag( "primaryOutput", new NBTTagCompound() );
+        for (final ItemStack is : this.pro_input.getItemStackSet()) {
+            toSend.setTag("input", new NBTTagCompound());
+            is.writeToNBT(toSend.getCompoundTag("input"));
+            FMLInterModComms.sendMessage("ThermalExpansion", "PulverizerRecipe", toSend);
+        }
+    }
 
-		this.pro_output[0].getItemStack().writeToNBT( toSend.getCompoundTag( "primaryOutput" ) );
+    @Override
+    public String getPattern(final RecipeHandler h) {
+        return null;
+    }
 
-		for( final ItemStack is : this.pro_input.getItemStackSet() )
-		{
-			toSend.setTag( "input", new NBTTagCompound() );
-			is.writeToNBT( toSend.getCompoundTag( "input" ) );
-			FMLInterModComms.sendMessage( "ThermalExpansion", "PulverizerRecipe", toSend );
-		}
-	}
-
-	@Override
-	public String getPattern( final RecipeHandler h )
-	{
-		return null;
-	}
-
-	@Override
-	public boolean canCraft( final ItemStack output ) throws RegistrationError, MissingIngredientError
-	{
-		return Platform.isSameItemPrecise( this.pro_output[0].getItemStack(), output );
-	}
+    @Override
+    public boolean canCraft(final ItemStack output) throws RegistrationError, MissingIngredientError {
+        return Platform.isSameItemPrecise(this.pro_output[0].getItemStack(), output);
+    }
 }

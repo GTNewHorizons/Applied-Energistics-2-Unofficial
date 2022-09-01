@@ -18,28 +18,21 @@
 
 package appeng.integration.modules.NEIHelpers;
 
-
 import appeng.client.gui.implementations.GuiMEMonitorable;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.api.IStackPositioner;
-
 import java.util.ArrayList;
 
+public class TerminalCraftingSlotFinder implements IStackPositioner {
 
-public class TerminalCraftingSlotFinder implements IStackPositioner
-{
-
-	@Override
-	public ArrayList<PositionedStack> positionStacks( final ArrayList<PositionedStack> a )
-	{
-		for( final PositionedStack ps : a )
-		{
-			if( ps != null )
-			{
-				ps.relx += GuiMEMonitorable.craftingGridOffsetX;
-				ps.rely += GuiMEMonitorable.craftingGridOffsetY;
-			}
-		}
-		return a;
-	}
+    @Override
+    public ArrayList<PositionedStack> positionStacks(final ArrayList<PositionedStack> a) {
+        for (final PositionedStack ps : a) {
+            if (ps != null) {
+                ps.relx += GuiMEMonitorable.craftingGridOffsetX;
+                ps.rely += GuiMEMonitorable.craftingGridOffsetY;
+            }
+        }
+        return a;
+    }
 }

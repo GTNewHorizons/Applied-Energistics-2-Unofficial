@@ -18,13 +18,11 @@
 
 package appeng.core.features.registries;
 
-
 import appeng.api.features.*;
 import appeng.api.movable.IMovableRegistry;
 import appeng.api.networking.IGridCacheRegistry;
 import appeng.api.storage.ICellRegistry;
 import appeng.api.storage.IExternalStorageRegistry;
-
 
 /**
  * represents all registries
@@ -34,103 +32,88 @@ import appeng.api.storage.IExternalStorageRegistry;
  * @version rv2
  * @since rv0
  */
-public class RegistryContainer implements IRegistryContainer
-{
-	private final IGrinderRegistry grinder = new GrinderRecipeManager();
-	private final IInscriberRegistry inscriber = new InscriberRegistry();
-	private final IExternalStorageRegistry storage = new ExternalStorageRegistry();
-	private final ICellRegistry cell = new CellRegistry();
-	private final ILocatableRegistry locatable = new LocatableRegistry();
-	private final ISpecialComparisonRegistry comparison = new SpecialComparisonRegistry();
-	private final IWirelessTermRegistry wireless = new WirelessRegistry();
-	private final IGridCacheRegistry gridCache = new GridCacheRegistry();
-	private final IP2PTunnelRegistry p2pTunnel = new P2PTunnelRegistry();
-	private final IMovableRegistry movable = new MovableTileRegistry();
-	private final IMatterCannonAmmoRegistry matterCannonReg = new MatterCannonAmmoRegistry();
-	private final IPlayerRegistry playerRegistry = new PlayerRegistry();
-	private final IRecipeHandlerRegistry recipeReg = new RecipeHandlerRegistry();
+public class RegistryContainer implements IRegistryContainer {
+    private final IGrinderRegistry grinder = new GrinderRecipeManager();
+    private final IInscriberRegistry inscriber = new InscriberRegistry();
+    private final IExternalStorageRegistry storage = new ExternalStorageRegistry();
+    private final ICellRegistry cell = new CellRegistry();
+    private final ILocatableRegistry locatable = new LocatableRegistry();
+    private final ISpecialComparisonRegistry comparison = new SpecialComparisonRegistry();
+    private final IWirelessTermRegistry wireless = new WirelessRegistry();
+    private final IGridCacheRegistry gridCache = new GridCacheRegistry();
+    private final IP2PTunnelRegistry p2pTunnel = new P2PTunnelRegistry();
+    private final IMovableRegistry movable = new MovableTileRegistry();
+    private final IMatterCannonAmmoRegistry matterCannonReg = new MatterCannonAmmoRegistry();
+    private final IPlayerRegistry playerRegistry = new PlayerRegistry();
+    private final IRecipeHandlerRegistry recipeReg = new RecipeHandlerRegistry();
 
-	@Override
-	public IMovableRegistry movable()
-	{
-		return this.movable;
-	}
+    @Override
+    public IMovableRegistry movable() {
+        return this.movable;
+    }
 
-	@Override
-	public IGridCacheRegistry gridCache()
-	{
-		return this.gridCache;
-	}
+    @Override
+    public IGridCacheRegistry gridCache() {
+        return this.gridCache;
+    }
 
-	@Override
-	public IExternalStorageRegistry externalStorage()
-	{
-		return this.storage;
-	}
+    @Override
+    public IExternalStorageRegistry externalStorage() {
+        return this.storage;
+    }
 
-	@Override
-	public ISpecialComparisonRegistry specialComparison()
-	{
-		return this.comparison;
-	}
+    @Override
+    public ISpecialComparisonRegistry specialComparison() {
+        return this.comparison;
+    }
 
-	@Override
-	public IWirelessTermRegistry wireless()
-	{
-		return this.wireless;
-	}
+    @Override
+    public IWirelessTermRegistry wireless() {
+        return this.wireless;
+    }
 
-	@Override
-	public ICellRegistry cell()
-	{
-		return this.cell;
-	}
+    @Override
+    public ICellRegistry cell() {
+        return this.cell;
+    }
 
-	@Override
-	public IGrinderRegistry grinder()
-	{
-		return this.grinder;
-	}
+    @Override
+    public IGrinderRegistry grinder() {
+        return this.grinder;
+    }
 
-	@Override
-	public IInscriberRegistry inscriber()
-	{
-		return this.inscriber;
-	}
+    @Override
+    public IInscriberRegistry inscriber() {
+        return this.inscriber;
+    }
 
-	@Override
-	public ILocatableRegistry locatable()
-	{
-		return this.locatable;
-	}
+    @Override
+    public ILocatableRegistry locatable() {
+        return this.locatable;
+    }
 
-	@Override
-	public IP2PTunnelRegistry p2pTunnel()
-	{
-		return this.p2pTunnel;
-	}
+    @Override
+    public IP2PTunnelRegistry p2pTunnel() {
+        return this.p2pTunnel;
+    }
 
-	@Override
-	public IMatterCannonAmmoRegistry matterCannon()
-	{
-		return this.matterCannonReg;
-	}
+    @Override
+    public IMatterCannonAmmoRegistry matterCannon() {
+        return this.matterCannonReg;
+    }
 
-	@Override
-	public IPlayerRegistry players()
-	{
-		return this.playerRegistry;
-	}
+    @Override
+    public IPlayerRegistry players() {
+        return this.playerRegistry;
+    }
 
-	@Override
-	public IRecipeHandlerRegistry recipes()
-	{
-		return this.recipeReg;
-	}
+    @Override
+    public IRecipeHandlerRegistry recipes() {
+        return this.recipeReg;
+    }
 
-	@Override
-	public IWorldGen worldgen()
-	{
-		return WorldGenRegistry.INSTANCE;
-	}
+    @Override
+    public IWorldGen worldgen() {
+        return WorldGenRegistry.INSTANCE;
+    }
 }

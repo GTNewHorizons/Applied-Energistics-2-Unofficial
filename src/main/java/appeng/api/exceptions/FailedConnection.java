@@ -23,9 +23,7 @@
 
 package appeng.api.exceptions;
 
-
 import appeng.api.networking.IGridNode;
-
 
 /**
  * Exception indicating a failed connection between two {@link IGridNode}s.
@@ -40,17 +38,13 @@ import appeng.api.networking.IGridNode;
  * @version rv3
  * @since rv0
  */
-public class FailedConnection extends Exception
-{
+public class FailedConnection extends Exception {
 
-	private static final long serialVersionUID = -2544208090248293753L;
+    private static final long serialVersionUID = -2544208090248293753L;
 
-	public FailedConnection()
-	{
-	}
+    public FailedConnection() {}
 
-	public FailedConnection( String message )
-	{
-		super( message );
-	}
+    public FailedConnection(String message) {
+        super(message);
+    }
 }

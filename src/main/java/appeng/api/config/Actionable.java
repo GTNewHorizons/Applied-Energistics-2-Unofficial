@@ -23,16 +23,14 @@
 
 package appeng.api.config;
 
+public enum Actionable {
+    /**
+     * Perform the intended action.
+     */
+    MODULATE,
 
-public enum Actionable
-{
-	/**
-	 * Perform the intended action.
-	 */
-	MODULATE,
-
-	/**
-	 * Pretend to perform the action.
-	 */
-	SIMULATE
+    /**
+     * Pretend to perform the action.
+     */
+    SIMULATE
 }

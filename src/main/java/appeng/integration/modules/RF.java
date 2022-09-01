@@ -18,7 +18,6 @@
 
 package appeng.integration.modules;
 
-
 import appeng.api.AEApi;
 import appeng.api.IAppEngApi;
 import appeng.api.config.TunnelType;
@@ -32,65 +31,57 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
+public final class RF implements IIntegrationModule {
+    @Reflected
+    public static RF instance;
 
-public final class RF implements IIntegrationModule
-{
-	@Reflected
-	public static RF instance;
+    @Reflected
+    public RF() {
+        IntegrationHelper.testClassExistence(this, cofh.api.energy.IEnergyReceiver.class);
+        IntegrationHelper.testClassExistence(this, cofh.api.energy.IEnergyProvider.class);
+        IntegrationHelper.testClassExistence(this, cofh.api.energy.IEnergyHandler.class);
+        IntegrationHelper.testClassExistence(this, cofh.api.energy.IEnergyConnection.class);
+    }
 
-	@Reflected
-	public RF()
-	{
-		IntegrationHelper.testClassExistence( this, cofh.api.energy.IEnergyReceiver.class );
-		IntegrationHelper.testClassExistence( this, cofh.api.energy.IEnergyProvider.class );
-		IntegrationHelper.testClassExistence( this, cofh.api.energy.IEnergyHandler.class );
-		IntegrationHelper.testClassExistence( this, cofh.api.energy.IEnergyConnection.class );
-	}
+    @Override
+    public void init() {
+        final IAppEngApi api = AEApi.instance();
+        final IPartHelper partHelper = api.partHelper();
 
-	@Override
-	public void init()
-	{
-		final IAppEngApi api = AEApi.instance();
-		final IPartHelper partHelper = api.partHelper();
+        if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.RF)) {
+            partHelper.registerNewLayer("appeng.parts.layers.LayerIEnergyHandler", "cofh.api.energy.IEnergyReceiver");
+        }
+    }
 
-		if( IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.RF ) )
-		{
-			partHelper.registerNewLayer( "appeng.parts.layers.LayerIEnergyHandler", "cofh.api.energy.IEnergyReceiver" );
-		}
-	}
+    @Override
+    public void postInit() {
+        this.registerRFAttunement("ExtraUtilities", "extractor_base", 12);
+        this.registerRFAttunement("ExtraUtilities", "pipes", 11);
+        this.registerRFAttunement("ExtraUtilities", "pipes", 14);
+        this.registerRFAttunement("ExtraUtilities", "generator", OreDictionary.WILDCARD_VALUE);
 
-	@Override
-	public void postInit()
-	{
-		this.registerRFAttunement( "ExtraUtilities", "extractor_base", 12 );
-		this.registerRFAttunement( "ExtraUtilities", "pipes", 11 );
-		this.registerRFAttunement( "ExtraUtilities", "pipes", 14 );
-		this.registerRFAttunement( "ExtraUtilities", "generator", OreDictionary.WILDCARD_VALUE );
+        this.registerRFAttunement("ThermalExpansion", "Cell", OreDictionary.WILDCARD_VALUE);
+        this.registerRFAttunement("ThermalExpansion", "Dynamo", OreDictionary.WILDCARD_VALUE);
 
-		this.registerRFAttunement( "ThermalExpansion", "Cell", OreDictionary.WILDCARD_VALUE );
-		this.registerRFAttunement( "ThermalExpansion", "Dynamo", OreDictionary.WILDCARD_VALUE );
+        // Fluxduct
+        this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 0);
 
-		// Fluxduct
-		this.registerRFAttunement( "ThermalDynamics", "ThermalDynamics_0", 0 );
+        this.registerRFAttunement("EnderIO", "itemPowerConduit", OreDictionary.WILDCARD_VALUE);
+        this.registerRFAttunement("EnderIO", "blockCapacitorBank", 0);
+        this.registerRFAttunement("EnderIO", "blockPowerMonitor", 0);
+    }
 
-		this.registerRFAttunement( "EnderIO", "itemPowerConduit", OreDictionary.WILDCARD_VALUE );
-		this.registerRFAttunement( "EnderIO", "blockCapacitorBank", 0 );
-		this.registerRFAttunement( "EnderIO", "blockPowerMonitor", 0 );
-	}
+    private void registerRFAttunement(final String mod, final String name, final int dmg) {
+        assert mod != null;
+        assert !mod.isEmpty();
+        assert name != null;
+        assert !name.isEmpty();
+        assert dmg >= 0;
 
-	private void registerRFAttunement( final String mod, final String name, final int dmg )
-	{
-		assert mod != null;
-		assert !mod.isEmpty();
-		assert name != null;
-		assert !name.isEmpty();
-		assert dmg >= 0;
-
-		final ItemStack modItem = GameRegistry.findItemStack( mod, name, 1 );
-		if( modItem != null )
-		{
-			modItem.setItemDamage( dmg );
-			AEApi.instance().registries().p2pTunnel().addNewAttunement( modItem, TunnelType.RF_POWER );
-		}
-	}
+        final ItemStack modItem = GameRegistry.findItemStack(mod, name, 1);
+        if (modItem != null) {
+            modItem.setItemDamage(dmg);
+            AEApi.instance().registries().p2pTunnel().addNewAttunement(modItem, TunnelType.RF_POWER);
+        }
+    }
 }

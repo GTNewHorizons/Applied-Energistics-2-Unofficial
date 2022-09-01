@@ -18,7 +18,6 @@
 
 package appeng.parts;
 
-
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -30,156 +29,131 @@ import appeng.me.GridAccessException;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
+import java.io.IOException;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.io.IOException;
+public abstract class PartBasicState extends AEBasePart implements IPowerChannelState {
 
+    protected static final int POWERED_FLAG = 1;
+    protected static final int CHANNEL_FLAG = 2;
+    protected static final int BOOTING_FLAG = 4;
 
-public abstract class PartBasicState extends AEBasePart implements IPowerChannelState
-{
+    private int clientFlags = 0; // sent as byte.
 
-	protected static final int POWERED_FLAG = 1;
-	protected static final int CHANNEL_FLAG = 2;
-	protected static final int BOOTING_FLAG = 4;
+    public PartBasicState(final ItemStack is) {
+        super(is);
+        this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
+    }
 
-	private int clientFlags = 0; // sent as byte.
+    @MENetworkEventSubscribe
+    public void chanRender(final MENetworkChannelsChanged c) {
+        this.getHost().markForUpdate();
+    }
 
-	public PartBasicState( final ItemStack is )
-	{
-		super( is );
-		this.getProxy().setFlags( GridFlags.REQUIRE_CHANNEL );
-	}
+    @MENetworkEventSubscribe
+    public void powerRender(final MENetworkPowerStatusChange c) {
+        this.getHost().markForUpdate();
+    }
 
-	@MENetworkEventSubscribe
-	public void chanRender( final MENetworkChannelsChanged c )
-	{
-		this.getHost().markForUpdate();
-	}
+    @SideOnly(Side.CLIENT)
+    public void renderLights(
+            final int x, final int y, final int z, final IPartRenderHelper rh, final RenderBlocks renderer) {
+        rh.normalRendering();
+        this.setColors(
+                (this.getClientFlags() & (POWERED_FLAG | CHANNEL_FLAG)) == (POWERED_FLAG | CHANNEL_FLAG),
+                (this.getClientFlags() & POWERED_FLAG) == POWERED_FLAG);
+        rh.renderFace(x, y, z, CableBusTextures.PartMonitorSidesStatusLights.getIcon(), ForgeDirection.EAST, renderer);
+        rh.renderFace(x, y, z, CableBusTextures.PartMonitorSidesStatusLights.getIcon(), ForgeDirection.WEST, renderer);
+        rh.renderFace(x, y, z, CableBusTextures.PartMonitorSidesStatusLights.getIcon(), ForgeDirection.UP, renderer);
+        rh.renderFace(x, y, z, CableBusTextures.PartMonitorSidesStatusLights.getIcon(), ForgeDirection.DOWN, renderer);
+    }
 
-	@MENetworkEventSubscribe
-	public void powerRender( final MENetworkPowerStatusChange c )
-	{
-		this.getHost().markForUpdate();
-	}
+    public void setColors(final boolean hasChan, final boolean hasPower) {
+        if (hasChan) {
+            final int l = 14;
+            Tessellator.instance.setBrightness(l << 20 | l << 4);
+            Tessellator.instance.setColorOpaque_I(this.getColor().blackVariant);
+        } else if (hasPower) {
+            final int l = 9;
+            Tessellator.instance.setBrightness(l << 20 | l << 4);
+            Tessellator.instance.setColorOpaque_I(this.getColor().whiteVariant);
+        } else {
+            Tessellator.instance.setBrightness(0);
+            Tessellator.instance.setColorOpaque_I(0x000000);
+        }
+    }
 
-	@SideOnly( Side.CLIENT )
-	public void renderLights( final int x, final int y, final int z, final IPartRenderHelper rh, final RenderBlocks renderer )
-	{
-		rh.normalRendering();
-		this.setColors( ( this.getClientFlags() & ( POWERED_FLAG | CHANNEL_FLAG ) ) == ( POWERED_FLAG | CHANNEL_FLAG ), ( this.getClientFlags() & POWERED_FLAG ) == POWERED_FLAG );
-		rh.renderFace( x, y, z, CableBusTextures.PartMonitorSidesStatusLights.getIcon(), ForgeDirection.EAST, renderer );
-		rh.renderFace( x, y, z, CableBusTextures.PartMonitorSidesStatusLights.getIcon(), ForgeDirection.WEST, renderer );
-		rh.renderFace( x, y, z, CableBusTextures.PartMonitorSidesStatusLights.getIcon(), ForgeDirection.UP, renderer );
-		rh.renderFace( x, y, z, CableBusTextures.PartMonitorSidesStatusLights.getIcon(), ForgeDirection.DOWN, renderer );
-	}
+    @Override
+    public void writeToStream(final ByteBuf data) throws IOException {
+        super.writeToStream(data);
 
-	public void setColors( final boolean hasChan, final boolean hasPower )
-	{
-		if( hasChan )
-		{
-			final int l = 14;
-			Tessellator.instance.setBrightness( l << 20 | l << 4 );
-			Tessellator.instance.setColorOpaque_I( this.getColor().blackVariant );
-		}
-		else if( hasPower )
-		{
-			final int l = 9;
-			Tessellator.instance.setBrightness( l << 20 | l << 4 );
-			Tessellator.instance.setColorOpaque_I( this.getColor().whiteVariant );
-		}
-		else
-		{
-			Tessellator.instance.setBrightness( 0 );
-			Tessellator.instance.setColorOpaque_I( 0x000000 );
-		}
-	}
+        this.setClientFlags(0);
 
-	@Override
-	public void writeToStream( final ByteBuf data ) throws IOException
-	{
-		super.writeToStream( data );
+        try {
+            if (this.getProxy().getEnergy().isNetworkPowered()) {
+                this.setClientFlags(this.getClientFlags() | POWERED_FLAG);
+            }
 
-		this.setClientFlags( 0 );
+            if (this.getProxy().getNode().meetsChannelRequirements()) {
+                this.setClientFlags(this.getClientFlags() | CHANNEL_FLAG);
+            }
 
-		try
-		{
-			if( this.getProxy().getEnergy().isNetworkPowered() )
-			{
-				this.setClientFlags( this.getClientFlags() | POWERED_FLAG );
-			}
+            if (this.getProxy().getPath().isNetworkBooting()) {
+                this.setClientFlags(this.getClientFlags() | BOOTING_FLAG);
+            }
 
-			if( this.getProxy().getNode().meetsChannelRequirements() )
-			{
-				this.setClientFlags( this.getClientFlags() | CHANNEL_FLAG );
-			}
+            this.setClientFlags(this.populateFlags(this.getClientFlags()));
+        } catch (final GridAccessException e) {
+            // meh
+        }
 
-			if( this.getProxy().getPath().isNetworkBooting() )
-			{
-				this.setClientFlags( this.getClientFlags() | BOOTING_FLAG );
-			}
+        data.writeByte((byte) this.getClientFlags());
+    }
 
-			this.setClientFlags( this.populateFlags( this.getClientFlags() ) );
-		}
-		catch( final GridAccessException e )
-		{
-			// meh
-		}
+    protected int populateFlags(final int cf) {
+        return cf;
+    }
 
-		data.writeByte( (byte) this.getClientFlags() );
-	}
+    @Override
+    public boolean readFromStream(final ByteBuf data) throws IOException {
+        final boolean eh = super.readFromStream(data);
 
-	protected int populateFlags( final int cf )
-	{
-		return cf;
-	}
+        final int old = this.getClientFlags();
+        this.setClientFlags(data.readByte());
 
-	@Override
-	public boolean readFromStream( final ByteBuf data ) throws IOException
-	{
-		final boolean eh = super.readFromStream( data );
+        return eh || old != this.getClientFlags();
+    }
 
-		final int old = this.getClientFlags();
-		this.setClientFlags( data.readByte() );
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IIcon getBreakingTexture() {
+        return CableBusTextures.PartTransitionPlaneBack.getIcon();
+    }
 
-		return eh || old != this.getClientFlags();
-	}
+    @Override
+    public boolean isPowered() {
+        return (this.getClientFlags() & POWERED_FLAG) == POWERED_FLAG;
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public IIcon getBreakingTexture()
-	{
-		return CableBusTextures.PartTransitionPlaneBack.getIcon();
-	}
+    @Override
+    public boolean isActive() {
+        return (this.getClientFlags() & CHANNEL_FLAG) == CHANNEL_FLAG;
+    }
 
-	@Override
-	public boolean isPowered()
-	{
-		return ( this.getClientFlags() & POWERED_FLAG ) == POWERED_FLAG;
-	}
+    @Override
+    public boolean isBooting() {
+        return (this.getClientFlags() & BOOTING_FLAG) == BOOTING_FLAG;
+    }
 
-	@Override
-	public boolean isActive()
-	{
-		return ( this.getClientFlags() & CHANNEL_FLAG ) == CHANNEL_FLAG;
-	}
+    public int getClientFlags() {
+        return this.clientFlags;
+    }
 
-	@Override
-	public boolean isBooting()
-	{
-		return ( this.getClientFlags() & BOOTING_FLAG ) == BOOTING_FLAG;
-	}
-
-	public int getClientFlags()
-	{
-		return this.clientFlags;
-	}
-
-	private void setClientFlags( final int clientFlags )
-	{
-		this.clientFlags = clientFlags;
-	}
+    private void setClientFlags(final int clientFlags) {
+        this.clientFlags = clientFlags;
+    }
 }

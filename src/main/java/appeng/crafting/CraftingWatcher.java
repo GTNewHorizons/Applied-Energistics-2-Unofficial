@@ -18,184 +18,154 @@
 
 package appeng.crafting;
 
-
 import appeng.api.networking.crafting.ICraftingWatcher;
 import appeng.api.networking.crafting.ICraftingWatcherHost;
 import appeng.api.storage.data.IAEStack;
 import appeng.me.cache.CraftingGridCache;
-
-import javax.annotation.Nonnull;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-
+import javax.annotation.Nonnull;
 
 /**
  * Maintain my interests, and a global watch list, they should always be fully synchronized.
  */
-public class CraftingWatcher implements ICraftingWatcher
-{
+public class CraftingWatcher implements ICraftingWatcher {
 
-	private final CraftingGridCache gsc;
-	private final ICraftingWatcherHost host;
-	private final HashSet<IAEStack> myInterests = new HashSet<IAEStack>();
+    private final CraftingGridCache gsc;
+    private final ICraftingWatcherHost host;
+    private final HashSet<IAEStack> myInterests = new HashSet<IAEStack>();
 
-	public CraftingWatcher( final CraftingGridCache cache, final ICraftingWatcherHost host )
-	{
-		this.gsc = cache;
-		this.host = host;
-	}
+    public CraftingWatcher(final CraftingGridCache cache, final ICraftingWatcherHost host) {
+        this.gsc = cache;
+        this.host = host;
+    }
 
-	public ICraftingWatcherHost getHost()
-	{
-		return this.host;
-	}
+    public ICraftingWatcherHost getHost() {
+        return this.host;
+    }
 
-	@Override
-	public int size()
-	{
-		return this.myInterests.size();
-	}
+    @Override
+    public int size() {
+        return this.myInterests.size();
+    }
 
-	@Override
-	public boolean isEmpty()
-	{
-		return this.myInterests.isEmpty();
-	}
+    @Override
+    public boolean isEmpty() {
+        return this.myInterests.isEmpty();
+    }
 
-	@Override
-	public boolean contains( final Object o )
-	{
-		return this.myInterests.contains( o );
-	}
+    @Override
+    public boolean contains(final Object o) {
+        return this.myInterests.contains(o);
+    }
 
-	@Nonnull
-	@Override
-	public Iterator<IAEStack> iterator()
-	{
-		return new ItemWatcherIterator( this, this.myInterests.iterator() );
-	}
+    @Nonnull
+    @Override
+    public Iterator<IAEStack> iterator() {
+        return new ItemWatcherIterator(this, this.myInterests.iterator());
+    }
 
-	@Nonnull
-	@Override
-	public Object[] toArray()
-	{
-		return this.myInterests.toArray();
-	}
+    @Nonnull
+    @Override
+    public Object[] toArray() {
+        return this.myInterests.toArray();
+    }
 
-	@Nonnull
-	@Override
-	public <T> T[] toArray( @Nonnull final T[] a )
-	{
-		return this.myInterests.toArray( a );
-	}
+    @Nonnull
+    @Override
+    public <T> T[] toArray(@Nonnull final T[] a) {
+        return this.myInterests.toArray(a);
+    }
 
-	@Override
-	public boolean add( final IAEStack e )
-	{
-		if( this.myInterests.contains( e ) )
-		{
-			return false;
-		}
+    @Override
+    public boolean add(final IAEStack e) {
+        if (this.myInterests.contains(e)) {
+            return false;
+        }
 
-		return this.myInterests.add( e.copy() ) && this.gsc.getInterestManager().put( e, this );
-	}
+        return this.myInterests.add(e.copy()) && this.gsc.getInterestManager().put(e, this);
+    }
 
-	@Override
-	public boolean remove( final Object o )
-	{
-		return this.myInterests.remove( o ) && this.gsc.getInterestManager().remove( (IAEStack) o, this );
-	}
+    @Override
+    public boolean remove(final Object o) {
+        return this.myInterests.remove(o) && this.gsc.getInterestManager().remove((IAEStack) o, this);
+    }
 
-	@Override
-	public boolean containsAll( @Nonnull final Collection<?> c )
-	{
-		return this.myInterests.containsAll( c );
-	}
+    @Override
+    public boolean containsAll(@Nonnull final Collection<?> c) {
+        return this.myInterests.containsAll(c);
+    }
 
-	@Override
-	public boolean addAll( @Nonnull final Collection<? extends IAEStack> c )
-	{
-		boolean didChange = false;
+    @Override
+    public boolean addAll(@Nonnull final Collection<? extends IAEStack> c) {
+        boolean didChange = false;
 
-		for( final IAEStack o : c )
-		{
-			didChange = this.add( o ) || didChange;
-		}
+        for (final IAEStack o : c) {
+            didChange = this.add(o) || didChange;
+        }
 
-		return didChange;
-	}
+        return didChange;
+    }
 
-	@Override
-	public boolean removeAll( @Nonnull final Collection<?> c )
-	{
-		boolean didSomething = false;
-		for( final Object o : c )
-		{
-			didSomething = this.remove( o ) || didSomething;
-		}
-		return didSomething;
-	}
+    @Override
+    public boolean removeAll(@Nonnull final Collection<?> c) {
+        boolean didSomething = false;
+        for (final Object o : c) {
+            didSomething = this.remove(o) || didSomething;
+        }
+        return didSomething;
+    }
 
-	@Override
-	public boolean retainAll( @Nonnull final Collection<?> c )
-	{
-		boolean changed = false;
-		final Iterator<IAEStack> i = this.iterator();
+    @Override
+    public boolean retainAll(@Nonnull final Collection<?> c) {
+        boolean changed = false;
+        final Iterator<IAEStack> i = this.iterator();
 
-		while( i.hasNext() )
-		{
-			if( !c.contains( i.next() ) )
-			{
-				i.remove();
-				changed = true;
-			}
-		}
+        while (i.hasNext()) {
+            if (!c.contains(i.next())) {
+                i.remove();
+                changed = true;
+            }
+        }
 
-		return changed;
-	}
+        return changed;
+    }
 
-	@Override
-	public void clear()
-	{
-		final Iterator<IAEStack> i = this.myInterests.iterator();
-		while( i.hasNext() )
-		{
-			this.gsc.getInterestManager().remove( i.next(), this );
-			i.remove();
-		}
-	}
+    @Override
+    public void clear() {
+        final Iterator<IAEStack> i = this.myInterests.iterator();
+        while (i.hasNext()) {
+            this.gsc.getInterestManager().remove(i.next(), this);
+            i.remove();
+        }
+    }
 
-	private class ItemWatcherIterator implements Iterator<IAEStack>
-	{
+    private class ItemWatcherIterator implements Iterator<IAEStack> {
 
-		private final CraftingWatcher watcher;
-		private final Iterator<IAEStack> interestIterator;
-		private IAEStack myLast;
+        private final CraftingWatcher watcher;
+        private final Iterator<IAEStack> interestIterator;
+        private IAEStack myLast;
 
-		public ItemWatcherIterator( final CraftingWatcher parent, final Iterator<IAEStack> i )
-		{
-			this.watcher = parent;
-			this.interestIterator = i;
-		}
+        public ItemWatcherIterator(final CraftingWatcher parent, final Iterator<IAEStack> i) {
+            this.watcher = parent;
+            this.interestIterator = i;
+        }
 
-		@Override
-		public boolean hasNext()
-		{
-			return this.interestIterator.hasNext();
-		}
+        @Override
+        public boolean hasNext() {
+            return this.interestIterator.hasNext();
+        }
 
-		@Override
-		public IAEStack next()
-		{
-			return this.myLast = this.interestIterator.next();
-		}
+        @Override
+        public IAEStack next() {
+            return this.myLast = this.interestIterator.next();
+        }
 
-		@Override
-		public void remove()
-		{
-			CraftingWatcher.this.gsc.getInterestManager().remove( this.myLast, this.watcher );
-			this.interestIterator.remove();
-		}
-	}
+        @Override
+        public void remove() {
+            CraftingWatcher.this.gsc.getInterestManager().remove(this.myLast, this.watcher);
+            this.interestIterator.remove();
+        }
+    }
 }

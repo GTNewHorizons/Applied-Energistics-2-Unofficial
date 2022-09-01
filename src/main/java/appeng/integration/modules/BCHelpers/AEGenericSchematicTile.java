@@ -18,62 +18,50 @@
 
 package appeng.integration.modules.BCHelpers;
 
-
 import appeng.api.util.ICommonTile;
 import appeng.tile.AEBaseTile;
 import appeng.util.Platform;
 import buildcraft.api.blueprints.IBuilderContext;
 import buildcraft.api.blueprints.SchematicTile;
+import java.util.ArrayList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.ArrayList;
+public class AEGenericSchematicTile extends SchematicTile {
 
+    @Override
+    public void storeRequirements(final IBuilderContext context, final int x, final int y, final int z) {
+        final TileEntity tile = context.world().getTileEntity(x, y, z);
+        final ArrayList<ItemStack> list = new ArrayList<ItemStack>();
+        if (tile instanceof AEBaseTile) {
+            final ICommonTile tcb = (ICommonTile) tile;
+            tcb.getDrops(tile.getWorldObj(), tile.xCoord, tile.yCoord, tile.zCoord, list);
+        }
 
-public class AEGenericSchematicTile extends SchematicTile
-{
+        this.storedRequirements = list.toArray(new ItemStack[list.size()]);
+    }
 
-	@Override
-	public void storeRequirements( final IBuilderContext context, final int x, final int y, final int z )
-	{
-		final TileEntity tile = context.world().getTileEntity( x, y, z );
-		final ArrayList<ItemStack> list = new ArrayList<ItemStack>();
-		if( tile instanceof AEBaseTile )
-		{
-			final ICommonTile tcb = (ICommonTile) tile;
-			tcb.getDrops( tile.getWorldObj(), tile.xCoord, tile.yCoord, tile.zCoord, list );
-		}
+    @Override
+    public void rotateLeft(final IBuilderContext context) {
+        if (this.tileNBT.hasKey("orientation_forward") && this.tileNBT.hasKey("orientation_up")) {
+            final String forward = this.tileNBT.getString("orientation_forward");
+            final String up = this.tileNBT.getString("orientation_up");
 
-		this.storedRequirements = list.toArray( new ItemStack[list.size()] );
-	}
+            if (forward != null && up != null) {
+                try {
+                    ForgeDirection fdForward = ForgeDirection.valueOf(forward);
+                    ForgeDirection fdUp = ForgeDirection.valueOf(up);
 
-	@Override
-	public void rotateLeft( final IBuilderContext context )
-	{
-		if( this.tileNBT.hasKey( "orientation_forward" ) && this.tileNBT.hasKey( "orientation_up" ) )
-		{
-			final String forward = this.tileNBT.getString( "orientation_forward" );
-			final String up = this.tileNBT.getString( "orientation_up" );
+                    fdForward = Platform.rotateAround(fdForward, ForgeDirection.DOWN);
+                    fdUp = Platform.rotateAround(fdUp, ForgeDirection.DOWN);
 
-			if( forward != null && up != null )
-			{
-				try
-				{
-					ForgeDirection fdForward = ForgeDirection.valueOf( forward );
-					ForgeDirection fdUp = ForgeDirection.valueOf( up );
+                    this.tileNBT.setString("orientation_forward", fdForward.name());
+                    this.tileNBT.setString("orientation_up", fdUp.name());
+                } catch (final Throwable ignored) {
 
-					fdForward = Platform.rotateAround( fdForward, ForgeDirection.DOWN );
-					fdUp = Platform.rotateAround( fdUp, ForgeDirection.DOWN );
-
-					this.tileNBT.setString( "orientation_forward", fdForward.name() );
-					this.tileNBT.setString( "orientation_up", fdUp.name() );
-				}
-				catch( final Throwable ignored )
-				{
-
-				}
-			}
-		}
-	}
+                }
+            }
+        }
+    }
 }

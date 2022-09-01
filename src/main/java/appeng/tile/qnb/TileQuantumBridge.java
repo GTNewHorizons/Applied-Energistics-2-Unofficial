@@ -18,7 +18,6 @@
 
 package appeng.tile.qnb;
 
-
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlockDefinition;
 import appeng.api.networking.GridFlags;
@@ -41,6 +40,7 @@ import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import com.google.common.base.Optional;
 import io.netty.buffer.ByteBuf;
+import java.util.EnumSet;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -48,311 +48,266 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
+public class TileQuantumBridge extends AENetworkInvTile implements IAEMultiBlock {
+    private final byte corner = 16;
+    private final int[] sidesRing = {};
+    private final int[] sidesLink = {0};
+    private final AppEngInternalInventory internalInventory = new AppEngInternalInventory(this, 1);
+    private final byte hasSingularity = 32;
+    private final byte powered = 64;
 
+    private final QuantumCalculator calc = new QuantumCalculator(this);
+    private byte constructed = -1;
+    private QuantumCluster cluster;
+    private boolean updateStatus = false;
 
-public class TileQuantumBridge extends AENetworkInvTile implements IAEMultiBlock
-{
-	private final byte corner = 16;
-	private final int[] sidesRing = {};
-	private final int[] sidesLink = { 0 };
-	private final AppEngInternalInventory internalInventory = new AppEngInternalInventory( this, 1 );
-	private final byte hasSingularity = 32;
-	private final byte powered = 64;
+    public TileQuantumBridge() {
+        this.getProxy().setValidSides(EnumSet.noneOf(ForgeDirection.class));
+        if (AEConfig.instance.quantumBridgeBackboneTransfer)
+            this.getProxy().setFlags(GridFlags.DENSE_CAPACITY, GridFlags.ULTRA_DENSE_CAPACITY);
+        else this.getProxy().setFlags(GridFlags.DENSE_CAPACITY);
+        this.getProxy().setIdlePowerUsage(22);
+        this.internalInventory.setMaxStackSize(1);
+    }
 
-	private final QuantumCalculator calc = new QuantumCalculator( this );
-	private byte constructed = -1;
-	private QuantumCluster cluster;
-	private boolean updateStatus = false;
+    @TileEvent(TileEventType.TICK)
+    public void onTickEvent() {
+        if (this.updateStatus) {
+            if (AEConfig.instance.debugPathFinding) {
+                AELog.debug("Pathfinding: QNB at (%d %d %d) is reforming", xCoord, yCoord, zCoord);
+            }
+            this.updateStatus = false;
+            if (this.cluster != null) {
+                this.cluster.updateStatus(true);
+            }
+            this.markForUpdate();
+        }
+    }
 
-	public TileQuantumBridge()
-	{
-		this.getProxy().setValidSides( EnumSet.noneOf( ForgeDirection.class ) );
-		if (AEConfig.instance.quantumBridgeBackboneTransfer)
-			this.getProxy().setFlags( GridFlags.DENSE_CAPACITY, GridFlags.ULTRA_DENSE_CAPACITY );
-		else
-			this.getProxy().setFlags( GridFlags.DENSE_CAPACITY);
-		this.getProxy().setIdlePowerUsage( 22 );
-		this.internalInventory.setMaxStackSize( 1 );
-	}
+    @TileEvent(TileEventType.NETWORK_WRITE)
+    public void onNetworkWriteEvent(final ByteBuf data) {
+        int out = this.constructed;
 
-	@TileEvent( TileEventType.TICK )
-	public void onTickEvent()
-	{
-		if( this.updateStatus )
-		{
-			if (AEConfig.instance.debugPathFinding)
-			{
-				AELog.debug("Pathfinding: QNB at (%d %d %d) is reforming", xCoord, yCoord, zCoord);
-			}
-			this.updateStatus = false;
-			if( this.cluster != null )
-			{
-				this.cluster.updateStatus( true );
-			}
-			this.markForUpdate();
-		}
-	}
+        if (this.getStackInSlot(0) != null && this.constructed != -1) {
+            out |= this.hasSingularity;
+        }
 
-	@TileEvent( TileEventType.NETWORK_WRITE )
-	public void onNetworkWriteEvent( final ByteBuf data )
-	{
-		int out = this.constructed;
+        if (this.getProxy().isActive() && this.constructed != -1) {
+            out |= this.powered;
+        }
 
-		if( this.getStackInSlot( 0 ) != null && this.constructed != -1 )
-		{
-			out |= this.hasSingularity;
-		}
+        data.writeByte((byte) out);
+    }
 
-		if( this.getProxy().isActive() && this.constructed != -1 )
-		{
-			out |= this.powered;
-		}
+    @TileEvent(TileEventType.NETWORK_READ)
+    public boolean onNetworkReadEvent(final ByteBuf data) {
+        final int oldValue = this.constructed;
+        this.constructed = data.readByte();
+        return this.constructed != oldValue;
+    }
 
-		data.writeByte( (byte) out );
-	}
+    @Override
+    public IInventory getInternalInventory() {
+        return this.internalInventory;
+    }
 
-	@TileEvent( TileEventType.NETWORK_READ )
-	public boolean onNetworkReadEvent( final ByteBuf data )
-	{
-		final int oldValue = this.constructed;
-		this.constructed = data.readByte();
-		return this.constructed != oldValue;
-	}
+    @Override
+    public void onChangeInventory(
+            final IInventory inv,
+            final int slot,
+            final InvOperation mc,
+            final ItemStack removed,
+            final ItemStack added) {
+        if (this.cluster != null) {
+            this.cluster.updateStatus(true);
+        }
+    }
 
-	@Override
-	public IInventory getInternalInventory()
-	{
-		return this.internalInventory;
-	}
+    @Override
+    public int[] getAccessibleSlotsBySide(final ForgeDirection side) {
+        if (this.isCenter()) {
+            return this.sidesLink;
+        }
+        return this.sidesRing;
+    }
 
-	@Override
-	public void onChangeInventory( final IInventory inv, final int slot, final InvOperation mc, final ItemStack removed, final ItemStack added )
-	{
-		if( this.cluster != null )
-		{
-			this.cluster.updateStatus( true );
-		}
-	}
+    private boolean isCenter() {
+        for (final Block link : AEApi.instance()
+                .definitions()
+                .blocks()
+                .quantumLink()
+                .maybeBlock()
+                .asSet()) {
+            return this.getBlockType() == link;
+        }
 
-	@Override
-	public int[] getAccessibleSlotsBySide( final ForgeDirection side )
-	{
-		if( this.isCenter() )
-		{
-			return this.sidesLink;
-		}
-		return this.sidesRing;
-	}
+        return false;
+    }
 
-	private boolean isCenter()
-	{
-		for( final Block link : AEApi.instance().definitions().blocks().quantumLink().maybeBlock().asSet() )
-		{
-			return this.getBlockType() == link;
-		}
+    @MENetworkEventSubscribe
+    public void onPowerStatusChange(final MENetworkPowerStatusChange c) {
+        this.updateStatus = true;
+    }
 
-		return false;
-	}
+    @Override
+    public void onChunkUnload() {
+        this.disconnect(false);
+        super.onChunkUnload();
+    }
 
-	@MENetworkEventSubscribe
-	public void onPowerStatusChange( final MENetworkPowerStatusChange c )
-	{
-		this.updateStatus = true;
-	}
+    @Override
+    public void onReady() {
+        super.onReady();
 
-	@Override
-	public void onChunkUnload()
-	{
-		this.disconnect( false );
-		super.onChunkUnload();
-	}
+        final IBlockDefinition quantumRing =
+                AEApi.instance().definitions().blocks().quantumRing();
+        final Optional<Block> maybeLinkBlock = quantumRing.maybeBlock();
+        final Optional<ItemStack> maybeLinkStack = quantumRing.maybeStack(1);
 
-	@Override
-	public void onReady()
-	{
-		super.onReady();
+        final boolean isPresent = maybeLinkBlock.isPresent() && maybeLinkStack.isPresent();
 
-		final IBlockDefinition quantumRing = AEApi.instance().definitions().blocks().quantumRing();
-		final Optional<Block> maybeLinkBlock = quantumRing.maybeBlock();
-		final Optional<ItemStack> maybeLinkStack = quantumRing.maybeStack( 1 );
+        if (isPresent && this.getBlockType() == maybeLinkBlock.get()) {
+            final ItemStack linkStack = maybeLinkStack.get();
 
-		final boolean isPresent = maybeLinkBlock.isPresent() && maybeLinkStack.isPresent();
+            this.getProxy().setVisualRepresentation(linkStack);
+        }
+    }
 
-		if( isPresent && this.getBlockType() == maybeLinkBlock.get() )
-		{
-			final ItemStack linkStack = maybeLinkStack.get();
+    @Override
+    public void invalidate() {
+        this.disconnect(false);
+        super.invalidate();
+    }
 
-			this.getProxy().setVisualRepresentation( linkStack );
-		}
-	}
+    @Override
+    public void disconnect(final boolean affectWorld) {
+        if (this.cluster != null) {
+            if (AEConfig.instance.debugPathFinding) {
+                AELog.debug(
+                        "Pathfinding: QNB at (%d %d %d) is disconnecting, affectWorld = %b",
+                        xCoord, yCoord, zCoord, affectWorld);
+            }
+            if (!affectWorld) {
+                this.cluster.setUpdateStatus(false);
+            }
 
-	@Override
-	public void invalidate()
-	{
-		this.disconnect( false );
-		super.invalidate();
-	}
+            this.cluster.destroy();
+        }
 
-	@Override
-	public void disconnect( final boolean affectWorld )
-	{
-		if( this.cluster != null )
-		{
-			if (AEConfig.instance.debugPathFinding)
-			{
-				AELog.debug("Pathfinding: QNB at (%d %d %d) is disconnecting, affectWorld = %b", xCoord, yCoord, zCoord, affectWorld);
-			}
-			if( !affectWorld )
-			{
-				this.cluster.setUpdateStatus( false );
-			}
+        this.cluster = null;
 
-			this.cluster.destroy();
-		}
+        if (affectWorld) {
+            this.getProxy().setValidSides(EnumSet.noneOf(ForgeDirection.class));
+        }
+    }
 
-		this.cluster = null;
+    @Override
+    public IAECluster getCluster() {
+        return this.cluster;
+    }
 
-		if( affectWorld )
-		{
-			this.getProxy().setValidSides( EnumSet.noneOf( ForgeDirection.class ) );
-		}
-	}
+    @Override
+    public boolean isValid() {
+        return !this.isInvalid();
+    }
 
-	@Override
-	public IAECluster getCluster()
-	{
-		return this.cluster;
-	}
+    public void updateStatus(final QuantumCluster c, final byte flags, final boolean affectWorld) {
+        if (AEConfig.instance.debugPathFinding) {
+            AELog.debug(
+                    "Pathfinding: QNB at (%d %d %d) is updating, affectWorld = %b, flags = %d",
+                    xCoord, yCoord, zCoord, affectWorld, (int) flags);
+        }
+        this.cluster = c;
 
-	@Override
-	public boolean isValid()
-	{
-		return !this.isInvalid();
-	}
+        if (affectWorld) {
+            if (this.constructed != flags) {
+                this.constructed = flags;
+                this.markForUpdate();
+            }
 
-	public void updateStatus( final QuantumCluster c, final byte flags, final boolean affectWorld )
-	{
-		if (AEConfig.instance.debugPathFinding)
-		{
-			AELog.debug("Pathfinding: QNB at (%d %d %d) is updating, affectWorld = %b, flags = %d", xCoord, yCoord, zCoord, affectWorld, (int)flags);
-		}
-		this.cluster = c;
+            if (this.isCorner() || this.isCenter()) {
+                this.getProxy().setValidSides(this.getConnections());
+            } else {
+                this.getProxy().setValidSides(EnumSet.allOf(ForgeDirection.class));
+            }
+        }
+    }
 
-		if( affectWorld )
-		{
-			if( this.constructed != flags )
-			{
-				this.constructed = flags;
-				this.markForUpdate();
-			}
+    public boolean isCorner() {
+        return (this.constructed & this.getCorner()) == this.getCorner() && this.constructed != -1;
+    }
 
-			if( this.isCorner() || this.isCenter() )
-			{
-				this.getProxy().setValidSides( this.getConnections() );
-			}
-			else
-			{
-				this.getProxy().setValidSides( EnumSet.allOf( ForgeDirection.class ) );
-			}
-		}
-	}
+    public EnumSet<ForgeDirection> getConnections() {
+        final EnumSet<ForgeDirection> set = EnumSet.noneOf(ForgeDirection.class);
 
-	public boolean isCorner()
-	{
-		return ( this.constructed & this.getCorner() ) == this.getCorner() && this.constructed != -1;
-	}
+        for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
+            final TileEntity te = this.worldObj.getTileEntity(
+                    this.xCoord + d.offsetX, this.yCoord + d.offsetY, this.zCoord + d.offsetZ);
+            if (te instanceof TileQuantumBridge) {
+                set.add(d);
+            }
+        }
 
-	public EnumSet<ForgeDirection> getConnections()
-	{
-		final EnumSet<ForgeDirection> set = EnumSet.noneOf( ForgeDirection.class );
+        return set;
+    }
 
-		for( final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS )
-		{
-			final TileEntity te = this.worldObj.getTileEntity( this.xCoord + d.offsetX, this.yCoord + d.offsetY, this.zCoord + d.offsetZ );
-			if( te instanceof TileQuantumBridge )
-			{
-				set.add( d );
-			}
-		}
+    public long getQEFrequency() {
+        final ItemStack is = this.internalInventory.getStackInSlot(0);
+        if (is != null) {
+            final NBTTagCompound c = is.getTagCompound();
+            if (c != null) {
+                return c.getLong("freq");
+            }
+        }
+        return 0;
+    }
 
-		return set;
-	}
+    public boolean isPowered() {
+        if (Platform.isClient()) {
+            return (this.constructed & this.powered) == this.powered && this.constructed != -1;
+        }
 
-	public long getQEFrequency()
-	{
-		final ItemStack is = this.internalInventory.getStackInSlot( 0 );
-		if( is != null )
-		{
-			final NBTTagCompound c = is.getTagCompound();
-			if( c != null )
-			{
-				return c.getLong( "freq" );
-			}
-		}
-		return 0;
-	}
+        try {
+            return this.getProxy().getEnergy().isNetworkPowered();
+        } catch (final GridAccessException e) {
+            // :P
+        }
 
-	public boolean isPowered()
-	{
-		if( Platform.isClient() )
-		{
-			return ( this.constructed & this.powered ) == this.powered && this.constructed != -1;
-		}
+        return false;
+    }
 
-		try
-		{
-			return this.getProxy().getEnergy().isNetworkPowered();
-		}
-		catch( final GridAccessException e )
-		{
-			// :P
-		}
+    public boolean isFormed() {
+        return this.constructed != -1;
+    }
 
-		return false;
-	}
+    @Override
+    public AECableType getCableConnectionType(final ForgeDirection dir) {
+        return AECableType.DENSE;
+    }
 
-	public boolean isFormed()
-	{
-		return this.constructed != -1;
-	}
+    public void neighborUpdate() {
+        this.calc.calculateMultiblock(this.worldObj, this.getLocation());
+    }
 
-	@Override
-	public AECableType getCableConnectionType( final ForgeDirection dir )
-	{
-		return AECableType.DENSE;
-	}
+    @Override
+    public DimensionalCoord getLocation() {
+        return new DimensionalCoord(this);
+    }
 
-	public void neighborUpdate()
-	{
-		this.calc.calculateMultiblock( this.worldObj, this.getLocation() );
-	}
+    public boolean hasQES() {
+        if (this.constructed == -1) {
+            return false;
+        }
+        return (this.constructed & this.hasSingularity) == this.hasSingularity;
+    }
 
-	@Override
-	public DimensionalCoord getLocation()
-	{
-		return new DimensionalCoord( this );
-	}
+    public void breakCluster() {
+        if (this.cluster != null) {
+            this.cluster.destroy();
+        }
+    }
 
-	public boolean hasQES()
-	{
-		if( this.constructed == -1 )
-		{
-			return false;
-		}
-		return ( this.constructed & this.hasSingularity ) == this.hasSingularity;
-	}
-
-	public void breakCluster()
-	{
-		if( this.cluster != null )
-		{
-			this.cluster.destroy();
-		}
-	}
-
-	public byte getCorner()
-	{
-		return this.corner;
-	}
+    public byte getCorner() {
+        return this.corner;
+    }
 }

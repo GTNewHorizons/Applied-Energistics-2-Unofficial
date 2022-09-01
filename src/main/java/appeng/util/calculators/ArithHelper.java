@@ -4,8 +4,7 @@ public class ArithHelper {
 
     private static final int DEF_DIV_SCALE = 16;
 
-    private ArithHelper() {
-    }
+    private ArithHelper() {}
 
     /**
      * addition
@@ -87,5 +86,4 @@ public class ArithHelper {
         java.math.BigDecimal one = new java.math.BigDecimal("1");
         return String.valueOf(b.divide(one, scale, java.math.BigDecimal.ROUND_HALF_UP));
     }
-
 }

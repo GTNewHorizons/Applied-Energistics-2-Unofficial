@@ -18,7 +18,6 @@
 
 package appeng.items.tools.powered.powersink;
 
-
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.PowerUnits;
 import appeng.api.implementations.items.IAEItemPowerStorage;
@@ -26,179 +25,158 @@ import appeng.core.localization.GuiText;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
 import com.google.common.base.Optional;
+import java.text.MessageFormat;
+import java.util.List;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.text.MessageFormat;
-import java.util.List;
+public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPowerStorage {
+    private static final String POWER_NBT_KEY = "internalCurrentPower";
+    private final double powerCapacity;
 
+    public AERootPoweredItem(final double powerCapacity, final Optional<String> subName) {
+        super(subName);
+        this.setMaxDamage(32);
+        this.hasSubtypes = false;
+        this.setFull3D();
 
-public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPowerStorage
-{
-	private static final String POWER_NBT_KEY = "internalCurrentPower";
-	private final double powerCapacity;
+        this.powerCapacity = powerCapacity;
+    }
 
-	public AERootPoweredItem( final double powerCapacity, final Optional<String> subName )
-	{
-		super( subName );
-		this.setMaxDamage( 32 );
-		this.hasSubtypes = false;
-		this.setFull3D();
+    @Override
+    public void addCheckedInformation(
+            final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo) {
+        final NBTTagCompound tag = stack.getTagCompound();
+        double internalCurrentPower = 0;
+        final double internalMaxPower = this.getAEMaxPower(stack);
 
-		this.powerCapacity = powerCapacity;
-	}
+        if (tag != null) {
+            internalCurrentPower = tag.getDouble("internalCurrentPower");
+        }
 
-	@Override
-	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
-	{
-		final NBTTagCompound tag = stack.getTagCompound();
-		double internalCurrentPower = 0;
-		final double internalMaxPower = this.getAEMaxPower( stack );
+        final double percent = internalCurrentPower / internalMaxPower;
 
-		if( tag != null )
-		{
-			internalCurrentPower = tag.getDouble( "internalCurrentPower" );
-		}
+        lines.add(GuiText.StoredEnergy.getLocal() + ':' + MessageFormat.format(" {0,number,#} ", internalCurrentPower)
+                + Platform.gui_localize(PowerUnits.AE.unlocalizedName) + " - "
+                + MessageFormat.format(" {0,number,#.##%} ", percent));
+    }
 
-		final double percent = internalCurrentPower / internalMaxPower;
+    @Override
+    public boolean isDamageable() {
+        return true;
+    }
 
-		lines.add( GuiText.StoredEnergy.getLocal() + ':' + MessageFormat.format( " {0,number,#} ", internalCurrentPower ) + Platform.gui_localize( PowerUnits.AE.unlocalizedName ) + " - " + MessageFormat.format( " {0,number,#.##%} ", percent ) );
-	}
+    @Override
+    protected void getCheckedSubItems(
+            final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks) {
+        super.getCheckedSubItems(sameItem, creativeTab, itemStacks);
 
-	@Override
-	public boolean isDamageable()
-	{
-		return true;
-	}
+        final ItemStack charged = new ItemStack(this, 1);
+        final NBTTagCompound tag = Platform.openNbtData(charged);
+        tag.setDouble("internalCurrentPower", this.getAEMaxPower(charged));
+        tag.setDouble("internalMaxPower", this.getAEMaxPower(charged));
 
-	@Override
-	protected void getCheckedSubItems( final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks )
-	{
-		super.getCheckedSubItems( sameItem, creativeTab, itemStacks );
+        itemStacks.add(charged);
+    }
 
-		final ItemStack charged = new ItemStack( this, 1 );
-		final NBTTagCompound tag = Platform.openNbtData( charged );
-		tag.setDouble( "internalCurrentPower", this.getAEMaxPower( charged ) );
-		tag.setDouble( "internalMaxPower", this.getAEMaxPower( charged ) );
+    @Override
+    public boolean isRepairable() {
+        return false;
+    }
 
-		itemStacks.add( charged );
-	}
+    @Override
+    public double getDurabilityForDisplay(final ItemStack is) {
+        return 1 - this.getAECurrentPower(is) / this.getAEMaxPower(is);
+    }
 
-	@Override
-	public boolean isRepairable()
-	{
-		return false;
-	}
+    @Override
+    public boolean isDamaged(final ItemStack stack) {
+        return true;
+    }
 
-	@Override
-	public double getDurabilityForDisplay( final ItemStack is )
-	{
-		return 1 - this.getAECurrentPower( is ) / this.getAEMaxPower( is );
-	}
+    @Override
+    public void setDamage(final ItemStack stack, final int damage) {}
 
-	@Override
-	public boolean isDamaged( final ItemStack stack )
-	{
-		return true;
-	}
+    private double getInternalBattery(final ItemStack is, final batteryOperation op, final double adjustment) {
+        final NBTTagCompound data = Platform.openNbtData(is);
 
-	@Override
-	public void setDamage( final ItemStack stack, final int damage )
-	{
+        double currentStorage = data.getDouble(POWER_NBT_KEY);
+        final double maxStorage = this.getAEMaxPower(is);
 
-	}
+        switch (op) {
+            case INJECT:
+                currentStorage += adjustment;
+                if (currentStorage > maxStorage) {
+                    final double diff = currentStorage - maxStorage;
+                    data.setDouble(POWER_NBT_KEY, maxStorage);
+                    return diff;
+                }
+                data.setDouble(POWER_NBT_KEY, currentStorage);
+                return 0;
+            case EXTRACT:
+                if (currentStorage > adjustment) {
+                    currentStorage -= adjustment;
+                    data.setDouble(POWER_NBT_KEY, currentStorage);
+                    return adjustment;
+                }
+                data.setDouble(POWER_NBT_KEY, 0);
+                return currentStorage;
+            default:
+                break;
+        }
 
-	private double getInternalBattery( final ItemStack is, final batteryOperation op, final double adjustment )
-	{
-		final NBTTagCompound data = Platform.openNbtData( is );
+        return currentStorage;
+    }
 
-		double currentStorage = data.getDouble( POWER_NBT_KEY );
-		final double maxStorage = this.getAEMaxPower( is );
+    /**
+     * inject external
+     */
+    double injectExternalPower(
+            final PowerUnits input, final ItemStack is, final double amount, final boolean simulate) {
+        if (simulate) {
+            final int requiredEU =
+                    (int) PowerUnits.AE.convertTo(PowerUnits.EU, this.getAEMaxPower(is) - this.getAECurrentPower(is));
+            if (amount < requiredEU) {
+                return 0;
+            }
+            return amount - requiredEU;
+        } else {
+            final double powerRemainder = this.injectAEPower(is, PowerUnits.EU.convertTo(PowerUnits.AE, amount));
+            return PowerUnits.AE.convertTo(PowerUnits.EU, powerRemainder);
+        }
+    }
 
-		switch( op )
-		{
-			case INJECT:
-				currentStorage += adjustment;
-				if( currentStorage > maxStorage )
-				{
-					final double diff = currentStorage - maxStorage;
-					data.setDouble( POWER_NBT_KEY, maxStorage );
-					return diff;
-				}
-				data.setDouble( POWER_NBT_KEY, currentStorage );
-				return 0;
-			case EXTRACT:
-				if( currentStorage > adjustment )
-				{
-					currentStorage -= adjustment;
-					data.setDouble( POWER_NBT_KEY, currentStorage );
-					return adjustment;
-				}
-				data.setDouble( POWER_NBT_KEY, 0 );
-				return currentStorage;
-			default:
-				break;
-		}
+    @Override
+    public double injectAEPower(final ItemStack is, final double amt) {
+        return this.getInternalBattery(is, batteryOperation.INJECT, amt);
+    }
 
-		return currentStorage;
-	}
+    @Override
+    public double extractAEPower(final ItemStack is, final double amt) {
+        return this.getInternalBattery(is, batteryOperation.EXTRACT, amt);
+    }
 
-	/**
-	 * inject external
-	 */
-	double injectExternalPower( final PowerUnits input, final ItemStack is, final double amount, final boolean simulate )
-	{
-		if( simulate )
-		{
-			final int requiredEU = (int) PowerUnits.AE.convertTo( PowerUnits.EU, this.getAEMaxPower( is ) - this.getAECurrentPower( is ) );
-			if( amount < requiredEU )
-			{
-				return 0;
-			}
-			return amount - requiredEU;
-		}
-		else
-		{
-			final double powerRemainder = this.injectAEPower( is, PowerUnits.EU.convertTo( PowerUnits.AE, amount ) );
-			return PowerUnits.AE.convertTo( PowerUnits.EU, powerRemainder );
-		}
-	}
+    @Override
+    public double getAEMaxPower(final ItemStack is) {
+        return this.powerCapacity;
+    }
 
-	@Override
-	public double injectAEPower( final ItemStack is, final double amt )
-	{
-		return this.getInternalBattery( is, batteryOperation.INJECT, amt );
-	}
+    @Override
+    public double getAECurrentPower(final ItemStack is) {
+        return this.getInternalBattery(is, batteryOperation.STORAGE, 0);
+    }
 
-	@Override
-	public double extractAEPower( final ItemStack is, final double amt )
-	{
-		return this.getInternalBattery( is, batteryOperation.EXTRACT, amt );
-	}
+    @Override
+    public AccessRestriction getPowerFlow(final ItemStack is) {
+        return AccessRestriction.WRITE;
+    }
 
-	@Override
-	public double getAEMaxPower( final ItemStack is )
-	{
-		return this.powerCapacity;
-	}
-
-	@Override
-	public double getAECurrentPower( final ItemStack is )
-	{
-		return this.getInternalBattery( is, batteryOperation.STORAGE, 0 );
-	}
-
-	@Override
-	public AccessRestriction getPowerFlow( final ItemStack is )
-	{
-		return AccessRestriction.WRITE;
-	}
-
-	private enum batteryOperation
-	{
-		STORAGE, INJECT, EXTRACT
-	}
+    private enum batteryOperation {
+        STORAGE,
+        INJECT,
+        EXTRACT
+    }
 }

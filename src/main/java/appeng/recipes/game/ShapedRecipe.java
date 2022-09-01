@@ -18,309 +18,244 @@
 
 package appeng.recipes.game;
 
-
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RegistrationError;
 import appeng.api.recipes.IIngredient;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.world.World;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+public class ShapedRecipe implements IRecipe, IRecipeBakeable {
+    // Added in for future ease of change, but hard coded for now.
+    private static final int MAX_CRAFT_GRID_WIDTH = 3;
+    private static final int MAX_CRAFT_GRID_HEIGHT = 3;
 
+    private ItemStack output = null;
+    private Object[] input = null;
+    private int width = 0;
+    private int height = 0;
+    private boolean mirrored = true;
+    private boolean disable = false;
 
-public class ShapedRecipe implements IRecipe, IRecipeBakeable
-{
-	// Added in for future ease of change, but hard coded for now.
-	private static final int MAX_CRAFT_GRID_WIDTH = 3;
-	private static final int MAX_CRAFT_GRID_HEIGHT = 3;
+    public ShapedRecipe(final ItemStack result, Object... recipe) {
+        this.output = result.copy();
 
-	private ItemStack output = null;
-	private Object[] input = null;
-	private int width = 0;
-	private int height = 0;
-	private boolean mirrored = true;
-	private boolean disable = false;
+        final StringBuilder shape = new StringBuilder();
+        int idx = 0;
 
-	public ShapedRecipe( final ItemStack result, Object... recipe )
-	{
-		this.output = result.copy();
+        if (recipe[idx] instanceof Boolean) {
+            this.mirrored = (Boolean) recipe[idx];
+            if (recipe[idx + 1] instanceof Object[]) {
+                recipe = (Object[]) recipe[idx + 1];
+            } else {
+                idx = 1;
+            }
+        }
 
-		final StringBuilder shape = new StringBuilder();
-		int idx = 0;
+        if (recipe[idx] instanceof String[]) {
+            final String[] parts = ((String[]) recipe[idx]);
+            idx++;
 
-		if( recipe[idx] instanceof Boolean )
-		{
-			this.mirrored = (Boolean) recipe[idx];
-			if( recipe[idx + 1] instanceof Object[] )
-			{
-				recipe = (Object[]) recipe[idx + 1];
-			}
-			else
-			{
-				idx = 1;
-			}
-		}
+            for (final String s : parts) {
+                this.width = s.length();
+                shape.append(s);
+            }
 
-		if( recipe[idx] instanceof String[] )
-		{
-			final String[] parts = ( (String[]) recipe[idx] );
-			idx++;
+            this.height = parts.length;
+        } else {
+            while (recipe[idx] instanceof String) {
+                final String s = (String) recipe[idx];
+                idx++;
+                shape.append(s);
+                this.width = s.length();
+                this.height++;
+            }
+        }
 
-			for( final String s : parts )
-			{
-				this.width = s.length();
-				shape.append( s );
-			}
+        if (this.width * this.height != shape.length()) {
+            final StringBuilder ret = new StringBuilder("Invalid shaped ore recipe: ");
+            for (final Object tmp : recipe) {
+                ret.append(tmp).append(", ");
+            }
+            ret.append(this.output);
+            throw new IllegalStateException(ret.toString());
+        }
 
-			this.height = parts.length;
-		}
-		else
-		{
-			while( recipe[idx] instanceof String )
-			{
-				final String s = (String) recipe[idx];
-				idx++;
-				shape.append( s );
-				this.width = s.length();
-				this.height++;
-			}
-		}
+        final Map<Character, IIngredient> itemMap = new HashMap<Character, IIngredient>();
 
-		if( this.width * this.height != shape.length() )
-		{
-			final StringBuilder ret = new StringBuilder( "Invalid shaped ore recipe: " );
-			for( final Object tmp : recipe )
-			{
-				ret.append( tmp ).append( ", " );
-			}
-			ret.append( this.output );
-			throw new IllegalStateException( ret.toString() );
-		}
+        for (; idx < recipe.length; idx += 2) {
+            final Character chr = (Character) recipe[idx];
+            final Object in = recipe[idx + 1];
 
-		final Map<Character, IIngredient> itemMap = new HashMap<Character, IIngredient>();
+            if (in instanceof IIngredient) {
+                itemMap.put(chr, (IIngredient) in);
+            } else {
+                final StringBuilder ret = new StringBuilder("Invalid shaped ore recipe: ");
+                for (final Object tmp : recipe) {
+                    ret.append(tmp).append(", ");
+                }
+                ret.append(this.output);
+                throw new IllegalStateException(ret.toString());
+            }
+        }
 
-		for( ; idx < recipe.length; idx += 2 )
-		{
-			final Character chr = (Character) recipe[idx];
-			final Object in = recipe[idx + 1];
+        this.input = new Object[this.width * this.height];
+        int x = 0;
+        for (final char chr : shape.toString().toCharArray()) {
+            this.input[x] = itemMap.get(chr);
+            x++;
+        }
+    }
 
-			if( in instanceof IIngredient )
-			{
-				itemMap.put( chr, (IIngredient) in );
-			}
-			else
-			{
-				final StringBuilder ret = new StringBuilder( "Invalid shaped ore recipe: " );
-				for( final Object tmp : recipe )
-				{
-					ret.append( tmp ).append( ", " );
-				}
-				ret.append( this.output );
-				throw new IllegalStateException( ret.toString() );
-			}
-		}
+    public boolean isEnabled() {
+        return !this.disable;
+    }
 
-		this.input = new Object[this.width * this.height];
-		int x = 0;
-		for( final char chr : shape.toString().toCharArray() )
-		{
-			this.input[x] = itemMap.get( chr );
-			x++;
-		}
-	}
+    @Override
+    public boolean matches(final InventoryCrafting inv, final World world) {
+        if (this.disable) {
+            return false;
+        }
 
-	public boolean isEnabled()
-	{
-		return !this.disable;
-	}
+        for (int x = 0; x <= MAX_CRAFT_GRID_WIDTH - this.width; x++) {
+            for (int y = 0; y <= MAX_CRAFT_GRID_HEIGHT - this.height; ++y) {
+                if (this.checkMatch(inv, x, y, false)) {
+                    return true;
+                }
 
-	@Override
-	public boolean matches( final InventoryCrafting inv, final World world )
-	{
-		if( this.disable )
-		{
-			return false;
-		}
+                if (this.mirrored && this.checkMatch(inv, x, y, true)) {
+                    return true;
+                }
+            }
+        }
 
-		for( int x = 0; x <= MAX_CRAFT_GRID_WIDTH - this.width; x++ )
-		{
-			for( int y = 0; y <= MAX_CRAFT_GRID_HEIGHT - this.height; ++y )
-			{
-				if( this.checkMatch( inv, x, y, false ) )
-				{
-					return true;
-				}
+        return false;
+    }
 
-				if( this.mirrored && this.checkMatch( inv, x, y, true ) )
-				{
-					return true;
-				}
-			}
-		}
+    @Override
+    public ItemStack getCraftingResult(final InventoryCrafting var1) {
+        return this.output.copy();
+    }
 
-		return false;
-	}
+    @Override
+    public int getRecipeSize() {
+        return this.input.length;
+    }
 
-	@Override
-	public ItemStack getCraftingResult( final InventoryCrafting var1 )
-	{
-		return this.output.copy();
-	}
+    @Override
+    public ItemStack getRecipeOutput() {
+        return this.output;
+    }
 
-	@Override
-	public int getRecipeSize()
-	{
-		return this.input.length;
-	}
+    @SuppressWarnings("unchecked")
+    private boolean checkMatch(final InventoryCrafting inv, final int startX, final int startY, final boolean mirror) {
+        if (this.disable) {
+            return false;
+        }
 
-	@Override
-	public ItemStack getRecipeOutput()
-	{
-		return this.output;
-	}
+        for (int x = 0; x < MAX_CRAFT_GRID_WIDTH; x++) {
+            for (int y = 0; y < MAX_CRAFT_GRID_HEIGHT; y++) {
+                final int subX = x - startX;
+                final int subY = y - startY;
+                Object target = null;
 
-	@SuppressWarnings( "unchecked" )
-	private boolean checkMatch( final InventoryCrafting inv, final int startX, final int startY, final boolean mirror )
-	{
-		if( this.disable )
-		{
-			return false;
-		}
+                if (subX >= 0 && subY >= 0 && subX < this.width && subY < this.height) {
+                    if (mirror) {
+                        target = this.input[this.width - subX - 1 + subY * this.width];
+                    } else {
+                        target = this.input[subX + subY * this.width];
+                    }
+                }
 
-		for( int x = 0; x < MAX_CRAFT_GRID_WIDTH; x++ )
-		{
-			for( int y = 0; y < MAX_CRAFT_GRID_HEIGHT; y++ )
-			{
-				final int subX = x - startX;
-				final int subY = y - startY;
-				Object target = null;
+                final ItemStack slot = inv.getStackInRowAndColumn(x, y);
 
-				if( subX >= 0 && subY >= 0 && subX < this.width && subY < this.height )
-				{
-					if( mirror )
-					{
-						target = this.input[this.width - subX - 1 + subY * this.width];
-					}
-					else
-					{
-						target = this.input[subX + subY * this.width];
-					}
-				}
+                if (target instanceof IIngredient) {
+                    boolean matched = false;
 
-				final ItemStack slot = inv.getStackInRowAndColumn( x, y );
+                    try {
+                        for (final ItemStack item : ((IIngredient) target).getItemStackSet()) {
+                            matched = matched || this.checkItemEquals(item, slot);
+                        }
+                    } catch (final RegistrationError e) {
+                        // :P
+                    } catch (final MissingIngredientError e) {
+                        // :P
+                    }
 
-				if( target instanceof IIngredient )
-				{
-					boolean matched = false;
+                    if (!matched) {
+                        return false;
+                    }
+                } else if (target instanceof ArrayList) {
+                    boolean matched = false;
 
-					try
-					{
-						for( final ItemStack item : ( (IIngredient) target ).getItemStackSet() )
-						{
-							matched = matched || this.checkItemEquals( item, slot );
-						}
-					}
-					catch( final RegistrationError e )
-					{
-						// :P
-					}
-					catch( final MissingIngredientError e )
-					{
-						// :P
-					}
+                    for (final ItemStack item : (Iterable<ItemStack>) target) {
+                        matched = matched || this.checkItemEquals(item, slot);
+                    }
 
-					if( !matched )
-					{
-						return false;
-					}
-				}
-				else if( target instanceof ArrayList )
-				{
-					boolean matched = false;
+                    if (!matched) {
+                        return false;
+                    }
+                } else if (target == null && slot != null) {
+                    return false;
+                }
+            }
+        }
 
-					for( final ItemStack item : (Iterable<ItemStack>) target )
-					{
-						matched = matched || this.checkItemEquals( item, slot );
-					}
+        return true;
+    }
 
-					if( !matched )
-					{
-						return false;
-					}
-				}
-				else if( target == null && slot != null )
-				{
-					return false;
-				}
-			}
-		}
+    private boolean checkItemEquals(final ItemStack target, final ItemStack input) {
+        if (input == null && target != null || input != null && target == null) {
+            return false;
+        }
+        return (target.getItem() == input.getItem()
+                && (target.getItemDamage() == OreDictionary.WILDCARD_VALUE
+                        || target.getItemDamage() == input.getItemDamage()));
+    }
 
-		return true;
-	}
+    public ShapedRecipe setMirrored(final boolean mirror) {
+        this.mirrored = mirror;
+        return this;
+    }
 
-	private boolean checkItemEquals( final ItemStack target, final ItemStack input )
-	{
-		if( input == null && target != null || input != null && target == null )
-		{
-			return false;
-		}
-		return ( target.getItem() == input.getItem() && ( target.getItemDamage() == OreDictionary.WILDCARD_VALUE || target.getItemDamage() == input.getItemDamage() ) );
-	}
+    /**
+     * Returns the input for this recipe, any mod accessing this value should never manipulate the values in this array
+     * as it will effect the recipe itself.
+     *
+     * @return The recipes input vales.
+     */
+    public Object[] getInput() {
+        return this.input;
+    }
 
-	public ShapedRecipe setMirrored( final boolean mirror )
-	{
-		this.mirrored = mirror;
-		return this;
-	}
+    public int getWidth() {
+        return this.width;
+    }
 
-	/**
-	 * Returns the input for this recipe, any mod accessing this value should never manipulate the values in this array
-	 * as it will effect the recipe itself.
-	 *
-	 * @return The recipes input vales.
-	 */
-	public Object[] getInput()
-	{
-		return this.input;
-	}
+    public int getHeight() {
+        return this.height;
+    }
 
-	public int getWidth()
-	{
-		return this.width;
-	}
+    public Object[] getIngredients() {
+        return this.input;
+    }
 
-	public int getHeight()
-	{
-		return this.height;
-	}
-
-	public Object[] getIngredients()
-	{
-		return this.input;
-	}
-
-	@Override
-	public void bake() throws RegistrationError
-	{
-		try
-		{
-			this.disable = false;
-			for( final Object o : this.input )
-			{
-				if( o instanceof IIngredient )
-				{
-					( (IIngredient) o ).bake();
-				}
-			}
-		}
-		catch( final MissingIngredientError err )
-		{
-			this.disable = true;
-		}
-	}
+    @Override
+    public void bake() throws RegistrationError {
+        try {
+            this.disable = false;
+            for (final Object o : this.input) {
+                if (o instanceof IIngredient) {
+                    ((IIngredient) o).bake();
+                }
+            }
+        } catch (final MissingIngredientError err) {
+            this.disable = true;
+        }
+    }
 }

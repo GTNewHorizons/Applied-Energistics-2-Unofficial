@@ -18,7 +18,6 @@
 
 package appeng.block.solids;
 
-
 import appeng.api.AEApi;
 import appeng.api.exceptions.MissingDefinition;
 import appeng.block.AEBaseBlock;
@@ -26,6 +25,9 @@ import appeng.client.render.blocks.RenderQuartzOre;
 import appeng.core.features.AEFeature;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.EnumSet;
+import java.util.Random;
+import javax.annotation.Nullable;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -33,135 +35,124 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-import javax.annotation.Nullable;
-import java.util.EnumSet;
-import java.util.Random;
+public class OreQuartz extends AEBaseBlock {
+    private int boostBrightnessLow;
+    private int boostBrightnessHigh;
+    private boolean enhanceBrightness;
 
+    public OreQuartz() {
+        super(Material.rock);
+        this.setHardness(3.0F);
+        this.setResistance(5.0F);
+        this.boostBrightnessLow = 0;
+        this.boostBrightnessHigh = 1;
+        this.enhanceBrightness = false;
+        this.setFeature(EnumSet.of(AEFeature.Core));
+    }
 
-public class OreQuartz extends AEBaseBlock
-{
-	private int boostBrightnessLow;
-	private int boostBrightnessHigh;
-	private boolean enhanceBrightness;
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RenderQuartzOre getRenderer() {
+        return new RenderQuartzOre();
+    }
 
-	public OreQuartz()
-	{
-		super( Material.rock );
-		this.setHardness( 3.0F );
-		this.setResistance( 5.0F );
-		this.boostBrightnessLow = 0;
-		this.boostBrightnessHigh = 1;
-		this.enhanceBrightness = false;
-		this.setFeature( EnumSet.of( AEFeature.Core ) );
-	}
+    @Override
+    public int getMixedBrightnessForBlock(
+            final IBlockAccess par1iBlockAccess, final int par2, final int par3, final int par4) {
+        int j1 = super.getMixedBrightnessForBlock(par1iBlockAccess, par2, par3, par4);
+        if (this.enhanceBrightness) {
+            j1 = Math.max(j1 >> 20, j1 >> 4);
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected RenderQuartzOre getRenderer()
-	{
-		return new RenderQuartzOre();
-	}
+            if (j1 > 4) {
+                j1 += this.boostBrightnessHigh;
+            } else {
+                j1 += this.boostBrightnessLow;
+            }
 
-	@Override
-	public int getMixedBrightnessForBlock( final IBlockAccess par1iBlockAccess, final int par2, final int par3, final int par4 )
-	{
-		int j1 = super.getMixedBrightnessForBlock( par1iBlockAccess, par2, par3, par4 );
-		if( this.enhanceBrightness )
-		{
-			j1 = Math.max( j1 >> 20, j1 >> 4 );
+            if (j1 > 15) {
+                j1 = 15;
+            }
+            return j1 << 20 | j1 << 4;
+        }
+        return j1;
+    }
 
-			if( j1 > 4 )
-			{
-				j1 += this.boostBrightnessHigh;
-			}
-			else
-			{
-				j1 += this.boostBrightnessLow;
-			}
+    @Override
+    public int quantityDropped(final Random rand) {
+        return 1 + rand.nextInt(2);
+    }
 
-			if( j1 > 15 )
-			{
-				j1 = 15;
-			}
-			return j1 << 20 | j1 << 4;
-		}
-		return j1;
-	}
+    @Nullable
+    @Override
+    public Item getItemDropped(final int id, final Random rand, final int meta) {
+        for (final Item crystalItem : AEApi.instance()
+                .definitions()
+                .materials()
+                .certusQuartzCrystal()
+                .maybeItem()
+                .asSet()) {
+            return crystalItem;
+        }
 
-	@Override
-	public int quantityDropped( final Random rand )
-	{
-		return 1 + rand.nextInt( 2 );
-	}
+        throw new MissingDefinition("Tried to access certus quartz crystal, even though they are disabled");
+    }
 
-	@Nullable
-	@Override
-	public Item getItemDropped( final int id, final Random rand, final int meta )
-	{
-		for( final Item crystalItem : AEApi.instance().definitions().materials().certusQuartzCrystal().maybeItem().asSet() )
-		{
-			return crystalItem;
-		}
+    @Override
+    public void dropBlockAsItemWithChance(
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final int blockID,
+            final float something,
+            final int meta) {
+        super.dropBlockAsItemWithChance(w, x, y, z, blockID, something, meta);
 
-		throw new MissingDefinition( "Tried to access certus quartz crystal, even though they are disabled" );
-	}
+        if (this.getItemDropped(blockID, w.rand, meta) != Item.getItemFromBlock(this)) {
+            final int xp = MathHelper.getRandomIntegerInRange(w.rand, 2, 5);
 
-	@Override
-	public void dropBlockAsItemWithChance( final World w, final int x, final int y, final int z, final int blockID, final float something, final int meta )
-	{
-		super.dropBlockAsItemWithChance( w, x, y, z, blockID, something, meta );
+            this.dropXpOnBlockBreak(w, x, y, z, xp);
+        }
+    }
 
-		if( this.getItemDropped( blockID, w.rand, meta ) != Item.getItemFromBlock( this ) )
-		{
-			final int xp = MathHelper.getRandomIntegerInRange( w.rand, 2, 5 );
+    @Override
+    public int damageDropped(final int id) {
+        for (final ItemStack crystalStack : AEApi.instance()
+                .definitions()
+                .materials()
+                .certusQuartzCrystal()
+                .maybeStack(1)
+                .asSet()) {
+            return crystalStack.getItemDamage();
+        }
 
-			this.dropXpOnBlockBreak( w, x, y, z, xp );
-		}
-	}
+        throw new MissingDefinition("Tried to access certus quartz crystal, even though they are disabled");
+    }
 
-	@Override
-	public int damageDropped( final int id )
-	{
-		for( final ItemStack crystalStack : AEApi.instance().definitions().materials().certusQuartzCrystal().maybeStack( 1 ).asSet() )
-		{
-			return crystalStack.getItemDamage();
-		}
+    @Override
+    public int quantityDroppedWithBonus(final int fortune, final Random rand) {
+        if (fortune > 0 && Item.getItemFromBlock(this) != this.getItemDropped(0, rand, fortune)) {
+            int j = rand.nextInt(fortune + 2) - 1;
 
-		throw new MissingDefinition( "Tried to access certus quartz crystal, even though they are disabled" );
-	}
+            if (j < 0) {
+                j = 0;
+            }
 
-	@Override
-	public int quantityDroppedWithBonus( final int fortune, final Random rand )
-	{
-		if( fortune > 0 && Item.getItemFromBlock( this ) != this.getItemDropped( 0, rand, fortune ) )
-		{
-			int j = rand.nextInt( fortune + 2 ) - 1;
+            return this.quantityDropped(rand) * (j + 1);
+        } else {
+            return this.quantityDropped(rand);
+        }
+    }
 
-			if( j < 0 )
-			{
-				j = 0;
-			}
+    void setBoostBrightnessLow(final int boostBrightnessLow) {
+        this.boostBrightnessLow = boostBrightnessLow;
+    }
 
-			return this.quantityDropped( rand ) * ( j + 1 );
-		}
-		else
-		{
-			return this.quantityDropped( rand );
-		}
-	}
+    void setBoostBrightnessHigh(final int boostBrightnessHigh) {
+        this.boostBrightnessHigh = boostBrightnessHigh;
+    }
 
-	void setBoostBrightnessLow( final int boostBrightnessLow )
-	{
-		this.boostBrightnessLow = boostBrightnessLow;
-	}
-
-	void setBoostBrightnessHigh( final int boostBrightnessHigh )
-	{
-		this.boostBrightnessHigh = boostBrightnessHigh;
-	}
-
-	public void setEnhanceBrightness( final boolean enhanceBrightness )
-	{
-		this.enhanceBrightness = enhanceBrightness;
-	}
+    public void setEnhanceBrightness(final boolean enhanceBrightness) {
+        this.enhanceBrightness = enhanceBrightness;
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.core;
 
-
 import appeng.api.AEApi;
 import appeng.api.definitions.*;
 import net.minecraft.creativetab.CreativeTabs;
@@ -26,48 +25,47 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+public final class CreativeTab extends CreativeTabs {
+    public static CreativeTab instance = null;
 
-public final class CreativeTab extends CreativeTabs
-{
-	public static CreativeTab instance = null;
+    public CreativeTab() {
+        super("appliedenergistics2");
+    }
 
-	public CreativeTab()
-	{
-		super( "appliedenergistics2" );
-	}
+    static void init() {
+        instance = new CreativeTab();
+    }
 
-	static void init()
-	{
-		instance = new CreativeTab();
-	}
+    @Override
+    public Item getTabIconItem() {
+        return this.getIconItemStack().getItem();
+    }
 
-	@Override
-	public Item getTabIconItem()
-	{
-		return this.getIconItemStack().getItem();
-	}
+    @Override
+    public ItemStack getIconItemStack() {
+        final IDefinitions definitions = AEApi.instance().definitions();
+        final IBlocks blocks = definitions.blocks();
+        final IItems items = definitions.items();
+        final IMaterials materials = definitions.materials();
 
-	@Override
-	public ItemStack getIconItemStack()
-	{
-		final IDefinitions definitions = AEApi.instance().definitions();
-		final IBlocks blocks = definitions.blocks();
-		final IItems items = definitions.items();
-		final IMaterials materials = definitions.materials();
+        return this.findFirst(
+                blocks.controller(),
+                blocks.chest(),
+                blocks.cellWorkbench(),
+                blocks.fluix(),
+                items.cell1k(),
+                items.networkTool(),
+                materials.fluixCrystal(),
+                materials.certusQuartzCrystal());
+    }
 
-		return this.findFirst( blocks.controller(), blocks.chest(), blocks.cellWorkbench(), blocks.fluix(), items.cell1k(), items.networkTool(), materials.fluixCrystal(), materials.certusQuartzCrystal() );
-	}
+    private ItemStack findFirst(final IItemDefinition... choices) {
+        for (final IItemDefinition definition : choices) {
+            for (final ItemStack definitionStack : definition.maybeStack(1).asSet()) {
+                return definitionStack;
+            }
+        }
 
-	private ItemStack findFirst( final IItemDefinition... choices )
-	{
-		for( final IItemDefinition definition : choices )
-		{
-			for( final ItemStack definitionStack : definition.maybeStack( 1 ).asSet() )
-			{
-				return definitionStack;
-			}
-		}
-
-		return new ItemStack( Blocks.chest );
-	}
+        return new ItemStack(Blocks.chest);
+    }
 }

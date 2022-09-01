@@ -18,54 +18,50 @@
 
 package appeng.client.gui.config;
 
-
 import appeng.core.AEConfig;
 import appeng.core.AppEng;
 import cpw.mods.fml.client.config.GuiConfig;
 import cpw.mods.fml.client.config.IConfigElement;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.ConfigElement;
 
-import java.util.ArrayList;
-import java.util.List;
+public class AEConfigGui extends GuiConfig {
 
+    public AEConfigGui(final GuiScreen parent) {
+        super(
+                parent,
+                getConfigElements(),
+                AppEng.MOD_ID,
+                false,
+                false,
+                GuiConfig.getAbridgedConfigPath(AEConfig.instance.getFilePath()));
+    }
 
-public class AEConfigGui extends GuiConfig
-{
+    private static List<IConfigElement> getConfigElements() {
+        final List<IConfigElement> list = new ArrayList<IConfigElement>();
 
-	public AEConfigGui( final GuiScreen parent )
-	{
-		super( parent, getConfigElements(), AppEng.MOD_ID, false, false, GuiConfig.getAbridgedConfigPath( AEConfig.instance.getFilePath() ) );
-	}
+        for (final String cat : AEConfig.instance.getCategoryNames()) {
+            if (cat.equals("versionchecker")) {
+                continue;
+            }
 
-	private static List<IConfigElement> getConfigElements()
-	{
-		final List<IConfigElement> list = new ArrayList<IConfigElement>();
+            if (cat.equals("settings")) {
+                continue;
+            }
 
-		for( final String cat : AEConfig.instance.getCategoryNames() )
-		{
-			if( cat.equals( "versionchecker" ) )
-			{
-				continue;
-			}
+            final ConfigCategory cc = AEConfig.instance.getCategory(cat);
 
-			if( cat.equals( "settings" ) )
-			{
-				continue;
-			}
+            if (cc.isChild()) {
+                continue;
+            }
 
-			final ConfigCategory cc = AEConfig.instance.getCategory( cat );
+            final ConfigElement ce = new ConfigElement(cc);
+            list.add(ce);
+        }
 
-			if( cc.isChild() )
-			{
-				continue;
-			}
-
-			final ConfigElement ce = new ConfigElement( cc );
-			list.add( ce );
-		}
-
-		return list;
-	}
+        return list;
+    }
 }

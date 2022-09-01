@@ -18,7 +18,6 @@
 
 package appeng.parts.automation;
 
-
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.tile.inventory.AppEngInternalInventory;
@@ -30,165 +29,152 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+public abstract class UpgradeInventory extends AppEngInternalInventory implements IAEAppEngInventory {
+    private final IAEAppEngInventory parent;
 
-public abstract class UpgradeInventory extends AppEngInternalInventory implements IAEAppEngInventory
-{
-	private final IAEAppEngInventory parent;
+    private boolean cached = false;
+    private int fuzzyUpgrades = 0;
+    private int speedUpgrades = 0;
+    private int redstoneUpgrades = 0;
+    private int capacityUpgrades = 0;
+    private int inverterUpgrades = 0;
+    private int craftingUpgrades = 0;
+    private int oreFilterUpgrades = 0;
+    private int patternCapacityUpgrades = 0;
 
-	private boolean cached = false;
-	private int fuzzyUpgrades = 0;
-	private int speedUpgrades = 0;
-	private int redstoneUpgrades = 0;
-	private int capacityUpgrades = 0;
-	private int inverterUpgrades = 0;
-	private int craftingUpgrades = 0;
-	private int oreFilterUpgrades = 0;
-	private int patternCapacityUpgrades = 0;
+    public UpgradeInventory(final IAEAppEngInventory parent, final int s) {
+        super(null, s);
+        this.setTileEntity(this);
+        this.parent = parent;
+    }
 
-	public UpgradeInventory( final IAEAppEngInventory parent, final int s )
-	{
-		super( null, s );
-		this.setTileEntity( this );
-		this.parent = parent;
-	}
+    @Override
+    protected boolean eventsEnabled() {
+        return true;
+    }
 
-	@Override
-	protected boolean eventsEnabled()
-	{
-		return true;
-	}
+    @Override
+    public int getInventoryStackLimit() {
+        return 1;
+    }
 
-	@Override
-	public int getInventoryStackLimit()
-	{
-		return 1;
-	}
+    @Override
+    public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
+        if (itemstack == null) {
+            return false;
+        }
+        final Item it = itemstack.getItem();
+        if (it instanceof IUpgradeModule) {
+            final Upgrades u = ((IUpgradeModule) it).getType(itemstack);
+            if (u != null) {
+                return this.getInstalledUpgrades(u) < this.getMaxInstalled(u);
+            }
+        }
+        return false;
+    }
 
-	@Override
-	public boolean isItemValidForSlot( final int i, final ItemStack itemstack )
-	{
-		if( itemstack == null )
-		{
-			return false;
-		}
-		final Item it = itemstack.getItem();
-		if( it instanceof IUpgradeModule )
-		{
-			final Upgrades u = ( (IUpgradeModule) it ).getType( itemstack );
-			if( u != null )
-			{
-				return this.getInstalledUpgrades( u ) < this.getMaxInstalled( u );
-			}
-		}
-		return false;
-	}
+    public int getInstalledUpgrades(final Upgrades u) {
+        if (!this.cached) {
+            this.updateUpgradeInfo();
+        }
 
-	public int getInstalledUpgrades( final Upgrades u )
-	{
-		if( !this.cached )
-		{
-			this.updateUpgradeInfo();
-		}
+        switch (u) {
+            case PATTERN_CAPACITY:
+                return this.patternCapacityUpgrades;
+            case CAPACITY:
+                return this.capacityUpgrades;
+            case FUZZY:
+                return this.fuzzyUpgrades;
+            case REDSTONE:
+                return this.redstoneUpgrades;
+            case SPEED:
+                return this.speedUpgrades;
+            case INVERTER:
+                return this.inverterUpgrades;
+            case CRAFTING:
+                return this.craftingUpgrades;
+            case ORE_FILTER:
+                return this.oreFilterUpgrades;
+            default:
+                return 0;
+        }
+    }
 
-		switch( u )
-		{
-			case PATTERN_CAPACITY:
-				return this.patternCapacityUpgrades;
-			case CAPACITY:
-				return this.capacityUpgrades;
-			case FUZZY:
-				return this.fuzzyUpgrades;
-			case REDSTONE:
-				return this.redstoneUpgrades;
-			case SPEED:
-				return this.speedUpgrades;
-			case INVERTER:
-				return this.inverterUpgrades;
-			case CRAFTING:
-				return this.craftingUpgrades;
-			case ORE_FILTER:
-				return this.oreFilterUpgrades;
-			default:
-				return 0;
-		}
-	}
+    public abstract int getMaxInstalled(Upgrades upgrades);
 
-	public abstract int getMaxInstalled( Upgrades upgrades );
+    private void updateUpgradeInfo() {
+        this.cached = true;
+        this.patternCapacityUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades =
+                this.speedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = 0;
 
-	private void updateUpgradeInfo()
-	{
-		this.cached = true;
-		this.patternCapacityUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = 0;
+        for (final ItemStack is : this) {
+            if (is == null || is.getItem() == null || !(is.getItem() instanceof IUpgradeModule)) {
+                continue;
+            }
 
-		for( final ItemStack is : this )
-		{
-			if( is == null || is.getItem() == null || !( is.getItem() instanceof IUpgradeModule ) )
-			{
-				continue;
-			}
+            final Upgrades myUpgrade = ((IUpgradeModule) is.getItem()).getType(is);
+            switch (myUpgrade) {
+                case PATTERN_CAPACITY:
+                    this.patternCapacityUpgrades++;
+                    break;
+                case CAPACITY:
+                    this.capacityUpgrades++;
+                    break;
+                case FUZZY:
+                    this.fuzzyUpgrades++;
+                    break;
+                case REDSTONE:
+                    this.redstoneUpgrades++;
+                    break;
+                case SPEED:
+                    this.speedUpgrades++;
+                    break;
+                case INVERTER:
+                    this.inverterUpgrades++;
+                    break;
+                case CRAFTING:
+                    this.craftingUpgrades++;
+                    break;
+                case ORE_FILTER:
+                    this.oreFilterUpgrades++;
+                    break;
+                default:
+                    break;
+            }
+        }
 
-			final Upgrades myUpgrade = ( (IUpgradeModule) is.getItem() ).getType( is );
-			switch( myUpgrade )
-			{
-				case PATTERN_CAPACITY:
-					this.patternCapacityUpgrades++;
-					break;
-				case CAPACITY:
-					this.capacityUpgrades++;
-					break;
-				case FUZZY:
-					this.fuzzyUpgrades++;
-					break;
-				case REDSTONE:
-					this.redstoneUpgrades++;
-					break;
-				case SPEED:
-					this.speedUpgrades++;
-					break;
-				case INVERTER:
-					this.inverterUpgrades++;
-					break;
-				case CRAFTING:
-					this.craftingUpgrades++;
-					break;
-				case ORE_FILTER:
-					this.oreFilterUpgrades++;
-					break;
-				default:
-					break;
-			}
-		}
+        this.capacityUpgrades = Math.min(this.capacityUpgrades, this.getMaxInstalled(Upgrades.CAPACITY));
+        this.fuzzyUpgrades = Math.min(this.fuzzyUpgrades, this.getMaxInstalled(Upgrades.FUZZY));
+        this.redstoneUpgrades = Math.min(this.redstoneUpgrades, this.getMaxInstalled(Upgrades.REDSTONE));
+        this.speedUpgrades = Math.min(this.speedUpgrades, this.getMaxInstalled(Upgrades.SPEED));
+        this.inverterUpgrades = Math.min(this.inverterUpgrades, this.getMaxInstalled(Upgrades.INVERTER));
+        this.craftingUpgrades = Math.min(this.craftingUpgrades, this.getMaxInstalled(Upgrades.CRAFTING));
+        this.patternCapacityUpgrades =
+                Math.min(this.patternCapacityUpgrades, this.getMaxInstalled(Upgrades.PATTERN_CAPACITY));
+        this.oreFilterUpgrades = Math.min(this.oreFilterUpgrades, this.getMaxInstalled(Upgrades.ORE_FILTER));
+    }
 
-		this.capacityUpgrades = Math.min( this.capacityUpgrades, this.getMaxInstalled( Upgrades.CAPACITY ) );
-		this.fuzzyUpgrades = Math.min( this.fuzzyUpgrades, this.getMaxInstalled( Upgrades.FUZZY ) );
-		this.redstoneUpgrades = Math.min( this.redstoneUpgrades, this.getMaxInstalled( Upgrades.REDSTONE ) );
-		this.speedUpgrades = Math.min( this.speedUpgrades, this.getMaxInstalled( Upgrades.SPEED ) );
-		this.inverterUpgrades = Math.min( this.inverterUpgrades, this.getMaxInstalled( Upgrades.INVERTER ) );
-		this.craftingUpgrades = Math.min( this.craftingUpgrades, this.getMaxInstalled( Upgrades.CRAFTING ) );
-		this.patternCapacityUpgrades = Math.min( this.patternCapacityUpgrades, this.getMaxInstalled( Upgrades.PATTERN_CAPACITY ) );
-		this.oreFilterUpgrades = Math.min( this.oreFilterUpgrades, this.getMaxInstalled( Upgrades.ORE_FILTER ) );
-	}
+    @Override
+    public void readFromNBT(final NBTTagCompound target) {
+        super.readFromNBT(target);
+        this.updateUpgradeInfo();
+    }
 
-	@Override
-	public void readFromNBT( final NBTTagCompound target )
-	{
-		super.readFromNBT( target );
-		this.updateUpgradeInfo();
-	}
+    @Override
+    public void saveChanges() {
+        this.parent.saveChanges();
+    }
 
-	@Override
-	public void saveChanges()
-	{
-		this.parent.saveChanges();
-	}
-
-	@Override
-	public void onChangeInventory( final IInventory inv, final int slot, final InvOperation mc, final ItemStack removedStack, final ItemStack newStack )
-	{
-		this.cached = false;
-		if( this.parent != null && Platform.isServer() )
-		{
-			this.parent.onChangeInventory( inv, slot, mc, removedStack, newStack );
-		}
-	}
+    @Override
+    public void onChangeInventory(
+            final IInventory inv,
+            final int slot,
+            final InvOperation mc,
+            final ItemStack removedStack,
+            final ItemStack newStack) {
+        this.cached = false;
+        if (this.parent != null && Platform.isServer()) {
+            this.parent.onChangeInventory(inv, slot, mc, removedStack, newStack);
+        }
+    }
 }

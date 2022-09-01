@@ -23,87 +23,84 @@
 
 package appeng.api.definitions;
 
-
 import appeng.api.util.AEColoredItemDefinition;
-
 
 /**
  * A list of all items in AE
  */
-public interface IItems
-{
-	IItemDefinition certusQuartzAxe();
+public interface IItems {
+    IItemDefinition certusQuartzAxe();
 
-	IItemDefinition certusQuartzHoe();
+    IItemDefinition certusQuartzHoe();
 
-	IItemDefinition certusQuartzShovel();
+    IItemDefinition certusQuartzShovel();
 
-	IItemDefinition certusQuartzPick();
+    IItemDefinition certusQuartzPick();
 
-	IItemDefinition certusQuartzSword();
+    IItemDefinition certusQuartzSword();
 
-	IItemDefinition certusQuartzWrench();
+    IItemDefinition certusQuartzWrench();
 
-	IItemDefinition certusQuartzKnife();
+    IItemDefinition certusQuartzKnife();
 
-	IItemDefinition netherQuartzAxe();
+    IItemDefinition netherQuartzAxe();
 
-	IItemDefinition netherQuartzHoe();
+    IItemDefinition netherQuartzHoe();
 
-	IItemDefinition netherQuartzShovel();
+    IItemDefinition netherQuartzShovel();
 
-	IItemDefinition netherQuartzPick();
+    IItemDefinition netherQuartzPick();
 
-	IItemDefinition netherQuartzSword();
+    IItemDefinition netherQuartzSword();
 
-	IItemDefinition netherQuartzWrench();
+    IItemDefinition netherQuartzWrench();
 
-	IItemDefinition netherQuartzKnife();
+    IItemDefinition netherQuartzKnife();
 
-	IItemDefinition entropyManipulator();
+    IItemDefinition entropyManipulator();
 
-	IItemDefinition wirelessTerminal();
+    IItemDefinition wirelessTerminal();
 
-	IItemDefinition biometricCard();
+    IItemDefinition biometricCard();
 
-	IItemDefinition chargedStaff();
+    IItemDefinition chargedStaff();
 
-	IItemDefinition massCannon();
+    IItemDefinition massCannon();
 
-	IItemDefinition memoryCard();
+    IItemDefinition memoryCard();
 
-	IItemDefinition networkTool();
+    IItemDefinition networkTool();
 
-	IItemDefinition portableCell();
+    IItemDefinition portableCell();
 
-	IItemDefinition cellCreative();
+    IItemDefinition cellCreative();
 
-	IItemDefinition viewCell();
+    IItemDefinition viewCell();
 
-	IItemDefinition cell1k();
+    IItemDefinition cell1k();
 
-	IItemDefinition cell4k();
+    IItemDefinition cell4k();
 
-	IItemDefinition cell16k();
+    IItemDefinition cell16k();
 
-	IItemDefinition cell64k();
+    IItemDefinition cell64k();
 
-	IItemDefinition spatialCell2();
+    IItemDefinition spatialCell2();
 
-	IItemDefinition spatialCell16();
+    IItemDefinition spatialCell16();
 
-	IItemDefinition spatialCell128();
+    IItemDefinition spatialCell128();
 
-	IItemDefinition facade();
+    IItemDefinition facade();
 
-	IItemDefinition crystalSeed();
+    IItemDefinition crystalSeed();
 
-	// rv1
-	IItemDefinition encodedPattern();
+    // rv1
+    IItemDefinition encodedPattern();
 
-	IItemDefinition colorApplicator();
+    IItemDefinition colorApplicator();
 
-	AEColoredItemDefinition coloredPaintBall();
+    AEColoredItemDefinition coloredPaintBall();
 
-	AEColoredItemDefinition coloredLumenPaintBall();
+    AEColoredItemDefinition coloredLumenPaintBall();
 }

@@ -18,7 +18,6 @@
 
 package appeng.block.spatial;
 
-
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderSpatialPylon;
 import appeng.core.features.AEFeature;
@@ -26,48 +25,39 @@ import appeng.helpers.AEGlassMaterial;
 import appeng.tile.spatial.TileSpatialPylon;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.EnumSet;
 import net.minecraft.block.Block;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
-import java.util.EnumSet;
+public class BlockSpatialPylon extends AEBaseTileBlock {
 
+    public BlockSpatialPylon() {
+        super(AEGlassMaterial.INSTANCE);
+        this.setTileEntity(TileSpatialPylon.class);
+        this.setFeature(EnumSet.of(AEFeature.SpatialIO));
+    }
 
-public class BlockSpatialPylon extends AEBaseTileBlock
-{
+    @Override
+    public void onNeighborBlockChange(final World w, final int x, final int y, final int z, final Block junk) {
+        final TileSpatialPylon tsp = this.getTileEntity(w, x, y, z);
+        if (tsp != null) {
+            tsp.onNeighborBlockChange();
+        }
+    }
 
-	public BlockSpatialPylon()
-	{
-		super( AEGlassMaterial.INSTANCE );
-		this.setTileEntity( TileSpatialPylon.class );
-		this.setFeature( EnumSet.of( AEFeature.SpatialIO ) );
-	}
+    @Override
+    public int getLightValue(final IBlockAccess w, final int x, final int y, final int z) {
+        final TileSpatialPylon tsp = this.getTileEntity(w, x, y, z);
+        if (tsp != null) {
+            return tsp.getLightValue();
+        }
+        return super.getLightValue(w, x, y, z);
+    }
 
-	@Override
-	public void onNeighborBlockChange( final World w, final int x, final int y, final int z, final Block junk )
-	{
-		final TileSpatialPylon tsp = this.getTileEntity( w, x, y, z );
-		if( tsp != null )
-		{
-			tsp.onNeighborBlockChange();
-		}
-	}
-
-	@Override
-	public int getLightValue( final IBlockAccess w, final int x, final int y, final int z )
-	{
-		final TileSpatialPylon tsp = this.getTileEntity( w, x, y, z );
-		if( tsp != null )
-		{
-			return tsp.getLightValue();
-		}
-		return super.getLightValue( w, x, y, z );
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected RenderSpatialPylon getRenderer()
-	{
-		return new RenderSpatialPylon();
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RenderSpatialPylon getRenderer() {
+        return new RenderSpatialPylon();
+    }
 }

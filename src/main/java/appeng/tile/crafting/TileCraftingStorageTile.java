@@ -18,78 +18,68 @@
 
 package appeng.tile.crafting;
 
-
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlocks;
 import net.minecraft.item.ItemStack;
 
+public class TileCraftingStorageTile extends TileCraftingTile {
+    private static final int KILO_SCALAR = 1024;
 
-public class TileCraftingStorageTile extends TileCraftingTile
-{
-	private static final int KILO_SCALAR = 1024;
+    @Override
+    protected ItemStack getItemFromTile(final Object obj) {
+        final IBlocks blocks = AEApi.instance().definitions().blocks();
+        final int storage = ((TileCraftingTile) obj).getStorageBytes() / KILO_SCALAR;
 
-	@Override
-	protected ItemStack getItemFromTile( final Object obj )
-	{
-		final IBlocks blocks = AEApi.instance().definitions().blocks();
-		final int storage = ( (TileCraftingTile) obj ).getStorageBytes() / KILO_SCALAR;
+        switch (storage) {
+            case 4:
+                for (final ItemStack stack :
+                        blocks.craftingStorage4k().maybeStack(1).asSet()) {
+                    return stack;
+                }
+                break;
+            case 16:
+                for (final ItemStack stack :
+                        blocks.craftingStorage16k().maybeStack(1).asSet()) {
+                    return stack;
+                }
+                break;
+            case 64:
+                for (final ItemStack stack :
+                        blocks.craftingStorage64k().maybeStack(1).asSet()) {
+                    return stack;
+                }
+                break;
+        }
 
-		switch( storage )
-		{
-			case 4:
-				for( final ItemStack stack : blocks.craftingStorage4k().maybeStack( 1 ).asSet() )
-				{
-					return stack;
-				}
-				break;
-			case 16:
-				for( final ItemStack stack : blocks.craftingStorage16k().maybeStack( 1 ).asSet() )
-				{
-					return stack;
-				}
-				break;
-			case 64:
-				for( final ItemStack stack : blocks.craftingStorage64k().maybeStack( 1 ).asSet() )
-				{
-					return stack;
-				}
-				break;
-		}
+        return super.getItemFromTile(obj);
+    }
 
-		return super.getItemFromTile( obj );
-	}
+    @Override
+    public boolean isAccelerator() {
+        return false;
+    }
 
-	@Override
-	public boolean isAccelerator()
-	{
-		return false;
-	}
+    @Override
+    public boolean isStorage() {
+        return true;
+    }
 
-	@Override
-	public boolean isStorage()
-	{
-		return true;
-	}
+    @Override
+    public int getStorageBytes() {
+        if (this.worldObj == null || this.notLoaded()) {
+            return 0;
+        }
 
-	@Override
-	public int getStorageBytes()
-	{
-		if( this.worldObj == null || this.notLoaded() )
-		{
-			return 0;
-		}
-
-		switch( this.worldObj.getBlockMetadata( this.xCoord, this.yCoord, this.zCoord ) & 3 )
-		{
-			default:
-			case 0:
-				return 1024;
-			case 1:
-				return 4 * 1024;
-			case 2:
-				return 16 * 1024;
-			case 3:
-				return 64 * 1024;
-		}
-	}
+        switch (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3) {
+            default:
+            case 0:
+                return 1024;
+            case 1:
+                return 4 * 1024;
+            case 2:
+                return 16 * 1024;
+            case 3:
+                return 64 * 1024;
+        }
+    }
 }

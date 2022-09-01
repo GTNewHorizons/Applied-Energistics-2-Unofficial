@@ -18,7 +18,6 @@
 
 package appeng.services.export;
 
-
 /**
  * Defines the different modes which need to be distinguished upon exporting.
  * <p>
@@ -28,15 +27,14 @@ package appeng.services.export;
  * @version rv3 - 23.09.2015
  * @since rv3 - 23.09.2015
  */
-enum ExportMode
-{
-	/**
-	 * Will provide general users with information required for recipe making
-	 */
-	MINIMAL,
+enum ExportMode {
+    /**
+     * Will provide general users with information required for recipe making
+     */
+    MINIMAL,
 
-	/**
-	 * Will provide advanced users with information with debugging functionality
-	 */
-	VERBOSE
+    /**
+     * Will provide advanced users with information with debugging functionality
+     */
+    VERBOSE
 }

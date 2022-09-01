@@ -18,51 +18,44 @@
 
 package appeng.core.worlddata;
 
-
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import net.minecraftforge.common.config.ConfigCategory;
-
-import javax.annotation.Nonnull;
 import java.util.Map;
 import java.util.UUID;
-
+import javax.annotation.Nonnull;
+import net.minecraftforge.common.config.ConfigCategory;
 
 /**
  * Wrapper class for the player mappings.
  * Will grant access to a pre initialized player map
  * based on the "players" category in the settings.cfg
  */
-final class PlayerMapping implements IWorldPlayerMapping
-{
-	/**
-	 * View of player mappings, is not immutable,
-	 * since it needs to be edited upon runtime,
-	 * cause new players can join
-	 */
-	private final Map<Integer, UUID> mappings;
+final class PlayerMapping implements IWorldPlayerMapping {
+    /**
+     * View of player mappings, is not immutable,
+     * since it needs to be edited upon runtime,
+     * cause new players can join
+     */
+    private final Map<Integer, UUID> mappings;
 
-	public PlayerMapping( final ConfigCategory category )
-	{
-		final PlayerMappingsInitializer init = new PlayerMappingsInitializer( category );
+    public PlayerMapping(final ConfigCategory category) {
+        final PlayerMappingsInitializer init = new PlayerMappingsInitializer(category);
 
-		this.mappings = init.getPlayerMappings();
-	}
+        this.mappings = init.getPlayerMappings();
+    }
 
-	@Nonnull
-	@Override
-	public Optional<UUID> get( final int id )
-	{
-		final UUID maybe = this.mappings.get( id );
+    @Nonnull
+    @Override
+    public Optional<UUID> get(final int id) {
+        final UUID maybe = this.mappings.get(id);
 
-		return Optional.fromNullable( maybe );
-	}
+        return Optional.fromNullable(maybe);
+    }
 
-	@Override
-	public void put( final int id, @Nonnull final UUID uuid )
-	{
-		Preconditions.checkNotNull( uuid );
+    @Override
+    public void put(final int id, @Nonnull final UUID uuid) {
+        Preconditions.checkNotNull(uuid);
 
-		this.mappings.put( id, uuid );
-	}
+        this.mappings.put(id, uuid);
+    }
 }

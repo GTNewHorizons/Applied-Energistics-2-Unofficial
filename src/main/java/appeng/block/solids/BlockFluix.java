@@ -18,19 +18,14 @@
 
 package appeng.block.solids;
 
-
 import appeng.block.AEDecorativeBlock;
 import appeng.core.features.AEFeature;
+import java.util.EnumSet;
 import net.minecraft.block.material.Material;
 
-import java.util.EnumSet;
-
-
-public class BlockFluix extends AEDecorativeBlock
-{
-	public BlockFluix()
-	{
-		super( Material.rock );
-		this.setFeature( EnumSet.of( AEFeature.DecorativeQuartzBlocks ) );
-	}
+public class BlockFluix extends AEDecorativeBlock {
+    public BlockFluix() {
+        super(Material.rock);
+        this.setFeature(EnumSet.of(AEFeature.DecorativeQuartzBlocks));
+    }
 }

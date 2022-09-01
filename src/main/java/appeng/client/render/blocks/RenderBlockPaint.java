@@ -18,12 +18,12 @@
 
 package appeng.client.render.blocks;
 
-
 import appeng.block.misc.BlockPaint;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.helpers.Splotch;
 import appeng.tile.misc.TilePaint;
+import java.util.EnumSet;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.ItemStack;
@@ -32,154 +32,142 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
+public class RenderBlockPaint extends BaseBlockRender<BlockPaint, TilePaint> {
 
+    public RenderBlockPaint() {
+        super(false, 0);
+    }
 
-public class RenderBlockPaint extends BaseBlockRender<BlockPaint, TilePaint>
-{
+    @Override
+    public void renderInventory(
+            final BlockPaint block,
+            final ItemStack is,
+            final RenderBlocks renderer,
+            final ItemRenderType type,
+            final Object[] obj) {}
 
-	public RenderBlockPaint()
-	{
-		super( false, 0 );
-	}
+    @Override
+    public boolean renderInWorld(
+            final BlockPaint imb,
+            final IBlockAccess world,
+            final int x,
+            final int y,
+            final int z,
+            final RenderBlocks renderer) {
+        final TilePaint tp = imb.getTileEntity(world, x, y, z);
+        boolean out = false;
 
-	@Override
-	public void renderInventory( final BlockPaint block, final ItemStack is, final RenderBlocks renderer, final ItemRenderType type, final Object[] obj )
-	{
+        if (tp != null) {
+            // super.renderInWorld( imb, world, x, y, z, renderer );
 
-	}
+            final IIcon[] icoSet = {
+                imb.getIcon(0, 0), ExtraBlockTextures.BlockPaint2.getIcon(), ExtraBlockTextures.BlockPaint3.getIcon()
+            };
 
-	@Override
-	public boolean renderInWorld( final BlockPaint imb, final IBlockAccess world, final int x, final int y, final int z, final RenderBlocks renderer )
-	{
-		final TilePaint tp = imb.getTileEntity( world, x, y, z );
-		boolean out = false;
+            final Tessellator tess = Tessellator.instance;
 
-		if( tp != null )
-		{
-			// super.renderInWorld( imb, world, x, y, z, renderer );
+            final int brightness = imb.getMixedBrightnessForBlock(world, x, y, z);
 
-			final IIcon[] icoSet = { imb.getIcon( 0, 0 ), ExtraBlockTextures.BlockPaint2.getIcon(), ExtraBlockTextures.BlockPaint3.getIcon() };
+            final EnumSet<ForgeDirection> validSides = EnumSet.noneOf(ForgeDirection.class);
 
-			final Tessellator tess = Tessellator.instance;
+            for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+                if (tp.isSideValid(side)) {
+                    validSides.add(side);
+                }
+            }
 
-			final int brightness = imb.getMixedBrightnessForBlock( world, x, y, z );
+            double offsetConstant = 0.001;
+            final int lumen = 14 << 20 | 14 << 4;
+            for (final Splotch s : tp.getDots()) {
+                if (!validSides.contains(s.getSide())) {
+                    continue;
+                }
 
-			final EnumSet<ForgeDirection> validSides = EnumSet.noneOf( ForgeDirection.class );
+                if (s.isLumen()) {
+                    tess.setColorOpaque_I(s.getColor().whiteVariant);
+                    tess.setBrightness(lumen);
+                } else {
+                    tess.setColorOpaque_I(s.getColor().mediumVariant);
+                    tess.setBrightness(brightness);
+                }
 
-			for( final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS )
-			{
-				if( tp.isSideValid( side ) )
-				{
-					validSides.add( side );
-				}
-			}
+                double offset = offsetConstant;
+                offsetConstant += 0.001;
 
-			double offsetConstant = 0.001;
-			final int lumen = 14 << 20 | 14 << 4;
-			for( final Splotch s : tp.getDots() )
-			{
-				if( !validSides.contains( s.getSide() ) )
-				{
-					continue;
-				}
+                final double buffer = 0.1;
 
-				if( s.isLumen() )
-				{
-					tess.setColorOpaque_I( s.getColor().whiteVariant );
-					tess.setBrightness( lumen );
-				}
-				else
-				{
-					tess.setColorOpaque_I( s.getColor().mediumVariant );
-					tess.setBrightness( brightness );
-				}
+                double pos_x = s.x();
+                double pos_y = s.y();
 
-				double offset = offsetConstant;
-				offsetConstant += 0.001;
+                pos_x = Math.max(buffer, Math.min(1.0 - buffer, pos_x));
+                pos_y = Math.max(buffer, Math.min(1.0 - buffer, pos_y));
 
-				final double buffer = 0.1;
+                if (s.getSide() == ForgeDirection.SOUTH || s.getSide() == ForgeDirection.NORTH) {
+                    pos_x += x;
+                    pos_y += y;
+                } else if (s.getSide() == ForgeDirection.UP || s.getSide() == ForgeDirection.DOWN) {
+                    pos_x += x;
+                    pos_y += z;
+                } else {
+                    pos_x += y;
+                    pos_y += z;
+                }
 
-				double pos_x = s.x();
-				double pos_y = s.y();
+                final IIcon ico = icoSet[s.getSeed() % icoSet.length];
 
-				pos_x = Math.max( buffer, Math.min( 1.0 - buffer, pos_x ) );
-				pos_y = Math.max( buffer, Math.min( 1.0 - buffer, pos_y ) );
+                switch (s.getSide()) {
+                    case UP:
+                        offset = 1.0 - offset;
+                        tess.addVertexWithUV(pos_x - buffer, y + offset, pos_y - buffer, ico.getMinU(), ico.getMinV());
+                        tess.addVertexWithUV(pos_x + buffer, y + offset, pos_y - buffer, ico.getMaxU(), ico.getMinV());
+                        tess.addVertexWithUV(pos_x + buffer, y + offset, pos_y + buffer, ico.getMaxU(), ico.getMaxV());
+                        tess.addVertexWithUV(pos_x - buffer, y + offset, pos_y + buffer, ico.getMinU(), ico.getMaxV());
+                        break;
 
-				if( s.getSide() == ForgeDirection.SOUTH || s.getSide() == ForgeDirection.NORTH )
-				{
-					pos_x += x;
-					pos_y += y;
-				}
+                    case DOWN:
+                        tess.addVertexWithUV(pos_x + buffer, y + offset, pos_y - buffer, ico.getMinU(), ico.getMinV());
+                        tess.addVertexWithUV(pos_x - buffer, y + offset, pos_y - buffer, ico.getMaxU(), ico.getMinV());
+                        tess.addVertexWithUV(pos_x - buffer, y + offset, pos_y + buffer, ico.getMaxU(), ico.getMaxV());
+                        tess.addVertexWithUV(pos_x + buffer, y + offset, pos_y + buffer, ico.getMinU(), ico.getMaxV());
+                        break;
 
-				else if( s.getSide() == ForgeDirection.UP || s.getSide() == ForgeDirection.DOWN )
-				{
-					pos_x += x;
-					pos_y += z;
-				}
+                    case EAST:
+                        offset = 1.0 - offset;
+                        tess.addVertexWithUV(x + offset, pos_x + buffer, pos_y - buffer, ico.getMinU(), ico.getMinV());
+                        tess.addVertexWithUV(x + offset, pos_x - buffer, pos_y - buffer, ico.getMaxU(), ico.getMinV());
+                        tess.addVertexWithUV(x + offset, pos_x - buffer, pos_y + buffer, ico.getMaxU(), ico.getMaxV());
+                        tess.addVertexWithUV(x + offset, pos_x + buffer, pos_y + buffer, ico.getMinU(), ico.getMaxV());
+                        break;
 
-				else
-				{
-					pos_x += y;
-					pos_y += z;
-				}
+                    case WEST:
+                        tess.addVertexWithUV(x + offset, pos_x - buffer, pos_y - buffer, ico.getMinU(), ico.getMinV());
+                        tess.addVertexWithUV(x + offset, pos_x + buffer, pos_y - buffer, ico.getMaxU(), ico.getMinV());
+                        tess.addVertexWithUV(x + offset, pos_x + buffer, pos_y + buffer, ico.getMaxU(), ico.getMaxV());
+                        tess.addVertexWithUV(x + offset, pos_x - buffer, pos_y + buffer, ico.getMinU(), ico.getMaxV());
+                        break;
 
-				final IIcon ico = icoSet[s.getSeed() % icoSet.length];
+                    case SOUTH:
+                        offset = 1.0 - offset;
+                        tess.addVertexWithUV(pos_x + buffer, pos_y - buffer, z + offset, ico.getMinU(), ico.getMinV());
+                        tess.addVertexWithUV(pos_x - buffer, pos_y - buffer, z + offset, ico.getMaxU(), ico.getMinV());
+                        tess.addVertexWithUV(pos_x - buffer, pos_y + buffer, z + offset, ico.getMaxU(), ico.getMaxV());
+                        tess.addVertexWithUV(pos_x + buffer, pos_y + buffer, z + offset, ico.getMinU(), ico.getMaxV());
+                        break;
 
-				switch( s.getSide() )
-				{
-					case UP:
-						offset = 1.0 - offset;
-						tess.addVertexWithUV( pos_x - buffer, y + offset, pos_y - buffer, ico.getMinU(), ico.getMinV() );
-						tess.addVertexWithUV( pos_x + buffer, y + offset, pos_y - buffer, ico.getMaxU(), ico.getMinV() );
-						tess.addVertexWithUV( pos_x + buffer, y + offset, pos_y + buffer, ico.getMaxU(), ico.getMaxV() );
-						tess.addVertexWithUV( pos_x - buffer, y + offset, pos_y + buffer, ico.getMinU(), ico.getMaxV() );
-						break;
+                    case NORTH:
+                        tess.addVertexWithUV(pos_x - buffer, pos_y - buffer, z + offset, ico.getMinU(), ico.getMinV());
+                        tess.addVertexWithUV(pos_x + buffer, pos_y - buffer, z + offset, ico.getMaxU(), ico.getMinV());
+                        tess.addVertexWithUV(pos_x + buffer, pos_y + buffer, z + offset, ico.getMaxU(), ico.getMaxV());
+                        tess.addVertexWithUV(pos_x - buffer, pos_y + buffer, z + offset, ico.getMinU(), ico.getMaxV());
+                        break;
 
-					case DOWN:
-						tess.addVertexWithUV( pos_x + buffer, y + offset, pos_y - buffer, ico.getMinU(), ico.getMinV() );
-						tess.addVertexWithUV( pos_x - buffer, y + offset, pos_y - buffer, ico.getMaxU(), ico.getMinV() );
-						tess.addVertexWithUV( pos_x - buffer, y + offset, pos_y + buffer, ico.getMaxU(), ico.getMaxV() );
-						tess.addVertexWithUV( pos_x + buffer, y + offset, pos_y + buffer, ico.getMinU(), ico.getMaxV() );
-						break;
+                    default:
+                }
+            }
 
-					case EAST:
-						offset = 1.0 - offset;
-						tess.addVertexWithUV( x + offset, pos_x + buffer, pos_y - buffer, ico.getMinU(), ico.getMinV() );
-						tess.addVertexWithUV( x + offset, pos_x - buffer, pos_y - buffer, ico.getMaxU(), ico.getMinV() );
-						tess.addVertexWithUV( x + offset, pos_x - buffer, pos_y + buffer, ico.getMaxU(), ico.getMaxV() );
-						tess.addVertexWithUV( x + offset, pos_x + buffer, pos_y + buffer, ico.getMinU(), ico.getMaxV() );
-						break;
+            out = true;
+        }
 
-					case WEST:
-						tess.addVertexWithUV( x + offset, pos_x - buffer, pos_y - buffer, ico.getMinU(), ico.getMinV() );
-						tess.addVertexWithUV( x + offset, pos_x + buffer, pos_y - buffer, ico.getMaxU(), ico.getMinV() );
-						tess.addVertexWithUV( x + offset, pos_x + buffer, pos_y + buffer, ico.getMaxU(), ico.getMaxV() );
-						tess.addVertexWithUV( x + offset, pos_x - buffer, pos_y + buffer, ico.getMinU(), ico.getMaxV() );
-						break;
-
-					case SOUTH:
-						offset = 1.0 - offset;
-						tess.addVertexWithUV( pos_x + buffer, pos_y - buffer, z + offset, ico.getMinU(), ico.getMinV() );
-						tess.addVertexWithUV( pos_x - buffer, pos_y - buffer, z + offset, ico.getMaxU(), ico.getMinV() );
-						tess.addVertexWithUV( pos_x - buffer, pos_y + buffer, z + offset, ico.getMaxU(), ico.getMaxV() );
-						tess.addVertexWithUV( pos_x + buffer, pos_y + buffer, z + offset, ico.getMinU(), ico.getMaxV() );
-						break;
-
-					case NORTH:
-						tess.addVertexWithUV( pos_x - buffer, pos_y - buffer, z + offset, ico.getMinU(), ico.getMinV() );
-						tess.addVertexWithUV( pos_x + buffer, pos_y - buffer, z + offset, ico.getMaxU(), ico.getMinV() );
-						tess.addVertexWithUV( pos_x + buffer, pos_y + buffer, z + offset, ico.getMaxU(), ico.getMaxV() );
-						tess.addVertexWithUV( pos_x - buffer, pos_y + buffer, z + offset, ico.getMinU(), ico.getMaxV() );
-						break;
-
-					default:
-				}
-			}
-
-			out = true;
-		}
-
-		return out;
-	}
+        return out;
+    }
 }

@@ -23,10 +23,8 @@
 
 package appeng.api.storage.data;
 
-
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
-
 
 /**
  * An alternate version of FluidStack for AE to keep tabs on things easier, and
@@ -39,36 +37,35 @@ import net.minecraftforge.fluids.FluidStack;
  * <p>
  * Construct with Util.createFluidStack( FluidStack )
  */
-public interface IAEFluidStack extends IAEStack<IAEFluidStack>
-{
+public interface IAEFluidStack extends IAEStack<IAEFluidStack> {
 
-	/**
-	 * creates a standard Forge FluidStack for the fluid.
-	 *
-	 * @return new FluidStack
-	 */
-	FluidStack getFluidStack();
+    /**
+     * creates a standard Forge FluidStack for the fluid.
+     *
+     * @return new FluidStack
+     */
+    FluidStack getFluidStack();
 
-	/**
-	 * Combines two IAEItemStacks via addition.
-	 *
-	 * @param option , to add to the current one.
-	 */
-	@Override
-	void add( IAEFluidStack option );
+    /**
+     * Combines two IAEItemStacks via addition.
+     *
+     * @param option , to add to the current one.
+     */
+    @Override
+    void add(IAEFluidStack option);
 
-	/**
-	 * create a AE Fluid clone.
-	 *
-	 * @return the copy.
-	 */
-	@Override
-	IAEFluidStack copy();
+    /**
+     * create a AE Fluid clone.
+     *
+     * @return the copy.
+     */
+    @Override
+    IAEFluidStack copy();
 
-	/**
-	 * quick way to get access to the Forge Fluid Definition.
-	 *
-	 * @return fluid definition
-	 */
-	Fluid getFluid();
+    /**
+     * quick way to get access to the Forge Fluid Definition.
+     *
+     * @return fluid definition
+     */
+    Fluid getFluid();
 }

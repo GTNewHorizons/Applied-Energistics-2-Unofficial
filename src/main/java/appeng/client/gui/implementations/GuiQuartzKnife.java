@@ -18,100 +18,89 @@
 
 package appeng.client.gui.implementations;
 
-
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerQuartzKnife;
 import appeng.core.AELog;
-import appeng.core.localization.GuiText;
 import appeng.core.localization.GuiColors;
+import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.items.contents.QuartzKnifeObj;
+import java.io.IOException;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
-import java.io.IOException;
+public class GuiQuartzKnife extends AEBaseGui implements IDropToFillTextField {
 
+    private MEGuiTextField textField;
 
-public class GuiQuartzKnife extends AEBaseGui implements IDropToFillTextField
-{
+    public GuiQuartzKnife(final InventoryPlayer inventoryPlayer, final QuartzKnifeObj te) {
+        super(new ContainerQuartzKnife(inventoryPlayer, te));
+        this.ySize = 184;
 
-	private MEGuiTextField textField;
+        this.textField = new MEGuiTextField(90, 12) {
 
-	public GuiQuartzKnife( final InventoryPlayer inventoryPlayer, final QuartzKnifeObj te )
-	{
-		super( new ContainerQuartzKnife( inventoryPlayer, te ) );
-		this.ySize = 184;
-
-        this.textField = new MEGuiTextField(90, 12)
-		{
-
-			@Override
-			public void onTextChange(final String oldText)
-			{
-				try {
-					final String Out = getText();
-					( (ContainerQuartzKnife) inventorySlots ).setName( Out );
-					NetworkHandler.instance.sendToServer( new PacketValueConfig( "QuartzKnife.Name", Out ) );
-				} catch (final IOException e) {
-					AELog.debug( e );
-				}
-			}
-
-		};
+            @Override
+            public void onTextChange(final String oldText) {
+                try {
+                    final String Out = getText();
+                    ((ContainerQuartzKnife) inventorySlots).setName(Out);
+                    NetworkHandler.instance.sendToServer(new PacketValueConfig("QuartzKnife.Name", Out));
+                } catch (final IOException e) {
+                    AELog.debug(e);
+                }
+            }
+        };
         this.textField.setMaxStringLength(32);
-	}
+    }
 
-	@Override
-	public void initGui()
-	{
-		super.initGui();
+    @Override
+    public void initGui() {
+        super.initGui();
 
-		this.textField.x = this.guiLeft + 21;
+        this.textField.x = this.guiLeft + 21;
         this.textField.y = this.guiTop + 30;
-		this.textField.setFocused( true );
-	}
+        this.textField.setFocused(true);
+    }
 
-	@Override
-	public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
-	{
-		this.fontRendererObj.drawString( this.getGuiDisplayName( GuiText.QuartzCuttingKnife.getLocal() ), 8, 6, GuiColors.QuartzCuttingKnifeTitle.getColor() );
-		this.fontRendererObj.drawString( GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.QuartzCuttingKnifeInventory.getColor() );
-	}
+    @Override
+    public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        this.fontRendererObj.drawString(
+                this.getGuiDisplayName(GuiText.QuartzCuttingKnife.getLocal()),
+                8,
+                6,
+                GuiColors.QuartzCuttingKnifeTitle.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.inventory.getLocal(), 8, this.ySize - 96 + 3, GuiColors.QuartzCuttingKnifeInventory.getColor());
+    }
 
-	@Override
-	public void drawBG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
-	{
-		this.bindTexture( "guis/quartzknife.png" );
-		this.drawTexturedModalRect( offsetX, offsetY, 0, 0, this.xSize, this.ySize );
-		this.textField.drawTextBox();
-	}
+    @Override
+    public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        this.bindTexture("guis/quartzknife.png");
+        this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
+        this.textField.drawTextBox();
+    }
 
-	@Override
-	protected void mouseClicked( final int xCoord, final int yCoord, final int btn )
-    {
-		this.textField.mouseClicked( xCoord, yCoord, btn );
-		super.mouseClicked( xCoord, yCoord, btn );
-	}
+    @Override
+    protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
+        this.textField.mouseClicked(xCoord, yCoord, btn);
+        super.mouseClicked(xCoord, yCoord, btn);
+    }
 
-	@Override
-	protected void keyTyped( final char character, final int key )
-	{
-		if (!this.textField.textboxKeyTyped(character, key)) {
-			super.keyTyped(character, key);
-		}
-	}
+    @Override
+    protected void keyTyped(final char character, final int key) {
+        if (!this.textField.textboxKeyTyped(character, key)) {
+            super.keyTyped(character, key);
+        }
+    }
 
-    public boolean isOverTextField(final int mousex, final int mousey)
-	{
-		return textField.isMouseIn(mousex, mousey);
-	}
+    public boolean isOverTextField(final int mousex, final int mousey) {
+        return textField.isMouseIn(mousex, mousey);
+    }
 
-    public void setTextFieldValue(final String displayName, final int mousex, final int mousey, final ItemStack stack)
-	{
-		textField.setText(displayName);
-	}
-
+    public void setTextFieldValue(final String displayName, final int mousex, final int mousey, final ItemStack stack) {
+        textField.setText(displayName);
+    }
 }

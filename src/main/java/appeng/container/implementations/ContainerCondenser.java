@@ -18,7 +18,6 @@
 
 package appeng.container.implementations;
 
-
 import appeng.api.config.CondenserOutput;
 import appeng.api.config.Settings;
 import appeng.container.AEBaseContainer;
@@ -30,65 +29,67 @@ import appeng.tile.misc.TileCondenser;
 import appeng.util.Platform;
 import net.minecraft.entity.player.InventoryPlayer;
 
+public class ContainerCondenser extends AEBaseContainer implements IProgressProvider {
 
-public class ContainerCondenser extends AEBaseContainer implements IProgressProvider
-{
+    private final TileCondenser condenser;
 
-	private final TileCondenser condenser;
-	@GuiSync( 0 )
-	public long requiredEnergy = 0;
-	@GuiSync( 1 )
-	public long storedPower = 0;
-	@GuiSync( 2 )
-	public CondenserOutput output = CondenserOutput.TRASH;
+    @GuiSync(0)
+    public long requiredEnergy = 0;
 
-	public ContainerCondenser( final InventoryPlayer ip, final TileCondenser condenser )
-	{
-		super( ip, condenser, null );
-		this.condenser = condenser;
+    @GuiSync(1)
+    public long storedPower = 0;
 
-		this.addSlotToContainer( new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.TRASH, condenser, 0, 51, 52, ip ) );
-		this.addSlotToContainer( new SlotOutput( condenser, 1, 105, 52, -1 ) );
-		this.addSlotToContainer( ( new SlotRestrictedInput( SlotRestrictedInput.PlacableItemType.STORAGE_COMPONENT, condenser.getInternalInventory(), 2, 101, 26, ip ) ).setStackLimit( 1 ) );
+    @GuiSync(2)
+    public CondenserOutput output = CondenserOutput.TRASH;
 
-		this.bindPlayerInventory( ip, 0, 197 - /* height of player inventory */82 );
-	}
+    public ContainerCondenser(final InventoryPlayer ip, final TileCondenser condenser) {
+        super(ip, condenser, null);
+        this.condenser = condenser;
 
-	@Override
-	public void detectAndSendChanges()
-	{
-		if( Platform.isServer() )
-		{
-			final double maxStorage = this.condenser.getStorage();
-			final double requiredEnergy = this.condenser.getRequiredPower();
+        this.addSlotToContainer(
+                new SlotRestrictedInput(SlotRestrictedInput.PlacableItemType.TRASH, condenser, 0, 51, 52, ip));
+        this.addSlotToContainer(new SlotOutput(condenser, 1, 105, 52, -1));
+        this.addSlotToContainer((new SlotRestrictedInput(
+                        SlotRestrictedInput.PlacableItemType.STORAGE_COMPONENT,
+                        condenser.getInternalInventory(),
+                        2,
+                        101,
+                        26,
+                        ip))
+                .setStackLimit(1));
 
-			this.requiredEnergy = requiredEnergy == 0 ? (int) maxStorage : (int) Math.min( requiredEnergy, maxStorage );
-			this.storedPower = (int) this.condenser.getStoredPower();
-			this.setOutput( (CondenserOutput) this.condenser.getConfigManager().getSetting( Settings.CONDENSER_OUTPUT ) );
-		}
+        this.bindPlayerInventory(ip, 0, 197 - /* height of player inventory */ 82);
+    }
 
-		super.detectAndSendChanges();
-	}
+    @Override
+    public void detectAndSendChanges() {
+        if (Platform.isServer()) {
+            final double maxStorage = this.condenser.getStorage();
+            final double requiredEnergy = this.condenser.getRequiredPower();
 
-	@Override
-	public int getCurrentProgress()
-	{
-		return (int) this.storedPower;
-	}
+            this.requiredEnergy = requiredEnergy == 0 ? (int) maxStorage : (int) Math.min(requiredEnergy, maxStorage);
+            this.storedPower = (int) this.condenser.getStoredPower();
+            this.setOutput((CondenserOutput) this.condenser.getConfigManager().getSetting(Settings.CONDENSER_OUTPUT));
+        }
 
-	@Override
-	public int getMaxProgress()
-	{
-		return (int) this.requiredEnergy;
-	}
+        super.detectAndSendChanges();
+    }
 
-	public CondenserOutput getOutput()
-	{
-		return this.output;
-	}
+    @Override
+    public int getCurrentProgress() {
+        return (int) this.storedPower;
+    }
 
-	private void setOutput( final CondenserOutput output )
-	{
-		this.output = output;
-	}
+    @Override
+    public int getMaxProgress() {
+        return (int) this.requiredEnergy;
+    }
+
+    public CondenserOutput getOutput() {
+        return this.output;
+    }
+
+    private void setOutput(final CondenserOutput output) {
+        this.output = output;
+    }
 }

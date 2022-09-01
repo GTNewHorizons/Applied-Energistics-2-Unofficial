@@ -18,42 +18,37 @@
 
 package appeng.recipes.loader;
 
-
 import appeng.api.recipes.IRecipeLoader;
 import com.google.common.base.Preconditions;
-
-import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-
+import javax.annotation.Nonnull;
 
 /**
  * Loads the recipes from the config folder
  */
-public final class ConfigLoader implements IRecipeLoader
-{
-	private final File generatedRecipesDir;
-	private final File userRecipesDir;
+public final class ConfigLoader implements IRecipeLoader {
+    private final File generatedRecipesDir;
+    private final File userRecipesDir;
 
-	public ConfigLoader( final File generatedRecipesDir, final File userRecipesDir )
-	{
-		this.generatedRecipesDir = generatedRecipesDir;
-		this.userRecipesDir = userRecipesDir;
-	}
+    public ConfigLoader(final File generatedRecipesDir, final File userRecipesDir) {
+        this.generatedRecipesDir = generatedRecipesDir;
+        this.userRecipesDir = userRecipesDir;
+    }
 
-	@Override
-	public BufferedReader getFile( @Nonnull final String relativeFilePath ) throws Exception
-	{
-		Preconditions.checkNotNull( relativeFilePath );
-		Preconditions.checkArgument( !relativeFilePath.isEmpty(), "Supplying an empty String will result creating a reader of a folder." );
+    @Override
+    public BufferedReader getFile(@Nonnull final String relativeFilePath) throws Exception {
+        Preconditions.checkNotNull(relativeFilePath);
+        Preconditions.checkArgument(
+                !relativeFilePath.isEmpty(), "Supplying an empty String will result creating a reader of a folder.");
 
-		final File generatedFile = new File( this.generatedRecipesDir, relativeFilePath );
-		final File userFile = new File( this.userRecipesDir, relativeFilePath );
+        final File generatedFile = new File(this.generatedRecipesDir, relativeFilePath);
+        final File userFile = new File(this.userRecipesDir, relativeFilePath);
 
-		final File toBeLoaded = ( userFile.exists() && userFile.isFile() ) ? userFile : generatedFile;
+        final File toBeLoaded = (userFile.exists() && userFile.isFile()) ? userFile : generatedFile;
 
-		return new BufferedReader( new InputStreamReader( new FileInputStream( toBeLoaded ), "UTF-8" ) );
-	}
+        return new BufferedReader(new InputStreamReader(new FileInputStream(toBeLoaded), "UTF-8"));
+    }
 }

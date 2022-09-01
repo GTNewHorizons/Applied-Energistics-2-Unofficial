@@ -18,16 +18,12 @@
 
 package appeng.items.tools.powered.powersink;
 
-
 import com.google.common.base.Optional;
 
+public abstract class AEBasePoweredItem extends RedstoneFlux {
+    public AEBasePoweredItem(final double powerCapacity, final Optional<String> subName) {
+        super(powerCapacity, subName);
 
-public abstract class AEBasePoweredItem extends RedstoneFlux
-{
-	public AEBasePoweredItem( final double powerCapacity, final Optional<String> subName )
-	{
-		super( powerCapacity, subName );
-
-		this.setMaxStackSize( 1 );
-	}
+        this.setMaxStackSize(1);
+    }
 }

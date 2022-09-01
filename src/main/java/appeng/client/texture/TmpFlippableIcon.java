@@ -18,49 +18,38 @@
 
 package appeng.client.texture;
 
-
 import net.minecraft.init.Blocks;
 import net.minecraft.util.IIcon;
 
+public class TmpFlippableIcon extends FlippableIcon {
 
-public class TmpFlippableIcon extends FlippableIcon
-{
+    private static final IIcon NULL_ICON = new MissingIcon(Blocks.diamond_block);
 
-	private static final IIcon NULL_ICON = new MissingIcon( Blocks.diamond_block );
+    public TmpFlippableIcon() {
+        super(NULL_ICON);
+    }
 
-	public TmpFlippableIcon()
-	{
-		super( NULL_ICON );
-	}
+    @Override
+    public void setOriginal(IIcon i) {
+        this.setFlip(false, false);
 
-	@Override
-	public void setOriginal( IIcon i )
-	{
-		this.setFlip( false, false );
+        while (i instanceof FlippableIcon) {
+            final FlippableIcon fi = (FlippableIcon) i;
+            if (fi.isFlipU()) {
+                this.setFlipU(!this.isFlipU());
+            }
 
-		while( i instanceof FlippableIcon )
-		{
-			final FlippableIcon fi = (FlippableIcon) i;
-			if( fi.isFlipU() )
-			{
-				this.setFlipU( !this.isFlipU() );
-			}
+            if (fi.isFlipV()) {
+                this.setFlipV(!this.isFlipV());
+            }
 
-			if( fi.isFlipV() )
-			{
-				this.setFlipV( !this.isFlipV() );
-			}
+            i = fi.getOriginal();
+        }
 
-			i = fi.getOriginal();
-		}
-
-		if( i == null )
-		{
-			super.setOriginal( NULL_ICON );
-		}
-		else
-		{
-			super.setOriginal( i );
-		}
-	}
+        if (i == null) {
+            super.setOriginal(NULL_ICON);
+        } else {
+            super.setOriginal(i);
+        }
+    }
 }

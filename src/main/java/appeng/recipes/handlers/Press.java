@@ -18,19 +18,16 @@
 
 package appeng.recipes.handlers;
 
-
 import appeng.api.AEApi;
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RegistrationError;
 import appeng.api.features.IInscriberRecipe;
 import appeng.api.features.InscriberProcessType;
 import appeng.core.features.registries.entries.InscriberRecipe;
-import net.minecraft.item.ItemStack;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import net.minecraft.item.ItemStack;
 
 /**
  * recipe translation for pressing in the inscriber
@@ -40,30 +37,28 @@ import java.util.List;
  * @version rv2
  * @since rv0
  */
-public final class Press extends InscriberProcess
-{
-	@Override
-	public void register() throws RegistrationError, MissingIngredientError
-	{
-		if( this.getImprintable() == null )
-		{
-			return;
-		}
-		if( this.getOutput() == null )
-		{
-			return;
-		}
+public final class Press extends InscriberProcess {
+    @Override
+    public void register() throws RegistrationError, MissingIngredientError {
+        if (this.getImprintable() == null) {
+            return;
+        }
+        if (this.getOutput() == null) {
+            return;
+        }
 
-		final ItemStack[] realInput = this.getImprintable().getItemStackSet();
-		final List<ItemStack> inputs = new ArrayList<ItemStack>( realInput.length );
-		Collections.addAll( inputs, realInput );
-		final ItemStack top = ( this.getTopOptional() == null ) ? null : this.getTopOptional().getItemStack();
-		final ItemStack bot = ( this.getBotOptional() == null ) ? null : this.getBotOptional().getItemStack();
-		final ItemStack output = this.getOutput().getItemStack();
-		final InscriberProcessType type = InscriberProcessType.Press;
+        final ItemStack[] realInput = this.getImprintable().getItemStackSet();
+        final List<ItemStack> inputs = new ArrayList<ItemStack>(realInput.length);
+        Collections.addAll(inputs, realInput);
+        final ItemStack top =
+                (this.getTopOptional() == null) ? null : this.getTopOptional().getItemStack();
+        final ItemStack bot =
+                (this.getBotOptional() == null) ? null : this.getBotOptional().getItemStack();
+        final ItemStack output = this.getOutput().getItemStack();
+        final InscriberProcessType type = InscriberProcessType.Press;
 
-		final IInscriberRecipe recipe = new InscriberRecipe( inputs, output, top, bot, type );
+        final IInscriberRecipe recipe = new InscriberRecipe(inputs, output, top, bot, type);
 
-		AEApi.instance().registries().inscriber().addRecipe( recipe );
-	}
+        AEApi.instance().registries().inscriber().addRecipe(recipe);
+    }
 }

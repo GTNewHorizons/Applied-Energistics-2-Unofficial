@@ -18,7 +18,6 @@
 
 package appeng.items.misc;
 
-
 import appeng.api.AEApi;
 import appeng.api.definitions.IMaterials;
 import appeng.api.implementations.items.IGrowableCrystal;
@@ -33,6 +32,9 @@ import appeng.util.Platform;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.EnumSet;
+import java.util.List;
+import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -47,285 +49,252 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
-import javax.annotation.Nullable;
-import java.util.EnumSet;
-import java.util.List;
+public class ItemCrystalSeed extends AEBaseItem implements IGrowableCrystal {
 
+    private static final int LEVEL_OFFSET = 200;
+    private static final int SINGLE_OFFSET = LEVEL_OFFSET * 3;
 
-public class ItemCrystalSeed extends AEBaseItem implements IGrowableCrystal
-{
+    public static final int CERTUS = 0;
+    public static final int NETHER = SINGLE_OFFSET;
+    public static final int FLUIX = SINGLE_OFFSET * 2;
+    public static final int FINAL_STAGE = SINGLE_OFFSET * 3;
 
-	private static final int LEVEL_OFFSET = 200;
-	private static final int SINGLE_OFFSET = LEVEL_OFFSET * 3;
+    private final IIcon[] certus = new IIcon[3];
+    private final IIcon[] fluix = new IIcon[3];
+    private final IIcon[] nether = new IIcon[3];
 
-	public static final int CERTUS = 0;
-	public static final int NETHER = SINGLE_OFFSET;
-	public static final int FLUIX = SINGLE_OFFSET * 2;
-	public static final int FINAL_STAGE = SINGLE_OFFSET * 3;
+    public ItemCrystalSeed() {
+        this.setHasSubtypes(true);
+        this.setFeature(EnumSet.of(AEFeature.Core));
 
-	private final IIcon[] certus = new IIcon[3];
-	private final IIcon[] fluix = new IIcon[3];
-	private final IIcon[] nether = new IIcon[3];
+        EntityRegistry.registerModEntity(
+                EntityGrowingCrystal.class,
+                EntityGrowingCrystal.class.getSimpleName(),
+                EntityIds.get(EntityGrowingCrystal.class),
+                AppEng.instance(),
+                16,
+                4,
+                true);
+    }
 
-	public ItemCrystalSeed()
-	{
-		this.setHasSubtypes( true );
-		this.setFeature( EnumSet.of( AEFeature.Core ) );
+    @Nullable
+    public static ResolverResult getResolver(final int certus2) {
+        ResolverResult resolver = null;
 
-		EntityRegistry.registerModEntity( EntityGrowingCrystal.class, EntityGrowingCrystal.class.getSimpleName(), EntityIds.get( EntityGrowingCrystal.class ), AppEng.instance(), 16, 4, true );
-	}
+        for (ItemStack crystalSeedStack : AEApi.instance()
+                .definitions()
+                .items()
+                .crystalSeed()
+                .maybeStack(1)
+                .asSet()) {
+            crystalSeedStack.setItemDamage(certus2);
+            crystalSeedStack = newStyle(crystalSeedStack);
+            resolver = new ResolverResult(
+                    "ItemCrystalSeed", crystalSeedStack.getItemDamage(), crystalSeedStack.getTagCompound());
+        }
 
-	@Nullable
-	public static ResolverResult getResolver( final int certus2 )
-	{
-		ResolverResult resolver = null;
+        return resolver;
+    }
 
-		for( ItemStack crystalSeedStack : AEApi.instance().definitions().items().crystalSeed().maybeStack( 1 ).asSet() )
-		{
-			crystalSeedStack.setItemDamage( certus2 );
-			crystalSeedStack = newStyle( crystalSeedStack );
-			resolver = new ResolverResult( "ItemCrystalSeed", crystalSeedStack.getItemDamage(), crystalSeedStack.getTagCompound() );
-		}
+    private static ItemStack newStyle(final ItemStack itemStack) {
+        ((ItemCrystalSeed) itemStack.getItem()).getProgress(itemStack);
+        return itemStack;
+    }
 
-		return resolver;
-	}
+    private int getProgress(final ItemStack is) {
+        if (is.hasTagCompound()) {
+            return is.getTagCompound().getInteger("progress");
+        } else {
+            final int progress;
+            final NBTTagCompound comp = Platform.openNbtData(is);
+            comp.setInteger("progress", progress = is.getItemDamage());
+            is.setItemDamage((is.getItemDamage() / SINGLE_OFFSET) * SINGLE_OFFSET);
+            return progress;
+        }
+    }
 
-	private static ItemStack newStyle( final ItemStack itemStack )
-	{
-		( (ItemCrystalSeed) itemStack.getItem() ).getProgress( itemStack );
-		return itemStack;
-	}
+    @Nullable
+    @Override
+    public ItemStack triggerGrowth(final ItemStack is) {
+        final int newDamage = this.getProgress(is) + 1;
+        final IMaterials materials = AEApi.instance().definitions().materials();
+        final int size = is.stackSize;
 
-	private int getProgress( final ItemStack is )
-	{
-		if( is.hasTagCompound() )
-		{
-			return is.getTagCompound().getInteger( "progress" );
-		}
-		else
-		{
-			final int progress;
-			final NBTTagCompound comp = Platform.openNbtData( is );
-			comp.setInteger( "progress", progress = is.getItemDamage() );
-			is.setItemDamage( ( is.getItemDamage() / SINGLE_OFFSET ) * SINGLE_OFFSET );
-			return progress;
-		}
-	}
+        if (newDamage == CERTUS + SINGLE_OFFSET) {
+            for (final ItemStack quartzStack :
+                    materials.purifiedCertusQuartzCrystal().maybeStack(size).asSet()) {
+                return quartzStack;
+            }
+        }
+        if (newDamage == NETHER + SINGLE_OFFSET) {
+            for (final ItemStack quartzStack :
+                    materials.purifiedNetherQuartzCrystal().maybeStack(size).asSet()) {
+                return quartzStack;
+            }
+        }
+        if (newDamage == FLUIX + SINGLE_OFFSET) {
+            for (final ItemStack quartzStack :
+                    materials.purifiedFluixCrystal().maybeStack(size).asSet()) {
+                return quartzStack;
+            }
+        }
+        if (newDamage > FINAL_STAGE) {
+            return null;
+        }
 
-	@Nullable
-	@Override
-	public ItemStack triggerGrowth( final ItemStack is )
-	{
-		final int newDamage = this.getProgress( is ) + 1;
-		final IMaterials materials = AEApi.instance().definitions().materials();
-		final int size = is.stackSize;
+        this.setProgress(is, newDamage);
+        return is;
+    }
 
-		if( newDamage == CERTUS + SINGLE_OFFSET )
-		{
-			for( final ItemStack quartzStack : materials.purifiedCertusQuartzCrystal().maybeStack( size ).asSet() )
-			{
-				return quartzStack;
-			}
-		}
-		if( newDamage == NETHER + SINGLE_OFFSET )
-		{
-			for( final ItemStack quartzStack : materials.purifiedNetherQuartzCrystal().maybeStack( size ).asSet() )
-			{
-				return quartzStack;
-			}
-		}
-		if( newDamage == FLUIX + SINGLE_OFFSET )
-		{
-			for( final ItemStack quartzStack : materials.purifiedFluixCrystal().maybeStack( size ).asSet() )
-			{
-				return quartzStack;
-			}
-		}
-		if( newDamage > FINAL_STAGE )
-		{
-			return null;
-		}
+    private void setProgress(final ItemStack is, final int newDamage) {
+        final NBTTagCompound comp = Platform.openNbtData(is);
+        comp.setInteger("progress", newDamage);
+        is.setItemDamage(is.getItemDamage() / LEVEL_OFFSET * LEVEL_OFFSET);
+    }
 
-		this.setProgress( is, newDamage );
-		return is;
-	}
-
-	private void setProgress( final ItemStack is, final int newDamage )
-	{
-		final NBTTagCompound comp = Platform.openNbtData( is );
-		comp.setInteger( "progress", newDamage );
-		is.setItemDamage( is.getItemDamage() / LEVEL_OFFSET * LEVEL_OFFSET );
-	}
-
-	@Override
-	public float getMultiplier( final Block blk, final Material mat )
-	{
-		return 0.5f;
-	}
+    @Override
+    public float getMultiplier(final Block blk, final Material mat) {
+        return 0.5f;
+    }
 
     @SideOnly(Side.CLIENT)
-	@Override
-	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
-	{
-		lines.add( ButtonToolTips.DoesntDespawn.getLocal() );
-		final int progress = this.getProgress( stack ) % SINGLE_OFFSET;
-		lines.add( Math.floor( (float) progress / (float) ( SINGLE_OFFSET / 100 ) ) + "%" );
+    @Override
+    public void addCheckedInformation(
+            final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo) {
+        lines.add(ButtonToolTips.DoesntDespawn.getLocal());
+        final int progress = this.getProgress(stack) % SINGLE_OFFSET;
+        lines.add(Math.floor((float) progress / (float) (SINGLE_OFFSET / 100)) + "%");
 
-		super.addCheckedInformation( stack, player, lines, displayMoreInfo );
-	}
+        super.addCheckedInformation(stack, player, lines, displayMoreInfo);
+    }
 
-	@Override
-	public int getEntityLifespan( final ItemStack itemStack, final World world )
-	{
-		return Integer.MAX_VALUE;
-	}
+    @Override
+    public int getEntityLifespan(final ItemStack itemStack, final World world) {
+        return Integer.MAX_VALUE;
+    }
 
-	@Override
-	public String getUnlocalizedName( final ItemStack is )
-	{
-		final int damage = this.getProgress( is );
+    @Override
+    public String getUnlocalizedName(final ItemStack is) {
+        final int damage = this.getProgress(is);
 
-		if( damage < CERTUS + SINGLE_OFFSET )
-		{
-			return this.getUnlocalizedName() + ".Certus";
-		}
+        if (damage < CERTUS + SINGLE_OFFSET) {
+            return this.getUnlocalizedName() + ".Certus";
+        }
 
-		if( damage < NETHER + SINGLE_OFFSET )
-		{
-			return this.getUnlocalizedName() + ".Nether";
-		}
+        if (damage < NETHER + SINGLE_OFFSET) {
+            return this.getUnlocalizedName() + ".Nether";
+        }
 
-		if( damage < FLUIX + SINGLE_OFFSET )
-		{
-			return this.getUnlocalizedName() + ".Fluix";
-		}
+        if (damage < FLUIX + SINGLE_OFFSET) {
+            return this.getUnlocalizedName() + ".Fluix";
+        }
 
-		return this.getUnlocalizedName();
-	}
+        return this.getUnlocalizedName();
+    }
 
-	@Override
-	public boolean isDamageable()
-	{
-		return false;
-	}
+    @Override
+    public boolean isDamageable() {
+        return false;
+    }
 
-	@Override
-	public boolean isDamaged( final ItemStack stack )
-	{
-		return false;
-	}
+    @Override
+    public boolean isDamaged(final ItemStack stack) {
+        return false;
+    }
 
-	@Override
-	public int getMaxDamage( final ItemStack stack )
-	{
-		return FINAL_STAGE;
-	}
+    @Override
+    public int getMaxDamage(final ItemStack stack) {
+        return FINAL_STAGE;
+    }
 
-	@Override
-	public IIcon getIcon( final ItemStack stack, final int pass )
-	{
-		return this.getIconIndex( stack );
-	}
+    @Override
+    public IIcon getIcon(final ItemStack stack, final int pass) {
+        return this.getIconIndex(stack);
+    }
 
-	@Override
-	public IIcon getIconIndex( final ItemStack stack )
-	{
-		IIcon[] list = null;
+    @Override
+    public IIcon getIconIndex(final ItemStack stack) {
+        IIcon[] list = null;
 
-		int damage = this.getProgress( stack );
+        int damage = this.getProgress(stack);
 
-		if( damage < CERTUS + SINGLE_OFFSET )
-		{
-			list = this.certus;
-		}
-		else if( damage < NETHER + SINGLE_OFFSET )
-		{
-			damage -= NETHER;
-			list = this.nether;
-		}
+        if (damage < CERTUS + SINGLE_OFFSET) {
+            list = this.certus;
+        } else if (damage < NETHER + SINGLE_OFFSET) {
+            damage -= NETHER;
+            list = this.nether;
+        } else if (damage < FLUIX + SINGLE_OFFSET) {
+            damage -= FLUIX;
+            list = this.fluix;
+        }
 
-		else if( damage < FLUIX + SINGLE_OFFSET )
-		{
-			damage -= FLUIX;
-			list = this.fluix;
-		}
+        if (list == null) {
+            return Items.diamond.getIconFromDamage(0);
+        }
 
-		if( list == null )
-		{
-			return Items.diamond.getIconFromDamage( 0 );
-		}
+        if (damage < LEVEL_OFFSET) {
+            return list[0];
+        } else if (damage < LEVEL_OFFSET * 2) {
+            return list[1];
+        } else {
+            return list[2];
+        }
+    }
 
-		if( damage < LEVEL_OFFSET )
-		{
-			return list[0];
-		}
-		else if( damage < LEVEL_OFFSET * 2 )
-		{
-			return list[1];
-		}
-		else
-		{
-			return list[2];
-		}
-	}
+    @Override
+    public void registerIcons(final IIconRegister ir) {
+        final String preFix = "appliedenergistics2:ItemCrystalSeed.";
 
-	@Override
-	public void registerIcons( final IIconRegister ir )
-	{
-		final String preFix = "appliedenergistics2:ItemCrystalSeed.";
+        this.certus[0] = ir.registerIcon(preFix + "Certus");
+        this.certus[1] = ir.registerIcon(preFix + "Certus2");
+        this.certus[2] = ir.registerIcon(preFix + "Certus3");
 
-		this.certus[0] = ir.registerIcon( preFix + "Certus" );
-		this.certus[1] = ir.registerIcon( preFix + "Certus2" );
-		this.certus[2] = ir.registerIcon( preFix + "Certus3" );
+        this.nether[0] = ir.registerIcon(preFix + "Nether");
+        this.nether[1] = ir.registerIcon(preFix + "Nether2");
+        this.nether[2] = ir.registerIcon(preFix + "Nether3");
 
-		this.nether[0] = ir.registerIcon( preFix + "Nether" );
-		this.nether[1] = ir.registerIcon( preFix + "Nether2" );
-		this.nether[2] = ir.registerIcon( preFix + "Nether3" );
+        this.fluix[0] = ir.registerIcon(preFix + "Fluix");
+        this.fluix[1] = ir.registerIcon(preFix + "Fluix2");
+        this.fluix[2] = ir.registerIcon(preFix + "Fluix3");
+    }
 
-		this.fluix[0] = ir.registerIcon( preFix + "Fluix" );
-		this.fluix[1] = ir.registerIcon( preFix + "Fluix2" );
-		this.fluix[2] = ir.registerIcon( preFix + "Fluix3" );
-	}
+    @Override
+    public boolean hasCustomEntity(final ItemStack stack) {
+        return true;
+    }
 
-	@Override
-	public boolean hasCustomEntity( final ItemStack stack )
-	{
-		return true;
-	}
+    @Override
+    public Entity createEntity(final World world, final Entity location, final ItemStack itemstack) {
+        final EntityGrowingCrystal egc =
+                new EntityGrowingCrystal(world, location.posX, location.posY, location.posZ, itemstack);
 
-	@Override
-	public Entity createEntity( final World world, final Entity location, final ItemStack itemstack )
-	{
-		final EntityGrowingCrystal egc = new EntityGrowingCrystal( world, location.posX, location.posY, location.posZ, itemstack );
+        egc.motionX = location.motionX;
+        egc.motionY = location.motionY;
+        egc.motionZ = location.motionZ;
 
-		egc.motionX = location.motionX;
-		egc.motionY = location.motionY;
-		egc.motionZ = location.motionZ;
+        if (location instanceof EntityItem) {
+            egc.delayBeforeCanPickup = ((EntityItem) location).delayBeforeCanPickup;
+        }
 
-		if( location instanceof EntityItem )
-		{
-			egc.delayBeforeCanPickup = ( (EntityItem) location ).delayBeforeCanPickup;
-		}
+        return egc;
+    }
 
-		return egc;
-	}
+    @Override
+    protected void getCheckedSubItems(
+            final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks) {
+        // lvl 0
+        itemStacks.add(newStyle(new ItemStack(this, 1, CERTUS)));
+        itemStacks.add(newStyle(new ItemStack(this, 1, NETHER)));
+        itemStacks.add(newStyle(new ItemStack(this, 1, FLUIX)));
 
-	@Override
-	protected void getCheckedSubItems( final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks )
-	{
-		// lvl 0
-		itemStacks.add( newStyle( new ItemStack( this, 1, CERTUS ) ) );
-		itemStacks.add( newStyle( new ItemStack( this, 1, NETHER ) ) );
-		itemStacks.add( newStyle( new ItemStack( this, 1, FLUIX ) ) );
+        // lvl 1
+        itemStacks.add(newStyle(new ItemStack(this, 1, LEVEL_OFFSET + CERTUS)));
+        itemStacks.add(newStyle(new ItemStack(this, 1, LEVEL_OFFSET + NETHER)));
+        itemStacks.add(newStyle(new ItemStack(this, 1, LEVEL_OFFSET + FLUIX)));
 
-		// lvl 1
-		itemStacks.add( newStyle( new ItemStack( this, 1, LEVEL_OFFSET + CERTUS ) ) );
-		itemStacks.add( newStyle( new ItemStack( this, 1, LEVEL_OFFSET + NETHER ) ) );
-		itemStacks.add( newStyle( new ItemStack( this, 1, LEVEL_OFFSET + FLUIX ) ) );
-
-		// lvl 2
-		itemStacks.add( newStyle( new ItemStack( this, 1, LEVEL_OFFSET * 2 + CERTUS ) ) );
-		itemStacks.add( newStyle( new ItemStack( this, 1, LEVEL_OFFSET * 2 + NETHER ) ) );
-		itemStacks.add( newStyle( new ItemStack( this, 1, LEVEL_OFFSET * 2 + FLUIX ) ) );
-	}
+        // lvl 2
+        itemStacks.add(newStyle(new ItemStack(this, 1, LEVEL_OFFSET * 2 + CERTUS)));
+        itemStacks.add(newStyle(new ItemStack(this, 1, LEVEL_OFFSET * 2 + NETHER)));
+        itemStacks.add(newStyle(new ItemStack(this, 1, LEVEL_OFFSET * 2 + FLUIX)));
+    }
 }

@@ -18,219 +18,178 @@
 
 package appeng.util.inv;
 
-
 import com.google.common.collect.ImmutableList;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
 
+public class WrapperChainedInventory implements IInventory {
 
-public class WrapperChainedInventory implements IInventory
-{
+    private int fullSize = 0;
+    private List<IInventory> l;
+    private Map<Integer, InvOffset> offsets;
 
-	private int fullSize = 0;
-	private List<IInventory> l;
-	private Map<Integer, InvOffset> offsets;
+    public WrapperChainedInventory(final IInventory... inventories) {
+        this.setInventory(inventories);
+    }
 
-	public WrapperChainedInventory( final IInventory... inventories )
-	{
-		this.setInventory( inventories );
-	}
+    private void setInventory(final IInventory... a) {
+        this.l = ImmutableList.copyOf(a);
+        this.calculateSizes();
+    }
 
-	private void setInventory( final IInventory... a )
-	{
-		this.l = ImmutableList.copyOf( a );
-		this.calculateSizes();
-	}
+    private void calculateSizes() {
+        this.offsets = new HashMap<Integer, WrapperChainedInventory.InvOffset>();
 
-	private void calculateSizes()
-	{
-		this.offsets = new HashMap<Integer, WrapperChainedInventory.InvOffset>();
+        int offset = 0;
+        for (final IInventory in : this.l) {
+            final InvOffset io = new InvOffset();
+            io.offset = offset;
+            io.size = in.getSizeInventory();
+            io.i = in;
 
-		int offset = 0;
-		for( final IInventory in : this.l )
-		{
-			final InvOffset io = new InvOffset();
-			io.offset = offset;
-			io.size = in.getSizeInventory();
-			io.i = in;
+            for (int y = 0; y < io.size; y++) {
+                this.offsets.put(y + io.offset, io);
+            }
 
-			for( int y = 0; y < io.size; y++ )
-			{
-				this.offsets.put( y + io.offset, io );
-			}
+            offset += io.size;
+        }
 
-			offset += io.size;
-		}
+        this.fullSize = offset;
+    }
 
-		this.fullSize = offset;
-	}
+    public WrapperChainedInventory(final List<IInventory> inventories) {
+        this.setInventory(inventories);
+    }
 
-	public WrapperChainedInventory( final List<IInventory> inventories )
-	{
-		this.setInventory( inventories );
-	}
+    private void setInventory(final List<IInventory> a) {
+        this.l = a;
+        this.calculateSizes();
+    }
 
-	private void setInventory( final List<IInventory> a )
-	{
-		this.l = a;
-		this.calculateSizes();
-	}
+    public void cycleOrder() {
+        if (this.l.size() > 1) {
+            final List<IInventory> newOrder = new ArrayList<IInventory>(this.l.size());
+            newOrder.add(this.l.get(this.l.size() - 1));
+            for (int x = 0; x < this.l.size() - 1; x++) {
+                newOrder.add(this.l.get(x));
+            }
+            this.setInventory(newOrder);
+        }
+    }
 
-	public void cycleOrder()
-	{
-		if( this.l.size() > 1 )
-		{
-			final List<IInventory> newOrder = new ArrayList<IInventory>( this.l.size() );
-			newOrder.add( this.l.get( this.l.size() - 1 ) );
-			for( int x = 0; x < this.l.size() - 1; x++ )
-			{
-				newOrder.add( this.l.get( x ) );
-			}
-			this.setInventory( newOrder );
-		}
-	}
+    public IInventory getInv(final int idx) {
+        final InvOffset io = this.offsets.get(idx);
+        if (io != null) {
+            return io.i;
+        }
+        return null;
+    }
 
-	public IInventory getInv( final int idx )
-	{
-		final InvOffset io = this.offsets.get( idx );
-		if( io != null )
-		{
-			return io.i;
-		}
-		return null;
-	}
+    public int getInvSlot(final int idx) {
+        final InvOffset io = this.offsets.get(idx);
+        if (io != null) {
+            return idx - io.offset;
+        }
+        return 0;
+    }
 
-	public int getInvSlot( final int idx )
-	{
-		final InvOffset io = this.offsets.get( idx );
-		if( io != null )
-		{
-			return idx - io.offset;
-		}
-		return 0;
-	}
+    @Override
+    public int getSizeInventory() {
+        return this.fullSize;
+    }
 
-	@Override
-	public int getSizeInventory()
-	{
-		return this.fullSize;
-	}
+    @Override
+    public ItemStack getStackInSlot(final int idx) {
+        final InvOffset io = this.offsets.get(idx);
+        if (io != null) {
+            return io.i.getStackInSlot(idx - io.offset);
+        }
+        return null;
+    }
 
-	@Override
-	public ItemStack getStackInSlot( final int idx )
-	{
-		final InvOffset io = this.offsets.get( idx );
-		if( io != null )
-		{
-			return io.i.getStackInSlot( idx - io.offset );
-		}
-		return null;
-	}
+    @Override
+    public ItemStack decrStackSize(final int idx, final int var2) {
+        final InvOffset io = this.offsets.get(idx);
+        if (io != null) {
+            return io.i.decrStackSize(idx - io.offset, var2);
+        }
+        return null;
+    }
 
-	@Override
-	public ItemStack decrStackSize( final int idx, final int var2 )
-	{
-		final InvOffset io = this.offsets.get( idx );
-		if( io != null )
-		{
-			return io.i.decrStackSize( idx - io.offset, var2 );
-		}
-		return null;
-	}
+    @Override
+    public ItemStack getStackInSlotOnClosing(final int idx) {
+        final InvOffset io = this.offsets.get(idx);
+        if (io != null) {
+            return io.i.getStackInSlotOnClosing(idx - io.offset);
+        }
+        return null;
+    }
 
-	@Override
-	public ItemStack getStackInSlotOnClosing( final int idx )
-	{
-		final InvOffset io = this.offsets.get( idx );
-		if( io != null )
-		{
-			return io.i.getStackInSlotOnClosing( idx - io.offset );
-		}
-		return null;
-	}
+    @Override
+    public void setInventorySlotContents(final int idx, final ItemStack var2) {
+        final InvOffset io = this.offsets.get(idx);
+        if (io != null) {
+            io.i.setInventorySlotContents(idx - io.offset, var2);
+        }
+    }
 
-	@Override
-	public void setInventorySlotContents( final int idx, final ItemStack var2 )
-	{
-		final InvOffset io = this.offsets.get( idx );
-		if( io != null )
-		{
-			io.i.setInventorySlotContents( idx - io.offset, var2 );
-		}
-	}
+    @Override
+    public String getInventoryName() {
+        return "ChainedInv";
+    }
 
-	@Override
-	public String getInventoryName()
-	{
-		return "ChainedInv";
-	}
+    @Override
+    public boolean hasCustomInventoryName() {
+        return false;
+    }
 
-	@Override
-	public boolean hasCustomInventoryName()
-	{
-		return false;
-	}
+    @Override
+    public int getInventoryStackLimit() {
+        int smallest = 64;
 
-	@Override
-	public int getInventoryStackLimit()
-	{
-		int smallest = 64;
+        for (final IInventory i : this.l) {
+            smallest = Math.min(smallest, i.getInventoryStackLimit());
+        }
 
-		for( final IInventory i : this.l )
-		{
-			smallest = Math.min( smallest, i.getInventoryStackLimit() );
-		}
+        return smallest;
+    }
 
-		return smallest;
-	}
+    @Override
+    public void markDirty() {
+        for (final IInventory i : this.l) {
+            i.markDirty();
+        }
+    }
 
-	@Override
-	public void markDirty()
-	{
-		for( final IInventory i : this.l )
-		{
-			i.markDirty();
-		}
-	}
+    @Override
+    public boolean isUseableByPlayer(final EntityPlayer var1) {
+        return false;
+    }
 
-	@Override
-	public boolean isUseableByPlayer( final EntityPlayer var1 )
-	{
-		return false;
-	}
+    @Override
+    public void openInventory() {}
 
-	@Override
-	public void openInventory()
-	{
-	}
+    @Override
+    public void closeInventory() {}
 
-	@Override
-	public void closeInventory()
-	{
-	}
+    @Override
+    public boolean isItemValidForSlot(final int idx, final ItemStack itemstack) {
+        final InvOffset io = this.offsets.get(idx);
+        if (io != null) {
+            return io.i.isItemValidForSlot(idx - io.offset, itemstack);
+        }
+        return false;
+    }
 
-	@Override
-	public boolean isItemValidForSlot( final int idx, final ItemStack itemstack )
-	{
-		final InvOffset io = this.offsets.get( idx );
-		if( io != null )
-		{
-			return io.i.isItemValidForSlot( idx - io.offset, itemstack );
-		}
-		return false;
-	}
+    private static class InvOffset {
 
-	private static class InvOffset
-	{
-
-		private int offset;
-		private int size;
-		private IInventory i;
-	}
+        private int offset;
+        private int size;
+        private IInventory i;
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.entity;
 
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.renderer.entity.RenderItem;
@@ -27,41 +26,39 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemBlock;
 import org.lwjgl.opengl.GL11;
 
+@SideOnly(Side.CLIENT)
+public class RenderFloatingItem extends RenderItem {
 
-@SideOnly( Side.CLIENT )
-public class RenderFloatingItem extends RenderItem
-{
+    public RenderFloatingItem() {
+        this.shadowOpaque = 0.0F;
+        this.renderManager = RenderManager.instance;
+    }
 
-	public RenderFloatingItem()
-	{
-		this.shadowOpaque = 0.0F;
-		this.renderManager = RenderManager.instance;
-	}
+    @Override
+    public void doRender(
+            final EntityItem entityItem,
+            final double x,
+            final double y,
+            final double z,
+            final float yaw,
+            final float partialTick) {
+        if (entityItem instanceof EntityFloatingItem) {
+            final EntityFloatingItem efi = (EntityFloatingItem) entityItem;
+            if (efi.getProgress() > 0.0) {
+                GL11.glPushMatrix();
 
-	@Override
-	public void doRender( final EntityItem entityItem, final double x, final double y, final double z, final float yaw, final float partialTick )
-	{
-		if( entityItem instanceof EntityFloatingItem )
-		{
-			final EntityFloatingItem efi = (EntityFloatingItem) entityItem;
-			if( efi.getProgress() > 0.0 )
-			{
-				GL11.glPushMatrix();
+                if (!(efi.getEntityItem().getItem() instanceof ItemBlock)) {
+                    GL11.glTranslatef(0, -0.15f, 0);
+                }
 
-				if( !( efi.getEntityItem().getItem() instanceof ItemBlock ) )
-				{
-					GL11.glTranslatef( 0, -0.15f, 0 );
-				}
+                super.doRender(efi, x, y, z, yaw, partialTick);
+                GL11.glPopMatrix();
+            }
+        }
+    }
 
-				super.doRender( efi, x, y, z, yaw, partialTick );
-				GL11.glPopMatrix();
-			}
-		}
-	}
-
-	@Override
-	public boolean shouldBob()
-	{
-		return false;
-	}
+    @Override
+    public boolean shouldBob() {
+        return false;
+    }
 }

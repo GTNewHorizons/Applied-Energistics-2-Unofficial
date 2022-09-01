@@ -18,11 +18,8 @@
 
 package appeng.core.features;
 
-
 import appeng.items.AEBaseItem;
-
 import java.util.regex.Pattern;
-
 
 /**
  * This class is used to rename items to match the persistent stored items.
@@ -33,53 +30,43 @@ import java.util.regex.Pattern;
  * @deprecated only a temporary solution for a rename
  */
 @Deprecated
-public final class NameResolver
-{
-	private static final Pattern ITEM_MULTI_PART = Pattern.compile( "ItemMultiPart", Pattern.LITERAL );
-	private static final Pattern ITEM_MULTI_MATERIAL = Pattern.compile( "ItemMultiMaterial", Pattern.LITERAL );
-	private static final Pattern QUARTZ = Pattern.compile( "Quartz", Pattern.LITERAL );
+public final class NameResolver {
+    private static final Pattern ITEM_MULTI_PART = Pattern.compile("ItemMultiPart", Pattern.LITERAL);
+    private static final Pattern ITEM_MULTI_MATERIAL = Pattern.compile("ItemMultiMaterial", Pattern.LITERAL);
+    private static final Pattern QUARTZ = Pattern.compile("Quartz", Pattern.LITERAL);
 
-	private final Class<? extends AEBaseItem> withOriginalName;
+    private final Class<? extends AEBaseItem> withOriginalName;
 
-	public NameResolver( final Class<? extends AEBaseItem> withOriginalName )
-	{
-		this.withOriginalName = withOriginalName;
-	}
+    public NameResolver(final Class<? extends AEBaseItem> withOriginalName) {
+        this.withOriginalName = withOriginalName;
+    }
 
-	public String getName( final String subName )
-	{
-		String name = this.withOriginalName.getSimpleName();
+    public String getName(final String subName) {
+        String name = this.withOriginalName.getSimpleName();
 
-		if( name.startsWith( "ItemMultiPart" ) )
-		{
-			name = ITEM_MULTI_PART.matcher( name ).replaceAll( "ItemPart" );
-		}
-		else if( name.startsWith( "ItemMultiMaterial" ) )
-		{
-			name = ITEM_MULTI_MATERIAL.matcher( name ).replaceAll( "ItemMaterial" );
-		}
+        if (name.startsWith("ItemMultiPart")) {
+            name = ITEM_MULTI_PART.matcher(name).replaceAll("ItemPart");
+        } else if (name.startsWith("ItemMultiMaterial")) {
+            name = ITEM_MULTI_MATERIAL.matcher(name).replaceAll("ItemMaterial");
+        }
 
-		if( subName != null )
-		{
-			// simple hack to allow me to do get nice names for these without
-			// mode code outside of AEBaseItem
-			if( subName.startsWith( "P2PTunnel" ) )
-			{
-				return "ItemPart.P2PTunnel";
-			}
+        if (subName != null) {
+            // simple hack to allow me to do get nice names for these without
+            // mode code outside of AEBaseItem
+            if (subName.startsWith("P2PTunnel")) {
+                return "ItemPart.P2PTunnel";
+            }
 
-			if( subName.equals( "CertusQuartzTools" ) )
-			{
-				return QUARTZ.matcher( name ).replaceAll( "CertusQuartz" );
-			}
-			if( subName.equals( "NetherQuartzTools" ) )
-			{
-				return QUARTZ.matcher( name ).replaceAll( "NetherQuartz" );
-			}
+            if (subName.equals("CertusQuartzTools")) {
+                return QUARTZ.matcher(name).replaceAll("CertusQuartz");
+            }
+            if (subName.equals("NetherQuartzTools")) {
+                return QUARTZ.matcher(name).replaceAll("NetherQuartz");
+            }
 
-			name += '.' + subName;
-		}
+            name += '.' + subName;
+        }
 
-		return name;
-	}
+        return name;
+    }
 }

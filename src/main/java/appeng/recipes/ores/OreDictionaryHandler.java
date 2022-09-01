@@ -18,103 +18,82 @@
 
 package appeng.recipes.ores;
 
-
 import appeng.core.AELog;
 import appeng.recipes.game.IRecipeBakeable;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.ArrayList;
-import java.util.List;
+public class OreDictionaryHandler {
 
+    public static final OreDictionaryHandler INSTANCE = new OreDictionaryHandler();
 
-public class OreDictionaryHandler
-{
+    private final List<IOreListener> oreListeners = new ArrayList<IOreListener>();
 
-	public static final OreDictionaryHandler INSTANCE = new OreDictionaryHandler();
+    private boolean enableRebaking = false;
 
-	private final List<IOreListener> oreListeners = new ArrayList<IOreListener>();
+    @SubscribeEvent
+    public void onOreDictionaryRegister(final OreDictionary.OreRegisterEvent event) {
+        if (event.Name == null || event.Ore == null) {
+            return;
+        }
 
-	private boolean enableRebaking = false;
+        if (this.shouldCare(event.Name)) {
+            for (final IOreListener v : this.oreListeners) {
+                v.oreRegistered(event.Name, event.Ore);
+            }
+        }
 
-	@SubscribeEvent
-	public void onOreDictionaryRegister( final OreDictionary.OreRegisterEvent event )
-	{
-		if( event.Name == null || event.Ore == null )
-		{
-			return;
-		}
+        if (this.enableRebaking) {
+            this.bakeRecipes();
+        }
+    }
 
-		if( this.shouldCare( event.Name ) )
-		{
-			for( final IOreListener v : this.oreListeners )
-			{
-				v.oreRegistered( event.Name, event.Ore );
-			}
-		}
+    /**
+     * Just limit what items are sent to the final listeners, I got sick of strange items showing up...
+     *
+     * @param name name about cared item
+     * @return true if it should care
+     */
+    private boolean shouldCare(final String name) {
+        return true;
+    }
 
-		if( this.enableRebaking )
-		{
-			this.bakeRecipes();
-		}
-	}
+    public void bakeRecipes() {
+        this.enableRebaking = true;
 
-	/**
-	 * Just limit what items are sent to the final listeners, I got sick of strange items showing up...
-	 *
-	 * @param name name about cared item
-	 * @return true if it should care
-	 */
-	private boolean shouldCare( final String name )
-	{
-		return true;
-	}
+        for (final Object o : CraftingManager.getInstance().getRecipeList()) {
+            if (o instanceof IRecipeBakeable) {
+                try {
+                    ((IRecipeBakeable) o).bake();
+                } catch (final Throwable e) {
+                    AELog.debug(e);
+                }
+            }
+        }
+    }
 
-	public void bakeRecipes()
-	{
-		this.enableRebaking = true;
+    /**
+     * Adds a new IOreListener and immediately notifies it of any previous ores, any ores added latter will be added at
+     * that point.
+     *
+     * @param n to be added ore listener
+     */
+    public void observe(final IOreListener n) {
+        this.oreListeners.add(n);
 
-		for( final Object o : CraftingManager.getInstance().getRecipeList() )
-		{
-			if( o instanceof IRecipeBakeable )
-			{
-				try
-				{
-					( (IRecipeBakeable) o ).bake();
-				}
-				catch( final Throwable e )
-				{
-					AELog.debug( e );
-				}
-			}
-		}
-	}
-
-	/**
-	 * Adds a new IOreListener and immediately notifies it of any previous ores, any ores added latter will be added at
-	 * that point.
-	 *
-	 * @param n to be added ore listener
-	 */
-	public void observe( final IOreListener n )
-	{
-		this.oreListeners.add( n );
-
-		// notify the listener of any ore already in existence.
-		for( final String name : OreDictionary.getOreNames() )
-		{
-			if( name != null && this.shouldCare( name ) )
-			{
-				for( final ItemStack item : OreDictionary.getOres( name ) )
-				{
-					if( item != null )
-					{
-						n.oreRegistered( name, item );
-					}
-				}
-			}
-		}
-	}
+        // notify the listener of any ore already in existence.
+        for (final String name : OreDictionary.getOreNames()) {
+            if (name != null && this.shouldCare(name)) {
+                for (final ItemStack item : OreDictionary.getOres(name)) {
+                    if (item != null) {
+                        n.oreRegistered(name, item);
+                    }
+                }
+            }
+        }
+    }
 }

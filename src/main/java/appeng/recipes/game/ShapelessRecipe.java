@@ -18,164 +18,130 @@
 
 package appeng.recipes.game;
 
-
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RegistrationError;
 import appeng.api.recipes.IIngredient;
+import java.util.ArrayList;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.world.World;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.ArrayList;
+public class ShapelessRecipe implements IRecipe, IRecipeBakeable {
 
+    private final ArrayList<Object> input = new ArrayList<Object>();
+    private ItemStack output = null;
+    private boolean disable = false;
 
-public class ShapelessRecipe implements IRecipe, IRecipeBakeable
-{
+    public ShapelessRecipe(final ItemStack result, final Object... recipe) {
+        this.output = result.copy();
+        for (final Object in : recipe) {
+            if (in instanceof IIngredient) {
+                this.input.add(in);
+            } else {
+                final StringBuilder ret = new StringBuilder("Invalid shapeless ore recipe: ");
+                for (final Object tmp : recipe) {
+                    ret.append(tmp).append(", ");
+                }
+                ret.append(this.output);
+                throw new IllegalArgumentException(ret.toString());
+            }
+        }
+    }
 
-	private final ArrayList<Object> input = new ArrayList<Object>();
-	private ItemStack output = null;
-	private boolean disable = false;
+    public boolean isEnabled() {
+        return !this.disable;
+    }
 
-	public ShapelessRecipe( final ItemStack result, final Object... recipe )
-	{
-		this.output = result.copy();
-		for( final Object in : recipe )
-		{
-			if( in instanceof IIngredient )
-			{
-				this.input.add( in );
-			}
-			else
-			{
-				final StringBuilder ret = new StringBuilder( "Invalid shapeless ore recipe: " );
-				for( final Object tmp : recipe )
-				{
-					ret.append( tmp ).append( ", " );
-				}
-				ret.append( this.output );
-				throw new IllegalArgumentException( ret.toString() );
-			}
-		}
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean matches(final InventoryCrafting var1, final World world) {
+        if (this.disable) {
+            return false;
+        }
 
-	public boolean isEnabled()
-	{
-		return !this.disable;
-	}
+        final ArrayList<Object> required = new ArrayList<Object>(this.input);
 
-	@SuppressWarnings( "unchecked" )
-	@Override
-	public boolean matches( final InventoryCrafting var1, final World world )
-	{
-		if( this.disable )
-		{
-			return false;
-		}
+        for (int x = 0; x < var1.getSizeInventory(); x++) {
+            final ItemStack slot = var1.getStackInSlot(x);
 
-		final ArrayList<Object> required = new ArrayList<Object>( this.input );
+            if (slot != null) {
+                boolean inRecipe = false;
 
-		for( int x = 0; x < var1.getSizeInventory(); x++ )
-		{
-			final ItemStack slot = var1.getStackInSlot( x );
+                for (final Object next : required) {
+                    boolean match = false;
 
-			if( slot != null )
-			{
-				boolean inRecipe = false;
+                    if (next instanceof IIngredient) {
+                        try {
+                            for (final ItemStack item : ((IIngredient) next).getItemStackSet()) {
+                                match = match || this.checkItemEquals(item, slot);
+                            }
+                        } catch (final RegistrationError e) {
+                            // :P
+                        } catch (final MissingIngredientError e) {
+                            // :P
+                        }
+                    }
 
-				for( final Object next : required )
-				{
-					boolean match = false;
+                    if (match) {
+                        inRecipe = true;
+                        required.remove(next);
+                        break;
+                    }
+                }
 
-					if( next instanceof IIngredient )
-					{
-						try
-						{
-							for( final ItemStack item : ( (IIngredient) next ).getItemStackSet() )
-							{
-								match = match || this.checkItemEquals( item, slot );
-							}
-						}
-						catch( final RegistrationError e )
-						{
-							// :P
-						}
-						catch( final MissingIngredientError e )
-						{
-							// :P
-						}
-					}
+                if (!inRecipe) {
+                    return false;
+                }
+            }
+        }
 
-					if( match )
-					{
-						inRecipe = true;
-						required.remove( next );
-						break;
-					}
-				}
+        return required.isEmpty();
+    }
 
-				if( !inRecipe )
-				{
-					return false;
-				}
-			}
-		}
+    @Override
+    public ItemStack getCraftingResult(final InventoryCrafting var1) {
+        return this.output.copy();
+    }
 
-		return required.isEmpty();
-	}
+    @Override
+    public int getRecipeSize() {
+        return this.input.size();
+    }
 
-	@Override
-	public ItemStack getCraftingResult( final InventoryCrafting var1 )
-	{
-		return this.output.copy();
-	}
+    @Override
+    public ItemStack getRecipeOutput() {
+        return this.output;
+    }
 
-	@Override
-	public int getRecipeSize()
-	{
-		return this.input.size();
-	}
+    private boolean checkItemEquals(final ItemStack target, final ItemStack input) {
+        return (target.getItem() == input.getItem()
+                && (target.getItemDamage() == OreDictionary.WILDCARD_VALUE
+                        || target.getItemDamage() == input.getItemDamage()));
+    }
 
-	@Override
-	public ItemStack getRecipeOutput()
-	{
-		return this.output;
-	}
+    /**
+     * Returns the input for this recipe, any mod accessing this value should never manipulate the values in this array
+     * as it will effect the recipe itself.
+     *
+     * @return The recipes input vales.
+     */
+    public ArrayList<Object> getInput() {
+        return this.input;
+    }
 
-	private boolean checkItemEquals( final ItemStack target, final ItemStack input )
-	{
-		return ( target.getItem() == input.getItem() && ( target.getItemDamage() == OreDictionary.WILDCARD_VALUE || target.getItemDamage() == input.getItemDamage() ) );
-	}
-
-	/**
-	 * Returns the input for this recipe, any mod accessing this value should never manipulate the values in this array
-	 * as it will effect the recipe itself.
-	 *
-	 * @return The recipes input vales.
-	 */
-	public ArrayList<Object> getInput()
-	{
-		return this.input;
-	}
-
-	@Override
-	public void bake() throws RegistrationError
-	{
-		try
-		{
-			this.disable = false;
-			for( final Object o : this.input )
-			{
-				if( o instanceof IIngredient )
-				{
-					( (IIngredient) o ).bake();
-				}
-			}
-		}
-		catch( final MissingIngredientError e )
-		{
-			this.disable = true;
-		}
-	}
+    @Override
+    public void bake() throws RegistrationError {
+        try {
+            this.disable = false;
+            for (final Object o : this.input) {
+                if (o instanceof IIngredient) {
+                    ((IIngredient) o).bake();
+                }
+            }
+        } catch (final MissingIngredientError e) {
+            this.disable = true;
+        }
+    }
 }

@@ -18,13 +18,13 @@
 
 package appeng.block.crafting;
 
-
 import appeng.api.AEApi;
 import appeng.client.render.blocks.RenderBlockCraftingCPUMonitor;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -32,48 +32,42 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.List;
+public class BlockCraftingMonitor extends BlockCraftingUnit {
+    public BlockCraftingMonitor() {
+        this.setTileEntity(TileCraftingMonitorTile.class);
+    }
 
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RenderBlockCraftingCPUMonitor getRenderer() {
+        return new RenderBlockCraftingCPUMonitor();
+    }
 
-public class BlockCraftingMonitor extends BlockCraftingUnit
-{
-	public BlockCraftingMonitor()
-	{
-		this.setTileEntity( TileCraftingMonitorTile.class );
-	}
+    @Override
+    public IIcon getIcon(final int direction, final int metadata) {
+        if (direction != ForgeDirection.SOUTH.ordinal()) {
+            for (final Block craftingUnitBlock : AEApi.instance()
+                    .definitions()
+                    .blocks()
+                    .craftingUnit()
+                    .maybeBlock()
+                    .asSet()) {
+                return craftingUnitBlock.getIcon(direction, metadata);
+            }
+        }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected RenderBlockCraftingCPUMonitor getRenderer()
-	{
-		return new RenderBlockCraftingCPUMonitor();
-	}
+        switch (metadata) {
+            default:
+            case 0:
+                return super.getIcon(0, 0);
+            case FLAG_FORMED:
+                return ExtraBlockTextures.BlockCraftingMonitorFit_Light.getIcon();
+        }
+    }
 
-	@Override
-	public IIcon getIcon( final int direction, final int metadata )
-	{
-		if( direction != ForgeDirection.SOUTH.ordinal() )
-		{
-			for( final Block craftingUnitBlock : AEApi.instance().definitions().blocks().craftingUnit().maybeBlock().asSet() )
-			{
-				return craftingUnitBlock.getIcon( direction, metadata );
-			}
-		}
-
-		switch( metadata )
-		{
-			default:
-			case 0:
-				return super.getIcon( 0, 0 );
-			case FLAG_FORMED:
-				return ExtraBlockTextures.BlockCraftingMonitorFit_Light.getIcon();
-		}
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void getCheckedSubBlocks( final Item item, final CreativeTabs tabs, final List<ItemStack> itemStacks )
-	{
-		itemStacks.add( new ItemStack( this, 1, 0 ) );
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void getCheckedSubBlocks(final Item item, final CreativeTabs tabs, final List<ItemStack> itemStacks) {
+        itemStacks.add(new ItemStack(this, 1, 0));
+    }
 }

@@ -18,75 +18,66 @@
 
 package appeng.core.worlddata;
 
-
 import appeng.core.AELog;
 import appeng.util.UUIDMatcher;
-import net.minecraftforge.common.config.ConfigCategory;
-import net.minecraftforge.common.config.Property;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
+import net.minecraftforge.common.config.ConfigCategory;
+import net.minecraftforge.common.config.Property;
 
 /**
  * Initializes a map of ID to UUID from the player list in the settings.cfg
  */
-class PlayerMappingsInitializer
-{
-	/**
-	 * Internal immutable mapping
-	 */
-	private final Map<Integer, UUID> playerMappings;
+class PlayerMappingsInitializer {
+    /**
+     * Internal immutable mapping
+     */
+    private final Map<Integer, UUID> playerMappings;
 
-	/**
-	 * Creates the initializer for the player mappings.
-	 * The map will be filled upon construction
-	 * and will only be filled with valid entries.
-	 * If an invalid entry is found, an warning is printed,
-	 * mostly due to migration problems from 1.7.2 to 1.7.10
-	 * where the UUIDs were introduced.
-	 *
-	 * @param playerList the category for the player list, generally extracted using the "players" tag
-	 * @param log        the logger used to warn the server or user of faulty entries
-	 */
-	PlayerMappingsInitializer( final ConfigCategory playerList )
-	{
-		// Matcher for UUIDs
-		final UUIDMatcher matcher = new UUIDMatcher();
+    /**
+     * Creates the initializer for the player mappings.
+     * The map will be filled upon construction
+     * and will only be filled with valid entries.
+     * If an invalid entry is found, an warning is printed,
+     * mostly due to migration problems from 1.7.2 to 1.7.10
+     * where the UUIDs were introduced.
+     *
+     * @param playerList the category for the player list, generally extracted using the "players" tag
+     * @param log        the logger used to warn the server or user of faulty entries
+     */
+    PlayerMappingsInitializer(final ConfigCategory playerList) {
+        // Matcher for UUIDs
+        final UUIDMatcher matcher = new UUIDMatcher();
 
-		// Initial capacity for mappings
-		final int capacity = playerList.size();
+        // Initial capacity for mappings
+        final int capacity = playerList.size();
 
-		// Mappings for the IDs is a regular HashMap
-		this.playerMappings = new HashMap<Integer, UUID>( capacity );
+        // Mappings for the IDs is a regular HashMap
+        this.playerMappings = new HashMap<Integer, UUID>(capacity);
 
-		// Iterates through every pair of UUID to ID
-		for( final Map.Entry<String, Property> entry : playerList.getValues().entrySet() )
-		{
-			final String maybeUUID = entry.getKey();
-			final int id = entry.getValue().getInt();
+        // Iterates through every pair of UUID to ID
+        for (final Map.Entry<String, Property> entry : playerList.getValues().entrySet()) {
+            final String maybeUUID = entry.getKey();
+            final int id = entry.getValue().getInt();
 
-			if( matcher.isUUID( maybeUUID ) )
-			{
-				final UUID uuidString = UUID.fromString( maybeUUID );
+            if (matcher.isUUID(maybeUUID)) {
+                final UUID uuidString = UUID.fromString(maybeUUID);
 
-				this.playerMappings.put( id, uuidString );
-			}
-			else
-			{
-				AELog.warn( "The configuration for players contained an outdated entry instead an expected UUID " + maybeUUID + " for the player " + id + ". Please clean this up." );
-			}
-		}
-	}
+                this.playerMappings.put(id, uuidString);
+            } else {
+                AELog.warn("The configuration for players contained an outdated entry instead an expected UUID "
+                        + maybeUUID + " for the player " + id + ". Please clean this up.");
+            }
+        }
+    }
 
-	/**
-	 * Getter
-	 *
-	 * @return Immutable map of the players mappings of their ID to their UUID
-	 */
-	public Map<Integer, UUID> getPlayerMappings()
-	{
-		return this.playerMappings;
-	}
+    /**
+     * Getter
+     *
+     * @return Immutable map of the players mappings of their ID to their UUID
+     */
+    public Map<Integer, UUID> getPlayerMappings() {
+        return this.playerMappings;
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.items.parts;
 
-
 import appeng.api.AEApi;
 import appeng.api.exceptions.MissingDefinition;
 import appeng.api.implementations.items.IItemGroup;
@@ -38,6 +37,11 @@ import appeng.items.AEBaseItem;
 import com.google.common.base.Preconditions;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.Map.Entry;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -46,360 +50,322 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.Map.Entry;
+public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemGroup {
+    private static final int INITIAL_REGISTERED_CAPACITY = PartType.values().length;
+    private static final Comparator<Entry<Integer, PartTypeWithVariant>> REGISTERED_COMPARATOR =
+            new RegisteredComparator();
 
+    public static ItemMultiPart instance;
+    private final NameResolver nameResolver;
+    private final Map<Integer, PartTypeWithVariant> registered;
 
-public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemGroup
-{
-	private static final int INITIAL_REGISTERED_CAPACITY = PartType.values().length;
-	private static final Comparator<Entry<Integer, PartTypeWithVariant>> REGISTERED_COMPARATOR = new RegisteredComparator();
+    public ItemMultiPart(final IPartHelper partHelper) {
+        Preconditions.checkNotNull(partHelper);
 
-	public static ItemMultiPart instance;
-	private final NameResolver nameResolver;
-	private final Map<Integer, PartTypeWithVariant> registered;
+        this.registered = new HashMap<Integer, PartTypeWithVariant>(INITIAL_REGISTERED_CAPACITY);
 
-	public ItemMultiPart( final IPartHelper partHelper )
-	{
-		Preconditions.checkNotNull( partHelper );
+        this.nameResolver = new NameResolver(this.getClass());
+        this.setFeature(EnumSet.of(AEFeature.Core));
+        partHelper.setItemBusRenderer(this);
+        this.setHasSubtypes(true);
 
-		this.registered = new HashMap<Integer, PartTypeWithVariant>( INITIAL_REGISTERED_CAPACITY );
+        instance = this;
+    }
 
-		this.nameResolver = new NameResolver( this.getClass() );
-		this.setFeature( EnumSet.of( AEFeature.Core ) );
-		partHelper.setItemBusRenderer( this );
-		this.setHasSubtypes( true );
+    @Nonnull
+    public final ItemStackSrc createPart(final PartType mat) {
+        Preconditions.checkNotNull(mat);
 
-		instance = this;
-	}
+        return this.createPart(mat, 0);
+    }
 
-	@Nonnull
-	public final ItemStackSrc createPart( final PartType mat )
-	{
-		Preconditions.checkNotNull( mat );
+    @Nonnull
+    public ItemStackSrc createPart(final PartType mat, final AEColor color) {
+        Preconditions.checkNotNull(mat);
+        Preconditions.checkNotNull(color);
 
-		return this.createPart( mat, 0 );
-	}
+        final int varID = color.ordinal();
 
-	@Nonnull
-	public ItemStackSrc createPart( final PartType mat, final AEColor color )
-	{
-		Preconditions.checkNotNull( mat );
-		Preconditions.checkNotNull( color );
+        return this.createPart(mat, varID);
+    }
 
-		final int varID = color.ordinal();
+    @Nonnull
+    private ItemStackSrc createPart(final PartType mat, final int varID) {
+        assert mat != null;
+        assert varID >= 0;
 
-		return this.createPart( mat, varID );
-	}
+        // verify
+        for (final PartTypeWithVariant p : this.registered.values()) {
+            if (p.part == mat && p.variant == varID) {
+                throw new IllegalStateException("Cannot create the same material twice...");
+            }
+        }
 
-	@Nonnull
-	private ItemStackSrc createPart( final PartType mat, final int varID )
-	{
-		assert mat != null;
-		assert varID >= 0;
+        boolean enabled = true;
+        for (final AEFeature f : mat.getFeature()) {
+            enabled = enabled && AEConfig.instance.isFeatureEnabled(f);
+        }
 
-		// verify
-		for( final PartTypeWithVariant p : this.registered.values() )
-		{
-			if( p.part == mat && p.variant == varID )
-			{
-				throw new IllegalStateException( "Cannot create the same material twice..." );
-			}
-		}
+        for (final IntegrationType integrationType : mat.getIntegrations()) {
+            enabled &= IntegrationRegistry.INSTANCE.isEnabled(integrationType);
+        }
 
-		boolean enabled = true;
-		for( final AEFeature f : mat.getFeature() )
-		{
-			enabled = enabled && AEConfig.instance.isFeatureEnabled( f );
-		}
+        final int partDamage = mat.getBaseDamage() + varID;
+        final ActivityState state = ActivityState.from(enabled);
+        final ItemStackSrc output = new ItemStackSrc(this, partDamage, state);
 
-		for( final IntegrationType integrationType : mat.getIntegrations() )
-		{
-			enabled &= IntegrationRegistry.INSTANCE.isEnabled( integrationType );
-		}
+        final PartTypeWithVariant pti = new PartTypeWithVariant(mat, varID);
 
-		final int partDamage = mat.getBaseDamage() + varID;
-		final ActivityState state = ActivityState.from( enabled );
-		final ItemStackSrc output = new ItemStackSrc( this, partDamage, state );
+        this.processMetaOverlap(enabled, partDamage, mat, pti);
 
-		final PartTypeWithVariant pti = new PartTypeWithVariant( mat, varID );
+        return output;
+    }
 
-		this.processMetaOverlap( enabled, partDamage, mat, pti );
+    private void processMetaOverlap(
+            final boolean enabled, final int partDamage, final PartType mat, final PartTypeWithVariant pti) {
+        assert partDamage >= 0;
+        assert mat != null;
+        assert pti != null;
 
-		return output;
-	}
+        final PartTypeWithVariant registeredPartType = this.registered.get(partDamage);
+        if (registeredPartType != null) {
+            throw new IllegalStateException("Meta Overlap detected with type " + mat + " and damage " + partDamage
+                    + ". Found " + registeredPartType + " there already.");
+        }
 
-	private void processMetaOverlap( final boolean enabled, final int partDamage, final PartType mat, final PartTypeWithVariant pti )
-	{
-		assert partDamage >= 0;
-		assert mat != null;
-		assert pti != null;
+        if (enabled) {
+            this.registered.put(partDamage, pti);
+        }
+    }
 
-		final PartTypeWithVariant registeredPartType = this.registered.get( partDamage );
-		if( registeredPartType != null )
-		{
-			throw new IllegalStateException( "Meta Overlap detected with type " + mat + " and damage " + partDamage + ". Found " + registeredPartType + " there already." );
-		}
+    public int getDamageByType(final PartType t) {
+        Preconditions.checkNotNull(t);
 
-		if( enabled )
-		{
-			this.registered.put( partDamage, pti );
-		}
-	}
+        for (final Entry<Integer, PartTypeWithVariant> pt : this.registered.entrySet()) {
+            if (pt.getValue().part == t) {
+                return pt.getKey();
+            }
+        }
+        return -1;
+    }
 
-	public int getDamageByType( final PartType t )
-	{
-		Preconditions.checkNotNull( t );
+    @Override
+    @SideOnly(Side.CLIENT)
+    public int getSpriteNumber() {
+        return 0;
+    }
 
-		for( final Entry<Integer, PartTypeWithVariant> pt : this.registered.entrySet() )
-		{
-			if( pt.getValue().part == t )
-			{
-				return pt.getKey();
-			}
-		}
-		return -1;
-	}
+    @Override
+    public IIcon getIconFromDamage(final int dmg) {
+        final PartTypeWithVariant registeredType = this.registered.get(dmg);
+        if (registeredType != null) {
+            return registeredType.ico;
+        }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public int getSpriteNumber()
-	{
-		return 0;
-	}
+        final String formattedRegistered =
+                Arrays.toString(this.registered.keySet().toArray());
+        throw new MissingDefinition("Tried to get the icon from a non-existent part with damage value " + dmg
+                + ". There were registered: " + formattedRegistered + '.');
+    }
 
-	@Override
-	public IIcon getIconFromDamage( final int dmg )
-	{
-		final PartTypeWithVariant registeredType = this.registered.get( dmg );
-		if( registeredType != null )
-		{
-			return registeredType.ico;
-		}
+    @Override
+    public boolean onItemUse(
+            final ItemStack is,
+            final EntityPlayer player,
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (this.getTypeByStack(is) == PartType.InvalidType) {
+            return false;
+        }
 
-		final String formattedRegistered = Arrays.toString( this.registered.keySet().toArray() );
-		throw new MissingDefinition( "Tried to get the icon from a non-existent part with damage value " + dmg + ". There were registered: " + formattedRegistered + '.' );
-	}
+        return AEApi.instance().partHelper().placeBus(is, x, y, z, side, player, w);
+    }
 
-	@Override
-	public boolean onItemUse( final ItemStack is, final EntityPlayer player, final World w, final int x, final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( this.getTypeByStack( is ) == PartType.InvalidType )
-		{
-			return false;
-		}
+    @Override
+    public String getUnlocalizedName(final ItemStack is) {
+        return "item.appliedenergistics2." + this.getName(is);
+    }
 
-		return AEApi.instance().partHelper().placeBus( is, x, y, z, side, player, w );
-	}
+    @Override
+    public String getItemStackDisplayName(final ItemStack is) {
+        final PartType pt = this.getTypeByStack(is);
 
-	@Override
-	public String getUnlocalizedName( final ItemStack is )
-	{
-		return "item.appliedenergistics2." + this.getName( is );
-	}
+        if (pt.isCable()) {
+            final AEColor[] variants = AEColor.values();
 
-	@Override
-	public String getItemStackDisplayName( final ItemStack is )
-	{
-		final PartType pt = this.getTypeByStack( is );
+            final int itemDamage = is.getItemDamage();
+            final PartTypeWithVariant registeredPartType = this.registered.get(itemDamage);
+            if (registeredPartType != null) {
+                return super.getItemStackDisplayName(is) + " - " + variants[registeredPartType.variant].toString();
+            }
+        }
 
-		if( pt.isCable() )
-		{
-			final AEColor[] variants = AEColor.values();
+        if (pt.getExtraName() != null) {
+            return super.getItemStackDisplayName(is) + " - " + pt.getExtraName().getLocal();
+        }
 
-			final int itemDamage = is.getItemDamage();
-			final PartTypeWithVariant registeredPartType = this.registered.get( itemDamage );
-			if( registeredPartType != null )
-			{
-				return super.getItemStackDisplayName( is ) + " - " + variants[registeredPartType.variant].toString();
-			}
-		}
+        return super.getItemStackDisplayName(is);
+    }
 
-		if( pt.getExtraName() != null )
-		{
-			return super.getItemStackDisplayName( is ) + " - " + pt.getExtraName().getLocal();
-		}
+    @Override
+    public void registerIcons(final IIconRegister iconRegister) {
+        for (final Entry<Integer, PartTypeWithVariant> part : this.registered.entrySet()) {
+            final String tex = "appliedenergistics2:" + this.getName(new ItemStack(this, 1, part.getKey()));
+            part.getValue().ico = iconRegister.registerIcon(tex);
+        }
+    }
 
-		return super.getItemStackDisplayName( is );
-	}
+    @Override
+    protected void getCheckedSubItems(
+            final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks) {
+        final List<Entry<Integer, PartTypeWithVariant>> types =
+                new ArrayList<Entry<Integer, PartTypeWithVariant>>(this.registered.entrySet());
+        Collections.sort(types, REGISTERED_COMPARATOR);
 
-	@Override
-	public void registerIcons( final IIconRegister iconRegister )
-	{
-		for( final Entry<Integer, PartTypeWithVariant> part : this.registered.entrySet() )
-		{
-			final String tex = "appliedenergistics2:" + this.getName( new ItemStack( this, 1, part.getKey() ) );
-			part.getValue().ico = iconRegister.registerIcon( tex );
-		}
-	}
+        for (final Entry<Integer, PartTypeWithVariant> part : types) {
+            itemStacks.add(new ItemStack(this, 1, part.getKey()));
+        }
+    }
 
-	@Override
-	protected void getCheckedSubItems( final Item sameItem, final CreativeTabs creativeTab, final List<ItemStack> itemStacks )
-	{
-		final List<Entry<Integer, PartTypeWithVariant>> types = new ArrayList<Entry<Integer, PartTypeWithVariant>>( this.registered.entrySet() );
-		Collections.sort( types, REGISTERED_COMPARATOR );
+    private String getName(final ItemStack is) {
+        Preconditions.checkNotNull(is);
 
-		for( final Entry<Integer, PartTypeWithVariant> part : types )
-		{
-			itemStacks.add( new ItemStack( this, 1, part.getKey() ) );
-		}
-	}
+        final PartType stackType = this.getTypeByStack(is);
+        final String typeName = stackType.name();
 
-	private String getName( final ItemStack is )
-	{
-		Preconditions.checkNotNull( is );
+        return this.nameResolver.getName(typeName);
+    }
 
-		final PartType stackType = this.getTypeByStack( is );
-		final String typeName = stackType.name();
+    @Nonnull
+    public PartType getTypeByStack(final ItemStack is) {
+        Preconditions.checkNotNull(is);
 
-		return this.nameResolver.getName( typeName );
-	}
+        final PartTypeWithVariant pt = this.registered.get(is.getItemDamage());
+        if (pt != null) {
+            return pt.part;
+        }
 
-	@Nonnull
-	public PartType getTypeByStack( final ItemStack is )
-	{
-		Preconditions.checkNotNull( is );
+        return PartType.InvalidType;
+    }
 
-		final PartTypeWithVariant pt = this.registered.get( is.getItemDamage() );
-		if( pt != null )
-		{
-			return pt.part;
-		}
+    @Nullable
+    @Override
+    public IPart createPartFromItemStack(final ItemStack is) {
+        final PartType type = this.getTypeByStack(is);
+        final Class<? extends IPart> part = type.getPart();
+        if (part == null) {
+            return null;
+        }
 
-		return PartType.InvalidType;
-	}
+        try {
+            if (type.getConstructor() == null) {
+                type.setConstructor(part.getConstructor(ItemStack.class));
+            }
 
-	@Nullable
-	@Override
-	public IPart createPartFromItemStack( final ItemStack is )
-	{
-		final PartType type = this.getTypeByStack( is );
-		final Class<? extends IPart> part = type.getPart();
-		if( part == null )
-		{
-			return null;
-		}
+            return type.getConstructor().newInstance(is);
+        } catch (final InstantiationException e) {
+            throw new IllegalStateException(
+                    "Unable to construct IBusPart from IBusItem : " + part.getName()
+                            + " ; Possibly didn't have correct constructor( ItemStack )",
+                    e);
+        } catch (final IllegalAccessException e) {
+            throw new IllegalStateException(
+                    "Unable to construct IBusPart from IBusItem : " + part.getName()
+                            + " ; Possibly didn't have correct constructor( ItemStack )",
+                    e);
+        } catch (final InvocationTargetException e) {
+            throw new IllegalStateException(
+                    "Unable to construct IBusPart from IBusItem : " + part.getName()
+                            + " ; Possibly didn't have correct constructor( ItemStack )",
+                    e);
+        } catch (final NoSuchMethodException e) {
+            throw new IllegalStateException(
+                    "Unable to construct IBusPart from IBusItem : " + part.getName()
+                            + " ; Possibly didn't have correct constructor( ItemStack )",
+                    e);
+        }
+    }
 
-		try
-		{
-			if( type.getConstructor() == null )
-			{
-				type.setConstructor( part.getConstructor( ItemStack.class ) );
-			}
+    public int variantOf(final int itemDamage) {
+        final PartTypeWithVariant registeredPartType = this.registered.get(itemDamage);
+        if (registeredPartType != null) {
+            return registeredPartType.variant;
+        }
 
-			return type.getConstructor().newInstance( is );
-		}
-		catch( final InstantiationException e )
-		{
-			throw new IllegalStateException( "Unable to construct IBusPart from IBusItem : " + part.getName() + " ; Possibly didn't have correct constructor( ItemStack )", e );
-		}
-		catch( final IllegalAccessException e )
-		{
-			throw new IllegalStateException( "Unable to construct IBusPart from IBusItem : " + part.getName() + " ; Possibly didn't have correct constructor( ItemStack )", e );
-		}
-		catch( final InvocationTargetException e )
-		{
-			throw new IllegalStateException( "Unable to construct IBusPart from IBusItem : " + part.getName() + " ; Possibly didn't have correct constructor( ItemStack )", e );
-		}
-		catch( final NoSuchMethodException e )
-		{
-			throw new IllegalStateException( "Unable to construct IBusPart from IBusItem : " + part.getName() + " ; Possibly didn't have correct constructor( ItemStack )", e );
-		}
-	}
+        return 0;
+    }
 
-	public int variantOf( final int itemDamage )
-	{
-		final PartTypeWithVariant registeredPartType = this.registered.get( itemDamage );
-		if( registeredPartType != null )
-		{
-			return registeredPartType.variant;
-		}
+    @Nullable
+    @Override
+    public String getUnlocalizedGroupName(final Set<ItemStack> others, final ItemStack is) {
+        boolean importBus = false;
+        boolean exportBus = false;
+        boolean group = false;
 
-		return 0;
-	}
+        final PartType u = this.getTypeByStack(is);
 
-	@Nullable
-	@Override
-	public String getUnlocalizedGroupName( final Set<ItemStack> others, final ItemStack is )
-	{
-		boolean importBus = false;
-		boolean exportBus = false;
-		boolean group = false;
+        for (final ItemStack stack : others) {
+            if (stack.getItem() == this) {
+                final PartType pt = this.getTypeByStack(stack);
+                switch (pt) {
+                    case ImportBus:
+                        importBus = true;
+                        if (u == pt) {
+                            group = true;
+                        }
+                        break;
+                    case ExportBus:
+                        exportBus = true;
+                        if (u == pt) {
+                            group = true;
+                        }
+                        break;
+                    default:
+                }
+            }
+        }
 
-		final PartType u = this.getTypeByStack( is );
+        if (group && importBus && exportBus) {
+            return GuiText.IOBuses.getUnlocalized();
+        }
 
-		for( final ItemStack stack : others )
-		{
-			if( stack.getItem() == this )
-			{
-				final PartType pt = this.getTypeByStack( stack );
-				switch( pt )
-				{
-					case ImportBus:
-						importBus = true;
-						if( u == pt )
-						{
-							group = true;
-						}
-						break;
-					case ExportBus:
-						exportBus = true;
-						if( u == pt )
-						{
-							group = true;
-						}
-						break;
-					default:
-				}
-			}
-		}
+        return null;
+    }
 
-		if( group && importBus && exportBus )
-		{
-			return GuiText.IOBuses.getUnlocalized();
-		}
+    private static final class PartTypeWithVariant {
+        private final PartType part;
+        private final int variant;
 
-		return null;
-	}
+        @SideOnly(Side.CLIENT)
+        private IIcon ico;
 
-	private static final class PartTypeWithVariant
-	{
-		private final PartType part;
-		private final int variant;
+        private PartTypeWithVariant(final PartType part, final int variant) {
+            assert part != null;
+            assert variant >= 0;
 
-		@SideOnly( Side.CLIENT )
-		private IIcon ico;
+            this.part = part;
+            this.variant = variant;
+        }
 
-		private PartTypeWithVariant( final PartType part, final int variant )
-		{
-			assert part != null;
-			assert variant >= 0;
+        @Override
+        public String toString() {
+            return "PartTypeWithVariant{" + "part="
+                    + this.part + ", variant="
+                    + this.variant + ", ico="
+                    + this.ico + '}';
+        }
+    }
 
-			this.part = part;
-			this.variant = variant;
-		}
-
-		@Override
-		public String toString()
-		{
-			return "PartTypeWithVariant{" +
-					"part=" + this.part +
-					", variant=" + this.variant +
-					", ico=" + this.ico +
-					'}';
-		}
-	}
-
-
-	private static final class RegisteredComparator implements Comparator<Entry<Integer, PartTypeWithVariant>>
-	{
-		@Override
-		public int compare( final Entry<Integer, PartTypeWithVariant> o1, final Entry<Integer, PartTypeWithVariant> o2 )
-		{
-			return o1.getValue().part.name().compareTo( o2.getValue().part.name() );
-		}
-	}
+    private static final class RegisteredComparator implements Comparator<Entry<Integer, PartTypeWithVariant>> {
+        @Override
+        public int compare(final Entry<Integer, PartTypeWithVariant> o1, final Entry<Integer, PartTypeWithVariant> o2) {
+            return o1.getValue().part.name().compareTo(o2.getValue().part.name());
+        }
+    }
 }

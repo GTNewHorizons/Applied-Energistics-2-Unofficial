@@ -18,15 +18,11 @@
 
 package appeng.container.slot;
 
-
 import net.minecraft.inventory.IInventory;
 
+public class SlotInaccessibleHD extends SlotInaccessible {
 
-public class SlotInaccessibleHD extends SlotInaccessible
-{
-
-	public SlotInaccessibleHD( final IInventory i, final int slotIdx, final int x, final int y )
-	{
-		super( i, slotIdx, x, y );
-	}
+    public SlotInaccessibleHD(final IInventory i, final int slotIdx, final int x, final int y) {
+        super(i, slotIdx, x, y);
+    }
 }

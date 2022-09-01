@@ -18,24 +18,19 @@
 
 package appeng.helpers;
 
-
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 
+public class AEGlassMaterial extends Material {
 
-public class AEGlassMaterial extends Material
-{
+    public static final AEGlassMaterial INSTANCE = (new AEGlassMaterial(MapColor.airColor));
 
-	public static final AEGlassMaterial INSTANCE = ( new AEGlassMaterial( MapColor.airColor ) );
+    public AEGlassMaterial(final MapColor color) {
+        super(color);
+    }
 
-	public AEGlassMaterial( final MapColor color )
-	{
-		super( color );
-	}
-
-	@Override
-	public boolean isOpaque()
-	{
-		return false;
-	}
+    @Override
+    public boolean isOpaque() {
+        return false;
+    }
 }

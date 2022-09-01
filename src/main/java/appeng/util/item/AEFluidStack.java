@@ -18,7 +18,6 @@
 
 package appeng.util.item;
 
-
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
@@ -26,6 +25,8 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAETagCompound;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
+import java.io.*;
+import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTBase;
@@ -33,352 +34,305 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 
-import javax.annotation.Nonnull;
-import java.io.*;
+public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFluidStack, Comparable<AEFluidStack> {
 
+    private final int myHash;
+    private final Fluid fluid;
+    private IAETagCompound tagCompound;
 
-public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFluidStack, Comparable<AEFluidStack>
-{
+    private AEFluidStack(final AEFluidStack is) {
 
-	private final int myHash;
-	private final Fluid fluid;
-	private IAETagCompound tagCompound;
+        this.fluid = is.fluid;
+        this.setStackSize(is.getStackSize());
 
-	private AEFluidStack( final AEFluidStack is )
-	{
+        // priority = is.priority;
+        this.setCraftable(is.isCraftable());
+        this.setCountRequestable(is.getCountRequestable());
 
-		this.fluid = is.fluid;
-		this.setStackSize( is.getStackSize() );
+        this.myHash = is.myHash;
+    }
 
-		// priority = is.priority;
-		this.setCraftable( is.isCraftable() );
-		this.setCountRequestable( is.getCountRequestable() );
+    private AEFluidStack(@Nonnull final FluidStack is) {
+        this.fluid = is.getFluid();
 
-		this.myHash = is.myHash;
-	}
+        if (this.fluid == null) {
+            throw new IllegalArgumentException("Fluid is null.");
+        }
 
-	private AEFluidStack( @Nonnull final FluidStack is )
-	{
-		this.fluid = is.getFluid();
+        this.setStackSize(is.amount);
+        this.setCraftable(false);
+        this.setCountRequestable(0);
 
-		if( this.fluid == null )
-		{
-			throw new IllegalArgumentException( "Fluid is null." );
-		}
+        this.myHash =
+                this.fluid.hashCode() ^ (this.tagCompound == null ? 0 : System.identityHashCode(this.tagCompound));
+    }
 
-		this.setStackSize( is.amount );
-		this.setCraftable( false );
-		this.setCountRequestable( 0 );
+    public static IAEFluidStack loadFluidStackFromNBT(final NBTTagCompound i) {
+        final ItemStack itemstack = ItemStack.loadItemStackFromNBT(i);
+        if (itemstack == null) {
+            return null;
+        }
+        final AEFluidStack fluid = AEFluidStack.create(itemstack);
+        // fluid.priority = i.getInteger( "Priority" );
+        fluid.setStackSize(i.getLong("Cnt"));
+        fluid.setCountRequestable(i.getLong("Req"));
+        fluid.setCraftable(i.getBoolean("Craft"));
+        return fluid;
+    }
 
-		this.myHash = this.fluid.hashCode() ^ ( this.tagCompound == null ? 0 : System.identityHashCode( this.tagCompound ) );
-	}
+    public static AEFluidStack create(final Object a) {
+        if (a == null) {
+            return null;
+        }
+        if (a instanceof AEFluidStack) {
+            ((IAEStack<IAEFluidStack>) a).copy();
+        }
+        if (a instanceof FluidStack) {
+            return new AEFluidStack((FluidStack) a);
+        }
+        return null;
+    }
 
-	public static IAEFluidStack loadFluidStackFromNBT( final NBTTagCompound i )
-	{
-		final ItemStack itemstack = ItemStack.loadItemStackFromNBT( i );
-		if( itemstack == null )
-		{
-			return null;
-		}
-		final AEFluidStack fluid = AEFluidStack.create( itemstack );
-		// fluid.priority = i.getInteger( "Priority" );
-		fluid.setStackSize( i.getLong( "Cnt" ) );
-		fluid.setCountRequestable( i.getLong( "Req" ) );
-		fluid.setCraftable( i.getBoolean( "Craft" ) );
-		return fluid;
-	}
+    public static IAEFluidStack loadFluidStackFromPacket(final ByteBuf data) throws IOException {
+        final byte mask = data.readByte();
+        // byte PriorityType = (byte) (mask & 0x03);
+        final byte stackType = (byte) ((mask & 0x0C) >> 2);
+        final byte countReqType = (byte) ((mask & 0x30) >> 4);
+        final boolean isCraftable = (mask & 0x40) > 0;
+        final boolean hasTagCompound = (mask & 0x80) > 0;
 
-	public static AEFluidStack create( final Object a )
-	{
-		if( a == null )
-		{
-			return null;
-		}
-		if( a instanceof AEFluidStack )
-		{
-			( (IAEStack<IAEFluidStack>) a ).copy();
-		}
-		if( a instanceof FluidStack )
-		{
-			return new AEFluidStack( (FluidStack) a );
-		}
-		return null;
-	}
+        // don't send this...
+        final NBTTagCompound d = new NBTTagCompound();
 
-	public static IAEFluidStack loadFluidStackFromPacket( final ByteBuf data ) throws IOException
-	{
-		final byte mask = data.readByte();
-		// byte PriorityType = (byte) (mask & 0x03);
-		final byte stackType = (byte) ( ( mask & 0x0C ) >> 2 );
-		final byte countReqType = (byte) ( ( mask & 0x30 ) >> 4 );
-		final boolean isCraftable = ( mask & 0x40 ) > 0;
-		final boolean hasTagCompound = ( mask & 0x80 ) > 0;
+        final byte len2 = data.readByte();
+        final byte[] name = new byte[len2];
+        data.readBytes(name, 0, len2);
 
-		// don't send this...
-		final NBTTagCompound d = new NBTTagCompound();
+        d.setString("FluidName", new String(name, "UTF-8"));
+        d.setByte("Count", (byte) 0);
 
-		final byte len2 = data.readByte();
-		final byte[] name = new byte[len2];
-		data.readBytes( name, 0, len2 );
+        if (hasTagCompound) {
+            final int len = data.readInt();
 
-		d.setString( "FluidName", new String( name, "UTF-8" ) );
-		d.setByte( "Count", (byte) 0 );
+            final byte[] bd = new byte[len];
+            data.readBytes(bd);
 
-		if( hasTagCompound )
-		{
-			final int len = data.readInt();
+            final DataInputStream di = new DataInputStream(new ByteArrayInputStream(bd));
+            d.setTag("tag", CompressedStreamTools.read(di));
+        }
 
-			final byte[] bd = new byte[len];
-			data.readBytes( bd );
+        // long priority = getPacketValue( PriorityType, data );
+        final long stackSize = getPacketValue(stackType, data);
+        final long countRequestable = getPacketValue(countReqType, data);
 
-			final DataInputStream di = new DataInputStream( new ByteArrayInputStream( bd ) );
-			d.setTag( "tag", CompressedStreamTools.read( di ) );
-		}
+        final FluidStack fluidStack = FluidStack.loadFluidStackFromNBT(d);
+        if (fluidStack == null) {
+            return null;
+        }
 
-		// long priority = getPacketValue( PriorityType, data );
-		final long stackSize = getPacketValue( stackType, data );
-		final long countRequestable = getPacketValue( countReqType, data );
+        final AEFluidStack fluid = AEFluidStack.create(fluidStack);
+        // fluid.priority = (int) priority;
+        fluid.setStackSize(stackSize);
+        fluid.setCountRequestable(countRequestable);
+        fluid.setCraftable(isCraftable);
+        return fluid;
+    }
 
-		final FluidStack fluidStack = FluidStack.loadFluidStackFromNBT( d );
-		if( fluidStack == null )
-		{
-			return null;
-		}
+    @Override
+    public void add(final IAEFluidStack option) {
+        if (option == null) {
+            return;
+        }
 
-		final AEFluidStack fluid = AEFluidStack.create( fluidStack );
-		// fluid.priority = (int) priority;
-		fluid.setStackSize( stackSize );
-		fluid.setCountRequestable( countRequestable );
-		fluid.setCraftable( isCraftable );
-		return fluid;
-	}
+        // if ( priority < ((AEFluidStack) option).priority )
+        // priority = ((AEFluidStack) option).priority;
 
-	@Override
-	public void add( final IAEFluidStack option )
-	{
-		if( option == null )
-		{
-			return;
-		}
+        this.incStackSize(option.getStackSize());
+        this.setCountRequestable(this.getCountRequestable() + option.getCountRequestable());
+        this.setCraftable(this.isCraftable() || option.isCraftable());
+    }
 
-		// if ( priority < ((AEFluidStack) option).priority )
-		// priority = ((AEFluidStack) option).priority;
+    @Override
+    public void writeToNBT(final NBTTagCompound i) {
+        /*
+         * Mojang Fucked this over ; GC Optimization - Ugly Yes, but it saves a lot in the memory department.
+         */
 
-		this.incStackSize( option.getStackSize() );
-		this.setCountRequestable( this.getCountRequestable() + option.getCountRequestable() );
-		this.setCraftable( this.isCraftable() || option.isCraftable() );
-	}
+        /*
+         * NBTBase FluidName = i.getTag( "FluidName" ); NBTBase Count = i.getTag( "Count" ); NBTBase Cnt = i.getTag(
+         * "Cnt" ); NBTBase Req = i.getTag( "Req" ); NBTBase Craft = i.getTag( "Craft" );
+         */
 
-	@Override
-	public void writeToNBT( final NBTTagCompound i )
-	{
-		/*
-		 * Mojang Fucked this over ; GC Optimization - Ugly Yes, but it saves a lot in the memory department.
-		 */
+        /*
+         * if ( FluidName != null && FluidName instanceof NBTTagString ) ((NBTTagString) FluidName).data = (String)
+         * this.fluid.getName(); else
+         */
+        i.setString("FluidName", this.fluid.getName());
 
-		/*
-		 * NBTBase FluidName = i.getTag( "FluidName" ); NBTBase Count = i.getTag( "Count" ); NBTBase Cnt = i.getTag(
-		 * "Cnt" ); NBTBase Req = i.getTag( "Req" ); NBTBase Craft = i.getTag( "Craft" );
-		 */
+        /*
+         * if ( Count != null && Count instanceof NBTTagByte ) ((NBTTagByte) Count).data = (byte) 0; else
+         */
+        i.setByte("Count", (byte) 0);
 
-		/*
-		 * if ( FluidName != null && FluidName instanceof NBTTagString ) ((NBTTagString) FluidName).data = (String)
-		 * this.fluid.getName(); else
-		 */
-		i.setString( "FluidName", this.fluid.getName() );
+        /*
+         * if ( Cnt != null && Cnt instanceof NBTTagLong ) ((NBTTagLong) Cnt).data = this.stackSize; else
+         */
+        i.setLong("Cnt", this.getStackSize());
 
-		/*
-		 * if ( Count != null && Count instanceof NBTTagByte ) ((NBTTagByte) Count).data = (byte) 0; else
-		 */
-		i.setByte( "Count", (byte) 0 );
+        /*
+         * if ( Req != null && Req instanceof NBTTagLong ) ((NBTTagLong) Req).data = this.stackSize; else
+         */
+        i.setLong("Req", this.getCountRequestable());
 
-		/*
-		 * if ( Cnt != null && Cnt instanceof NBTTagLong ) ((NBTTagLong) Cnt).data = this.stackSize; else
-		 */
-		i.setLong( "Cnt", this.getStackSize() );
+        /*
+         * if ( Craft != null && Craft instanceof NBTTagByte ) ((NBTTagByte) Craft).data = (byte) (this.isCraftable() ?
+         * 1 : 0); else
+         */
+        i.setBoolean("Craft", this.isCraftable());
 
-		/*
-		 * if ( Req != null && Req instanceof NBTTagLong ) ((NBTTagLong) Req).data = this.stackSize; else
-		 */
-		i.setLong( "Req", this.getCountRequestable() );
+        if (this.tagCompound != null) {
+            i.setTag("tag", (NBTBase) this.tagCompound);
+        } else {
+            i.removeTag("tag");
+        }
+    }
 
-		/*
-		 * if ( Craft != null && Craft instanceof NBTTagByte ) ((NBTTagByte) Craft).data = (byte) (this.isCraftable() ?
-		 * 1 : 0); else
-		 */
-		i.setBoolean( "Craft", this.isCraftable() );
+    @Override
+    public boolean fuzzyComparison(final Object st, final FuzzyMode mode) {
+        if (st instanceof FluidStack) {
+            return ((FluidStack) st).getFluid() == this.fluid;
+        }
 
-		if( this.tagCompound != null )
-		{
-			i.setTag( "tag", (NBTBase) this.tagCompound );
-		}
-		else
-		{
-			i.removeTag( "tag" );
-		}
-	}
+        if (st instanceof IAEFluidStack) {
+            return ((IAEFluidStack) st).getFluid() == this.fluid;
+        }
 
-	@Override
-	public boolean fuzzyComparison( final Object st, final FuzzyMode mode )
-	{
-		if( st instanceof FluidStack )
-		{
-			return ( (FluidStack) st ).getFluid() == this.fluid;
-		}
+        return false;
+    }
 
-		if( st instanceof IAEFluidStack )
-		{
-			return ( (IAEFluidStack) st ).getFluid() == this.fluid;
-		}
+    @Override
+    public IAEFluidStack copy() {
+        return new AEFluidStack(this);
+    }
 
-		return false;
-	}
+    @Override
+    public IAEFluidStack empty() {
+        final IAEFluidStack dup = this.copy();
+        dup.reset();
+        return dup;
+    }
 
-	@Override
-	public IAEFluidStack copy()
-	{
-		return new AEFluidStack( this );
-	}
+    @Override
+    public IAETagCompound getTagCompound() {
+        return this.tagCompound;
+    }
 
-	@Override
-	public IAEFluidStack empty()
-	{
-		final IAEFluidStack dup = this.copy();
-		dup.reset();
-		return dup;
-	}
+    @Override
+    public boolean isItem() {
+        return false;
+    }
 
-	@Override
-	public IAETagCompound getTagCompound()
-	{
-		return this.tagCompound;
-	}
+    @Override
+    public boolean isFluid() {
+        return true;
+    }
 
-	@Override
-	public boolean isItem()
-	{
-		return false;
-	}
+    @Override
+    public StorageChannel getChannel() {
+        return StorageChannel.FLUIDS;
+    }
 
-	@Override
-	public boolean isFluid()
-	{
-		return true;
-	}
+    @Override
+    public int compareTo(final AEFluidStack b) {
+        final int diff = this.hashCode() - b.hashCode();
+        return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+    }
 
-	@Override
-	public StorageChannel getChannel()
-	{
-		return StorageChannel.FLUIDS;
-	}
+    @Override
+    public int hashCode() {
+        return this.myHash;
+    }
 
-	@Override
-	public int compareTo( final AEFluidStack b )
-	{
-		final int diff = this.hashCode() - b.hashCode();
-		return diff > 0 ? 1 : ( diff < 0 ? -1 : 0 );
-	}
+    @Override
+    public boolean equals(final Object ia) {
+        if (ia instanceof AEFluidStack) {
+            return ((AEFluidStack) ia).fluid == this.fluid && this.tagCompound == ((AEFluidStack) ia).tagCompound;
+        } else if (ia instanceof FluidStack) {
+            final FluidStack is = (FluidStack) ia;
 
-	@Override
-	public int hashCode()
-	{
-		return this.myHash;
-	}
+            if (is.getFluidID() == this.fluid.getID()) {
+                final NBTTagCompound ta = (NBTTagCompound) this.tagCompound;
+                final NBTTagCompound tb = is.tag;
+                if (ta == tb) {
+                    return true;
+                }
 
-	@Override
-	public boolean equals( final Object ia )
-	{
-		if( ia instanceof AEFluidStack )
-		{
-			return ( (AEFluidStack) ia ).fluid == this.fluid && this.tagCompound == ( (AEFluidStack) ia ).tagCompound;
-		}
-		else if( ia instanceof FluidStack )
-		{
-			final FluidStack is = (FluidStack) ia;
+                if ((ta == null && tb == null)
+                        || (ta != null && ta.hasNoTags() && tb == null)
+                        || (tb != null && tb.hasNoTags() && ta == null)
+                        || (ta != null && ta.hasNoTags() && tb != null && tb.hasNoTags())) {
+                    return true;
+                }
 
-			if( is.getFluidID() == this.fluid.getID() )
-			{
-				final NBTTagCompound ta = (NBTTagCompound) this.tagCompound;
-				final NBTTagCompound tb = is.tag;
-				if( ta == tb )
-				{
-					return true;
-				}
+                if ((ta == null && tb != null) || (ta != null && tb == null)) {
+                    return false;
+                }
 
-				if( ( ta == null && tb == null ) || ( ta != null && ta.hasNoTags() && tb == null ) || ( tb != null && tb.hasNoTags() && ta == null ) || ( ta != null && ta.hasNoTags() && tb != null && tb.hasNoTags() ) )
-				{
-					return true;
-				}
+                if (AESharedNBT.isShared(tb)) {
+                    return ta == tb;
+                }
 
-				if( ( ta == null && tb != null ) || ( ta != null && tb == null ) )
-				{
-					return false;
-				}
+                return Platform.NBTEqualityTest(ta, tb);
+            }
+        }
+        return false;
+    }
 
-				if( AESharedNBT.isShared( tb ) )
-				{
-					return ta == tb;
-				}
+    @Override
+    public String toString() {
+        return this.getFluidStack().toString();
+    }
 
-				return Platform.NBTEqualityTest( ta, tb );
-			}
-		}
-		return false;
-	}
+    @Override
+    public boolean hasTagCompound() {
+        return this.tagCompound != null;
+    }
 
-	@Override
-	public String toString()
-	{
-		return this.getFluidStack().toString();
-	}
+    @Override
+    void writeIdentity(final ByteBuf i) throws IOException {
+        final byte[] name = this.fluid.getName().getBytes("UTF-8");
+        i.writeByte((byte) name.length);
+        i.writeBytes(name);
+    }
 
-	@Override
-	public boolean hasTagCompound()
-	{
-		return this.tagCompound != null;
-	}
+    @Override
+    void readNBT(final ByteBuf i) throws IOException {
+        if (this.hasTagCompound()) {
+            final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            final DataOutputStream data = new DataOutputStream(bytes);
 
-	@Override
-	void writeIdentity( final ByteBuf i ) throws IOException
-	{
-		final byte[] name = this.fluid.getName().getBytes( "UTF-8" );
-		i.writeByte( (byte) name.length );
-		i.writeBytes( name );
-	}
+            CompressedStreamTools.write((NBTTagCompound) this.tagCompound, data);
 
-	@Override
-	void readNBT( final ByteBuf i ) throws IOException
-	{
-		if( this.hasTagCompound() )
-		{
-			final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-			final DataOutputStream data = new DataOutputStream( bytes );
+            final byte[] tagBytes = bytes.toByteArray();
+            final int size = tagBytes.length;
 
-			CompressedStreamTools.write( (NBTTagCompound) this.tagCompound, data );
+            i.writeInt(size);
+            i.writeBytes(tagBytes);
+        }
+    }
 
-			final byte[] tagBytes = bytes.toByteArray();
-			final int size = tagBytes.length;
+    @Override
+    public FluidStack getFluidStack() {
+        final FluidStack is = new FluidStack(this.fluid, (int) Math.min(Integer.MAX_VALUE, this.getStackSize()));
+        if (this.tagCompound != null) {
+            is.tag = this.tagCompound.getNBTTagCompoundCopy();
+        }
 
-			i.writeInt( size );
-			i.writeBytes( tagBytes );
-		}
-	}
+        return is;
+    }
 
-	@Override
-	public FluidStack getFluidStack()
-	{
-		final FluidStack is = new FluidStack( this.fluid, (int) Math.min( Integer.MAX_VALUE, this.getStackSize() ) );
-		if( this.tagCompound != null )
-		{
-			is.tag = this.tagCompound.getNBTTagCompoundCopy();
-		}
-
-		return is;
-	}
-
-	@Override
-	public Fluid getFluid()
-	{
-		return this.fluid;
-	}
+    @Override
+    public Fluid getFluid() {
+        return this.fluid;
+    }
 }

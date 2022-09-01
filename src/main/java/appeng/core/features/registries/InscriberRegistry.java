@@ -18,177 +18,151 @@
 
 package appeng.core.features.registries;
 
-
 import appeng.api.features.IInscriberRecipe;
 import appeng.api.features.IInscriberRecipeBuilder;
 import appeng.api.features.IInscriberRegistry;
 import appeng.api.features.InscriberProcessType;
 import appeng.core.features.registries.entries.InscriberRecipe;
-import net.minecraft.item.ItemStack;
-
-import javax.annotation.Nonnull;
 import java.util.*;
-
+import javax.annotation.Nonnull;
+import net.minecraft.item.ItemStack;
 
 /**
  * @author thatsIch
  * @version rv3
  * @since rv2
  */
-public final class InscriberRegistry implements IInscriberRegistry
-{
-	private final Set<IInscriberRecipe> recipes;
-	private final Set<ItemStack> optionals;
-	private final Set<ItemStack> inputs;
+public final class InscriberRegistry implements IInscriberRegistry {
+    private final Set<IInscriberRecipe> recipes;
+    private final Set<ItemStack> optionals;
+    private final Set<ItemStack> inputs;
 
-	public InscriberRegistry()
-	{
-		this.inputs = new HashSet<ItemStack>();
-		this.optionals = new HashSet<ItemStack>();
-		this.recipes = new HashSet<IInscriberRecipe>();
-	}
+    public InscriberRegistry() {
+        this.inputs = new HashSet<ItemStack>();
+        this.optionals = new HashSet<ItemStack>();
+        this.recipes = new HashSet<IInscriberRecipe>();
+    }
 
-	@Nonnull
-	@Override
-	public Collection<IInscriberRecipe> getRecipes()
-	{
-		return Collections.unmodifiableCollection( this.recipes );
-	}
+    @Nonnull
+    @Override
+    public Collection<IInscriberRecipe> getRecipes() {
+        return Collections.unmodifiableCollection(this.recipes);
+    }
 
-	@Nonnull
-	@Override
-	public Set<ItemStack> getOptionals()
-	{
-		return this.optionals;
-	}
+    @Nonnull
+    @Override
+    public Set<ItemStack> getOptionals() {
+        return this.optionals;
+    }
 
-	@Nonnull
-	@Override
-	public Set<ItemStack> getInputs()
-	{
-		return this.inputs;
-	}
+    @Nonnull
+    @Override
+    public Set<ItemStack> getInputs() {
+        return this.inputs;
+    }
 
-	@Nonnull
-	@Override
-	public IInscriberRecipeBuilder builder()
-	{
-		return new Builder();
-	}
+    @Nonnull
+    @Override
+    public IInscriberRecipeBuilder builder() {
+        return new Builder();
+    }
 
-	@Override
-	public void addRecipe( final IInscriberRecipe recipe )
-	{
-		if( recipe == null )
-		{
-			throw new IllegalArgumentException( "Tried to add an invalid (null) inscriber recipe to the registry." );
-		}
+    @Override
+    public void addRecipe(final IInscriberRecipe recipe) {
+        if (recipe == null) {
+            throw new IllegalArgumentException("Tried to add an invalid (null) inscriber recipe to the registry.");
+        }
 
-		this.recipes.add( recipe );
+        this.recipes.add(recipe);
 
-		this.optionals.addAll( recipe.getTopOptional().asSet() );
-		this.optionals.addAll( recipe.getBottomOptional().asSet() );
+        this.optionals.addAll(recipe.getTopOptional().asSet());
+        this.optionals.addAll(recipe.getBottomOptional().asSet());
 
-		this.inputs.addAll( recipe.getInputs() );
-	}
+        this.inputs.addAll(recipe.getInputs());
+    }
 
-	@Override
-	public void removeRecipe( final IInscriberRecipe toBeRemovedRecipe )
-	{
-		for( final Iterator<IInscriberRecipe> iterator = this.recipes.iterator(); iterator.hasNext(); )
-		{
-			final IInscriberRecipe recipe = iterator.next();
-			if( recipe.equals( toBeRemovedRecipe ) )
-			{
-				iterator.remove();
-			}
-		}
-	}
+    @Override
+    public void removeRecipe(final IInscriberRecipe toBeRemovedRecipe) {
+        for (final Iterator<IInscriberRecipe> iterator = this.recipes.iterator(); iterator.hasNext(); ) {
+            final IInscriberRecipe recipe = iterator.next();
+            if (recipe.equals(toBeRemovedRecipe)) {
+                iterator.remove();
+            }
+        }
+    }
 
-	/**
-	 * Internal {@link IInscriberRecipeBuilder} implementation.
-	 * Needs to be adapted to represent a correct {@link IInscriberRecipe}
-	 */
-	private static final class Builder implements IInscriberRecipeBuilder
-	{
-		private List<ItemStack> inputs;
-		private ItemStack output;
-		private ItemStack topOptional;
-		private ItemStack bottomOptional;
-		private InscriberProcessType type;
+    /**
+     * Internal {@link IInscriberRecipeBuilder} implementation.
+     * Needs to be adapted to represent a correct {@link IInscriberRecipe}
+     */
+    private static final class Builder implements IInscriberRecipeBuilder {
+        private List<ItemStack> inputs;
+        private ItemStack output;
+        private ItemStack topOptional;
+        private ItemStack bottomOptional;
+        private InscriberProcessType type;
 
-		@Nonnull
-		@Override
-		public Builder withInputs( @Nonnull final Collection<ItemStack> inputs )
-		{
-			this.inputs = new ArrayList<ItemStack>( inputs.size() );
-			this.inputs.addAll( inputs );
+        @Nonnull
+        @Override
+        public Builder withInputs(@Nonnull final Collection<ItemStack> inputs) {
+            this.inputs = new ArrayList<ItemStack>(inputs.size());
+            this.inputs.addAll(inputs);
 
-			return this;
-		}
+            return this;
+        }
 
-		@Nonnull
-		@Override
-		public Builder withOutput( @Nonnull final ItemStack output )
-		{
-			this.output = output;
+        @Nonnull
+        @Override
+        public Builder withOutput(@Nonnull final ItemStack output) {
+            this.output = output;
 
-			return this;
-		}
+            return this;
+        }
 
-		@Nonnull
-		@Override
-		public Builder withTopOptional( @Nonnull final ItemStack topOptional )
-		{
-			this.topOptional = topOptional;
+        @Nonnull
+        @Override
+        public Builder withTopOptional(@Nonnull final ItemStack topOptional) {
+            this.topOptional = topOptional;
 
-			return this;
-		}
+            return this;
+        }
 
-		@Nonnull
-		@Override
-		public Builder withBottomOptional( @Nonnull final ItemStack bottomOptional )
-		{
-			this.bottomOptional = bottomOptional;
+        @Nonnull
+        @Override
+        public Builder withBottomOptional(@Nonnull final ItemStack bottomOptional) {
+            this.bottomOptional = bottomOptional;
 
-			return this;
-		}
+            return this;
+        }
 
-		@Nonnull
-		@Override
-		public Builder withProcessType( @Nonnull final InscriberProcessType type )
-		{
-			this.type = type;
+        @Nonnull
+        @Override
+        public Builder withProcessType(@Nonnull final InscriberProcessType type) {
+            this.type = type;
 
-			return this;
-		}
+            return this;
+        }
 
-		@Nonnull
-		@Override
-		public IInscriberRecipe build()
-		{
-			if( this.inputs == null )
-			{
-				throw new IllegalStateException( "Input must be defined." );
-			}
-			if( this.inputs.isEmpty() )
-			{
-				throw new IllegalStateException( "Input must have a size." );
-			}
-			if( this.output == null )
-			{
-				throw new IllegalStateException( "Output must be defined." );
-			}
-			if( this.topOptional == null && this.bottomOptional == null )
-			{
-				throw new IllegalStateException( "One optional must be defined." );
-			}
-			if( this.type == null )
-			{
-				throw new IllegalStateException( "Process type must be defined." );
-			}
+        @Nonnull
+        @Override
+        public IInscriberRecipe build() {
+            if (this.inputs == null) {
+                throw new IllegalStateException("Input must be defined.");
+            }
+            if (this.inputs.isEmpty()) {
+                throw new IllegalStateException("Input must have a size.");
+            }
+            if (this.output == null) {
+                throw new IllegalStateException("Output must be defined.");
+            }
+            if (this.topOptional == null && this.bottomOptional == null) {
+                throw new IllegalStateException("One optional must be defined.");
+            }
+            if (this.type == null) {
+                throw new IllegalStateException("Process type must be defined.");
+            }
 
-			return new InscriberRecipe( this.inputs, this.output, this.topOptional, this.bottomOptional, this.type );
-		}
-	}
+            return new InscriberRecipe(this.inputs, this.output, this.topOptional, this.bottomOptional, this.type);
+        }
+    }
 }

@@ -18,128 +18,118 @@
 
 package appeng.core.features.registries.entries;
 
-
 import appeng.api.features.IGrinderEntry;
 import net.minecraft.item.ItemStack;
 
+public class AppEngGrinderRecipe implements IGrinderEntry {
 
-public class AppEngGrinderRecipe implements IGrinderEntry
-{
+    private ItemStack in;
+    private ItemStack out;
 
-	private ItemStack in;
-	private ItemStack out;
+    private float optionalChance;
+    private ItemStack optionalOutput;
 
-	private float optionalChance;
-	private ItemStack optionalOutput;
+    private float optionalChance2;
+    private ItemStack optionalOutput2;
 
-	private float optionalChance2;
-	private ItemStack optionalOutput2;
+    private int energy;
 
-	private int energy;
+    public AppEngGrinderRecipe(final ItemStack a, final ItemStack b, final int cost) {
+        this.in = a;
+        this.out = b;
+        this.energy = cost;
+    }
 
-	public AppEngGrinderRecipe( final ItemStack a, final ItemStack b, final int cost )
-	{
-		this.in = a;
-		this.out = b;
-		this.energy = cost;
-	}
+    public AppEngGrinderRecipe(
+            final ItemStack a, final ItemStack b, final ItemStack c, final float chance, final int cost) {
+        this.in = a;
+        this.out = b;
 
-	public AppEngGrinderRecipe( final ItemStack a, final ItemStack b, final ItemStack c, final float chance, final int cost )
-	{
-		this.in = a;
-		this.out = b;
+        this.optionalOutput = c;
+        this.optionalChance = chance;
 
-		this.optionalOutput = c;
-		this.optionalChance = chance;
+        this.energy = cost;
+    }
 
-		this.energy = cost;
-	}
+    public AppEngGrinderRecipe(
+            final ItemStack a,
+            final ItemStack b,
+            final ItemStack c,
+            final ItemStack d,
+            final float chance,
+            final float chance2,
+            final int cost) {
+        this.in = a;
+        this.out = b;
 
-	public AppEngGrinderRecipe( final ItemStack a, final ItemStack b, final ItemStack c, final ItemStack d, final float chance, final float chance2, final int cost )
-	{
-		this.in = a;
-		this.out = b;
+        this.optionalOutput = c;
+        this.optionalChance = chance;
 
-		this.optionalOutput = c;
-		this.optionalChance = chance;
+        this.optionalOutput2 = d;
+        this.optionalChance2 = chance2;
 
-		this.optionalOutput2 = d;
-		this.optionalChance2 = chance2;
+        this.energy = cost;
+    }
 
-		this.energy = cost;
-	}
+    @Override
+    public ItemStack getInput() {
+        return this.in;
+    }
 
-	@Override
-	public ItemStack getInput()
-	{
-		return this.in;
-	}
+    @Override
+    public void setInput(final ItemStack i) {
+        this.in = i.copy();
+    }
 
-	@Override
-	public void setInput( final ItemStack i )
-	{
-		this.in = i.copy();
-	}
+    @Override
+    public ItemStack getOutput() {
+        return this.out;
+    }
 
-	@Override
-	public ItemStack getOutput()
-	{
-		return this.out;
-	}
+    @Override
+    public void setOutput(final ItemStack o) {
+        this.out = o.copy();
+    }
 
-	@Override
-	public void setOutput( final ItemStack o )
-	{
-		this.out = o.copy();
-	}
+    @Override
+    public ItemStack getOptionalOutput() {
+        return this.optionalOutput;
+    }
 
-	@Override
-	public ItemStack getOptionalOutput()
-	{
-		return this.optionalOutput;
-	}
+    @Override
+    public ItemStack getSecondOptionalOutput() {
+        return this.optionalOutput2;
+    }
 
-	@Override
-	public ItemStack getSecondOptionalOutput()
-	{
-		return this.optionalOutput2;
-	}
+    @Override
+    public void setOptionalOutput(final ItemStack output, final float chance) {
+        this.optionalOutput = output.copy();
+        this.optionalChance = chance;
+    }
 
-	@Override
-	public void setOptionalOutput( final ItemStack output, final float chance )
-	{
-		this.optionalOutput = output.copy();
-		this.optionalChance = chance;
-	}
+    @Override
+    public float getOptionalChance() {
+        return this.optionalChance;
+    }
 
-	@Override
-	public float getOptionalChance()
-	{
-		return this.optionalChance;
-	}
+    @Override
+    public void setSecondOptionalOutput(final ItemStack output, final float chance) {
+        this.optionalChance2 = chance;
+        this.optionalOutput2 = output.copy();
+    }
 
-	@Override
-	public void setSecondOptionalOutput( final ItemStack output, final float chance )
-	{
-		this.optionalChance2 = chance;
-		this.optionalOutput2 = output.copy();
-	}
+    @Override
+    public float getSecondOptionalChance() {
+        return this.optionalChance2;
+    }
 
-	@Override
-	public float getSecondOptionalChance()
-	{
-		return this.optionalChance2;
-	}
+    @Override
+    public int getEnergyCost() {
+        return this.energy;
+    }
 
-	@Override
-	public int getEnergyCost()
-	{
-		return this.energy;
-	}
-
-	@Override
-	public void setEnergyCost( final int c )
-	{
-		this.energy = c;
-	}
+    @Override
+    public void setEnergyCost(final int c) {
+        this.energy = c;
+    }
 }

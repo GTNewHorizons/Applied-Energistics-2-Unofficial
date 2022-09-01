@@ -18,49 +18,38 @@
 
 package appeng.util.item;
 
-
 import appeng.api.storage.data.IAEItemStack;
+import java.util.*;
 import net.minecraft.item.ItemStack;
 
-import java.util.*;
+public class OreReference {
 
+    private final List<String> otherOptions = new LinkedList<String>();
+    private final Set<Integer> ores = new HashSet<Integer>();
+    private List<IAEItemStack> aeOtherOptions = null;
 
-public class OreReference
-{
+    Collection<String> getEquivalents() {
+        return this.otherOptions;
+    }
 
-	private final List<String> otherOptions = new LinkedList<String>();
-	private final Set<Integer> ores = new HashSet<Integer>();
-	private List<IAEItemStack> aeOtherOptions = null;
+    List<IAEItemStack> getAEEquivalents() {
+        if (this.aeOtherOptions == null) {
+            this.aeOtherOptions = new ArrayList<IAEItemStack>(this.otherOptions.size());
 
-	Collection<String> getEquivalents()
-	{
-		return this.otherOptions;
-	}
+            // SUMMON AE STACKS!
+            for (final String oreName : this.otherOptions) {
+                for (final ItemStack is : OreHelper.INSTANCE.getCachedOres(oreName)) {
+                    if (is.getItem() != null) {
+                        this.aeOtherOptions.add(AEItemStack.create(is));
+                    }
+                }
+            }
+        }
 
-	List<IAEItemStack> getAEEquivalents()
-	{
-		if( this.aeOtherOptions == null )
-		{
-			this.aeOtherOptions = new ArrayList<IAEItemStack>( this.otherOptions.size() );
+        return this.aeOtherOptions;
+    }
 
-			// SUMMON AE STACKS!
-			for( final String oreName : this.otherOptions )
-			{
-				for( final ItemStack is : OreHelper.INSTANCE.getCachedOres( oreName ) )
-				{
-					if( is.getItem() != null )
-					{
-						this.aeOtherOptions.add( AEItemStack.create( is ) );
-					}
-				}
-			}
-		}
-
-		return this.aeOtherOptions;
-	}
-
-	Set<Integer> getOres()
-	{
-		return this.ores;
-	}
+    Set<Integer> getOres() {
+        return this.ores;
+    }
 }

@@ -18,129 +18,100 @@
 
 package appeng.debug;
 
-
 import appeng.tile.AEBaseTile;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+public class TileItemGen extends AEBaseTile implements IInventory {
 
+    private static final Queue<ItemStack> POSSIBLE_ITEMS = new LinkedList<ItemStack>();
 
-public class TileItemGen extends AEBaseTile implements IInventory
-{
+    public TileItemGen() {
+        if (POSSIBLE_ITEMS.isEmpty()) {
+            for (final Object obj : Item.itemRegistry) {
+                final Item mi = (Item) obj;
+                if (mi != null) {
+                    if (mi.isDamageable()) {
+                        for (int dmg = 0; dmg < mi.getMaxDamage(); dmg++) {
+                            POSSIBLE_ITEMS.add(new ItemStack(mi, 1, dmg));
+                        }
+                    } else {
+                        final List<ItemStack> list = new ArrayList<ItemStack>();
+                        mi.getSubItems(mi, mi.getCreativeTab(), list);
+                        POSSIBLE_ITEMS.addAll(list);
+                    }
+                }
+            }
+        }
+    }
 
-	private static final Queue<ItemStack> POSSIBLE_ITEMS = new LinkedList<ItemStack>();
+    @Override
+    public int getSizeInventory() {
+        return 1;
+    }
 
-	public TileItemGen()
-	{
-		if( POSSIBLE_ITEMS.isEmpty() )
-		{
-			for( final Object obj : Item.itemRegistry )
-			{
-				final Item mi = (Item) obj;
-				if( mi != null )
-				{
-					if( mi.isDamageable() )
-					{
-						for( int dmg = 0; dmg < mi.getMaxDamage(); dmg++ )
-						{
-							POSSIBLE_ITEMS.add( new ItemStack( mi, 1, dmg ) );
-						}
-					}
-					else
-					{
-						final List<ItemStack> list = new ArrayList<ItemStack>();
-						mi.getSubItems( mi, mi.getCreativeTab(), list );
-						POSSIBLE_ITEMS.addAll( list );
-					}
-				}
-			}
-		}
-	}
+    @Override
+    public ItemStack getStackInSlot(final int i) {
+        return this.getRandomItem();
+    }
 
-	@Override
-	public int getSizeInventory()
-	{
-		return 1;
-	}
+    private ItemStack getRandomItem() {
+        return POSSIBLE_ITEMS.peek();
+    }
 
-	@Override
-	public ItemStack getStackInSlot( final int i )
-	{
-		return this.getRandomItem();
-	}
+    @Override
+    public ItemStack decrStackSize(final int i, final int j) {
+        final ItemStack a = POSSIBLE_ITEMS.poll();
+        final ItemStack out = a.copy();
+        POSSIBLE_ITEMS.add(a);
+        return out;
+    }
 
-	private ItemStack getRandomItem()
-	{
-		return POSSIBLE_ITEMS.peek();
-	}
+    @Override
+    public ItemStack getStackInSlotOnClosing(final int i) {
+        return null;
+    }
 
-	@Override
-	public ItemStack decrStackSize( final int i, final int j )
-	{
-		final ItemStack a = POSSIBLE_ITEMS.poll();
-		final ItemStack out = a.copy();
-		POSSIBLE_ITEMS.add( a );
-		return out;
-	}
+    @Override
+    public void setInventorySlotContents(final int i, final ItemStack itemstack) {
+        final ItemStack a = POSSIBLE_ITEMS.poll();
+        POSSIBLE_ITEMS.add(a);
+    }
 
-	@Override
-	public ItemStack getStackInSlotOnClosing( final int i )
-	{
-		return null;
-	}
+    @Override
+    public String getInventoryName() {
+        return null;
+    }
 
-	@Override
-	public void setInventorySlotContents( final int i, final ItemStack itemstack )
-	{
-		final ItemStack a = POSSIBLE_ITEMS.poll();
-		POSSIBLE_ITEMS.add( a );
-	}
+    @Override
+    public boolean hasCustomInventoryName() {
+        return false;
+    }
 
-	@Override
-	public String getInventoryName()
-	{
-		return null;
-	}
+    @Override
+    public int getInventoryStackLimit() {
+        return 1;
+    }
 
-	@Override
-	public boolean hasCustomInventoryName()
-	{
-		return false;
-	}
+    @Override
+    public boolean isUseableByPlayer(final EntityPlayer entityplayer) {
+        return false;
+    }
 
-	@Override
-	public int getInventoryStackLimit()
-	{
-		return 1;
-	}
+    @Override
+    public void openInventory() {}
 
-	@Override
-	public boolean isUseableByPlayer( final EntityPlayer entityplayer )
-	{
-		return false;
-	}
+    @Override
+    public void closeInventory() {}
 
-	@Override
-	public void openInventory()
-	{
-
-	}
-
-	@Override
-	public void closeInventory()
-	{
-
-	}
-
-	@Override
-	public boolean isItemValidForSlot( final int i, final ItemStack itemstack )
-	{
-		return false;
-	}
+    @Override
+    public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
+        return false;
+    }
 }

@@ -15,7 +15,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.fluids.IFluidHandler;
 
-@Integration.Interface(iname = IntegrationType.GT, iface = "gregtech.api.interfaces.tileentity.IEnergyConnected" )
+@Integration.Interface(iname = IntegrationType.GT, iface = "gregtech.api.interfaces.tileentity.IEnergyConnected")
 public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyConnected {
     @Override
     public long injectEnergyUnits(byte side, long voltage, long amperage) {
@@ -23,15 +23,12 @@ public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyCo
         double overflow = this.funnelPowerIntoStorage(e, Actionable.SIMULATE);
         // Energy grid may keep some "extra energy" that it is happy to get rid of
         // so overflow may actually be greater than input
-        if (overflow >= e)
-            return 0;
-        long used = amperage - (int)Math.ceil(PowerUnits.AE.convertTo(PowerUnits.EU, overflow) / voltage);
+        if (overflow >= e) return 0;
+        long used = amperage - (int) Math.ceil(PowerUnits.AE.convertTo(PowerUnits.EU, overflow) / voltage);
         if (used > 0) {
             e = PowerUnits.EU.convertTo(PowerUnits.AE, voltage * used);
             PowerUnits.AE.convertTo(PowerUnits.EU, this.funnelPowerIntoStorage(e, Actionable.MODULATE));
-        }
-        else if (used < 0)
-            used = 0;
+        } else if (used < 0) used = 0;
         return used;
     }
 
@@ -67,7 +64,7 @@ public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyCo
 
     @Override
     public short getYCoord() {
-        return (short)yCoord;
+        return (short) yCoord;
     }
 
     @Override
@@ -325,9 +322,7 @@ public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyCo
     }
 
     @Override
-    public void sendBlockEvent(byte b, byte b1) {
-
-    }
+    public void sendBlockEvent(byte b, byte b1) {}
 
     @Override
     public long getTimer() {
@@ -335,9 +330,7 @@ public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyCo
     }
 
     @Override
-    public void setLightValue(byte b) {
-
-    }
+    public void setLightValue(byte b) {}
 
     @Override
     public boolean isInvalidTileEntity() {

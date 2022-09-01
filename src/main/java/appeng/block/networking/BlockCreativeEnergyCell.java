@@ -18,22 +18,17 @@
 
 package appeng.block.networking;
 
-
 import appeng.block.AEBaseTileBlock;
 import appeng.core.features.AEFeature;
 import appeng.helpers.AEGlassMaterial;
 import appeng.tile.networking.TileCreativeEnergyCell;
-
 import java.util.EnumSet;
 
+public class BlockCreativeEnergyCell extends AEBaseTileBlock {
 
-public class BlockCreativeEnergyCell extends AEBaseTileBlock
-{
-
-	public BlockCreativeEnergyCell()
-	{
-		super( AEGlassMaterial.INSTANCE );
-		this.setTileEntity( TileCreativeEnergyCell.class );
-		this.setFeature( EnumSet.of( AEFeature.Creative ) );
-	}
+    public BlockCreativeEnergyCell() {
+        super(AEGlassMaterial.INSTANCE);
+        this.setTileEntity(TileCreativeEnergyCell.class);
+        this.setFeature(EnumSet.of(AEFeature.Creative));
+    }
 }

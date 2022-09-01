@@ -1,4 +1,4 @@
-///*
+/// *
 // * This file is part of Applied Energistics 2.
 // * Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved.
 // *
@@ -16,19 +16,19 @@
 // * along with Applied Energistics 2.  If not, see <http://www.gnu.org/licenses/lgpl>.
 // */
 //
-//package appeng.tile.powersink;
+// package appeng.tile.powersink;
 //
 //
-//import appeng.api.config.PowerUnits;
-//import appeng.integration.IntegrationType;
-//import appeng.transformer.annotations.Integration.Interface;
-//import mekanism.api.energy.IStrictEnergyAcceptor;
-//import net.minecraftforge.common.util.ForgeDirection;
+// import appeng.api.config.PowerUnits;
+// import appeng.integration.IntegrationType;
+// import appeng.transformer.annotations.Integration.Interface;
+// import mekanism.api.energy.IStrictEnergyAcceptor;
+// import net.minecraftforge.common.util.ForgeDirection;
 //
 //
-//@Interface( iname = IntegrationType.Mekanism, iface = "mekanism.api.energy.IStrictEnergyAcceptor" )
-//public abstract class MekJoules extends RedstoneFlux implements IStrictEnergyAcceptor
-//{
+// @Interface( iname = IntegrationType.Mekanism, iface = "mekanism.api.energy.IStrictEnergyAcceptor" )
+// public abstract class MekJoules extends RedstoneFlux implements IStrictEnergyAcceptor
+// {
 //
 //	@Override
 //	public double getEnergy()
@@ -67,4 +67,4 @@
 //	{
 //		return this.getPowerSides().contains( side );
 //	}
-//}
+// }

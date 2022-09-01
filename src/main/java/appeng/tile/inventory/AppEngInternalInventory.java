@@ -18,292 +18,230 @@
 
 package appeng.tile.inventory;
 
-
 import appeng.api.storage.IMEInventory;
 import appeng.core.AELog;
 import appeng.me.storage.MEIInventoryWrapper;
 import appeng.util.Platform;
 import appeng.util.iterators.InvIterator;
+import java.util.Iterator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.util.Iterator;
+public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> {
 
+    private final int size;
+    protected final ItemStack[] inv;
+    private boolean enableClientEvents = false;
+    private IAEAppEngInventory te;
+    private int maxStack;
 
-public class AppEngInternalInventory implements IInventory, Iterable<ItemStack>
-{
+    public AppEngInternalInventory(final IAEAppEngInventory inventory, final int size) {
+        this(inventory, size, 64);
+    }
 
-	private final int size;
-	protected final ItemStack[] inv;
-	private boolean enableClientEvents = false;
-	private IAEAppEngInventory te;
-	private int maxStack;
+    public AppEngInternalInventory(final IAEAppEngInventory inventory, final int size, final int maxstack) {
+        this.setTileEntity(inventory);
+        this.size = size;
+        this.maxStack = maxstack;
+        this.inv = new ItemStack[size];
+    }
 
-	public AppEngInternalInventory( final IAEAppEngInventory inventory, final int size )
-	{
-		this(inventory, size, 64);
-	}
+    public IMEInventory getMEInventory() {
+        return new MEIInventoryWrapper(this, null);
+    }
 
-	public AppEngInternalInventory( final IAEAppEngInventory inventory, final int size, final int maxstack )
-	{
-		this.setTileEntity( inventory );
-		this.size = size;
-		this.maxStack = maxstack;
-		this.inv = new ItemStack[size];
-	}
+    public boolean isEmpty() {
+        for (int x = 0; x < this.size; x++) {
+            if (this.getStackInSlot(x) != null) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-	public IMEInventory getMEInventory()
-	{
-		return new MEIInventoryWrapper( this, null );
-	}
+    @Override
+    public int getSizeInventory() {
+        return this.size;
+    }
 
-	public boolean isEmpty()
-	{
-		for( int x = 0; x < this.size; x++ )
-		{
-			if( this.getStackInSlot( x ) != null )
-			{
-				return false;
-			}
-		}
-		return true;
-	}
+    @Override
+    public ItemStack getStackInSlot(final int var1) {
+        return this.inv[var1];
+    }
 
-	@Override
-	public int getSizeInventory()
-	{
-		return this.size;
-	}
+    @Override
+    public ItemStack decrStackSize(final int slot, final int qty) {
+        if (this.inv[slot] != null) {
+            final ItemStack split = this.getStackInSlot(slot);
+            ItemStack ns = null;
 
-	@Override
-	public ItemStack getStackInSlot( final int var1 )
-	{
-		return this.inv[var1];
-	}
+            if (qty >= split.stackSize) {
+                ns = this.inv[slot];
+                this.inv[slot] = null;
+            } else {
+                ns = split.splitStack(qty);
+            }
 
-	@Override
-	public ItemStack decrStackSize( final int slot, final int qty )
-	{
-		if( this.inv[slot] != null )
-		{
-			final ItemStack split = this.getStackInSlot( slot );
-			ItemStack ns = null;
+            if (this.getTileEntity() != null && this.eventsEnabled()) {
+                this.getTileEntity().onChangeInventory(this, slot, InvOperation.decreaseStackSize, ns, null);
+            }
 
-			if( qty >= split.stackSize )
-			{
-				ns = this.inv[slot];
-				this.inv[slot] = null;
-			}
-			else
-			{
-				ns = split.splitStack( qty );
-			}
+            this.markDirty();
+            return ns;
+        }
 
-			if( this.getTileEntity() != null && this.eventsEnabled() )
-			{
-				this.getTileEntity().onChangeInventory( this, slot, InvOperation.decreaseStackSize, ns, null );
-			}
+        return null;
+    }
 
-			this.markDirty();
-			return ns;
-		}
+    protected boolean eventsEnabled() {
+        return Platform.isServer() || this.isEnableClientEvents();
+    }
 
-		return null;
-	}
+    @Override
+    public ItemStack getStackInSlotOnClosing(final int var1) {
+        return null;
+    }
 
-	protected boolean eventsEnabled()
-	{
-		return Platform.isServer() || this.isEnableClientEvents();
-	}
+    @Override
+    public void setInventorySlotContents(final int slot, final ItemStack newItemStack) {
+        final ItemStack oldStack = this.inv[slot];
+        this.inv[slot] = newItemStack;
 
-	@Override
-	public ItemStack getStackInSlotOnClosing( final int var1 )
-	{
-		return null;
-	}
+        if (this.getTileEntity() != null && this.eventsEnabled()) {
+            ItemStack removed = oldStack;
+            ItemStack added = newItemStack;
 
-	@Override
-	public void setInventorySlotContents( final int slot, final ItemStack newItemStack )
-	{
-		final ItemStack oldStack = this.inv[slot];
-		this.inv[slot] = newItemStack;
+            if (oldStack != null && newItemStack != null && Platform.isSameItem(oldStack, newItemStack)) {
+                if (oldStack.stackSize > newItemStack.stackSize) {
+                    removed = removed.copy();
+                    removed.stackSize -= newItemStack.stackSize;
+                    added = null;
+                } else if (oldStack.stackSize < newItemStack.stackSize) {
+                    added = added.copy();
+                    added.stackSize -= oldStack.stackSize;
+                    removed = null;
+                } else {
+                    removed = added = null;
+                }
+            }
 
-		if( this.getTileEntity() != null && this.eventsEnabled() )
-		{
-			ItemStack removed = oldStack;
-			ItemStack added = newItemStack;
+            this.getTileEntity().onChangeInventory(this, slot, InvOperation.setInventorySlotContents, removed, added);
+        }
 
-			if( oldStack != null && newItemStack != null && Platform.isSameItem( oldStack, newItemStack ) )
-			{
-				if( oldStack.stackSize > newItemStack.stackSize )
-				{
-					removed = removed.copy();
-					removed.stackSize -= newItemStack.stackSize;
-					added = null;
-				}
-				else if( oldStack.stackSize < newItemStack.stackSize )
-				{
-					added = added.copy();
-					added.stackSize -= oldStack.stackSize;
-					removed = null;
-				}
-				else
-				{
-					removed = added = null;
-				}
-			}
+        this.markDirty();
+    }
 
-			this.getTileEntity().onChangeInventory( this, slot, InvOperation.setInventorySlotContents, removed, added );
-		}
+    @Override
+    public String getInventoryName() {
+        return "appeng-internal";
+    }
 
-		this.markDirty();
-	}
+    @Override
+    public boolean hasCustomInventoryName() {
+        return false;
+    }
 
-	@Override
-	public String getInventoryName()
-	{
-		return "appeng-internal";
-	}
+    @Override
+    public int getInventoryStackLimit() {
+        return this.maxStack > 64 ? 64 : this.maxStack;
+    }
 
-	@Override
-	public boolean hasCustomInventoryName()
-	{
-		return false;
-	}
+    @Override
+    public void markDirty() {
+        if (this.getTileEntity() != null && this.eventsEnabled()) {
+            this.getTileEntity().onChangeInventory(this, -1, InvOperation.markDirty, null, null);
+        }
+    }
 
-	@Override
-	public int getInventoryStackLimit()
-	{
-		return this.maxStack > 64 ? 64 : this.maxStack;
-	}
+    @Override
+    public boolean isUseableByPlayer(final EntityPlayer var1) {
+        return true;
+    }
 
-	@Override
-	public void markDirty()
-	{
-		if( this.getTileEntity() != null && this.eventsEnabled() )
-		{
-			this.getTileEntity().onChangeInventory( this, -1, InvOperation.markDirty, null, null );
-		}
-	}
+    @Override
+    public void openInventory() {}
 
-	@Override
-	public boolean isUseableByPlayer( final EntityPlayer var1 )
-	{
-		return true;
-	}
+    @Override
+    public void closeInventory() {}
 
-	@Override
-	public void openInventory()
-	{
-	}
+    @Override
+    public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
+        return true;
+    }
 
-	@Override
-	public void closeInventory()
-	{
-	}
+    public void setMaxStackSize(final int s) {
+        this.maxStack = s;
+    }
 
-	@Override
-	public boolean isItemValidForSlot( final int i, final ItemStack itemstack )
-	{
-		return true;
-	}
+    // for guis...
+    public void markDirty(final int slotIndex) {
+        if (this.getTileEntity() != null && this.eventsEnabled()) {
+            this.getTileEntity().onChangeInventory(this, slotIndex, InvOperation.markDirty, null, null);
+        }
+    }
 
-	public void setMaxStackSize( final int s )
-	{
-		this.maxStack = s;
-	}
+    public void writeToNBT(final NBTTagCompound data, final String name) {
+        final NBTTagCompound c = new NBTTagCompound();
+        this.writeToNBT(c);
+        data.setTag(name, c);
+    }
 
-	// for guis...
-	public void markDirty( final int slotIndex )
-	{
-		if( this.getTileEntity() != null && this.eventsEnabled() )
-		{
-			this.getTileEntity().onChangeInventory( this, slotIndex, InvOperation.markDirty, null, null );
-		}
-	}
+    protected void writeToNBT(final NBTTagCompound target) {
+        for (int x = 0; x < this.size; x++) {
+            try {
+                final NBTTagCompound c = new NBTTagCompound();
 
-	public void writeToNBT( final NBTTagCompound data, final String name )
-	{
-		final NBTTagCompound c = new NBTTagCompound();
-		this.writeToNBT( c );
-		data.setTag( name, c );
-	}
+                if (this.inv[x] != null) {
+                    this.inv[x].writeToNBT(c);
+                }
 
-	protected void writeToNBT( final NBTTagCompound target )
-	{
-		for( int x = 0; x < this.size; x++ )
-		{
-			try
-			{
-				final NBTTagCompound c = new NBTTagCompound();
+                target.setTag("#" + x, c);
+            } catch (final Exception ignored) {
+            }
+        }
+    }
 
-				if( this.inv[x] != null )
-				{
-					this.inv[x].writeToNBT( c );
-				}
+    public void readFromNBT(final NBTTagCompound data, final String name) {
+        final NBTTagCompound c = data.getCompoundTag(name);
+        if (c != null) {
+            this.readFromNBT(c);
+        }
+    }
 
-				target.setTag( "#" + x, c );
-			}
-			catch( final Exception ignored )
-			{
-			}
-		}
-	}
+    public void readFromNBT(final NBTTagCompound target) {
+        for (int x = 0; x < this.size; x++) {
+            try {
+                final NBTTagCompound c = target.getCompoundTag("#" + x);
 
-	public void readFromNBT( final NBTTagCompound data, final String name )
-	{
-		final NBTTagCompound c = data.getCompoundTag( name );
-		if( c != null )
-		{
-			this.readFromNBT( c );
-		}
-	}
+                if (c != null) {
+                    this.inv[x] = ItemStack.loadItemStackFromNBT(c);
+                }
+            } catch (final Exception e) {
+                AELog.debug(e);
+            }
+        }
+    }
 
-	public void readFromNBT( final NBTTagCompound target )
-	{
-		for( int x = 0; x < this.size; x++ )
-		{
-			try
-			{
-				final NBTTagCompound c = target.getCompoundTag( "#" + x );
+    @Override
+    public Iterator<ItemStack> iterator() {
+        return new InvIterator(this);
+    }
 
-				if( c != null )
-				{
-					this.inv[x] = ItemStack.loadItemStackFromNBT( c );
-				}
-			}
-			catch( final Exception e )
-			{
-				AELog.debug( e );
-			}
-		}
-	}
+    private boolean isEnableClientEvents() {
+        return this.enableClientEvents;
+    }
 
-	@Override
-	public Iterator<ItemStack> iterator()
-	{
-		return new InvIterator( this );
-	}
+    public void setEnableClientEvents(final boolean enableClientEvents) {
+        this.enableClientEvents = enableClientEvents;
+    }
 
-	private boolean isEnableClientEvents()
-	{
-		return this.enableClientEvents;
-	}
+    private IAEAppEngInventory getTileEntity() {
+        return this.te;
+    }
 
-	public void setEnableClientEvents( final boolean enableClientEvents )
-	{
-		this.enableClientEvents = enableClientEvents;
-	}
-
-	private IAEAppEngInventory getTileEntity()
-	{
-		return this.te;
-	}
-
-	public void setTileEntity( final IAEAppEngInventory te )
-	{
-		this.te = te;
-	}
+    public void setTileEntity(final IAEAppEngInventory te) {
+        this.te = te;
+    }
 }

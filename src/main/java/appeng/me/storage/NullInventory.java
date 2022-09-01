@@ -18,7 +18,6 @@
 
 package appeng.me.storage;
 
-
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
@@ -27,67 +26,55 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 
+public class NullInventory<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
 
-public class NullInventory<T extends IAEStack<T>> implements IMEInventoryHandler<T>
-{
+    @Override
+    public T injectItems(final T input, final Actionable mode, final BaseActionSource src) {
+        return input;
+    }
 
-	@Override
-	public T injectItems( final T input, final Actionable mode, final BaseActionSource src )
-	{
-		return input;
-	}
+    @Override
+    public T extractItems(final T request, final Actionable mode, final BaseActionSource src) {
+        return null;
+    }
 
-	@Override
-	public T extractItems( final T request, final Actionable mode, final BaseActionSource src )
-	{
-		return null;
-	}
+    @Override
+    public IItemList<T> getAvailableItems(final IItemList out) {
+        return out;
+    }
 
-	@Override
-	public IItemList<T> getAvailableItems( final IItemList out )
-	{
-		return out;
-	}
+    @Override
+    public StorageChannel getChannel() {
+        return StorageChannel.ITEMS;
+    }
 
-	@Override
-	public StorageChannel getChannel()
-	{
-		return StorageChannel.ITEMS;
-	}
+    @Override
+    public AccessRestriction getAccess() {
+        return AccessRestriction.READ;
+    }
 
-	@Override
-	public AccessRestriction getAccess()
-	{
-		return AccessRestriction.READ;
-	}
+    @Override
+    public boolean isPrioritized(final T input) {
+        return false;
+    }
 
-	@Override
-	public boolean isPrioritized( final T input )
-	{
-		return false;
-	}
+    @Override
+    public boolean canAccept(final T input) {
+        return false;
+    }
 
-	@Override
-	public boolean canAccept( final T input )
-	{
-		return false;
-	}
+    @Override
+    public int getPriority() {
+        return 0;
+    }
 
-	@Override
-	public int getPriority()
-	{
-		return 0;
-	}
+    @Override
+    public int getSlot() {
+        return 0;
+    }
 
-	@Override
-	public int getSlot()
-	{
-		return 0;
-	}
-
-	@Override
-	public boolean validForPass( final int i )
-	{
-		return i == 2;
-	}
+    @Override
+    public boolean validForPass(final int i) {
+        return i == 2;
+    }
 }

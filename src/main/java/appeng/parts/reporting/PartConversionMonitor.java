@@ -18,7 +18,6 @@
 
 package appeng.parts.reporting;
 
-
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.IMEMonitor;
@@ -29,157 +28,139 @@ import appeng.me.GridAccessException;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
+import java.util.Collections;
+import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.Collections;
-import java.util.List;
+public class PartConversionMonitor extends AbstractPartMonitor {
+    private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartConversionMonitor_Bright;
+    private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartConversionMonitor_Dark;
+    private static final CableBusTextures FRONT_DARK_ICON_LOCKED = CableBusTextures.PartConversionMonitor_Dark_Locked;
+    private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartConversionMonitor_Colored;
 
+    @Reflected
+    public PartConversionMonitor(final ItemStack is) {
+        super(is);
+    }
 
-public class PartConversionMonitor extends AbstractPartMonitor
-{
-	private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartConversionMonitor_Bright;
-	private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartConversionMonitor_Dark;
-	private static final CableBusTextures FRONT_DARK_ICON_LOCKED = CableBusTextures.PartConversionMonitor_Dark_Locked;
-	private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartConversionMonitor_Colored;
+    @Override
+    public boolean onPartShiftActivate(final EntityPlayer player, final Vec3 pos) {
+        if (Platform.isClient()) {
+            return true;
+        }
 
-	@Reflected
-	public PartConversionMonitor( final ItemStack is )
-	{
-		super( is );
-	}
+        if (!this.getProxy().isActive()) {
+            return false;
+        }
 
-	@Override
-	public boolean onPartShiftActivate( final EntityPlayer player, final Vec3 pos )
-	{
-		if( Platform.isClient() )
-		{
-			return true;
-		}
+        if (!Platform.hasPermissions(this.getLocation(), player)) {
+            return false;
+        }
 
-		if( !this.getProxy().isActive() )
-		{
-			return false;
-		}
+        boolean ModeB = false;
 
-		if( !Platform.hasPermissions( this.getLocation(), player ) )
-		{
-			return false;
-		}
+        ItemStack item = player.getCurrentEquippedItem();
+        if (item == null && this.getDisplayed() != null) {
+            ModeB = true;
+            item = ((IAEItemStack) this.getDisplayed()).getItemStack();
+        }
 
-		boolean ModeB = false;
+        if (item != null) {
+            try {
+                if (!this.getProxy().isActive()) {
+                    return false;
+                }
 
-		ItemStack item = player.getCurrentEquippedItem();
-		if( item == null && this.getDisplayed() != null )
-		{
-			ModeB = true;
-			item = ( (IAEItemStack) this.getDisplayed() ).getItemStack();
-		}
+                final IEnergySource energy = this.getProxy().getEnergy();
+                final IMEMonitor<IAEItemStack> cell =
+                        this.getProxy().getStorage().getItemInventory();
+                final IAEItemStack input = AEItemStack.create(item);
 
-		if( item != null )
-		{
-			try
-			{
-				if( !this.getProxy().isActive() )
-				{
-					return false;
-				}
+                if (ModeB) {
+                    for (int x = 0; x < player.inventory.getSizeInventory(); x++) {
+                        final ItemStack targetStack = player.inventory.getStackInSlot(x);
+                        if (input.equals(targetStack)) {
+                            final IAEItemStack insertItem = input.copy();
+                            insertItem.setStackSize(targetStack.stackSize);
+                            final IAEItemStack failedToInsert =
+                                    Platform.poweredInsert(energy, cell, insertItem, new PlayerSource(player, this));
+                            player.inventory.setInventorySlotContents(
+                                    x, failedToInsert == null ? null : failedToInsert.getItemStack());
+                        }
+                    }
+                } else {
+                    final IAEItemStack failedToInsert =
+                            Platform.poweredInsert(energy, cell, input, new PlayerSource(player, this));
+                    player.inventory.setInventorySlotContents(
+                            player.inventory.currentItem,
+                            failedToInsert == null ? null : failedToInsert.getItemStack());
+                }
+            } catch (final GridAccessException e) {
+                // :P
+            }
+        }
+        return true;
+    }
 
-				final IEnergySource energy = this.getProxy().getEnergy();
-				final IMEMonitor<IAEItemStack> cell = this.getProxy().getStorage().getItemInventory();
-				final IAEItemStack input = AEItemStack.create( item );
+    @Override
+    protected void extractItem(final EntityPlayer player) {
+        final IAEItemStack input = (IAEItemStack) this.getDisplayed();
+        if (input != null) {
+            try {
+                if (!this.getProxy().isActive()) {
+                    return;
+                }
 
-				if( ModeB )
-				{
-					for( int x = 0; x < player.inventory.getSizeInventory(); x++ )
-					{
-						final ItemStack targetStack = player.inventory.getStackInSlot( x );
-						if( input.equals( targetStack ) )
-						{
-							final IAEItemStack insertItem = input.copy();
-							insertItem.setStackSize( targetStack.stackSize );
-							final IAEItemStack failedToInsert = Platform.poweredInsert( energy, cell, insertItem, new PlayerSource( player, this ) );
-							player.inventory.setInventorySlotContents( x, failedToInsert == null ? null : failedToInsert.getItemStack() );
-						}
-					}
-				}
-				else
-				{
-					final IAEItemStack failedToInsert = Platform.poweredInsert( energy, cell, input, new PlayerSource( player, this ) );
-					player.inventory.setInventorySlotContents( player.inventory.currentItem, failedToInsert == null ? null : failedToInsert.getItemStack() );
-				}
-			}
-			catch( final GridAccessException e )
-			{
-				// :P
-			}
-		}
-		return true;
-	}
+                final IEnergySource energy = this.getProxy().getEnergy();
+                final IMEMonitor<IAEItemStack> cell =
+                        this.getProxy().getStorage().getItemInventory();
 
-	@Override
-	protected void extractItem( final EntityPlayer player )
-	{
-		final IAEItemStack input = (IAEItemStack) this.getDisplayed();
-		if( input != null )
-		{
-			try
-			{
-				if( !this.getProxy().isActive() )
-				{
-					return;
-				}
+                final ItemStack is = input.getItemStack();
+                input.setStackSize(is.getMaxStackSize());
 
-				final IEnergySource energy = this.getProxy().getEnergy();
-				final IMEMonitor<IAEItemStack> cell = this.getProxy().getStorage().getItemInventory();
+                final IAEItemStack retrieved =
+                        Platform.poweredExtraction(energy, cell, input, new PlayerSource(player, this));
+                if (retrieved != null) {
+                    ItemStack newItems = retrieved.getItemStack();
+                    final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
+                    newItems = adaptor.addItems(newItems);
+                    if (newItems != null) {
+                        final TileEntity te = this.getTile();
+                        final List<ItemStack> list = Collections.singletonList(newItems);
+                        Platform.spawnDrops(
+                                player.worldObj,
+                                te.xCoord + this.getSide().offsetX,
+                                te.yCoord + this.getSide().offsetY,
+                                te.zCoord + this.getSide().offsetZ,
+                                list);
+                    }
 
-				final ItemStack is = input.getItemStack();
-				input.setStackSize( is.getMaxStackSize() );
+                    if (player.openContainer != null) {
+                        player.openContainer.detectAndSendChanges();
+                    }
+                }
+            } catch (final GridAccessException e) {
+                // :P
+            }
+        }
+    }
 
-				final IAEItemStack retrieved = Platform.poweredExtraction( energy, cell, input, new PlayerSource( player, this ) );
-				if( retrieved != null )
-				{
-					ItemStack newItems = retrieved.getItemStack();
-					final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor( player, ForgeDirection.UNKNOWN );
-					newItems = adaptor.addItems( newItems );
-					if( newItems != null )
-					{
-						final TileEntity te = this.getTile();
-						final List<ItemStack> list = Collections.singletonList( newItems );
-						Platform.spawnDrops( player.worldObj, te.xCoord + this.getSide().offsetX, te.yCoord + this.getSide().offsetY, te.zCoord + this.getSide().offsetZ, list );
-					}
+    @Override
+    public CableBusTextures getFrontBright() {
+        return FRONT_BRIGHT_ICON;
+    }
 
-					if( player.openContainer != null )
-					{
-						player.openContainer.detectAndSendChanges();
-					}
-				}
-			}
-			catch( final GridAccessException e )
-			{
-				// :P
-			}
-		}
-	}
+    @Override
+    public CableBusTextures getFrontColored() {
+        return FRONT_COLORED_ICON;
+    }
 
-	@Override
-	public CableBusTextures getFrontBright()
-	{
-		return FRONT_BRIGHT_ICON;
-	}
-
-	@Override
-	public CableBusTextures getFrontColored()
-	{
-		return FRONT_COLORED_ICON;
-	}
-
-	@Override
-	public CableBusTextures getFrontDark()
-	{
-		return this.isLocked() ? FRONT_DARK_ICON_LOCKED : FRONT_DARK_ICON;
-	}
+    @Override
+    public CableBusTextures getFrontDark() {
+        return this.isLocked() ? FRONT_DARK_ICON_LOCKED : FRONT_DARK_ICON;
+    }
 }

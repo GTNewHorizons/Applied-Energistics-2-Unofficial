@@ -18,60 +18,49 @@
 
 package appeng.util.inv;
 
-
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public class WrapperMCISidedInventory extends WrapperInventoryRange implements IInventoryWrapper {
 
-public class WrapperMCISidedInventory extends WrapperInventoryRange implements IInventoryWrapper
-{
+    private final ISidedInventory side;
+    private final ForgeDirection dir;
 
-	private final ISidedInventory side;
-	private final ForgeDirection dir;
+    public WrapperMCISidedInventory(final ISidedInventory a, final ForgeDirection d) {
+        super(a, a.getAccessibleSlotsFromSide(d.ordinal()), false);
+        this.side = a;
+        this.dir = d;
+    }
 
-	public WrapperMCISidedInventory( final ISidedInventory a, final ForgeDirection d )
-	{
-		super( a, a.getAccessibleSlotsFromSide( d.ordinal() ), false );
-		this.side = a;
-		this.dir = d;
-	}
+    @Override
+    public ItemStack decrStackSize(final int var1, final int var2) {
+        if (this.canRemoveItemFromSlot(var1, this.getStackInSlot(var1))) {
+            return super.decrStackSize(var1, var2);
+        }
+        return null;
+    }
 
-	@Override
-	public ItemStack decrStackSize( final int var1, final int var2 )
-	{
-		if( this.canRemoveItemFromSlot( var1, this.getStackInSlot( var1 ) ) )
-		{
-			return super.decrStackSize( var1, var2 );
-		}
-		return null;
-	}
+    @Override
+    public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
 
-	@Override
-	public boolean isItemValidForSlot( final int i, final ItemStack itemstack )
-	{
+        if (this.isIgnoreValidItems()) {
+            return true;
+        }
 
-		if( this.isIgnoreValidItems() )
-		{
-			return true;
-		}
+        if (this.side.isItemValidForSlot(this.getSlots()[i], itemstack)) {
+            return this.side.canInsertItem(this.getSlots()[i], itemstack, this.dir.ordinal());
+        }
 
-		if( this.side.isItemValidForSlot( this.getSlots()[i], itemstack ) )
-		{
-			return this.side.canInsertItem( this.getSlots()[i], itemstack, this.dir.ordinal() );
-		}
+        return false;
+    }
 
-		return false;
-	}
+    @Override
+    public boolean canRemoveItemFromSlot(final int i, final ItemStack is) {
+        if (is == null) {
+            return false;
+        }
 
-	@Override
-	public boolean canRemoveItemFromSlot( final int i, final ItemStack is )
-	{
-		if( is == null )
-		{
-			return false;
-		}
-
-		return this.side.canExtractItem( this.getSlots()[i], is, this.dir.ordinal() );
-	}
+        return this.side.canExtractItem(this.getSlots()[i], is, this.dir.ordinal());
+    }
 }

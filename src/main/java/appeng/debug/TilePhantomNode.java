@@ -18,47 +18,38 @@
 
 package appeng.debug;
 
-
 import appeng.api.networking.IGridNode;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.tile.grid.AENetworkTile;
+import java.util.EnumSet;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
+public class TilePhantomNode extends AENetworkTile {
 
+    private AENetworkProxy proxy = null;
+    private boolean crashMode = false;
 
-public class TilePhantomNode extends AENetworkTile
-{
+    @Override
+    public IGridNode getGridNode(final ForgeDirection dir) {
+        if (!this.crashMode) {
+            return super.getGridNode(dir);
+        }
 
-	private AENetworkProxy proxy = null;
-	private boolean crashMode = false;
+        return this.proxy.getNode();
+    }
 
-	@Override
-	public IGridNode getGridNode( final ForgeDirection dir )
-	{
-		if( !this.crashMode )
-		{
-			return super.getGridNode( dir );
-		}
+    @Override
+    public void onReady() {
+        super.onReady();
+        this.proxy = this.createProxy();
+        this.proxy.onReady();
+        this.crashMode = true;
+    }
 
-		return this.proxy.getNode();
-	}
-
-	@Override
-	public void onReady()
-	{
-		super.onReady();
-		this.proxy = this.createProxy();
-		this.proxy.onReady();
-		this.crashMode = true;
-	}
-
-	void triggerCrashMode()
-	{
-		if( this.proxy != null )
-		{
-			this.crashMode = true;
-			this.proxy.setValidSides( EnumSet.allOf( ForgeDirection.class ) );
-		}
-	}
+    void triggerCrashMode() {
+        if (this.proxy != null) {
+            this.crashMode = true;
+            this.proxy.setValidSides(EnumSet.allOf(ForgeDirection.class));
+        }
+    }
 }

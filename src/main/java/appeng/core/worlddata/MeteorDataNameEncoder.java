@@ -18,11 +18,8 @@
 
 package appeng.core.worlddata;
 
-
 import com.google.common.base.Preconditions;
-
 import javax.annotation.Nonnull;
-
 
 /**
  * encodes data into a common name
@@ -31,51 +28,61 @@ import javax.annotation.Nonnull;
  * @version rv3 - 05.06.2015
  * @since rv3 05.06.2015
  */
-public class MeteorDataNameEncoder
-{
-	private static final char DATA_SEPARATOR = '_';
-	private static final char BASE_EXTENSION_SEPARATOR = '.';
-	private static final String FILE_EXTENSION = "dat";
+public class MeteorDataNameEncoder {
+    private static final char DATA_SEPARATOR = '_';
+    private static final char BASE_EXTENSION_SEPARATOR = '.';
+    private static final String FILE_EXTENSION = "dat";
 
-	private final char dataSeparator;
-	@Nonnull
-	private final String fileExtension;
-	private final char baseExtSeparator;
-	private final int bitScale;
+    private final char dataSeparator;
 
-	/**
-	 * @param bitScale how often the coordinates will be shifted right (will scale coordinates down)
-	 */
-	public MeteorDataNameEncoder( final int bitScale )
-	{
-		this( DATA_SEPARATOR, BASE_EXTENSION_SEPARATOR, FILE_EXTENSION, bitScale );
-	}
+    @Nonnull
+    private final String fileExtension;
 
-	private MeteorDataNameEncoder( final char dataSeparator, final char baseExtSeparator, @Nonnull final String fileExtension, final int bitScale )
-	{
-		Preconditions.checkNotNull( fileExtension );
-		Preconditions.checkArgument( !fileExtension.isEmpty() );
-		Preconditions.checkArgument( bitScale >= 0 );
+    private final char baseExtSeparator;
+    private final int bitScale;
 
-		this.dataSeparator = dataSeparator;
-		this.baseExtSeparator = baseExtSeparator;
-		this.fileExtension = fileExtension;
-		this.bitScale = bitScale;
-	}
+    /**
+     * @param bitScale how often the coordinates will be shifted right (will scale coordinates down)
+     */
+    public MeteorDataNameEncoder(final int bitScale) {
+        this(DATA_SEPARATOR, BASE_EXTENSION_SEPARATOR, FILE_EXTENSION, bitScale);
+    }
 
-	/**
-	 * @param dimension ID of the processed dimension. Can be any integer
-	 * @param chunkX    X coordinate of the chunk. Can be any integer
-	 * @param chunkZ    Z coordinate of the chunk. Can be any integer
-	 * @return encoded file name suggestion in form of <tt>dim_x_y.dat</tt> where <tt>x</tt> and <tt>y</tt> will be
-	 * shifted to stay conform with the vanilla chunk system
-	 * @since rv3 05.06.2015
-	 */
-	public String encode( final int dimension, final int chunkX, final int chunkZ )
-	{
-		final int shiftedX = chunkX >> this.bitScale;
-		final int shiftedZ = chunkZ >> this.bitScale;
+    private MeteorDataNameEncoder(
+            final char dataSeparator,
+            final char baseExtSeparator,
+            @Nonnull final String fileExtension,
+            final int bitScale) {
+        Preconditions.checkNotNull(fileExtension);
+        Preconditions.checkArgument(!fileExtension.isEmpty());
+        Preconditions.checkArgument(bitScale >= 0);
 
-		return String.format( "%d%c%d%c%d%c%s", dimension, this.dataSeparator, shiftedX, this.dataSeparator, shiftedZ, this.baseExtSeparator, this.fileExtension );
-	}
+        this.dataSeparator = dataSeparator;
+        this.baseExtSeparator = baseExtSeparator;
+        this.fileExtension = fileExtension;
+        this.bitScale = bitScale;
+    }
+
+    /**
+     * @param dimension ID of the processed dimension. Can be any integer
+     * @param chunkX    X coordinate of the chunk. Can be any integer
+     * @param chunkZ    Z coordinate of the chunk. Can be any integer
+     * @return encoded file name suggestion in form of <tt>dim_x_y.dat</tt> where <tt>x</tt> and <tt>y</tt> will be
+     * shifted to stay conform with the vanilla chunk system
+     * @since rv3 05.06.2015
+     */
+    public String encode(final int dimension, final int chunkX, final int chunkZ) {
+        final int shiftedX = chunkX >> this.bitScale;
+        final int shiftedZ = chunkZ >> this.bitScale;
+
+        return String.format(
+                "%d%c%d%c%d%c%s",
+                dimension,
+                this.dataSeparator,
+                shiftedX,
+                this.dataSeparator,
+                shiftedZ,
+                this.baseExtSeparator,
+                this.fileExtension);
+    }
 }

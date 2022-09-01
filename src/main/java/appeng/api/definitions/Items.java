@@ -23,88 +23,85 @@
 
 package appeng.api.definitions;
 
-
 import appeng.api.util.AEColoredItemDefinition;
 import appeng.api.util.AEItemDefinition;
-
 
 /**
  * @deprecated use {@link IItems}
  */
 @Deprecated
-public class Items
-{
-	public AEItemDefinition itemCertusQuartzAxe;
+public class Items {
+    public AEItemDefinition itemCertusQuartzAxe;
 
-	public AEItemDefinition itemCertusQuartzHoe;
+    public AEItemDefinition itemCertusQuartzHoe;
 
-	public AEItemDefinition itemCertusQuartzShovel;
+    public AEItemDefinition itemCertusQuartzShovel;
 
-	public AEItemDefinition itemCertusQuartzPick;
+    public AEItemDefinition itemCertusQuartzPick;
 
-	public AEItemDefinition itemCertusQuartzSword;
+    public AEItemDefinition itemCertusQuartzSword;
 
-	public AEItemDefinition itemCertusQuartzWrench;
+    public AEItemDefinition itemCertusQuartzWrench;
 
-	public AEItemDefinition itemCertusQuartzKnife;
+    public AEItemDefinition itemCertusQuartzKnife;
 
-	public AEItemDefinition itemNetherQuartzAxe;
+    public AEItemDefinition itemNetherQuartzAxe;
 
-	public AEItemDefinition itemNetherQuartzHoe;
+    public AEItemDefinition itemNetherQuartzHoe;
 
-	public AEItemDefinition itemNetherQuartzShovel;
+    public AEItemDefinition itemNetherQuartzShovel;
 
-	public AEItemDefinition itemNetherQuartzPick;
+    public AEItemDefinition itemNetherQuartzPick;
 
-	public AEItemDefinition itemNetherQuartzSword;
+    public AEItemDefinition itemNetherQuartzSword;
 
-	public AEItemDefinition itemNetherQuartzWrench;
+    public AEItemDefinition itemNetherQuartzWrench;
 
-	public AEItemDefinition itemNetherQuartzKnife;
+    public AEItemDefinition itemNetherQuartzKnife;
 
-	public AEItemDefinition itemEntropyManipulator;
+    public AEItemDefinition itemEntropyManipulator;
 
-	public AEItemDefinition itemWirelessTerminal;
+    public AEItemDefinition itemWirelessTerminal;
 
-	public AEItemDefinition itemBiometricCard;
+    public AEItemDefinition itemBiometricCard;
 
-	public AEItemDefinition itemChargedStaff;
+    public AEItemDefinition itemChargedStaff;
 
-	public AEItemDefinition itemMassCannon;
+    public AEItemDefinition itemMassCannon;
 
-	public AEItemDefinition itemMemoryCard;
+    public AEItemDefinition itemMemoryCard;
 
-	public AEItemDefinition itemNetworkTool;
+    public AEItemDefinition itemNetworkTool;
 
-	public AEItemDefinition itemPortableCell;
+    public AEItemDefinition itemPortableCell;
 
-	public AEItemDefinition itemCellCreative;
+    public AEItemDefinition itemCellCreative;
 
-	public AEItemDefinition itemViewCell;
+    public AEItemDefinition itemViewCell;
 
-	public AEItemDefinition itemCell1k;
+    public AEItemDefinition itemCell1k;
 
-	public AEItemDefinition itemCell4k;
+    public AEItemDefinition itemCell4k;
 
-	public AEItemDefinition itemCell16k;
+    public AEItemDefinition itemCell16k;
 
-	public AEItemDefinition itemCell64k;
+    public AEItemDefinition itemCell64k;
 
-	public AEItemDefinition itemSpatialCell2;
+    public AEItemDefinition itemSpatialCell2;
 
-	public AEItemDefinition itemSpatialCell16;
+    public AEItemDefinition itemSpatialCell16;
 
-	public AEItemDefinition itemSpatialCell128;
+    public AEItemDefinition itemSpatialCell128;
 
-	public AEItemDefinition itemFacade;
+    public AEItemDefinition itemFacade;
 
-	public AEItemDefinition itemCrystalSeed;
+    public AEItemDefinition itemCrystalSeed;
 
-	public AEItemDefinition itemEncodedPattern;
+    public AEItemDefinition itemEncodedPattern;
 
-	public AEItemDefinition itemColorApplicator;
+    public AEItemDefinition itemColorApplicator;
 
-	public AEColoredItemDefinition itemPaintBall;
+    public AEColoredItemDefinition itemPaintBall;
 
-	public AEColoredItemDefinition itemLumenPaintBall;
+    public AEColoredItemDefinition itemLumenPaintBall;
 }

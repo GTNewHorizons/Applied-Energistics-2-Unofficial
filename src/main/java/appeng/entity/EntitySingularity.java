@@ -18,13 +18,14 @@
 
 package appeng.entity;
 
-
 import appeng.api.AEApi;
 import appeng.api.definitions.IMaterials;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.helpers.Reflected;
 import appeng.util.Platform;
+import java.util.Date;
+import java.util.List;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
@@ -34,119 +35,96 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.Date;
-import java.util.List;
+public final class EntitySingularity extends AEBaseEntityItem {
 
+    private static int randTickSeed = 0;
 
-public final class EntitySingularity extends AEBaseEntityItem
-{
+    @Reflected
+    public EntitySingularity(final World w) {
+        super(w);
+    }
 
-	private static int randTickSeed = 0;
+    public EntitySingularity(final World w, final double x, final double y, final double z, final ItemStack is) {
+        super(w, x, y, z, is);
+    }
 
-	@Reflected
-	public EntitySingularity( final World w )
-	{
-		super( w );
-	}
+    @Override
+    public boolean attackEntityFrom(final DamageSource src, final float dmg) {
+        if (src.isExplosion()) {
+            this.doExplosion();
+            return false;
+        }
 
-	public EntitySingularity( final World w, final double x, final double y, final double z, final ItemStack is )
-	{
-		super( w, x, y, z, is );
-	}
+        return super.attackEntityFrom(src, dmg);
+    }
 
-	@Override
-	public boolean attackEntityFrom( final DamageSource src, final float dmg )
-	{
-		if( src.isExplosion() )
-		{
-			this.doExplosion();
-			return false;
-		}
+    private void doExplosion() {
+        if (Platform.isClient()) {
+            return;
+        }
 
-		return super.attackEntityFrom( src, dmg );
-	}
+        if (!AEConfig.instance.isFeatureEnabled(AEFeature.InWorldSingularity)) {
+            return;
+        }
 
-	private void doExplosion()
-	{
-		if( Platform.isClient() )
-		{
-			return;
-		}
+        final ItemStack item = this.getEntityItem();
 
-		if( !AEConfig.instance.isFeatureEnabled( AEFeature.InWorldSingularity ) )
-		{
-			return;
-		}
+        final IMaterials materials = AEApi.instance().definitions().materials();
 
-		final ItemStack item = this.getEntityItem();
+        if (materials.singularity().isSameAs(item)) {
+            final AxisAlignedBB region = AxisAlignedBB.getBoundingBox(
+                    this.posX - 4, this.posY - 4, this.posZ - 4, this.posX + 4, this.posY + 4, this.posZ + 4);
+            final List<Entity> l = this.getCheckedEntitiesWithinAABBExcludingEntity(region);
 
-		final IMaterials materials = AEApi.instance().definitions().materials();
+            for (final Entity e : l) {
+                if (e instanceof EntityItem) {
+                    final ItemStack other = ((EntityItem) e).getEntityItem();
+                    if (other != null) {
+                        boolean matches = false;
+                        for (final ItemStack is : OreDictionary.getOres("dustEnder")) {
+                            if (OreDictionary.itemMatches(other, is, false)) {
+                                matches = true;
+                                break;
+                            }
+                        }
 
-		if( materials.singularity().isSameAs( item ) )
-		{
-			final AxisAlignedBB region = AxisAlignedBB.getBoundingBox( this.posX - 4, this.posY - 4, this.posZ - 4, this.posX + 4, this.posY + 4, this.posZ + 4 );
-			final List<Entity> l = this.getCheckedEntitiesWithinAABBExcludingEntity( region );
+                        // check... other name.
+                        if (!matches) {
+                            for (final ItemStack is : OreDictionary.getOres("dustEnderPearl")) {
+                                if (OreDictionary.itemMatches(other, is, false)) {
+                                    matches = true;
+                                    break;
+                                }
+                            }
+                        }
 
-			for( final Entity e : l )
-			{
-				if( e instanceof EntityItem )
-				{
-					final ItemStack other = ( (EntityItem) e ).getEntityItem();
-					if( other != null )
-					{
-						boolean matches = false;
-						for( final ItemStack is : OreDictionary.getOres( "dustEnder" ) )
-						{
-							if( OreDictionary.itemMatches( other, is, false ) )
-							{
-								matches = true;
-								break;
-							}
-						}
+                        if (matches) {
+                            while (item.stackSize > 0 && other.stackSize > 0) {
+                                other.stackSize--;
+                                if (other.stackSize == 0) {
+                                    e.setDead();
+                                }
 
-						// check... other name.
-						if( !matches )
-						{
-							for( final ItemStack is : OreDictionary.getOres( "dustEnderPearl" ) )
-							{
-								if( OreDictionary.itemMatches( other, is, false ) )
-								{
-									matches = true;
-									break;
-								}
-							}
-						}
+                                for (final ItemStack singularityStack :
+                                        materials.qESingularity().maybeStack(2).asSet()) {
+                                    final NBTTagCompound cmp = Platform.openNbtData(singularityStack);
+                                    cmp.setLong("freq", (new Date()).getTime() * 100 + (randTickSeed) % 100);
+                                    randTickSeed++;
+                                    item.stackSize--;
 
-						if( matches )
-						{
-							while( item.stackSize > 0 && other.stackSize > 0 )
-							{
-								other.stackSize--;
-								if( other.stackSize == 0 )
-								{
-									e.setDead();
-								}
+                                    final EntitySingularity entity = new EntitySingularity(
+                                            this.worldObj, this.posX, this.posY, this.posZ, singularityStack);
+                                    this.worldObj.spawnEntityInWorld(entity);
+                                }
+                            }
 
-								for( final ItemStack singularityStack : materials.qESingularity().maybeStack( 2 ).asSet() )
-								{
-									final NBTTagCompound cmp = Platform.openNbtData( singularityStack );
-									cmp.setLong( "freq", ( new Date() ).getTime() * 100 + ( randTickSeed ) % 100 );
-									randTickSeed++;
-									item.stackSize--;
-
-									final EntitySingularity entity = new EntitySingularity( this.worldObj, this.posX, this.posY, this.posZ, singularityStack );
-									this.worldObj.spawnEntityInWorld( entity );
-								}
-							}
-
-							if( item.stackSize <= 0 )
-							{
-								this.setDead();
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+                            if (item.stackSize <= 0) {
+                                this.setDead();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

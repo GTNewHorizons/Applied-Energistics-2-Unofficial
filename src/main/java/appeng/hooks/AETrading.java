@@ -18,107 +18,103 @@
 
 package appeng.hooks;
 
-
 import appeng.api.AEApi;
 import appeng.api.definitions.IItemDefinition;
 import appeng.api.definitions.IMaterials;
 import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.VillagerRegistry.IVillageTradeHandler;
+import java.util.Random;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.village.MerchantRecipe;
 import net.minecraft.village.MerchantRecipeList;
 
-import java.util.Random;
+public class AETrading implements IVillageTradeHandler {
 
+    @Override
+    public void manipulateTradesForVillager(
+            final EntityVillager villager, final MerchantRecipeList recipeList, final Random random) {
+        final IMaterials materials = AEApi.instance().definitions().materials();
 
-public class AETrading implements IVillageTradeHandler
-{
+        this.addMerchant(recipeList, materials.silicon(), 1, random, 2);
+        this.addMerchant(recipeList, materials.certusQuartzCrystal(), 2, random, 4);
+        this.addMerchant(recipeList, materials.certusQuartzDust(), 1, random, 3);
 
-	@Override
-	public void manipulateTradesForVillager( final EntityVillager villager, final MerchantRecipeList recipeList, final Random random )
-	{
-		final IMaterials materials = AEApi.instance().definitions().materials();
+        this.addTrade(recipeList, materials.certusQuartzDust(), materials.certusQuartzCrystal(), random, 2);
+    }
 
-		this.addMerchant( recipeList, materials.silicon(), 1, random, 2 );
-		this.addMerchant( recipeList, materials.certusQuartzCrystal(), 2, random, 4 );
-		this.addMerchant( recipeList, materials.certusQuartzDust(), 1, random, 3 );
+    private void addMerchant(
+            final MerchantRecipeList list,
+            final IItemDefinition item,
+            final int emera,
+            final Random rand,
+            final int greed) {
+        for (final ItemStack itemStack : item.maybeStack(1).asSet()) {
+            // Sell
+            final ItemStack from = itemStack.copy();
+            final ItemStack to = new ItemStack(Items.emerald);
 
-		this.addTrade( recipeList, materials.certusQuartzDust(), materials.certusQuartzCrystal(), random, 2 );
-	}
+            final int multiplier = (Math.abs(rand.nextInt()) % 6);
+            final int emeraldCost = emera + (Math.abs(rand.nextInt()) % greed) - multiplier;
+            final int mood = rand.nextInt() % 2;
 
-	private void addMerchant( final MerchantRecipeList list, final IItemDefinition item, final int emera, final Random rand, final int greed )
-	{
-		for( final ItemStack itemStack : item.maybeStack( 1 ).asSet() )
-		{
-			// Sell
-			final ItemStack from = itemStack.copy();
-			final ItemStack to = new ItemStack( Items.emerald );
+            from.stackSize = multiplier + mood;
+            to.stackSize = multiplier * emeraldCost - mood;
 
-			final int multiplier = ( Math.abs( rand.nextInt() ) % 6 );
-			final int emeraldCost = emera + ( Math.abs( rand.nextInt() ) % greed ) - multiplier;
-			final int mood = rand.nextInt() % 2;
+            if (to.stackSize < 0) {
+                from.stackSize -= to.stackSize;
+                to.stackSize -= to.stackSize;
+            }
 
-			from.stackSize = multiplier + mood;
-			to.stackSize = multiplier * emeraldCost - mood;
+            this.addToList(list, from, to);
 
-			if( to.stackSize < 0 )
-			{
-				from.stackSize -= to.stackSize;
-				to.stackSize -= to.stackSize;
-			}
+            // Buy
+            final ItemStack reverseTo = from.copy();
+            final ItemStack reverseFrom = to.copy();
 
-			this.addToList( list, from, to );
+            reverseFrom.stackSize *= rand.nextFloat() * 3.0f + 1.0f;
 
-			// Buy
-			final ItemStack reverseTo = from.copy();
-			final ItemStack reverseFrom = to.copy();
+            this.addToList(list, reverseFrom, reverseTo);
+        }
+    }
 
-			reverseFrom.stackSize *= rand.nextFloat() * 3.0f + 1.0f;
+    private void addTrade(
+            final MerchantRecipeList list,
+            final IItemDefinition inputDefinition,
+            final IItemDefinition outputDefinition,
+            final Random rand,
+            final int conversionVariance) {
+        final Optional<ItemStack> maybeInputStack = inputDefinition.maybeStack(1);
+        final Optional<ItemStack> maybeOutputStack = outputDefinition.maybeStack(1);
 
-			this.addToList( list, reverseFrom, reverseTo );
-		}
-	}
+        if (maybeInputStack.isPresent() && maybeOutputStack.isPresent()) {
+            // Sell
+            final ItemStack inputStack = maybeInputStack.get().copy();
+            final ItemStack outputStack = maybeOutputStack.get().copy();
 
-	private void addTrade( final MerchantRecipeList list, final IItemDefinition inputDefinition, final IItemDefinition outputDefinition, final Random rand, final int conversionVariance )
-	{
-		final Optional<ItemStack> maybeInputStack = inputDefinition.maybeStack( 1 );
-		final Optional<ItemStack> maybeOutputStack = outputDefinition.maybeStack( 1 );
+            inputStack.stackSize = 1 + (Math.abs(rand.nextInt()) % (1 + conversionVariance));
+            outputStack.stackSize = 1;
 
-		if( maybeInputStack.isPresent() && maybeOutputStack.isPresent() )
-		{
-			// Sell
-			final ItemStack inputStack = maybeInputStack.get().copy();
-			final ItemStack outputStack = maybeOutputStack.get().copy();
+            this.addToList(list, inputStack, outputStack);
+        }
+    }
 
-			inputStack.stackSize = 1 + ( Math.abs( rand.nextInt() ) % ( 1 + conversionVariance ) );
-			outputStack.stackSize = 1;
+    private void addToList(final MerchantRecipeList l, final ItemStack a, final ItemStack b) {
+        if (a.stackSize < 1) {
+            a.stackSize = 1;
+        }
+        if (b.stackSize < 1) {
+            b.stackSize = 1;
+        }
 
-			this.addToList( list, inputStack, outputStack );
-		}
-	}
+        if (a.stackSize > a.getMaxStackSize()) {
+            a.stackSize = a.getMaxStackSize();
+        }
+        if (b.stackSize > b.getMaxStackSize()) {
+            b.stackSize = b.getMaxStackSize();
+        }
 
-	private void addToList( final MerchantRecipeList l, final ItemStack a, final ItemStack b )
-	{
-		if( a.stackSize < 1 )
-		{
-			a.stackSize = 1;
-		}
-		if( b.stackSize < 1 )
-		{
-			b.stackSize = 1;
-		}
-
-		if( a.stackSize > a.getMaxStackSize() )
-		{
-			a.stackSize = a.getMaxStackSize();
-		}
-		if( b.stackSize > b.getMaxStackSize() )
-		{
-			b.stackSize = b.getMaxStackSize();
-		}
-
-		l.add( new MerchantRecipe( a, b ) );
-	}
+        l.add(new MerchantRecipe(a, b));
+    }
 }

@@ -18,18 +18,13 @@
 
 package appeng.block.stair;
 
-
 import appeng.block.AEBaseStairBlock;
 import appeng.core.features.AEFeature;
+import java.util.EnumSet;
 import net.minecraft.block.Block;
 
-import java.util.EnumSet;
-
-
-public class SkyStoneBlockStairBlock extends AEBaseStairBlock
-{
-	public SkyStoneBlockStairBlock( final Block block, final Integer meta )
-	{
-		super( block, meta, EnumSet.of( AEFeature.DecorativeQuartzBlocks ) );
-	}
+public class SkyStoneBlockStairBlock extends AEBaseStairBlock {
+    public SkyStoneBlockStairBlock(final Block block, final Integer meta) {
+        super(block, meta, EnumSet.of(AEFeature.DecorativeQuartzBlocks));
+    }
 }

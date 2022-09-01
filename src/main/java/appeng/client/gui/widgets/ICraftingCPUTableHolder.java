@@ -1,6 +1,5 @@
 package appeng.client.gui.widgets;
 
-public interface ICraftingCPUTableHolder
-{
+public interface ICraftingCPUTableHolder {
     GuiCraftingCPUTable getCPUTable();
 }

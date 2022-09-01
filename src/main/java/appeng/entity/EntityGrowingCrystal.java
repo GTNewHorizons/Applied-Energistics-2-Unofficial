@@ -18,7 +18,6 @@
 
 package appeng.entity;
 
-
 import appeng.api.implementations.items.IGrowableCrystal;
 import appeng.api.implementations.tiles.ICrystalGrowthAccelerator;
 import appeng.client.EffectType;
@@ -35,166 +34,135 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.World;
 
+public final class EntityGrowingCrystal extends EntityItem {
 
-public final class EntityGrowingCrystal extends EntityItem
-{
+    private int progress_1000 = 0;
 
-	private int progress_1000 = 0;
+    public EntityGrowingCrystal(final World w) {
+        super(w);
+    }
 
-	public EntityGrowingCrystal( final World w )
-	{
-		super( w );
-	}
+    public EntityGrowingCrystal(final World w, final double x, final double y, final double z, final ItemStack is) {
+        super(w, x, y, z, is);
+    }
 
-	public EntityGrowingCrystal( final World w, final double x, final double y, final double z, final ItemStack is )
-	{
-		super( w, x, y, z, is );
-	}
+    @Override
+    public void onUpdate() {
+        super.onUpdate();
 
-	@Override
-	public void onUpdate()
-	{
-		super.onUpdate();
+        if (!AEConfig.instance.isFeatureEnabled(AEFeature.InWorldPurification)) {
+            return;
+        }
 
-		if( !AEConfig.instance.isFeatureEnabled( AEFeature.InWorldPurification ) )
-		{
-			return;
-		}
+        if (this.age > 600) {
+            this.age = 100;
+        }
 
-		if( this.age > 600 )
-		{
-			this.age = 100;
-		}
+        final ItemStack is = this.getEntityItem();
+        final Item gc = is.getItem();
 
-		final ItemStack is = this.getEntityItem();
-		final Item gc = is.getItem();
+        if (gc instanceof IGrowableCrystal) // if it changes this just stops being an issue...
+        {
+            final int j = MathHelper.floor_double(this.posX);
+            final int i = MathHelper.floor_double(this.posY);
+            final int k = MathHelper.floor_double(this.posZ);
 
-		if( gc instanceof IGrowableCrystal ) // if it changes this just stops being an issue...
-		{
-			final int j = MathHelper.floor_double( this.posX );
-			final int i = MathHelper.floor_double( this.posY );
-			final int k = MathHelper.floor_double( this.posZ );
+            final Block blk = this.worldObj.getBlock(j, i, k);
+            final Material mat = blk.getMaterial();
+            final IGrowableCrystal cry = (IGrowableCrystal) is.getItem();
 
-			final Block blk = this.worldObj.getBlock( j, i, k );
-			final Material mat = blk.getMaterial();
-			final IGrowableCrystal cry = (IGrowableCrystal) is.getItem();
+            final float multiplier = cry.getMultiplier(blk, mat);
+            final int speed = (int) Math.max(1, this.getSpeed(j, i, k) * multiplier);
 
-			final float multiplier = cry.getMultiplier( blk, mat );
-			final int speed = (int) Math.max( 1, this.getSpeed( j, i, k ) * multiplier );
+            final boolean isClient = Platform.isClient();
 
-			final boolean isClient = Platform.isClient();
+            if (mat.isLiquid()) {
+                if (isClient) {
+                    this.progress_1000++;
+                } else {
+                    this.progress_1000 += speed;
+                }
+            } else {
+                this.progress_1000 = 0;
+            }
 
-			if( mat.isLiquid() )
-			{
-				if( isClient )
-				{
-					this.progress_1000++;
-				}
-				else
-				{
-					this.progress_1000 += speed;
-				}
-			}
-			else
-			{
-				this.progress_1000 = 0;
-			}
+            if (isClient) {
+                int len = 40;
 
-			if( isClient )
-			{
-				int len = 40;
+                if (speed > 2) {
+                    len = 20;
+                }
 
-				if( speed > 2 )
-				{
-					len = 20;
-				}
+                if (speed > 90) {
+                    len = 15;
+                }
 
-				if( speed > 90 )
-				{
-					len = 15;
-				}
+                if (speed > 150) {
+                    len = 10;
+                }
 
-				if( speed > 150 )
-				{
-					len = 10;
-				}
+                if (speed > 240) {
+                    len = 7;
+                }
 
-				if( speed > 240 )
-				{
-					len = 7;
-				}
+                if (speed > 360) {
+                    len = 3;
+                }
 
-				if( speed > 360 )
-				{
-					len = 3;
-				}
+                if (speed > 500) {
+                    len = 1;
+                }
 
-				if( speed > 500 )
-				{
-					len = 1;
-				}
+                if (this.progress_1000 >= len) {
+                    this.progress_1000 = 0;
+                    CommonHelper.proxy.spawnEffect(
+                            EffectType.Vibrant, this.worldObj, this.posX, this.posY + 0.2, this.posZ, null);
+                }
+            } else {
+                if (this.progress_1000 > 1000) {
+                    this.progress_1000 -= 1000;
+                    this.setEntityItemStack(cry.triggerGrowth(is));
+                }
+            }
+        }
+    }
 
-				if( this.progress_1000 >= len )
-				{
-					this.progress_1000 = 0;
-					CommonHelper.proxy.spawnEffect( EffectType.Vibrant, this.worldObj, this.posX, this.posY + 0.2, this.posZ, null );
-				}
-			}
-			else
-			{
-				if( this.progress_1000 > 1000 )
-				{
-					this.progress_1000 -= 1000;
-					this.setEntityItemStack( cry.triggerGrowth( is ) );
-				}
-			}
-		}
-	}
+    private int getSpeed(final int x, final int y, final int z) {
+        final int per = 80;
+        final float mul = 0.3f;
 
-	private int getSpeed( final int x, final int y, final int z )
-	{
-		final int per = 80;
-		final float mul = 0.3f;
+        int qty = 0;
 
-		int qty = 0;
+        if (this.isAccelerated(x + 1, y, z)) {
+            qty += per + qty * mul;
+        }
 
-		if( this.isAccelerated( x + 1, y, z ) )
-		{
-			qty += per + qty * mul;
-		}
+        if (this.isAccelerated(x, y + 1, z)) {
+            qty += per + qty * mul;
+        }
 
-		if( this.isAccelerated( x, y + 1, z ) )
-		{
-			qty += per + qty * mul;
-		}
+        if (this.isAccelerated(x, y, z + 1)) {
+            qty += per + qty * mul;
+        }
 
-		if( this.isAccelerated( x, y, z + 1 ) )
-		{
-			qty += per + qty * mul;
-		}
+        if (this.isAccelerated(x - 1, y, z)) {
+            qty += per + qty * mul;
+        }
 
-		if( this.isAccelerated( x - 1, y, z ) )
-		{
-			qty += per + qty * mul;
-		}
+        if (this.isAccelerated(x, y - 1, z)) {
+            qty += per + qty * mul;
+        }
 
-		if( this.isAccelerated( x, y - 1, z ) )
-		{
-			qty += per + qty * mul;
-		}
+        if (this.isAccelerated(x, y, z - 1)) {
+            qty += per + qty * mul;
+        }
 
-		if( this.isAccelerated( x, y, z - 1 ) )
-		{
-			qty += per + qty * mul;
-		}
+        return qty;
+    }
 
-		return qty;
-	}
+    private boolean isAccelerated(final int x, final int y, final int z) {
+        final TileEntity te = this.worldObj.getTileEntity(x, y, z);
 
-	private boolean isAccelerated( final int x, final int y, final int z )
-	{
-		final TileEntity te = this.worldObj.getTileEntity( x, y, z );
-
-		return te instanceof ICrystalGrowthAccelerator && ( (ICrystalGrowthAccelerator) te ).isPowered();
-	}
+        return te instanceof ICrystalGrowthAccelerator && ((ICrystalGrowthAccelerator) te).isPowered();
+    }
 }

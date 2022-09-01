@@ -23,8 +23,8 @@
 
 package appeng.api.config;
 
-
-public enum YesNo
-{
-	YES, NO, UNDECIDED
+public enum YesNo {
+    YES,
+    NO,
+    UNDECIDED
 }

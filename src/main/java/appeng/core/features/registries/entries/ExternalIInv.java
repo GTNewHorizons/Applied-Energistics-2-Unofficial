@@ -18,7 +18,6 @@
 
 package appeng.core.features.registries.entries;
 
-
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
@@ -29,26 +28,23 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public class ExternalIInv implements IExternalStorageHandler {
 
-public class ExternalIInv implements IExternalStorageHandler
-{
+    @Override
+    public boolean canHandle(
+            final TileEntity te, final ForgeDirection d, final StorageChannel channel, final BaseActionSource mySrc) {
+        return channel == StorageChannel.ITEMS && te instanceof IInventory;
+    }
 
-	@Override
-	public boolean canHandle( final TileEntity te, final ForgeDirection d, final StorageChannel channel, final BaseActionSource mySrc )
-	{
-		return channel == StorageChannel.ITEMS && te instanceof IInventory;
-	}
+    @Override
+    public IMEInventory getInventory(
+            final TileEntity te, final ForgeDirection d, final StorageChannel channel, final BaseActionSource src) {
+        final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, d);
 
-	@Override
-	public IMEInventory getInventory( final TileEntity te, final ForgeDirection d, final StorageChannel channel, final BaseActionSource src )
-	{
-		final InventoryAdaptor ad = InventoryAdaptor.getAdaptor( te, d );
+        if (channel == StorageChannel.ITEMS && ad != null) {
+            return new MEMonitorIInventory(ad);
+        }
 
-		if( channel == StorageChannel.ITEMS && ad != null )
-		{
-			return new MEMonitorIInventory( ad );
-		}
-
-		return null;
-	}
+        return null;
+    }
 }

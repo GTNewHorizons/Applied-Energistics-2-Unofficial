@@ -18,100 +18,81 @@
 
 package appeng.helpers;
 
-
 import appeng.api.util.AEColor;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public class Splotch {
 
-public class Splotch
-{
+    private final ForgeDirection side;
+    private final boolean lumen;
+    private final AEColor color;
+    private final int pos;
 
-	private final ForgeDirection side;
-	private final boolean lumen;
-	private final AEColor color;
-	private final int pos;
+    public Splotch(final AEColor col, final boolean lit, final ForgeDirection side, final Vec3 position) {
+        this.color = col;
+        this.lumen = lit;
 
-	public Splotch( final AEColor col, final boolean lit, final ForgeDirection side, final Vec3 position )
-	{
-		this.color = col;
-		this.lumen = lit;
+        final double x;
+        final double y;
 
-		final double x;
-		final double y;
+        if (side == ForgeDirection.SOUTH || side == ForgeDirection.NORTH) {
+            x = position.xCoord;
+            y = position.yCoord;
+        } else if (side == ForgeDirection.UP || side == ForgeDirection.DOWN) {
+            x = position.xCoord;
+            y = position.zCoord;
+        } else {
+            x = position.yCoord;
+            y = position.zCoord;
+        }
 
-		if( side == ForgeDirection.SOUTH || side == ForgeDirection.NORTH )
-		{
-			x = position.xCoord;
-			y = position.yCoord;
-		}
+        final int a = (int) (x * 0xF);
+        final int b = (int) (y * 0xF);
+        this.pos = a | (b << 4);
 
-		else if( side == ForgeDirection.UP || side == ForgeDirection.DOWN )
-		{
-			x = position.xCoord;
-			y = position.zCoord;
-		}
+        this.side = side;
+    }
 
-		else
-		{
-			x = position.yCoord;
-			y = position.zCoord;
-		}
+    public Splotch(final ByteBuf data) {
 
-		final int a = (int) ( x * 0xF );
-		final int b = (int) ( y * 0xF );
-		this.pos = a | ( b << 4 );
+        this.pos = data.readByte();
+        final int val = data.readByte();
 
-		this.side = side;
-	}
+        this.side = ForgeDirection.getOrientation(val & 0x07);
+        this.color = AEColor.values()[(val >> 3) & 0x0F];
+        this.lumen = ((val >> 7) & 0x01) > 0;
+    }
 
-	public Splotch( final ByteBuf data )
-	{
+    public void writeToStream(final ByteBuf stream) {
+        stream.writeByte(this.pos);
+        final int val = this.getSide().ordinal() | (this.getColor().ordinal() << 3) | (this.isLumen() ? 0x80 : 0x00);
+        stream.writeByte(val);
+    }
 
-		this.pos = data.readByte();
-		final int val = data.readByte();
+    public float x() {
+        return (this.pos & 0x0f) / 15.0f;
+    }
 
-		this.side = ForgeDirection.getOrientation( val & 0x07 );
-		this.color = AEColor.values()[( val >> 3 ) & 0x0F];
-		this.lumen = ( ( val >> 7 ) & 0x01 ) > 0;
-	}
+    public float y() {
+        return ((this.pos >> 4) & 0x0f) / 15.0f;
+    }
 
-	public void writeToStream( final ByteBuf stream )
-	{
-		stream.writeByte( this.pos );
-		final int val = this.getSide().ordinal() | ( this.getColor().ordinal() << 3 ) | ( this.isLumen() ? 0x80 : 0x00 );
-		stream.writeByte( val );
-	}
+    public int getSeed() {
+        final int val = this.getSide().ordinal() | (this.getColor().ordinal() << 3) | (this.isLumen() ? 0x80 : 0x00);
+        return Math.abs(this.pos + val);
+    }
 
-	public float x()
-	{
-		return ( this.pos & 0x0f ) / 15.0f;
-	}
+    public ForgeDirection getSide() {
+        return this.side;
+    }
 
-	public float y()
-	{
-		return ( ( this.pos >> 4 ) & 0x0f ) / 15.0f;
-	}
+    public AEColor getColor() {
+        return this.color;
+    }
 
-	public int getSeed()
-	{
-		final int val = this.getSide().ordinal() | ( this.getColor().ordinal() << 3 ) | ( this.isLumen() ? 0x80 : 0x00 );
-		return Math.abs( this.pos + val );
-	}
-
-	public ForgeDirection getSide()
-	{
-		return this.side;
-	}
-
-	public AEColor getColor()
-	{
-		return this.color;
-	}
-
-	public boolean isLumen()
-	{
-		return this.lumen;
-	}
+    public boolean isLumen() {
+        return this.lumen;
+    }
 }

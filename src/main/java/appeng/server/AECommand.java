@@ -18,119 +18,91 @@
 
 package appeng.server;
 
-
 import com.google.common.base.Joiner;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
 import net.minecraft.server.MinecraftServer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+public final class AECommand extends CommandBase {
+    private final MinecraftServer srv;
 
+    public AECommand(final MinecraftServer server) {
+        this.srv = server;
+    }
 
-public final class AECommand extends CommandBase
-{
-	private final MinecraftServer srv;
+    @Override
+    public int getRequiredPermissionLevel() {
+        return 0;
+    }
 
-	public AECommand( final MinecraftServer server )
-	{
-		this.srv = server;
-	}
+    /**
+     * wtf?
+     */
+    @Override
+    public int compareTo(final Object arg0) {
+        return 1;
+    }
 
-	@Override
-	public int getRequiredPermissionLevel()
-	{
-		return 0;
-	}
+    @Override
+    public String getCommandName() {
+        return "ae2";
+    }
 
-	/**
-	 * wtf?
-	 */
-	@Override
-	public int compareTo( final Object arg0 )
-	{
-		return 1;
-	}
+    @Override
+    public String getCommandUsage(final ICommandSender icommandsender) {
+        return "commands.ae2.usage";
+    }
 
-	@Override
-	public String getCommandName()
-	{
-		return "ae2";
-	}
+    @Override
+    public List addTabCompletionOptions(ICommandSender sender, String[] ss) {
+        List<String> l = new ArrayList<>();
+        String test = ss.length == 0 ? "" : ss[0].trim();
+        if (ss.length == 0
+                || ss.length == 1
+                        && (test.isEmpty()
+                                || Arrays.stream(Commands.values())
+                                        .anyMatch(c -> c.toString().startsWith(test))))
+            Arrays.stream(Commands.values())
+                    .map(Commands::toString)
+                    .filter(c -> test.isEmpty() || c.startsWith(test))
+                    .forEach(l::add);
+        return l;
+    }
 
-	@Override
-	public String getCommandUsage( final ICommandSender icommandsender )
-	{
-		return "commands.ae2.usage";
-	}
-
-	@Override
-	public List addTabCompletionOptions(ICommandSender sender, String[] ss) {
-		List<String> l = new ArrayList<>();
-		String test = ss.length == 0 ? "" : ss[0].trim();
-		if (ss.length == 0
-				|| ss.length == 1 && (test.isEmpty() || Arrays.stream(Commands.values()).anyMatch(c -> c.toString().startsWith(test))))
-			Arrays.stream(Commands.values())
-					.map(Commands::toString)
-					.filter(c -> test.isEmpty() || c.startsWith(test))
-					.forEach(l::add);
-		return l;
-	}
-
-	@Override
-	public void processCommand( final ICommandSender sender, final String[] args )
-	{
-		if( args.length == 0 )
-		{
-			throw new WrongUsageException( "commands.ae2.usage" );
-		}
-		else if( "help".equals( args[0] ) )
-		{
-			try
-			{
-				if( args.length > 1 )
-				{
-					final Commands c = Commands.valueOf( args[1] );
-					throw new WrongUsageException( c.command.getHelp( this.srv ) );
-				}
-			}
-			catch( final WrongUsageException wrong )
-			{
-				throw wrong;
-			}
-			catch( final Throwable er )
-			{
-				throw new WrongUsageException( "commands.ae2.usage" );
-			}
-		}
-		else if( "list".equals( args[0] ) )
-		{
-			throw new WrongUsageException( Joiner.on( ", " ).join( Commands.values() ) );
-		}
-		else
-		{
-			try
-			{
-				final Commands c = Commands.valueOf( args[0] );
-				if( sender.canCommandSenderUseCommand( c.level, this.getCommandName() ) )
-				{
-					c.command.call( this.srv, args, sender );
-				}
-				else
-				{
-					throw new WrongUsageException( "commands.ae2.permissions" );
-				}
-			}
-			catch( final WrongUsageException wrong )
-			{
-				throw wrong;
-			}
-			catch( final Throwable er )
-			{
-				throw new WrongUsageException( "commands.ae2.usage" );
-			}
-		}
-	}
+    @Override
+    public void processCommand(final ICommandSender sender, final String[] args) {
+        if (args.length == 0) {
+            throw new WrongUsageException("commands.ae2.usage");
+        } else if ("help".equals(args[0])) {
+            try {
+                if (args.length > 1) {
+                    final Commands c = Commands.valueOf(args[1]);
+                    throw new WrongUsageException(c.command.getHelp(this.srv));
+                }
+            } catch (final WrongUsageException wrong) {
+                throw wrong;
+            } catch (final Throwable er) {
+                throw new WrongUsageException("commands.ae2.usage");
+            }
+        } else if ("list".equals(args[0])) {
+            throw new WrongUsageException(Joiner.on(", ").join(Commands.values()));
+        } else {
+            try {
+                final Commands c = Commands.valueOf(args[0]);
+                if (sender.canCommandSenderUseCommand(c.level, this.getCommandName())) {
+                    c.command.call(this.srv, args, sender);
+                } else {
+                    throw new WrongUsageException("commands.ae2.permissions");
+                }
+            } catch (final WrongUsageException wrong) {
+                throw wrong;
+            } catch (final Throwable er) {
+                throw new WrongUsageException("commands.ae2.usage");
+            }
+        }
+    }
 }

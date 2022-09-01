@@ -18,7 +18,6 @@
 
 package appeng.client.render.blocks;
 
-
 import appeng.block.solids.OreQuartz;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
@@ -28,35 +27,41 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 
+public class RenderQuartzOre extends BaseBlockRender<OreQuartz, AEBaseTile> {
 
-public class RenderQuartzOre extends BaseBlockRender<OreQuartz, AEBaseTile>
-{
+    public RenderQuartzOre() {
+        super(false, 20);
+    }
 
-	public RenderQuartzOre()
-	{
-		super( false, 20 );
-	}
+    @Override
+    public void renderInventory(
+            final OreQuartz blk,
+            final ItemStack is,
+            final RenderBlocks renderer,
+            final ItemRenderType type,
+            final Object[] obj) {
+        super.renderInventory(blk, is, renderer, type, obj);
+        blk.getRendererInstance().setTemporaryRenderIcon(ExtraBlockTextures.OreQuartzStone.getIcon());
+        super.renderInventory(blk, is, renderer, type, obj);
+        blk.getRendererInstance().setTemporaryRenderIcon(null);
+    }
 
-	@Override
-	public void renderInventory( final OreQuartz blk, final ItemStack is, final RenderBlocks renderer, final ItemRenderType type, final Object[] obj )
-	{
-		super.renderInventory( blk, is, renderer, type, obj );
-		blk.getRendererInstance().setTemporaryRenderIcon( ExtraBlockTextures.OreQuartzStone.getIcon() );
-		super.renderInventory( blk, is, renderer, type, obj );
-		blk.getRendererInstance().setTemporaryRenderIcon( null );
-	}
+    @Override
+    public boolean renderInWorld(
+            final OreQuartz quartz,
+            final IBlockAccess world,
+            final int x,
+            final int y,
+            final int z,
+            final RenderBlocks renderer) {
+        quartz.setEnhanceBrightness(true);
+        super.renderInWorld(quartz, world, x, y, z, renderer);
+        quartz.setEnhanceBrightness(false);
 
-	@Override
-	public boolean renderInWorld( final OreQuartz quartz, final IBlockAccess world, final int x, final int y, final int z, final RenderBlocks renderer )
-	{
-		quartz.setEnhanceBrightness( true );
-		super.renderInWorld( quartz, world, x, y, z, renderer );
-		quartz.setEnhanceBrightness( false );
+        quartz.getRendererInstance().setTemporaryRenderIcon(ExtraBlockTextures.OreQuartzStone.getIcon());
+        final boolean out = super.renderInWorld(quartz, world, x, y, z, renderer);
+        quartz.getRendererInstance().setTemporaryRenderIcon(null);
 
-		quartz.getRendererInstance().setTemporaryRenderIcon( ExtraBlockTextures.OreQuartzStone.getIcon() );
-		final boolean out = super.renderInWorld( quartz, world, x, y, z, renderer );
-		quartz.getRendererInstance().setTemporaryRenderIcon( null );
-
-		return out;
-	}
+        return out;
+    }
 }

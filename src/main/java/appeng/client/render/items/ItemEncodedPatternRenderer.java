@@ -18,7 +18,6 @@
 
 package appeng.client.render.items;
 
-
 import appeng.items.misc.ItemEncodedPattern;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderHelper;
@@ -28,52 +27,46 @@ import net.minecraftforge.client.IItemRenderer;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
+public class ItemEncodedPatternRenderer implements IItemRenderer {
 
-public class ItemEncodedPatternRenderer implements IItemRenderer
-{
+    private final RenderItem ri = new RenderItem();
+    private boolean recursive = false;
 
-	private final RenderItem ri = new RenderItem();
-	private boolean recursive = false;
+    @Override
+    public boolean handleRenderType(final ItemStack item, final ItemRenderType type) {
+        final boolean isShiftHeld = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
 
-	@Override
-	public boolean handleRenderType( final ItemStack item, final ItemRenderType type )
-	{
-		final boolean isShiftHeld = Keyboard.isKeyDown( Keyboard.KEY_LSHIFT ) || Keyboard.isKeyDown( Keyboard.KEY_RSHIFT );
+        if (!this.recursive && type == IItemRenderer.ItemRenderType.INVENTORY && isShiftHeld) {
+            final ItemEncodedPattern iep = (ItemEncodedPattern) item.getItem();
 
-		if( !this.recursive && type == IItemRenderer.ItemRenderType.INVENTORY && isShiftHeld )
-		{
-			final ItemEncodedPattern iep = (ItemEncodedPattern) item.getItem();
+            if (iep.getOutput(item) != null) {
+                return true;
+            }
+        }
 
-			if( iep.getOutput( item ) != null )
-			{
-				return true;
-			}
-		}
+        return false;
+    }
 
-		return false;
-	}
+    @Override
+    public boolean shouldUseRenderHelper(
+            final ItemRenderType type, final ItemStack item, final ItemRendererHelper helper) {
+        return false;
+    }
 
-	@Override
-	public boolean shouldUseRenderHelper( final ItemRenderType type, final ItemStack item, final ItemRendererHelper helper )
-	{
-		return false;
-	}
+    @Override
+    public void renderItem(final ItemRenderType type, final ItemStack item, final Object... data) {
+        this.recursive = true;
 
-	@Override
-	public void renderItem( final ItemRenderType type, final ItemStack item, final Object... data )
-	{
-		this.recursive = true;
+        final ItemEncodedPattern iep = (ItemEncodedPattern) item.getItem();
+        final ItemStack is = iep.getOutput(item);
+        final Minecraft mc = Minecraft.getMinecraft();
 
-		final ItemEncodedPattern iep = (ItemEncodedPattern) item.getItem();
-		final ItemStack is = iep.getOutput( item );
-		final Minecraft mc = Minecraft.getMinecraft();
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
+        RenderHelper.enableGUIStandardItemLighting();
+        this.ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), is, 0, 0);
+        RenderHelper.disableStandardItemLighting();
+        GL11.glPopAttrib();
 
-		GL11.glPushAttrib( GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT );
-		RenderHelper.enableGUIStandardItemLighting();
-		this.ri.renderItemAndEffectIntoGUI( mc.fontRenderer, mc.getTextureManager(), is, 0, 0 );
-		RenderHelper.disableStandardItemLighting();
-		GL11.glPopAttrib();
-
-		this.recursive = false;
-	}
+        this.recursive = false;
+    }
 }

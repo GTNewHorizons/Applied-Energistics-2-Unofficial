@@ -18,7 +18,6 @@
 
 package appeng.me.storage;
 
-
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
@@ -28,83 +27,68 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IItemList;
 import appeng.tile.misc.TileCondenser;
 
+public class VoidFluidInventory implements IMEInventoryHandler<IAEFluidStack> {
 
-public class VoidFluidInventory implements IMEInventoryHandler<IAEFluidStack>
-{
+    private final TileCondenser target;
 
-	private final TileCondenser target;
+    public VoidFluidInventory(final TileCondenser te) {
+        this.target = te;
+    }
 
-	public VoidFluidInventory( final TileCondenser te )
-	{
-		this.target = te;
-	}
+    @Override
+    public IAEFluidStack injectItems(final IAEFluidStack input, final Actionable mode, final BaseActionSource src) {
+        if (mode == Actionable.SIMULATE) {
+            return null;
+        }
 
-	@Override
-	public IAEFluidStack injectItems( final IAEFluidStack input, final Actionable mode, final BaseActionSource src )
-	{
-		if( mode == Actionable.SIMULATE )
-		{
-			return null;
-		}
+        if (input != null) {
+            this.target.addPower(input.getStackSize() / 1000.0);
+        }
+        return null;
+    }
 
-		if( input != null )
-		{
-			this.target.addPower( input.getStackSize() / 1000.0 );
-		}
-		return null;
-	}
+    @Override
+    public IAEFluidStack extractItems(final IAEFluidStack request, final Actionable mode, final BaseActionSource src) {
+        return null;
+    }
 
-	@Override
-	public IAEFluidStack extractItems( final IAEFluidStack request, final Actionable mode, final BaseActionSource src )
-	{
-		return null;
-	}
+    @Override
+    public IItemList<IAEFluidStack> getAvailableItems(final IItemList out) {
+        return out;
+    }
 
-	@Override
-	public IItemList<IAEFluidStack> getAvailableItems( final IItemList out )
-	{
-		return out;
-	}
+    @Override
+    public StorageChannel getChannel() {
+        return StorageChannel.FLUIDS;
+    }
 
-	@Override
-	public StorageChannel getChannel()
-	{
-		return StorageChannel.FLUIDS;
-	}
+    @Override
+    public AccessRestriction getAccess() {
+        return AccessRestriction.WRITE;
+    }
 
-	@Override
-	public AccessRestriction getAccess()
-	{
-		return AccessRestriction.WRITE;
-	}
+    @Override
+    public boolean isPrioritized(final IAEFluidStack input) {
+        return false;
+    }
 
-	@Override
-	public boolean isPrioritized( final IAEFluidStack input )
-	{
-		return false;
-	}
+    @Override
+    public boolean canAccept(final IAEFluidStack input) {
+        return true;
+    }
 
-	@Override
-	public boolean canAccept( final IAEFluidStack input )
-	{
-		return true;
-	}
+    @Override
+    public int getPriority() {
+        return 0;
+    }
 
-	@Override
-	public int getPriority()
-	{
-		return 0;
-	}
+    @Override
+    public int getSlot() {
+        return 0;
+    }
 
-	@Override
-	public int getSlot()
-	{
-		return 0;
-	}
-
-	@Override
-	public boolean validForPass( final int i )
-	{
-		return i == 2;
-	}
+    @Override
+    public boolean validForPass(final int i) {
+        return i == 2;
+    }
 }

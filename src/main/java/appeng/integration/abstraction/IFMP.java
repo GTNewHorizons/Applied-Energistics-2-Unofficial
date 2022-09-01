@@ -18,22 +18,19 @@
 
 package appeng.integration.abstraction;
 
-
 import appeng.api.parts.IPartHost;
 import appeng.parts.CableBusContainer;
 import cpw.mods.fml.common.eventhandler.Event;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 
+public interface IFMP {
 
-public interface IFMP
-{
+    IPartHost getOrCreateHost(TileEntity tile);
 
-	IPartHost getOrCreateHost( TileEntity tile );
+    CableBusContainer getCableContainer(TileEntity te);
 
-	CableBusContainer getCableContainer( TileEntity te );
+    void registerPassThrough(Class<?> layerInterface);
 
-	void registerPassThrough( Class<?> layerInterface );
-
-	Event newFMPPacketEvent( EntityPlayerMP sender );
+    Event newFMPPacketEvent(EntityPlayerMP sender);
 }

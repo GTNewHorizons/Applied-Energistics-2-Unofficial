@@ -18,7 +18,6 @@
 
 package appeng.integration.modules;
 
-
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlockDefinition;
 import appeng.api.definitions.IBlocks;
@@ -43,178 +42,147 @@ import codechicken.multipart.TMultiPart;
 import codechicken.multipart.TileMultipart;
 import com.google.common.collect.Lists;
 import cpw.mods.fml.common.eventhandler.Event;
+import java.util.Collection;
+import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
-import java.util.Collection;
-import java.util.List;
+public class FMP implements IIntegrationModule, IPartFactory, IPartConverter, IFMP {
+    @Reflected
+    public static FMP instance;
 
+    @Override
+    public TMultiPart createPart(final String name, final boolean client) {
+        for (final PartRegistry pr : PartRegistry.values()) {
+            if (pr.getName().equals(name)) {
+                return pr.construct(0);
+            }
+        }
 
-public class FMP implements IIntegrationModule, IPartFactory, IPartConverter, IFMP
-{
-	@Reflected
-	public static FMP instance;
+        return null;
+    }
 
-	@Override
-	public TMultiPart createPart( final String name, final boolean client )
-	{
-		for( final PartRegistry pr : PartRegistry.values() )
-		{
-			if( pr.getName().equals( name ) )
-			{
-				return pr.construct( 0 );
-			}
-		}
+    @Override
+    public TMultiPart convert(final World world, final BlockCoord pos) {
+        final Block blk = world.getBlock(pos.x, pos.y, pos.z);
+        final int meta = world.getBlockMetadata(pos.x, pos.y, pos.z);
 
-		return null;
-	}
+        final TMultiPart part = PartRegistry.getPartByBlock(blk, meta);
+        if (part instanceof CableBusPart) {
+            final CableBusPart cbp = (CableBusPart) part;
+            cbp.convertFromTile(world.getTileEntity(pos.x, pos.y, pos.z));
+        }
 
-	@Override
-	public TMultiPart convert( final World world, final BlockCoord pos )
-	{
-		final Block blk = world.getBlock( pos.x, pos.y, pos.z );
-		final int meta = world.getBlockMetadata( pos.x, pos.y, pos.z );
+        return part;
+    }
 
-		final TMultiPart part = PartRegistry.getPartByBlock( blk, meta );
-		if( part instanceof CableBusPart )
-		{
-			final CableBusPart cbp = (CableBusPart) part;
-			cbp.convertFromTile( world.getTileEntity( pos.x, pos.y, pos.z ) );
-		}
+    @Override
+    public Iterable<Block> blockTypes() {
+        final IBlocks blocks = AEApi.instance().definitions().blocks();
+        final List<Block> blockTypes = Lists.newArrayListWithCapacity(2);
 
-		return part;
-	}
+        this.addBlockTypes(blockTypes, blocks.multiPart());
+        this.addBlockTypes(blockTypes, blocks.quartzTorch());
 
-	@Override
-	public Iterable<Block> blockTypes()
-	{
-		final IBlocks blocks = AEApi.instance().definitions().blocks();
-		final List<Block> blockTypes = Lists.newArrayListWithCapacity( 2 );
+        return blockTypes;
+    }
 
-		this.addBlockTypes( blockTypes, blocks.multiPart() );
-		this.addBlockTypes( blockTypes, blocks.quartzTorch() );
+    private void addBlockTypes(final Collection<Block> blockTypes, final IBlockDefinition definition) {
+        for (final Block block : definition.maybeBlock().asSet()) {
+            blockTypes.add(block);
+        }
+    }
 
-		return blockTypes;
-	}
+    @Override
+    public void init() throws Throwable {
+        final IBlocks blocks = AEApi.instance().definitions().blocks();
 
-	private void addBlockTypes( final Collection<Block> blockTypes, final IBlockDefinition definition )
-	{
-		for( final Block block : definition.maybeBlock().asSet() )
-		{
-			blockTypes.add( block );
-		}
-	}
+        this.createAndRegister(blocks.quartz(), 0);
+        this.createAndRegister(blocks.quartzPillar(), 0);
+        this.createAndRegister(blocks.quartzChiseled(), 0);
+        this.createAndRegister(blocks.skyStone(), 0);
+        this.createAndRegister(blocks.skyStone(), 1);
+        this.createAndRegister(blocks.skyStone(), 2);
+        this.createAndRegister(blocks.skyStone(), 3);
 
-	@Override
-	public void init() throws Throwable
-	{
-		final IBlocks blocks = AEApi.instance().definitions().blocks();
+        final PartRegistry[] reg = PartRegistry.values();
 
-		this.createAndRegister( blocks.quartz(), 0 );
-		this.createAndRegister( blocks.quartzPillar(), 0 );
-		this.createAndRegister( blocks.quartzChiseled(), 0 );
-		this.createAndRegister( blocks.skyStone(), 0 );
-		this.createAndRegister( blocks.skyStone(), 1 );
-		this.createAndRegister( blocks.skyStone(), 2 );
-		this.createAndRegister( blocks.skyStone(), 3 );
+        final String[] data = new String[reg.length];
+        for (int x = 0; x < data.length; x++) {
+            data[x] = reg[x].getName();
+        }
 
-		final PartRegistry[] reg = PartRegistry.values();
+        MultiPartRegistry.registerConverter(this);
+        MultiPartRegistry.registerParts(this, data);
 
-		final String[] data = new String[reg.length];
-		for( int x = 0; x < data.length; x++ )
-		{
-			data[x] = reg[x].getName();
-		}
+        MultipartGenerator.registerPassThroughInterface("appeng.helpers.AEMultiTile");
+    }
 
-		MultiPartRegistry.registerConverter( this );
-		MultiPartRegistry.registerParts( this, data );
+    private void createAndRegister(final IBlockDefinition definition, final int i) {
+        for (final Block block : definition.maybeBlock().asSet()) {
+            BlockMicroMaterial.createAndRegister(block, i);
+        }
+    }
 
-		MultipartGenerator.registerPassThroughInterface( "appeng.helpers.AEMultiTile" );
-	}
+    @Override
+    public void postInit() {
+        MinecraftForge.EVENT_BUS.register(new FMPEvent());
+    }
 
-	private void createAndRegister( final IBlockDefinition definition, final int i )
-	{
-		for( final Block block : definition.maybeBlock().asSet() )
-		{
-			BlockMicroMaterial.createAndRegister( block, i );
-		}
-	}
+    @Override
+    public IPartHost getOrCreateHost(final TileEntity tile) {
+        try {
+            final BlockCoord loc = new BlockCoord(tile.xCoord, tile.yCoord, tile.zCoord);
 
-	@Override
-	public void postInit()
-	{
-		MinecraftForge.EVENT_BUS.register( new FMPEvent() );
-	}
+            final TileMultipart mp = TileMultipart.getOrConvertTile(tile.getWorldObj(), loc);
+            if (mp != null) {
+                final scala.collection.Iterator<TMultiPart> i = mp.partList().iterator();
+                while (i.hasNext()) {
+                    final TMultiPart p = i.next();
+                    if (p instanceof CableBusPart) {
+                        return (IPartHost) p;
+                    }
+                }
 
-	@Override
-	public IPartHost getOrCreateHost( final TileEntity tile )
-	{
-		try
-		{
-			final BlockCoord loc = new BlockCoord( tile.xCoord, tile.yCoord, tile.zCoord );
+                return new FMPPlacementHelper(mp);
+            }
+        } catch (final Throwable t) {
+            AELog.debug(t);
+        }
+        return null;
+    }
 
-			final TileMultipart mp = TileMultipart.getOrConvertTile( tile.getWorldObj(), loc );
-			if( mp != null )
-			{
-				final scala.collection.Iterator<TMultiPart> i = mp.partList().iterator();
-				while( i.hasNext() )
-				{
-					final TMultiPart p = i.next();
-					if( p instanceof CableBusPart )
-					{
-						return (IPartHost) p;
-					}
-				}
+    @Override
+    public CableBusContainer getCableContainer(final TileEntity te) {
+        if (te instanceof TileMultipart) {
+            final TileMultipart mp = (TileMultipart) te;
+            final scala.collection.Iterator<TMultiPart> i = mp.partList().iterator();
+            while (i.hasNext()) {
+                final TMultiPart p = i.next();
+                if (p instanceof CableBusPart) {
+                    return ((CableBusPart) p).getCableBus();
+                }
+            }
+        }
+        return null;
+    }
 
-				return new FMPPlacementHelper( mp );
-			}
-		}
-		catch( final Throwable t )
-		{
-			AELog.debug( t );
-		}
-		return null;
-	}
+    @Override
+    public void registerPassThrough(final Class<?> layerInterface) {
+        try {
+            MultipartGenerator.registerPassThroughInterface(layerInterface.getName());
+        } catch (final Throwable t) {
+            AELog.error("Failed to register " + layerInterface.getName()
+                    + " with FMP, some features may not work with MultiParts.");
+            AELog.debug(t);
+        }
+    }
 
-	@Override
-	public CableBusContainer getCableContainer( final TileEntity te )
-	{
-		if( te instanceof TileMultipart )
-		{
-			final TileMultipart mp = (TileMultipart) te;
-			final scala.collection.Iterator<TMultiPart> i = mp.partList().iterator();
-			while( i.hasNext() )
-			{
-				final TMultiPart p = i.next();
-				if( p instanceof CableBusPart )
-				{
-					return ( (CableBusPart) p ).getCableBus();
-				}
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public void registerPassThrough( final Class<?> layerInterface )
-	{
-		try
-		{
-			MultipartGenerator.registerPassThroughInterface( layerInterface.getName() );
-		}
-		catch( final Throwable t )
-		{
-			AELog.error( "Failed to register " + layerInterface.getName() + " with FMP, some features may not work with MultiParts." );
-			AELog.debug( t );
-		}
-	}
-
-	@Override
-	public Event newFMPPacketEvent( final EntityPlayerMP sender )
-	{
-		return new FMPPacketEvent( sender );
-	}
+    @Override
+    public Event newFMPPacketEvent(final EntityPlayerMP sender) {
+        return new FMPPacketEvent(sender);
+    }
 }

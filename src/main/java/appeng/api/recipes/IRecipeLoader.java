@@ -23,17 +23,14 @@
 
 package appeng.api.recipes;
 
-
-import javax.annotation.Nonnull;
 import java.io.BufferedReader;
+import javax.annotation.Nonnull;
 
-
-public interface IRecipeLoader
-{
-	/**
-	 * @param filePath the path to the to be loaded file
-	 * @return reader handler of the file
-	 * @throws Exception if reading goes wrong
-	 */
-	BufferedReader getFile( @Nonnull String filePath ) throws Exception;
+public interface IRecipeLoader {
+    /**
+     * @param filePath the path to the to be loaded file
+     * @return reader handler of the file
+     * @throws Exception if reading goes wrong
+     */
+    BufferedReader getFile(@Nonnull String filePath) throws Exception;
 }

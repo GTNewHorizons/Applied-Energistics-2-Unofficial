@@ -18,7 +18,6 @@
 
 package appeng.core.sync.packets;
 
-
 import appeng.client.gui.implementations.GuiInterfaceTerminal;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -26,86 +25,74 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import java.io.*;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 
-import java.io.*;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+public class PacketCompressedNBT extends AppEngPacket {
 
+    // input.
+    private final NBTTagCompound in;
+    // output...
+    private final ByteBuf data;
+    private final GZIPOutputStream compressFrame;
 
-public class PacketCompressedNBT extends AppEngPacket
-{
+    // automatic.
+    public PacketCompressedNBT(final ByteBuf stream) throws IOException {
+        this.data = null;
+        this.compressFrame = null;
 
-	// input.
-	private final NBTTagCompound in;
-	// output...
-	private final ByteBuf data;
-	private final GZIPOutputStream compressFrame;
+        final GZIPInputStream gzReader = new GZIPInputStream(new InputStream() {
 
-	// automatic.
-	public PacketCompressedNBT( final ByteBuf stream ) throws IOException
-	{
-		this.data = null;
-		this.compressFrame = null;
+            @Override
+            public int read() throws IOException {
+                if (stream.readableBytes() <= 0) {
+                    return -1;
+                }
 
-		final GZIPInputStream gzReader = new GZIPInputStream( new InputStream()
-		{
+                return stream.readByte() & 0xff;
+            }
+        });
 
-			@Override
-			public int read() throws IOException
-			{
-				if( stream.readableBytes() <= 0 )
-				{
-					return -1;
-				}
+        final DataInputStream inStream = new DataInputStream(gzReader);
+        this.in = CompressedStreamTools.read(inStream);
+        inStream.close();
+    }
 
-				return stream.readByte() & 0xff;
-			}
-		} );
+    // api
+    public PacketCompressedNBT(final NBTTagCompound din) throws IOException {
 
-		final DataInputStream inStream = new DataInputStream( gzReader );
-		this.in = CompressedStreamTools.read( inStream );
-		inStream.close();
-	}
+        this.data = Unpooled.buffer(2048);
+        this.data.writeInt(this.getPacketID());
 
-	// api
-	public PacketCompressedNBT( final NBTTagCompound din ) throws IOException
-	{
+        this.in = din;
 
-		this.data = Unpooled.buffer( 2048 );
-		this.data.writeInt( this.getPacketID() );
+        this.compressFrame = new GZIPOutputStream(new OutputStream() {
 
-		this.in = din;
+            @Override
+            public void write(final int value) throws IOException {
+                PacketCompressedNBT.this.data.writeByte(value);
+            }
+        });
 
-		this.compressFrame = new GZIPOutputStream( new OutputStream()
-		{
+        CompressedStreamTools.write(din, new DataOutputStream(this.compressFrame));
+        this.compressFrame.close();
 
-			@Override
-			public void write( final int value ) throws IOException
-			{
-				PacketCompressedNBT.this.data.writeByte( value );
-			}
-		} );
+        this.configureWrite(this.data);
+    }
 
-		CompressedStreamTools.write( din, new DataOutputStream( this.compressFrame ) );
-		this.compressFrame.close();
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
+        final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
-		this.configureWrite( this.data );
-	}
-
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void clientPacketData( final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player )
-	{
-		final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-
-		if( gs instanceof GuiInterfaceTerminal )
-		{
-			( (GuiInterfaceTerminal) gs ).postUpdate( this.in );
-		}
-	}
+        if (gs instanceof GuiInterfaceTerminal) {
+            ((GuiInterfaceTerminal) gs).postUpdate(this.in);
+        }
+    }
 }

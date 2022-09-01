@@ -16,24 +16,22 @@ public class GT implements IIntegrationModule {
 
     @Reflected
     public GT() throws Throwable {
-        IntegrationHelper.testClassExistence( this, gregtech.api.interfaces.tileentity.IEnergyConnected.class );
+        IntegrationHelper.testClassExistence(this, gregtech.api.interfaces.tileentity.IEnergyConnected.class);
         String ver = Loader.instance().getIndexedModList().get("gregtech").getVersion();
-        if (!ver.equals("MC1710"))
-            throw new ModNotInstalled( "gregtech" );
+        if (!ver.equals("MC1710")) throw new ModNotInstalled("gregtech");
     }
 
     @Override
     public void init() throws Throwable {
-        if( IntegrationRegistry.INSTANCE.isEnabled( IntegrationType.GT ) )
-        {
-            AEApi.instance().partHelper().registerNewLayer(
-                    "appeng.parts.layers.LayerIEnergyConnected",
-                    "gregtech.api.interfaces.tileentity.IEnergyConnected");
-
+        if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)) {
+            AEApi.instance()
+                    .partHelper()
+                    .registerNewLayer(
+                            "appeng.parts.layers.LayerIEnergyConnected",
+                            "gregtech.api.interfaces.tileentity.IEnergyConnected");
         }
     }
 
     @Override
-    public void postInit() {
-    }
+    public void postInit() {}
 }

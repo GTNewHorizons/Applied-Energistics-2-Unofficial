@@ -18,12 +18,12 @@
 
 package appeng.integration.modules.waila;
 
-
 import appeng.integration.modules.waila.tile.ChargerWailaDataProvider;
 import appeng.integration.modules.waila.tile.CraftingMonitorWailaDataProvider;
 import appeng.integration.modules.waila.tile.PowerStateWailaDataProvider;
 import appeng.integration.modules.waila.tile.PowerStorageWailaDataProvider;
 import com.google.common.collect.Lists;
+import java.util.List;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 import mcp.mobius.waila.api.IWailaDataProvider;
@@ -33,9 +33,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-import java.util.List;
-
-
 /**
  * Delegation provider for tiles through {@link mcp.mobius.waila.api.IWailaDataProvider}
  *
@@ -43,73 +40,81 @@ import java.util.List;
  * @version rv2
  * @since rv2
  */
-public final class TileWailaDataProvider implements IWailaDataProvider
-{
-	/**
-	 * Contains all providers
-	 */
-	private final List<IWailaDataProvider> providers;
+public final class TileWailaDataProvider implements IWailaDataProvider {
+    /**
+     * Contains all providers
+     */
+    private final List<IWailaDataProvider> providers;
 
-	/**
-	 * Initializes the provider list with all wanted providers
-	 */
-	public TileWailaDataProvider()
-	{
-		final IWailaDataProvider charger = new ChargerWailaDataProvider();
-		final IWailaDataProvider energyCell = new PowerStorageWailaDataProvider();
-		final IWailaDataProvider craftingBlock = new PowerStateWailaDataProvider();
-		final IWailaDataProvider craftingMonitor = new CraftingMonitorWailaDataProvider();
+    /**
+     * Initializes the provider list with all wanted providers
+     */
+    public TileWailaDataProvider() {
+        final IWailaDataProvider charger = new ChargerWailaDataProvider();
+        final IWailaDataProvider energyCell = new PowerStorageWailaDataProvider();
+        final IWailaDataProvider craftingBlock = new PowerStateWailaDataProvider();
+        final IWailaDataProvider craftingMonitor = new CraftingMonitorWailaDataProvider();
 
-		this.providers = Lists.newArrayList( charger, energyCell, craftingBlock, craftingMonitor );
-	}
+        this.providers = Lists.newArrayList(charger, energyCell, craftingBlock, craftingMonitor);
+    }
 
-	@Override
-	public ItemStack getWailaStack( final IWailaDataAccessor accessor, final IWailaConfigHandler config )
-	{
-		return null;
-	}
+    @Override
+    public ItemStack getWailaStack(final IWailaDataAccessor accessor, final IWailaConfigHandler config) {
+        return null;
+    }
 
-	@Override
-	public List<String> getWailaHead( final ItemStack itemStack, final List<String> currentToolTip, final IWailaDataAccessor accessor, final IWailaConfigHandler config )
-	{
-		for( final IWailaDataProvider provider : this.providers )
-		{
-			provider.getWailaHead( itemStack, currentToolTip, accessor, config );
-		}
+    @Override
+    public List<String> getWailaHead(
+            final ItemStack itemStack,
+            final List<String> currentToolTip,
+            final IWailaDataAccessor accessor,
+            final IWailaConfigHandler config) {
+        for (final IWailaDataProvider provider : this.providers) {
+            provider.getWailaHead(itemStack, currentToolTip, accessor, config);
+        }
 
-		return currentToolTip;
-	}
+        return currentToolTip;
+    }
 
-	@Override
-	public List<String> getWailaBody( final ItemStack itemStack, final List<String> currentToolTip, final IWailaDataAccessor accessor, final IWailaConfigHandler config )
-	{
-		for( final IWailaDataProvider provider : this.providers )
-		{
-			provider.getWailaBody( itemStack, currentToolTip, accessor, config );
-		}
+    @Override
+    public List<String> getWailaBody(
+            final ItemStack itemStack,
+            final List<String> currentToolTip,
+            final IWailaDataAccessor accessor,
+            final IWailaConfigHandler config) {
+        for (final IWailaDataProvider provider : this.providers) {
+            provider.getWailaBody(itemStack, currentToolTip, accessor, config);
+        }
 
-		return currentToolTip;
-	}
+        return currentToolTip;
+    }
 
-	@Override
-	public List<String> getWailaTail( final ItemStack itemStack, final List<String> currentToolTip, final IWailaDataAccessor accessor, final IWailaConfigHandler config )
-	{
-		for( final IWailaDataProvider provider : this.providers )
-		{
-			provider.getWailaTail( itemStack, currentToolTip, accessor, config );
-		}
+    @Override
+    public List<String> getWailaTail(
+            final ItemStack itemStack,
+            final List<String> currentToolTip,
+            final IWailaDataAccessor accessor,
+            final IWailaConfigHandler config) {
+        for (final IWailaDataProvider provider : this.providers) {
+            provider.getWailaTail(itemStack, currentToolTip, accessor, config);
+        }
 
-		return currentToolTip;
-	}
+        return currentToolTip;
+    }
 
-	@Override
-	public NBTTagCompound getNBTData( final EntityPlayerMP player, final TileEntity te, final NBTTagCompound tag, final World world, final int x, final int y, final int z )
-	{
-		for( final IWailaDataProvider provider : this.providers )
-		{
-			provider.getNBTData( player, te, tag, world, x, y, z );
-		}
+    @Override
+    public NBTTagCompound getNBTData(
+            final EntityPlayerMP player,
+            final TileEntity te,
+            final NBTTagCompound tag,
+            final World world,
+            final int x,
+            final int y,
+            final int z) {
+        for (final IWailaDataProvider provider : this.providers) {
+            provider.getNBTData(player, te, tag, world, x, y, z);
+        }
 
-		return tag;
-	}
+        return tag;
+    }
 }

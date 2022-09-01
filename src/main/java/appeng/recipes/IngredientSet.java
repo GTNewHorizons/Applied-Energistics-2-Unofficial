@@ -18,109 +18,92 @@
 
 package appeng.recipes;
 
-
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RegistrationError;
 import appeng.api.recipes.IIngredient;
 import appeng.api.recipes.ResolverResultSet;
 import com.google.common.base.Preconditions;
+import java.util.LinkedList;
+import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.util.LinkedList;
-import java.util.List;
+public class IngredientSet implements IIngredient {
 
+    private final int qty;
+    private final String name;
+    private final List<ItemStack> items;
+    private final boolean isInside = false;
+    private ItemStack[] baked;
 
-public class IngredientSet implements IIngredient
-{
+    public IngredientSet(final ResolverResultSet rr, final int qty) {
+        Preconditions.checkNotNull(rr);
+        Preconditions.checkNotNull(rr.name);
+        Preconditions.checkNotNull(rr.results);
+        Preconditions.checkState(qty > 0);
 
-	private final int qty;
-	private final String name;
-	private final List<ItemStack> items;
-	private final boolean isInside = false;
-	private ItemStack[] baked;
+        this.name = rr.name;
+        this.items = rr.results;
+        this.qty = qty;
+    }
 
-	public IngredientSet( final ResolverResultSet rr, final int qty )
-	{
-		Preconditions.checkNotNull( rr );
-		Preconditions.checkNotNull( rr.name );
-		Preconditions.checkNotNull( rr.results );
-		Preconditions.checkState( qty > 0 );
+    @Override
+    public ItemStack getItemStack() throws RegistrationError, MissingIngredientError {
+        throw new RegistrationError("Cannot pass group of items to a recipe which desires a single recipe item.");
+    }
 
-		this.name = rr.name;
-		this.items = rr.results;
-		this.qty = qty;
-	}
+    @Override
+    public ItemStack[] getItemStackSet() throws RegistrationError, MissingIngredientError {
+        if (this.baked != null) {
+            return this.baked;
+        }
 
-	@Override
-	public ItemStack getItemStack() throws RegistrationError, MissingIngredientError
-	{
-		throw new RegistrationError( "Cannot pass group of items to a recipe which desires a single recipe item." );
-	}
+        if (this.isInside) {
+            return new ItemStack[0];
+        }
 
-	@Override
-	public ItemStack[] getItemStackSet() throws RegistrationError, MissingIngredientError
-	{
-		if( this.baked != null )
-		{
-			return this.baked;
-		}
+        final List<ItemStack> out = new LinkedList<ItemStack>();
+        out.addAll(this.items);
 
-		if( this.isInside )
-		{
-			return new ItemStack[0];
-		}
+        if (out.isEmpty()) {
+            throw new MissingIngredientError(this.toString() + " - group could not be resolved to any items.");
+        }
 
-		final List<ItemStack> out = new LinkedList<ItemStack>();
-		out.addAll( this.items );
+        for (final ItemStack is : out) {
+            is.stackSize = this.qty;
+        }
 
-		if( out.isEmpty() )
-		{
-			throw new MissingIngredientError( this.toString() + " - group could not be resolved to any items." );
-		}
+        return out.toArray(new ItemStack[out.size()]);
+    }
 
-		for( final ItemStack is : out )
-		{
-			is.stackSize = this.qty;
-		}
+    @Override
+    public boolean isAir() {
+        return false;
+    }
 
-		return out.toArray( new ItemStack[out.size()] );
-	}
+    @Override
+    public String getNameSpace() {
+        return "";
+    }
 
-	@Override
-	public boolean isAir()
-	{
-		return false;
-	}
+    @Override
+    public String getItemName() {
+        return this.name;
+    }
 
-	@Override
-	public String getNameSpace()
-	{
-		return "";
-	}
+    @Override
+    public int getDamageValue() {
+        return OreDictionary.WILDCARD_VALUE;
+    }
 
-	@Override
-	public String getItemName()
-	{
-		return this.name;
-	}
+    @Override
+    public int getQty() {
+        return this.qty;
+    }
 
-	@Override
-	public int getDamageValue()
-	{
-		return OreDictionary.WILDCARD_VALUE;
-	}
-
-	@Override
-	public int getQty()
-	{
-		return this.qty;
-	}
-
-	@Override
-	public void bake() throws RegistrationError, MissingIngredientError
-	{
-		this.baked = null;
-		this.baked = this.getItemStackSet();
-	}
+    @Override
+    public void bake() throws RegistrationError, MissingIngredientError {
+        this.baked = null;
+        this.baked = this.getItemStackSet();
+    }
 }

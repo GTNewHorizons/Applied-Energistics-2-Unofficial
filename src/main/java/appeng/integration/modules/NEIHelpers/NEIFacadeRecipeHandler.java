@@ -18,7 +18,6 @@
 
 package appeng.integration.modules.NEIHelpers;
 
-
 import appeng.api.AEApi;
 import appeng.api.definitions.IDefinitions;
 import appeng.api.definitions.IItemDefinition;
@@ -32,216 +31,177 @@ import codechicken.nei.api.IRecipeOverlayRenderer;
 import codechicken.nei.api.IStackPositioner;
 import codechicken.nei.recipe.RecipeInfo;
 import codechicken.nei.recipe.TemplateRecipeHandler;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.inventory.GuiCrafting;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
+public class NEIFacadeRecipeHandler extends TemplateRecipeHandler {
+    private final ItemFacade facade;
+    private final IItemDefinition anchorDefinition;
 
+    public NEIFacadeRecipeHandler() {
+        final IDefinitions definitions = AEApi.instance().definitions();
 
-public class NEIFacadeRecipeHandler extends TemplateRecipeHandler
-{
-	private final ItemFacade facade;
-	private final IItemDefinition anchorDefinition;
+        this.facade = (ItemFacade) definitions.items().facade().maybeItem().get();
+        this.anchorDefinition = definitions.parts().cableAnchor();
+    }
 
-	public NEIFacadeRecipeHandler()
-	{
-		final IDefinitions definitions = AEApi.instance().definitions();
+    @Override
+    public void loadTransferRects() {
+        this.transferRects.add(new TemplateRecipeHandler.RecipeTransferRect(new Rectangle(84, 23, 24, 18), "crafting"));
+    }
 
-		this.facade = (ItemFacade) definitions.items().facade().maybeItem().get();
-		this.anchorDefinition = definitions.parts().cableAnchor();
-	}
+    @Override
+    public void loadCraftingRecipes(final String outputId, final Object... results) {
+        if ((outputId.equals("crafting")) && (this.getClass() == NEIFacadeRecipeHandler.class)) {
+            final List<ItemStack> facades = this.facade.getFacades();
+            for (final ItemStack anchorStack :
+                    this.anchorDefinition.maybeStack(1).asSet()) {
+                for (final ItemStack is : facades) {
+                    final CachedShapedRecipe recipe = new CachedShapedRecipe(this.facade, anchorStack, is);
+                    recipe.computeVisuals();
+                    this.arecipes.add(recipe);
+                }
+            }
+        } else {
+            super.loadCraftingRecipes(outputId, results);
+        }
+    }
 
-	@Override
-	public void loadTransferRects()
-	{
-		this.transferRects.add( new TemplateRecipeHandler.RecipeTransferRect( new Rectangle( 84, 23, 24, 18 ), "crafting" ) );
-	}
+    @Override
+    public void loadCraftingRecipes(final ItemStack result) {
+        if (result.getItem() == this.facade) {
+            for (final ItemStack anchorStack :
+                    this.anchorDefinition.maybeStack(1).asSet()) {
+                final CachedShapedRecipe recipe = new CachedShapedRecipe(this.facade, anchorStack, result);
+                recipe.computeVisuals();
+                this.arecipes.add(recipe);
+            }
+        }
+    }
 
-	@Override
-	public void loadCraftingRecipes( final String outputId, final Object... results )
-	{
-		if( ( outputId.equals( "crafting" ) ) && ( this.getClass() == NEIFacadeRecipeHandler.class ) )
-		{
-			final List<ItemStack> facades = this.facade.getFacades();
-			for( final ItemStack anchorStack : this.anchorDefinition.maybeStack( 1 ).asSet() )
-			{
-				for( final ItemStack is : facades )
-				{
-					final CachedShapedRecipe recipe = new CachedShapedRecipe( this.facade, anchorStack, is );
-					recipe.computeVisuals();
-					this.arecipes.add( recipe );
-				}
-			}
-		}
-		else
-		{
-			super.loadCraftingRecipes( outputId, results );
-		}
-	}
+    @Override
+    public void loadUsageRecipes(final ItemStack ingredient) {
+        final List<ItemStack> facades = this.facade.getFacades();
+        for (final ItemStack anchorStack : this.anchorDefinition.maybeStack(1).asSet()) {
+            for (final ItemStack is : facades) {
+                final CachedShapedRecipe recipe = new CachedShapedRecipe(this.facade, anchorStack, is);
 
-	@Override
-	public void loadCraftingRecipes( final ItemStack result )
-	{
-		if( result.getItem() == this.facade )
-		{
-			for( final ItemStack anchorStack : this.anchorDefinition.maybeStack( 1 ).asSet() )
-			{
-				final CachedShapedRecipe recipe = new CachedShapedRecipe( this.facade, anchorStack, result );
-				recipe.computeVisuals();
-				this.arecipes.add( recipe );
-			}
-		}
-	}
+                if (recipe.contains(recipe.ingredients, ingredient.getItem())) {
+                    recipe.computeVisuals();
+                    if (recipe.contains(recipe.ingredients, ingredient)) {
+                        recipe.setIngredientPermutation(recipe.ingredients, ingredient);
+                        this.arecipes.add(recipe);
+                    }
+                }
+            }
+        }
+    }
 
-	@Override
-	public void loadUsageRecipes( final ItemStack ingredient )
-	{
-		final List<ItemStack> facades = this.facade.getFacades();
-		for( final ItemStack anchorStack : this.anchorDefinition.maybeStack( 1 ).asSet() )
-		{
-			for( final ItemStack is : facades )
-			{
-				final CachedShapedRecipe recipe = new CachedShapedRecipe( this.facade, anchorStack, is );
+    @Override
+    public String getGuiTexture() {
+        return "textures/gui/container/crafting_table.png";
+    }
 
-				if( recipe.contains( recipe.ingredients, ingredient.getItem() ) )
-				{
-					recipe.computeVisuals();
-					if( recipe.contains( recipe.ingredients, ingredient ) )
-					{
-						recipe.setIngredientPermutation( recipe.ingredients, ingredient );
-						this.arecipes.add( recipe );
-					}
-				}
-			}
-		}
-	}
+    @Override
+    public String getOverlayIdentifier() {
+        return "AEFacadeCrafting";
+    }
 
-	@Override
-	public String getGuiTexture()
-	{
-		return "textures/gui/container/crafting_table.png";
-	}
+    @Override
+    public Class<? extends GuiContainer> getGuiClass() {
+        return GuiCrafting.class;
+    }
 
-	@Override
-	public String getOverlayIdentifier()
-	{
-		return "AEFacadeCrafting";
-	}
+    @Override
+    public boolean hasOverlay(final GuiContainer gui, final Container container, final int recipe) {
+        return (super.hasOverlay(gui, container, recipe))
+                || ((this.isRecipe2x2(recipe)) && (RecipeInfo.hasDefaultOverlay(gui, "crafting2x2")));
+    }
 
-	@Override
-	public Class<? extends GuiContainer> getGuiClass()
-	{
-		return GuiCrafting.class;
-	}
+    @Override
+    public IRecipeOverlayRenderer getOverlayRenderer(final GuiContainer gui, final int recipe) {
+        final IRecipeOverlayRenderer renderer = super.getOverlayRenderer(gui, recipe);
+        if (renderer != null) {
+            return renderer;
+        }
 
-	@Override
-	public boolean hasOverlay( final GuiContainer gui, final Container container, final int recipe )
-	{
-		return ( super.hasOverlay( gui, container, recipe ) ) || ( ( this.isRecipe2x2( recipe ) ) && ( RecipeInfo.hasDefaultOverlay( gui, "crafting2x2" ) ) );
-	}
+        final IStackPositioner positioner = RecipeInfo.getStackPositioner(gui, "crafting2x2");
+        if (positioner == null) {
+            return null;
+        }
 
-	@Override
-	public IRecipeOverlayRenderer getOverlayRenderer( final GuiContainer gui, final int recipe )
-	{
-		final IRecipeOverlayRenderer renderer = super.getOverlayRenderer( gui, recipe );
-		if( renderer != null )
-		{
-			return renderer;
-		}
+        return new DefaultOverlayRenderer(this.getIngredientStacks(recipe), positioner);
+    }
 
-		final IStackPositioner positioner = RecipeInfo.getStackPositioner( gui, "crafting2x2" );
-		if( positioner == null )
-		{
-			return null;
-		}
+    @Override
+    public IOverlayHandler getOverlayHandler(final GuiContainer gui, final int recipe) {
+        final IOverlayHandler handler = super.getOverlayHandler(gui, recipe);
+        if (handler != null) {
+            return handler;
+        }
 
-		return new DefaultOverlayRenderer( this.getIngredientStacks( recipe ), positioner );
-	}
+        return RecipeInfo.getOverlayHandler(gui, "crafting2x2");
+    }
 
-	@Override
-	public IOverlayHandler getOverlayHandler( final GuiContainer gui, final int recipe )
-	{
-		final IOverlayHandler handler = super.getOverlayHandler( gui, recipe );
-		if( handler != null )
-		{
-			return handler;
-		}
+    private boolean isRecipe2x2(final int recipe) {
+        for (final PositionedStack stack : this.getIngredientStacks(recipe)) {
+            if ((stack.relx > 43) || (stack.rely > 24)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-		return RecipeInfo.getOverlayHandler( gui, "crafting2x2" );
-	}
+    @Override
+    public String getRecipeName() {
+        return GuiText.FacadeCrafting.getLocal();
+    }
 
-	private boolean isRecipe2x2( final int recipe )
-	{
-		for( final PositionedStack stack : this.getIngredientStacks( recipe ) )
-		{
-			if( ( stack.relx > 43 ) || ( stack.rely > 24 ) )
-			{
-				return false;
-			}
-		}
-		return true;
-	}
+    private final class CachedShapedRecipe extends TemplateRecipeHandler.CachedRecipe {
+        public final List<PositionedStack> ingredients;
+        public final PositionedStack result;
 
-	@Override
-	public String getRecipeName()
-	{
-		return GuiText.FacadeCrafting.getLocal();
-	}
+        public CachedShapedRecipe(final IFacadeItem facade, final ItemStack anchor, final ItemStack output) {
+            output.stackSize = 4;
+            this.result = new PositionedStack(output, 119, 24);
+            this.ingredients = new ArrayList<PositionedStack>();
+            final ItemStack in = facade.getTextureItem(output);
+            this.setIngredients(3, 3, new Object[] {null, anchor, null, anchor, in, anchor, null, anchor, null});
+        }
 
-	private final class CachedShapedRecipe extends TemplateRecipeHandler.CachedRecipe
-	{
-		public final List<PositionedStack> ingredients;
-		public final PositionedStack result;
+        public void setIngredients(final int width, final int height, final Object[] items) {
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    if (items[(y * width + x)] != null) {
+                        final ItemStack is = (ItemStack) items[(y * width + x)];
+                        final PositionedStack stack = new PositionedStack(is, 25 + x * 18, 6 + y * 18, false);
+                        stack.setMaxSize(1);
+                        this.ingredients.add(stack);
+                    }
+                }
+            }
+        }
 
-		public CachedShapedRecipe( final IFacadeItem facade, final ItemStack anchor, final ItemStack output )
-		{
-			output.stackSize = 4;
-			this.result = new PositionedStack( output, 119, 24 );
-			this.ingredients = new ArrayList<PositionedStack>();
-			final ItemStack in = facade.getTextureItem( output );
-			this.setIngredients( 3, 3, new Object[] { null, anchor, null, anchor, in, anchor, null, anchor, null } );
-		}
+        @Override
+        public PositionedStack getResult() {
+            return this.result;
+        }
 
-		public void setIngredients( final int width, final int height, final Object[] items )
-		{
-			for( int x = 0; x < width; x++ )
-			{
-				for( int y = 0; y < height; y++ )
-				{
-					if( items[( y * width + x )] != null )
-					{
-						final ItemStack is = (ItemStack) items[( y * width + x )];
-						final PositionedStack stack = new PositionedStack( is, 25 + x * 18, 6 + y * 18, false );
-						stack.setMaxSize( 1 );
-						this.ingredients.add( stack );
-					}
-				}
-			}
-		}
+        @Override
+        public List<PositionedStack> getIngredients() {
+            return this.getCycledIngredients(NEIFacadeRecipeHandler.this.cycleticks / 20, this.ingredients);
+        }
 
-		@Override
-		public PositionedStack getResult()
-		{
-			return this.result;
-		}
-
-		@Override
-		public List<PositionedStack> getIngredients()
-		{
-			return this.getCycledIngredients( NEIFacadeRecipeHandler.this.cycleticks / 20, this.ingredients );
-		}
-
-		public void computeVisuals()
-		{
-			for( final PositionedStack p : this.ingredients )
-			{
-				p.generatePermutations();
-			}
-			this.result.generatePermutations();
-		}
-	}
+        public void computeVisuals() {
+            for (final PositionedStack p : this.ingredients) {
+                p.generatePermutations();
+            }
+            this.result.generatePermutations();
+        }
+    }
 }

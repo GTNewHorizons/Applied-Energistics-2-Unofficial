@@ -18,7 +18,6 @@
 
 package appeng.parts.p2p;
 
-
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
@@ -27,6 +26,8 @@ import appeng.core.settings.TickRates;
 import appeng.integration.IntegrationType;
 import appeng.transformer.annotations.Integration.Interface;
 import appeng.util.Platform;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -37,144 +38,122 @@ import pneumaticCraft.api.tileentity.AirHandlerSupplier;
 import pneumaticCraft.api.tileentity.IAirHandler;
 import pneumaticCraft.api.tileentity.ISidedPneumaticMachine;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+@Interface(iface = "pneumaticCraft.api.tileentity.ISidedPneumaticMachine", iname = IntegrationType.PneumaticCraft)
+public final class PartP2PPressure extends PartP2PTunnel<PartP2PPressure>
+        implements ISidedPneumaticMachine, IGridTickable {
+    private static final String PRESSURE_NBT_TAG = "pneumaticCraft";
+    private static final String PRESSURE_TYPE_ICON_NAME = "compressedIronBlock";
 
+    /**
+     * The pressure should never exceed 30f, thus preventing the tunnel from exploding.
+     */
+    private static final float MAX_PRESSURE = 30f;
 
-@Interface( iface = "pneumaticCraft.api.tileentity.ISidedPneumaticMachine", iname = IntegrationType.PneumaticCraft )
-public final class PartP2PPressure extends PartP2PTunnel<PartP2PPressure> implements ISidedPneumaticMachine, IGridTickable
-{
-	private static final String PRESSURE_NBT_TAG = "pneumaticCraft";
-	private static final String PRESSURE_TYPE_ICON_NAME = "compressedIronBlock";
+    private static final int VOLUME = 1000;
 
-	/**
-	 * The pressure should never exceed 30f, thus preventing the tunnel from exploding.
-	 */
-	private static final float MAX_PRESSURE = 30f;
-	private static final int VOLUME = 1000;
+    @Nonnull
+    private final IAirHandler handler;
 
-	@Nonnull
-	private final IAirHandler handler;
-	private boolean isConnected = false;
-	private boolean isValid = false;
+    private boolean isConnected = false;
+    private boolean isValid = false;
 
-	public PartP2PPressure( final ItemStack is )
-	{
-		super( is );
-		this.handler = AirHandlerSupplier.getAirHandler( MAX_PRESSURE, MAX_PRESSURE, VOLUME );
-	}
+    public PartP2PPressure(final ItemStack is) {
+        super(is);
+        this.handler = AirHandlerSupplier.getAirHandler(MAX_PRESSURE, MAX_PRESSURE, VOLUME);
+    }
 
-	@Override
-	protected IIcon getTypeTexture()
-	{
-		return BlockSupplier.getBlock( PRESSURE_TYPE_ICON_NAME ).getIcon( 0, 0 );
-	}
+    @Override
+    protected IIcon getTypeTexture() {
+        return BlockSupplier.getBlock(PRESSURE_TYPE_ICON_NAME).getIcon(0, 0);
+    }
 
-	@Nullable
-	@Override
-	public IAirHandler getAirHandler( final ForgeDirection side )
-	{
-		if( side == this.getSide() )
-		{
-			return this.getInternalHandler();
-		}
+    @Nullable
+    @Override
+    public IAirHandler getAirHandler(final ForgeDirection side) {
+        if (side == this.getSide()) {
+            return this.getInternalHandler();
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	@Override
-	public void onNeighborChanged()
-	{
-		super.onNeighborChanged();
+    @Override
+    public void onNeighborChanged() {
+        super.onNeighborChanged();
 
-		if( this.isValid )
-		{
-			this.getInternalHandler().onNeighborChange();
-		}
-	}
+        if (this.isValid) {
+            this.getInternalHandler().onNeighborChange();
+        }
+    }
 
-	@Override
-	public void addToWorld()
-	{
-		super.addToWorld();
+    @Override
+    public void addToWorld() {
+        super.addToWorld();
 
-		this.getInternalHandler().validateI( this.getTile() );
-		this.isValid = true;
-	}
+        this.getInternalHandler().validateI(this.getTile());
+        this.isValid = true;
+    }
 
-	@Override
-	public void removeFromWorld()
-	{
-		super.removeFromWorld();
+    @Override
+    public void removeFromWorld() {
+        super.removeFromWorld();
 
-		this.isValid = false;
-		if( this.isOutput() && this.getInput() != null )
-		{
-			this.getInternalHandler().removeConnection( this.getInput().getInternalHandler() );
-			this.isConnected = false;
-		}
-	}
+        this.isValid = false;
+        if (this.isOutput() && this.getInput() != null) {
+            this.getInternalHandler().removeConnection(this.getInput().getInternalHandler());
+            this.isConnected = false;
+        }
+    }
 
-	@Override
-	public TickingRequest getTickingRequest( final IGridNode node )
-	{
-		return new TickingRequest( TickRates.PressureTunnel.getMin(), TickRates.PressureTunnel.getMax(), false, false );
-	}
+    @Override
+    public TickingRequest getTickingRequest(final IGridNode node) {
+        return new TickingRequest(TickRates.PressureTunnel.getMin(), TickRates.PressureTunnel.getMax(), false, false);
+    }
 
-	@Override
-	public TickRateModulation tickingRequest( final IGridNode node, final int TicksSinceLastCall )
-	{
-		if( this.getProxy().isPowered() && this.getProxy().isActive() )
-		{
-			if( !this.isConnected )
-			{
-				this.updateHandler();
-			}
+    @Override
+    public TickRateModulation tickingRequest(final IGridNode node, final int TicksSinceLastCall) {
+        if (this.getProxy().isPowered() && this.getProxy().isActive()) {
+            if (!this.isConnected) {
+                this.updateHandler();
+            }
 
-			this.getInternalHandler().updateEntityI();
-			return TickRateModulation.URGENT;
-		}
+            this.getInternalHandler().updateEntityI();
+            return TickRateModulation.URGENT;
+        }
 
-		return TickRateModulation.IDLE;
-	}
+        return TickRateModulation.IDLE;
+    }
 
-	@Override
-	public void writeToNBT( final NBTTagCompound data )
-	{
-		super.writeToNBT( data );
-		final NBTTagCompound pneumaticNBT = new NBTTagCompound();
+    @Override
+    public void writeToNBT(final NBTTagCompound data) {
+        super.writeToNBT(data);
+        final NBTTagCompound pneumaticNBT = new NBTTagCompound();
 
-		this.getInternalHandler().writeToNBTI( pneumaticNBT );
-		data.setTag( PRESSURE_NBT_TAG, pneumaticNBT );
-	}
+        this.getInternalHandler().writeToNBTI(pneumaticNBT);
+        data.setTag(PRESSURE_NBT_TAG, pneumaticNBT);
+    }
 
-	@Override
-	public void readFromNBT( final NBTTagCompound data )
-	{
-		super.readFromNBT( data );
-		this.getInternalHandler().readFromNBTI( data.getCompoundTag( PRESSURE_NBT_TAG ) );
-	}
+    @Override
+    public void readFromNBT(final NBTTagCompound data) {
+        super.readFromNBT(data);
+        this.getInternalHandler().readFromNBTI(data.getCompoundTag(PRESSURE_NBT_TAG));
+    }
 
-	@Nonnull
-	private IAirHandler getInternalHandler()
-	{
-		return this.handler;
-	}
+    @Nonnull
+    private IAirHandler getInternalHandler() {
+        return this.handler;
+    }
 
-	private void updateHandler()
-	{
-		if( this.getProxy().isPowered() && this.getProxy().isActive() )
-		{
+    private void updateHandler() {
+        if (this.getProxy().isPowered() && this.getProxy().isActive()) {
 
-			if( this.isOutput() && this.getInput() != null )
-			{
-				this.getInternalHandler().createConnection( this.getInput().getInternalHandler() );
-				this.isConnected = true;
-			}
+            if (this.isOutput() && this.getInput() != null) {
+                this.getInternalHandler().createConnection(this.getInput().getInternalHandler());
+                this.isConnected = true;
+            }
 
-			final TileEntity te = this.getTile();
-			Platform.notifyBlocksOfNeighbors( te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord );
-		}
-	}
-
+            final TileEntity te = this.getTile();
+            Platform.notifyBlocksOfNeighbors(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord);
+        }
+    }
 }

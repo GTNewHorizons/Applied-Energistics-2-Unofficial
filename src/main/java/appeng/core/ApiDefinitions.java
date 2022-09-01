@@ -18,68 +18,58 @@
 
 package appeng.core;
 
-
 import appeng.api.definitions.IDefinitions;
 import appeng.api.parts.IPartHelper;
 import appeng.core.api.definitions.*;
 
-
 /**
  * Internal implementation of the definitions for the API
  */
-public final class ApiDefinitions implements IDefinitions
-{
-	private final ApiBlocks blocks;
-	private final ApiItems items;
-	private final ApiMaterials materials;
-	private final ApiParts parts;
-	private final FeatureHandlerRegistry handlers;
-	private final FeatureRegistry features;
+public final class ApiDefinitions implements IDefinitions {
+    private final ApiBlocks blocks;
+    private final ApiItems items;
+    private final ApiMaterials materials;
+    private final ApiParts parts;
+    private final FeatureHandlerRegistry handlers;
+    private final FeatureRegistry features;
 
-	public ApiDefinitions( final IPartHelper partHelper )
-	{
-		this.features = new FeatureRegistry();
-		this.handlers = new FeatureHandlerRegistry();
+    public ApiDefinitions(final IPartHelper partHelper) {
+        this.features = new FeatureRegistry();
+        this.handlers = new FeatureHandlerRegistry();
 
-		final DefinitionConstructor constructor = new DefinitionConstructor( this.features, this.handlers );
+        final DefinitionConstructor constructor = new DefinitionConstructor(this.features, this.handlers);
 
-		this.blocks = new ApiBlocks( constructor );
-		this.items = new ApiItems( constructor );
-		this.materials = new ApiMaterials( constructor );
-		this.parts = new ApiParts( constructor, partHelper );
-	}
+        this.blocks = new ApiBlocks(constructor);
+        this.items = new ApiItems(constructor);
+        this.materials = new ApiMaterials(constructor);
+        this.parts = new ApiParts(constructor, partHelper);
+    }
 
-	FeatureHandlerRegistry getFeatureHandlerRegistry()
-	{
-		return this.handlers;
-	}
+    FeatureHandlerRegistry getFeatureHandlerRegistry() {
+        return this.handlers;
+    }
 
-	FeatureRegistry getFeatureRegistry()
-	{
-		return this.features;
-	}
+    FeatureRegistry getFeatureRegistry() {
+        return this.features;
+    }
 
-	@Override
-	public ApiBlocks blocks()
-	{
-		return this.blocks;
-	}
+    @Override
+    public ApiBlocks blocks() {
+        return this.blocks;
+    }
 
-	@Override
-	public ApiItems items()
-	{
-		return this.items;
-	}
+    @Override
+    public ApiItems items() {
+        return this.items;
+    }
 
-	@Override
-	public ApiMaterials materials()
-	{
-		return this.materials;
-	}
+    @Override
+    public ApiMaterials materials() {
+        return this.materials;
+    }
 
-	@Override
-	public ApiParts parts()
-	{
-		return this.parts;
-	}
+    @Override
+    public ApiParts parts() {
+        return this.parts;
+    }
 }

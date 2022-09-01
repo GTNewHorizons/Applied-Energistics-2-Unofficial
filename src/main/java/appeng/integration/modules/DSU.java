@@ -18,7 +18,6 @@
 
 package appeng.integration.modules;
 
-
 import appeng.api.AEApi;
 import appeng.api.storage.IMEInventory;
 import appeng.helpers.Reflected;
@@ -30,38 +29,30 @@ import appeng.integration.modules.helpers.MinefactoryReloadedDeepStorageUnit;
 import net.minecraft.tileentity.TileEntity;
 import powercrystals.minefactoryreloaded.api.IDeepStorageUnit;
 
+public class DSU implements IDSU, IIntegrationModule {
+    @Reflected
+    public static DSU instance;
 
-public class DSU implements IDSU, IIntegrationModule
-{
-	@Reflected
-	public static DSU instance;
+    @Reflected
+    public DSU() {
+        IntegrationHelper.testClassExistence(this, powercrystals.minefactoryreloaded.api.IDeepStorageUnit.class);
+    }
 
-	@Reflected
-	public DSU()
-	{
-		IntegrationHelper.testClassExistence( this, powercrystals.minefactoryreloaded.api.IDeepStorageUnit.class );
-	}
+    @Override
+    public IMEInventory getDSU(final TileEntity te) {
+        return new MinefactoryReloadedDeepStorageUnit(te);
+    }
 
-	@Override
-	public IMEInventory getDSU( final TileEntity te )
-	{
-		return new MinefactoryReloadedDeepStorageUnit( te );
-	}
+    @Override
+    public boolean isDSU(final TileEntity te) {
+        return te instanceof IDeepStorageUnit;
+    }
 
-	@Override
-	public boolean isDSU( final TileEntity te )
-	{
-		return te instanceof IDeepStorageUnit;
-	}
+    @Override
+    public void init() {}
 
-	@Override
-	public void init()
-	{
-	}
-
-	@Override
-	public void postInit()
-	{
-		AEApi.instance().registries().externalStorage().addExternalStorageInterface( new MFRDSUHandler() );
-	}
+    @Override
+    public void postInit() {
+        AEApi.instance().registries().externalStorage().addExternalStorageInterface(new MFRDSUHandler());
+    }
 }

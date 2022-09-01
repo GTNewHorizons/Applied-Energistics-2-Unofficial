@@ -18,7 +18,6 @@
 
 package appeng.fmp;
 
-
 import appeng.api.parts.*;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
@@ -28,291 +27,237 @@ import appeng.util.Platform;
 import codechicken.lib.vec.BlockCoord;
 import codechicken.multipart.TMultiPart;
 import codechicken.multipart.TileMultipart;
+import java.util.EnumSet;
+import java.util.Set;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
-import java.util.Set;
+public class FMPPlacementHelper implements IPartHost {
 
+    private static final CableBusStorage NULL_STORAGE = new NullStorage();
+    private boolean hasPart = false;
+    private TileMultipart myMP;
+    private CableBusPart myPart;
 
-public class FMPPlacementHelper implements IPartHost
-{
+    public FMPPlacementHelper(final TileMultipart mp) {
+        this.myMP = mp;
+    }
 
-	private static final CableBusStorage NULL_STORAGE = new NullStorage();
-	private boolean hasPart = false;
-	private TileMultipart myMP;
-	private CableBusPart myPart;
+    @Override
+    public IFacadeContainer getFacadeContainer() {
+        if (this.myPart == null) {
+            return new FacadeContainer(NULL_STORAGE);
+        }
+        return this.myPart.getFacadeContainer();
+    }
 
-	public FMPPlacementHelper( final TileMultipart mp )
-	{
-		this.myMP = mp;
-	}
+    @Override
+    public boolean canAddPart(final ItemStack part, final ForgeDirection side) {
+        final CableBusPart myPart = this.getPart();
 
-	@Override
-	public IFacadeContainer getFacadeContainer()
-	{
-		if( this.myPart == null )
-		{
-			return new FacadeContainer( NULL_STORAGE );
-		}
-		return this.myPart.getFacadeContainer();
-	}
+        final boolean returnValue = this.hasPart && myPart.canAddPart(part, side);
 
-	@Override
-	public boolean canAddPart( final ItemStack part, final ForgeDirection side )
-	{
-		final CableBusPart myPart = this.getPart();
+        this.removePart();
 
-		final boolean returnValue = this.hasPart && myPart.canAddPart( part, side );
+        return returnValue;
+    }
 
-		this.removePart();
+    private CableBusPart getPart() {
+        final scala.collection.Iterator<TMultiPart> i = this.myMP.partList().iterator();
+        while (i.hasNext()) {
+            final TMultiPart p = i.next();
+            if (p instanceof CableBusPart) {
+                this.myPart = (CableBusPart) p;
+            }
+        }
 
-		return returnValue;
-	}
+        if (this.myPart == null) {
+            this.myPart = (CableBusPart) PartRegistry.CableBusPart.construct(0);
+        }
 
-	private CableBusPart getPart()
-	{
-		final scala.collection.Iterator<TMultiPart> i = this.myMP.partList().iterator();
-		while( i.hasNext() )
-		{
-			final TMultiPart p = i.next();
-			if( p instanceof CableBusPart )
-			{
-				this.myPart = (CableBusPart) p;
-			}
-		}
+        final BlockCoord loc = new BlockCoord(this.myMP.xCoord, this.myMP.yCoord, this.myMP.zCoord);
 
-		if( this.myPart == null )
-		{
-			this.myPart = (CableBusPart) PartRegistry.CableBusPart.construct( 0 );
-		}
+        if (this.myMP.canAddPart(this.myPart) && Platform.isServer()) {
+            this.myMP = TileMultipart.addPart(this.myMP.getWorldObj(), loc, this.myPart);
+            this.hasPart = true;
+        }
 
-		final BlockCoord loc = new BlockCoord( this.myMP.xCoord, this.myMP.yCoord, this.myMP.zCoord );
+        return this.myPart;
+    }
 
-		if( this.myMP.canAddPart( this.myPart ) && Platform.isServer() )
-		{
-			this.myMP = TileMultipart.addPart( this.myMP.getWorldObj(), loc, this.myPart );
-			this.hasPart = true;
-		}
+    private void removePart() {
+        if (this.myPart.isEmpty()) {
+            final scala.collection.Iterator<TMultiPart> i = this.myMP.partList().iterator();
+            while (i.hasNext()) {
+                final TMultiPart p = i.next();
+                if (p == this.myPart) {
+                    this.myMP = this.myMP.remPart(this.myPart);
+                    break;
+                }
+            }
+            this.hasPart = false;
+            this.myPart = null;
+        }
+    }
 
-		return this.myPart;
-	}
+    @Override
+    public ForgeDirection addPart(final ItemStack is, final ForgeDirection side, final EntityPlayer owner) {
+        final CableBusPart myPart = this.getPart();
 
-	private void removePart()
-	{
-		if( this.myPart.isEmpty() )
-		{
-			final scala.collection.Iterator<TMultiPart> i = this.myMP.partList().iterator();
-			while( i.hasNext() )
-			{
-				final TMultiPart p = i.next();
-				if( p == this.myPart )
-				{
-					this.myMP = this.myMP.remPart( this.myPart );
-					break;
-				}
-			}
-			this.hasPart = false;
-			this.myPart = null;
-		}
-	}
+        final ForgeDirection returnValue = this.hasPart ? myPart.addPart(is, side, owner) : null;
 
-	@Override
-	public ForgeDirection addPart( final ItemStack is, final ForgeDirection side, final EntityPlayer owner )
-	{
-		final CableBusPart myPart = this.getPart();
+        this.removePart();
 
-		final ForgeDirection returnValue = this.hasPart ? myPart.addPart( is, side, owner ) : null;
+        return returnValue;
+    }
 
-		this.removePart();
+    @Override
+    public IPart getPart(final ForgeDirection side) {
+        if (this.myPart == null) {
+            return null;
+        }
+        return this.myPart.getPart(side);
+    }
 
-		return returnValue;
-	}
+    @Override
+    public void removePart(final ForgeDirection side, final boolean suppressUpdate) {
+        if (this.myPart == null) {
+            return;
+        }
+        this.myPart.removePart(side, suppressUpdate);
+    }
 
-	@Override
-	public IPart getPart( final ForgeDirection side )
-	{
-		if( this.myPart == null )
-		{
-			return null;
-		}
-		return this.myPart.getPart( side );
-	}
+    @Override
+    public void markForUpdate() {
+        if (this.myPart == null) {
+            return;
+        }
+        this.myPart.markForUpdate();
+    }
 
-	@Override
-	public void removePart( final ForgeDirection side, final boolean suppressUpdate )
-	{
-		if( this.myPart == null )
-		{
-			return;
-		}
-		this.myPart.removePart( side, suppressUpdate );
-	}
+    @Override
+    public DimensionalCoord getLocation() {
+        if (this.myPart == null) {
+            return new DimensionalCoord(this.myMP);
+        }
+        return this.myPart.getLocation();
+    }
 
-	@Override
-	public void markForUpdate()
-	{
-		if( this.myPart == null )
-		{
-			return;
-		}
-		this.myPart.markForUpdate();
-	}
+    @Override
+    public TileEntity getTile() {
+        return this.myMP;
+    }
 
-	@Override
-	public DimensionalCoord getLocation()
-	{
-		if( this.myPart == null )
-		{
-			return new DimensionalCoord( this.myMP );
-		}
-		return this.myPart.getLocation();
-	}
+    @Override
+    public AEColor getColor() {
+        if (this.myPart == null) {
+            return AEColor.Transparent;
+        }
+        return this.myPart.getColor();
+    }
 
-	@Override
-	public TileEntity getTile()
-	{
-		return this.myMP;
-	}
+    @Override
+    public void clearContainer() {
+        if (this.myPart == null) {
+            return;
+        }
+        this.myPart.clearContainer();
+    }
 
-	@Override
-	public AEColor getColor()
-	{
-		if( this.myPart == null )
-		{
-			return AEColor.Transparent;
-		}
-		return this.myPart.getColor();
-	}
+    @Override
+    public boolean isBlocked(final ForgeDirection side) {
+        this.getPart();
 
-	@Override
-	public void clearContainer()
-	{
-		if( this.myPart == null )
-		{
-			return;
-		}
-		this.myPart.clearContainer();
-	}
+        final boolean returnValue = this.myPart.isBlocked(side);
 
-	@Override
-	public boolean isBlocked( final ForgeDirection side )
-	{
-		this.getPart();
+        this.removePart();
 
-		final boolean returnValue = this.myPart.isBlocked( side );
+        return returnValue;
+    }
 
-		this.removePart();
+    @Override
+    public SelectedPart selectPart(final Vec3 pos) {
+        if (this.myPart == null) {
+            return new SelectedPart();
+        }
+        return this.myPart.selectPart(pos);
+    }
 
-		return returnValue;
-	}
+    @Override
+    public void markForSave() {
+        if (this.myPart == null) {
+            return;
+        }
+        this.myPart.markForSave();
+    }
 
-	@Override
-	public SelectedPart selectPart( final Vec3 pos )
-	{
-		if( this.myPart == null )
-		{
-			return new SelectedPart();
-		}
-		return this.myPart.selectPart( pos );
-	}
+    @Override
+    public void partChanged() {
+        if (this.myPart == null) {
+            return;
+        }
+        this.myPart.partChanged();
+    }
 
-	@Override
-	public void markForSave()
-	{
-		if( this.myPart == null )
-		{
-			return;
-		}
-		this.myPart.markForSave();
-	}
+    @Override
+    public boolean hasRedstone(final ForgeDirection side) {
+        if (this.myPart == null) {
+            return false;
+        }
+        return this.myPart.hasRedstone(side);
+    }
 
-	@Override
-	public void partChanged()
-	{
-		if( this.myPart == null )
-		{
-			return;
-		}
-		this.myPart.partChanged();
-	}
+    @Override
+    public boolean isEmpty() {
+        if (this.myPart == null) {
+            return true;
+        }
+        return this.myPart.isEmpty();
+    }
 
-	@Override
-	public boolean hasRedstone( final ForgeDirection side )
-	{
-		if( this.myPart == null )
-		{
-			return false;
-		}
-		return this.myPart.hasRedstone( side );
-	}
+    @Override
+    public Set<LayerFlags> getLayerFlags() {
+        if (this.myPart == null) {
+            return EnumSet.noneOf(LayerFlags.class);
+        }
+        return this.myPart.getLayerFlags();
+    }
 
-	@Override
-	public boolean isEmpty()
-	{
-		if( this.myPart == null )
-		{
-			return true;
-		}
-		return this.myPart.isEmpty();
-	}
+    @Override
+    public void cleanup() {
+        if (this.myPart == null) {
+            return;
+        }
+        this.myPart.cleanup();
+    }
 
-	@Override
-	public Set<LayerFlags> getLayerFlags()
-	{
-		if( this.myPart == null )
-		{
-			return EnumSet.noneOf( LayerFlags.class );
-		}
-		return this.myPart.getLayerFlags();
-	}
+    @Override
+    public void notifyNeighbors() {
+        if (this.myPart == null) {
+            return;
+        }
+        this.myPart.notifyNeighbors();
+    }
 
-	@Override
-	public void cleanup()
-	{
-		if( this.myPart == null )
-		{
-			return;
-		}
-		this.myPart.cleanup();
-	}
+    @Override
+    public boolean isInWorld() {
+        if (this.myPart == null) {
+            return this.myMP.getWorldObj() != null;
+        }
+        return this.myPart.isInWorld();
+    }
 
-	@Override
-	public void notifyNeighbors()
-	{
-		if( this.myPart == null )
-		{
-			return;
-		}
-		this.myPart.notifyNeighbors();
-	}
+    private static class NullStorage extends CableBusStorage {
 
-	@Override
-	public boolean isInWorld()
-	{
-		if( this.myPart == null )
-		{
-			return this.myMP.getWorldObj() != null;
-		}
-		return this.myPart.isInWorld();
-	}
+        @Override
+        public IFacadePart getFacade(final int x) {
+            return null;
+        }
 
-	private static class NullStorage extends CableBusStorage
-	{
-
-		@Override
-		public IFacadePart getFacade( final int x )
-		{
-			return null;
-		}
-
-		@Override
-		public void setFacade( final int x, final IFacadePart facade )
-		{
-
-		}
-	}
+        @Override
+        public void setFacade(final int x, final IFacadePart facade) {}
+    }
 }

@@ -18,7 +18,6 @@
 
 package appeng.block.networking;
 
-
 import appeng.api.config.PowerMultiplier;
 import appeng.block.AEBaseItemBlock;
 import appeng.block.AEBaseItemBlockChargeable;
@@ -31,81 +30,71 @@ import appeng.tile.networking.TileEnergyCell;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.EnumSet;
+import java.util.List;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IIcon;
 
-import java.util.EnumSet;
-import java.util.List;
+public class BlockEnergyCell extends AEBaseTileBlock {
 
+    public BlockEnergyCell() {
+        super(AEGlassMaterial.INSTANCE);
 
-public class BlockEnergyCell extends AEBaseTileBlock
-{
+        this.setTileEntity(TileEnergyCell.class);
+        this.setFeature(EnumSet.of(AEFeature.Core));
+    }
 
-	public BlockEnergyCell()
-	{
-		super( AEGlassMaterial.INSTANCE );
+    @Override
+    @SideOnly(Side.CLIENT)
+    protected RenderBlockEnergyCube getRenderer() {
+        return new RenderBlockEnergyCube();
+    }
 
-		this.setTileEntity( TileEnergyCell.class );
-		this.setFeature( EnumSet.of( AEFeature.Core ) );
-	}
+    @Override
+    public IIcon getIcon(final int direction, final int metadata) {
+        switch (metadata) {
+            case 0:
+                return ExtraBlockTextures.MEEnergyCell0.getIcon();
+            case 1:
+                return ExtraBlockTextures.MEEnergyCell1.getIcon();
+            case 2:
+                return ExtraBlockTextures.MEEnergyCell2.getIcon();
+            case 3:
+                return ExtraBlockTextures.MEEnergyCell3.getIcon();
+            case 4:
+                return ExtraBlockTextures.MEEnergyCell4.getIcon();
+            case 5:
+                return ExtraBlockTextures.MEEnergyCell5.getIcon();
+            case 6:
+                return ExtraBlockTextures.MEEnergyCell6.getIcon();
+            case 7:
+                return ExtraBlockTextures.MEEnergyCell7.getIcon();
+        }
+        return super.getIcon(direction, metadata);
+    }
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	protected RenderBlockEnergyCube getRenderer()
-	{
-		return new RenderBlockEnergyCube();
-	}
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void getCheckedSubBlocks(final Item item, final CreativeTabs tabs, final List<ItemStack> itemStacks) {
+        super.getCheckedSubBlocks(item, tabs, itemStacks);
 
-	@Override
-	public IIcon getIcon( final int direction, final int metadata )
-	{
-		switch( metadata )
-		{
-			case 0:
-				return ExtraBlockTextures.MEEnergyCell0.getIcon();
-			case 1:
-				return ExtraBlockTextures.MEEnergyCell1.getIcon();
-			case 2:
-				return ExtraBlockTextures.MEEnergyCell2.getIcon();
-			case 3:
-				return ExtraBlockTextures.MEEnergyCell3.getIcon();
-			case 4:
-				return ExtraBlockTextures.MEEnergyCell4.getIcon();
-			case 5:
-				return ExtraBlockTextures.MEEnergyCell5.getIcon();
-			case 6:
-				return ExtraBlockTextures.MEEnergyCell6.getIcon();
-			case 7:
-				return ExtraBlockTextures.MEEnergyCell7.getIcon();
-		}
-		return super.getIcon( direction, metadata );
-	}
+        final ItemStack charged = new ItemStack(this, 1);
+        final NBTTagCompound tag = Platform.openNbtData(charged);
+        tag.setDouble("internalCurrentPower", this.getMaxPower());
+        tag.setDouble("internalMaxPower", this.getMaxPower());
 
-	@Override
-	@SideOnly( Side.CLIENT )
-	public void getCheckedSubBlocks( final Item item, final CreativeTabs tabs, final List<ItemStack> itemStacks )
-	{
-		super.getCheckedSubBlocks( item, tabs, itemStacks );
+        itemStacks.add(charged);
+    }
 
-		final ItemStack charged = new ItemStack( this, 1 );
-		final NBTTagCompound tag = Platform.openNbtData( charged );
-		tag.setDouble( "internalCurrentPower", this.getMaxPower() );
-		tag.setDouble( "internalMaxPower", this.getMaxPower() );
+    public double getMaxPower() {
+        return 200000.0 * PowerMultiplier.CONFIG.multiplier;
+    }
 
-		itemStacks.add( charged );
-	}
-
-	public double getMaxPower()
-	{
-		return 200000.0 * PowerMultiplier.CONFIG.multiplier;
-	}
-
-	@Override
-	public Class<? extends AEBaseItemBlock> getItemBlockClass()
-	{
-		return AEBaseItemBlockChargeable.class;
-	}
+    @Override
+    public Class<? extends AEBaseItemBlock> getItemBlockClass() {
+        return AEBaseItemBlockChargeable.class;
+    }
 }

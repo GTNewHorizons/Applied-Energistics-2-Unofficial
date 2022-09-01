@@ -18,28 +18,22 @@
 
 package appeng.debug;
 
-
 import appeng.block.AEBaseTileBlock;
 import appeng.core.features.AEFeature;
+import java.util.EnumSet;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 
-import java.util.EnumSet;
+public class BlockItemGen extends AEBaseTileBlock {
 
+    public BlockItemGen() {
+        super(Material.iron);
+        this.setTileEntity(TileItemGen.class);
+        this.setFeature(EnumSet.of(AEFeature.UnsupportedDeveloperTools, AEFeature.Creative));
+    }
 
-public class BlockItemGen extends AEBaseTileBlock
-{
-
-	public BlockItemGen()
-	{
-		super( Material.iron );
-		this.setTileEntity( TileItemGen.class );
-		this.setFeature( EnumSet.of( AEFeature.UnsupportedDeveloperTools, AEFeature.Creative ) );
-	}
-
-	@Override
-	public void registerBlockIcons( final IIconRegister iconRegistry )
-	{
-		this.registerNoIcons();
-	}
+    @Override
+    public void registerBlockIcons(final IIconRegister iconRegistry) {
+        this.registerNoIcons();
+    }
 }

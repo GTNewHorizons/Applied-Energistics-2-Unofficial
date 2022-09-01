@@ -23,12 +23,10 @@
 
 package appeng.api.parts;
 
+public enum BusSupport {
+    CABLE,
 
-public enum BusSupport
-{
-	CABLE,
+    DENSE_CABLE,
 
-	DENSE_CABLE,
-
-	NO_PARTS
+    NO_PARTS
 }

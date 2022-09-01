@@ -23,46 +23,44 @@
 
 package appeng.api.util;
 
+public enum AECableType {
+    /**
+     * No Cable present.
+     */
+    NONE,
 
-public enum AECableType
-{
-	/**
-	 * No Cable present.
-	 */
-	NONE,
+    /**
+     * Connections to this block should render as glass.
+     */
+    GLASS,
 
-	/**
-	 * Connections to this block should render as glass.
-	 */
-	GLASS,
+    /**
+     * Connections to this block should render as covered.
+     */
+    COVERED,
 
-	/**
-	 * Connections to this block should render as covered.
-	 */
-	COVERED,
+    /**
+     * Connections to this block should render as smart.
+     */
+    SMART,
 
-	/**
-	 * Connections to this block should render as smart.
-	 */
-	SMART,
+    /**
+     * Dense Cable, represents a tier 2 block that can carry 32 channels.
+     */
+    DENSE,
 
-	/**
-	 * Dense Cable, represents a tier 2 block that can carry 32 channels.
-	 */
-	DENSE,
+    /**
+     * Dense Covered Cable, represents a tier 2 block that can carry 32 channels that should render as covered.
+     */
+    DENSE_COVERED,
 
-	/**
-	 * Dense Covered Cable, represents a tier 2 block that can carry 32 channels that should render as covered.
-	 */
-	DENSE_COVERED,
+    /**
+     * Ultra Dense Cable, represents a tier 3 block that can carry 128 channels.
+     */
+    ULTRA_DENSE,
 
-	/**
-	 * Ultra Dense Cable, represents a tier 3 block that can carry 128 channels.
-	 */
-	ULTRA_DENSE,
-
-	/**
-	 * Ultra Dense Cable, represents a tier 3 block that can carry 128 channels and renders as smart (4 channels per line).
-	 */
-	ULTRA_DENSE_SMART
+    /**
+     * Ultra Dense Cable, represents a tier 3 block that can carry 128 channels and renders as smart (4 channels per line).
+     */
+    ULTRA_DENSE_SMART
 }

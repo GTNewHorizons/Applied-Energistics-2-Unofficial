@@ -18,17 +18,16 @@
 
 package appeng.items.tools;
 
-
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
-import appeng.api.util.AEColor;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
-
+import java.util.EnumSet;
+import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -36,145 +35,130 @@ import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
-import java.text.NumberFormat;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Locale;
+public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
 
+    public ToolMemoryCard() {
+        this.setFeature(EnumSet.of(AEFeature.Core));
+        this.setMaxStackSize(1);
+    }
 
-public class ToolMemoryCard extends AEBaseItem implements IMemoryCard
-{
+    @Override
+    public void addCheckedInformation(
+            final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo) {
+        lines.add(this.getLocalizedName(this.getSettingsName(stack) + ".name", this.getSettingsName(stack)));
 
-	public ToolMemoryCard()
-	{
-		this.setFeature( EnumSet.of( AEFeature.Core ) );
-		this.setMaxStackSize( 1 );
-	}
+        final NBTTagCompound data = this.getData(stack);
+        if (data.hasKey("tooltip")) {
+            lines.add(StatCollector.translateToLocal(
+                    this.getLocalizedName(data.getString("tooltip") + ".name", data.getString("tooltip"))));
+        }
 
-	@Override
-	public void addCheckedInformation( final ItemStack stack, final EntityPlayer player, final List<String> lines, final boolean displayMoreInfo )
-	{
-		lines.add( this.getLocalizedName( this.getSettingsName( stack ) + ".name", this.getSettingsName( stack ) ) );
+        if (data.hasKey("freq")) {
+            final long freq = data.getLong("freq");
+            final String freqTooltip =
+                    String.format("%X", freq).replaceAll("(.{4})", "$0 ").trim();
 
-		final NBTTagCompound data = this.getData( stack );
-		if( data.hasKey( "tooltip" ) )
-		{
-			lines.add( StatCollector.translateToLocal( this.getLocalizedName( data.getString( "tooltip" ) + ".name", data.getString( "tooltip" ) ) ) );
-		}
+            final String local = ButtonToolTips.P2PFrequency.getLocal();
 
-		if( data.hasKey( "freq" ) )
-		{
-			final long freq = data.getLong( "freq" );
-			final String freqTooltip = String.format("%X", freq ).replaceAll("(.{4})", "$0 ").trim();
+            lines.add(String.format(local, freqTooltip));
+        }
+        if (data.hasKey("custom_name")) lines.add(data.getString("custom_name"));
+    }
 
-			final String local = ButtonToolTips.P2PFrequency.getLocal();
+    /**
+     * Find the localized string...
+     *
+     * @param name possible names for the localized string
+     * @return localized name
+     */
+    private String getLocalizedName(final String... name) {
+        for (final String n : name) {
+            final String l = StatCollector.translateToLocal(n);
+            if (!l.equals(n)) {
+                return l;
+            }
+        }
 
-			lines.add( String.format( local, freqTooltip ) );
-		}
-		if (data.hasKey( "custom_name" ))
-			lines.add(data.getString("custom_name"));
-	}
+        for (final String n : name) {
+            return n;
+        }
 
-	/**
-	 * Find the localized string...
-	 *
-	 * @param name possible names for the localized string
-	 * @return localized name
-	 */
-	private String getLocalizedName( final String... name )
-	{
-		for( final String n : name )
-		{
-			final String l = StatCollector.translateToLocal( n );
-			if( !l.equals( n ) )
-			{
-				return l;
-			}
-		}
+        return "";
+    }
 
-		for( final String n : name )
-		{
-			return n;
-		}
+    @Override
+    public void setMemoryCardContents(final ItemStack is, final String settingsName, final NBTTagCompound data) {
+        final NBTTagCompound c = Platform.openNbtData(is);
+        c.setString("Config", settingsName);
+        c.setTag("Data", data);
+    }
 
-		return "";
-	}
+    @Override
+    public String getSettingsName(final ItemStack is) {
+        final NBTTagCompound c = Platform.openNbtData(is);
+        final String name = c.getString("Config");
+        return name == null || name.isEmpty() ? GuiText.Blank.getUnlocalized() : name;
+    }
 
-	@Override
-	public void setMemoryCardContents( final ItemStack is, final String settingsName, final NBTTagCompound data )
-	{
-		final NBTTagCompound c = Platform.openNbtData( is );
-		c.setString( "Config", settingsName );
-		c.setTag( "Data", data );
-	}
+    @Override
+    public NBTTagCompound getData(final ItemStack is) {
+        final NBTTagCompound c = Platform.openNbtData(is);
+        NBTTagCompound o = c.getCompoundTag("Data");
+        if (o == null) {
+            o = new NBTTagCompound();
+        }
+        return (NBTTagCompound) o.copy();
+    }
 
-	@Override
-	public String getSettingsName( final ItemStack is )
-	{
-		final NBTTagCompound c = Platform.openNbtData( is );
-		final String name = c.getString( "Config" );
-		return name == null || name.isEmpty() ? GuiText.Blank.getUnlocalized() : name;
-	}
+    @Override
+    public void notifyUser(final EntityPlayer player, final MemoryCardMessages msg) {
+        if (Platform.isClient()) {
+            return;
+        }
 
-	@Override
-	public NBTTagCompound getData( final ItemStack is )
-	{
-		final NBTTagCompound c = Platform.openNbtData( is );
-		NBTTagCompound o = c.getCompoundTag( "Data" );
-		if( o == null )
-		{
-			o = new NBTTagCompound();
-		}
-		return (NBTTagCompound) o.copy();
-	}
+        switch (msg) {
+            case SETTINGS_CLEARED:
+                player.addChatMessage(PlayerMessages.SettingCleared.get());
+                break;
+            case INVALID_MACHINE:
+                player.addChatMessage(PlayerMessages.InvalidMachine.get());
+                break;
+            case SETTINGS_LOADED:
+                player.addChatMessage(PlayerMessages.LoadedSettings.get());
+                break;
+            case SETTINGS_SAVED:
+                player.addChatMessage(PlayerMessages.SavedSettings.get());
+                break;
+            default:
+        }
+    }
 
-	@Override
-	public void notifyUser( final EntityPlayer player, final MemoryCardMessages msg )
-	{
-		if( Platform.isClient() )
-		{
-			return;
-		}
+    @Override
+    public boolean onItemUse(
+            final ItemStack is,
+            final EntityPlayer player,
+            final World w,
+            final int x,
+            final int y,
+            final int z,
+            final int side,
+            final float hx,
+            final float hy,
+            final float hz) {
+        if (player.isSneaking() && !w.isRemote) {
+            if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
+            final IMemoryCard mem = (IMemoryCard) is.getItem();
+            mem.notifyUser(player, MemoryCardMessages.SETTINGS_CLEARED);
+            is.setTagCompound(null);
+            return true;
+        } else {
+            return super.onItemUse(is, player, w, x, y, z, side, hx, hy, hz);
+        }
+    }
 
-		switch( msg )
-		{
-			case SETTINGS_CLEARED:
-				player.addChatMessage( PlayerMessages.SettingCleared.get() );
-				break;
-			case INVALID_MACHINE:
-				player.addChatMessage( PlayerMessages.InvalidMachine.get() );
-				break;
-			case SETTINGS_LOADED:
-				player.addChatMessage( PlayerMessages.LoadedSettings.get() );
-				break;
-			case SETTINGS_SAVED:
-				player.addChatMessage( PlayerMessages.SavedSettings.get() );
-				break;
-			default:
-		}
-	}
-
-	@Override
-	public boolean onItemUse( final ItemStack is, final EntityPlayer player, final World w, final int x, final int y, final int z, final int side, final float hx, final float hy, final float hz )
-	{
-		if( player.isSneaking() && !w.isRemote )
-		{
-			if( ForgeEventFactory.onItemUseStart( player, is, 1 ) <= 0 )
-				return false;
-			final IMemoryCard mem = (IMemoryCard) is.getItem();
-			mem.notifyUser( player, MemoryCardMessages.SETTINGS_CLEARED );
-			is.setTagCompound( null );
-			return true;
-		}
-		else
-		{
-			return super.onItemUse( is, player, w, x, y, z, side, hx, hy, hz );
-		}
-	}
-
-	@Override
-	public boolean doesSneakBypassUse( final World world, final int x, final int y, final int z, final EntityPlayer player )
-	{
-		return true;
-	}
+    @Override
+    public boolean doesSneakBypassUse(
+            final World world, final int x, final int y, final int z, final EntityPlayer player) {
+        return true;
+    }
 }

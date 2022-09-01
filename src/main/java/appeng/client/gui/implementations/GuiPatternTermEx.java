@@ -10,19 +10,17 @@ import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.container.implementations.ContainerPatternTermEx;
 import appeng.container.slot.AppEngSlot;
 import appeng.core.AppEng;
-import appeng.core.localization.GuiText;
 import appeng.core.localization.GuiColors;
+import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
+import java.io.IOException;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import java.io.IOException;
-
-public class GuiPatternTermEx extends GuiMEMonitorable
-{
+public class GuiPatternTermEx extends GuiMEMonitorable {
     private static final String SUBSITUTION_DISABLE = "0";
     private static final String SUBSITUTION_ENABLE = "1";
 
@@ -36,112 +34,109 @@ public class GuiPatternTermEx extends GuiMEMonitorable
     private GuiImgButton doubleBtn;
     private final GuiScrollbar processingScrollBar = new GuiScrollbar();
 
-    public GuiPatternTermEx(final InventoryPlayer inventoryPlayer, final ITerminalHost te )
-    {
-        super( inventoryPlayer, te, new ContainerPatternTermEx( inventoryPlayer, te ) );
+    public GuiPatternTermEx(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
+        super(inventoryPlayer, te, new ContainerPatternTermEx(inventoryPlayer, te));
         this.container = (ContainerPatternTermEx) this.inventorySlots;
-        this.setReservedSpace( 81 );
+        this.setReservedSpace(81);
 
         processingScrollBar.setHeight(70).setWidth(7).setLeft(6).setRange(0, 1, 1);
         processingScrollBar.setTexture(AppEng.MOD_ID, "guis/pattern3.png", 242, 0);
     }
 
     @Override
-    protected void actionPerformed( final GuiButton btn )
-    {
-        super.actionPerformed( btn );
+    protected void actionPerformed(final GuiButton btn) {
+        super.actionPerformed(btn);
 
-        try
-        {
-            if( this.encodeBtn == btn )
-            {
-                NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminalEx.Encode", isCtrlKeyDown() ? (isShiftKeyDown() ? "6" : "1") : (isShiftKeyDown() ? "2" : "1") ) );
+        try {
+            if (this.encodeBtn == btn) {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig(
+                        "PatternTerminalEx.Encode",
+                        isCtrlKeyDown() ? (isShiftKeyDown() ? "6" : "1") : (isShiftKeyDown() ? "2" : "1")));
+            } else if (this.clearBtn == btn) {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("PatternTerminalEx.Clear", "1"));
+            } else if (this.invertBtn == btn) {
+                NetworkHandler.instance.sendToServer(
+                        new PacketValueConfig("PatternTerminalEx.Invert", container.inverted ? "0" : "1"));
+            } else if (this.substitutionsEnabledBtn == btn || this.substitutionsDisabledBtn == btn) {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig(
+                        "PatternTerminalEx.Substitute",
+                        this.substitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
+            } else if (doubleBtn == btn) {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig(
+                        "PatternTerminalEx.Double", Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? "1" : "0"));
             }
-            else if( this.clearBtn == btn )
-            {
-                NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminalEx.Clear", "1" ) );
-            }
-            else if( this.invertBtn == btn )
-            {
-                NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminalEx.Invert", container.inverted ? "0" : "1") );
-            }
-            else if( this.substitutionsEnabledBtn == btn || this.substitutionsDisabledBtn == btn )
-            {
-                NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminalEx.Substitute", this.substitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE ) );
-            }
-            else if (doubleBtn == btn)
-            {
-                NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminalEx.Double",  Keyboard.isKeyDown( Keyboard.KEY_LSHIFT ) ? "1": "0") );
-            }
-        }
-        catch( final IOException e )
-        {
+        } catch (final IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
     @Override
-    public void initGui()
-    {
+    public void initGui() {
         super.initGui();
 
-        this.substitutionsEnabledBtn = new GuiImgButton( this.guiLeft + 97, this.guiTop + this.ySize - 163, Settings.ACTIONS, ItemSubstitution.ENABLED );
-        this.substitutionsEnabledBtn.setHalfSize( true );
-        this.buttonList.add( this.substitutionsEnabledBtn );
+        this.substitutionsEnabledBtn = new GuiImgButton(
+                this.guiLeft + 97, this.guiTop + this.ySize - 163, Settings.ACTIONS, ItemSubstitution.ENABLED);
+        this.substitutionsEnabledBtn.setHalfSize(true);
+        this.buttonList.add(this.substitutionsEnabledBtn);
 
-        this.substitutionsDisabledBtn = new GuiImgButton( this.guiLeft + 97, this.guiTop + this.ySize - 163, Settings.ACTIONS, ItemSubstitution.DISABLED );
-        this.substitutionsDisabledBtn.setHalfSize( true );
-        this.buttonList.add( this.substitutionsDisabledBtn );
+        this.substitutionsDisabledBtn = new GuiImgButton(
+                this.guiLeft + 97, this.guiTop + this.ySize - 163, Settings.ACTIONS, ItemSubstitution.DISABLED);
+        this.substitutionsDisabledBtn.setHalfSize(true);
+        this.buttonList.add(this.substitutionsDisabledBtn);
 
-        this.clearBtn = new GuiImgButton( this.guiLeft + 87, this.guiTop + this.ySize - 163, Settings.ACTIONS, ActionItems.CLOSE );
-        this.clearBtn.setHalfSize( true );
-        this.buttonList.add( this.clearBtn );
+        this.clearBtn = new GuiImgButton(
+                this.guiLeft + 87, this.guiTop + this.ySize - 163, Settings.ACTIONS, ActionItems.CLOSE);
+        this.clearBtn.setHalfSize(true);
+        this.buttonList.add(this.clearBtn);
 
-        this.encodeBtn = new GuiImgButton( this.guiLeft + 147, this.guiTop + this.ySize - 142, Settings.ACTIONS, ActionItems.ENCODE );
-        this.buttonList.add( this.encodeBtn );
+        this.encodeBtn = new GuiImgButton(
+                this.guiLeft + 147, this.guiTop + this.ySize - 142, Settings.ACTIONS, ActionItems.ENCODE);
+        this.buttonList.add(this.encodeBtn);
 
-        invertBtn = new GuiImgButton( this.guiLeft + 87, this.guiTop + this.ySize - 153, Settings.ACTIONS, container.inverted ? PatternSlotConfig.C_4_16 : PatternSlotConfig.C_16_4);
-        invertBtn.setHalfSize( true );
-        this.buttonList.add( this.invertBtn );
+        invertBtn = new GuiImgButton(
+                this.guiLeft + 87,
+                this.guiTop + this.ySize - 153,
+                Settings.ACTIONS,
+                container.inverted ? PatternSlotConfig.C_4_16 : PatternSlotConfig.C_16_4);
+        invertBtn.setHalfSize(true);
+        this.buttonList.add(this.invertBtn);
 
-        this.doubleBtn = new GuiImgButton( this.guiLeft + 97, this.guiTop + this.ySize - 153, Settings.ACTIONS, ActionItems.DOUBLE );
-        this.doubleBtn.setHalfSize( true );
-        this.buttonList.add( this.doubleBtn );
+        this.doubleBtn = new GuiImgButton(
+                this.guiLeft + 97, this.guiTop + this.ySize - 153, Settings.ACTIONS, ActionItems.DOUBLE);
+        this.doubleBtn.setHalfSize(true);
+        this.buttonList.add(this.doubleBtn);
 
         processingScrollBar.setTop(this.ySize - 164);
     }
 
     @Override
-    public void drawFG( final int offsetX, final int offsetY, final int mouseX, final int mouseY )
-    {
-        super.drawFG( offsetX, offsetY, mouseX, mouseY );
-        this.fontRendererObj.drawString( GuiText.PatternTerminalEx.getLocal(), 8, this.ySize - 96 + 2 - this.getReservedSpace(), GuiColors.PatternTerminalEx.getColor() );
+    public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        super.drawFG(offsetX, offsetY, mouseX, mouseY);
+        this.fontRendererObj.drawString(
+                GuiText.PatternTerminalEx.getLocal(),
+                8,
+                this.ySize - 96 + 2 - this.getReservedSpace(),
+                GuiColors.PatternTerminalEx.getColor());
         this.processingScrollBar.draw(this);
     }
 
     @Override
-    protected String getBackground()
-    {
+    protected String getBackground() {
         return container.inverted ? "guis/pattern4.png" : "guis/pattern3.png";
     }
 
     @Override
-    protected void repositionSlot( final AppEngSlot s )
-    {
-        if( s.isPlayerSide() )
-        {
+    protected void repositionSlot(final AppEngSlot s) {
+        if (s.isPlayerSide()) {
             s.yDisplayPosition = s.getY() + this.ySize - 78 - 5;
-        }
-        else
-        {
+        } else {
             s.yDisplayPosition = s.getY() + this.ySize - 78 - 3;
         }
     }
 
     @Override
-	public void drawScreen( final int mouseX, final int mouseY, final float btn )
-	{
+    public void drawScreen(final int mouseX, final int mouseY, final float btn) {
 
         if (container.substitute) {
             substitutionsEnabledBtn.visible = true;
@@ -151,12 +146,12 @@ public class GuiPatternTermEx extends GuiMEMonitorable
             substitutionsDisabledBtn.visible = true;
         }
 
-        final int offset = container.inverted? 18 * -3: 0;
-        
-        substitutionsEnabledBtn.xPosition  = this.guiLeft + 97 + offset;
+        final int offset = container.inverted ? 18 * -3 : 0;
+
+        substitutionsEnabledBtn.xPosition = this.guiLeft + 97 + offset;
         substitutionsDisabledBtn.xPosition = this.guiLeft + 97 + offset;
         doubleBtn.xPosition = this.guiLeft + 97 + offset;
-        clearBtn.xPosition  = this.guiLeft + 87 + offset;
+        clearBtn.xPosition = this.guiLeft + 87 + offset;
         invertBtn.xPosition = this.guiLeft + 87 + offset;
 
         processingScrollBar.setCurrentScroll(container.activePage);
@@ -164,33 +159,30 @@ public class GuiPatternTermEx extends GuiMEMonitorable
         super.drawScreen(mouseX, mouseY, btn);
     }
 
-	@Override
-	protected void mouseClicked( final int xCoord, final int yCoord, final int btn )
-	{
+    @Override
+    protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         final int currentScroll = this.processingScrollBar.getCurrentScroll();
         this.processingScrollBar.click(this, xCoord - this.guiLeft, yCoord - this.guiTop);
-		super.mouseClicked(xCoord, yCoord, btn);
+        super.mouseClicked(xCoord, yCoord, btn);
 
         if (currentScroll != this.processingScrollBar.getCurrentScroll()) {
             changeActivePage();
         }
-	}
+    }
 
-	@Override
-	protected void mouseClickMove( final int x, final int y, final int c, final long d )
-	{
+    @Override
+    protected void mouseClickMove(final int x, final int y, final int c, final long d) {
         final int currentScroll = this.processingScrollBar.getCurrentScroll();
-        this.processingScrollBar.click(this, x - this.guiLeft, y - this.guiTop );
+        this.processingScrollBar.click(this, x - this.guiLeft, y - this.guiTop);
         super.mouseClickMove(x, y, c, d);
 
         if (currentScroll != this.processingScrollBar.getCurrentScroll()) {
             changeActivePage();
         }
-	}
+    }
 
     @Override
-	public void handleMouseInput()
-	{
+    public void handleMouseInput() {
         super.handleMouseInput();
 
         final int wheel = Mouse.getEventDWheel();
@@ -198,7 +190,7 @@ public class GuiPatternTermEx extends GuiMEMonitorable
         if (wheel != 0) {
             final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
             final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight;
-    
+
             if (this.processingScrollBar.contains(x - this.guiLeft, y - this.guiTop)) {
                 final int currentScroll = this.processingScrollBar.getCurrentScroll();
                 this.processingScrollBar.wheel(wheel);
@@ -206,21 +198,17 @@ public class GuiPatternTermEx extends GuiMEMonitorable
                 if (currentScroll != this.processingScrollBar.getCurrentScroll()) {
                     changeActivePage();
                 }
-
             }
         }
-
-	}
-
-    private void changeActivePage()
-    {
-
-        try {
-            NetworkHandler.instance.sendToServer( new PacketValueConfig( "PatternTerminalEx.ActivePage", String.valueOf(this.processingScrollBar.getCurrentScroll())) );
-        } catch( final IOException e ) {
-            e.printStackTrace();
-        }
-
     }
 
+    private void changeActivePage() {
+
+        try {
+            NetworkHandler.instance.sendToServer(new PacketValueConfig(
+                    "PatternTerminalEx.ActivePage", String.valueOf(this.processingScrollBar.getCurrentScroll())));
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

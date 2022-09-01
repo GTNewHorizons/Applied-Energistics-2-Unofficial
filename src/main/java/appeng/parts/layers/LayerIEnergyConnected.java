@@ -19,10 +19,9 @@ import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
 
-@Integration.Interface( iname = IntegrationType.GT, iface = "gregtech.api.interfaces.tileentity.IEnergyConnected" )
-public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnected {
-    public LayerIEnergyConnected() {
-    }
+@Integration.Interface(iname = IntegrationType.GT, iface = "gregtech.api.interfaces.tileentity.IEnergyConnected")
+public class LayerIEnergyConnected extends LayerBase implements IEnergyConnected {
+    public LayerIEnergyConnected() {}
 
     public long injectEnergyUnits(byte side, long voltage, long amperage) {
         IPart part = this.getPart(ForgeDirection.getOrientation(side));
@@ -34,10 +33,12 @@ public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnecte
                 TileEntity source = this.getTileEntityAtSide(side);
                 if (source != null && ((IEnergySink) part).acceptsEnergyFrom(source, dir)) {
                     long rUsedAmperes;
-                    for (rUsedAmperes = 0L; amperage > rUsedAmperes && ((IEnergySink) part).getDemandedEnergy() > 0.0D
-                            && ((IEnergySink) part).injectEnergy(dir, (double) voltage, (double) voltage) < (double) voltage;
-                         ++rUsedAmperes) {
-                    }
+                    for (rUsedAmperes = 0L;
+                            amperage > rUsedAmperes
+                                    && ((IEnergySink) part).getDemandedEnergy() > 0.0D
+                                    && ((IEnergySink) part).injectEnergy(dir, (double) voltage, (double) voltage)
+                                            < (double) voltage;
+                            ++rUsedAmperes) {}
 
                     return rUsedAmperes;
                 }
@@ -160,7 +161,10 @@ public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnecte
     }
 
     public final Block getBlockAtSideAndDistance(byte aSide, int aDistance) {
-        return this.getBlock(this.getOffsetX(aSide, aDistance), this.getOffsetY(aSide, aDistance), this.getOffsetZ(aSide, aDistance));
+        return this.getBlock(
+                this.getOffsetX(aSide, aDistance),
+                this.getOffsetY(aSide, aDistance),
+                this.getOffsetZ(aSide, aDistance));
     }
 
     public final byte getMetaIDOffset(int aX, int aY, int aZ) {
@@ -172,7 +176,10 @@ public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnecte
     }
 
     public final byte getMetaIDAtSideAndDistance(byte aSide, int aDistance) {
-        return this.getMetaID(this.getOffsetX(aSide, aDistance), this.getOffsetY(aSide, aDistance), this.getOffsetZ(aSide, aDistance));
+        return this.getMetaID(
+                this.getOffsetX(aSide, aDistance),
+                this.getOffsetY(aSide, aDistance),
+                this.getOffsetZ(aSide, aDistance));
     }
 
     public final byte getLightLevelOffset(int aX, int aY, int aZ) {
@@ -184,7 +191,10 @@ public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnecte
     }
 
     public final byte getLightLevelAtSideAndDistance(byte aSide, int aDistance) {
-        return this.getLightLevel(this.getOffsetX(aSide, aDistance), this.getOffsetY(aSide, aDistance), this.getOffsetZ(aSide, aDistance));
+        return this.getLightLevel(
+                this.getOffsetX(aSide, aDistance),
+                this.getOffsetY(aSide, aDistance),
+                this.getOffsetZ(aSide, aDistance));
     }
 
     public final boolean getOpacityOffset(int aX, int aY, int aZ) {
@@ -196,7 +206,10 @@ public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnecte
     }
 
     public final boolean getOpacityAtSideAndDistance(byte aSide, int aDistance) {
-        return this.getOpacity(this.getOffsetX(aSide, aDistance), this.getOffsetY(aSide, aDistance), this.getOffsetZ(aSide, aDistance));
+        return this.getOpacity(
+                this.getOffsetX(aSide, aDistance),
+                this.getOffsetY(aSide, aDistance),
+                this.getOffsetZ(aSide, aDistance));
     }
 
     public final boolean getSkyOffset(int aX, int aY, int aZ) {
@@ -208,7 +221,10 @@ public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnecte
     }
 
     public final boolean getSkyAtSideAndDistance(byte aSide, int aDistance) {
-        return this.getSky(this.getOffsetX(aSide, aDistance), this.getOffsetY(aSide, aDistance), this.getOffsetZ(aSide, aDistance));
+        return this.getSky(
+                this.getOffsetX(aSide, aDistance),
+                this.getOffsetY(aSide, aDistance),
+                this.getOffsetZ(aSide, aDistance));
     }
 
     public final boolean getAirOffset(int aX, int aY, int aZ) {
@@ -220,7 +236,10 @@ public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnecte
     }
 
     public final boolean getAirAtSideAndDistance(byte aSide, int aDistance) {
-        return this.getAir(this.getOffsetX(aSide, aDistance), this.getOffsetY(aSide, aDistance), this.getOffsetZ(aSide, aDistance));
+        return this.getAir(
+                this.getOffsetX(aSide, aDistance),
+                this.getOffsetY(aSide, aDistance),
+                this.getOffsetZ(aSide, aDistance));
     }
 
     public final TileEntity getTileEntityOffset(int aX, int aY, int aZ) {
@@ -228,7 +247,12 @@ public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnecte
     }
 
     public final TileEntity getTileEntityAtSideAndDistance(byte aSide, int aDistance) {
-        return aDistance == 1 ? this.getTileEntityAtSide(aSide) : this.getTileEntity(this.getOffsetX(aSide, aDistance), this.getOffsetY(aSide, aDistance), this.getOffsetZ(aSide, aDistance));
+        return aDistance == 1
+                ? this.getTileEntityAtSide(aSide)
+                : this.getTileEntity(
+                        this.getOffsetX(aSide, aDistance),
+                        this.getOffsetY(aSide, aDistance),
+                        this.getOffsetZ(aSide, aDistance));
     }
 
     public final IInventory getIInventory(int aX, int aY, int aZ) {
@@ -296,56 +320,66 @@ public class LayerIEnergyConnected  extends LayerBase implements IEnergyConnecte
     }
 
     public final Block getBlock(int aX, int aY, int aZ) {
-        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ) ? Blocks.air : this.worldObj.getBlock(aX, aY, aZ);
+        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ)
+                ? Blocks.air
+                : this.worldObj.getBlock(aX, aY, aZ);
     }
 
     public final byte getMetaID(int aX, int aY, int aZ) {
-        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ) ? 0 : (byte) this.worldObj.getBlockMetadata(aX, aY, aZ);
+        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ)
+                ? 0
+                : (byte) this.worldObj.getBlockMetadata(aX, aY, aZ);
     }
 
     public final byte getLightLevel(int aX, int aY, int aZ) {
-        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ) ? 0 : (byte) ((int) (this.worldObj.getLightBrightness(aX, aY, aZ) * 15.0F));
+        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ)
+                ? 0
+                : (byte) ((int) (this.worldObj.getLightBrightness(aX, aY, aZ) * 15.0F));
     }
 
     public final boolean getSky(int aX, int aY, int aZ) {
-        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ) || this.worldObj.canBlockSeeTheSky(aX, aY, aZ);
+        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ)
+                || this.worldObj.canBlockSeeTheSky(aX, aY, aZ);
     }
 
     public final boolean getOpacity(int aX, int aY, int aZ) {
-        return (!this.crossedChunkBorder(aX, aZ) || this.worldObj.blockExists(aX, aY, aZ)) && GT_Utility.isOpaqueBlock(this.worldObj, aX, aY, aZ);
+        return (!this.crossedChunkBorder(aX, aZ) || this.worldObj.blockExists(aX, aY, aZ))
+                && GT_Utility.isOpaqueBlock(this.worldObj, aX, aY, aZ);
     }
 
     public final boolean getAir(int aX, int aY, int aZ) {
-        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ) || GT_Utility.isBlockAir(this.worldObj, aX, aY, aZ);
+        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ)
+                || GT_Utility.isBlockAir(this.worldObj, aX, aY, aZ);
     }
 
     public final TileEntity getTileEntity(int aX, int aY, int aZ) {
-        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ) ? null : this.worldObj.getTileEntity(aX, aY, aZ);
+        return this.crossedChunkBorder(aX, aZ) && !this.worldObj.blockExists(aX, aY, aZ)
+                ? null
+                : this.worldObj.getTileEntity(aX, aY, aZ);
     }
 
     public final TileEntity getTileEntityAtSide(byte aSide) {
         int tX = this.getOffsetX(aSide, 1);
         int tY = this.getOffsetY(aSide, 1);
         int tZ = this.getOffsetZ(aSide, 1);
-        return this.crossedChunkBorder(tX, tZ) && !this.worldObj.blockExists(tX, tY, tZ) ? null : this.worldObj.getTileEntity(tX, tY, tZ);
+        return this.crossedChunkBorder(tX, tZ) && !this.worldObj.blockExists(tX, tY, tZ)
+                ? null
+                : this.worldObj.getTileEntity(tX, tY, tZ);
     }
 
     public boolean isDead() {
         return this.isInvalidTileEntity();
     }
 
-    public void sendBlockEvent(byte b, byte b1) {
-    }
+    public void sendBlockEvent(byte b, byte b1) {}
 
     public long getTimer() {
         return 0L;
     }
 
-    public void setLightValue(byte b) {
-    }
+    public void setLightValue(byte b) {}
 
     public boolean isInvalidTileEntity() {
         return this.isInvalid();
     }
-
 }

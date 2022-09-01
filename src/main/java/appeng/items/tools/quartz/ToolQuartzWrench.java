@@ -18,7 +18,6 @@
 
 package appeng.items.tools.quartz;
 
-
 import appeng.api.implementations.items.IAEWrench;
 import appeng.api.util.DimensionalCoord;
 import appeng.core.features.AEFeature;
@@ -28,6 +27,7 @@ import appeng.transformer.annotations.Integration.Interface;
 import appeng.util.Platform;
 import buildcraft.api.tools.IToolWrench;
 import com.google.common.base.Optional;
+import java.util.EnumSet;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -36,75 +36,82 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
-import java.util.EnumSet;
+@Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore)
+public class ToolQuartzWrench extends AEBaseItem implements IAEWrench, IToolWrench {
 
+    public ToolQuartzWrench(final AEFeature type) {
+        super(Optional.of(type.name()));
 
-@Interface( iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore )
-public class ToolQuartzWrench extends AEBaseItem implements IAEWrench, IToolWrench
-{
+        this.setFeature(EnumSet.of(type, AEFeature.QuartzWrench));
+        this.setMaxStackSize(1);
+        this.setHarvestLevel("wrench", 0);
+    }
 
-	public ToolQuartzWrench( final AEFeature type )
-	{
-		super( Optional.of( type.name() ) );
+    @Override
+    public boolean onItemUseFirst(
+            final ItemStack is,
+            final EntityPlayer player,
+            final World world,
+            final int x,
+            final int y,
+            final int z,
+            final int side,
+            final float hitX,
+            final float hitY,
+            final float hitZ) {
+        if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return true;
 
-		this.setFeature( EnumSet.of( type, AEFeature.QuartzWrench ) );
-		this.setMaxStackSize( 1 );
-		this.setHarvestLevel( "wrench", 0 );
-	}
+        final Block b = world.getBlock(x, y, z);
 
-	@Override
-	public boolean onItemUseFirst( final ItemStack is, final EntityPlayer player, final World world, final int x, final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ )
-	{
-		if( ForgeEventFactory.onItemUseStart( player, is, 1 ) <= 0 )
-			return true;
+        if (b != null
+                && ForgeEventFactory.onPlayerInteract(
+                                player,
+                                b.isAir(world, x, y, z)
+                                        ? PlayerInteractEvent.Action.RIGHT_CLICK_AIR
+                                        : PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK,
+                                x,
+                                y,
+                                z,
+                                side,
+                                world)
+                        .isCanceled()) return true;
 
-		final Block b = world.getBlock( x, y, z );
+        if (b != null
+                && !player.isSneaking()
+                && Platform.hasPermissions(new DimensionalCoord(world, x, y, z), player)) {
+            if (Platform.isClient()) {
+                return !world.isRemote;
+            }
 
-		if( b != null && ForgeEventFactory.onPlayerInteract( player,
-				b.isAir( world, x, y, z ) ? PlayerInteractEvent.Action.RIGHT_CLICK_AIR : PlayerInteractEvent.Action.RIGHT_CLICK_BLOCK,
-				x, y, z, side, world ).isCanceled() )
-			return true;
+            final ForgeDirection mySide = ForgeDirection.getOrientation(side);
+            if (b.rotateBlock(world, x, y, z, mySide)) {
+                b.onNeighborBlockChange(world, x, y, z, Platform.AIR_BLOCK);
+                player.swingItem();
+                return !world.isRemote;
+            }
+        }
+        return false;
+    }
 
-		if( b != null && !player.isSneaking() && Platform.hasPermissions( new DimensionalCoord( world, x, y, z ), player ) )
-		{
-			if( Platform.isClient() )
-			{
-				return !world.isRemote;
-			}
+    @Override
+    // public boolean shouldPassSneakingClickToBlock(World w, int x, int y, int z)
+    public boolean doesSneakBypassUse(
+            final World world, final int x, final int y, final int z, final EntityPlayer player) {
+        return true;
+    }
 
-			final ForgeDirection mySide = ForgeDirection.getOrientation( side );
-			if( b.rotateBlock( world, x, y, z, mySide ) )
-			{
-				b.onNeighborBlockChange( world, x, y, z, Platform.AIR_BLOCK );
-				player.swingItem();
-				return !world.isRemote;
-			}
-		}
-		return false;
-	}
+    @Override
+    public boolean canWrench(final ItemStack is, final EntityPlayer player, final int x, final int y, final int z) {
+        return true;
+    }
 
-	@Override
-	// public boolean shouldPassSneakingClickToBlock(World w, int x, int y, int z)
-	public boolean doesSneakBypassUse( final World world, final int x, final int y, final int z, final EntityPlayer player )
-	{
-		return true;
-	}
+    @Override
+    public boolean canWrench(final EntityPlayer player, final int x, final int y, final int z) {
+        return true;
+    }
 
-	@Override
-	public boolean canWrench( final ItemStack is, final EntityPlayer player, final int x, final int y, final int z )
-	{
-		return true;
-	}
-
-	@Override
-	public boolean canWrench( final EntityPlayer player, final int x, final int y, final int z )
-	{
-		return true;
-	}
-
-	@Override
-	public void wrenchUsed( final EntityPlayer player, final int x, final int y, final int z )
-	{
-		player.swingItem();
-	}
+    @Override
+    public void wrenchUsed(final EntityPlayer player, final int x, final int y, final int z) {
+        player.swingItem();
+    }
 }

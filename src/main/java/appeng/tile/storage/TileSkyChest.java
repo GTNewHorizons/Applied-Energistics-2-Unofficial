@@ -18,7 +18,6 @@
 
 package appeng.tile.storage;
 
-
 import appeng.tile.AEBaseInvTile;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
@@ -30,128 +29,126 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
 
+public class TileSkyChest extends AEBaseInvTile {
 
-public class TileSkyChest extends AEBaseInvTile
-{
+    private final int[] sides = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+        30, 31, 32, 33, 34, 35
+    };
+    private final AppEngInternalInventory inv = new AppEngInternalInventory(this, 9 * 4);
+    // server
+    private int playerOpen;
+    // client..
+    private long lastEvent;
+    private float lidAngle;
 
-	private final int[] sides = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35 };
-	private final AppEngInternalInventory inv = new AppEngInternalInventory( this, 9 * 4 );
-	// server
-	private int playerOpen;
-	// client..
-	private long lastEvent;
-	private float lidAngle;
+    @TileEvent(TileEventType.NETWORK_WRITE)
+    public void writeToStream_TileSkyChest(final ByteBuf data) {
+        data.writeBoolean(this.getPlayerOpen() > 0);
+    }
 
-	@TileEvent( TileEventType.NETWORK_WRITE )
-	public void writeToStream_TileSkyChest( final ByteBuf data )
-	{
-		data.writeBoolean( this.getPlayerOpen() > 0 );
-	}
+    @TileEvent(TileEventType.NETWORK_READ)
+    public boolean readFromStream_TileSkyChest(final ByteBuf data) {
+        final int wasOpen = this.getPlayerOpen();
+        this.setPlayerOpen(data.readBoolean() ? 1 : 0);
 
-	@TileEvent( TileEventType.NETWORK_READ )
-	public boolean readFromStream_TileSkyChest( final ByteBuf data )
-	{
-		final int wasOpen = this.getPlayerOpen();
-		this.setPlayerOpen( data.readBoolean() ? 1 : 0 );
+        if (wasOpen != this.getPlayerOpen()) {
+            this.setLastEvent(System.currentTimeMillis());
+        }
 
-		if( wasOpen != this.getPlayerOpen() )
-		{
-			this.setLastEvent( System.currentTimeMillis() );
-		}
+        return false; // TESR yo!
+    }
 
-		return false; // TESR yo!
-	}
+    @Override
+    public boolean requiresTESR() {
+        return true;
+    }
 
-	@Override
-	public boolean requiresTESR()
-	{
-		return true;
-	}
+    @Override
+    public IInventory getInternalInventory() {
+        return this.inv;
+    }
 
-	@Override
-	public IInventory getInternalInventory()
-	{
-		return this.inv;
-	}
+    @Override
+    public void openInventory() {
+        if (Platform.isClient()) {
+            return;
+        }
 
-	@Override
-	public void openInventory()
-	{
-		if( Platform.isClient() )
-		{
-			return;
-		}
+        this.setPlayerOpen(this.getPlayerOpen() + 1);
 
-		this.setPlayerOpen( this.getPlayerOpen() + 1 );
+        if (this.getPlayerOpen() == 1) {
+            this.getWorldObj()
+                    .playSoundEffect(
+                            this.xCoord + 0.5D,
+                            this.yCoord + 0.5D,
+                            this.zCoord + 0.5D,
+                            "random.chestopen",
+                            0.5F,
+                            this.getWorldObj().rand.nextFloat() * 0.1F + 0.9F);
+            this.markForUpdate();
+        }
+    }
 
-		if( this.getPlayerOpen() == 1 )
-		{
-			this.getWorldObj().playSoundEffect( this.xCoord + 0.5D, this.yCoord + 0.5D, this.zCoord + 0.5D, "random.chestopen", 0.5F, this.getWorldObj().rand.nextFloat() * 0.1F + 0.9F );
-			this.markForUpdate();
-		}
-	}
+    @Override
+    public void closeInventory() {
+        if (Platform.isClient()) {
+            return;
+        }
 
-	@Override
-	public void closeInventory()
-	{
-		if( Platform.isClient() )
-		{
-			return;
-		}
+        this.setPlayerOpen(this.getPlayerOpen() - 1);
 
-		this.setPlayerOpen( this.getPlayerOpen() - 1 );
+        if (this.getPlayerOpen() < 0) {
+            this.setPlayerOpen(0);
+        }
 
-		if( this.getPlayerOpen() < 0 )
-		{
-			this.setPlayerOpen( 0 );
-		}
+        if (this.getPlayerOpen() == 0) {
+            this.getWorldObj()
+                    .playSoundEffect(
+                            this.xCoord + 0.5D,
+                            this.yCoord + 0.5D,
+                            this.zCoord + 0.5D,
+                            "random.chestclosed",
+                            0.5F,
+                            this.getWorldObj().rand.nextFloat() * 0.1F + 0.9F);
+            this.markForUpdate();
+        }
+    }
 
-		if( this.getPlayerOpen() == 0 )
-		{
-			this.getWorldObj().playSoundEffect( this.xCoord + 0.5D, this.yCoord + 0.5D, this.zCoord + 0.5D, "random.chestclosed", 0.5F, this.getWorldObj().rand.nextFloat() * 0.1F + 0.9F );
-			this.markForUpdate();
-		}
-	}
+    @Override
+    public void onChangeInventory(
+            final IInventory inv,
+            final int slot,
+            final InvOperation mc,
+            final ItemStack removed,
+            final ItemStack added) {}
 
-	@Override
-	public void onChangeInventory( final IInventory inv, final int slot, final InvOperation mc, final ItemStack removed, final ItemStack added )
-	{
+    @Override
+    public int[] getAccessibleSlotsBySide(final ForgeDirection side) {
+        return this.sides;
+    }
 
-	}
+    public float getLidAngle() {
+        return this.lidAngle;
+    }
 
-	@Override
-	public int[] getAccessibleSlotsBySide( final ForgeDirection side )
-	{
-		return this.sides;
-	}
+    public void setLidAngle(final float lidAngle) {
+        this.lidAngle = lidAngle;
+    }
 
-	public float getLidAngle()
-	{
-		return this.lidAngle;
-	}
+    public int getPlayerOpen() {
+        return this.playerOpen;
+    }
 
-	public void setLidAngle( final float lidAngle )
-	{
-		this.lidAngle = lidAngle;
-	}
+    private void setPlayerOpen(final int playerOpen) {
+        this.playerOpen = playerOpen;
+    }
 
-	public int getPlayerOpen()
-	{
-		return this.playerOpen;
-	}
+    public long getLastEvent() {
+        return this.lastEvent;
+    }
 
-	private void setPlayerOpen( final int playerOpen )
-	{
-		this.playerOpen = playerOpen;
-	}
-
-	public long getLastEvent()
-	{
-		return this.lastEvent;
-	}
-
-	private void setLastEvent( final long lastEvent )
-	{
-		this.lastEvent = lastEvent;
-	}
+    private void setLastEvent(final long lastEvent) {
+        this.lastEvent = lastEvent;
+    }
 }

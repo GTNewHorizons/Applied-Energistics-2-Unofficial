@@ -18,60 +18,56 @@
 
 package appeng.entity;
 
-
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
+public final class EntityFloatingItem extends EntityItem {
 
-public final class EntityFloatingItem extends EntityItem
-{
+    public static int ageStatic = 0;
+    private final Entity parent;
+    private int superDeath = 0;
+    private float progress = 0;
 
-	public static int ageStatic = 0;
-	private final Entity parent;
-	private int superDeath = 0;
-	private float progress = 0;
+    public EntityFloatingItem(
+            final Entity parent,
+            final World world,
+            final double x,
+            final double y,
+            final double z,
+            final ItemStack stack) {
+        super(world, x, y, z, stack);
+        this.motionX = this.motionY = this.motionZ = 0.0d;
+        this.hoverStart = 0.5f;
+        this.rotationYaw = 0;
+        this.parent = parent;
+    }
 
-	public EntityFloatingItem( final Entity parent, final World world, final double x, final double y, final double z, final ItemStack stack )
-	{
-		super( world, x, y, z, stack );
-		this.motionX = this.motionY = this.motionZ = 0.0d;
-		this.hoverStart = 0.5f;
-		this.rotationYaw = 0;
-		this.parent = parent;
-	}
+    // public boolean isEntityAlive()
 
-	// public boolean isEntityAlive()
+    @Override
+    public void onUpdate() {
+        if (!this.isDead && this.parent.isDead) {
+            this.setDead();
+        }
 
-	@Override
-	public void onUpdate()
-	{
-		if( !this.isDead && this.parent.isDead )
-		{
-			this.setDead();
-		}
+        if (this.superDeath > 100) {
+            this.setDead();
+        }
+        this.superDeath++;
 
-		if( this.superDeath > 100 )
-		{
-			this.setDead();
-		}
-		this.superDeath++;
+        this.age = ageStatic;
+    }
 
-		this.age = ageStatic;
-	}
+    public void setProgress(final float progress) {
+        this.progress = progress;
+        if (this.progress > 0.99) {
+            this.setDead();
+        }
+    }
 
-	public void setProgress( final float progress )
-	{
-		this.progress = progress;
-		if( this.progress > 0.99 )
-		{
-			this.setDead();
-		}
-	}
-
-	float getProgress()
-	{
-		return this.progress;
-	}
+    float getProgress() {
+        return this.progress;
+    }
 }

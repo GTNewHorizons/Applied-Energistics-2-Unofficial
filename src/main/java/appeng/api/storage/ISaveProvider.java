@@ -23,9 +23,7 @@
 
 package appeng.api.storage;
 
+public interface ISaveProvider {
 
-public interface ISaveProvider
-{
-
-	void saveChanges( IMEInventory cellInventory );
+    void saveChanges(IMEInventory cellInventory);
 }

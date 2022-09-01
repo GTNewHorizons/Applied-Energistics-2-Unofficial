@@ -18,17 +18,14 @@
 
 package appeng.core.features.registries;
 
-
 import appeng.api.features.IRecipeHandlerRegistry;
 import appeng.api.recipes.ICraftHandler;
 import appeng.api.recipes.IRecipeHandler;
 import appeng.api.recipes.ISubItemResolver;
 import appeng.core.AELog;
 import appeng.recipes.RecipeHandler;
-
-import javax.annotation.Nullable;
 import java.util.*;
-
+import javax.annotation.Nullable;
 
 /**
  * @author AlgorithmX2
@@ -36,76 +33,62 @@ import java.util.*;
  * @version rv3 - 10.08.2015
  * @since rv0
  */
-public class RecipeHandlerRegistry implements IRecipeHandlerRegistry
-{
-	private final Map<String, Class<? extends ICraftHandler>> handlers = new HashMap<String, Class<? extends ICraftHandler>>( 20 );
-	private final Collection<ISubItemResolver> resolvers = new LinkedList<ISubItemResolver>();
+public class RecipeHandlerRegistry implements IRecipeHandlerRegistry {
+    private final Map<String, Class<? extends ICraftHandler>> handlers =
+            new HashMap<String, Class<? extends ICraftHandler>>(20);
+    private final Collection<ISubItemResolver> resolvers = new LinkedList<ISubItemResolver>();
 
-	@Override
-	public void addNewCraftHandler( final String name, final Class<? extends ICraftHandler> handler )
-	{
-		this.handlers.put( name.toLowerCase( Locale.ENGLISH ), handler );
-	}
+    @Override
+    public void addNewCraftHandler(final String name, final Class<? extends ICraftHandler> handler) {
+        this.handlers.put(name.toLowerCase(Locale.ENGLISH), handler);
+    }
 
-	@Override
-	public void addNewSubItemResolver( final ISubItemResolver sir )
-	{
-		this.resolvers.add( sir );
-	}
+    @Override
+    public void addNewSubItemResolver(final ISubItemResolver sir) {
+        this.resolvers.add(sir);
+    }
 
-	@Nullable
-	@Override
-	public ICraftHandler getCraftHandlerFor( final String name )
-	{
-		final Class<? extends ICraftHandler> clz = this.handlers.get( name );
-		if( clz == null )
-		{
-			return null;
-		}
-		try
-		{
-			return clz.newInstance();
-		}
-		catch( final Throwable e )
-		{
-			AELog.error( "Error Caused when trying to construct " + clz.getName() );
-			AELog.debug( e );
+    @Nullable
+    @Override
+    public ICraftHandler getCraftHandlerFor(final String name) {
+        final Class<? extends ICraftHandler> clz = this.handlers.get(name);
+        if (clz == null) {
+            return null;
+        }
+        try {
+            return clz.newInstance();
+        } catch (final Throwable e) {
+            AELog.error("Error Caused when trying to construct " + clz.getName());
+            AELog.debug(e);
 
-			this.handlers.put( name, null ); // clear it..
+            this.handlers.put(name, null); // clear it..
 
-			return null;
-		}
-	}
+            return null;
+        }
+    }
 
-	@Override
-	public IRecipeHandler createNewRecipehandler()
-	{
-		return new RecipeHandler();
-	}
+    @Override
+    public IRecipeHandler createNewRecipehandler() {
+        return new RecipeHandler();
+    }
 
-	@Nullable
-	@Override
-	public Object resolveItem( final String nameSpace, final String itemName )
-	{
-		for( final ISubItemResolver sir : this.resolvers )
-		{
-			Object rr = null;
+    @Nullable
+    @Override
+    public Object resolveItem(final String nameSpace, final String itemName) {
+        for (final ISubItemResolver sir : this.resolvers) {
+            Object rr = null;
 
-			try
-			{
-				rr = sir.resolveItemByName( nameSpace, itemName );
-			}
-			catch( final Throwable t )
-			{
-				AELog.debug( t );
-			}
+            try {
+                rr = sir.resolveItemByName(nameSpace, itemName);
+            } catch (final Throwable t) {
+                AELog.debug(t);
+            }
 
-			if( rr != null )
-			{
-				return rr;
-			}
-		}
+            if (rr != null) {
+                return rr;
+            }
+        }
 
-		return null;
-	}
+        return null;
+    }
 }

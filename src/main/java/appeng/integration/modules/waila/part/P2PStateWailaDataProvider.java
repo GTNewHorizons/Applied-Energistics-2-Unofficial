@@ -18,166 +18,141 @@
 
 package appeng.integration.modules.waila.part;
 
-
-import java.text.NumberFormat;
-import java.util.List;
-import java.util.Locale;
-
+import appeng.api.parts.IPart;
 import appeng.core.localization.ButtonToolTips;
+import appeng.core.localization.WailaText;
+import appeng.me.GridAccessException;
+import appeng.parts.p2p.PartP2PTunnel;
 import com.google.common.collect.Iterators;
-
+import java.util.List;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
-
-import appeng.api.parts.IPart;
-import appeng.core.localization.WailaText;
-import appeng.me.GridAccessException;
-import appeng.parts.p2p.PartP2PTunnel;
-import appeng.util.Platform;
-
-
 /**
  * Provides information about a P2P tunnel to WAILA.
  */
-public final class P2PStateWailaDataProvider extends BasePartWailaDataProvider
-{
+public final class P2PStateWailaDataProvider extends BasePartWailaDataProvider {
 
-	private static final int STATE_UNLINKED = 0;
-	private static final int STATE_OUTPUT = 1;
-	private static final int STATE_INPUT = 2;
-	public static final String TAG_P2P_STATE = "p2p_state";
-	public static final String TAG_P2P_FREQUENCY = "p2p_frequency";
-	public static final String TAG_CUSTOMNAME = "custom_name";
+    private static final int STATE_UNLINKED = 0;
+    private static final int STATE_OUTPUT = 1;
+    private static final int STATE_INPUT = 2;
+    public static final String TAG_P2P_STATE = "p2p_state";
+    public static final String TAG_P2P_FREQUENCY = "p2p_frequency";
+    public static final String TAG_CUSTOMNAME = "custom_name";
 
-	/**
-	 * Adds state to the tooltip
-	 *
-	 * @param part part with state
-	 * @param currentToolTip to be added to tooltip
-	 * @param accessor wrapper for various information
-	 * @param config config settings
-	 *
-	 * @return modified tooltip
-	 */
-	@Override
-	public List<String> getWailaBody( final IPart part, final List<String> currentToolTip, final IWailaDataAccessor accessor, final IWailaConfigHandler config )
-	{
-		if( part instanceof PartP2PTunnel )
-		{
-			NBTTagCompound nbtData = accessor.getNBTData();
-			if( nbtData.hasKey( TAG_P2P_STATE ) )
-			{
-				int[] stateArr = nbtData.getIntArray( TAG_P2P_STATE );
-				if( stateArr.length == 2 )
-				{
-					int state = stateArr[0];
-					int outputs = stateArr[1];
+    /**
+     * Adds state to the tooltip
+     *
+     * @param part part with state
+     * @param currentToolTip to be added to tooltip
+     * @param accessor wrapper for various information
+     * @param config config settings
+     *
+     * @return modified tooltip
+     */
+    @Override
+    public List<String> getWailaBody(
+            final IPart part,
+            final List<String> currentToolTip,
+            final IWailaDataAccessor accessor,
+            final IWailaConfigHandler config) {
+        if (part instanceof PartP2PTunnel) {
+            NBTTagCompound nbtData = accessor.getNBTData();
+            if (nbtData.hasKey(TAG_P2P_STATE)) {
+                int[] stateArr = nbtData.getIntArray(TAG_P2P_STATE);
+                if (stateArr.length == 2) {
+                    int state = stateArr[0];
+                    int outputs = stateArr[1];
 
-					switch( state )
-					{
-						case STATE_UNLINKED:
-							currentToolTip.add( WailaText.P2PUnlinked.getLocal() );
-							break;
-						case STATE_OUTPUT:
-							currentToolTip.add( WailaText.P2POutput.getLocal() );
-							break;
-						case STATE_INPUT:
-							currentToolTip.add( getOutputText( outputs ) );
-							break;
-					}
-				}
+                    switch (state) {
+                        case STATE_UNLINKED:
+                            currentToolTip.add(WailaText.P2PUnlinked.getLocal());
+                            break;
+                        case STATE_OUTPUT:
+                            currentToolTip.add(WailaText.P2POutput.getLocal());
+                            break;
+                        case STATE_INPUT:
+                            currentToolTip.add(getOutputText(outputs));
+                            break;
+                    }
+                }
 
-				final long freq = nbtData.getLong( TAG_P2P_FREQUENCY );
-				final String freqTooltip = String.format("%X", freq ).replaceAll("(.{4})", "$0 ").trim();
+                final long freq = nbtData.getLong(TAG_P2P_FREQUENCY);
+                final String freqTooltip =
+                        String.format("%X", freq).replaceAll("(.{4})", "$0 ").trim();
 
                 final String local = ButtonToolTips.P2PFrequency.getLocal();
 
-                currentToolTip.add( String.format( local, freqTooltip ) );
-                if (nbtData.hasKey(TAG_CUSTOMNAME))
-					currentToolTip.add(nbtData.getString(TAG_CUSTOMNAME));
-			}
-		}
+                currentToolTip.add(String.format(local, freqTooltip));
+                if (nbtData.hasKey(TAG_CUSTOMNAME)) currentToolTip.add(nbtData.getString(TAG_CUSTOMNAME));
+            }
+        }
 
-		return currentToolTip;
-	}
+        return currentToolTip;
+    }
 
-	@Override
-	public NBTTagCompound getNBTData( final EntityPlayerMP player, final IPart part, final TileEntity te, final NBTTagCompound tag, final World world, final int x, final int y, final int z )
-	{
-		if( part instanceof PartP2PTunnel )
-		{
-			final PartP2PTunnel tunnel = (PartP2PTunnel) part;
+    @Override
+    public NBTTagCompound getNBTData(
+            final EntityPlayerMP player,
+            final IPart part,
+            final TileEntity te,
+            final NBTTagCompound tag,
+            final World world,
+            final int x,
+            final int y,
+            final int z) {
+        if (part instanceof PartP2PTunnel) {
+            final PartP2PTunnel tunnel = (PartP2PTunnel) part;
 
-			if( !tunnel.isPowered() )
-			{
-				return tag;
-			}
+            if (!tunnel.isPowered()) {
+                return tag;
+            }
 
-			if (tunnel.hasCustomName())
-				tag.setString(TAG_CUSTOMNAME, tunnel.getCustomName());
+            if (tunnel.hasCustomName()) tag.setString(TAG_CUSTOMNAME, tunnel.getCustomName());
 
-			tag.setLong( TAG_P2P_FREQUENCY, tunnel.getFrequency() );
+            tag.setLong(TAG_P2P_FREQUENCY, tunnel.getFrequency());
 
-			// The default state
-			int state = STATE_UNLINKED;
-			int outputCount = 0;
+            // The default state
+            int state = STATE_UNLINKED;
+            int outputCount = 0;
 
-			if( !tunnel.isOutput() )
-			{
-				outputCount = getOutputCount( tunnel );
-				if( outputCount > 0 )
-				{
-					// Only set it to INPUT if we know there are any outputs
-					state = STATE_INPUT;
-				}
-			}
-			else
-			{
-				PartP2PTunnel input = tunnel.getInput();
-				if( input != null )
-				{
-					state = STATE_OUTPUT;
-				}
-			}
+            if (!tunnel.isOutput()) {
+                outputCount = getOutputCount(tunnel);
+                if (outputCount > 0) {
+                    // Only set it to INPUT if we know there are any outputs
+                    state = STATE_INPUT;
+                }
+            } else {
+                PartP2PTunnel input = tunnel.getInput();
+                if (input != null) {
+                    state = STATE_OUTPUT;
+                }
+            }
 
-			tag.setIntArray( TAG_P2P_STATE, new int[] {
-					state,
-					outputCount
-			} );
+            tag.setIntArray(TAG_P2P_STATE, new int[] {state, outputCount});
+        }
 
-		}
+        return tag;
+    }
 
-		return tag;
-	}
+    private static int getOutputCount(PartP2PTunnel tunnel) {
+        try {
+            return Iterators.size(tunnel.getOutputs().iterator());
+        } catch (GridAccessException e) {
+            // Well... unknown size it is!
+            return 0;
+        }
+    }
 
-	private static int getOutputCount( PartP2PTunnel tunnel )
-	{
-		try
-		{
-			return Iterators.size( tunnel.getOutputs().iterator() );
-		}
-		catch( GridAccessException e )
-		{
-			// Well... unknown size it is!
-			return 0;
-		}
-	}
-
-	private static String getOutputText( int outputs )
-	{
-		if( outputs <= 1 )
-		{
-			return WailaText.P2PInputOneOutput.getLocal();
-		}
-		else
-		{
-			return String.format( WailaText.P2PInputManyOutputs.getLocal(), outputs );
-		}
-	}
-
+    private static String getOutputText(int outputs) {
+        if (outputs <= 1) {
+            return WailaText.P2PInputOneOutput.getLocal();
+        } else {
+            return String.format(WailaText.P2PInputManyOutputs.getLocal(), outputs);
+        }
+    }
 }

@@ -18,37 +18,31 @@
 
 package appeng.services.version.github;
 
-
 import appeng.services.version.Version;
-
 import javax.annotation.Nonnull;
-
 
 /**
  * Default template when a {@link FormattedRelease} is needed.
  */
-public final class DefaultFormattedRelease implements FormattedRelease
-{
-	@Nonnull
-	private final Version version;
-	@Nonnull
-	private final String changelog;
+public final class DefaultFormattedRelease implements FormattedRelease {
+    @Nonnull
+    private final Version version;
 
-	public DefaultFormattedRelease( @Nonnull final Version version, @Nonnull final String changelog )
-	{
-		this.version = version;
-		this.changelog = changelog;
-	}
+    @Nonnull
+    private final String changelog;
 
-	@Override
-	public String changelog()
-	{
-		return this.changelog;
-	}
+    public DefaultFormattedRelease(@Nonnull final Version version, @Nonnull final String changelog) {
+        this.version = version;
+        this.changelog = changelog;
+    }
 
-	@Override
-	public Version version()
-	{
-		return this.version;
-	}
+    @Override
+    public String changelog() {
+        return this.changelog;
+    }
+
+    @Override
+    public Version version() {
+        return this.version;
+    }
 }

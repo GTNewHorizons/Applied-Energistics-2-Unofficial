@@ -18,7 +18,6 @@
 
 package appeng.me.cache;
 
-
 import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
@@ -32,184 +31,142 @@ import appeng.core.worlddata.WorldData;
 import appeng.me.GridNode;
 import com.google.common.base.Preconditions;
 import com.mojang.authlib.GameProfile;
+import java.util.*;
 import net.minecraft.entity.player.EntityPlayer;
 
-import java.util.*;
+public class SecurityCache implements ISecurityGrid {
+    private final IGrid myGrid;
+    private final List<ISecurityProvider> securityProvider = new ArrayList<>();
+    private final HashMap<Integer, EnumSet<SecurityPermissions>> playerPerms = new HashMap<>();
+    private long securityKey = -1;
+    static final int STARTUP_DELAY = 20;
+    private int startupTicks = 0;
+    private static final Set<GameProfile> opPlayers = new HashSet<>();
 
+    public SecurityCache(final IGrid g) {
+        this.myGrid = g;
+    }
 
-public class SecurityCache implements ISecurityGrid
-{
-	private final IGrid myGrid;
-	private final List<ISecurityProvider> securityProvider = new ArrayList<>();
-	private final HashMap<Integer, EnumSet<SecurityPermissions>> playerPerms = new HashMap<>();
-	private long securityKey = -1;
-	static final int STARTUP_DELAY = 20;
-	private int startupTicks = 0;
-	private final static Set<GameProfile> opPlayers = new HashSet<>();
+    @MENetworkEventSubscribe
+    public void updatePermissions(final MENetworkSecurityChange ev) {
+        this.playerPerms.clear();
+        if (this.securityProvider.isEmpty()) {
+            return;
+        }
 
-	public SecurityCache( final IGrid g )
-	{
-		this.myGrid = g;
-	}
+        this.securityProvider.get(0).readPermissions(this.playerPerms);
+    }
 
-	@MENetworkEventSubscribe
-	public void updatePermissions( final MENetworkSecurityChange ev )
-	{
-		this.playerPerms.clear();
-		if( this.securityProvider.isEmpty() )
-		{
-			return;
-		}
+    public long getSecurityKey() {
+        return this.securityKey;
+    }
 
-		this.securityProvider.get( 0 ).readPermissions( this.playerPerms );
-	}
+    @Override
+    public void onUpdateTick() {
+        if (startupTicks < STARTUP_DELAY) startupTicks++;
+    }
 
-	public long getSecurityKey()
-	{
-		return this.securityKey;
-	}
+    @Override
+    public void removeNode(final IGridNode gridNode, final IGridHost machine) {
+        if (machine instanceof ISecurityProvider) {
+            this.securityProvider.remove(machine);
+            this.updateSecurityKey();
+        }
+    }
 
-	@Override
-	public void onUpdateTick()
-	{
-		if (startupTicks < STARTUP_DELAY)
-			startupTicks++;
-	}
+    private void updateSecurityKey() {
+        final long lastCode = this.securityKey;
 
-	@Override
-	public void removeNode( final IGridNode gridNode, final IGridHost machine )
-	{
-		if( machine instanceof ISecurityProvider )
-		{
-			this.securityProvider.remove( machine );
-			this.updateSecurityKey();
-		}
-	}
+        if (this.securityProvider.size() == 1) {
+            this.securityKey = this.securityProvider.get(0).getSecurityKey();
+        } else {
+            this.securityKey = -1;
+        }
 
-	private void updateSecurityKey()
-	{
-		final long lastCode = this.securityKey;
+        if (lastCode != this.securityKey) {
+            this.getGrid().postEvent(new MENetworkSecurityChange());
+            for (final IGridNode n : this.getGrid().getNodes()) {
+                ((GridNode) n).setLastSecurityKey(this.securityKey);
+            }
+        }
+    }
 
-		if( this.securityProvider.size() == 1 )
-		{
-			this.securityKey = this.securityProvider.get( 0 ).getSecurityKey();
-		}
-		else
-		{
-			this.securityKey = -1;
-		}
+    @Override
+    public void addNode(final IGridNode gridNode, final IGridHost machine) {
+        if (machine instanceof ISecurityProvider) {
+            this.securityProvider.add((ISecurityProvider) machine);
+            this.updateSecurityKey();
+        } else {
+            ((GridNode) gridNode).setLastSecurityKey(this.securityKey);
+        }
+    }
 
-		if( lastCode != this.securityKey )
-		{
-			this.getGrid().postEvent( new MENetworkSecurityChange() );
-			for( final IGridNode n : this.getGrid().getNodes() )
-			{
-				( (GridNode) n ).setLastSecurityKey( this.securityKey );
-			}
-		}
-	}
+    @Override
+    public void onSplit(final IGridStorage destinationStorage) {}
 
-	@Override
-	public void addNode( final IGridNode gridNode, final IGridHost machine )
-	{
-		if( machine instanceof ISecurityProvider )
-		{
-			this.securityProvider.add( (ISecurityProvider) machine );
-			this.updateSecurityKey();
-		}
-		else
-		{
-			( (GridNode) gridNode ).setLastSecurityKey( this.securityKey );
-		}
-	}
+    @Override
+    public void onJoin(final IGridStorage sourceStorage) {}
 
-	@Override
-	public void onSplit( final IGridStorage destinationStorage )
-	{
+    @Override
+    public void populateGridStorage(final IGridStorage destinationStorage) {}
 
-	}
+    @Override
+    public boolean isAvailable() {
+        return startupTicks >= STARTUP_DELAY
+                && this.securityProvider.size() == 1
+                && this.securityProvider.get(0).isSecurityEnabled();
+    }
 
-	@Override
-	public void onJoin( final IGridStorage sourceStorage )
-	{
+    @Override
+    public boolean hasPermission(final EntityPlayer player, final SecurityPermissions perm) {
+        Preconditions.checkNotNull(player);
+        Preconditions.checkNotNull(perm);
 
-	}
+        final GameProfile profile = player.getGameProfile();
+        if (isPlayerOP(profile)) return true;
+        return this.hasPermission(WorldData.instance().playerData().getPlayerID(profile), perm);
+    }
 
-	@Override
-	public void populateGridStorage( final IGridStorage destinationStorage )
-	{
+    @Override
+    public boolean hasPermission(final int playerID, final SecurityPermissions perm) {
+        if (this.isAvailable()) {
+            final EnumSet<SecurityPermissions> perms = this.playerPerms.get(playerID);
 
-	}
+            if (perms == null) {
+                if (playerID == -1) // no default?
+                {
+                    return false;
+                } else {
+                    return this.hasPermission(-1, perm);
+                }
+            }
 
-	@Override
-	public boolean isAvailable()
-	{
-		return startupTicks >= STARTUP_DELAY && this.securityProvider.size() == 1 && this.securityProvider.get( 0 ).isSecurityEnabled();
-	}
+            return perms.contains(perm);
+        }
+        return true;
+    }
 
-	@Override
-	public boolean hasPermission( final EntityPlayer player, final SecurityPermissions perm )
-	{
-		Preconditions.checkNotNull( player );
-		Preconditions.checkNotNull( perm );
+    @Override
+    public int getOwner() {
+        if (this.isAvailable()) {
+            return this.securityProvider.get(0).getOwner();
+        }
+        return -1;
+    }
 
-		final GameProfile profile = player.getGameProfile();
-		if (isPlayerOP(profile))
-			return true;
-		return this.hasPermission( WorldData.instance().playerData().getPlayerID( profile ), perm );
-	}
+    public IGrid getGrid() {
+        return this.myGrid;
+    }
 
-	@Override
-	public boolean hasPermission( final int playerID, final SecurityPermissions perm )
-	{
-		if( this.isAvailable() )
-		{
-			final EnumSet<SecurityPermissions> perms = this.playerPerms.get( playerID );
+    public static void registerOpPlayer(GameProfile profile) {
+        opPlayers.add(profile);
+    }
 
-			if( perms == null )
-			{
-				if( playerID == -1 ) // no default?
-				{
-					return false;
-				}
-				else
-				{
-					return this.hasPermission( -1, perm );
-				}
-			}
+    public static void unregisterOpPlayer(GameProfile profile) {
+        opPlayers.remove(profile);
+    }
 
-			return perms.contains( perm );
-		}
-		return true;
-	}
-
-	@Override
-	public int getOwner()
-	{
-		if( this.isAvailable() )
-		{
-			return this.securityProvider.get( 0 ).getOwner();
-		}
-		return -1;
-	}
-
-	public IGrid getGrid()
-	{
-		return this.myGrid;
-	}
-
-	public static void registerOpPlayer(GameProfile profile)
-	{
-		opPlayers.add(profile);
-	}
-
-	public static void unregisterOpPlayer(GameProfile profile)
-	{
-		opPlayers.remove(profile);
-	}
-
-	public static boolean isPlayerOP(GameProfile profile)
-	{
-		return opPlayers.contains(profile);
-	}
+    public static boolean isPlayerOP(GameProfile profile) {
+        return opPlayers.contains(profile);
+    }
 }

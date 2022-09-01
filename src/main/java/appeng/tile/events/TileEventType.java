@@ -18,17 +18,16 @@
 
 package appeng.tile.events;
 
+public enum TileEventType {
+    TICK,
 
-public enum TileEventType
-{
-	TICK,
+    WORLD_NBT_READ,
+    WORLD_NBT_WRITE,
 
-	WORLD_NBT_READ, WORLD_NBT_WRITE,
+    /**
+     * Methods annotated with this need to return a boolean
+     */
+    NETWORK_READ,
 
-	/**
-	 * Methods annotated with this need to return a boolean
-	 */
-	NETWORK_READ,
-
-	NETWORK_WRITE
+    NETWORK_WRITE
 }

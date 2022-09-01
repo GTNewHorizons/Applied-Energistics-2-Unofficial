@@ -18,42 +18,43 @@
 
 package appeng.core.localization;
 
-
 import net.minecraft.util.StatCollector;
 
+public enum WailaText {
+    Crafting,
 
-public enum WailaText
-{
-	Crafting,
+    DeviceOnline,
+    DeviceOffline,
+    DeviceMissingChannel,
 
-	DeviceOnline, DeviceOffline, DeviceMissingChannel,
+    P2PUnlinked,
+    P2PInputOneOutput,
+    P2PInputManyOutputs,
+    P2POutput,
 
-	P2PUnlinked, P2PInputOneOutput, P2PInputManyOutputs, P2POutput,
+    Locked,
+    Unlocked,
+    Showing,
 
-	Locked, Unlocked, Showing,
+    Contains,
+    Channels,
+    Booting;
 
-	Contains, Channels, Booting;
+    private final String root;
 
-	private final String root;
+    WailaText() {
+        this.root = "waila.appliedenergistics2";
+    }
 
-	WailaText()
-	{
-		this.root = "waila.appliedenergistics2";
-	}
+    WailaText(final String r) {
+        this.root = r;
+    }
 
-	WailaText( final String r )
-	{
-		this.root = r;
-	}
+    public String getLocal() {
+        return StatCollector.translateToLocal(this.getUnlocalized());
+    }
 
-	public String getLocal()
-	{
-		return StatCollector.translateToLocal( this.getUnlocalized() );
-	}
-
-	public String getUnlocalized()
-	{
-		return this.root + '.' + this.toString();
-	}
-
+    public String getUnlocalized() {
+        return this.root + '.' + this.toString();
+    }
 }

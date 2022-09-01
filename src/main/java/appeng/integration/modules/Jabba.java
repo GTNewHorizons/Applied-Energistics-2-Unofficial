@@ -14,29 +14,25 @@ import net.minecraft.tileentity.TileEntity;
 public class Jabba implements IIntegrationModule {
     @Reflected
     public static Jabba instance;
+
     @Reflected
-    public Jabba()
-    {
-        IntegrationHelper.testClassExistence( this, mcp.mobius.betterbarrels.common.blocks.TileEntityBarrel.class );
+    public Jabba() {
+        IntegrationHelper.testClassExistence(this, mcp.mobius.betterbarrels.common.blocks.TileEntityBarrel.class);
     }
-    public boolean isBarrel( final TileEntity te )
-    {
+
+    public boolean isBarrel(final TileEntity te) {
         return te instanceof TileEntityBarrel;
     }
 
-    public IMEInventory<IAEItemStack> getBarrel( final TileEntity te )
-    {
-        return new JabbaBarrel( te );
+    public IMEInventory<IAEItemStack> getBarrel(final TileEntity te) {
+        return new JabbaBarrel(te);
     }
 
     @Override
-    public void init()
-    {
-    }
+    public void init() {}
 
     @Override
-    public void postInit()
-    {
-        AEApi.instance().registries().externalStorage().addExternalStorageInterface( new JabbaStorageHandler() );
+    public void postInit() {
+        AEApi.instance().registries().externalStorage().addExternalStorageInterface(new JabbaStorageHandler());
     }
 }

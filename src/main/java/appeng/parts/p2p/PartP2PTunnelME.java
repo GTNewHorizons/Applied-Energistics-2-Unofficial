@@ -18,7 +18,6 @@
 
 package appeng.parts.p2p;
 
-
 import appeng.api.AEApi;
 import appeng.api.exceptions.FailedConnection;
 import appeng.api.networking.GridFlags;
@@ -36,217 +35,183 @@ import appeng.me.GridAccessException;
 import appeng.me.cache.helpers.Connections;
 import appeng.me.cache.helpers.TunnelConnection;
 import appeng.me.helpers.AENetworkProxy;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
-import java.util.Iterator;
-import java.util.LinkedList;
+public class PartP2PTunnelME extends PartP2PTunnel<PartP2PTunnelME> implements IGridTickable {
 
+    private final Connections connection = new Connections(this);
+    private final AENetworkProxy outerProxy = new AENetworkProxy(this, "outer", null, true);
 
-public class PartP2PTunnelME extends PartP2PTunnel<PartP2PTunnelME> implements IGridTickable
-{
+    public PartP2PTunnelME(final ItemStack is) {
+        super(is);
+        this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL, GridFlags.COMPRESSED_CHANNEL);
+        if (AEConfig.instance.p2pBackboneTransfer)
+            this.outerProxy.setFlags(
+                    GridFlags.DENSE_CAPACITY, GridFlags.ULTRA_DENSE_CAPACITY, GridFlags.CANNOT_CARRY_COMPRESSED);
+        else this.outerProxy.setFlags(GridFlags.DENSE_CAPACITY, GridFlags.CANNOT_CARRY_COMPRESSED);
+    }
 
-	private final Connections connection = new Connections( this );
-	private final AENetworkProxy outerProxy = new AENetworkProxy( this, "outer", null, true );
+    @Override
+    public void readFromNBT(final NBTTagCompound extra) {
+        super.readFromNBT(extra);
+        this.outerProxy.readFromNBT(extra);
+    }
 
-	public PartP2PTunnelME( final ItemStack is )
-	{
-		super( is );
-		this.getProxy().setFlags( GridFlags.REQUIRE_CHANNEL, GridFlags.COMPRESSED_CHANNEL );
-		if (AEConfig.instance.p2pBackboneTransfer)
-			this.outerProxy.setFlags( GridFlags.DENSE_CAPACITY, GridFlags.ULTRA_DENSE_CAPACITY, GridFlags.CANNOT_CARRY_COMPRESSED );
-		else
-			this.outerProxy.setFlags( GridFlags.DENSE_CAPACITY, GridFlags.CANNOT_CARRY_COMPRESSED );
-	}
+    @Override
+    public void writeToNBT(final NBTTagCompound extra) {
+        super.writeToNBT(extra);
+        this.outerProxy.writeToNBT(extra);
+    }
 
-	@Override
-	public void readFromNBT( final NBTTagCompound extra )
-	{
-		super.readFromNBT( extra );
-		this.outerProxy.readFromNBT( extra );
-	}
+    @Override
+    public void onTunnelNetworkChange() {
+        super.onTunnelNetworkChange();
+        if (!this.isOutput()) {
+            try {
+                this.getProxy().getTick().wakeDevice(this.getProxy().getNode());
+            } catch (final GridAccessException e) {
+                // :P
+            }
+        }
+    }
 
-	@Override
-	public void writeToNBT( final NBTTagCompound extra )
-	{
-		super.writeToNBT( extra );
-		this.outerProxy.writeToNBT( extra );
-	}
+    @Override
+    public AECableType getCableConnectionType(final ForgeDirection dir) {
+        return AECableType.DENSE;
+    }
 
-	@Override
-	public void onTunnelNetworkChange()
-	{
-		super.onTunnelNetworkChange();
-		if( !this.isOutput() )
-		{
-			try
-			{
-				this.getProxy().getTick().wakeDevice( this.getProxy().getNode() );
-			}
-			catch( final GridAccessException e )
-			{
-				// :P
-			}
-		}
-	}
+    @Override
+    public void removeFromWorld() {
+        super.removeFromWorld();
+        this.outerProxy.invalidate();
+    }
 
-	@Override
-	public AECableType getCableConnectionType( final ForgeDirection dir )
-	{
-		return AECableType.DENSE;
-	}
+    @Override
+    public void addToWorld() {
+        super.addToWorld();
+        this.outerProxy.onReady();
+    }
 
-	@Override
-	public void removeFromWorld()
-	{
-		super.removeFromWorld();
-		this.outerProxy.invalidate();
-	}
+    @Override
+    public void setPartHostInfo(final ForgeDirection side, final IPartHost host, final TileEntity tile) {
+        super.setPartHostInfo(side, host, tile);
+        this.outerProxy.setValidSides(EnumSet.of(side));
+    }
 
-	@Override
-	public void addToWorld()
-	{
-		super.addToWorld();
-		this.outerProxy.onReady();
-	}
+    @Override
+    public IGridNode getExternalFacingNode() {
+        return this.outerProxy.getNode();
+    }
 
-	@Override
-	public void setPartHostInfo( final ForgeDirection side, final IPartHost host, final TileEntity tile )
-	{
-		super.setPartHostInfo( side, host, tile );
-		this.outerProxy.setValidSides( EnumSet.of( side ) );
-	}
+    @Override
+    public void onPlacement(final EntityPlayer player, final ItemStack held, final ForgeDirection side) {
+        super.onPlacement(player, held, side);
+        this.outerProxy.setOwner(player);
+    }
 
-	@Override
-	public IGridNode getExternalFacingNode()
-	{
-		return this.outerProxy.getNode();
-	}
+    @Override
+    public TickingRequest getTickingRequest(final IGridNode node) {
+        return new TickingRequest(TickRates.METunnel.getMin(), TickRates.METunnel.getMax(), true, false);
+    }
 
-	@Override
-	public void onPlacement( final EntityPlayer player, final ItemStack held, final ForgeDirection side )
-	{
-		super.onPlacement( player, held, side );
-		this.outerProxy.setOwner( player );
-	}
+    @Override
+    public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
+        // just move on...
+        try {
+            if (!this.getProxy().getPath().isNetworkBooting()) {
+                if (!this.getProxy().getEnergy().isNetworkPowered()) {
+                    this.connection.markDestroy();
+                    TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
+                } else {
+                    if (this.getProxy().isActive()) {
+                        this.connection.markCreate();
+                        TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
+                    } else {
+                        this.connection.markDestroy();
+                        TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
+                    }
+                }
 
-	@Override
-	public TickingRequest getTickingRequest( final IGridNode node )
-	{
-		return new TickingRequest( TickRates.METunnel.getMin(), TickRates.METunnel.getMax(), true, false );
-	}
+                return TickRateModulation.SLEEP;
+            }
+        } catch (final GridAccessException e) {
+            // meh?
+        }
 
-	@Override
-	public TickRateModulation tickingRequest( final IGridNode node, final int ticksSinceLastCall )
-	{
-		// just move on...
-		try
-		{
-			if( !this.getProxy().getPath().isNetworkBooting() )
-			{
-				if( !this.getProxy().getEnergy().isNetworkPowered() )
-				{
-					this.connection.markDestroy();
-					TickHandler.INSTANCE.addCallable( this.getTile().getWorldObj(), this.connection );
-				}
-				else
-				{
-					if( this.getProxy().isActive() )
-					{
-						this.connection.markCreate();
-						TickHandler.INSTANCE.addCallable( this.getTile().getWorldObj(), this.connection );
-					}
-					else
-					{
-						this.connection.markDestroy();
-						TickHandler.INSTANCE.addCallable( this.getTile().getWorldObj(), this.connection );
-					}
-				}
+        return TickRateModulation.IDLE;
+    }
 
-				return TickRateModulation.SLEEP;
-			}
-		}
-		catch( final GridAccessException e )
-		{
-			// meh?
-		}
+    public void updateConnections(final Connections connections) {
+        if (connections.isDestroy()) {
+            for (final TunnelConnection cw : this.connection.getConnections().values()) {
+                cw.getConnection().destroy();
+            }
 
-		return TickRateModulation.IDLE;
-	}
+            this.connection.getConnections().clear();
+        } else if (connections.isCreate()) {
 
-	public void updateConnections( final Connections connections )
-	{
-		if( connections.isDestroy() )
-		{
-			for( final TunnelConnection cw : this.connection.getConnections().values() )
-			{
-				cw.getConnection().destroy();
-			}
+            final Iterator<TunnelConnection> i =
+                    this.connection.getConnections().values().iterator();
+            while (i.hasNext()) {
+                final TunnelConnection cw = i.next();
+                try {
+                    if (cw.getTunnel().getProxy().getGrid() != this.getProxy().getGrid()) {
+                        cw.getConnection().destroy();
+                        i.remove();
+                    } else if (!cw.getTunnel().getProxy().isActive()) {
+                        cw.getConnection().destroy();
+                        i.remove();
+                    }
+                } catch (final GridAccessException e) {
+                    // :P
+                }
+            }
 
-			this.connection.getConnections().clear();
-		}
-		else if( connections.isCreate() )
-		{
+            final LinkedList<PartP2PTunnelME> newSides = new LinkedList<PartP2PTunnelME>();
+            try {
+                for (final PartP2PTunnelME me : this.getOutputs()) {
+                    if (me.getProxy().isActive() && connections.getConnections().get(me.getGridNode()) == null) {
+                        newSides.add(me);
+                    }
+                }
 
-			final Iterator<TunnelConnection> i = this.connection.getConnections().values().iterator();
-			while( i.hasNext() )
-			{
-				final TunnelConnection cw = i.next();
-				try
-				{
-					if( cw.getTunnel().getProxy().getGrid() != this.getProxy().getGrid() )
-					{
-						cw.getConnection().destroy();
-						i.remove();
-					}
-					else if( !cw.getTunnel().getProxy().isActive() )
-					{
-						cw.getConnection().destroy();
-						i.remove();
-					}
-				}
-				catch( final GridAccessException e )
-				{
-					// :P
-				}
-			}
-
-			final LinkedList<PartP2PTunnelME> newSides = new LinkedList<PartP2PTunnelME>();
-			try
-			{
-				for( final PartP2PTunnelME me : this.getOutputs() )
-				{
-					if( me.getProxy().isActive() && connections.getConnections().get( me.getGridNode() ) == null )
-					{
-						newSides.add( me );
-					}
-				}
-
-				for( final PartP2PTunnelME me : newSides )
-				{
-					try
-					{
-						connections.getConnections().put( me.getGridNode(), new TunnelConnection( me, AEApi.instance().createGridConnection( this.outerProxy.getNode(), me.outerProxy.getNode() ) ) );
-					}
-					catch( final FailedConnection e )
-					{
-						final TileEntity start = this.getTile();
-						final TileEntity end = me.getTile();
-						AELog.warn( "Failed to establish a ME P2P Tunnel between the tunnels at [x=%d, y=%d, z=%d, dim=%d] and [x=%d, y=%d, z=%d, dim=%d]",
-								start.xCoord, start.yCoord, start.zCoord, start.hasWorldObj() ? start.getWorldObj().provider.dimensionId : Integer.MAX_VALUE,
-								end.xCoord, end.yCoord, end.zCoord, end.hasWorldObj() ? end.getWorldObj().provider.dimensionId : Integer.MAX_VALUE );
-						// :(
-					}
-				}
-			}
-			catch( final GridAccessException e )
-			{
-				AELog.debug( e );
-			}
-		}
-	}
+                for (final PartP2PTunnelME me : newSides) {
+                    try {
+                        connections
+                                .getConnections()
+                                .put(
+                                        me.getGridNode(),
+                                        new TunnelConnection(
+                                                me,
+                                                AEApi.instance()
+                                                        .createGridConnection(
+                                                                this.outerProxy.getNode(), me.outerProxy.getNode())));
+                    } catch (final FailedConnection e) {
+                        final TileEntity start = this.getTile();
+                        final TileEntity end = me.getTile();
+                        AELog.warn(
+                                "Failed to establish a ME P2P Tunnel between the tunnels at [x=%d, y=%d, z=%d, dim=%d] and [x=%d, y=%d, z=%d, dim=%d]",
+                                start.xCoord,
+                                start.yCoord,
+                                start.zCoord,
+                                start.hasWorldObj() ? start.getWorldObj().provider.dimensionId : Integer.MAX_VALUE,
+                                end.xCoord,
+                                end.yCoord,
+                                end.zCoord,
+                                end.hasWorldObj() ? end.getWorldObj().provider.dimensionId : Integer.MAX_VALUE);
+                        // :(
+                    }
+                }
+            } catch (final GridAccessException e) {
+                AELog.debug(e);
+            }
+        }
+    }
 }

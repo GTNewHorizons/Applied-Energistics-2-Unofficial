@@ -18,7 +18,6 @@
 
 package appeng.tile.spatial;
 
-
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -33,216 +32,179 @@ import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
 import io.netty.buffer.ByteBuf;
+import java.util.EnumSet;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.EnumSet;
+public class TileSpatialPylon extends AENetworkTile implements IAEMultiBlock {
 
+    public static final int DISPLAY_END_MIN = 0x01;
+    public static final int DISPLAY_END_MAX = 0x02;
+    public static final int DISPLAY_MIDDLE = 0x01 + 0x02;
+    public static final int DISPLAY_X = 0x04;
+    public static final int DISPLAY_Y = 0x08;
+    public static final int DISPLAY_Z = 0x04 + 0x08;
+    public static final int MB_STATUS = 0x01 + 0x02 + 0x04 + 0x08;
 
-public class TileSpatialPylon extends AENetworkTile implements IAEMultiBlock
-{
+    public static final int DISPLAY_ENABLED = 0x10;
+    public static final int DISPLAY_POWERED_ENABLED = 0x20;
+    public static final int NET_STATUS = 0x10 + 0x20;
 
-	public static final int DISPLAY_END_MIN = 0x01;
-	public static final int DISPLAY_END_MAX = 0x02;
-	public static final int DISPLAY_MIDDLE = 0x01 + 0x02;
-	public static final int DISPLAY_X = 0x04;
-	public static final int DISPLAY_Y = 0x08;
-	public static final int DISPLAY_Z = 0x04 + 0x08;
-	public static final int MB_STATUS = 0x01 + 0x02 + 0x04 + 0x08;
+    private final SpatialPylonCalculator calc = new SpatialPylonCalculator(this);
+    private int displayBits = 0;
+    private SpatialPylonCluster cluster;
+    private boolean didHaveLight = false;
 
-	public static final int DISPLAY_ENABLED = 0x10;
-	public static final int DISPLAY_POWERED_ENABLED = 0x20;
-	public static final int NET_STATUS = 0x10 + 0x20;
+    public TileSpatialPylon() {
+        this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL, GridFlags.MULTIBLOCK);
+        this.getProxy().setIdlePowerUsage(0.5);
+        this.getProxy().setValidSides(EnumSet.noneOf(ForgeDirection.class));
+    }
 
-	private final SpatialPylonCalculator calc = new SpatialPylonCalculator( this );
-	private int displayBits = 0;
-	private SpatialPylonCluster cluster;
-	private boolean didHaveLight = false;
+    @Override
+    protected AENetworkProxy createProxy() {
+        return new AENetworkProxyMultiblock(this, "proxy", this.getItemFromTile(this), true);
+    }
 
-	public TileSpatialPylon()
-	{
-		this.getProxy().setFlags( GridFlags.REQUIRE_CHANNEL, GridFlags.MULTIBLOCK );
-		this.getProxy().setIdlePowerUsage( 0.5 );
-		this.getProxy().setValidSides( EnumSet.noneOf( ForgeDirection.class ) );
-	}
+    @Override
+    public void onChunkUnload() {
+        this.disconnect(false);
+        super.onChunkUnload();
+    }
 
-	@Override
-	protected AENetworkProxy createProxy()
-	{
-		return new AENetworkProxyMultiblock( this, "proxy", this.getItemFromTile( this ), true );
-	}
+    @Override
+    public void onReady() {
+        super.onReady();
+        this.onNeighborBlockChange();
+    }
 
-	@Override
-	public void onChunkUnload()
-	{
-		this.disconnect( false );
-		super.onChunkUnload();
-	}
+    @Override
+    public void invalidate() {
+        this.disconnect(false);
+        super.invalidate();
+    }
 
-	@Override
-	public void onReady()
-	{
-		super.onReady();
-		this.onNeighborBlockChange();
-	}
+    public void onNeighborBlockChange() {
+        this.calc.calculateMultiblock(this.worldObj, this.getLocation());
+    }
 
-	@Override
-	public void invalidate()
-	{
-		this.disconnect( false );
-		super.invalidate();
-	}
+    @Override
+    public void disconnect(final boolean b) {
+        if (this.cluster != null) {
+            this.cluster.destroy();
+            this.updateStatus(null);
+        }
+    }
 
-	public void onNeighborBlockChange()
-	{
-		this.calc.calculateMultiblock( this.worldObj, this.getLocation() );
-	}
+    @Override
+    public SpatialPylonCluster getCluster() {
+        return this.cluster;
+    }
 
-	@Override
-	public void disconnect( final boolean b )
-	{
-		if( this.cluster != null )
-		{
-			this.cluster.destroy();
-			this.updateStatus( null );
-		}
-	}
+    @Override
+    public boolean isValid() {
+        return true;
+    }
 
-	@Override
-	public SpatialPylonCluster getCluster()
-	{
-		return this.cluster;
-	}
+    public void updateStatus(final SpatialPylonCluster c) {
+        this.cluster = c;
+        this.getProxy()
+                .setValidSides(c == null ? EnumSet.noneOf(ForgeDirection.class) : EnumSet.allOf(ForgeDirection.class));
+        this.recalculateDisplay();
+    }
 
-	@Override
-	public boolean isValid()
-	{
-		return true;
-	}
+    public void recalculateDisplay() {
+        final int oldBits = this.displayBits;
 
-	public void updateStatus( final SpatialPylonCluster c )
-	{
-		this.cluster = c;
-		this.getProxy().setValidSides( c == null ? EnumSet.noneOf( ForgeDirection.class ) : EnumSet.allOf( ForgeDirection.class ) );
-		this.recalculateDisplay();
-	}
+        this.displayBits = 0;
 
-	public void recalculateDisplay()
-	{
-		final int oldBits = this.displayBits;
+        if (this.cluster != null) {
+            if (this.cluster.getMin().equals(this.getLocation())) {
+                this.displayBits = DISPLAY_END_MIN;
+            } else if (this.cluster.getMax().equals(this.getLocation())) {
+                this.displayBits = DISPLAY_END_MAX;
+            } else {
+                this.displayBits = DISPLAY_MIDDLE;
+            }
 
-		this.displayBits = 0;
+            switch (this.cluster.getCurrentAxis()) {
+                case X:
+                    this.displayBits |= DISPLAY_X;
+                    break;
+                case Y:
+                    this.displayBits |= DISPLAY_Y;
+                    break;
+                case Z:
+                    this.displayBits |= DISPLAY_Z;
+                    break;
+                default:
+                    this.displayBits = 0;
+                    break;
+            }
 
-		if( this.cluster != null )
-		{
-			if( this.cluster.getMin().equals( this.getLocation() ) )
-			{
-				this.displayBits = DISPLAY_END_MIN;
-			}
-			else if( this.cluster.getMax().equals( this.getLocation() ) )
-			{
-				this.displayBits = DISPLAY_END_MAX;
-			}
-			else
-			{
-				this.displayBits = DISPLAY_MIDDLE;
-			}
+            try {
+                if (this.getProxy().getEnergy().isNetworkPowered()) {
+                    this.displayBits |= DISPLAY_POWERED_ENABLED;
+                }
 
-			switch( this.cluster.getCurrentAxis() )
-			{
-				case X:
-					this.displayBits |= DISPLAY_X;
-					break;
-				case Y:
-					this.displayBits |= DISPLAY_Y;
-					break;
-				case Z:
-					this.displayBits |= DISPLAY_Z;
-					break;
-				default:
-					this.displayBits = 0;
-					break;
-			}
+                if (this.cluster.isValid() && this.getProxy().isActive()) {
+                    this.displayBits |= DISPLAY_ENABLED;
+                }
+            } catch (final GridAccessException e) {
+                // nothing?
+            }
+        }
 
-			try
-			{
-				if( this.getProxy().getEnergy().isNetworkPowered() )
-				{
-					this.displayBits |= DISPLAY_POWERED_ENABLED;
-				}
+        if (oldBits != this.displayBits) {
+            this.markForUpdate();
+        }
+    }
 
-				if( this.cluster.isValid() && this.getProxy().isActive() )
-				{
-					this.displayBits |= DISPLAY_ENABLED;
-				}
-			}
-			catch( final GridAccessException e )
-			{
-				// nothing?
-			}
-		}
+    @Override
+    public void markForUpdate() {
+        super.markForUpdate();
+        final boolean hasLight = this.getLightValue() > 0;
+        if (hasLight != this.didHaveLight) {
+            this.didHaveLight = hasLight;
+            this.worldObj.func_147451_t(this.xCoord, this.yCoord, this.zCoord);
+            // worldObj.updateAllLightTypes( xCoord, yCoord, zCoord );
+        }
+    }
 
-		if( oldBits != this.displayBits )
-		{
-			this.markForUpdate();
-		}
-	}
+    @Override
+    public boolean canBeRotated() {
+        return false;
+    }
 
-	@Override
-	public void markForUpdate()
-	{
-		super.markForUpdate();
-		final boolean hasLight = this.getLightValue() > 0;
-		if( hasLight != this.didHaveLight )
-		{
-			this.didHaveLight = hasLight;
-			this.worldObj.func_147451_t( this.xCoord, this.yCoord, this.zCoord );
-			// worldObj.updateAllLightTypes( xCoord, yCoord, zCoord );
-		}
-	}
+    public int getLightValue() {
+        if ((this.displayBits & DISPLAY_POWERED_ENABLED) == DISPLAY_POWERED_ENABLED) {
+            return 8;
+        }
+        return 0;
+    }
 
-	@Override
-	public boolean canBeRotated()
-	{
-		return false;
-	}
+    @TileEvent(TileEventType.NETWORK_READ)
+    public boolean readFromStream_TileSpatialPylon(final ByteBuf data) {
+        final int old = this.displayBits;
+        this.displayBits = data.readByte();
+        return old != this.displayBits;
+    }
 
-	public int getLightValue()
-	{
-		if( ( this.displayBits & DISPLAY_POWERED_ENABLED ) == DISPLAY_POWERED_ENABLED )
-		{
-			return 8;
-		}
-		return 0;
-	}
+    @TileEvent(TileEventType.NETWORK_WRITE)
+    public void writeToStream_TileSpatialPylon(final ByteBuf data) {
+        data.writeByte(this.displayBits);
+    }
 
-	@TileEvent( TileEventType.NETWORK_READ )
-	public boolean readFromStream_TileSpatialPylon( final ByteBuf data )
-	{
-		final int old = this.displayBits;
-		this.displayBits = data.readByte();
-		return old != this.displayBits;
-	}
+    @MENetworkEventSubscribe
+    public void powerRender(final MENetworkPowerStatusChange c) {
+        this.recalculateDisplay();
+    }
 
-	@TileEvent( TileEventType.NETWORK_WRITE )
-	public void writeToStream_TileSpatialPylon( final ByteBuf data )
-	{
-		data.writeByte( this.displayBits );
-	}
+    @MENetworkEventSubscribe
+    public void activeRender(final MENetworkChannelsChanged c) {
+        this.recalculateDisplay();
+    }
 
-	@MENetworkEventSubscribe
-	public void powerRender( final MENetworkPowerStatusChange c )
-	{
-		this.recalculateDisplay();
-	}
-
-	@MENetworkEventSubscribe
-	public void activeRender( final MENetworkChannelsChanged c )
-	{
-		this.recalculateDisplay();
-	}
-
-	public int getDisplayBits()
-	{
-		return this.displayBits;
-	}
+    public int getDisplayBits() {
+        return this.displayBits;
+    }
 }

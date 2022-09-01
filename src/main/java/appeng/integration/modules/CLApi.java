@@ -1,4 +1,4 @@
-///*
+/// *
 // * This file is part of Applied Energistics 2.
 // * Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved.
 // *
@@ -16,18 +16,18 @@
 // * along with Applied Energistics 2.  If not, see <http://www.gnu.org/licenses/lgpl>.
 // */
 //
-//package appeng.integration.modules;
+// package appeng.integration.modules;
 //
 //
-//import appeng.api.util.AEColor;
-//import appeng.helpers.Reflected;
-//import appeng.integration.IIntegrationModule;
-//import appeng.integration.IntegrationHelper;
-//import appeng.integration.abstraction.ICLApi;
+// import appeng.api.util.AEColor;
+// import appeng.helpers.Reflected;
+// import appeng.integration.IIntegrationModule;
+// import appeng.integration.IntegrationHelper;
+// import appeng.integration.abstraction.ICLApi;
 //
 //
-//public class CLApi implements ICLApi, IIntegrationModule
-//{
+// public class CLApi implements ICLApi, IIntegrationModule
+// {
 //	@Reflected
 //	public static CLApi instance;
 //
@@ -59,4 +59,4 @@
 //
 //		return coloredlightscore.src.api.CLApi.makeRGBLightValue( r / 255.0f, g / 255.0f, b / 255.0f, light / 15.0f );
 //	}
-//}
+// }

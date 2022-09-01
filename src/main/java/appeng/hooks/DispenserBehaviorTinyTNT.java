@@ -18,7 +18,6 @@
 
 package appeng.hooks;
 
-
 import appeng.entity.EntityTinyTNTPrimed;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.dispenser.BehaviorDefaultDispenseItem;
@@ -27,21 +26,19 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 
+public final class DispenserBehaviorTinyTNT extends BehaviorDefaultDispenseItem {
 
-public final class DispenserBehaviorTinyTNT extends BehaviorDefaultDispenseItem
-{
-
-	@Override
-	protected ItemStack dispenseStack( final IBlockSource dispenser, final ItemStack dispensedItem )
-	{
-		final EnumFacing enumfacing = BlockDispenser.func_149937_b( dispenser.getBlockMetadata() );
-		final World world = dispenser.getWorld();
-		final int i = dispenser.getXInt() + enumfacing.getFrontOffsetX();
-		final int j = dispenser.getYInt() + enumfacing.getFrontOffsetY();
-		final int k = dispenser.getZInt() + enumfacing.getFrontOffsetZ();
-		final EntityTinyTNTPrimed primedTinyTNTEntity = new EntityTinyTNTPrimed( world, i + 0.5F, j + 0.5F, k + 0.5F, null );
-		world.spawnEntityInWorld( primedTinyTNTEntity );
-		--dispensedItem.stackSize;
-		return dispensedItem;
-	}
+    @Override
+    protected ItemStack dispenseStack(final IBlockSource dispenser, final ItemStack dispensedItem) {
+        final EnumFacing enumfacing = BlockDispenser.func_149937_b(dispenser.getBlockMetadata());
+        final World world = dispenser.getWorld();
+        final int i = dispenser.getXInt() + enumfacing.getFrontOffsetX();
+        final int j = dispenser.getYInt() + enumfacing.getFrontOffsetY();
+        final int k = dispenser.getZInt() + enumfacing.getFrontOffsetZ();
+        final EntityTinyTNTPrimed primedTinyTNTEntity =
+                new EntityTinyTNTPrimed(world, i + 0.5F, j + 0.5F, k + 0.5F, null);
+        world.spawnEntityInWorld(primedTinyTNTEntity);
+        --dispensedItem.stackSize;
+        return dispensedItem;
+    }
 }
