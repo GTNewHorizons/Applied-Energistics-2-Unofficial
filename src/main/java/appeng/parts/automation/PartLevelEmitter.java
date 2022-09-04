@@ -109,8 +109,10 @@ public class PartLevelEmitter extends PartUpgradeable
         this.getConfigManager().registerSetting(Settings.CRAFT_VIA_REDSTONE, YesNo.NO);
 
         // Workaround the emitter randomly breaking on world load
-        delayedUpdatesQueued = true;
-        lastWorkingTick = MinecraftServer.getServer().getTickCounter();
+        if (MinecraftServer.getServer() != null) {
+            delayedUpdatesQueued = true;
+            lastWorkingTick = MinecraftServer.getServer().getTickCounter();
+        }
     }
 
     public long getReportingValue() {
