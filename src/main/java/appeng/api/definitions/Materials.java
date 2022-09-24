@@ -98,6 +98,12 @@ public class Materials {
 
     public AEItemDefinition materialEnderDust;
 
+    public AEItemDefinition materialFlour;
+
+    public AEItemDefinition materialGoldDust;
+
+    public AEItemDefinition materialIronDust;
+
     public AEItemDefinition materialFluixDust;
 
     public AEItemDefinition materialCertusQuartzDust;
@@ -105,6 +111,8 @@ public class Materials {
     public AEItemDefinition materialNetherQuartzDust;
 
     public AEItemDefinition materialMatterBall;
+
+    public AEItemDefinition materialIronNugget;
 
     public AEItemDefinition materialCertusQuartzCrystal;
 

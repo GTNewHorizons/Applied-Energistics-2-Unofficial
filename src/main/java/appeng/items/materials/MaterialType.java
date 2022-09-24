@@ -41,6 +41,10 @@ public enum MaterialType {
 
     CertusQuartzDust(2, AEFeature.Core, "dustCertusQuartz"),
     NetherQuartzDust(3, AEFeature.Core, "dustNetherQuartz"),
+    Flour(4, AEFeature.Flour, "dustWheat"),
+    GoldDust(51, AEFeature.Core, "dustGold"),
+    IronDust(49, AEFeature.Core, "dustIron"),
+    IronNugget(50, AEFeature.Core, "nuggetIron"),
 
     Silicon(5, AEFeature.Core, "itemSilicon"),
     MatterBall(6),

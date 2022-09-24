@@ -36,6 +36,7 @@ public enum AEFeature {
     SkyStoneChests(Constants.CATEGORY_WORLD),
     SpawnPressesInMeteorites(Constants.CATEGORY_WORLD),
     GrindStone(Constants.CATEGORY_WORLD),
+    Flour(Constants.CATEGORY_WORLD),
     Inscriber(Constants.CATEGORY_WORLD),
     ChestLoot(Constants.CATEGORY_WORLD),
     VillagerTrading(Constants.CATEGORY_WORLD),

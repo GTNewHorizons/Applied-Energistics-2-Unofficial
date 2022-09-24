@@ -475,9 +475,15 @@ item.appliedenergistics2.ItemMaterial.CertusQuartzDust.name=赛特斯石英粉
 item.appliedenergistics2.ItemMaterial.EmptyStorageCell.name=ME存储外壳
 item.appliedenergistics2.ItemMaterial.EnderDust.name=末影粉
 
+item.appliedenergistics2.ItemMaterial.Flour.name=面粉
 item.appliedenergistics2.ItemMaterial.FluixCrystal.name=福鲁伊克斯水晶
 item.appliedenergistics2.ItemMaterial.FluixDust.name=福鲁伊克斯粉
 item.appliedenergistics2.ItemMaterial.FluixPearl.name=福鲁伊克斯珍珠
+
+item.appliedenergistics2.ItemMaterial.GoldDust.name=金粉
+item.appliedenergistics2.ItemMaterial.IronDust.name=铁粉
+item.appliedenergistics2.ItemMaterial.IronNugget.name=铁粒
+
 
 item.appliedenergistics2.ItemMaterial.MatterBall.name=物质球
 item.appliedenergistics2.ItemMaterial.NetherQuartzDust.name=下界石英粉

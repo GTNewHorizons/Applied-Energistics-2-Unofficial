@@ -95,6 +95,12 @@ public interface IMaterials {
 
     IItemDefinition enderDust();
 
+    IItemDefinition flour();
+
+    IItemDefinition goldDust();
+
+    IItemDefinition ironDust();
+
     IItemDefinition fluixDust();
 
     IItemDefinition certusQuartzDust();
@@ -102,6 +108,8 @@ public interface IMaterials {
     IItemDefinition netherQuartzDust();
 
     IItemDefinition matterBall();
+
+    IItemDefinition ironNugget();
 
     IItemDefinition certusQuartzCrystal();
 

@@ -74,11 +74,15 @@ public final class ApiMaterials implements IMaterials {
     private final IItemDefinition cardCrafting;
     private final IItemDefinition cardOreFilter;
     private final IItemDefinition enderDust;
+    private final IItemDefinition flour;
+    private final IItemDefinition goldDust;
+    private final IItemDefinition ironDust;
     private final IItemDefinition fluixDust;
     private final IItemDefinition certusQuartzDust;
     private final IItemDefinition netherQuartzDust;
 
     private final IItemDefinition matterBall;
+    private final IItemDefinition ironNugget;
 
     private final IItemDefinition certusQuartzCrystal;
     private final IItemDefinition certusQuartzCrystalCharged;
@@ -162,6 +166,9 @@ public final class ApiMaterials implements IMaterials {
         this.cardOreFilter = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardOreFilter));
 
         this.enderDust = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.EnderDust));
+        this.flour = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.Flour));
+        this.goldDust = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.GoldDust));
+        this.ironDust = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.IronDust));
         this.fluixDust = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.FluixDust));
         this.certusQuartzDust =
                 new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CertusQuartzDust));
@@ -169,6 +176,7 @@ public final class ApiMaterials implements IMaterials {
                 new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.NetherQuartzDust));
 
         this.matterBall = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.MatterBall));
+        this.ironNugget = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.IronNugget));
 
         this.certusQuartzCrystal =
                 new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CertusQuartzCrystal));
@@ -373,6 +381,21 @@ public final class ApiMaterials implements IMaterials {
     }
 
     @Override
+    public IItemDefinition flour() {
+        return this.flour;
+    }
+
+    @Override
+    public IItemDefinition goldDust() {
+        return this.goldDust;
+    }
+
+    @Override
+    public IItemDefinition ironDust() {
+        return this.ironDust;
+    }
+
+    @Override
     public IItemDefinition fluixDust() {
         return this.fluixDust;
     }
@@ -390,6 +413,11 @@ public final class ApiMaterials implements IMaterials {
     @Override
     public IItemDefinition matterBall() {
         return this.matterBall;
+    }
+
+    @Override
+    public IItemDefinition ironNugget() {
+        return this.ironNugget;
     }
 
     @Override

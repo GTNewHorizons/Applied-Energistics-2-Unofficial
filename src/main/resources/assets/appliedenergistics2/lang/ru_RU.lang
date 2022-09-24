@@ -460,9 +460,15 @@ item.appliedenergistics2.ItemMaterial.CertusQuartzDust.name=Пыль истин�
 item.appliedenergistics2.ItemMaterial.EmptyStorageCell.name=МЭ корпус ячейки хранения
 item.appliedenergistics2.ItemMaterial.EnderDust.name=Пыль Края
 
+item.appliedenergistics2.ItemMaterial.Flour.name=Мука
 item.appliedenergistics2.ItemMaterial.FluixCrystal.name=Изменчивый кристалл
 item.appliedenergistics2.ItemMaterial.FluixDust.name=Изменчивая пыль
 item.appliedenergistics2.ItemMaterial.FluixPearl.name=Изменчивая жемчужина
+
+item.appliedenergistics2.ItemMaterial.GoldDust.name=Золотая пыль
+item.appliedenergistics2.ItemMaterial.IronDust.name=Железная пыль
+item.appliedenergistics2.ItemMaterial.IronNugget.name=Железный самородок
+
 
 item.appliedenergistics2.ItemMaterial.MatterBall.name=Шарик материи
 item.appliedenergistics2.ItemMaterial.NetherQuartzDust.name=Пыль кварца Нижнего мира

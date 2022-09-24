@@ -488,9 +488,15 @@ item.appliedenergistics2.ItemMaterial.CertusQuartzDust.name=Certus Quartz Dust
 item.appliedenergistics2.ItemMaterial.EmptyStorageCell.name=ME Storage Housing
 item.appliedenergistics2.ItemMaterial.EnderDust.name=Ender Dust
 
+item.appliedenergistics2.ItemMaterial.Flour.name=Flour
 item.appliedenergistics2.ItemMaterial.FluixCrystal.name=Fluix Crystal
 item.appliedenergistics2.ItemMaterial.FluixDust.name=Fluix Dust
 item.appliedenergistics2.ItemMaterial.FluixPearl.name=Fluix Pearl
+
+item.appliedenergistics2.ItemMaterial.GoldDust.name=Gold Dust
+item.appliedenergistics2.ItemMaterial.IronDust.name=Iron Dust
+item.appliedenergistics2.ItemMaterial.IronNugget.name=Iron Nugget
+
 
 item.appliedenergistics2.ItemMaterial.MatterBall.name=Matter Ball
 item.appliedenergistics2.ItemMaterial.NetherQuartzDust.name=Nether Quartz Dust
