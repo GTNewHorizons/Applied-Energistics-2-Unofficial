@@ -259,15 +259,11 @@ public final class Registration {
         target.materialCardCrafting = this.converter.of(source.cardCrafting());
 
         target.materialEnderDust = this.converter.of(source.enderDust());
-        target.materialFlour = this.converter.of(source.flour());
-        target.materialGoldDust = this.converter.of(source.goldDust());
-        target.materialIronDust = this.converter.of(source.ironDust());
         target.materialFluixDust = this.converter.of(source.fluixDust());
         target.materialCertusQuartzDust = this.converter.of(source.certusQuartzDust());
         target.materialNetherQuartzDust = this.converter.of(source.netherQuartzDust());
 
         target.materialMatterBall = this.converter.of(source.matterBall());
-        target.materialIronNugget = this.converter.of(source.ironNugget());
 
         target.materialCertusQuartzCrystal = this.converter.of(source.certusQuartzCrystal());
         target.materialCertusQuartzCrystalCharged = this.converter.of(source.certusQuartzCrystalCharged());
