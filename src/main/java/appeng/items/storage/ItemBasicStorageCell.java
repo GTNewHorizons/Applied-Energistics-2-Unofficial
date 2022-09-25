@@ -18,6 +18,8 @@
 
 package appeng.items.storage;
 
+import static appeng.util.Utility.formatNumbers;
+
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
@@ -54,8 +56,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
-
-import static appeng.util.Utility.formatNumbers;
 
 public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, IItemGroup {
     private final MaterialType component;
@@ -117,8 +117,8 @@ public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCe
 
                     if (filter.isEmpty()) {
                         final String list = (handler.getIncludeExcludeMode() == IncludeExclude.WHITELIST
-                                ? GuiText.Included
-                                : GuiText.Excluded)
+                                        ? GuiText.Included
+                                        : GuiText.Excluded)
                                 .getLocal();
 
                         if (handler.isFuzzy()) {
@@ -129,8 +129,8 @@ public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCe
                         if (GuiScreen.isShiftKeyDown()) {
                             lines.add(GuiText.Filter.getLocal() + ": ");
                             for (int i = 0;
-                                 i < cellInventory.getConfigInventory().getSizeInventory();
-                                 ++i) {
+                                    i < cellInventory.getConfigInventory().getSizeInventory();
+                                    ++i) {
                                 ItemStack s = cellInventory.getConfigInventory().getStackInSlot(i);
                                 if (s != null) lines.add(s.getDisplayName());
                             }
