@@ -186,3 +186,4 @@ Thanks to
 * Lex et al for MinecraftForge
 * AlgorithmX2 for AppliedEnergistics2
 * all [contributors](https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/graphs/contributors)
+* Credit to [AE2 1.18](https://github.com/AppliedEnergistics/Applied-Energistics-2) for texture contributions.
