@@ -55,6 +55,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 
+import static appeng.util.Utility.formatNumbers;
+
 public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, IItemGroup {
     private final MaterialType component;
     private final int totalBytes;
@@ -104,19 +106,19 @@ public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCe
             final ICellInventory cellInventory = handler.getCellInv();
 
             if (cellInventory != null) {
-                lines.add(cellInventory.getUsedBytes() + " " + GuiText.Of.getLocal() + ' '
-                        + cellInventory.getTotalBytes() + ' ' + GuiText.BytesUsed.getLocal());
+                lines.add(formatNumbers(cellInventory.getUsedBytes()) + " " + GuiText.Of.getLocal() + ' '
+                        + formatNumbers(cellInventory.getTotalBytes()) + ' ' + GuiText.BytesUsed.getLocal());
 
-                lines.add(cellInventory.getStoredItemTypes() + " " + GuiText.Of.getLocal() + ' '
-                        + cellInventory.getTotalItemTypes() + ' ' + GuiText.Types.getLocal());
+                lines.add(formatNumbers(cellInventory.getStoredItemTypes()) + " " + GuiText.Of.getLocal() + ' '
+                        + formatNumbers(cellInventory.getTotalItemTypes()) + ' ' + GuiText.Types.getLocal());
 
                 if (handler.isPreformatted()) {
                     String filter = cellInventory.getOreFilter();
 
                     if (filter.isEmpty()) {
                         final String list = (handler.getIncludeExcludeMode() == IncludeExclude.WHITELIST
-                                        ? GuiText.Included
-                                        : GuiText.Excluded)
+                                ? GuiText.Included
+                                : GuiText.Excluded)
                                 .getLocal();
 
                         if (handler.isFuzzy()) {
@@ -127,8 +129,8 @@ public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCe
                         if (GuiScreen.isShiftKeyDown()) {
                             lines.add(GuiText.Filter.getLocal() + ": ");
                             for (int i = 0;
-                                    i < cellInventory.getConfigInventory().getSizeInventory();
-                                    ++i) {
+                                 i < cellInventory.getConfigInventory().getSizeInventory();
+                                 ++i) {
                                 ItemStack s = cellInventory.getConfigInventory().getStackInSlot(i);
                                 if (s != null) lines.add(s.getDisplayName());
                             }
