@@ -1,23 +1,6 @@
-/*
- * This file is part of Applied Energistics 2.
- * Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved.
- *
- * Applied Energistics 2 is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Applied Energistics 2 is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Applied Energistics 2.  If not, see <http://www.gnu.org/licenses/lgpl>.
- */
+package appeng.parts.p2p;
 
-package appeng.parts.misc;
-
+import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.tiles.ITileStorageMonitorable;
@@ -26,38 +9,36 @@ import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.events.MENetworkChannelsChanged;
+import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
-import appeng.api.parts.IPartCollisionHelper;
-import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.IConfigManager;
-import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
-import appeng.parts.PartBasicState;
+import appeng.me.GridAccessException;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
-import appeng.util.SettingsFrom;
 import appeng.util.inv.IInventoryDestination;
 import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.List;
-import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -69,7 +50,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
-public class PartInterface extends PartBasicState
+public class PartP2PInterface extends PartP2PTunnel<PartP2PInterface>
         implements IGridTickable,
                 IStorageMonitorable,
                 IInventoryDestination,
@@ -79,12 +60,73 @@ public class PartInterface extends PartBasicState
                 ITileStorageMonitorable,
                 IPriorityHost {
 
-    private final DualityInterface duality = new DualityInterface(this.getProxy(), this);
-
     @Reflected
-    public PartInterface(final ItemStack is) {
+    public PartP2PInterface(ItemStack is) {
         super(is);
     }
+
+    private final DualityInterface duality = new DualityInterface(this.getProxy(), this) {
+        @Override
+        public void updateCraftingList() {
+            if (!isOutput()) {
+                super.updateCraftingList();
+                try {
+                    for (PartP2PInterface p2p : getOutputs()) p2p.duality.updateCraftingList();
+                } catch (GridAccessException e) {
+                    // ?
+                }
+            } else {
+                PartP2PInterface p2p = getInput();
+                if (p2p != null) {
+                    final boolean[] accountedFor =
+                            new boolean[p2p.duality.getPatterns().getSizeInventory()];
+
+                    if (!this.gridProxy.isReady()) {
+                        return;
+                    }
+
+                    if (this.craftingList != null) {
+                        final Iterator<ICraftingPatternDetails> i = this.craftingList.iterator();
+                        while (i.hasNext()) {
+                            final ICraftingPatternDetails details = i.next();
+                            boolean found = false;
+
+                            for (int x = 0; x < accountedFor.length; x++) {
+                                final ItemStack is = p2p.duality.getPatterns().getStackInSlot(x);
+                                if (details.getPattern() == is) {
+                                    accountedFor[x] = found = true;
+                                }
+                            }
+
+                            if (!found) {
+                                i.remove();
+                            }
+                        }
+                    }
+
+                    for (int x = 0; x < accountedFor.length; x++) {
+                        if (!accountedFor[x]) {
+                            this.addToCraftingList(p2p.duality.getPatterns().getStackInSlot(x));
+                        }
+                    }
+
+                    try {
+                        this.gridProxy
+                                .getGrid()
+                                .postEvent(new MENetworkCraftingPatternChange(this, this.gridProxy.getNode()));
+                    } catch (final GridAccessException e) {
+                        // :P
+                    }
+                }
+            }
+        }
+
+        @Override
+        public int getInstalledUpgrades(Upgrades u) {
+            if (isOutput() && u == Upgrades.PATTERN_CAPACITY) return -1;
+            return super.getInstalledUpgrades(u);
+        }
+    };
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkChannelsChanged c) {
@@ -97,81 +139,25 @@ public class PartInterface extends PartBasicState
     }
 
     @Override
-    public void getBoxes(final IPartCollisionHelper bch) {
-        bch.addBox(2, 2, 14, 14, 14, 16);
-        bch.addBox(5, 5, 12, 11, 11, 14);
-    }
-
-    @Override
     public int getInstalledUpgrades(final Upgrades u) {
         return this.duality.getInstalledUpgrades(u);
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void renderInventory(final IPartRenderHelper rh, final RenderBlocks renderer) {
-        rh.setTexture(
-                CableBusTextures.PartMonitorSides.getIcon(),
-                CableBusTextures.PartMonitorSides.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartMonitorSides.getIcon(),
-                CableBusTextures.PartMonitorSides.getIcon());
-
-        rh.setBounds(2, 2, 14, 14, 14, 16);
-        rh.renderInventoryBox(renderer);
-
-        rh.setBounds(5, 5, 12, 11, 11, 13);
-        rh.renderInventoryBox(renderer);
-
-        rh.setBounds(5, 5, 13, 11, 11, 14);
-        rh.renderInventoryBox(renderer);
+    protected IIcon getTypeTexture() {
+        return AEApi.instance()
+                .definitions()
+                .blocks()
+                .iface()
+                .maybeBlock()
+                .get()
+                .getBlockTextureFromSide(0);
     }
 
     @Override
     public void gridChanged() {
         this.duality.gridChanged();
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void renderStatic(
-            final int x, final int y, final int z, final IPartRenderHelper rh, final RenderBlocks renderer) {
-        this.setRenderCache(rh.useSimplifiedRendering(x, y, z, this, this.getRenderCache()));
-        rh.setTexture(
-                CableBusTextures.PartMonitorSides.getIcon(),
-                CableBusTextures.PartMonitorSides.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartMonitorSides.getIcon(),
-                CableBusTextures.PartMonitorSides.getIcon());
-
-        rh.setBounds(2, 2, 14, 14, 14, 16);
-        rh.renderBlock(x, y, z, renderer);
-
-        rh.setTexture(
-                CableBusTextures.PartMonitorSides.getIcon(),
-                CableBusTextures.PartMonitorSides.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartMonitorSides.getIcon(),
-                CableBusTextures.PartMonitorSides.getIcon());
-
-        rh.setBounds(5, 5, 12, 11, 11, 13);
-        rh.renderBlock(x, y, z, renderer);
-
-        rh.setTexture(
-                CableBusTextures.PartMonitorSidesStatus.getIcon(),
-                CableBusTextures.PartMonitorSidesStatus.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartMonitorSidesStatus.getIcon(),
-                CableBusTextures.PartMonitorSidesStatus.getIcon());
-
-        rh.setBounds(5, 5, 13, 11, 11, 14);
-        rh.renderBlock(x, y, z, renderer);
-
-        this.renderLights(x, y, z, rh, renderer);
     }
 
     @Override
@@ -214,6 +200,21 @@ public class PartInterface extends PartBasicState
 
     @Override
     public boolean onPartActivate(final EntityPlayer p, final Vec3 pos) {
+        AppEngInternalInventory patterns = (AppEngInternalInventory) this.duality.getPatterns();
+        if (super.onPartActivate(p, pos))
+        {
+            ArrayList<ItemStack> drops = new ArrayList<>();
+            for (int i = 0; i < patterns.getSizeInventory(); i++) {
+                if (patterns.getStackInSlot(i) == null) continue;
+                drops.add(patterns.getStackInSlot(i));
+            }
+            TileEntity te = getTileEntity();
+            Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
+
+            return true;
+        }
+
+
         if (p.isSneaking()) {
             return false;
         }
@@ -406,36 +407,7 @@ public class PartInterface extends PartBasicState
     }
 
     @Override
-    public boolean onPartShiftActivate(EntityPlayer player, Vec3 pos) {
-        return super.onPartShiftActivate(player, pos);
-    }
-
-    @Override
-    public NBTTagCompound downloadSettings(SettingsFrom from) {
-        NBTTagCompound output = super.downloadSettings(from);
-        if (from != SettingsFrom.MEMORY_CARD) return output;
-
-        if (output == null) output = new NBTTagCompound();
-
-        ((AppEngInternalInventory) duality.getPatterns()).writeToNBT(output, "patterns");
-
-        return output.hasNoTags() ? null : output;
-    }
-
-    @Override
-    public void uploadSettings(SettingsFrom from, NBTTagCompound compound) {
-        super.uploadSettings(from, compound);
-        if (from != SettingsFrom.MEMORY_CARD) return;
-        AppEngInternalInventory patterns = (AppEngInternalInventory) duality.getPatterns();
-        NBTTagCompound tag = compound.getCompoundTag("patterns");
-        if (tag == null) return;
-        for (int x = 0; x < patterns.getSizeInventory(); x++) {
-            if (patterns.getStackInSlot(x) == null) continue;
-            NBTTagCompound TItem = tag.getCompoundTag("#" + x);
-            if (TItem == null) continue;
-            ItemStack savedPattern = ItemStack.loadItemStackFromNBT(TItem);
-            if (savedPattern == null) continue;
-            patterns.setInventorySlotContents(x, savedPattern);
-        }
+    public void onTunnelNetworkChange() {
+        this.duality.updateCraftingList();
     }
 }

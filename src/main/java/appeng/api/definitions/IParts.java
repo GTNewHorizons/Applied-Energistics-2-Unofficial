@@ -114,4 +114,6 @@ public interface IParts {
     IItemDefinition patternTerminalEx();
 
     IItemDefinition p2PTunnelGregtech();
+
+    IItemDefinition p2PTunnelMEInterface();
 }

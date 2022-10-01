@@ -92,6 +92,8 @@ public class GuiInterface extends GuiUpgradeable {
     @Override
     protected String getBackground() {
         switch (((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled()) {
+            case -1:
+                return "guis/interfacenone.png";
             case 1:
                 return "guis/interface2.png";
             case 2:

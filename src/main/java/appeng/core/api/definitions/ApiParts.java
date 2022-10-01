@@ -63,6 +63,7 @@ public final class ApiParts implements IParts {
     private final IItemDefinition p2PTunnelOpenComputers;
     private final IItemDefinition p2PTunnelPneumaticCraft;
     private final IItemDefinition p2PTunnelGregtech;
+    private final IItemDefinition p2PTunnelInterface;
     private final IItemDefinition cableAnchor;
     private final IItemDefinition monitor;
     private final IItemDefinition semiDarkMonitor;
@@ -115,6 +116,7 @@ public final class ApiParts implements IParts {
                 new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelOpenComputers));
         this.p2PTunnelPneumaticCraft = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelPressure));
         this.p2PTunnelGregtech = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelGT));
+        this.p2PTunnelInterface = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelInterface));
         this.cableAnchor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.CableAnchor));
         this.monitor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.Monitor));
         this.semiDarkMonitor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.SemiDarkMonitor));
@@ -290,6 +292,11 @@ public final class ApiParts implements IParts {
     @Override
     public IItemDefinition p2PTunnelGregtech() {
         return this.p2PTunnelGregtech;
+    }
+
+    @Override
+    public IItemDefinition p2PTunnelMEInterface() {
+        return this.p2PTunnelInterface;
     }
 
     @Override

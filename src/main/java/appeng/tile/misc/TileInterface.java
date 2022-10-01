@@ -47,8 +47,10 @@ import appeng.me.GridAccessException;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkInvTile;
+import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
+import appeng.util.SettingsFrom;
 import appeng.util.inv.IInventoryDestination;
 import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.ByteBuf;
@@ -332,5 +334,34 @@ public class TileInterface extends AENetworkInvTile
     @Override
     public boolean isBooting() {
         return (clientFlags & BOOTING_FLAG) == BOOTING_FLAG;
+    }
+
+    @Override
+    public NBTTagCompound downloadSettings(SettingsFrom from) {
+        NBTTagCompound output = super.downloadSettings(from);
+        if (from != SettingsFrom.MEMORY_CARD) return output;
+
+        if (output == null) output = new NBTTagCompound();
+
+        ((AppEngInternalInventory) duality.getPatterns()).writeToNBT(output, "patterns");
+
+        return output.hasNoTags() ? null : output;
+    }
+
+    @Override
+    public void uploadSettings(SettingsFrom from, NBTTagCompound compound) {
+        super.uploadSettings(from, compound);
+        if (from != SettingsFrom.MEMORY_CARD) return;
+        AppEngInternalInventory patterns = (AppEngInternalInventory) duality.getPatterns();
+        NBTTagCompound tag = compound.getCompoundTag("patterns");
+        if (tag == null) return;
+        for (int x = 0; x < patterns.getSizeInventory(); x++) {
+            if (patterns.getStackInSlot(x) == null) continue;
+            NBTTagCompound TItem = tag.getCompoundTag("#" + x);
+            if (TItem == null) continue;
+            ItemStack savedPattern = ItemStack.loadItemStackFromNBT(TItem);
+            if (savedPattern == null) continue;
+            patterns.setInventorySlotContents(x, savedPattern);
+        }
     }
 }

@@ -311,7 +311,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
      * @param from     source of settings
      * @param compound compound of source
      */
-    private void uploadSettings(final SettingsFrom from, final NBTTagCompound compound) {
+    public void uploadSettings(final SettingsFrom from, final NBTTagCompound compound) {
         if (compound != null) {
             final IConfigManager cm = this.getConfigManager();
             if (cm != null) {
@@ -341,7 +341,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
      * @param from source of settings
      * @return compound of source
      */
-    private NBTTagCompound downloadSettings(final SettingsFrom from) {
+    public NBTTagCompound downloadSettings(final SettingsFrom from) {
         final NBTTagCompound output = new NBTTagCompound();
 
         final IConfigManager cm = this.getConfigManager();
