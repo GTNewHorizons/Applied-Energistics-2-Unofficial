@@ -340,12 +340,14 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
                         newType = stack;
                     }
                     break;
+
                 case ME_INTERFACE:
                     for (final ItemStack stack :
                             parts.p2PTunnelMEInterface().maybeStack(1).asSet()) {
                         newType = stack;
                     }
                     break;
+
                 default:
                     break;
             }

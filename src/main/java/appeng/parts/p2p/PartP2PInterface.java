@@ -200,7 +200,20 @@ public class PartP2PInterface extends PartP2PTunnel<PartP2PInterface>
 
     @Override
     public boolean onPartActivate(final EntityPlayer p, final Vec3 pos) {
-        if (super.onPartActivate(p, pos)) return true;
+        AppEngInternalInventory patterns = (AppEngInternalInventory) this.duality.getPatterns();
+        if (super.onPartActivate(p, pos))
+        {
+            ArrayList<ItemStack> drops = new ArrayList<>();
+            for (int i = 0; i < patterns.getSizeInventory(); i++) {
+                if (patterns.getStackInSlot(i) == null) continue;
+                drops.add(patterns.getStackInSlot(i));
+            }
+            TileEntity te = getTileEntity();
+            Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
+
+            return true;
+        }
+
 
         if (p.isSneaking()) {
             return false;
@@ -395,17 +408,6 @@ public class PartP2PInterface extends PartP2PTunnel<PartP2PInterface>
 
     @Override
     public void onTunnelNetworkChange() {
-        if (this.isOutput()) {
-            AppEngInternalInventory patterns = (AppEngInternalInventory) this.duality.getPatterns();
-            ArrayList<ItemStack> drops = new ArrayList<>();
-            for (int i = 0; i < patterns.getSizeInventory(); i++) {
-                if (patterns.getStackInSlot(i) == null) continue;
-                drops.add(patterns.getStackInSlot(i));
-                patterns.setInventorySlotContents(i, null);
-            }
-            TileEntity te = getTileEntity();
-            Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
-        }
         this.duality.updateCraftingList();
     }
 }
