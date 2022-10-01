@@ -46,9 +46,11 @@ import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
 import appeng.parts.PartBasicState;
+import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
+import appeng.util.SettingsFrom;
 import appeng.util.inv.IInventoryDestination;
 import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.relauncher.Side;
@@ -401,5 +403,39 @@ public class PartInterface extends PartBasicState
     @Override
     public void setPriority(final int newValue) {
         this.duality.setPriority(newValue);
+    }
+
+    @Override
+    public boolean onPartShiftActivate(EntityPlayer player, Vec3 pos) {
+        return super.onPartShiftActivate(player, pos);
+    }
+
+    @Override
+    public NBTTagCompound downloadSettings(SettingsFrom from) {
+        NBTTagCompound output = super.downloadSettings(from);
+        if (from != SettingsFrom.MEMORY_CARD) return output;
+
+        if (output == null) output = new NBTTagCompound();
+
+        ((AppEngInternalInventory) duality.getPatterns()).writeToNBT(output, "patterns");
+
+        return output.hasNoTags() ? null : output;
+    }
+
+    @Override
+    public void uploadSettings(SettingsFrom from, NBTTagCompound compound) {
+        super.uploadSettings(from, compound);
+        if (from != SettingsFrom.MEMORY_CARD) return;
+        AppEngInternalInventory patterns = (AppEngInternalInventory) duality.getPatterns();
+        NBTTagCompound tag = compound.getCompoundTag("patterns");
+        if (tag == null) return;
+        for (int x = 0; x < patterns.getSizeInventory(); x++) {
+            if (patterns.getStackInSlot(x) == null) continue;
+            NBTTagCompound TItem = tag.getCompoundTag("#" + x);
+            if (TItem == null) continue;
+            ItemStack savedPattern = ItemStack.loadItemStackFromNBT(TItem);
+            if (savedPattern == null) continue;
+            patterns.setInventorySlotContents(x, savedPattern);
+        }
     }
 }
