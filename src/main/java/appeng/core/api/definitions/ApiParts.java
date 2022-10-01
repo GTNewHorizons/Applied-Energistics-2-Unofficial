@@ -295,6 +295,11 @@ public final class ApiParts implements IParts {
     }
 
     @Override
+    public IItemDefinition p2PTunnelMEInterface() {
+        return this.p2PTunnelInterface;
+    }
+
+    @Override
     public IItemDefinition cableAnchor() {
         return this.cableAnchor;
     }
