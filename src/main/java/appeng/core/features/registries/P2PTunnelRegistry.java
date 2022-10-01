@@ -73,8 +73,6 @@ public final class P2PTunnelRegistry implements IP2PTunnelRegistry {
         final IBlocks blocks = definitions.blocks();
         final IParts parts = definitions.parts();
 
-        this.addNewAttunement(blocks.iface(), TunnelType.ME_INTERFACE);
-        this.addNewAttunement(parts.iface(), TunnelType.ME_INTERFACE);
         this.addNewAttunement(parts.storageBus(), TunnelType.ITEM);
         this.addNewAttunement(parts.importBus(), TunnelType.ITEM);
         this.addNewAttunement(parts.exportBus(), TunnelType.ITEM);
@@ -113,6 +111,10 @@ public final class P2PTunnelRegistry implements IP2PTunnelRegistry {
             this.addNewAttunement(parts.cableUltraDenseCovered().stack(c, 1), TunnelType.ME);
             this.addNewAttunement(parts.cableUltraDenseSmart().stack(c, 1), TunnelType.ME);
         }
+
+        this.addNewAttunement(blocks.iface(), TunnelType.ME_INTERFACE);
+        this.addNewAttunement(parts.iface(), TunnelType.ME_INTERFACE);
+        this.addNewAttunement(definitions.items().encodedPattern(), TunnelType.ME_INTERFACE);
     }
 
     @Override
