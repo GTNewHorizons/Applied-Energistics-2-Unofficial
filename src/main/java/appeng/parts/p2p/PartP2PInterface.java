@@ -201,8 +201,7 @@ public class PartP2PInterface extends PartP2PTunnel<PartP2PInterface>
     @Override
     public boolean onPartActivate(final EntityPlayer p, final Vec3 pos) {
         AppEngInternalInventory patterns = (AppEngInternalInventory) this.duality.getPatterns();
-        if (super.onPartActivate(p, pos))
-        {
+        if (super.onPartActivate(p, pos)) {
             ArrayList<ItemStack> drops = new ArrayList<>();
             for (int i = 0; i < patterns.getSizeInventory(); i++) {
                 if (patterns.getStackInSlot(i) == null) continue;
@@ -213,7 +212,6 @@ public class PartP2PInterface extends PartP2PTunnel<PartP2PInterface>
 
             return true;
         }
-
 
         if (p.isSneaking()) {
             return false;
