@@ -73,8 +73,8 @@ public final class P2PTunnelRegistry implements IP2PTunnelRegistry {
         final IBlocks blocks = definitions.blocks();
         final IParts parts = definitions.parts();
 
-        this.addNewAttunement(blocks.iface(), TunnelType.ITEM);
-        this.addNewAttunement(parts.iface(), TunnelType.ITEM);
+        this.addNewAttunement(blocks.iface(), TunnelType.ME_INTERFACE);
+        this.addNewAttunement(parts.iface(), TunnelType.ME_INTERFACE);
         this.addNewAttunement(parts.storageBus(), TunnelType.ITEM);
         this.addNewAttunement(parts.importBus(), TunnelType.ITEM);
         this.addNewAttunement(parts.exportBus(), TunnelType.ITEM);
