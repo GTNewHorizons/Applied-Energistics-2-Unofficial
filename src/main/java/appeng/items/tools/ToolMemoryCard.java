@@ -62,11 +62,6 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
 
             lines.add(String.format(local, freqTooltip));
         }
-
-        if (data.hasKey("patterns")) {
-            lines.add(StatCollector.translateToLocal("gui.tooltips.appliedenergistics2.ContainsPatternData"));
-        }
-
         if (data.hasKey("custom_name")) lines.add(data.getString("custom_name"));
     }
 
