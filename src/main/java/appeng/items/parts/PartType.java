@@ -223,6 +223,13 @@ public enum PartType {
             PartP2PGT5Power.class,
             GuiText.GTTunnel),
 
+    P2PTunnelInterface(
+            471,
+            EnumSet.of(AEFeature.P2PTunnel),
+            EnumSet.noneOf(IntegrationType.class),
+            PartP2PInterface.class,
+            GuiText.IFACETunnel),
+
     InterfaceTerminal(
             480,
             EnumSet.of(AEFeature.InterfaceTerminal),

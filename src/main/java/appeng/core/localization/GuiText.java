@@ -89,6 +89,7 @@ public enum GuiText {
     RFTunnel,
     PressureTunnel,
     GTTunnel,
+    IFACETunnel,
 
     StoredSize,
     CopyMode,

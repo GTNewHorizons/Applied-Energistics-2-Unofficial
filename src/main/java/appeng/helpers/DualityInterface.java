@@ -106,7 +106,7 @@ public class DualityInterface
     private final int[] sides = {0, 1, 2, 3, 4, 5, 6, 7, 8};
     private final IAEItemStack[] requireWork = {null, null, null, null, null, null, null, null, null};
     private final MultiCraftingTracker craftingTracker;
-    private final AENetworkProxy gridProxy;
+    protected final AENetworkProxy gridProxy;
     private final IInterfaceHost iHost;
     private final BaseActionSource mySource;
     private final BaseActionSource interfaceRequestSource;
@@ -122,7 +122,7 @@ public class DualityInterface
     private final UpgradeInventory upgrades;
     private boolean hasConfig = false;
     private int priority;
-    private List<ICraftingPatternDetails> craftingList = null;
+    public List<ICraftingPatternDetails> craftingList = null;
     private List<ItemStack> waitingToSend = null;
     private IMEInventory<IAEItemStack> destination;
     private boolean isWorking = false;
@@ -289,7 +289,7 @@ public class DualityInterface
         this.notifyNeighbors();
     }
 
-    private void updateCraftingList() {
+    public void updateCraftingList() {
 
         final boolean[] accountedFor = new boolean[patterns.getSizeInventory()];
 
@@ -398,7 +398,7 @@ public class DualityInterface
         }
     }
 
-    private void addToCraftingList(final ItemStack is) {
+    protected void addToCraftingList(final ItemStack is) {
         if (is == null) {
             return;
         }
