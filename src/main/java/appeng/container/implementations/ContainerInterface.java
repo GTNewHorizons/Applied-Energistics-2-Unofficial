@@ -46,6 +46,9 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     @GuiSync(7)
     public int patternRows;
 
+    @GuiSync(9)
+    public boolean isEmpty;
+
     public ContainerInterface(final InventoryPlayer ip, final IInterfaceHost te) {
         super(ip, te.getInterfaceDuality().getHost());
 
@@ -102,6 +105,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         this.verifyPermissions(SecurityPermissions.BUILD, false);
 
         if (patternRows != getPatternCapacityCardsInstalled()) patternRows = getPatternCapacityCardsInstalled();
+        isEmpty = patternRows == -1;
 
         final ArrayList<ItemStack> drops = getRemovedPatterns();
         if (!drops.isEmpty()) {
@@ -161,12 +165,14 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     }
 
     public int getPatternCapacityCardsInstalled() {
+        if (Platform.isClient() && isEmpty) return -1;
         if (myDuality == null) return 0;
         return myDuality.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY);
     }
 
     @Override
     public boolean isSlotEnabled(final int idx) {
+        if (Platform.isClient() && isEmpty) return false;
         return myDuality.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY) >= idx;
     }
 }
