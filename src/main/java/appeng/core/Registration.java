@@ -567,8 +567,10 @@ public final class Registration {
         // Interface
         Upgrades.CRAFTING.registerItem(parts.iface(), 1);
         Upgrades.CRAFTING.registerItem(blocks.iface(), 1);
+        Upgrades.CRAFTING.registerItem(parts.p2PTunnelMEInterface(), 1);
         Upgrades.PATTERN_CAPACITY.registerItem(parts.iface(), 3);
         Upgrades.PATTERN_CAPACITY.registerItem(blocks.iface(), 3);
+        Upgrades.PATTERN_CAPACITY.registerItem(parts.p2PTunnelMEInterface(), 3);
 
         // IO Port!
         Upgrades.SPEED.registerItem(blocks.iOPort(), 3);
