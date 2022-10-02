@@ -217,8 +217,6 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
 
     @Override
     public boolean onPartActivate(final EntityPlayer player, final Vec3 pos) {
-        if (new Throwable().getStackTrace()[2].getMethodName().equals("place")) return true;
-
         final ItemStack is = player.inventory.getCurrentItem();
 
         // UniqueIdentifier id = GameRegistry.findUniqueIdentifierFor( is.getItem() );
@@ -355,6 +353,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             }
 
             if (newType != null && !Platform.isSameItem(newType, this.getItemStack())) {
+                if (new Throwable().getStackTrace()[2].getMethodName().equals("place")) return true;
                 final boolean oldOutput = this.isOutput();
                 final long myFreq = this.getFrequency();
 
