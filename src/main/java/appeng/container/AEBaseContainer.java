@@ -649,7 +649,9 @@ public abstract class AEBaseContainer extends Container {
                         ItemStack is = s.getStack();
                         if (is != null) {
                             if (hand == null) {
-                                is.stackSize--;
+                                if (is.stackSize > 1) {
+                                    is.stackSize--;
+                                }
                             } else if (hand.isItemEqual(is)) {
                                 is.stackSize = Math.min(is.getMaxStackSize(), is.stackSize + 1);
                             } else {
