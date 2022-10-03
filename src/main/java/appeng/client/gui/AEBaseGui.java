@@ -721,7 +721,7 @@ public abstract class AEBaseGui extends GuiContainer {
     private void drawSlot(final Slot s) {
         if (s instanceof SlotME || s instanceof SlotFake) {
             IAEItemStack stack = Platform.getAEStackInSlot(s);
-            if( s instanceof SlotFake && stack != null && stack.getStackSize() == 1 ) {
+            if (s instanceof SlotFake && stack != null && stack.getStackSize() == 1) {
                 super.func_146977_a(s);
                 return;
             }
