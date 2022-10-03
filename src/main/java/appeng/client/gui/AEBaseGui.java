@@ -720,7 +720,13 @@ public abstract class AEBaseGui extends GuiContainer {
 
     private void drawSlot(final Slot s) {
         if (s instanceof SlotME || s instanceof SlotFake) {
-            final RenderItem pIR = this.setItemRender(this.aeRenderItem);
+            IAEItemStack stack = Platform.getAEStackInSlot(s);
+            if( s instanceof SlotFake && stack != null && stack.getStackSize() == 1 ) {
+                super.func_146977_a(s);
+                return;
+            }
+
+            RenderItem pIR = this.setItemRender(this.aeRenderItem);
             try {
                 this.zLevel = 100.0F;
                 itemRender.zLevel = 100.0F;
