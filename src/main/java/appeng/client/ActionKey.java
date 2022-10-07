@@ -3,7 +3,7 @@ package appeng.client;
 import org.lwjgl.input.Keyboard;
 
 public enum ActionKey {
-    TOGGLE_FOCUS(Keyboard.KEY_TAB);
+    TOGGLE_FOCUS(Keyboard.KEY_NONE);
 
     private final int defaultKey;
 
