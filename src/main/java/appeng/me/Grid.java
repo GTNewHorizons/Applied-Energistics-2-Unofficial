@@ -25,6 +25,7 @@ import appeng.api.networking.events.MENetworkPostCacheConstruction;
 import appeng.api.util.IReadOnlyCollection;
 import appeng.core.worlddata.WorldData;
 import appeng.hooks.TickHandler;
+import appeng.me.cache.CraftingGridCache;
 import appeng.util.ReadOnlyCollection;
 import java.util.*;
 import java.util.Map.Entry;
@@ -182,7 +183,10 @@ public class Grid implements IGrid {
 
     @Override
     public MENetworkEvent postEvent(final MENetworkEvent ev) {
-        return this.eventBus.postEvent(this, ev);
+        CraftingGridCache.pauseRebuilds();
+        final MENetworkEvent ret = this.eventBus.postEvent(this, ev);
+        CraftingGridCache.unpauseRebuilds();
+        return ret;
     }
 
     @Override
