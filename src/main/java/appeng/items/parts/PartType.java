@@ -49,14 +49,14 @@ public enum PartType {
         }
     },
 
-    CableSmart(40, EnumSet.of(AEFeature.Channels), EnumSet.noneOf(IntegrationType.class), PartCableSmart.class) {
+    CableSmart(40, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartCableSmart.class) {
         @Override
         public boolean isCable() {
             return true;
         }
     },
 
-    CableDense(60, EnumSet.of(AEFeature.Channels), EnumSet.noneOf(IntegrationType.class), PartDenseCable.class) {
+    CableDense(60, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartDenseCable.class) {
         @Override
         public boolean isCable() {
             return true;
@@ -64,7 +64,7 @@ public enum PartType {
     },
 
     CableDenseCovered(
-            520, EnumSet.of(AEFeature.Channels), EnumSet.noneOf(IntegrationType.class), PartDenseCableCovered.class) {
+            520, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartDenseCableCovered.class) {
         @Override
         public boolean isCable() {
             return true;
@@ -72,20 +72,14 @@ public enum PartType {
     },
 
     CableUltraDenseCovered(
-            540,
-            EnumSet.of(AEFeature.Channels),
-            EnumSet.noneOf(IntegrationType.class),
-            PartUltraDenseCableCovered.class) {
+            540, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartUltraDenseCableCovered.class) {
         @Override
         public boolean isCable() {
             return true;
         }
     },
     CableUltraDenseSmart(
-            560,
-            EnumSet.of(AEFeature.Channels),
-            EnumSet.noneOf(IntegrationType.class),
-            PartUltraDenseCableSmart.class) {
+            560, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartUltraDenseCableSmart.class) {
         @Override
         public boolean isCable() {
             return true;
