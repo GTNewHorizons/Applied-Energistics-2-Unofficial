@@ -163,14 +163,10 @@ public class NEIWorldCraftingHandler implements ICraftingHandler, IUsageHandler 
         final IDefinitions definitions = AEApi.instance().definitions();
         final IMaterials materials = definitions.materials();
 
-        final String message;
         if (AEConfig.instance.isFeatureEnabled(AEFeature.CertusQuartzWorldGen)) {
-            message = GuiText.ChargedQuartz.getLocal() + "\n\n" + GuiText.ChargedQuartzFind.getLocal();
-        } else {
-            message = GuiText.ChargedQuartzFind.getLocal();
+            final String message = GuiText.ChargedQuartz.getLocal() + "\n\n" + GuiText.ChargedQuartzFind.getLocal();
+            this.addRecipe(materials.certusQuartzCrystalCharged(), message);
         }
-
-        this.addRecipe(materials.certusQuartzCrystalCharged(), message);
 
         if (AEConfig.instance.isFeatureEnabled(AEFeature.MeteoriteWorldGen)) {
             this.addRecipe(materials.logicProcessorPress(), GuiText.inWorldCraftingPresses.getLocal());
