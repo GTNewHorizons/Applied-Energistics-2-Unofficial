@@ -294,11 +294,12 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     }
                 }
 
-                for (final IGridNode gn : this.grid.getMachines( PartP2PInterface.class)) {
+                for (final IGridNode gn : this.grid.getMachines(PartP2PInterface.class)) {
                     final IInterfaceHost ih = (IInterfaceHost) gn.getMachine();
                     final DualityInterface dual = ih.getInterfaceDuality();
-                    if (gn.isActive() && dual.getConfigManager().getSetting(Settings.INTERFACE_TERMINAL) == YesNo.YES
-                            && !( (PartP2PInterface) ih ).isOutput() ) {
+                    if (gn.isActive()
+                            && dual.getConfigManager().getSetting(Settings.INTERFACE_TERMINAL) == YesNo.YES
+                            && !((PartP2PInterface) ih).isOutput()) {
                         for (int i = 0; i <= dual.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY); ++i) {
                             this.diList.put(ih, new InvTracker(dual, dual.getPatterns(), dual.getTermName(), i * 9, 9));
                         }
@@ -420,7 +421,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             if (gn.isActive()) {
                 final IInterfaceHost ih = (IInterfaceHost) gn.getMachine();
                 if (ih.getInterfaceDuality().getConfigManager().getSetting(Settings.INTERFACE_TERMINAL) == YesNo.NO
-                    || ih instanceof PartP2PInterface && ( (PartP2PInterface) ih ).isOutput()) {
+                        || ih instanceof PartP2PInterface && ((PartP2PInterface) ih).isOutput()) {
                     return this;
                 }
 
