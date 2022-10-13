@@ -1,5 +1,5 @@
 inscribe=
-    oredictionary:plateGold ae2:ItemMaterial.LogicProcessorPress
+    oredictionary:ingotGold ae2:ItemMaterial.LogicProcessorPress
     -> ae2:ItemMaterial.LogicProcessorPrint
 
 inscribe=
@@ -7,9 +7,9 @@ inscribe=
     -> ae2:ItemMaterial.CalcProcessorPrint
 
 inscribe=
-    oredictionary:plateDiamond ae2:ItemMaterial.EngProcessorPress
+    oredictionary:gemDiamond ae2:ItemMaterial.EngProcessorPress
     -> ae2:ItemMaterial.EngProcessorPrint
 
 inscribe=
-    oredictionary:plateSiliconSolarGrade ae2:ItemMaterial.SiliconPress
+    oredictionary:itemSilicon ae2:ItemMaterial.SiliconPress
     -> ae2:ItemMaterial.SiliconPrint
