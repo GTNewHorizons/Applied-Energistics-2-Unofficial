@@ -32,6 +32,7 @@ import appeng.helpers.IInterfaceHost;
 import appeng.helpers.InventoryAction;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.misc.PartInterface;
+import appeng.parts.p2p.PartP2PInterface;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.misc.TileInterface;
@@ -102,6 +103,12 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                 }
 
                 for (final IGridNode gn : this.grid.getMachines(PartInterface.class)) {
+                    InterfaceCheck interfaceCheck = new InterfaceCheck().invoke(gn);
+                    total += interfaceCheck.getTotal();
+                    missing |= interfaceCheck.isMissing();
+                }
+
+                for (final IGridNode gn : this.grid.getMachines(PartP2PInterface.class)) {
                     InterfaceCheck interfaceCheck = new InterfaceCheck().invoke(gn);
                     total += interfaceCheck.getTotal();
                     missing |= interfaceCheck.isMissing();
@@ -286,6 +293,17 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                         }
                     }
                 }
+
+                for (final IGridNode gn : this.grid.getMachines( PartP2PInterface.class)) {
+                    final IInterfaceHost ih = (IInterfaceHost) gn.getMachine();
+                    final DualityInterface dual = ih.getInterfaceDuality();
+                    if (gn.isActive() && dual.getConfigManager().getSetting(Settings.INTERFACE_TERMINAL) == YesNo.YES
+                            && !( (PartP2PInterface) ih ).isOutput() ) {
+                        for (int i = 0; i <= dual.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY); ++i) {
+                            this.diList.put(ih, new InvTracker(dual, dual.getPatterns(), dual.getTermName(), i * 9, 9));
+                        }
+                    }
+                }
             }
         }
 
@@ -401,7 +419,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         public InterfaceCheck invoke(IGridNode gn) {
             if (gn.isActive()) {
                 final IInterfaceHost ih = (IInterfaceHost) gn.getMachine();
-                if (ih.getInterfaceDuality().getConfigManager().getSetting(Settings.INTERFACE_TERMINAL) == YesNo.NO) {
+                if (ih.getInterfaceDuality().getConfigManager().getSetting(Settings.INTERFACE_TERMINAL) == YesNo.NO
+                    || ih instanceof PartP2PInterface && ( (PartP2PInterface) ih ).isOutput()) {
                     return this;
                 }
 
