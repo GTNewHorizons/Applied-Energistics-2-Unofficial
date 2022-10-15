@@ -525,11 +525,19 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     }
 
     public void switchToOriginalGUI() {
-        NetworkHandler.instance.sendToServer(new PacketSwitchGuis(this.OriginalGui));
+        // null if terminal is not a native AE2 terminal
+        if (this.OriginalGui != null) {
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(this.OriginalGui));
+        }
     }
 
     public ItemStack getHoveredStack() {
         return hoveredStack;
+    }
+
+    // expose GUI buttons for mod integrations
+    public GuiButton getCancelButton() {
+        return cancel;
     }
 
     @Override
