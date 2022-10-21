@@ -48,6 +48,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     private final IAEItemStack[] outputs;
     private final boolean isCrafting;
     private final boolean canSubstitute;
+    private final boolean canBeSubstitute;
     private final Set<TestLookup> failCache = new HashSet<TestLookup>();
     private final Set<TestLookup> passCache = new HashSet<TestLookup>();
     private final IAEItemStack pattern;
@@ -65,6 +66,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
         this.isCrafting = encodedValue.getBoolean("crafting");
 
         this.canSubstitute = encodedValue.getBoolean("substitute");
+        this.canBeSubstitute = encodedValue.getBoolean("be_substitute");
         this.patternItem = is;
         this.pattern = AEItemStack.create(is);
 
@@ -218,6 +220,11 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     @Override
     public boolean canSubstitute() {
         return this.canSubstitute;
+    }
+
+    @Override
+    public boolean canBeSubstitute() {
+        return this.canBeSubstitute;
     }
 
     @Override

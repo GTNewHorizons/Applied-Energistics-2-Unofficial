@@ -80,6 +80,13 @@ public interface ICraftingPatternDetails {
     boolean canSubstitute();
 
     /**
+     * @return if this pattern can be used in autocrafting as a substitute for another item.
+     */
+    default boolean canBeSubstitute() {
+        return true;
+    }
+
+    /**
      * Allow using this INSTANCE of the pattern details to preform the crafting action with performance enhancements.
      *
      * @param craftingInv inventory

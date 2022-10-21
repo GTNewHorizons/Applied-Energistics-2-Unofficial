@@ -88,7 +88,7 @@ public class CraftingGridCache
     private final IGrid grid;
     private final Map<ICraftingPatternDetails, List<ICraftingMedium>> craftingMethods = new HashMap<>();
     // Used for fuzzy lookups
-    private final ItemList craftableItemTypes = new ItemList();
+    private final ItemList craftableItemSubstitutes = new ItemList();
     private final Map<IAEItemStack, ImmutableList<ICraftingPatternDetails>> craftableItems = new HashMap<>();
     private final Set<IAEItemStack> emitableItems = new HashSet<IAEItemStack>();
     private final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<String, CraftingLinkNexus>();
@@ -229,7 +229,7 @@ public class CraftingGridCache
         // erase list.
         this.craftingMethods.clear();
         this.craftableItems.clear();
-        this.craftableItemTypes.clear();
+        this.craftableItemSubstitutes.clear();
         this.emitableItems.clear();
 
         // update the stuff that was in the list...
@@ -240,8 +240,7 @@ public class CraftingGridCache
             provider.provideCrafting(this);
         }
 
-        final Map<IAEItemStack, Set<ICraftingPatternDetails>> tmpCraft =
-                new HashMap<IAEItemStack, Set<ICraftingPatternDetails>>();
+        final Map<IAEItemStack, Set<ICraftingPatternDetails>> tmpCraft = new HashMap<>();
 
         // new craftables!
         for (final ICraftingPatternDetails details : this.craftingMethods.keySet()) {
@@ -250,11 +249,11 @@ public class CraftingGridCache
                 out.reset();
                 out.setCraftable(true);
 
-                Set<ICraftingPatternDetails> methods = tmpCraft.get(out);
-
-                if (methods == null) {
-                    tmpCraft.put(out, methods = new TreeSet<ICraftingPatternDetails>(COMPARATOR));
+                if (details.canBeSubstitute()) {
+                    this.craftableItemSubstitutes.add(out);
                 }
+
+                Set<ICraftingPatternDetails> methods = tmpCraft.computeIfAbsent(out, k -> new TreeSet<>(COMPARATOR));
 
                 methods.add(details);
             }
@@ -263,7 +262,6 @@ public class CraftingGridCache
         // make them immutable
         for (final Entry<IAEItemStack, Set<ICraftingPatternDetails>> e : tmpCraft.entrySet()) {
             this.craftableItems.put(e.getKey(), ImmutableList.copyOf(e.getValue()));
-            this.craftableItemTypes.add(e.getKey());
         }
 
         this.storageGrid.postAlterationOfStoredItems(
@@ -419,7 +417,7 @@ public class CraftingGridCache
         final ImmutableList<ICraftingPatternDetails> res;
         if (details != null && details.canSubstitute()) {
             final Collection<IAEItemStack> substitutions =
-                    this.craftableItemTypes.findFuzzy(whatToCraft, FuzzyMode.IGNORE_ALL);
+                    this.craftableItemSubstitutes.findFuzzy(whatToCraft, FuzzyMode.IGNORE_ALL);
             ImmutableList.Builder<ICraftingPatternDetails> allPatterns = ImmutableList.builder();
             for (IAEItemStack alternative : substitutions) {
                 allPatterns.addAll(this.craftableItems.get(alternative));
@@ -442,10 +440,14 @@ public class CraftingGridCache
                 }
                 // no perfect match found, look for substitutions
                 if (details.canSubstitute()) {
-                    for (final IAEItemStack ais : this.craftableItems.keySet()) {
-                        if (ais.fuzzyComparison(whatToCraft, FuzzyMode.IGNORE_ALL)) {
-                            if (details.isValidItemForSlot(slotIndex, ais.getItemStack(), world)) {
-                                return this.craftableItems.get(ais);
+                    for (final Map.Entry<IAEItemStack, ImmutableList<ICraftingPatternDetails>> entry :
+                            this.craftableItems.entrySet()) {
+                        final boolean canBeASubstitute =
+                                entry.getValue().stream().anyMatch(cp -> (cp != null) && cp.canBeSubstitute());
+                        if (canBeASubstitute && entry.getKey().fuzzyComparison(whatToCraft, FuzzyMode.IGNORE_ALL)) {
+                            if (details.isValidItemForSlot(
+                                    slotIndex, entry.getKey().getItemStack(), world)) {
+                                return entry.getValue();
                             }
                         }
                     }
