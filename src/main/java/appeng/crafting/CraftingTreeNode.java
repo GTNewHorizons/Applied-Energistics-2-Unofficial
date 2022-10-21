@@ -30,7 +30,6 @@ import appeng.me.cluster.implementations.CraftingCPUCluster;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import net.minecraft.world.World;
 
@@ -113,7 +112,7 @@ public class CraftingTreeNode {
             throws CraftBranchFailure, InterruptedException {
         this.job.handlePausing();
 
-        final List<IAEItemStack> thingsUsed = new LinkedList<IAEItemStack>();
+        final List<IAEItemStack> thingsUsed = new ArrayList<>();
 
         this.what.setStackSize(l);
         if (this.getSlot() >= 0 && this.parent != null && this.parent.details.isCraftable()) {

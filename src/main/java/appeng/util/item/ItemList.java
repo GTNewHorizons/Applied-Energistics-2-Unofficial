@@ -183,6 +183,10 @@ public final class ItemList implements IItemList<IAEItemStack> {
         }
     }
 
+    public void clear() {
+        this.records.clear();
+    }
+
     private IAEItemStack putItemRecord(final IAEItemStack itemStack) {
         return this.records.put(itemStack, itemStack);
     }
