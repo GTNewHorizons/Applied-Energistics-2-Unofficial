@@ -121,6 +121,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final ICraftingPatternDetails details = this.getPatternForItem(stack, player.worldObj);
         final boolean isCrafting = encodedValue.getBoolean("crafting");
         final boolean substitute = encodedValue.getBoolean("substitute");
+        final boolean beSubstitute = encodedValue.getBoolean("beSubstitute");
         IAEItemStack[] inItems;
         IAEItemStack[] outItems;
 
@@ -142,7 +143,9 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final List<String> out = new ArrayList<>();
 
         final String substitutionLabel = GuiText.Substitute.getLocal() + " ";
+        final String beSubstitutionLabel = GuiText.BeSubstitute.getLocal() + " ";
         final String canSubstitute = substitute ? GuiText.Yes.getLocal() : GuiText.No.getLocal();
+        final String canBeSubstitute = beSubstitute ? GuiText.Yes.getLocal() : GuiText.No.getLocal();
         final String label = (isCrafting ? GuiText.Crafts.getLocal() : GuiText.Creates.getLocal()) + ": ";
         final String and = " " + GuiText.And.getLocal() + " ";
         final String with = GuiText.With.getLocal() + ": ";
@@ -158,6 +161,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         lines.addAll(in);
 
         lines.add(substitutionLabel + canSubstitute);
+        lines.add(beSubstitutionLabel + canBeSubstitute);
     }
 
     @Override

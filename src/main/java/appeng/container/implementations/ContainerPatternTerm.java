@@ -75,6 +75,9 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     @GuiSync(96)
     public boolean substitute = false;
 
+    @GuiSync(95)
+    public boolean beSubstitute = true;
+
     public ContainerPatternTerm(final InventoryPlayer ip, final ITerminalHost monitorable) {
         super(ip, monitorable, false);
         this.patternTerminal = (PartPatternTerminal) monitorable;
@@ -261,6 +264,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         encodedValue.setTag("out", tagOut);
         encodedValue.setBoolean("crafting", this.isCraftingMode());
         encodedValue.setBoolean("substitute", this.isSubstitute());
+        encodedValue.setBoolean("beSubstitute", this.canBeSubstitute());
 
         output.setTagCompound(encodedValue);
     }
@@ -456,6 +460,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
             }
 
             this.substitute = this.patternTerminal.isSubstitution();
+            this.beSubstitute = this.patternTerminal.canBeSubstitution();
         }
     }
 
@@ -536,8 +541,16 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         return this.substitute;
     }
 
+    private boolean canBeSubstitute() {
+        return this.beSubstitute;
+    }
+
     public void setSubstitute(final boolean substitute) {
         this.substitute = substitute;
+    }
+
+    public void setCanBeSubstitute(final boolean beSubstitute) {
+        this.beSubstitute = beSubstitute;
     }
 
     static boolean canDoubleStacks(SlotFake[] slots) {

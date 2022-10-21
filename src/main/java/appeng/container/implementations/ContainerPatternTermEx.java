@@ -68,6 +68,9 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
     @GuiSync(96 + (17 - 9) + 12)
     public boolean substitute = false;
 
+    @GuiSync(96 + (17 - 9) + 13)
+    public boolean beSubstitute = false;
+
     @GuiSync(96 + (17 - 9) + 16)
     public boolean inverted;
 
@@ -211,6 +214,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
         encodedValue.setTag("out", tagOut);
         encodedValue.setBoolean("crafting", false);
         encodedValue.setBoolean("substitute", this.isSubstitute());
+        encodedValue.setBoolean("beSubstitute", this.canBeSubstitute());
 
         output.setTagCompound(encodedValue);
     }
@@ -294,6 +298,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
 
         if (Platform.isServer()) {
             substitute = patternTerminal.isSubstitution();
+            beSubstitute = patternTerminal.canBeSubstitution();
 
             if (inverted != patternTerminal.isInverted() || activePage != patternTerminal.getActivePage()) {
                 inverted = patternTerminal.isInverted();
@@ -380,8 +385,16 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
         return this.substitute;
     }
 
+    private boolean canBeSubstitute() {
+        return this.beSubstitute;
+    }
+
     public void setSubstitute(final boolean substitute) {
         this.substitute = substitute;
+    }
+
+    public void setCanBeSubstitute(final boolean beSubstitute) {
+        this.beSubstitute = beSubstitute;
     }
 
     public void setActivePage(final int activePage) {

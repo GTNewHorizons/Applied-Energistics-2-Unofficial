@@ -20,6 +20,7 @@ package appeng.client.gui.implementations;
 
 import appeng.api.config.ActionItems;
 import appeng.api.config.ItemSubstitution;
+import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -51,6 +52,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     private GuiTabButton tabProcessButton;
     private GuiImgButton substitutionsEnabledBtn;
     private GuiImgButton substitutionsDisabledBtn;
+    private GuiImgButton beSubstitutionsEnabledBtn;
+    private GuiImgButton beSubstitutionsDisabledBtn;
     private GuiImgButton encodeBtn;
     private GuiImgButton clearBtn;
     private GuiImgButton doubleBtn;
@@ -80,6 +83,10 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig(
                         "PatternTerminal.Substitute",
                         this.substitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
+            } else if (this.beSubstitutionsEnabledBtn == btn || this.beSubstitutionsDisabledBtn == btn) {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig(
+                        "PatternTerminal.BeSubstitute",
+                        this.beSubstitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
             } else if (doubleBtn == btn) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig(
                         "PatternTerminal.Double", Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? "1" : "0"));
@@ -119,6 +126,16 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         this.substitutionsDisabledBtn.setHalfSize(true);
         this.buttonList.add(this.substitutionsDisabledBtn);
 
+        this.beSubstitutionsEnabledBtn = new GuiImgButton(
+                this.guiLeft + 84, this.guiTop + this.ySize - 153, Settings.ACTIONS, PatternBeSubstitution.ENABLED);
+        this.beSubstitutionsEnabledBtn.setHalfSize(true);
+        this.buttonList.add(this.beSubstitutionsEnabledBtn);
+
+        this.beSubstitutionsDisabledBtn = new GuiImgButton(
+                this.guiLeft + 84, this.guiTop + this.ySize - 153, Settings.ACTIONS, PatternBeSubstitution.DISABLED);
+        this.beSubstitutionsDisabledBtn.setHalfSize(true);
+        this.buttonList.add(this.beSubstitutionsDisabledBtn);
+
         this.clearBtn = new GuiImgButton(
                 this.guiLeft + 74, this.guiTop + this.ySize - 163, Settings.ACTIONS, ActionItems.CLOSE);
         this.clearBtn.setHalfSize(true);
@@ -153,6 +170,9 @@ public class GuiPatternTerm extends GuiMEMonitorable {
             this.substitutionsEnabledBtn.visible = false;
             this.substitutionsDisabledBtn.visible = true;
         }
+
+        this.beSubstitutionsEnabledBtn.visible = this.container.beSubstitute;
+        this.beSubstitutionsDisabledBtn.visible = !this.container.beSubstitute;
 
         super.drawFG(offsetX, offsetY, mouseX, mouseY);
         this.fontRendererObj.drawString(

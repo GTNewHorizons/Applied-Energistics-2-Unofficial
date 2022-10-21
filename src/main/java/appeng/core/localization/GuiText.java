@@ -104,6 +104,7 @@ public enum GuiText {
     And,
     With,
     Substitute,
+    BeSubstitute,
     Yes,
     No,
 

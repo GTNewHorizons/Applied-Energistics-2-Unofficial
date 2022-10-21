@@ -106,10 +106,13 @@ public enum ButtonToolTips {
     Encode,
     EncodeDescription,
     Substitutions,
+    BeSubstitutions,
     PatternSlotConfigTitle,
     PatternSlotConfigInfo,
     SubstitutionsDescEnabled,
     SubstitutionsDescDisabled,
+    BeSubstitutionsDescEnabled,
+    BeSubstitutionsDescDisabled,
     CraftOnly,
     CraftEither,
 

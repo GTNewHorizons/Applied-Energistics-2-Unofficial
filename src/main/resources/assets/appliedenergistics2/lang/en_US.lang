@@ -188,6 +188,7 @@ gui.appliedenergistics2.And=and
 gui.appliedenergistics2.Creates=Creates
 gui.appliedenergistics2.With=with
 gui.appliedenergistics2.Substitute=Using Substitutions:
+gui.appliedenergistics2.BeSubstitute=Can be a substitution:
 gui.appliedenergistics2.Yes=Yes
 gui.appliedenergistics2.No=No
 gui.appliedenergistics2.InWorldCrafting=AE2 In World Crafting
@@ -268,6 +269,9 @@ gui.tooltips.appliedenergistics2.StashDesc=Return items on the crafting grid to 
 gui.tooltips.appliedenergistics2.Substitutions=Ore-Dict Substitutions
 gui.tooltips.appliedenergistics2.SubstitutionsDescEnabled=Allow substitutions of input components.
 gui.tooltips.appliedenergistics2.SubstitutionsDescDisabled=Prevent substitutions of input components.
+gui.tooltips.appliedenergistics2.BeSubstitutions=Use as substitution
+gui.tooltips.appliedenergistics2.BeSubstitutionsDescEnabled=Allow crafting as substitutions of input components.
+gui.tooltips.appliedenergistics2.BeSubstitutionsDescDisabled=Prevent crafting as substitutions of input components.
 
 gui.tooltips.appliedenergistics2.PatternSlotConfigTitle=Switch Terminal Mode
 gui.tooltips.appliedenergistics2.PatternSlotConfigInfo=Switch slot pattern mode beween (16 -> 4) and (4 -> 16)

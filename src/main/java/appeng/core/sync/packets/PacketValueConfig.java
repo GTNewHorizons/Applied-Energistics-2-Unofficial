@@ -121,6 +121,8 @@ public class PacketValueConfig extends AppEngPacket {
                 cpt.clear();
             } else if (this.Name.equals("PatternTerminal.Substitute")) {
                 cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
+            } else if (this.Name.equals("PatternTerminal.BeSubstitute")) {
+                cpt.getPatternTerminal().setCanBeSubstitution(this.Value.equals("1"));
             } else if (this.Name.equals("PatternTerminal.Double")) {
                 cpt.doubleStacks(Value.equals("1"));
             }
@@ -134,6 +136,8 @@ public class PacketValueConfig extends AppEngPacket {
                 cpt.clear();
             } else if (this.Name.equals("PatternTerminalEx.Substitute")) {
                 cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
+            } else if (this.Name.equals("PatternTerminalEx.BeSubstitute")) {
+                cpt.getPatternTerminal().setCanBeSubstitution(this.Value.equals("1"));
             } else if (this.Name.equals("PatternTerminalEx.Invert")) {
                 cpt.getPatternTerminal().setInverted(Value.equals("1"));
             } else if (this.Name.equals("PatternTerminalEx.Double")) {

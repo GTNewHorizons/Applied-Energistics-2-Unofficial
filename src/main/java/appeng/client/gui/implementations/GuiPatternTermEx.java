@@ -1,9 +1,6 @@
 package appeng.client.gui.implementations;
 
-import appeng.api.config.ActionItems;
-import appeng.api.config.ItemSubstitution;
-import appeng.api.config.PatternSlotConfig;
-import appeng.api.config.Settings;
+import appeng.api.config.*;
 import appeng.api.storage.ITerminalHost;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
@@ -28,6 +25,8 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
 
     private GuiImgButton substitutionsEnabledBtn;
     private GuiImgButton substitutionsDisabledBtn;
+    private GuiImgButton beSubstitutionsEnabledBtn;
+    private GuiImgButton beSubstitutionsDisabledBtn;
     private GuiImgButton encodeBtn;
     private GuiImgButton clearBtn;
     private GuiImgButton invertBtn;
@@ -61,6 +60,10 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig(
                         "PatternTerminalEx.Substitute",
                         this.substitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
+            } else if (this.beSubstitutionsEnabledBtn == btn || this.beSubstitutionsDisabledBtn == btn) {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig(
+                        "PatternTerminalEx.BeSubstitute",
+                        this.beSubstitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
             } else if (doubleBtn == btn) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig(
                         "PatternTerminalEx.Double", Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? "1" : "0"));
@@ -84,6 +87,16 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
                 this.guiLeft + 97, this.guiTop + this.ySize - 163, Settings.ACTIONS, ItemSubstitution.DISABLED);
         this.substitutionsDisabledBtn.setHalfSize(true);
         this.buttonList.add(this.substitutionsDisabledBtn);
+
+        this.beSubstitutionsEnabledBtn = new GuiImgButton(
+                this.guiLeft + 97, this.guiTop + this.ySize - 143, Settings.ACTIONS, PatternBeSubstitution.ENABLED);
+        this.beSubstitutionsEnabledBtn.setHalfSize(true);
+        this.buttonList.add(this.beSubstitutionsEnabledBtn);
+
+        this.beSubstitutionsDisabledBtn = new GuiImgButton(
+                this.guiLeft + 97, this.guiTop + this.ySize - 143, Settings.ACTIONS, PatternBeSubstitution.DISABLED);
+        this.beSubstitutionsDisabledBtn.setHalfSize(true);
+        this.buttonList.add(this.beSubstitutionsDisabledBtn);
 
         this.clearBtn = new GuiImgButton(
                 this.guiLeft + 87, this.guiTop + this.ySize - 163, Settings.ACTIONS, ActionItems.CLOSE);
@@ -145,6 +158,9 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
             substitutionsEnabledBtn.visible = false;
             substitutionsDisabledBtn.visible = true;
         }
+
+        this.beSubstitutionsEnabledBtn.visible = this.container.beSubstitute;
+        this.beSubstitutionsDisabledBtn.visible = !this.container.beSubstitute;
 
         final int offset = container.inverted ? 18 * -3 : 0;
 

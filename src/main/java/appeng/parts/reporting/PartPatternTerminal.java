@@ -47,6 +47,7 @@ public class PartPatternTerminal extends AbstractPartTerminal {
 
     private boolean craftingMode = true;
     private boolean substitute = false;
+    private boolean beSubstitute = false;
 
     @Reflected
     public PartPatternTerminal(final ItemStack is) {
@@ -67,6 +68,7 @@ public class PartPatternTerminal extends AbstractPartTerminal {
         super.readFromNBT(data);
         this.setCraftingRecipe(data.getBoolean("craftingMode"));
         this.setSubstitution(data.getBoolean("substitute"));
+        this.setCanBeSubstitution(data.getBoolean("beSubstitute"));
         this.pattern.readFromNBT(data, "pattern");
         this.output.readFromNBT(data, "outputList");
         this.crafting.readFromNBT(data, "craftingGrid");
@@ -77,6 +79,7 @@ public class PartPatternTerminal extends AbstractPartTerminal {
         super.writeToNBT(data);
         data.setBoolean("craftingMode", this.craftingMode);
         data.setBoolean("substitute", this.substitute);
+        data.setBoolean("beSubstitute", this.beSubstitute);
         this.pattern.writeToNBT(data, "pattern");
         this.output.writeToNBT(data, "outputList");
         this.crafting.writeToNBT(data, "craftingGrid");
@@ -118,6 +121,7 @@ public class PartPatternTerminal extends AbstractPartTerminal {
                     final ICraftingPatternDetails details = pattern.getPatternForItem(
                             stack, this.getHost().getTile().getWorldObj());
                     final boolean substitute = encodedValue.getBoolean("substitute");
+                    final boolean beSubstitute = encodedValue.getBoolean("beSubstitute");
                     final boolean isCrafting = encodedValue.getBoolean("crafting");
                     final IAEItemStack[] inItems;
                     final IAEItemStack[] outItems;
@@ -133,6 +137,7 @@ public class PartPatternTerminal extends AbstractPartTerminal {
 
                     this.setCraftingRecipe(isCrafting);
                     this.setSubstitution(substitute);
+                    this.setCanBeSubstitution(beSubstitute);
 
                     for (int x = 0; x < this.crafting.getSizeInventory(); x++) {
                         this.crafting.setInventorySlotContents(x, null);
@@ -186,8 +191,16 @@ public class PartPatternTerminal extends AbstractPartTerminal {
         return this.substitute;
     }
 
+    public boolean canBeSubstitution() {
+        return this.beSubstitute;
+    }
+
     public void setSubstitution(boolean canSubstitute) {
         this.substitute = canSubstitute;
+    }
+
+    public void setCanBeSubstitution(boolean beSubstitute) {
+        this.beSubstitute = beSubstitute;
     }
 
     @Override
