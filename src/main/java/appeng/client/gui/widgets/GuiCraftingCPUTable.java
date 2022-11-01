@@ -1,7 +1,5 @@
 package appeng.client.gui.widgets;
 
-import static appeng.util.Utility.formatNumbers;
-
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerCPUTable;
@@ -12,6 +10,7 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -165,20 +164,20 @@ public class GuiCraftingCPUTable {
             } else {
                 tooltip.append(GuiText.CPUs.getLocal());
                 tooltip.append(" #");
-                tooltip.append(formatNumbers(hoveredCpu.getSerial()));
+                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getSerial()));
                 tooltip.append('\n');
             }
             IAEItemStack crafting = hoveredCpu.getCrafting();
             if (crafting != null && crafting.getStackSize() > 0) {
                 tooltip.append(GuiText.Crafting.getLocal());
                 tooltip.append(": ");
-                tooltip.append(formatNumbers(crafting.getStackSize()));
+                tooltip.append(NumberFormat.getInstance().format(crafting.getStackSize()));
                 tooltip.append(' ');
                 tooltip.append(crafting.getItemStack().getDisplayName());
                 tooltip.append('\n');
-                tooltip.append(formatNumbers(hoveredCpu.getRemainingItems()));
+                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getRemainingItems()));
                 tooltip.append(" / ");
-                tooltip.append(formatNumbers(hoveredCpu.getTotalItems()));
+                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getTotalItems()));
                 tooltip.append('\n');
             }
             if (hoveredCpu.getStorage() > 0) {
@@ -190,7 +189,7 @@ public class GuiCraftingCPUTable {
             if (hoveredCpu.getCoprocessors() > 0) {
                 tooltip.append(GuiText.CoProcessors.getLocal());
                 tooltip.append(": ");
-                tooltip.append(formatNumbers(hoveredCpu.getCoprocessors()));
+                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getCoprocessors()));
                 tooltip.append('\n');
             }
             if (tooltip.length() > 0) {

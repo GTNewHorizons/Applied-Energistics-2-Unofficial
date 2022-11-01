@@ -18,8 +18,6 @@
 
 package appeng.items.storage;
 
-import static appeng.util.Utility.formatNumbers;
-
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
@@ -45,6 +43,8 @@ import appeng.util.Platform;
 import com.google.common.base.Optional;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+
+import java.text.NumberFormat;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -106,11 +106,11 @@ public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCe
             final ICellInventory cellInventory = handler.getCellInv();
 
             if (cellInventory != null) {
-                lines.add(formatNumbers(cellInventory.getUsedBytes()) + " " + GuiText.Of.getLocal() + ' '
-                        + formatNumbers(cellInventory.getTotalBytes()) + ' ' + GuiText.BytesUsed.getLocal());
+                lines.add(NumberFormat.getInstance().format(cellInventory.getUsedBytes()) + " " + GuiText.Of.getLocal() + ' '
+                        + NumberFormat.getInstance().format(cellInventory.getTotalBytes()) + ' ' + GuiText.BytesUsed.getLocal());
 
-                lines.add(formatNumbers(cellInventory.getStoredItemTypes()) + " " + GuiText.Of.getLocal() + ' '
-                        + formatNumbers(cellInventory.getTotalItemTypes()) + ' ' + GuiText.Types.getLocal());
+                lines.add(NumberFormat.getInstance().format(cellInventory.getStoredItemTypes()) + " " + GuiText.Of.getLocal() + ' '
+                        + NumberFormat.getInstance().format(cellInventory.getTotalItemTypes()) + ' ' + GuiText.Types.getLocal());
 
                 if (handler.isPreformatted()) {
                     String filter = cellInventory.getOreFilter();
