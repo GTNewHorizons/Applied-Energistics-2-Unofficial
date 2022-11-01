@@ -18,6 +18,8 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.Utility.formatNumbers;
+
 import appeng.api.AEApi;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -48,8 +50,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
-
-import static appeng.util.Utility.formatNumbers;
 
 public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
     private static final int GUI_HEIGHT = 184;

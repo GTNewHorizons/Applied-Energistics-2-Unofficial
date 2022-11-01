@@ -1,5 +1,7 @@
 package appeng.client.gui.widgets;
 
+import static appeng.util.Utility.formatNumbers;
+
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerCPUTable;
@@ -15,9 +17,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
-
-import static appeng.util.Utility.formatNumbers;
-
 
 public class GuiCraftingCPUTable {
     private final AEBaseGui parent;

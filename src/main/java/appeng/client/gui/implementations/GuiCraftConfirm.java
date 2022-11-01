@@ -18,6 +18,8 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.Utility.formatNumbers;
+
 import appeng.api.AEApi;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
@@ -53,8 +55,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
-
-import static appeng.util.Utility.formatNumbers;
 
 public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolder {
 

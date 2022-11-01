@@ -18,6 +18,8 @@
 
 package appeng.items.tools.powered;
 
+import static appeng.util.Utility.formatNumbers;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
@@ -71,8 +73,6 @@ import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
-import static appeng.util.Utility.formatNumbers;
-
 
 public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
 
@@ -99,10 +99,10 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
         if (cdi instanceof CellInventoryHandler) {
             final ICellInventory cd = ((ICellInventoryHandler) cdi).getCellInv();
             if (cd != null) {
-                lines.add(cd.getUsedBytes() + " " + GuiText.Of.getLocal() + ' ' + formatNumbers(cd.getTotalBytes()) + ' '
-                        + GuiText.BytesUsed.getLocal());
-                lines.add(cd.getStoredItemTypes() + " " + GuiText.Of.getLocal() + ' ' + formatNumbers(cd.getTotalItemTypes()) + ' '
-                        + GuiText.Types.getLocal());
+                lines.add(cd.getUsedBytes() + " " + GuiText.Of.getLocal() + ' ' + formatNumbers(cd.getTotalBytes())
+                        + ' ' + GuiText.BytesUsed.getLocal());
+                lines.add(cd.getStoredItemTypes() + " " + GuiText.Of.getLocal() + ' '
+                        + formatNumbers(cd.getTotalItemTypes()) + ' ' + GuiText.Types.getLocal());
             }
         }
     }
