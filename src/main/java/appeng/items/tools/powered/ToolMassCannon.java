@@ -54,6 +54,8 @@ import appeng.util.Platform;
 import com.google.common.base.Optional;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+
+import java.text.NumberFormat;
 import java.util.EnumSet;
 import java.util.List;
 import net.minecraft.block.Block;
@@ -97,10 +99,10 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
         if (cdi instanceof CellInventoryHandler) {
             final ICellInventory cd = ((ICellInventoryHandler) cdi).getCellInv();
             if (cd != null) {
-                lines.add(cd.getUsedBytes() + " " + GuiText.Of.getLocal() + ' ' + cd.getTotalBytes() + ' '
-                        + GuiText.BytesUsed.getLocal());
-                lines.add(cd.getStoredItemTypes() + " " + GuiText.Of.getLocal() + ' ' + cd.getTotalItemTypes() + ' '
-                        + GuiText.Types.getLocal());
+                lines.add(cd.getUsedBytes() + " " + GuiText.Of.getLocal() + ' ' + NumberFormat.getInstance().format(cd.getTotalBytes())
+                        + ' ' + GuiText.BytesUsed.getLocal());
+                lines.add(cd.getStoredItemTypes() + " " + GuiText.Of.getLocal() + ' '
+                        + NumberFormat.getInstance().format(cd.getTotalItemTypes()) + ' ' + GuiText.Types.getLocal());
             }
         }
     }

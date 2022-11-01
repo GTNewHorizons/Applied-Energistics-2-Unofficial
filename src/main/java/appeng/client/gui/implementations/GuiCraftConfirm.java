@@ -210,6 +210,8 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         return ((ContainerCraftConfirm) this.inventorySlots).isSimulation();
     }
 
+    final ReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
+
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         cpuTable.drawFG(offsetX, offsetY, mouseX, mouseY, guiLeft, guiTop);
@@ -227,8 +229,9 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             dsp = GuiText.Simulation.getLocal();
         } else {
             dsp = this.ccc.getCpuAvailableBytes() > 0
-                    ? (GuiText.Bytes.getLocal() + ": " + this.ccc.getCpuAvailableBytes() + " : "
-                            + GuiText.CoProcessors.getLocal() + ": " + this.ccc.getCpuCoProcessors())
+                    ? (GuiText.Bytes.getLocal() + ": " + NumberFormat.getInstance().format(this.ccc.getCpuAvailableBytes())
+                            + " : " + GuiText.CoProcessors.getLocal() + ": "
+                            + NumberFormat.getInstance().format(this.ccc.getCpuCoProcessors()))
                     : GuiText.Bytes.getLocal() + ": N/A : " + GuiText.CoProcessors.getLocal() + ": N/A";
         }
 
@@ -249,7 +252,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         int toolPosX = 0;
         int toolPosY = 0;
         hoveredStack = null;
-        final ReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
         final int offY = 23;
 
         for (int z = viewStart; z < Math.min(viewEnd, this.visual.size()); z++) {
