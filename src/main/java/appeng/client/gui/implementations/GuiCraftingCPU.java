@@ -49,6 +49,8 @@ import net.minecraft.item.ItemStack;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
 
+import static appeng.util.Utility.formatNumbers;
+
 public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
     private static final int GUI_HEIGHT = 184;
     private static final int GUI_WIDTH = 238;
@@ -251,7 +253,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                             GuiColors.CraftingCPUStored.getColor());
 
                     if (this.tooltip == z - viewStart) {
-                        lineList.add(GuiText.Stored.getLocal() + ": " + Long.toString(stored.getStackSize()));
+                        lineList.add(GuiText.Stored.getLocal() + ": " + formatNumbers(stored.getStackSize()));
                     }
 
                     downY += 5;
@@ -270,7 +272,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                             GuiColors.CraftingCPUAmount.getColor());
 
                     if (this.tooltip == z - viewStart) {
-                        lineList.add(GuiText.Crafting.getLocal() + ": " + Long.toString(activeStack.getStackSize()));
+                        lineList.add(GuiText.Crafting.getLocal() + ": " + formatNumbers(activeStack.getStackSize()));
                     }
 
                     downY += 5;
@@ -289,7 +291,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                             GuiColors.CraftingCPUScheduled.getColor());
 
                     if (this.tooltip == z - viewStart) {
-                        lineList.add(GuiText.Scheduled.getLocal() + ": " + Long.toString(pendingStack.getStackSize()));
+                        lineList.add(GuiText.Scheduled.getLocal() + ": " + formatNumbers(pendingStack.getStackSize()));
                     }
                 }
 

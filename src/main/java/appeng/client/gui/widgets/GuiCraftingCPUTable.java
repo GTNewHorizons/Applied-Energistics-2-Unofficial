@@ -16,6 +16,9 @@ import net.minecraft.client.gui.FontRenderer;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import static appeng.util.Utility.formatNumbers;
+
+
 public class GuiCraftingCPUTable {
     private final AEBaseGui parent;
     private final ContainerCPUTable container;
@@ -163,20 +166,20 @@ public class GuiCraftingCPUTable {
             } else {
                 tooltip.append(GuiText.CPUs.getLocal());
                 tooltip.append(" #");
-                tooltip.append(hoveredCpu.getSerial());
+                tooltip.append(formatNumbers(hoveredCpu.getSerial()));
                 tooltip.append('\n');
             }
             IAEItemStack crafting = hoveredCpu.getCrafting();
             if (crafting != null && crafting.getStackSize() > 0) {
                 tooltip.append(GuiText.Crafting.getLocal());
                 tooltip.append(": ");
-                tooltip.append(crafting.getStackSize());
+                tooltip.append(formatNumbers(crafting.getStackSize()));
                 tooltip.append(' ');
                 tooltip.append(crafting.getItemStack().getDisplayName());
                 tooltip.append('\n');
-                tooltip.append(hoveredCpu.getRemainingItems());
+                tooltip.append(formatNumbers(hoveredCpu.getRemainingItems()));
                 tooltip.append(" / ");
-                tooltip.append(hoveredCpu.getTotalItems());
+                tooltip.append(formatNumbers(hoveredCpu.getTotalItems()));
                 tooltip.append('\n');
             }
             if (hoveredCpu.getStorage() > 0) {
@@ -188,7 +191,7 @@ public class GuiCraftingCPUTable {
             if (hoveredCpu.getCoprocessors() > 0) {
                 tooltip.append(GuiText.CoProcessors.getLocal());
                 tooltip.append(": ");
-                tooltip.append(hoveredCpu.getCoprocessors());
+                tooltip.append(formatNumbers(hoveredCpu.getCoprocessors()));
                 tooltip.append('\n');
             }
             if (tooltip.length() > 0) {

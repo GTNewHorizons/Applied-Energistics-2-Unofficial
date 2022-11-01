@@ -54,6 +54,8 @@ import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import static appeng.util.Utility.formatNumbers;
+
 public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolder {
 
     private final ContainerCraftConfirm ccc;
@@ -227,8 +229,8 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             dsp = GuiText.Simulation.getLocal();
         } else {
             dsp = this.ccc.getCpuAvailableBytes() > 0
-                    ? (GuiText.Bytes.getLocal() + ": " + this.ccc.getCpuAvailableBytes() + " : "
-                            + GuiText.CoProcessors.getLocal() + ": " + this.ccc.getCpuCoProcessors())
+                    ? (GuiText.Bytes.getLocal() + ": " + formatNumbers(this.ccc.getCpuAvailableBytes()) + " : "
+                            + GuiText.CoProcessors.getLocal() + ": " + formatNumbers(this.ccc.getCpuCoProcessors()))
                     : GuiText.Bytes.getLocal() + ": N/A : " + GuiText.CoProcessors.getLocal() + ": N/A";
         }
 
