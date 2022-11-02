@@ -4,6 +4,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerCPUTable;
 import appeng.container.implementations.CraftingCPUStatus;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
@@ -12,10 +13,14 @@ import appeng.core.sync.packets.PacketValueConfig;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.List;
+
+import appeng.util.ReadableNumberConverter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+
+import static appeng.util.Platform.formatPowerLong;
 
 public class GuiCraftingCPUTable {
     private final AEBaseGui parent;
@@ -104,7 +109,7 @@ public class GuiCraftingCPUTable {
 
                 String name = cpu.getName();
                 if (name == null || name.isEmpty()) {
-                    name = GuiText.CPUs.getLocal() + " #" + cpu.getSerial();
+                    name = GuiText.CPUs.getLocal() + " #" + NumberFormat.getInstance().format((cpu.getSerial()));
                 }
                 if (name.length() > 12) {
                     name = name.substring(0, 11) + "..";
@@ -128,9 +133,9 @@ public class GuiCraftingCPUTable {
                     GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                     parent.drawTexturedModalRect(0, 0, uv_x * 16, uv_y * 16, 16, 16);
                     GL11.glTranslatef(18.0f, 2.0f, 0.0f);
-                    String amount = Long.toString(craftingStack.getStackSize());
-                    if (amount.length() > 5) {
-                        amount = amount.substring(0, 5) + "..";
+                    String amount = NumberFormat.getInstance().format(craftingStack.getStackSize());
+                    if (amount.length() > 9) {
+                        amount = ReadableNumberConverter.INSTANCE.toWideReadableForm(craftingStack.getStackSize());
                     }
                     GL11.glScalef(1.5f, 1.5f, 1.0f);
                     font.drawString(amount, 0, 0, GuiColors.CraftingStatusCPUAmount.getColor());
