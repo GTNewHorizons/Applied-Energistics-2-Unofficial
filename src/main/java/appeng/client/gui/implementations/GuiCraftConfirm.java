@@ -227,8 +227,10 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             dsp = GuiText.Simulation.getLocal();
         } else {
             dsp = this.ccc.getCpuAvailableBytes() > 0
-                    ? (GuiText.Bytes.getLocal() + ": " + this.ccc.getCpuAvailableBytes() + " : "
-                            + GuiText.CoProcessors.getLocal() + ": " + this.ccc.getCpuCoProcessors())
+                    ? (GuiText.Bytes.getLocal() + ": "
+                            + NumberFormat.getInstance().format(this.ccc.getCpuAvailableBytes())
+                            + " : " + GuiText.CoProcessors.getLocal() + ": "
+                            + NumberFormat.getInstance().format(this.ccc.getCpuCoProcessors()))
                     : GuiText.Bytes.getLocal() + ": N/A : " + GuiText.CoProcessors.getLocal() + ": N/A";
         }
 
@@ -249,7 +251,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         int toolPosX = 0;
         int toolPosY = 0;
         hoveredStack = null;
-        final ReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
         final int offY = 23;
 
         for (int z = viewStart; z < Math.min(viewEnd, this.visual.size()); z++) {
@@ -279,7 +280,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
                 if (stored != null && stored.getStackSize() > 0) {
                     String str =
-                            GuiText.FromStorage.getLocal() + ": " + converter.toWideReadableForm(stored.getStackSize());
+                            GuiText.FromStorage.getLocal() + ": " + ReadableNumberConverter.INSTANCE.toWideReadableForm(stored.getStackSize());
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
                     this.fontRendererObj.drawString(
                             str,
@@ -298,7 +299,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 boolean red = false;
                 if (missingStack != null && missingStack.getStackSize() > 0) {
                     String str = GuiText.Missing.getLocal() + ": "
-                            + converter.toWideReadableForm(missingStack.getStackSize());
+                            + ReadableNumberConverter.INSTANCE.toWideReadableForm(missingStack.getStackSize());
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
                     this.fontRendererObj.drawString(
                             str,
@@ -317,7 +318,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
                 if (pendingStack != null && pendingStack.getStackSize() > 0) {
                     String str = GuiText.ToCraft.getLocal() + ": "
-                            + converter.toWideReadableForm(pendingStack.getStackSize());
+                            + ReadableNumberConverter.INSTANCE.toWideReadableForm(pendingStack.getStackSize());
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
                     this.fontRendererObj.drawString(
                             str,

@@ -38,6 +38,7 @@ import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import com.google.common.base.Joiner;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -251,7 +252,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                             GuiColors.CraftingCPUStored.getColor());
 
                     if (this.tooltip == z - viewStart) {
-                        lineList.add(GuiText.Stored.getLocal() + ": " + Long.toString(stored.getStackSize()));
+                        lineList.add(GuiText.Stored.getLocal() + ": "
+                                + NumberFormat.getInstance().format(stored.getStackSize()));
                     }
 
                     downY += 5;
@@ -270,7 +272,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                             GuiColors.CraftingCPUAmount.getColor());
 
                     if (this.tooltip == z - viewStart) {
-                        lineList.add(GuiText.Crafting.getLocal() + ": " + Long.toString(activeStack.getStackSize()));
+                        lineList.add(GuiText.Crafting.getLocal() + ": "
+                                + NumberFormat.getInstance().format(activeStack.getStackSize()));
                     }
 
                     downY += 5;
@@ -289,7 +292,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                             GuiColors.CraftingCPUScheduled.getColor());
 
                     if (this.tooltip == z - viewStart) {
-                        lineList.add(GuiText.Scheduled.getLocal() + ": " + Long.toString(pendingStack.getStackSize()));
+                        lineList.add(GuiText.Scheduled.getLocal() + ": "
+                                + NumberFormat.getInstance().format(pendingStack.getStackSize()));
                     }
                 }
 
