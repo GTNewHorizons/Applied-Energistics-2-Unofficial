@@ -279,8 +279,8 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 int downY = 0;
 
                 if (stored != null && stored.getStackSize() > 0) {
-                    String str =
-                            GuiText.FromStorage.getLocal() + ": " + ReadableNumberConverter.INSTANCE.toWideReadableForm(stored.getStackSize());
+                    String str = GuiText.FromStorage.getLocal() + ": "
+                            + ReadableNumberConverter.INSTANCE.toWideReadableForm(stored.getStackSize());
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
                     this.fontRendererObj.drawString(
                             str,
