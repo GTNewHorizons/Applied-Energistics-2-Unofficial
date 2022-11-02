@@ -43,7 +43,6 @@ import appeng.util.Platform;
 import com.google.common.base.Optional;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
 import java.text.NumberFormat;
 import java.util.EnumSet;
 import java.util.List;
@@ -106,11 +105,14 @@ public final class ItemBasicStorageCell extends AEBaseItem implements IStorageCe
             final ICellInventory cellInventory = handler.getCellInv();
 
             if (cellInventory != null) {
-                lines.add(NumberFormat.getInstance().format(cellInventory.getUsedBytes()) + " " + GuiText.Of.getLocal() + ' '
-                        + NumberFormat.getInstance().format(cellInventory.getTotalBytes()) + ' ' + GuiText.BytesUsed.getLocal());
+                lines.add(NumberFormat.getInstance().format(cellInventory.getUsedBytes()) + " " + GuiText.Of.getLocal()
+                        + ' ' + NumberFormat.getInstance().format(cellInventory.getTotalBytes()) + ' '
+                        + GuiText.BytesUsed.getLocal());
 
-                lines.add(NumberFormat.getInstance().format(cellInventory.getStoredItemTypes()) + " " + GuiText.Of.getLocal() + ' '
-                        + NumberFormat.getInstance().format(cellInventory.getTotalItemTypes()) + ' ' + GuiText.Types.getLocal());
+                lines.add(NumberFormat.getInstance().format(cellInventory.getStoredItemTypes()) + " "
+                        + GuiText.Of.getLocal() + ' '
+                        + NumberFormat.getInstance().format(cellInventory.getTotalItemTypes()) + ' '
+                        + GuiText.Types.getLocal());
 
                 if (handler.isPreformatted()) {
                     String filter = cellInventory.getOreFilter();

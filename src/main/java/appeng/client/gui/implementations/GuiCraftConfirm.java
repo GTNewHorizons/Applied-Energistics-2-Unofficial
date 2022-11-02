@@ -227,7 +227,8 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             dsp = GuiText.Simulation.getLocal();
         } else {
             dsp = this.ccc.getCpuAvailableBytes() > 0
-                    ? (GuiText.Bytes.getLocal() + ": " + NumberFormat.getInstance().format(this.ccc.getCpuAvailableBytes())
+                    ? (GuiText.Bytes.getLocal() + ": "
+                            + NumberFormat.getInstance().format(this.ccc.getCpuAvailableBytes())
                             + " : " + GuiText.CoProcessors.getLocal() + ": "
                             + NumberFormat.getInstance().format(this.ccc.getCpuCoProcessors()))
                     : GuiText.Bytes.getLocal() + ": N/A : " + GuiText.CoProcessors.getLocal() + ": N/A";
