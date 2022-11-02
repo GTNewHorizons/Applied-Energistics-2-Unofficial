@@ -4,23 +4,19 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerCPUTable;
 import appeng.container.implementations.CraftingCPUStatus;
-import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.util.ReadableNumberConverter;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.List;
-
-import appeng.util.ReadableNumberConverter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
-
-import static appeng.util.Platform.formatPowerLong;
 
 public class GuiCraftingCPUTable {
     private final AEBaseGui parent;
@@ -109,7 +105,8 @@ public class GuiCraftingCPUTable {
 
                 String name = cpu.getName();
                 if (name == null || name.isEmpty()) {
-                    name = GuiText.CPUs.getLocal() + " #" + NumberFormat.getInstance().format((cpu.getSerial()));
+                    name = GuiText.CPUs.getLocal() + " #"
+                            + NumberFormat.getInstance().format((cpu.getSerial()));
                 }
                 if (name.length() > 12) {
                     name = name.substring(0, 11) + "..";
