@@ -69,7 +69,11 @@ public enum Settings {
     SAVE_SEARCH(EnumSet.of(YesNo.YES, YesNo.NO)),
     CRAFTING_STATUS(EnumSet.allOf(CraftingStatus.class)),
 
-    INSERTION_MODE(EnumSet.allOf(InsertionMode.class));
+    INSERTION_MODE(EnumSet.allOf(InsertionMode.class)),
+    
+    SIDELESS_MODE(EnumSet.allOf(SidelessMode.class));
+    
+    
 
     private final EnumSet<? extends Enum<?>> values;
 

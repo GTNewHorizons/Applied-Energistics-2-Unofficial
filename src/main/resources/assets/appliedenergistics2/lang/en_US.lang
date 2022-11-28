@@ -404,6 +404,11 @@ gui.tooltips.appliedenergistics2.InsertionModePreferEmptyDesc=Same as default, b
 gui.tooltips.appliedenergistics2.InsertionModeOnlyEmpty=Insert to empty slots only
 gui.tooltips.appliedenergistics2.InsertionModeOnlyEmptyDesc=First to last, does not merge stacks
 
+gui.tooltips.appliedenergistics2.SidelessModeSided=Sided Mode
+gui.tooltips.appliedenergistics2.SidelessModeSidedDesc=Each fluid is accessible only from one specific side
+gui.tooltips.appliedenergistics2.SidelessModeSideless=Sideless Mode
+gui.tooltips.appliedenergistics2.SidelessModeSidelessDesc=All fluids are accessible from all sides
+
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=Energy Units

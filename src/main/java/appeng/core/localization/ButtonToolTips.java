@@ -172,6 +172,11 @@ public enum ButtonToolTips {
     InsertionModePreferEmptyDesc,
     InsertionModeOnlyEmpty,
     InsertionModeOnlyEmptyDesc,
+    
+    SidelessModeSided,
+    SidelessModeSidedDesc,
+    SidelessModeSideless,
+    SidelessModeSidelessDesc,
     ;
 
     private final String root;
