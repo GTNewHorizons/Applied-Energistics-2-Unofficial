@@ -33,6 +33,7 @@ public enum ReadableNumberConverter implements ISlimReadableNumberConverter, IWi
     ReadableNumberConverter() {
         final DecimalFormatSymbols symbols = new DecimalFormatSymbols();
         symbols.setDecimalSeparator('.');
+        symbols.setGroupingSeparator(',');
         final DecimalFormat format = new DecimalFormat(".#;0.#");
         format.setDecimalFormatSymbols(symbols);
         format.setRoundingMode(RoundingMode.DOWN);
