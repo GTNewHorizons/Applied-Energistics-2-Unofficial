@@ -418,11 +418,15 @@ public class CraftingGridCache
         if (details != null && details.canSubstitute()) {
             final Collection<IAEItemStack> substitutions =
                     this.craftableItemSubstitutes.findFuzzy(whatToCraft, FuzzyMode.IGNORE_ALL);
-            ImmutableList.Builder<ICraftingPatternDetails> allPatterns = ImmutableList.builder();
-            for (IAEItemStack alternative : substitutions) {
-                allPatterns.addAll(this.craftableItems.get(alternative));
+            if (substitutions.isEmpty()) {
+                res = this.craftableItems.get(whatToCraft);
+            } else {
+                ImmutableList.Builder<ICraftingPatternDetails> allPatterns = ImmutableList.builder();
+                for (IAEItemStack alternative : substitutions) {
+                    allPatterns.addAll(this.craftableItems.get(alternative));
+                }
+                res = allPatterns.build();
             }
-            res = allPatterns.build();
         } else {
             res = this.craftableItems.get(whatToCraft);
         }
