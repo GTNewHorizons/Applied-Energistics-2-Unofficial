@@ -166,6 +166,8 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
 
         substitutionsEnabledBtn.xPosition = this.guiLeft + 97 + offset;
         substitutionsDisabledBtn.xPosition = this.guiLeft + 97 + offset;
+        beSubstitutionsEnabledBtn.xPosition = this.guiLeft + 97 + offset;
+        beSubstitutionsDisabledBtn.xPosition = this.guiLeft + 97 + offset;
         doubleBtn.xPosition = this.guiLeft + 97 + offset;
         clearBtn.xPosition = this.guiLeft + 87 + offset;
         invertBtn.xPosition = this.guiLeft + 87 + offset;
