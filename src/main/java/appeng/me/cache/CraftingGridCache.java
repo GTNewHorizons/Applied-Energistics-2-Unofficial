@@ -415,11 +415,13 @@ public class CraftingGridCache
             final int slotIndex,
             final World world) {
         final ImmutableList<ICraftingPatternDetails> res;
+        boolean normalMode = false;
         if (details != null && details.canSubstitute()) {
             final Collection<IAEItemStack> substitutions =
                     this.craftableItemSubstitutes.findFuzzy(whatToCraft, FuzzyMode.IGNORE_ALL);
             if (substitutions.isEmpty()) {
                 res = this.craftableItems.get(whatToCraft);
+                normalMode = true;
             } else {
                 ImmutableList.Builder<ICraftingPatternDetails> allPatterns = ImmutableList.builder();
                 for (IAEItemStack alternative : substitutions) {
@@ -443,7 +445,7 @@ public class CraftingGridCache
                     }
                 }
                 // no perfect match found, look for substitutions
-                if (details.canSubstitute()) {
+                if (details.canSubstitute() && !normalMode) {
                     for (final Map.Entry<IAEItemStack, ImmutableList<ICraftingPatternDetails>> entry :
                             this.craftableItems.entrySet()) {
                         final boolean canBeASubstitute =
