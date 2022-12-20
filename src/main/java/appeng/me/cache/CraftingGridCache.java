@@ -48,7 +48,7 @@ import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.ItemSorters;
-import appeng.util.item.ItemList;
+import appeng.util.item.OreListMultiMap;
 import com.google.common.collect.*;
 import java.util.*;
 import java.util.Map.Entry;
@@ -88,7 +88,7 @@ public class CraftingGridCache
     private final IGrid grid;
     private final Map<ICraftingPatternDetails, List<ICraftingMedium>> craftingMethods = new HashMap<>();
     // Used for fuzzy lookups
-    private final ItemList craftableItemSubstitutes = new ItemList(true);
+    private final OreListMultiMap<ICraftingPatternDetails> craftableItemSubstitutes = new OreListMultiMap<>();
     private final Map<IAEItemStack, ImmutableList<ICraftingPatternDetails>> craftableItems = new HashMap<>();
     private final Set<IAEItemStack> emitableItems = new HashSet<IAEItemStack>();
     private final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<String, CraftingLinkNexus>();
@@ -250,7 +250,7 @@ public class CraftingGridCache
                 out.setCraftable(true);
 
                 if (details.canBeSubstitute()) {
-                    this.craftableItemSubstitutes.add(out);
+                    craftableItemSubstitutes.put(out, details);
                 }
 
                 Set<ICraftingPatternDetails> methods = tmpCraft.computeIfAbsent(out, k -> new TreeSet<>(COMPARATOR));
@@ -258,6 +258,8 @@ public class CraftingGridCache
                 methods.add(details);
             }
         }
+
+        craftableItemSubstitutes.freeze();
 
         // make them immutable
         for (final Entry<IAEItemStack, Set<ICraftingPatternDetails>> e : tmpCraft.entrySet()) {
@@ -416,19 +418,13 @@ public class CraftingGridCache
             final World world) {
         final ImmutableList<ICraftingPatternDetails> res;
         boolean normalMode = false;
-        if (details != null && details.canBeSubstitute()) {
-            final Collection<IAEItemStack> substitutions =
-                    this.craftableItemSubstitutes.findFuzzy(whatToCraft, FuzzyMode.IGNORE_ALL);
+        if (details != null && details.canSubstitute()) {
+            final ImmutableList<ICraftingPatternDetails> substitutions = this.craftableItemSubstitutes.get(whatToCraft);
             if (substitutions.isEmpty()) {
                 res = this.craftableItems.get(whatToCraft);
                 normalMode = true;
             } else {
-                ImmutableList.Builder<ICraftingPatternDetails> allPatterns = ImmutableList.builder();
-                for (IAEItemStack alternative : substitutions) {
-                    allPatterns.addAll(this.craftableItems.get(alternative));
-                    break;
-                }
-                res = allPatterns.build();
+                res = substitutions;
             }
         } else {
             res = this.craftableItems.get(whatToCraft);

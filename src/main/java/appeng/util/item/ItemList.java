@@ -25,62 +25,17 @@ import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import net.minecraftforge.oredict.OreDictionary;
 
-public class ItemList implements IItemList<IAEItemStack> {
+public final class ItemList implements IItemList<IAEItemStack> {
+
     private final NavigableMap<IAEItemStack, IAEItemStack> records =
             new ConcurrentSkipListMap<IAEItemStack, IAEItemStack>();
-    private final FuzzySearchCache cache;
-
-    public ItemList(boolean useCache) {
-        this.cache = new FuzzySearchCache(useCache);
-    }
-
-    public ItemList() {
-        this(false);
-    }
-
-    private static class FuzzySearchCache {
-        private final Map<Integer, Collection<IAEItemStack>> cache;
-        private final boolean useCache;
-        private final ArrayList<IAEItemStack> emptyCollection = new ArrayList<IAEItemStack>();
-
-        public FuzzySearchCache(boolean useCache) {
-            this.cache = new HashMap<Integer, Collection<IAEItemStack>>();
-            this.useCache = useCache;
-        }
-
-        public void clear() {
-            this.cache.clear();
-        }
-
-        private void put(IAEItemStack ias, Collection<IAEItemStack> iaeItemStackCollection) {
-            if (!this.useCache) return;
-            ArrayList<IAEItemStack> tmp = new ArrayList<IAEItemStack>(iaeItemStackCollection);
-            if (iaeItemStackCollection.isEmpty()) {
-                this.cache.put(((AEItemStack) ias).getDefinition().getMyHash(), this.emptyCollection);
-            } else {
-                for (IAEItemStack is : iaeItemStackCollection) {
-                    Collection<IAEItemStack> collection = this.cache.getOrDefault(
-                            ((AEItemStack) is).getDefinition().getMyHash(), null);
-                    if (collection == null) {
-                        this.cache.put(((AEItemStack) is).getDefinition().getMyHash(), tmp);
-                    } else {
-                        collection.add(ias);
-                    }
-                }
-            }
-        }
-
-        private Collection<IAEItemStack> get(IAEItemStack ias) {
-            if (!this.useCache) return null;
-            return this.cache.getOrDefault(((AEItemStack) ias).getDefinition().getMyHash(), null);
-        }
-    }
 
     @Override
     public void add(final IAEItemStack option) {
         if (option == null) {
             return;
         }
+
         final IAEItemStack st = this.records.get(option);
 
         if (st != null) {
@@ -107,33 +62,30 @@ public class ItemList implements IItemList<IAEItemStack> {
         if (filter == null) {
             return Collections.emptyList();
         }
-        final Collection<IAEItemStack> items = this.cache.get(filter);
-        if (items != null) return items;
+
         final AEItemStack ais = (AEItemStack) filter;
+
         if (ais.isOre()) {
             final OreReference or = ais.getDefinition().getIsOre();
 
             if (or.getAEEquivalents().size() == 1) {
                 final IAEItemStack is = or.getAEEquivalents().get(0);
 
-                Collection<IAEItemStack> res = this.findFuzzyDamage(
+                return this.findFuzzyDamage(
                         (AEItemStack) is, fuzzy, is.getItemDamage() == OreDictionary.WILDCARD_VALUE);
-                this.cache.put(filter, res);
-                return res;
             } else {
-                final Collection<IAEItemStack> output = new ArrayList<IAEItemStack>();
+                final Collection<IAEItemStack> output = new LinkedList<IAEItemStack>();
 
                 for (final IAEItemStack is : or.getAEEquivalents()) {
                     output.addAll(this.findFuzzyDamage(
                             (AEItemStack) is, fuzzy, is.getItemDamage() == OreDictionary.WILDCARD_VALUE));
                 }
-                this.cache.put(filter, output);
+
                 return output;
             }
         }
-        Collection<IAEItemStack> res = this.findFuzzyDamage(ais, fuzzy, false);
-        this.cache.put(filter, res);
-        return res;
+
+        return this.findFuzzyDamage(ais, fuzzy, false);
     }
 
     @Override
@@ -233,7 +185,6 @@ public class ItemList implements IItemList<IAEItemStack> {
 
     public void clear() {
         this.records.clear();
-        this.cache.clear();
     }
 
     private IAEItemStack putItemRecord(final IAEItemStack itemStack) {
