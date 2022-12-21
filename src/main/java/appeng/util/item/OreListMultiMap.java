@@ -7,21 +7,21 @@ import com.google.common.collect.ImmutableListMultimap.Builder;
 import java.util.Collection;
 
 public class OreListMultiMap<T> {
-    private ImmutableListMultimap<IAEItemStack, T> map;
-    private ImmutableListMultimap.Builder<IAEItemStack, T> builder;
+    private ImmutableListMultimap<Integer, T> map;
+    private ImmutableListMultimap.Builder<Integer, T> builder;
 
-    private static Collection<IAEItemStack> getAEEquivalents(IAEItemStack stack) {
+    private static Collection<Integer> getAEEquivalents(IAEItemStack stack) {
         AEItemStack s;
         if (!(stack instanceof AEItemStack)) {
             s = AEItemStack.create(stack.getItemStack());
         } else {
             s = (AEItemStack) stack;
         }
-        return s.getDefinition().getIsOre().getAEEquivalents();
+        return s.getDefinition().getIsOre().getOres();
     }
 
     public void put(IAEItemStack key, T val) {
-        for (IAEItemStack realKey : getAEEquivalents(key)) {
+        for (Integer realKey : getAEEquivalents(key)) {
             builder.put(realKey, val);
         }
     }
@@ -32,7 +32,18 @@ public class OreListMultiMap<T> {
     }
 
     public ImmutableList<T> get(IAEItemStack key) {
-        return map.get(key);
+        Collection<Integer> ids = getAEEquivalents(key);
+        if (ids.isEmpty())
+            return ImmutableList.of();
+        else if (ids.size() == 1) {
+            return map.get(ids.iterator().next());
+        } else {
+            ImmutableList.Builder<T> b = ImmutableList.builder();
+            for (Integer id : ids) {
+                b.addAll(map.get(id));
+            }
+            return b.build();
+        }
     }
 
     public void clear() {
