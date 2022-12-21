@@ -33,8 +33,7 @@ public class OreListMultiMap<T> {
 
     public ImmutableList<T> get(IAEItemStack key) {
         Collection<Integer> ids = getAEEquivalents(key);
-        if (ids.isEmpty())
-            return ImmutableList.of();
+        if (ids.isEmpty()) return ImmutableList.of();
         else if (ids.size() == 1) {
             return map.get(ids.iterator().next());
         } else {
