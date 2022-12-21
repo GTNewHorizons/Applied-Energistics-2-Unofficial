@@ -37,7 +37,6 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -78,37 +77,7 @@ public class PartP2PInterface extends PartP2PTunnel<PartP2PInterface>
             } else {
                 PartP2PInterface p2p = getInput();
                 if (p2p != null) {
-                    final boolean[] accountedFor =
-                            new boolean[p2p.duality.getPatterns().getSizeInventory()];
-
-                    if (!this.gridProxy.isReady()) {
-                        return;
-                    }
-
-                    if (this.craftingList != null) {
-                        final Iterator<ICraftingPatternDetails> i = this.craftingList.iterator();
-                        while (i.hasNext()) {
-                            final ICraftingPatternDetails details = i.next();
-                            boolean found = false;
-
-                            for (int x = 0; x < accountedFor.length; x++) {
-                                final ItemStack is = p2p.duality.getPatterns().getStackInSlot(x);
-                                if (details.getPattern() == is) {
-                                    accountedFor[x] = found = true;
-                                }
-                            }
-
-                            if (!found) {
-                                i.remove();
-                            }
-                        }
-                    }
-
-                    for (int x = 0; x < accountedFor.length; x++) {
-                        if (!accountedFor[x]) {
-                            this.addToCraftingList(p2p.duality.getPatterns().getStackInSlot(x));
-                        }
-                    }
+                    this.craftingList = p2p.duality.craftingList;
 
                     try {
                         this.gridProxy
