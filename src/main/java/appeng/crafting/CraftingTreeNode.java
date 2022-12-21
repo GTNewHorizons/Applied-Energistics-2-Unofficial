@@ -40,7 +40,7 @@ public class CraftingTreeNode {
     private final CraftingJob job;
     private final IItemList<IAEItemStack> used = AEApi.instance().storage().createItemList();
     // parent node.
-    final CraftingTreeProcess parent;
+    private final CraftingTreeProcess parent;
     private final World world;
     // what item is this?
     private final IAEItemStack what;
