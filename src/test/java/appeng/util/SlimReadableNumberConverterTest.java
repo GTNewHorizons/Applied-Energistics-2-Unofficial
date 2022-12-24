@@ -46,7 +46,7 @@ public final class SlimReadableNumberConverterTest {
     private static final String RESULT_10000000 = "10M";
 
     private static final long NUMBER_155555555 = 155555555L;
-    private static final String RESULT_155555555 = ".1G";
+    private static final String RESULT_155555555 = ".1B";
 
     private final ISlimReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
 

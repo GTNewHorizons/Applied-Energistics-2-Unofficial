@@ -23,7 +23,7 @@ public enum ReadableNumberConverter implements ISlimReadableNumberConverter, IWi
     /**
      * String representation of the sorted postfixes
      */
-    private static final char[] ENCODED_POSTFIXES = "KMGTPE".toCharArray();
+    private static final char[] ENCODED_POSTFIXES = "KMBTQ".toCharArray();
 
     private final Format format;
 
