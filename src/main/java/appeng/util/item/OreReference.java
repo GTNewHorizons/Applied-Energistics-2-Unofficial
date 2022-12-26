@@ -28,7 +28,7 @@ public class OreReference {
     private final Set<Integer> ores = new HashSet<Integer>();
     private List<IAEItemStack> aeOtherOptions = null;
 
-    Collection<String> getEquivalents() {
+    public Collection<String> getEquivalents() {
         return this.otherOptions;
     }
 

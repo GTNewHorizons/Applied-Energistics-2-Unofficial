@@ -28,12 +28,15 @@ import appeng.core.AEConfig;
 import appeng.items.storage.ItemViewCell;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
+import appeng.util.item.OreHelper;
+import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
@@ -111,16 +114,29 @@ public class ItemRepo {
         }
 
         this.innerSearch = this.searchString;
-        final boolean terminalSearchToolTips =
-                AEConfig.instance.settings.getSetting(Settings.SEARCH_TOOLTIPS) != YesNo.NO;
+        //        final boolean terminalSearchToolTips =
+        //                AEConfig.instance.settings.getSetting(Settings.SEARCH_TOOLTIPS) != YesNo.NO;
         // boolean terminalSearchMods = Configuration.INSTANCE.settings.getSetting( Settings.SEARCH_MODS ) != YesNo.NO;
-
-        boolean searchMod = false;
-        if (this.innerSearch.startsWith("@")) {
-            searchMod = true;
-            this.innerSearch = this.innerSearch.substring(1);
+        final SearchMode searchWhat;
+        if (this.innerSearch.length() == 0) {
+            searchWhat = SearchMode.ITEM;
+        } else {
+            switch (this.innerSearch.substring(0, 1)) {
+                case "#":
+                    searchWhat = SearchMode.TOOLTIPS;
+                    break;
+                case "@":
+                    searchWhat = SearchMode.MOD;
+                    break;
+                case "$":
+                    searchWhat = SearchMode.ORE;
+                    break;
+                default:
+                    searchWhat = SearchMode.ITEM;
+                    break;
+            }
+            if (searchWhat != SearchMode.ITEM) this.innerSearch = this.innerSearch.substring(1);
         }
-
         Pattern m = null;
         try {
             m = Pattern.compile(this.innerSearch.toLowerCase(), Pattern.CASE_INSENSITIVE);
@@ -152,16 +168,34 @@ public class ItemRepo {
             if (viewMode == ViewItems.STORED && is.getStackSize() == 0) {
                 continue;
             }
+            String dspName = null;
+            switch (searchWhat) {
+                case MOD:
+                    dspName = Platform.getModId(is);
+                    break;
+                case ORE:
+                    OreReference ore = OreHelper.INSTANCE.isOre(is.getItemStack());
+                    if (ore != null) {
+                        dspName = String.join(" ", ore.getEquivalents());
+                    }
+                    break;
+                case TOOLTIPS:
+                    dspName = String.join(" ", ((List<String>) Platform.getTooltip(is)));
+                    break;
+                default:
+                    dspName = Platform.getItemDisplayName(is);
+                    break;
+            }
 
-            final String dspName = searchMod ? Platform.getModId(is) : Platform.getItemDisplayName(is);
+            if (dspName == null) continue;
+
             notDone = true;
-
             if (m.matcher(dspName.toLowerCase()).find()) {
                 this.view.add(is);
                 notDone = false;
             }
 
-            if (terminalSearchToolTips && notDone) {
+            if (notDone && searchWhat == SearchMode.ITEM) {
                 for (final Object lp : Platform.getTooltip(is)) {
                     if (lp instanceof String && m.matcher((CharSequence) lp).find()) {
                         this.view.add(is);
@@ -248,5 +282,12 @@ public class ItemRepo {
 
     public void setSearchString(@Nonnull final String searchString) {
         this.searchString = searchString;
+    }
+
+    enum SearchMode {
+        MOD,
+        TOOLTIPS,
+        ORE,
+        ITEM
     }
 }
