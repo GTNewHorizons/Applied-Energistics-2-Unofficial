@@ -143,6 +143,8 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
                 return Upgrades.REDSTONE;
             case CardSpeed:
                 return Upgrades.SPEED;
+            case CardSuperSpeed:
+                return Upgrades.SUPERSPEED;
             case CardInverter:
                 return Upgrades.INVERTER;
             case CardCrafting:

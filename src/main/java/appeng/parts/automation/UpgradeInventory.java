@@ -35,6 +35,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
     private boolean cached = false;
     private int fuzzyUpgrades = 0;
     private int speedUpgrades = 0;
+    private int superSpeedUpgrades = 0;
     private int redstoneUpgrades = 0;
     private int capacityUpgrades = 0;
     private int inverterUpgrades = 0;
@@ -89,6 +90,8 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
                 return this.redstoneUpgrades;
             case SPEED:
                 return this.speedUpgrades;
+            case SUPERSPEED:
+                return this.superSpeedUpgrades;
             case INVERTER:
                 return this.inverterUpgrades;
             case CRAFTING:
@@ -105,7 +108,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
     private void updateUpgradeInfo() {
         this.cached = true;
         this.patternCapacityUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades =
-                this.speedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = 0;
+                this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = 0;
 
         for (final ItemStack is : this) {
             if (is == null || is.getItem() == null || !(is.getItem() instanceof IUpgradeModule)) {
@@ -129,6 +132,9 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
                 case SPEED:
                     this.speedUpgrades++;
                     break;
+                case SUPERSPEED:
+                    this.superSpeedUpgrades++;
+                    break;
                 case INVERTER:
                     this.inverterUpgrades++;
                     break;
@@ -147,6 +153,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
         this.fuzzyUpgrades = Math.min(this.fuzzyUpgrades, this.getMaxInstalled(Upgrades.FUZZY));
         this.redstoneUpgrades = Math.min(this.redstoneUpgrades, this.getMaxInstalled(Upgrades.REDSTONE));
         this.speedUpgrades = Math.min(this.speedUpgrades, this.getMaxInstalled(Upgrades.SPEED));
+        this.superSpeedUpgrades = Math.min(this.superSpeedUpgrades, this.getMaxInstalled(Upgrades.SPEED));
         this.inverterUpgrades = Math.min(this.inverterUpgrades, this.getMaxInstalled(Upgrades.INVERTER));
         this.craftingUpgrades = Math.min(this.craftingUpgrades, this.getMaxInstalled(Upgrades.CRAFTING));
         this.patternCapacityUpgrades =

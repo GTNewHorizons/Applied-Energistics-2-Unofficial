@@ -88,6 +88,8 @@ public class Materials {
 
     public AEItemDefinition materialCardSpeed;
 
+    public AEItemDefinition materialCardSuperSpeed;
+
     public AEItemDefinition materialCardCapacity;
 
     public AEItemDefinition materialCardFuzzy;

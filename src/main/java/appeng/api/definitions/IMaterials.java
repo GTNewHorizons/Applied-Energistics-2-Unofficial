@@ -85,6 +85,8 @@ public interface IMaterials {
 
     IItemDefinition cardSpeed();
 
+    IItemDefinition cardSuperSpeed();
+
     IItemDefinition cardCapacity();
 
     IItemDefinition cardFuzzy();

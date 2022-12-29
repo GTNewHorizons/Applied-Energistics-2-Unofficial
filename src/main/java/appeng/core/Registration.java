@@ -253,6 +253,7 @@ public final class Registration {
 
         target.materialCardRedstone = this.converter.of(source.cardRedstone());
         target.materialCardSpeed = this.converter.of(source.cardSpeed());
+        target.materialCardSpeed = this.converter.of(source.cardSuperSpeed());
         target.materialCardCapacity = this.converter.of(source.cardCapacity());
         target.materialCardFuzzy = this.converter.of(source.cardFuzzy());
         target.materialCardInverter = this.converter.of(source.cardInverter());
@@ -574,6 +575,7 @@ public final class Registration {
 
         // IO Port!
         Upgrades.SPEED.registerItem(blocks.iOPort(), 3);
+        Upgrades.SUPERSPEED.registerItem(blocks.iOPort(), 3);
         Upgrades.REDSTONE.registerItem(blocks.iOPort(), 1);
 
         // Level Emitter!
