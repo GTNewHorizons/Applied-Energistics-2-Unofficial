@@ -481,6 +481,7 @@ item.appliedenergistics2.ItemMaterial.CardFuzzy.name=Fuzzy Card
 item.appliedenergistics2.ItemMaterial.CardInverter.name=Inverter Card
 item.appliedenergistics2.ItemMaterial.CardRedstone.name=Redstone Card
 item.appliedenergistics2.ItemMaterial.CardSpeed.name=Acceleration Card
+item.appliedenergistics2.ItemMaterial.CardSuperSpeed.name=Hyper-Acceleration Card
 item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Oredictionary Filter Card
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³ Spatial Component

@@ -43,6 +43,7 @@ public enum Upgrades {
      */
     FUZZY(1),
     SPEED(1),
+    SUPERSPEED(1),
     INVERTER(1),
     PATTERN_CAPACITY(1),
     ORE_FILTER(1);
