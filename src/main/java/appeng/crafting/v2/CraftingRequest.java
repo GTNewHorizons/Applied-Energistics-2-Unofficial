@@ -117,6 +117,9 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> {
         if (input == null || input.getStackSize() < 0) {
             throw new IllegalArgumentException("Can't fulfill crafting request with a negative amount of " + input);
         }
+        if (input.getStackSize() == 0) {
+            return;
+        }
         final long consumed = Math.max(0L, this.remainingToProcess);
         final long remaining = input.getStackSize() - consumed;
         if (remaining > 0 && input instanceof IAEItemStack) {
@@ -125,6 +128,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> {
         this.byteCost += input.getStackSize();
         this.remainingToProcess -= input.getStackSize();
         this.resolvedInputs.add(input);
+        this.usedResolvers.add(origin);
     }
 
     /**
