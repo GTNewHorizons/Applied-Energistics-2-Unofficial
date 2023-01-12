@@ -34,8 +34,10 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
                 final long requestSize = Math.min(request.remainingToProcess, exactMatching.getStackSize());
                 final IAEItemStack extracted = context.itemModel.extractItems(
                         exactMatching.copy().setStackSize(requestSize), Actionable.MODULATE, context.actionSource);
-                request.fulfill(this, extracted, context);
-                removedFromSystem.add(extracted.copy());
+                if (extracted != null && extracted.getStackSize() > 0) {
+                    request.fulfill(this, extracted, context);
+                    removedFromSystem.add(extracted.copy());
+                }
             }
             // Extract fuzzy
             if (request.remainingToProcess > 0
@@ -50,6 +52,9 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
                         final long requestSize = Math.min(request.remainingToProcess, candidate.getStackSize());
                         final IAEItemStack extracted = context.itemModel.extractItems(
                                 candidate.copy().setStackSize(requestSize), Actionable.MODULATE, context.actionSource);
+                        if (extracted == null || extracted.getStackSize() <= 0) {
+                            continue;
+                        }
                         request.fulfill(this, extracted, context);
                         removedFromSystem.add(extracted.copy());
                     }

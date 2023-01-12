@@ -114,7 +114,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> {
      * Reduces the items needed to fulfill this request, and adds any leftovers into the item cache of the context.
      */
     public void fulfill(CraftingTask origin, StackType input, CraftingContext context) {
-        if (input.getStackSize() < 0) {
+        if (input == null || input.getStackSize() < 0) {
             throw new IllegalArgumentException("Can't fulfill crafting request with a negative amount of " + input);
         }
         final long consumed = Math.max(0L, this.remainingToProcess);
