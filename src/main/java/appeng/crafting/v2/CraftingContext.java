@@ -37,7 +37,13 @@ public final class CraftingContext {
     public final MECraftingInventory itemModel;
     /**
      * An initially blank inventory for keeping all crafting byproduct outputs in.
-     * Extract from here before extracting from {@link CraftingContext#itemModel}
+     * Extract from here before extracting from {@link CraftingContext#itemModel}. <p>
+     * It is separate from the item model, because at the end of the crafting calculation we must produce a list of items to extract from the system.
+     * When a crafting process puts those items back into the modelled inventory, and another process extract them the calculator would
+     * request withdrawing that byproduct directly from AE when setting up the crafting CPU.
+     * This would be wrong, it should assume that the item will be produced during crafting and does not need to be initially present in the system, which we achieve by separating byproducts.
+     *
+     * @see appeng.crafting.v2.resolvers.ExtractItemResolver ExtractItemResolver - separates the items extracted from AE vs from byproducts for the crafting plan
      */
     public final MECraftingInventory byproductsInventory;
     /**
