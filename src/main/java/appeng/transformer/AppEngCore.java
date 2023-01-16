@@ -46,6 +46,7 @@ public final class AppEngCore extends DummyModContainer implements IFMLLoadingPl
         this.metadata.url = "http://ae2.ae-mod.info";
         this.metadata.logoFile = "assets/appliedenergistics2/meta/logo.png";
         this.metadata.description = "Embedded Coremod for Applied Energistics 2";
+        this.metadata.parent = "appliedenergistics2";
     }
 
     @EventHandler
