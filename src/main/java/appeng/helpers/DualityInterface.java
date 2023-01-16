@@ -496,25 +496,29 @@ public class DualityInterface
             return this.hasWorkToDo() ? TickRateModulation.SLOWER : TickRateModulation.SLEEP;
         }
 
+        boolean sentItems = false;
         if (this.hasItemsToSend()) {
-            this.pushItemsOut(this.iHost.getTargets());
+            sentItems = this.pushItemsOut(this.iHost.getTargets());
         }
 
         final boolean couldDoWork = this.updateStorage();
-        return this.hasWorkToDo()
+        final boolean hasWorkToDo = this.hasWorkToDo();
+        return (hasWorkToDo || (sentItems && this.hasItemsToSend()))
                 ? (couldDoWork ? TickRateModulation.URGENT : TickRateModulation.SLOWER)
                 : TickRateModulation.SLEEP;
     }
 
-    private void pushItemsOut(final EnumSet<ForgeDirection> possibleDirections) {
+    // Returns if it successfully sent some items
+    private boolean pushItemsOut(final EnumSet<ForgeDirection> possibleDirections) {
         if (!this.hasItemsToSend()) {
-            return;
+            return false;
         }
 
         final TileEntity tile = this.iHost.getTileEntity();
         final World w = tile.getWorldObj();
 
         final Iterator<ItemStack> i = this.waitingToSend.iterator();
+        boolean sentSomething = false;
         while (i.hasNext()) {
             ItemStack whatToSend = i.next();
 
@@ -534,8 +538,10 @@ public class DualityInterface
                 }
                 if (Result == null) {
                     whatToSend = null;
+                    sentSomething = true;
                 } else {
-                    whatToSend.stackSize -= whatToSend.stackSize - Result.stackSize;
+                    sentSomething |= Result.stackSize < whatToSend.stackSize;
+                    whatToSend.stackSize = Result.stackSize;
                 }
 
                 if (whatToSend == null) {
@@ -551,6 +557,7 @@ public class DualityInterface
         if (this.waitingToSend.isEmpty()) {
             this.waitingToSend = null;
         }
+        return sentSomething;
     }
 
     private boolean updateStorage() {
@@ -894,12 +901,30 @@ public class DualityInterface
     private static boolean acceptsItems(
             final InventoryAdaptor ad, final InventoryCrafting table, final InsertionMode insertionMode) {
         for (int x = 0; x < table.getSizeInventory(); x++) {
-            final ItemStack is = table.getStackInSlot(x);
+            ItemStack is = table.getStackInSlot(x);
             if (is == null) {
                 continue;
             }
-
-            if (ad.simulateAdd(is.copy(), insertionMode) != null) {
+            is = is.copy();
+            boolean moreItemsMayFit;
+            do {
+                final int originalCount = is.stackSize;
+                final ItemStack remainingAfterSimulatedAdd = ad.simulateAdd(is.copy(), insertionMode);
+                final int remainingCount;
+                if (remainingAfterSimulatedAdd != null) {
+                    if (remainingAfterSimulatedAdd.isItemEqual(is)) {
+                        remainingCount = originalCount - remainingAfterSimulatedAdd.stackSize;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    remainingCount = 0;
+                }
+                is.stackSize = remainingCount;
+                moreItemsMayFit = (remainingCount > 0) && (remainingCount < originalCount);
+            } while (moreItemsMayFit);
+            if (is.stackSize > 0) {
+                // Can't fit all of the items
                 return false;
             }
         }

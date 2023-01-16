@@ -98,6 +98,7 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
     /**
      * @param insertionMode advice implementation on how ItemStacks should be inserted. Might not has an effect whatsoever!
+     * @return The leftover itemstack, or null if everything could be inserted
      */
     public ItemStack simulateAdd(ItemStack toBeSimulated, InsertionMode insertionMode) {
         return simulateAdd(toBeSimulated);
