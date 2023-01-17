@@ -542,6 +542,7 @@ public class DualityInterface
                 } else {
                     sentSomething |= Result.stackSize < whatToSend.stackSize;
                     whatToSend.stackSize = Result.stackSize;
+                    whatToSend.setTagCompound(Result.getTagCompound());
                 }
 
                 if (whatToSend == null) {
