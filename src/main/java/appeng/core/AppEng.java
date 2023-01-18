@@ -30,11 +30,9 @@ import appeng.integration.IntegrationRegistry;
 import appeng.recipes.CustomRecipeConfig;
 import appeng.recipes.CustomRecipeForgeConfiguration;
 import appeng.server.AECommand;
-import appeng.services.VersionChecker;
 import appeng.services.export.ExportConfig;
 import appeng.services.export.ExportProcess;
 import appeng.services.export.ForgeExportConfig;
-import appeng.services.version.VersionCheckerConfig;
 import appeng.util.Platform;
 import com.google.common.base.Stopwatch;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -119,13 +117,11 @@ public final class AppEng {
 
         final File configFile = new File(this.configDirectory, "AppliedEnergistics2.cfg");
         final File facadeFile = new File(this.configDirectory, "Facades.cfg");
-        final File versionFile = new File(this.configDirectory, "VersionChecker.cfg");
         final File recipeFile = new File(this.configDirectory, "CustomRecipes.cfg");
         final Configuration recipeConfiguration = new Configuration(recipeFile);
 
         AEConfig.instance = new AEConfig(configFile);
         FacadeConfig.instance = new FacadeConfig(facadeFile);
-        final VersionCheckerConfig versionCheckerConfig = new VersionCheckerConfig(versionFile);
         this.customRecipeConfig = new CustomRecipeForgeConfiguration(recipeConfiguration);
         this.exportConfig = new ForgeExportConfig(recipeConfiguration);
 
@@ -141,13 +137,6 @@ public final class AppEng {
         }
 
         this.registration.preInitialize(event);
-
-        if (versionCheckerConfig.isVersionCheckingEnabled()) {
-            final VersionChecker versionChecker = new VersionChecker(versionCheckerConfig);
-            final Thread versionCheckerThread = new Thread(versionChecker);
-
-            this.startService("AE2 VersionChecker", versionCheckerThread);
-        }
 
         AELog.info("Pre Initialization ( ended after " + watch.elapsed(TimeUnit.MILLISECONDS) + "ms )");
     }

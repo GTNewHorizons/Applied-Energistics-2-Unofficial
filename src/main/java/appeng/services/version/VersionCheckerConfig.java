@@ -18,6 +18,7 @@
 
 package appeng.services.version;
 
+import appeng.core.AELog;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Date;
@@ -52,6 +53,7 @@ public final class VersionCheckerConfig {
      * @param file requires fully qualified file in which the config is saved
      */
     public VersionCheckerConfig(@Nonnull final File file) {
+        AELog.warn("The version checker has been removed, you should not use it !");
         Preconditions.checkNotNull(file);
         Preconditions.checkState(!file.isDirectory());
 
@@ -93,7 +95,7 @@ public final class VersionCheckerConfig {
     }
 
     public boolean isVersionCheckingEnabled() {
-        return this.isEnabled;
+        return false;
     }
 
     public String lastCheck() {
