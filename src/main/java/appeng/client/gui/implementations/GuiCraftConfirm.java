@@ -44,10 +44,7 @@ import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import com.google.common.base.Joiner;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -424,8 +421,25 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 is.setStackSize(amt);
             }
         }
-
+        this.sortItems();
         this.setScrollBar();
+    }
+
+    Comparator<IAEItemStack> comparator = (i1, i2) -> {
+        if (missing.findPrecise(i1) != null) {
+            if (missing.findPrecise(i2) != null) return 0;
+            return -1;
+        } else if (missing.findPrecise(i2) != null) {
+            return 1;
+        } else {
+            return 0;
+        }
+    };
+
+    private void sortItems() {
+        if (!this.missing.isEmpty()) {
+            this.visual.sort(comparator);
+        }
     }
 
     private void handleInput(final IItemList<IAEItemStack> s, final IAEItemStack l) {
