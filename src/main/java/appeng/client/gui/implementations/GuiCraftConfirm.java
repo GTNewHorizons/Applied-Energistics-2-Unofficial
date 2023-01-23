@@ -36,6 +36,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.WirelessTerminalGuiObject;
+import appeng.integration.modules.NEI;
 import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartPatternTerminal;
 import appeng.parts.reporting.PartPatternTerminalEx;
@@ -527,6 +528,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         }
 
         if (btn == this.cancel) {
+            this.addMissingItemsToBookMark();
             switchToOriginalGUI();
         }
 
@@ -577,5 +579,25 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
     public boolean hideItemPanelSlot(int x, int y, int w, int h) {
         return cpuTable.hideItemPanelSlot(x - guiLeft, y - guiTop, w, h);
+    }
+
+    protected void addMissingItemsToBookMark() {
+        if (!this.missing.isEmpty() && isShiftKeyDown()) {
+            for (IAEItemStack iaeItemStack : this.missing) {
+                NEI.instance.addItemToBookMark(iaeItemStack.getItemStack());
+            }
+        }
+    }
+
+    public IItemList<IAEItemStack> getStorage() {
+        return this.storage;
+    }
+
+    public IItemList<IAEItemStack> getPending() {
+        return this.pending;
+    }
+
+    public IItemList<IAEItemStack> getMissing() {
+        return this.missing;
     }
 }

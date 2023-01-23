@@ -30,6 +30,8 @@ import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
 import appeng.integration.abstraction.INEI;
 import appeng.integration.modules.NEIHelpers.*;
+import codechicken.nei.ItemsGrid;
+import codechicken.nei.LayoutManager;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.IStackPositioner;
 import codechicken.nei.guihook.GuiContainerManager;
@@ -60,9 +62,9 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     @Reflected
     public NEI() throws ClassNotFoundException {
         IntegrationHelper.testClassExistence(this, codechicken.nei.api.API.class);
-        IntegrationHelper.testClassExistence(this, codechicken.nei.api.IStackPositioner.class);
-        IntegrationHelper.testClassExistence(this, codechicken.nei.guihook.GuiContainerManager.class);
-        IntegrationHelper.testClassExistence(this, codechicken.nei.guihook.IContainerTooltipHandler.class);
+        IntegrationHelper.testClassExistence(this, IStackPositioner.class);
+        IntegrationHelper.testClassExistence(this, GuiContainerManager.class);
+        IntegrationHelper.testClassExistence(this, IContainerTooltipHandler.class);
         IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.ICraftingHandler.class);
         IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.IUsageHandler.class);
 
@@ -204,5 +206,11 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         if (gui instanceof GuiCraftConfirm) return ((GuiCraftConfirm) gui).getHoveredStack() == null;
         if (gui instanceof GuiCraftingCPU) return ((GuiCraftingCPU) gui).getHoveredStack() == null;
         return true;
+    }
+
+    public void addItemToBookMark(ItemStack itemStack) {
+        ItemsGrid grid = LayoutManager.bookmarkPanel.getGrid();
+        grid.setPage(grid.getNumPages() - 1);
+        LayoutManager.bookmarkPanel.addItem(itemStack);
     }
 }
