@@ -29,6 +29,7 @@ import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
+import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageChannel;
@@ -54,6 +55,7 @@ import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.inv.WrapperInventoryRange;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
@@ -280,6 +282,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         return new TickingRequest(TickRates.IOPort.getMin(), TickRates.IOPort.getMax(), this.hasWork(), false);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
         if (!this.getProxy().isActive()) {
@@ -324,7 +327,32 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                     if (ItemsToMove > 0) {
                         final IMEInventory<IAEItemStack> itemInv = this.getInv(is, StorageChannel.ITEMS);
                         final IMEInventory<IAEFluidStack> fluidInv = this.getInv(is, StorageChannel.FLUIDS);
-
+                        if (itemInv instanceof ICellInventoryHandler) {
+                            long storeItems = ((ICellInventoryHandler) itemInv)
+                                    .getCellInv()
+                                    .getStoredItemCount();
+                            ItemsToMove += Math.round(((3L * this.getInstalledUpgrades(Upgrades.SUPERSPEED)
+                                                    + this.getInstalledUpgrades(Upgrades.SPEED))
+                                            * storeItems)
+                                    / 1000D);
+                        } else if (fluidInv != null) {
+                            try {
+                                // fc cells
+                                Object cellInv = fluidInv.getClass()
+                                        .getDeclaredMethod("getCellInv")
+                                        .invoke(fluidInv);
+                                long storeFluids = (long) cellInv.getClass()
+                                        .getDeclaredMethod("getStoredFluidCount")
+                                        .invoke(cellInv);
+                                ItemsToMove += Math.round(((3L * this.getInstalledUpgrades(Upgrades.SUPERSPEED)
+                                                        + this.getInstalledUpgrades(Upgrades.SPEED))
+                                                * storeFluids)
+                                        / 1000D);
+                            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+                                // ec2 cells
+                                ItemsToMove *= 2048;
+                            }
+                        }
                         if (this.manager.getSetting(Settings.OPERATION_MODE) == OperationMode.EMPTY) {
                             if (itemInv != null) {
                                 ItemsToMove = this.transferContents(
