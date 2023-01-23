@@ -112,7 +112,6 @@ import net.minecraftforge.oredict.OreDictionary;
  * @since rv0
  */
 public class Platform {
-    public static final int maxExtractPower = 9999;
 
     public static final Block AIR_BLOCK = Blocks.air;
 
@@ -1268,7 +1267,7 @@ public class Platform {
         if (possible != null) {
             stored -= possible.getStackSize();
         }
-        stored = Math.min(maxExtractPower, stored);
+
         final double availablePower = energy.extractAEPower(stored, Actionable.SIMULATE, PowerMultiplier.CONFIG);
 
         final long itemToAdd = Math.min((long) (availablePower + 0.9), stored);
