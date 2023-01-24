@@ -1303,14 +1303,15 @@ public class Platform {
         return input;
     }
 
+    @SuppressWarnings("unchecked")
     public static void postChanges(
             final IStorageGrid gs, final ItemStack removed, final ItemStack added, final BaseActionSource src) {
         final IItemList<IAEItemStack> itemChanges = AEApi.instance().storage().createItemList();
         final IItemList<IAEFluidStack> fluidChanges = AEApi.instance().storage().createFluidList();
-
+        IMEInventory<IAEItemStack> myItems = null;
+        IMEInventory<IAEFluidStack> myFluids = null;
         if (removed != null) {
-            final IMEInventory<IAEItemStack> myItems =
-                    AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.ITEMS);
+            myItems = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.ITEMS);
 
             if (myItems != null) {
                 for (final IAEItemStack is : myItems.getAvailableItems(itemChanges)) {
@@ -1318,8 +1319,7 @@ public class Platform {
                 }
             }
 
-            final IMEInventory<IAEFluidStack> myFluids =
-                    AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.FLUIDS);
+            myFluids = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.FLUIDS);
 
             if (myFluids != null) {
                 for (final IAEFluidStack is : myFluids.getAvailableItems(fluidChanges)) {
@@ -1329,22 +1329,23 @@ public class Platform {
         }
 
         if (added != null) {
-            final IMEInventory<IAEItemStack> myItems =
-                    AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.ITEMS);
+            myItems = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.ITEMS);
 
             if (myItems != null) {
                 myItems.getAvailableItems(itemChanges);
             }
 
-            final IMEInventory<IAEFluidStack> myFluids =
-                    AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.FLUIDS);
+            myFluids = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.FLUIDS);
 
             if (myFluids != null) {
                 myFluids.getAvailableItems(fluidChanges);
             }
         }
-
-        gs.postAlterationOfStoredItems(StorageChannel.ITEMS, itemChanges, src);
+        if (myItems == null) {
+            gs.postAlterationOfStoredItems(StorageChannel.FLUIDS, fluidChanges, src);
+        } else {
+            gs.postAlterationOfStoredItems(StorageChannel.ITEMS, itemChanges, src);
+        }
     }
 
     public static <T extends IAEStack<T>> void postListChanges(
