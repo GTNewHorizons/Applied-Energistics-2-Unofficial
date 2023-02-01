@@ -51,6 +51,7 @@ import appeng.core.features.IFeatureHandler;
 import appeng.core.features.registries.P2PTunnelRegistry;
 import appeng.core.features.registries.entries.BasicCellHandler;
 import appeng.core.features.registries.entries.CreativeCellHandler;
+import appeng.core.features.registries.entries.VoidCellHandler;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.stats.PlayerStatsRegistration;
@@ -508,6 +509,7 @@ public final class Registration {
 
         registries.cell().addCellHandler(new BasicCellHandler());
         registries.cell().addCellHandler(new CreativeCellHandler());
+        registries.cell().addCellHandler(new VoidCellHandler());
 
         for (final ItemStack ammoStack : api.definitions().materials().matterBall().maybeStack(1).asSet()) {
             final double weight = 32;
@@ -628,6 +630,22 @@ public final class Registration {
         Upgrades.FUZZY.registerItem(items.cell16384k(), 1);
         Upgrades.INVERTER.registerItem(items.cell16384k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell16384k(), 1);
+
+        Upgrades.FUZZY.registerItem(items.cellVoid(), 1);
+        Upgrades.INVERTER.registerItem(items.cellVoid(), 1);
+        Upgrades.ORE_FILTER.registerItem(items.cellVoid(), 1);
+
+        Upgrades.FUZZY.registerItem(items.cellContainer(), 1);
+        Upgrades.INVERTER.registerItem(items.cellContainer(), 1);
+        Upgrades.ORE_FILTER.registerItem(items.cellContainer(), 1);
+
+        Upgrades.FUZZY.registerItem(items.cellQuantum(), 1);
+        Upgrades.INVERTER.registerItem(items.cellQuantum(), 1);
+        Upgrades.ORE_FILTER.registerItem(items.cellQuantum(), 1);
+
+        Upgrades.FUZZY.registerItem(items.cellSingularity(), 1);
+        Upgrades.INVERTER.registerItem(items.cellSingularity(), 1);
+        Upgrades.ORE_FILTER.registerItem(items.cellSingularity(), 1);
 
         Upgrades.FUZZY.registerItem(items.portableCell(), 1);
         Upgrades.INVERTER.registerItem(items.portableCell(), 1);

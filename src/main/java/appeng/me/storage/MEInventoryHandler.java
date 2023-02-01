@@ -32,7 +32,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     private AccessRestriction cachedAccessRestriction;
     private boolean hasReadAccess;
-    private boolean hasWriteAccess;
+    protected boolean hasWriteAccess;
 
     public MEInventoryHandler(final IMEInventory<T> i, final StorageChannel channel) {
         if (i instanceof IMEInventoryHandler) {
@@ -47,7 +47,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         this.myPartitionList = new DefaultPriorityList<T>();
     }
 
-    IncludeExclude getWhitelist() {
+    public IncludeExclude getWhitelist() {
         return this.myWhitelist;
     }
 

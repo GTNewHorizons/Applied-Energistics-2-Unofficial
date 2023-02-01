@@ -191,7 +191,9 @@ public enum GuiText {
     HoldShiftForTooltip,
 
     // Used in a ME Interface when no appropriate TileEntity was detected near it
-    Nothing;
+    Nothing,
+
+    VoidCellTooltip;
 
     private final String root;
 
@@ -208,6 +210,6 @@ public enum GuiText {
     }
 
     public String getUnlocalized() {
-        return this.root + '.' + this.toString();
+        return this.root + '.' + this;
     }
 }

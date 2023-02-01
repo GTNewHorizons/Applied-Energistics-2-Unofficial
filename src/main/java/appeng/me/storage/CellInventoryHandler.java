@@ -80,9 +80,9 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
 
                 if (!priorityList.isEmpty()) {
                     if (hasFuzzy) {
-                        this.setPartitionList(new FuzzyPriorityList<IAEItemStack>(priorityList, fzMode));
+                        this.setPartitionList(new FuzzyPriorityList<>(priorityList, fzMode));
                     } else {
-                        this.setPartitionList(new PrecisePriorityList<IAEItemStack>(priorityList));
+                        this.setPartitionList(new PrecisePriorityList<>(priorityList));
                     }
                 }
             }
@@ -92,11 +92,9 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
     @Override
     public ICellInventory getCellInv() {
         Object o = this.getInternal();
-
         if (o instanceof MEPassThrough) {
-            o = ((MEPassThrough) o).getInternal();
+            o = ((MEPassThrough<?>) o).getInternal();
         }
-
         return (ICellInventory) (o instanceof ICellInventory ? o : null);
     }
 

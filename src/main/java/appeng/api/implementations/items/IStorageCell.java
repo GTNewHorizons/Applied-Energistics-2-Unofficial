@@ -30,13 +30,18 @@ import appeng.api.storage.data.IAEItemStack;
  */
 public interface IStorageCell extends ICellWorkbenchItem {
 
+    @Deprecated
+    int getBytes(ItemStack cellItem);
+
     /**
-     * It wont work if the return is not a multiple of 8. The limit is ({@link Integer#MAX_VALUE} + 1) / 8.
+     * It won't work if the return is not a multiple of 8. The limit is ({@link Long#MAX_VALUE} + 1) / 8.
      *
      * @param cellItem item
      * @return number of bytes
      */
-    int getBytes(ItemStack cellItem);
+    default long getBytesLong(ItemStack cellItem) {
+        return getBytes(cellItem);
+    }
 
     /**
      * Determines the number of bytes used for any type included on the cell.

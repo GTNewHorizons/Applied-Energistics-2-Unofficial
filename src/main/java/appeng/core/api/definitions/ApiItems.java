@@ -61,6 +61,7 @@ public final class ApiItems implements IItems {
     private final IItemDefinition portableCell;
 
     private final IItemDefinition cellCreative;
+    private final IItemDefinition cellVoid;
     private final IItemDefinition viewCell;
 
     private final IItemDefinition cell1k;
@@ -71,6 +72,9 @@ public final class ApiItems implements IItems {
     private final IItemDefinition cell1024k;
     private final IItemDefinition cell4096k;
     private final IItemDefinition cell16384k;
+    private final IItemDefinition cellContainer;
+    private final IItemDefinition cellQuantum;
+    private final IItemDefinition cellSingularity;
 
     private final IItemDefinition spatialCell2;
     private final IItemDefinition spatialCell16;
@@ -122,6 +126,7 @@ public final class ApiItems implements IItems {
         this.portableCell = constructor.registerItemDefinition(new ToolPortableCell());
 
         this.cellCreative = constructor.registerItemDefinition(new ItemCreativeStorageCell());
+        this.cellVoid = constructor.registerItemDefinition(new ItemVoidStorageCell());
         this.viewCell = constructor.registerItemDefinition(new ItemViewCell());
 
         this.cell1k = constructor.registerItemDefinition(new ItemBasicStorageCell(MaterialType.Cell1kPart, 1));
@@ -135,6 +140,13 @@ public final class ApiItems implements IItems {
                 .registerItemDefinition(new ItemAdvancedStorageCell(MaterialType.Cell4096kPart, 4096));
         this.cell16384k = constructor
                 .registerItemDefinition(new ItemAdvancedStorageCell(MaterialType.Cell16384kPart, 16384));
+
+        this.cellContainer = constructor
+                .registerItemDefinition(new ItemExtremeStorageCell("Container", 65536, 1, 8, 2D));
+        this.cellQuantum = constructor
+                .registerItemDefinition(new ItemExtremeStorageCell("Quantum", Integer.MAX_VALUE / 16, 63, 8, 1000D));
+        this.cellSingularity = constructor.registerItemDefinition(
+                new ItemExtremeStorageCell("Singularity", Long.MAX_VALUE / 16, 1, 4096, 15000D));
 
         this.spatialCell2 = constructor.registerItemDefinition(new ItemSpatialStorageCell(2));
         this.spatialCell16 = constructor.registerItemDefinition(new ItemSpatialStorageCell(16));
@@ -273,6 +285,11 @@ public final class ApiItems implements IItems {
     }
 
     @Override
+    public IItemDefinition cellVoid() {
+        return this.cellVoid;
+    }
+
+    @Override
     public IItemDefinition viewCell() {
         return this.viewCell;
     }
@@ -315,6 +332,21 @@ public final class ApiItems implements IItems {
     @Override
     public IItemDefinition cell16384k() {
         return this.cell16384k;
+    }
+
+    @Override
+    public IItemDefinition cellContainer() {
+        return this.cellContainer;
+    }
+
+    @Override
+    public IItemDefinition cellQuantum() {
+        return this.cellQuantum;
+    }
+
+    @Override
+    public IItemDefinition cellSingularity() {
+        return this.cellSingularity;
     }
 
     @Override

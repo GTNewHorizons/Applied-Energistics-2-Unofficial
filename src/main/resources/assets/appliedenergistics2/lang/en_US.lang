@@ -254,6 +254,7 @@ gui.appliedenergistics2.Renamer=Custom Name: (Enter to set)
 gui.appliedenergistics2.OreFilterLabel=Ore dictionary filter
 gui.appliedenergistics2.HoldShiftForTooltip=Hold shift for extended tooltip
 gui.appliedenergistics2.Nothing=Nothing
+gui.appliedenergistics2.VoidCellTooltip=Deletes §4everything§7 stored on it
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
@@ -464,7 +465,11 @@ item.appliedenergistics2.ItemAdvancedStorageCell.256k.name=256k ME Storage Cell
 item.appliedenergistics2.ItemAdvancedStorageCell.1024k.name=1024k ME Storage Cell
 item.appliedenergistics2.ItemAdvancedStorageCell.4096k.name=4096k ME Storage Cell
 item.appliedenergistics2.ItemAdvancedStorageCell.16384k.name=16384k ME Storage Cell
+item.appliedenergistics2.ItemExtremeStorageCell.Container.name=ME Block Container Cell
+item.appliedenergistics2.ItemExtremeStorageCell.Quantum.name=ME Quantum Storage Cell
+item.appliedenergistics2.ItemExtremeStorageCell.Singularity.name=ME Digital Singularity Cell
 item.appliedenergistics2.ItemCreativeStorageCell.name=Creative ME Storage Cell
+item.appliedenergistics2.ItemVoidStorageCell.name=Void ME Storage Cell
 item.appliedenergistics2.ItemEncodedPattern.name=Encoded Pattern
 item.appliedenergistics2.ItemViewCell.name=View Cell
 item.appliedenergistics2.ItemFacade.name=Cable Facade

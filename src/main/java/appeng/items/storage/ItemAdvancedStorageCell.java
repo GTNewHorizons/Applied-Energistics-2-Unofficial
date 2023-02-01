@@ -15,7 +15,7 @@ import com.google.common.base.Optional;
 public class ItemAdvancedStorageCell extends ItemBasicStorageCell {
 
     @SuppressWarnings("Guava")
-    public ItemAdvancedStorageCell(final MaterialType whichCell, final int kilobytes) {
+    public ItemAdvancedStorageCell(final MaterialType whichCell, final long kilobytes) {
         super(Optional.of(kilobytes + "k"));
 
         this.setFeature(EnumSet.of(AEFeature.StorageCells));

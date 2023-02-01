@@ -441,7 +441,7 @@ public class CellInventory implements ICellInventory {
 
     @Override
     public long getTotalBytes() {
-        return this.cellType.getBytes(this.cellItem);
+        return this.cellType.getBytesLong(this.cellItem);
     }
 
     @Override

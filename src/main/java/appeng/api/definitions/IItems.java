@@ -66,6 +66,8 @@ public interface IItems {
 
     IItemDefinition cellCreative();
 
+    IItemDefinition cellVoid();
+
     IItemDefinition viewCell();
 
     IItemDefinition cell1k();
@@ -83,6 +85,12 @@ public interface IItems {
     IItemDefinition cell4096k();
 
     IItemDefinition cell16384k();
+
+    IItemDefinition cellContainer();
+
+    IItemDefinition cellQuantum();
+
+    IItemDefinition cellSingularity();
 
     IItemDefinition spatialCell2();
 

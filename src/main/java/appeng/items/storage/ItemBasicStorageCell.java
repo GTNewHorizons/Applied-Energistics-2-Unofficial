@@ -56,12 +56,12 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, IItemGroup {
 
     protected MaterialType component;
-    protected int totalBytes;
+    protected long totalBytes;
     protected int perType;
     protected double idleDrain;
 
     @SuppressWarnings("Guava")
-    public ItemBasicStorageCell(final MaterialType whichCell, final int kilobytes) {
+    public ItemBasicStorageCell(final MaterialType whichCell, final long kilobytes) {
         super(Optional.of(kilobytes + "k"));
 
         this.setFeature(EnumSet.of(AEFeature.StorageCells));
@@ -155,6 +155,11 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
 
     @Override
     public int getBytes(final ItemStack cellItem) {
+        return (int) this.totalBytes;
+    }
+
+    @Override
+    public long getBytesLong(final ItemStack cellItem) {
         return this.totalBytes;
     }
 
