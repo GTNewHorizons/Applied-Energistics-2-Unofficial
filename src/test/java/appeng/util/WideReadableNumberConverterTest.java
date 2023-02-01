@@ -17,7 +17,7 @@ public final class WideReadableNumberConverterTest {
     private static final String RESULT_NEG_999999 = "-0M";
 
     private static final long NUMBER_NEG_9999 = -9999L;
-    private static final String RESULT_NEG_9999 = "-9K";
+    private static final String RESULT_NEG_9999 = "-9k";
 
     private static final long NUMBER_NEG_999 = -999L;
     private static final String RESULT_NEG_999 = "-999";
@@ -32,13 +32,13 @@ public final class WideReadableNumberConverterTest {
     private static final String RESULT_9999 = "9999";
 
     private static final long NUMBER_10000 = 10000L;
-    private static final String RESULT_10000 = "10K";
+    private static final String RESULT_10000 = "10k";
 
     private static final long NUMBER_10500 = 10500L;
-    private static final String RESULT_10500 = "10K";
+    private static final String RESULT_10500 = "10k";
 
     private static final long NUMBER_155555 = 155555L;
-    private static final String RESULT_155555 = "155K";
+    private static final String RESULT_155555 = "155k";
 
     private static final long NUMBER_9999999 = 9999999L;
     private static final String RESULT_9999999 = "9.9M";

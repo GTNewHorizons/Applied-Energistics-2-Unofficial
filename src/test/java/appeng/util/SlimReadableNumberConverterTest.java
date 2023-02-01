@@ -17,10 +17,10 @@ public final class SlimReadableNumberConverterTest {
     private static final String RESULT_NEG_999999 = "-0M";
 
     private static final long NUMBER_NEG_9999 = -9999L;
-    private static final String RESULT_NEG_9999 = "-9K";
+    private static final String RESULT_NEG_9999 = "-9k";
 
     private static final long NUMBER_NEG_999 = -999L;
-    private static final String RESULT_NEG_999 = "-0K";
+    private static final String RESULT_NEG_999 = "-0k";
 
     private static final long NUMBER_0 = 0L;
     private static final String RESULT_0 = "0";
@@ -29,13 +29,13 @@ public final class SlimReadableNumberConverterTest {
     private static final String RESULT_999 = "999";
 
     private static final long NUMBER_9999 = 9999L;
-    private static final String RESULT_9999 = "9K";
+    private static final String RESULT_9999 = "9k";
 
     private static final long NUMBER_10000 = 10000L;
-    private static final String RESULT_10000 = "10K";
+    private static final String RESULT_10000 = "10k";
 
     private static final long NUMBER_10500 = 10500L;
-    private static final String RESULT_10500 = "10K";
+    private static final String RESULT_10500 = "10k";
 
     private static final long NUMBER_155555 = 155555L;
     private static final String RESULT_155555 = ".1M";
