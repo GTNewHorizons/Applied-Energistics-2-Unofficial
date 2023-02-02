@@ -133,7 +133,7 @@ public class TileCharger extends AENetworkPowerTile implements ICrankable {
                 }
                 this.tickTickTimer = 20; // keep ticking...
             }
-        } else if (this.getInternalCurrentPower() == getInternalMaxPower()
+        } else if (this.getInternalCurrentPower() == getInternalMaxPower() / 16
                 && materials.certusQuartzCrystal().isSameAs(myItem)) {
                     if (Platform.getRandomFloat() > 0.8f) // simulate wait
                     {
