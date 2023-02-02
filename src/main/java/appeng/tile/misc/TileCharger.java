@@ -138,7 +138,7 @@ public class TileCharger extends AENetworkPowerTile implements ICrankable {
                     if (Platform.getRandomFloat() > 0.8f) // simulate wait
                     {
                         this.extractAEPower(
-                                this.getInternalMaxPower() / PowerMultiplier.CONFIG.multiplier,
+                                (this.getInternalMaxPower() / 16) / PowerMultiplier.CONFIG.multiplier,
                                 Actionable.MODULATE,
                                 PowerMultiplier.CONFIG); // 1500
 
@@ -176,7 +176,7 @@ public class TileCharger extends AENetworkPowerTile implements ICrankable {
             final IMaterials materials = AEApi.instance().definitions().materials();
 
             if (materials.certusQuartzCrystal().isSameAs(myItem)) {
-                this.extractAEPower(1500, Actionable.MODULATE, PowerMultiplier.CONFIG); // 1500
+                this.extractAEPower(this.getInternalMaxPower() / 16, Actionable.MODULATE, PowerMultiplier.CONFIG); // 1500
 
                 for (final ItemStack charged : materials.certusQuartzCrystalCharged().maybeStack(myItem.stackSize)
                         .asSet()) {
