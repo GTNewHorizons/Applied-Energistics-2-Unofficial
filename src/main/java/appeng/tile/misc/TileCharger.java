@@ -53,7 +53,7 @@ public class TileCharger extends AENetworkPowerTile implements ICrankable {
     public TileCharger() {
         this.getProxy().setValidSides(EnumSet.noneOf(ForgeDirection.class));
         this.getProxy().setFlags();
-        this.setInternalMaxPower(3200);
+        this.setInternalMaxPower(25600);
         this.getProxy().setIdlePowerUsage(0);
     }
 
@@ -176,7 +176,7 @@ public class TileCharger extends AENetworkPowerTile implements ICrankable {
             final IMaterials materials = AEApi.instance().definitions().materials();
 
             if (materials.certusQuartzCrystal().isSameAs(myItem)) {
-                this.extractAEPower(this.getInternalMaxPower(), Actionable.MODULATE, PowerMultiplier.CONFIG); // 1500
+                this.extractAEPower(1500, Actionable.MODULATE, PowerMultiplier.CONFIG); // 1500
 
                 for (final ItemStack charged : materials.certusQuartzCrystalCharged().maybeStack(myItem.stackSize)
                         .asSet()) {
