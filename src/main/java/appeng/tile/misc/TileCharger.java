@@ -53,7 +53,7 @@ public class TileCharger extends AENetworkPowerTile implements ICrankable {
     public TileCharger() {
         this.getProxy().setValidSides(EnumSet.noneOf(ForgeDirection.class));
         this.getProxy().setFlags();
-        this.setInternalMaxPower(1500);
+        this.setInternalMaxPower(3200);
         this.getProxy().setIdlePowerUsage(0);
     }
 
