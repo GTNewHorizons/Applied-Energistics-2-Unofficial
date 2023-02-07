@@ -8,6 +8,8 @@ import java.util.concurrent.TimeoutException;
 
 import net.minecraft.world.World;
 
+import org.apache.logging.log4j.Level;
+
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingCallback;
@@ -15,6 +17,7 @@ import appeng.api.networking.crafting.ICraftingJob;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.core.AELog;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingContext.RequestInProcessing;
 import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
@@ -97,6 +100,13 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob> {
         if (!taskState.needsMoreWork) {
             getByteTotal();
             this.state = State.FINISHED;
+            if (AELog.isCraftingDebugLogEnabled()) {
+                AELog.log(
+                        Level.DEBUG,
+                        "Crafting job for %s finished with resolved steps: %s\n",
+                        originalRequest.toString(),
+                        context.toString());
+            }
             if (callback != null) {
                 callback.calculationComplete(this);
             }

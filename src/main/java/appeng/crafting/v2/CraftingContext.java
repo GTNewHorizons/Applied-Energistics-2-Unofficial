@@ -2,6 +2,7 @@ package appeng.crafting.v2;
 
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -284,6 +285,11 @@ public final class CraftingContext {
      */
     public List<RequestInProcessing<?>> getLiveRequests() {
         return Collections.unmodifiableList(liveRequests);
+    }
+
+    @Override
+    public String toString() {
+        return getResolvedTasks().stream().map(rt -> "  " + rt.toString()).collect(Collectors.joining("\n"));
     }
 
     /**
