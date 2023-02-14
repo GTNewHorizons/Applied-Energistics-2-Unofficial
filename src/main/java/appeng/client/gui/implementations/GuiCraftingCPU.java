@@ -21,8 +21,6 @@ import java.util.concurrent.TimeUnit;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChatComponentTranslation;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
@@ -33,18 +31,14 @@ import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
-import appeng.api.util.DimensionalCoord;
-import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ISortSource;
-import appeng.client.render.BlockPosHighlighter;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
@@ -119,30 +113,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                 AELog.debug(e);
             }
         }
-    }
-
-    @Override
-    protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
-        if (hoveredStack != null && isShiftKeyDown()) {
-            NBTTagCompound data = Platform.openNbtData(hoveredStack);
-            WorldCoord blockPos2 = new WorldCoord(
-                    (int) mc.thePlayer.posX,
-                    (int) mc.thePlayer.posY,
-                    (int) mc.thePlayer.posZ);
-            for (DimensionalCoord blockPos : DimensionalCoord.readAsListFromNBT(data)) {
-                BlockPosHighlighter.highlightBlock(
-                        blockPos,
-                        System.currentTimeMillis() + 500 * WorldCoord.getTaxicabDistance(blockPos, blockPos2));
-                mc.thePlayer.addChatMessage(
-                        new ChatComponentTranslation(
-                                PlayerMessages.InterfaceHighlighted.getName(),
-                                blockPos.x,
-                                blockPos.y,
-                                blockPos.z));
-            }
-            mc.thePlayer.closeScreen();
-        }
-        super.mouseClicked(xCoord, yCoord, btn);
     }
 
     @Override
@@ -360,30 +330,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
 
         if (this.tooltip >= 0 && dspToolTip.length() > 0) {
             this.drawTooltip(toolPosX, toolPosY + 10, 0, dspToolTip);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    protected void addItemTooltip(ItemStack is, List<String> lineList) {
-        if (isShiftKeyDown()) {
-            List l = is.getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
-            if (!l.isEmpty()) l.remove(0);
-            lineList.addAll(l);
-            NBTTagCompound data = Platform.openNbtData(is);
-            List<DimensionalCoord> blocks = DimensionalCoord.readAsListFromNBT(data);
-            if (blocks.isEmpty()) return;
-            for (DimensionalCoord blockPos : blocks) {
-                lineList.add(
-                        String.format(
-                                "Dim:%s X:%s Y:%s Z:%s",
-                                blockPos.getDimension(),
-                                blockPos.x,
-                                blockPos.y,
-                                blockPos.z));
-            }
-            lineList.add(GuiText.HoldShiftClick_HIGHLIGHT_INTERFACE.getLocal());
-        } else {
-            lineList.add(GuiText.HoldShiftForTooltip.getLocal());
         }
     }
 

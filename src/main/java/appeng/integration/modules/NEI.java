@@ -36,7 +36,6 @@ import appeng.integration.abstraction.INEI;
 import appeng.integration.modules.NEIHelpers.*;
 import codechicken.nei.ItemsGrid;
 import codechicken.nei.LayoutManager;
-import codechicken.nei.SearchField.ISearchProvider;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.IStackPositioner;
 import codechicken.nei.guihook.GuiContainerManager;
@@ -54,7 +53,6 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     private Method registerRecipeHandler;
     private Method registerUsageHandler;
     private Method registerNEIGuiHandler;
-    private Method registerItemFilter;
 
     @Reflected
     public NEI() throws ClassNotFoundException {
@@ -76,8 +74,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
                 .getDeclaredMethod("registerUsageHandler", codechicken.nei.recipe.IUsageHandler.class);
         this.registerNEIGuiHandler = this.apiClass.getDeclaredMethod("registerNEIGuiHandler", INEIGuiHandler.class);
         registerNEIGuiHandler.invoke(apiClass, new NEIGuiHandler());
-        this.registerItemFilter = this.apiClass.getDeclaredMethod("addSearchProvider", ISearchProvider.class);
-        this.registerItemFilter.invoke(apiClass, new NEIOreDictionaryFilter());
+
         this.registerRecipeHandler(new NEIAEShapedRecipeHandler());
         this.registerRecipeHandler(new NEIAEShapelessRecipeHandler());
         this.registerRecipeHandler(new NEIInscriberRecipeHandler());

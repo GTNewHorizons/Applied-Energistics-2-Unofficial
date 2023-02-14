@@ -253,7 +253,6 @@ gui.appliedenergistics2.LargeFontCraft=+
 gui.appliedenergistics2.Renamer=Custom Name: (Enter to set)
 gui.appliedenergistics2.OreFilterLabel=Ore dictionary filter
 gui.appliedenergistics2.HoldShiftForTooltip=Hold shift for extended tooltip
-gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=Hold shift click to highlight interface
 gui.appliedenergistics2.Nothing=Nothing
 gui.appliedenergistics2.VoidCellTooltip=Deletes §4everything§7 stored on it
 

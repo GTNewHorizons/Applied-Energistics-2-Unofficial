@@ -13,10 +13,6 @@
 
 package appeng.api.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -69,46 +65,6 @@ public class DimensionalCoord extends WorldCoord {
 
     public boolean isEqual(final DimensionalCoord c) {
         return this.x == c.x && this.y == c.y && this.z == c.z && c.w == this.w;
-    }
-
-    private static void writeToNBT(final NBTTagCompound data, int x, int y, int z, int dimId) {
-        data.setInteger("dim", dimId);
-        data.setInteger("x", x);
-        data.setInteger("y", y);
-        data.setInteger("z", z);
-    }
-
-    public void writeToNBT(final NBTTagCompound data) {
-        writeToNBT(data, this.x, this.y, this.z, this.dimId);
-    }
-
-    public static void writeListToNBT(final NBTTagCompound tag, List<DimensionalCoord> list) {
-        int i = 0;
-        for (DimensionalCoord d : list) {
-            NBTTagCompound data = new NBTTagCompound();
-            writeToNBT(data, d.x, d.y, d.z, d.dimId);
-            tag.setTag("pos#" + i, data);
-            i++;
-        }
-    }
-
-    public static DimensionalCoord readFromNBT(final NBTTagCompound data) {
-        return new DimensionalCoord(
-                data.getInteger("x"),
-                data.getInteger("y"),
-                data.getInteger("z"),
-                data.getInteger("dim"));
-    }
-
-    public static List<DimensionalCoord> readAsListFromNBT(final NBTTagCompound tag) {
-        List<DimensionalCoord> list = new ArrayList<>();
-        int i = 0;
-        while (tag.hasKey("pos#" + i)) {
-            NBTTagCompound data = tag.getCompoundTag("pos#" + i);
-            list.add(readFromNBT(data));
-            i++;
-        }
-        return list;
     }
 
     @Override

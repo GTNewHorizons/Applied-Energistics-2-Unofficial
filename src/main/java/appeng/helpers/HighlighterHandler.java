@@ -1,7 +1,5 @@
 package appeng.helpers;
 
-import java.util.List;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -20,43 +18,42 @@ public class HighlighterHandler {
     }
 
     private static void renderHilightedBlock(RenderWorldLastEvent event) {
-        List<DimensionalCoord> list = BlockPosHighlighter.getHighlightedBlocks();
-        if (list.isEmpty()) {
+        DimensionalCoord c = BlockPosHighlighter.getHighlightedBlock();
+        if (c == null) {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
         int dimension = mc.theWorld.provider.dimensionId;
         long time = System.currentTimeMillis();
 
+        if (time > BlockPosHighlighter.getExpireHighlight()
+                || dimension != BlockPosHighlighter.getHighlightedBlock().getDimension()) {
+            BlockPosHighlighter.highlightBlock(null, -1);
+            return;
+        }
+
+        if (((time / 500) & 1) == 0) {
+            return;
+        }
+
         EntityPlayerSP p = mc.thePlayer;
         double doubleX = p.lastTickPosX + (p.posX - p.lastTickPosX) * event.partialTicks;
         double doubleY = p.lastTickPosY + (p.posY - p.lastTickPosY) * event.partialTicks;
         double doubleZ = p.lastTickPosZ + (p.posZ - p.lastTickPosZ) * event.partialTicks;
 
-        if (((time / 500) & 1) == 0) {
-            return;
-        }
-        if (time > BlockPosHighlighter.getExpireHighlight()) BlockPosHighlighter.clear();
-        for (DimensionalCoord c : list.toArray(new DimensionalCoord[0])) {
-            if (dimension != c.getDimension()) {
-                BlockPosHighlighter.remove(c);
-                if (BlockPosHighlighter.getHighlightedBlocks().isEmpty()) return;
-            }
+        GL11.glPushMatrix();
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glLineWidth(3);
+        GL11.glTranslated(-doubleX, -doubleY, -doubleZ);
 
-            GL11.glPushMatrix();
-            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-            GL11.glLineWidth(3);
-            GL11.glTranslated(-doubleX, -doubleY, -doubleZ);
+        GL11.glDisable(GL11.GL_DEPTH_TEST);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
 
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-            GL11.glDisable(GL11.GL_TEXTURE_2D);
+        GL11.glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+        renderHighLightedBlocksOutline(c.x, c.y, c.z);
 
-            GL11.glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-            renderHighLightedBlocksOutline(c.x, c.y, c.z);
-
-            GL11.glPopAttrib();
-            GL11.glPopMatrix();
-        }
+        GL11.glPopAttrib();
+        GL11.glPopMatrix();
     }
 
     static void renderHighLightedBlocksOutline(double x, double y, double z) {
