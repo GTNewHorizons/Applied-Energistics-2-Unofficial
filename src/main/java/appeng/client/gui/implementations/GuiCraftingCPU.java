@@ -131,10 +131,12 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                     (int) mc.thePlayer.posX,
                     (int) mc.thePlayer.posY,
                     (int) mc.thePlayer.posZ);
+            BlockPosHighlighter.clear();
             for (DimensionalCoord blockPos : DimensionalCoord.readAsListFromNBT(data)) {
                 BlockPosHighlighter.highlightBlock(
                         blockPos,
-                        System.currentTimeMillis() + 500 * WorldCoord.getTaxicabDistance(blockPos, blockPos2));
+                        System.currentTimeMillis() + 500 * WorldCoord.getTaxicabDistance(blockPos, blockPos2),
+                        false);
                 mc.thePlayer.addChatMessage(
                         new ChatComponentTranslation(
                                 PlayerMessages.InterfaceHighlighted.getName(),

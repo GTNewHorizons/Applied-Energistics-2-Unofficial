@@ -14,9 +14,17 @@ public class BlockPosHighlighter {
     private static final int max = min * 10;
 
     public static void highlightBlock(DimensionalCoord c, long expireHighlight) {
+        highlightBlock(c, expireHighlight, true);
+    }
+
+    public static void highlightBlock(DimensionalCoord c, long expireHighlight, boolean clear) {
+        if (clear) clear();
         highlightedBlocks.add(c);
-        BlockPosHighlighter.expireHighlight = Math
-                .min(System.currentTimeMillis() + max, Math.max(expireHighlight, System.currentTimeMillis() + min));
+        BlockPosHighlighter.expireHighlight = Math.max(
+                BlockPosHighlighter.expireHighlight,
+                Math.min(
+                        System.currentTimeMillis() + max,
+                        Math.max(expireHighlight, System.currentTimeMillis() + min)));
     }
 
     public static List<DimensionalCoord> getHighlightedBlocks() {
