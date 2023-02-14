@@ -54,6 +54,7 @@ import appeng.crafting.MECraftingInventory;
 import appeng.helpers.DualityInterface;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.IAECluster;
+import appeng.tile.AEBaseTile;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.Platform;
@@ -630,7 +631,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                             for (final IAEItemStack out : details.getCondensedOutputs()) {
                                 this.postChange(out, this.machineSrc);
-                                providers.computeIfAbsent(out, k -> new ArrayList<DimensionalCoord>());
+                                this.waitingFor.add(out.copy());
+                                this.postCraftingStatusChange(out.copy());
+                                providers.computeIfAbsent(out, k -> new ArrayList<>());
                                 List<DimensionalCoord> list = providers.get(out);
                                 if (m instanceof ICraftingProvider) {
                                     TileEntity tile = this.getTile(m);
@@ -647,8 +650,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                         list.add(tileDimensionalCoord);
                                     }
                                 }
-                                this.waitingFor.add(out.copy());
-                                this.postCraftingStatusChange(out.copy());
                             }
 
                             if (details.isCraftable()) {
@@ -739,7 +740,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (!job.supportsCPUCluster(this)) {
             return null;
         }
-
+        this.providers.clear();
         final IStorageGrid sg = g.getCache(IStorageGrid.class);
         final IMEInventory<IAEItemStack> storage = sg.getItemInventory();
         final MECraftingInventory ci = new MECraftingInventory(storage, true, false, false);
@@ -932,21 +933,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     public IAEItemStack getItemStack(final IAEItemStack what, final CraftingItemList storage2) {
         IAEItemStack is;
-        ItemStack itemStack;
         switch (storage2) {
             case STORAGE:
                 is = this.inventory.getItemList().findPrecise(what);
                 break;
             case ACTIVE:
                 is = this.waitingFor.findPrecise(what);
-                if (is != null) {
-                    itemStack = is.getItemStack();
-                    NBTTagCompound data = Platform.openNbtData(itemStack);
-                    DimensionalCoord.writeListToNBT(data, this.providers.getOrDefault(is, new ArrayList<>()));
-                    itemStack.setTagCompound(data);
-                    is = AEApi.instance().storage().createItemStack(itemStack);
-                    is.setStackSize(this.waitingFor.findPrecise(what).getStackSize());
-                }
                 break;
             case PENDING:
                 CraftingGridCache cache = null;
@@ -1200,8 +1192,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private TileEntity getTile(ICraftingMedium craftingProvider) {
+        if (craftingProvider instanceof DualityInterface) {
+            return ((DualityInterface) craftingProvider).getHost().getTile();
+        } else if (craftingProvider instanceof AEBaseTile) {
+            return ((AEBaseTile) craftingProvider).getTile();
+        }
         try {
-            Method method = craftingProvider.getClass().getDeclaredMethod("getTile");
+            Method method = craftingProvider.getClass().getMethod("getTile");
             return (TileEntity) method.invoke(craftingProvider);
         } catch (Exception ignored) {
             return null;
