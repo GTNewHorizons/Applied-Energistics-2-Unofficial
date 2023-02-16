@@ -84,6 +84,7 @@ import appeng.util.item.AEItemStack;
 import cofh.api.transport.IItemDuct;
 
 import com.google.common.collect.ImmutableSet;
+import cpw.mods.fml.common.Loader;
 
 public class DualityInterface implements IGridTickable, IStorageMonitorable, IInventoryDestination, IAEAppEngInventory,
         IConfigManagerHost, ICraftingProvider, IUpgradeableHost, IPriorityHost {
@@ -118,6 +119,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private List<ItemStack> waitingToSend = null;
     private IMEInventory<IAEItemStack> destination;
     private boolean isWorking = false;
+    protected static final boolean EIO = Loader.isModLoaded("EnderIO");
 
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
         this.gridProxy = networkProxy;
@@ -525,7 +527,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 ItemStack Result = whatToSend;
                 if (ad != null) {
                     Result = ad.addItems(whatToSend, getInsertionMode());
-                } else if (te instanceof IItemDuct) {
+                } else if (EIO && te instanceof IItemDuct) {
                     Result = ((IItemDuct) te).insertItem(s.getOpposite(), whatToSend);
                 }
                 if (Result == null) {
@@ -848,7 +850,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     this.pushItemsOut(possibleDirections);
                     return true;
                 }
-            } else if (te instanceof IItemDuct) {
+            } else if (EIO && te instanceof IItemDuct) {
                 boolean hadAcceptedSome = false;
                 for (int x = 0; x < table.getSizeInventory(); x++) {
                     final ItemStack is = table.getStackInSlot(x);
