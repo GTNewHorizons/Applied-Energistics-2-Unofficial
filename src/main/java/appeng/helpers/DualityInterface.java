@@ -25,6 +25,8 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.FluidTankInfo;
+import net.minecraftforge.fluids.IFluidHandler;
 
 import appeng.api.AEApi;
 import appeng.api.config.*;
@@ -768,9 +770,33 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return true;
     }
 
-    private boolean inventoryCountsAsEmpty(TileEntity te, InventoryAdaptor ad) {
+    private boolean gtMachineNoFluid(TileEntity te, ForgeDirection side) {
+        if (te instanceof IFluidHandler) {
+            FluidTankInfo[] infos = ((IFluidHandler) te).getTankInfo(side);
+            if (infos != null) {
+                for (FluidTankInfo info : infos) {
+                    if (info.fluid != null && info.fluid.amount > 0) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean shouldCheckFluid() {
+        String hostName = this.iHost.getClass().getName();
+        return hostName.contains("TileFluidInterface") || hostName.contains("PartFluidInterface");
+    }
+
+    private boolean inventoryCountsAsEmpty(TileEntity te, InventoryAdaptor ad, ForgeDirection side) {
         String name = te.getBlockType().getUnlocalizedName();
-        return (name.equals("gt.blockmachines") || name.equals("tile.interface")) && gtMachineHasOnlyCircuit(ad);
+        if (shouldCheckFluid()) {
+            return (name.equals("gt.blockmachines") || name.equals("tile.interface")) && gtMachineHasOnlyCircuit(ad)
+                    && gtMachineNoFluid(te, side);
+        } else {
+            return (name.equals("gt.blockmachines") || name.equals("tile.interface")) && gtMachineHasOnlyCircuit(ad);
+        }
     }
 
     @Override
@@ -809,7 +835,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
-                if (this.isBlocking() && ad.containsItems() && !inventoryCountsAsEmpty(te, ad)) continue;
+                if (this.isBlocking() && ad.containsItems() && !inventoryCountsAsEmpty(te, ad, s.getOpposite()))
+                    continue;
 
                 if (acceptsItems(ad, table, getInsertionMode())) {
                     for (int x = 0; x < table.getSizeInventory(); x++) {
@@ -866,7 +893,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 if (te != null && te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
                 final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
                 if (ad != null) {
-                    if (ad.simulateRemove(1, null, null) == null || inventoryCountsAsEmpty(te, ad)) {
+                    if (ad.simulateRemove(1, null, null) == null || inventoryCountsAsEmpty(te, ad, s.getOpposite())) {
                         allAreBusy = false;
                         break;
                     }
