@@ -144,7 +144,7 @@ public final class ApiItems implements IItems {
         this.cellContainer = constructor
                 .registerItemDefinition(new ItemExtremeStorageCell("Container", 65536, 1, 8, 2D));
         this.cellQuantum = constructor
-                .registerItemDefinition(new ItemExtremeStorageCell("Quantum", Integer.MAX_VALUE / 16, 63, 8, 1000D));
+                .registerItemDefinition(new ItemExtremeStorageCell("Quantum", Integer.MAX_VALUE / 16, 1, 8, 1000D));
         this.cellSingularity = constructor.registerItemDefinition(
                 new ItemExtremeStorageCell("Singularity", Long.MAX_VALUE / 16, 1, 4096, 15000D));
 
