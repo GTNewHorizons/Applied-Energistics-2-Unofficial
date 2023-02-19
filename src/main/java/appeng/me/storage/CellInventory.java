@@ -376,6 +376,12 @@ public class CellInventory implements ICellInventory {
                 ias.setStackSize(this.tagCompound.getInteger(itemSlotCount[x]));
                 if (ias.getStackSize() > 0) {
                     this.cellItems.add(ias);
+                } else {
+                    // Dirty Compact for EC2
+                    ias.setStackSize(this.tagCompound.getCompoundTag(itemSlots[x]).getLong("Cnt"));
+                    if (ias.getStackSize() > 0) {
+                        this.cellItems.add(ias);
+                    }
                 }
             }
         }
