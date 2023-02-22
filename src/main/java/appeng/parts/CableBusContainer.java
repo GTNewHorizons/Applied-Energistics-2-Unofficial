@@ -840,8 +840,8 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         if (Loader.isModLoaded("extracells") && Loader.isModLoaded("ae2fc")) {
             ItemStack item = ItemStack.loadItemStackFromNBT(part);
             ItemStack ec2part = new ItemStack(GameRegistry.findItem("extracells", "part.base"), 1, 2);
-            ItemStack fc2part = new ItemStack(GameRegistry.findItem("ae2fc", "part_fluid_storage_bus"), 1, 0);
             if (Platform.isSameItem(item, ec2part)) {
+                ItemStack fc2part = new ItemStack(GameRegistry.findItem("ae2fc", "part_fluid_storage_bus"), 1, 0);
                 tmp[0] = fc2part.writeToNBT(new NBTTagCompound());
                 NBTTagCompound data_new = new NBTTagCompound();
                 data_new.setTag("part", data.getCompoundTag("node").getCompoundTag("node0"));
