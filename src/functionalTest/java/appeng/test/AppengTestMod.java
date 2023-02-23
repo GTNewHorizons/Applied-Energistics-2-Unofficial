@@ -23,15 +23,24 @@ import org.junit.platform.reporting.legacy.xml.LegacyXmlReportGeneratingListener
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartedEvent;
+import gregtech.GT_Mod;
 
 // Most of these don't matter as this mod never gets published
 @Mod(
         modid = "appeng-tests",
         name = "AE2 Dev Tests",
         version = "1.0",
-        dependencies = "required-after:appliedenergistics2")
+        dependencies = "required-after:appliedenergistics2;required-after:gregtech")
 public class AppengTestMod {
+
+    @EventHandler
+    public void preInit(FMLPreInitializationEvent ev) {
+        // Disable GT5u messing with vanilla recipes for unit tests
+        GT_Mod.gregtechproxy.mNerfedWoodPlank = false;
+        GT_Mod.gregtechproxy.mNerfedVanillaTools = false;
+    }
 
     @EventHandler
     public void onServerStarted(FMLServerStartedEvent startedEv) {
