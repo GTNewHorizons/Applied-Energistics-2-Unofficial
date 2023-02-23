@@ -12,6 +12,7 @@ package appeng.parts.reporting;
 
 import java.io.IOException;
 
+import appeng.hooks.TickHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GLAllocation;
@@ -209,7 +210,7 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         super.finalize();
 
         if (this.dspList != null) {
-            GLAllocation.deleteDisplayLists(this.dspList);
+            TickHandler.INSTANCE.scheduleCallListDelete(dspList);
         }
     }
 
