@@ -156,6 +156,14 @@ public interface IBlocks {
 
     ITileDefinition craftingAccelerator16x();
 
+    IBlockDefinition craftingAccelerator64x();
+
+    IBlockDefinition craftingAccelerator256x();
+
+    IBlockDefinition craftingAccelerator1024x();
+
+    IBlockDefinition craftingAccelerator4096x();
+
     ITileDefinition craftingStorage1k();
 
     ITileDefinition craftingStorage4k();

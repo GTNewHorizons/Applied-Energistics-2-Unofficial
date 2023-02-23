@@ -104,6 +104,10 @@ public enum ExtraBlockTextures {
     BlockCraftingAccelerator("BlockCraftingAccelerator"),
     BlockCraftingAccelerator4x("BlockCraftingAccelerator4x"),
     BlockCraftingAccelerator16x("BlockCraftingAccelerator16x"),
+    BlockCraftingAccelerator64x("BlockCraftingAccelerator64x"),
+    BlockCraftingAccelerator256x("BlockCraftingAccelerator256x"),
+    BlockCraftingAccelerator1024x("BlockCraftingAccelerator1024x"),
+    BlockCraftingAccelerator4096x("BlockCraftingAccelerator4096x"),
     BlockCraftingMonitor("BlockCraftingMonitor"),
 
     BlockCraftingStorage1k("BlockCraftingStorage"),
@@ -118,6 +122,11 @@ public enum ExtraBlockTextures {
     BlockCraftingAcceleratorFit("BlockCraftingAcceleratorFit"),
     BlockCraftingAccelerator4xFit("BlockCraftingAccelerator4xFit"),
     BlockCraftingAccelerator16xFit("BlockCraftingAccelerator16xFit"),
+
+    BlockCraftingAccelerator64xFit("BlockCraftingAccelerator64xFit"),
+    BlockCraftingAccelerator256xFit("BlockCraftingAccelerator256xFit"),
+    BlockCraftingAccelerator1024xFit("BlockCraftingAccelerator1024xFit"),
+    BlockCraftingAccelerator4096xFit("BlockCraftingAccelerator4096xFit"),
 
     BlockCraftingMonitorFit_Light("BlockCraftingMonitorFit_Light"),
     BlockCraftingMonitorFit_Dark("BlockCraftingMonitorFit_Dark"),

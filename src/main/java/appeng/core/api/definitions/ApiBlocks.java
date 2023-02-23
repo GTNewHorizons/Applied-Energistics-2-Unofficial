@@ -87,9 +87,13 @@ public final class ApiBlocks implements IBlocks {
     private final ITileDefinition energyCellDense;
     private final ITileDefinition energyCellCreative;
     private final ITileDefinition craftingUnit;
+    private final ITileDefinition craftingAccelerator64x;
     private final ITileDefinition craftingAccelerator;
     private final ITileDefinition craftingAccelerator4x;
     private final ITileDefinition craftingAccelerator16x;
+    private final ITileDefinition craftingAccelerator256x;
+    private final ITileDefinition craftingAccelerator1024x;
+    private final ITileDefinition craftingAccelerator4096x;
     private final ITileDefinition craftingStorage1k;
     private final ITileDefinition craftingStorage4k;
     private final ITileDefinition craftingStorage16k;
@@ -180,6 +184,10 @@ public final class ApiBlocks implements IBlocks {
         this.craftingAccelerator = new WrappedDamageItemDefinition(this.craftingUnit, 1);
         this.craftingAccelerator4x = new WrappedDamageItemDefinition(this.craftingUnit, 2);
         this.craftingAccelerator16x = new WrappedDamageItemDefinition(this.craftingUnit, 3);
+        this.craftingAccelerator64x = constructor.registerTileDefinition(new BlockAdvancedCraftingUnit());
+        this.craftingAccelerator256x = new WrappedDamageItemDefinition(this.craftingAccelerator64x, 1);
+        this.craftingAccelerator1024x = new WrappedDamageItemDefinition(this.craftingAccelerator64x, 2);
+        this.craftingAccelerator4096x = new WrappedDamageItemDefinition(this.craftingAccelerator64x, 3);
         this.craftingStorage1k = constructor.registerTileDefinition(new BlockCraftingStorage());
         this.craftingStorage4k = new WrappedDamageItemDefinition(this.craftingStorage1k, 1);
         this.craftingStorage16k = new WrappedDamageItemDefinition(this.craftingStorage1k, 2);
@@ -558,6 +566,22 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition craftingAccelerator16x() {
         return this.craftingAccelerator16x;
+    }
+
+    public ITileDefinition craftingAccelerator64x() {
+        return this.craftingAccelerator64x;
+    }
+
+    public ITileDefinition craftingAccelerator256x() {
+        return this.craftingAccelerator256x;
+    }
+
+    public ITileDefinition craftingAccelerator1024x() {
+        return this.craftingAccelerator1024x;
+    }
+
+    public ITileDefinition craftingAccelerator4096x() {
+        return this.craftingAccelerator4096x;
     }
 
     @Override

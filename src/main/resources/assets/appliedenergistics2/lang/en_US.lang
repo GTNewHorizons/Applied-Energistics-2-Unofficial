@@ -54,6 +54,10 @@ tile.appliedenergistics2.BlockCraftingStorage16384k.name=16384k Crafting Storage
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Crafting Co-Processing Unit
 tile.appliedenergistics2.BlockCraftingAccelerator4x.name=Quad Core Co-Processing Unit
 tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 Core Co-Processing Unit
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 Core Co-Processing Unit
+tile.appliedenergistics2.BlockCraftingAccelerator256x.name=256 Core Co-Processing Unit
+tile.appliedenergistics2.BlockCraftingAccelerator1024x.name=1024 Core Co-Processing Unit
+tile.appliedenergistics2.BlockCraftingAccelerator4096x.name=4096 Core Co-Processing Unit
 tile.appliedenergistics2.BlockCraftingUnit.name=Crafting Unit
 tile.appliedenergistics2.BlockMolecularAssembler.name=Molecular Assembler
 
