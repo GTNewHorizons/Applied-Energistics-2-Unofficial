@@ -14,10 +14,7 @@ import java.util.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
-import gnu.trove.list.TIntList;
-import gnu.trove.list.array.TIntArrayList;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.ChunkEvent;
@@ -217,8 +214,7 @@ public class TickHandler {
     private void deleteCallLists() {
         // we have only one consumer, so this is safe
         // even if we missed some, we will delete them next tick.
-        while (!callListToDelete.isEmpty())
-            GLAllocation.deleteDisplayLists(callListToDelete.remove());
+        while (!callListToDelete.isEmpty()) GLAllocation.deleteDisplayLists(callListToDelete.remove());
     }
 
     private void tickColors(final HashMap<Integer, PlayerColor> playerSet) {
