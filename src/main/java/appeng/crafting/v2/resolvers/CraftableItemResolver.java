@@ -187,7 +187,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                         final CraftingRequest<IAEItemStack> slotRequest = complexRequestPerSlot.get(slot);
                         if (slotRequest != null) {
                             final IAEItemStack resolvedItem = (IAEItemStack) slotRequest.getOneResolvedType();
-                            inputs[slot] = resolvedItem;
+                            inputs[slot] = resolvedItem.copy();
                         }
                     }
                     final IAEItemStack[] leftovers = context.simulateComplexCrafting(inputs, pattern);
@@ -260,6 +260,15 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                         newChildren.add(req);
                         childRequests.add(new RequestAndPerCraftAmount(req, input.getStackSize()));
                     }
+                    // Try to fulfill container items (like GT tools) last to prevent them being frozen while other
+                    // ingredients are resolved
+                    newChildren.sort(
+                            Comparator
+                                    .<CraftingRequest<IAEItemStack>>comparingInt(
+                                            r -> r.stack.getItem().hasContainerItem(r.stack.getItemStack()) ? 1 : 0)
+                                    .thenComparingInt(
+                                            r -> r.stack.getItem().getItemStackLimit(r.stack.getItemStack()) == 1 ? 1
+                                                    : 0));
                 } else {
                     if (patternRecursionInputs.length > 0) {
                         for (IAEItemStack recInput : patternRecursionInputs) {

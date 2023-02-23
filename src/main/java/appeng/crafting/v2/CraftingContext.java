@@ -249,10 +249,12 @@ public final class CraftingContext {
         doingWork = false;
         if (!out.extraInputsRequired.isEmpty()) {
             final Set<ICraftingPatternDetails> parentPatterns = frontTask.request.patternParents;
-            out.extraInputsRequired.forEach(request -> {
+            // Last pushed gets resolved first, so iterate in reverse order to maintain array ordering
+            for (int ri = out.extraInputsRequired.size() - 1; ri >= 0; ri--) {
+                final CraftingRequest<?> request = out.extraInputsRequired.get(ri);
                 request.patternParents.addAll(parentPatterns);
                 this.addRequest(request);
-            });
+            }
         } else if (newState == CraftingTask.State.SUCCESS) {
             if (tasksToProcess.getFirst() != frontTask) {
                 throw new IllegalStateException("A crafting task got added to the queue without requesting more work.");
