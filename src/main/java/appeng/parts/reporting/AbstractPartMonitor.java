@@ -12,7 +12,6 @@ package appeng.parts.reporting;
 
 import java.io.IOException;
 
-import appeng.hooks.TickHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GLAllocation;
@@ -44,6 +43,7 @@ import appeng.client.ClientHelper;
 import appeng.core.AELog;
 import appeng.core.localization.PlayerMessages;
 import appeng.helpers.Reflected;
+import appeng.hooks.TickHandler;
 import appeng.me.GridAccessException;
 import appeng.util.IWideReadableNumberConverter;
 import appeng.util.Platform;
