@@ -442,7 +442,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             ICraftingPatternDetails pattern = patterns.get(0);
             if (context.isPatternComplex(pattern)) {
                 for (int i = 0; i < request.remainingToProcess; i++) {
-                    tasks.add(new CraftFromPatternTask(request, pattern, priority, false, true));
+                    tasks.add(new CraftFromPatternTask(request, pattern, priority, true, true));
                 }
             } else {
                 tasks.add(
