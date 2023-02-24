@@ -209,9 +209,9 @@ public final class CraftingContext {
                 continue;
             }
             Item item = mcOut.getItem();
-            if (item.hasContainerItem(mcOut)) {
-                ItemStack container = item.getContainerItem(mcOut);
-                if (container == null || container.stackSize <= 0) {
+            ItemStack container = Platform.getContainerItem(mcOut);
+            if (container != null) {
+                if (container.stackSize <= 0) {
                     output[i] = null;
                 } else {
                     output[i] = AEItemStack.create(container);
