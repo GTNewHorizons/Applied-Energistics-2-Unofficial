@@ -92,10 +92,19 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob> {
         final long startTime = System.currentTimeMillis();
         final long finishTime = startTime + milli;
         CraftingTask.State taskState = CraftingTask.State.NEEDS_MORE_WORK;
-        do {
-            taskState = context.doWork();
-            totalByteCost = -1;
-        } while (taskState.needsMoreWork && System.currentTimeMillis() < finishTime && (state == State.RUNNING));
+        try {
+            do {
+                taskState = context.doWork();
+                totalByteCost = -1;
+            } while (taskState.needsMoreWork && System.currentTimeMillis() < finishTime && (state == State.RUNNING));
+        } catch (Exception e) {
+            AELog.error(e, "Error while simulating crafting for " + originalRequest);
+            this.state = State.CANCELLED;
+            if (callback != null) {
+                callback.calculationComplete(this);
+            }
+            return false;
+        }
 
         if (!taskState.needsMoreWork) {
             getByteTotal();
