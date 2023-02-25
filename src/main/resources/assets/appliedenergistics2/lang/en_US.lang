@@ -103,6 +103,7 @@ chat.appliedenergistics2.TunnelHasNoOutputs=Tunnel has no outputs.
 chat.appliedenergistics2.TunnelOutputsAreAt=Tunnel outputs are at:
 chat.appliedenergistics2.InterfaceInOtherDim=Interface located at dimension: %d and cant be highlighted
 chat.appliedenergistics2.InterfaceHighlighted=The interface is now highlighted at %d, %d, %d
+chat.appliedenergistics2.CraftingItemsWentMissing=Could not start craft, ingredient went missing: %d * %s
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
 itemGroup.appliedenergistics2.facades=Applied Energistics 2 - Facades

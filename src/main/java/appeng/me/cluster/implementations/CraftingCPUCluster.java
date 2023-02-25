@@ -15,11 +15,13 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.IntStream;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
@@ -37,6 +39,7 @@ import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.events.MENetworkCraftingCpuChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
@@ -47,6 +50,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.container.ContainerNull;
 import appeng.core.AELog;
+import appeng.core.localization.PlayerMessages;
 import appeng.crafting.CraftBranchFailure;
 import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingWatcher;
@@ -787,6 +791,31 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 this.inventory.getItemList().resetStatus();
             }
         } catch (final CraftBranchFailure e) {
+
+            if (src instanceof PlayerSource) {
+                try {
+                    EntityPlayer player = ((PlayerSource) src).player;
+                    if (player != null) {
+                        final IAEItemStack missingStack = e.getMissing();
+                        String missingName = "?";
+                        long missingCount = -1;
+                        if (missingStack != null && missingStack.getItem() != null) {
+                            missingName = missingStack.getItem().getUnlocalizedName(missingStack.getItemStack());
+                            missingCount = missingStack.getStackSize();
+                        }
+                        player.addChatMessage(
+                                new ChatComponentTranslation(
+                                        PlayerMessages.CraftingItemsWentMissing.getName(),
+                                        missingCount,
+                                        missingName).appendText(" (")
+                                                .appendSibling(new ChatComponentTranslation(missingName + ".name"))
+                                                .appendText(")"));
+                    }
+                } catch (Exception ex) {
+                    AELog.error(ex, "Could not notify player of crafting failure");
+                }
+            }
+
             this.tasks.clear();
             this.providers.clear();
             this.inventory.getItemList().resetStatus();
