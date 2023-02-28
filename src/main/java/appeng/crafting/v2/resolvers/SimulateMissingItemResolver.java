@@ -41,6 +41,9 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
 
         @Override
         public long partialRefund(CraftingContext context, long amount) {
+            if (amount > fulfilled) {
+                amount = fulfilled;
+            }
             fulfilled -= amount;
             return amount;
         }
