@@ -338,4 +338,20 @@ public class CraftingV2Tests {
                 AEItemStack.create(withSize(bronzeIngot.copy(), 4)),
                 AEItemStack.create(withSize(bronzePlate.copy(), 0)).setCountRequestable(2));
     }
+
+    @Test
+    void partialMissingAmount() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(withSize(bronzePlate.copy(), 1));
+        aeSystem.newProcessingPattern().addInput(withSize(bronzePlate.copy(), 2)).addOutput(bronzeDoublePlate.copy())
+                .buildAndAdd();
+
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(withSize(bronzeDoublePlate.copy(), 1));
+        simulateJobAndCheck(job, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertEquals(true, job.isSimulation());
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(withSize(bronzePlate.copy(), 2)),
+                AEItemStack.create(withSize(bronzeDoublePlate.copy(), 0)).setCountRequestable(1));
+    }
 }
