@@ -214,7 +214,8 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                     // Need to refund some items as not everything could be crafted.
                     for (RequestAndPerCraftAmount inputChildPair : childRequests) {
                         final CraftingRequest<IAEItemStack> inputChild = inputChildPair.request;
-                        final long actuallyNeeded = Math.multiplyExact(inputChild.stack.getStackSize(), maxCraftable);
+                        final long actuallyNeeded = Math
+                                .multiplyExact(inputChild.stack.getStackSize() / toCraft, maxCraftable);
                         final long produced = inputChild.stack.getStackSize()
                                 - Math.max(inputChild.remainingToProcess, 0);
                         if (produced > actuallyNeeded) {
