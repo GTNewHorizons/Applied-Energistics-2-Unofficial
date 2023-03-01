@@ -68,7 +68,15 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
 
         @Override
         public String toString() {
-            return "ConjureItemTask{" + "request=" + request + ", priority=" + priority + ", state=" + state + '}';
+            return "ConjureItemTask{" + "fulfilled="
+                    + fulfilled
+                    + ", request="
+                    + request
+                    + ", priority="
+                    + priority
+                    + ", state="
+                    + state
+                    + '}';
         }
     }
 
