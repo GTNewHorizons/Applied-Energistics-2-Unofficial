@@ -291,7 +291,11 @@ public final class CraftingContext {
 
     @Override
     public String toString() {
-        return getResolvedTasks().stream().map(rt -> "  " + rt.toString()).collect(Collectors.joining("\n"));
+        final Set<CraftingTask<?>> processed = Collections.newSetFromMap(new IdentityHashMap<>());
+        return getResolvedTasks().stream().map(rt -> {
+            boolean isNew = processed.add(rt);
+            return (isNew ? "  " : "  [duplicate] ") + rt.toString();
+        }).collect(Collectors.joining("\n"));
     }
 
     /**

@@ -111,7 +111,7 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob> {
             this.state = State.FINISHED;
             if (AELog.isCraftingDebugLogEnabled()) {
                 AELog.log(
-                        Level.DEBUG,
+                        Level.INFO,
                         "Crafting job for %s finished with resolved steps: %s\n",
                         originalRequest.toString(),
                         context.toString());
