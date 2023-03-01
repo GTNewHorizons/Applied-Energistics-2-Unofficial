@@ -10,7 +10,9 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.core.AELog;
 import appeng.crafting.v2.resolvers.CraftingTask;
+import appeng.util.item.AEItemStack;
 
 /**
  * A single requested stack (item or fluid) to craft, e.g. 32x Torches
@@ -120,7 +122,17 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> {
 
     @Override
     public String toString() {
+        String readableName = "";
+        if (stack instanceof AEItemStack) {
+            try {
+                readableName = "<" + ((AEItemStack) stack).getDisplayName() + ">";
+            } catch (Exception e) {
+                AELog.warn(e, "Trying to obtain display name for " + stack);
+                readableName = "<EXCEPTION>";
+            }
+        }
         return "CraftingRequest{request=" + stack
+                + readableName
                 + ", substitutionMode="
                 + substitutionMode
                 + ", remainingToProcess="
