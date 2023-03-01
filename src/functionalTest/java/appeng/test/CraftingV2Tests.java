@@ -354,4 +354,22 @@ public class CraftingV2Tests {
                 AEItemStack.create(withSize(bronzePlate.copy(), 2)),
                 AEItemStack.create(withSize(bronzeDoublePlate.copy(), 0)).setCountRequestable(1));
     }
+
+    @Test
+    void differentMissingAmounts() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(new ItemStack(Items.iron_ingot, 32));
+        aeSystem.addStoredItem(new ItemStack(Items.gold_ingot, 64));
+        aeSystem.newProcessingPattern().addInput(new ItemStack(Items.iron_ingot, 2))
+                .addInput(new ItemStack(Items.gold_ingot, 2)).addOutput(new ItemStack(Blocks.gold_block)).buildAndAdd();
+
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(new ItemStack(Blocks.gold_block, 100));
+        simulateJobAndCheck(job, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertEquals(true, job.isSimulation());
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(new ItemStack(Items.gold_ingot, 200)),
+                AEItemStack.create(new ItemStack(Items.iron_ingot, 200)),
+                AEItemStack.create(new ItemStack(Blocks.gold_block, 0)).setCountRequestable(100));
+    }
 }
