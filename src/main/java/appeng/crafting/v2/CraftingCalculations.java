@@ -62,7 +62,7 @@ public class CraftingCalculations {
                 allTasks.addAll(tasks);
             } catch (Exception t) {
                 AELog.log(
-                        Level.DEBUG,
+                        Level.WARN,
                         t,
                         "Error encountered when trying to generate the list of CraftingTasks for crafting {}",
                         request.toString());

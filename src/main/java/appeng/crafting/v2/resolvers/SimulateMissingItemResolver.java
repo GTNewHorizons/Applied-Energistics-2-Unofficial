@@ -18,6 +18,8 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
 
     public static class ConjureItemTask<StackType extends IAEStack<StackType>> extends CraftingTask<StackType> {
 
+        private long fulfilled = 0;
+
         public ConjureItemTask(CraftingRequest<StackType> request) {
             super(request, CraftingTask.PRIORITY_SIMULATE); // conjure items for calculations out of thin air as a last
                                                             // resort
@@ -32,25 +34,29 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
             // Simulate items existing
             request.wasSimulated = true;
             context.wasSimulated = true;
+            fulfilled = request.remainingToProcess;
             request.fulfill(this, request.stack.copy().setStackSize(request.remainingToProcess), context);
             return new StepOutput(Collections.emptyList());
         }
 
         @Override
         public long partialRefund(CraftingContext context, long amount) {
-            // no-op: items were simulated, so there's nothing to refund
+            if (amount > fulfilled) {
+                amount = fulfilled;
+            }
+            fulfilled -= amount;
             return amount;
         }
 
         @Override
         public void fullRefund(CraftingContext context) {
-            // no-op: items were simulated, so there's nothing to refund
+            fulfilled = 0;
         }
 
         @Override
         public void populatePlan(IItemList<IAEItemStack> targetPlan) {
-            if (request.stack instanceof IAEItemStack) {
-                targetPlan.add((IAEItemStack) request.stack.copy());
+            if (fulfilled > 0 && request.stack instanceof IAEItemStack) {
+                targetPlan.add((IAEItemStack) request.stack.copy().setStackSize(fulfilled));
             }
         }
 
@@ -62,7 +68,15 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
 
         @Override
         public String toString() {
-            return "ConjureItemTask{" + "request=" + request + ", priority=" + priority + ", state=" + state + '}';
+            return "ConjureItemTask{" + "fulfilled="
+                    + fulfilled
+                    + ", request="
+                    + request
+                    + ", priority="
+                    + priority
+                    + ", state="
+                    + state
+                    + '}';
         }
     }
 

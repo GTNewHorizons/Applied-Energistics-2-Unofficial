@@ -11,8 +11,11 @@
 package appeng.hooks;
 
 import java.util.*;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
+import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.world.World;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -54,12 +57,18 @@ public class TickHandler {
     private final HashMap<Integer, PlayerColor> cliPlayerColors = new HashMap<Integer, PlayerColor>();
     private final HashMap<Integer, PlayerColor> srvPlayerColors = new HashMap<Integer, PlayerColor>();
     private CableRenderMode crm = CableRenderMode.Standard;
+    // must be a thread safe collection since this can be called from finalizer thread
+    private final BlockingDeque<Integer> callListToDelete = new LinkedBlockingDeque<>();
 
     public HashMap<Integer, PlayerColor> getPlayerColors() {
         if (Platform.isServer()) {
             return this.srvPlayerColors;
         }
         return this.cliPlayerColors;
+    }
+
+    public void scheduleCallListDelete(Integer id) {
+        callListToDelete.add(id);
     }
 
     public void addCallable(final World w, final IWorldCallable<?> c) {
@@ -147,6 +156,7 @@ public class TickHandler {
 
         if (ev.type == Type.CLIENT && ev.phase == Phase.START) {
             this.tickColors(this.cliPlayerColors);
+            this.deleteCallLists();
             EntityFloatingItem.ageStatic = (EntityFloatingItem.ageStatic + 1) % 60000;
             final CableRenderMode currentMode = AEApi.instance().partHelper().getCableRenderMode();
             if (currentMode != this.crm) {
@@ -199,6 +209,12 @@ public class TickHandler {
             final Queue<IWorldCallable<?>> queue = this.callQueue.get(world);
             this.processQueue(queue, world);
         }
+    }
+
+    private void deleteCallLists() {
+        // we have only one consumer, so this is safe
+        // even if we missed some, we will delete them next tick.
+        while (!callListToDelete.isEmpty()) GLAllocation.deleteDisplayLists(callListToDelete.remove());
     }
 
     private void tickColors(final HashMap<Integer, PlayerColor> playerSet) {

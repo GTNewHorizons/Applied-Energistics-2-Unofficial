@@ -43,6 +43,7 @@ import appeng.client.ClientHelper;
 import appeng.core.AELog;
 import appeng.core.localization.PlayerMessages;
 import appeng.helpers.Reflected;
+import appeng.hooks.TickHandler;
 import appeng.me.GridAccessException;
 import appeng.util.IWideReadableNumberConverter;
 import appeng.util.Platform;
@@ -209,7 +210,7 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         super.finalize();
 
         if (this.dspList != null) {
-            GLAllocation.deleteDisplayLists(this.dspList);
+            TickHandler.INSTANCE.scheduleCallListDelete(dspList);
         }
     }
 

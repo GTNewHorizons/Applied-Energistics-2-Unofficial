@@ -38,6 +38,7 @@ import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ISortSource;
+import appeng.client.gui.widgets.ITooltip;
 import appeng.client.render.BlockPosHighlighter;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AEConfig;
@@ -47,6 +48,7 @@ import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
+import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
@@ -83,9 +85,76 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
     private IItemList<IAEItemStack> active = AEApi.instance().storage().createItemList();
     private IItemList<IAEItemStack> pending = AEApi.instance().storage().createItemList();
 
+    private class RemainingOperations implements ITooltip {
+
+        private long refreshTick = System.currentTimeMillis();
+        private long lastWorkingTick = 0;
+
+        private int remainingOperations = 0;
+
+        public long getLastWorkingTick() {
+            return lastWorkingTick;
+        }
+
+        public long getRefreshTick() {
+            return refreshTick;
+        }
+
+        public void setLastWorkingTick(long lastWorkingTick) {
+            this.lastWorkingTick = lastWorkingTick;
+        }
+
+        public void setRefreshTick(long refreshTick) {
+            this.refreshTick = refreshTick;
+        }
+
+        @Override
+        public String getMessage() {
+            return GuiText.RemainingOperations.getLocal();
+        }
+
+        @Override
+        public int xPos() {
+            return guiLeft + TITLE_LEFT_OFFSET + 200 - this.getStringWidth();
+        }
+
+        @Override
+        public int yPos() {
+            return guiTop + TITLE_TOP_OFFSET;
+        }
+
+        @Override
+        public int getWidth() {
+            return this.getStringWidth();
+        }
+
+        @Override
+        public int getHeight() {
+            return fontRendererObj.FONT_HEIGHT;
+        }
+
+        @Override
+        public boolean isVisible() {
+            return true;
+        }
+
+        public void setRemainingOperations(int remainingOperations) {
+            this.remainingOperations = remainingOperations;
+        }
+
+        public int getRemainingOperations() {
+            return this.remainingOperations;
+        }
+
+        public int getStringWidth() {
+            return fontRendererObj.getStringWidth(String.valueOf(this.remainingOperations));
+        }
+    }
+
     private List<IAEItemStack> visual = new ArrayList<IAEItemStack>();
     private GuiButton cancel;
     private int tooltip = -1;
+    private final RemainingOperations remainingOperations = new RemainingOperations();
     private ItemStack hoveredStack;
     private ItemStack hoveredNbtStack;
 
@@ -202,6 +271,19 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
         }
 
         super.drawScreen(mouseX, mouseY, btn);
+        this.handleTooltip(mouseX, mouseY, remainingOperations);
+    }
+
+    private void updateRemainingOperations() {
+        int interval = 1000;
+        if (this.remainingOperations.getRefreshTick() >= this.remainingOperations.getLastWorkingTick() + interval) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketCraftingRemainingOperations());
+            } catch (IOException ignored) {}
+            this.remainingOperations.setLastWorkingTick(this.remainingOperations.refreshTick);
+        } else {
+            this.remainingOperations.setRefreshTick(System.currentTimeMillis());
+        }
     }
 
     @Override
@@ -215,6 +297,12 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                     .formatDuration(etaInMilliseconds, GuiText.ETAFormat.getLocal());
             title += " - " + etaTimeText;
         }
+        updateRemainingOperations();
+        this.fontRendererObj.drawString(
+                String.valueOf(remainingOperations.getRemainingOperations()),
+                TITLE_LEFT_OFFSET + 200 - this.remainingOperations.getStringWidth(),
+                TITLE_TOP_OFFSET,
+                GuiColors.CraftingCPUTitle.getColor());
 
         this.fontRendererObj
                 .drawString(title, TITLE_LEFT_OFFSET, TITLE_TOP_OFFSET, GuiColors.CraftingCPUTitle.getColor());
@@ -408,6 +496,10 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
 
     public void postUpdate(IAEItemStack is) {
         this.hoveredNbtStack = is.getItemStack();
+    }
+
+    public void postUpdate(int remainingOperations) {
+        this.remainingOperations.setRemainingOperations(remainingOperations);
     }
 
     public void postUpdate(final List<IAEItemStack> list, final byte ref) {

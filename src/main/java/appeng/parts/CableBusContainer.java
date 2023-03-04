@@ -24,6 +24,9 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 
 import appeng.api.AEApi;
 import appeng.api.config.YesNo;
@@ -32,6 +35,7 @@ import appeng.api.implementations.parts.IPartCable;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.parts.*;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
@@ -44,6 +48,9 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.ICLApi;
 import appeng.me.GridConnection;
 import appeng.util.Platform;
+import appeng.util.item.AEItemStack;
+import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -828,6 +835,47 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         throw new IllegalStateException("Uhh Bad Part (" + part + ") on Side.");
     }
 
+    private NBTTagCompound[] covertEC2Part(NBTTagCompound part, NBTTagCompound data) {
+        NBTTagCompound[] tmp = new NBTTagCompound[2];
+        if (Loader.isModLoaded("extracells") && Loader.isModLoaded("ae2fc")) {
+            ItemStack item = ItemStack.loadItemStackFromNBT(part);
+            ItemStack ec2part = new ItemStack(GameRegistry.findItem("extracells", "part.base"), 1, 2);
+            if (Platform.isSameItem(item, ec2part)) {
+                ItemStack fc2part = new ItemStack(GameRegistry.findItem("ae2fc", "part_fluid_storage_bus"), 1, 0);
+                tmp[0] = fc2part.writeToNBT(new NBTTagCompound());
+                NBTTagCompound data_new = new NBTTagCompound();
+                data_new.setTag("part", data.getCompoundTag("node").getCompoundTag("node0"));
+                data_new.setInteger("priority", data.getInteger("priority"));
+                data_new.setString("ACCESS", data.getString("access"));
+                NBTTagCompound fluid_filter = new NBTTagCompound();
+                for (int slot = 0; slot < 54; slot++) {
+                    NBTTagCompound fluid_slot = new NBTTagCompound();
+                    String ec2fluid_key = "FilterFluid#" + slot;
+                    Fluid fluid = FluidRegistry.getFluid(data.getString(ec2fluid_key));
+                    if (fluid != null) {
+                        ItemStack fc2packet = new ItemStack(GameRegistry.findItem("ae2fc", "fluid_packet"), 1, 0);
+                        NBTTagCompound fluid_info = new NBTTagCompound();
+                        NBTTagCompound fluid_info2 = new NBTTagCompound();
+                        fluid_info.setBoolean("DisplayOnly", true);
+                        FluidStack fluidStack = new FluidStack(fluid, 1000);
+                        fluidStack.writeToNBT(fluid_info2);
+                        fluid_info.setTag("FluidStack", fluid_info2);
+                        fc2packet.setTagCompound(fluid_info);
+                        IAEItemStack ae_stack = AEItemStack.create(fc2packet);
+                        ae_stack.writeToNBT(fluid_slot);
+                    }
+                    fluid_filter.setTag("#" + slot, fluid_slot);
+                }
+                data_new.setTag("config", fluid_filter);
+                tmp[1] = data_new;
+                return tmp;
+            }
+        }
+        tmp[0] = part;
+        tmp[1] = data;
+        return tmp;
+    }
+
     public void readFromNBT(final NBTTagCompound data) {
         if (data.hasKey("hasRedstone")) {
             this.hasRedstone = YesNo.values()[data.getInteger("hasRedstone")];
@@ -836,8 +884,11 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         for (int x = 0; x < 7; x++) {
             ForgeDirection side = ForgeDirection.getOrientation(x);
 
-            final NBTTagCompound def = data.getCompoundTag("def:" + side.ordinal());
-            final NBTTagCompound extra = data.getCompoundTag("extra:" + side.ordinal());
+            NBTTagCompound def = data.getCompoundTag("def:" + side.ordinal());
+            NBTTagCompound extra = data.getCompoundTag("extra:" + side.ordinal());
+            NBTTagCompound[] covert = covertEC2Part(def, extra);
+            def = covert[0];
+            extra = covert[1];
             if (def != null && extra != null) {
                 IPart p = this.getPart(side);
                 final ItemStack iss = ItemStack.loadItemStackFromNBT(def);

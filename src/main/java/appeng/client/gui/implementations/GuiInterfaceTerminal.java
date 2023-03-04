@@ -255,6 +255,7 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
         buttonList.add(guiButtonBrokenRecipes);
 
         buttonList.add(terminalStyleBox);
+        guiButtonHashMap.clear();
 
         int offset = 51;
         final int ex = this.getScrollBar().getCurrentScroll();

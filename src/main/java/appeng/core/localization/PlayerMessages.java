@@ -36,7 +36,8 @@ public enum PlayerMessages {
     TunnelHasNoOutputs,
     TunnelOutputsAreAt,
     InterfaceInOtherDim,
-    InterfaceHighlighted;
+    InterfaceHighlighted,
+    CraftingItemsWentMissing;
 
     public IChatComponent get() {
         return new ChatComponentTranslation(this.getName());

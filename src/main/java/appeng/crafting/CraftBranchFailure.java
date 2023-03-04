@@ -23,4 +23,8 @@ public class CraftBranchFailure extends RuntimeException {
         this.missing = what.copy();
         this.missing.setStackSize(howMany);
     }
+
+    public IAEItemStack getMissing() {
+        return missing;
+    }
 }

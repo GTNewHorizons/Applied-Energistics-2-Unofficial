@@ -16,6 +16,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -33,6 +34,7 @@ import appeng.api.parts.ISimplifiedBundle;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.WorldCoord;
+import appeng.block.crafting.BlockAdvancedCraftingUnit;
 import appeng.me.cluster.IAECluster;
 import appeng.me.cluster.IAEMultiBlock;
 import appeng.me.cluster.implementations.CraftingCPUCalculator;
@@ -68,9 +70,16 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
     @Override
     protected ItemStack getItemFromTile(final Object obj) {
         if (((TileCraftingTile) obj).isAccelerator()) {
-            for (final ItemStack accelerator : AEApi.instance().definitions().blocks().craftingAccelerator()
-                    .maybeStack(1).asSet()) {
-                return accelerator;
+            if (((TileCraftingTile) obj).getBlockType() instanceof BlockAdvancedCraftingUnit) {
+                for (final ItemStack accelerator : AEApi.instance().definitions().blocks().craftingAccelerator64x()
+                        .maybeStack(1).asSet()) {
+                    return accelerator;
+                }
+            } else {
+                for (final ItemStack accelerator : AEApi.instance().definitions().blocks().craftingAccelerator()
+                        .maybeStack(1).asSet()) {
+                    return accelerator;
+                }
             }
         }
 
@@ -95,12 +104,19 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
         if (this.worldObj == null) {
             return false;
         }
+        if (this.worldObj.getBlock(this.xCoord, this.yCoord, this.zCoord) instanceof BlockAdvancedCraftingUnit) {
+            return true;
+        }
         return Arrays.asList(1, 2, 3)
                 .contains(this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3);
     }
 
     public int acceleratorValue() {
         int meta = this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3;
+        Block blockType = this.worldObj.getBlock(this.xCoord, this.yCoord, this.zCoord);
+        if (blockType instanceof BlockAdvancedCraftingUnit) {
+            meta += 4;
+        }
         return (int) Math.pow(ACCELERATOR_SCALE_FACTOR, meta - 1);
     }
 

@@ -10,7 +10,9 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.core.AELog;
 import appeng.crafting.v2.resolvers.CraftingTask;
+import appeng.util.item.AEItemStack;
 
 /**
  * A single requested stack (item or fluid) to craft, e.g. 32x Torches
@@ -120,7 +122,17 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> {
 
     @Override
     public String toString() {
+        String readableName = "";
+        if (stack instanceof AEItemStack) {
+            try {
+                readableName = "<" + ((AEItemStack) stack).getDisplayName() + ">";
+            } catch (Exception e) {
+                AELog.warn(e, "Trying to obtain display name for " + stack);
+                readableName = "<EXCEPTION>";
+            }
+        }
         return "CraftingRequest{request=" + stack
+                + readableName
                 + ", substitutionMode="
                 + substitutionMode
                 + ", remainingToProcess="
@@ -157,8 +169,8 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> {
      * Reduces the amount of items needed by {@code amount}, propagating any necessary refunds via the resolver crafting
      * tasks.
      */
-    public void partialRefund(CraftingContext context, long amount) {
-        long remainingTaskAmount = amount;
+    public void partialRefund(CraftingContext context, final long refundedAmount) {
+        long remainingTaskAmount = refundedAmount;
         for (UsedResolverEntry resolver : usedResolvers) {
             if (remainingTaskAmount <= 0) {
                 break;
@@ -177,10 +189,18 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> {
         if (remainingTaskAmount != 0) {
             throw new IllegalStateException("Partial refunds could not cover all resolved items for request " + this);
         }
-        final long processed = this.stack.getStackSize() - this.remainingToProcess;
-        this.stack.setStackSize(this.stack.getStackSize() - amount);
-        this.remainingToProcess = this.stack.getStackSize() - processed;
-        this.untransformedByteCost -= amount;
+
+        final long originallyRequested = this.stack.getStackSize();
+        final long originallyRemainingToProcess = this.remainingToProcess;
+        final long originallyProcessed = originallyRequested - originallyRemainingToProcess;
+
+        final long newlyRequested = originallyRequested - refundedAmount;
+        final long newlyProcessed = Math.min(originallyProcessed, newlyRequested);
+        final long newlyRemainingToProcess = newlyRequested - newlyProcessed;
+
+        this.stack.setStackSize(newlyRequested);
+        this.remainingToProcess = newlyRemainingToProcess;
+        this.untransformedByteCost -= refundedAmount;
         this.byteCost = CraftingCalculations.adjustByteCost(this, untransformedByteCost);
         if (this.remainingToProcess < 0) {
             throw new IllegalArgumentException("Refunded more items than were resolved for request " + this);

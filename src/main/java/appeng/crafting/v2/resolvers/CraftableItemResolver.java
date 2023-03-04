@@ -47,7 +47,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
         // With the recursive part subtracted
         protected final IAEItemStack[] patternOutputs;
         protected final IAEItemStack matchingOutput;
-        protected final Map<IAEItemStack, RequestAndPerCraftAmount> childRequests = new HashMap<>();
+        protected final List<RequestAndPerCraftAmount> childRequests = new ArrayList<>();
         protected final List<CraftingRequest> complexRequestPerSlot = new ArrayList<>();
         protected final Map<IAEItemStack, CraftingRequest<IAEItemStack>> childRecursionRequests = new HashMap<>();
         // byproduct injected -> amount per craft
@@ -155,7 +155,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                         maxCraftable = 0;
                     }
                 }
-                for (RequestAndPerCraftAmount inputChildPair : childRequests.values()) {
+                for (RequestAndPerCraftAmount inputChildPair : childRequests) {
                     final CraftingRequest<IAEItemStack> inputChild = inputChildPair.request;
                     final long costPerRecipe = inputChild.stack.getStackSize() / toCraft;
                     final long available = inputChild.stack.getStackSize() - inputChild.remainingToProcess;
@@ -187,7 +187,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                         final CraftingRequest<IAEItemStack> slotRequest = complexRequestPerSlot.get(slot);
                         if (slotRequest != null) {
                             final IAEItemStack resolvedItem = (IAEItemStack) slotRequest.getOneResolvedType();
-                            inputs[slot] = resolvedItem;
+                            inputs[slot] = resolvedItem.copy();
                         }
                     }
                     final IAEItemStack[] leftovers = context.simulateComplexCrafting(inputs, pattern);
@@ -212,9 +212,10 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                 this.totalCraftsDone = maxCraftable;
                 if (maxCraftable != toCraft) {
                     // Need to refund some items as not everything could be crafted.
-                    for (RequestAndPerCraftAmount inputChildPair : childRequests.values()) {
+                    for (RequestAndPerCraftAmount inputChildPair : childRequests) {
                         final CraftingRequest<IAEItemStack> inputChild = inputChildPair.request;
-                        final long actuallyNeeded = Math.multiplyExact(inputChild.stack.getStackSize(), maxCraftable);
+                        final long actuallyNeeded = Math
+                                .multiplyExact(inputChild.stack.getStackSize() / toCraft, maxCraftable);
                         final long produced = inputChild.stack.getStackSize()
                                 - Math.max(inputChild.remainingToProcess, 0);
                         if (produced > actuallyNeeded) {
@@ -258,8 +259,17 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                                 stack -> this.isValidSubstitute(input, stack, context.world, finalSlot));
                         complexRequestPerSlot.add(req);
                         newChildren.add(req);
-                        childRequests.put(input, new RequestAndPerCraftAmount(req, input.getStackSize()));
+                        childRequests.add(new RequestAndPerCraftAmount(req, input.getStackSize()));
                     }
+                    // Try to fulfill container items (like GT tools) last to prevent them being frozen while other
+                    // ingredients are resolved
+                    newChildren.sort(
+                            Comparator
+                                    .<CraftingRequest<IAEItemStack>>comparingInt(
+                                            r -> r.stack.getItem().hasContainerItem(r.stack.getItemStack()) ? 1 : 0)
+                                    .thenComparingInt(
+                                            r -> r.stack.getItem().getItemStackLimit(r.stack.getItemStack()) == 1 ? 1
+                                                    : 0));
                 } else {
                     if (patternRecursionInputs.length > 0) {
                         for (IAEItemStack recInput : patternRecursionInputs) {
@@ -283,7 +293,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                                 allowSimulation,
                                 stack -> this.isValidSubstitute(input, stack, context.world));
                         newChildren.add(req);
-                        childRequests.put(input, new RequestAndPerCraftAmount(req, input.getStackSize()));
+                        childRequests.add(new RequestAndPerCraftAmount(req, input.getStackSize()));
                     }
                 }
                 requestedInputs = true;
@@ -330,7 +340,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                 }
                 this.totalCraftsDone = newTotalCrafts;
                 final long craftsRefunded = oldTotalCrafts - newTotalCrafts;
-                for (RequestAndPerCraftAmount subrequest : childRequests.values()) {
+                for (RequestAndPerCraftAmount subrequest : childRequests) {
                     subrequest.request.partialRefund(context, subrequest.perCraftAmount * craftsRefunded);
                 }
                 for (Entry<IAEItemStack, Long> entry : byproducts.entrySet()) {
@@ -352,7 +362,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             request.patternParents.remove(this.pattern);
             totalCraftsDone = 0;
             fulfilledAmount = 0;
-            childRequests.values().forEach(req -> req.request.fullRefund(context));
+            childRequests.forEach(req -> req.request.fullRefund(context));
             childRequests.clear();
             childRecursionRequests.values().forEach(req -> req.fullRefund(context));
             childRecursionRequests.clear();
@@ -442,7 +452,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             ICraftingPatternDetails pattern = patterns.get(0);
             if (context.isPatternComplex(pattern)) {
                 for (int i = 0; i < request.remainingToProcess; i++) {
-                    tasks.add(new CraftFromPatternTask(request, pattern, priority, false, true));
+                    tasks.add(new CraftFromPatternTask(request, pattern, priority, true, true));
                 }
             } else {
                 tasks.add(

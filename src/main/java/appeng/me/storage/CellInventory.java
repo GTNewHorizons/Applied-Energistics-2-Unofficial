@@ -373,7 +373,7 @@ public class CellInventory implements ICellInventory {
             final ItemStack t = ItemStack.loadItemStackFromNBT(this.tagCompound.getCompoundTag(itemSlots[x]));
             final IAEItemStack ias = AEItemStack.create(t);
             if (t != null) {
-                ias.setStackSize(this.tagCompound.getInteger(itemSlotCount[x]));
+                ias.setStackSize(this.tagCompound.getLong(itemSlotCount[x]));
                 if (ias.getStackSize() > 0) {
                     this.cellItems.add(ias);
                 } else {

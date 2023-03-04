@@ -25,8 +25,6 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidHandler;
 
 import appeng.api.AEApi;
 import appeng.api.config.*;
@@ -772,20 +770,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return true;
     }
 
-    private boolean gtMachineNoFluid(TileEntity te, ForgeDirection side) {
-        if (te instanceof IFluidHandler) {
-            FluidTankInfo[] infos = ((IFluidHandler) te).getTankInfo(side);
-            if (infos != null) {
-                for (FluidTankInfo info : infos) {
-                    if (info.fluid != null && info.fluid.amount > 0) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
     private boolean shouldCheckFluid() {
         String hostName = this.iHost.getClass().getName();
         return hostName.contains("TileFluidInterface") || hostName.contains("PartFluidInterface");
@@ -796,7 +780,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         boolean isEmpty = (name.equals("gt.blockmachines") || name.equals("tile.interface"))
                 && gtMachineHasOnlyCircuit(ad);
         if (shouldCheckFluid()) {
-            isEmpty = isEmpty && gtMachineNoFluid(te, side);
+            isEmpty = name.equals("tile.interface");
         }
         return isEmpty;
     }

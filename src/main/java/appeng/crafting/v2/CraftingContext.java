@@ -209,9 +209,9 @@ public final class CraftingContext {
                 continue;
             }
             Item item = mcOut.getItem();
-            if (item.hasContainerItem(mcOut)) {
-                ItemStack container = item.getContainerItem(mcOut);
-                if (container == null || container.stackSize <= 0) {
+            ItemStack container = Platform.getContainerItem(mcOut);
+            if (container != null) {
+                if (container.stackSize <= 0) {
                     output[i] = null;
                 } else {
                     output[i] = AEItemStack.create(container);
@@ -249,10 +249,12 @@ public final class CraftingContext {
         doingWork = false;
         if (!out.extraInputsRequired.isEmpty()) {
             final Set<ICraftingPatternDetails> parentPatterns = frontTask.request.patternParents;
-            out.extraInputsRequired.forEach(request -> {
+            // Last pushed gets resolved first, so iterate in reverse order to maintain array ordering
+            for (int ri = out.extraInputsRequired.size() - 1; ri >= 0; ri--) {
+                final CraftingRequest<?> request = out.extraInputsRequired.get(ri);
                 request.patternParents.addAll(parentPatterns);
                 this.addRequest(request);
-            });
+            }
         } else if (newState == CraftingTask.State.SUCCESS) {
             if (tasksToProcess.getFirst() != frontTask) {
                 throw new IllegalStateException("A crafting task got added to the queue without requesting more work.");
@@ -289,7 +291,11 @@ public final class CraftingContext {
 
     @Override
     public String toString() {
-        return getResolvedTasks().stream().map(rt -> "  " + rt.toString()).collect(Collectors.joining("\n"));
+        final Set<CraftingTask<?>> processed = Collections.newSetFromMap(new IdentityHashMap<>());
+        return getResolvedTasks().stream().map(rt -> {
+            boolean isNew = processed.add(rt);
+            return (isNew ? "  " : "  [duplicate] ") + rt.toString();
+        }).collect(Collectors.joining("\n"));
     }
 
     /**
