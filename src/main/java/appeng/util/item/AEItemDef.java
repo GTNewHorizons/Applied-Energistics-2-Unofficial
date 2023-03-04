@@ -35,7 +35,6 @@ public class AEItemDef {
     private int maxDamage;
     private AESharedNBT tagCompound;
 
-    @SideOnly(Side.CLIENT)
     private String displayName;
 
     @SideOnly(Side.CLIENT)

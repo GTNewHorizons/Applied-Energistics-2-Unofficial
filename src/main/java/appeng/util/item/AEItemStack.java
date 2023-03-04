@@ -480,7 +480,6 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return this.getDefinition().setTooltip(Platform.getTooltip(this.getItemStack()));
     }
 
-    @SideOnly(Side.CLIENT)
     public String getDisplayName() {
         if (this.getDefinition().getDisplayName() == null) {
             this.getDefinition().setDisplayName(Platform.getItemDisplayName(this.getItemStack()));
@@ -489,7 +488,6 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return this.getDefinition().getDisplayName();
     }
 
-    @SideOnly(Side.CLIENT)
     public String getModID() {
         if (this.getDefinition().getUniqueID() != null) {
             return this.getModName(this.getDefinition().getUniqueID());
