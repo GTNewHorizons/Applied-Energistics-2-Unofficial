@@ -20,7 +20,7 @@ public class PartUltraDenseCableSmart extends PartDenseCable {
 
     @Override
     public AECableType getCableConnectionType() {
-        return AECableType.ULTRA_DENSE;
+        return AECableType.ULTRA_DENSE_SMART;
     }
 
     @Override
