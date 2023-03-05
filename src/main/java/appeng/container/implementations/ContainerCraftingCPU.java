@@ -33,6 +33,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
@@ -177,6 +178,9 @@ public class ContainerCraftingCPU extends AEBaseContainer
                         if (!c.isEmpty()) {
                             NetworkHandler.instance.sendTo(c, (EntityPlayerMP) g);
                         }
+                        NetworkHandler.instance.sendTo(
+                                new PacketCraftingRemainingOperations(this.getMonitor().getRemainingOperations()),
+                                (EntityPlayerMP) g);
                     }
                 }
             } catch (final IOException e) {

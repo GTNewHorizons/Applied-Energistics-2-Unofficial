@@ -47,9 +47,18 @@ tile.appliedenergistics2.BlockCraftingStorage.name=1k合成存储器
 tile.appliedenergistics2.BlockCraftingStorage4k.name=4k合成存储器
 tile.appliedenergistics2.BlockCraftingStorage16k.name=16k合成存储器
 tile.appliedenergistics2.BlockCraftingStorage64k.name=64k合成存储器
+tile.appliedenergistics2.BlockCraftingStorage256k.name=256k合成存储器
+tile.appliedenergistics2.BlockCraftingStorage1024k.name=1024k合成存储器
+tile.appliedenergistics2.BlockCraftingStorage4096k.name=4096k合成存储器
+tile.appliedenergistics2.BlockCraftingStorage16384k.name=16384k合成存储器
 tile.appliedenergistics2.BlockCraftingAccelerator.name=并行处理单元
 tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4核并行处理单元
 tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16核并行处理单元
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64核并行处理单元
+tile.appliedenergistics2.BlockCraftingAccelerator256x.name=256核并行处理单元
+tile.appliedenergistics2.BlockCraftingAccelerator1024x.name=1024核并行处理单元
+tile.appliedenergistics2.BlockCraftingAccelerator4096x.name=4096核并行处理单元
+
 tile.appliedenergistics2.BlockCraftingUnit.name=合成单元
 tile.appliedenergistics2.BlockMolecularAssembler.name=分子装配室
 
@@ -95,6 +104,7 @@ chat.appliedenergistics2.TunnelHasNoOutputs=通道无出口.
 chat.appliedenergistics2.TunnelOutputsAreAt=通道出口位于:
 chat.appliedenergistics2.InterfaceInOtherDim=接口位于 %d 世界，无法高亮显示
 chat.appliedenergistics2.InterfaceHighlighted=接口已高亮，坐标：%d, %d, %d
+chat.appliedenergistics2.CraftingItemsWentMissing=无法开始合成, 材料缺少: %d * %s
 # Creative Tabs
 itemGroup.appliedenergistics2=应用能源2
 itemGroup.appliedenergistics2.facades=应用能源2-伪装板
@@ -111,6 +121,7 @@ gui.appliedenergistics2.LightTunnel=光
 gui.appliedenergistics2.OCTunnel=OC
 gui.appliedenergistics2.PressureTunnel=气压
 gui.appliedenergistics2.GTTunnel=GT EU
+gui.appliedenergistics2.IFACETunnel=ME接口
 
 gui.appliedenergistics2.security.extract.name=取出
 gui.appliedenergistics2.security.inject.name=存入
@@ -212,6 +223,7 @@ gui.appliedenergistics2.ETAFormat=HH:mm:ss
 gui.appliedenergistics2.Crafting=正在合成
 gui.appliedenergistics2.Scheduled=计划合成
 gui.appliedenergistics2.CraftingStatus=合成状态
+gui.appliedenergistics2.RemainingOperations=空闲处理器
 gui.appliedenergistics2.FromStorage=可用数量
 gui.appliedenergistics2.ToCraft=合成数量
 gui.appliedenergistics2.CraftingPlan=合成计划
@@ -247,6 +259,8 @@ gui.appliedenergistics2.LargeFontCraft=+
 gui.appliedenergistics2.Renamer=自定义名称: (回车保存设置)
 gui.appliedenergistics2.OreFilterLabel=矿典过滤卡
 gui.appliedenergistics2.HoldShiftForTooltip=按住Shift以查看拓展tooltip
+gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=shift点击,高亮ME接口
+gui.appliedenergistics2.VoidCellTooltip=删除§任何§7存储在里面的物品
 gui.appliedenergistics2.Nothing=无
 
 # GUI Colors - ARGB
@@ -446,6 +460,13 @@ item.appliedenergistics2.ItemBasicStorageCell.1k.name=1k-ME存储元件
 item.appliedenergistics2.ItemBasicStorageCell.4k.name=4k-ME存储元件
 item.appliedenergistics2.ItemBasicStorageCell.16k.name=16k-ME存储元件
 item.appliedenergistics2.ItemBasicStorageCell.64k.name=64k-ME存储元件
+item.appliedenergistics2.ItemAdvancedStorageCell.256k.name=256k-ME存储元件
+item.appliedenergistics2.ItemAdvancedStorageCell.1024k.name=1024k-ME存储元件
+item.appliedenergistics2.ItemAdvancedStorageCell.4096k.name=4096k-ME存储元件
+item.appliedenergistics2.ItemAdvancedStorageCell.16384k.name=16384k-ME存储元件
+item.appliedenergistics2.ItemExtremeStorageCell.Quantum.name=ME量子存储元件
+item.appliedenergistics2.ItemExtremeStorageCell.Singularity.name=ME数字奇点存储元件
+item.appliedenergistics2.ItemVoidStorageCell.name=ME虚空存储元件
 item.appliedenergistics2.ItemCreativeStorageCell.name=创造型ME存储元件
 item.appliedenergistics2.ItemEncodedPattern.name=编码样板
 item.appliedenergistics2.ItemViewCell.name=显示元件
@@ -471,6 +492,7 @@ item.appliedenergistics2.ItemMaterial.CardFuzzy.name=模糊卡
 item.appliedenergistics2.ItemMaterial.CardInverter.name=反相卡
 item.appliedenergistics2.ItemMaterial.CardRedstone.name=红石卡
 item.appliedenergistics2.ItemMaterial.CardSpeed.name=加速卡
+item.appliedenergistics2.ItemMaterial.CardSuperSpeed.name=超级加速卡
 item.appliedenergistics2.ItemMaterial.CardOreFilter.name=矿典过滤卡
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³-空间组件
@@ -481,11 +503,16 @@ item.appliedenergistics2.ItemMaterial.Cell1kPart.name=1k-ME存储组件
 item.appliedenergistics2.ItemMaterial.Cell4kPart.name=4k-ME存储组件
 item.appliedenergistics2.ItemMaterial.Cell16kPart.name=16k-ME存储组件
 item.appliedenergistics2.ItemMaterial.Cell64kPart.name=64k-ME存储组件
+item.appliedenergistics2.ItemMaterial.Cell256kPart.name=256k-ME存储组件
+item.appliedenergistics2.ItemMaterial.Cell1024kPart.name=1024k-ME存储组件
+item.appliedenergistics2.ItemMaterial.Cell4096kPart.name=4096k-ME存储组件
+item.appliedenergistics2.ItemMaterial.Cell16384kPart.name=16384k-ME存储组件
 
 item.appliedenergistics2.ItemMaterial.CertusQuartzCrystal.name=赛特斯石英水晶
 item.appliedenergistics2.ItemMaterial.CertusQuartzCrystalCharged.name=充能赛特斯石英水晶
 item.appliedenergistics2.ItemMaterial.CertusQuartzDust.name=赛特斯石英粉
 item.appliedenergistics2.ItemMaterial.EmptyStorageCell.name=ME存储外壳
+item.appliedenergistics2.ItemMaterial.EmptyAdvancedStorageCell.name=ME高级存储外壳
 item.appliedenergistics2.ItemMaterial.EnderDust.name=末影粉
 
 item.appliedenergistics2.ItemMaterial.Flour.name=面粉

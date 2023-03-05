@@ -110,11 +110,8 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob> {
             getByteTotal();
             this.state = State.FINISHED;
             if (AELog.isCraftingDebugLogEnabled()) {
-                AELog.log(
-                        Level.INFO,
-                        "Crafting job for %s finished with resolved steps: %s\n",
-                        originalRequest.toString(),
-                        context.toString());
+                AELog.log(Level.INFO, "Crafting job for %s finished with resolved steps:", originalRequest.toString());
+                AELog.logSimple(Level.INFO, context.toString());
             }
             if (callback != null) {
                 callback.calculationComplete(this);

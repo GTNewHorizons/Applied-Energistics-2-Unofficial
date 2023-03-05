@@ -60,6 +60,22 @@ public final class AELog {
     }
 
     /**
+     * Logs an unformatted message with a specific log level.
+     * <p>
+     * The output can be globally disabled via the configuration file.
+     *
+     * @param level   the intended level.
+     * @param message the message to be printed.
+     */
+    public static void logSimple(@Nonnull final Level level, @Nonnull final String message) {
+        if (AELog.isLogEnabled()) {
+            final Logger logger = getLogger();
+
+            logger.log(level, message);
+        }
+    }
+
+    /**
      * Logs a formatted message with a specific log level.
      * <p>
      * This uses {@link String#format(String, Object...)} as opposed to the {@link ParameterizedMessage} to allow a more

@@ -1235,6 +1235,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     }
 
+    public int getRemainingOperations() {
+        if (this.isComplete) {
+            return 0;
+        } else {
+            return this.remainingOperations;
+        }
+    }
+
     private static class TaskProgress {
 
         private long value;
