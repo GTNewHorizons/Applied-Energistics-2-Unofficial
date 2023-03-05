@@ -111,6 +111,7 @@ public enum AEFeature {
     UpdateLogging(Constants.CATEGORY_MISC, false),
     PacketLogging(Constants.CATEGORY_MISC, false),
     CraftingLog(Constants.CATEGORY_MISC, false),
+    ComplexPatternLog(Constants.CATEGORY_MISC, false),
     LightDetector(Constants.CATEGORY_MISC),
     DebugLogging(Constants.CATEGORY_MISC, false),
 

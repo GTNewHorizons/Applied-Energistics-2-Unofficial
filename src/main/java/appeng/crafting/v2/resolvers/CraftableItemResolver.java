@@ -7,17 +7,23 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.world.World;
 
+import org.apache.logging.log4j.Level;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.core.AEConfig;
+import appeng.core.AELog;
+import appeng.core.features.AEFeature;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingContext;
 import appeng.crafting.v2.CraftingRequest;
 import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
+import appeng.util.item.AEItemStack;
 import appeng.util.item.HashBasedItemList;
 
 import com.google.common.collect.ImmutableList;
@@ -419,6 +425,28 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
         }
     }
 
+    private void logComplexPattrn(ICraftingPatternDetails pattern, long count) {
+        if (AEConfig.instance != null && AEConfig.instance.isFeatureEnabled(AEFeature.ComplexPatternLog)) {
+            StringBuilder outputs = new StringBuilder();
+            for (IAEItemStack stack : pattern.getOutputs()) {
+                if (stack != null) {
+                    outputs.append(stack);
+                    if (stack instanceof AEItemStack) {
+                        outputs.append(" <");
+                        try {
+                            outputs.append(((AEItemStack) stack).getDisplayName());
+                        } catch (Exception e) {
+                            outputs.append("? " + e.getMessage());
+                        }
+                        outputs.append('>');
+                    }
+                    outputs.append(", ");
+                }
+            }
+            AELog.log(Level.INFO, "Complex crafting pattern found: %d * %s", count, outputs);
+        }
+    }
+
     @Nonnull
     @Override
     public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<IAEItemStack> request,
@@ -439,6 +467,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
         int priority = CraftingTask.PRIORITY_CRAFT_OFFSET + patterns.size() - 1;
         for (ICraftingPatternDetails pattern : patterns) {
             if (context.isPatternComplex(pattern)) {
+                logComplexPattrn(pattern, request.remainingToProcess);
                 for (int i = 0; i < request.remainingToProcess; i++) {
                     tasks.add(new CraftFromPatternTask(request, pattern, priority, false, true));
                 }
