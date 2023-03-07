@@ -10,6 +10,8 @@
 
 package appeng.parts;
 
+import static net.minecraftforge.common.util.Constants.NBT.TAG_COMPOUND;
+
 import java.io.IOException;
 import java.util.*;
 
@@ -19,6 +21,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Vec3;
@@ -835,6 +838,17 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         throw new IllegalStateException("Uhh Bad Part (" + part + ") on Side.");
     }
 
+    // spotless:off
+    static final int[] FILTER_MAP = {0,  9, 18, 27, 36, 45,
+                                     1, 10, 19, 28, 37, 46,
+                                     2, 11, 20, 29, 38, 47,
+                                     3, 12, 21, 30, 39, 48,
+                                     4, 13, 22, 31, 40, 49,
+                                     5, 14, 23, 32, 41, 50,
+                                     6, 15, 24, 33, 42, 51,
+                                     7, 16, 25, 34, 43, 52,
+                                     8, 17, 26, 35, 44, 53};
+    //spotless:on
     private NBTTagCompound[] covertEC2Part(NBTTagCompound part, NBTTagCompound data) {
         NBTTagCompound[] tmp = new NBTTagCompound[2];
         if (Loader.isModLoaded("extracells") && Loader.isModLoaded("ae2fc")) {
@@ -848,6 +862,14 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
                 data_new.setInteger("priority", data.getInteger("priority"));
                 data_new.setString("ACCESS", data.getString("access"));
                 NBTTagCompound fluid_filter = new NBTTagCompound();
+                NBTTagList upgrades = data.getTagList("upgradeInventory", TAG_COMPOUND);
+                NBTTagCompound upgradeNew = new NBTTagCompound();
+                upgradeNew.setTag("#0", upgrades.getCompoundTagAt(0));
+                upgradeNew.setTag("#1", new NBTTagCompound());
+                upgradeNew.setTag("#2", new NBTTagCompound());
+                upgradeNew.setTag("#3", new NBTTagCompound());
+                upgradeNew.setTag("#4", new NBTTagCompound());
+                data_new.setTag("upgrades", upgradeNew);
                 for (int slot = 0; slot < 54; slot++) {
                     NBTTagCompound fluid_slot = new NBTTagCompound();
                     String ec2fluid_key = "FilterFluid#" + slot;
@@ -864,7 +886,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
                         IAEItemStack ae_stack = AEItemStack.create(fc2packet);
                         ae_stack.writeToNBT(fluid_slot);
                     }
-                    fluid_filter.setTag("#" + slot, fluid_slot);
+                    fluid_filter.setTag("#" + FILTER_MAP[slot], fluid_slot);
                 }
                 data_new.setTag("config", fluid_filter);
                 tmp[1] = data_new;
