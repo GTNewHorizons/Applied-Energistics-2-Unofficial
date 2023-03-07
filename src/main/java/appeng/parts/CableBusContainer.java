@@ -891,6 +891,10 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
             extra = covert[1];
             if (def != null && extra != null) {
                 IPart p = this.getPart(side);
+                if (p instanceof IPartDeprecated) {
+                    def = ((IPartDeprecated) p).transformPart(def);
+                    extra = ((IPartDeprecated) p).transformNBT(extra);
+                }
                 final ItemStack iss = ItemStack.loadItemStackFromNBT(def);
                 if (iss == null) {
                     continue;
