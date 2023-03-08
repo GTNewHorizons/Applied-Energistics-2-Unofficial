@@ -913,13 +913,15 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
             extra = covert[1];
             if (def != null && extra != null) {
                 IPart p = this.getPart(side);
-                if (p instanceof IPartDeprecated) {
-                    def = ((IPartDeprecated) p).transformPart(def);
-                    extra = ((IPartDeprecated) p).transformNBT(extra);
-                }
-                final ItemStack iss = ItemStack.loadItemStackFromNBT(def);
-                if (iss == null) {
-                    continue;
+                ItemStack iss = ItemStack.loadItemStackFromNBT(def);
+                if (iss == null) continue;
+                if (iss.getItem() instanceof IPartItem) {
+                    IPart part = ((IPartItem) iss.getItem()).createPartFromItemStack(iss);
+                    if (part instanceof IPartDeprecated) {
+                        def = ((IPartDeprecated) part).transformPart(def);
+                        extra = ((IPartDeprecated) part).transformNBT(extra);
+                    }
+                    iss = ItemStack.loadItemStackFromNBT(def);
                 }
 
                 final ItemStack current = p == null ? null : p.getItemStack(PartItemStack.World);
