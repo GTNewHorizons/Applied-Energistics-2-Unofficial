@@ -112,7 +112,7 @@ public class PartP2PInterface extends PartP2PTunnel<PartP2PInterface>
 
     @Override
     @SideOnly(Side.CLIENT)
-    protected IIcon getTypeTexture() {
+    public IIcon getTypeTexture() {
         return AEApi.instance().definitions().blocks().iface().maybeBlock().get().getBlockTextureFromSide(0);
     }
 
