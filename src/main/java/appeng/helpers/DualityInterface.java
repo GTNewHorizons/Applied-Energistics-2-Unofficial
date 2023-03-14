@@ -1017,12 +1017,14 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.craftingTracker.jobStateChange(link);
     }
 
-    public String getTermName() {
+    @Override
+    public ItemStack getCrafterIcon() {
         final TileEntity hostTile = this.iHost.getTileEntity();
         final World hostWorld = hostTile.getWorldObj();
 
+        String customName = null;
         if (((ICustomNameObject) this.iHost).hasCustomName()) {
-            return ((ICustomNameObject) this.iHost).getCustomName();
+            customName = ((ICustomNameObject) this.iHost).getCustomName();
         }
 
         final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
@@ -1093,17 +1095,33 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
 
                 if (what.getItem() != null) {
-                    return what.getUnlocalizedName();
+                    if (customName != null) {
+                        what.setStackDisplayName(customName);
+                    }
+                    return what;
                 }
 
                 final Item item = Item.getItemFromBlock(directedBlock);
-                if (item == null) {
-                    return directedBlock.getUnlocalizedName();
+                if (item != null) {
+                    return new ItemStack(item);
                 }
             }
         }
 
-        return "Nothing";
+        return null;
+    }
+
+    public String getTermName() {
+        if (((ICustomNameObject) this.iHost).hasCustomName()) {
+            return ((ICustomNameObject) this.iHost).getCustomName();
+        }
+
+        final ItemStack item = getCrafterIcon();
+        if (item != null) {
+            return item.getUnlocalizedName();
+        } else {
+            return "Nothing";
+        }
     }
 
     public long getSortValue() {

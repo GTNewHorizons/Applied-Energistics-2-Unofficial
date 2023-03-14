@@ -14,6 +14,7 @@
 package appeng.api.networking.crafting;
 
 import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.ItemStack;
 
 /**
  * A place to send Items for crafting purposes, this is considered part of AE's External crafting system.
@@ -34,4 +35,11 @@ public interface ICraftingMedium {
      * @return if this is false, the crafting engine will refuse to send new jobs to this medium.
      */
     boolean isBusy();
+
+    /**
+     * @return An itemstack representing the machine that will craft the patterns pushed into this medium. Shown in the crafting simulation tree view.
+     */
+    default ItemStack getCrafterIcon() {
+        return null;
+    }
 }

@@ -1,5 +1,8 @@
 package appeng.crafting.v2;
 
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -24,17 +27,19 @@ import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
 import appeng.crafting.v2.resolvers.CraftingTask;
 import appeng.hooks.TickHandler;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * A new, self-contained implementation of the crafting calculator. Does an iterative search on the crafting recipe
  * tree.
  */
-public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob> {
+public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeSerializable {
 
     protected volatile long totalByteCost = -1; // -1 means it needs to be recalculated
 
     protected CraftingContext context;
-    protected final CraftingRequest<IAEItemStack> originalRequest;
+    public final CraftingRequest<IAEItemStack> originalRequest;
     protected ICraftingCallback callback;
 
     protected enum State {
@@ -80,9 +85,38 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob> {
     }
 
     @Override
+    public List<? extends ITreeSerializable> serializeTree(CraftingTreeSerializer serializer) throws IOException {
+        if (this.state == State.RUNNING) {
+            throw new IllegalStateException("Can't serialize a running crafting simulation");
+        }
+        if (this.originalRequest == null) {
+            throw new IllegalStateException("Can't serialize a null request");
+        }
+        return originalRequest.serializeTree(serializer);
+    }
+
+    public ByteBuf toByteBuf() {
+        try {
+            final CraftingTreeSerializer serializer = new CraftingTreeSerializer();
+
+            return serializer.getBuffer();
+        } catch (Exception e) {
+            AELog.error(e, "Could not serialize " + this.originalRequest);
+            return Unpooled.buffer(0);
+        }
+    }
+
+    @Override
+    public void loadChildren(Collection<ITreeSerializable> children) throws IOException {
+        originalRequest.loadChildren(children);
+    }
+
+    @Override
     public IAEItemStack getOutput() {
         return originalRequest.stack;
     }
+
+    public static WeakReference<CraftingJobV2> TEST_LAST_JOB = null;
 
     @Override
     public boolean simulateFor(int milli) {
@@ -113,6 +147,7 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob> {
                 AELog.log(Level.INFO, "Crafting job for %s finished with resolved steps:", originalRequest.toString());
                 AELog.logSimple(Level.INFO, context.toString());
             }
+            TEST_LAST_JOB = new WeakReference<>(this);
             if (callback != null) {
                 callback.calculationComplete(this);
             }

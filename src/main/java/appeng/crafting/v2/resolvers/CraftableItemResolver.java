@@ -2,6 +2,7 @@ package appeng.crafting.v2.resolvers;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -53,6 +54,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
         // With the recursive part subtracted
         protected final IAEItemStack[] patternOutputs;
         protected final IAEItemStack matchingOutput;
+        public IAEItemStack craftingMachine;
         protected final ArrayList<RequestAndPerCraftAmount> childRequests = new ArrayList<>();
         protected final ArrayList<CraftingRequest> complexRequestPerSlot = new ArrayList<>();
         protected final Map<IAEItemStack, CraftingRequest<IAEItemStack>> childRecursionRequests = new HashMap<>();
@@ -109,6 +111,18 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                 throw new IllegalStateException("Invalid pattern crafting step for " + request);
             }
             this.matchingOutput = foundMatchingOutput;
+        }
+
+        public List<CraftingRequest<IAEItemStack>> getChildRequests() {
+            return childRequests.stream().map(r -> r.request).collect(Collectors.toList());
+        }
+
+        public long getTotalCraftsDone() {
+            return totalCraftsDone;
+        }
+
+        public IAEItemStack getCraftingMachine() {
+            return craftingMachine;
         }
 
         public boolean isOutputSameAs(IAEItemStack otherStack) {
@@ -239,6 +253,15 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                         }
                     }
                 }
+                if (totalCraftsDone > 0) {
+                    for (RequestAndPerCraftAmount inputChildPair : childRequests) {
+                        if (inputChildPair.request.wasSimulated) {
+                            this.request.wasSimulated = true;
+                        }
+                    }
+                }
+                // Determine an icon for the crafting plan
+                this.craftingMachine = context.getCrafterIconForPattern(this.pattern);
                 state = State.SUCCESS;
                 return new StepOutput(Collections.emptyList());
             } else {

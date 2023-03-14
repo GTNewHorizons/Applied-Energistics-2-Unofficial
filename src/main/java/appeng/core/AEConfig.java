@@ -99,6 +99,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     private double WirelessBoosterExp = 1.5;
     public int levelEmitterDelay = 40;
     public int craftingCalculatorVersion = 2;
+    public int maxCraftingTreeVisualizationSize = 32 * 1024 * 1024; // 32 MiB
 
     public AEConfig(final File configFile) {
         super(configFile);
@@ -207,6 +208,12 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.craftingCalculatorVersion = this.get("debug", "CraftingCalculatorVersion", this.craftingCalculatorVersion)
                 .getInt(this.craftingCalculatorVersion);
         this.craftingCalculatorVersion = Math.max(1, Math.min(this.craftingCalculatorVersion, 2));
+        this.maxCraftingTreeVisualizationSize = this
+                .get("misc", "MaxCraftingTreeVisualizationSize", this.maxCraftingTreeVisualizationSize)
+                .getInt(this.maxCraftingTreeVisualizationSize);
+        // Clamp to 4kiB..1GiB
+        this.maxCraftingTreeVisualizationSize = Math
+                .max(4096, Math.min(this.maxCraftingTreeVisualizationSize, 1024 * 1024 * 1024));
         this.clientSync();
 
         for (final AEFeature feature : AEFeature.values()) {

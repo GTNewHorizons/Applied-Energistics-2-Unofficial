@@ -1,9 +1,7 @@
 package appeng.crafting.v2;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 import java.util.function.Predicate;
 
 import appeng.api.networking.crafting.ICraftingPatternDetails;
@@ -13,13 +11,14 @@ import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.crafting.v2.resolvers.CraftingTask;
 import appeng.util.item.AEItemStack;
+import io.netty.buffer.ByteBuf;
 
 /**
  * A single requested stack (item or fluid) to craft, e.g. 32x Torches
  *
  * @param <StackType> Should be {@link IAEItemStack} or {@link appeng.api.storage.data.IAEFluidStack}
  */
-public class CraftingRequest<StackType extends IAEStack<StackType>> {
+public class CraftingRequest<StackType extends IAEStack<StackType>> implements ITreeSerializable {
 
     public enum SubstitutionMode {
         /**
@@ -37,14 +36,25 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> {
         ACCEPT_FUZZY
     }
 
-    public static class UsedResolverEntry {
+    public static class UsedResolverEntry<T extends IAEStack<T>> implements ITreeSerializable {
 
-        public final CraftingTask task;
-        public final IAEStack<?> resolvedStack;
+        public final CraftingTask<T> task;
+        public final IAEStack<T> resolvedStack;
 
-        public UsedResolverEntry(CraftingTask task, IAEStack<?> resolvedStack) {
+        public UsedResolverEntry(CraftingTask<T> task, IAEStack<T> resolvedStack) {
             this.task = task;
             this.resolvedStack = resolvedStack;
+        }
+
+        @Override
+        public List<? extends ITreeSerializable> serializeTree(CraftingTreeSerializer serializer) throws IOException {
+            serializer.writeStack(resolvedStack);
+            return task.serializeTree(serializer);
+        }
+
+        @Override
+        public void loadChildren(Collection<ITreeSerializable> children) throws IOException {
+            task.loadChildren(children);
         }
     }
 
@@ -79,6 +89,26 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> {
      * A set of all patterns used to resolve this request and its parents, used for avoiding infinite recursion.
      */
     public final Set<ICraftingPatternDetails> patternParents = new HashSet<>();
+
+    @Override
+    public List<? extends ITreeSerializable> serializeTree(CraftingTreeSerializer serializer) throws IOException {
+        final ByteBuf buffer = serializer.getBuffer();
+        serializer.writeStack(stack);
+        serializer.writeEnum(substitutionMode);
+        buffer.writeBoolean(allowSimulation);
+        buffer.writeLong(remainingToProcess);
+        buffer.writeLong(byteCost);
+        buffer.writeLong(untransformedByteCost);
+        buffer.writeBoolean(wasSimulated);
+        return usedResolvers;
+    }
+
+    @Override
+    public void loadChildren(Collection<ITreeSerializable> children) throws IOException {
+        for (ITreeSerializable child : children) {
+            usedResolvers.add((UsedResolverEntry) child);
+        }
+    }
 
     /**
      * @param stack                  The item/fluid and stack to request

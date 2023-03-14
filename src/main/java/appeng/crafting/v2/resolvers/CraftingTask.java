@@ -1,5 +1,7 @@
 package appeng.crafting.v2.resolvers;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -12,13 +14,15 @@ import appeng.api.storage.data.IItemList;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingContext;
 import appeng.crafting.v2.CraftingRequest;
+import appeng.crafting.v2.CraftingTreeSerializer;
+import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 
 /**
  * A single action that can be performed to solve a {@link CraftingRequest}. Can have multiple inputs and outputs,
  * resolved at runtime during crafting resolution (e.g. for handling substitutions).
  */
-public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStackType>> {
+public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStackType>> implements ITreeSerializable {
 
     public enum State {
 
@@ -96,4 +100,15 @@ public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStac
      * Compares priorities - highest priority first
      */
     public static final Comparator<CraftingTask> PRIORITY_COMPARATOR = Comparator.comparing(ct -> -ct.priority);
+
+    // TODO: remove
+    @Override
+    public List<? extends ITreeSerializable> serializeTree(CraftingTreeSerializer serializer) throws IOException {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void loadChildren(Collection<ITreeSerializable> children) throws IOException {
+
+    }
 }

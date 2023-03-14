@@ -6,6 +6,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import appeng.api.AEApi;
+import appeng.api.networking.crafting.ICraftingMedium;
+import appeng.me.cache.CraftingGridCache;
+import appeng.util.item.AEItemDef;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -91,6 +95,7 @@ public final class CraftingContext {
     private CraftingTask.State finishedState = CraftingTask.State.FAILURE;
     private final ImmutableMap<IAEItemStack, ImmutableList<ICraftingPatternDetails>> availablePatterns;
     private final Map<IAEItemStack, List<ICraftingPatternDetails>> precisePatternCache = new HashMap<>();
+    private final Map<ICraftingPatternDetails, IAEItemStack> crafterIconCache = new HashMap<>();
     private final OreListMultiMap<ICraftingPatternDetails> fuzzyPatternCache = new OreListMultiMap<>();
     private final IdentityHashMap<ICraftingPatternDetails, Boolean> isPatternComplexCache = new IdentityHashMap<>();
     private final ClassToInstanceMap<Object> userCaches = MutableClassToInstanceMap.create();
@@ -133,6 +138,21 @@ public final class CraftingContext {
             throw new IllegalStateException("No resolvers available for request " + request.toString());
         }
         queueNextTaskOf(processing, true);
+    }
+
+    public IAEItemStack getCrafterIconForPattern(@Nonnull ICraftingPatternDetails pattern) {
+        return crafterIconCache.computeIfAbsent(pattern, ignored -> {
+            if (craftingGrid instanceof CraftingGridCache) {
+                final List<ICraftingMedium> mediums = ((CraftingGridCache) craftingGrid).getMediums(pattern);
+                for (ICraftingMedium medium : mediums) {
+                    ItemStack stack = medium.getCrafterIcon();
+                    if (stack != null) {
+                        return AEItemStack.create(stack);
+                    }
+                }
+            }
+            return AEItemStack.create(AEApi.instance().definitions().blocks().iface().maybeStack(1).orNull());
+        });
     }
 
     public List<ICraftingPatternDetails> getPrecisePatternsFor(@Nonnull IAEItemStack stack) {

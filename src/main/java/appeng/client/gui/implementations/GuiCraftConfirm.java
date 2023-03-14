@@ -10,6 +10,7 @@
 
 package appeng.client.gui.implementations;
 
+import java.lang.ref.WeakReference;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -23,6 +24,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.AEApi;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiCraftingCPUTable;
@@ -37,6 +39,13 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.crafting.v2.CraftingJobV2;
+import appeng.crafting.v2.CraftingRequest;
+import appeng.crafting.v2.CraftingRequest.UsedResolverEntry;
+import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
+import appeng.crafting.v2.resolvers.EmitableItemResolver.EmitItemTask;
+import appeng.crafting.v2.resolvers.ExtractItemResolver.ExtractItemTask;
+import appeng.crafting.v2.resolvers.SimulateMissingItemResolver;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.integration.modules.NEI;
 import appeng.parts.reporting.PartCraftingTerminal;
@@ -50,6 +59,23 @@ import com.google.common.base.Joiner;
 
 public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolder {
 
+    public enum DisplayMode {
+
+        LIST,
+        TREE;
+
+        public DisplayMode next() {
+            switch (this) {
+                case LIST:
+                    return TREE;
+                case TREE:
+                    return LIST;
+                default:
+                    throw new IllegalArgumentException(this.toString());
+            }
+        }
+    }
+
     private final ContainerCraftConfirm ccc;
     private final GuiCraftingCPUTable cpuTable;
 
@@ -61,10 +87,13 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
     private final List<IAEItemStack> visual = new ArrayList<>();
 
+    private DisplayMode displayMode = DisplayMode.LIST;
+
     private GuiBridge OriginalGui;
     private GuiButton cancel;
     private GuiButton start;
     private GuiButton selectCPU;
+    private GuiButton switchDisplayMode;
     private int tooltip = -1;
     private ItemStack hoveredStack;
 
@@ -142,6 +171,15 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 20,
                 GuiText.Cancel.getLocal());
         this.buttonList.add(this.cancel);
+
+        this.switchDisplayMode = new GuiButton(
+                0,
+                this.guiLeft + this.xSize - 60,
+                this.guiTop + 1,
+                32,
+                18,
+                GuiText.Yes.getLocal());
+        this.buttonList.add(this.switchDisplayMode);
     }
 
     @Override
@@ -159,6 +197,19 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         }
         this.selectCPU.enabled = !this.isSimulation();
 
+        switch (displayMode) {
+            case LIST:
+                drawListScreen(mouseX, mouseY, btn);
+                break;
+            case TREE:
+                drawTreeScreen(mouseX, mouseY, btn);
+                break;
+        }
+
+        super.drawScreen(mouseX, mouseY, btn);
+    }
+
+    private void drawListScreen(final int mouseX, final int mouseY, final float btn) {
         final int gx = (this.width - this.xSize) / 2;
         final int gy = (this.height - this.ySize) / 2;
 
@@ -185,8 +236,10 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 x = 0;
             }
         }
+    }
 
-        super.drawScreen(mouseX, mouseY, btn);
+    private void drawTreeScreen(final int mouseX, final int mouseY, final float btn) {
+        // TODO
     }
 
     private void updateCPUButtonText() {
@@ -226,6 +279,17 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 7,
                 GuiColors.CraftConfirmCraftingPlan.getColor());
 
+        switch (displayMode) {
+            case LIST:
+                drawListFG(offsetX, offsetY, mouseX, mouseY);
+                break;
+            case TREE:
+                drawTreeFG(offsetX, offsetY, mouseX, mouseY);
+                break;
+        }
+    }
+
+    private void drawListFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         String dsp = null;
 
         if (this.isSimulation()) {
@@ -388,11 +452,148 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         }
     }
 
+    private void drawTreeFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        final WeakReference<CraftingJobV2> weakJob = CraftingJobV2.TEST_LAST_JOB;
+        if (weakJob == null) {
+            return;
+        }
+        final CraftingJobV2 job = weakJob.get();
+        if (job == null) {
+            return;
+        }
+        if (job.getOutput() == null) {
+            return;
+        }
+
+        final int xo = 9;
+        final int yo = 22;
+
+        drawTreeRequestRecursive(xo + 2, yo + 2, job.originalRequest);
+        bindTexture("guis/states.png");
+    }
+
+    private <T extends IAEStack<T>> IAEStack<T> getDisplayItemForRequest(CraftingRequest<T> request) {
+        if (request.usedResolvers.isEmpty()) {
+            return request.stack;
+        } else {
+            return request.usedResolvers.get(0).resolvedStack;
+        }
+    }
+
+    // Returns self width
+    private int drawTreeRequestRecursive(final int x, final int y, final CraftingRequest<?> request) {
+        final int textColor = GuiColors.SearchboxText.getColor();
+
+        drawStack(x, y, getDisplayItemForRequest(request), true);
+        if (request.wasSimulated) {
+            bindTexture("guis/states.png");
+            GL11.glScalef(0.5f, 0.5f, 1.0f);
+            drawIcon(2 * x + 16, 2 * y, 8 * 16);
+            GL11.glScalef(2.0f, 2.0f, 1.0f);
+        }
+        int curX = x;
+        for (UsedResolverEntry resolver : request.usedResolvers) {
+            final int resolverX = curX;
+            bindTexture("guis/states.png");
+            final int iconX = curX, iconY = y + 18;
+            if (resolver.resolvedStack == null) {
+                continue;
+            }
+            drawTreeLine(x + 8, y + 14, curX + 8, y + 20);
+            List<CraftingRequest<IAEItemStack>> children = null;
+            long displayCount = resolver.resolvedStack.getStackSize();
+            if (resolver.task instanceof ExtractItemTask) {
+                final ExtractItemTask task = (ExtractItemTask) resolver.task;
+                drawIcon(iconX, iconY, task.removedFromSystem.isEmpty() ? (1 * 16 + 2) : (1 * 16 + 1));
+            } else if (resolver.task instanceof CraftFromPatternTask) {
+                final CraftFromPatternTask task = (CraftFromPatternTask) resolver.task;
+                IAEItemStack icon = task.craftingMachine;
+                if (icon != null) {
+                    drawStack(iconX, iconY, icon, false);
+                    GL11.glScalef(0.5f, 0.5f, 1.0f);
+                    drawIcon(iconX * 2 - 4, iconY * 2 - 4, 1 * 16 + 3);
+                    GL11.glScalef(2.0f, 2.0f, 1.0f);
+                } else {
+                    drawIcon(iconX, iconY, 1 * 16 + 3);
+                }
+                children = task.getChildRequests();
+                displayCount = task.getTotalCraftsDone();
+            } else if (resolver.task instanceof EmitItemTask) {
+                drawIcon(iconX, iconY, 1);
+            } else if (resolver.task instanceof SimulateMissingItemResolver.ConjureItemTask) {
+                drawIcon(iconX, iconY, 8 * 16);
+            }
+            drawSmallStackCount(iconX, iconY, displayCount, textColor);
+            if (children != null) {
+                for (CraftingRequest<IAEItemStack> child : children) {
+                    drawTreeLine(resolverX + 8, y + 30, curX + 8, y + 38);
+                    curX += drawTreeRequestRecursive(curX, y + 36, child);
+                }
+            } else {
+                curX += 18;
+            }
+        }
+        if (curX == x) {
+            curX += 18;
+        }
+        return curX - x;
+    }
+
+    private void drawTreeLine(final int x0, final int y0, final int x1, final int y1) {
+        final int color = GuiColors.SearchboxText.getColor() | 0xFF000000;
+        if (x0 != x1) {
+            final int midY = (y0 + y1) / 2;
+            drawVerticalLine(x0, y0, midY, color);
+            drawHorizontalLine(x0, x1, midY, color);
+            drawVerticalLine(x1, midY, y1, color);
+        } else {
+            drawVerticalLine(x0, y0, y1, color);
+        }
+    }
+
+    private void drawIcon(final int x, final int y, final int iconIndex) {
+        final int uv_y = iconIndex / 16;
+        final int uv_x = iconIndex - uv_y * 16;
+
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        drawTexturedModalRect(x, y, uv_x * 16, uv_y * 16, 16, 16);
+    }
+
+    private void drawStack(final int x, final int y, final IAEStack<?> stack, boolean drawCount) {
+        final int textColor = GuiColors.SearchboxText.getColor();
+        if (stack instanceof IAEItemStack) {
+            drawItem(x, y, ((IAEItemStack) stack).getItemStack());
+        }
+        if (drawCount) {
+            drawSmallStackCount(x, y, (stack == null) ? 0L : stack.getStackSize(), textColor);
+        }
+    }
+
+    private void drawSmallStackCount(final int x, final int y, final long count, final int textColor) {
+        final String countText = ReadableNumberConverter.INSTANCE.toSlimReadableForm(count);
+        drawSmallStackCount(x, y, countText, textColor);
+    }
+
+    private void drawSmallStackCount(final int x, final int y, final String countText, final int textColor) {
+        final int countWidth = this.fontRendererObj.getStringWidth(countText);
+        GL11.glScalef(0.5f, 0.5f, 1.0f);
+        this.fontRendererObj.drawString(countText, x * 2 + 32 - countWidth, y * 2 + 24, textColor, false);
+        GL11.glScalef(2.0f, 2.0f, 1.0f);
+    }
+
     @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         cpuTable.drawBG(offsetX, offsetY);
         this.setScrollBar();
-        this.bindTexture("guis/craftingreport.png");
+
+        switch (displayMode) {
+            case LIST:
+                this.bindTexture("guis/craftingreport.png");
+                break;
+            case TREE:
+                this.bindTexture("guis/craftingtree.png");
+                break;
+        }
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
     }
 
@@ -542,6 +743,10 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         if (btn == this.cancel) {
             this.addMissingItemsToBookMark();
             switchToOriginalGUI();
+        }
+
+        if (btn == this.switchDisplayMode) {
+            this.displayMode = this.displayMode.next();
         }
 
         if (btn == this.start) {
