@@ -6,18 +6,16 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-import appeng.api.AEApi;
-import appeng.api.networking.crafting.ICraftingMedium;
-import appeng.me.cache.CraftingGridCache;
-import appeng.util.item.AEItemDef;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
+import appeng.api.AEApi;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingGrid;
+import appeng.api.networking.crafting.ICraftingMedium;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IStorageGrid;
@@ -27,6 +25,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.container.ContainerNull;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.resolvers.CraftingTask;
+import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;

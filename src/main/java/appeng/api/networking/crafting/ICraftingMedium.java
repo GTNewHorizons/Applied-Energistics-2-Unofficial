@@ -37,7 +37,8 @@ public interface ICraftingMedium {
     boolean isBusy();
 
     /**
-     * @return An itemstack representing the machine that will craft the patterns pushed into this medium. Shown in the crafting simulation tree view.
+     * @return An itemstack representing the machine that will craft the patterns pushed into this medium. Shown in the
+     *         crafting simulation tree view.
      */
     default ItemStack getCrafterIcon() {
         return null;
