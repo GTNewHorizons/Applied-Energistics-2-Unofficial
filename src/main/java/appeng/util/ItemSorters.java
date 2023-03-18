@@ -14,56 +14,25 @@ import java.util.Comparator;
 
 import appeng.api.config.SortDir;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IInvTweaks;
-import appeng.util.item.AEItemStack;
 
 public class ItemSorters {
 
-    private static SortDir Direction = SortDir.ASCENDING;
+    private static SortDir direction = SortDir.ASCENDING;
 
-    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_NAME = new Comparator<IAEItemStack>() {
+    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_NAME = Comparator
+            .comparing(Platform::getItemDisplayName, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint);
 
-        @Override
-        public int compare(final IAEItemStack o1, final IAEItemStack o2) {
-            if (getDirection() == SortDir.ASCENDING) {
-                return Platform.getItemDisplayName(o1).compareToIgnoreCase(Platform.getItemDisplayName(o2));
-            }
-            return Platform.getItemDisplayName(o2).compareToIgnoreCase(Platform.getItemDisplayName(o1));
-        }
-    };
-    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_MOD = new Comparator<IAEItemStack>() {
+    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_MOD = Comparator
+            .comparing(Platform::getModId, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint)
+            .thenComparing(Platform::getItemDisplayName);
 
-        @Override
-        public int compare(final IAEItemStack o1, final IAEItemStack o2) {
-            final AEItemStack op1 = (AEItemStack) o1;
-            final AEItemStack op2 = (AEItemStack) o2;
+    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_SIZE = Comparator
+            .comparing(IAEStack::getStackSize, (a, b) -> Long.compare(a, b) * direction.sortHint);
 
-            if (getDirection() == SortDir.ASCENDING) {
-                return this.secondarySort(op2.getModID().compareToIgnoreCase(op1.getModID()), o1, o2);
-            }
-            return this.secondarySort(op1.getModID().compareToIgnoreCase(op2.getModID()), o2, o1);
-        }
-
-        private int secondarySort(final int compareToIgnoreCase, final IAEItemStack o1, final IAEItemStack o2) {
-            if (compareToIgnoreCase == 0) {
-                return Platform.getItemDisplayName(o2).compareToIgnoreCase(Platform.getItemDisplayName(o1));
-            }
-
-            return compareToIgnoreCase;
-        }
-    };
-    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_SIZE = new Comparator<IAEItemStack>() {
-
-        @Override
-        public int compare(final IAEItemStack o1, final IAEItemStack o2) {
-            if (getDirection() == SortDir.ASCENDING) {
-                return compareLong(o2.getStackSize(), o1.getStackSize());
-            }
-            return compareLong(o1.getStackSize(), o2.getStackSize());
-        }
-    };
     private static IInvTweaks api;
     public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_INV_TWEAKS = new Comparator<IAEItemStack>() {
 
@@ -73,12 +42,7 @@ public class ItemSorters {
                 return CONFIG_BASED_SORT_BY_NAME.compare(o1, o2);
             }
 
-            final int cmp = api.compareItems(o1.getItemStack(), o2.getItemStack());
-
-            if (getDirection() == SortDir.ASCENDING) {
-                return cmp;
-            }
-            return -cmp;
+            return api.compareItems(o1.getItemStack(), o2.getItemStack()) * direction.sortHint;
         }
     };
 
@@ -95,40 +59,21 @@ public class ItemSorters {
     }
 
     public static int compareInt(final int a, final int b) {
-        if (a == b) {
-            return 0;
-        }
-        if (a < b) {
-            return -1;
-        }
-        return 1;
+        // for backwards compat for ext mods...
+        return Integer.compare(a, b);
     }
 
     public static int compareLong(final long a, final long b) {
-        if (a == b) {
-            return 0;
-        }
-        if (a < b) {
-            return -1;
-        }
-        return 1;
+        // for backwards compat with ext mods...
+        return Long.compare(a, b);
     }
 
     public static int compareDouble(final double a, final double b) {
-        if (a == b) {
-            return 0;
-        }
-        if (a < b) {
-            return -1;
-        }
-        return 1;
-    }
-
-    private static SortDir getDirection() {
-        return Direction;
+        // for backwards compat for ext mods...
+        return Double.compare(a, b);
     }
 
     public static void setDirection(final SortDir direction) {
-        Direction = direction;
+        ItemSorters.direction = direction;
     }
 }
