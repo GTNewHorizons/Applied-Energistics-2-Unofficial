@@ -55,6 +55,7 @@ public enum Settings {
     CRAFT_VIA_REDSTONE(EnumSet.of(YesNo.YES, YesNo.NO)),
 
     STORAGE_FILTER(EnumSet.allOf(StorageFilter.class)),
+    TYPE_FILTER(EnumSet.allOf(TypeFilter.class)),
     PLACE_BLOCK(EnumSet.of(YesNo.YES, YesNo.NO)),
 
     SCHEDULING_MODE(EnumSet.allOf(SchedulingMode.class)),

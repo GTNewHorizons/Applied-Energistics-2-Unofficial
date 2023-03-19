@@ -65,7 +65,7 @@ public class TileChest extends AENetworkPowerTile
     private static final int[] SIDES = { 0 };
     private static final int[] FRONT = { 1 };
     private static final int[] NO_SLOTS = {};
-    private final AppEngInternalInventory inv = new AppEngInternalInventory(this, 2);
+    private final AppEngInternalInventory inv = new AppEngInternalInventory(this, 2, Integer.MAX_VALUE, true);
     private final BaseActionSource mySrc = new MachineSource(this);
     private final IConfigManager config = new ConfigManager(this);
     private ItemStack storageType;
@@ -85,7 +85,7 @@ public class TileChest extends AENetworkPowerTile
         this.config.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.config.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.config.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-
+        this.config.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
         this.setInternalPublicPowerStorage(true);
         this.setInternalPowerFlow(AccessRestriction.WRITE);
     }

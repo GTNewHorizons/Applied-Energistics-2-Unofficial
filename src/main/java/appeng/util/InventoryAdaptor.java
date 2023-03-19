@@ -24,6 +24,7 @@ import appeng.api.config.InsertionMode;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBetterStorage;
+import appeng.tile.AEBaseInvTile;
 import appeng.util.inv.*;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
@@ -52,7 +53,14 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         } else if (te instanceof ISidedInventory) {
             final ISidedInventory si = (ISidedInventory) te;
             final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
+            int stackLimit = 0;
+            if (te instanceof AEBaseInvTile) {
+                stackLimit = ((AEBaseInvTile) te).getInternalInventory().getInventoryStackLimit();
+            }
             if (si.getSizeInventory() > 0 && slots != null && slots.length > 0) {
+                if (stackLimit > 0) {
+                    return new AdaptorIInventory(new WrapperMCISidedInventory(si, d), stackLimit);
+                }
                 return new AdaptorIInventory(new WrapperMCISidedInventory(si, d));
             }
         } else if (te instanceof IInventory) {

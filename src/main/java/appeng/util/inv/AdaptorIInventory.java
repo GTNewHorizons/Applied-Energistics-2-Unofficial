@@ -24,13 +24,18 @@ public class AdaptorIInventory extends InventoryAdaptor {
 
     private final IInventory i;
     private final boolean wrapperEnabled;
-    private final boolean skipStackSizeCheck;
+    private boolean skipStackSizeCheck;
 
     public AdaptorIInventory(final IInventory s) {
         this.i = s;
         skipStackSizeCheck = i.getClass().toString()
                 .equals("class wanion.avaritiaddons.block.chest.infinity.TileEntityInfinityChest");
         this.wrapperEnabled = s instanceof IInventoryWrapper;
+    }
+
+    public AdaptorIInventory(final IInventory s, final int maxStack) {
+        this(s);
+        skipStackSizeCheck = skipStackSizeCheck || maxStack == Integer.MAX_VALUE;
     }
 
     @Override
@@ -230,8 +235,15 @@ public class AdaptorIInventory extends InventoryAdaptor {
         }
 
         final ItemStack left = itemsToAdd.copy();
-        final int perOperationLimit = this.skipStackSizeCheck ? this.i.getInventoryStackLimit()
-                : Math.min(this.i.getInventoryStackLimit(), itemsToAdd.getMaxStackSize());
+
+        int internalLimit = 0;
+        if (this.i instanceof WrapperInventoryRange) {
+            internalLimit = ((WrapperInventoryRange) this.i).getInternalInventoryStackLimit();
+        }
+        int invLimit = internalLimit > 0 ? internalLimit : this.i.getInventoryStackLimit();
+
+        final int perOperationLimit = this.skipStackSizeCheck ? invLimit
+                : Math.min(invLimit, itemsToAdd.getMaxStackSize());
         final int inventorySize = this.i.getSizeInventory();
 
         // go over empty slots first if needed

@@ -440,7 +440,24 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     StorageFilter.NONE,
                     ButtonToolTips.ReportInaccessibleItems,
                     ButtonToolTips.ReportInaccessibleItemsYes);
-
+            this.registerApp(
+                    16 * 3 + 7,
+                    Settings.TYPE_FILTER,
+                    TypeFilter.ITEMS,
+                    ButtonToolTips.TypeFilter,
+                    ButtonToolTips.TypeFilterShowItemsOnly);
+            this.registerApp(
+                    16 * 3 + 8,
+                    Settings.TYPE_FILTER,
+                    TypeFilter.FLUIDS,
+                    ButtonToolTips.TypeFilter,
+                    ButtonToolTips.TypeFilterShowFluidsOnly);
+            this.registerApp(
+                    16 * 3 + 9,
+                    Settings.TYPE_FILTER,
+                    TypeFilter.ALL,
+                    ButtonToolTips.TypeFilter,
+                    ButtonToolTips.TypeFilterShowAll);
             this.registerApp(
                     16 * 14,
                     Settings.PLACE_BLOCK,

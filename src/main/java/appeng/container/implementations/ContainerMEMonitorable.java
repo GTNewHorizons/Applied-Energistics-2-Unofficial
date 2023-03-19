@@ -92,6 +92,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
         this.clientCM.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.clientCM.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.clientCM.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
+        this.clientCM.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
 
         if (Platform.isServer()) {
             this.serverCM = monitorable.getConfigManager();

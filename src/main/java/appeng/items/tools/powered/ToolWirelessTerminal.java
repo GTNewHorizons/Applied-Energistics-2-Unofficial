@@ -21,10 +21,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import appeng.api.AEApi;
-import appeng.api.config.Settings;
-import appeng.api.config.SortDir;
-import appeng.api.config.SortOrder;
-import appeng.api.config.ViewItems;
+import appeng.api.config.*;
 import appeng.api.features.IWirelessTermHandler;
 import appeng.api.util.IConfigManager;
 import appeng.core.AEConfig;
@@ -111,6 +108,7 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
         out.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         out.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         out.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
+        out.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
 
         out.readFromNBT((NBTTagCompound) Platform.openNbtData(target).copy());
         return out;

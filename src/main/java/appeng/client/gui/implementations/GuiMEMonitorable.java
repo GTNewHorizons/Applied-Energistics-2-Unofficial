@@ -90,6 +90,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
     private GuiImgButton searchBoxSettings;
     private GuiImgButton terminalStyleBox;
     private GuiImgButton searchStringSave;
+    private GuiImgButton typeFilter;
     private boolean isAutoFocus = false;
     private int currentMouseX = 0;
     private int currentMouseY = 0;
@@ -263,6 +264,15 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
                             offset,
                             Settings.VIEW_MODE,
                             this.configSrc.getSetting(Settings.VIEW_MODE)));
+            offset += 20;
+        }
+        if (ItemRepo.getFilter().containsKey(TypeFilter.FLUIDS)) {
+            this.buttonList.add(
+                    this.typeFilter = new GuiImgButton(
+                            this.guiLeft - 18,
+                            offset,
+                            Settings.TYPE_FILTER,
+                            this.configSrc.getSetting(Settings.TYPE_FILTER)));
             offset += 20;
         }
 
@@ -518,6 +528,11 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
     }
 
     @Override
+    public Enum getTypeFilter() {
+        return this.configSrc.getSetting(Settings.TYPE_FILTER);
+    }
+
+    @Override
     public Enum getSortDisplay() {
         return this.configSrc.getSetting(Settings.VIEW_MODE);
     }
@@ -534,6 +549,9 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 
         if (this.ViewBox != null) {
             this.ViewBox.set(this.configSrc.getSetting(Settings.VIEW_MODE));
+        }
+        if (this.typeFilter != null) {
+            this.typeFilter.set(this.configSrc.getSetting(Settings.TYPE_FILTER));
         }
 
         this.repo.updateView();

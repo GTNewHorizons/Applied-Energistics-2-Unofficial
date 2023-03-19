@@ -76,7 +76,7 @@ public final class CraftingContext {
         /**
          * Ordered by priority
          */
-        public final Deque<CraftingTask> resolvers = new ArrayDeque<>(4);
+        public final ArrayList<CraftingTask> resolvers = new ArrayList<>(4);
 
         public RequestInProcessing(CraftingRequest<StackType> request) {
             this.request = request;
@@ -127,6 +127,7 @@ public final class CraftingContext {
         }
         final RequestInProcessing<?> processing = new RequestInProcessing<>(request);
         processing.resolvers.addAll(CraftingCalculations.tryResolveCraftingRequest(request, this));
+        Collections.reverse(processing.resolvers); // We remove from the end for efficient ArrayList usage
         liveRequests.add(processing);
         if (processing.resolvers.isEmpty()) {
             throw new IllegalStateException("No resolvers available for request " + request.toString());
@@ -305,9 +306,12 @@ public final class CraftingContext {
         if (request.request.remainingToProcess <= 0 || request.resolvers.isEmpty()) {
             return false;
         }
-        CraftingTask nextResolver = request.resolvers.removeFirst();
+        CraftingTask nextResolver = request.resolvers.remove(request.resolvers.size() - 1);
         if (addResolverTask && !request.resolvers.isEmpty()) {
             tasksToProcess.addFirst(new CheckOtherResolversTask(request));
+        }
+        if (request.resolvers.isEmpty()) {
+            request.resolvers.trimToSize();
         }
         tasksToProcess.addFirst(nextResolver);
         return true;

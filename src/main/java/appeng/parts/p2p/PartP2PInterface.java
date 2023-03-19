@@ -31,6 +31,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
+import appeng.api.parts.IPart;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.data.IAEFluidStack;
@@ -42,6 +43,7 @@ import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
+import appeng.parts.automation.UpgradeInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
@@ -112,7 +114,7 @@ public class PartP2PInterface extends PartP2PTunnel<PartP2PInterface>
 
     @Override
     @SideOnly(Side.CLIENT)
-    protected IIcon getTypeTexture() {
+    public IIcon getTypeTexture() {
         return AEApi.instance().definitions().blocks().iface().maybeBlock().get().getBlockTextureFromSide(0);
     }
 
@@ -167,6 +169,25 @@ public class PartP2PInterface extends PartP2PTunnel<PartP2PInterface>
             for (int i = 0; i < patterns.getSizeInventory(); i++) {
                 if (patterns.getStackInSlot(i) == null) continue;
                 drops.add(patterns.getStackInSlot(i));
+            }
+            final IPart tile = this.getHost().getPart(this.getSide());
+            if (tile instanceof PartP2PInterface) {
+                DualityInterface newDuality = ((PartP2PInterface) tile).duality;
+                // Copy interface storage, upgrades, and settings over
+                UpgradeInventory upgrades = (UpgradeInventory) duality.getInventoryByName("upgrades");
+                ((PartP2PInterface) tile).duality.getStorage();
+                UpgradeInventory newUpgrade = (UpgradeInventory) newDuality.getInventoryByName("upgrades");
+                for (int i = 0; i < upgrades.getSizeInventory(); ++i) {
+                    newUpgrade.setInventorySlotContents(i, upgrades.getStackInSlot(i));
+                }
+                IInventory storage = duality.getStorage();
+                IInventory newStorage = newDuality.getStorage();
+                for (int i = 0; i < storage.getSizeInventory(); ++i) {
+                    newStorage.setInventorySlotContents(i, storage.getStackInSlot(i));
+                }
+                IConfigManager config = duality.getConfigManager();
+                config.getSettings().forEach(
+                        setting -> newDuality.getConfigManager().putSetting(setting, config.getSetting(setting)));
             }
             TileEntity te = getTileEntity();
             Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);

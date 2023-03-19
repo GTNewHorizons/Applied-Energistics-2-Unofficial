@@ -12,6 +12,7 @@ import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerCraftingStatus;
+import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.core.sync.network.NetworkHandler;
@@ -47,21 +48,26 @@ public class PacketCraftingRemainingOperations extends AppEngPacket {
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
         if (player.openContainer instanceof ContainerCraftingStatus) {
-            ContainerCraftingStatus cpv = (ContainerCraftingStatus) player.openContainer;
+            final ContainerCraftingStatus cpv = (ContainerCraftingStatus) player.openContainer;
             final Object target = cpv.getTarget();
-            if (target instanceof IGridHost) {
-                final ContainerOpenContext context = cpv.getOpenContext();
-                if (context != null) {
-                    ICraftingCPU cpu = cpv.getCPUTable().getSelectedCPU().getServerCluster();
-                    if (cpu instanceof CraftingCPUCluster) {
-                        try {
-                            NetworkHandler.instance.sendTo(
-                                    new PacketCraftingRemainingOperations(
-                                            ((CraftingCPUCluster) cpu).getRemainingOperations()),
-                                    (EntityPlayerMP) player);
-                        } catch (Exception ignored) {}
-                    }
-                }
+            if (!(target instanceof IGridHost)) {
+                return;
+            }
+            final ContainerOpenContext context = cpv.getOpenContext();
+            if (context == null) {
+                return;
+            }
+            final CraftingCPUStatus selectedCpu = cpv.getCPUTable().getSelectedCPU();
+            if (selectedCpu == null) {
+                return;
+            }
+            final ICraftingCPU cpu = selectedCpu.getServerCluster();
+            if (cpu instanceof CraftingCPUCluster) {
+                try {
+                    NetworkHandler.instance.sendTo(
+                            new PacketCraftingRemainingOperations(((CraftingCPUCluster) cpu).getRemainingOperations()),
+                            (EntityPlayerMP) player);
+                } catch (Exception ignored) {}
             }
         }
     }
