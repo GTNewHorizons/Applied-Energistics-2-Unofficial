@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
@@ -24,6 +25,7 @@ import net.minecraft.item.ItemStack;
 import appeng.api.AEApi;
 import appeng.api.config.*;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.widgets.IScrollSource;
 import appeng.client.gui.widgets.ISortSource;
@@ -34,6 +36,9 @@ import appeng.util.Platform;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 
 public class ItemRepo {
@@ -51,6 +56,17 @@ public class ItemRepo {
     private String innerSearch = "";
     private String NEIWord = null;
     private boolean hasPower;
+    private static final ListMultimap<Enum<TypeFilter>, BiPredicate<IAEStack<?>, TypeFilter>> filters = ArrayListMultimap
+            .create(4, 8);
+
+    public static <StackType extends IAEStack<StackType>> void registerTypeHandler(
+            BiPredicate<IAEStack<?>, TypeFilter> filter, TypeFilter type) {
+        filters.put(type, filter);
+    }
+
+    public static ListMultimap<Enum<TypeFilter>, BiPredicate<IAEStack<?>, TypeFilter>> getFilter() {
+        return filters;
+    }
 
     public ItemRepo(final IScrollSource src, final ISortSource sortSrc) {
         this.src = src;
@@ -104,6 +120,7 @@ public class ItemRepo {
 
         final Enum viewMode = this.sortSrc.getSortDisplay();
         final Enum searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
+        final Enum typeFilter = this.sortSrc.getTypeFilter();
         if (searchMode == SearchBoxMode.NEI_AUTOSEARCH || searchMode == SearchBoxMode.NEI_MANUAL_SEARCH) {
             this.updateNEI(this.searchString);
         }
@@ -144,7 +161,12 @@ public class ItemRepo {
         }
 
         boolean notDone = false;
-        for (IAEItemStack is : this.list) {
+        out: for (IAEItemStack is : this.list) {
+            // filter AEStack type
+            IAEItemStack finalIs = is;
+            for (final BiPredicate<IAEStack<?>, TypeFilter> filter : filters.values()) {
+                if (!filter.test(finalIs, (TypeFilter) typeFilter)) continue out;
+            }
             if (this.myPartitionList != null) {
                 if (!this.myPartitionList.isListed(is)) {
                     continue;

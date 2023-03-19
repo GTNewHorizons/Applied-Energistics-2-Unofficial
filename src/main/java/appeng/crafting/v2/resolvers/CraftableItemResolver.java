@@ -53,8 +53,8 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
         // With the recursive part subtracted
         protected final IAEItemStack[] patternOutputs;
         protected final IAEItemStack matchingOutput;
-        protected final List<RequestAndPerCraftAmount> childRequests = new ArrayList<>();
-        protected final List<CraftingRequest> complexRequestPerSlot = new ArrayList<>();
+        protected final ArrayList<RequestAndPerCraftAmount> childRequests = new ArrayList<>();
+        protected final ArrayList<CraftingRequest> complexRequestPerSlot = new ArrayList<>();
         protected final Map<IAEItemStack, CraftingRequest<IAEItemStack>> childRecursionRequests = new HashMap<>();
         // byproduct injected -> amount per craft
         protected final IdentityHashMap<IAEItemStack, Long> byproducts = new IdentityHashMap<>();
@@ -302,6 +302,8 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                         childRequests.add(new RequestAndPerCraftAmount(req, input.getStackSize()));
                     }
                 }
+                childRequests.trimToSize();
+                complexRequestPerSlot.trimToSize();
                 requestedInputs = true;
                 state = State.NEEDS_MORE_WORK;
                 return new StepOutput(Collections.unmodifiableList(newChildren));

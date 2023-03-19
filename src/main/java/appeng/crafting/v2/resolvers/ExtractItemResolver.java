@@ -18,8 +18,8 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
 
     public static class ExtractItemTask extends CraftingTask<IAEItemStack> {
 
-        public final List<IAEItemStack> removedFromSystem = new ArrayList<>();
-        public final List<IAEItemStack> removedFromByproducts = new ArrayList<>();
+        public final ArrayList<IAEItemStack> removedFromSystem = new ArrayList<>();
+        public final ArrayList<IAEItemStack> removedFromByproducts = new ArrayList<>();
 
         public ExtractItemTask(CraftingRequest<IAEItemStack> request) {
             super(request, CraftingTask.PRIORITY_EXTRACT); // always try to extract items first
@@ -42,6 +42,8 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
                     extractFuzzy(context, context.itemModel, removedFromSystem);
                 }
             }
+            removedFromSystem.trimToSize();
+            removedFromByproducts.trimToSize();
             return new StepOutput(Collections.emptyList());
         }
 

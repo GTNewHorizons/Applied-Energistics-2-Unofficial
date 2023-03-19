@@ -119,6 +119,11 @@ public enum ButtonToolTips {
     ReportInaccessibleItemsYes,
     ReportInaccessibleItemsNo,
 
+    TypeFilter,
+    TypeFilterShowAll,
+    TypeFilterShowItemsOnly,
+    TypeFilterShowFluidsOnly,
+
     BlockPlacement,
     BlockPlacementYes,
     BlockPlacementNo,

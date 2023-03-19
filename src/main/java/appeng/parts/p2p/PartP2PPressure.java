@@ -58,7 +58,7 @@ public final class PartP2PPressure extends PartP2PTunnel<PartP2PPressure>
     }
 
     @Override
-    protected IIcon getTypeTexture() {
+    public IIcon getTypeTexture() {
         return BlockSupplier.getBlock(PRESSURE_TYPE_ICON_NAME).getIcon(0, 0);
     }
 

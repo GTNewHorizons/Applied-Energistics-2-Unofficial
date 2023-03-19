@@ -372,6 +372,11 @@ gui.tooltips.appliedenergistics2.ReportInaccessibleItems=Report Inaccessible Ite
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=Yes: Items that cannot be extracted will be visible.
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=No: Only extractable items will be visible.
 
+gui.tooltips.appliedenergistics2.TypeFilter=Filter Types
+gui.tooltips.appliedenergistics2.TypeFilterShowAll=Show All
+gui.tooltips.appliedenergistics2.TypeFilterShowItemsOnly=Show Items only
+gui.tooltips.appliedenergistics2.TypeFilterShowFluidsOnly=Show Fluid Drops only
+
 gui.tooltips.appliedenergistics2.BlockPlacement=Block Placement
 gui.tooltips.appliedenergistics2.BlockPlacementYes=Blocks will be placed as block.
 gui.tooltips.appliedenergistics2.BlockPlacementNo=Blocks will be dropped as item.

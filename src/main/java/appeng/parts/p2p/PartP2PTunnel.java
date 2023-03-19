@@ -125,7 +125,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     /**
      * @return If enabled it returns the icon of an AE quartz block, else vanilla quartz block icon
      */
-    protected IIcon getTypeTexture() {
+    public IIcon getTypeTexture() {
         final Optional<Block> maybeBlock = AEApi.instance().definitions().blocks().quartz().maybeBlock();
         if (maybeBlock.isPresent()) {
             return maybeBlock.get().getIcon(0, 0);

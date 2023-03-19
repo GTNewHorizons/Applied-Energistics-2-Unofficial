@@ -30,6 +30,7 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
     private boolean enableClientEvents = false;
     private IAEAppEngInventory te;
     private int maxStack;
+    private boolean ignoreStackLimit = false;
 
     public AppEngInternalInventory(final IAEAppEngInventory inventory, final int size) {
         this(inventory, size, 64);
@@ -40,6 +41,12 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
         this.size = size;
         this.maxStack = maxstack;
         this.inv = new ItemStack[size];
+    }
+
+    public AppEngInternalInventory(final IAEAppEngInventory inventory, final int size, final int maxstack,
+            final boolean ignoreStackLimit) {
+        this(inventory, size, maxstack);
+        this.ignoreStackLimit = ignoreStackLimit;
     }
 
     public IMEInventory getMEInventory() {
@@ -139,7 +146,7 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
 
     @Override
     public int getInventoryStackLimit() {
-        return this.maxStack > 64 ? 64 : this.maxStack;
+        return this.ignoreStackLimit ? this.maxStack : Math.min(this.maxStack, 64);
     }
 
     @Override

@@ -22,6 +22,7 @@ server.properties
 servers.dat
 usercache.json
 whitelist.json
+classes
 /out/
 *.iml
 *.ipr

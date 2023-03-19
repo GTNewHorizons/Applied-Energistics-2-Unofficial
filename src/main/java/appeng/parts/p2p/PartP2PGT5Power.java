@@ -53,8 +53,9 @@ public class PartP2PGT5Power extends PartP2PTunnel<PartP2PGT5Power> implements I
         this.cachedTarget = null;
     }
 
+    @Override
     @SideOnly(Side.CLIENT)
-    protected IIcon getTypeTexture() {
+    public IIcon getTypeTexture() {
         return Blocks.obsidian.getIcon(0, 0);
     }
 
