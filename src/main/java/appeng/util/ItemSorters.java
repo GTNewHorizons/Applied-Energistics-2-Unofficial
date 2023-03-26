@@ -12,14 +12,14 @@ package appeng.util;
 
 import java.util.Comparator;
 
+import javax.annotation.Nullable;
+
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IInvTweaks;
-
-import javax.annotation.Nullable;
 
 public class ItemSorters {
 

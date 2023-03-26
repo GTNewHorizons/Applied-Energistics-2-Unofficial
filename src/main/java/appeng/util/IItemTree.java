@@ -1,12 +1,12 @@
 package appeng.util;
 
-import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IItemList;
-import net.minecraft.item.ItemStack;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
+
+import net.minecraft.item.ItemStack;
+
+import appeng.api.storage.data.IAEItemStack;
 
 public interface IItemTree extends Iterable<IAEItemStack> {
 

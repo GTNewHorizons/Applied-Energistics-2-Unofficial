@@ -12,16 +12,12 @@ package appeng.client.me;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
-import appeng.util.IItemTree;
-import appeng.util.ItemTreeList;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.*;
@@ -31,7 +27,9 @@ import appeng.client.gui.widgets.IScrollSource;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.core.AEConfig;
 import appeng.items.storage.ItemViewCell;
+import appeng.util.IItemTree;
 import appeng.util.ItemSorters;
+import appeng.util.ItemTreeList;
 import appeng.util.Platform;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
@@ -148,7 +146,8 @@ public class ItemRepo {
                     cachedSearchPat = Pattern.compile(cachedSearchString.toLowerCase(), Pattern.CASE_INSENSITIVE);
                 } catch (final Throwable ignore) {
                     try {
-                        cachedSearchPat = Pattern.compile(Pattern.quote(cachedSearchString.toLowerCase()), Pattern.CASE_INSENSITIVE);
+                        cachedSearchPat = Pattern
+                                .compile(Pattern.quote(cachedSearchString.toLowerCase()), Pattern.CASE_INSENSITIVE);
                     } catch (final Throwable __) {
                         // :{ no search for you
                         cachedSearchPat = Pattern.compile(".+");

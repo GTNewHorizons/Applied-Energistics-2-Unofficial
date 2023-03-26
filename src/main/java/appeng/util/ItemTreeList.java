@@ -1,10 +1,11 @@
 package appeng.util;
 
-import appeng.api.storage.data.IAEItemStack;
-import net.minecraft.item.ItemStack;
-
 import java.util.*;
 import java.util.function.Predicate;
+
+import net.minecraft.item.ItemStack;
+
+import appeng.api.storage.data.IAEItemStack;
 
 public class ItemTreeList implements IItemTree {
 
@@ -47,7 +48,7 @@ public class ItemTreeList implements IItemTree {
         dsp.clear();
         if (filter != null) {
             list.forEach(item -> {
-                if(filter.test(item)) {
+                if (filter.test(item)) {
                     view.add(item);
                     dsp.add(item.getItemStack());
                 }
@@ -97,6 +98,7 @@ public class ItemTreeList implements IItemTree {
     }
 
     private Comparator<IAEItemStack> stackComparator(Comparator<IAEItemStack> cmp) {
-        return (stack1, stack2) -> Platform.isSameItem(stack1.getItemStack(), stack2.getItemStack()) ? 0 : cmp.compare(stack1, stack2);
+        return (stack1, stack2) -> Platform.isSameItem(stack1.getItemStack(), stack2.getItemStack()) ? 0
+                : cmp.compare(stack1, stack2);
     }
 }
