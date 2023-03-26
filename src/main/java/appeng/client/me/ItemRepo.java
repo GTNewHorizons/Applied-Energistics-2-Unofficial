@@ -12,8 +12,6 @@ package appeng.client.me;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
@@ -22,16 +20,16 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
 
-import appeng.api.AEApi;
 import appeng.api.config.*;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
-import appeng.api.storage.data.IItemList;
 import appeng.client.gui.widgets.IScrollSource;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.core.AEConfig;
 import appeng.items.storage.ItemViewCell;
+import appeng.util.IItemTree;
 import appeng.util.ItemSorters;
+import appeng.util.ItemTreeList;
 import appeng.util.Platform;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
@@ -43,17 +41,19 @@ import cpw.mods.fml.relauncher.ReflectionHelper;
 
 public class ItemRepo {
 
-    private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
-    private final ArrayList<IAEItemStack> view = new ArrayList<IAEItemStack>();
-    private final ArrayList<ItemStack> dsp = new ArrayList<ItemStack>();
+    private final IItemTree list;
     private final IScrollSource src;
     private final ISortSource sortSrc;
+    private SortOrder cachedSortOrder;
+    private SortDir cachedSortDir;
+    private SearchMode cachedSearchMode;
 
     private int rowSize = 9;
 
     private String searchString = "";
+    private Pattern cachedSearchPat;
+    private String cachedSearchString;
     private IPartitionList<IAEItemStack> myPartitionList;
-    private String innerSearch = "";
     private String NEIWord = null;
     private boolean hasPower;
     private static final ListMultimap<Enum<TypeFilter>, BiPredicate<IAEStack<?>, TypeFilter>> filters = ArrayListMultimap
@@ -71,24 +71,30 @@ public class ItemRepo {
     public ItemRepo(final IScrollSource src, final ISortSource sortSrc) {
         this.src = src;
         this.sortSrc = sortSrc;
+        // AE2, did you really have to make this API so miserable? >;(
+        this.list = new ItemTreeList(ItemSorters.CONFIG_BASED_SORT_BY_SIZE, this::filterView);
+        this.cachedSearchPat = Pattern.compile(".+");
+        this.cachedSearchString = this.searchString;
+        this.cachedSearchMode = SearchMode.ITEM;
+        this.cachedSortDir = SortDir.ASCENDING;
     }
 
     public IAEItemStack getReferenceItem(int idx) {
         idx += this.src.getCurrentScroll() * this.rowSize;
 
-        if (idx >= this.view.size()) {
+        if (idx >= this.list.viewList().size()) {
             return null;
         }
-        return this.view.get(idx);
+        return this.list.viewList().get(idx);
     }
 
     public ItemStack getItem(int idx) {
         idx += this.src.getCurrentScroll() * this.rowSize;
 
-        if (idx >= this.dsp.size()) {
+        if (idx >= this.list.displayList().size()) {
             return null;
         }
-        return this.dsp.get(idx);
+        return this.list.displayList().get(idx);
     }
 
     void setSearch(final String search) {
@@ -96,14 +102,7 @@ public class ItemRepo {
     }
 
     public void postUpdate(final IAEItemStack is) {
-        final IAEItemStack st = this.list.findPrecise(is);
-
-        if (st != null) {
-            st.reset();
-            st.add(is);
-        } else {
-            this.list.add(is);
-        }
+        list.update(is);
     }
 
     public void setViewCell(final ItemStack[] list) {
@@ -112,141 +111,120 @@ public class ItemRepo {
     }
 
     public void updateView() {
-        this.view.clear();
-        this.dsp.clear();
-
-        this.view.ensureCapacity(this.list.size());
-        this.dsp.ensureCapacity(this.list.size());
-
-        final Enum viewMode = this.sortSrc.getSortDisplay();
         final Enum searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
-        final Enum typeFilter = this.sortSrc.getTypeFilter();
         if (searchMode == SearchBoxMode.NEI_AUTOSEARCH || searchMode == SearchBoxMode.NEI_MANUAL_SEARCH) {
             this.updateNEI(this.searchString);
         }
-
-        this.innerSearch = this.searchString;
-        // final boolean terminalSearchToolTips =
-        // AEConfig.instance.settings.getSetting(Settings.SEARCH_TOOLTIPS) != YesNo.NO;
-        // boolean terminalSearchMods = Configuration.INSTANCE.settings.getSetting( Settings.SEARCH_MODS ) != YesNo.NO;
-        final SearchMode searchWhat;
-        if (this.innerSearch.length() == 0) {
-            searchWhat = SearchMode.ITEM;
-        } else {
-            switch (this.innerSearch.substring(0, 1)) {
-                case "#":
-                    searchWhat = SearchMode.TOOLTIPS;
-                    break;
-                case "@":
-                    searchWhat = SearchMode.MOD;
-                    break;
-                case "$":
-                    searchWhat = SearchMode.ORE;
-                    break;
-                default:
-                    searchWhat = SearchMode.ITEM;
-                    break;
-            }
-            if (searchWhat != SearchMode.ITEM) this.innerSearch = this.innerSearch.substring(1);
-        }
-        Pattern m = null;
-        try {
-            m = Pattern.compile(this.innerSearch.toLowerCase(), Pattern.CASE_INSENSITIVE);
-        } catch (final Throwable ignore) {
-            try {
-                m = Pattern.compile(Pattern.quote(this.innerSearch.toLowerCase()), Pattern.CASE_INSENSITIVE);
-            } catch (final Throwable __) {
-                return;
-            }
-        }
-
-        boolean notDone = false;
-        out: for (IAEItemStack is : this.list) {
-            // filter AEStack type
-            IAEItemStack finalIs = is;
-            for (final BiPredicate<IAEStack<?>, TypeFilter> filter : filters.values()) {
-                if (!filter.test(finalIs, (TypeFilter) typeFilter)) continue out;
-            }
-            if (this.myPartitionList != null) {
-                if (!this.myPartitionList.isListed(is)) {
-                    continue;
-                }
-            }
-
-            if (viewMode == ViewItems.CRAFTABLE && !is.isCraftable()) {
-                continue;
-            }
-
-            if (viewMode == ViewItems.CRAFTABLE) {
-                is = is.copy();
-                is.setStackSize(0);
-            }
-
-            if (viewMode == ViewItems.STORED && is.getStackSize() == 0) {
-                continue;
-            }
-            String dspName = null;
-            switch (searchWhat) {
-                case MOD:
-                    dspName = Platform.getModId(is);
-                    break;
-                case ORE:
-                    OreReference ore = OreHelper.INSTANCE.isOre(is.getItemStack());
-                    if (ore != null) {
-                        dspName = String.join(" ", ore.getEquivalents());
-                    }
-                    break;
-                case TOOLTIPS:
-                    dspName = String.join(" ", ((List<String>) Platform.getTooltip(is)));
-                    break;
-                default:
-                    dspName = Platform.getItemDisplayName(is);
-                    break;
-            }
-
-            if (dspName == null) continue;
-
-            notDone = true;
-            if (m.matcher(dspName.toLowerCase()).find()) {
-                this.view.add(is);
-                notDone = false;
-            }
-
-            if (notDone && searchWhat == SearchMode.ITEM) {
-                for (final Object lp : Platform.getTooltip(is)) {
-                    if (lp instanceof String && m.matcher((CharSequence) lp).find()) {
-                        this.view.add(is);
-                        notDone = false;
+        boolean shouldRefresh = false;
+        if (!searchString.equals(cachedSearchString)) {
+            shouldRefresh = true;
+            if (searchString.length() == 0) {
+                cachedSearchMode = SearchMode.ITEM;
+            } else {
+                switch (searchString.charAt(0)) {
+                    case '#':
+                        cachedSearchMode = SearchMode.TOOLTIPS;
                         break;
+                    case '@':
+                        cachedSearchMode = SearchMode.MOD;
+                        break;
+                    case '$':
+                        cachedSearchMode = SearchMode.ORE;
+                        break;
+                    default:
+                        cachedSearchMode = SearchMode.ITEM;
+                        break;
+                }
+                if (cachedSearchMode != SearchMode.ITEM) {
+                    cachedSearchString = searchString;
+                }
+            }
+            // TODO: We should measure the difference between using this pattern vs. contains. It's probably not
+            // a big difference - contains looks cleaner
+            if (!cachedSearchPat.pattern().equals(cachedSearchString)) {
+                try {
+                    cachedSearchPat = Pattern.compile(cachedSearchString.toLowerCase(), Pattern.CASE_INSENSITIVE);
+                } catch (final Throwable ignore) {
+                    try {
+                        cachedSearchPat = Pattern
+                                .compile(Pattern.quote(cachedSearchString.toLowerCase()), Pattern.CASE_INSENSITIVE);
+                    } catch (final Throwable __) {
+                        // :{ no search for you
+                        cachedSearchPat = Pattern.compile(".+");
                     }
                 }
             }
-
-            /*
-             * if ( terminalSearchMods && notDone ) { if ( m.matcher( Platform.getMod( is.getItemStack() ) ).find() ) {
-             * view.add( is ); notDone = false; } }
-             */
         }
-
-        final Enum SortBy = this.sortSrc.getSortBy();
-        final Enum SortDir = this.sortSrc.getSortDir();
-
-        ItemSorters.setDirection((appeng.api.config.SortDir) SortDir);
-        ItemSorters.init();
-
-        if (SortBy == SortOrder.MOD) {
-            Collections.sort(this.view, ItemSorters.CONFIG_BASED_SORT_BY_MOD);
-        } else if (SortBy == SortOrder.AMOUNT) {
-            Collections.sort(this.view, ItemSorters.CONFIG_BASED_SORT_BY_SIZE);
-        } else if (SortBy == SortOrder.INVTWEAKS) {
-            Collections.sort(this.view, ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS);
-        } else {
-            Collections.sort(this.view, ItemSorters.CONFIG_BASED_SORT_BY_NAME);
+        final SortOrder sortOrder = (SortOrder) this.sortSrc.getSortBy();
+        final SortDir sortDir = (SortDir) this.sortSrc.getSortDir();
+        if (cachedSortDir != sortDir) {
+            cachedSortDir = sortDir;
+            ItemSorters.setDirection(sortDir);
+            shouldRefresh = true;
         }
-
-        for (final IAEItemStack is : this.view) {
-            this.dsp.add(is.getItemStack());
+        if (cachedSortOrder != sortOrder) {
+            cachedSortOrder = sortOrder;
+            shouldRefresh = true;
         }
+        if (shouldRefresh) {
+            list.refresh(ItemSorters.getSorter(sortOrder));
+        }
+    }
+
+    private boolean filterView(final IAEItemStack stack) {
+        // Type filter check
+        final TypeFilter typeFilter = (TypeFilter) this.sortSrc.getTypeFilter();
+        for (final BiPredicate<IAEStack<?>, TypeFilter> filter : filters.values()) {
+            if (!filter.test(stack, typeFilter)) {
+                return false;
+            }
+        }
+        // Partition check
+        if (this.myPartitionList != null) {
+            if (!this.myPartitionList.isListed(stack)) {
+                return false;
+            }
+        }
+        // Search filter check
+        ViewItems viewMode = (ViewItems) this.sortSrc.getSortDisplay();
+        switch (viewMode) {
+            case CRAFTABLE:
+                if (!stack.isCraftable()) return false;
+            case STORED:
+                if (stack.getStackSize() <= 0) return false;
+        }
+        // Search tag check
+        String dspName;
+        switch (cachedSearchMode) {
+            case MOD:
+                dspName = Platform.getModId(stack);
+                break;
+            case ORE:
+                OreReference ore = OreHelper.INSTANCE.isOre(stack.getItemStack());
+                if (ore != null) {
+                    dspName = String.join(" ", ore.getEquivalents());
+                } else {
+                    return false;
+                }
+                break;
+            case TOOLTIPS:
+                dspName = String.join(" ", ((List<String>) Platform.getTooltip(stack)));
+                break;
+            default:
+                dspName = Platform.getItemDisplayName(stack);
+        }
+        if (cachedSearchPat.matcher(dspName.toLowerCase()).find()) {
+            return true;
+        }
+        // Tooltips
+        if (cachedSearchMode == SearchMode.ITEM) {
+            for (final Object lp : Platform.getTooltip(stack)) {
+                if (lp instanceof String && cachedSearchPat.matcher((CharSequence) lp).find()) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void updateNEI(final String filter) {
@@ -270,11 +248,11 @@ public class ItemRepo {
     }
 
     public int size() {
-        return this.view.size();
+        return this.list.viewList().size();
     }
 
     public void clear() {
-        this.list.resetStatus();
+        this.list.clear();
     }
 
     public boolean hasPower() {

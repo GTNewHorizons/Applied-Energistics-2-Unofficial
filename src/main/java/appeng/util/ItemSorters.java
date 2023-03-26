@@ -12,9 +12,11 @@ package appeng.util;
 
 import java.util.Comparator;
 
+import javax.annotation.Nullable;
+
 import appeng.api.config.SortDir;
+import appeng.api.config.SortOrder;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IAEStack;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IInvTweaks;
@@ -28,10 +30,11 @@ public class ItemSorters {
 
     public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_MOD = Comparator
             .comparing(Platform::getModId, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint)
-            .thenComparing(Platform::getItemDisplayName);
+            .thenComparing(CONFIG_BASED_SORT_BY_NAME);
 
     public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_SIZE = Comparator
-            .comparing(IAEStack::getStackSize, (a, b) -> Long.compare(b, a) * direction.sortHint);
+            .comparing(IAEItemStack::getStackSize, (a, b) -> Long.compare(b, a) * direction.sortHint)
+            .thenComparing(CONFIG_BASED_SORT_BY_NAME);
 
     private static IInvTweaks api;
     public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_INV_TWEAKS = new Comparator<IAEItemStack>() {
@@ -75,5 +78,20 @@ public class ItemSorters {
 
     public static void setDirection(final SortDir direction) {
         ItemSorters.direction = direction;
+    }
+
+    @Nullable
+    public static Comparator<IAEItemStack> getSorter(SortOrder order) {
+        switch (order) {
+            case AMOUNT:
+                return ItemSorters.CONFIG_BASED_SORT_BY_SIZE;
+            case NAME:
+                return ItemSorters.CONFIG_BASED_SORT_BY_NAME;
+            case MOD:
+                return ItemSorters.CONFIG_BASED_SORT_BY_MOD;
+            case INVTWEAKS:
+                return ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS;
+        }
+        return null;
     }
 }
