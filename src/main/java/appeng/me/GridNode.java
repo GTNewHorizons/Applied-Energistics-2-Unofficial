@@ -52,7 +52,6 @@ public class GridNode implements IGridNode, IPathItem {
     private int compressedData = 0;
     private int usedChannels = 0;
     private int lastUsedChannels = 0;
-    private boolean isAlive = true;
 
     public GridNode(final IGridBlock what) {
         this.gridProxy = what;
@@ -104,7 +103,7 @@ public class GridNode implements IGridNode, IPathItem {
     void validateGrid() {
         final GridSplitDetector gsd = new GridSplitDetector(this.getInternalGrid().getPivot());
         this.beginVisit(gsd);
-        if (!gsd.isPivotFound() && isAlive) {
+        if (!gsd.isPivotFound()) {
             final IGridVisitor gp = new GridPropagator(new Grid(this));
             this.beginVisit(gp);
         }
@@ -213,7 +212,6 @@ public class GridNode implements IGridNode, IPathItem {
 
     @Override
     public void destroy() {
-        isAlive = false;
 
         while (!this.connections.isEmpty()) {
             // not part of this network for real anymore.
