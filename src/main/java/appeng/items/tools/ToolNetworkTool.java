@@ -23,6 +23,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
+import com.google.common.base.Optional;
+
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.implementations.items.IAEWrench;
@@ -43,8 +45,6 @@ import appeng.items.contents.NetworkToolViewer;
 import appeng.transformer.annotations.Integration.Interface;
 import appeng.util.Platform;
 import buildcraft.api.tools.IToolWrench;
-
-import com.google.common.base.Optional;
 
 @Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore)
 public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, IToolWrench {

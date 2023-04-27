@@ -11,6 +11,8 @@ import net.minecraft.world.World;
 
 import org.apache.logging.log4j.Level;
 
+import com.google.common.collect.ImmutableList;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
@@ -30,8 +32,6 @@ import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.HashBasedItemList;
-
-import com.google.common.collect.ImmutableList;
 import io.netty.buffer.ByteBuf;
 
 public class CraftableItemResolver implements CraftingRequestResolver<IAEItemStack> {

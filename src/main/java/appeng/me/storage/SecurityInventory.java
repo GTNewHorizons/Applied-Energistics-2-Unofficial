@@ -10,6 +10,8 @@
 
 package appeng.me.storage;
 
+import com.mojang.authlib.GameProfile;
+
 import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
@@ -23,8 +25,6 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.GridAccessException;
 import appeng.tile.misc.TileSecurity;
-
-import com.mojang.authlib.GameProfile;
 
 public class SecurityInventory implements IMEInventoryHandler<IAEItemStack> {
 

@@ -14,10 +14,10 @@ import javax.annotation.Nullable;
 
 import net.minecraftforge.common.util.ForgeDirection;
 
-import pneumaticCraft.api.tileentity.IAirHandler;
-import pneumaticCraft.api.tileentity.ISidedPneumaticMachine;
 import appeng.api.parts.IPart;
 import appeng.api.parts.LayerBase;
+import pneumaticCraft.api.tileentity.IAirHandler;
+import pneumaticCraft.api.tileentity.ISidedPneumaticMachine;
 
 public class LayerPressure extends LayerBase implements ISidedPneumaticMachine {
 

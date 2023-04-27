@@ -18,13 +18,13 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.io.FileUtils;
 
+import com.google.common.base.Preconditions;
+
 import appeng.api.recipes.IRecipeHandler;
 import appeng.recipes.CustomRecipeConfig;
 import appeng.recipes.loader.ConfigLoader;
 import appeng.recipes.loader.JarLoader;
 import appeng.recipes.loader.RecipeResourceCopier;
-
-import com.google.common.base.Preconditions;
 
 /**
  * handles the decision if recipes should be loaded from jar, loaded from file system or force copied from jar

@@ -12,10 +12,6 @@ package appeng.integration.modules.waila.tile;
 
 import java.util.List;
 
-import mcp.mobius.waila.api.ITaggedList;
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
-
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -28,6 +24,9 @@ import appeng.integration.modules.waila.BaseWailaDataProvider;
 import appeng.util.Platform;
 import gnu.trove.map.TObjectLongMap;
 import gnu.trove.map.hash.TObjectLongHashMap;
+import mcp.mobius.waila.api.ITaggedList;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
 
 /**
  * Power storage provider for WAILA

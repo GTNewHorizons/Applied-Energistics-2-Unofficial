@@ -29,6 +29,8 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.base.Optional;
+
 import appeng.api.util.IOrientable;
 import appeng.api.util.IOrientableBlock;
 import appeng.client.render.BaseBlockRender;
@@ -42,9 +44,6 @@ import appeng.helpers.ICustomCollision;
 import appeng.tile.AEBaseTile;
 import appeng.util.LookDirection;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 

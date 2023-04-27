@@ -15,9 +15,9 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
-import appeng.services.version.exceptions.*;
-
 import com.google.common.base.Preconditions;
+
+import appeng.services.version.exceptions.*;
 
 /**
  * can parse a version in form of rv2-beta-8 or rv2.beta.8

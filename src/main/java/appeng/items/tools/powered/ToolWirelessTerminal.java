@@ -20,6 +20,8 @@ import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.api.config.*;
 import appeng.api.features.IWirelessTermHandler;
@@ -31,9 +33,6 @@ import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 

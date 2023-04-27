@@ -18,6 +18,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.oredict.OreDictionary;
 
+import com.google.common.base.Preconditions;
+
 import appeng.api.AEApi;
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RecipeError;
@@ -25,8 +27,6 @@ import appeng.api.exceptions.RegistrationError;
 import appeng.api.recipes.IIngredient;
 import appeng.api.recipes.ResolverResult;
 import appeng.api.recipes.ResolverResultSet;
-
-import com.google.common.base.Preconditions;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public class Ingredient implements IIngredient {

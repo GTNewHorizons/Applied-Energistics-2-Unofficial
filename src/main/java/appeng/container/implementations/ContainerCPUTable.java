@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 
+import com.google.common.collect.ImmutableSet;
+
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingGrid;
@@ -17,8 +19,6 @@ import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
 import appeng.util.Platform;
-
-import com.google.common.collect.ImmutableSet;
 
 public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
 

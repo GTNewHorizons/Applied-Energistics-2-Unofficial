@@ -9,6 +9,8 @@ import java.util.*;
 
 import net.minecraft.world.World;
 
+import com.google.common.base.Throwables;
+
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
@@ -17,9 +19,6 @@ import appeng.core.AEConfig;
 import appeng.crafting.v2.resolvers.*;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
-
-import com.google.common.base.Throwables;
-
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

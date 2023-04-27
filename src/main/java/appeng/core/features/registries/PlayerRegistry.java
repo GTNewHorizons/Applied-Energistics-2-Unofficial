@@ -14,10 +14,10 @@ import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
 
+import com.mojang.authlib.GameProfile;
+
 import appeng.api.features.IPlayerRegistry;
 import appeng.core.worlddata.WorldData;
-
-import com.mojang.authlib.GameProfile;
 
 public class PlayerRegistry implements IPlayerRegistry {
 

@@ -20,15 +20,15 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.io.IOUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import appeng.core.AELog;
 import appeng.services.version.Channel;
 import appeng.services.version.Version;
 import appeng.services.version.VersionCheckerConfig;
 import appeng.services.version.VersionParser;
 import appeng.services.version.exceptions.VersionCheckerException;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 public final class ReleaseFetcher {
 

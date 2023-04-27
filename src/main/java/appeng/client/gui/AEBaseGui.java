@@ -34,6 +34,9 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
+
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ITooltip;
@@ -57,9 +60,6 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Stopwatch;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 
 public abstract class AEBaseGui extends GuiContainer {

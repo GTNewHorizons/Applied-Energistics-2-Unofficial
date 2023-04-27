@@ -22,6 +22,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.event.ForgeEventFactory;
 
+import com.mojang.authlib.GameProfile;
+
 import appeng.api.config.SecurityPermissions;
 import appeng.api.features.IPlayerRegistry;
 import appeng.api.implementations.items.IBiometricCard;
@@ -31,8 +33,6 @@ import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
-
-import com.mojang.authlib.GameProfile;
 
 public class ToolBiometricCard extends AEBaseItem implements IBiometricCard {
 

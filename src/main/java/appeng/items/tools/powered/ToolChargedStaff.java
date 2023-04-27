@@ -18,14 +18,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraftforge.event.ForgeEventFactory;
 
+import com.google.common.base.Optional;
+
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.core.sync.packets.PacketLightning;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.server.ServerHelper;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
 
 public class ToolChargedStaff extends AEBasePoweredItem {
 

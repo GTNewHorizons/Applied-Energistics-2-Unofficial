@@ -10,8 +10,6 @@
 
 package appeng.integration.modules;
 
-import mcp.mobius.waila.api.IWailaDataProvider;
-import mcp.mobius.waila.api.IWailaRegistrar;
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
@@ -19,6 +17,8 @@ import appeng.integration.modules.waila.PartWailaDataProvider;
 import appeng.integration.modules.waila.TileWailaDataProvider;
 import appeng.tile.AEBaseTile;
 import cpw.mods.fml.common.event.FMLInterModComms;
+import mcp.mobius.waila.api.IWailaDataProvider;
+import mcp.mobius.waila.api.IWailaRegistrar;
 
 public class Waila implements IIntegrationModule {
 

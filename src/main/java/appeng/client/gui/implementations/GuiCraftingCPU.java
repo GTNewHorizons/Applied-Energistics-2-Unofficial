@@ -27,6 +27,8 @@ import net.minecraft.util.ChatComponentTranslation;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
 
+import com.google.common.base.Joiner;
+
 import appeng.api.AEApi;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -52,8 +54,6 @@ import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
-
-import com.google.common.base.Joiner;
 
 public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
 

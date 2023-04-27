@@ -12,21 +12,20 @@ package appeng.integration.modules.waila.part;
 
 import java.util.List;
 
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
-
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+
+import com.google.common.collect.Iterators;
 
 import appeng.api.parts.IPart;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.WailaText;
 import appeng.me.GridAccessException;
 import appeng.parts.p2p.PartP2PTunnel;
-
-import com.google.common.collect.Iterators;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
 
 /**
  * Provides information about a P2P tunnel to WAILA.

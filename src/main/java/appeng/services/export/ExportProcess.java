@@ -18,11 +18,10 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.item.Item;
 
-import appeng.core.AELog;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
+import appeng.core.AELog;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.registry.FMLControlledNamespacedRegistry;

@@ -12,12 +12,12 @@ package appeng.items.tools.powered.powersink;
 
 import net.minecraft.item.ItemStack;
 
+import com.google.common.base.Optional;
+
 import appeng.api.config.PowerUnits;
 import appeng.integration.IntegrationType;
 import appeng.transformer.annotations.Integration.Interface;
 import cofh.api.energy.IEnergyContainerItem;
-
-import com.google.common.base.Optional;
 
 @Interface(iface = "cofh.api.energy.IEnergyContainerItem", iname = IntegrationType.RFItem)
 public abstract class RedstoneFlux extends IC2 implements IEnergyContainerItem {

@@ -22,6 +22,9 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+
 import appeng.api.AEApi;
 import appeng.api.config.*;
 import appeng.api.storage.data.IAEItemStack;
@@ -36,9 +39,6 @@ import appeng.util.Platform;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 
 public class ItemRepo {

@@ -25,6 +25,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
+import com.google.common.base.Preconditions;
+
 import appeng.api.AEApi;
 import appeng.api.exceptions.MissingDefinition;
 import appeng.api.implementations.items.IItemGroup;
@@ -41,9 +43,6 @@ import appeng.core.localization.GuiText;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
-
-import com.google.common.base.Preconditions;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 

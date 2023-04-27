@@ -18,6 +18,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.mojang.authlib.GameProfile;
+
 import appeng.api.AEApi;
 import appeng.api.networking.*;
 import appeng.api.networking.crafting.ICraftingGrid;
@@ -37,8 +39,6 @@ import appeng.me.cache.P2PCache;
 import appeng.parts.networking.PartCable;
 import appeng.tile.AEBaseTile;
 import appeng.util.Platform;
-
-import com.mojang.authlib.GameProfile;
 
 public class AENetworkProxy implements IGridBlock {
 

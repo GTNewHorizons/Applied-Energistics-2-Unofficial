@@ -16,6 +16,8 @@ import java.util.List;
 
 import net.minecraft.world.World;
 
+import com.google.common.collect.Lists;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
@@ -25,8 +27,6 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
-
-import com.google.common.collect.Lists;
 
 public class CraftingTreeNode {
 

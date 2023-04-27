@@ -17,9 +17,9 @@ import java.nio.channels.FileChannel;
 
 import javax.annotation.Nonnull;
 
-import appeng.core.worlddata.MeteorDataNameEncoder;
-
 import com.google.common.base.Preconditions;
+
+import appeng.core.worlddata.MeteorDataNameEncoder;
 
 public final class CompassRegion {
 

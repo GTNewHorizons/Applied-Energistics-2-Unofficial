@@ -23,6 +23,8 @@ import net.minecraft.world.World;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import com.google.common.collect.HashMultimap;
+
 import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
@@ -50,8 +52,6 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.util.Platform;
-
-import com.google.common.collect.HashMultimap;
 
 public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextField {
 

@@ -15,13 +15,13 @@ import java.util.EnumSet;
 import net.minecraft.item.ItemSpade;
 import net.minecraft.item.ItemStack;
 
+import com.google.common.base.Optional;
+
 import appeng.core.features.AEFeature;
 import appeng.core.features.IAEFeature;
 import appeng.core.features.IFeatureHandler;
 import appeng.core.features.ItemFeatureHandler;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
 
 public class ToolQuartzSpade extends ItemSpade implements IAEFeature {
 

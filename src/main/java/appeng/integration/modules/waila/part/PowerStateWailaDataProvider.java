@@ -12,11 +12,11 @@ package appeng.integration.modules.waila.part;
 
 import java.util.List;
 
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
 import appeng.api.implementations.IPowerChannelState;
 import appeng.api.parts.IPart;
 import appeng.core.localization.WailaText;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
 
 /**
  * Power state provider for WAILA

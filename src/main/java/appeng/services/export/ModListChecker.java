@@ -17,6 +17,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import com.google.common.base.Preconditions;
+
 import cpw.mods.fml.common.ModContainer;
 
 /**

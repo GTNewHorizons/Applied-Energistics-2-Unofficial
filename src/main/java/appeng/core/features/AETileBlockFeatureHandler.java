@@ -12,14 +12,14 @@ package appeng.core.features;
 
 import java.util.EnumSet;
 
+import com.google.common.base.Optional;
+
 import appeng.api.definitions.ITileDefinition;
 import appeng.block.AEBaseTileBlock;
 import appeng.core.CommonHelper;
 import appeng.core.CreativeTab;
 import appeng.tile.AEBaseTile;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public final class AETileBlockFeatureHandler implements IFeatureHandler {

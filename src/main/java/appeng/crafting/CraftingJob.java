@@ -17,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 
+import com.google.common.base.Stopwatch;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGrid;
@@ -35,8 +37,6 @@ import appeng.core.AELog;
 import appeng.hooks.TickHandler;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
-
-import com.google.common.base.Stopwatch;
 
 public class CraftingJob implements ICraftingJob, Runnable {
 

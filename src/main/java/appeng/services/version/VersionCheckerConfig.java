@@ -17,9 +17,9 @@ import javax.annotation.Nonnull;
 
 import net.minecraftforge.common.config.Configuration;
 
-import appeng.core.AELog;
-
 import com.google.common.base.Preconditions;
+
+import appeng.core.AELog;
 
 /**
  * Separate config file to handle the version checker

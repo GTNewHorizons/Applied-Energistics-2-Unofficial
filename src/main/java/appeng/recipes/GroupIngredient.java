@@ -17,12 +17,12 @@ import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
+import com.google.common.base.Preconditions;
+
 import appeng.api.exceptions.MissingIngredientError;
 import appeng.api.exceptions.RecipeError;
 import appeng.api.exceptions.RegistrationError;
 import appeng.api.recipes.IIngredient;
-
-import com.google.common.base.Preconditions;
 
 public class GroupIngredient implements IIngredient {
 

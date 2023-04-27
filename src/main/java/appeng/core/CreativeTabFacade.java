@@ -15,10 +15,10 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.items.parts.ItemFacade;
-
-import com.google.common.base.Optional;
 
 public final class CreativeTabFacade extends CreativeTabs {
 

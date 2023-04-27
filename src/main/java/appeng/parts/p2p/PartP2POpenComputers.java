@@ -12,11 +12,6 @@ package appeng.parts.p2p;
 
 import javax.annotation.Nullable;
 
-import li.cil.oc.api.API;
-import li.cil.oc.api.Items;
-import li.cil.oc.api.Network;
-import li.cil.oc.api.network.*;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IIcon;
@@ -32,6 +27,10 @@ import appeng.transformer.annotations.Integration.Interface;
 import appeng.transformer.annotations.Integration.InterfaceList;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import li.cil.oc.api.API;
+import li.cil.oc.api.Items;
+import li.cil.oc.api.Network;
+import li.cil.oc.api.network.*;
 
 @InterfaceList(
         value = { @Interface(iface = "li.cil.oc.api.network.Environment", iname = IntegrationType.OpenComputers),

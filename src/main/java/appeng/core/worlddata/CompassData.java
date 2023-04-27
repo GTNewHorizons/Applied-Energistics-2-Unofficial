@@ -14,9 +14,9 @@ import java.io.File;
 
 import javax.annotation.Nonnull;
 
-import appeng.services.CompassService;
-
 import com.google.common.base.Preconditions;
+
+import appeng.services.CompassService;
 
 /**
  * @author thatsIch

@@ -17,11 +17,11 @@ import java.util.EnumSet;
 
 import net.minecraft.item.ItemStack;
 
+import com.mojang.authlib.GameProfile;
+
 import appeng.api.config.SecurityPermissions;
 import appeng.api.features.IPlayerRegistry;
 import appeng.api.networking.security.ISecurityRegistry;
-
-import com.mojang.authlib.GameProfile;
 
 public interface IBiometricCard {
 

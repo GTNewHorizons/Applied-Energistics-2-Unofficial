@@ -24,6 +24,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
@@ -47,9 +49,6 @@ import appeng.items.contents.CellUpgrades;
 import appeng.items.materials.MaterialType;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 

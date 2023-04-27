@@ -1,7 +1,5 @@
 package appeng.integration.modules;
 
-import mcp.mobius.betterbarrels.common.blocks.TileEntityBarrel;
-
 import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.AEApi;
@@ -12,6 +10,7 @@ import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
 import appeng.integration.modules.helpers.JabbaBarrel;
 import appeng.integration.modules.helpers.JabbaStorageHandler;
+import mcp.mobius.betterbarrels.common.blocks.TileEntityBarrel;
 
 public class Jabba implements IIntegrationModule {
 

@@ -6,9 +6,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
-import appeng.core.features.AEFeature;
-
 import com.google.common.base.Optional;
+
+import appeng.core.features.AEFeature;
 
 public class ItemExtremeStorageCell extends ItemBasicStorageCell {
 

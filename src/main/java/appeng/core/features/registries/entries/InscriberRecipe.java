@@ -9,10 +9,10 @@ import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 
+import com.google.common.base.Optional;
+
 import appeng.api.features.IInscriberRecipe;
 import appeng.api.features.InscriberProcessType;
-
-import com.google.common.base.Optional;
 
 /**
  * Basic inscriber recipe

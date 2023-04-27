@@ -12,22 +12,21 @@ package appeng.integration.modules.waila;
 
 import java.util.List;
 
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
-import mcp.mobius.waila.api.IWailaDataProvider;
-
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+import com.google.common.collect.Lists;
+
 import appeng.integration.modules.waila.tile.ChargerWailaDataProvider;
 import appeng.integration.modules.waila.tile.CraftingMonitorWailaDataProvider;
 import appeng.integration.modules.waila.tile.PowerStateWailaDataProvider;
 import appeng.integration.modules.waila.tile.PowerStorageWailaDataProvider;
-
-import com.google.common.collect.Lists;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
+import mcp.mobius.waila.api.IWailaDataProvider;
 
 /**
  * Delegation provider for tiles through {@link mcp.mobius.waila.api.IWailaDataProvider}

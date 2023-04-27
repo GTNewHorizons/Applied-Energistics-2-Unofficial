@@ -34,6 +34,9 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.world.BlockEvent;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
+
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
 import appeng.api.implementations.tiles.IColorableTile;
@@ -51,9 +54,6 @@ import appeng.tile.networking.TileCableBus;
 import appeng.tile.storage.TileSkyChest;
 import appeng.util.Platform;
 import appeng.util.SettingsFrom;
-
-import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 
 public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature, ITileEntityProvider {

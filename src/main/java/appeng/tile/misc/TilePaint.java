@@ -23,15 +23,14 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.collect.ImmutableList;
+
 import appeng.api.util.AEColor;
 import appeng.helpers.Splotch;
 import appeng.items.misc.ItemPaintBall;
 import appeng.tile.AEBaseTile;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
-
-import com.google.common.collect.ImmutableList;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 

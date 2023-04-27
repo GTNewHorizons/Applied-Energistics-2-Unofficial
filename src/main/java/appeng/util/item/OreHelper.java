@@ -16,12 +16,12 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
-import appeng.api.storage.data.IAEItemStack;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Sets;
+
+import appeng.api.storage.data.IAEItemStack;
 
 public class OreHelper {
 

@@ -20,6 +20,8 @@ import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import com.google.common.base.Joiner;
+
 import appeng.api.AEApi;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
@@ -44,8 +46,6 @@ import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
-
-import com.google.common.base.Joiner;
 
 public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolder {
 

@@ -24,6 +24,8 @@ import net.minecraft.util.*;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
@@ -46,9 +48,6 @@ import appeng.me.cache.helpers.TunnelCollection;
 import appeng.parts.PartBasicState;
 import appeng.util.Platform;
 import buildcraft.api.tools.IToolWrench;
-
-import com.google.common.base.Optional;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 

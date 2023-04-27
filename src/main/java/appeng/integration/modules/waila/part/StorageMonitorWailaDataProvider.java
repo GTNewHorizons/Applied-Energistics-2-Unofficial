@@ -12,14 +12,14 @@ package appeng.integration.modules.waila.part;
 
 import java.util.List;
 
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
 import appeng.api.implementations.parts.IPartStorageMonitor;
 import appeng.api.parts.IPart;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.localization.WailaText;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
 
 /**
  * Storage monitor provider for WAILA

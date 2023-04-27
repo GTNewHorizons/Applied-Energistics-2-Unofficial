@@ -12,9 +12,6 @@ package appeng.integration.modules.waila.part;
 
 import java.util.List;
 
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
-
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -27,6 +24,8 @@ import appeng.parts.networking.PartDenseCable;
 import appeng.parts.networking.PartUltraDenseCableSmart;
 import gnu.trove.map.TObjectShortMap;
 import gnu.trove.map.hash.TObjectShortHashMap;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
 
 /**
  * Channel-information provider for WAILA

@@ -31,6 +31,8 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import com.google.common.base.Joiner;
+
 import appeng.api.parts.CableRenderMode;
 import appeng.api.parts.IPartHelper;
 import appeng.api.parts.IPartItem;
@@ -44,8 +46,6 @@ import appeng.integration.abstraction.IFMP;
 import appeng.parts.PartPlacement;
 import appeng.tile.networking.TileCableBus;
 import appeng.util.Platform;
-
-import com.google.common.base.Joiner;
 
 public class ApiPart implements IPartHelper {
 

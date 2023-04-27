@@ -20,11 +20,11 @@ import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
-import appeng.core.CommonHelper;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.mojang.authlib.GameProfile;
+
+import appeng.core.CommonHelper;
 
 /**
  * Handles the matching between UUIDs and internal IDs for security systems. This whole system could be replaced by

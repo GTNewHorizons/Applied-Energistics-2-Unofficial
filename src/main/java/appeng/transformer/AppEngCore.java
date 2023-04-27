@@ -14,10 +14,9 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import appeng.core.AEConfig;
-
 import com.google.common.eventbus.EventBus;
 
+import appeng.core.AEConfig;
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.LoadController;
 import cpw.mods.fml.common.Mod.EventHandler;

@@ -33,6 +33,8 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.oredict.OreDictionary;
 
+import com.google.common.base.Optional;
+
 import appeng.api.util.DimensionalCoord;
 import appeng.block.misc.BlockTinyTNT;
 import appeng.core.AEConfig;
@@ -42,8 +44,6 @@ import appeng.hooks.IBlockTool;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.util.InWorldToolOperationResult;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
 
 public class ToolEntropyManipulator extends AEBasePoweredItem implements IBlockTool {
 

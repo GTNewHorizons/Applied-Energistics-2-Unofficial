@@ -21,6 +21,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.collect.ImmutableSet;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IPowerChannelState;
@@ -53,8 +55,6 @@ import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.inv.IInventoryDestination;
-
-import com.google.common.collect.ImmutableSet;
 import io.netty.buffer.ByteBuf;
 
 public class TileInterface extends AENetworkInvTile implements IGridTickable, ITileStorageMonitorable,

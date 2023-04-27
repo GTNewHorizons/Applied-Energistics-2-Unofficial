@@ -50,6 +50,8 @@ import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
+import com.mojang.authlib.GameProfile;
+
 import appeng.api.AEApi;
 import appeng.api.config.*;
 import appeng.api.definitions.IItemDefinition;
@@ -92,9 +94,6 @@ import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
 import buildcraft.api.tools.IToolWrench;
-
-import com.mojang.authlib.GameProfile;
-
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;

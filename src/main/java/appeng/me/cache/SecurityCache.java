@@ -14,6 +14,9 @@ import java.util.*;
 
 import net.minecraft.entity.player.EntityPlayer;
 
+import com.google.common.base.Preconditions;
+import com.mojang.authlib.GameProfile;
+
 import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
@@ -25,9 +28,6 @@ import appeng.api.networking.security.ISecurityGrid;
 import appeng.api.networking.security.ISecurityProvider;
 import appeng.core.worlddata.WorldData;
 import appeng.me.GridNode;
-
-import com.google.common.base.Preconditions;
-import com.mojang.authlib.GameProfile;
 
 public class SecurityCache implements ISecurityGrid {
 

@@ -12,6 +12,9 @@ package appeng.me.cache;
 
 import java.util.HashMap;
 
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Multimap;
+
 import appeng.api.networking.*;
 import appeng.api.networking.events.MENetworkBootingStatusChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -20,9 +23,6 @@ import appeng.api.networking.ticking.ITickManager;
 import appeng.me.cache.helpers.TunnelCollection;
 import appeng.parts.p2p.PartP2PTunnel;
 import appeng.parts.p2p.PartP2PTunnelME;
-
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
 
 public class P2PCache implements IGridCache {
 

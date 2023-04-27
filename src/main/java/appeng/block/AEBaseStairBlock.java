@@ -15,12 +15,12 @@ import java.util.EnumSet;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStairs;
 
+import com.google.common.base.Optional;
+
 import appeng.core.features.AEFeature;
 import appeng.core.features.IAEFeature;
 import appeng.core.features.IFeatureHandler;
 import appeng.core.features.StairBlockFeatureHandler;
-
-import com.google.common.base.Optional;
 
 public abstract class AEBaseStairBlock extends BlockStairs implements IAEFeature {
 

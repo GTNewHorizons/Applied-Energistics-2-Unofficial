@@ -20,11 +20,11 @@ import javax.annotation.Nullable;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
+import com.google.common.base.Preconditions;
+
 import appeng.core.AELog;
 import appeng.me.GridStorage;
 import appeng.me.GridStorageSearch;
-
-import com.google.common.base.Preconditions;
 
 /**
  * @author thatsIch

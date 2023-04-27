@@ -32,6 +32,9 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.oredict.OreDictionary;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.items.IItemGroup;
@@ -49,9 +52,6 @@ import appeng.core.features.NameResolver;
 import appeng.items.AEBaseItem;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 
 public final class ItemMultiMaterial extends AEBaseItem implements IStorageComponent, IUpgradeModule {
 

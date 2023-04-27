@@ -19,6 +19,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
+import com.google.common.collect.Lists;
+
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlockDefinition;
 import appeng.api.definitions.IBlocks;
@@ -41,8 +43,6 @@ import codechicken.multipart.MultiPartRegistry.IPartFactory;
 import codechicken.multipart.MultipartGenerator;
 import codechicken.multipart.TMultiPart;
 import codechicken.multipart.TileMultipart;
-
-import com.google.common.collect.Lists;
 import cpw.mods.fml.common.eventhandler.Event;
 
 public class FMP implements IIntegrationModule, IPartFactory, IPartConverter, IFMP {

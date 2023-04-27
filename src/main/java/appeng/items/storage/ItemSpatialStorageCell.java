@@ -19,6 +19,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 
+import com.google.common.base.Optional;
+
 import appeng.api.implementations.TransitionResult;
 import appeng.api.implementations.items.ISpatialStorageCell;
 import appeng.api.util.WorldCoord;
@@ -29,8 +31,6 @@ import appeng.items.AEBaseItem;
 import appeng.spatial.StorageHelper;
 import appeng.spatial.StorageWorldProvider;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
 
 public class ItemSpatialStorageCell extends AEBaseItem implements ISpatialStorageCell {
 

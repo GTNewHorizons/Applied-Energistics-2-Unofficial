@@ -17,6 +17,9 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.events.MENetworkStorageEvent;
@@ -28,9 +31,6 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.storage.ItemWatcher;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 
 public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 

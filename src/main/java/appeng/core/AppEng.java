@@ -17,6 +17,8 @@ import javax.annotation.Nonnull;
 
 import net.minecraftforge.common.config.Configuration;
 
+import com.google.common.base.Stopwatch;
+
 import appeng.core.crash.CrashInfo;
 import appeng.core.crash.IntegrationCrashEnhancement;
 import appeng.core.crash.ModCrashEnhancement;
@@ -33,9 +35,6 @@ import appeng.services.export.ExportConfig;
 import appeng.services.export.ExportProcess;
 import appeng.services.export.ForgeExportConfig;
 import appeng.util.Platform;
-
-import com.google.common.base.Stopwatch;
-
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;

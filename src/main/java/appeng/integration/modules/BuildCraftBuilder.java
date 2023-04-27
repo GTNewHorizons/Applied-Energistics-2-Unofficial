@@ -16,6 +16,8 @@ import java.lang.reflect.Method;
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
 
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlockDefinition;
 import appeng.api.definitions.IBlocks;
@@ -30,8 +32,6 @@ import appeng.integration.modules.BCHelpers.AEGenericSchematicTile;
 import appeng.integration.modules.BCHelpers.AERotatableBlockSchematic;
 import buildcraft.api.blueprints.BuilderAPI;
 import buildcraft.api.blueprints.ISchematicRegistry;
-
-import com.google.common.base.Optional;
 
 /**
  * The builder has no interface, because it provides no functionality

@@ -1,7 +1,5 @@
 package appeng.integration.modules.helpers;
 
-import mcp.mobius.betterbarrels.common.blocks.TileEntityBarrel;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 
@@ -12,6 +10,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.AEItemStack;
+import mcp.mobius.betterbarrels.common.blocks.TileEntityBarrel;
 
 public class JabbaBarrel implements IMEInventory<IAEItemStack> {
 

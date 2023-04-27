@@ -26,13 +26,12 @@ import net.minecraft.util.StatCollector;
 
 import org.apache.commons.io.FileUtils;
 
-import appeng.core.AELog;
-
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+import appeng.core.AELog;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.registry.FMLControlledNamespacedRegistry;
 

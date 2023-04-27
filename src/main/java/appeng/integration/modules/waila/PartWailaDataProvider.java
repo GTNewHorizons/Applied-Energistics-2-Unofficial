@@ -12,10 +12,6 @@ package appeng.integration.modules.waila;
 
 import java.util.List;
 
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
-import mcp.mobius.waila.api.IWailaDataProvider;
-
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -23,11 +19,14 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
-import appeng.api.parts.IPart;
-import appeng.integration.modules.waila.part.*;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+
+import appeng.api.parts.IPart;
+import appeng.integration.modules.waila.part.*;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
+import mcp.mobius.waila.api.IWailaDataProvider;
 
 /**
  * Delegation provider for parts through {@link IPartWailaDataProvider}

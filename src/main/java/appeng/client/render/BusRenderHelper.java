@@ -20,6 +20,9 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.api.exceptions.MissingDefinition;
 import appeng.api.parts.IBoxProvider;
@@ -31,10 +34,6 @@ import appeng.block.networking.BlockCableBus;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.tile.AEBaseTile;
-
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 

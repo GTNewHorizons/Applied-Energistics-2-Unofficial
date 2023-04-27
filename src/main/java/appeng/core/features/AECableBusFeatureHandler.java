@@ -14,14 +14,14 @@ import java.util.EnumSet;
 
 import net.minecraft.tileentity.TileEntity;
 
+import com.google.common.base.Optional;
+
 import appeng.api.definitions.ITileDefinition;
 import appeng.block.AEBaseTileBlock;
 import appeng.block.networking.BlockCableBus;
 import appeng.core.CommonHelper;
 import appeng.core.CreativeTab;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public final class AECableBusFeatureHandler implements IFeatureHandler {

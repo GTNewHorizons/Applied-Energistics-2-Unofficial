@@ -22,6 +22,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
@@ -46,9 +49,6 @@ import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.inv.ItemSlot;
 import appeng.util.inv.WrapperInvSlot;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 public final class ContainerInterfaceTerminal extends AEBaseContainer {
 

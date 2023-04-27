@@ -20,6 +20,8 @@ import java.util.stream.StreamSupport;
 
 import net.minecraft.world.World;
 
+import com.google.common.collect.*;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGrid;
@@ -52,8 +54,6 @@ import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.ItemSorters;
 import appeng.util.item.OreListMultiMap;
-
-import com.google.common.collect.*;
 
 public class CraftingGridCache
         implements ICraftingGrid, ICraftingProviderHelper, ICellProvider, IMEInventoryHandler<IAEStack> {

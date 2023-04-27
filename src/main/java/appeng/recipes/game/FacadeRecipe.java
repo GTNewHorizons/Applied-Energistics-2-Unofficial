@@ -19,12 +19,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.world.World;
 
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.api.definitions.IComparableDefinition;
 import appeng.api.definitions.IDefinitions;
 import appeng.items.parts.ItemFacade;
-
-import com.google.common.base.Optional;
 
 public final class FacadeRecipe implements IRecipe {
 

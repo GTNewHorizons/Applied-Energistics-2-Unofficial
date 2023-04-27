@@ -26,6 +26,8 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.collect.ImmutableSet;
+
 import appeng.api.AEApi;
 import appeng.api.config.*;
 import appeng.api.crafting.ICraftingIconProvider;
@@ -81,8 +83,6 @@ import appeng.util.inv.ItemSlot;
 import appeng.util.inv.WrapperInvSlot;
 import appeng.util.item.AEItemStack;
 import cofh.api.transport.IItemDuct;
-
-import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.common.Loader;
 
 public class DualityInterface implements IGridTickable, IStorageMonitorable, IInventoryDestination, IAEAppEngInventory,

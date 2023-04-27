@@ -22,13 +22,13 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.event.world.WorldEvent;
 
+import com.google.common.base.Preconditions;
+
 import appeng.api.AEApi;
 import appeng.api.util.DimensionalCoord;
 import appeng.services.compass.CompassReader;
 import appeng.services.compass.ICompassCallback;
 import appeng.util.Platform;
-
-import com.google.common.base.Preconditions;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public final class CompassService {

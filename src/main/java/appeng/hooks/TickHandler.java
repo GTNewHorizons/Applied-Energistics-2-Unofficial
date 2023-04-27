@@ -20,6 +20,10 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.event.world.WorldEvent;
 
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
+
 import appeng.api.AEApi;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingJob;
@@ -35,11 +39,6 @@ import appeng.me.NetworkList;
 import appeng.tile.AEBaseTile;
 import appeng.util.IWorldCallable;
 import appeng.util.Platform;
-
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.Multimap;
-
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.common.gameevent.TickEvent.Phase;

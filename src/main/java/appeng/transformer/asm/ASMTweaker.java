@@ -22,10 +22,10 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
-import appeng.helpers.Reflected;
-
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+
+import appeng.helpers.Reflected;
 import cpw.mods.fml.relauncher.FMLRelaunchLog;
 
 @Reflected

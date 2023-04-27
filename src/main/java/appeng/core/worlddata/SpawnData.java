@@ -22,9 +22,9 @@ import javax.annotation.Nonnull;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 
-import appeng.core.AELog;
-
 import com.google.common.base.Preconditions;
+
+import appeng.core.AELog;
 
 /**
  * @author thatsIch

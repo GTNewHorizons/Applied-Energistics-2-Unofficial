@@ -5,10 +5,10 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 
+import com.mojang.authlib.GameProfile;
+
 import appeng.me.cache.SecurityCache;
 import appeng.server.ISubCommand;
-
-import com.mojang.authlib.GameProfile;
 
 public class ToggleFullAccess implements ISubCommand {
 

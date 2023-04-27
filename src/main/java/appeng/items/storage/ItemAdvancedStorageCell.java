@@ -4,13 +4,13 @@ import java.util.EnumSet;
 
 import net.minecraft.item.ItemStack;
 
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.api.definitions.IItemDefinition;
 import appeng.api.exceptions.MissingDefinition;
 import appeng.core.features.AEFeature;
 import appeng.items.materials.MaterialType;
-
-import com.google.common.base.Optional;
 
 public class ItemAdvancedStorageCell extends ItemBasicStorageCell {
 

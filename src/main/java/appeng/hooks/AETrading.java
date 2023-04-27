@@ -18,11 +18,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.village.MerchantRecipe;
 import net.minecraft.village.MerchantRecipeList;
 
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.api.definitions.IItemDefinition;
 import appeng.api.definitions.IMaterials;
-
-import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.VillagerRegistry.IVillageTradeHandler;
 
 public class AETrading implements IVillageTradeHandler {

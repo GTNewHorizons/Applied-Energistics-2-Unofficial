@@ -14,11 +14,11 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
+import com.google.common.base.Optional;
+
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
-
-import com.google.common.base.Optional;
 
 /**
  * Accessor to access specific parts for WAILA

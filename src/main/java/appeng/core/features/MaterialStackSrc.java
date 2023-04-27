@@ -13,9 +13,9 @@ package appeng.core.features;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-import appeng.items.materials.MaterialType;
-
 import com.google.common.base.Preconditions;
+
+import appeng.items.materials.MaterialType;
 
 public class MaterialStackSrc implements IStackSrc {
 

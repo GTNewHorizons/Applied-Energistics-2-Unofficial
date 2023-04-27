@@ -14,10 +14,10 @@ import java.util.EnumSet;
 
 import net.minecraft.block.BlockStairs;
 
+import com.google.common.base.Optional;
+
 import appeng.api.definitions.IBlockDefinition;
 import appeng.core.CreativeTab;
-
-import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public class StairBlockFeatureHandler implements IFeatureHandler {

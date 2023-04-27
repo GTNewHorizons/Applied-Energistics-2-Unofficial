@@ -12,9 +12,6 @@ package appeng.integration.modules.waila.part;
 
 import java.util.List;
 
-import mcp.mobius.waila.api.IWailaConfigHandler;
-import mcp.mobius.waila.api.IWailaDataAccessor;
-
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -23,6 +20,8 @@ import net.minecraft.world.World;
 
 import appeng.api.parts.IPart;
 import appeng.api.parts.PartItemStack;
+import mcp.mobius.waila.api.IWailaConfigHandler;
+import mcp.mobius.waila.api.IWailaDataAccessor;
 
 /**
  * Default implementation of {@link appeng.integration.modules.waila.part.IPartWailaDataProvider}

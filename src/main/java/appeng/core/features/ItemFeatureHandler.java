@@ -14,12 +14,12 @@ import java.util.EnumSet;
 
 import net.minecraft.item.Item;
 
+import com.google.common.base.Optional;
+
 import appeng.api.definitions.IItemDefinition;
 import appeng.core.CreativeTab;
 import appeng.core.CreativeTabFacade;
 import appeng.items.parts.ItemFacade;
-
-import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public final class ItemFeatureHandler implements IFeatureHandler {

@@ -20,6 +20,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
+import com.google.common.base.Optional;
+
 import appeng.api.implementations.items.IAEWrench;
 import appeng.api.util.DimensionalCoord;
 import appeng.core.features.AEFeature;
@@ -28,8 +30,6 @@ import appeng.items.AEBaseItem;
 import appeng.transformer.annotations.Integration.Interface;
 import appeng.util.Platform;
 import buildcraft.api.tools.IToolWrench;
-
-import com.google.common.base.Optional;
 
 @Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore)
 public class ToolQuartzWrench extends AEBaseItem implements IAEWrench, IToolWrench {

@@ -18,6 +18,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.google.common.base.Optional;
+
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.core.features.AEFeature;
@@ -27,8 +29,6 @@ import appeng.items.contents.QuartzKnifeObj;
 import appeng.tile.AEBaseTile;
 import appeng.tile.networking.TileCableBus;
 import appeng.util.Platform;
-
-import com.google.common.base.Optional;
 
 public class ToolQuartzCuttingKnife extends AEBaseItem implements IGuiItem {
 

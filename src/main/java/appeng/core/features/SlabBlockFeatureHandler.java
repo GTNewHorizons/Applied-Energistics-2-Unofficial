@@ -12,12 +12,12 @@ package appeng.core.features;
 
 import java.util.EnumSet;
 
+import com.google.common.base.Optional;
+
 import appeng.api.definitions.IBlockDefinition;
 import appeng.block.AEBaseItemBlockSlab;
 import appeng.block.AEBaseSlabBlock;
 import appeng.core.CreativeTab;
-
-import com.google.common.base.Optional;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 public class SlabBlockFeatureHandler implements IFeatureHandler {

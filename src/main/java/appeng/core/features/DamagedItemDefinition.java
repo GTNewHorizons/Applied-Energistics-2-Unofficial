@@ -16,11 +16,11 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.IBlockAccess;
 
-import appeng.api.definitions.IItemDefinition;
-
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+
+import appeng.api.definitions.IItemDefinition;
 
 public final class DamagedItemDefinition implements IItemDefinition {
 
