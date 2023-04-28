@@ -417,7 +417,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 x,
                 y,
                 z,
-                getSide(this.side),
+                getSideIndexFromDirection(this.side),
                 player.getEntityWorld());
         if (event.isCanceled()) return false;
 
@@ -436,7 +436,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 x,
                 y,
                 z,
-                getSide(this.side),
+                getSideIndexFromDirection(this.side),
                 player.getEntityWorld());
         if (event.isCanceled()) return false;
 
@@ -496,12 +496,10 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
         this.renderCache = renderCache;
     }
 
-    private static int getSide(ForgeDirection direction) {
-        for (int i = 0; i < ForgeDirection.VALID_DIRECTIONS.length; i++) {
-            if (direction == ForgeDirection.VALID_DIRECTIONS[i]) {
-                return i;
-            }
+    private static int getSideIndexFromDirection(ForgeDirection direction) {
+        if (direction == ForgeDirection.UNKNOWN || direction == null) {
+            return -1;
         }
-        return -1;
+        return direction.ordinal();
     }
 }
