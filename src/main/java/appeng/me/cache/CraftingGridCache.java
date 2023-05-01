@@ -90,7 +90,8 @@ public class CraftingGridCache
     private final Set<IAEItemStack> emitableItems = new HashSet<>();
     private final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<>();
     private final Multimap<IAEStack, CraftingWatcher> interests = HashMultimap.create();
-    private final GenericInterestManager<CraftingWatcher> interestManager = new GenericInterestManager<>(this.interests);
+    private final GenericInterestManager<CraftingWatcher> interestManager = new GenericInterestManager<>(
+            this.interests);
     private IStorageGrid storageGrid;
     private IEnergyGrid energyGrid;
     private boolean updateList = false;
@@ -499,9 +500,10 @@ public class CraftingGridCache
             Collections.sort(validCpusClusters, new Comparator<>() {
 
                 private int compareInternal(CraftingCPUCluster firstCluster, CraftingCPUCluster nextCluster) {
-                    int comparison = ItemSorters.compareLong(nextCluster.getCoProcessors(), firstCluster.getCoProcessors());
-                    if (comparison == 0) comparison = ItemSorters.compareLong(nextCluster.getAvailableStorage(),
-                            firstCluster.getAvailableStorage());
+                    int comparison = ItemSorters
+                            .compareLong(nextCluster.getCoProcessors(), firstCluster.getCoProcessors());
+                    if (comparison == 0) comparison = ItemSorters
+                            .compareLong(nextCluster.getAvailableStorage(), firstCluster.getAvailableStorage());
                     if (comparison == 0) return nextCluster.getName().compareTo(firstCluster.getName());
                     else return comparison;
                 }

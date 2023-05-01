@@ -278,8 +278,7 @@ public class AEBaseTile extends TileEntity implements IOrientable, ICommonTile, 
         final Map<TileEventType, List<AETileEventHandler>> storedHandlers = HANDLERS.get(clazz);
 
         if (storedHandlers == null) {
-            final Map<TileEventType, List<AETileEventHandler>> newStoredHandlers = new EnumMap<>(
-                    TileEventType.class);
+            final Map<TileEventType, List<AETileEventHandler>> newStoredHandlers = new EnumMap<>(TileEventType.class);
 
             HANDLERS.put(clazz, newStoredHandlers);
 

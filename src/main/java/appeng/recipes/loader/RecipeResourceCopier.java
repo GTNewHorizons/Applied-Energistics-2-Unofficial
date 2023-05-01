@@ -202,7 +202,7 @@ public class RecipeResourceCopier {
                 try {
                     final Enumeration<JarEntry> entries = jar.entries(); // gives ALL entries in jar
                     final Collection<String> result = new HashSet<>(INITIAL_RESOURCE_CAPACITY); // avoid
-                                                                                                      // duplicates
+                                                                                                // duplicates
 
                     // in case it is a
                     // subdirectory

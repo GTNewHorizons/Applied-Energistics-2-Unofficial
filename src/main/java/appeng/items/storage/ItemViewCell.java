@@ -95,9 +95,7 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
 
                     if (!priorityList.isEmpty()) {
                         if (hasFuzzy) {
-                            myMergedList.addNewList(
-                                    new FuzzyPriorityList<>(priorityList, fzMode),
-                                    !hasInverter);
+                            myMergedList.addNewList(new FuzzyPriorityList<>(priorityList, fzMode), !hasInverter);
                         } else {
                             myMergedList.addNewList(new PrecisePriorityList<>(priorityList), !hasInverter);
                         }
