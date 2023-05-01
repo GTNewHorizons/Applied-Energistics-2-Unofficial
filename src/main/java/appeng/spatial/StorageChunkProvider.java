@@ -11,6 +11,7 @@
 package appeng.spatial;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import net.minecraft.block.Block;
@@ -33,9 +34,7 @@ public class StorageChunkProvider extends ChunkProviderGenerate {
 
         for (final Block matrixFrameBlock : AEApi.instance().definitions().blocks().matrixFrame().maybeBlock()
                 .asSet()) {
-            for (int x = 0; x < BLOCKS.length; x++) {
-                BLOCKS[x] = matrixFrameBlock;
-            }
+            Arrays.fill(BLOCKS, matrixFrameBlock);
         }
     }
 
@@ -53,9 +52,7 @@ public class StorageChunkProvider extends ChunkProviderGenerate {
         final byte[] biomes = chunk.getBiomeArray();
         final AEConfig config = AEConfig.instance;
 
-        for (int k = 0; k < biomes.length; ++k) {
-            biomes[k] = (byte) config.storageBiomeID;
-        }
+        Arrays.fill(biomes, (byte) config.storageBiomeID);
 
         if (!chunk.isTerrainPopulated) {
             chunk.isTerrainPopulated = true;
