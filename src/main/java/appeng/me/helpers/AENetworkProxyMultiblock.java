@@ -14,11 +14,12 @@ import java.util.Iterator;
 
 import net.minecraft.item.ItemStack;
 
+import com.google.common.collect.Iterators;
+
 import appeng.api.networking.IGridMultiblock;
 import appeng.api.networking.IGridNode;
 import appeng.me.cluster.IAECluster;
 import appeng.me.cluster.IAEMultiBlock;
-import appeng.util.iterators.ChainedIterator;
 import appeng.util.iterators.ProxyNodeIterator;
 
 public class AENetworkProxyMultiblock extends AENetworkProxy implements IGridMultiblock {
@@ -31,7 +32,7 @@ public class AENetworkProxyMultiblock extends AENetworkProxy implements IGridMul
     @Override
     public Iterator<IGridNode> getMultiblockNodes() {
         if (this.getCluster() == null) {
-            return new ChainedIterator<>();
+            return Iterators.emptyIterator();
         }
 
         return new ProxyNodeIterator(this.getCluster().getTiles());

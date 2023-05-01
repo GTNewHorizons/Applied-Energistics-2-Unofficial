@@ -12,12 +12,17 @@ package appeng.util.iterators;
 
 import java.util.Iterator;
 
+/**
+ * @deprecated Use Guava's {@link com.google.common.collect.Iterators} types instead
+ */
+@Deprecated
 public final class ChainedIterator<T> implements Iterator<T> {
 
     private final T[] list;
 
     private int offset = 0;
 
+    @SafeVarargs
     public ChainedIterator(final T... list) {
         this.list = list;
     }
