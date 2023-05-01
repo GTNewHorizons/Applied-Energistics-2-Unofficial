@@ -375,6 +375,7 @@ public class CachedPlane {
             for (final Block matrixFrameBlock : CachedPlane.this.matrixFrame.maybeBlock().asSet()) {
                 if (blk[0] == matrixFrameBlock) {
                     blk[0] = Platform.AIR_BLOCK;
+                    break;
                 }
             }
 

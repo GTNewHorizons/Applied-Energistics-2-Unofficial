@@ -99,6 +99,7 @@ public class CableRenderHelper {
 
                 if (o >= 2) {
                     useThinFacades = true;
+                    break;
                 }
             }
 

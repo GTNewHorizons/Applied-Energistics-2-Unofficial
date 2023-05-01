@@ -80,6 +80,7 @@ public class CraftingTreeProcess {
                 for (final IAEItemStack a : details.getCondensedOutputs()) {
                     if (g != null && a != null && a.equals(g)) {
                         isAnInput = true;
+                        break;
                     }
                 }
 
@@ -126,6 +127,7 @@ public class CraftingTreeProcess {
                 for (final IAEItemStack a : details.getCondensedOutputs()) {
                     if (g != null && a != null && a.equals(g)) {
                         isAnInput = true;
+                        break;
                     }
                 }
 

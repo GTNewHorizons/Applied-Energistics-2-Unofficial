@@ -246,6 +246,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                     if (recInputChild.remainingToProcess > 0) {
                         // If we can't resolve an input to the recursive process, we can't craft anything at all
                         maxCraftable = 0;
+                        break;
                     }
                 }
                 for (RequestAndPerCraftAmount inputChildPair : childRequests) {
@@ -330,6 +331,7 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                     for (RequestAndPerCraftAmount inputChildPair : childRequests) {
                         if (inputChildPair.request.wasSimulated) {
                             this.request.wasSimulated = true;
+                            break;
                         }
                     }
                 }
