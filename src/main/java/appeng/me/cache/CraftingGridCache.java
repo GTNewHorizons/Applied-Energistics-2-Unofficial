@@ -59,22 +59,11 @@ public class CraftingGridCache
         implements ICraftingGrid, ICraftingProviderHelper, ICellProvider, IMEInventoryHandler<IAEStack> {
 
     private static final ExecutorService CRAFTING_POOL;
-    private static final Comparator<ICraftingPatternDetails> COMPARATOR = new Comparator<>() {
-
-        @Override
-        public int compare(final ICraftingPatternDetails firstDetail, final ICraftingPatternDetails nextDetail) {
-            return nextDetail.getPriority() - firstDetail.getPriority();
-        }
-    };
+    private static final Comparator<ICraftingPatternDetails> COMPARATOR = (firstDetail,
+            nextDetail) -> nextDetail.getPriority() - firstDetail.getPriority();
 
     static {
-        final ThreadFactory factory = new ThreadFactory() {
-
-            @Override
-            public Thread newThread(final Runnable ar) {
-                return new Thread(ar, "AE Crafting Calculator");
-            }
-        };
+        final ThreadFactory factory = ar -> new Thread(ar, "AE Crafting Calculator");
 
         CRAFTING_POOL = Executors.newCachedThreadPool(factory);
     }

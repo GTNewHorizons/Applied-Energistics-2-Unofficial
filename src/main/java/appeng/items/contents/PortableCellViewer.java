@@ -24,7 +24,6 @@ import appeng.api.util.IConfigManager;
 import appeng.container.interfaces.IInventorySlotAware;
 import appeng.me.storage.CellInventory;
 import appeng.util.ConfigManager;
-import appeng.util.IConfigManagerHost;
 import appeng.util.Platform;
 
 public class PortableCellViewer extends MEMonitorHandler<IAEItemStack> implements IPortableCell, IInventorySlotAware {
@@ -73,13 +72,9 @@ public class PortableCellViewer extends MEMonitorHandler<IAEItemStack> implement
 
     @Override
     public IConfigManager getConfigManager() {
-        final ConfigManager out = new ConfigManager(new IConfigManagerHost() {
-
-            @Override
-            public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
-                final NBTTagCompound data = Platform.openNbtData(PortableCellViewer.this.target);
-                manager.writeToNBT(data);
-            }
+        final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
+            final NBTTagCompound data = Platform.openNbtData(PortableCellViewer.this.target);
+            manager.writeToNBT(data);
         });
 
         out.registerSetting(Settings.SORT_BY, SortOrder.NAME);

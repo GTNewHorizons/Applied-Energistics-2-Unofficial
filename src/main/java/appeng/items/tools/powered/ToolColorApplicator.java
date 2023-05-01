@@ -251,13 +251,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
                     list.add(i);
                 }
 
-                list.sort(new Comparator<>() {
-
-                    @Override
-                    public int compare(final IAEItemStack a, final IAEItemStack b) {
-                        return ItemSorters.compareInt(a.getItemDamage(), b.getItemDamage());
-                    }
-                });
+                list.sort((a, b) -> ItemSorters.compareInt(a.getItemDamage(), b.getItemDamage()));
 
                 if (list.size() <= 0) {
                     return null;
