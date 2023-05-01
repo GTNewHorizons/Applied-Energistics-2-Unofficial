@@ -198,11 +198,10 @@ public class RecipeResourceCopier {
                 final String dirPath = dirURL.getPath();
                 final String jarPath = dirPath.substring(5, dirPath.indexOf('!')); // strip out only
                 // the JAR file
-                final JarFile jar = new JarFile(URLDecoder.decode(jarPath, UTF_8_ENCODING));
-                try {
+                try (JarFile jar = new JarFile(URLDecoder.decode(jarPath, UTF_8_ENCODING))) {
                     final Enumeration<JarEntry> entries = jar.entries(); // gives ALL entries in jar
                     final Collection<String> result = new HashSet<>(INITIAL_RESOURCE_CAPACITY); // avoid
-                                                                                                // duplicates
+                    // duplicates
 
                     // in case it is a
                     // subdirectory
@@ -221,8 +220,6 @@ public class RecipeResourceCopier {
                     }
 
                     return result.toArray(new String[result.size()]);
-                } finally {
-                    jar.close();
                 }
             }
         }
