@@ -159,10 +159,8 @@ public class CraftingJob implements ICraftingJob, Runnable {
                     }
 
                     this.logCraftingJob("simulate", timer);
-                } catch (final CraftBranchFailure e1) {
+                } catch (final CraftBranchFailure | CraftingCalculationFailure e1) {
                     AELog.debug(e1);
-                } catch (final CraftingCalculationFailure f) {
-                    AELog.debug(f);
                 } catch (final InterruptedException e1) {
                     AELog.crafting("Crafting calculation canceled.");
                     this.finish();

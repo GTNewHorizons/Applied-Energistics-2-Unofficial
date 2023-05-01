@@ -49,13 +49,7 @@ public final class GridCacheRegistry implements IGridCacheRegistry {
             } catch (final NoSuchMethodException e) {
                 AELog.error("Grid Caches must have a constructor with IGrid as the single param.");
                 throw new IllegalArgumentException(e);
-            } catch (final InvocationTargetException e) {
-                AELog.error("Grid Caches must have a constructor with IGrid as the single param.");
-                throw new IllegalStateException(e);
-            } catch (final InstantiationException e) {
-                AELog.error("Grid Caches must have a constructor with IGrid as the single param.");
-                throw new IllegalStateException(e);
-            } catch (final IllegalAccessException e) {
+            } catch (final InvocationTargetException | IllegalAccessException | InstantiationException e) {
                 AELog.error("Grid Caches must have a constructor with IGrid as the single param.");
                 throw new IllegalStateException(e);
             }

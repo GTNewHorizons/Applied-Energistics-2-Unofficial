@@ -71,9 +71,7 @@ public class ShapelessRecipe implements IRecipe, IRecipeBakeable {
                             for (final ItemStack item : ((IIngredient) next).getItemStackSet()) {
                                 match = match || this.checkItemEquals(item, slot);
                             }
-                        } catch (final RegistrationError e) {
-                            // :P
-                        } catch (final MissingIngredientError e) {
+                        } catch (final RegistrationError | MissingIngredientError e) {
                             // :P
                         }
                     }

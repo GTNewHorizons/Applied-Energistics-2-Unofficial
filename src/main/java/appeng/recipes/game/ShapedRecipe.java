@@ -176,9 +176,7 @@ public class ShapedRecipe implements IRecipe, IRecipeBakeable {
                         for (final ItemStack item : ((IIngredient) target).getItemStackSet()) {
                             matched = matched || this.checkItemEquals(item, slot);
                         }
-                    } catch (final RegistrationError e) {
-                        // :P
-                    } catch (final MissingIngredientError e) {
+                    } catch (final RegistrationError | MissingIngredientError e) {
                         // :P
                     }
 

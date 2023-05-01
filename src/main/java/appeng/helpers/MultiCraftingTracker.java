@@ -88,9 +88,7 @@ public class MultiCraftingTracker {
                             return true;
                         }
                     }
-                } catch (final InterruptedException e) {
-                    // :P
-                } catch (final ExecutionException e) {
+                } catch (final InterruptedException | ExecutionException e) {
                     // :P
                 }
             } else {

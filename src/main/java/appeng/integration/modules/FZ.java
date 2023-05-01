@@ -54,7 +54,7 @@ public class FZ implements IFZ, IIntegrationModule {
             }
 
             return i;
-        } catch (final IllegalArgumentException ignored) {} catch (final IllegalAccessException ignored) {}
+        } catch (final IllegalArgumentException | IllegalAccessException ignored) {}
         return null;
     }
 
@@ -64,7 +64,7 @@ public class FZ implements IFZ, IIntegrationModule {
             if (day_BarrelClass.isInstance(te)) {
                 return (Integer) day_getMaxSize.invoke(te);
             }
-        } catch (final IllegalAccessException ignored) {} catch (final IllegalArgumentException ignored) {} catch (final InvocationTargetException ignored) {}
+        } catch (final IllegalAccessException | InvocationTargetException | IllegalArgumentException ignored) {}
         return 0;
     }
 
@@ -74,7 +74,7 @@ public class FZ implements IFZ, IIntegrationModule {
             if (day_BarrelClass.isInstance(te)) {
                 return (Integer) day_getItemCount.invoke(te);
             }
-        } catch (final IllegalAccessException ignored) {} catch (final IllegalArgumentException ignored) {} catch (final InvocationTargetException ignored) {}
+        } catch (final IllegalAccessException | InvocationTargetException | IllegalArgumentException ignored) {}
         return 0;
     }
 
@@ -84,7 +84,7 @@ public class FZ implements IFZ, IIntegrationModule {
             if (day_BarrelClass.isInstance(te)) {
                 day_item.set(te, input == null ? null : input.copy());
             }
-        } catch (final IllegalArgumentException ignored) {} catch (final IllegalAccessException ignored) {}
+        } catch (final IllegalArgumentException | IllegalAccessException ignored) {}
     }
 
     @Override
@@ -95,7 +95,7 @@ public class FZ implements IFZ, IIntegrationModule {
             }
 
             te.markDirty();
-        } catch (final IllegalAccessException ignored) {} catch (final IllegalArgumentException ignored) {} catch (final InvocationTargetException ignored) {}
+        } catch (final IllegalAccessException | InvocationTargetException | IllegalArgumentException ignored) {}
     }
 
     @Override

@@ -87,10 +87,7 @@ public class RecipeLoader implements Runnable {
                 this.handler.parseRecipes(new ConfigLoader(generatedRecipesDir, userRecipesDir), "index.recipe");
             }
             // on failure use jar parsing
-            catch (final IOException e) {
-                AELog.debug(e);
-                this.handler.parseRecipes(new JarLoader(ASSETS_RECIPE_PATH), "index.recipe");
-            } catch (final URISyntaxException e) {
+            catch (final IOException | URISyntaxException e) {
                 AELog.debug(e);
                 this.handler.parseRecipes(new JarLoader(ASSETS_RECIPE_PATH), "index.recipe");
             }

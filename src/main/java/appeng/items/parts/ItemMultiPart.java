@@ -262,22 +262,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
             }
 
             return type.getConstructor().newInstance(is);
-        } catch (final InstantiationException e) {
-            throw new IllegalStateException(
-                    "Unable to construct IBusPart from IBusItem : " + part.getName()
-                            + " ; Possibly didn't have correct constructor( ItemStack )",
-                    e);
-        } catch (final IllegalAccessException e) {
-            throw new IllegalStateException(
-                    "Unable to construct IBusPart from IBusItem : " + part.getName()
-                            + " ; Possibly didn't have correct constructor( ItemStack )",
-                    e);
-        } catch (final InvocationTargetException e) {
-            throw new IllegalStateException(
-                    "Unable to construct IBusPart from IBusItem : " + part.getName()
-                            + " ; Possibly didn't have correct constructor( ItemStack )",
-                    e);
-        } catch (final NoSuchMethodException e) {
+        } catch (final ReflectiveOperationException e) {
             throw new IllegalStateException(
                     "Unable to construct IBusPart from IBusItem : " + part.getName()
                             + " ; Possibly didn't have correct constructor( ItemStack )",

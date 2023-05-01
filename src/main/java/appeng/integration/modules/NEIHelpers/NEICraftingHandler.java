@@ -54,7 +54,7 @@ public class NEICraftingHandler implements IOverlayHandler {
                 }
                 NetworkHandler.instance.sendToServer(packet);
             }
-        } catch (final Exception ignored) {} catch (final Error ignored) {}
+        } catch (final Exception | Error ignored) {}
     }
 
     // if the packet becomes too large, limit each slot contents to 3k

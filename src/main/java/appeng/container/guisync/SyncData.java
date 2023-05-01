@@ -79,11 +79,7 @@ public class SyncData {
             } else if (!val.equals(this.clientVersion)) {
                 this.send(c, val);
             }
-        } catch (final IllegalArgumentException e) {
-            AELog.debug(e);
-        } catch (final IllegalAccessException e) {
-            AELog.debug(e);
-        } catch (final IOException e) {
+        } catch (final IllegalArgumentException | IOException | IllegalAccessException e) {
             AELog.debug(e);
         }
     }
@@ -115,9 +111,7 @@ public class SyncData {
             } else {
                 this.updateValue(oldValue, (Long) val);
             }
-        } catch (final IllegalArgumentException e) {
-            AELog.debug(e);
-        } catch (final IllegalAccessException e) {
+        } catch (final IllegalArgumentException | IllegalAccessException e) {
             AELog.debug(e);
         }
     }
@@ -126,9 +120,7 @@ public class SyncData {
         try {
             this.setValue(val);
             this.source.onUpdate(this.fieldName, oldValue, this.getValue());
-        } catch (final IllegalArgumentException e) {
-            AELog.debug(e);
-        } catch (final IllegalAccessException e) {
+        } catch (final IllegalArgumentException | IllegalAccessException e) {
             AELog.debug(e);
         }
     }
@@ -160,9 +152,7 @@ public class SyncData {
             }
 
             this.source.onUpdate(this.fieldName, oldValue, this.getValue());
-        } catch (final IllegalArgumentException e) {
-            AELog.debug(e);
-        } catch (final IllegalAccessException e) {
+        } catch (final IllegalArgumentException | IllegalAccessException e) {
             AELog.debug(e);
         }
     }

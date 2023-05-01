@@ -32,11 +32,7 @@ public final class AETileEventHandler {
     public void tick(final AEBaseTile tile) {
         try {
             this.method.invoke(tile);
-        } catch (final IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        } catch (final IllegalArgumentException e) {
-            throw new IllegalStateException(e);
-        } catch (final InvocationTargetException e) {
+        } catch (final IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -45,11 +41,7 @@ public final class AETileEventHandler {
     public void writeToNBT(final AEBaseTile tile, final NBTTagCompound data) {
         try {
             this.method.invoke(tile, data);
-        } catch (final IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        } catch (final IllegalArgumentException e) {
-            throw new IllegalStateException(e);
-        } catch (final InvocationTargetException e) {
+        } catch (final IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -58,11 +50,7 @@ public final class AETileEventHandler {
     public void readFromNBT(final AEBaseTile tile, final NBTTagCompound data) {
         try {
             this.method.invoke(tile, data);
-        } catch (final IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        } catch (final IllegalArgumentException e) {
-            throw new IllegalStateException(e);
-        } catch (final InvocationTargetException e) {
+        } catch (final IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -71,11 +59,7 @@ public final class AETileEventHandler {
     public void writeToStream(final AEBaseTile tile, final ByteBuf data) {
         try {
             this.method.invoke(tile, data);
-        } catch (final IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        } catch (final IllegalArgumentException e) {
-            throw new IllegalStateException(e);
-        } catch (final InvocationTargetException e) {
+        } catch (final IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -92,11 +76,7 @@ public final class AETileEventHandler {
     public boolean readFromStream(final AEBaseTile tile, final ByteBuf data) {
         try {
             return (Boolean) this.method.invoke(tile, data);
-        } catch (final IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        } catch (final IllegalArgumentException e) {
-            throw new IllegalStateException(e);
-        } catch (final InvocationTargetException e) {
+        } catch (final IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
             throw new IllegalStateException(e);
         }
     }

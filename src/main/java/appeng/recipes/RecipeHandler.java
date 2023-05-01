@@ -359,13 +359,8 @@ public class RecipeHandler implements IRecipeHandler {
                                 combined.putAll(realName, recipes);
                             }
                         }
-                    } catch (final RecipeError ignored) {
-
-                    } catch (final MissedIngredientSet ignored) {
-
-                    } catch (final RegistrationError ignored) {
-
-                    } catch (final MissingIngredientError ignored) {
+                    } catch (final RecipeError | MissingIngredientError | RegistrationError |
+                            MissedIngredientSet ignored) {
 
                     }
                 }
@@ -384,8 +379,6 @@ public class RecipeHandler implements IRecipeHandler {
                 }
 
                 out.close();
-            } catch (final FileNotFoundException e1) {
-                AELog.debug(e1);
             } catch (final IOException e1) {
                 AELog.debug(e1);
             }

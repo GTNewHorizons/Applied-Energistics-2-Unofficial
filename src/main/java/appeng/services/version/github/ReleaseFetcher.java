@@ -60,11 +60,9 @@ public final class ReleaseFetcher {
             final FormattedRelease latestFitRelease = this.getLatestFitRelease(releases);
 
             return latestFitRelease;
-        } catch (final VersionCheckerException e) {
-            AELog.debug(e);
         } catch (MalformedURLException e) {
             AELog.debug(e);
-        } catch (IOException e) {
+        } catch (final VersionCheckerException | IOException e) {
             AELog.debug(e);
         }
 

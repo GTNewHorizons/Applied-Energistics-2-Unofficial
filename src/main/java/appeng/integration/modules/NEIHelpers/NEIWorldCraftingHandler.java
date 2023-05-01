@@ -147,9 +147,7 @@ public class NEIWorldCraftingHandler implements ICraftingHandler, IUsageHandler 
     private NEIWorldCraftingHandler newInstance() {
         try {
             return this.getClass().newInstance();
-        } catch (final InstantiationException e) {
-            throw new IllegalStateException(e);
-        } catch (final IllegalAccessException e) {
+        } catch (final InstantiationException | IllegalAccessException e) {
             throw new IllegalStateException(e);
         }
     }

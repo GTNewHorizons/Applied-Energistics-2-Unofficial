@@ -183,9 +183,7 @@ public class NEIAEShapedRecipeHandler extends TemplateRecipeHandler {
                                     false);
                             stack.setMaxSize(1);
                             this.ingredients.add(stack);
-                        } catch (final RegistrationError ignored) {
-
-                        } catch (final MissingIngredientError ignored) {
+                        } catch (final RegistrationError | MissingIngredientError ignored) {
 
                         }
                     }

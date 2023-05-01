@@ -46,11 +46,7 @@ public class ClassInstantiation<T> {
                 if (valid) {
                     try {
                         return Optional.of(constructor.newInstance(this.args));
-                    } catch (final InstantiationException e) {
-                        e.printStackTrace();
-                    } catch (final IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (final InvocationTargetException e) {
+                    } catch (final InstantiationException | InvocationTargetException | IllegalAccessException e) {
                         e.printStackTrace();
                     }
                     break;
