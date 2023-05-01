@@ -52,16 +52,19 @@ public class ServerHelper extends CommonHelper {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<EntityPlayer> getPlayers() {
         if (!Platform.isClient()) {
             final MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
 
             if (server != null) {
-                return server.getConfigurationManager().playerEntityList;
+                // The real generic type uses EntityPlayerMP, but we can't change it here without breaking API
+                // compatibility
+                return (List<EntityPlayer>) (List<?>) server.getConfigurationManager().playerEntityList;
             }
         }
 
-        return new ArrayList<EntityPlayer>();
+        return new ArrayList<>();
     }
 
     @Override

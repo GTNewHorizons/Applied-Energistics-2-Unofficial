@@ -14,6 +14,7 @@ configurations { configs ->
     // Keep all dependencies from the main mod in the functional test mod
     named(functionalTestSet.compileClasspathConfigurationName).configure {it.extendsFrom(named("compileClasspath").get())}
     named(functionalTestSet.runtimeClasspathConfigurationName).configure {it.extendsFrom(named("runtimeClasspath").get())}
+    named(functionalTestSet.annotationProcessorConfigurationName).configure {it.extendsFrom(named("annotationProcessor").get())}
 }
 
 tasks.register(functionalTestSet.jarTaskName, Jar) {
