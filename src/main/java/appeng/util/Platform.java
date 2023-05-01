@@ -1168,8 +1168,8 @@ public class Platform {
         if (hitEntities) {
             final List list = w.getEntitiesWithinAABBExcludingEntity(p, bb);
 
-            for (int l = 0; l < list.size(); ++l) {
-                final Entity entity1 = (Entity) list.get(l);
+            for (Object o : list) {
+                final Entity entity1 = (Entity) o;
 
                 if (!entity1.isDead && entity1 != p && !(entity1 instanceof EntityItem)) {
                     if (entity1.isEntityAlive()) {

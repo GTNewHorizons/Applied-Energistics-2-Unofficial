@@ -283,10 +283,10 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
     private void cleanup(final EntityPlayer p, final IMEMonitor<IAEItemStack> inv, final ItemStack[] set) {
         if (Platform.isServer()) {
             final List<ItemStack> drops = new ArrayList<ItemStack>();
-            for (int i = 0; i < set.length; ++i) {
-                if (set[i] != null && set[i].stackSize > 0) {
+            for (ItemStack itemStack : set) {
+                if (itemStack != null && itemStack.stackSize > 0) {
                     final IAEItemStack fail = inv
-                            .injectItems(AEItemStack.create(set[i]), Actionable.MODULATE, this.mySrc);
+                            .injectItems(AEItemStack.create(itemStack), Actionable.MODULATE, this.mySrc);
                     if (fail != null) {
                         drops.add(fail.getItemStack());
                     }

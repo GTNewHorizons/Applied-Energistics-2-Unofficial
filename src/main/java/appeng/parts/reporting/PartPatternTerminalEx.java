@@ -122,14 +122,14 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
                         outItems = details.getOutputs();
                     }
 
-                    for (int x = 0; x < inItems.length; x++) {
-                        if (inItems[x] != null) {
+                    for (IAEItemStack inItem : inItems) {
+                        if (inItem != null) {
                             inputsCount++;
                         }
                     }
 
-                    for (int x = 0; x < outItems.length; x++) {
-                        if (outItems[x] != null) {
+                    for (IAEItemStack outItem : outItems) {
+                        if (outItem != null) {
                             outputCount++;
                         }
                     }
