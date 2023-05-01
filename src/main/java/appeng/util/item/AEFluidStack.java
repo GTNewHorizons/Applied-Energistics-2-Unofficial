@@ -240,7 +240,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     @Override
     public int compareTo(final AEFluidStack b) {
         final int diff = this.hashCode() - b.hashCode();
-        return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+        return Integer.compare(diff, 0);
     }
 
     @Override

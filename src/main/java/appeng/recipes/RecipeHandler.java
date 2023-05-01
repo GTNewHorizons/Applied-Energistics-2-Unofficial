@@ -392,50 +392,55 @@ public class RecipeHandler implements IRecipeHandler {
             if (split != -1) {
                 final String operation = this.tokens.remove(0).toLowerCase(Locale.ENGLISH);
 
-                if (operation.equals("alias")) {
-                    if (this.tokens.size() == 3 && this.tokens.indexOf("->") == 1) {
-                        this.data.aliases.put(this.tokens.get(0), this.tokens.get(2));
-                    } else {
-                        throw new RecipeError("Alias must have exactly 1 input and 1 output.");
+                switch (operation) {
+                    case "alias" -> {
+                        if (this.tokens.size() == 3 && this.tokens.indexOf("->") == 1) {
+                            this.data.aliases.put(this.tokens.get(0), this.tokens.get(2));
+                        } else {
+                            throw new RecipeError("Alias must have exactly 1 input and 1 output.");
+                        }
                     }
-                } else if (operation.equals("group")) {
-                    final List<String> pre = this.tokens.subList(0, split - 1);
-                    final List<String> post = this.tokens.subList(split, this.tokens.size());
+                    case "group" -> {
+                        final List<String> pre = this.tokens.subList(0, split - 1);
+                        final List<String> post = this.tokens.subList(split, this.tokens.size());
 
-                    final List<List<IIngredient>> inputs = this.parseLines(pre);
+                        final List<List<IIngredient>> inputs = this.parseLines(pre);
 
-                    if (inputs.size() == 1 && inputs.get(0).size() > 0 && post.size() == 1) {
-                        this.data.groups.put(post.get(0), new GroupIngredient(post.get(0), inputs.get(0), 1));
-                    } else {
-                        throw new RecipeError("Group must have exactly 1 output, and 1 or more inputs.");
+                        if (inputs.size() == 1 && inputs.get(0).size() > 0 && post.size() == 1) {
+                            this.data.groups.put(post.get(0), new GroupIngredient(post.get(0), inputs.get(0), 1));
+                        } else {
+                            throw new RecipeError("Group must have exactly 1 output, and 1 or more inputs.");
+                        }
                     }
-                } else if (operation.equals("ore")) {
-                    final List<String> pre = this.tokens.subList(0, split - 1);
-                    final List<String> post = this.tokens.subList(split, this.tokens.size());
+                    case "ore" -> {
+                        final List<String> pre = this.tokens.subList(0, split - 1);
+                        final List<String> post = this.tokens.subList(split, this.tokens.size());
 
-                    final List<List<IIngredient>> inputs = this.parseLines(pre);
+                        final List<List<IIngredient>> inputs = this.parseLines(pre);
 
-                    if (inputs.size() == 1 && inputs.get(0).size() > 0 && post.size() == 1) {
-                        final ICraftHandler ch = new OreRegistration(inputs.get(0), post.get(0));
-                        this.addCrafting(ch);
-                    } else {
-                        throw new RecipeError(
-                                "Group must have exactly 1 output, and 1 or more inputs in a single row.");
+                        if (inputs.size() == 1 && inputs.get(0).size() > 0 && post.size() == 1) {
+                            final ICraftHandler ch = new OreRegistration(inputs.get(0), post.get(0));
+                            this.addCrafting(ch);
+                        } else {
+                            throw new RecipeError(
+                                    "Group must have exactly 1 output, and 1 or more inputs in a single row.");
+                        }
                     }
-                } else {
-                    final List<String> pre = this.tokens.subList(0, split - 1);
-                    final List<String> post = this.tokens.subList(split, this.tokens.size());
+                    default -> {
+                        final List<String> pre = this.tokens.subList(0, split - 1);
+                        final List<String> post = this.tokens.subList(split, this.tokens.size());
 
-                    final List<List<IIngredient>> inputs = this.parseLines(pre);
-                    final List<List<IIngredient>> outputs = this.parseLines(post);
+                        final List<List<IIngredient>> inputs = this.parseLines(pre);
+                        final List<List<IIngredient>> outputs = this.parseLines(post);
 
-                    final ICraftHandler ch = cr.getCraftHandlerFor(operation);
+                        final ICraftHandler ch = cr.getCraftHandlerFor(operation);
 
-                    if (ch != null) {
-                        ch.setup(inputs, outputs);
-                        this.addCrafting(ch);
-                    } else {
-                        throw new RecipeError("Invalid crafting type: " + operation);
+                        if (ch != null) {
+                            ch.setup(inputs, outputs);
+                            this.addCrafting(ch);
+                        } else {
+                            throw new RecipeError("Invalid crafting type: " + operation);
+                        }
                     }
                 }
             } else {

@@ -235,7 +235,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
         final List<MaterialType> types = Arrays.asList(MaterialType.values());
-        types.sort((o1, o2) -> o1.name().compareTo(o2.name()));
+        types.sort(Comparator.comparing(Enum::name));
 
         for (final MaterialType mat : types) {
             if (mat.getDamageValue() >= 0 && mat.isRegistered() && mat.getItemInstance() == this) {

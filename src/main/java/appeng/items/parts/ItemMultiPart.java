@@ -218,7 +218,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
         final List<Entry<Integer, PartTypeWithVariant>> types = new ArrayList<>(this.registered.entrySet());
-        Collections.sort(types, REGISTERED_COMPARATOR);
+        types.sort(REGISTERED_COMPARATOR);
 
         for (final Entry<Integer, PartTypeWithVariant> part : types) {
             itemStacks.add(new ItemStack(this, 1, part.getKey()));
@@ -291,19 +291,19 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
             if (stack.getItem() == this) {
                 final PartType pt = this.getTypeByStack(stack);
                 switch (pt) {
-                    case ImportBus:
+                    case ImportBus -> {
                         importBus = true;
                         if (u == pt) {
                             group = true;
                         }
-                        break;
-                    case ExportBus:
+                    }
+                    case ExportBus -> {
                         exportBus = true;
                         if (u == pt) {
                             group = true;
                         }
-                        break;
-                    default:
+                    }
+                    default -> {}
                 }
             }
         }

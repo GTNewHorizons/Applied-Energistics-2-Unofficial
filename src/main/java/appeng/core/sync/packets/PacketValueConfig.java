@@ -100,39 +100,34 @@ public class PacketValueConfig extends AppEngPacket {
             lvc.setLevel(Long.parseLong(this.Value), player);
         } else if (this.Name.startsWith("PatternTerminal.") && c instanceof ContainerPatternTerm) {
             final ContainerPatternTerm cpt = (ContainerPatternTerm) c;
-            if (this.Name.equals("PatternTerminal.CraftMode")) {
-                cpt.getPatternTerminal().setCraftingRecipe(this.Value.equals("1"));
-            } else if (this.Name.equals("PatternTerminal.Encode")) {
-                if (this.Value.equals("2")) cpt.encodeAndMoveToInventory(false);
-                else if (this.Value.equals("6")) cpt.encodeAndMoveToInventory(true);
-                else cpt.encode();
-            } else if (this.Name.equals("PatternTerminal.Clear")) {
-                cpt.clear();
-            } else if (this.Name.equals("PatternTerminal.Substitute")) {
-                cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
-            } else if (this.Name.equals("PatternTerminal.BeSubstitute")) {
-                cpt.getPatternTerminal().setCanBeSubstitution(this.Value.equals("1"));
-            } else if (this.Name.equals("PatternTerminal.Double")) {
-                cpt.doubleStacks(Value.equals("1"));
+            switch (this.Name) {
+                case "PatternTerminal.CraftMode" -> cpt.getPatternTerminal().setCraftingRecipe(this.Value.equals("1"));
+                case "PatternTerminal.Encode" -> {
+                    if (this.Value.equals("2")) cpt.encodeAndMoveToInventory(false);
+                    else if (this.Value.equals("6")) cpt.encodeAndMoveToInventory(true);
+                    else cpt.encode();
+                }
+                case "PatternTerminal.Clear" -> cpt.clear();
+                case "PatternTerminal.Substitute" -> cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
+                case "PatternTerminal.BeSubstitute" -> cpt.getPatternTerminal()
+                        .setCanBeSubstitution(this.Value.equals("1"));
+                case "PatternTerminal.Double" -> cpt.doubleStacks(Value.equals("1"));
             }
         } else if (this.Name.startsWith("PatternTerminalEx.") && c instanceof ContainerPatternTermEx) {
             final ContainerPatternTermEx cpt = (ContainerPatternTermEx) c;
-            if (this.Name.equals("PatternTerminalEx.Encode")) {
-                if (this.Value.equals("2")) cpt.encodeAndMoveToInventory(false);
-                else if (this.Value.equals("6")) cpt.encodeAndMoveToInventory(true);
-                else cpt.encode();
-            } else if (this.Name.equals("PatternTerminalEx.Clear")) {
-                cpt.clear();
-            } else if (this.Name.equals("PatternTerminalEx.Substitute")) {
-                cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
-            } else if (this.Name.equals("PatternTerminalEx.BeSubstitute")) {
-                cpt.getPatternTerminal().setCanBeSubstitution(this.Value.equals("1"));
-            } else if (this.Name.equals("PatternTerminalEx.Invert")) {
-                cpt.getPatternTerminal().setInverted(Value.equals("1"));
-            } else if (this.Name.equals("PatternTerminalEx.Double")) {
-                cpt.doubleStacks(Value.equals("1"));
-            } else if (this.Name.equals("PatternTerminalEx.ActivePage")) {
-                cpt.getPatternTerminal().setActivePage(Integer.parseInt(Value));
+            switch (this.Name) {
+                case "PatternTerminalEx.Encode" -> {
+                    if (this.Value.equals("2")) cpt.encodeAndMoveToInventory(false);
+                    else if (this.Value.equals("6")) cpt.encodeAndMoveToInventory(true);
+                    else cpt.encode();
+                }
+                case "PatternTerminalEx.Clear" -> cpt.clear();
+                case "PatternTerminalEx.Substitute" -> cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
+                case "PatternTerminalEx.BeSubstitute" -> cpt.getPatternTerminal()
+                        .setCanBeSubstitution(this.Value.equals("1"));
+                case "PatternTerminalEx.Invert" -> cpt.getPatternTerminal().setInverted(Value.equals("1"));
+                case "PatternTerminalEx.Double" -> cpt.doubleStacks(Value.equals("1"));
+                case "PatternTerminalEx.ActivePage" -> cpt.getPatternTerminal().setActivePage(Integer.parseInt(Value));
             }
         } else if (this.Name.startsWith("StorageBus.") && c instanceof ContainerStorageBus) {
             final ContainerStorageBus ccw = (ContainerStorageBus) c;
@@ -146,12 +141,10 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.startsWith("CellWorkbench.") && c instanceof ContainerCellWorkbench) {
             final ContainerCellWorkbench ccw = (ContainerCellWorkbench) c;
             if (this.Name.equals("CellWorkbench.Action")) {
-                if (this.Value.equals("CopyMode")) {
-                    ccw.nextWorkBenchCopyMode();
-                } else if (this.Value.equals("Partition")) {
-                    ccw.partition();
-                } else if (this.Value.equals("Clear")) {
-                    ccw.clear();
+                switch (this.Value) {
+                    case "CopyMode" -> ccw.nextWorkBenchCopyMode();
+                    case "Partition" -> ccw.partition();
+                    case "Clear" -> ccw.clear();
                 }
             } else if (this.Name.equals("CellWorkbench.Fuzzy")) {
                 ccw.setFuzzy(FuzzyMode.valueOf(this.Value));

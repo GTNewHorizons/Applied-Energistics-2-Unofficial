@@ -467,7 +467,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     }
 
     private int compare(final int l, final int m) {
-        return l < m ? -1 : (l > m ? 1 : 0);
+        return Integer.compare(l, m);
     }
 
     @SideOnly(Side.CLIENT)

@@ -106,12 +106,7 @@ public class CraftingGridCache
             this.updateCPUClusters();
         }
 
-        final Iterator<CraftingLinkNexus> craftingLinkIterator = this.craftingLinks.values().iterator();
-        while (craftingLinkIterator.hasNext()) {
-            if (craftingLinkIterator.next().isDead(this.grid, this)) {
-                craftingLinkIterator.remove();
-            }
-        }
+        this.craftingLinks.values().removeIf(craftingLinkNexus -> craftingLinkNexus.isDead(this.grid, this));
 
         for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
             cpu.updateCraftingLogic(this.grid, this.energyGrid, this);
@@ -148,8 +143,7 @@ public class CraftingGridCache
 
     @Override
     public void addNode(final IGridNode gridNode, final IGridHost machine) {
-        if (machine instanceof ICraftingWatcherHost) {
-            final ICraftingWatcherHost watcherHost = (ICraftingWatcherHost) machine;
+        if (machine instanceof ICraftingWatcherHost watcherHost) {
             final CraftingWatcher watcher = new CraftingWatcher(this, watcherHost);
             this.craftingWatchers.put(gridNode, watcher);
             watcherHost.updateWatcher(watcher);
@@ -273,7 +267,7 @@ public class CraftingGridCache
         this.craftingCPUClusters.clear();
 
         for (Object cls : StreamSupport.stream(grid.getMachinesClasses().spliterator(), false)
-                .filter(c -> TileCraftingStorageTile.class.isAssignableFrom(c)).toArray()) {
+                .filter(TileCraftingStorageTile.class::isAssignableFrom).toArray()) {
             for (final IGridNode cst : this.grid.getMachines((Class<? extends IGridHost>) cls)) {
                 final TileCraftingStorageTile tile = (TileCraftingStorageTile) cst.getMachine();
                 final CraftingCPUCluster cluster = (CraftingCPUCluster) tile.getCluster();
@@ -450,17 +444,11 @@ public class CraftingGridCache
             throw new IllegalArgumentException("Invalid Crafting Job Request");
         }
 
-        final ICraftingJob job;
-        switch (AEConfig.instance.craftingCalculatorVersion) {
-            case 1:
-                job = new CraftingJob(world, grid, actionSrc, slotItem, cb);
-                break;
-            case 2:
-                job = new CraftingJobV2(world, grid, actionSrc, slotItem, cb);
-                break;
-            default:
-                throw new IllegalStateException("Invalid crafting calculator version");
-        }
+        final ICraftingJob job = switch (AEConfig.instance.craftingCalculatorVersion) {
+            case 1 -> new CraftingJob(world, grid, actionSrc, slotItem, cb);
+            case 2 -> new CraftingJobV2(world, grid, actionSrc, slotItem, cb);
+            default -> throw new IllegalStateException("Invalid crafting calculator version");
+        };
 
         return job.schedule();
     }
@@ -486,7 +474,7 @@ public class CraftingGridCache
                 }
             }
 
-            Collections.sort(validCpusClusters, new Comparator<>() {
+            validCpusClusters.sort(new Comparator<>() {
 
                 private int compareInternal(CraftingCPUCluster firstCluster, CraftingCPUCluster nextCluster) {
                     int comparison = ItemSorters
