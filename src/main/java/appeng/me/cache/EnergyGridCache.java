@@ -282,8 +282,7 @@ public class EnergyGridCache implements IEnergyGrid {
             final Iterator<IEnergyGridProvider> i = this.energyGridProviders.iterator();
             while (amt > 0 && i.hasNext()) {
                 final IEnergyGridProvider what = i.next();
-                final Set<IEnergyGrid> listCopy = new HashSet<>();
-                listCopy.addAll(seen);
+                final Set<IEnergyGrid> listCopy = new HashSet<>(seen);
 
                 final double cannotHold = what.injectAEPower(amt, Actionable.SIMULATE, listCopy);
                 what.injectAEPower(amt - cannotHold, mode, seen);

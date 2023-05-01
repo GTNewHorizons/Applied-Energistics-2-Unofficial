@@ -100,13 +100,13 @@ public class CachedPlane {
 
         for (int cx = 0; cx < this.cx_size; cx++) {
             for (int cz = 0; cz < this.cz_size; cz++) {
-                final LinkedList<Entry<ChunkPosition, TileEntity>> rawTiles = new LinkedList<>();
                 final LinkedList<ChunkPosition> deadTiles = new LinkedList<>();
 
                 final Chunk c = w.getChunkFromChunkCoords(minCX + cx, minCZ + cz);
                 this.myChunks[cx][cz] = c;
 
-                rawTiles.addAll(((HashMap<ChunkPosition, TileEntity>) c.chunkTileEntityMap).entrySet());
+                final LinkedList<Entry<ChunkPosition, TileEntity>> rawTiles = new LinkedList<>(
+                        ((HashMap<ChunkPosition, TileEntity>) c.chunkTileEntityMap).entrySet());
                 for (final Entry<ChunkPosition, TileEntity> tx : rawTiles) {
                     final ChunkPosition cp = tx.getKey();
                     final TileEntity te = tx.getValue();
