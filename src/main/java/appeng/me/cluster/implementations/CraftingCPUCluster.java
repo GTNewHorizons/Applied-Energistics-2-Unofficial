@@ -827,13 +827,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     @Override
     public boolean isBusy() {
-        final Iterator<Entry<ICraftingPatternDetails, TaskProgress>> i = this.tasks.entrySet().iterator();
 
-        while (i.hasNext()) {
-            if (i.next().getValue().value <= 0) {
-                i.remove();
-            }
-        }
+        this.tasks.entrySet().removeIf(
+                iCraftingPatternDetailsTaskProgressEntry -> iCraftingPatternDetailsTaskProgressEntry.getValue().value
+                        <= 0);
 
         return !this.tasks.isEmpty() || !this.waitingFor.isEmpty();
     }

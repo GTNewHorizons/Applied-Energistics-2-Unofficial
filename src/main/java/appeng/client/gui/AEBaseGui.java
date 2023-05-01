@@ -106,12 +106,7 @@ public abstract class AEBaseGui extends GuiContainer {
         super.initGui();
 
         final List<Slot> slots = this.getInventorySlots();
-        final Iterator<Slot> i = slots.iterator();
-        while (i.hasNext()) {
-            if (i.next() instanceof SlotME) {
-                i.remove();
-            }
-        }
+        slots.removeIf(slot -> slot instanceof SlotME);
 
         for (final InternalSlotME me : this.meSlots) {
             slots.add(new SlotME(me));

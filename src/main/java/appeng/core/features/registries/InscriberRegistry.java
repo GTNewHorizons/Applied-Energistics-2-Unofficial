@@ -79,12 +79,7 @@ public final class InscriberRegistry implements IInscriberRegistry {
 
     @Override
     public void removeRecipe(final IInscriberRecipe toBeRemovedRecipe) {
-        for (final Iterator<IInscriberRecipe> iterator = this.recipes.iterator(); iterator.hasNext();) {
-            final IInscriberRecipe recipe = iterator.next();
-            if (recipe.equals(toBeRemovedRecipe)) {
-                iterator.remove();
-            }
-        }
+        this.recipes.removeIf(recipe -> recipe.equals(toBeRemovedRecipe));
     }
 
     /**
