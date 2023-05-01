@@ -167,7 +167,7 @@ public class Ingredient implements IIngredient {
 
         if (this.nameSpace.equalsIgnoreCase("oreDictionary")) {
             final List<ItemStack> ores = OreDictionary.getOres(this.itemName);
-            final ItemStack[] set = ores.toArray(new ItemStack[ores.size()]);
+            final ItemStack[] set = ores.toArray(new ItemStack[0]);
 
             // clone and set qty.
             for (int x = 0; x < set.length; x++) {

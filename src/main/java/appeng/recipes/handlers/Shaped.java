@@ -84,7 +84,7 @@ public class Shaped implements ICraftHandler, IWebsiteSerializer {
         final ItemStack outIS = this.output.getItemStack();
 
         try {
-            GameRegistry.addRecipe(new ShapedRecipe(outIS, args.toArray(new Object[args.size()])));
+            GameRegistry.addRecipe(new ShapedRecipe(outIS, args.toArray(new Object[0])));
         } catch (final Throwable e) {
             AELog.debug(e);
             throw new RegistrationError("Error while adding shaped recipe.");

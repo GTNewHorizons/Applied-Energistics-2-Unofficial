@@ -33,7 +33,7 @@ public class AEGenericSchematicTile extends SchematicTile {
             tcb.getDrops(tile.getWorldObj(), tile.xCoord, tile.yCoord, tile.zCoord, list);
         }
 
-        this.storedRequirements = list.toArray(new ItemStack[list.size()]);
+        this.storedRequirements = list.toArray(new ItemStack[0]);
     }
 
     @Override

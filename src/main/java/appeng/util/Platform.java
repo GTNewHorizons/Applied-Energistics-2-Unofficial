@@ -581,7 +581,7 @@ public class Platform {
         if (out == null) {
             return new ItemStack[0];
         }
-        return out.toArray(new ItemStack[out.size()]);
+        return out.toArray(new ItemStack[0]);
     }
 
     public static ForgeDirection cycleOrientations(final ForgeDirection dir, final boolean upAndDown) {

@@ -304,7 +304,7 @@ public class ToolEntropyManipulator extends AEBasePoweredItem implements IBlockT
 
                     this.extractAEPower(item, 1600);
                     final InWorldToolOperationResult or = InWorldToolOperationResult
-                            .getBlockOperationResult(out.toArray(new ItemStack[out.size()]));
+                            .getBlockOperationResult(out.toArray(new ItemStack[0]));
                     w.playSoundEffect(
                             x + 0.5D,
                             y + 0.5D,

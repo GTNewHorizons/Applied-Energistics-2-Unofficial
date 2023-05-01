@@ -300,7 +300,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
             }
 
             if (hasValue) {
-                return list.toArray(new ItemStack[list.size()]);
+                return list.toArray(new ItemStack[0]);
             }
         }
 

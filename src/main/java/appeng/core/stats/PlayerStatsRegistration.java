@@ -91,7 +91,7 @@ public class PlayerStatsRegistration {
 
             final AchievementPage ae2AchievementPage = new AchievementPage(
                     "Applied Energistics 2",
-                    list.toArray(new Achievement[list.size()]));
+                    list.toArray(new Achievement[0]));
             AchievementPage.registerAchievementPage(ae2AchievementPage);
         }
     }

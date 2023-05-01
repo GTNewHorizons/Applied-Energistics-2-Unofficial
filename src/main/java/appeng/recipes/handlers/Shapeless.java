@@ -53,7 +53,7 @@ public class Shapeless implements ICraftHandler, IWebsiteSerializer {
         final ItemStack outIS = this.output.getItemStack();
 
         try {
-            GameRegistry.addRecipe(new ShapelessRecipe(outIS, args.toArray(new Object[args.size()])));
+            GameRegistry.addRecipe(new ShapelessRecipe(outIS, args.toArray(new Object[0])));
         } catch (final Throwable e) {
             AELog.debug(e);
             throw new RegistrationError("Error while adding shapeless recipe.");

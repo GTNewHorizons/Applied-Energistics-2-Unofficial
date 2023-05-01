@@ -92,7 +92,7 @@ public class GroupIngredient implements IIngredient {
             is.stackSize = this.qty;
         }
 
-        return out.toArray(new ItemStack[out.size()]);
+        return out.toArray(new ItemStack[0]);
     }
 
     @Override

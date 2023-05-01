@@ -116,8 +116,8 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
             }
         }
 
-        this.outputs = out.toArray(new IAEItemStack[out.size()]);
-        this.inputs = in.toArray(new IAEItemStack[in.size()]);
+        this.outputs = out.toArray(new IAEItemStack[0]);
+        this.inputs = in.toArray(new IAEItemStack[0]);
 
         this.condensedInputs = convertToCondensedList(this.inputs);
         this.condensedOutputs = convertToCondensedList(this.outputs);
@@ -368,7 +368,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
             }
         }
 
-        return items.toArray(new IAEItemStack[items.size()]);
+        return items.toArray(new IAEItemStack[0]);
     }
 
     public static IAEItemStack[] convertToCondensedList(final IAEItemStack[] items) {
@@ -389,6 +389,6 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
             }
         }
 
-        return tmp.values().toArray(new IAEItemStack[tmp.size()]);
+        return tmp.values().toArray(new IAEItemStack[0]);
     }
 }
