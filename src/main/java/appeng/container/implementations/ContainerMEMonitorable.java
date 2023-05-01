@@ -121,7 +121,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                             this.setPowerSource(
                                     new ChannelPowerSrc(
                                             this.networkNode,
-                                            (IEnergySource) g.getCache(IEnergyGrid.class)));
+                                            g.getCache(IEnergyGrid.class)));
                         }
                     }
                 }

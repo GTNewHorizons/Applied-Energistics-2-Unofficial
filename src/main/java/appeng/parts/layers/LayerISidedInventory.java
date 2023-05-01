@@ -65,7 +65,7 @@ public class LayerISidedInventory extends LayerBase implements ISidedInventory {
             inventories = null;
         } else {
             sideData = new int[][] { NULL_SIDES, NULL_SIDES, NULL_SIDES, NULL_SIDES, NULL_SIDES, NULL_SIDES };
-            slots = new ArrayList<>(Collections.nCopies(slotCount, (InvSot) null));
+            slots = new ArrayList<>(Collections.nCopies(slotCount, null));
 
             int offsetForLayer = 0;
             int offsetForPart = 0;
