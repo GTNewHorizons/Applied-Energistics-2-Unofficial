@@ -42,7 +42,7 @@ import appeng.util.Platform;
 public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternItem {
 
     // rather simple client side caching.
-    private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<ItemStack, ItemStack>();
+    private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<>();
 
     public ItemEncodedPattern() {
         this.setFeature(EnumSet.of(AEFeature.Patterns));

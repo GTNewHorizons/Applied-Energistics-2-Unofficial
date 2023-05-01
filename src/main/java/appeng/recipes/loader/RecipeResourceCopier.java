@@ -201,7 +201,7 @@ public class RecipeResourceCopier {
                 final JarFile jar = new JarFile(URLDecoder.decode(jarPath, UTF_8_ENCODING));
                 try {
                     final Enumeration<JarEntry> entries = jar.entries(); // gives ALL entries in jar
-                    final Collection<String> result = new HashSet<String>(INITIAL_RESOURCE_CAPACITY); // avoid
+                    final Collection<String> result = new HashSet<>(INITIAL_RESOURCE_CAPACITY); // avoid
                                                                                                       // duplicates
 
                     // in case it is a

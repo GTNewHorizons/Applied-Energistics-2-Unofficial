@@ -39,7 +39,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class BusRenderer implements IItemRenderer {
 
     public static final BusRenderer INSTANCE = new BusRenderer();
-    private static final Map<Integer, IPart> RENDER_PART = new HashMap<Integer, IPart>();
+    private static final Map<Integer, IPart> RENDER_PART = new HashMap<>();
     private final RenderBlocksWorkaround renderer = new RenderBlocksWorkaround();
 
     @Override

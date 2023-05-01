@@ -67,12 +67,12 @@ public abstract class AEBaseContainer extends Container {
 
     private final InventoryPlayer invPlayer;
     private final BaseActionSource mySrc;
-    private final HashSet<Integer> locked = new HashSet<Integer>();
+    private final HashSet<Integer> locked = new HashSet<>();
     private final TileEntity tileEntity;
     private final IPart part;
     private final IGuiItemObject obj;
-    private final List<PacketPartialItem> dataChunks = new LinkedList<PacketPartialItem>();
-    private final HashMap<Integer, SyncData> syncData = new HashMap<Integer, SyncData>();
+    private final List<PacketPartialItem> dataChunks = new LinkedList<>();
+    private final HashMap<Integer, SyncData> syncData = new HashMap<>();
     private boolean isContainerValid = true;
     private String customName;
     private ContainerOpenContext openContext;
@@ -210,7 +210,7 @@ public abstract class AEBaseContainer extends Container {
                 CompressedStreamTools.writeCompressed(item, stream);
 
                 final int maxChunkSize = 30000;
-                final List<byte[]> miniPackets = new LinkedList<byte[]>();
+                final List<byte[]> miniPackets = new LinkedList<>();
 
                 final byte[] data = stream.toByteArray();
 
@@ -405,7 +405,7 @@ public abstract class AEBaseContainer extends Container {
                 return null;
             }
 
-            final List<Slot> selectedSlots = new ArrayList<Slot>();
+            final List<Slot> selectedSlots = new ArrayList<>();
 
             /**
              * Gather a list of valid destinations.
@@ -676,7 +676,7 @@ public abstract class AEBaseContainer extends Container {
                 if (s instanceof SlotPatternTerm) return;
                 // SlotPatternTerm should't transfer its ItemStack to the Player
 
-                final List<Slot> from = new LinkedList<Slot>();
+                final List<Slot> from = new LinkedList<>();
 
                 for (final Object j : this.inventorySlots) {
                     if (j instanceof Slot && j.getClass() == s.getClass()) {

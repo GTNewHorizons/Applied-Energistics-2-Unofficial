@@ -58,7 +58,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
     public ItemMultiPart(final IPartHelper partHelper) {
         Preconditions.checkNotNull(partHelper);
 
-        this.registered = new HashMap<Integer, PartTypeWithVariant>(INITIAL_REGISTERED_CAPACITY);
+        this.registered = new HashMap<>(INITIAL_REGISTERED_CAPACITY);
 
         this.nameResolver = new NameResolver(this.getClass());
         this.setFeature(EnumSet.of(AEFeature.Core));
@@ -218,7 +218,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
     @Override
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
-        final List<Entry<Integer, PartTypeWithVariant>> types = new ArrayList<Entry<Integer, PartTypeWithVariant>>(
+        final List<Entry<Integer, PartTypeWithVariant>> types = new ArrayList<>(
                 this.registered.entrySet());
         Collections.sort(types, REGISTERED_COMPARATOR);
 

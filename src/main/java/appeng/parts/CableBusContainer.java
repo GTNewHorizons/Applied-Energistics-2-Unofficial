@@ -50,7 +50,7 @@ import io.netty.buffer.ByteBuf;
 
 public class CableBusContainer extends CableBusStorage implements AEMultiTile, ICableBusContainer {
 
-    private static final ThreadLocal<Boolean> IS_LOADING = new ThreadLocal<Boolean>();
+    private static final ThreadLocal<Boolean> IS_LOADING = new ThreadLocal<>();
     private final EnumSet<LayerFlags> myLayerFlags = EnumSet.noneOf(LayerFlags.class);
     private YesNo hasRedstone = YesNo.UNDECIDED;
     private IPartHost tcb;
@@ -315,7 +315,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
         for (final ForgeDirection side : ForgeDirection.values()) {
             final IPart p = this.getPart(side);
             if (p != null) {
-                final List<AxisAlignedBB> boxes = new LinkedList<AxisAlignedBB>();
+                final List<AxisAlignedBB> boxes = new LinkedList<>();
 
                 final IPartCollisionHelper bch = new BusCollisionHelper(boxes, side, null, true);
                 p.getBoxes(bch);
@@ -333,7 +333,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
             for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
                 final IFacadePart p = fc.getFacade(side);
                 if (p != null) {
-                    final List<AxisAlignedBB> boxes = new LinkedList<AxisAlignedBB>();
+                    final List<AxisAlignedBB> boxes = new LinkedList<>();
 
                     final IPartCollisionHelper bch = new BusCollisionHelper(boxes, side, null, true);
                     p.getBoxes(bch, null);
@@ -358,7 +358,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
     @Override
     public void partChanged() {
         if (this.getCenter() == null) {
-            final List<ItemStack> facades = new LinkedList<ItemStack>();
+            final List<ItemStack> facades = new LinkedList<>();
 
             final IFacadeContainer fc = this.getFacadeContainer();
             for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
@@ -573,7 +573,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
 
     public Iterable<AxisAlignedBB> getSelectedBoundingBoxesFromPool(final boolean ignoreConnections,
             final boolean includeFacades, final Entity e, final boolean visual) {
-        final List<AxisAlignedBB> boxes = new LinkedList<AxisAlignedBB>();
+        final List<AxisAlignedBB> boxes = new LinkedList<>();
 
         final IFacadeContainer fc = this.getFacadeContainer();
         for (final ForgeDirection s : ForgeDirection.values()) {

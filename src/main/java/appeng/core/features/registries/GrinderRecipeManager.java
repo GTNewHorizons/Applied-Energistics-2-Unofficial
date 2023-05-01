@@ -37,10 +37,10 @@ public final class GrinderRecipeManager implements IGrinderRegistry, IOreListene
     private final Map<String, ItemStack> dusts;
 
     public GrinderRecipeManager() {
-        this.recipes = new ArrayList<IGrinderEntry>();
-        this.ores = new HashMap<ItemStack, String>();
-        this.ingots = new HashMap<ItemStack, String>();
-        this.dusts = new HashMap<String, ItemStack>();
+        this.recipes = new ArrayList<>();
+        this.ores = new HashMap<>();
+        this.ingots = new HashMap<>();
+        this.dusts = new HashMap<>();
 
         this.addOre("Coal", new ItemStack(Items.coal));
         this.addOre("Charcoal", new ItemStack(Items.coal, 1, 1));

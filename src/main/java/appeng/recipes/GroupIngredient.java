@@ -70,7 +70,7 @@ public class GroupIngredient implements IIngredient {
             return new ItemStack[0];
         }
 
-        final List<ItemStack> out = new LinkedList<ItemStack>();
+        final List<ItemStack> out = new LinkedList<>();
         this.isInside = true;
         try {
             for (final IIngredient i : this.ingredients) {

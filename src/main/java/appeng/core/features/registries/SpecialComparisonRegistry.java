@@ -24,7 +24,7 @@ public class SpecialComparisonRegistry implements ISpecialComparisonRegistry {
     private final List<IItemComparisonProvider> CompRegistry;
 
     public SpecialComparisonRegistry() {
-        this.CompRegistry = new ArrayList<IItemComparisonProvider>();
+        this.CompRegistry = new ArrayList<>();
     }
 
     @Override

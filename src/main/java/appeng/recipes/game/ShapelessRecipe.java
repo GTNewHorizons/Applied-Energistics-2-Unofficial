@@ -24,7 +24,7 @@ import appeng.api.recipes.IIngredient;
 
 public class ShapelessRecipe implements IRecipe, IRecipeBakeable {
 
-    private final ArrayList<Object> input = new ArrayList<Object>();
+    private final ArrayList<Object> input = new ArrayList<>();
     private ItemStack output = null;
     private boolean disable = false;
 
@@ -55,7 +55,7 @@ public class ShapelessRecipe implements IRecipe, IRecipeBakeable {
             return false;
         }
 
-        final ArrayList<Object> required = new ArrayList<Object>(this.input);
+        final ArrayList<Object> required = new ArrayList<>(this.input);
 
         for (int x = 0; x < var1.getSizeInventory(); x++) {
             final ItemStack slot = var1.getStackInSlot(x);

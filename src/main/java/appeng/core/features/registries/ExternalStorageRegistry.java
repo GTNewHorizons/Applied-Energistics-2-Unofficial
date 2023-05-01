@@ -28,7 +28,7 @@ public class ExternalStorageRegistry implements IExternalStorageRegistry {
     private final ExternalIInv lastHandler = new ExternalIInv();
 
     public ExternalStorageRegistry() {
-        this.Handlers = new ArrayList<IExternalStorageHandler>();
+        this.Handlers = new ArrayList<>();
     }
 
     @Override

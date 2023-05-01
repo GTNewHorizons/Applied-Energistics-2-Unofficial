@@ -91,7 +91,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         if (this.getProxy().isActive()) {
             return (TunnelCollection<T>) this.getProxy().getP2P().getOutputs(this.getFrequency(), this.getClass());
         }
-        return new TunnelCollection<T>(new ArrayList<T>(), this.getClass());
+        return new TunnelCollection<>(new ArrayList<>(), this.getClass());
     }
 
     @Override

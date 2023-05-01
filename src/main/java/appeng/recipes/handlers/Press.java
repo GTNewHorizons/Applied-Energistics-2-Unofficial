@@ -43,7 +43,7 @@ public final class Press extends InscriberProcess {
         }
 
         final ItemStack[] realInput = this.getImprintable().getItemStackSet();
-        final List<ItemStack> inputs = new ArrayList<ItemStack>(realInput.length);
+        final List<ItemStack> inputs = new ArrayList<>(realInput.length);
         Collections.addAll(inputs, realInput);
         final ItemStack top = (this.getTopOptional() == null) ? null : this.getTopOptional().getItemStack();
         final ItemStack bot = (this.getBotOptional() == null) ? null : this.getBotOptional().getItemStack();

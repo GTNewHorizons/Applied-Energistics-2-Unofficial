@@ -17,7 +17,7 @@ import appeng.core.features.IFeatureHandler;
 
 public final class FeatureHandlerRegistry {
 
-    private final Set<IFeatureHandler> registry = new LinkedHashSet<IFeatureHandler>();
+    private final Set<IFeatureHandler> registry = new LinkedHashSet<>();
 
     public void addFeatureHandler(final IFeatureHandler feature) {
         this.registry.add(feature);

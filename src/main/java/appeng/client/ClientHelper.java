@@ -131,7 +131,7 @@ public class ClientHelper extends ServerHelper {
     @Override
     public List<EntityPlayer> getPlayers() {
         if (Platform.isClient()) {
-            final List<EntityPlayer> o = new ArrayList<EntityPlayer>();
+            final List<EntityPlayer> o = new ArrayList<>();
             o.add(Minecraft.getMinecraft().thePlayer);
             return o;
         } else {

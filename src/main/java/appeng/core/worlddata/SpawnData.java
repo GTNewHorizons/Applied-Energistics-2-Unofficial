@@ -85,7 +85,7 @@ final class SpawnData implements IWorldSpawnData {
 
     @Override
     public Collection<NBTTagCompound> getNearByMeteorites(final int dim, final int chunkX, final int chunkZ) {
-        final Collection<NBTTagCompound> ll = new LinkedList<NBTTagCompound>();
+        final Collection<NBTTagCompound> ll = new LinkedList<>();
 
         synchronized (SpawnData.class) {
             for (int x = -1; x <= 1; x++) {

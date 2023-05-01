@@ -29,7 +29,7 @@ public class GenericInterestManager<T> {
 
     public void enableTransactions() {
         if (this.transDepth == 0) {
-            this.transactions = new LinkedList<SavedTransactions>();
+            this.transactions = new LinkedList<>();
         }
 
         this.transDepth++;

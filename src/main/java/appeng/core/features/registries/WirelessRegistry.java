@@ -30,7 +30,7 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
     private final List<IWirelessTermHandler> handlers;
 
     public WirelessRegistry() {
-        this.handlers = new ArrayList<IWirelessTermHandler>();
+        this.handlers = new ArrayList<>();
     }
 
     @Override

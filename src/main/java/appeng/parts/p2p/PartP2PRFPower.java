@@ -32,7 +32,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 @InterfaceList(value = { @Interface(iface = "cofh.api.energy.IEnergyReceiver", iname = IntegrationType.RF) })
 public final class PartP2PRFPower extends PartP2PTunnel<PartP2PRFPower> implements IEnergyReceiver {
 
-    private static final ThreadLocal<Stack<PartP2PRFPower>> THREAD_STACK = new ThreadLocal<Stack<PartP2PRFPower>>();
+    private static final ThreadLocal<Stack<PartP2PRFPower>> THREAD_STACK = new ThreadLocal<>();
     /**
      * Default element based on the null element pattern
      */
@@ -126,7 +126,7 @@ public final class PartP2PRFPower extends PartP2PTunnel<PartP2PRFPower> implemen
         Stack<PartP2PRFPower> s = THREAD_STACK.get();
 
         if (s == null) {
-            THREAD_STACK.set(s = new Stack<PartP2PRFPower>());
+            THREAD_STACK.set(s = new Stack<>());
         }
 
         return s;

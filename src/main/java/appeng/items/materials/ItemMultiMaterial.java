@@ -59,7 +59,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 
     private static final int KILO_SCALAR = 1024;
 
-    private final Map<Integer, MaterialType> dmgToMaterial = new HashMap<Integer, MaterialType>();
+    private final Map<Integer, MaterialType> dmgToMaterial = new HashMap<>();
     private final NameResolver nameResolver;
 
     public ItemMultiMaterial() {
@@ -86,7 +86,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 
         final Upgrades u = this.getType(stack);
         if (u != null) {
-            final List<String> textList = new LinkedList<String>();
+            final List<String> textList = new LinkedList<>();
             for (final Entry<ItemStack, Integer> j : u.getSupported().entrySet()) {
                 String name = null;
 
@@ -247,7 +247,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
         final List<MaterialType> types = Arrays.asList(MaterialType.values());
-        Collections.sort(types, new Comparator<MaterialType>() {
+        Collections.sort(types, new Comparator<>() {
 
             @Override
             public int compare(final MaterialType o1, final MaterialType o2) {

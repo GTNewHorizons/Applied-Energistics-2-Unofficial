@@ -51,7 +51,7 @@ public class PathGridCache implements IPathingGrid {
     private ControllerState controllerState = ControllerState.NO_CONTROLLER;
     private int ticksUntilReady = 20;
     private int lastChannels = 0;
-    private HashSet<IPathItem> semiOpen = new HashSet<IPathItem>();
+    private HashSet<IPathItem> semiOpen = new HashSet<>();
 
     public PathGridCache(final IGrid g) {
         this.myGrid = g;
@@ -93,8 +93,8 @@ public class PathGridCache implements IPathingGrid {
             } else {
                 final int nodes = this.myGrid.getNodes().size();
                 this.ticksUntilReady = 20 + Math.max(0, nodes / 100 - 20);
-                final HashSet<IPathItem> closedList = new HashSet<IPathItem>();
-                this.semiOpen = new HashSet<IPathItem>();
+                final HashSet<IPathItem> closedList = new HashSet<>();
+                this.semiOpen = new HashSet<>();
 
                 // myGrid.getPivot().beginVisit( new AdHocChannelUpdater( 0 )
                 // );
@@ -103,7 +103,7 @@ public class PathGridCache implements IPathingGrid {
                     for (final IGridConnection gcc : node.getConnections()) {
                         final GridConnection gc = (GridConnection) gcc;
                         if (!(gc.getOtherSide(node).getMachine() instanceof TileController)) {
-                            final List<IPathItem> open = new LinkedList<IPathItem>();
+                            final List<IPathItem> open = new LinkedList<>();
                             closedList.add(gc);
                             open.add(gc);
                             gc.setControllerRoute((GridNode) node, true);
@@ -295,7 +295,7 @@ public class PathGridCache implements IPathingGrid {
             final Achievements currentBracket = this.getAchievementBracket(this.getChannelsInUse());
             final Achievements lastBracket = this.getAchievementBracket(this.lastChannels);
             if (currentBracket != lastBracket && currentBracket != null) {
-                final Set<Integer> players = new HashSet<Integer>();
+                final Set<Integer> players = new HashSet<>();
                 for (final IGridNode n : this.requireChannels) {
                     players.add(n.getPlayerID());
                 }

@@ -59,7 +59,7 @@ public class CraftingGridCache
         implements ICraftingGrid, ICraftingProviderHelper, ICellProvider, IMEInventoryHandler<IAEStack> {
 
     private static final ExecutorService CRAFTING_POOL;
-    private static final Comparator<ICraftingPatternDetails> COMPARATOR = new Comparator<ICraftingPatternDetails>() {
+    private static final Comparator<ICraftingPatternDetails> COMPARATOR = new Comparator<>() {
 
         @Override
         public int compare(final ICraftingPatternDetails firstDetail, final ICraftingPatternDetails nextDetail) {
@@ -87,11 +87,10 @@ public class CraftingGridCache
     // Used for fuzzy lookups
     private final OreListMultiMap<ICraftingPatternDetails> craftableItemSubstitutes = new OreListMultiMap<>();
     private final Map<IAEItemStack, ImmutableList<ICraftingPatternDetails>> craftableItems = new HashMap<>();
-    private final Set<IAEItemStack> emitableItems = new HashSet<IAEItemStack>();
-    private final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<String, CraftingLinkNexus>();
+    private final Set<IAEItemStack> emitableItems = new HashSet<>();
+    private final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<>();
     private final Multimap<IAEStack, CraftingWatcher> interests = HashMultimap.create();
-    private final GenericInterestManager<CraftingWatcher> interestManager = new GenericInterestManager<CraftingWatcher>(
-            this.interests);
+    private final GenericInterestManager<CraftingWatcher> interestManager = new GenericInterestManager<>(this.interests);
     private IStorageGrid storageGrid;
     private IEnergyGrid energyGrid;
     private boolean updateList = false;
@@ -326,7 +325,7 @@ public class CraftingGridCache
     public void addCraftingOption(final ICraftingMedium medium, final ICraftingPatternDetails api) {
         List<ICraftingMedium> details = this.craftingMethods.get(api);
         if (details == null) {
-            details = new ArrayList<ICraftingMedium>();
+            details = new ArrayList<>();
             details.add(medium);
             this.craftingMethods.put(api, details);
         } else {
@@ -341,7 +340,7 @@ public class CraftingGridCache
 
     @Override
     public List<IMEInventoryHandler> getCellArray(final StorageChannel channel) {
-        final List<IMEInventoryHandler> list = new ArrayList<IMEInventoryHandler>(1);
+        final List<IMEInventoryHandler> list = new ArrayList<>(1);
 
         if (channel == StorageChannel.ITEMS) {
             list.add(this);
@@ -490,20 +489,19 @@ public class CraftingGridCache
         }
 
         if (target == null) {
-            final List<CraftingCPUCluster> validCpusClusters = new ArrayList<CraftingCPUCluster>();
+            final List<CraftingCPUCluster> validCpusClusters = new ArrayList<>();
             for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
                 if (cpu.isActive() && !cpu.isBusy() && cpu.getAvailableStorage() >= job.getByteTotal()) {
                     validCpusClusters.add(cpu);
                 }
             }
 
-            Collections.sort(validCpusClusters, new Comparator<CraftingCPUCluster>() {
+            Collections.sort(validCpusClusters, new Comparator<>() {
 
                 private int compareInternal(CraftingCPUCluster firstCluster, CraftingCPUCluster nextCluster) {
-                    int comparison = ItemSorters
-                            .compareLong(nextCluster.getCoProcessors(), firstCluster.getCoProcessors());
-                    if (comparison == 0) comparison = ItemSorters
-                            .compareLong(nextCluster.getAvailableStorage(), firstCluster.getAvailableStorage());
+                    int comparison = ItemSorters.compareLong(nextCluster.getCoProcessors(), firstCluster.getCoProcessors());
+                    if (comparison == 0) comparison = ItemSorters.compareLong(nextCluster.getAvailableStorage(),
+                            firstCluster.getAvailableStorage());
                     if (comparison == 0) return nextCluster.getName().compareTo(firstCluster.getName());
                     else return comparison;
                 }

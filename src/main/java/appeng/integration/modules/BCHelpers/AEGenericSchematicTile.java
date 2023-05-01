@@ -27,7 +27,7 @@ public class AEGenericSchematicTile extends SchematicTile {
     @Override
     public void storeRequirements(final IBuilderContext context, final int x, final int y, final int z) {
         final TileEntity tile = context.world().getTileEntity(x, y, z);
-        final ArrayList<ItemStack> list = new ArrayList<ItemStack>();
+        final ArrayList<ItemStack> list = new ArrayList<>();
         if (tile instanceof AEBaseTile) {
             final ICommonTile tcb = (ICommonTile) tile;
             tcb.getDrops(tile.getWorldObj(), tile.xCoord, tile.yCoord, tile.zCoord, list);

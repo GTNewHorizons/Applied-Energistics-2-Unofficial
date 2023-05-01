@@ -246,7 +246,7 @@ public class TileCharger extends AENetworkPowerTile implements ICrankable {
                 this.setInventorySlotContents(0, held);
             }
         } else {
-            final List<ItemStack> drops = new ArrayList<ItemStack>();
+            final List<ItemStack> drops = new ArrayList<>();
             drops.add(myItem);
             this.setInventorySlotContents(0, null);
             Platform.spawnDrops(

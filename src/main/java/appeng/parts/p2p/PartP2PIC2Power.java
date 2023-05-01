@@ -133,7 +133,7 @@ public class PartP2PIC2Power extends PartP2PTunnel<PartP2PIC2Power>
             return amount;
         }
 
-        final LinkedList<PartP2PIC2Power> options = new LinkedList<PartP2PIC2Power>();
+        final LinkedList<PartP2PIC2Power> options = new LinkedList<>();
         for (final PartP2PIC2Power o : outs) {
             if (o.OutputEnergyA <= 0.01) {
                 options.add(o);

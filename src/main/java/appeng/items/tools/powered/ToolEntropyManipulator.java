@@ -55,8 +55,8 @@ public class ToolEntropyManipulator extends AEBasePoweredItem implements IBlockT
 
         this.setFeature(EnumSet.of(AEFeature.EntropyManipulator, AEFeature.PoweredTools));
 
-        this.heatUp = new HashMap<InWorldToolOperationIngredient, InWorldToolOperationResult>();
-        this.coolDown = new HashMap<InWorldToolOperationIngredient, InWorldToolOperationResult>();
+        this.heatUp = new HashMap<>();
+        this.coolDown = new HashMap<>();
 
         this.coolDown.put(
                 new InWorldToolOperationIngredient(Blocks.stone, 0),
@@ -74,7 +74,7 @@ public class ToolEntropyManipulator extends AEBasePoweredItem implements IBlockT
                 new InWorldToolOperationIngredient(Blocks.grass, OreDictionary.WILDCARD_VALUE),
                 new InWorldToolOperationResult(new ItemStack(Blocks.dirt)));
 
-        final List<ItemStack> snowBalls = new ArrayList<ItemStack>();
+        final List<ItemStack> snowBalls = new ArrayList<>();
         snowBalls.add(new ItemStack(Items.snowball));
         this.coolDown.put(
                 new InWorldToolOperationIngredient(Blocks.flowing_water, OreDictionary.WILDCARD_VALUE),
@@ -277,7 +277,7 @@ public class ToolEntropyManipulator extends AEBasePoweredItem implements IBlockT
                 }
 
                 final ItemStack[] stack = Platform.getBlockDrops(w, x, y, z);
-                final List<ItemStack> out = new ArrayList<ItemStack>();
+                final List<ItemStack> out = new ArrayList<>();
                 boolean hasFurnaceable = false;
                 boolean canFurnaceable = true;
 

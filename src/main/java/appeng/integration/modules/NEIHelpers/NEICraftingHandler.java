@@ -76,7 +76,7 @@ public class NEICraftingHandler implements IOverlayHandler {
                     if (slot instanceof SlotCraftingMatrix || slot instanceof SlotFakeCraftingMatrix) {
                         if (slot.getSlotIndex() == col + row * 3) {
                             final NBTTagList tags = new NBTTagList();
-                            final List<ItemStack> list = new LinkedList<ItemStack>();
+                            final List<ItemStack> list = new LinkedList<>();
 
                             // prefer pure crystals.
                             for (int x = 0; x < positionedStack.items.length; x++) {

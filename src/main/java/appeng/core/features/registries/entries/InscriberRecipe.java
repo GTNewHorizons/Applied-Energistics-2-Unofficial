@@ -40,7 +40,7 @@ public class InscriberRecipe implements IInscriberRecipe {
 
     public InscriberRecipe(@Nonnull final Collection<ItemStack> inputs, @Nonnull final ItemStack output,
             @Nullable final ItemStack top, @Nullable final ItemStack bot, @Nonnull final InscriberProcessType type) {
-        this.inputs = new ArrayList<ItemStack>(inputs.size());
+        this.inputs = new ArrayList<>(inputs.size());
         this.inputs.addAll(inputs);
 
         this.output = output;

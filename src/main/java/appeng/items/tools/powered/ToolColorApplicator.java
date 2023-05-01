@@ -67,7 +67,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ToolColorApplicator extends AEBasePoweredItem
         implements IStorageCell, IItemGroup, IBlockTool, IMouseWheelItem {
 
-    private static final Map<Integer, AEColor> ORE_TO_COLOR = new HashMap<Integer, AEColor>();
+    private static final Map<Integer, AEColor> ORE_TO_COLOR = new HashMap<>();
 
     static {
         for (final AEColor col : AEColor.values()) {
@@ -245,13 +245,13 @@ public class ToolColorApplicator extends AEBasePoweredItem
                     newColor = firstItem.getItemStack();
                 }
             } else {
-                final LinkedList<IAEItemStack> list = new LinkedList<IAEItemStack>();
+                final LinkedList<IAEItemStack> list = new LinkedList<>();
 
                 for (final IAEItemStack i : itemList) {
                     list.add(i);
                 }
 
-                Collections.sort(list, new Comparator<IAEItemStack>() {
+                Collections.sort(list, new Comparator<>() {
 
                     @Override
                     public int compare(final IAEItemStack a, final IAEItemStack b) {

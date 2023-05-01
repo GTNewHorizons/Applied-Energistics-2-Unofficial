@@ -22,7 +22,7 @@ public class CellRegistry implements ICellRegistry {
     private final List<ICellHandler> handlers;
 
     public CellRegistry() {
-        this.handlers = new ArrayList<ICellHandler>();
+        this.handlers = new ArrayList<>();
     }
 
     @Override

@@ -81,7 +81,7 @@ public class ShapedRecipe implements IRecipe, IRecipeBakeable {
             throw new IllegalStateException(ret.toString());
         }
 
-        final Map<Character, IIngredient> itemMap = new HashMap<Character, IIngredient>();
+        final Map<Character, IIngredient> itemMap = new HashMap<>();
 
         for (; idx < recipe.length; idx += 2) {
             final Character chr = (Character) recipe[idx];

@@ -17,7 +17,7 @@ import appeng.core.features.IAEFeature;
 
 public final class FeatureRegistry {
 
-    private final Set<IAEFeature> registry = new LinkedHashSet<IAEFeature>();
+    private final Set<IAEFeature> registry = new LinkedHashSet<>();
 
     public void addFeature(final IAEFeature feature) {
         this.registry.add(feature);

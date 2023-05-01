@@ -91,13 +91,13 @@ public class ItemFacade extends AEBaseItem implements IFacadeItem, IAlphaPassIte
 
     private void calculateSubTypes() {
         if (this.subTypes == null) {
-            this.subTypes = new ArrayList<ItemStack>(1000);
+            this.subTypes = new ArrayList<>(1000);
             for (final Object blk : Block.blockRegistry) {
                 final Block b = (Block) blk;
                 try {
                     final Item item = Item.getItemFromBlock(b);
 
-                    final List<ItemStack> tmpList = new ArrayList<ItemStack>(100);
+                    final List<ItemStack> tmpList = new ArrayList<>(100);
                     b.getSubBlocks(item, b.getCreativeTabToDisplayOn(), tmpList);
                     for (final ItemStack l : tmpList) {
                         final ItemStack facade = this.createFacadeForItem(l, false);

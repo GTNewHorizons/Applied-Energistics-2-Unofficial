@@ -65,9 +65,9 @@ import cpw.mods.fml.common.ObfuscationReflectionHelper;
 public abstract class AEBaseGui extends GuiContainer {
 
     private static boolean switchingGuis;
-    private final List<InternalSlotME> meSlots = new LinkedList<InternalSlotME>();
+    private final List<InternalSlotME> meSlots = new LinkedList<>();
     // drag y
-    private final Set<Slot> drag_click = new HashSet<Slot>();
+    private final Set<Slot> drag_click = new HashSet<>();
     private final AppEngRenderItem aeRenderItem = new AppEngRenderItem();
     private GuiScrollbar scrollBar = null;
     private boolean disableShiftClick = false;

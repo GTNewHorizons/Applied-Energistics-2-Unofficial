@@ -25,7 +25,7 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
     private final AEBaseContainer parent;
 
     private ImmutableSet<ICraftingCPU> lastCpuSet = null;
-    private List<CraftingCPUStatus> cpus = new ArrayList<CraftingCPUStatus>();
+    private List<CraftingCPUStatus> cpus = new ArrayList<>();
     private final WeakHashMap<ICraftingCPU, Integer> cpuSerialMap = new WeakHashMap<>();
     private int nextCpuSerial = 1;
     private int lastUpdate = 0;

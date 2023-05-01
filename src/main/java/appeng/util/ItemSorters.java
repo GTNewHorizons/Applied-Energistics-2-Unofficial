@@ -34,7 +34,7 @@ public class ItemSorters {
             .comparing(IAEStack::getStackSize, (a, b) -> Long.compare(b, a) * direction.sortHint);
 
     private static IInvTweaks api;
-    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_INV_TWEAKS = new Comparator<IAEItemStack>() {
+    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_INV_TWEAKS = new Comparator<>() {
 
         @Override
         public int compare(final IAEItemStack o1, final IAEItemStack o2) {

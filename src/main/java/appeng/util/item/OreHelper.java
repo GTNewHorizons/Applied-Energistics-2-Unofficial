@@ -31,7 +31,7 @@ public class OreHelper {
      * A local cache to speed up OreDictionary lookups.
      */
     private final LoadingCache<String, List<ItemStack>> oreDictCache = CacheBuilder.newBuilder()
-            .build(new CacheLoader<String, List<ItemStack>>() {
+            .build(new CacheLoader<>() {
 
                 @Override
                 public List<ItemStack> load(final String oreName) {
@@ -39,7 +39,7 @@ public class OreHelper {
                 }
             });
 
-    private final Map<ItemRef, OreReference> references = new HashMap<ItemRef, OreReference>();
+    private final Map<ItemRef, OreReference> references = new HashMap<>();
 
     /**
      * Test if the passed {@link ItemStack} is an ore.

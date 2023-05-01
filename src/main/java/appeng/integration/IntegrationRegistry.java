@@ -24,7 +24,7 @@ public enum IntegrationRegistry {
 
     private static final String PACKAGE_PREFIX = "appeng.integration.modules.";
 
-    private final Collection<IntegrationNode> modules = new LinkedList<IntegrationNode>();
+    private final Collection<IntegrationNode> modules = new LinkedList<>();
 
     public void add(final IntegrationType type) {
         if (type.side == IntegrationSide.CLIENT && FMLLaunchHandler.side() == Side.SERVER) {

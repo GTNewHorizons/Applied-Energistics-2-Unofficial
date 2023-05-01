@@ -62,7 +62,7 @@ import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
 public class RecipeHandler implements IRecipeHandler {
 
     private final RecipeData data;
-    private final List<String> tokens = new LinkedList<String>();
+    private final List<String> tokens = new LinkedList<>();
 
     public RecipeHandler() {
         this.data = new RecipeData();
@@ -295,7 +295,7 @@ public class RecipeHandler implements IRecipeHandler {
             throw new IllegalStateException("Recipes must now be loaded in Init.");
         }
 
-        final Map<Class, Integer> processed = new HashMap<Class, Integer>();
+        final Map<Class, Integer> processed = new HashMap<>();
         try {
             for (final ICraftHandler ch : this.data.handlers) {
                 try {
@@ -393,7 +393,7 @@ public class RecipeHandler implements IRecipeHandler {
     }
 
     private List<IWebsiteSerializer> findRecipe(final ItemStack output) {
-        final List<IWebsiteSerializer> out = new LinkedList<IWebsiteSerializer>();
+        final List<IWebsiteSerializer> out = new LinkedList<>();
 
         for (final ICraftHandler ch : this.data.handlers) {
             try {
@@ -522,8 +522,8 @@ public class RecipeHandler implements IRecipeHandler {
     }
 
     private List<List<IIngredient>> parseLines(final Iterable<String> subList) throws RecipeError {
-        final List<List<IIngredient>> out = new LinkedList<List<IIngredient>>();
-        List<IIngredient> cList = new LinkedList<IIngredient>();
+        final List<List<IIngredient>> out = new LinkedList<>();
+        List<IIngredient> cList = new LinkedList<>();
 
         boolean hasQty = false;
         int qty = 1;
@@ -536,7 +536,7 @@ public class RecipeHandler implements IRecipeHandler {
                 if (!cList.isEmpty()) {
                     out.add(cList);
                 }
-                cList = new LinkedList<IIngredient>();
+                cList = new LinkedList<>();
             } else {
                 if (this.isNumber(v)) {
                     if (hasQty) {

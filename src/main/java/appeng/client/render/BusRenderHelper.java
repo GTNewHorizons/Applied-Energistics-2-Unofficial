@@ -65,7 +65,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
     public BusRenderHelper() {
         this.bbc = new BoundBoxCalculator(this);
         this.noAlphaPass = !AEConfig.instance.isFeatureEnabled(AEFeature.AlphaPass);
-        this.bbr = new BaseBlockRender<AEBaseBlock, AEBaseTile>();
+        this.bbr = new BaseBlockRender<>();
         this.renderingForPass = 0;
         this.currentPass = 0;
         this.itemsRendered = 0;

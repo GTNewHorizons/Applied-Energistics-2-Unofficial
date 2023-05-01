@@ -53,7 +53,7 @@ public enum Upgrades {
      * @deprecated use {@link Upgrades#getSupported()}
      */
     @Deprecated
-    private final Map<ItemStack, Integer> supportedMax = new HashMap<ItemStack, Integer>();
+    private final Map<ItemStack, Integer> supportedMax = new HashMap<>();
 
     Upgrades(final int tier) {
         this.tier = tier;

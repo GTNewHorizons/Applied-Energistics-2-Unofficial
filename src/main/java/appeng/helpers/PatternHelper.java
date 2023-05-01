@@ -43,8 +43,8 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     private final boolean isCrafting;
     private final boolean canSubstitute;
     private final boolean canBeSubstitute;
-    private final Set<TestLookup> failCache = new HashSet<TestLookup>();
-    private final Set<TestLookup> passCache = new HashSet<TestLookup>();
+    private final Set<TestLookup> failCache = new HashSet<>();
+    private final Set<TestLookup> passCache = new HashSet<>();
     private final IAEItemStack pattern;
     private int priority = 0;
 
@@ -64,8 +64,8 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
         this.patternItem = is;
         this.pattern = AEItemStack.create(is);
 
-        final List<IAEItemStack> in = new ArrayList<IAEItemStack>();
-        final List<IAEItemStack> out = new ArrayList<IAEItemStack>();
+        final List<IAEItemStack> in = new ArrayList<>();
+        final List<IAEItemStack> out = new ArrayList<>();
 
         for (int x = 0; x < inTag.tagCount(); x++) {
             final NBTTagCompound tag = inTag.getCompoundTagAt(x);
@@ -347,7 +347,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 
     public static IAEItemStack[] loadIAEItemStackFromNBT(final NBTTagList tags, boolean saveOrder,
             final ItemStack unknownItem) {
-        final List<IAEItemStack> items = new ArrayList<IAEItemStack>();
+        final List<IAEItemStack> items = new ArrayList<>();
 
         for (int x = 0; x < tags.tagCount(); x++) {
             final NBTTagCompound tag = tags.getCompoundTagAt(x);
@@ -373,7 +373,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     }
 
     public static IAEItemStack[] convertToCondensedList(final IAEItemStack[] items) {
-        final Map<IAEItemStack, IAEItemStack> tmp = new HashMap<IAEItemStack, IAEItemStack>();
+        final Map<IAEItemStack, IAEItemStack> tmp = new HashMap<>();
 
         for (final IAEItemStack io : items) {
 

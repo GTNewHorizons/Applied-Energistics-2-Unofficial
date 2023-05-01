@@ -27,7 +27,7 @@ public final class LocatableRegistry implements ILocatableRegistry {
     private final Map<Long, ILocatable> set;
 
     public LocatableRegistry() {
-        this.set = new HashMap<Long, ILocatable>();
+        this.set = new HashMap<>();
         MinecraftForge.EVENT_BUS.register(this);
     }
 

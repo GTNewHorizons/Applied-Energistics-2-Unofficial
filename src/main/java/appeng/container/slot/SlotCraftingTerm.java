@@ -114,7 +114,7 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
             rs.stackSize -= res.stackSize;
             final ItemStack extra = ia.addItems(res);
             if (extra != null) {
-                final List<ItemStack> drops = new ArrayList<ItemStack>();
+                final List<ItemStack> drops = new ArrayList<>();
                 drops.add(extra);
                 Platform.spawnDrops(who.worldObj, (int) who.posX, (int) who.posY, (int) who.posZ, drops);
                 break;
@@ -242,7 +242,7 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
 
     private boolean postCraft(final EntityPlayer p, final IMEMonitor<IAEItemStack> inv, final ItemStack[] set,
             final ItemStack result) {
-        final List<ItemStack> drops = new ArrayList<ItemStack>();
+        final List<ItemStack> drops = new ArrayList<>();
 
         boolean hadEmptyStacks = false;
         // add one of each item to the items on the board...
@@ -282,7 +282,7 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
 
     private void cleanup(final EntityPlayer p, final IMEMonitor<IAEItemStack> inv, final ItemStack[] set) {
         if (Platform.isServer()) {
-            final List<ItemStack> drops = new ArrayList<ItemStack>();
+            final List<ItemStack> drops = new ArrayList<>();
             for (ItemStack itemStack : set) {
                 if (itemStack != null && itemStack.stackSize > 0) {
                     final IAEItemStack fail = inv

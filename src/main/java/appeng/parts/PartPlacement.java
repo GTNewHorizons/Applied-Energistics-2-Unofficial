@@ -56,7 +56,7 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 public class PartPlacement {
 
     private static float eyeHeight = 0.0f;
-    private final ThreadLocal<Object> placing = new ThreadLocal<Object>();
+    private final ThreadLocal<Object> placing = new ThreadLocal<>();
     private boolean wasCanceled = false;
 
     public static boolean place(final ItemStack held, final int x, final int y, final int z, final int face,
@@ -85,7 +85,7 @@ public class PartPlacement {
                     final LookDirection dir = Platform.getPlayerRay(player, getEyeOffset(player));
                     final MovingObjectPosition mop = block.collisionRayTrace(world, x, y, z, dir.getA(), dir.getB());
                     if (mop != null) {
-                        final List<ItemStack> is = new LinkedList<ItemStack>();
+                        final List<ItemStack> is = new LinkedList<>();
                         final SelectedPart sp = selectPart(
                                 player,
                                 host,

@@ -24,7 +24,7 @@ import appeng.tile.AEBaseTile;
 
 public class TileItemGen extends AEBaseTile implements IInventory {
 
-    private static final Queue<ItemStack> POSSIBLE_ITEMS = new LinkedList<ItemStack>();
+    private static final Queue<ItemStack> POSSIBLE_ITEMS = new LinkedList<>();
 
     public TileItemGen() {
         if (POSSIBLE_ITEMS.isEmpty()) {
@@ -36,7 +36,7 @@ public class TileItemGen extends AEBaseTile implements IInventory {
                             POSSIBLE_ITEMS.add(new ItemStack(mi, 1, dmg));
                         }
                     } else {
-                        final List<ItemStack> list = new ArrayList<ItemStack>();
+                        final List<ItemStack> list = new ArrayList<>();
                         mi.getSubItems(mi, mi.getCreativeTab(), list);
                         POSSIBLE_ITEMS.addAll(list);
                     }

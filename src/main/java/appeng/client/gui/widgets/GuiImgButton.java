@@ -45,7 +45,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
         this.height = 16;
 
         if (appearances == null) {
-            appearances = new HashMap<EnumPair, ButtonAppearance>();
+            appearances = new HashMap<>();
             this.registerApp(
                     16 * 7,
                     Settings.CONDENSER_OUTPUT,

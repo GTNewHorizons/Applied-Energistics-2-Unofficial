@@ -12,7 +12,7 @@ public class BackbonePathSegment extends PathSegment {
 
     public BackbonePathSegment(IPathItem node, final PathGridCache myPGC, final Set<IPathItem> semiOpen,
             final Set<IPathItem> closed) {
-        super(myPGC, new LinkedList<IPathItem>(), semiOpen, closed);
+        super(myPGC, new LinkedList<>(), semiOpen, closed);
         startNode = node;
     }
 

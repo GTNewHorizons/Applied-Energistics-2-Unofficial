@@ -38,7 +38,7 @@ public class CellInventory implements ICellInventory {
     private static final String ITEM_COUNT_TAG = "ic";
     private static final String ITEM_SLOT = "#";
     private static final String ITEM_SLOT_COUNT = "@";
-    private static final Set<Integer> BLACK_LIST = new HashSet<Integer>();
+    private static final Set<Integer> BLACK_LIST = new HashSet<>();
     private static String[] itemSlots;
     private static String[] itemSlotCount;
     private final NBTTagCompound tagCompound;

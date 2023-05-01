@@ -38,13 +38,13 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         if (i instanceof IMEInventoryHandler) {
             this.internal = (IMEInventoryHandler<T>) i;
         } else {
-            this.internal = new MEPassThrough<T>(i, channel);
+            this.internal = new MEPassThrough<>(i, channel);
         }
 
         this.myPriority = 0;
         this.myWhitelist = IncludeExclude.WHITELIST;
         this.setBaseAccess(AccessRestriction.READ_WRITE);
-        this.myPartitionList = new DefaultPriorityList<T>();
+        this.myPartitionList = new DefaultPriorityList<>();
     }
 
     public IncludeExclude getWhitelist() {

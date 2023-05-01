@@ -53,7 +53,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class PartP2PItems extends PartP2PTunnel<PartP2PItems>
         implements IPipeConnection, ISidedInventory, IGridTickable {
 
-    private final LinkedList<IInventory> which = new LinkedList<IInventory>();
+    private final LinkedList<IInventory> which = new LinkedList<>();
     private int oldSize = 0;
     private boolean requested;
     private IInventory cachedInv;
@@ -78,7 +78,7 @@ public class PartP2PItems extends PartP2PTunnel<PartP2PItems>
             return this.cachedInv;
         }
 
-        final List<IInventory> outs = new LinkedList<IInventory>();
+        final List<IInventory> outs = new LinkedList<>();
         final TunnelCollection<PartP2PItems> itemTunnels;
 
         try {

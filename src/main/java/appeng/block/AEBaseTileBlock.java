@@ -131,7 +131,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
     public void breakBlock(final World w, final int x, final int y, final int z, final Block a, final int b) {
         final AEBaseTile te = this.getTileEntity(w, x, y, z);
         if (te != null) {
-            final ArrayList<ItemStack> drops = new ArrayList<ItemStack>();
+            final ArrayList<ItemStack> drops = new ArrayList<>();
             if (te.dropItems()) {
                 te.getDrops(w, x, y, z, drops);
             } else {

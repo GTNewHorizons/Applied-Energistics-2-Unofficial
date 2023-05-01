@@ -20,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class NetworkList implements Collection<Grid> {
 
-    private List<Grid> networks = new CopyOnWriteArrayList<Grid>();
+    private List<Grid> networks = new CopyOnWriteArrayList<>();
 
     @Override
     public int size() {

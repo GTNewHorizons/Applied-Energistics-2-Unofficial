@@ -115,7 +115,7 @@ public abstract class AEBaseBlock extends Block implements IAEFeature {
      */
     @SideOnly(Side.CLIENT)
     protected BaseBlockRender<? extends AEBaseBlock, ? extends AEBaseTile> getRenderer() {
-        return new BaseBlockRender<AEBaseBlock, AEBaseTile>();
+        return new BaseBlockRender<>();
     }
 
     IIcon unmappedGetIcon(final IBlockAccess w, final int x, final int y, final int z, final int s) {
@@ -182,7 +182,7 @@ public abstract class AEBaseBlock extends Block implements IAEFeature {
         final ICustomCollision collisionHandler = this.getCustomCollision(w, x, y, z);
 
         if (collisionHandler != null && bb != null) {
-            final List<AxisAlignedBB> tmp = new ArrayList<AxisAlignedBB>();
+            final List<AxisAlignedBB> tmp = new ArrayList<>();
             collisionHandler.addCollidingBlockToList(w, x, y, z, bb, tmp, e);
             for (final AxisAlignedBB b : tmp) {
                 b.minX += x;

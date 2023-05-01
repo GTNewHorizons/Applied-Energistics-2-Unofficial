@@ -364,11 +364,11 @@ public class PartFormationPlane extends PartUpgradeable
     @Override
     public List<IMEInventoryHandler> getCellArray(final StorageChannel channel) {
         if (this.getProxy().isActive() && channel == StorageChannel.ITEMS) {
-            final List<IMEInventoryHandler> Handler = new ArrayList<IMEInventoryHandler>(1);
+            final List<IMEInventoryHandler> Handler = new ArrayList<>(1);
             Handler.add(this.myHandler);
             return Handler;
         }
-        return new ArrayList<IMEInventoryHandler>();
+        return new ArrayList<>();
     }
 
     @Override

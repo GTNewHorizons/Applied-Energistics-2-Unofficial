@@ -135,7 +135,7 @@ public class NEIInscriberRecipeHandler extends TemplateRecipeHandler {
 
         public CachedInscriberRecipe(final IInscriberRecipe recipe) {
             this.result = new PositionedStack(recipe.getOutput(), 108, 29);
-            this.ingredients = new ArrayList<PositionedStack>();
+            this.ingredients = new ArrayList<>();
 
             for (final ItemStack top : recipe.getTopOptional().asSet()) {
                 this.ingredients.add(new PositionedStack(top, 40, 5));

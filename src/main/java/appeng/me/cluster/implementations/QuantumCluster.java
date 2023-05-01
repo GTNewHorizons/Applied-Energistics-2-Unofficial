@@ -207,7 +207,7 @@ public class QuantumCluster implements ILocatable, IAECluster {
 
     @Override
     public Iterator<IGridHost> getTiles() {
-        return new ChainedIterator<IGridHost>(
+        return new ChainedIterator<>(
                 this.getRing()[0],
                 this.getRing()[1],
                 this.getRing()[2],

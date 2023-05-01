@@ -25,7 +25,7 @@ public class EnergyWatcher implements IEnergyWatcher {
 
     private final EnergyGridCache gsc;
     private final IEnergyWatcherHost myObject;
-    private final HashSet<EnergyThreshold> myInterests = new HashSet<EnergyThreshold>();
+    private final HashSet<EnergyThreshold> myInterests = new HashSet<>();
 
     public EnergyWatcher(final EnergyGridCache cache, final IEnergyWatcherHost host) {
         this.gsc = cache;

@@ -335,7 +335,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         final int viewEnd = viewStart + 3 * this.rows;
 
         String dspToolTip = "";
-        final List<String> lineList = new LinkedList<String>();
+        final List<String> lineList = new LinkedList<>();
         int toolPosX = 0;
         int toolPosY = 0;
         hoveredStack = null;

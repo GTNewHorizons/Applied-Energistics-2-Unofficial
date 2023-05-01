@@ -80,7 +80,7 @@ public class PlayerStatsRegistration {
             /**
              * register
              */
-            final ArrayList<Achievement> list = new ArrayList<Achievement>();
+            final ArrayList<Achievement> list = new ArrayList<>();
 
             for (final Achievements a : Achievements.values()) {
                 final Achievement ach = a.getAchievement();

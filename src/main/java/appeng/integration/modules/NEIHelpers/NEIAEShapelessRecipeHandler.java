@@ -163,7 +163,7 @@ public class NEIAEShapelessRecipeHandler extends TemplateRecipeHandler {
 
         public CachedShapelessRecipe(final ShapelessRecipe recipe) {
             this.result = new PositionedStack(recipe.getRecipeOutput(), 119, 24);
-            this.ingredients = new ArrayList<PositionedStack>();
+            this.ingredients = new ArrayList<>();
             this.setIngredients(recipe.getInput().toArray());
         }
 

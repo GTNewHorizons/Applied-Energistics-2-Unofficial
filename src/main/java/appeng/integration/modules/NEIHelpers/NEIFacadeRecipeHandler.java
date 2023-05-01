@@ -163,7 +163,7 @@ public class NEIFacadeRecipeHandler extends TemplateRecipeHandler {
         public CachedShapedRecipe(final IFacadeItem facade, final ItemStack anchor, final ItemStack output) {
             output.stackSize = 4;
             this.result = new PositionedStack(output, 119, 24);
-            this.ingredients = new ArrayList<PositionedStack>();
+            this.ingredients = new ArrayList<>();
             final ItemStack in = facade.getTextureItem(output);
             this.setIngredients(3, 3, new Object[] { null, anchor, null, anchor, in, anchor, null, anchor, null });
         }

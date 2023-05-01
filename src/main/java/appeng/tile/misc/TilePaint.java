@@ -201,7 +201,7 @@ public class TilePaint extends AEBaseTile {
             final boolean lit = ipb.isLumen(type);
 
             if (this.dots == null) {
-                this.dots = new ArrayList<Splotch>();
+                this.dots = new ArrayList<>();
             }
 
             if (this.dots.size() > 20) {

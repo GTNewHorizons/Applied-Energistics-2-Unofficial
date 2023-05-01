@@ -46,7 +46,7 @@ class PlayerMappingsInitializer {
         final int capacity = playerList.size();
 
         // Mappings for the IDs is a regular HashMap
-        this.playerMappings = new HashMap<Integer, UUID>(capacity);
+        this.playerMappings = new HashMap<>(capacity);
 
         // Iterates through every pair of UUID to ID
         for (final Map.Entry<String, Property> entry : playerList.getValues().entrySet()) {

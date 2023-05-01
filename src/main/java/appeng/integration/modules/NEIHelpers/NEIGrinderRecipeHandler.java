@@ -163,7 +163,7 @@ public class NEIGrinderRecipeHandler extends TemplateRecipeHandler {
 
         public CachedGrindStoneRecipe(final IGrinderEntry recipe) {
             this.result = new PositionedStack(recipe.getOutput(), -30 + 107, 47);
-            this.ingredients = new ArrayList<PositionedStack>();
+            this.ingredients = new ArrayList<>();
 
             final ItemStack optionalOutput = recipe.getOptionalOutput();
             final int optionalChancePercent = (int) (recipe.getOptionalChance() * 100);

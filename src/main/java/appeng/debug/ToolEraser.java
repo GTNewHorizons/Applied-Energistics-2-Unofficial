@@ -60,13 +60,13 @@ public class ToolEraser extends AEBaseItem {
                 .isCanceled())
             return true;
 
-        List<WorldCoord> next = new LinkedList<WorldCoord>();
+        List<WorldCoord> next = new LinkedList<>();
         next.add(new WorldCoord(x, y, z));
 
         int blocks = 0;
         while (blocks < BLOCK_ERASE_LIMIT && !next.isEmpty()) {
             final List<WorldCoord> c = next;
-            next = new LinkedList<WorldCoord>();
+            next = new LinkedList<>();
 
             for (final WorldCoord wc : c) {
                 final Block c_blk = world.getBlock(wc.x, wc.y, wc.z);

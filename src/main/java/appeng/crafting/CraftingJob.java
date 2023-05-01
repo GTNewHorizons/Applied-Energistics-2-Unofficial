@@ -47,7 +47,7 @@ public class CraftingJob implements ICraftingJob, Runnable {
     private final World world;
     private final IItemList<IAEItemStack> crafting = AEApi.instance().storage().createItemList();
     private final IItemList<IAEItemStack> missing = AEApi.instance().storage().createItemList();
-    private final HashMap<String, TwoIntegers> opsAndMultiplier = new HashMap<String, TwoIntegers>();
+    private final HashMap<String, TwoIntegers> opsAndMultiplier = new HashMap<>();
     private final Object monitor = new Object();
     private final Stopwatch watch = Stopwatch.createUnstarted();
     private CraftingTreeNode tree;
