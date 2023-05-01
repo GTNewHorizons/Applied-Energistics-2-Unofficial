@@ -86,9 +86,7 @@ public class FMP implements IIntegrationModule, IPartFactory, IPartConverter, IF
     }
 
     private void addBlockTypes(final Collection<Block> blockTypes, final IBlockDefinition definition) {
-        for (final Block block : definition.maybeBlock().asSet()) {
-            blockTypes.add(block);
-        }
+        blockTypes.addAll(definition.maybeBlock().asSet());
     }
 
     @Override
