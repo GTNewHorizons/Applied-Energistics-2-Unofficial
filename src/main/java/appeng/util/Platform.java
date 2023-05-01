@@ -606,8 +606,6 @@ public class Platform {
                 case UNKNOWN -> ForgeDirection.UNKNOWN;
             };
         }
-
-        return ForgeDirection.UNKNOWN;
     }
 
     /*

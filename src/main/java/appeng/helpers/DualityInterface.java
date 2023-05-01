@@ -106,10 +106,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private final AppEngInternalInventory patterns = new AppEngInternalInventory(this, NUMBER_OF_PATTERN_SLOTS * 4);
     private final WrapperInvSlot slotInv = new WrapperInvSlot(this.storage);
     private final MEMonitorPassThrough<IAEItemStack> items = new MEMonitorPassThrough<>(
-            new NullInventory<>(),
+            new NullInventory<IAEItemStack>(),
             StorageChannel.ITEMS);
     private final MEMonitorPassThrough<IAEFluidStack> fluids = new MEMonitorPassThrough<>(
-            new NullInventory<>(),
+            new NullInventory<IAEFluidStack>(),
             StorageChannel.FLUIDS);
     private final UpgradeInventory upgrades;
     private boolean hasConfig = false;
