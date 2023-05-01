@@ -178,7 +178,7 @@ public abstract class AEBaseBlock extends Block implements IAEFeature {
     @SuppressWarnings("unchecked")
     // NOTE: WAS FINAL, changed for Immibis
     public void addCollisionBoxesToList(final World w, final int x, final int y, final int z, final AxisAlignedBB bb,
-            final List out, final Entity e) {
+            final List<AxisAlignedBB> out, final Entity e) {
         final ICustomCollision collisionHandler = this.getCustomCollision(w, x, y, z);
 
         if (collisionHandler != null && bb != null) {
@@ -331,8 +331,7 @@ public abstract class AEBaseBlock extends Block implements IAEFeature {
 
     @Override
     @SideOnly(Side.CLIENT)
-    @SuppressWarnings("unchecked")
-    public final void getSubBlocks(final Item item, final CreativeTabs tabs, final List itemStacks) {
+    public final void getSubBlocks(final Item item, final CreativeTabs tabs, final List<ItemStack> itemStacks) {
         this.getCheckedSubBlocks(item, tabs, itemStacks);
     }
 

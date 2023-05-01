@@ -888,7 +888,7 @@ public abstract class AEBaseGui extends GuiContainer {
 
     protected void addItemTooltip(ItemStack is, List<String> lineList) {
         if (isShiftKeyDown()) {
-            List l = is.getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
+            List<String> l = is.getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
             if (!l.isEmpty()) l.remove(0);
             lineList.addAll(l);
         } else {
@@ -927,12 +927,12 @@ public abstract class AEBaseGui extends GuiContainer {
         super.drawCreativeTabHoveringText(tabName, mouseX, mouseY);
     }
 
-    public void drawHoveringText(List textLines, int x, int y) {
+    public void drawHoveringText(List<String> textLines, int x, int y) {
         super.func_146283_a(textLines, x, y);
     }
 
     @Override
-    public void drawHoveringText(List textLines, int x, int y, FontRenderer font) {
+    public void drawHoveringText(List<String> textLines, int x, int y, FontRenderer font) {
         super.drawHoveringText(textLines, x, y, font);
     }
 

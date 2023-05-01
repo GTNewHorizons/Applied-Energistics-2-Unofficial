@@ -53,7 +53,7 @@ public final class AECommand extends CommandBase {
     }
 
     @Override
-    public List addTabCompletionOptions(ICommandSender sender, String[] ss) {
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] ss) {
         List<String> l = new ArrayList<>();
         String test = ss.length == 0 ? "" : ss[0].trim();
         if (ss.length == 0 || ss.length == 1

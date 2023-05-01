@@ -61,15 +61,14 @@ public abstract class AEBaseItem extends Item implements IAEFeature {
 
     @SideOnly(Side.CLIENT)
     @Override
-    @SuppressWarnings("unchecked")
-    public final void addInformation(final ItemStack stack, final EntityPlayer player, final List lines,
+    public final void addInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
             final boolean displayMoreInfo) {
         this.addCheckedInformation(stack, player, lines, displayMoreInfo);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public final void getSubItems(final Item sameItem, final CreativeTabs creativeTab, final List itemStacks) {
+    public final void getSubItems(final Item sameItem, final CreativeTabs creativeTab,
+            final List<ItemStack> itemStacks) {
         this.getCheckedSubItems(sameItem, creativeTab, itemStacks);
     }
 

@@ -732,9 +732,9 @@ public class Platform {
     }
 
     @SideOnly(Side.CLIENT)
-    public static List getTooltip(final Object o) {
+    public static List<String> getTooltip(final Object o) {
         if (o == null) {
-            return new ArrayList();
+            return new ArrayList<>();
         }
 
         ItemStack itemStack = null;
@@ -743,13 +743,13 @@ public class Platform {
         } else if (o instanceof ItemStack) {
             itemStack = (ItemStack) o;
         } else {
-            return new ArrayList();
+            return new ArrayList<>();
         }
 
         try {
             return itemStack.getTooltip(Minecraft.getMinecraft().thePlayer, false);
         } catch (final Exception errB) {
-            return new ArrayList();
+            return new ArrayList<>();
         }
     }
 

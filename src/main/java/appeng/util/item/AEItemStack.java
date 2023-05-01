@@ -471,7 +471,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     }
 
     @SideOnly(Side.CLIENT)
-    public List getToolTip() {
+    public List<String> getToolTip() {
         if (this.getDefinition().getTooltip() != null) {
             return this.getDefinition().getTooltip();
         }

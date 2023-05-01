@@ -15,7 +15,7 @@ import java.io.IOException;
 import appeng.api.storage.data.IAEStack;
 import io.netty.buffer.ByteBuf;
 
-public abstract class AEStack<StackType extends IAEStack> implements IAEStack<StackType> {
+public abstract class AEStack<StackType extends IAEStack<StackType>> implements IAEStack<StackType> {
 
     private boolean isCraftable;
     private long stackSize;

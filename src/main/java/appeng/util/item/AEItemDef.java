@@ -38,7 +38,7 @@ public class AEItemDef {
     private String displayName;
 
     @SideOnly(Side.CLIENT)
-    private List tooltip;
+    private List<String> tooltip;
 
     @SideOnly(Side.CLIENT)
     private UniqueIdentifier uniqueID;
@@ -138,11 +138,11 @@ public class AEItemDef {
         this.displayName = displayName;
     }
 
-    List getTooltip() {
+    List<String> getTooltip() {
         return this.tooltip;
     }
 
-    List setTooltip(final List tooltip) {
+    List<String> setTooltip(final List<String> tooltip) {
         this.tooltip = tooltip;
         return tooltip;
     }

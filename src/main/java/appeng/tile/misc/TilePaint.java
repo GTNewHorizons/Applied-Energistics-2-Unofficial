@@ -78,7 +78,7 @@ public class TilePaint extends AEBaseTile {
             return;
         }
 
-        this.dots = new ArrayList(howMany);
+        this.dots = new ArrayList<>(howMany);
         for (int x = 0; x < howMany; x++) {
             this.dots.add(new Splotch(in));
         }

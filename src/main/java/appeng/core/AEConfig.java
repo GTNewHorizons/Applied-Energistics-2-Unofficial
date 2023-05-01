@@ -323,23 +323,23 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         }
     }
 
-    private String getListComment(final Enum value) {
-        String comment = null;
+    @SuppressWarnings("unchecked")
+    private <T extends Enum<T>> String getListComment(final Enum<T> value) {
+        StringBuilder comment = new StringBuilder();
 
         if (value != null) {
-            final EnumSet set = EnumSet.allOf(value.getClass());
+            final EnumSet<T> set = EnumSet.allOf((Class<T>) value.getClass());
 
-            for (final Object Oeg : set) {
-                final Enum eg = (Enum) Oeg;
-                if (comment == null) {
-                    comment = "Possible Values: " + eg.name();
+            for (final T eg : set) {
+                if (comment.length() == 0) {
+                    comment.append("Possible Values: ").append(eg.name());
                 } else {
-                    comment += ", " + eg.name();
+                    comment.append(", ").append(eg.name());
                 }
             }
         }
 
-        return comment;
+        return comment.toString();
     }
 
     public boolean isFeatureEnabled(final AEFeature f) {
@@ -419,6 +419,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public void updateSetting(final IConfigManager manager, final Enum setting, final Enum newValue) {
         for (final Settings e : this.settings.getSettings()) {
             if (e == setting) {
