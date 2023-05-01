@@ -46,8 +46,7 @@ public class AEExternalHandler implements IExternalStorageHandler {
             }
         }
 
-        if (te instanceof ITileStorageMonitorable) {
-            final ITileStorageMonitorable iface = (ITileStorageMonitorable) te;
+        if (te instanceof ITileStorageMonitorable iface) {
             final IStorageMonitorable sm = iface.getMonitorable(d, src);
 
             if (channel == StorageChannel.ITEMS && sm != null) {

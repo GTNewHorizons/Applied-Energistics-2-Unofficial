@@ -112,8 +112,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     private ArrayList<ItemStack> getRemovedPatterns() {
         final ArrayList<ItemStack> drops = new ArrayList<>();
         for (final Object o : this.inventorySlots) {
-            if (o instanceof OptionalSlotRestrictedInput) {
-                final OptionalSlotRestrictedInput fs = (OptionalSlotRestrictedInput) o;
+            if (o instanceof OptionalSlotRestrictedInput fs) {
                 if (!fs.isEnabled()) {
                     ItemStack s = fs.inventory.getStackInSlot(fs.getSlotIndex());
                     if (s != null) {

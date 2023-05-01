@@ -57,8 +57,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
         int yCoord = 0;
         int zCoord = 0;
 
-        if (te instanceof TileEntity) {
-            final TileEntity myTile = (TileEntity) te;
+        if (te instanceof TileEntity myTile) {
             w = myTile.getWorldObj();
             xCoord = myTile.xCoord;
             yCoord = myTile.yCoord;
@@ -197,8 +196,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
         this.checkToolbox();
 
         for (final Object o : this.inventorySlots) {
-            if (o instanceof OptionalSlotFake) {
-                final OptionalSlotFake fs = (OptionalSlotFake) o;
+            if (o instanceof OptionalSlotFake fs) {
                 if (!fs.isEnabled() && fs.getDisplayStack() != null) {
                     fs.clearStack();
                 }

@@ -25,8 +25,7 @@ public class TmpFlippableIcon extends FlippableIcon {
     public void setOriginal(IIcon i) {
         this.setFlip(false, false);
 
-        while (i instanceof FlippableIcon) {
-            final FlippableIcon fi = (FlippableIcon) i;
+        while (i instanceof FlippableIcon fi) {
             if (fi.isFlipU()) {
                 this.setFlipU(!this.isFlipU());
             }

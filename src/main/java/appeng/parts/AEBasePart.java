@@ -311,14 +311,12 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
             }
         }
 
-        if (this instanceof IPriorityHost) {
-            final IPriorityHost pHost = (IPriorityHost) this;
+        if (this instanceof IPriorityHost pHost) {
             pHost.setPriority(compound.getInteger("priority"));
         }
 
         final IInventory inv = this.getInventoryByName("config");
-        if (inv instanceof AppEngInternalAEInventory) {
-            final AppEngInternalAEInventory target = (AppEngInternalAEInventory) inv;
+        if (inv instanceof AppEngInternalAEInventory target) {
             final AppEngInternalAEInventory tmp = new AppEngInternalAEInventory(null, target.getSizeInventory());
             tmp.readFromNBT(compound, "config");
             for (int x = 0; x < tmp.getSizeInventory(); x++) {
@@ -341,8 +339,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
             cm.writeToNBT(output);
         }
 
-        if (this instanceof IPriorityHost) {
-            final IPriorityHost pHost = (IPriorityHost) this;
+        if (this instanceof IPriorityHost pHost) {
             output.setInteger("priority", pHost.getPriority());
         }
 
@@ -360,9 +357,9 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
     private boolean useMemoryCard(final EntityPlayer player) {
         final ItemStack memCardIS = player.inventory.getCurrentItem();
-        if (memCardIS != null && this.useStandardMemoryCard() && memCardIS.getItem() instanceof IMemoryCard) {
+        if (memCardIS != null && this.useStandardMemoryCard()
+                && memCardIS.getItem() instanceof IMemoryCard memoryCard) {
             if (ForgeEventFactory.onItemUseStart(player, memCardIS, 1) <= 0) return false;
-            final IMemoryCard memoryCard = (IMemoryCard) memCardIS.getItem();
 
             ItemStack is = this.getItemStack(PartItemStack.Network);
 

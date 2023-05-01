@@ -77,10 +77,9 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (!(rawJob instanceof CraftingJobV2)) {
+        if (!(rawJob instanceof CraftingJobV2 job)) {
             throw new UnsupportedOperationException("Invalid job type deserialized: " + rawJob.getClass());
         }
-        final CraftingJobV2 job = (CraftingJobV2) rawJob;
         while (serializer.hasWork()) {
             try {
                 serializer.doWork();

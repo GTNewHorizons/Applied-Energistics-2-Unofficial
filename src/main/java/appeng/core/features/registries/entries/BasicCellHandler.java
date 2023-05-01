@@ -62,8 +62,7 @@ public class BasicCellHandler implements ICellHandler {
 
     @Override
     public int getStatusForCell(final ItemStack is, final IMEInventory handler) {
-        if (handler instanceof CellInventoryHandler) {
-            final CellInventoryHandler ci = (CellInventoryHandler) handler;
+        if (handler instanceof CellInventoryHandler ci) {
             return ci.getStatusForCell();
         }
         return 0;

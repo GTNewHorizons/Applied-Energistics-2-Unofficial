@@ -154,8 +154,7 @@ public class ToolDebugCard extends AEBaseItem {
                 }
             }
 
-            if (te instanceof IAEPowerStorage) {
-                final IAEPowerStorage ps = (IAEPowerStorage) te;
+            if (te instanceof IAEPowerStorage ps) {
                 this.outputMsg(player, "Energy: " + ps.getAECurrentPower() + " / " + ps.getAEMaxPower());
 
                 if (te instanceof IGridHost) {

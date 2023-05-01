@@ -392,8 +392,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             return;
         }
 
-        if (is.getItem() instanceof ICraftingPatternItem) {
-            final ICraftingPatternItem cpi = (ICraftingPatternItem) is.getItem();
+        if (is.getItem() instanceof ICraftingPatternItem cpi) {
             final ICraftingPatternDetails details = cpi.getPatternForItem(is, this.iHost.getTileEntity().getWorldObj());
 
             if (details != null) {
@@ -809,8 +808,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
             }
 
-            if (te instanceof ICraftingMachine) {
-                final ICraftingMachine cm = (ICraftingMachine) te;
+            if (te instanceof ICraftingMachine cm) {
                 if (cm.acceptsPlans()) {
                     if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
                         return true;

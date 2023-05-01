@@ -56,11 +56,9 @@ public class PacketCraftRequest extends AppEngPacket {
 
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
-        if (player.openContainer instanceof ContainerCraftAmount) {
-            final ContainerCraftAmount cca = (ContainerCraftAmount) player.openContainer;
+        if (player.openContainer instanceof ContainerCraftAmount cca) {
             final Object target = cca.getTarget();
-            if (target instanceof IGridHost) {
-                final IGridHost gh = (IGridHost) target;
+            if (target instanceof IGridHost gh) {
                 final IGridNode gn = gh.getGridNode(ForgeDirection.UNKNOWN);
                 if (gn == null) {
                     return;
@@ -88,8 +86,7 @@ public class PacketCraftRequest extends AppEngPacket {
                         final TileEntity te = context.getTile();
                         cca.openConfirmationGUI(player, te);
 
-                        if (player.openContainer instanceof ContainerCraftConfirm) {
-                            final ContainerCraftConfirm ccc = (ContainerCraftConfirm) player.openContainer;
+                        if (player.openContainer instanceof ContainerCraftConfirm ccc) {
                             ccc.setAutoStart(this.heldShift);
                             ccc.setJob(futureJob);
                             cca.detectAndSendChanges();

@@ -197,9 +197,8 @@ public class TileMolecularAssembler extends AENetworkInvTile
         if (data.hasKey("myPlan")) {
             final ItemStack myPat = ItemStack.loadItemStackFromNBT(data.getCompoundTag("myPlan"));
 
-            if (myPat != null && myPat.getItem() instanceof ItemEncodedPattern) {
+            if (myPat != null && myPat.getItem() instanceof ItemEncodedPattern iep) {
                 final World w = this.getWorldObj();
-                final ItemEncodedPattern iep = (ItemEncodedPattern) myPat.getItem();
                 final ICraftingPatternDetails ph = iep.getPatternForItem(myPat, w);
                 if (ph != null && ph.isCraftable()) {
                     this.forcePlan = true;

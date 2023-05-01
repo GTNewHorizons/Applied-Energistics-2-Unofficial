@@ -234,8 +234,7 @@ public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection 
     public boolean addHitEffects(final World world, final MovingObjectPosition target,
             final EffectRenderer effectRenderer) {
         final Object object = this.cb(world, target.blockX, target.blockY, target.blockZ);
-        if (object instanceof IPartHost) {
-            final IPartHost host = (IPartHost) object;
+        if (object instanceof IPartHost host) {
 
             for (final ForgeDirection side : ForgeDirection.values()) {
                 final IPart p = host.getPart(side);
@@ -285,8 +284,7 @@ public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection 
     public boolean addDestroyEffects(final World world, final int x, final int y, final int z, final int meta,
             final EffectRenderer effectRenderer) {
         final Object object = this.cb(world, x, y, z);
-        if (object instanceof IPartHost) {
-            final IPartHost host = (IPartHost) object;
+        if (object instanceof IPartHost host) {
 
             for (final ForgeDirection side : ForgeDirection.values()) {
                 final IPart p = host.getPart(side);

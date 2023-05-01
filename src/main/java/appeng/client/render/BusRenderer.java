@@ -110,8 +110,7 @@ public class BusRenderer implements IItemRenderer {
         this.getRenderer().useInventoryTint = false;
         this.getRenderer().overrideBlockTexture = null;
 
-        if (item.getItem() instanceof IFacadeItem) {
-            final IFacadeItem fi = (IFacadeItem) item.getItem();
+        if (item.getItem() instanceof IFacadeItem fi) {
             final IFacadePart fp = fi.createPartFromItemStack(item, ForgeDirection.SOUTH);
 
             if (type == ItemRenderType.EQUIPPED_FIRST_PERSON) {

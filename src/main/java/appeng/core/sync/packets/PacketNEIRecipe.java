@@ -94,8 +94,7 @@ public class PacketNEIRecipe extends AppEngPacket {
         final EntityPlayerMP pmp = (EntityPlayerMP) player;
         final Container con = pmp.openContainer;
 
-        if (con instanceof IContainerCraftingPacket) {
-            final IContainerCraftingPacket cct = (IContainerCraftingPacket) con;
+        if (con instanceof IContainerCraftingPacket cct) {
             final IGridNode node = cct.getNetworkNode();
             if (node != null) {
                 final IGrid grid = node.getGrid();

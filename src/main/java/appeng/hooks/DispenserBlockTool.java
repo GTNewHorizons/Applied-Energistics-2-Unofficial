@@ -26,9 +26,8 @@ public final class DispenserBlockTool extends BehaviorDefaultDispenseItem {
     @Override
     protected ItemStack dispenseStack(final IBlockSource dispenser, final ItemStack dispensedItem) {
         final Item i = dispensedItem.getItem();
-        if (i instanceof IBlockTool) {
+        if (i instanceof IBlockTool tm) {
             final EnumFacing enumfacing = BlockDispenser.func_149937_b(dispenser.getBlockMetadata());
-            final IBlockTool tm = (IBlockTool) i;
 
             final World w = dispenser.getWorld();
             if (w instanceof WorldServer) {

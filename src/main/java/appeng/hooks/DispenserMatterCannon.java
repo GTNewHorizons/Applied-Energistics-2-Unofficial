@@ -29,7 +29,7 @@ public final class DispenserMatterCannon extends BehaviorDefaultDispenseItem {
     @Override
     protected ItemStack dispenseStack(final IBlockSource dispenser, ItemStack dispensedItem) {
         final Item i = dispensedItem.getItem();
-        if (i instanceof ToolMassCannon) {
+        if (i instanceof ToolMassCannon tm) {
             final EnumFacing enumfacing = BlockDispenser.func_149937_b(dispenser.getBlockMetadata());
             ForgeDirection dir = ForgeDirection.UNKNOWN;
             for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
@@ -38,8 +38,6 @@ public final class DispenserMatterCannon extends BehaviorDefaultDispenseItem {
                     dir = d;
                 }
             }
-
-            final ToolMassCannon tm = (ToolMassCannon) i;
 
             final World w = dispenser.getWorld();
             if (w instanceof WorldServer) {

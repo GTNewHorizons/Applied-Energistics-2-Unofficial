@@ -271,8 +271,7 @@ public enum GuiBridge implements IGuiHandler {
 
     private Object updateGui(final Object newContainer, final World w, final int x, final int y, final int z,
             final ForgeDirection side, final Object myItem) {
-        if (newContainer instanceof AEBaseContainer) {
-            final AEBaseContainer bc = (AEBaseContainer) newContainer;
+        if (newContainer instanceof AEBaseContainer bc) {
             bc.setOpenContext(new ContainerOpenContext(myItem));
             bc.getOpenContext().setWorld(w);
             bc.getOpenContext().setX(x);
@@ -304,8 +303,7 @@ public enum GuiBridge implements IGuiHandler {
             /**
              * triggers achievement when the player sees presses.
              */
-            if (o instanceof AEBaseContainer) {
-                final AEBaseContainer bc = (AEBaseContainer) o;
+            if (o instanceof AEBaseContainer bc) {
                 for (final Object so : bc.inventorySlots) {
                     if (so instanceof Slot) {
                         final ItemStack is = ((Slot) so).getStack();

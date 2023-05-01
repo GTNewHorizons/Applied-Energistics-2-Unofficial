@@ -97,8 +97,7 @@ public class BuildCraftTransport implements IBuildCraftTransport, IIntegrationMo
     public ItemStack getTextureForFacade(@Nonnull final ItemStack facade) {
         final Item maybeFacadeItem = facade.getItem();
 
-        if (maybeFacadeItem instanceof IFacadeItem) {
-            final IFacadeItem facadeItem = (IFacadeItem) maybeFacadeItem;
+        if (maybeFacadeItem instanceof IFacadeItem facadeItem) {
 
             final Block[] blocks = facadeItem.getBlocksForFacade(facade);
             final int[] metas = facadeItem.getMetaValuesForFacade(facade);
@@ -124,8 +123,7 @@ public class BuildCraftTransport implements IBuildCraftTransport, IIntegrationMo
 
     @Override
     public boolean isPipe(final TileEntity te, @Nonnull final ForgeDirection dir) {
-        if (te instanceof IPipeTile) {
-            final IPipeTile pipeTile = (IPipeTile) te;
+        if (te instanceof IPipeTile pipeTile) {
             return !pipeTile.hasPipePluggable(dir.getOpposite());
         }
 
@@ -134,8 +132,7 @@ public class BuildCraftTransport implements IBuildCraftTransport, IIntegrationMo
 
     @Override
     public boolean canAddItemsToPipe(final TileEntity te, final ItemStack is, final ForgeDirection dir) {
-        if (is != null && te != null && te instanceof IInjectable) {
-            final IInjectable pt = (IInjectable) te;
+        if (is != null && te != null && te instanceof IInjectable pt) {
             if (pt.canInjectItems(dir)) {
                 final int amt = pt.injectItem(is, false, dir, null);
                 if (amt == is.stackSize) {
@@ -150,8 +147,7 @@ public class BuildCraftTransport implements IBuildCraftTransport, IIntegrationMo
     @Override
     public boolean addItemsToPipe(@Nullable final TileEntity te, @Nullable final ItemStack is,
             @Nonnull final ForgeDirection dir) {
-        if (is != null && te != null && te instanceof IInjectable) {
-            final IInjectable pt = (IInjectable) te;
+        if (is != null && te != null && te instanceof IInjectable pt) {
             if (pt.canInjectItems(dir)) {
                 final int amt = pt.injectItem(is, false, dir, null);
                 if (amt == is.stackSize) {

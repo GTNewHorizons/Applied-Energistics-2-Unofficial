@@ -50,8 +50,7 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             return bs.getAdaptor(te, d);
         } else if (te instanceof TileEntityChest) {
             return new AdaptorIInventory(Platform.GetChestInv(te));
-        } else if (te instanceof ISidedInventory) {
-            final ISidedInventory si = (ISidedInventory) te;
+        } else if (te instanceof ISidedInventory si) {
             final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
             int stackLimit = 0;
             if (te instanceof AEBaseInvTile) {
@@ -63,8 +62,7 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
                 }
                 return new AdaptorIInventory(new WrapperMCISidedInventory(si, d));
             }
-        } else if (te instanceof IInventory) {
-            final IInventory i = (IInventory) te;
+        } else if (te instanceof IInventory i) {
             if (i.getSizeInventory() > 0) {
                 return new AdaptorIInventory(i);
             }

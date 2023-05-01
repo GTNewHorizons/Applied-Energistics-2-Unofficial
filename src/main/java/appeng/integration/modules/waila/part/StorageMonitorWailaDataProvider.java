@@ -42,8 +42,7 @@ public final class StorageMonitorWailaDataProvider extends BasePartWailaDataProv
     @Override
     public List<String> getWailaBody(final IPart part, final List<String> currentToolTip,
             final IWailaDataAccessor accessor, final IWailaConfigHandler config) {
-        if (part instanceof IPartStorageMonitor) {
-            final IPartStorageMonitor monitor = (IPartStorageMonitor) part;
+        if (part instanceof IPartStorageMonitor monitor) {
 
             final IAEStack<?> displayed = monitor.getDisplayed();
             final boolean isLocked = monitor.isLocked();

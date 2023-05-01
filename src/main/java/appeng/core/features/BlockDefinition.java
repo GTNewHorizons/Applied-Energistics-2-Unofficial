@@ -65,8 +65,7 @@ public class BlockDefinition extends ItemDefinition implements IBlockDefinition 
      * @return a {@link Class} extending ItemBlock
      */
     private static Class<? extends ItemBlock> getItemBlockConstructor(final Block block) {
-        if (block instanceof AEBaseBlock) {
-            final AEBaseBlock aeBaseBlock = (AEBaseBlock) block;
+        if (block instanceof AEBaseBlock aeBaseBlock) {
             return aeBaseBlock.getItemBlockClass();
         }
 

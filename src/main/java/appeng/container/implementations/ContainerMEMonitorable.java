@@ -329,8 +329,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
     @Override
     public void onListUpdate() {
         for (final Object c : this.crafters) {
-            if (c instanceof ICrafting) {
-                final ICrafting cr = (ICrafting) c;
+            if (c instanceof ICrafting cr) {
                 this.queueInventory(cr);
             }
         }

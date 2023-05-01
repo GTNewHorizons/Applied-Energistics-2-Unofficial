@@ -61,8 +61,7 @@ public class FMPEvent {
 
         Block blk = null;
         TMultiPart part = null;
-        if (held.getItem() instanceof AEBaseItemBlock) {
-            final AEBaseItemBlock ib = (AEBaseItemBlock) held.getItem();
+        if (held.getItem() instanceof AEBaseItemBlock ib) {
             blk = Block.getBlockFromItem(ib);
             part = PartRegistry.getPartByBlock(blk, hit.sideHit);
         }

@@ -128,9 +128,8 @@ public class GridNode implements IGridNode, IPathItem {
 
         this.visitorIterationNumber = tracker;
 
-        if (g instanceof IGridConnectionVisitor) {
+        if (g instanceof IGridConnectionVisitor gcv) {
             final LinkedList<IGridConnection> nextConn = new LinkedList<>();
-            final IGridConnectionVisitor gcv = (IGridConnectionVisitor) g;
 
             while (!nextRun.isEmpty()) {
                 while (!nextConn.isEmpty()) {

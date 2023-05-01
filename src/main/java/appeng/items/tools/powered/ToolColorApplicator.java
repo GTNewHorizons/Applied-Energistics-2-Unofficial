@@ -203,8 +203,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
             return AEColor.Transparent;
         }
 
-        if (paintBall.getItem() instanceof ItemPaintBall) {
-            final ItemPaintBall ipb = (ItemPaintBall) paintBall.getItem();
+        if (paintBall.getItem() instanceof ItemPaintBall ipb) {
             return ipb.getColor(paintBall);
         } else {
             final int[] id = OreDictionary.getOreIDs(paintBall);

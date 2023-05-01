@@ -60,14 +60,13 @@ public class P2PCache implements IGridCache {
 
     @Override
     public void removeNode(final IGridNode node, final IGridHost machine) {
-        if (machine instanceof PartP2PTunnel) {
+        if (machine instanceof PartP2PTunnel t) {
             if (machine instanceof PartP2PTunnelME) {
                 if (!node.hasFlag(GridFlags.REQUIRE_CHANNEL)) {
                     return;
                 }
             }
 
-            final PartP2PTunnel t = (PartP2PTunnel) machine;
             // AELog.info( "rmv-" + (t.output ? "output: " : "input: ") + t.freq
             // );
 
@@ -83,14 +82,13 @@ public class P2PCache implements IGridCache {
 
     @Override
     public void addNode(final IGridNode node, final IGridHost machine) {
-        if (machine instanceof PartP2PTunnel) {
+        if (machine instanceof PartP2PTunnel t) {
             if (machine instanceof PartP2PTunnelME) {
                 if (!node.hasFlag(GridFlags.REQUIRE_CHANNEL)) {
                     return;
                 }
             }
 
-            final PartP2PTunnel t = (PartP2PTunnel) machine;
             // AELog.info( "add-" + (t.output ? "output: " : "input: ") + t.freq
             // );
 

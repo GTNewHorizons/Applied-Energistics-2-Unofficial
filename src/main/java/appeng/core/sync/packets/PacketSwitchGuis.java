@@ -52,8 +52,7 @@ public class PacketSwitchGuis extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final Container c = player.openContainer;
-        if (c instanceof AEBaseContainer) {
-            final AEBaseContainer bc = (AEBaseContainer) c;
+        if (c instanceof AEBaseContainer bc) {
             final ContainerOpenContext context = bc.getOpenContext();
             if (context != null) {
                 final TileEntity te = context.getTile();

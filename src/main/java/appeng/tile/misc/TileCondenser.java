@@ -63,8 +63,7 @@ public class TileCondenser extends AEBaseInvTile implements IFluidHandler, IConf
     public double getStorage() {
         final ItemStack is = this.inv.getStackInSlot(2);
         if (is != null) {
-            if (is.getItem() instanceof IStorageComponent) {
-                final IStorageComponent sc = (IStorageComponent) is.getItem();
+            if (is.getItem() instanceof IStorageComponent sc) {
                 if (sc.isStorageComponent(is)) {
                     return sc.getBytes(is) * 8;
                 }

@@ -48,8 +48,7 @@ public class PacketCraftingItemInterface extends AppEngPacket {
 
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
-        if (player.openContainer instanceof ContainerCraftingStatus) {
-            ContainerCraftingStatus cpv = (ContainerCraftingStatus) player.openContainer;
+        if (player.openContainer instanceof ContainerCraftingStatus cpv) {
             final Object target = cpv.getTarget();
             if (target instanceof IGridHost) {
                 final ContainerOpenContext context = cpv.getOpenContext();

@@ -290,12 +290,10 @@ public class RenderBlockAssembler extends BaseBlockRender<BlockMolecularAssemble
 
         if (-1 < tileYPos && tileYPos < 256) {
             final TileEntity ne = world.getTileEntity(x + side.offsetX, tileYPos, z + side.offsetZ);
-            if (ne instanceof IGridHost && ne instanceof IPartHost) {
-                final IPartHost ph = (IPartHost) ne;
+            if (ne instanceof IGridHost && ne instanceof IPartHost ph) {
                 final IPart pcx = ph.getPart(ForgeDirection.UNKNOWN);
 
-                if (pcx instanceof PartCable) {
-                    final PartCable pc = (PartCable) pcx;
+                if (pcx instanceof PartCable pc) {
 
                     if (pc.isConnected(side.getOpposite())) {
                         if (covered) {

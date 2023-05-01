@@ -110,8 +110,7 @@ public class SecurityInventory implements IMEInventoryHandler<IAEItemStack> {
 
     @Override
     public boolean canAccept(final IAEItemStack input) {
-        if (input.getItem() instanceof IBiometricCard) {
-            final IBiometricCard tbc = (IBiometricCard) input.getItem();
+        if (input.getItem() instanceof IBiometricCard tbc) {
             final GameProfile newUser = tbc.getProfile(input.getItemStack());
 
             final int PlayerID = AEApi.instance().registries().players().getID(newUser);

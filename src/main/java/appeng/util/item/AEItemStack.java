@@ -398,8 +398,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
             return ((AEItemStack) ia).getDefinition().equals(this.getDefinition()); // && def.tagCompound ==
             // ((AEItemStack)
             // ia).def.tagCompound;
-        } else if (ia instanceof ItemStack) {
-            final ItemStack is = (ItemStack) ia;
+        } else if (ia instanceof ItemStack is) {
 
             if (is.getItem() == this.getDefinition().getItem()
                     && is.getItemDamage() == this.getDefinition().getDamageValue()) {

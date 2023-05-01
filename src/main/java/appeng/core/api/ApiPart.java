@@ -203,8 +203,7 @@ public class ApiPart implements IPartHelper {
     }
 
     private void processNode(final AbstractInsnNode next, final String nePar) {
-        if (next instanceof MethodInsnNode) {
-            final MethodInsnNode min = (MethodInsnNode) next;
+        if (next instanceof MethodInsnNode min) {
             if (min.owner.equals("appeng/api/parts/LayerBase")) {
                 min.owner = nePar;
             }

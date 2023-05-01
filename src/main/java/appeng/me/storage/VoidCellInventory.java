@@ -24,10 +24,9 @@ public class VoidCellInventory extends MEInventoryHandler<IAEItemStack> {
 
     protected VoidCellInventory(final ItemStack o) throws AppEngException {
         super(new NullInventory<>(), StorageChannel.ITEMS);
-        if (o == null || !(o.getItem() instanceof ItemVoidStorageCell)) {
+        if (o == null || !(o.getItem() instanceof ItemVoidStorageCell cell)) {
             throw new AppEngException("ItemStack was used as a void cell, but was not a void cell!");
         }
-        final ItemVoidStorageCell cell = (ItemVoidStorageCell) o.getItem();
         final IInventory upgrades = cell.getUpgradesInventory(o);
         final IInventory config = cell.getConfigInventory(o);
         final FuzzyMode fzMode = cell.getFuzzyMode(o);

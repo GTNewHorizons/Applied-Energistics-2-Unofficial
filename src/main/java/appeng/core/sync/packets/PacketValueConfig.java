@@ -90,17 +90,13 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof ContainerRenamer) {
             final ContainerRenamer qk = (ContainerRenamer) c;
             qk.setNewName(this.Value);
-        } else if (this.Name.equals("TileSecurity.ToggleOption") && c instanceof ContainerSecurity) {
-            final ContainerSecurity sc = (ContainerSecurity) c;
+        } else if (this.Name.equals("TileSecurity.ToggleOption") && c instanceof ContainerSecurity sc) {
             sc.toggleSetting(this.Value, player);
-        } else if (this.Name.equals("PriorityHost.Priority") && c instanceof ContainerPriority) {
-            final ContainerPriority pc = (ContainerPriority) c;
+        } else if (this.Name.equals("PriorityHost.Priority") && c instanceof ContainerPriority pc) {
             pc.setPriority(Integer.parseInt(this.Value), player);
-        } else if (this.Name.equals("OreFilter") && c instanceof ContainerOreFilter) {
-            final ContainerOreFilter fc = (ContainerOreFilter) c;
+        } else if (this.Name.equals("OreFilter") && c instanceof ContainerOreFilter fc) {
             fc.setFilter(this.Value);
-        } else if (this.Name.equals("LevelEmitter.Value") && c instanceof ContainerLevelEmitter) {
-            final ContainerLevelEmitter lvc = (ContainerLevelEmitter) c;
+        } else if (this.Name.equals("LevelEmitter.Value") && c instanceof ContainerLevelEmitter lvc) {
             lvc.setLevel(Long.parseLong(this.Value), player);
         } else if (this.Name.startsWith("PatternTerminal.") && c instanceof ContainerPatternTerm) {
             final ContainerPatternTerm cpt = (ContainerPatternTerm) c;

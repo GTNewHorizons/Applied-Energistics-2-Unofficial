@@ -67,8 +67,7 @@ public class FMP implements IIntegrationModule, IPartFactory, IPartConverter, IF
         final int meta = world.getBlockMetadata(pos.x, pos.y, pos.z);
 
         final TMultiPart part = PartRegistry.getPartByBlock(blk, meta);
-        if (part instanceof CableBusPart) {
-            final CableBusPart cbp = (CableBusPart) part;
+        if (part instanceof CableBusPart cbp) {
             cbp.convertFromTile(world.getTileEntity(pos.x, pos.y, pos.z));
         }
 
@@ -153,8 +152,7 @@ public class FMP implements IIntegrationModule, IPartFactory, IPartConverter, IF
 
     @Override
     public CableBusContainer getCableContainer(final TileEntity te) {
-        if (te instanceof TileMultipart) {
-            final TileMultipart mp = (TileMultipart) te;
+        if (te instanceof TileMultipart mp) {
             final scala.collection.Iterator<TMultiPart> i = mp.partList().iterator();
             while (i.hasNext()) {
                 final TMultiPart p = i.next();

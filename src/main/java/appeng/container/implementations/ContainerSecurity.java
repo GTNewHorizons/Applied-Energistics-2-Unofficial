@@ -76,8 +76,7 @@ public class ContainerSecurity extends ContainerMEMonitorable implements IAEAppE
             final SecurityPermissions permission = SecurityPermissions.valueOf(value);
 
             final ItemStack a = this.configSlot.getStack();
-            if (a != null && a.getItem() instanceof IBiometricCard) {
-                final IBiometricCard bc = (IBiometricCard) a.getItem();
+            if (a != null && a.getItem() instanceof IBiometricCard bc) {
                 if (bc.hasPermission(a, permission)) {
                     bc.removePermission(a, permission);
                 } else {
@@ -96,8 +95,7 @@ public class ContainerSecurity extends ContainerMEMonitorable implements IAEAppE
         this.setPermissionMode(0);
 
         final ItemStack a = this.configSlot.getStack();
-        if (a != null && a.getItem() instanceof IBiometricCard) {
-            final IBiometricCard bc = (IBiometricCard) a.getItem();
+        if (a != null && a.getItem() instanceof IBiometricCard bc) {
 
             for (final SecurityPermissions sp : bc.getPermissions(a)) {
                 this.setPermissionMode(this.getPermissionMode() | (1 << sp.ordinal()));

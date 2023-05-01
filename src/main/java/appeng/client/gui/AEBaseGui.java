@@ -247,8 +247,7 @@ public abstract class AEBaseGui extends GuiContainer {
 
         final List<Slot> slots = this.getInventorySlots();
         for (final Slot slot : slots) {
-            if (slot instanceof OptionalSlotFake) {
-                final OptionalSlotFake fs = (OptionalSlotFake) slot;
+            if (slot instanceof OptionalSlotFake fs) {
                 if (fs.renderDisabled()) {
                     if (fs.isEnabled()) {
                         this.drawTexturedModalRect(
@@ -743,9 +742,8 @@ public abstract class AEBaseGui extends GuiContainer {
         } else {
             try {
                 final ItemStack is = s.getStack();
-                if (s instanceof AppEngSlot && (((AppEngSlot) s).renderIconWithItem() || is == null)
+                if (s instanceof AppEngSlot aes && (((AppEngSlot) s).renderIconWithItem() || is == null)
                         && (((AppEngSlot) s).shouldDisplay())) {
-                    final AppEngSlot aes = (AppEngSlot) s;
                     if (aes.getIcon() >= 0) {
                         this.bindTexture("guis/states.png");
 

@@ -178,8 +178,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_CRAFTING_STATUS));
         }
 
-        if (btn instanceof GuiImgButton) {
-            final GuiImgButton iBtn = (GuiImgButton) btn;
+        if (btn instanceof GuiImgButton iBtn) {
             if (iBtn.getSetting() != Settings.ACTIONS) {
                 final Enum cv = iBtn.getCurrentValue();
                 final boolean backwards = Mouse.isButtonDown(1);

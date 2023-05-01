@@ -53,8 +53,7 @@ public class LayerISidedInventory extends LayerBase implements ISidedInventory {
 
         for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
             final IPart bp = this.getPart(side);
-            if (bp instanceof ISidedInventory) {
-                final ISidedInventory part = (ISidedInventory) bp;
+            if (bp instanceof ISidedInventory part) {
                 slotCount += part.getSizeInventory();
                 inventories.add(part);
             }

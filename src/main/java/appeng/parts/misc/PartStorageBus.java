@@ -390,8 +390,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                 final IMEInventory inv = esh
                         .getInventory(target, this.getSide().getOpposite(), StorageChannel.ITEMS, this.mySrc);
 
-                if (inv instanceof MEMonitorIInventory) {
-                    final MEMonitorIInventory h = (MEMonitorIInventory) inv;
+                if (inv instanceof MEMonitorIInventory h) {
                     h.setMode((StorageFilter) this.getConfigManager().getSetting(Settings.STORAGE_FILTER));
                     h.setActionSource(new MachineSource(this));
                 }

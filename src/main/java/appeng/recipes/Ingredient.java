@@ -73,8 +73,7 @@ public class Ingredient implements IIngredient {
                 } else {
                     try {
                         final Object ro = AEApi.instance().registries().recipes().resolveItem(this.nameSpace, tmpName);
-                        if (ro instanceof ResolverResult) {
-                            final ResolverResult rr = (ResolverResult) ro;
+                        if (ro instanceof ResolverResult rr) {
                             tmpName = rr.itemName;
                             sel = rr.damageValue;
                             this.nbt = rr.compound;

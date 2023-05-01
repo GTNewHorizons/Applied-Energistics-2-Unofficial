@@ -80,11 +80,9 @@ public abstract class BaseVersion implements Version {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof Version)) {
+        if (!(o instanceof Version that)) {
             return false;
         }
-
-        final Version that = (Version) o;
 
         if (this.revision != that.revision()) {
             return false;

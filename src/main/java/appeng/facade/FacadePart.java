@@ -127,8 +127,7 @@ public class FacadePart implements IFacadePart, IBoxProvider {
                 }
 
                 if (randomItem != null) {
-                    if (randomItem.getItem() instanceof ItemBlock) {
-                        final ItemBlock ib = (ItemBlock) randomItem.getItem();
+                    if (randomItem.getItem() instanceof ItemBlock ib) {
                         final Block blk = Block.getBlockFromItem(ib);
 
                         if (AEApi.instance().partHelper().getCableRenderMode().transparentFacades) {
@@ -451,8 +450,7 @@ public class FacadePart implements IFacadePart, IBoxProvider {
                     instance.setTexture(null);
 
                     if (randomItem != null) {
-                        if (randomItem.getItem() instanceof ItemBlock) {
-                            final ItemBlock ib = (ItemBlock) randomItem.getItem();
+                        if (randomItem.getItem() instanceof ItemBlock ib) {
                             final Block blk = Block.getBlockFromItem(ib);
 
                             try {
@@ -537,8 +535,7 @@ public class FacadePart implements IFacadePart, IBoxProvider {
         final Item maybeFacade = this.facade.getItem();
 
         // AE Facade
-        if (maybeFacade instanceof IFacadeItem) {
-            final IFacadeItem facade = (IFacadeItem) maybeFacade;
+        if (maybeFacade instanceof IFacadeItem facade) {
 
             return facade.getTextureItem(this.facade);
         } else if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.BuildCraftTransport)) {
@@ -646,8 +643,7 @@ public class FacadePart implements IFacadePart, IBoxProvider {
     }
 
     private boolean hasAlphaDiff(final TileEntity tileEntity, final ForgeDirection side, final IFacadePart facade) {
-        if (tileEntity instanceof IPartHost) {
-            final IPartHost ph = (IPartHost) tileEntity;
+        if (tileEntity instanceof IPartHost ph) {
             final IFacadePart fp = ph.getFacadeContainer().getFacade(side);
 
             return fp == null || (fp.isTransparent() != facade.isTransparent());

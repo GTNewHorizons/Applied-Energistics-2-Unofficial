@@ -764,8 +764,7 @@ public class Platform {
         }
 
         ItemStack itemStack = null;
-        if (o instanceof AEItemStack) {
-            final AEItemStack ais = (AEItemStack) o;
+        if (o instanceof AEItemStack ais) {
             return ais.getToolTip();
         } else if (o instanceof ItemStack) {
             itemStack = (ItemStack) o;
@@ -841,8 +840,7 @@ public class Platform {
             final int z) {
         if (eq != null) {
             try {
-                if (eq.getItem() instanceof IToolWrench) {
-                    final IToolWrench wrench = (IToolWrench) eq.getItem();
+                if (eq.getItem() instanceof IToolWrench wrench) {
                     return wrench.canWrench(player, x, y, z);
                 }
             } catch (final Throwable ignore) { // explodes without BC
@@ -1373,8 +1371,7 @@ public class Platform {
 
         if (target instanceof ITileStorageMonitorable) {
             return 0;
-        } else if (target instanceof TileEntityChest) {
-            final TileEntityChest chest = (TileEntityChest) target;
+        } else if (target instanceof TileEntityChest chest) {
             chest.checkForAdjacentChests();
             if (chest.adjacentChestZNeg != null) {
                 hash ^= chest.adjacentChestZNeg.hashCode();

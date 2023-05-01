@@ -102,8 +102,7 @@ public class PacketInventoryAction extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
-        if (sender.openContainer instanceof AEBaseContainer) {
-            final AEBaseContainer baseContainer = (AEBaseContainer) sender.openContainer;
+        if (sender.openContainer instanceof AEBaseContainer baseContainer) {
             if (this.action == InventoryAction.AUTO_CRAFT) {
                 final ContainerOpenContext context = baseContainer.getOpenContext();
                 if (context != null) {
@@ -114,8 +113,7 @@ public class PacketInventoryAction extends AppEngPacket {
                             baseContainer.getOpenContext().getSide(),
                             GuiBridge.GUI_CRAFTING_AMOUNT);
 
-                    if (sender.openContainer instanceof ContainerCraftAmount) {
-                        final ContainerCraftAmount cca = (ContainerCraftAmount) sender.openContainer;
+                    if (sender.openContainer instanceof ContainerCraftAmount cca) {
 
                         if (baseContainer.getTargetStack() != null) {
                             cca.getCraftingItem().putStack(baseContainer.getTargetStack().getItemStack());
@@ -134,8 +132,7 @@ public class PacketInventoryAction extends AppEngPacket {
                             te,
                             baseContainer.getOpenContext().getSide(),
                             GuiBridge.GUI_PATTERN_VALUE_AMOUNT);
-                    if (sender.openContainer instanceof ContainerPatternValueAmount) {
-                        final ContainerPatternValueAmount cpv = (ContainerPatternValueAmount) sender.openContainer;
+                    if (sender.openContainer instanceof ContainerPatternValueAmount cpv) {
                         if (baseContainer.getTargetStack() != null) {
                             cpv.setValueIndex(this.slot);
                             cpv.getPatternValue().putStack(baseContainer.getTargetStack().getItemStack());

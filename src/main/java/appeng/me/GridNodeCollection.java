@@ -57,8 +57,7 @@ public class GridNodeCollection implements IReadOnlyCollection<IGridNode> {
     public boolean contains(final Object maybeGridNode) {
         final boolean doesContainNode;
 
-        if (maybeGridNode instanceof IGridNode) {
-            final IGridNode node = (IGridNode) maybeGridNode;
+        if (maybeGridNode instanceof IGridNode node) {
             final IGridHost machine = node.getMachine();
             final Class<? extends IGridHost> machineClass = machine.getClass();
 

@@ -107,8 +107,7 @@ public class SlotRestrictedInput extends AppEngSlot {
 
         switch (this.which) {
             case ENCODED_CRAFTING_PATTERN:
-                if (i.getItem() instanceof ICraftingPatternItem) {
-                    final ICraftingPatternItem b = (ICraftingPatternItem) i.getItem();
+                if (i.getItem() instanceof ICraftingPatternItem b) {
                     final ICraftingPatternDetails de = b.getPatternForItem(i, this.p.player.worldObj);
                     if (de != null) {
                         return de.isCraftable();
@@ -212,8 +211,7 @@ public class SlotRestrictedInput extends AppEngSlot {
     public ItemStack getDisplayStack() {
         if (Platform.isClient() && (this.which == PlacableItemType.ENCODED_PATTERN)) {
             final ItemStack is = super.getStack();
-            if (is != null && is.getItem() instanceof ItemEncodedPattern) {
-                final ItemEncodedPattern iep = (ItemEncodedPattern) is.getItem();
+            if (is != null && is.getItem() instanceof ItemEncodedPattern iep) {
                 final ItemStack out = iep.getOutput(is);
                 if (out != null) {
                     return out;

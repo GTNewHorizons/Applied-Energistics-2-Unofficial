@@ -104,8 +104,7 @@ public class AENetworkProxy implements IGridBlock {
         this.isReady = true;
 
         // send orientation based directionality to the node.
-        if (this.gp instanceof IOrientable) {
-            final IOrientable ori = (IOrientable) this.gp;
+        if (this.gp instanceof IOrientable ori) {
             if (ori.canBeRotated()) {
                 ori.setOrientation(ori.getForward(), ori.getUp());
             }

@@ -263,8 +263,7 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
         for (final IAEItemStack ais : this.inventory.getStoredItems()) {
             final ItemStack is = ais.getItemStack();
             final Item i = is.getItem();
-            if (i instanceof IBiometricCard) {
-                final IBiometricCard bc = (IBiometricCard) i;
+            if (i instanceof IBiometricCard bc) {
                 bc.registerPermissions(new PlayerSecurityWrapper(playerPerms), pr, is);
             }
         }

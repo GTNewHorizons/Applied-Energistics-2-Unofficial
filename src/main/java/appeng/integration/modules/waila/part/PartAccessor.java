@@ -40,9 +40,8 @@ public final class PartAccessor {
      * @return maybe the looked at {@link appeng.api.parts.IPart}
      */
     public Optional<IPart> getMaybePart(final TileEntity te, final MovingObjectPosition mop) {
-        if (te instanceof IPartHost) {
+        if (te instanceof IPartHost host) {
             final Vec3 position = mop.hitVec.addVector(-mop.blockX, -mop.blockY, -mop.blockZ);
-            final IPartHost host = (IPartHost) te;
             final SelectedPart sp = host.selectPart(position);
 
             if (sp.part != null) {

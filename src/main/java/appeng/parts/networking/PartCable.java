@@ -278,8 +278,7 @@ public class PartCable extends AEBasePart implements IPartCable {
 
         for (final ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
             final IPart p = this.getHost().getPart(dir);
-            if (p instanceof IGridHost) {
-                final IGridHost igh = (IGridHost) p;
+            if (p instanceof IGridHost igh) {
                 final AECableType type = igh.getCableConnectionType(dir.getOpposite());
                 if (type == AECableType.COVERED || type == AECableType.SMART) {
                     useCovered = true;

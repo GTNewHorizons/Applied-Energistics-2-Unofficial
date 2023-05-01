@@ -193,8 +193,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                         treeUpdate = null;
                     }
                     for (final Object player : this.crafters) {
-                        if (player instanceof EntityPlayerMP) {
-                            EntityPlayerMP playerMP = (EntityPlayerMP) player;
+                        if (player instanceof EntityPlayerMP playerMP) {
                             NetworkHandler.instance.sendTo(storageUpdate, playerMP);
                             NetworkHandler.instance.sendTo(pendingUpdate, playerMP);
                             if (missingUpdate != null) {

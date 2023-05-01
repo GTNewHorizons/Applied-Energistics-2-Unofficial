@@ -35,8 +35,7 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
         lines.add(GuiText.VoidCellTooltip.getLocal());
         lines.add(0 + " " + GuiText.Of.getLocal() + " \u00A7k9999\u00A77 " + GuiText.BytesUsed.getLocal());
         VoidCellInventory inv = (VoidCellInventory) VoidCellInventory.getCell(stack);
-        if (inv != null && stack.getItem() instanceof ItemVoidStorageCell) {
-            ItemVoidStorageCell cell = (ItemVoidStorageCell) stack.getItem();
+        if (inv != null && stack.getItem() instanceof ItemVoidStorageCell cell) {
             if (inv.isPreformatted()) {
                 String filter = cell.getOreFilter(stack);
                 if (filter.isEmpty()) {

@@ -258,8 +258,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
             AELog.debug(err);
         }
 
-        if (pos != null && type != null && type.getItem() instanceof ItemPaintBall) {
-            final ItemPaintBall ipb = (ItemPaintBall) type.getItem();
+        if (pos != null && type != null && type.getItem() instanceof ItemPaintBall ipb) {
 
             final AEColor col = ipb.getColor(type);
             // boolean lit = ipb.isLumen( type );
@@ -269,8 +268,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
                 final PlayerColor marker = new PlayerColor(id, col, 20 * 30);
                 TickHandler.INSTANCE.getPlayerColors().put(id, marker);
 
-                if (pos.entityHit instanceof EntitySheep) {
-                    final EntitySheep sh = (EntitySheep) pos.entityHit;
+                if (pos.entityHit instanceof EntitySheep sh) {
                     sh.setFleeceColor(col.ordinal());
                 }
 
@@ -385,8 +383,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
 
                 if (pos.typeOfHit == MovingObjectType.ENTITY) {
                     final int dmg = (int) Math.ceil(penetration / 20.0f);
-                    if (pos.entityHit instanceof EntityLivingBase) {
-                        final EntityLivingBase el = (EntityLivingBase) pos.entityHit;
+                    if (pos.entityHit instanceof EntityLivingBase el) {
                         penetration -= dmg;
                         el.knockBack(p, 0, -direction.xCoord, -direction.zCoord);
                         // el.knockBack( p, 0, vec3.xCoord,

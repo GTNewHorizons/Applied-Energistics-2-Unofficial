@@ -32,8 +32,7 @@ public class RenderBlockQuartzAccelerator
             final int y, final int z, final RenderBlocks renderer) {
         final TileEntity te = world.getTileEntity(x, y, z);
 
-        if (te instanceof TileQuartzGrowthAccelerator) {
-            final TileQuartzGrowthAccelerator tileCGA = (TileQuartzGrowthAccelerator) te;
+        if (te instanceof TileQuartzGrowthAccelerator tileCGA) {
 
             if (tileCGA.isPowered()) {
                 final IIcon top_Bottom = ExtraBlockTextures.BlockQuartzGrowthAcceleratorOn.getIcon();

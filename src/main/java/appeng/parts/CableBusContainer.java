@@ -100,8 +100,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
             return true;
         }
 
-        if (is.getItem() instanceof IPartItem) {
-            final IPartItem bi = (IPartItem) is.getItem();
+        if (is.getItem() instanceof IPartItem bi) {
 
             is = is.copy();
             is.stackSize = 1;
@@ -138,8 +137,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
     @Override
     public ForgeDirection addPart(ItemStack is, final ForgeDirection side, final EntityPlayer player) {
         if (this.canAddPart(is, side)) {
-            if (is.getItem() instanceof IPartItem) {
-                final IPartItem bi = (IPartItem) is.getItem();
+            if (is.getItem() instanceof IPartItem bi) {
 
                 is = is.copy();
                 is.stackSize = 1;

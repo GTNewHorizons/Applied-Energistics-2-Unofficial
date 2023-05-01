@@ -100,8 +100,7 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
         if (inv == this.pattern && slot == 1) {
             final ItemStack stack = this.pattern.getStackInSlot(1);
 
-            if (stack != null && stack.getItem() instanceof ICraftingPatternItem) {
-                final ICraftingPatternItem pattern = (ICraftingPatternItem) stack.getItem();
+            if (stack != null && stack.getItem() instanceof ICraftingPatternItem pattern) {
                 final NBTTagCompound encodedValue = stack.getTagCompound();
 
                 if (encodedValue != null) {

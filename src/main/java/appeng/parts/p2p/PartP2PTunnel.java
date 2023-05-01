@@ -216,10 +216,9 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         // AELog.info( "ID:" + id.toString() + " : " + is.getItemDamage() );
 
         final TunnelType tt = AEApi.instance().registries().p2pTunnel().getTunnelTypeByItem(is);
-        if (is != null && is.getItem() instanceof IMemoryCard) {
+        if (is != null && is.getItem() instanceof IMemoryCard mc) {
             if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
 
-            final IMemoryCard mc = (IMemoryCard) is.getItem();
             final NBTTagCompound data = mc.getData(is);
 
             final ItemStack newType = ItemStack.loadItemStackFromNBT(data);
@@ -233,8 +232,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
                         final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
                         final IPart newBus = this.getHost().getPart(dir);
 
-                        if (newBus instanceof PartP2PTunnel) {
-                            final PartP2PTunnel<?> newTunnel = (PartP2PTunnel<?>) newBus;
+                        if (newBus instanceof PartP2PTunnel<?>newTunnel) {
                             newTunnel.setOutput(true);
 
                             try {
@@ -343,8 +341,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
                 final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
                 final IPart newBus = this.getHost().getPart(dir);
 
-                if (newBus instanceof PartP2PTunnel<?>) {
-                    final PartP2PTunnel<?> newTunnel = (PartP2PTunnel<?>) newBus;
+                if (newBus instanceof PartP2PTunnel<?>newTunnel) {
                     newTunnel.setOutput(oldOutput);
                     newTunnel.onTunnelNetworkChange();
 
@@ -402,10 +399,9 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     @Override
     public boolean onPartShiftActivate(final EntityPlayer player, final Vec3 pos) {
         final ItemStack is = player.inventory.getCurrentItem();
-        if (is != null && is.getItem() instanceof IMemoryCard) {
+        if (is != null && is.getItem() instanceof IMemoryCard mc) {
             if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
 
-            final IMemoryCard mc = (IMemoryCard) is.getItem();
             final NBTTagCompound data = new NBTTagCompound();
 
             long newFreq = this.getFrequency();

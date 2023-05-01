@@ -135,8 +135,7 @@ public class BlockTinyTNT extends AEBaseBlock implements ICustomCollision {
 
     @Override
     public void onEntityCollidedWithBlock(final World w, final int x, final int y, final int z, final Entity entity) {
-        if (entity instanceof EntityArrow && !w.isRemote) {
-            final EntityArrow entityarrow = (EntityArrow) entity;
+        if (entity instanceof EntityArrow entityarrow && !w.isRemote) {
 
             if (entityarrow.isBurning()) {
                 this.startFuse(

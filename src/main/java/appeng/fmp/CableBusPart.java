@@ -415,8 +415,7 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
             return true;
         }
 
-        if (is.getItem() instanceof IPartItem) {
-            final IPartItem bi = (IPartItem) is.getItem();
+        if (is.getItem() instanceof IPartItem bi) {
 
             is = is.copy();
             is.stackSize = 1;

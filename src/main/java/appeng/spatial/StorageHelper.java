@@ -108,8 +108,7 @@ public class StorageHelper {
                     entity.lastTickPosY = entity.prevPosY = entity.posY = link.y;
                     entity.lastTickPosZ = entity.prevPosZ = entity.posZ = link.z;
 
-                    if (entity instanceof EntityHanging) {
-                        final EntityHanging h = (EntityHanging) entity;
+                    if (entity instanceof EntityHanging h) {
                         h.field_146063_b += link.xOff;
                         h.field_146064_c += link.yOff;
                         h.field_146062_d += link.zOff;

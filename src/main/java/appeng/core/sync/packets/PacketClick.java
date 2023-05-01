@@ -72,8 +72,7 @@ public class PacketClick extends AppEngPacket {
         final IComparableDefinition maybeColorApplicator = items.colorApplicator();
 
         if (is != null) {
-            if (is.getItem() instanceof ToolNetworkTool) {
-                final ToolNetworkTool tnt = (ToolNetworkTool) is.getItem();
+            if (is.getItem() instanceof ToolNetworkTool tnt) {
                 tnt.serverSideToolLogic(
                         is,
                         player,

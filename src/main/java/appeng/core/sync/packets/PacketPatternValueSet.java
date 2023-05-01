@@ -46,8 +46,7 @@ public class PacketPatternValueSet extends AppEngPacket {
 
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
-        if (player.openContainer instanceof ContainerPatternValueAmount) {
-            ContainerPatternValueAmount cpv = (ContainerPatternValueAmount) player.openContainer;
+        if (player.openContainer instanceof ContainerPatternValueAmount cpv) {
             final Object target = cpv.getTarget();
             if (target instanceof IGridHost) {
                 final ContainerOpenContext context = cpv.getOpenContext();

@@ -52,8 +52,7 @@ public class ShapedRecipe implements IRecipe, IRecipeBakeable {
             }
         }
 
-        if (recipe[idx] instanceof String[]) {
-            final String[] parts = ((String[]) recipe[idx]);
+        if (recipe[idx] instanceof String[]parts) {
             idx++;
 
             for (final String s : parts) {
@@ -63,8 +62,7 @@ public class ShapedRecipe implements IRecipe, IRecipeBakeable {
 
             this.height = parts.length;
         } else {
-            while (recipe[idx] instanceof String) {
-                final String s = (String) recipe[idx];
+            while (recipe[idx] instanceof String s) {
                 idx++;
                 shape.append(s);
                 this.width = s.length();

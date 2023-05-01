@@ -309,8 +309,7 @@ public class CraftingJob implements ICraftingJob, Runnable {
                 final DimensionalCoord location = actionableNode.getGridBlock().getLocation();
 
                 actionSource = String.format(LOG_MACHINE_SOURCE_DETAILS, machine, location);
-            } else if (this.actionSrc instanceof PlayerSource) {
-                final PlayerSource source = (PlayerSource) this.actionSrc;
+            } else if (this.actionSrc instanceof PlayerSource source) {
                 final EntityPlayer player = source.player;
 
                 actionSource = player.toString();

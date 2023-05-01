@@ -89,8 +89,7 @@ public final class P2PStateWailaDataProvider extends BasePartWailaDataProvider {
     @Override
     public NBTTagCompound getNBTData(final EntityPlayerMP player, final IPart part, final TileEntity te,
             final NBTTagCompound tag, final World world, final int x, final int y, final int z) {
-        if (part instanceof PartP2PTunnel) {
-            final PartP2PTunnel tunnel = (PartP2PTunnel) part;
+        if (part instanceof PartP2PTunnel tunnel) {
 
             if (!tunnel.isPowered()) {
                 return tag;

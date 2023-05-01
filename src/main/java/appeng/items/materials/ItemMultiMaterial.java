@@ -92,8 +92,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 
                 final int limit = j.getValue();
 
-                if (j.getKey().getItem() instanceof IItemGroup) {
-                    final IItemGroup ig = (IItemGroup) j.getKey().getItem();
+                if (j.getKey().getItem() instanceof IItemGroup ig) {
                     final String str = ig.getUnlocalizedGroupName(u.getSupported().keySet(), j.getKey());
                     if (str != null) {
                         name = Platform.gui_localize(str) + (limit > 1 ? " (" + limit + ')' : "");
@@ -287,8 +286,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
                 upgrades = ((ISegmentedInventory) te).getInventoryByName("upgrades");
             }
 
-            if (upgrades != null && is != null && is.getItem() instanceof IUpgradeModule) {
-                final IUpgradeModule um = (IUpgradeModule) is.getItem();
+            if (upgrades != null && is != null && is.getItem() instanceof IUpgradeModule um) {
                 final Upgrades u = um.getType(is);
 
                 if (u != null) {

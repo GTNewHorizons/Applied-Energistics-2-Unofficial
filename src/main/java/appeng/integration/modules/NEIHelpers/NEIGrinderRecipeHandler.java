@@ -111,8 +111,7 @@ public class NEIGrinderRecipeHandler extends TemplateRecipeHandler {
         super.drawForeground(recipe);
         if (this.arecipes.size() > recipe) {
             final CachedRecipe cr = this.arecipes.get(recipe);
-            if (cr instanceof CachedGrindStoneRecipe) {
-                final CachedGrindStoneRecipe cachedRecipe = (CachedGrindStoneRecipe) cr;
+            if (cr instanceof CachedGrindStoneRecipe cachedRecipe) {
                 if (cachedRecipe.hasOptional) {
                     final FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
                     final int width = fr.getStringWidth(cachedRecipe.displayChance);

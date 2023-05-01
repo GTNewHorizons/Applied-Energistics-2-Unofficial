@@ -19,8 +19,7 @@ public class NEIGuiHandler extends INEIGuiAdapter {
     @Override
     public boolean handleDragNDrop(GuiContainer gui, int mousex, int mousey, ItemStack draggedStack, int button) {
 
-        if (draggedStack != null && draggedStack.getItem() != null && gui instanceof IDropToFillTextField) {
-            IDropToFillTextField gmm = (IDropToFillTextField) gui;
+        if (draggedStack != null && draggedStack.getItem() != null && gui instanceof IDropToFillTextField gmm) {
 
             if (gmm.isOverTextField(mousex, mousey)) {
                 gmm.setTextFieldValue(

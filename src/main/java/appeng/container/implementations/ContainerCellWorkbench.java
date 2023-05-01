@@ -150,8 +150,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
                 if (this.prevStack != is) {
                     // if the bars changed an item was probably made, so just send shit!
                     for (final Object s : this.inventorySlots) {
-                        if (s instanceof OptionalSlotRestrictedInput) {
-                            final OptionalSlotRestrictedInput sri = (OptionalSlotRestrictedInput) s;
+                        if (s instanceof OptionalSlotRestrictedInput sri) {
                             icrafting.sendSlotContents(this, sri.slotNumber, sri.getStack());
                         }
                     }

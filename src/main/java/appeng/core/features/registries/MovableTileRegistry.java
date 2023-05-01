@@ -109,8 +109,7 @@ public class MovableTileRegistry implements IMovableRegistry {
 
     @Override
     public void doneMoving(final TileEntity te) {
-        if (te instanceof IMovableTile) {
-            final IMovableTile mt = (IMovableTile) te;
+        if (te instanceof IMovableTile mt) {
             mt.doneMoving();
         }
     }
