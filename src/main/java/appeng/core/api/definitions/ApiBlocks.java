@@ -140,7 +140,7 @@ public final class ApiBlocks implements IBlocks {
         final BlockQuartz quartzBlock = new BlockQuartz();
         final BlockQuartzChiseled chiseledQuartz = new BlockQuartzChiseled();
 
-        this.orientables = ImmutableSet.<IOrientableBlock>of(lightDetector, quartzPillar, skyStone, cga, quartzTorch);
+        this.orientables = ImmutableSet.of(lightDetector, quartzPillar, skyStone, cga, quartzTorch);
 
         this.quartzOre = constructor.registerBlockDefinition(new OreQuartz());
         this.quartzOreCharged = constructor.registerBlockDefinition(new OreQuartzCharged());

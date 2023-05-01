@@ -89,7 +89,7 @@ public final class WorldData implements IWorldData {
         this.compassData = compassData;
         this.spawnData = spawnData;
 
-        this.startables = Lists.<IOnWorldStartable>newArrayList(playerData, dimensionData, storageData);
+        this.startables = Lists.newArrayList(playerData, dimensionData, storageData);
         this.stoppables = Lists.newArrayList(playerData, dimensionData, storageData, compassData);
     }
 

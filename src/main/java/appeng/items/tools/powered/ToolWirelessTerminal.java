@@ -38,7 +38,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ToolWirelessTerminal extends AEBasePoweredItem implements IWirelessTermHandler {
 
     public ToolWirelessTerminal() {
-        super(AEConfig.instance.wirelessTerminalBattery, Optional.<String>absent());
+        super(AEConfig.instance.wirelessTerminalBattery, Optional.absent());
         this.setFeature(EnumSet.of(AEFeature.WirelessAccessTerminal, AEFeature.PoweredTools));
     }
 

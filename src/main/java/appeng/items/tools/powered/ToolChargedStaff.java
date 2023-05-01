@@ -30,7 +30,7 @@ import appeng.util.Platform;
 public class ToolChargedStaff extends AEBasePoweredItem {
 
     public ToolChargedStaff() {
-        super(AEConfig.instance.chargedStaffBattery, Optional.<String>absent());
+        super(AEConfig.instance.chargedStaffBattery, Optional.absent());
         this.setFeature(EnumSet.of(AEFeature.ChargedStaff, AEFeature.PoweredTools));
     }
 

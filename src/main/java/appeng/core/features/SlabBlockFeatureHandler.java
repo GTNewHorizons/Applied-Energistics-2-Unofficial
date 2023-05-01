@@ -30,7 +30,7 @@ public class SlabBlockFeatureHandler implements IFeatureHandler {
     public SlabBlockFeatureHandler(final EnumSet<AEFeature> features, final AEBaseSlabBlock slabs) {
         final ActivityState state = new FeaturedActiveChecker(features).getActivityState();
         this.slabs = slabs;
-        this.extractor = new FeatureNameExtractor(slabs.getClass(), Optional.<String>absent());
+        this.extractor = new FeatureNameExtractor(slabs.getClass(), Optional.absent());
         this.enabled = state == ActivityState.Enabled;
         this.definition = new BlockDefinition(slabs, state);
     }

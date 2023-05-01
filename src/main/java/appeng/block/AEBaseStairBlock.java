@@ -29,7 +29,7 @@ public abstract class AEBaseStairBlock extends BlockStairs implements IAEFeature
     protected AEBaseStairBlock(final Block block, final int meta, final EnumSet<AEFeature> features) {
         super(block, meta);
 
-        this.features = new StairBlockFeatureHandler(features, this, Optional.<String>absent());
+        this.features = new StairBlockFeatureHandler(features, this, Optional.absent());
         this.setBlockName(block.getUnlocalizedName());
 
         this.setLightOpacity(0);

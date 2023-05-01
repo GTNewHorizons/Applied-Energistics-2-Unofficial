@@ -80,7 +80,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     public ToolColorApplicator() {
-        super(AEConfig.instance.colorApplicatorBattery, Optional.<String>absent());
+        super(AEConfig.instance.colorApplicatorBattery, Optional.absent());
         this.setFeature(EnumSet.of(AEFeature.ColorApplicator, AEFeature.PoweredTools));
         if (Platform.isClient()) {
             MinecraftForgeClient.registerItemRenderer(this, new ToolColorApplicatorRender());

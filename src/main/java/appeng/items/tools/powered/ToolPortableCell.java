@@ -49,7 +49,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class ToolPortableCell extends AEBasePoweredItem implements IStorageCell, IGuiItem, IItemGroup {
 
     public ToolPortableCell() {
-        super(AEConfig.instance.portableCellBattery, Optional.<String>absent());
+        super(AEConfig.instance.portableCellBattery, Optional.absent());
         this.setFeature(EnumSet.of(AEFeature.PortableCell, AEFeature.StorageCells, AEFeature.PoweredTools));
     }
 

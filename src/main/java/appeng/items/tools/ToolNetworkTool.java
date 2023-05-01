@@ -50,7 +50,7 @@ import buildcraft.api.tools.IToolWrench;
 public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, IToolWrench {
 
     public ToolNetworkTool() {
-        super(Optional.<String>absent());
+        super(Optional.absent());
 
         this.setFeature(EnumSet.of(AEFeature.NetworkTool));
         this.setMaxStackSize(1);

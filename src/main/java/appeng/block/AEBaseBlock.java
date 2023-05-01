@@ -61,7 +61,7 @@ public abstract class AEBaseBlock extends Block implements IAEFeature {
     private BlockRenderInfo renderInfo;
 
     protected AEBaseBlock(final Material mat) {
-        this(mat, Optional.<String>absent());
+        this(mat, Optional.absent());
         this.setLightOpacity(255);
         this.setLightLevel(0);
         this.setHardness(2.2F);
