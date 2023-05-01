@@ -13,7 +13,6 @@ package appeng.client.me;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
@@ -235,13 +234,13 @@ public class ItemRepo {
         ItemSorters.init();
 
         if (SortBy == SortOrder.MOD) {
-            Collections.sort(this.view, ItemSorters.CONFIG_BASED_SORT_BY_MOD);
+            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_MOD);
         } else if (SortBy == SortOrder.AMOUNT) {
-            Collections.sort(this.view, ItemSorters.CONFIG_BASED_SORT_BY_SIZE);
+            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_SIZE);
         } else if (SortBy == SortOrder.INVTWEAKS) {
-            Collections.sort(this.view, ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS);
+            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS);
         } else {
-            Collections.sort(this.view, ItemSorters.CONFIG_BASED_SORT_BY_NAME);
+            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_NAME);
         }
 
         for (final IAEItemStack is : this.view) {

@@ -10,7 +10,6 @@
 
 package appeng.items.parts;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.Map.Entry;
 

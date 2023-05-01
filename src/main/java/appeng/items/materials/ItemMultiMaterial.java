@@ -111,7 +111,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 
             final Pattern p = Pattern.compile("(\\d+)[^\\d]");
             final SlightlyBetterSort s = new SlightlyBetterSort(p);
-            Collections.sort(textList, s);
+            textList.sort(s);
             lines.addAll(textList);
         }
     }
@@ -247,7 +247,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
         final List<MaterialType> types = Arrays.asList(MaterialType.values());
-        Collections.sort(types, new Comparator<>() {
+        types.sort(new Comparator<>() {
 
             @Override
             public int compare(final MaterialType o1, final MaterialType o2) {

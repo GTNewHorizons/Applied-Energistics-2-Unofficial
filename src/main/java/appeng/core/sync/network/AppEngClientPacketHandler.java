@@ -33,8 +33,8 @@ public class AppEngClientPacketHandler extends AppEngPacketHandlerBase implement
             final int packetType = stream.readInt();
             final AppEngPacket pack = PacketTypes.getPacket(packetType).parsePacket(stream);
             pack.clientPacketData(network, pack, player);
-        } catch (final InstantiationException | InvocationTargetException | IllegalArgumentException |
-                IllegalAccessException e) {
+        } catch (final InstantiationException | InvocationTargetException | IllegalArgumentException
+                | IllegalAccessException e) {
             AELog.debug(e);
         }
     }

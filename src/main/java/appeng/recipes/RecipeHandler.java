@@ -11,7 +11,6 @@
 package appeng.recipes;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
@@ -359,8 +358,8 @@ public class RecipeHandler implements IRecipeHandler {
                                 combined.putAll(realName, recipes);
                             }
                         }
-                    } catch (final RecipeError | MissingIngredientError | RegistrationError |
-                            MissedIngredientSet ignored) {
+                    } catch (final RecipeError | MissingIngredientError | RegistrationError
+                            | MissedIngredientSet ignored) {
 
                     }
                 }

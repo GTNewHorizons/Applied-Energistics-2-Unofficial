@@ -81,7 +81,7 @@ public class GridNode implements IGridNode, IPathItem {
 
         final IGridNode gn = this;
 
-        Collections.sort(this.connections, new ConnectionComparator(gn));
+        this.connections.sort(new ConnectionComparator(gn));
     }
 
     void removeConnection(final IGridConnection gridConnection) {
