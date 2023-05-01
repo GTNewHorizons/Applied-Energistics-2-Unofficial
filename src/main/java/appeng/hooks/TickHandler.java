@@ -74,12 +74,7 @@ public class TickHandler {
         if (w == null) {
             this.serverQueue.add(c);
         } else {
-            Queue<IWorldCallable<?>> queue = this.callQueue.get(w);
-
-            if (queue == null) {
-                queue = new LinkedList<>();
-                this.callQueue.put(w, queue);
-            }
+            Queue<IWorldCallable<?>> queue = this.callQueue.computeIfAbsent(w, k -> new LinkedList<>());
 
             queue.add(c);
         }

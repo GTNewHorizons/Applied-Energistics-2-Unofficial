@@ -301,12 +301,7 @@ public class RecipeHandler implements IRecipeHandler {
                     ch.register();
 
                     final Class clz = ch.getClass();
-                    final Integer i = processed.get(clz);
-                    if (i == null) {
-                        processed.put(clz, 1);
-                    } else {
-                        processed.put(clz, i + 1);
-                    }
+                    processed.merge(clz, 1, Integer::sum);
                 } catch (final RegistrationError e) {
                     AELog.warn("Unable to register a recipe: " + e.getMessage());
                     if (this.data.exceptions) {

@@ -50,10 +50,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
 
     public void addNewStorage(final IMEInventoryHandler<T> h) {
         final int priority = h.getPriority();
-        List<IMEInventoryHandler<T>> list = this.priorityInventory.get(priority);
-        if (list == null) {
-            this.priorityInventory.put(priority, list = new ArrayList<>());
-        }
+        List<IMEInventoryHandler<T>> list = this.priorityInventory.computeIfAbsent(priority, k -> new ArrayList<>());
 
         list.add(h);
     }

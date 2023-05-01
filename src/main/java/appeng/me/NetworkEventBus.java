@@ -38,10 +38,8 @@ public class NetworkEventBus {
                     if (types.length == 1) {
                         if (MENetworkEvent.class.isAssignableFrom(types[0])) {
 
-                            Map<Class, MENetworkEventInfo> classEvents = EVENTS.get(types[0]);
-                            if (classEvents == null) {
-                                EVENTS.put(types[0], classEvents = new HashMap<>());
-                            }
+                            Map<Class, MENetworkEventInfo> classEvents = EVENTS
+                                    .computeIfAbsent(types[0], k -> new HashMap<>());
 
                             MENetworkEventInfo thisEvent = classEvents.get(listAs);
                             if (thisEvent == null) {
