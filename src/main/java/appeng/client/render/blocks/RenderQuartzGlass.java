@@ -68,21 +68,19 @@ public class RenderQuartzGlass extends BaseBlockRender<BlockQuartzGlass, AEBaseT
         final int v = OFFSETS[9 - cx][9 - cy][9 - cz] % 4;
 
         switch (Math.abs((OFFSETS[cx][cy][cz] + (x + y + z)) % 4)) {
-            case 0:
-                renderer.overrideBlockTexture = new OffsetIcon(imb.getIcon(0, 0), u / 2, v / 2);
-                break;
-            case 1:
-                renderer.overrideBlockTexture = new OffsetIcon(
-                        ExtraBlockTextures.BlockQuartzGlassB.getIcon(),
-                        u / 2,
-                        v / 2);
-                break;
-            case 2:
-                renderer.overrideBlockTexture = new OffsetIcon(ExtraBlockTextures.BlockQuartzGlassC.getIcon(), u, v);
-                break;
-            case 3:
-                renderer.overrideBlockTexture = new OffsetIcon(ExtraBlockTextures.BlockQuartzGlassD.getIcon(), u, v);
-                break;
+            case 0 -> renderer.overrideBlockTexture = new OffsetIcon(imb.getIcon(0, 0), u / 2, v / 2);
+            case 1 -> renderer.overrideBlockTexture = new OffsetIcon(
+                    ExtraBlockTextures.BlockQuartzGlassB.getIcon(),
+                    u / 2,
+                    v / 2);
+            case 2 -> renderer.overrideBlockTexture = new OffsetIcon(
+                    ExtraBlockTextures.BlockQuartzGlassC.getIcon(),
+                    u,
+                    v);
+            case 3 -> renderer.overrideBlockTexture = new OffsetIcon(
+                    ExtraBlockTextures.BlockQuartzGlassD.getIcon(),
+                    u,
+                    v);
         }
 
         final boolean result = renderer.renderStandardBlock(imb, x, y, z);
@@ -168,26 +166,13 @@ public class RenderQuartzGlass extends BaseBlockRender<BlockQuartzGlass, AEBaseT
                 renderer.setRenderBounds(minX, minY, minZ, maxX, maxY, maxZ);
 
                 switch (side) {
-                    case WEST:
-                        renderer.renderFaceXNeg(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
-                        break;
-                    case EAST:
-                        renderer.renderFaceXPos(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
-                        break;
-                    case NORTH:
-                        renderer.renderFaceZNeg(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
-                        break;
-                    case SOUTH:
-                        renderer.renderFaceZPos(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
-                        break;
-                    case DOWN:
-                        renderer.renderFaceYNeg(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
-                        break;
-                    case UP:
-                        renderer.renderFaceYPos(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
-                        break;
-                    default:
-                        break;
+                    case WEST -> renderer.renderFaceXNeg(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
+                    case EAST -> renderer.renderFaceXPos(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
+                    case NORTH -> renderer.renderFaceZNeg(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
+                    case SOUTH -> renderer.renderFaceZPos(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
+                    case DOWN -> renderer.renderFaceYNeg(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
+                    case UP -> renderer.renderFaceYPos(imb, x, y, z, ExtraBlockTextures.GlassFrame.getIcon());
+                    default -> {}
                 }
             }
         }

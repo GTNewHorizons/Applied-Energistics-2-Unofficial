@@ -109,19 +109,13 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
     }
 
     protected int calculateItemsToSend() {
-        switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
-            default:
-            case 0:
-                return 1;
-            case 1:
-                return 8;
-            case 2:
-                return 32;
-            case 3:
-                return 64;
-            case 4:
-                return 96;
-        }
+        return switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
+            default -> 1;
+            case 1 -> 8;
+            case 2 -> 32;
+            case 3 -> 64;
+            case 4 -> 96;
+        };
     }
 
     /**

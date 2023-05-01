@@ -69,25 +69,26 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
         this.component = whichCell;
 
         switch (this.component) {
-            case Cell1kPart:
+            case Cell1kPart -> {
                 this.idleDrain = 0.5;
                 this.perType = 8;
-                break;
-            case Cell4kPart:
+            }
+            case Cell4kPart -> {
                 this.idleDrain = 1.0;
                 this.perType = 32;
-                break;
-            case Cell16kPart:
+            }
+            case Cell16kPart -> {
                 this.idleDrain = 1.5;
                 this.perType = 128;
-                break;
-            case Cell64kPart:
+            }
+            case Cell64kPart -> {
                 this.idleDrain = 2.0;
                 this.perType = 512;
-                break;
-            default:
+            }
+            default -> {
                 this.idleDrain = 0.0;
                 this.perType = 8;
+            }
         }
     }
 

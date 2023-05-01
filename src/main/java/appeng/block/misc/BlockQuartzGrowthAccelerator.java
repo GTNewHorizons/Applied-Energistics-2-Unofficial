@@ -74,38 +74,38 @@ public class BlockQuartzGrowthAccelerator extends AEBaseTileBlock implements IOr
             double dz = 0;
             double dx = 0;
             switch (r.nextInt(4)) {
-                case 0:
+                case 0 -> {
                     dx = 0.6;
                     dz = d1;
                     if (!w.getBlock(x + west.offsetX, y + west.offsetY, z + west.offsetZ)
                             .isAir(w, x + west.offsetX, y + west.offsetY, z + west.offsetZ)) {
                         return;
                     }
-                    break;
-                case 1:
+                }
+                case 1 -> {
                     dx = d1;
                     dz += 0.6;
                     if (!w.getBlock(x + forward.offsetX, y + forward.offsetY, z + forward.offsetZ)
                             .isAir(w, x + forward.offsetX, y + forward.offsetY, z + forward.offsetZ)) {
                         return;
                     }
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     dx = d1;
                     dz = -0.6;
                     if (!w.getBlock(x - forward.offsetX, y - forward.offsetY, z - forward.offsetZ)
                             .isAir(w, x - forward.offsetX, y - forward.offsetY, z - forward.offsetZ)) {
                         return;
                     }
-                    break;
-                case 3:
+                }
+                case 3 -> {
                     dx = -0.6;
                     dz = d1;
                     if (!w.getBlock(x - west.offsetX, y - west.offsetY, z - west.offsetZ)
                             .isAir(w, x - west.offsetX, y - west.offsetY, z - west.offsetZ)) {
                         return;
                     }
-                    break;
+                }
             }
 
             rx += dx * west.offsetX;

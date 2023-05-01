@@ -352,16 +352,16 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
             }
 
             switch (dir) {
-                case WEST:
-                case EAST:
+                case WEST, EAST -> {
                     return this.getSize(b.minZ, b.maxZ, b.minY, b.maxY);
-                case DOWN:
-                case NORTH:
+                }
+                case DOWN, NORTH -> {
                     return this.getSize(b.minX, b.maxX, b.minZ, b.maxZ);
-                case SOUTH:
-                case UP:
+                }
+                case SOUTH, UP -> {
                     return this.getSize(b.minX, b.maxX, b.minY, b.maxY);
-                default:
+                }
+                default -> {}
             }
         }
 

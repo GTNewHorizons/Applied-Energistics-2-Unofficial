@@ -53,25 +53,16 @@ public class BlockCraftingUnit extends AEBaseTileBlock {
 
     @Override
     public IIcon getIcon(final int direction, final int metadata) {
-        switch (metadata) {
-            default:
-            case 0:
-                return super.getIcon(0, 0);
-            case 1:
-                return ExtraBlockTextures.BlockCraftingAccelerator.getIcon();
-            case FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingUnitFit.getIcon();
-            case 1 | FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingAcceleratorFit.getIcon();
-            case 2:
-                return ExtraBlockTextures.BlockCraftingAccelerator4x.getIcon();
-            case 2 | FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingAccelerator4xFit.getIcon();
-            case 3:
-                return ExtraBlockTextures.BlockCraftingAccelerator16x.getIcon();
-            case 3 | FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingAccelerator16xFit.getIcon();
-        }
+        return switch (metadata) {
+            default -> super.getIcon(0, 0);
+            case 1 -> ExtraBlockTextures.BlockCraftingAccelerator.getIcon();
+            case FLAG_FORMED -> ExtraBlockTextures.BlockCraftingUnitFit.getIcon();
+            case 1 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingAcceleratorFit.getIcon();
+            case 2 -> ExtraBlockTextures.BlockCraftingAccelerator4x.getIcon();
+            case 2 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingAccelerator4xFit.getIcon();
+            case 3 -> ExtraBlockTextures.BlockCraftingAccelerator16x.getIcon();
+            case 3 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingAccelerator16xFit.getIcon();
+        };
     }
 
     @Override

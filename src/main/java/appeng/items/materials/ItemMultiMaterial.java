@@ -124,30 +124,19 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 
     @Override
     public Upgrades getType(final ItemStack itemstack) {
-        switch (this.getTypeByStack(itemstack)) {
-            case CardOreFilter:
-                return Upgrades.ORE_FILTER;
-            case CardPatternCapacity:
-                return Upgrades.PATTERN_CAPACITY;
-            case CardCapacity:
-                return Upgrades.CAPACITY;
-            case CardFuzzy:
-                return Upgrades.FUZZY;
-            case CardRedstone:
-                return Upgrades.REDSTONE;
-            case CardSpeed:
-                return Upgrades.SPEED;
-            case CardSuperSpeed:
-                return Upgrades.SUPERSPEED;
-            case CardInverter:
-                return Upgrades.INVERTER;
-            case CardCrafting:
-                return Upgrades.CRAFTING;
-            case CardPatternRefiller:
-                return Upgrades.PATTERN_REFILLER;
-            default:
-                return null;
-        }
+        return switch (this.getTypeByStack(itemstack)) {
+            case CardOreFilter -> Upgrades.ORE_FILTER;
+            case CardPatternCapacity -> Upgrades.PATTERN_CAPACITY;
+            case CardCapacity -> Upgrades.CAPACITY;
+            case CardFuzzy -> Upgrades.FUZZY;
+            case CardRedstone -> Upgrades.REDSTONE;
+            case CardSpeed -> Upgrades.SPEED;
+            case CardSuperSpeed -> Upgrades.SUPERSPEED;
+            case CardInverter -> Upgrades.INVERTER;
+            case CardCrafting -> Upgrades.CRAFTING;
+            case CardPatternRefiller -> Upgrades.PATTERN_REFILLER;
+            default -> null;
+        };
     }
 
     public IStackSrc createMaterial(final MaterialType mat) {
@@ -337,15 +326,19 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
     @Override
     public int getBytes(final ItemStack is) {
         switch (this.getTypeByStack(is)) {
-            case Cell1kPart:
+            case Cell1kPart -> {
                 return KILO_SCALAR;
-            case Cell4kPart:
+            }
+            case Cell4kPart -> {
                 return KILO_SCALAR * 4;
-            case Cell16kPart:
+            }
+            case Cell16kPart -> {
                 return KILO_SCALAR * 16;
-            case Cell64kPart:
+            }
+            case Cell64kPart -> {
                 return KILO_SCALAR * 64;
-            default:
+            }
+            default -> {}
         }
         return 0;
     }
@@ -353,12 +346,10 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
     @Override
     public boolean isStorageComponent(final ItemStack is) {
         switch (this.getTypeByStack(is)) {
-            case Cell1kPart:
-            case Cell4kPart:
-            case Cell16kPart:
-            case Cell64kPart:
+            case Cell1kPart, Cell4kPart, Cell16kPart, Cell64kPart -> {
                 return true;
-            default:
+            }
+            default -> {}
         }
         return false;
     }

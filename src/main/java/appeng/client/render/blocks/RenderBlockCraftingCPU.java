@@ -300,45 +300,44 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
                 final double width = 3.0 / 16.0;
 
                 switch (a) {
-                    case DOWN:
+                    case DOWN -> {
                         renderer.renderMinY = 0;
                         renderer.renderMaxY = width;
-                        break;
-                    case EAST:
+                    }
+                    case EAST -> {
                         renderer.renderMaxX = 1;
                         renderer.renderMinX = 1.0 - width;
                         renderer.uvRotateTop = 1;
                         renderer.uvRotateBottom = 1;
                         renderer.uvRotateWest = 1;
                         renderer.uvRotateEast = 1;
-                        break;
-                    case NORTH:
+                    }
+                    case NORTH -> {
                         renderer.renderMinZ = 0;
                         renderer.renderMaxZ = width;
                         renderer.uvRotateWest = 1;
                         renderer.uvRotateNorth = 1;
                         renderer.uvRotateSouth = 1;
-                        break;
-                    case SOUTH:
+                    }
+                    case SOUTH -> {
                         renderer.renderMaxZ = 1;
                         renderer.renderMinZ = 1.0 - width;
                         renderer.uvRotateNorth = 1;
                         renderer.uvRotateSouth = 1;
-                        break;
-                    case UP:
+                    }
+                    case UP -> {
                         renderer.renderMaxY = 1;
                         renderer.renderMinY = 1.0 - width;
-                        break;
-                    case WEST:
+                    }
+                    case WEST -> {
                         renderer.renderMinX = 0;
                         renderer.renderMaxX = width;
                         renderer.uvRotateTop = 1;
                         renderer.uvRotateBottom = 1;
                         renderer.uvRotateWest = 1;
                         renderer.uvRotateEast = 1;
-                        break;
-                    case UNKNOWN:
-                    default:
+                    }
+                    default -> {}
                 }
 
                 i.renderBlockCurrentBounds(x, y, z, renderer);

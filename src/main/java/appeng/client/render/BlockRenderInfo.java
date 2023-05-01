@@ -77,38 +77,48 @@ public class BlockRenderInfo {
     public FlippableIcon getTexture(final ForgeDirection dir) {
         if (this.useTmp) {
             switch (dir) {
-                case DOWN:
+                case DOWN -> {
                     return this.tmpBottomIcon;
-                case UP:
+                }
+                case UP -> {
                     return this.tmpTopIcon;
-                case NORTH:
+                }
+                case NORTH -> {
                     return this.tmpNorthIcon;
-                case SOUTH:
+                }
+                case SOUTH -> {
                     return this.tmpSouthIcon;
-                case EAST:
+                }
+                case EAST -> {
                     return this.tmpEastIcon;
-                case WEST:
+                }
+                case WEST -> {
                     return this.tmpWestIcon;
-                default:
-                    break;
+                }
+                default -> {}
             }
         }
 
         switch (dir) {
-            case DOWN:
+            case DOWN -> {
                 return this.bottomIcon;
-            case UP:
+            }
+            case UP -> {
                 return this.topIcon;
-            case NORTH:
+            }
+            case NORTH -> {
                 return this.northIcon;
-            case SOUTH:
+            }
+            case SOUTH -> {
                 return this.southIcon;
-            case EAST:
+            }
+            case EAST -> {
                 return this.eastIcon;
-            case WEST:
+            }
+            case WEST -> {
                 return this.westIcon;
-            default:
-                break;
+            }
+            default -> {}
         }
 
         return this.topIcon;

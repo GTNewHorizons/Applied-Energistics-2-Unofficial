@@ -121,18 +121,10 @@ public class TileSpatialPylon extends AENetworkTile implements IAEMultiBlock {
             }
 
             switch (this.cluster.getCurrentAxis()) {
-                case X:
-                    this.displayBits |= DISPLAY_X;
-                    break;
-                case Y:
-                    this.displayBits |= DISPLAY_Y;
-                    break;
-                case Z:
-                    this.displayBits |= DISPLAY_Z;
-                    break;
-                default:
-                    this.displayBits = 0;
-                    break;
+                case X -> this.displayBits |= DISPLAY_X;
+                case Y -> this.displayBits |= DISPLAY_Y;
+                case Z -> this.displayBits |= DISPLAY_Z;
+                default -> this.displayBits = 0;
             }
 
             try {

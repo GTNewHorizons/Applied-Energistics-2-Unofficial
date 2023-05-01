@@ -9,25 +9,16 @@ public class BlockAdvancedCraftingUnit extends BlockCraftingUnit {
 
     @Override
     public IIcon getIcon(final int direction, final int metadata) {
-        switch (metadata) {
-            default:
-            case 0:
-                return ExtraBlockTextures.BlockCraftingAccelerator64x.getIcon();
-            case FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingAccelerator64xFit.getIcon();
-            case 1:
-                return ExtraBlockTextures.BlockCraftingAccelerator256x.getIcon();
-            case 1 | FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingAccelerator256xFit.getIcon();
-            case 2:
-                return ExtraBlockTextures.BlockCraftingAccelerator1024x.getIcon();
-            case 2 | FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingAccelerator1024xFit.getIcon();
-            case 3:
-                return ExtraBlockTextures.BlockCraftingAccelerator4096x.getIcon();
-            case 3 | FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingAccelerator4096xFit.getIcon();
-        }
+        return switch (metadata) {
+            default -> ExtraBlockTextures.BlockCraftingAccelerator64x.getIcon();
+            case FLAG_FORMED -> ExtraBlockTextures.BlockCraftingAccelerator64xFit.getIcon();
+            case 1 -> ExtraBlockTextures.BlockCraftingAccelerator256x.getIcon();
+            case 1 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingAccelerator256xFit.getIcon();
+            case 2 -> ExtraBlockTextures.BlockCraftingAccelerator1024x.getIcon();
+            case 2 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingAccelerator1024xFit.getIcon();
+            case 3 -> ExtraBlockTextures.BlockCraftingAccelerator4096x.getIcon();
+            case 3 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingAccelerator4096xFit.getIcon();
+        };
     }
 
     @Override

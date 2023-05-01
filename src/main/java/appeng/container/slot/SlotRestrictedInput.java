@@ -106,7 +106,7 @@ public class SlotRestrictedInput extends AppEngSlot {
         final IItems items = definitions.items();
 
         switch (this.which) {
-            case ENCODED_CRAFTING_PATTERN:
+            case ENCODED_CRAFTING_PATTERN -> {
                 if (i.getItem() instanceof ICraftingPatternItem b) {
                     final ICraftingPatternDetails de = b.getPatternForItem(i, this.p.player.worldObj);
                     if (de != null) {
@@ -114,9 +114,8 @@ public class SlotRestrictedInput extends AppEngSlot {
                     }
                 }
                 return false;
-            case VALID_ENCODED_PATTERN_W_OUTPUT:
-            case ENCODED_PATTERN_W_OUTPUT:
-            case ENCODED_PATTERN: {
+            }
+            case VALID_ENCODED_PATTERN_W_OUTPUT, ENCODED_PATTERN_W_OUTPUT, ENCODED_PATTERN -> {
                 if (i.getItem() instanceof ICraftingPatternItem) {
                     return true;
                 }
@@ -125,78 +124,85 @@ public class SlotRestrictedInput extends AppEngSlot {
                 // i.getItem()).getPatternForItem( i ) : null;
                 return false; // pattern != null;
             }
-            case BLANK_PATTERN:
+            case BLANK_PATTERN -> {
                 return materials.blankPattern().isSameAs(i);
-
-            case PATTERN:
+            }
+            case PATTERN -> {
                 if (i.getItem() instanceof ICraftingPatternItem) {
                     return true;
                 }
-
                 return materials.blankPattern().isSameAs(i);
-
-            case INSCRIBER_PLATE:
+            }
+            case INSCRIBER_PLATE -> {
                 if (materials.namePress().isSameAs(i)) {
                     return true;
                 }
-
                 for (final ItemStack optional : AEApi.instance().registries().inscriber().getOptionals()) {
                     if (Platform.isSameItemPrecise(optional, i)) {
                         return true;
                     }
                 }
-
                 return false;
-
-            case INSCRIBER_INPUT:
+            }
+            case INSCRIBER_INPUT -> {
                 return true; /*
                               * for (ItemStack is : Inscribe.inputs) if ( Platform.isSameItemPrecise( is, i ) ) return
                               * true; return false;
                               */
-
-            case METAL_INGOTS:
+            }
+            case METAL_INGOTS -> {
                 return isMetalIngot(i);
-
-            case VIEW_CELL:
+            }
+            case VIEW_CELL -> {
                 return items.viewCell().isSameAs(i);
-            case ORE:
-                return appeng.api.AEApi.instance().registries().grinder().getRecipeForInput(i) != null;
-            case FUEL:
+            }
+            case ORE -> {
+                return AEApi.instance().registries().grinder().getRecipeForInput(i) != null;
+            }
+            case FUEL -> {
                 return TileEntityFurnace.getItemBurnTime(i) > 0;
-            case POWERED_TOOL:
+            }
+            case POWERED_TOOL -> {
                 return Platform.isChargeable(i);
-            case QE_SINGULARITY:
+            }
+            case QE_SINGULARITY -> {
                 return materials.qESingularity().isSameAs(i);
-
-            case RANGE_BOOSTER:
+            }
+            case RANGE_BOOSTER -> {
                 return materials.wirelessBooster().isSameAs(i);
-
-            case SPATIAL_STORAGE_CELLS:
+            }
+            case SPATIAL_STORAGE_CELLS -> {
                 return i.getItem() instanceof ISpatialStorageCell
                         && ((ISpatialStorageCell) i.getItem()).isSpatialStorage(i);
-            case STORAGE_CELLS:
+            }
+            case STORAGE_CELLS -> {
                 return AEApi.instance().registries().cell().isCellHandled(i);
-            case WORKBENCH_CELL:
+            }
+            case WORKBENCH_CELL -> {
                 return i.getItem() instanceof ICellWorkbenchItem && ((ICellWorkbenchItem) i.getItem()).isEditable(i);
-            case STORAGE_COMPONENT:
+            }
+            case STORAGE_COMPONENT -> {
                 return i.getItem() instanceof IStorageComponent
                         && ((IStorageComponent) i.getItem()).isStorageComponent(i);
-            case TRASH:
+            }
+            case TRASH -> {
                 if (AEApi.instance().registries().cell().isCellHandled(i)) {
                     return false;
                 }
-
                 return !(i.getItem() instanceof IStorageComponent
                         && ((IStorageComponent) i.getItem()).isStorageComponent(i));
-            case ENCODABLE_ITEM:
+            }
+            case ENCODABLE_ITEM -> {
                 return i.getItem() instanceof INetworkEncodable
                         || AEApi.instance().registries().wireless().isWirelessTerminal(i);
-            case BIOMETRIC_CARD:
+            }
+            case BIOMETRIC_CARD -> {
                 return i.getItem() instanceof IBiometricCard;
-            case UPGRADES:
+            }
+            case UPGRADES -> {
                 return i.getItem() instanceof IUpgradeModule && ((IUpgradeModule) i.getItem()).getType(i) != null;
-            default:
-                break;
+            }
+            default -> {}
         }
 
         return false;

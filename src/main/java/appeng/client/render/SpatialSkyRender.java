@@ -65,23 +65,12 @@ public class SpatialSkyRender extends IRenderHandler {
             GL11.glPushMatrix();
 
             switch (i) {
-                case 1:
-                    GL11.glRotatef(90.0F, 1.0F, 0.0F, 0.0F);
-                    break;
-                case 2:
-                    GL11.glRotatef(-90.0F, 1.0F, 0.0F, 0.0F);
-                    break;
-                case 3:
-                    GL11.glRotatef(180.0F, 1.0F, 0.0F, 0.0F);
-                    break;
-                case 4:
-                    GL11.glRotatef(90.0F, 0.0F, 0.0F, 1.0F);
-                    break;
-                case 5:
-                    GL11.glRotatef(-90.0F, 0.0F, 0.0F, 1.0F);
-                    break;
-                default:
-                    break;
+                case 1 -> GL11.glRotatef(90.0F, 1.0F, 0.0F, 0.0F);
+                case 2 -> GL11.glRotatef(-90.0F, 1.0F, 0.0F, 0.0F);
+                case 3 -> GL11.glRotatef(180.0F, 1.0F, 0.0F, 0.0F);
+                case 4 -> GL11.glRotatef(90.0F, 0.0F, 0.0F, 1.0F);
+                case 5 -> GL11.glRotatef(-90.0F, 0.0F, 0.0F, 1.0F);
+                default -> {}
             }
 
             tessellator.startDrawingQuads();

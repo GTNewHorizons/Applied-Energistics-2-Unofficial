@@ -46,42 +46,41 @@ public class BusCollisionHelper implements IPartCollisionHelper {
         this.isVisual = visual;
 
         switch (s) {
-            case DOWN:
+            case DOWN -> {
                 this.x = ForgeDirection.EAST;
                 this.y = ForgeDirection.NORTH;
                 this.z = ForgeDirection.DOWN;
-                break;
-            case UP:
+            }
+            case UP -> {
                 this.x = ForgeDirection.EAST;
                 this.y = ForgeDirection.SOUTH;
                 this.z = ForgeDirection.UP;
-                break;
-            case EAST:
+            }
+            case EAST -> {
                 this.x = ForgeDirection.SOUTH;
                 this.y = ForgeDirection.UP;
                 this.z = ForgeDirection.EAST;
-                break;
-            case WEST:
+            }
+            case WEST -> {
                 this.x = ForgeDirection.NORTH;
                 this.y = ForgeDirection.UP;
                 this.z = ForgeDirection.WEST;
-                break;
-            case NORTH:
+            }
+            case NORTH -> {
                 this.x = ForgeDirection.WEST;
                 this.y = ForgeDirection.UP;
                 this.z = ForgeDirection.NORTH;
-                break;
-            case SOUTH:
+            }
+            case SOUTH -> {
                 this.x = ForgeDirection.EAST;
                 this.y = ForgeDirection.UP;
                 this.z = ForgeDirection.SOUTH;
-                break;
-            case UNKNOWN:
-            default:
+            }
+            default -> {
                 this.x = ForgeDirection.EAST;
                 this.y = ForgeDirection.UP;
                 this.z = ForgeDirection.SOUTH;
-                break;
+            }
         }
     }
 

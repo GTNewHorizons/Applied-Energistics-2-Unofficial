@@ -60,24 +60,21 @@ public final class IntegrationNode {
 
             try {
                 switch (stage) {
-                    case PRE_INIT:
+                    case PRE_INIT -> {
                         final ModAPIManager apiManager = ModAPIManager.INSTANCE;
                         boolean enabled = this.modID == null || Loader.isModLoaded(this.modID)
                                 || apiManager.hasAPI(this.modID);
-
                         AEConfig.instance.addCustomCategoryComment(
                                 "ModIntegration",
                                 "Valid Values are 'AUTO', 'ON', or 'OFF' - defaults to 'AUTO' ; Suggested that you leave this alone unless your experiencing an issue, or wish to disable the integration for a reason.");
                         final String mode = AEConfig.instance
                                 .get("ModIntegration", this.displayName.replace(" ", ""), "AUTO").getString();
-
                         if (mode.toUpperCase().equals("ON")) {
                             enabled = true;
                         }
                         if (mode.toUpperCase().equals("OFF")) {
                             enabled = false;
                         }
-
                         if (enabled) {
                             this.classValue = this.getClass().getClassLoader().loadClass(this.name);
                             this.mod = (IIntegrationModule) this.classValue.getConstructor().newInstance();
@@ -86,23 +83,17 @@ public final class IntegrationNode {
                         } else {
                             throw new ModNotInstalled(this.modID);
                         }
-
                         this.setState(IntegrationStage.INIT);
-
-                        break;
-                    case INIT:
+                    }
+                    case INIT -> {
                         this.mod.init();
                         this.setState(IntegrationStage.POST_INIT);
-
-                        break;
-                    case POST_INIT:
+                    }
+                    case POST_INIT -> {
                         this.mod.postInit();
                         this.setState(IntegrationStage.READY);
-
-                        break;
-                    case FAILED:
-                    default:
-                        break;
+                    }
+                    default -> {}
                 }
             } catch (final Throwable t) {
                 this.failedStage = stage;

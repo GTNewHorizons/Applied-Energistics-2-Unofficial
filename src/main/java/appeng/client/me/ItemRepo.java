@@ -132,20 +132,12 @@ public class ItemRepo {
         if (this.innerSearch.length() == 0) {
             searchWhat = SearchMode.ITEM;
         } else {
-            switch (this.innerSearch.substring(0, 1)) {
-                case "#":
-                    searchWhat = SearchMode.TOOLTIPS;
-                    break;
-                case "@":
-                    searchWhat = SearchMode.MOD;
-                    break;
-                case "$":
-                    searchWhat = SearchMode.ORE;
-                    break;
-                default:
-                    searchWhat = SearchMode.ITEM;
-                    break;
-            }
+            searchWhat = switch (this.innerSearch.substring(0, 1)) {
+                case "#" -> SearchMode.TOOLTIPS;
+                case "@" -> SearchMode.MOD;
+                case "$" -> SearchMode.ORE;
+                default -> SearchMode.ITEM;
+            };
             if (searchWhat != SearchMode.ITEM) this.innerSearch = this.innerSearch.substring(1);
         }
         Pattern m = null;
@@ -186,21 +178,15 @@ public class ItemRepo {
             }
             String dspName = null;
             switch (searchWhat) {
-                case MOD:
-                    dspName = Platform.getModId(is);
-                    break;
-                case ORE:
+                case MOD -> dspName = Platform.getModId(is);
+                case ORE -> {
                     OreReference ore = OreHelper.INSTANCE.isOre(is.getItemStack());
                     if (ore != null) {
                         dspName = String.join(" ", ore.getEquivalents());
                     }
-                    break;
-                case TOOLTIPS:
-                    dspName = String.join(" ", ((List<String>) Platform.getTooltip(is)));
-                    break;
-                default:
-                    dspName = Platform.getItemDisplayName(is);
-                    break;
+                }
+                case TOOLTIPS -> dspName = String.join(" ", ((List<String>) Platform.getTooltip(is)));
+                default -> dspName = Platform.getItemDisplayName(is);
             }
 
             if (dspName == null) continue;

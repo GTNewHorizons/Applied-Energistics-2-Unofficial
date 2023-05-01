@@ -197,13 +197,9 @@ public class GridStorageCache implements IStorageGrid {
     private void postChangesToNetwork(final StorageChannel chan, final int upOrDown, final IItemList availableItems,
             final BaseActionSource src) {
         switch (chan) {
-            case FLUIDS:
-                this.fluidMonitor.postChange(upOrDown > 0, availableItems, src);
-                break;
-            case ITEMS:
-                this.itemMonitor.postChange(upOrDown > 0, availableItems, src);
-                break;
-            default:
+            case FLUIDS -> this.fluidMonitor.postChange(upOrDown > 0, availableItems, src);
+            case ITEMS -> this.itemMonitor.postChange(upOrDown > 0, availableItems, src);
+            default -> {}
         }
     }
 
@@ -218,23 +214,23 @@ public class GridStorageCache implements IStorageGrid {
         final SecurityCache security = this.getGrid().getCache(ISecurityGrid.class);
 
         switch (chan) {
-            case FLUIDS:
+            case FLUIDS -> {
                 this.myFluidNetwork = new NetworkInventoryHandler<>(StorageChannel.FLUIDS, security);
                 for (final ICellProvider cc : this.activeCellProviders) {
                     for (final IMEInventoryHandler<IAEFluidStack> h : cc.getCellArray(chan)) {
                         this.myFluidNetwork.addNewStorage(h);
                     }
                 }
-                break;
-            case ITEMS:
+            }
+            case ITEMS -> {
                 this.myItemNetwork = new NetworkInventoryHandler<>(StorageChannel.ITEMS, security);
                 for (final ICellProvider cc : this.activeCellProviders) {
                     for (final IMEInventoryHandler<IAEItemStack> h : cc.getCellArray(chan)) {
                         this.myItemNetwork.addNewStorage(h);
                     }
                 }
-                break;
-            default:
+            }
+            default -> {}
         }
     }
 

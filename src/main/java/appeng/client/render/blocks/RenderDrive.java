@@ -69,108 +69,60 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                 int spin = 0;
 
                 switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
-                    case 1:
+                    case 1 -> {
                         switch (up) {
-                            case UP:
-                                spin = 3;
-                                break;
-                            case DOWN:
-                                spin = 1;
-                                break;
-                            case NORTH:
-                                spin = 0;
-                                break;
-                            case SOUTH:
-                                spin = 2;
-                                break;
-                            default:
+                            case UP -> spin = 3;
+                            case DOWN -> spin = 1;
+                            case NORTH -> spin = 0;
+                            case SOUTH -> spin = 2;
+                            default -> {}
                         }
-                        break;
-                    case -1:
+                    }
+                    case -1 -> {
                         switch (up) {
-                            case UP:
-                                spin = 1;
-                                break;
-                            case DOWN:
-                                spin = 3;
-                                break;
-                            case NORTH:
-                                spin = 0;
-                                break;
-                            case SOUTH:
-                                spin = 2;
-                                break;
-                            default:
+                            case UP -> spin = 1;
+                            case DOWN -> spin = 3;
+                            case NORTH -> spin = 0;
+                            case SOUTH -> spin = 2;
+                            default -> {}
                         }
-                        break;
-                    case -2:
+                    }
+                    case -2 -> {
                         switch (up) {
-                            case EAST:
-                                spin = 1;
-                                break;
-                            case WEST:
-                                spin = 3;
-                                break;
-                            case NORTH:
-                                spin = 2;
-                                break;
-                            case SOUTH:
-                                spin = 0;
-                                break;
-                            default:
+                            case EAST -> spin = 1;
+                            case WEST -> spin = 3;
+                            case NORTH -> spin = 2;
+                            case SOUTH -> spin = 0;
+                            default -> {}
                         }
-                        break;
-                    case 2:
+                    }
+                    case 2 -> {
                         switch (up) {
-                            case EAST:
-                                spin = 1;
-                                break;
-                            case WEST:
-                                spin = 3;
-                                break;
-                            case NORTH:
-                                spin = 0;
-                                break;
-                            case SOUTH:
-                                spin = 0;
-                                break;
-                            default:
+                            case EAST -> spin = 1;
+                            case WEST -> spin = 3;
+                            case NORTH -> spin = 0;
+                            case SOUTH -> spin = 0;
+                            default -> {}
                         }
-                        break;
-                    case 3:
+                    }
+                    case 3 -> {
                         switch (up) {
-                            case UP:
-                                spin = 2;
-                                break;
-                            case DOWN:
-                                spin = 0;
-                                break;
-                            case EAST:
-                                spin = 3;
-                                break;
-                            case WEST:
-                                spin = 1;
-                                break;
-                            default:
+                            case UP -> spin = 2;
+                            case DOWN -> spin = 0;
+                            case EAST -> spin = 3;
+                            case WEST -> spin = 1;
+                            default -> {}
                         }
-                        break;
-                    case -3:
+                    }
+                    case -3 -> {
                         switch (up) {
-                            case UP:
-                                spin = 2;
-                                break;
-                            case DOWN:
-                                spin = 0;
-                                break;
-                            case EAST:
-                                spin = 1;
-                                break;
-                            case WEST:
-                                spin = 3;
-                                break;
-                            default:
+                            case UP -> spin = 2;
+                            case DOWN -> spin = 0;
+                            case EAST -> spin = 1;
+                            case WEST -> spin = 3;
+                            default -> {}
                         }
-                        break;
+                    }
                 }
 
                 double u1 = ico.getInterpolatedU((spin % 4 < 2) ? 1 : 6);
@@ -193,7 +145,7 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                 tess.setBrightness(b);
                 tess.setColorOpaque_I(0xffffff);
                 switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
-                    case 1:
+                    case 1 -> {
                         tess.addVertexWithUV(
                                 x + renderer.renderMaxX,
                                 y + renderer.renderMaxY,
@@ -218,8 +170,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                 z + renderer.renderMinZ,
                                 u4,
                                 v4);
-                        break;
-                    case -1:
+                    }
+                    case -1 -> {
                         tess.addVertexWithUV(
                                 x + renderer.renderMaxX,
                                 y + renderer.renderMinY,
@@ -244,8 +196,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                 z + renderer.renderMinZ,
                                 u4,
                                 v4);
-                        break;
-                    case -2:
+                    }
+                    case -2 -> {
                         tess.addVertexWithUV(
                                 x + renderer.renderMaxX,
                                 y + renderer.renderMaxY,
@@ -270,8 +222,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                 z + renderer.renderMinZ,
                                 u4,
                                 v4);
-                        break;
-                    case 2:
+                    }
+                    case 2 -> {
                         tess.addVertexWithUV(
                                 x + renderer.renderMinX,
                                 y + renderer.renderMaxY,
@@ -296,8 +248,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                 z + renderer.renderMinZ,
                                 u4,
                                 v4);
-                        break;
-                    case 3:
+                    }
+                    case 3 -> {
                         tess.addVertexWithUV(
                                 x + renderer.renderMaxX,
                                 y + renderer.renderMinY,
@@ -322,8 +274,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                 z + renderer.renderMaxZ,
                                 u4,
                                 v4);
-                        break;
-                    case -3:
+                    }
+                    case -3 -> {
                         tess.addVertexWithUV(
                                 x + renderer.renderMinX,
                                 y + renderer.renderMinY,
@@ -348,7 +300,7 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                 z + renderer.renderMaxZ,
                                 u4,
                                 v4);
-                        break;
+                    }
                 }
 
                 if ((forward == ForgeDirection.UP && up == ForgeDirection.SOUTH) || forward == ForgeDirection.DOWN) {
@@ -386,7 +338,7 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                     }
 
                     switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
-                        case 1:
+                        case 1 -> {
                             tess.addVertexWithUV(
                                     x + renderer.renderMaxX,
                                     y + renderer.renderMaxY,
@@ -411,8 +363,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                     z + renderer.renderMinZ,
                                     u4,
                                     v4);
-                            break;
-                        case -1:
+                        }
+                        case -1 -> {
                             tess.addVertexWithUV(
                                     x + renderer.renderMaxX,
                                     y + renderer.renderMinY,
@@ -437,8 +389,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                     z + renderer.renderMinZ,
                                     u4,
                                     v4);
-                            break;
-                        case -2:
+                        }
+                        case -2 -> {
                             tess.addVertexWithUV(
                                     x + renderer.renderMaxX,
                                     y + renderer.renderMaxY,
@@ -463,8 +415,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                     z + renderer.renderMinZ,
                                     u4,
                                     v4);
-                            break;
-                        case 2:
+                        }
+                        case 2 -> {
                             tess.addVertexWithUV(
                                     x + renderer.renderMinX,
                                     y + renderer.renderMaxY,
@@ -489,8 +441,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                     z + renderer.renderMinZ,
                                     u4,
                                     v4);
-                            break;
-                        case 3:
+                        }
+                        case 3 -> {
                             tess.addVertexWithUV(
                                     x + renderer.renderMaxX,
                                     y + renderer.renderMinY,
@@ -515,8 +467,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                     z + renderer.renderMaxZ,
                                     u4,
                                     v4);
-                            break;
-                        case -3:
+                        }
+                        case -3 -> {
                             tess.addVertexWithUV(
                                     x + renderer.renderMinX,
                                     y + renderer.renderMinY,
@@ -541,7 +493,7 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                                     z + renderer.renderMaxZ,
                                     u4,
                                     v4);
-                            break;
+                        }
                     }
                 }
             }

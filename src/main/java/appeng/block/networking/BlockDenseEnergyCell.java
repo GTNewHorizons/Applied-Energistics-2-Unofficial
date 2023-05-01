@@ -28,25 +28,17 @@ public class BlockDenseEnergyCell extends BlockEnergyCell {
 
     @Override
     public IIcon getIcon(final int direction, final int metadata) {
-        switch (metadata) {
-            case 0:
-                return ExtraBlockTextures.MEDenseEnergyCell0.getIcon();
-            case 1:
-                return ExtraBlockTextures.MEDenseEnergyCell1.getIcon();
-            case 2:
-                return ExtraBlockTextures.MEDenseEnergyCell2.getIcon();
-            case 3:
-                return ExtraBlockTextures.MEDenseEnergyCell3.getIcon();
-            case 4:
-                return ExtraBlockTextures.MEDenseEnergyCell4.getIcon();
-            case 5:
-                return ExtraBlockTextures.MEDenseEnergyCell5.getIcon();
-            case 6:
-                return ExtraBlockTextures.MEDenseEnergyCell6.getIcon();
-            case 7:
-                return ExtraBlockTextures.MEDenseEnergyCell7.getIcon();
-        }
-        return super.getIcon(direction, metadata);
+        return switch (metadata) {
+            case 0 -> ExtraBlockTextures.MEDenseEnergyCell0.getIcon();
+            case 1 -> ExtraBlockTextures.MEDenseEnergyCell1.getIcon();
+            case 2 -> ExtraBlockTextures.MEDenseEnergyCell2.getIcon();
+            case 3 -> ExtraBlockTextures.MEDenseEnergyCell3.getIcon();
+            case 4 -> ExtraBlockTextures.MEDenseEnergyCell4.getIcon();
+            case 5 -> ExtraBlockTextures.MEDenseEnergyCell5.getIcon();
+            case 6 -> ExtraBlockTextures.MEDenseEnergyCell6.getIcon();
+            case 7 -> ExtraBlockTextures.MEDenseEnergyCell7.getIcon();
+            default -> super.getIcon(direction, metadata);
+        };
     }
 
     @Override

@@ -266,34 +266,30 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         GL11.glTranslated(d.offsetX * 0.77, d.offsetY * 0.77, d.offsetZ * 0.77);
 
         switch (d) {
-            case UP:
+            case UP -> {
                 GL11.glScalef(1.0f, -1.0f, 1.0f);
                 GL11.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
                 GL11.glRotatef(this.getSpin() * 90.0F, 0, 0, 1);
-                break;
-            case DOWN:
+            }
+            case DOWN -> {
                 GL11.glScalef(1.0f, -1.0f, 1.0f);
                 GL11.glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
                 GL11.glRotatef(this.getSpin() * -90.0F, 0, 0, 1);
-                break;
-            case EAST:
+            }
+            case EAST -> {
                 GL11.glScalef(-1.0f, -1.0f, -1.0f);
                 GL11.glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
-                break;
-            case WEST:
+            }
+            case WEST -> {
                 GL11.glScalef(-1.0f, -1.0f, -1.0f);
                 GL11.glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
-                break;
-            case NORTH:
-                GL11.glScalef(-1.0f, -1.0f, -1.0f);
-                break;
-            case SOUTH:
+            }
+            case NORTH -> GL11.glScalef(-1.0f, -1.0f, -1.0f);
+            case SOUTH -> {
                 GL11.glScalef(-1.0f, -1.0f, -1.0f);
                 GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
-                break;
-
-            default:
-                break;
+            }
+            default -> {}
         }
 
         try {

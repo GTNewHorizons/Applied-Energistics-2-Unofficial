@@ -36,39 +36,55 @@ public class PartUltraDenseCableSmart extends PartDenseCable {
     @Override
     protected IIcon getDenseTexture(final AEColor c) {
         switch (c) {
-            case Black:
+            case Black -> {
                 return CableBusTextures.MEUltraDense_Black.getIcon();
-            case Blue:
+            }
+            case Blue -> {
                 return CableBusTextures.MEUltraDense_Blue.getIcon();
-            case Brown:
+            }
+            case Brown -> {
                 return CableBusTextures.MEUltraDense_Brown.getIcon();
-            case Cyan:
+            }
+            case Cyan -> {
                 return CableBusTextures.MEUltraDense_Cyan.getIcon();
-            case Gray:
+            }
+            case Gray -> {
                 return CableBusTextures.MEUltraDense_Gray.getIcon();
-            case Green:
+            }
+            case Green -> {
                 return CableBusTextures.MEUltraDense_Green.getIcon();
-            case LightBlue:
+            }
+            case LightBlue -> {
                 return CableBusTextures.MEUltraDense_LightBlue.getIcon();
-            case LightGray:
+            }
+            case LightGray -> {
                 return CableBusTextures.MEUltraDense_LightGrey.getIcon();
-            case Lime:
+            }
+            case Lime -> {
                 return CableBusTextures.MEUltraDense_Lime.getIcon();
-            case Magenta:
+            }
+            case Magenta -> {
                 return CableBusTextures.MEUltraDense_Magenta.getIcon();
-            case Orange:
+            }
+            case Orange -> {
                 return CableBusTextures.MEUltraDense_Orange.getIcon();
-            case Pink:
+            }
+            case Pink -> {
                 return CableBusTextures.MEUltraDense_Pink.getIcon();
-            case Purple:
+            }
+            case Purple -> {
                 return CableBusTextures.MEUltraDense_Purple.getIcon();
-            case Red:
+            }
+            case Red -> {
                 return CableBusTextures.MEUltraDense_Red.getIcon();
-            case White:
+            }
+            case White -> {
                 return CableBusTextures.MEUltraDense_White.getIcon();
-            case Yellow:
+            }
+            case Yellow -> {
                 return CableBusTextures.MEUltraDense_Yellow.getIcon();
-            default:
+            }
+            default -> {}
         }
 
         return this.getItemStack().getIconIndex();

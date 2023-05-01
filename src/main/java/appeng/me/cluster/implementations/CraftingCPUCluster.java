@@ -902,12 +902,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     public void getListOfItem(final IItemList<IAEItemStack> list, final CraftingItemList whichList) {
         switch (whichList) {
-            case ACTIVE:
+            case ACTIVE -> {
                 for (final IAEItemStack ais : this.waitingFor) {
                     list.add(ais);
                 }
-                break;
-            case PENDING:
+            }
+            case PENDING -> {
                 for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
                     for (IAEItemStack ais : t.getKey().getCondensedOutputs()) {
                         ais = ais.copy();
@@ -915,18 +915,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         list.add(ais);
                     }
                 }
-                break;
-            case STORAGE:
+            }
+            case STORAGE -> this.inventory.getAvailableItems(list);
+            default -> {
                 this.inventory.getAvailableItems(list);
-                break;
-            default:
-            case ALL:
-                this.inventory.getAvailableItems(list);
-
                 for (final IAEItemStack ais : this.waitingFor) {
                     list.add(ais);
                 }
-
                 for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
                     for (IAEItemStack ais : t.getKey().getCondensedOutputs()) {
                         ais = ais.copy();
@@ -934,7 +929,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         list.add(ais);
                     }
                 }
-                break;
+            }
         }
     }
 
@@ -960,20 +955,15 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     public IAEItemStack getItemStack(final IAEItemStack what, final CraftingItemList storage2) {
         IAEItemStack is;
         switch (storage2) {
-            case STORAGE:
-                is = this.inventory.getItemList().findPrecise(what);
-                break;
-            case ACTIVE:
-                is = this.waitingFor.findPrecise(what);
-                break;
-            case PENDING:
+            case STORAGE -> is = this.inventory.getItemList().findPrecise(what);
+            case ACTIVE -> is = this.waitingFor.findPrecise(what);
+            case PENDING -> {
                 CraftingGridCache cache = null;
                 if (this.getGrid() != null) {
                     cache = this.getGrid().getCache(ICraftingGrid.class);
                 }
                 is = what.copy();
                 is.setStackSize(0);
-
                 for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
                     for (final IAEItemStack ais : t.getKey().getCondensedOutputs()) {
                         if (ais.equals(is)) {
@@ -990,11 +980,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         }
                     }
                 }
-
-                break;
-            default:
-            case ALL:
-                throw new IllegalStateException("Invalid Operation");
+            }
+            default -> throw new IllegalStateException("Invalid Operation");
         }
 
         if (is != null) {

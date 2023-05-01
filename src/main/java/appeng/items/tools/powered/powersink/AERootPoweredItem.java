@@ -106,7 +106,7 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
         final double maxStorage = this.getAEMaxPower(is);
 
         switch (op) {
-            case INJECT:
+            case INJECT -> {
                 currentStorage += adjustment;
                 if (currentStorage > maxStorage) {
                     final double diff = currentStorage - maxStorage;
@@ -115,7 +115,8 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
                 }
                 data.setDouble(POWER_NBT_KEY, currentStorage);
                 return 0;
-            case EXTRACT:
+            }
+            case EXTRACT -> {
                 if (currentStorage > adjustment) {
                     currentStorage -= adjustment;
                     data.setDouble(POWER_NBT_KEY, currentStorage);
@@ -123,8 +124,8 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
                 }
                 data.setDouble(POWER_NBT_KEY, 0);
                 return currentStorage;
-            default:
-                break;
+            }
+            default -> {}
         }
 
         return currentStorage;

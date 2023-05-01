@@ -272,15 +272,11 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
         } catch (Exception e) {
             throw new ExecutionException(e);
         }
-        switch (this.state) {
-            case RUNNING:
-                throw new TimeoutException();
-            case CANCELLED:
-                throw new InterruptedException();
-            case FINISHED:
-                return this;
-            default:
-                throw new IllegalStateException();
-        }
+        return switch (this.state) {
+            case RUNNING -> throw new TimeoutException();
+            case CANCELLED -> throw new InterruptedException();
+            case FINISHED -> this;
+            default -> throw new IllegalStateException();
+        };
     }
 }

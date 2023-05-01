@@ -504,23 +504,21 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
 
     public void postUpdate(final List<IAEItemStack> list, final byte ref) {
         switch (ref) {
-            case 0:
+            case 0 -> {
                 for (final IAEItemStack l : list) {
                     this.handleInput(this.storage, l);
                 }
-                break;
-
-            case 1:
+            }
+            case 1 -> {
                 for (final IAEItemStack l : list) {
                     this.handleInput(this.active, l);
                 }
-                break;
-
-            case 2:
+            }
+            case 2 -> {
                 for (final IAEItemStack l : list) {
                     this.handleInput(this.pending, l);
                 }
-                break;
+            }
         }
 
         for (final IAEItemStack l : list) {

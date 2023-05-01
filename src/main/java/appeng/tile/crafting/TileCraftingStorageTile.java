@@ -27,41 +27,41 @@ public class TileCraftingStorageTile extends TileCraftingTile {
         final int storage = ((TileCraftingTile) obj).getStorageBytes() / KILO_SCALAR;
 
         switch (storage) {
-            case 4:
+            case 4 -> {
                 for (final ItemStack stack : blocks.craftingStorage4k().maybeStack(1).asSet()) {
                     return stack;
                 }
-                break;
-            case 16:
+            }
+            case 16 -> {
                 for (final ItemStack stack : blocks.craftingStorage16k().maybeStack(1).asSet()) {
                     return stack;
                 }
-                break;
-            case 64:
+            }
+            case 64 -> {
                 for (final ItemStack stack : blocks.craftingStorage64k().maybeStack(1).asSet()) {
                     return stack;
                 }
-                break;
-            case 256:
+            }
+            case 256 -> {
                 for (final ItemStack stack : blocks.craftingStorage256k().maybeStack(1).asSet()) {
                     return stack;
                 }
-                break;
-            case 1024:
+            }
+            case 1024 -> {
                 for (final ItemStack stack : blocks.craftingStorage1024k().maybeStack(1).asSet()) {
                     return stack;
                 }
-                break;
-            case 4096:
+            }
+            case 4096 -> {
                 for (final ItemStack stack : blocks.craftingStorage4096k().maybeStack(1).asSet()) {
                     return stack;
                 }
-                break;
-            case 16384:
+            }
+            case 16384 -> {
                 for (final ItemStack stack : blocks.craftingStorage16384k().maybeStack(1).asSet()) {
                     return stack;
                 }
-                break;
+            }
         }
 
         return super.getItemFromTile(obj);
@@ -85,16 +85,11 @@ public class TileCraftingStorageTile extends TileCraftingTile {
         Block block = this.worldObj.getBlock(this.xCoord, this.yCoord, this.zCoord);
         int blockMultiplier = block instanceof BlockAdvancedCraftingStorage ? 256 : 1;
 
-        switch (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3) {
-            default:
-            case 0:
-                return KILO_SCALAR * blockMultiplier;
-            case 1:
-                return 4 * KILO_SCALAR * blockMultiplier;
-            case 2:
-                return 16 * KILO_SCALAR * blockMultiplier;
-            case 3:
-                return 64 * KILO_SCALAR * blockMultiplier;
-        }
+        return switch (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3) {
+            default -> KILO_SCALAR * blockMultiplier;
+            case 1 -> 4 * KILO_SCALAR * blockMultiplier;
+            case 2 -> 16 * KILO_SCALAR * blockMultiplier;
+            case 3 -> 64 * KILO_SCALAR * blockMultiplier;
+        };
     }
 }

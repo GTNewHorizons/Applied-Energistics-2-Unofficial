@@ -167,21 +167,13 @@ public class Calculator {
      * @return
      */
     private String calculate(String firstValue, String secondValue, char currentOp) {
-        String result = "";
-        switch (currentOp) {
-            case '+':
-                result = ArithHelper.add(firstValue, secondValue);
-                break;
-            case '-':
-                result = ArithHelper.sub(firstValue, secondValue);
-                break;
-            case '*':
-                result = ArithHelper.mul(firstValue, secondValue);
-                break;
-            case '/':
-                result = ArithHelper.div(firstValue, secondValue);
-                break;
-        }
+        String result = switch (currentOp) {
+            case '+' -> ArithHelper.add(firstValue, secondValue);
+            case '-' -> ArithHelper.sub(firstValue, secondValue);
+            case '*' -> ArithHelper.mul(firstValue, secondValue);
+            case '/' -> ArithHelper.div(firstValue, secondValue);
+            default -> "";
+        };
         return result;
     }
 }

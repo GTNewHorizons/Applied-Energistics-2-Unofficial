@@ -73,28 +73,18 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
             this.updateUpgradeInfo();
         }
 
-        switch (u) {
-            case PATTERN_CAPACITY:
-                return this.patternCapacityUpgrades;
-            case CAPACITY:
-                return this.capacityUpgrades;
-            case FUZZY:
-                return this.fuzzyUpgrades;
-            case REDSTONE:
-                return this.redstoneUpgrades;
-            case SPEED:
-                return this.speedUpgrades;
-            case SUPERSPEED:
-                return this.superSpeedUpgrades;
-            case INVERTER:
-                return this.inverterUpgrades;
-            case CRAFTING:
-                return this.craftingUpgrades;
-            case ORE_FILTER:
-                return this.oreFilterUpgrades;
-            default:
-                return 0;
-        }
+        return switch (u) {
+            case PATTERN_CAPACITY -> this.patternCapacityUpgrades;
+            case CAPACITY -> this.capacityUpgrades;
+            case FUZZY -> this.fuzzyUpgrades;
+            case REDSTONE -> this.redstoneUpgrades;
+            case SPEED -> this.speedUpgrades;
+            case SUPERSPEED -> this.superSpeedUpgrades;
+            case INVERTER -> this.inverterUpgrades;
+            case CRAFTING -> this.craftingUpgrades;
+            case ORE_FILTER -> this.oreFilterUpgrades;
+            default -> 0;
+        };
     }
 
     public abstract int getMaxInstalled(Upgrades upgrades);
@@ -110,35 +100,16 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
 
             final Upgrades myUpgrade = ((IUpgradeModule) is.getItem()).getType(is);
             switch (myUpgrade) {
-                case PATTERN_CAPACITY:
-                    this.patternCapacityUpgrades++;
-                    break;
-                case CAPACITY:
-                    this.capacityUpgrades++;
-                    break;
-                case FUZZY:
-                    this.fuzzyUpgrades++;
-                    break;
-                case REDSTONE:
-                    this.redstoneUpgrades++;
-                    break;
-                case SPEED:
-                    this.speedUpgrades++;
-                    break;
-                case SUPERSPEED:
-                    this.superSpeedUpgrades++;
-                    break;
-                case INVERTER:
-                    this.inverterUpgrades++;
-                    break;
-                case CRAFTING:
-                    this.craftingUpgrades++;
-                    break;
-                case ORE_FILTER:
-                    this.oreFilterUpgrades++;
-                    break;
-                default:
-                    break;
+                case PATTERN_CAPACITY -> this.patternCapacityUpgrades++;
+                case CAPACITY -> this.capacityUpgrades++;
+                case FUZZY -> this.fuzzyUpgrades++;
+                case REDSTONE -> this.redstoneUpgrades++;
+                case SPEED -> this.speedUpgrades++;
+                case SUPERSPEED -> this.superSpeedUpgrades++;
+                case INVERTER -> this.inverterUpgrades++;
+                case CRAFTING -> this.craftingUpgrades++;
+                case ORE_FILTER -> this.oreFilterUpgrades++;
+                default -> {}
             }
         }
 

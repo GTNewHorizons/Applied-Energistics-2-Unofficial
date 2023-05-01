@@ -24,25 +24,26 @@ public class ItemAdvancedStorageCell extends ItemBasicStorageCell {
         this.component = whichCell;
 
         switch (this.component) {
-            case Cell256kPart:
+            case Cell256kPart -> {
                 this.idleDrain = 2.5;
                 this.perType = 2048;
-                break;
-            case Cell1024kPart:
+            }
+            case Cell1024kPart -> {
                 this.idleDrain = 3.0;
                 this.perType = 8192;
-                break;
-            case Cell4096kPart:
+            }
+            case Cell4096kPart -> {
                 this.idleDrain = 3.5;
                 this.perType = 32768;
-                break;
-            case Cell16384kPart:
+            }
+            case Cell16384kPart -> {
                 this.idleDrain = 4.0;
                 this.perType = 131072;
-                break;
-            default:
+            }
+            default -> {
                 this.idleDrain = 0.0;
                 this.perType = 8;
+            }
         }
     }
 

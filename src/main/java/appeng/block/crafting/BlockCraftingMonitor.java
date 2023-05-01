@@ -47,13 +47,10 @@ public class BlockCraftingMonitor extends BlockCraftingUnit {
             }
         }
 
-        switch (metadata) {
-            default:
-            case 0:
-                return super.getIcon(0, 0);
-            case FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingMonitorFit_Light.getIcon();
-        }
+        return switch (metadata) {
+            default -> super.getIcon(0, 0);
+            case FLAG_FORMED -> ExtraBlockTextures.BlockCraftingMonitorFit_Light.getIcon();
+        };
     }
 
     @Override

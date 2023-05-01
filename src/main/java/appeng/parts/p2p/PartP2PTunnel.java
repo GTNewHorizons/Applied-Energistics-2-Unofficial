@@ -262,74 +262,62 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             final IParts parts = AEApi.instance().definitions().parts();
 
             switch (tt) {
-                case LIGHT:
+                case LIGHT -> {
                     for (final ItemStack stack : parts.p2PTunnelLight().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case RF_POWER:
+                }
+                case RF_POWER -> {
                     for (final ItemStack stack : parts.p2PTunnelRF().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case FLUID:
+                }
+                case FLUID -> {
                     for (final ItemStack stack : parts.p2PTunnelLiquids().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case IC2_POWER:
+                }
+                case IC2_POWER -> {
                     for (final ItemStack stack : parts.p2PTunnelEU().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case ITEM:
+                }
+                case ITEM -> {
                     for (final ItemStack stack : parts.p2PTunnelItems().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case ME:
+                }
+                case ME -> {
                     for (final ItemStack stack : parts.p2PTunnelME().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case REDSTONE:
+                }
+                case REDSTONE -> {
                     for (final ItemStack stack : parts.p2PTunnelRedstone().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case COMPUTER_MESSAGE:
+                }
+                case COMPUTER_MESSAGE -> {
                     for (final ItemStack stack : parts.p2PTunnelOpenComputers().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case PRESSURE:
+                }
+                case PRESSURE -> {
                     for (final ItemStack stack : parts.p2PTunnelPneumaticCraft().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case GT_POWER:
+                }
+                case GT_POWER -> {
                     for (final ItemStack stack : parts.p2PTunnelGregtech().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                case ME_INTERFACE:
+                }
+                case ME_INTERFACE -> {
                     for (final ItemStack stack : parts.p2PTunnelMEInterface().maybeStack(1).asSet()) {
                         newType = stack;
                     }
-                    break;
-
-                default:
-                    break;
+                }
+                default -> {}
             }
 
             if (newType != null && !Platform.isSameItem(newType, this.getItemStack())) {

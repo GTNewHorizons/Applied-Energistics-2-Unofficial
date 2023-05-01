@@ -56,26 +56,20 @@ public abstract class PartUpgradeable extends PartBasicState implements IAEAppEn
     protected boolean isSleeping() {
         if (this.getInstalledUpgrades(Upgrades.REDSTONE) > 0) {
             switch (this.getRSMode()) {
-                case IGNORE:
+                case IGNORE -> {
                     return false;
-
-                case HIGH_SIGNAL:
+                }
+                case HIGH_SIGNAL -> {
                     if (this.getHost().hasRedstone(this.getSide())) {
                         return false;
                     }
-
-                    break;
-
-                case LOW_SIGNAL:
+                }
+                case LOW_SIGNAL -> {
                     if (!this.getHost().hasRedstone(this.getSide())) {
                         return false;
                     }
-
-                    break;
-
-                case SIGNAL_PULSE:
-                default:
-                    break;
+                }
+                default -> {}
             }
 
             return true;

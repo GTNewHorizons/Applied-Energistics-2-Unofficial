@@ -67,27 +67,13 @@ public class OreQuartzCharged extends OreQuartz {
         double zOff = (r.nextFloat());
 
         switch (r.nextInt(6)) {
-            case 0:
-                xOff = -0.01;
-                break;
-            case 1:
-                yOff = -0.01;
-                break;
-            case 2:
-                xOff = -0.01;
-                break;
-            case 3:
-                zOff = -0.01;
-                break;
-            case 4:
-                xOff = 1.01;
-                break;
-            case 5:
-                yOff = 1.01;
-                break;
-            case 6:
-                zOff = 1.01;
-                break;
+            case 0 -> xOff = -0.01;
+            case 1 -> yOff = -0.01;
+            case 2 -> xOff = -0.01;
+            case 3 -> zOff = -0.01;
+            case 4 -> xOff = 1.01;
+            case 5 -> yOff = 1.01;
+            case 6 -> zOff = 1.01;
         }
 
         if (CommonHelper.proxy.shouldAddParticles(r)) {

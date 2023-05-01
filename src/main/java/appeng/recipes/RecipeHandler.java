@@ -125,43 +125,27 @@ public class RecipeHandler implements IRecipeHandler {
             }
         } else if (maybeSkyStoneItem.isPresent() && is.getItem() == maybeSkyStoneItem.get()) {
             switch (is.getItemDamage()) {
-                case 1:
-                    realName += ".Block";
-                    break;
-                case 2:
-                    realName += ".Brick";
-                    break;
-                case 3:
-                    realName += ".SmallBrick";
-                    break;
-                default:
+                case 1 -> realName += ".Block";
+                case 2 -> realName += ".Brick";
+                case 3 -> realName += ".SmallBrick";
+                default -> {}
             }
         } else if (maybeCStorageItem.isPresent() && is.getItem() == maybeCStorageItem.get()) {
             switch (is.getItemDamage()) {
-                case 1:
-                    realName += "4k";
-                    break;
-                case 2:
-                    realName += "16k";
-                    break;
-                case 3:
-                    realName += "64k";
-                    break;
-                default:
+                case 1 -> realName += "4k";
+                case 2 -> realName += "16k";
+                case 3 -> realName += "64k";
+                default -> {}
             }
         } else if (maybeCUnitItem.isPresent() && is.getItem() == maybeCUnitItem.get()) {
             switch (is.getItemDamage()) {
-                case 1:
-                    realName = realName.replace("Unit", "Accelerator");
-                    break;
-                default:
+                case 1 -> realName = realName.replace("Unit", "Accelerator");
+                default -> {}
             }
         } else if (maybeSkyChestItem.isPresent() && is.getItem() == maybeSkyChestItem.get()) {
             switch (is.getItemDamage()) {
-                case 1:
-                    realName += ".Block";
-                    break;
-                default:
+                case 1 -> realName += ".Block";
+                default -> {}
             }
         } else if (is.getItem() instanceof ItemMultiMaterial) {
             realName = realName.replace("ItemMultiMaterial", "ItemMaterial");
@@ -225,11 +209,8 @@ public class RecipeHandler implements IRecipeHandler {
                     }
                 } else if (inQuote) {
                     switch (c) {
-                        case '"':
-                            inQuote = !inQuote;
-                            break;
-                        default:
-                            token += c;
+                        case '"' -> inQuote = !inQuote;
+                        default -> token += c;
                     }
                 } else {
                     switch (c) {

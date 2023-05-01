@@ -151,32 +151,33 @@ public abstract class MBCalculator {
     private boolean verifyUnownedRegionInner(final World w, int minX, int minY, int minZ, int maxX, int maxY, int maxZ,
             final ForgeDirection side) {
         switch (side) {
-            case WEST:
+            case WEST -> {
                 minX -= 1;
                 maxX = minX;
-                break;
-            case EAST:
+            }
+            case EAST -> {
                 maxX += 1;
                 minX = maxX;
-                break;
-            case DOWN:
+            }
+            case DOWN -> {
                 minY -= 1;
                 maxY = minY;
-                break;
-            case NORTH:
+            }
+            case NORTH -> {
                 maxZ += 1;
                 minZ = maxZ;
-                break;
-            case SOUTH:
+            }
+            case SOUTH -> {
                 minZ -= 1;
                 maxZ = minZ;
-                break;
-            case UP:
+            }
+            case UP -> {
                 maxY += 1;
                 minY = maxY;
-                break;
-            case UNKNOWN:
+            }
+            case UNKNOWN -> {
                 return false;
+            }
         }
 
         for (int x = minX; x <= maxX; x++) {

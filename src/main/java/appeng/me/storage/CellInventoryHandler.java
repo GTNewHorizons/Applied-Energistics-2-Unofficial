@@ -52,16 +52,10 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
                     final Upgrades u = ((IUpgradeModule) is.getItem()).getType(is);
                     if (u != null) {
                         switch (u) {
-                            case FUZZY:
-                                hasFuzzy = true;
-                                break;
-                            case INVERTER:
-                                hasInverter = true;
-                                break;
-                            case ORE_FILTER:
-                                hasOreFilter = true;
-                                break;
-                            default:
+                            case FUZZY -> hasFuzzy = true;
+                            case INVERTER -> hasInverter = true;
+                            case ORE_FILTER -> hasOreFilter = true;
+                            default -> {}
                         }
                     }
                 }

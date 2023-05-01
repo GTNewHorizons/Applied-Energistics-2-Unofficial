@@ -78,44 +78,43 @@ public class BlockWireless extends AEBaseTileBlock implements ICustomCollision {
             double maxZ = 1;
 
             switch (forward) {
-                case DOWN:
+                case DOWN -> {
                     minZ = minX = 3.0 / 16.0;
                     maxZ = maxX = 13.0 / 16.0;
                     maxY = 1.0;
                     minY = 5.0 / 16.0;
-                    break;
-                case EAST:
+                }
+                case EAST -> {
                     minZ = minY = 3.0 / 16.0;
                     maxZ = maxY = 13.0 / 16.0;
                     maxX = 11.0 / 16.0;
                     minX = 0.0;
-                    break;
-                case NORTH:
+                }
+                case NORTH -> {
                     minY = minX = 3.0 / 16.0;
                     maxY = maxX = 13.0 / 16.0;
                     maxZ = 1.0;
                     minZ = 5.0 / 16.0;
-                    break;
-                case SOUTH:
+                }
+                case SOUTH -> {
                     minY = minX = 3.0 / 16.0;
                     maxY = maxX = 13.0 / 16.0;
                     maxZ = 11.0 / 16.0;
                     minZ = 0.0;
-                    break;
-                case UP:
+                }
+                case UP -> {
                     minZ = minX = 3.0 / 16.0;
                     maxZ = maxX = 13.0 / 16.0;
                     maxY = 11.0 / 16.0;
                     minY = 0.0;
-                    break;
-                case WEST:
+                }
+                case WEST -> {
                     minZ = minY = 3.0 / 16.0;
                     maxZ = maxY = 13.0 / 16.0;
                     maxX = 1.0;
                     minX = 5.0 / 16.0;
-                    break;
-                default:
-                    break;
+                }
+                default -> {}
             }
 
             return Collections.singletonList(AxisAlignedBB.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ));
@@ -138,44 +137,43 @@ public class BlockWireless extends AEBaseTileBlock implements ICustomCollision {
             double maxZ = 1;
 
             switch (forward) {
-                case DOWN:
+                case DOWN -> {
                     minZ = minX = 3.0 / 16.0;
                     maxZ = maxX = 13.0 / 16.0;
                     maxY = 1.0;
                     minY = 5.0 / 16.0;
-                    break;
-                case EAST:
+                }
+                case EAST -> {
                     minZ = minY = 3.0 / 16.0;
                     maxZ = maxY = 13.0 / 16.0;
                     maxX = 11.0 / 16.0;
                     minX = 0.0;
-                    break;
-                case NORTH:
+                }
+                case NORTH -> {
                     minY = minX = 3.0 / 16.0;
                     maxY = maxX = 13.0 / 16.0;
                     maxZ = 1.0;
                     minZ = 5.0 / 16.0;
-                    break;
-                case SOUTH:
+                }
+                case SOUTH -> {
                     minY = minX = 3.0 / 16.0;
                     maxY = maxX = 13.0 / 16.0;
                     maxZ = 11.0 / 16.0;
                     minZ = 0.0;
-                    break;
-                case UP:
+                }
+                case UP -> {
                     minZ = minX = 3.0 / 16.0;
                     maxZ = maxX = 13.0 / 16.0;
                     maxY = 11.0 / 16.0;
                     minY = 0.0;
-                    break;
-                case WEST:
+                }
+                case WEST -> {
                     minZ = minY = 3.0 / 16.0;
                     maxZ = maxY = 13.0 / 16.0;
                     maxX = 1.0;
                     minX = 5.0 / 16.0;
-                    break;
-                default:
-                    break;
+                }
+                default -> {}
             }
 
             out.add(AxisAlignedBB.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ));

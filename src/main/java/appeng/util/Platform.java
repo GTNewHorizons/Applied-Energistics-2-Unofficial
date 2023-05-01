@@ -193,24 +193,16 @@ public class Platform {
         final int west_y = forward.offsetZ * up.offsetX - forward.offsetX * up.offsetZ;
         final int west_z = forward.offsetX * up.offsetY - forward.offsetY * up.offsetX;
 
-        switch (west_x + west_y * 2 + west_z * 3) {
-            case 1:
-                return ForgeDirection.EAST;
-            case -1:
-                return ForgeDirection.WEST;
+        return switch (west_x + west_y * 2 + west_z * 3) {
+            case 1 -> ForgeDirection.EAST;
+            case -1 -> ForgeDirection.WEST;
+            case 2 -> ForgeDirection.UP;
+            case -2 -> ForgeDirection.DOWN;
+            case 3 -> ForgeDirection.SOUTH;
+            case -3 -> ForgeDirection.NORTH;
+            default -> ForgeDirection.UNKNOWN;
+        };
 
-            case 2:
-                return ForgeDirection.UP;
-            case -2:
-                return ForgeDirection.DOWN;
-
-            case 3:
-                return ForgeDirection.SOUTH;
-            case -3:
-                return ForgeDirection.NORTH;
-        }
-
-        return ForgeDirection.UNKNOWN;
     }
 
     public static <T extends Enum> T rotateEnum(T ce, final boolean backwards, final EnumSet validOptions) {
@@ -392,7 +384,7 @@ public class Platform {
         final byte id = left.getId();
         if (id == right.getId()) {
             switch (id) {
-                case 10: {
+                case 10 -> {
                     final NBTTagCompound ctA = (NBTTagCompound) left;
                     final NBTTagCompound ctB = (NBTTagCompound) right;
 
@@ -417,8 +409,7 @@ public class Platform {
 
                     return true;
                 }
-
-                case 9: // ) // A instanceof NBTTagList )
+                case 9 -> // ) // A instanceof NBTTagList )
                 {
                     final NBTTagList lA = (NBTTagList) left;
                     final NBTTagList lB = (NBTTagList) right;
@@ -444,33 +435,33 @@ public class Platform {
 
                     return true;
                 }
-
-                case 1: // ( A instanceof NBTTagByte )
+                case 1 -> { // ( A instanceof NBTTagByte )
                     return ((NBTBase.NBTPrimitive) left).func_150287_d()
                             == ((NBTBase.NBTPrimitive) right).func_150287_d();
-
-                case 4: // else if ( A instanceof NBTTagLong )
+                }
+                case 4 -> { // else if ( A instanceof NBTTagLong )
                     return ((NBTBase.NBTPrimitive) left).func_150291_c()
                             == ((NBTBase.NBTPrimitive) right).func_150291_c();
-
-                case 8: // else if ( A instanceof NBTTagString )
+                }
+                case 8 -> { // else if ( A instanceof NBTTagString )
                     return ((NBTTagString) left).func_150285_a_().equals(((NBTTagString) right).func_150285_a_())
                             || ((NBTTagString) left).func_150285_a_().equals(((NBTTagString) right).func_150285_a_());
-
-                case 6: // else if ( A instanceof NBTTagDouble )
+                }
+                case 6 -> { // else if ( A instanceof NBTTagDouble )
                     return ((NBTBase.NBTPrimitive) left).func_150286_g()
                             == ((NBTBase.NBTPrimitive) right).func_150286_g();
-
-                case 5: // else if ( A instanceof NBTTagFloat )
+                }
+                case 5 -> { // else if ( A instanceof NBTTagFloat )
                     return ((NBTBase.NBTPrimitive) left).func_150288_h()
                             == ((NBTBase.NBTPrimitive) right).func_150288_h();
-
-                case 3: // else if ( A instanceof NBTTagInt )
+                }
+                case 3 -> { // else if ( A instanceof NBTTagInt )
                     return ((NBTBase.NBTPrimitive) left).func_150287_d()
                             == ((NBTBase.NBTPrimitive) right).func_150287_d();
-
-                default:
+                }
+                default -> {
                     return left.equals(right);
+                }
             }
         }
 
@@ -511,7 +502,7 @@ public class Platform {
         final byte id = nbt.getId();
         hash += id;
         switch (id) {
-            case 10: {
+            case 10 -> {
                 final NBTTagCompound ctA = (NBTTagCompound) nbt;
 
                 final Set<String> cA = ctA.func_150296_c();
@@ -522,8 +513,7 @@ public class Platform {
 
                 return hash;
             }
-
-            case 9: // ) // A instanceof NBTTagList )
+            case 9 -> // ) // A instanceof NBTTagList )
             {
                 final NBTTagList lA = (NBTTagList) nbt;
                 hash += 9 * lA.tagCount();
@@ -535,27 +525,27 @@ public class Platform {
 
                 return hash;
             }
-
-            case 1: // ( A instanceof NBTTagByte )
+            case 1 -> { // ( A instanceof NBTTagByte )
                 return hash + ((NBTBase.NBTPrimitive) nbt).func_150290_f();
-
-            case 4: // else if ( A instanceof NBTTagLong )
+            }
+            case 4 -> { // else if ( A instanceof NBTTagLong )
                 return hash + (int) ((NBTBase.NBTPrimitive) nbt).func_150291_c();
-
-            case 8: // else if ( A instanceof NBTTagString )
+            }
+            case 8 -> { // else if ( A instanceof NBTTagString )
                 return hash + ((NBTTagString) nbt).func_150285_a_().hashCode();
-
-            case 6: // else if ( A instanceof NBTTagDouble )
+            }
+            case 6 -> { // else if ( A instanceof NBTTagDouble )
                 return hash + (int) ((NBTBase.NBTPrimitive) nbt).func_150286_g();
-
-            case 5: // else if ( A instanceof NBTTagFloat )
+            }
+            case 5 -> { // else if ( A instanceof NBTTagFloat )
                 return hash + (int) ((NBTBase.NBTPrimitive) nbt).func_150288_h();
-
-            case 3: // else if ( A instanceof NBTTagInt )
+            }
+            case 3 -> { // else if ( A instanceof NBTTagInt )
                 return hash + ((NBTBase.NBTPrimitive) nbt).func_150287_d();
-
-            default:
+            }
+            default -> {
                 return hash;
+            }
         }
     }
 
@@ -596,39 +586,25 @@ public class Platform {
 
     public static ForgeDirection cycleOrientations(final ForgeDirection dir, final boolean upAndDown) {
         if (upAndDown) {
-            switch (dir) {
-                case NORTH:
-                    return ForgeDirection.SOUTH;
-                case SOUTH:
-                    return ForgeDirection.EAST;
-                case EAST:
-                    return ForgeDirection.WEST;
-                case WEST:
-                    return ForgeDirection.NORTH;
-                case UP:
-                    return ForgeDirection.UP;
-                case DOWN:
-                    return ForgeDirection.DOWN;
-                case UNKNOWN:
-                    return ForgeDirection.UNKNOWN;
-            }
+            return switch (dir) {
+                case NORTH -> ForgeDirection.SOUTH;
+                case SOUTH -> ForgeDirection.EAST;
+                case EAST -> ForgeDirection.WEST;
+                case WEST -> ForgeDirection.NORTH;
+                case UP -> ForgeDirection.UP;
+                case DOWN -> ForgeDirection.DOWN;
+                case UNKNOWN -> ForgeDirection.UNKNOWN;
+            };
         } else {
-            switch (dir) {
-                case UP:
-                    return ForgeDirection.DOWN;
-                case DOWN:
-                    return ForgeDirection.NORTH;
-                case NORTH:
-                    return ForgeDirection.SOUTH;
-                case SOUTH:
-                    return ForgeDirection.EAST;
-                case EAST:
-                    return ForgeDirection.WEST;
-                case WEST:
-                    return ForgeDirection.UP;
-                case UNKNOWN:
-                    return ForgeDirection.UNKNOWN;
-            }
+            return switch (dir) {
+                case UP -> ForgeDirection.DOWN;
+                case DOWN -> ForgeDirection.NORTH;
+                case NORTH -> ForgeDirection.SOUTH;
+                case SOUTH -> ForgeDirection.EAST;
+                case EAST -> ForgeDirection.WEST;
+                case WEST -> ForgeDirection.UP;
+                case UNKNOWN -> ForgeDirection.UNKNOWN;
+            };
         }
 
         return ForgeDirection.UNKNOWN;
@@ -942,89 +918,109 @@ public class Platform {
         switch (forward) {
             case DOWN:
                 switch (axis) {
-                    case DOWN:
+                    case DOWN -> {
                         return forward;
-                    case UP:
+                    }
+                    case UP -> {
                         return forward;
-                    case NORTH:
+                    }
+                    case NORTH -> {
                         return ForgeDirection.EAST;
-                    case SOUTH:
+                    }
+                    case SOUTH -> {
                         return ForgeDirection.WEST;
-                    case EAST:
+                    }
+                    case EAST -> {
                         return ForgeDirection.NORTH;
-                    case WEST:
+                    }
+                    case WEST -> {
                         return ForgeDirection.SOUTH;
-                    default:
-                        break;
+                    }
+                    default -> {}
                 }
                 break;
             case UP:
                 switch (axis) {
-                    case NORTH:
+                    case NORTH -> {
                         return ForgeDirection.WEST;
-                    case SOUTH:
+                    }
+                    case SOUTH -> {
                         return ForgeDirection.EAST;
-                    case EAST:
+                    }
+                    case EAST -> {
                         return ForgeDirection.SOUTH;
-                    case WEST:
+                    }
+                    case WEST -> {
                         return ForgeDirection.NORTH;
-                    default:
-                        break;
+                    }
+                    default -> {}
                 }
                 break;
             case NORTH:
                 switch (axis) {
-                    case UP:
+                    case UP -> {
                         return ForgeDirection.WEST;
-                    case DOWN:
+                    }
+                    case DOWN -> {
                         return ForgeDirection.EAST;
-                    case EAST:
+                    }
+                    case EAST -> {
                         return ForgeDirection.UP;
-                    case WEST:
+                    }
+                    case WEST -> {
                         return ForgeDirection.DOWN;
-                    default:
-                        break;
+                    }
+                    default -> {}
                 }
                 break;
             case SOUTH:
                 switch (axis) {
-                    case UP:
+                    case UP -> {
                         return ForgeDirection.EAST;
-                    case DOWN:
+                    }
+                    case DOWN -> {
                         return ForgeDirection.WEST;
-                    case EAST:
+                    }
+                    case EAST -> {
                         return ForgeDirection.DOWN;
-                    case WEST:
+                    }
+                    case WEST -> {
                         return ForgeDirection.UP;
-                    default:
-                        break;
+                    }
+                    default -> {}
                 }
                 break;
             case EAST:
                 switch (axis) {
-                    case UP:
+                    case UP -> {
                         return ForgeDirection.NORTH;
-                    case DOWN:
+                    }
+                    case DOWN -> {
                         return ForgeDirection.SOUTH;
-                    case NORTH:
+                    }
+                    case NORTH -> {
                         return ForgeDirection.UP;
-                    case SOUTH:
+                    }
+                    case SOUTH -> {
                         return ForgeDirection.DOWN;
-                    default:
-                        break;
+                    }
+                    default -> {}
                 }
             case WEST:
                 switch (axis) {
-                    case UP:
+                    case UP -> {
                         return ForgeDirection.SOUTH;
-                    case DOWN:
+                    }
+                    case DOWN -> {
                         return ForgeDirection.NORTH;
-                    case NORTH:
+                    }
+                    case NORTH -> {
                         return ForgeDirection.DOWN;
-                    case SOUTH:
+                    }
+                    case SOUTH -> {
                         return ForgeDirection.UP;
-                    default:
-                        break;
+                    }
+                    default -> {}
                 }
             default:
                 break;
@@ -1753,20 +1749,25 @@ public class Platform {
 
     public static AxisAlignedBB getPrimaryBox(final ForgeDirection side, final int facadeThickness) {
         switch (side) {
-            case DOWN:
+            case DOWN -> {
                 return AxisAlignedBB.getBoundingBox(0.0, 0.0, 0.0, 1.0, (facadeThickness) / 16.0, 1.0);
-            case EAST:
+            }
+            case EAST -> {
                 return AxisAlignedBB.getBoundingBox((16.0 - facadeThickness) / 16.0, 0.0, 0.0, 1.0, 1.0, 1.0);
-            case NORTH:
+            }
+            case NORTH -> {
                 return AxisAlignedBB.getBoundingBox(0.0, 0.0, 0.0, 1.0, 1.0, (facadeThickness) / 16.0);
-            case SOUTH:
+            }
+            case SOUTH -> {
                 return AxisAlignedBB.getBoundingBox(0.0, 0.0, (16.0 - facadeThickness) / 16.0, 1.0, 1.0, 1.0);
-            case UP:
+            }
+            case UP -> {
                 return AxisAlignedBB.getBoundingBox(0.0, (16.0 - facadeThickness) / 16.0, 0.0, 1.0, 1.0, 1.0);
-            case WEST:
+            }
+            case WEST -> {
                 return AxisAlignedBB.getBoundingBox(0.0, 0.0, 0.0, (facadeThickness) / 16.0, 1.0, 1.0);
-            default:
-                break;
+            }
+            default -> {}
         }
         return AxisAlignedBB.getBoundingBox(0, 0, 0, 1, 1, 1);
     }

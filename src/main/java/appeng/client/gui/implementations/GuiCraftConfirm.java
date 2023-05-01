@@ -55,25 +55,19 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         TREE;
 
         public DisplayMode next() {
-            switch (this) {
-                case LIST:
-                    return TREE;
-                case TREE:
-                    return LIST;
-                default:
-                    throw new IllegalArgumentException(this.toString());
-            }
+            return switch (this) {
+                case LIST -> TREE;
+                case TREE -> LIST;
+                default -> throw new IllegalArgumentException(this.toString());
+            };
         }
 
         public int getYSize() {
-            switch (this) {
-                case LIST:
-                    return 206;
-                case TREE:
-                    return 238;
-                default:
-                    throw new IllegalArgumentException(this.toString());
-            }
+            return switch (this) {
+                case LIST -> 206;
+                case TREE -> 238;
+                default -> throw new IllegalArgumentException(this.toString());
+            };
         }
     }
 
@@ -211,12 +205,8 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         super.drawScreen(mouseX, mouseY, btn);
 
         switch (displayMode) {
-            case LIST:
-                drawListScreen(mouseX, mouseY, btn);
-                break;
-            case TREE:
-                drawTreeScreen(mouseX, mouseY, btn);
-                break;
+            case LIST -> drawListScreen(mouseX, mouseY, btn);
+            case TREE -> drawTreeScreen(mouseX, mouseY, btn);
         }
     }
 
@@ -297,12 +287,8 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 GuiColors.CraftConfirmCraftingPlan.getColor());
 
         switch (displayMode) {
-            case LIST:
-                drawListFG(offsetX, offsetY, mouseX, mouseY);
-                break;
-            case TREE:
-                drawTreeFG(offsetX, offsetY, mouseX, mouseY);
-                break;
+            case LIST -> drawListFG(offsetX, offsetY, mouseX, mouseY);
+            case TREE -> drawTreeFG(offsetX, offsetY, mouseX, mouseY);
         }
     }
 
@@ -491,54 +477,47 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         this.setScrollBar();
 
         switch (displayMode) {
-            case LIST:
-                this.bindTexture("guis/craftingreport.png");
-                break;
-            case TREE:
-                this.bindTexture("guis/craftingtree.png");
-                break;
+            case LIST -> this.bindTexture("guis/craftingreport.png");
+            case TREE -> this.bindTexture("guis/craftingtree.png");
         }
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
     }
 
     private void setScrollBar() {
         switch (displayMode) {
-            case LIST:
+            case LIST -> {
                 if (getScrollBar() == null) {
                     setScrollBar(scrollbar);
                 }
                 final int size = this.visual.size();
-
                 this.getScrollBar().setTop(19).setLeft(218).setHeight(114);
                 this.getScrollBar().setRange(0, (size + 2) / 3 - this.rows, 1);
-                break;
-            case TREE:
+            }
+            case TREE -> {
                 if (getScrollBar() != null) {
                     setScrollBar(null);
                 }
-                break;
+            }
         }
     }
 
     public void postUpdate(final List<IAEItemStack> list, final byte ref) {
         switch (ref) {
-            case 0:
+            case 0 -> {
                 for (final IAEItemStack l : list) {
                     this.handleInput(this.storage, l);
                 }
-                break;
-
-            case 1:
+            }
+            case 1 -> {
                 for (final IAEItemStack l : list) {
                     this.handleInput(this.pending, l);
                 }
-                break;
-
-            case 2:
+            }
+            case 2 -> {
                 for (final IAEItemStack l : list) {
                     this.handleInput(this.missing, l);
                 }
-                break;
+            }
         }
 
         for (final IAEItemStack l : list) {

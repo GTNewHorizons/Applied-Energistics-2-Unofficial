@@ -100,52 +100,46 @@ public class RenderBlockPaint extends BaseBlockRender<BlockPaint, TilePaint> {
                 final IIcon ico = icoSet[s.getSeed() % icoSet.length];
 
                 switch (s.getSide()) {
-                    case UP:
+                    case UP -> {
                         offset = 1.0 - offset;
                         tess.addVertexWithUV(pos_x - buffer, y + offset, pos_y - buffer, ico.getMinU(), ico.getMinV());
                         tess.addVertexWithUV(pos_x + buffer, y + offset, pos_y - buffer, ico.getMaxU(), ico.getMinV());
                         tess.addVertexWithUV(pos_x + buffer, y + offset, pos_y + buffer, ico.getMaxU(), ico.getMaxV());
                         tess.addVertexWithUV(pos_x - buffer, y + offset, pos_y + buffer, ico.getMinU(), ico.getMaxV());
-                        break;
-
-                    case DOWN:
+                    }
+                    case DOWN -> {
                         tess.addVertexWithUV(pos_x + buffer, y + offset, pos_y - buffer, ico.getMinU(), ico.getMinV());
                         tess.addVertexWithUV(pos_x - buffer, y + offset, pos_y - buffer, ico.getMaxU(), ico.getMinV());
                         tess.addVertexWithUV(pos_x - buffer, y + offset, pos_y + buffer, ico.getMaxU(), ico.getMaxV());
                         tess.addVertexWithUV(pos_x + buffer, y + offset, pos_y + buffer, ico.getMinU(), ico.getMaxV());
-                        break;
-
-                    case EAST:
+                    }
+                    case EAST -> {
                         offset = 1.0 - offset;
                         tess.addVertexWithUV(x + offset, pos_x + buffer, pos_y - buffer, ico.getMinU(), ico.getMinV());
                         tess.addVertexWithUV(x + offset, pos_x - buffer, pos_y - buffer, ico.getMaxU(), ico.getMinV());
                         tess.addVertexWithUV(x + offset, pos_x - buffer, pos_y + buffer, ico.getMaxU(), ico.getMaxV());
                         tess.addVertexWithUV(x + offset, pos_x + buffer, pos_y + buffer, ico.getMinU(), ico.getMaxV());
-                        break;
-
-                    case WEST:
+                    }
+                    case WEST -> {
                         tess.addVertexWithUV(x + offset, pos_x - buffer, pos_y - buffer, ico.getMinU(), ico.getMinV());
                         tess.addVertexWithUV(x + offset, pos_x + buffer, pos_y - buffer, ico.getMaxU(), ico.getMinV());
                         tess.addVertexWithUV(x + offset, pos_x + buffer, pos_y + buffer, ico.getMaxU(), ico.getMaxV());
                         tess.addVertexWithUV(x + offset, pos_x - buffer, pos_y + buffer, ico.getMinU(), ico.getMaxV());
-                        break;
-
-                    case SOUTH:
+                    }
+                    case SOUTH -> {
                         offset = 1.0 - offset;
                         tess.addVertexWithUV(pos_x + buffer, pos_y - buffer, z + offset, ico.getMinU(), ico.getMinV());
                         tess.addVertexWithUV(pos_x - buffer, pos_y - buffer, z + offset, ico.getMaxU(), ico.getMinV());
                         tess.addVertexWithUV(pos_x - buffer, pos_y + buffer, z + offset, ico.getMaxU(), ico.getMaxV());
                         tess.addVertexWithUV(pos_x + buffer, pos_y + buffer, z + offset, ico.getMinU(), ico.getMaxV());
-                        break;
-
-                    case NORTH:
+                    }
+                    case NORTH -> {
                         tess.addVertexWithUV(pos_x - buffer, pos_y - buffer, z + offset, ico.getMinU(), ico.getMinV());
                         tess.addVertexWithUV(pos_x + buffer, pos_y - buffer, z + offset, ico.getMaxU(), ico.getMinV());
                         tess.addVertexWithUV(pos_x + buffer, pos_y + buffer, z + offset, ico.getMaxU(), ico.getMaxV());
                         tess.addVertexWithUV(pos_x - buffer, pos_y + buffer, z + offset, ico.getMinU(), ico.getMaxV());
-                        break;
-
-                    default:
+                    }
+                    default -> {}
                 }
             }
 

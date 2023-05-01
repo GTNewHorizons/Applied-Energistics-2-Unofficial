@@ -49,25 +49,17 @@ public class BlockEnergyCell extends AEBaseTileBlock {
 
     @Override
     public IIcon getIcon(final int direction, final int metadata) {
-        switch (metadata) {
-            case 0:
-                return ExtraBlockTextures.MEEnergyCell0.getIcon();
-            case 1:
-                return ExtraBlockTextures.MEEnergyCell1.getIcon();
-            case 2:
-                return ExtraBlockTextures.MEEnergyCell2.getIcon();
-            case 3:
-                return ExtraBlockTextures.MEEnergyCell3.getIcon();
-            case 4:
-                return ExtraBlockTextures.MEEnergyCell4.getIcon();
-            case 5:
-                return ExtraBlockTextures.MEEnergyCell5.getIcon();
-            case 6:
-                return ExtraBlockTextures.MEEnergyCell6.getIcon();
-            case 7:
-                return ExtraBlockTextures.MEEnergyCell7.getIcon();
-        }
-        return super.getIcon(direction, metadata);
+        return switch (metadata) {
+            case 0 -> ExtraBlockTextures.MEEnergyCell0.getIcon();
+            case 1 -> ExtraBlockTextures.MEEnergyCell1.getIcon();
+            case 2 -> ExtraBlockTextures.MEEnergyCell2.getIcon();
+            case 3 -> ExtraBlockTextures.MEEnergyCell3.getIcon();
+            case 4 -> ExtraBlockTextures.MEEnergyCell4.getIcon();
+            case 5 -> ExtraBlockTextures.MEEnergyCell5.getIcon();
+            case 6 -> ExtraBlockTextures.MEEnergyCell6.getIcon();
+            case 7 -> ExtraBlockTextures.MEEnergyCell7.getIcon();
+            default -> super.getIcon(direction, metadata);
+        };
     }
 
     @Override

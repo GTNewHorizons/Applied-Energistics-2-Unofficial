@@ -162,11 +162,13 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @SuppressWarnings("unchecked")
     private IMEInventoryHandler<T> getHandler() {
         switch (this.myChannel) {
-            case ITEMS:
+            case ITEMS -> {
                 return (IMEInventoryHandler<T>) this.myGridCache.getItemInventoryHandler();
-            case FLUIDS:
+            }
+            case FLUIDS -> {
                 return (IMEInventoryHandler<T>) this.myGridCache.getFluidInventoryHandler();
-            default:
+            }
+            default -> {}
         }
         return null;
     }

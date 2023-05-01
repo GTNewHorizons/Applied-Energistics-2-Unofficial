@@ -35,27 +35,16 @@ public class BlockCraftingStorage extends BlockCraftingUnit {
 
     @Override
     public IIcon getIcon(final int direction, final int metadata) {
-        switch (metadata & (~4)) {
-            default:
-
-            case 0:
-                return super.getIcon(0, 0);
-            case 1:
-                return ExtraBlockTextures.BlockCraftingStorage4k.getIcon();
-            case 2:
-                return ExtraBlockTextures.BlockCraftingStorage16k.getIcon();
-            case 3:
-                return ExtraBlockTextures.BlockCraftingStorage64k.getIcon();
-
-            case FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingStorage1kFit.getIcon();
-            case 1 | FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingStorage4kFit.getIcon();
-            case 2 | FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingStorage16kFit.getIcon();
-            case 3 | FLAG_FORMED:
-                return ExtraBlockTextures.BlockCraftingStorage64kFit.getIcon();
-        }
+        return switch (metadata & (~4)) {
+            default -> super.getIcon(0, 0);
+            case 1 -> ExtraBlockTextures.BlockCraftingStorage4k.getIcon();
+            case 2 -> ExtraBlockTextures.BlockCraftingStorage16k.getIcon();
+            case 3 -> ExtraBlockTextures.BlockCraftingStorage64k.getIcon();
+            case FLAG_FORMED -> ExtraBlockTextures.BlockCraftingStorage1kFit.getIcon();
+            case 1 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingStorage4kFit.getIcon();
+            case 2 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingStorage16kFit.getIcon();
+            case 3 | FLAG_FORMED -> ExtraBlockTextures.BlockCraftingStorage64kFit.getIcon();
+        };
     }
 
     @Override
@@ -69,15 +58,11 @@ public class BlockCraftingStorage extends BlockCraftingUnit {
 
     @Override
     public String getUnlocalizedName(final ItemStack is) {
-        switch (is.getItemDamage()) {
-            case 1:
-                return "tile.appliedenergistics2.BlockCraftingStorage4k";
-            case 2:
-                return "tile.appliedenergistics2.BlockCraftingStorage16k";
-            case 3:
-                return "tile.appliedenergistics2.BlockCraftingStorage64k";
-            default:
-                return this.getItemUnlocalizedName(is);
-        }
+        return switch (is.getItemDamage()) {
+            case 1 -> "tile.appliedenergistics2.BlockCraftingStorage4k";
+            case 2 -> "tile.appliedenergistics2.BlockCraftingStorage16k";
+            case 3 -> "tile.appliedenergistics2.BlockCraftingStorage64k";
+            default -> this.getItemUnlocalizedName(is);
+        };
     }
 }

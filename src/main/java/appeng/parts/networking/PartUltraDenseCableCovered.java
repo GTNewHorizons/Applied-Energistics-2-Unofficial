@@ -36,39 +36,55 @@ public class PartUltraDenseCableCovered extends PartDenseCableCovered {
     @Override
     protected IIcon getDenseCoveredTexture(final AEColor c) {
         switch (c) {
-            case Black:
+            case Black -> {
                 return CableBusTextures.MEUltraDenseCovered_Black.getIcon();
-            case Blue:
+            }
+            case Blue -> {
                 return CableBusTextures.MEUltraDenseCovered_Blue.getIcon();
-            case Brown:
+            }
+            case Brown -> {
                 return CableBusTextures.MEUltraDenseCovered_Brown.getIcon();
-            case Cyan:
+            }
+            case Cyan -> {
                 return CableBusTextures.MEUltraDenseCovered_Cyan.getIcon();
-            case Gray:
+            }
+            case Gray -> {
                 return CableBusTextures.MEUltraDenseCovered_Gray.getIcon();
-            case Green:
+            }
+            case Green -> {
                 return CableBusTextures.MEUltraDenseCovered_Green.getIcon();
-            case LightBlue:
+            }
+            case LightBlue -> {
                 return CableBusTextures.MEUltraDenseCovered_LightBlue.getIcon();
-            case LightGray:
+            }
+            case LightGray -> {
                 return CableBusTextures.MEUltraDenseCovered_LightGrey.getIcon();
-            case Lime:
+            }
+            case Lime -> {
                 return CableBusTextures.MEUltraDenseCovered_Lime.getIcon();
-            case Magenta:
+            }
+            case Magenta -> {
                 return CableBusTextures.MEUltraDenseCovered_Magenta.getIcon();
-            case Orange:
+            }
+            case Orange -> {
                 return CableBusTextures.MEUltraDenseCovered_Orange.getIcon();
-            case Pink:
+            }
+            case Pink -> {
                 return CableBusTextures.MEUltraDenseCovered_Pink.getIcon();
-            case Purple:
+            }
+            case Purple -> {
                 return CableBusTextures.MEUltraDenseCovered_Purple.getIcon();
-            case Red:
+            }
+            case Red -> {
                 return CableBusTextures.MEUltraDenseCovered_Red.getIcon();
-            case White:
+            }
+            case White -> {
                 return CableBusTextures.MEUltraDenseCovered_White.getIcon();
-            case Yellow:
+            }
+            case Yellow -> {
                 return CableBusTextures.MEUltraDenseCovered_Yellow.getIcon();
-            default:
+            }
+            default -> {}
         }
 
         return this.getItemStack().getIconIndex();

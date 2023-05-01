@@ -191,16 +191,12 @@ public final class CraftingTreeSerializer {
 
     public IAEStack<?> readStack() throws IOException {
         final byte stackType = buffer.readByte();
-        switch (stackType) {
-            case ST_NULL:
-                return null;
-            case ST_ITEM:
-                return AEItemStack.loadItemStackFromPacket(buffer);
-            case ST_FLUID:
-                return AEFluidStack.loadFluidStackFromPacket(buffer);
-            default:
-                throw new UnsupportedOperationException("Unknown stack type " + stackType);
-        }
+        return switch (stackType) {
+            case ST_NULL -> null;
+            case ST_ITEM -> AEItemStack.loadItemStackFromPacket(buffer);
+            case ST_FLUID -> AEFluidStack.loadFluidStackFromPacket(buffer);
+            default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
+        };
     }
 
     public void writeItemStack(IAEItemStack stack) throws IOException {

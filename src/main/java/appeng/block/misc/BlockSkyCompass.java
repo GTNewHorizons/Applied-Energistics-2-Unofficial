@@ -113,44 +113,43 @@ public class BlockSkyCompass extends AEBaseTileBlock implements ICustomCollision
             double maxZ = 1;
 
             switch (forward) {
-                case DOWN:
+                case DOWN -> {
                     minZ = minX = 5.0 / 16.0;
                     maxZ = maxX = 11.0 / 16.0;
                     maxY = 1.0;
                     minY = 14.0 / 16.0;
-                    break;
-                case EAST:
+                }
+                case EAST -> {
                     minZ = minY = 5.0 / 16.0;
                     maxZ = maxY = 11.0 / 16.0;
                     maxX = 2.0 / 16.0;
                     minX = 0.0;
-                    break;
-                case NORTH:
+                }
+                case NORTH -> {
                     minY = minX = 5.0 / 16.0;
                     maxY = maxX = 11.0 / 16.0;
                     maxZ = 1.0;
                     minZ = 14.0 / 16.0;
-                    break;
-                case SOUTH:
+                }
+                case SOUTH -> {
                     minY = minX = 5.0 / 16.0;
                     maxY = maxX = 11.0 / 16.0;
                     maxZ = 2.0 / 16.0;
                     minZ = 0.0;
-                    break;
-                case UP:
+                }
+                case UP -> {
                     minZ = minX = 5.0 / 16.0;
                     maxZ = maxX = 11.0 / 16.0;
                     maxY = 2.0 / 16.0;
                     minY = 0.0;
-                    break;
-                case WEST:
+                }
+                case WEST -> {
                     minZ = minY = 5.0 / 16.0;
                     maxZ = maxY = 11.0 / 16.0;
                     maxX = 1.0;
                     minX = 14.0 / 16.0;
-                    break;
-                default:
-                    break;
+                }
+                default -> {}
             }
 
             return Collections.singletonList(AxisAlignedBB.getBoundingBox(minX, minY, minZ, maxX, maxY, maxZ));

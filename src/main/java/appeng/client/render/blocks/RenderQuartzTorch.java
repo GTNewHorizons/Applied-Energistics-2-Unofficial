@@ -239,23 +239,23 @@ public class RenderQuartzTorch extends BaseBlockRender<AEBaseBlock, AEBaseTile> 
         if (te != null) {
             final ForgeDirection forward = te.getUp();
             switch (forward) {
-                case EAST:
+                case EAST -> {
                     renderer.setRenderBounds(0, bottom + yOff, bottom + zOff, Point2 + xOff, top + yOff, top + zOff);
                     renderer.renderStandardBlock(block, x, y, z);
-                    break;
-                case WEST:
+                }
+                case WEST -> {
                     renderer.setRenderBounds(Point13 + xOff, bottom + yOff, bottom + zOff, 1.0, top + yOff, top + zOff);
                     renderer.renderStandardBlock(block, x, y, z);
-                    break;
-                case NORTH:
+                }
+                case NORTH -> {
                     renderer.setRenderBounds(bottom + xOff, bottom + yOff, Point13 + zOff, top + xOff, top + yOff, 1.0);
                     renderer.renderStandardBlock(block, x, y, z);
-                    break;
-                case SOUTH:
+                }
+                case SOUTH -> {
                     renderer.setRenderBounds(bottom + xOff, bottom + yOff, 0, top + xOff, top + yOff, Point2 + zOff);
                     renderer.renderStandardBlock(block, x, y, z);
-                    break;
-                case UP:
+                }
+                case UP -> {
                     renderer.setRenderBounds(Point2, 0, Point2, Point3, bottom + yOff, Point3);
                     renderer.renderStandardBlock(block, x, y, z);
                     renderer.setRenderBounds(Point2, 0, Point12, Point3, bottom + yOff, Point13);
@@ -264,8 +264,8 @@ public class RenderQuartzTorch extends BaseBlockRender<AEBaseBlock, AEBaseTile> 
                     renderer.renderStandardBlock(block, x, y, z);
                     renderer.setRenderBounds(Point12, 0, Point12, Point13, bottom + yOff, Point13);
                     renderer.renderStandardBlock(block, x, y, z);
-                    break;
-                case DOWN:
+                }
+                case DOWN -> {
                     renderer.setRenderBounds(Point2, top + yOff, Point2, Point3, 1.0, Point3);
                     renderer.renderStandardBlock(block, x, y, z);
                     renderer.setRenderBounds(Point2, top + yOff, Point12, Point3, 1.0, Point13);
@@ -274,8 +274,8 @@ public class RenderQuartzTorch extends BaseBlockRender<AEBaseBlock, AEBaseTile> 
                     renderer.renderStandardBlock(block, x, y, z);
                     renderer.setRenderBounds(Point12, top + yOff, Point12, Point13, 1.0, Point13);
                     renderer.renderStandardBlock(block, x, y, z);
-                    break;
-                default:
+                }
+                default -> {}
             }
         }
 

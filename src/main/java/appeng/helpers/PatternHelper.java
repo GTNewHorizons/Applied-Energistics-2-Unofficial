@@ -149,13 +149,13 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
         final TestStatus result = this.getStatus(slotIndex, i);
 
         switch (result) {
-            case ACCEPT:
+            case ACCEPT -> {
                 return true;
-            case DECLINE:
+            }
+            case DECLINE -> {
                 return false;
-            case TEST:
-            default:
-                break;
+            }
+            default -> {}
         }
 
         for (int x = 0; x < this.crafting.getSizeInventory(); x++) {

@@ -323,24 +323,22 @@ public final class MeteoritePlacer {
                 final int secondaryCount = 1 + lootRng.nextInt(3);
                 for (int zz = 0; zz < secondaryCount; zz++) {
                     switch (lootRng.nextInt(3)) {
-                        case 0:
+                        case 0 -> {
                             final int amount = 1 + lootRng.nextInt(SKYSTONE_SPAWN_LIMIT);
                             for (final ItemStack skyStoneStack : skyStoneDefinition.maybeStack(amount).asSet()) {
                                 ap.addItems(skyStoneStack);
                             }
-                            break;
-                        case 1:
+                        }
+                        case 1 -> {
                             ItemStack nugget = nuggetLoot.get(lootRng.nextInt(nuggetLoot.size()));
                             if (nugget != null) {
                                 nugget = nugget.copy();
                                 nugget.stackSize = 1 + lootRng.nextInt(12);
                                 ap.addItems(nugget);
                             }
-                            break;
-                        case 2:
-                        default:
-                            // Add nothing
-                            break;
+                        }
+                        default -> {}
+                        // Add nothing
                     }
                 }
             }

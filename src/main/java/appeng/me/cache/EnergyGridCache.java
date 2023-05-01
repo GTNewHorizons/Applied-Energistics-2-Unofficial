@@ -97,16 +97,16 @@ public class EnergyGridCache implements IEnergyGrid {
     public void EnergyNodeChanges(final MENetworkPowerStorage ev) {
         if (ev.storage.isAEPublicPowerStorage()) {
             switch (ev.type) {
-                case PROVIDE_POWER:
+                case PROVIDE_POWER -> {
                     if (ev.storage.getPowerFlow() != AccessRestriction.WRITE) {
                         this.providers.add(ev.storage);
                     }
-                    break;
-                case REQUEST_POWER:
+                }
+                case REQUEST_POWER -> {
                     if (ev.storage.getPowerFlow() != AccessRestriction.READ) {
                         this.requesters.add(ev.storage);
                     }
-                    break;
+                }
             }
         } else {
             (new RuntimeException("Attempt to ask the IEnergyGrid to charge a non public energy store."))

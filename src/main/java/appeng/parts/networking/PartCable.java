@@ -161,25 +161,13 @@ public class PartCable extends AEBasePart implements IPartCable {
                     }
 
                     switch (dir) {
-                        case DOWN:
-                            bch.addBox(6.0, dist, 6.0, 10.0, 6.0, 10.0);
-                            break;
-                        case EAST:
-                            bch.addBox(10.0, 6.0, 6.0, 16.0 - dist, 10.0, 10.0);
-                            break;
-                        case NORTH:
-                            bch.addBox(6.0, 6.0, dist, 10.0, 10.0, 6.0);
-                            break;
-                        case SOUTH:
-                            bch.addBox(6.0, 6.0, 10.0, 10.0, 10.0, 16.0 - dist);
-                            break;
-                        case UP:
-                            bch.addBox(6.0, 10.0, 6.0, 10.0, 16.0 - dist, 10.0);
-                            break;
-                        case WEST:
-                            bch.addBox(dist, 6.0, 6.0, 6.0, 10.0, 10.0);
-                            break;
-                        default:
+                        case DOWN -> bch.addBox(6.0, dist, 6.0, 10.0, 6.0, 10.0);
+                        case EAST -> bch.addBox(10.0, 6.0, 6.0, 16.0 - dist, 10.0, 10.0);
+                        case NORTH -> bch.addBox(6.0, 6.0, dist, 10.0, 10.0, 6.0);
+                        case SOUTH -> bch.addBox(6.0, 6.0, 10.0, 10.0, 10.0, 16.0 - dist);
+                        case UP -> bch.addBox(6.0, 10.0, 6.0, 10.0, 16.0 - dist, 10.0);
+                        case WEST -> bch.addBox(dist, 6.0, 6.0, 6.0, 10.0, 10.0);
+                        default -> {}
                     }
                 }
             }
@@ -187,25 +175,13 @@ public class PartCable extends AEBasePart implements IPartCable {
 
         for (final ForgeDirection of : this.getConnections()) {
             switch (of) {
-                case DOWN:
-                    bch.addBox(6.0, 0.0, 6.0, 10.0, 6.0, 10.0);
-                    break;
-                case EAST:
-                    bch.addBox(10.0, 6.0, 6.0, 16.0, 10.0, 10.0);
-                    break;
-                case NORTH:
-                    bch.addBox(6.0, 6.0, 0.0, 10.0, 10.0, 6.0);
-                    break;
-                case SOUTH:
-                    bch.addBox(6.0, 6.0, 10.0, 10.0, 10.0, 16.0);
-                    break;
-                case UP:
-                    bch.addBox(6.0, 10.0, 6.0, 10.0, 16.0, 10.0);
-                    break;
-                case WEST:
-                    bch.addBox(0.0, 6.0, 6.0, 6.0, 10.0, 10.0);
-                    break;
-                default:
+                case DOWN -> bch.addBox(6.0, 0.0, 6.0, 10.0, 6.0, 10.0);
+                case EAST -> bch.addBox(10.0, 6.0, 6.0, 16.0, 10.0, 10.0);
+                case NORTH -> bch.addBox(6.0, 6.0, 0.0, 10.0, 10.0, 6.0);
+                case SOUTH -> bch.addBox(6.0, 6.0, 10.0, 10.0, 10.0, 16.0);
+                case UP -> bch.addBox(6.0, 10.0, 6.0, 10.0, 16.0, 10.0);
+                case WEST -> bch.addBox(0.0, 6.0, 6.0, 6.0, 10.0, 10.0);
+                default -> {}
             }
         }
     }
@@ -227,39 +203,55 @@ public class PartCable extends AEBasePart implements IPartCable {
 
     public IIcon getGlassTexture(final AEColor c) {
         switch (c) {
-            case Black:
+            case Black -> {
                 return CableBusTextures.MECable_Black.getIcon();
-            case Blue:
+            }
+            case Blue -> {
                 return CableBusTextures.MECable_Blue.getIcon();
-            case Brown:
+            }
+            case Brown -> {
                 return CableBusTextures.MECable_Brown.getIcon();
-            case Cyan:
+            }
+            case Cyan -> {
                 return CableBusTextures.MECable_Cyan.getIcon();
-            case Gray:
+            }
+            case Gray -> {
                 return CableBusTextures.MECable_Grey.getIcon();
-            case Green:
+            }
+            case Green -> {
                 return CableBusTextures.MECable_Green.getIcon();
-            case LightBlue:
+            }
+            case LightBlue -> {
                 return CableBusTextures.MECable_LightBlue.getIcon();
-            case LightGray:
+            }
+            case LightGray -> {
                 return CableBusTextures.MECable_LightGrey.getIcon();
-            case Lime:
+            }
+            case Lime -> {
                 return CableBusTextures.MECable_Lime.getIcon();
-            case Magenta:
+            }
+            case Magenta -> {
                 return CableBusTextures.MECable_Magenta.getIcon();
-            case Orange:
+            }
+            case Orange -> {
                 return CableBusTextures.MECable_Orange.getIcon();
-            case Pink:
+            }
+            case Pink -> {
                 return CableBusTextures.MECable_Pink.getIcon();
-            case Purple:
+            }
+            case Purple -> {
                 return CableBusTextures.MECable_Purple.getIcon();
-            case Red:
+            }
+            case Red -> {
                 return CableBusTextures.MECable_Red.getIcon();
-            case White:
+            }
+            case White -> {
                 return CableBusTextures.MECable_White.getIcon();
-            case Yellow:
+            }
+            case Yellow -> {
                 return CableBusTextures.MECable_Yellow.getIcon();
-            default:
+            }
+            default -> {}
         }
 
         final AEColoredItemDefinition glassCable = AEApi.instance().definitions().parts().cableGlass();
@@ -308,26 +300,15 @@ public class PartCable extends AEBasePart implements IPartCable {
                 final int len = bp.cableConnectionRenderTo();
                 if (len < 8) {
                     switch (of) {
-                        case DOWN:
-                            rh.setBounds(6, len, 6, 10, 6, 10);
-                            break;
-                        case EAST:
-                            rh.setBounds(10, 6, 6, 16 - len, 10, 10);
-                            break;
-                        case NORTH:
-                            rh.setBounds(6, 6, len, 10, 10, 6);
-                            break;
-                        case SOUTH:
-                            rh.setBounds(6, 6, 10, 10, 10, 16 - len);
-                            break;
-                        case UP:
-                            rh.setBounds(6, 10, 6, 10, 16 - len, 10);
-                            break;
-                        case WEST:
-                            rh.setBounds(len, 6, 6, 6, 10, 10);
-                            break;
-                        default:
+                        case DOWN -> rh.setBounds(6, len, 6, 10, 6, 10);
+                        case EAST -> rh.setBounds(10, 6, 6, 16 - len, 10, 10);
+                        case NORTH -> rh.setBounds(6, 6, len, 10, 10, 6);
+                        case SOUTH -> rh.setBounds(6, 6, 10, 10, 10, 16 - len);
+                        case UP -> rh.setBounds(6, 10, 6, 10, 16 - len, 10);
+                        case WEST -> rh.setBounds(len, 6, 6, 6, 10, 10);
+                        default -> {
                             continue;
+                        }
                     }
                     rh.renderBlock(x, y, z, renderer);
                 }
@@ -355,22 +336,17 @@ public class PartCable extends AEBasePart implements IPartCable {
             for (final ForgeDirection of : this.getConnections()) {
                 rh.setFacesToRender(EnumSet.complementOf(EnumSet.of(of, of.getOpposite())));
                 switch (of) {
-                    case DOWN:
-                    case UP:
-                        renderer.setRenderBounds(6 / 16.0, 0, 6 / 16.0, 10 / 16.0, 16 / 16.0, 10 / 16.0);
-                        break;
-                    case EAST:
-                    case WEST:
+                    case DOWN, UP -> renderer.setRenderBounds(6 / 16.0, 0, 6 / 16.0, 10 / 16.0, 16 / 16.0, 10 / 16.0);
+                    case EAST, WEST -> {
                         renderer.uvRotateEast = renderer.uvRotateWest = 1;
                         renderer.uvRotateBottom = renderer.uvRotateTop = 1;
                         renderer.setRenderBounds(0, 6 / 16.0, 6 / 16.0, 16 / 16.0, 10 / 16.0, 10 / 16.0);
-                        break;
-                    case NORTH:
-                    case SOUTH:
+                    }
+                    case NORTH, SOUTH -> {
                         renderer.uvRotateNorth = renderer.uvRotateSouth = 1;
                         renderer.setRenderBounds(6 / 16.0, 6 / 16.0, 0, 10 / 16.0, 10 / 16.0, 16 / 16.0);
-                        break;
-                    default:
+                    }
+                    default -> {}
                 }
             }
 
@@ -506,39 +482,55 @@ public class PartCable extends AEBasePart implements IPartCable {
 
     public IIcon getCoveredTexture(final AEColor c) {
         switch (c) {
-            case Black:
+            case Black -> {
                 return CableBusTextures.MECovered_Black.getIcon();
-            case Blue:
+            }
+            case Blue -> {
                 return CableBusTextures.MECovered_Blue.getIcon();
-            case Brown:
+            }
+            case Brown -> {
                 return CableBusTextures.MECovered_Brown.getIcon();
-            case Cyan:
+            }
+            case Cyan -> {
                 return CableBusTextures.MECovered_Cyan.getIcon();
-            case Gray:
+            }
+            case Gray -> {
                 return CableBusTextures.MECovered_Gray.getIcon();
-            case Green:
+            }
+            case Green -> {
                 return CableBusTextures.MECovered_Green.getIcon();
-            case LightBlue:
+            }
+            case LightBlue -> {
                 return CableBusTextures.MECovered_LightBlue.getIcon();
-            case LightGray:
+            }
+            case LightGray -> {
                 return CableBusTextures.MECovered_LightGrey.getIcon();
-            case Lime:
+            }
+            case Lime -> {
                 return CableBusTextures.MECovered_Lime.getIcon();
-            case Magenta:
+            }
+            case Magenta -> {
                 return CableBusTextures.MECovered_Magenta.getIcon();
-            case Orange:
+            }
+            case Orange -> {
                 return CableBusTextures.MECovered_Orange.getIcon();
-            case Pink:
+            }
+            case Pink -> {
                 return CableBusTextures.MECovered_Pink.getIcon();
-            case Purple:
+            }
+            case Purple -> {
                 return CableBusTextures.MECovered_Purple.getIcon();
-            case Red:
+            }
+            case Red -> {
                 return CableBusTextures.MECovered_Red.getIcon();
-            case White:
+            }
+            case White -> {
                 return CableBusTextures.MECovered_White.getIcon();
-            case Yellow:
+            }
+            case Yellow -> {
                 return CableBusTextures.MECovered_Yellow.getIcon();
-            default:
+            }
+            default -> {}
         }
 
         final AEColoredItemDefinition coveredCable = AEApi.instance().definitions().parts().cableCovered();
@@ -571,26 +563,15 @@ public class PartCable extends AEBasePart implements IPartCable {
         } else if (partHost == null && gh != null && gh.getCableConnectionType(of.getOpposite()) != AECableType.GLASS) {
             rh.setTexture(this.getCoveredTexture(this.getCableColor()));
             switch (of) {
-                case DOWN:
-                    rh.setBounds(5, 0, 5, 11, 4, 11);
-                    break;
-                case EAST:
-                    rh.setBounds(12, 5, 5, 16, 11, 11);
-                    break;
-                case NORTH:
-                    rh.setBounds(5, 5, 0, 11, 11, 4);
-                    break;
-                case SOUTH:
-                    rh.setBounds(5, 5, 12, 11, 11, 16);
-                    break;
-                case UP:
-                    rh.setBounds(5, 12, 5, 11, 16, 11);
-                    break;
-                case WEST:
-                    rh.setBounds(0, 5, 5, 4, 11, 11);
-                    break;
-                default:
+                case DOWN -> rh.setBounds(5, 0, 5, 11, 4, 11);
+                case EAST -> rh.setBounds(12, 5, 5, 16, 11, 11);
+                case NORTH -> rh.setBounds(5, 5, 0, 11, 11, 4);
+                case SOUTH -> rh.setBounds(5, 5, 12, 11, 11, 16);
+                case UP -> rh.setBounds(5, 12, 5, 11, 16, 11);
+                case WEST -> rh.setBounds(0, 5, 5, 4, 11, 11);
+                default -> {
                     return;
+                }
             }
 
             rh.renderBlock(x, y, z, renderer);
@@ -600,26 +581,15 @@ public class PartCable extends AEBasePart implements IPartCable {
         }
 
         switch (of) {
-            case DOWN:
-                rh.setBounds(6, 0, 6, 10, 6, 10);
-                break;
-            case EAST:
-                rh.setBounds(10, 6, 6, 16, 10, 10);
-                break;
-            case NORTH:
-                rh.setBounds(6, 6, 0, 10, 10, 6);
-                break;
-            case SOUTH:
-                rh.setBounds(6, 6, 10, 10, 10, 16);
-                break;
-            case UP:
-                rh.setBounds(6, 10, 6, 10, 16, 10);
-                break;
-            case WEST:
-                rh.setBounds(0, 6, 6, 6, 10, 10);
-                break;
-            default:
+            case DOWN -> rh.setBounds(6, 0, 6, 10, 6, 10);
+            case EAST -> rh.setBounds(10, 6, 6, 16, 10, 10);
+            case NORTH -> rh.setBounds(6, 6, 0, 10, 10, 6);
+            case SOUTH -> rh.setBounds(6, 6, 10, 10, 10, 16);
+            case UP -> rh.setBounds(6, 10, 6, 10, 16, 10);
+            case WEST -> rh.setBounds(0, 6, 6, 6, 10, 10);
+            default -> {
                 return;
+            }
         }
 
         rh.renderBlock(x, y, z, renderer);
@@ -644,26 +614,15 @@ public class PartCable extends AEBasePart implements IPartCable {
             if (partHost == null && ghh != null && ghh.getCableConnectionType(of.getOpposite()) != AECableType.GLASS) {
                 rh.setTexture(this.getCoveredTexture(this.getCableColor()));
                 switch (of) {
-                    case DOWN:
-                        rh.setBounds(5, 0, 5, 11, 4, 11);
-                        break;
-                    case EAST:
-                        rh.setBounds(12, 5, 5, 16, 11, 11);
-                        break;
-                    case NORTH:
-                        rh.setBounds(5, 5, 0, 11, 11, 4);
-                        break;
-                    case SOUTH:
-                        rh.setBounds(5, 5, 12, 11, 11, 16);
-                        break;
-                    case UP:
-                        rh.setBounds(5, 12, 5, 11, 16, 11);
-                        break;
-                    case WEST:
-                        rh.setBounds(0, 5, 5, 4, 11, 11);
-                        break;
-                    default:
+                    case DOWN -> rh.setBounds(5, 0, 5, 11, 4, 11);
+                    case EAST -> rh.setBounds(12, 5, 5, 16, 11, 11);
+                    case NORTH -> rh.setBounds(5, 5, 0, 11, 11, 4);
+                    case SOUTH -> rh.setBounds(5, 5, 12, 11, 11, 16);
+                    case UP -> rh.setBounds(5, 12, 5, 11, 16, 11);
+                    case WEST -> rh.setBounds(0, 5, 5, 4, 11, 11);
+                    default -> {
                         return;
+                    }
                 }
 
                 rh.renderBlock(x, y, z, renderer);
@@ -679,26 +638,15 @@ public class PartCable extends AEBasePart implements IPartCable {
                     }
 
         switch (of) {
-            case DOWN:
-                rh.setBounds(6, 0, 6, 10, 5, 10);
-                break;
-            case EAST:
-                rh.setBounds(11, 6, 6, 16, 10, 10);
-                break;
-            case NORTH:
-                rh.setBounds(6, 6, 0, 10, 10, 5);
-                break;
-            case SOUTH:
-                rh.setBounds(6, 6, 11, 10, 10, 16);
-                break;
-            case UP:
-                rh.setBounds(6, 11, 6, 10, 16, 10);
-                break;
-            case WEST:
-                rh.setBounds(0, 6, 6, 5, 10, 10);
-                break;
-            default:
+            case DOWN -> rh.setBounds(6, 0, 6, 10, 5, 10);
+            case EAST -> rh.setBounds(11, 6, 6, 16, 10, 10);
+            case NORTH -> rh.setBounds(6, 6, 0, 10, 10, 5);
+            case SOUTH -> rh.setBounds(6, 6, 11, 10, 10, 16);
+            case UP -> rh.setBounds(6, 11, 6, 10, 16, 10);
+            case WEST -> rh.setBounds(0, 6, 6, 5, 10, 10);
+            default -> {
                 return;
+            }
         }
 
         rh.renderBlock(x, y, z, renderer);
@@ -728,26 +676,15 @@ public class PartCable extends AEBasePart implements IPartCable {
             if (partHost == null && ghh != null && ghh.getCableConnectionType(of.getOpposite()) != AECableType.GLASS) {
                 rh.setTexture(this.getSmartTexture(myColor));
                 switch (of) {
-                    case DOWN:
-                        rh.setBounds(5, 0, 5, 11, 4, 11);
-                        break;
-                    case EAST:
-                        rh.setBounds(12, 5, 5, 16, 11, 11);
-                        break;
-                    case NORTH:
-                        rh.setBounds(5, 5, 0, 11, 11, 4);
-                        break;
-                    case SOUTH:
-                        rh.setBounds(5, 5, 12, 11, 11, 16);
-                        break;
-                    case UP:
-                        rh.setBounds(5, 12, 5, 11, 16, 11);
-                        break;
-                    case WEST:
-                        rh.setBounds(0, 5, 5, 4, 11, 11);
-                        break;
-                    default:
+                    case DOWN -> rh.setBounds(5, 0, 5, 11, 4, 11);
+                    case EAST -> rh.setBounds(12, 5, 5, 16, 11, 11);
+                    case NORTH -> rh.setBounds(5, 5, 0, 11, 11, 4);
+                    case SOUTH -> rh.setBounds(5, 5, 12, 11, 11, 16);
+                    case UP -> rh.setBounds(5, 12, 5, 11, 16, 11);
+                    case WEST -> rh.setBounds(0, 5, 5, 4, 11, 11);
+                    default -> {
                         return;
+                    }
                 }
                 rh.renderBlock(x, y, z, renderer);
 
@@ -783,26 +720,15 @@ public class PartCable extends AEBasePart implements IPartCable {
                     }
 
         switch (of) {
-            case DOWN:
-                rh.setBounds(6, 0, 6, 10, 5, 10);
-                break;
-            case EAST:
-                rh.setBounds(11, 6, 6, 16, 10, 10);
-                break;
-            case NORTH:
-                rh.setBounds(6, 6, 0, 10, 10, 5);
-                break;
-            case SOUTH:
-                rh.setBounds(6, 6, 11, 10, 10, 16);
-                break;
-            case UP:
-                rh.setBounds(6, 11, 6, 10, 16, 10);
-                break;
-            case WEST:
-                rh.setBounds(0, 6, 6, 5, 10, 10);
-                break;
-            default:
+            case DOWN -> rh.setBounds(6, 0, 6, 10, 5, 10);
+            case EAST -> rh.setBounds(11, 6, 6, 16, 10, 10);
+            case NORTH -> rh.setBounds(6, 6, 0, 10, 10, 5);
+            case SOUTH -> rh.setBounds(6, 6, 11, 10, 10, 16);
+            case UP -> rh.setBounds(6, 11, 6, 10, 16, 10);
+            case WEST -> rh.setBounds(0, 6, 6, 5, 10, 10);
+            default -> {
                 return;
+            }
         }
 
         rh.renderBlock(x, y, z, renderer);
@@ -829,39 +755,55 @@ public class PartCable extends AEBasePart implements IPartCable {
 
     IIcon getSmartTexture(final AEColor c) {
         switch (c) {
-            case Black:
+            case Black -> {
                 return CableBusTextures.MESmart_Black.getIcon();
-            case Blue:
+            }
+            case Blue -> {
                 return CableBusTextures.MESmart_Blue.getIcon();
-            case Brown:
+            }
+            case Brown -> {
                 return CableBusTextures.MESmart_Brown.getIcon();
-            case Cyan:
+            }
+            case Cyan -> {
                 return CableBusTextures.MESmart_Cyan.getIcon();
-            case Gray:
+            }
+            case Gray -> {
                 return CableBusTextures.MESmart_Gray.getIcon();
-            case Green:
+            }
+            case Green -> {
                 return CableBusTextures.MESmart_Green.getIcon();
-            case LightBlue:
+            }
+            case LightBlue -> {
                 return CableBusTextures.MESmart_LightBlue.getIcon();
-            case LightGray:
+            }
+            case LightGray -> {
                 return CableBusTextures.MESmart_LightGrey.getIcon();
-            case Lime:
+            }
+            case Lime -> {
                 return CableBusTextures.MESmart_Lime.getIcon();
-            case Magenta:
+            }
+            case Magenta -> {
                 return CableBusTextures.MESmart_Magenta.getIcon();
-            case Orange:
+            }
+            case Orange -> {
                 return CableBusTextures.MESmart_Orange.getIcon();
-            case Pink:
+            }
+            case Pink -> {
                 return CableBusTextures.MESmart_Pink.getIcon();
-            case Purple:
+            }
+            case Purple -> {
                 return CableBusTextures.MESmart_Purple.getIcon();
-            case Red:
+            }
+            case Red -> {
                 return CableBusTextures.MESmart_Red.getIcon();
-            case White:
+            }
+            case White -> {
                 return CableBusTextures.MESmart_White.getIcon();
-            case Yellow:
+            }
+            case Yellow -> {
                 return CableBusTextures.MESmart_Yellow.getIcon();
-            default:
+            }
+            default -> {}
         }
 
         final IParts parts = AEApi.instance().definitions().parts();
@@ -873,32 +815,28 @@ public class PartCable extends AEBasePart implements IPartCable {
     @SideOnly(Side.CLIENT)
     protected void setSmartConnectionRotations(final ForgeDirection of, final RenderBlocks renderer) {
         switch (of) {
-            case UP:
-            case DOWN:
+            case UP, DOWN -> {
                 renderer.uvRotateTop = 0;
                 renderer.uvRotateBottom = 0;
                 renderer.uvRotateSouth = 3;
                 renderer.uvRotateEast = 3;
-                break;
-            case NORTH:
-            case SOUTH:
+            }
+            case NORTH, SOUTH -> {
                 renderer.uvRotateTop = 3;
                 renderer.uvRotateBottom = 3;
                 renderer.uvRotateNorth = 1;
                 renderer.uvRotateSouth = 2;
                 renderer.uvRotateWest = 1;
-                break;
-            case EAST:
-            case WEST:
+            }
+            case EAST, WEST -> {
                 renderer.uvRotateEast = 2;
                 renderer.uvRotateWest = 1;
                 renderer.uvRotateBottom = 2;
                 renderer.uvRotateTop = 1;
                 renderer.uvRotateSouth = 3;
                 renderer.uvRotateNorth = 0;
-                break;
-            default:
-                break;
+            }
+            default -> {}
         }
     }
 
@@ -908,31 +846,21 @@ public class PartCable extends AEBasePart implements IPartCable {
         }
 
         if (b) {
-            switch (i) {
-                default:
-                    return CableBusTextures.Channels10;
-                case 5:
-                    return CableBusTextures.Channels11;
-                case 6:
-                    return CableBusTextures.Channels12;
-                case 7:
-                    return CableBusTextures.Channels13;
-                case 8:
-                    return CableBusTextures.Channels14;
-            }
+            return switch (i) {
+                default -> CableBusTextures.Channels10;
+                case 5 -> CableBusTextures.Channels11;
+                case 6 -> CableBusTextures.Channels12;
+                case 7 -> CableBusTextures.Channels13;
+                case 8 -> CableBusTextures.Channels14;
+            };
         } else {
-            switch (i) {
-                case 0:
-                    return CableBusTextures.Channels00;
-                case 1:
-                    return CableBusTextures.Channels01;
-                case 2:
-                    return CableBusTextures.Channels02;
-                case 3:
-                    return CableBusTextures.Channels03;
-                default:
-                    return CableBusTextures.Channels04;
-            }
+            return switch (i) {
+                case 0 -> CableBusTextures.Channels00;
+                case 1 -> CableBusTextures.Channels01;
+                case 2 -> CableBusTextures.Channels02;
+                case 3 -> CableBusTextures.Channels03;
+                default -> CableBusTextures.Channels04;
+            };
         }
     }
 

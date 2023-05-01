@@ -187,20 +187,14 @@ public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection 
 
     @Override
     public boolean canConnectRedstone(final IBlockAccess w, final int x, final int y, final int z, final int side) {
-        switch (side) {
-            case -1:
-            case 4:
-                return this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.UP, ForgeDirection.DOWN));
-            case 0:
-                return this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.NORTH));
-            case 1:
-                return this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.EAST));
-            case 2:
-                return this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.SOUTH));
-            case 3:
-                return this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.WEST));
-        }
-        return false;
+        return switch (side) {
+            case -1, 4 -> this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.UP, ForgeDirection.DOWN));
+            case 0 -> this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.NORTH));
+            case 1 -> this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.EAST));
+            case 2 -> this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.SOUTH));
+            case 3 -> this.cb(w, x, y, z).canConnectRedstone(EnumSet.of(ForgeDirection.WEST));
+            default -> false;
+        };
     }
 
     @Override

@@ -295,38 +295,37 @@ public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWire
         final IIcon sides = new OffsetIcon(r, 0.0f, -2.0f);
 
         switch (z) {
-            case DOWN:
+            case DOWN -> {
                 renderer.uvRotateNorth = 3;
                 renderer.uvRotateSouth = 3;
                 renderer.uvRotateEast = 3;
                 renderer.uvRotateWest = 3;
-                break;
-            case EAST:
+            }
+            case EAST -> {
                 renderer.uvRotateTop = 1;
                 renderer.uvRotateBottom = 2;
                 renderer.uvRotateEast = 2;
                 renderer.uvRotateWest = 1;
-                break;
-            case NORTH:
+            }
+            case NORTH -> {
                 renderer.uvRotateTop = 0;
                 renderer.uvRotateBottom = 0;
                 renderer.uvRotateNorth = 2;
                 renderer.uvRotateSouth = 1;
-                break;
-            case SOUTH:
+            }
+            case SOUTH -> {
                 renderer.uvRotateTop = 3;
                 renderer.uvRotateBottom = 3;
                 renderer.uvRotateNorth = 1;
                 renderer.uvRotateSouth = 2;
-                break;
-            case WEST:
+            }
+            case WEST -> {
                 renderer.uvRotateTop = 2;
                 renderer.uvRotateBottom = 1;
                 renderer.uvRotateEast = 1;
                 renderer.uvRotateWest = 2;
-                break;
-            default:
-                break;
+            }
+            default -> {}
         }
 
         Tessellator.instance.setColorOpaque_I(0xffffff);

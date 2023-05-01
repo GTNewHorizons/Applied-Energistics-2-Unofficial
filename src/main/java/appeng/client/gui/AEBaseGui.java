@@ -444,28 +444,20 @@ public abstract class AEBaseGui extends GuiContainer {
             InventoryAction action = null;
 
             switch (mouseButton) {
-                case 0: // pickup / set-down.
+                case 0 -> // pickup / set-down.
                 {
                     ItemStack heldStack = player.inventory.getItemStack();
                     if (slot.getStack() == null && heldStack != null) action = InventoryAction.SPLIT_OR_PLACE_SINGLE;
                     else if (slot.getStack() != null && (heldStack == null || heldStack.stackSize <= 1))
                         action = InventoryAction.PICKUP_OR_SET_DOWN;
                 }
-                    break;
-                case 1:
-                    action = ctrlDown == 1 ? InventoryAction.PICKUP_SINGLE : InventoryAction.SHIFT_CLICK;
-                    break;
-
-                case 3: // creative dupe:
+                case 1 -> action = ctrlDown == 1 ? InventoryAction.PICKUP_SINGLE : InventoryAction.SHIFT_CLICK;
+                case 3 -> { // creative dupe:
                     if (player.capabilities.isCreativeMode) {
                         action = InventoryAction.CREATIVE_DUPLICATE;
                     }
-
-                    break;
-
-                default:
-                case 4: // drop item:
-                case 6:
+                } // drop item:
+                default -> {}
             }
 
             if (action != null) {
@@ -484,23 +476,20 @@ public abstract class AEBaseGui extends GuiContainer {
             IAEItemStack stack = null;
 
             switch (mouseButton) {
-                case 0: // pickup / set-down.
+                case 0 -> { // pickup / set-down.
                     action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE : InventoryAction.PICKUP_OR_SET_DOWN;
                     stack = ((SlotME) slot).getAEStack();
-
                     if (stack != null && action == InventoryAction.PICKUP_OR_SET_DOWN
                             && stack.getStackSize() == 0
                             && player.inventory.getItemStack() == null) {
                         action = InventoryAction.AUTO_CRAFT;
                     }
-
-                    break;
-                case 1:
+                }
+                case 1 -> {
                     action = ctrlDown == 1 ? InventoryAction.PICKUP_SINGLE : InventoryAction.SHIFT_CLICK;
                     stack = ((SlotME) slot).getAEStack();
-                    break;
-
-                case 3: // creative dupe:
+                }
+                case 3 -> { // creative dupe:
                     stack = ((SlotME) slot).getAEStack();
                     if (stack != null && stack.isCraftable()) {
                         action = InventoryAction.AUTO_CRAFT;
@@ -510,11 +499,8 @@ public abstract class AEBaseGui extends GuiContainer {
                             action = InventoryAction.CREATIVE_DUPLICATE;
                         }
                     }
-                    break;
-
-                default:
-                case 4: // drop item:
-                case 6:
+                } // drop item:
+                default -> {}
             }
 
             if (action != null) {

@@ -540,44 +540,37 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
 
         boolean flip = false;
         switch (orientation) {
-            case NORTH:
+            case NORTH -> {
                 layerAX = 1.0;
                 layerBY = 1.0;
                 flip = true;
-
-                break;
-            case SOUTH:
+            }
+            case SOUTH -> {
                 layerAX = 1.0;
                 layerBY = 1.0;
                 offsetZ = 1.0;
-
-                break;
-            case EAST:
+            }
+            case EAST -> {
                 flip = true;
                 layerAZ = 1.0;
                 layerBY = 1.0;
                 offsetX = 1.0;
-
-                break;
-            case WEST:
+            }
+            case WEST -> {
                 layerAZ = 1.0;
                 layerBY = 1.0;
-
-                break;
-            case UP:
+            }
+            case UP -> {
                 flip = true;
                 layerAX = 1.0;
                 layerBZ = 1.0;
                 offsetY = 1.0;
-
-                break;
-            case DOWN:
+            }
+            case DOWN -> {
                 layerAX = 1.0;
                 layerBZ = 1.0;
-
-                break;
-            default:
-                break;
+            }
+            default -> {}
         }
 
         offsetX += x;
@@ -728,26 +721,13 @@ public class BaseBlockRender<B extends AEBaseBlock, T extends AEBaseTile> {
     protected void renderFace(final int x, final int y, final int z, final B block, final IIcon ico,
             final RenderBlocks renderer, final ForgeDirection orientation) {
         switch (orientation) {
-            case NORTH:
-                renderer.renderFaceZNeg(block, x, y, z, ico);
-                break;
-            case SOUTH:
-                renderer.renderFaceZPos(block, x, y, z, ico);
-                break;
-            case EAST:
-                renderer.renderFaceXPos(block, x, y, z, ico);
-                break;
-            case WEST:
-                renderer.renderFaceXNeg(block, x, y, z, ico);
-                break;
-            case UP:
-                renderer.renderFaceYPos(block, x, y, z, ico);
-                break;
-            case DOWN:
-                renderer.renderFaceYNeg(block, x, y, z, ico);
-                break;
-            default:
-                break;
+            case NORTH -> renderer.renderFaceZNeg(block, x, y, z, ico);
+            case SOUTH -> renderer.renderFaceZPos(block, x, y, z, ico);
+            case EAST -> renderer.renderFaceXPos(block, x, y, z, ico);
+            case WEST -> renderer.renderFaceXNeg(block, x, y, z, ico);
+            case UP -> renderer.renderFaceYPos(block, x, y, z, ico);
+            case DOWN -> renderer.renderFaceYNeg(block, x, y, z, ico);
+            default -> {}
         }
     }
 
