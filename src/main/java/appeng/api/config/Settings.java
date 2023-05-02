@@ -64,7 +64,9 @@ public enum Settings {
 
     INSERTION_MODE(EnumSet.allOf(InsertionMode.class)),
 
-    SIDELESS_MODE(EnumSet.allOf(SidelessMode.class));
+    SIDELESS_MODE(EnumSet.allOf(SidelessMode.class)),
+
+    ADVANCED_BLOCKING_MODE(EnumSet.allOf(AdvancedBlockingMode.class));
 
     private final EnumSet<? extends Enum<?>> values;
 

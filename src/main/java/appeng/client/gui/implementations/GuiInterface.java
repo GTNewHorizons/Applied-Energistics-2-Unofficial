@@ -15,9 +15,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.InsertionMode;
-import appeng.api.config.Settings;
-import appeng.api.config.YesNo;
+import appeng.api.config.*;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.GuiToggleButton;
@@ -36,6 +34,8 @@ public class GuiInterface extends GuiUpgradeable {
     private GuiImgButton BlockMode;
     private GuiToggleButton interfaceMode;
     private GuiImgButton insertionMode;
+
+    private GuiImgButton advancedBlockingMode;
 
     public GuiInterface(final InventoryPlayer inventoryPlayer, final IInterfaceHost te) {
         super(new ContainerInterface(inventoryPlayer, te));
@@ -70,6 +70,14 @@ public class GuiInterface extends GuiUpgradeable {
                 Settings.INSERTION_MODE,
                 InsertionMode.DEFAULT);
         this.buttonList.add(this.insertionMode);
+
+        this.advancedBlockingMode = new GuiImgButton(
+                this.guiLeft - 18,
+                this.guiTop + 62,
+                Settings.ADVANCED_BLOCKING_MODE,
+                AdvancedBlockingMode.DEFAULT);
+        this.advancedBlockingMode.visible = this.bc.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0;
+        this.buttonList.add(advancedBlockingMode);
     }
 
     @Override
@@ -84,6 +92,10 @@ public class GuiInterface extends GuiUpgradeable {
 
         if (this.insertionMode != null) {
             this.insertionMode.set(((ContainerInterface) this.cvb).getInsertionMode());
+        }
+
+        if (this.advancedBlockingMode != null) {
+            this.advancedBlockingMode.set(((ContainerInterface) this.cvb).getAdvancedBlockingMode());
         }
 
         this.fontRendererObj.drawString(
@@ -124,6 +136,19 @@ public class GuiInterface extends GuiUpgradeable {
 
         if (btn == this.insertionMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.insertionMode.getSetting(), backwards));
+        }
+
+        if (btn == this.advancedBlockingMode) {
+            NetworkHandler.instance
+                    .sendToServer(new PacketConfigButton(this.advancedBlockingMode.getSetting(), backwards));
+        }
+    }
+
+    @Override
+    protected void handleButtonVisibility() {
+        super.handleButtonVisibility();
+        if (this.advancedBlockingMode != null) {
+            this.advancedBlockingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0);
         }
     }
 }

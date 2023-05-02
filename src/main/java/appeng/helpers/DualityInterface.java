@@ -128,6 +128,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.cm.registerSetting(Settings.BLOCK, YesNo.NO);
         this.cm.registerSetting(Settings.INTERFACE_TERMINAL, YesNo.YES);
         this.cm.registerSetting(Settings.INSERTION_MODE, InsertionMode.DEFAULT);
+        this.cm.registerSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.DEFAULT);
 
         this.iHost = ih;
         this.craftingTracker = new MultiCraftingTracker(this.iHost, 9);
@@ -157,7 +158,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         if (this.isWorking) {
             return;
         }
-
         if (inv == this.config) {
             this.readConfig();
         } else if (inv == this.patterns && (removed != null || added != null)) {
