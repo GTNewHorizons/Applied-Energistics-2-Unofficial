@@ -36,6 +36,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
     private int craftingUpgrades = 0;
     private int oreFilterUpgrades = 0;
     private int patternCapacityUpgrades = 0;
+    private int advancedBlockingUpgrades = 0;
 
     public UpgradeInventory(final IAEAppEngInventory parent, final int s) {
         super(null, s);
@@ -83,6 +84,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
             case INVERTER -> this.inverterUpgrades;
             case CRAFTING -> this.craftingUpgrades;
             case ORE_FILTER -> this.oreFilterUpgrades;
+            case ADVANCED_BLOCKING -> this.advancedBlockingUpgrades;
             default -> 0;
         };
     }
@@ -91,7 +93,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
 
     private void updateUpgradeInfo() {
         this.cached = true;
-        this.patternCapacityUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = 0;
+        this.patternCapacityUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = this.advancedBlockingUpgrades = 0;
 
         for (final ItemStack is : this) {
             if (is == null || is.getItem() == null || !(is.getItem() instanceof IUpgradeModule)) {
@@ -109,6 +111,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
                 case INVERTER -> this.inverterUpgrades++;
                 case CRAFTING -> this.craftingUpgrades++;
                 case ORE_FILTER -> this.oreFilterUpgrades++;
+                case ADVANCED_BLOCKING -> this.advancedBlockingUpgrades++;
                 default -> {}
             }
         }
@@ -123,6 +126,8 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
         this.patternCapacityUpgrades = Math
                 .min(this.patternCapacityUpgrades, this.getMaxInstalled(Upgrades.PATTERN_CAPACITY));
         this.oreFilterUpgrades = Math.min(this.oreFilterUpgrades, this.getMaxInstalled(Upgrades.ORE_FILTER));
+        this.advancedBlockingUpgrades = Math
+                .min(this.advancedBlockingUpgrades, this.getMaxInstalled(Upgrades.ADVANCED_BLOCKING));
     }
 
     @Override

@@ -49,3 +49,7 @@ shaped=
 shapeless=
     ae2:ItemMaterial.BasicCard ae2:ItemPart.ImportBus ae2:ItemMaterial.BlankPattern
     -> ae2:ItemMaterial.CardPatternRefiller
+
+shapeless=
+    ae2:ItemMaterial.AdvCard ae2:ItemPart.StorageBus ae2:ItemPart.LevelEmitter
+    -> ae2:ItemMaterial.CardAdvancedBlocking

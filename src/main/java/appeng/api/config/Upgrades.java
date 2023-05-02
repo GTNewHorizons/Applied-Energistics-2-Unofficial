@@ -31,6 +31,7 @@ public enum Upgrades {
     CAPACITY(0),
     REDSTONE(0),
     CRAFTING(0),
+    PATTERN_REFILLER(0),
 
     /**
      * Diamond Tier Upgrades.
@@ -41,7 +42,7 @@ public enum Upgrades {
     INVERTER(1),
     PATTERN_CAPACITY(1),
     ORE_FILTER(1),
-    PATTERN_REFILLER(0);
+    ADVANCED_BLOCKING(1);
 
     /**
      * @deprecated use {@link Upgrades#getTier()}

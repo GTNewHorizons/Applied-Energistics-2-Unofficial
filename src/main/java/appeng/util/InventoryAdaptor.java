@@ -25,6 +25,7 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBetterStorage;
 import appeng.tile.AEBaseInvTile;
+import appeng.tile.misc.TileInterface;
 import appeng.util.inv.*;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
@@ -52,6 +53,9 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             return new AdaptorIInventory(Platform.GetChestInv(te));
         } else if (te instanceof ISidedInventory si) {
             final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
+            if (te instanceof TileInterface) {
+                return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), (TileInterface) te);
+            }
             int stackLimit = 0;
             if (te instanceof AEBaseInvTile) {
                 stackLimit = ((AEBaseInvTile) te).getInternalInventory().getInventoryStackLimit();
