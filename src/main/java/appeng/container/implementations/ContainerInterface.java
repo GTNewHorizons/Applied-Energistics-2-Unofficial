@@ -161,7 +161,6 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         this.insertionMode = insertionMode;
     }
 
-
     public AdvancedBlockingMode getAdvancedBlockingMode() {
         return this.advancedBlockingMode;
     }
@@ -169,6 +168,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     private void setAdvancedBlockingMode(final AdvancedBlockingMode mode) {
         this.advancedBlockingMode = mode;
     }
+
     public int getPatternCapacityCardsInstalled() {
         if (Platform.isClient() && isEmpty) return -1;
         if (myDuality == null) return 0;

@@ -10,12 +10,12 @@
 
 package appeng.client.gui.implementations;
 
-import appeng.api.config.*;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Mouse;
 
+import appeng.api.config.*;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.GuiToggleButton;
@@ -98,7 +98,6 @@ public class GuiInterface extends GuiUpgradeable {
             this.advancedBlockingMode.set(((ContainerInterface) this.cvb).getAdvancedBlockingMode());
         }
 
-
         this.fontRendererObj.drawString(
                 this.getGuiDisplayName(GuiText.Interface.getLocal()),
                 8,
@@ -140,7 +139,8 @@ public class GuiInterface extends GuiUpgradeable {
         }
 
         if (btn == this.advancedBlockingMode) {
-            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.advancedBlockingMode.getSetting(), backwards));
+            NetworkHandler.instance
+                    .sendToServer(new PacketConfigButton(this.advancedBlockingMode.getSetting(), backwards));
         }
     }
 
@@ -148,8 +148,7 @@ public class GuiInterface extends GuiUpgradeable {
     protected void handleButtonVisibility() {
         super.handleButtonVisibility();
         if (this.advancedBlockingMode != null) {
-            this.advancedBlockingMode.setVisibility(
-                    this.bc.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0);
+            this.advancedBlockingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0);
         }
     }
 }

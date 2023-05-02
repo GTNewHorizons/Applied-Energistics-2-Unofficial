@@ -1,12 +1,12 @@
 package appeng.util.inv;
 
-import appeng.api.config.AdvancedBlockingMode;
-import appeng.api.config.Settings;
-import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IItemList;
 import net.minecraft.inventory.IInventory;
 
+import appeng.api.config.AdvancedBlockingMode;
+import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
+import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IItemList;
 import appeng.helpers.DualityInterface;
 import appeng.tile.misc.TileInterface;
 
