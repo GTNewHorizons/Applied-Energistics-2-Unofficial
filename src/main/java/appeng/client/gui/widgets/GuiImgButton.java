@@ -584,6 +584,18 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     SidelessMode.SIDELESS,
                     ButtonToolTips.SidelessModeSideless,
                     ButtonToolTips.SidelessModeSidelessDesc);
+            this.registerApp(
+                    16 * 9 + 8,
+                    Settings.ADVANCED_BLOCKING_MODE,
+                    AdvancedBlockingMode.DEFAULT,
+                    ButtonToolTips.AdvancedBlockingModeDefault,
+                    ButtonToolTips.AdvancedBlockingModeDefaultDesc);
+            this.registerApp(
+                    16 * 9 + 9,
+                    Settings.ADVANCED_BLOCKING_MODE,
+                    AdvancedBlockingMode.BLOCK_ON_ALL,
+                    ButtonToolTips.AdvancedBlockingModeAll,
+                    ButtonToolTips.AdvancedBlockingModeAllDesc);
         }
     }
 

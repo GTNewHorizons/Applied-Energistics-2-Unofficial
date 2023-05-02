@@ -34,6 +34,9 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     @GuiSync(4)
     public YesNo iTermMode = YesNo.YES;
 
+    @GuiSync(5)
+    public AdvancedBlockingMode advancedBlockingMode = AdvancedBlockingMode.DEFAULT;
+
     @GuiSync(8)
     public InsertionMode insertionMode = InsertionMode.DEFAULT;
 
@@ -131,6 +134,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         this.setBlockingMode((YesNo) cm.getSetting(Settings.BLOCK));
         this.setInterfaceTerminalMode((YesNo) cm.getSetting(Settings.INTERFACE_TERMINAL));
         this.setInsertionMode((InsertionMode) cm.getSetting(Settings.INSERTION_MODE));
+        this.setAdvancedBlockingMode((AdvancedBlockingMode) cm.getSetting(Settings.ADVANCED_BLOCKING_MODE));
     }
 
     public YesNo getBlockingMode() {
@@ -157,6 +161,14 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         this.insertionMode = insertionMode;
     }
 
+
+    public AdvancedBlockingMode getAdvancedBlockingMode() {
+        return this.advancedBlockingMode;
+    }
+
+    private void setAdvancedBlockingMode(final AdvancedBlockingMode mode) {
+        this.advancedBlockingMode = mode;
+    }
     public int getPatternCapacityCardsInstalled() {
         if (Platform.isClient() && isEmpty) return -1;
         if (myDuality == null) return 0;

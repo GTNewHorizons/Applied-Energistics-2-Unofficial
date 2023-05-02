@@ -174,7 +174,12 @@ public enum ButtonToolTips {
     SidelessModeSided,
     SidelessModeSidedDesc,
     SidelessModeSideless,
-    SidelessModeSidelessDesc,;
+    SidelessModeSidelessDesc,
+
+    AdvancedBlockingModeDefault,
+    AdvancedBlockingModeDefaultDesc,
+    AdvancedBlockingModeAll,
+    AdvancedBlockingModeAllDesc,;
 
     private final String root;
 

@@ -128,6 +128,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.cm.registerSetting(Settings.BLOCK, YesNo.NO);
         this.cm.registerSetting(Settings.INTERFACE_TERMINAL, YesNo.YES);
         this.cm.registerSetting(Settings.INSERTION_MODE, InsertionMode.DEFAULT);
+        this.cm.registerSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.DEFAULT);
 
         this.iHost = ih;
         this.craftingTracker = new MultiCraftingTracker(this.iHost, 9);
@@ -145,6 +146,15 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.iHost.saveChanges();
     }
 
+    /**
+     * Called so that the advanced blocking card setting is not used
+     */
+    public void upgradesChanged() {
+        if (getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) == 0) {
+            this.getConfigManager().putSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.DEFAULT);
+        }
+    }
+
     @Override
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc, final ItemStack removed,
             final ItemStack added) {
@@ -157,7 +167,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         if (this.isWorking) {
             return;
         }
-
         if (inv == this.config) {
             this.readConfig();
         } else if (inv == this.patterns && (removed != null || added != null)) {
@@ -180,6 +189,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     // :P
                 }
             }
+        } else if (inv == this.upgrades) {
+            upgradesChanged();
         }
     }
 
