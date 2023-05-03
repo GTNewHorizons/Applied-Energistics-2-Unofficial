@@ -8,20 +8,20 @@ import appeng.api.config.Upgrades;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.helpers.DualityInterface;
-import appeng.tile.misc.TileInterface;
+import appeng.helpers.IInterfaceHost;
 
 public class AdaptorDualityInterface extends AdaptorIInventory {
 
-    private final TileInterface tileInterface;
+    public final IInterfaceHost interfaceHost;
 
-    public AdaptorDualityInterface(IInventory s, TileInterface tileInterface) {
+    public AdaptorDualityInterface(IInventory s, IInterfaceHost interfaceHost) {
         super(s);
-        this.tileInterface = tileInterface;
+        this.interfaceHost = interfaceHost;
     }
 
     @Override
     public boolean containsItems() {
-        DualityInterface dual = tileInterface.getInterfaceDuality();
+        DualityInterface dual = interfaceHost.getInterfaceDuality();
         boolean hasMEItems = false;
         if (dual.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
             if (dual.getConfigManager().getSetting(Settings.ADVANCED_BLOCKING_MODE) == AdvancedBlockingMode.DEFAULT) {

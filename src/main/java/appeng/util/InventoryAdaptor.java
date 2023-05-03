@@ -21,11 +21,14 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
+import appeng.api.parts.IPart;
+import appeng.helpers.IInterfaceHost;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBetterStorage;
 import appeng.tile.AEBaseInvTile;
 import appeng.tile.misc.TileInterface;
+import appeng.tile.networking.TileCableBus;
 import appeng.util.inv.*;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
@@ -54,7 +57,12 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         } else if (te instanceof ISidedInventory si) {
             final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
             if (te instanceof TileInterface) {
-                return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), (TileInterface) te);
+                return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), (IInterfaceHost) te);
+            } else if (te instanceof TileCableBus) {
+                IPart part = ((TileCableBus) te).getPart(d);
+                if (part instanceof IInterfaceHost host) {
+                    return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), host);
+                }
             }
             int stackLimit = 0;
             if (te instanceof AEBaseInvTile) {
