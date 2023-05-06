@@ -468,7 +468,7 @@ item.appliedenergistics2.ItemMaterial.CardInverter.name=Карта инверт�
 item.appliedenergistics2.ItemMaterial.CardRedstone.name=Карта красного камня
 item.appliedenergistics2.ItemMaterial.CardSpeed.name=Карта ускорения
 item.appliedenergistics2.ItemMaterial.CardSuperSpeed.name=Карта гиперускорения
-item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Карта фильтрации по OreDictionary
+item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Карта фильтрации по словарю руд
 item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=Карта автозагрузки шаблонов
 item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=Продвинутая карта блокировки
 
