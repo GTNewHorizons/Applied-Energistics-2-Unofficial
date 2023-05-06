@@ -223,6 +223,79 @@ public abstract class AEBaseGui extends GuiContainer {
         GL11.glPopAttrib();
     }
 
+    /**
+     * Utility to add the vertices of a rectangle to an active Tesselator tesselation. The rectangle is defined to be
+     * between points (x0, y0)..(x1, y1) and have corresponding texture coordinates (u0, v0)..(u1, v1).
+     */
+    public void addTexturedRectToTesselator(float x0, float y0, float x1, float y1, float zLevel, float u0, float v0,
+            float u1, float v1) {
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.addVertexWithUV(x0, y1, this.zLevel, u0, v1);
+        tessellator.addVertexWithUV(x1, y1, this.zLevel, u1, v1);
+        tessellator.addVertexWithUV(x1, y0, this.zLevel, u1, v0);
+        tessellator.addVertexWithUV(x0, y0, this.zLevel, u0, v0);
+    }
+
+    /**
+     * Like {@link net.minecraft.client.gui.Gui#drawTexturedModalRect(int, int, int, int, int, int)} but draws the
+     * texture in 9 patches, stretching the middle patch in X&Y directions. The north, east, west and south patches are
+     * stretched along one axis, and the corner patches are rendered in 1:1 scale to preserve corner texture quality. A
+     * 256x256 GUI texture size is assumed like in the vanilla function.
+     *
+     * @see <a href="https://developer.android.com/develop/ui/views/graphics/drawables#nine-patch">Android documentation
+     *      for a more detailed description.</a>
+     * @param x        X coordinate of the drawn rectangle of the screen
+     * @param y        Y coordinate of the drawn rectangle of the screen
+     * @param width    Width of the drawn rectangle of the screen
+     * @param height   Height of the drawn rectangle of the screen
+     * @param textureX X coordinate of the top-left pixel in the texture
+     * @param textureY Y coordinate of the top-left pixel in the texture
+     * @param textureW Width of texture fragment to draw
+     * @param textureH Height of texture fragment to draw
+     */
+    public void drawTextured9PatchRect(int x, int y, int width, int height, int textureX, int textureY, int textureW,
+            int textureH) {
+        final float uvScale = 1.0f / 256.0f;
+
+        // On-screen thirds (use texture thirds as corner sizes)
+        // 03 = 0/3, 13 = 1/3, etc.
+        final float x03 = x;
+        final float x13 = x + textureW / 3f;
+        final float x23 = x + width - textureW / 3f;
+        final float x33 = x + width;
+        final float y03 = y;
+        final float y13 = y + textureH / 3f;
+        final float y23 = y + height - textureH / 3f;
+        final float y33 = y + height;
+        // Texture UV thirds (uniformly scaled 3x3 grid)
+        final float u03 = uvScale * textureX;
+        final float u13 = uvScale * (textureX + textureW / 3f);
+        final float u23 = uvScale * (textureX + 2 * textureW / 3f);
+        final float u33 = uvScale * (textureX + textureW);
+        final float v03 = uvScale * textureY;
+        final float v13 = uvScale * (textureY + textureH / 3f);
+        final float v23 = uvScale * (textureY + 2 * textureH / 3f);
+        final float v33 = uvScale * (textureY + textureH);
+
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
+
+        // top row
+        addTexturedRectToTesselator(x03, y03, x13, y13, this.zLevel, u03, v03, u13, v13); // top-left
+        addTexturedRectToTesselator(x13, y03, x23, y13, this.zLevel, u13, v03, u23, v13); // top-middle
+        addTexturedRectToTesselator(x23, y03, x33, y13, this.zLevel, u23, v03, u33, v13); // top-right
+        // middle row
+        addTexturedRectToTesselator(x03, y13, x13, y23, this.zLevel, u03, v13, u13, v23); // middle-left
+        addTexturedRectToTesselator(x13, y13, x23, y23, this.zLevel, u13, v13, u23, v23); // middle-middle
+        addTexturedRectToTesselator(x23, y13, x33, y23, this.zLevel, u23, v13, u33, v23); // middle-right
+        // bottom row
+        addTexturedRectToTesselator(x03, y23, x13, y33, this.zLevel, u03, v23, u13, v33); // bottom-left
+        addTexturedRectToTesselator(x13, y23, x23, y33, this.zLevel, u13, v23, u23, v33); // bottom-middle
+        addTexturedRectToTesselator(x23, y23, x33, y33, this.zLevel, u23, v23, u33, v33); // bottom-right
+
+        tessellator.draw();
+    }
+
     @Override
     protected final void drawGuiContainerForegroundLayer(final int x, final int y) {
         final int ox = this.guiLeft; // (width - xSize) / 2;

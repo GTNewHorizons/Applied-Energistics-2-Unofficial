@@ -24,7 +24,7 @@ import appeng.util.ReadableNumberConverter;
 public class GuiCraftingTree {
 
     private final AEBaseGui parent;
-    private final int widgetX, widgetY, widgetW, widgetH;
+    public int widgetX, widgetY, widgetW, widgetH;
 
     public float scrollX = -8, scrollY = -8;
     private CraftingRequest<?> request;
