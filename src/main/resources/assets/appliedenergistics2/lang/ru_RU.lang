@@ -47,9 +47,17 @@ tile.appliedenergistics2.BlockCraftingStorage.name=1К хранилище соз
 tile.appliedenergistics2.BlockCraftingStorage4k.name=4К хранилище создания
 tile.appliedenergistics2.BlockCraftingStorage16k.name=16К хранилище создания
 tile.appliedenergistics2.BlockCraftingStorage64k.name=64К хранилище создания
-tile.appliedenergistics2.BlockCraftingAccelerator.name=Блок обработки создания
-tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4х ядерный блок обработки создания
-tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16и ядерный блок обработки создания
+tile.appliedenergistics2.BlockCraftingStorage256k.name=256К хранилище создания
+tile.appliedenergistics2.BlockCraftingStorage1024k.name=1024К хранилище создания
+tile.appliedenergistics2.BlockCraftingStorage4096k.name=4096К хранилище создания
+tile.appliedenergistics2.BlockCraftingStorage16384k.name=16384К хранилище создания
+tile.appliedenergistics2.BlockCraftingAccelerator.name=Сопроцессор создания
+tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4-х ядерный сопроцессор создания
+tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16-х ядерный сопроцессор создания
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64-х ядерный сопроцессор создания
+tile.appliedenergistics2.BlockCraftingAccelerator256x.name=256-х ядерный сопроцессор создания
+tile.appliedenergistics2.BlockCraftingAccelerator1024x.name=1024-х ядерный сопроцессор создания
+tile.appliedenergistics2.BlockCraftingAccelerator4096x.name=4096-х ядерный сопроцессор создания
 tile.appliedenergistics2.BlockCraftingUnit.name=Блок создания
 tile.appliedenergistics2.BlockMolecularAssembler.name=Молекулярный сборщик
 
@@ -95,6 +103,7 @@ chat.appliedenergistics2.TunnelHasNoOutputs=Туннель не имеет вы�
 chat.appliedenergistics2.TunnelOutputsAreAt=Выходы туннеля находятся в:
 chat.appliedenergistics2.InterfaceInOtherDim=Интерфейс расположен в измерении: %d и не может быть подсвечен
 chat.appliedenergistics2.InterfaceHighlighted=Интерфейс сейчас подсвечен и находится: %d, %d, %d
+
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
 itemGroup.appliedenergistics2.facades=Applied Energistics 2 - Фасады
@@ -111,6 +120,7 @@ gui.appliedenergistics2.LightTunnel=Свет
 gui.appliedenergistics2.OCTunnel=OpenComputers
 gui.appliedenergistics2.PressureTunnel=Pressure
 gui.appliedenergistics2.GTTunnel=GT EU
+gui.appliedenergistics2.IFACETunnel=МЭ Интерфейс
 
 gui.appliedenergistics2.security.extract.name=Забирать
 gui.appliedenergistics2.security.inject.name=Класть
@@ -245,6 +255,7 @@ gui.appliedenergistics2.Renamer=Пользовательское имя: (Вве
 gui.appliedenergistics2.OreFilterLabel=Фильтр Ore dictionary
 gui.appliedenergistics2.HoldShiftForTooltip=Удерживайте нажатой клавишу shift для расширенной всплывающей подсказки
 gui.appliedenergistics2.Nothing=Ничего
+gui.appliedenergistics2.VoidCellTooltip=Удаляет §4всё§7, что помещено в неё
 
 # GUI Tooltips
 gui.tooltips.appliedenergistics2.Stash=Хранить предметы
@@ -372,6 +383,11 @@ gui.tooltips.appliedenergistics2.HighlightInterface=Подсветка инте�
 gui.tooltips.appliedenergistics2.SearchFieldInputs=Inputs OR names
 gui.tooltips.appliedenergistics2.SearchFieldOutputs=Outputs OR names
 
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefault=Блокировка по умолчанию
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefaultDesc=Блокировка интерфейса следуют стандартным правилам (игнорируют схемы и т.д.).
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeAll=Свободный режим
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeAllDesc=Блокировка проверяет наличие любого предмета в МЭ системе, включая схемы.
+
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=Эе
@@ -410,7 +426,7 @@ waila.appliedenergistics2.Contains=Содержит
 waila.appliedenergistics2.Channels=Каналы: %1$d из %2$d
 waila.appliedenergistics2.P2PUnlinked=Несвязанный
 waila.appliedenergistics2.P2PInputOneOutput=Связанный (Входная сторона)
-waila.appliedenergistics2.P2PInputManyOutputs=Linked (Input Side) - выходов %d
+waila.appliedenergistics2.P2PInputManyOutputs=Связанный (Входная сторона) - выходов %d
 waila.appliedenergistics2.P2POutput=Связанный (Выходная сторона)
 
 # Items
@@ -418,7 +434,15 @@ item.appliedenergistics2.ItemBasicStorageCell.1k.name=1К МЭ ячейка хр
 item.appliedenergistics2.ItemBasicStorageCell.4k.name=4К МЭ ячейка хранения
 item.appliedenergistics2.ItemBasicStorageCell.16k.name=16К МЭ ячейка хранения
 item.appliedenergistics2.ItemBasicStorageCell.64k.name=64К МЭ ячейка хранения
-item.appliedenergistics2.ItemCreativeStorageCell.name=Творческая МЭ ячейка хранения
+item.appliedenergistics2.ItemAdvancedStorageCell.256k.name=256К МЭ ячейка хранения
+item.appliedenergistics2.ItemAdvancedStorageCell.1024k.name=102К МЭ ячейка хранения
+item.appliedenergistics2.ItemAdvancedStorageCell.4096k.name=4096К МЭ ячейка хранения
+item.appliedenergistics2.ItemAdvancedStorageCell.16384k.name=16384К МЭ ячейка хранения
+item.appliedenergistics2.ItemExtremeStorageCell.Container.name=МЭ ячейка хранения под блоки
+item.appliedenergistics2.ItemExtremeStorageCell.Quantum.name=МЭ квантовая ячейка хранения
+item.appliedenergistics2.ItemExtremeStorageCell.Singularity.name=МЭ сингулярная ячейка хранения
+item.appliedenergistics2.ItemCreativeStorageCell.name=МЭ творческая ячейка хранения
+item.appliedenergistics2.ItemVoidStorageCell.name=МЭ пустотная ячейка хранения
 item.appliedenergistics2.ItemEncodedPattern.name=Кодированный шаблон
 item.appliedenergistics2.ItemViewCell.name=Ячейка представления
 item.appliedenergistics2.ItemFacade.name=Кабельный фасад
@@ -443,7 +467,10 @@ item.appliedenergistics2.ItemMaterial.CardFuzzy.name=Карта нечёткос
 item.appliedenergistics2.ItemMaterial.CardInverter.name=Карта инвертирования
 item.appliedenergistics2.ItemMaterial.CardRedstone.name=Карта красного камня
 item.appliedenergistics2.ItemMaterial.CardSpeed.name=Карта ускорения
-item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Карта фильтрации Oredictionary
+item.appliedenergistics2.ItemMaterial.CardSuperSpeed.name=Карта гиперускорения
+item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Карта фильтрации по OreDictionary
+item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=Карта автозагрузки шаблонов
+item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=Продвинутая карта блокировки
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³ пространственный компонент
 item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=16³ пространственный компонент
@@ -453,11 +480,16 @@ item.appliedenergistics2.ItemMaterial.Cell1kPart.name=1К МЭ компонен�
 item.appliedenergistics2.ItemMaterial.Cell4kPart.name=4К МЭ компонент хранения
 item.appliedenergistics2.ItemMaterial.Cell16kPart.name=16К МЭ компонент хранения
 item.appliedenergistics2.ItemMaterial.Cell64kPart.name=64К МЭ компонент хранения
+item.appliedenergistics2.ItemMaterial.Cell256kPart.name=256k МЭ компонент хранения
+item.appliedenergistics2.ItemMaterial.Cell1024kPart.name=1024k МЭ компонент хранения
+item.appliedenergistics2.ItemMaterial.Cell4096kPart.name=4096k МЭ компонент хранения
+item.appliedenergistics2.ItemMaterial.Cell16384kPart.name=16384k МЭ компонент хранения
 
 item.appliedenergistics2.ItemMaterial.CertusQuartzCrystal.name=Кристалл истинного кварца
 item.appliedenergistics2.ItemMaterial.CertusQuartzCrystalCharged.name=Заряженный кристалл истинного кварца
 item.appliedenergistics2.ItemMaterial.CertusQuartzDust.name=Пыль истинного кварца
 item.appliedenergistics2.ItemMaterial.EmptyStorageCell.name=МЭ корпус ячейки хранения
+item.appliedenergistics2.ItemMaterial.EmptyAdvancedStorageCell.name=МЭ продвинутый корпус ячейки хранения
 item.appliedenergistics2.ItemMaterial.EnderDust.name=Пыль Края
 
 item.appliedenergistics2.ItemMaterial.Flour.name=Мука
