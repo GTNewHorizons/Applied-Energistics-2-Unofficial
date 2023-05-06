@@ -55,6 +55,16 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     public static final int TREE_VIEW_TEXTURE_WIDTH = 238;
     public static final int TREE_VIEW_TEXTURE_HEIGHT = 238;
 
+    public static final int LIST_VIEW_TEXTURE_WIDTH = 238;
+    public static final int LIST_VIEW_TEXTURE_HEIGHT = 206;
+    public static final int LIST_VIEW_TEXTURE_BELOW_TOP_ROW_Y = 41;
+    public static final int LIST_VIEW_TEXTURE_ABOVE_BOTTOM_ROW_Y = 110;
+    public static final int LIST_VIEW_TEXTURE_ROW_HEIGHT = 23;
+    /** How many pixels tall is the list view texture minus the space for rows of items */
+    public static final int LIST_VIEW_TEXTURE_NONROW_HEIGHT = LIST_VIEW_TEXTURE_HEIGHT
+            - (LIST_VIEW_TEXTURE_ABOVE_BOTTOM_ROW_Y - LIST_VIEW_TEXTURE_BELOW_TOP_ROW_Y)
+            - 2 * LIST_VIEW_TEXTURE_ROW_HEIGHT;
+
     public enum DisplayMode {
 
         LIST,
@@ -72,8 +82,15 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     protected void recalculateScreenSize() {
         switch (this.displayMode) {
             case LIST -> {
-                this.xSize = 238;
-                this.ySize = 206;
+                final int maxAvailableHeight = height - 64;
+                this.xSize = LIST_VIEW_TEXTURE_WIDTH;
+                if (tallMode) {
+                    this.rows = (maxAvailableHeight - LIST_VIEW_TEXTURE_NONROW_HEIGHT) / LIST_VIEW_TEXTURE_ROW_HEIGHT;
+                    this.ySize = LIST_VIEW_TEXTURE_NONROW_HEIGHT + this.rows * LIST_VIEW_TEXTURE_ROW_HEIGHT;
+                } else {
+                    this.rows = 5;
+                    this.ySize = LIST_VIEW_TEXTURE_HEIGHT;
+                }
             }
             case TREE -> {
                 this.xSize = tallMode ? width - 200 : TREE_VIEW_TEXTURE_WIDTH;
@@ -88,7 +105,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     private final GuiCraftingCPUTable cpuTable;
     private final GuiCraftingTree craftingTree;
 
-    private final int rows = 5;
+    private int rows = 5;
 
     private final IItemList<IAEItemStack> storage = AEApi.instance().storage().createItemList();
     private final IItemList<IAEItemStack> pending = AEApi.instance().storage().createItemList();
@@ -240,7 +257,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         final int offY = 23;
         int y = 0;
         int x = 0;
-        for (int z = 0; z <= 4 * 5; z++) {
+        for (int z = 0; z <= 4 * this.rows; z++) {
             final int minX = gx + 9 + x * 67;
             final int minY = gy + 22 + y * offY;
 
@@ -330,7 +347,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         }
 
         final int offset = (219 - this.fontRendererObj.getStringWidth(dsp)) / 2;
-        this.fontRendererObj.drawString(dsp, offset, 165, GuiColors.CraftConfirmSimulation.getColor());
+        this.fontRendererObj.drawString(dsp, offset, ySize - 41, GuiColors.CraftConfirmSimulation.getColor());
 
         final int sectionLength = 67;
 
@@ -500,7 +517,30 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         switch (displayMode) {
             case LIST -> {
                 this.bindTexture("guis/craftingreport.png");
-                this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
+                if (tallMode) {
+                    this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, LIST_VIEW_TEXTURE_BELOW_TOP_ROW_Y);
+                    int y = LIST_VIEW_TEXTURE_BELOW_TOP_ROW_Y;
+                    // first and last row are pre-baked
+                    for (int row = 1; row < rows - 1; row++) {
+                        this.drawTexturedModalRect(
+                                offsetX,
+                                offsetY + y,
+                                0,
+                                LIST_VIEW_TEXTURE_BELOW_TOP_ROW_Y,
+                                this.xSize,
+                                LIST_VIEW_TEXTURE_ROW_HEIGHT);
+                        y += LIST_VIEW_TEXTURE_ROW_HEIGHT;
+                    }
+                    this.drawTexturedModalRect(
+                            offsetX,
+                            offsetY + y,
+                            0,
+                            LIST_VIEW_TEXTURE_ABOVE_BOTTOM_ROW_Y,
+                            this.xSize,
+                            LIST_VIEW_TEXTURE_HEIGHT - LIST_VIEW_TEXTURE_ABOVE_BOTTOM_ROW_Y);
+                } else {
+                    this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
+                }
             }
             case TREE -> {
                 this.bindTexture("guis/craftingtree.png");
@@ -524,7 +564,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                     setScrollBar(scrollbar);
                 }
                 final int size = this.visual.size();
-                this.getScrollBar().setTop(19).setLeft(218).setHeight(114);
+                this.getScrollBar().setTop(19).setLeft(218).setHeight(ySize - 92);
                 this.getScrollBar().setRange(0, (size + 2) / 3 - this.rows, 1);
             }
             case TREE -> {
