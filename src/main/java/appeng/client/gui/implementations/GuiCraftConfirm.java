@@ -115,7 +115,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     private final List<IAEItemStack> visual = new ArrayList<>();
 
     private DisplayMode displayMode = DisplayMode.LIST;
-    private boolean tallMode = false;
+    private boolean tallMode = true;
 
     private GuiBridge OriginalGui;
     private GuiButton cancel;
