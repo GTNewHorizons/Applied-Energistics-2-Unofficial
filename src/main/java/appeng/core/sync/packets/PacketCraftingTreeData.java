@@ -98,8 +98,8 @@ public class PacketCraftingTreeData extends AppEngPacket {
             AELog.warn("Invalid chunked crafting tree packet received from server: Chunk %d/%d", chunkId, totalChunks);
             return;
         }
-        if (totalChunks == -1) {
-            onFullClientData(receivedData.slice(), player);
+        if (totalChunks == 1) {
+            onFullClientData(receivedData.slice().order(ByteOrder.LITTLE_ENDIAN), player);
         } else {
             boolean packetComplete = false;
             ByteBuf[] storage;
