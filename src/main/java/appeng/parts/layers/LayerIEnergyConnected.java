@@ -64,14 +64,14 @@ public class LayerIEnergyConnected extends LayerBase implements IEnergyConnected
     }
 
     @Override
-    public boolean outputsEnergyTo(ForgeDirection dir) {
-        IPart part = this.getPart(dir);
+    public boolean outputsEnergyTo(ForgeDirection side) {
+        IPart part = this.getPart(side);
         return part instanceof IPartGT5Power && ((IPartGT5Power) part).outputsEnergy();
     }
 
     @Override
-    public boolean outputsEnergyTo(ForgeDirection dir, boolean waitForActive) {
-        IPart part = this.getPart(dir);
+    public boolean outputsEnergyTo(ForgeDirection side, boolean waitForActive) {
+        IPart part = this.getPart(side);
         return part instanceof IPartGT5Power && ((IPartGT5Power) part).outputsEnergy();
     }
 
