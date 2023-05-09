@@ -1,5 +1,7 @@
 package appeng.tile.powersink;
 
+import net.minecraftforge.common.util.ForgeDirection;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerUnits;
 import appeng.integration.IntegrationType;
@@ -10,7 +12,7 @@ import gregtech.api.interfaces.tileentity.IEnergyConnected;
 public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyConnected {
 
     @Override
-    public long injectEnergyUnits(byte side, long voltage, long amperage) {
+    public long injectEnergyUnits(ForgeDirection side, long voltage, long amperage) {
         double e = PowerUnits.EU.convertTo(PowerUnits.AE, voltage * amperage);
         double overflow = this.funnelPowerIntoStorage(e, Actionable.SIMULATE);
         // Energy grid may keep some "extra energy" that it is happy to get rid of
@@ -27,12 +29,12 @@ public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyCo
     }
 
     @Override
-    public boolean inputEnergyFrom(byte b) {
+    public boolean inputEnergyFrom(ForgeDirection side) {
         return true;
     }
 
     @Override
-    public boolean outputsEnergyTo(byte b) {
+    public boolean outputsEnergyTo(ForgeDirection side) {
         return false;
     }
 

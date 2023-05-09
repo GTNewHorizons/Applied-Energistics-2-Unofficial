@@ -144,8 +144,7 @@ public class PartP2PGT5Power extends PartP2PTunnel<PartP2PGT5Power> implements I
             } else {
                 ForgeDirection oppositeSide = this.getSide().getOpposite();
                 if (te instanceof IEnergyConnected) {
-                    return ((IEnergyConnected) te)
-                            .injectEnergyUnits((byte) oppositeSide.ordinal(), aVoltage, aAmperage);
+                    return ((IEnergyConnected) te).injectEnergyUnits(oppositeSide, aVoltage, aAmperage);
                 } else {
                     if (te instanceof IEnergySink) {
                         if (((IEnergySink) te).acceptsEnergyFrom(this.getTile(), oppositeSide)) {
