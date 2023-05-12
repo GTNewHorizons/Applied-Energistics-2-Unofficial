@@ -693,16 +693,13 @@ public class TileChest extends AENetworkPowerTile
 
         @Override
         public void postChange(final IBaseMonitor<T> monitor, final Iterable<T> change, final BaseActionSource source) {
-            if (source == TileChest.this.mySrc
-                    || (source instanceof PlayerSource && ((PlayerSource) source).via == TileChest.this)) {
-                try {
-                    if (TileChest.this.getProxy().isActive()) {
-                        TileChest.this.getProxy().getStorage()
-                                .postAlterationOfStoredItems(this.chan, change, TileChest.this.mySrc);
-                    }
-                } catch (final GridAccessException e) {
-                    // :(
+            try {
+                if (TileChest.this.getProxy().isActive()) {
+                    TileChest.this.getProxy().getStorage()
+                            .postAlterationOfStoredItems(this.chan, change, TileChest.this.mySrc);
                 }
+            } catch (final GridAccessException e) {
+                // :(
             }
 
             TileChest.this.blinkCell(0);
