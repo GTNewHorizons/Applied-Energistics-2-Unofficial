@@ -520,6 +520,14 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 if (te == null) {
                     continue;
                 }
+                try {
+                    if (te instanceof IInterfaceHost host
+                            && host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+                        continue;
+                    }
+                } catch (GridAccessException e) {
+                    continue;
+                }
 
                 final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
                 ItemStack Result = whatToSend;
