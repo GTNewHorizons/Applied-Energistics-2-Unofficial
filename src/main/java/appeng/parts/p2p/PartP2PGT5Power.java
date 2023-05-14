@@ -1,5 +1,7 @@
 package appeng.parts.p2p;
 
+import java.lang.reflect.Method;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -144,7 +146,17 @@ public class PartP2PGT5Power extends PartP2PTunnel<PartP2PGT5Power> implements I
             } else {
                 ForgeDirection oppositeSide = this.getSide().getOpposite();
                 if (te instanceof IEnergyConnected) {
-                    return ((IEnergyConnected) te).injectEnergyUnits(oppositeSide, aVoltage, aAmperage);
+                    try {
+                        return ((IEnergyConnected) te).injectEnergyUnits(oppositeSide, aVoltage, aAmperage);
+                    } catch (Throwable e) { // NoSuchMethodException on old GT versions
+                        Class<?> iEConn = ((IEnergyConnected) te).getClass();
+                        try {
+                            Method injectEU = iEConn.getMethod("injectEnergyUnits", byte.class, long.class, long.class);
+                            return (long) injectEU.invoke(te, (byte) oppositeSide.ordinal(), aVoltage, aAmperage);
+                        } catch (Throwable error) {
+                            return 0L;
+                        }
+                    }
                 } else {
                     if (te instanceof IEnergySink) {
                         if (((IEnergySink) te).acceptsEnergyFrom(this.getTile(), oppositeSide)) {
