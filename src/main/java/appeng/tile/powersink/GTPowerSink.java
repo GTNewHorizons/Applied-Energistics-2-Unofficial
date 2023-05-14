@@ -11,6 +11,11 @@ import gregtech.api.interfaces.tileentity.IEnergyConnected;
 @Integration.Interface(iname = IntegrationType.GT, iface = "gregtech.api.interfaces.tileentity.IEnergyConnected")
 public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyConnected {
 
+    @Deprecated
+    public long injectEnergyUnits(byte side, long voltage, long amperage) {
+        return injectEnergyUnits(ForgeDirection.getOrientation(side), voltage, amperage);
+    }
+
     @Override
     public long injectEnergyUnits(ForgeDirection side, long voltage, long amperage) {
         double e = PowerUnits.EU.convertTo(PowerUnits.AE, voltage * amperage);
@@ -28,9 +33,19 @@ public abstract class GTPowerSink extends AERootPoweredTile implements IEnergyCo
         return used;
     }
 
+    @Deprecated
+    public boolean inputEnergyFrom(byte b) {
+        return true;
+    }
+
     @Override
     public boolean inputEnergyFrom(ForgeDirection side) {
         return true;
+    }
+
+    @Deprecated
+    public boolean outputsEnergyTo(byte b) {
+        return false;
     }
 
     @Override

@@ -16,6 +16,11 @@ public class LayerIEnergyConnected extends LayerBase implements IEnergyConnected
 
     public LayerIEnergyConnected() {}
 
+    @Deprecated
+    public long injectEnergyUnits(byte side, long voltage, long amperage) {
+        return injectEnergyUnits(ForgeDirection.getOrientation(side), voltage, amperage);
+    }
+
     public long injectEnergyUnits(ForgeDirection side, long voltage, long amperage) {
         IPart part = this.getPart(side);
         if (part instanceof IPartGT5Power) {
@@ -37,6 +42,11 @@ public class LayerIEnergyConnected extends LayerBase implements IEnergyConnected
         }
     }
 
+    @Deprecated
+    public boolean inputEnergyFrom(byte side) {
+        return inputEnergyFrom(ForgeDirection.getOrientation(side));
+    }
+
     @Override
     public boolean inputEnergyFrom(ForgeDirection side) {
         IPart part = this.getPart(side);
@@ -48,6 +58,11 @@ public class LayerIEnergyConnected extends LayerBase implements IEnergyConnected
             TileEntity source = this.getTileEntityAtSide(side);
             return source != null && ((IEnergySink) part).acceptsEnergyFrom(source, side);
         }
+    }
+
+    @Deprecated
+    public boolean inputEnergyFrom(byte side, boolean waitForActive) {
+        return inputEnergyFrom(ForgeDirection.getOrientation(side), waitForActive);
     }
 
     @Override
@@ -63,10 +78,20 @@ public class LayerIEnergyConnected extends LayerBase implements IEnergyConnected
         }
     }
 
+    @Deprecated
+    public boolean outputsEnergyTo(byte side) {
+        return outputsEnergyTo(ForgeDirection.getOrientation(side));
+    }
+
     @Override
     public boolean outputsEnergyTo(ForgeDirection side) {
         IPart part = this.getPart(side);
         return part instanceof IPartGT5Power && ((IPartGT5Power) part).outputsEnergy();
+    }
+
+    @Deprecated
+    public boolean outputsEnergyTo(byte side, boolean waitForActive) {
+        return outputsEnergyTo(ForgeDirection.getOrientation(side), waitForActive);
     }
 
     @Override
