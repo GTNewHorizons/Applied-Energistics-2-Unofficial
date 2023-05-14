@@ -136,6 +136,20 @@ public class PartP2PGT5Power extends PartP2PTunnel<PartP2PGT5Power> implements I
                 .getTileEntity(te.xCoord + side.offsetX, te.yCoord + side.offsetY, te.zCoord + side.offsetZ);
     }
 
+    private long injectEnergy(IEnergyConnected te, ForgeDirection oppositeSide, long aVoltage, long aAmperage) {
+        try {
+            return te.injectEnergyUnits(oppositeSide, aVoltage, aAmperage);
+        } catch (Throwable e) { // NoSuchMethodException on old GT versions
+            Class<?> iEConn = te.getClass();
+            try {
+                Method injectEU = iEConn.getMethod("injectEnergyUnits", byte.class, long.class, long.class);
+                return (long) injectEU.invoke(te, (byte) oppositeSide.ordinal(), aVoltage, aAmperage);
+            } catch (Throwable error) {
+                return 0L;
+            }
+        }
+    }
+
     private long doOutput(long aVoltage, long aAmperage) {
         if (!this.isOutput()) {
             return 0L;
@@ -146,17 +160,7 @@ public class PartP2PGT5Power extends PartP2PTunnel<PartP2PGT5Power> implements I
             } else {
                 ForgeDirection oppositeSide = this.getSide().getOpposite();
                 if (te instanceof IEnergyConnected) {
-                    try {
-                        return ((IEnergyConnected) te).injectEnergyUnits(oppositeSide, aVoltage, aAmperage);
-                    } catch (Throwable e) { // NoSuchMethodException on old GT versions
-                        Class<?> iEConn = ((IEnergyConnected) te).getClass();
-                        try {
-                            Method injectEU = iEConn.getMethod("injectEnergyUnits", byte.class, long.class, long.class);
-                            return (long) injectEU.invoke(te, (byte) oppositeSide.ordinal(), aVoltage, aAmperage);
-                        } catch (Throwable error) {
-                            return 0L;
-                        }
-                    }
+                    return injectEnergy((IEnergyConnected) te, oppositeSide, aVoltage, aAmperage);
                 } else {
                     if (te instanceof IEnergySink) {
                         if (((IEnergySink) te).acceptsEnergyFrom(this.getTile(), oppositeSide)) {
