@@ -22,6 +22,7 @@ import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import appeng.api.AEApi;
 import appeng.api.config.*;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.implementations.tiles.IMEChest;
@@ -265,7 +266,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
                             this.configSrc.getSetting(Settings.VIEW_MODE)));
             offset += 20;
         }
-        if (ItemRepo.getFilter().containsKey(TypeFilter.FLUIDS)) {
+        if (!AEApi.instance().registries().itemDisplay().getItemFilters().isEmpty()) {
             this.buttonList.add(
                     this.typeFilter = new GuiImgButton(
                             this.guiLeft - 18,
@@ -512,7 +513,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 
     @Override
     public void updateScreen() {
-        this.repo.setPower(this.monitorableContainer.isPowered());
+        this.repo.setPowered(this.monitorableContainer.isPowered());
         super.updateScreen();
     }
 

@@ -15,6 +15,7 @@ import appeng.api.movable.IMovableRegistry;
 import appeng.api.networking.IGridCacheRegistry;
 import appeng.api.storage.ICellRegistry;
 import appeng.api.storage.IExternalStorageRegistry;
+import appeng.api.storage.IItemDisplayRegistry;
 
 /**
  * represents all registries
@@ -30,6 +31,7 @@ public class RegistryContainer implements IRegistryContainer {
     private final IInscriberRegistry inscriber = new InscriberRegistry();
     private final IExternalStorageRegistry storage = new ExternalStorageRegistry();
     private final ICellRegistry cell = new CellRegistry();
+    private final IItemDisplayRegistry itemDisplay = new ItemDisplayRegistry();
     private final ILocatableRegistry locatable = new LocatableRegistry();
     private final ISpecialComparisonRegistry comparison = new SpecialComparisonRegistry();
     private final IWirelessTermRegistry wireless = new WirelessRegistry();
@@ -68,6 +70,11 @@ public class RegistryContainer implements IRegistryContainer {
     @Override
     public ICellRegistry cell() {
         return this.cell;
+    }
+
+    @Override
+    public IItemDisplayRegistry itemDisplay() {
+        return itemDisplay;
     }
 
     @Override
