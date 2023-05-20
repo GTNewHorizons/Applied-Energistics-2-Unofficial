@@ -58,6 +58,7 @@ public class ItemRepo implements IDisplayRepo {
         this.sortSrc = sortSrc;
     }
 
+    @Override
     public IAEItemStack getReferenceItem(int idx) {
         idx += this.src.getCurrentScroll() * this.rowSize;
 

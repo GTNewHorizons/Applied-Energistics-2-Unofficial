@@ -29,6 +29,7 @@ import appeng.api.implementations.tiles.IMEChest;
 import appeng.api.implementations.tiles.IViewCellStorage;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IDisplayRepo;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.ActionKey;
@@ -67,7 +68,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
     public static int craftingGridOffsetY;
 
     private static String memoryText = "";
-    private final ItemRepo repo;
+    private final IDisplayRepo repo;
     private final int offsetX = 9;
     private final int MAGIC_HEIGHT_NUMBER = 114 + 1;
     private final int lowerTextureOffset = 0;

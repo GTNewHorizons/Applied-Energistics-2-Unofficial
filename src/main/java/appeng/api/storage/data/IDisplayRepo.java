@@ -13,6 +13,8 @@ public interface IDisplayRepo {
 
     void setViewCell(final ItemStack[] filters);
 
+    IAEItemStack getReferenceItem(int idx);
+
     ItemStack getItem(int idx);
 
     void updateView();

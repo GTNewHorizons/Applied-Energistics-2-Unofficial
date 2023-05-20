@@ -13,15 +13,16 @@ package appeng.client.me;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IDisplayRepo;
 
 public class InternalSlotME {
 
     private final int offset;
     private final int xPos;
     private final int yPos;
-    private final ItemRepo repo;
+    private final IDisplayRepo repo;
 
-    public InternalSlotME(final ItemRepo def, final int offset, final int displayX, final int displayY) {
+    public InternalSlotME(final IDisplayRepo def, final int offset, final int displayX, final int displayY) {
         this.repo = def;
         this.offset = offset;
         this.xPos = displayX;
