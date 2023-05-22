@@ -17,7 +17,7 @@ public class ItemExtremeStorageCell extends ItemBasicStorageCell {
     @SuppressWarnings("Guava")
     public ItemExtremeStorageCell(String name, long bytes, int types, int perType, double drain) {
         super(Optional.of(name));
-        this.setFeature(EnumSet.of(AEFeature.StorageCells));
+        this.setFeature(EnumSet.of(AEFeature.XtremeStorageCells));
         this.setMaxStackSize(1);
         this.totalBytes = bytes;
         this.perType = perType;

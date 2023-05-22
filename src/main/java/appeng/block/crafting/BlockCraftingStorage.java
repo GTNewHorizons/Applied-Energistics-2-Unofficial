@@ -26,6 +26,7 @@ public class BlockCraftingStorage extends BlockCraftingUnit {
 
     public BlockCraftingStorage() {
         this.setTileEntity(TileCraftingStorageTile.class);
+        this.hasSubtypes = true;
     }
 
     @Override

@@ -18,7 +18,7 @@ public class ItemAdvancedStorageCell extends ItemBasicStorageCell {
     public ItemAdvancedStorageCell(final MaterialType whichCell, final long kilobytes) {
         super(Optional.of(kilobytes + "k"));
 
-        this.setFeature(EnumSet.of(AEFeature.StorageCells));
+        this.setFeature(EnumSet.of(AEFeature.XtremeStorageCells));
         this.setMaxStackSize(1);
         this.totalBytes = kilobytes * 1024;
         this.component = whichCell;

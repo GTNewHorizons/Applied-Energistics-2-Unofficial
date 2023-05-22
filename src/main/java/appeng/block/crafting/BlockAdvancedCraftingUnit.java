@@ -1,11 +1,18 @@
 package appeng.block.crafting;
 
+import java.util.EnumSet;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 
 import appeng.client.texture.ExtraBlockTextures;
+import appeng.core.features.AEFeature;
 
 public class BlockAdvancedCraftingUnit extends BlockCraftingUnit {
+
+    public BlockAdvancedCraftingUnit() {
+        this.setFeature(EnumSet.of(AEFeature.XtremeCraftingCPU));
+    }
 
     @Override
     public IIcon getIcon(final int direction, final int metadata) {

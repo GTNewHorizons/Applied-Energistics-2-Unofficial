@@ -1,15 +1,19 @@
 package appeng.block.crafting;
 
+import java.util.EnumSet;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 
 import appeng.client.texture.ExtraBlockTextures;
+import appeng.core.features.AEFeature;
 import appeng.tile.crafting.TileCraftingStorageTile;
 
 public class BlockAdvancedCraftingStorage extends BlockCraftingStorage {
 
     public BlockAdvancedCraftingStorage() {
         this.setTileEntity(TileCraftingStorageTile.class);
+        this.setFeature(EnumSet.of(AEFeature.XtremeCraftingCPU));
     }
 
     @Override

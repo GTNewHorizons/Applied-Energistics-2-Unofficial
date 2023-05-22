@@ -70,7 +70,7 @@ public enum PartType {
         }
     },
 
-    CableUltraDenseCovered(540, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+    CableUltraDenseCovered(540, EnumSet.of(AEFeature.UltraDenseCables), EnumSet.noneOf(IntegrationType.class),
             PartUltraDenseCableCovered.class) {
 
         @Override
@@ -78,7 +78,7 @@ public enum PartType {
             return true;
         }
     },
-    CableUltraDenseSmart(560, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+    CableUltraDenseSmart(560, EnumSet.of(AEFeature.UltraDenseCables), EnumSet.noneOf(IntegrationType.class),
             PartUltraDenseCableSmart.class) {
 
         @Override
