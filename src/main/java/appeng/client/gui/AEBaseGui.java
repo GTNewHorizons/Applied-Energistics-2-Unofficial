@@ -28,6 +28,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -37,6 +38,7 @@ import org.lwjgl.opengl.GL12;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 
+import appeng.api.events.GuiScrollEvent;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ITooltip;
@@ -60,6 +62,7 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 
 public abstract class AEBaseGui extends GuiContainer {
@@ -682,26 +685,43 @@ public abstract class AEBaseGui extends GuiContainer {
 
     public abstract void drawBG(int offsetX, int offsetY, int mouseX, int mouseY);
 
+    private static boolean hasLwjgl3 = Loader.isModLoaded("lwjgl3ify");
+
     @Override
     public void handleMouseInput() {
         super.handleMouseInput();
 
-        final int wheel = Mouse.getEventDWheel();
+        int wheel = Mouse.getEventDWheel();
+        if (wheel == 0) {
+            return;
+        }
+        if (!hasLwjgl3) {
+            // LWJGL2 reports different scroll values for every platform, 120 for one tick on Windows.
+            // LWJGL3 reports the delta in exact scroll ticks.
+            // Round away from zero to avoid dropping small scroll events
+            if (wheel > 0) {
+                wheel = (int) Platform.ceilDiv(wheel, 120);
+            } else {
+                wheel = -(int) Platform.ceilDiv(-wheel, 120);
+            }
+        }
 
-        if (wheel != 0) {
-            final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
-            final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
+        final int x = Mouse.getEventX() * this.width / this.mc.displayWidth;
+        final int y = this.height - Mouse.getEventY() * this.height / this.mc.displayHeight - 1;
 
-            if (isShiftKeyDown()) {
-                this.mouseWheelEvent(x, y, wheel / Math.abs(wheel));
-            } else if (this.getScrollBar() != null) {
-                final GuiScrollbar scrollBar = this.getScrollBar();
+        if (MinecraftForge.EVENT_BUS.post(new GuiScrollEvent(this, x, y, wheel))) {
+            return;
+        }
 
-                if (x > this.guiLeft && y - this.guiTop > scrollBar.getTop()
-                        && x <= this.guiLeft + this.xSize
-                        && y - this.guiTop <= scrollBar.getTop() + scrollBar.getHeight()) {
-                    this.getScrollBar().wheel(wheel);
-                }
+        if (isShiftKeyDown()) {
+            this.mouseWheelEvent(x, y, wheel);
+        } else if (this.getScrollBar() != null) {
+            final GuiScrollbar scrollBar = this.getScrollBar();
+
+            if (x > this.guiLeft && y - this.guiTop > scrollBar.getTop()
+                    && x <= this.guiLeft + this.xSize
+                    && y - this.guiTop <= scrollBar.getTop() + scrollBar.getHeight()) {
+                this.getScrollBar().wheel(wheel);
             }
         }
     }

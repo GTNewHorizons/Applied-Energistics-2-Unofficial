@@ -134,21 +134,6 @@ public class NEIGrinderRecipeHandler extends TemplateRecipeHandler {
     }
 
     @Override
-    public boolean hasOverlay(final GuiContainer gui, final Container container, final int recipe) {
-        return false;
-    }
-
-    @Override
-    public IRecipeOverlayRenderer getOverlayRenderer(final GuiContainer gui, final int recipe) {
-        return null;
-    }
-
-    @Override
-    public IOverlayHandler getOverlayHandler(final GuiContainer gui, final int recipe) {
-        return null;
-    }
-
-    @Override
     public String getRecipeName() {
         return GuiText.GrindStone.getLocal();
     }
