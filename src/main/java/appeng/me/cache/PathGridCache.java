@@ -345,7 +345,7 @@ public class PathGridCache implements IPathingGrid {
 
     @Override
     public boolean isNetworkBooting() {
-        return (!this.active.isEmpty() || !this.backbone.isEmpty()) && !this.booting;
+        return !this.active.isEmpty() || !this.backbone.isEmpty() || this.updateNetwork;
     }
 
     @Override
