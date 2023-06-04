@@ -12,12 +12,12 @@ package appeng.me.cache;
 
 import java.util.*;
 
-import appeng.api.networking.events.*;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.apache.logging.log4j.Level;
 
 import appeng.api.networking.*;
+import appeng.api.networking.events.*;
 import appeng.api.networking.pathing.ControllerState;
 import appeng.api.networking.pathing.IPathingGrid;
 import appeng.api.util.DimensionalCoord;
