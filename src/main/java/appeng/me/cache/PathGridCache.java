@@ -12,12 +12,12 @@ package appeng.me.cache;
 
 import java.util.*;
 
-import appeng.api.networking.events.*;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.apache.logging.log4j.Level;
 
 import appeng.api.networking.*;
+import appeng.api.networking.events.*;
 import appeng.api.networking.pathing.ControllerState;
 import appeng.api.networking.pathing.IPathingGrid;
 import appeng.api.util.DimensionalCoord;
@@ -33,6 +33,7 @@ import appeng.util.Platform;
 
 public class PathGridCache implements IPathingGrid {
 
+    private static final int STEPS_PER_TICK = 10;
     private final LinkedList<PathSegment> active = new LinkedList<>();
     private final Map<IPathItem, BackbonePathSegment> backbone = new HashMap<>();
     private final Set<TileController> controllers = new HashSet<>();
@@ -93,8 +94,6 @@ public class PathGridCache implements IPathingGrid {
                 final HashSet<IPathItem> closedList = new HashSet<>();
                 this.semiOpen = new HashSet<>();
 
-                // myGrid.getPivot().beginVisit( new AdHocChannelUpdater( 0 )
-                // );
                 for (final IGridNode node : this.myGrid.getMachines(TileController.class)) {
                     closedList.add((IPathItem) node);
                     for (final IGridConnection gcc : node.getConnections()) {
@@ -113,12 +112,14 @@ public class PathGridCache implements IPathingGrid {
 
         if (!this.active.isEmpty() || !backbone.isEmpty() || this.ticksUntilReady > 0) {
             boolean firstStage = !this.active.isEmpty();
-            final Iterator<PathSegment> i = this.active.iterator();
-            while (i.hasNext()) {
-                final PathSegment pat = i.next();
-                if (pat.step(backbone, TopologyStage.CONTROLLER_TO_BACKBONE)) {
-                    pat.setDead(true);
-                    i.remove();
+            for (int k = 0; k < STEPS_PER_TICK && !this.active.isEmpty(); ++k) {
+                final Iterator<PathSegment> i = this.active.iterator();
+                while (i.hasNext()) {
+                    final PathSegment pat = i.next();
+                    if (pat.step(backbone, TopologyStage.CONTROLLER_TO_BACKBONE)) {
+                        pat.setDead(true);
+                        i.remove();
+                    }
                 }
             }
             if (active.isEmpty() && !backbone.isEmpty()) {
