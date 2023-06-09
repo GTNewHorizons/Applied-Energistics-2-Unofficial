@@ -76,6 +76,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private final WorldCoord max;
     private final int[] usedOps = new int[3];
     private final Map<ICraftingPatternDetails, TaskProgress> tasks = new HashMap<>();
+    private Map<ICraftingPatternDetails, TaskProgress> workableTasks = new HashMap<>();
+    private HashSet<ICraftingMedium> knownBusyMediums = new HashSet<>();
     // INSTANCE sate
     private final LinkedList<TileCraftingTile> tiles = new LinkedList<>();
     private final LinkedList<TileCraftingTile> storage = new LinkedList<>();
@@ -527,6 +529,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.remainingOperations = this.accelerator + 1 - (this.usedOps[0] + this.usedOps[1] + this.usedOps[2]);
         final int started = this.remainingOperations;
 
+        // Shallow copy tasks so we may remove them after visiting
+        this.workableTasks = new HashMap<>(this.tasks);
+        this.knownBusyMediums.clear();
         if (this.remainingOperations > 0) {
             do {
                 this.somethingChanged = false;
@@ -537,33 +542,44 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.usedOps[1] = this.usedOps[0];
         this.usedOps[0] = started - this.remainingOperations;
 
+        this.workableTasks.clear();
+        this.knownBusyMediums.clear();
+
         if (this.remainingOperations > 0 && !this.somethingChanged) {
             this.waiting = true;
         }
     }
 
     private void executeCrafting(final IEnergyGrid eg, final CraftingGridCache cc) {
-        final Iterator<Entry<ICraftingPatternDetails, TaskProgress>> i = this.tasks.entrySet().iterator();
+        final Iterator<Entry<ICraftingPatternDetails, TaskProgress>> i = this.workableTasks.entrySet().iterator();
 
         while (i.hasNext()) {
             final Entry<ICraftingPatternDetails, TaskProgress> e = i.next();
 
             if (e.getValue().value <= 0) {
+                this.tasks.remove(e.getKey());
                 i.remove();
                 continue;
             }
 
             final ICraftingPatternDetails details = e.getKey();
 
-            if (this.canCraft(details, details.getCondensedInputs())) {
+            if (!this.canCraft(details, details.getCondensedInputs())) {
+                i.remove(); // No need to revisit this task on next executeCrafting this tick
+                continue;
+            } else {
                 InventoryCrafting ic = null;
+                boolean pushedPattern = false;
 
                 for (final ICraftingMedium m : cc.getMediums(e.getKey())) {
-                    if (e.getValue().value <= 0) {
+                    if (e.getValue().value <= 0 || knownBusyMediums.contains(m)) {
                         continue;
                     }
 
-                    if (!m.isBusy()) {
+                    if (m.isBusy()) {
+                        knownBusyMediums.add(m);
+                        continue;
+                    } else {
                         double sum = 0;
                         if (ic == null) {
                             final IAEItemStack[] input = details.getInputs();
@@ -632,6 +648,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             eg.extractAEPower(sum, Actionable.MODULATE, PowerMultiplier.CONFIG);
                             this.somethingChanged = true;
                             this.remainingOperations--;
+                            pushedPattern = true;
 
                             for (final IAEItemStack out : details.getCondensedOutputs()) {
                                 this.postChange(out, this.machineSrc);
@@ -686,6 +703,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             }
                         }
                     }
+                }
+
+                if (!pushedPattern) {
+                    // No need to revisit this task on next executeCrafting this tick
+                    i.remove();
                 }
 
                 if (ic != null) {
