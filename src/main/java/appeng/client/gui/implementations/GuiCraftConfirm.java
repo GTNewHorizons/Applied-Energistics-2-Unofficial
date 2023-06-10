@@ -13,7 +13,6 @@ package appeng.client.gui.implementations;
 import java.text.NumberFormat;
 import java.util.*;
 
-import appeng.core.AEConfig;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -34,6 +33,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.*;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.CraftingCPUStatus;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
