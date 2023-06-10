@@ -55,7 +55,7 @@ public class ItemEncodedPatternRenderer implements IItemRenderer {
         final ItemStack is = iep.getOutput(item);
         final Minecraft mc = Minecraft.getMinecraft();
 
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
         RenderHelper.enableGUIStandardItemLighting();
         this.ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), is, 0, 0);
         RenderHelper.disableStandardItemLighting();
