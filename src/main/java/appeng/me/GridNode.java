@@ -268,9 +268,8 @@ public class GridNode implements IGridNode, IPathItem {
     public boolean isActiveOrBooting() {
         final IGrid g = this.getGrid();
         if (g != null) {
-            if (!((IEnergyGrid) g.getCache(IEnergyGrid.class)).isNetworkPowered())
-                return false;
-            return ((IPathingGrid)g.getCache(IPathingGrid.class)).isNetworkBooting() || meetsChannelRequirements();
+            if (!((IEnergyGrid) g.getCache(IEnergyGrid.class)).isNetworkPowered()) return false;
+            return ((IPathingGrid) g.getCache(IPathingGrid.class)).isNetworkBooting() || meetsChannelRequirements();
         }
         return false;
     }
