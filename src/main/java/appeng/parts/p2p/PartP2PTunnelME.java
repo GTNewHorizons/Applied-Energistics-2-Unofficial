@@ -122,8 +122,8 @@ public class PartP2PTunnelME extends PartP2PTunnel<PartP2PTunnelME> implements I
                 this.connection.markDestroy();
                 TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
             } else {
-                // if the node grid is booting then it is active enough to create p2p connection
-                if (this.getProxy().isActive() || this.getProxy().getPath().isNetworkBooting()) {
+                if (this.getProxy().getPath().isNetworkBooting()) return TickRateModulation.SAME;
+                if (this.getProxy().isActive()) {
                     this.connection.markCreate();
                     TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
                 } else {
@@ -153,8 +153,7 @@ public class PartP2PTunnelME extends PartP2PTunnel<PartP2PTunnelME> implements I
                 final TunnelConnection cw = i.next();
                 try {
                     if (cw.getTunnel().getProxy().getGrid() != this.getProxy().getGrid()
-                            || (!cw.getTunnel().getProxy().isActive()
-                                    && !cw.getTunnel().getProxy().getPath().isNetworkBooting())) {
+                            || !cw.getTunnel().getProxy().isActiveOrBooting()) {
                         cw.getConnection().destroy();
                         i.remove();
                     }
@@ -166,7 +165,7 @@ public class PartP2PTunnelME extends PartP2PTunnel<PartP2PTunnelME> implements I
             final LinkedList<PartP2PTunnelME> newSides = new LinkedList<>();
             try {
                 for (final PartP2PTunnelME output : this.getOutputs()) {
-                    if ((output.getProxy().isActive() || output.getProxy().getPath().isNetworkBooting())
+                    if (output.getProxy().isActiveOrBooting()
                             && connections.getConnections().get(output.getGridNode()) == null) {
                         newSides.add(output);
                     }

@@ -27,7 +27,7 @@ public class ChannelPowerSrc implements IEnergySource {
 
     @Override
     public double extractAEPower(final double amt, final Actionable mode, final PowerMultiplier usePowerMultiplier) {
-        if (this.node.isActive()) {
+        if (this.node.isActiveOrBooting()) {
             return this.realSrc.extractAEPower(amt, mode, usePowerMultiplier);
         }
         return 0.0;
