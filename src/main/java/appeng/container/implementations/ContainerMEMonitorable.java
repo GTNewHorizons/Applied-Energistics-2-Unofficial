@@ -15,6 +15,7 @@ import java.nio.BufferOverflowException;
 
 import javax.annotation.Nonnull;
 
+import appeng.api.networking.pathing.IPathingGrid;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -238,7 +239,19 @@ public class ContainerMEMonitorable extends AEBaseContainer
     protected void updatePowerStatus() {
         try {
             if (this.networkNode != null) {
-                this.setPowered(this.networkNode.isActive());
+                IGrid g = this.networkNode.getGrid();
+                if (g == null) {
+                    this.setPowered(false);
+                }
+                else {
+                    if (this.networkNode.isActive()) {
+                        this.setPowered(true);
+                    }
+                    else {
+                        final IPathingGrid pg = g.getCache(IPathingGrid.class);
+                        this.setPowered(pg.isNetworkBooting()); // if the grid is booting just use storage cache, it will be updated later
+                    }
+                }
             } else if (this.getPowerSource() instanceof IEnergyGrid) {
                 this.setPowered(((IEnergyGrid) this.getPowerSource()).isNetworkPowered());
             } else {
