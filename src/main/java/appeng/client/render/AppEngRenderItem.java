@@ -10,6 +10,9 @@
 
 package appeng.client.render;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.annotation.Nonnull;
 
 import net.minecraft.client.gui.FontRenderer;
@@ -20,6 +23,7 @@ import net.minecraft.item.ItemStack;
 
 import org.lwjgl.opengl.GL11;
 
+import appeng.api.storage.IItemDisplayRegistry.ItemRenderHook;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
@@ -40,10 +44,22 @@ public class AppEngRenderItem extends RenderItem {
 
     private IAEItemStack aeStack = null;
 
+    /**
+     * Post render hooks. All are called.
+     */
+    public static List<ItemRenderHook> POST_HOOKS = new ArrayList<>();
+
     @Override
     public void renderItemOverlayIntoGUI(final FontRenderer fontRenderer, final TextureManager textureManager,
             final ItemStack is, final int par4, final int par5, final String par6Str) {
         if (is != null) {
+            boolean skip = false;
+            for (ItemRenderHook hook : POST_HOOKS) {
+                skip |= hook.renderOverlay(fontRenderer, textureManager, is, par4, par5);
+            }
+            if (skip) {
+                return;
+            }
             final float scaleFactor = AEConfig.instance.useTerminalUseLargeFont() ? 0.85f : 0.5f;
             final float inverseScaleFactor = 1.0f / scaleFactor;
             final int offset = AEConfig.instance.useTerminalUseLargeFont() ? 0 : -1;

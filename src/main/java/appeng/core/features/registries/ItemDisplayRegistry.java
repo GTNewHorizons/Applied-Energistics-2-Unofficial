@@ -11,6 +11,9 @@ import net.minecraft.item.Item;
 import appeng.api.config.TypeFilter;
 import appeng.api.storage.IItemDisplayRegistry;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.client.render.AppEngRenderItem;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public final class ItemDisplayRegistry implements IItemDisplayRegistry {
 
@@ -52,5 +55,11 @@ public final class ItemDisplayRegistry implements IItemDisplayRegistry {
     @Override
     public List<BiPredicate<TypeFilter, IAEItemStack>> getItemFilters() {
         return itemFilters;
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addPostItemRenderHook(ItemRenderHook hook) {
+        AppEngRenderItem.POST_HOOKS.add(hook);
     }
 }
