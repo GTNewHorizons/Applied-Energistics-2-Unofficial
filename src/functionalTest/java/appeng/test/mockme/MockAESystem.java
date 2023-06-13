@@ -58,7 +58,7 @@ public class MockAESystem implements ICellProvider {
             dirtyPatterns = false;
             this.cgCache.setMockPatternsFromMethods();
         }
-        return new CraftingJobV2(world, grid, dummyActionSource, AEItemStack.create(request), false, null);
+        return new CraftingJobV2(world, grid, dummyActionSource, AEItemStack.create(request), null);
     }
 
     public PatternBuilder newProcessingPattern() {

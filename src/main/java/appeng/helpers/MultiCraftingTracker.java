@@ -96,7 +96,7 @@ public class MultiCraftingTracker {
                     final IAEItemStack aisC = ais.copy();
                     aisC.setStackSize(itemToCraft);
 
-                    this.setJob(x, cg.beginCraftingJob(w, g, mySrc, aisC, false, null));
+                    this.setJob(x, cg.beginCraftingJob(w, g, mySrc, aisC, null));
                 }
             }
         }

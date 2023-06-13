@@ -12,6 +12,7 @@ import appeng.core.localization.GuiText;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingContext;
 import appeng.crafting.v2.CraftingRequest;
+import appeng.crafting.v2.CraftingRequest.CraftingMode;
 import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
@@ -49,7 +50,7 @@ public class PreCraftingItemResolver implements CraftingRequestResolver<IAEItemS
             if (request.remainingToProcess <= 0) {
                 return new StepOutput(Collections.emptyList());
             }
-            // Assume items will be generated, triggered by the emitter
+            // Assume items will be added into the system later
             fulfilled = request.remainingToProcess;
             request.fulfill(this, request.stack.copy().setStackSize(request.remainingToProcess), context);
             return new StepOutput(Collections.emptyList());
@@ -80,6 +81,7 @@ public class PreCraftingItemResolver implements CraftingRequestResolver<IAEItemS
         public void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
                 MECraftingInventory craftingInv) {
             cpuCluster.addEmitable(this.request.stack.copy());
+            // It's just called that, and it has little to do with the level emitter
         }
 
         @Override
@@ -105,7 +107,7 @@ public class PreCraftingItemResolver implements CraftingRequestResolver<IAEItemS
     @Override
     public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<IAEItemStack> request,
             @Nonnull CraftingContext context) {
-        if (request.usePreCrafting && request.allowSimulation) {
+        if (request.craftingMode == CraftingMode.IGNORE_MISSING && request.allowSimulation) {
             return Collections.singletonList(new PreCraftItemTask(request));
         } else return Collections.emptyList();
 

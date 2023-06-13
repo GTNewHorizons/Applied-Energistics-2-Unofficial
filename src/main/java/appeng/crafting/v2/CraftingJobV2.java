@@ -21,6 +21,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.core.AELog;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingContext.RequestInProcessing;
+import appeng.crafting.v2.CraftingRequest.CraftingMode;
 import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
 import appeng.crafting.v2.resolvers.CraftingTask;
 import appeng.hooks.TickHandler;
@@ -51,7 +52,12 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
     protected State state = State.RUNNING;
 
     public CraftingJobV2(final World world, final IGrid meGrid, final BaseActionSource actionSource,
-            final IAEItemStack what, final boolean usePreCrafting, final ICraftingCallback callback) {
+            final IAEItemStack what, final ICraftingCallback callback) {
+        this(world, meGrid, actionSource, what, CraftingMode.STANDARD, callback);
+    }
+
+    public CraftingJobV2(final World world, final IGrid meGrid, final BaseActionSource actionSource,
+            final IAEItemStack what, final CraftingMode craftingMode, final ICraftingCallback callback) {
         this.context = new CraftingContext(world, meGrid, actionSource);
         this.callback = callback;
         this.originalRequest = new CraftingRequest<>(
@@ -59,7 +65,7 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
                 SubstitutionMode.PRECISE_FRESH,
                 IAEItemStack.class,
                 true,
-                usePreCrafting);
+                craftingMode);
         this.context.addRequest(this.originalRequest);
         this.context.itemModel.ignore(what);
     }

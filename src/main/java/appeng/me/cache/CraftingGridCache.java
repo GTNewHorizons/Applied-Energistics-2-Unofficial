@@ -48,6 +48,7 @@ import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingLinkNexus;
 import appeng.crafting.CraftingWatcher;
 import appeng.crafting.v2.CraftingJobV2;
+import appeng.crafting.v2.CraftingRequest.CraftingMode;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
@@ -439,14 +440,19 @@ public class CraftingGridCache
 
     @Override
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
-            final IAEItemStack slotItem, final boolean usePreCrafting, final ICraftingCallback cb) {
+            final IAEItemStack slotItem, final ICraftingCallback cb) {
+        return beginCraftingJob(world, grid, actionSrc, slotItem, CraftingMode.STANDARD, cb);
+    }
+
+    public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
+            final IAEItemStack slotItem, final CraftingMode craftingMode, final ICraftingCallback cb) {
         if (world == null || grid == null || actionSrc == null || slotItem == null) {
             throw new IllegalArgumentException("Invalid Crafting Job Request");
         }
 
         final ICraftingJob job = switch (AEConfig.instance.craftingCalculatorVersion) {
             case 1 -> new CraftingJob(world, grid, actionSrc, slotItem, cb);
-            case 2 -> new CraftingJobV2(world, grid, actionSrc, slotItem, usePreCrafting, cb);
+            case 2 -> new CraftingJobV2(world, grid, actionSrc, slotItem, craftingMode, cb);
             default -> throw new IllegalStateException("Invalid crafting calculator version");
         };
 

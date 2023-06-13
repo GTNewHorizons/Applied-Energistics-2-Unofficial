@@ -27,6 +27,8 @@ import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.core.AELog;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
+import appeng.crafting.v2.CraftingRequest.CraftingMode;
+import appeng.me.cache.CraftingGridCache;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -42,6 +44,10 @@ public class PacketCraftRequest extends AppEngPacket {
         this.heldShift = stream.readBoolean();
         this.amount = stream.readLong();
         this.heldCtrl = stream.readBoolean();
+    }
+
+    public PacketCraftRequest(final int craftAmt, final boolean shift) {
+        this(craftAmt, shift, false);
     }
 
     public PacketCraftRequest(final int craftAmt, final boolean shift, final boolean ctrl) {
@@ -79,13 +85,22 @@ public class PacketCraftRequest extends AppEngPacket {
                 Future<ICraftingJob> futureJob = null;
                 try {
                     final ICraftingGrid cg = g.getCache(ICraftingGrid.class);
-                    futureJob = cg.beginCraftingJob(
-                            cca.getWorld(),
-                            cca.getGrid(),
-                            cca.getActionSrc(),
-                            cca.getItemToCraft(),
-                            this.heldCtrl,
-                            null);
+                    if (cg instanceof CraftingGridCache cgc) {
+                        futureJob = cgc.beginCraftingJob(
+                                cca.getWorld(),
+                                cca.getGrid(),
+                                cca.getActionSrc(),
+                                cca.getItemToCraft(),
+                                this.heldCtrl ? CraftingMode.IGNORE_MISSING : CraftingMode.STANDARD,
+                                null);
+                    } else {
+                        futureJob = cg.beginCraftingJob(
+                                cca.getWorld(),
+                                cca.getGrid(),
+                                cca.getActionSrc(),
+                                cca.getItemToCraft(),
+                                null);
+                    }
 
                     final ContainerOpenContext context = cca.getOpenContext();
                     if (context != null) {
