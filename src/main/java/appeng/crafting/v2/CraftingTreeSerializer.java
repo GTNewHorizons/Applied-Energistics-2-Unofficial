@@ -75,6 +75,7 @@ public final class CraftingTreeSerializer {
         registerSerializable(":te", EmitableItemResolver.EmitItemTask.class);
         registerSerializable(":tx", ExtractItemResolver.ExtractItemTask.class);
         registerSerializable(":ts", SimulateMissingItemResolver.ConjureItemTask.class);
+        registerSerializable(":tpr", PreCraftingItemResolver.PreCraftItemTask.class);
     }
 
     /**

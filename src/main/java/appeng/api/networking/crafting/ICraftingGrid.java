@@ -56,7 +56,7 @@ public interface ICraftingGrid extends IGridCache {
      *         on this, your be waiting forever.
      */
     Future<ICraftingJob> beginCraftingJob(World world, IGrid grid, BaseActionSource actionSrc, IAEItemStack craftWhat,
-            ICraftingCallback callback);
+            boolean usePreCrafting, ICraftingCallback callback);
 
     /**
      * Submit the job to the Crafting system for processing.

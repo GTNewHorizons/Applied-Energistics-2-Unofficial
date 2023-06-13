@@ -51,10 +51,15 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
     protected State state = State.RUNNING;
 
     public CraftingJobV2(final World world, final IGrid meGrid, final BaseActionSource actionSource,
-            final IAEItemStack what, final ICraftingCallback callback) {
+            final IAEItemStack what, final boolean usePreCrafting, final ICraftingCallback callback) {
         this.context = new CraftingContext(world, meGrid, actionSource);
         this.callback = callback;
-        this.originalRequest = new CraftingRequest<>(what, SubstitutionMode.PRECISE_FRESH, IAEItemStack.class, true);
+        this.originalRequest = new CraftingRequest<>(
+                what,
+                SubstitutionMode.PRECISE_FRESH,
+                IAEItemStack.class,
+                true,
+                usePreCrafting);
         this.context.addRequest(this.originalRequest);
         this.context.itemModel.ignore(what);
     }

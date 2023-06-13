@@ -159,7 +159,10 @@ public class GuiCraftAmount extends AEBaseGui {
 
     @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.next.displayString = isShiftKeyDown() ? GuiText.Start.getLocal() : GuiText.Next.getLocal();
+
+        if (isCtrlKeyDown()) this.next.displayString = GuiText.PreCraftStart.getLocal();
+        else if (isShiftKeyDown()) this.next.displayString = GuiText.Start.getLocal();
+        else this.next.displayString = GuiText.Next.getLocal();
 
         this.bindTexture("guis/craftAmt.png");
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
@@ -215,7 +218,8 @@ public class GuiCraftAmount extends AEBaseGui {
                     resultI = (int) ArithHelper.round(resultD, 0);
                 }
 
-                NetworkHandler.instance.sendToServer(new PacketCraftRequest(resultI, isShiftKeyDown()));
+                NetworkHandler.instance
+                        .sendToServer(new PacketCraftRequest(resultI, isShiftKeyDown(), isCtrlKeyDown()));
             }
         } catch (final NumberFormatException e) {
             // nope..

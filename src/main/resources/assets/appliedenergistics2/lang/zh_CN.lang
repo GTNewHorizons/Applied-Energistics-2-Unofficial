@@ -214,6 +214,7 @@ gui.appliedenergistics2.MultipleOutputs=第一副产概率%1$d%%,第二副产概
 gui.appliedenergistics2.SelectAmount=选择数量
 gui.appliedenergistics2.CopyMode=复制模式
 gui.appliedenergistics2.CopyModeDesc=控制当取出存储元件时,是否清空配置格.
+gui.appliedenergistics2.PreCraftStart=预合成
 gui.appliedenergistics2.Next=下一页
 gui.appliedenergistics2.Lumen=光通
 gui.appliedenergistics2.Empty=空

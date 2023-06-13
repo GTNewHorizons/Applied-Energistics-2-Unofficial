@@ -35,21 +35,26 @@ public class PacketCraftRequest extends AppEngPacket {
     private final long amount;
     private final boolean heldShift;
 
+    private final boolean heldCtrl;
+
     // automatic.
     public PacketCraftRequest(final ByteBuf stream) {
         this.heldShift = stream.readBoolean();
         this.amount = stream.readLong();
+        this.heldCtrl = stream.readBoolean();
     }
 
-    public PacketCraftRequest(final int craftAmt, final boolean shift) {
+    public PacketCraftRequest(final int craftAmt, final boolean shift, final boolean ctrl) {
         this.amount = craftAmt;
         this.heldShift = shift;
+        this.heldCtrl = ctrl;
 
         final ByteBuf data = Unpooled.buffer();
 
         data.writeInt(this.getPacketID());
         data.writeBoolean(shift);
         data.writeLong(this.amount);
+        data.writeBoolean(ctrl);
 
         this.configureWrite(data);
     }
@@ -79,6 +84,7 @@ public class PacketCraftRequest extends AppEngPacket {
                             cca.getGrid(),
                             cca.getActionSrc(),
                             cca.getItemToCraft(),
+                            this.heldCtrl,
                             null);
 
                     final ContainerOpenContext context = cca.getOpenContext();

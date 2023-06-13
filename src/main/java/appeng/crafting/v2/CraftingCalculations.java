@@ -88,5 +88,6 @@ public class CraftingCalculations {
         registerProvider(new SimulateMissingItemResolver<>(), IAEFluidStack.class);
         registerProvider(new EmitableItemResolver(), IAEItemStack.class);
         registerProvider(new CraftableItemResolver(), IAEItemStack.class);
+        registerProvider(new PreCraftingItemResolver(), IAEItemStack.class);
     }
 }

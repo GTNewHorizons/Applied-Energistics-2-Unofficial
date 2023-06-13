@@ -78,6 +78,9 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
     public final SubstitutionMode substitutionMode;
     public final Predicate<StackType> acceptableSubstituteFn;
     // (task, amount fulfilled by task)
+
+    public final boolean usePreCrafting;
+
     public final List<UsedResolverEntry<StackType>> usedResolvers = new ArrayList<>();
     /**
      * Whether this request and its children can be fulfilled by simulations
@@ -113,6 +116,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
         buffer.writeLong(untransformedByteCost);
         buffer.writeBoolean(wasSimulated);
         buffer.writeBoolean(incomplete);
+        buffer.writeBoolean(usePreCrafting);
         return usedResolvers;
     }
 
@@ -144,6 +148,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
         untransformedByteCost = buffer.readLong();
         wasSimulated = buffer.readBoolean();
         incomplete = buffer.readBoolean();
+        usePreCrafting = buffer.readBoolean();
         acceptableSubstituteFn = x -> true;
     }
 
@@ -154,13 +159,14 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
      * @param acceptableSubstituteFn A predicate testing if a given item (in fuzzy mode) can fulfill the request
      */
     public CraftingRequest(StackType stack, SubstitutionMode substitutionMode, Class<StackType> stackTypeClass,
-            boolean allowSimulation, Predicate<StackType> acceptableSubstituteFn) {
+            boolean allowSimulation, boolean usePreCrafting, Predicate<StackType> acceptableSubstituteFn) {
         this.stackTypeClass = stackTypeClass;
         this.stack = stack;
         this.substitutionMode = substitutionMode;
         this.acceptableSubstituteFn = acceptableSubstituteFn;
         this.remainingToProcess = stack.getStackSize();
         this.allowSimulation = allowSimulation;
+        this.usePreCrafting = usePreCrafting;
         if (!(stackTypeClass == IAEItemStack.class || stackTypeClass == IAEFluidStack.class)) {
             throw new IllegalArgumentException(
                     "Invalid stack type for a crafting request: " + stackTypeClass.getName());
@@ -173,8 +179,8 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
      * @param stackTypeClass   Pass in {@code StackType.class}, needed for resolving types at runtime
      */
     public CraftingRequest(StackType request, SubstitutionMode substitutionMode, Class<StackType> stackTypeClass,
-            boolean allowSimulation) {
-        this(request, substitutionMode, stackTypeClass, allowSimulation, x -> true);
+            boolean allowSimulation, boolean usePreCrafting) {
+        this(request, substitutionMode, stackTypeClass, allowSimulation, usePreCrafting, x -> true);
         if (substitutionMode == SubstitutionMode.ACCEPT_FUZZY) {
             throw new IllegalArgumentException("Fuzzy requests must have a substitution-valid predicate");
         }

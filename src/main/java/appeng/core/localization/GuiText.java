@@ -201,7 +201,10 @@ public enum GuiText {
     // Used in a ME Interface when no appropriate TileEntity was detected near it
     Nothing,
 
-    VoidCellTooltip;
+    VoidCellTooltip,
+
+    // Pre-Crafting
+    PreCraftStart;
 
     private final String root;
 
