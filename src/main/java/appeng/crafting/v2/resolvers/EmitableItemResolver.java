@@ -73,7 +73,7 @@ public class EmitableItemResolver implements CraftingRequestResolver<IAEItemStac
         @Override
         public void populatePlan(IItemList<IAEItemStack> targetPlan) {
             if (fulfilled > 0 && request.stack instanceof IAEItemStack) {
-                targetPlan.addRequestable(request.stack.copy().setStackSize(fulfilled));
+                targetPlan.addRequestable(request.stack.copy().setCountRequestable(fulfilled));
             }
         }
 
