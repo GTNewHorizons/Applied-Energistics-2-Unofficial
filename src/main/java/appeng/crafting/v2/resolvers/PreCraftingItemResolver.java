@@ -23,8 +23,7 @@ public class PreCraftingItemResolver implements CraftingRequestResolver<IAEItemS
         private long fulfilled = 0;
 
         public PreCraftItemTask(CraftingRequest<IAEItemStack> request) {
-            super(request, Integer.MIN_VALUE + 200); // conjure items for calculations out of thin air as
-            // a last
+            super(request, Integer.MIN_VALUE + 200);
         }
 
         @SuppressWarnings("unused")
@@ -85,7 +84,7 @@ public class PreCraftingItemResolver implements CraftingRequestResolver<IAEItemS
 
         @Override
         public String toString() {
-            return "EmitItemTask{" + "fulfilled="
+            return "PreCraftItemTask{" + "fulfilled="
                     + fulfilled
                     + ", request="
                     + request
