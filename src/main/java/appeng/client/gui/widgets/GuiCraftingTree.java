@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
+import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver.IgnoreMissingItemTask;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.shader.Framebuffer;
@@ -36,7 +37,6 @@ import appeng.crafting.v2.CraftingRequest.UsedResolverEntry;
 import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
 import appeng.crafting.v2.resolvers.EmitableItemResolver.EmitItemTask;
 import appeng.crafting.v2.resolvers.ExtractItemResolver.ExtractItemTask;
-import appeng.crafting.v2.resolvers.PreCraftingItemResolver;
 import appeng.crafting.v2.resolvers.SimulateMissingItemResolver;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
@@ -165,7 +165,7 @@ public class GuiCraftingTree {
                 drawIcon(x, y, 1);
             } else if (resolver.task instanceof SimulateMissingItemResolver.ConjureItemTask) {
                 drawIcon(x, y, 8 * 16);
-            } else if (resolver.task instanceof PreCraftingItemResolver.PreCraftItemTask) {
+            } else if (resolver.task instanceof IgnoreMissingItemTask) {
                 drawIcon(x, y, 9 * 16 + 1);
             }
             drawSmallStackCount(x, y, displayCount, textColor);

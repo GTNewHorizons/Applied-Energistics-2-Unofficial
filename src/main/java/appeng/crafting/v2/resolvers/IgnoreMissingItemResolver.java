@@ -17,18 +17,18 @@ import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 
-public class PreCraftingItemResolver implements CraftingRequestResolver<IAEItemStack> {
+public class IgnoreMissingItemResolver implements CraftingRequestResolver<IAEItemStack> {
 
-    public static class PreCraftItemTask extends CraftingTask<IAEItemStack> {
+    public static class IgnoreMissingItemTask extends CraftingTask<IAEItemStack> {
 
         private long fulfilled = 0;
 
-        public PreCraftItemTask(CraftingRequest<IAEItemStack> request) {
+        public IgnoreMissingItemTask(CraftingRequest<IAEItemStack> request) {
             super(request, Integer.MIN_VALUE + 200);
         }
 
         @SuppressWarnings("unused")
-        public PreCraftItemTask(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
+        public IgnoreMissingItemTask(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
             super(serializer, parent);
 
             fulfilled = serializer.getBuffer().readLong();
@@ -108,7 +108,7 @@ public class PreCraftingItemResolver implements CraftingRequestResolver<IAEItemS
     public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<IAEItemStack> request,
             @Nonnull CraftingContext context) {
         if (request.craftingMode == CraftingMode.IGNORE_MISSING && request.allowSimulation) {
-            return Collections.singletonList(new PreCraftItemTask(request));
+            return Collections.singletonList(new IgnoreMissingItemTask(request));
         } else return Collections.emptyList();
 
     }

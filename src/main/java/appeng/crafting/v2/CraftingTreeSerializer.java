@@ -7,6 +7,7 @@ import java.lang.invoke.MethodType;
 import java.nio.ByteOrder;
 import java.util.*;
 
+import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver.IgnoreMissingItemTask;
 import net.minecraft.world.World;
 
 import com.google.common.base.Throwables;
@@ -75,7 +76,7 @@ public final class CraftingTreeSerializer {
         registerSerializable(":te", EmitableItemResolver.EmitItemTask.class);
         registerSerializable(":tx", ExtractItemResolver.ExtractItemTask.class);
         registerSerializable(":ts", SimulateMissingItemResolver.ConjureItemTask.class);
-        registerSerializable(":tp", PreCraftingItemResolver.PreCraftItemTask.class);
+        registerSerializable(":tp", IgnoreMissingItemTask.class);
     }
 
     /**
