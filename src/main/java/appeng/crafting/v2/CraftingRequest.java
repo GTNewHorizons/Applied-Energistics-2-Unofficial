@@ -155,7 +155,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
         wasSimulated = buffer.readBoolean();
         incomplete = buffer.readBoolean();
         int index = buffer.readInt();
-        if (index < 0 || index > CraftingMode.values().length || CraftingMode.values()[index] == CraftingMode.STANDARD)
+        if (index < 0 || index >= CraftingMode.values().length || CraftingMode.values()[index] == CraftingMode.STANDARD)
             craftingMode = CraftingMode.STANDARD;
         else craftingMode = CraftingMode.IGNORE_MISSING;
         acceptableSubstituteFn = x -> true;

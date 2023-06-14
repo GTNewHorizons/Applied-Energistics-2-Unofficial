@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 
 import javax.imageio.ImageIO;
 
-import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver.IgnoreMissingItemTask;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.shader.Framebuffer;
@@ -37,6 +36,7 @@ import appeng.crafting.v2.CraftingRequest.UsedResolverEntry;
 import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
 import appeng.crafting.v2.resolvers.EmitableItemResolver.EmitItemTask;
 import appeng.crafting.v2.resolvers.ExtractItemResolver.ExtractItemTask;
+import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver.IgnoreMissingItemTask;
 import appeng.crafting.v2.resolvers.SimulateMissingItemResolver;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;

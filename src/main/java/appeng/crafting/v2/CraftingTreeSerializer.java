@@ -7,7 +7,6 @@ import java.lang.invoke.MethodType;
 import java.nio.ByteOrder;
 import java.util.*;
 
-import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver.IgnoreMissingItemTask;
 import net.minecraft.world.World;
 
 import com.google.common.base.Throwables;
@@ -18,6 +17,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AEConfig;
 import appeng.crafting.v2.resolvers.*;
+import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver.IgnoreMissingItemTask;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.network.ByteBufUtils;
