@@ -16,6 +16,7 @@ import net.minecraft.client.gui.GuiTextField;
 
 import org.lwjgl.input.Keyboard;
 
+import appeng.core.AEConfig;
 import appeng.core.localization.GuiColors;
 
 /**
@@ -29,7 +30,6 @@ public class MEGuiTextField implements ITooltip {
     protected GuiTextField field;
 
     private static final int PADDING = 2;
-    private static final int MAX_INPUT_LENGTH = 25;
     private static boolean previousKeyboardRepeatEnabled;
     private static MEGuiTextField previousKeyboardRepeatEnabledField;
     private String tooltip;
@@ -55,7 +55,7 @@ public class MEGuiTextField implements ITooltip {
         h = height;
 
         field.setEnableBackgroundDrawing(false);
-        field.setMaxStringLength(MAX_INPUT_LENGTH);
+        field.setMaxStringLength(AEConfig.instance.quartzKnifeInputLength);
         field.setTextColor(GuiColors.SearchboxText.getColor());
         field.setCursorPositionZero();
 

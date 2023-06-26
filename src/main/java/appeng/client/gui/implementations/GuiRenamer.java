@@ -9,6 +9,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerRenamer;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
@@ -35,7 +36,7 @@ public class GuiRenamer extends AEBaseGui implements IDropToFillTextField {
                 }
             }
         };
-        this.textField.setMaxStringLength(32);
+        this.textField.setMaxStringLength(AEConfig.instance.quartzKnifeInputLength);
     }
 
     @Override
