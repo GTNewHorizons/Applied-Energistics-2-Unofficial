@@ -152,8 +152,9 @@ public class MEGuiTextField implements ITooltip {
     public void setText(String text, boolean ignoreTrigger) {
         final String oldText = getText();
 
+        int currentCursorPos = field.getCursorPosition();
         field.setText(text);
-        field.setCursorPositionEnd();
+        field.setCursorPosition(currentCursorPos);
 
         if (!ignoreTrigger) {
             onTextChange(oldText);
