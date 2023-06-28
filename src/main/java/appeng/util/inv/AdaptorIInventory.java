@@ -235,12 +235,7 @@ public class AdaptorIInventory extends InventoryAdaptor {
         }
 
         final ItemStack left = itemsToAdd.copy();
-
-        int internalLimit = 0;
-        if (this.i instanceof WrapperInventoryRange) {
-            internalLimit = ((WrapperInventoryRange) this.i).getInternalInventoryStackLimit();
-        }
-        int invLimit = internalLimit > 0 ? internalLimit : this.i.getInventoryStackLimit();
+        int invLimit = this.i.getInventoryStackLimit();
 
         final int perOperationLimit = this.skipStackSizeCheck ? invLimit
                 : Math.min(invLimit, itemsToAdd.getMaxStackSize());
