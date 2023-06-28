@@ -1150,6 +1150,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return (te.zCoord << 24) ^ (te.xCoord << 8) ^ te.yCoord;
     }
 
+    public BaseActionSource getActionSource() {
+        return interfaceRequestSource;
+    }
+
     public void initialize() {
         this.updateCraftingList();
     }

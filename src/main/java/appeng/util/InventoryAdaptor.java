@@ -62,6 +62,8 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
                 IPart part = ((TileCableBus) te).getPart(d);
                 if (part instanceof IInterfaceHost host) {
                     return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), host);
+                } else {
+
                 }
             }
             int stackLimit = 0;
