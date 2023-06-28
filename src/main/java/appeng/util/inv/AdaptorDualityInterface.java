@@ -1,11 +1,11 @@
 package appeng.util.inv;
 
-import appeng.api.config.InsertionMode;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.AdvancedBlockingMode;
+import appeng.api.config.InsertionMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.storage.IMEMonitor;
