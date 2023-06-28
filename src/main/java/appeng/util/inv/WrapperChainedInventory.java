@@ -144,7 +144,7 @@ public class WrapperChainedInventory implements IInventory {
 
     @Override
     public int getInventoryStackLimit() {
-        int smallest = 64;
+        int smallest = Integer.MAX_VALUE;
 
         for (final IInventory i : this.l) {
             smallest = Math.min(smallest, i.getInventoryStackLimit());

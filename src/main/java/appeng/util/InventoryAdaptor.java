@@ -26,6 +26,7 @@ import appeng.helpers.IInterfaceHost;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBetterStorage;
+import appeng.parts.p2p.PartP2PItems;
 import appeng.tile.AEBaseInvTile;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
@@ -62,8 +63,8 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
                 IPart part = ((TileCableBus) te).getPart(d);
                 if (part instanceof IInterfaceHost host) {
                     return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), host);
-                } else {
-
+                } else if (part instanceof PartP2PItems p2p) {
+                    return new AdaptorP2PItem(p2p);
                 }
             }
             int stackLimit = 0;
