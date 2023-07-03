@@ -326,11 +326,6 @@ public class AENetworkProxy implements IGridBlock {
         return this.node.isActive();
     }
 
-    public boolean isActiveOrBooting() {
-        if (this.node == null) return false;
-        return this.node.isActiveOrBooting();
-    }
-
     public boolean isPowered() {
         try {
             return this.getEnergy().isNetworkPowered();

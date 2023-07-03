@@ -118,20 +118,22 @@ public class PartP2PTunnelME extends PartP2PTunnel<PartP2PTunnelME> implements I
     public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
         // just move on...
         try {
-            if (!this.getProxy().getEnergy().isNetworkPowered()) {
-                this.connection.markDestroy();
-                TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
-            } else {
-                if (this.getProxy().getPath().isNetworkBooting()) return TickRateModulation.SAME;
-                if (this.getProxy().isActive()) {
-                    this.connection.markCreate();
-                    TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
-                } else {
+            if (!this.getProxy().getPath().isNetworkBooting()) {
+                if (!this.getProxy().getEnergy().isNetworkPowered()) {
                     this.connection.markDestroy();
                     TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
+                } else {
+                    if (this.getProxy().isActive()) {
+                        this.connection.markCreate();
+                        TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
+                    } else {
+                        this.connection.markDestroy();
+                        TickHandler.INSTANCE.addCallable(this.getTile().getWorldObj(), this.connection);
+                    }
                 }
+
+                return TickRateModulation.SLEEP;
             }
-            return TickRateModulation.SLEEP;
         } catch (final GridAccessException e) {
             // meh?
         }
@@ -152,8 +154,10 @@ public class PartP2PTunnelME extends PartP2PTunnel<PartP2PTunnelME> implements I
             while (i.hasNext()) {
                 final TunnelConnection cw = i.next();
                 try {
-                    if (cw.getTunnel().getProxy().getGrid() != this.getProxy().getGrid()
-                            || !cw.getTunnel().getProxy().isActiveOrBooting()) {
+                    if (cw.getTunnel().getProxy().getGrid() != this.getProxy().getGrid()) {
+                        cw.getConnection().destroy();
+                        i.remove();
+                    } else if (!cw.getTunnel().getProxy().isActive()) {
                         cw.getConnection().destroy();
                         i.remove();
                     }
@@ -164,25 +168,24 @@ public class PartP2PTunnelME extends PartP2PTunnel<PartP2PTunnelME> implements I
 
             final LinkedList<PartP2PTunnelME> newSides = new LinkedList<>();
             try {
-                for (final PartP2PTunnelME output : this.getOutputs()) {
-                    if (output.getProxy().isActiveOrBooting()
-                            && connections.getConnections().get(output.getGridNode()) == null) {
-                        newSides.add(output);
+                for (final PartP2PTunnelME me : this.getOutputs()) {
+                    if (me.getProxy().isActive() && connections.getConnections().get(me.getGridNode()) == null) {
+                        newSides.add(me);
                     }
                 }
 
-                for (final PartP2PTunnelME output : newSides) {
+                for (final PartP2PTunnelME me : newSides) {
                     try {
                         connections.getConnections().put(
-                                output.getGridNode(),
+                                me.getGridNode(),
                                 new TunnelConnection(
-                                        output,
+                                        me,
                                         AEApi.instance().createGridConnection(
                                                 this.outerProxy.getNode(),
-                                                output.outerProxy.getNode())));
+                                                me.outerProxy.getNode())));
                     } catch (final FailedConnection e) {
                         final TileEntity start = this.getTile();
-                        final TileEntity end = output.getTile();
+                        final TileEntity end = me.getTile();
                         AELog.warn(
                                 "Failed to establish a ME P2P Tunnel between the tunnels at [x=%d, y=%d, z=%d, dim=%d] and [x=%d, y=%d, z=%d, dim=%d]",
                                 start.xCoord,

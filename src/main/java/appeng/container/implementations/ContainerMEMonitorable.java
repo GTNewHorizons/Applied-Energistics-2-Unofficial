@@ -238,7 +238,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
     protected void updatePowerStatus() {
         try {
             if (this.networkNode != null) {
-                this.setPowered(this.networkNode.isActiveOrBooting());
+                this.setPowered(this.networkNode.isActive());
             } else if (this.getPowerSource() instanceof IEnergyGrid) {
                 this.setPowered(((IEnergyGrid) this.getPowerSource()).isNetworkPowered());
             } else {

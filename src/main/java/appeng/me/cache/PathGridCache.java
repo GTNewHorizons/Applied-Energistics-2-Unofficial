@@ -10,29 +10,14 @@
 
 package appeng.me.cache;
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.apache.logging.log4j.Level;
 
-import appeng.api.networking.GridFlags;
-import appeng.api.networking.IGrid;
-import appeng.api.networking.IGridBlock;
-import appeng.api.networking.IGridConnection;
-import appeng.api.networking.IGridHost;
-import appeng.api.networking.IGridMultiblock;
-import appeng.api.networking.IGridNode;
-import appeng.api.networking.IGridStorage;
+import appeng.api.networking.*;
 import appeng.api.networking.events.MENetworkBootingStatusChange;
-import appeng.api.networking.events.MENetworkCellArrayUpdate;
 import appeng.api.networking.events.MENetworkChannelChanged;
 import appeng.api.networking.events.MENetworkControllerChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -45,19 +30,12 @@ import appeng.core.features.AEFeature;
 import appeng.core.stats.Achievements;
 import appeng.me.GridConnection;
 import appeng.me.GridNode;
-import appeng.me.pathfinding.AdHocChannelUpdater;
-import appeng.me.pathfinding.BackbonePathSegment;
-import appeng.me.pathfinding.ControllerChannelUpdater;
-import appeng.me.pathfinding.ControllerValidator;
-import appeng.me.pathfinding.IPathItem;
-import appeng.me.pathfinding.PathSegment;
-import appeng.me.pathfinding.TopologyStage;
+import appeng.me.pathfinding.*;
 import appeng.tile.networking.TileController;
 import appeng.util.Platform;
 
 public class PathGridCache implements IPathingGrid {
 
-    private static final int STEPS_PER_TICK = 10;
     private final LinkedList<PathSegment> active = new LinkedList<>();
     private final Map<IPathItem, BackbonePathSegment> backbone = new HashMap<>();
     private final Set<TileController> controllers = new HashSet<>();
@@ -118,6 +96,8 @@ public class PathGridCache implements IPathingGrid {
                 final HashSet<IPathItem> closedList = new HashSet<>();
                 this.semiOpen = new HashSet<>();
 
+                // myGrid.getPivot().beginVisit( new AdHocChannelUpdater( 0 )
+                // );
                 for (final IGridNode node : this.myGrid.getMachines(TileController.class)) {
                     closedList.add((IPathItem) node);
                     for (final IGridConnection gcc : node.getConnections()) {
@@ -136,14 +116,12 @@ public class PathGridCache implements IPathingGrid {
 
         if (!this.active.isEmpty() || !backbone.isEmpty() || this.ticksUntilReady > 0) {
             boolean firstStage = !this.active.isEmpty();
-            for (int k = 0; k < STEPS_PER_TICK && !this.active.isEmpty(); ++k) {
-                final Iterator<PathSegment> i = this.active.iterator();
-                while (i.hasNext()) {
-                    final PathSegment pat = i.next();
-                    if (pat.step(backbone, TopologyStage.CONTROLLER_TO_BACKBONE)) {
-                        pat.setDead(true);
-                        i.remove();
-                    }
+            final Iterator<PathSegment> i = this.active.iterator();
+            while (i.hasNext()) {
+                final PathSegment pat = i.next();
+                if (pat.step(backbone, TopologyStage.CONTROLLER_TO_BACKBONE)) {
+                    pat.setDead(true);
+                    i.remove();
                 }
             }
             if (active.isEmpty() && !backbone.isEmpty()) {
@@ -189,7 +167,6 @@ public class PathGridCache implements IPathingGrid {
                 this.booting = false;
                 this.setChannelPowerUsage(this.getChannelsByBlocks() / 128.0);
                 this.myGrid.postEvent(new MENetworkBootingStatusChange());
-                this.myGrid.postEvent(new MENetworkCellArrayUpdate());
             }
         }
     }
@@ -368,7 +345,7 @@ public class PathGridCache implements IPathingGrid {
 
     @Override
     public boolean isNetworkBooting() {
-        return !this.active.isEmpty() || !this.backbone.isEmpty() || this.updateNetwork;
+        return (!this.active.isEmpty() || !this.backbone.isEmpty()) && !this.booting;
     }
 
     @Override
