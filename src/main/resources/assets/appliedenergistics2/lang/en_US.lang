@@ -440,9 +440,9 @@ gui.tooltips.appliedenergistics2.AdvancedBlockingModeAll=Loose Mode
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeAllDesc=Blocking interfaces will block on any item in this ME system.
 
 gui.tooltips.appliedenergistics2.CraftingModeStandard=Standard Crafting Mode
-gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Default Crafting Mode
+gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Only starts craft if all ingredients are available in the ME System.
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Ignore Missing Crafting Mode
-gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=The plan can still be submitted when the item is missing. Missing items will be waited for later.
+gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=Starts craft even if ingredients are missing from the ME System.
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
