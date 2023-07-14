@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 
+import appeng.api.config.CraftingMode;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
@@ -35,12 +36,6 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
          * predicate to determine if the given fuzzy match item is valid
          */
         ACCEPT_FUZZY
-    }
-
-    public enum CraftingMode {
-        STANDARD,
-        IGNORE_MISSING
-
     }
 
     public static class UsedResolverEntry<T extends IAEStack<T>> implements ITreeSerializable {

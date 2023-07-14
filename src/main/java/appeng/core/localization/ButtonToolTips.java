@@ -180,7 +180,11 @@ public enum ButtonToolTips {
     AdvancedBlockingModeDefault,
     AdvancedBlockingModeDefaultDesc,
     AdvancedBlockingModeAll,
-    AdvancedBlockingModeAllDesc,;
+    AdvancedBlockingModeAllDesc,
+    CraftingModeStandard,
+    CraftingModeStandardDesc,
+    CraftingModeIgnoreMissing,
+    CraftingModeIgnoreMissingDesc;
 
     private final String root;
 

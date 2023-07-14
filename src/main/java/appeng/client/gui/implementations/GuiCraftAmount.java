@@ -15,11 +15,16 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
+import org.lwjgl.input.Mouse;
+
 import appeng.api.AEApi;
+import appeng.api.config.CraftingMode;
+import appeng.api.config.Settings;
 import appeng.api.definitions.IDefinitions;
 import appeng.api.definitions.IParts;
 import appeng.api.storage.ITerminalHost;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerCraftAmount;
@@ -36,6 +41,7 @@ import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartPatternTerminal;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
+import appeng.util.Platform;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
@@ -43,6 +49,8 @@ public class GuiCraftAmount extends AEBaseGui {
 
     private GuiTextField amountToCraft;
     private GuiTabButton originalGuiBtn;
+
+    private GuiImgButton craftingMode;
 
     private GuiButton next;
 
@@ -84,6 +92,13 @@ public class GuiCraftAmount extends AEBaseGui {
 
         this.buttonList.add(
                 this.next = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.Next.getLocal()));
+
+        this.buttonList.add(
+                this.craftingMode = new GuiImgButton(
+                        this.guiLeft + 10,
+                        this.guiTop + 53,
+                        Settings.CRAFTING_MODE,
+                        CraftingMode.STANDARD));
 
         ItemStack myIcon = null;
         final Object target = ((AEBaseContainer) this.inventorySlots).getTarget();
@@ -160,9 +175,7 @@ public class GuiCraftAmount extends AEBaseGui {
     @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
 
-        if (isCtrlKeyDown()) this.next.displayString = GuiText.PreCraftStart.getLocal();
-        else if (isShiftKeyDown()) this.next.displayString = GuiText.Start.getLocal();
-        else this.next.displayString = GuiText.Next.getLocal();
+        this.next.displayString = isShiftKeyDown() ? GuiText.Start.getLocal() : GuiText.Next.getLocal();
 
         this.bindTexture("guis/craftAmt.png");
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
@@ -207,6 +220,15 @@ public class GuiCraftAmount extends AEBaseGui {
             if (btn == this.originalGuiBtn) {
                 NetworkHandler.instance.sendToServer(new PacketSwitchGuis(this.originalGui));
             }
+            if (btn == this.craftingMode) {
+                GuiImgButton iBtn = (GuiImgButton) btn;
+
+                final Enum cv = iBtn.getCurrentValue();
+                final boolean backwards = Mouse.isButtonDown(1);
+                final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
+
+                iBtn.set(next);
+            }
 
             if (btn == this.next && btn.enabled) {
                 double resultD = Calculator.conversion(this.amountToCraft.getText());
@@ -218,8 +240,11 @@ public class GuiCraftAmount extends AEBaseGui {
                     resultI = (int) ArithHelper.round(resultD, 0);
                 }
 
-                NetworkHandler.instance
-                        .sendToServer(new PacketCraftRequest(resultI, isShiftKeyDown(), isCtrlKeyDown()));
+                NetworkHandler.instance.sendToServer(
+                        new PacketCraftRequest(
+                                resultI,
+                                isShiftKeyDown(),
+                                (CraftingMode) this.craftingMode.getCurrentValue()));
             }
         } catch (final NumberFormatException e) {
             // nope..

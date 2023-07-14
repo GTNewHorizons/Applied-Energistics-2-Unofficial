@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.config.CraftingMode;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
@@ -27,7 +28,6 @@ import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.core.AELog;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
-import appeng.crafting.v2.CraftingRequest.CraftingMode;
 import appeng.me.cache.CraftingGridCache;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -37,30 +37,30 @@ public class PacketCraftRequest extends AppEngPacket {
     private final long amount;
     private final boolean heldShift;
 
-    private final boolean heldCtrl;
+    private final CraftingMode craftingMode;
 
     // automatic.
     public PacketCraftRequest(final ByteBuf stream) {
         this.heldShift = stream.readBoolean();
         this.amount = stream.readLong();
-        this.heldCtrl = stream.readBoolean();
+        this.craftingMode = CraftingMode.values()[stream.readByte()];
     }
 
     public PacketCraftRequest(final int craftAmt, final boolean shift) {
-        this(craftAmt, shift, false);
+        this(craftAmt, shift, CraftingMode.STANDARD);
     }
 
-    public PacketCraftRequest(final int craftAmt, final boolean shift, final boolean ctrl) {
+    public PacketCraftRequest(final int craftAmt, final boolean shift, final CraftingMode craftingMode) {
         this.amount = craftAmt;
         this.heldShift = shift;
-        this.heldCtrl = ctrl;
+        this.craftingMode = craftingMode;
 
         final ByteBuf data = Unpooled.buffer();
 
         data.writeInt(this.getPacketID());
         data.writeBoolean(shift);
         data.writeLong(this.amount);
-        data.writeBoolean(ctrl);
+        data.writeByte(craftingMode.ordinal());
 
         this.configureWrite(data);
     }
@@ -91,7 +91,7 @@ public class PacketCraftRequest extends AppEngPacket {
                                 cca.getGrid(),
                                 cca.getActionSrc(),
                                 cca.getItemToCraft(),
-                                this.heldCtrl ? CraftingMode.IGNORE_MISSING : CraftingMode.STANDARD,
+                                this.craftingMode,
                                 null);
                     } else {
                         futureJob = cg.beginCraftingJob(

@@ -66,7 +66,9 @@ public enum Settings {
 
     SIDELESS_MODE(EnumSet.allOf(SidelessMode.class)),
 
-    ADVANCED_BLOCKING_MODE(EnumSet.allOf(AdvancedBlockingMode.class));
+    ADVANCED_BLOCKING_MODE(EnumSet.allOf(AdvancedBlockingMode.class)),
+
+    CRAFTING_MODE(EnumSet.allOf(CraftingMode.class));
 
     private final EnumSet<? extends Enum<?>> values;
 

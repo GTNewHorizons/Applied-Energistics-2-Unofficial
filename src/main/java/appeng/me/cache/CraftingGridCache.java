@@ -24,6 +24,7 @@ import com.google.common.collect.*;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
+import appeng.api.config.CraftingMode;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
@@ -48,7 +49,6 @@ import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingLinkNexus;
 import appeng.crafting.CraftingWatcher;
 import appeng.crafting.v2.CraftingJobV2;
-import appeng.crafting.v2.CraftingRequest.CraftingMode;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;

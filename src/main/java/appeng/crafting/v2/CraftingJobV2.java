@@ -11,6 +11,7 @@ import net.minecraft.world.World;
 
 import org.apache.logging.log4j.Level;
 
+import appeng.api.config.CraftingMode;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingCallback;
@@ -21,7 +22,6 @@ import appeng.api.storage.data.IItemList;
 import appeng.core.AELog;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingContext.RequestInProcessing;
-import appeng.crafting.v2.CraftingRequest.CraftingMode;
 import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
 import appeng.crafting.v2.resolvers.CraftingTask;
 import appeng.hooks.TickHandler;

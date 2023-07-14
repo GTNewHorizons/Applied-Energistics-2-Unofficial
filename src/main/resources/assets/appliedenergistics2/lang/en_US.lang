@@ -216,7 +216,6 @@ gui.appliedenergistics2.MultipleOutputs=%1$d%% second, %2$d%% third output.
 gui.appliedenergistics2.SelectAmount=Select Amount
 gui.appliedenergistics2.CopyMode=Copy Mode
 gui.appliedenergistics2.CopyModeDesc=Controls if the contents of the configuration pane are cleared when you remove the cell.
-gui.appliedenergistics2.PreCraftStart=Ignore missing
 gui.appliedenergistics2.Next=Next
 gui.appliedenergistics2.Lumen=Lumen
 gui.appliedenergistics2.Empty=Empty
@@ -439,6 +438,11 @@ gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefault=Default Blocking Mo
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefaultDesc=Blocking interfaces follow follow normal blocking rules (ignore circuits, etc.)
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeAll=Loose Mode
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeAllDesc=Blocking interfaces will block on any item in this ME system.
+
+gui.tooltips.appliedenergistics2.CraftingModeStandard=Standard Crafting Mode
+gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Default Crafting Mode
+gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Ignore Missing Crafting Mode
+gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=The plan can still be submitted when the item is missing. Missing items will be waited for later.
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
