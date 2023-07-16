@@ -19,44 +19,40 @@ import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 
-import appeng.api.config.ActionItems;
-import appeng.api.config.ItemSubstitution;
-import appeng.api.config.PatternBeSubstitution;
-import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
-import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerPatternTerm;
-import appeng.container.slot.AppEngSlot;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.helpers.Reflected;
 
-public class GuiPatternTerm extends GuiMEMonitorable {
-
-    private static final String SUBSITUTION_DISABLE = "0";
-    private static final String SUBSITUTION_ENABLE = "1";
+public class GuiPatternTerm extends GuiBasePatternTerm {
 
     private static final String CRAFTMODE_CRFTING = "1";
     private static final String CRAFTMODE_PROCESSING = "0";
 
-    private final ContainerPatternTerm container;
+    private final GuiTabButton tabCraftButton;
+    private final GuiTabButton tabProcessButton;
 
-    private GuiTabButton tabCraftButton;
-    private GuiTabButton tabProcessButton;
-    private GuiImgButton substitutionsEnabledBtn;
-    private GuiImgButton substitutionsDisabledBtn;
-    private GuiImgButton beSubstitutionsEnabledBtn;
-    private GuiImgButton beSubstitutionsDisabledBtn;
-    private GuiImgButton encodeBtn;
-    private GuiImgButton clearBtn;
-    private GuiImgButton doubleBtn;
-
+    @Reflected
     public GuiPatternTerm(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         super(inventoryPlayer, te, new ContainerPatternTerm(inventoryPlayer, te));
-        this.container = (ContainerPatternTerm) this.inventorySlots;
-        this.setReservedSpace(81);
+        this.btnArrLeft = 84;
+
+        this.tabCraftButton = new GuiTabButton(
+                this.guiLeft + 173,
+                this.guiTop + this.ySize - 177,
+                new ItemStack(Blocks.crafting_table),
+                GuiText.CraftingPattern.getLocal(),
+                itemRender);
+        this.tabProcessButton = new GuiTabButton(
+                this.guiLeft + 173,
+                this.guiTop + this.ySize - 177,
+                new ItemStack(Blocks.furnace),
+                GuiText.ProcessingPattern.getLocal(),
+                itemRender);
     }
 
     @Override
@@ -69,6 +65,9 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                         new PacketValueConfig(
                                 "PatternTerminal.CraftMode",
                                 this.tabProcessButton == btn ? CRAFTMODE_CRFTING : CRAFTMODE_PROCESSING));
+                tabCraftButton.visible = !tabCraftButton.visible;
+                tabProcessButton.visible = !tabProcessButton.visible;
+                doubleBtn.visible = !doubleBtn.visible;
             } else if (this.encodeBtn == btn) {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
@@ -76,16 +75,16 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                                 isCtrlKeyDown() ? (isShiftKeyDown() ? "6" : "1") : (isShiftKeyDown() ? "2" : "1")));
             } else if (this.clearBtn == btn) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("PatternTerminal.Clear", "1"));
-            } else if (this.substitutionsEnabledBtn == btn || this.substitutionsDisabledBtn == btn) {
+            } else if (this.subsEnabledBtn == btn || this.subsDisabledBtn == btn) {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
                                 "PatternTerminal.Substitute",
-                                this.substitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
-            } else if (this.beSubstitutionsEnabledBtn == btn || this.beSubstitutionsDisabledBtn == btn) {
+                                this.subsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
+            } else if (this.amSubEnabledBtn == btn || this.amSubDisabledBtn == btn) {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
                                 "PatternTerminal.BeSubstitute",
-                                this.beSubstitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
+                                this.amSubEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
             } else if (doubleBtn == btn) {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
@@ -93,89 +92,34 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                                 Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? "1" : "0"));
             }
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
     @Override
+    protected void initLayout() {
+        btnArrLeft = this.guiLeft + 84;
+        btnArrTop = this.guiTop + this.ySize - 163;
+        btnOffsetX = 10;
+        btnOffsetY = 10;
+
+        tabCraftButton.xPosition = this.guiLeft + 173;
+        tabCraftButton.yPosition = this.guiTop + this.ySize - 177;
+        tabProcessButton.xPosition = this.guiLeft + 173;
+        tabProcessButton.yPosition = this.guiTop + this.ySize - 177;
+    }
+
+    @Override
     public void initGui() {
         super.initGui();
-        this.tabCraftButton = new GuiTabButton(
-                this.guiLeft + 173,
-                this.guiTop + this.ySize - 177,
-                new ItemStack(Blocks.crafting_table),
-                GuiText.CraftingPattern.getLocal(),
-                itemRender);
-        this.buttonList.add(this.tabCraftButton);
 
-        this.tabProcessButton = new GuiTabButton(
-                this.guiLeft + 173,
-                this.guiTop + this.ySize - 177,
-                new ItemStack(Blocks.furnace),
-                GuiText.ProcessingPattern.getLocal(),
-                itemRender);
-        this.buttonList.add(this.tabProcessButton);
-
-        this.substitutionsEnabledBtn = new GuiImgButton(
-                this.guiLeft + 84,
-                this.guiTop + this.ySize - 163,
-                Settings.ACTIONS,
-                ItemSubstitution.ENABLED);
-        this.substitutionsEnabledBtn.setHalfSize(true);
-        this.buttonList.add(this.substitutionsEnabledBtn);
-
-        this.substitutionsDisabledBtn = new GuiImgButton(
-                this.guiLeft + 84,
-                this.guiTop + this.ySize - 163,
-                Settings.ACTIONS,
-                ItemSubstitution.DISABLED);
-        this.substitutionsDisabledBtn.setHalfSize(true);
-        this.buttonList.add(this.substitutionsDisabledBtn);
-
-        this.beSubstitutionsEnabledBtn = new GuiImgButton(
-                this.guiLeft + 84,
-                this.guiTop + this.ySize - 153,
-                Settings.ACTIONS,
-                PatternBeSubstitution.ENABLED);
-        this.beSubstitutionsEnabledBtn.setHalfSize(true);
-        this.buttonList.add(this.beSubstitutionsEnabledBtn);
-
-        this.beSubstitutionsDisabledBtn = new GuiImgButton(
-                this.guiLeft + 84,
-                this.guiTop + this.ySize - 153,
-                Settings.ACTIONS,
-                PatternBeSubstitution.DISABLED);
-        this.beSubstitutionsDisabledBtn.setHalfSize(true);
-        this.buttonList.add(this.beSubstitutionsDisabledBtn);
-
-        this.clearBtn = new GuiImgButton(
-                this.guiLeft + 74,
-                this.guiTop + this.ySize - 163,
-                Settings.ACTIONS,
-                ActionItems.CLOSE);
-        this.clearBtn.setHalfSize(true);
-        this.buttonList.add(this.clearBtn);
-
-        this.encodeBtn = new GuiImgButton(
-                this.guiLeft + 147,
-                this.guiTop + this.ySize - 142,
-                Settings.ACTIONS,
-                ActionItems.ENCODE);
-        this.buttonList.add(this.encodeBtn);
-
-        this.doubleBtn = new GuiImgButton(
-                this.guiLeft + 74,
-                this.guiTop + this.ySize - 153,
-                Settings.ACTIONS,
-                ActionItems.DOUBLE);
-        this.doubleBtn.setHalfSize(true);
-        this.buttonList.add(this.doubleBtn);
+        buttonList.add(tabCraftButton);
+        buttonList.add(tabProcessButton);
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        if (!this.container.isCraftingMode()) {
+        if (!((ContainerPatternTerm) this.container).craftingMode) {
             this.tabCraftButton.visible = false;
             this.tabProcessButton.visible = true;
             this.doubleBtn.visible = true;
@@ -184,17 +128,6 @@ public class GuiPatternTerm extends GuiMEMonitorable {
             this.tabProcessButton.visible = false;
             this.doubleBtn.visible = false;
         }
-
-        if (this.container.substitute) {
-            this.substitutionsEnabledBtn.visible = true;
-            this.substitutionsDisabledBtn.visible = false;
-        } else {
-            this.substitutionsEnabledBtn.visible = false;
-            this.substitutionsDisabledBtn.visible = true;
-        }
-
-        this.beSubstitutionsEnabledBtn.visible = this.container.beSubstitute;
-        this.beSubstitutionsDisabledBtn.visible = !this.container.beSubstitute;
 
         super.drawFG(offsetX, offsetY, mouseX, mouseY);
         this.fontRendererObj.drawString(
@@ -206,18 +139,9 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
     @Override
     protected String getBackground() {
-        if (this.container.isCraftingMode()) {
+        if (((ContainerPatternTerm) this.container).craftingMode) {
             return "guis/pattern.png";
         }
         return "guis/pattern2.png";
-    }
-
-    @Override
-    protected void repositionSlot(final AppEngSlot s) {
-        if (s.isPlayerSide()) {
-            s.yDisplayPosition = s.getY() + this.ySize - 78 - 5;
-        } else {
-            s.yDisplayPosition = s.getY() + this.ySize - 78 - 3;
-        }
     }
 }

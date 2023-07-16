@@ -10,32 +10,19 @@ import net.minecraft.nbt.NBTTagCompound;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.PatternHelper;
 import appeng.helpers.Reflected;
-import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.tile.inventory.BiggerAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 
-public class PartPatternTerminalEx extends AbstractPartTerminal {
+public class PartPatternTerminalEx extends AbstractPartPatternTerm {
 
-    private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartPatternTerm_Bright;
-    private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
-    private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
-
-    private final AppEngInternalInventory crafting = new BiggerAppEngInventory(this, 32);
-    private final AppEngInternalInventory output = new BiggerAppEngInventory(this, 32);
-    private final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
-
-    private boolean substitute = false;
-    private boolean beSubstitute = false;
     private boolean inverted = false;
     private int activePage = 0;
 
     @Reflected
     public PartPatternTerminalEx(final ItemStack is) {
-        super(is);
+        super(is, 32, 32);
     }
 
     @Override
@@ -52,27 +39,13 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
     @Override
     public void readFromNBT(final NBTTagCompound data) {
         super.readFromNBT(data);
-
-        this.pattern.readFromNBT(data, "pattern");
-        this.output.readFromNBT(data, "outputList");
-        this.crafting.readFromNBT(data, "craftingGrid");
-
-        this.setSubstitution(data.getBoolean("substitute"));
-        this.setCanBeSubstitution(data.getBoolean("beSubstitute"));
-        this.setInverted(data.getBoolean("inverted"));
-        this.setActivePage(data.getInteger("activePage"));
+        this.inverted = data.getBoolean("inverted");
+        this.activePage = data.getInteger("activePage");
     }
 
     @Override
     public void writeToNBT(final NBTTagCompound data) {
         super.writeToNBT(data);
-
-        this.pattern.writeToNBT(data, "pattern");
-        this.output.writeToNBT(data, "outputList");
-        this.crafting.writeToNBT(data, "craftingGrid");
-
-        data.setBoolean("substitute", this.substitute);
-        data.setBoolean("beSubstitute", this.beSubstitute);
         data.setBoolean("inverted", this.inverted);
         data.setInteger("activePage", this.activePage);
     }
@@ -100,11 +73,11 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
         if (inv == this.pattern && slot == 1) {
             final ItemStack stack = this.pattern.getStackInSlot(1);
 
-            if (stack != null && stack.getItem() instanceof ICraftingPatternItem pattern) {
+            if (stack != null && stack.getItem() instanceof ICraftingPatternItem craftPattern) {
                 final NBTTagCompound encodedValue = stack.getTagCompound();
 
                 if (encodedValue != null) {
-                    final ICraftingPatternDetails details = pattern
+                    final ICraftingPatternDetails details = craftPattern
                             .getPatternForItem(stack, this.getHost().getTile().getWorldObj());
                     final boolean substitute = encodedValue.getBoolean("substitute");
                     final IAEItemStack[] inItems;
@@ -133,7 +106,7 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
                         }
                     }
 
-                    this.setSubstitution(substitute);
+                    this.substitute = substitute;
                     this.setInverted(inputsCount <= 8 && outputCount >= 8);
                     this.setActivePage(0);
 
@@ -167,54 +140,6 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
         }
 
         this.getHost().markForSave();
-    }
-
-    public boolean isSubstitution() {
-        return this.substitute;
-    }
-
-    public boolean canBeSubstitution() {
-        return this.beSubstitute;
-    }
-
-    public void setSubstitution(boolean canSubstitute) {
-        this.substitute = canSubstitute;
-    }
-
-    public void setCanBeSubstitution(boolean beSubstitute) {
-        this.beSubstitute = beSubstitute;
-    }
-
-    @Override
-    public IInventory getInventoryByName(final String name) {
-        if (name.equals("crafting")) {
-            return this.crafting;
-        }
-
-        if (name.equals("output")) {
-            return this.output;
-        }
-
-        if (name.equals("pattern")) {
-            return this.pattern;
-        }
-
-        return super.getInventoryByName(name);
-    }
-
-    @Override
-    public CableBusTextures getFrontBright() {
-        return FRONT_BRIGHT_ICON;
-    }
-
-    @Override
-    public CableBusTextures getFrontColored() {
-        return FRONT_COLORED_ICON;
-    }
-
-    @Override
-    public CableBusTextures getFrontDark() {
-        return FRONT_DARK_ICON;
     }
 
     public boolean isInverted() {

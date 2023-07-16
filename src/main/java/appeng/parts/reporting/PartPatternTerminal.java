@@ -10,8 +10,6 @@
 
 package appeng.parts.reporting;
 
-import java.util.List;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -20,66 +18,30 @@ import net.minecraft.nbt.NBTTagCompound;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.PatternHelper;
 import appeng.helpers.Reflected;
-import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.tile.inventory.BiggerAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 
-public class PartPatternTerminal extends AbstractPartTerminal {
-
-    private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartPatternTerm_Bright;
-    private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
-    private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
-
-    private final AppEngInternalInventory crafting = new BiggerAppEngInventory(this, 9) {};
-
-    private final AppEngInternalInventory output = new BiggerAppEngInventory(this, 3) {};
-
-    private final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
+public class PartPatternTerminal extends AbstractPartPatternTerm {
 
     private boolean craftingMode = true;
-    private boolean substitute = false;
-    private boolean beSubstitute = false;
 
     @Reflected
     public PartPatternTerminal(final ItemStack is) {
-        super(is);
-    }
-
-    @Override
-    public void getDrops(final List<ItemStack> drops, final boolean wrenched) {
-        super.getDrops(drops, wrenched);
-
-        for (final ItemStack is : this.pattern) {
-            if (is != null) {
-                drops.add(is);
-            }
-        }
+        super(is, 9, 3);
     }
 
     @Override
     public void readFromNBT(final NBTTagCompound data) {
         super.readFromNBT(data);
         this.setCraftingRecipe(data.getBoolean("craftingMode"));
-        this.setSubstitution(data.getBoolean("substitute"));
-        this.setCanBeSubstitution(data.getBoolean("beSubstitute"));
-        this.pattern.readFromNBT(data, "pattern");
-        this.output.readFromNBT(data, "outputList");
-        this.crafting.readFromNBT(data, "craftingGrid");
     }
 
     @Override
     public void writeToNBT(final NBTTagCompound data) {
         super.writeToNBT(data);
         data.setBoolean("craftingMode", this.craftingMode);
-        data.setBoolean("substitute", this.substitute);
-        data.setBoolean("beSubstitute", this.beSubstitute);
-        this.pattern.writeToNBT(data, "pattern");
-        this.output.writeToNBT(data, "outputList");
-        this.crafting.writeToNBT(data, "craftingGrid");
     }
 
     @Override
@@ -128,8 +90,8 @@ public class PartPatternTerminal extends AbstractPartTerminal {
                     }
 
                     this.setCraftingRecipe(isCrafting);
-                    this.setSubstitution(substitute);
-                    this.setCanBeSubstitution(beSubstitute);
+                    this.substitute = substitute;
+                    this.beSubstitute = beSubstitute;
 
                     for (int x = 0; x < this.crafting.getSizeInventory(); x++) {
                         this.crafting.setInventorySlotContents(x, null);
@@ -179,51 +141,4 @@ public class PartPatternTerminal extends AbstractPartTerminal {
         this.fixCraftingRecipes();
     }
 
-    public boolean isSubstitution() {
-        return this.substitute;
-    }
-
-    public boolean canBeSubstitution() {
-        return this.beSubstitute;
-    }
-
-    public void setSubstitution(boolean canSubstitute) {
-        this.substitute = canSubstitute;
-    }
-
-    public void setCanBeSubstitution(boolean beSubstitute) {
-        this.beSubstitute = beSubstitute;
-    }
-
-    @Override
-    public IInventory getInventoryByName(final String name) {
-        if (name.equals("crafting")) {
-            return this.crafting;
-        }
-
-        if (name.equals("output")) {
-            return this.output;
-        }
-
-        if (name.equals("pattern")) {
-            return this.pattern;
-        }
-
-        return super.getInventoryByName(name);
-    }
-
-    @Override
-    public CableBusTextures getFrontBright() {
-        return FRONT_BRIGHT_ICON;
-    }
-
-    @Override
-    public CableBusTextures getFrontColored() {
-        return FRONT_COLORED_ICON;
-    }
-
-    @Override
-    public CableBusTextures getFrontDark() {
-        return FRONT_DARK_ICON;
-    }
 }

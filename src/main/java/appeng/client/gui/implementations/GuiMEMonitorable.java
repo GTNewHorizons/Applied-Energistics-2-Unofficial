@@ -73,8 +73,8 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
     private final int MAGIC_HEIGHT_NUMBER = 114 + 1;
     private final int lowerTextureOffset = 0;
     private final IConfigManager configSrc;
-    private final boolean viewCell;
-    private final ItemStack[] myCurrentViewCells = new ItemStack[5];
+    protected final boolean viewCell;
+    protected final ItemStack[] myCurrentViewCells = new ItemStack[5];
     private final ContainerMEMonitorable monitorableContainer;
     private GuiTabButton craftingStatusBtn;
     private GuiImgButton craftingStatusImgBtn;
@@ -618,18 +618,16 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
     }
 
     public boolean hideItemPanelSlot(int tx, int ty, int tw, int th) {
-
         if (this.viewCell) {
             int rw = 33;
             int rh = 14 + myCurrentViewCells.length * 18;
-            if (monitorableContainer.isAPatternTerminal()) rh += 21;
 
-            if (rw <= 0 || rh <= 0 || tw <= 0 || th <= 0) {
+            if (rh <= 0 || tw <= 0 || th <= 0) {
                 return false;
             }
 
             int rx = this.guiLeft + this.xSize;
-            int ry = this.guiTop + 0;
+            int ry = this.guiTop;
 
             rw += rx;
             rh += ry;

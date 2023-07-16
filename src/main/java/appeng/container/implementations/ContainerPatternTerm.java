@@ -11,36 +11,35 @@
 package appeng.container.implementations;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.*;
+import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.SlotCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.AEApi;
 import appeng.api.config.Actionable;
-import appeng.api.definitions.IDefinitions;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.container.ContainerBasePatternTerm;
 import appeng.container.ContainerNull;
 import appeng.container.guisync.GuiSync;
-import appeng.container.slot.*;
+import appeng.container.slot.OptionalSlotFake;
+import appeng.container.slot.SlotFakeCraftingMatrix;
+import appeng.container.slot.SlotPatternOutputs;
+import appeng.container.slot.SlotPatternTerm;
 import appeng.core.sync.packets.PacketPatternSlot;
-import appeng.helpers.IContainerCraftingPacket;
 import appeng.items.storage.ItemViewCell;
 import appeng.parts.reporting.PartPatternTerminal;
 import appeng.tile.inventory.AppEngInternalInventory;
@@ -51,35 +50,23 @@ import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.item.AEItemStack;
 
-public class ContainerPatternTerm extends ContainerMEMonitorable
-        implements IAEAppEngInventory, IOptionalSlotHost, IContainerCraftingPacket {
+public class ContainerPatternTerm extends ContainerBasePatternTerm implements IAEAppEngInventory {
 
-    private final PartPatternTerminal patternTerminal;
     private final AppEngInternalInventory cOut = new AppEngInternalInventory(null, 1);
     private final IInventory crafting;
     private final SlotFakeCraftingMatrix[] craftingSlots = new SlotFakeCraftingMatrix[9];
     private final OptionalSlotFake[] outputSlots = new OptionalSlotFake[3];
     private final SlotPatternTerm craftSlot;
-    private final SlotRestrictedInput patternSlotIN;
-    private final SlotRestrictedInput patternSlotOUT;
-
     @GuiSync(97)
     public boolean craftingMode = true;
 
-    @GuiSync(96)
-    public boolean substitute = false;
-
-    @GuiSync(95)
-    public boolean beSubstitute = true;
-
     public ContainerPatternTerm(final InventoryPlayer ip, final ITerminalHost monitorable) {
-        super(ip, monitorable, false);
-        this.patternTerminal = (PartPatternTerminal) monitorable;
+        super(ip, monitorable);
 
-        final IInventory patternInv = this.getPatternTerminal().getInventoryByName("pattern");
-        final IInventory output = this.getPatternTerminal().getInventoryByName("output");
+        final IInventory patternInv = this.patternTerminal.getInventoryByName("pattern");
+        final IInventory output = this.patternTerminal.getInventoryByName("output");
 
-        this.crafting = this.getPatternTerminal().getInventoryByName("crafting");
+        this.crafting = this.patternTerminal.getInventoryByName("crafting");
 
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
@@ -113,33 +100,11 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                     this.outputSlots[y] = new SlotPatternOutputs(output, this, y, 110, -76 + y * 18, 0, 0, 1));
             this.outputSlots[y].setRenderDisabled(false);
         }
-
-        this.addSlotToContainer(
-                this.patternSlotIN = new SlotRestrictedInput(
-                        SlotRestrictedInput.PlacableItemType.BLANK_PATTERN,
-                        patternInv,
-                        0,
-                        147,
-                        -72 - 9,
-                        this.getInventoryPlayer()));
-        this.addSlotToContainer(
-                this.patternSlotOUT = new SlotRestrictedInput(
-                        SlotRestrictedInput.PlacableItemType.ENCODED_PATTERN,
-                        patternInv,
-                        1,
-                        147,
-                        -72 + 34,
-                        this.getInventoryPlayer()));
-
-        this.patternSlotOUT.setStackLimit(1);
-
-        this.bindPlayerInventory(ip, 0, 0);
         this.updateOrderOfOutputSlots();
-        if (getPatternTerminal().hasRefillerUpgrade()) refillBlankPatterns(patternSlotIN);
     }
 
     private void updateOrderOfOutputSlots() {
-        if (!this.isCraftingMode()) {
+        if (!this.craftingMode) {
             this.craftSlot.xDisplayPosition = -9000;
 
             for (int y = 0; y < 3; y++) {
@@ -185,83 +150,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc,
             final ItemStack removedStack, final ItemStack newStack) {}
 
-    public void encodeAndMoveToInventory(boolean encodeWholeStack) {
-        encode();
-        ItemStack output = this.patternSlotOUT.getStack();
-        if (output != null) {
-            if (encodeWholeStack) {
-                ItemStack blanks = this.patternSlotIN.getStack();
-                this.patternSlotIN.putStack(null);
-                if (blanks != null) output.stackSize += blanks.stackSize;
-            }
-            if (!getPlayerInv().addItemStackToInventory(output)) {
-                getPlayerInv().player.entityDropItem(output, 0);
-            }
-            this.patternSlotOUT.putStack(null);
-            if (getPatternTerminal().hasRefillerUpgrade()) refillBlankPatterns(patternSlotIN);
-        }
-    }
-
-    public void encode() {
-        ItemStack output = this.patternSlotOUT.getStack();
-
-        final ItemStack[] in = this.getInputs();
-        final ItemStack[] out = this.getOutputs();
-
-        // if there is no input, this would be silly.
-        if (in == null || out == null) {
-            return;
-        }
-
-        // first check the output slots, should either be null, or a pattern
-        if (output != null && !this.isPattern(output)) {
-            return;
-        } // if nothing is there we should snag a new pattern.
-        else if (output == null) {
-            output = this.patternSlotIN.getStack();
-            if (!this.isPattern(output)) {
-                return; // no blanks.
-            }
-
-            // remove one, and clear the input slot.
-            output.stackSize--;
-            if (output.stackSize == 0) {
-                this.patternSlotIN.putStack(null);
-            }
-
-            // add a new encoded pattern.
-            for (final ItemStack encodedPatternStack : AEApi.instance().definitions().items().encodedPattern()
-                    .maybeStack(1).asSet()) {
-                output = encodedPatternStack;
-                this.patternSlotOUT.putStack(output);
-            }
-            if (getPatternTerminal().hasRefillerUpgrade()) refillBlankPatterns(patternSlotIN);
-        }
-
-        // encode the slot.
-        final NBTTagCompound encodedValue = new NBTTagCompound();
-
-        final NBTTagList tagIn = new NBTTagList();
-        final NBTTagList tagOut = new NBTTagList();
-
-        for (final ItemStack i : in) {
-            tagIn.appendTag(this.createItemTag(i));
-        }
-
-        for (final ItemStack i : out) {
-            tagOut.appendTag(this.createItemTag(i));
-        }
-
-        encodedValue.setTag("in", tagIn);
-        encodedValue.setTag("out", tagOut);
-        encodedValue.setBoolean("crafting", this.isCraftingMode());
-        encodedValue.setBoolean("substitute", this.isSubstitute());
-        encodedValue.setBoolean("beSubstitute", this.canBeSubstitute());
-
-        output.setTagCompound(encodedValue);
-    }
-
-    private ItemStack[] getInputs() {
+    @Override
+    protected ItemStack[] getInputs() {
         final ItemStack[] input = new ItemStack[9];
         boolean hasValue = false;
 
@@ -279,8 +169,9 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         return null;
     }
 
-    private ItemStack[] getOutputs() {
-        if (this.isCraftingMode()) {
+    @Override
+    protected ItemStack[] getOutputs() {
+        if (this.craftingMode) {
             final ItemStack out = this.getAndUpdateOutput();
 
             if (out != null && out.stackSize > 0) {
@@ -307,36 +198,22 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         return null;
     }
 
-    private boolean isPattern(final ItemStack output) {
-        if (output == null) {
-            return false;
+    @Override
+    public void encode() {
+        super.encode();
+        ItemStack patternOut = patternSlotOUT.getStack();
+        if (patternOut != null) {
+            patternOut.getTagCompound().setBoolean("crafting", this.craftingMode);
         }
-
-        final IDefinitions definitions = AEApi.instance().definitions();
-
-        boolean isPattern = definitions.items().encodedPattern().isSameAs(output);
-        isPattern |= definitions.materials().blankPattern().isSameAs(output);
-
-        return isPattern;
-    }
-
-    private NBTBase createItemTag(final ItemStack i) {
-        final NBTTagCompound c = new NBTTagCompound();
-
-        if (i != null) {
-            i.writeToNBT(c);
-            c.setInteger("Count", i.stackSize);
-        }
-
-        return c;
     }
 
     @Override
     public boolean isSlotEnabled(final int idx) {
+        final PartPatternTerminal term = (PartPatternTerminal) patternTerminal;
         if (idx == 1) {
-            return Platform.isServer() ? !this.getPatternTerminal().isCraftingRecipe() : !this.isCraftingMode();
+            return Platform.isServer() ? !term.isCraftingRecipe() : !this.craftingMode;
         } else if (idx == 2) {
-            return Platform.isServer() ? this.getPatternTerminal().isCraftingRecipe() : this.isCraftingMode();
+            return Platform.isServer() ? term.isCraftingRecipe() : this.craftingMode;
         } else {
             return false;
         }
@@ -385,7 +262,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                 return;
             }
 
-            final IMEMonitor<IAEItemStack> storage = this.getPatternTerminal().getItemInventory();
+            final IMEMonitor<IAEItemStack> storage = this.patternTerminal.getItemInventory();
             final IItemList<IAEItemStack> all = storage.getStorageList();
 
             final ItemStack is = r.getCraftingResult(ic);
@@ -435,7 +312,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                         this.getCellInventory().injectItems(
                                 AEItemStack.create(failed),
                                 Actionable.MODULATE,
-                                new MachineSource(this.getPatternTerminal()));
+                                new MachineSource(this.patternTerminal));
                     }
                 }
             }
@@ -445,9 +322,10 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     @Override
     public void detectAndSendChanges() {
         super.detectAndSendChanges();
+        final PartPatternTerminal term = (PartPatternTerminal) patternTerminal;
         if (Platform.isServer()) {
-            if (this.isCraftingMode() != this.getPatternTerminal().isCraftingRecipe()) {
-                this.setCraftingMode(this.getPatternTerminal().isCraftingRecipe());
+            if (this.craftingMode != term.isCraftingRecipe()) {
+                this.craftingMode = term.isCraftingRecipe();
                 this.updateOrderOfOutputSlots();
             }
 
@@ -470,24 +348,22 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public void onSlotChange(final Slot s) {
         if (!Platform.isServer()) return;
         if (s == this.patternSlotOUT) {
-            for (final Object crafter : this.crafters) {
-                final ICrafting icrafting = (ICrafting) crafter;
-
-                for (final Object g : this.inventorySlots) {
-                    if (g instanceof OptionalSlotFake || g instanceof SlotFakeCraftingMatrix) {
-                        final Slot sri = (Slot) g;
-                        icrafting.sendSlotContents(this, sri.slotNumber, sri.getStack());
+            for (final ICrafting crafter : this.crafters) {
+                for (final Slot slot : this.inventorySlots) {
+                    if (slot instanceof OptionalSlotFake || slot instanceof SlotFakeCraftingMatrix) {
+                        crafter.sendSlotContents(this, slot.slotNumber, slot.getStack());
                     }
                 }
-                ((EntityPlayerMP) icrafting).isChangingQuantityOnly = false;
+                ((EntityPlayerMP) crafter).isChangingQuantityOnly = false;
             }
             this.detectAndSendChanges();
         } else if (s == patternRefiller && patternRefiller.getStack() != null) {
-            refillBlankPatterns(patternSlotIN);
+            refillBlankPatterns();
             detectAndSendChanges();
         }
     }
 
+    @Override
     public void clear() {
         for (final Slot s : this.craftingSlots) {
             s.putStack(null);
@@ -501,86 +377,13 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         this.getAndUpdateOutput();
     }
 
-    @Override
-    public IInventory getInventoryByName(final String name) {
-        if (name.equals("player")) {
-            return this.getInventoryPlayer();
-        }
-        return this.getPatternTerminal().getInventoryByName(name);
-    }
-
-    @Override
-    public boolean useRealItems() {
-        return false;
-    }
-
-    public void toggleSubstitute() {
-        this.substitute = !this.substitute;
-
-        this.detectAndSendChanges();
-        this.getAndUpdateOutput();
-    }
-
-    public boolean isCraftingMode() {
-        return this.craftingMode;
-    }
-
     private void setCraftingMode(final boolean craftingMode) {
         this.craftingMode = craftingMode;
     }
 
-    public PartPatternTerminal getPatternTerminal() {
-        return this.patternTerminal;
-    }
-
-    private boolean isSubstitute() {
-        return this.substitute;
-    }
-
-    private boolean canBeSubstitute() {
-        return this.beSubstitute;
-    }
-
-    public void setSubstitute(final boolean substitute) {
-        this.substitute = substitute;
-    }
-
-    public void setCanBeSubstitute(final boolean beSubstitute) {
-        this.beSubstitute = beSubstitute;
-    }
-
-    static boolean canDoubleStacks(SlotFake[] slots) {
-        List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
-        long emptyStots = enabledSlots.stream().filter(s -> s.getStack() == null).count();
-        long fullSlots = enabledSlots.stream().filter(s -> s.getStack() != null && s.getStack().stackSize * 2 > 127)
-                .count();
-        return fullSlots <= emptyStots && emptyStots < enabledSlots.size();
-    }
-
-    static void doubleStacksInternal(SlotFake[] slots) {
-        List<ItemStack> overFlowStacks = new ArrayList<>();
-        List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
-        for (final Slot s : enabledSlots) {
-            ItemStack st = s.getStack();
-            if (st == null) continue;
-            if (st.stackSize * 2 > 127) {
-                overFlowStacks.add(st.copy());
-            } else {
-                st.stackSize *= 2;
-                s.putStack(st);
-            }
-        }
-        Iterator<ItemStack> ow = overFlowStacks.iterator();
-        for (final Slot s : enabledSlots) {
-            if (!ow.hasNext()) break;
-            if (s.getStack() != null) continue;
-            s.putStack(ow.next());
-        }
-        assert !ow.hasNext();
-    }
-
+    @Override
     public void doubleStacks(boolean isShift) {
-        if (!isCraftingMode() && canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots)) {
+        if (!craftingMode && canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots)) {
             doubleStacksInternal(this.craftingSlots);
             doubleStacksInternal(this.outputSlots);
             if (isShift) {
@@ -593,7 +396,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         }
     }
 
-    public boolean isAPatternTerminal() {
-        return true;
+    @Override
+    public PartPatternTerminal getPatternTerminal() {
+        return (PartPatternTerminal) patternTerminal;
     }
 }

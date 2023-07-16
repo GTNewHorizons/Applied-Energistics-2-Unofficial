@@ -13,37 +13,33 @@ import appeng.api.storage.ITerminalHost;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.container.implementations.ContainerPatternTermEx;
-import appeng.container.slot.AppEngSlot;
 import appeng.core.AppEng;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.helpers.Reflected;
 
-public class GuiPatternTermEx extends GuiMEMonitorable {
+@SuppressWarnings("unused")
+public class GuiPatternTermEx extends GuiBasePatternTerm {
 
-    private static final String SUBSITUTION_DISABLE = "0";
-    private static final String SUBSITUTION_ENABLE = "1";
-
-    private final ContainerPatternTermEx container;
-
-    private GuiImgButton substitutionsEnabledBtn;
-    private GuiImgButton substitutionsDisabledBtn;
-    private GuiImgButton beSubstitutionsEnabledBtn;
-    private GuiImgButton beSubstitutionsDisabledBtn;
-    private GuiImgButton encodeBtn;
-    private GuiImgButton clearBtn;
-    private GuiImgButton invertBtn;
-    private GuiImgButton doubleBtn;
+    private final GuiImgButton invertBtn;
     private final GuiScrollbar processingScrollBar = new GuiScrollbar();
 
+    @Reflected
+    @SuppressWarnings("unused")
     public GuiPatternTermEx(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         super(inventoryPlayer, te, new ContainerPatternTermEx(inventoryPlayer, te));
-        this.container = (ContainerPatternTermEx) this.inventorySlots;
-        this.setReservedSpace(81);
 
         processingScrollBar.setHeight(70).setWidth(7).setLeft(6).setRange(0, 1, 1);
         processingScrollBar.setTexture(AppEng.MOD_ID, "guis/pattern3.png", 242, 0);
+
+        invertBtn = new GuiImgButton(
+                this.guiLeft + 87,
+                this.guiTop + this.ySize - 153,
+                Settings.ACTIONS,
+                ((ContainerPatternTermEx) container).inverted ? PatternSlotConfig.C_4_16 : PatternSlotConfig.C_16_4);
+        invertBtn.setHalfSize(true);
     }
 
     @Override
@@ -60,17 +56,19 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("PatternTerminalEx.Clear", "1"));
             } else if (this.invertBtn == btn) {
                 NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig("PatternTerminalEx.Invert", container.inverted ? "0" : "1"));
-            } else if (this.substitutionsEnabledBtn == btn || this.substitutionsDisabledBtn == btn) {
+                        new PacketValueConfig(
+                                "PatternTerminalEx.Invert",
+                                ((ContainerPatternTermEx) container).inverted ? "0" : "1"));
+            } else if (this.subsEnabledBtn == btn || this.subsDisabledBtn == btn) {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
                                 "PatternTerminalEx.Substitute",
-                                this.substitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
-            } else if (this.beSubstitutionsEnabledBtn == btn || this.beSubstitutionsDisabledBtn == btn) {
+                                this.subsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
+            } else if (this.amSubEnabledBtn == btn || this.amSubDisabledBtn == btn) {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
                                 "PatternTerminalEx.BeSubstitute",
-                                this.beSubstitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
+                                this.amSubEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
             } else if (doubleBtn == btn) {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
@@ -84,71 +82,18 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
     }
 
     @Override
+    protected void initLayout() {
+        btnArrLeft = this.guiLeft + 87;
+        btnArrTop = this.guiTop + this.ySize - 163;
+        btnOffsetX = 10;
+        btnOffsetY = 10;
+    }
+
+    @Override
     public void initGui() {
         super.initGui();
-
-        this.substitutionsEnabledBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 163,
-                Settings.ACTIONS,
-                ItemSubstitution.ENABLED);
-        this.substitutionsEnabledBtn.setHalfSize(true);
-        this.buttonList.add(this.substitutionsEnabledBtn);
-
-        this.substitutionsDisabledBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 163,
-                Settings.ACTIONS,
-                ItemSubstitution.DISABLED);
-        this.substitutionsDisabledBtn.setHalfSize(true);
-        this.buttonList.add(this.substitutionsDisabledBtn);
-
-        this.beSubstitutionsEnabledBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 143,
-                Settings.ACTIONS,
-                PatternBeSubstitution.ENABLED);
-        this.beSubstitutionsEnabledBtn.setHalfSize(true);
-        this.buttonList.add(this.beSubstitutionsEnabledBtn);
-
-        this.beSubstitutionsDisabledBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 143,
-                Settings.ACTIONS,
-                PatternBeSubstitution.DISABLED);
-        this.beSubstitutionsDisabledBtn.setHalfSize(true);
-        this.buttonList.add(this.beSubstitutionsDisabledBtn);
-
-        this.clearBtn = new GuiImgButton(
-                this.guiLeft + 87,
-                this.guiTop + this.ySize - 163,
-                Settings.ACTIONS,
-                ActionItems.CLOSE);
-        this.clearBtn.setHalfSize(true);
-        this.buttonList.add(this.clearBtn);
-
-        this.encodeBtn = new GuiImgButton(
-                this.guiLeft + 147,
-                this.guiTop + this.ySize - 142,
-                Settings.ACTIONS,
-                ActionItems.ENCODE);
-        this.buttonList.add(this.encodeBtn);
-
-        invertBtn = new GuiImgButton(
-                this.guiLeft + 87,
-                this.guiTop + this.ySize - 153,
-                Settings.ACTIONS,
-                container.inverted ? PatternSlotConfig.C_4_16 : PatternSlotConfig.C_16_4);
-        invertBtn.setHalfSize(true);
-        this.buttonList.add(this.invertBtn);
-
-        this.doubleBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 153,
-                Settings.ACTIONS,
-                ActionItems.DOUBLE);
-        this.doubleBtn.setHalfSize(true);
-        this.buttonList.add(this.doubleBtn);
+        layoutButton(invertBtn, 0, 2);
+        buttonList.add(invertBtn);
 
         processingScrollBar.setTop(this.ySize - 164);
     }
@@ -156,6 +101,17 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         super.drawFG(offsetX, offsetY, mouseX, mouseY);
+        final int offset = ((ContainerPatternTermEx) container).inverted ? 18 * -3 : 0;
+
+        subsEnabledBtn.xPosition = this.guiLeft + 97 + offset;
+        subsDisabledBtn.xPosition = this.guiLeft + 97 + offset;
+        amSubEnabledBtn.xPosition = this.guiLeft + 97 + offset;
+        amSubDisabledBtn.xPosition = this.guiLeft + 97 + offset;
+        doubleBtn.xPosition = this.guiLeft + 97 + offset;
+        clearBtn.xPosition = this.guiLeft + 87 + offset;
+        invertBtn.xPosition = this.guiLeft + 87 + offset;
+
+        processingScrollBar.setCurrentScroll(((ContainerPatternTermEx) container).activePage);
         this.fontRendererObj.drawString(
                 GuiText.PatternTerminalEx.getLocal(),
                 8,
@@ -166,45 +122,7 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
 
     @Override
     protected String getBackground() {
-        return container.inverted ? "guis/pattern4.png" : "guis/pattern3.png";
-    }
-
-    @Override
-    protected void repositionSlot(final AppEngSlot s) {
-        if (s.isPlayerSide()) {
-            s.yDisplayPosition = s.getY() + this.ySize - 78 - 5;
-        } else {
-            s.yDisplayPosition = s.getY() + this.ySize - 78 - 3;
-        }
-    }
-
-    @Override
-    public void drawScreen(final int mouseX, final int mouseY, final float btn) {
-
-        if (container.substitute) {
-            substitutionsEnabledBtn.visible = true;
-            substitutionsDisabledBtn.visible = false;
-        } else {
-            substitutionsEnabledBtn.visible = false;
-            substitutionsDisabledBtn.visible = true;
-        }
-
-        this.beSubstitutionsEnabledBtn.visible = this.container.beSubstitute;
-        this.beSubstitutionsDisabledBtn.visible = !this.container.beSubstitute;
-
-        final int offset = container.inverted ? 18 * -3 : 0;
-
-        substitutionsEnabledBtn.xPosition = this.guiLeft + 97 + offset;
-        substitutionsDisabledBtn.xPosition = this.guiLeft + 97 + offset;
-        beSubstitutionsEnabledBtn.xPosition = this.guiLeft + 97 + offset;
-        beSubstitutionsDisabledBtn.xPosition = this.guiLeft + 97 + offset;
-        doubleBtn.xPosition = this.guiLeft + 97 + offset;
-        clearBtn.xPosition = this.guiLeft + 87 + offset;
-        invertBtn.xPosition = this.guiLeft + 87 + offset;
-
-        processingScrollBar.setCurrentScroll(container.activePage);
-
-        super.drawScreen(mouseX, mouseY, btn);
+        return ((ContainerPatternTermEx) container).inverted ? "guis/pattern4.png" : "guis/pattern3.png";
     }
 
     @Override
@@ -251,7 +169,6 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
     }
 
     private void changeActivePage() {
-
         try {
             NetworkHandler.instance.sendToServer(
                     new PacketValueConfig(
