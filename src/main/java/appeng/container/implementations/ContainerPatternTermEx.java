@@ -1,6 +1,5 @@
 package appeng.container.implementations;
 
-import static appeng.container.implementations.ContainerPatternTerm.canDoubleStacks;
 import static appeng.container.implementations.ContainerPatternTerm.doubleStacksInternal;
 
 import java.util.ArrayList;
@@ -405,17 +404,14 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
     }
 
     public void doubleStacks(boolean isShift) {
-        if (canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots)) {
-            doubleStacksInternal(this.craftingSlots);
-            doubleStacksInternal(this.outputSlots);
-            if (isShift) {
-                while (canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots)) {
-                    doubleStacksInternal(this.craftingSlots);
-                    doubleStacksInternal(this.outputSlots);
-                }
-            }
-            this.detectAndSendChanges();
+        if (isShift) {
+            doubleStacksInternal(this.craftingSlots, 8);
+            doubleStacksInternal(this.outputSlots, 8);
+        } else {
+            doubleStacksInternal(this.craftingSlots, 2);
+            doubleStacksInternal(this.outputSlots, 2);
         }
+        this.detectAndSendChanges();
     }
 
     public boolean isAPatternTerminal() {

@@ -12,7 +12,6 @@ package appeng.container.implementations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -549,44 +548,38 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         this.beSubstitute = beSubstitute;
     }
 
-    static boolean canDoubleStacks(SlotFake[] slots) {
-        List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
-        long emptyStots = enabledSlots.stream().filter(s -> s.getStack() == null).count();
-        long fullSlots = enabledSlots.stream().filter(s -> s.getStack() != null && s.getStack().stackSize * 2 > 127)
-                .count();
-        return fullSlots <= emptyStots && emptyStots < enabledSlots.size();
+    static boolean canDouble(SlotFake[] slots, int mult) {
+        for (Slot s : slots) {
+            if (s.getStack() != null && s.getStack().stackSize * mult < 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    static void doubleStacksInternal(SlotFake[] slots) {
-        List<ItemStack> overFlowStacks = new ArrayList<>();
+    static void doubleStacksInternal(SlotFake[] slots, int mult) {
         List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
         for (final Slot s : enabledSlots) {
             ItemStack st = s.getStack();
-            if (st == null) continue;
-            if (st.stackSize * 2 > 127) {
-                overFlowStacks.add(st.copy());
-            } else {
-                st.stackSize *= 2;
+            if (st != null) {
+                st.stackSize *= mult;
                 s.putStack(st);
             }
         }
-        Iterator<ItemStack> ow = overFlowStacks.iterator();
-        for (final Slot s : enabledSlots) {
-            if (!ow.hasNext()) break;
-            if (s.getStack() != null) continue;
-            s.putStack(ow.next());
-        }
-        assert !ow.hasNext();
+        return true;
     }
 
     public void doubleStacks(boolean isShift) {
-        if (!isCraftingMode() && canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots)) {
-            doubleStacksInternal(this.craftingSlots);
-            doubleStacksInternal(this.outputSlots);
+        if (!isCraftingMode()) {
             if (isShift) {
-                while (canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots)) {
-                    doubleStacksInternal(this.craftingSlots);
-                    doubleStacksInternal(this.outputSlots);
+                if (canDouble(this.craftingSlots, 8) && canDouble(this.outputSlots, 8)) {
+                    doubleStacksInternal(this.craftingSlots, 8);
+                    doubleStacksInternal(this.outputSlots, 8);
+                }
+            } else {
+                if (canDouble(this.craftingSlots, 2) && canDouble(this.outputSlots, 2)) {
+                    doubleStacksInternal(this.craftingSlots, 2);
+                    doubleStacksInternal(this.outputSlots, 2);
                 }
             }
             this.detectAndSendChanges();
