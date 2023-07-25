@@ -566,7 +566,6 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                 s.putStack(st);
             }
         }
-        return true;
     }
 
     public void doubleStacks(boolean isShift) {
