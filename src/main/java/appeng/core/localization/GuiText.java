@@ -201,7 +201,10 @@ public enum GuiText {
     // Used in a ME Interface when no appropriate TileEntity was detected near it
     Nothing,
 
-    VoidCellTooltip;
+    VoidCellTooltip,
+
+    // If a thing is deprecated
+    Deprecated;
 
     private final String root;
 

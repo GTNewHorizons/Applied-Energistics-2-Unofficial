@@ -79,9 +79,9 @@ public final class ApiParts implements IParts {
         this.cableDense = constructor.constructColoredDefinition(itemMultiPart, PartType.CableDense);
         this.cableDenseCovered = constructor.constructColoredDefinition(itemMultiPart, PartType.CableDenseCovered);
         this.cableUltraDenseSmart = constructor
-                .constructColoredDefinition(itemMultiPart, PartType.CableUltraDenseSmart);
+                .constructColoredDefinition(itemMultiPart, PartType.CableUltraDenseSmart, true);
         this.cableUltraDenseCovered = constructor
-                .constructColoredDefinition(itemMultiPart, PartType.CableUltraDenseCovered);
+                .constructColoredDefinition(itemMultiPart, PartType.CableUltraDenseCovered, true);
         // this.lumenCableSmart = Optional.absent(); // has yet to be implemented, no PartType defined for it yet
         // this.lumenCableCovered = Optional.absent(); // has yet to be implemented, no PartType defined for it yet
         // this.lumenCableGlass = Optional.absent(); // has yet to be implemented, no PartType defined for it yet

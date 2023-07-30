@@ -81,10 +81,15 @@ public class DefinitionConstructor {
     }
 
     final AEColoredItemDefinition constructColoredDefinition(final ItemMultiPart target, final PartType type) {
+        return constructColoredDefinition(target, type, false);
+    }
+
+    final AEColoredItemDefinition constructColoredDefinition(final ItemMultiPart target, final PartType type,
+            boolean deprecated) {
         final ColoredItemDefinition definition = new ColoredItemDefinition();
 
         for (final AEColor color : AEColor.values()) {
-            final ItemStackSrc multiPartSource = target.createPart(type, color);
+            final ItemStackSrc multiPartSource = target.createPart(type, color, deprecated);
 
             definition.add(color, multiPartSource);
         }

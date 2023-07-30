@@ -25,6 +25,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
 import com.google.common.base.Preconditions;
+import com.mojang.realmsclient.gui.ChatFormatting;
 
 import appeng.api.AEApi;
 import appeng.api.exceptions.MissingDefinition;
@@ -71,21 +72,21 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
     public final ItemStackSrc createPart(final PartType mat) {
         Preconditions.checkNotNull(mat);
 
-        return this.createPart(mat, 0);
+        return this.createPart(mat, 0, false);
     }
 
     @Nonnull
-    public ItemStackSrc createPart(final PartType mat, final AEColor color) {
+    public ItemStackSrc createPart(final PartType mat, final AEColor color, boolean deprecated) {
         Preconditions.checkNotNull(mat);
         Preconditions.checkNotNull(color);
 
         final int varID = color.ordinal();
 
-        return this.createPart(mat, varID);
+        return this.createPart(mat, varID, deprecated);
     }
 
     @Nonnull
-    private ItemStackSrc createPart(final PartType mat, final int varID) {
+    private ItemStackSrc createPart(final PartType mat, final int varID, boolean deprecated) {
         assert mat != null;
         assert varID >= 0;
 
@@ -109,7 +110,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
         final ActivityState state = ActivityState.from(enabled);
         final ItemStackSrc output = new ItemStackSrc(this, partDamage, state);
 
-        final PartTypeWithVariant pti = new PartTypeWithVariant(mat, varID);
+        final PartTypeWithVariant pti = new PartTypeWithVariant(mat, varID, deprecated);
 
         this.processMetaOverlap(enabled, partDamage, mat, pti);
 
@@ -225,6 +226,18 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
         }
     }
 
+    @SideOnly(Side.CLIENT)
+    @Override
+    protected void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> lines,
+            boolean displayMoreInfo) {
+        super.addCheckedInformation(stack, player, lines, displayMoreInfo);
+        int damage = stack.getItemDamage();
+        PartTypeWithVariant part = this.registered.get(damage);
+        if (part != null && part.deprecated) {
+            lines.add(ChatFormatting.RED + GuiText.Deprecated.getLocal());
+        }
+    }
+
     private String getName(final ItemStack is) {
         Preconditions.checkNotNull(is);
 
@@ -319,16 +332,21 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
 
         private final PartType part;
         private final int variant;
-
+        private final boolean deprecated;
         @SideOnly(Side.CLIENT)
         private IIcon ico;
 
         private PartTypeWithVariant(final PartType part, final int variant) {
+            this(part, variant, false);
+        }
+
+        private PartTypeWithVariant(final PartType part, final int variant, boolean deprecated) {
             assert part != null;
             assert variant >= 0;
 
             this.part = part;
             this.variant = variant;
+            this.deprecated = deprecated;
         }
 
         @Override
