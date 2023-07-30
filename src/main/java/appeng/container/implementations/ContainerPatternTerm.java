@@ -550,8 +550,11 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
 
     static boolean canDouble(SlotFake[] slots, int mult) {
         for (Slot s : slots) {
-            if (s.getStack() != null && s.getStack().stackSize * mult < 0) {
-                return false;
+            if (s.getStack() != null) {
+                long val = (long) s.getStack().stackSize * mult;
+                if (val > Integer.MAX_VALUE) {
+                    return false;
+                }
             }
         }
         return true;
