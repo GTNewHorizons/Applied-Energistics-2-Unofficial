@@ -53,9 +53,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
      */
     private static long autoBase = Long.MIN_VALUE;
 
-    private final Multimap<IInterfaceTerminalSupport, InvTracker> diList = HashMultimap.create();
+    private final Multimap<IInterfaceTerminalSupport, InvTracker> supportedInterfaces = HashMultimap.create();
     private final Map<Long, InvTracker> byId = new HashMap<>();
-    // private final Map<Long, InvTracker> byId = new HashMap<>();
     private IGrid grid;
     private NBTTagCompound data = new NBTTagCompound();
 
@@ -94,7 +93,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     for (final IGridNode gn : this.grid.getMachines(clz)) {
                         final IInterfaceTerminalSupport interfaceTerminalSupport = (IInterfaceTerminalSupport) gn
                                 .getMachine();
-                        final Collection<InvTracker> t = diList.get(interfaceTerminalSupport);
+                        final Collection<InvTracker> t = supportedInterfaces.get(interfaceTerminalSupport);
                         final String name = interfaceTerminalSupport.getName();
                         missing = t.isEmpty() || t.stream().anyMatch(it -> !it.unlocalizedName.equals(name));
                         total += interfaceTerminalSupport.getPatternsConfigurations().length;
@@ -106,10 +105,10 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             }
         }
 
-        if (total != this.diList.size() || missing) {
+        if (total != this.supportedInterfaces.size() || missing) {
             this.regenList(this.data);
         } else {
-            for (final InvTracker inv : diList.values()) {
+            for (final InvTracker inv : supportedInterfaces.values()) {
                 for (int x = 0; x < inv.client.getSizeInventory(); x++) {
                     if (this.isDifferent(inv.server.getStackInSlot(inv.offset + x), inv.client.getStackInSlot(x))) {
                         this.addItems(this.data, inv, x, 1);
@@ -255,7 +254,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
 
     private void regenList(final NBTTagCompound data) {
         this.byId.clear();
-        this.diList.clear();
+        this.supportedInterfaces.clear();
 
         final IActionHost host = this.getActionHost();
         if (host != null) {
@@ -271,7 +270,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                         final var configurations = terminalSupport.getPatternsConfigurations();
 
                         for (int i = 0; i < configurations.length; ++i) {
-                            this.diList.put(terminalSupport, new InvTracker(terminalSupport, configurations[i], i));
+                            this.supportedInterfaces.put(terminalSupport, new InvTracker(terminalSupport, configurations[i], i));
                         }
                     }
                 }
@@ -280,7 +279,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
 
         data.setBoolean("clear", true);
 
-        for (final InvTracker inv : this.diList.values()) {
+        for (final InvTracker inv : this.supportedInterfaces.values()) {
             this.byId.put(inv.which, inv);
             this.addItems(data, inv, 0, inv.client.getSizeInventory());
         }
