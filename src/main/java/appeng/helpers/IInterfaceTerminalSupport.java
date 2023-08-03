@@ -1,11 +1,12 @@
 package appeng.helpers;
 
+import appeng.api.networking.IGridHost;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.util.DimensionalCoord;
 
-public interface IInterfaceTerminalSupport {
+public interface IInterfaceTerminalSupport extends IGridHost {
 
     class PatternsConfiguration {
 
@@ -29,7 +30,8 @@ public interface IInterfaceTerminalSupport {
     TileEntity getTileEntity();
 
     default long getSortValue() {
-        return 0;
+        var te = getTileEntity();
+        return ((long) te.zCoord << 24) ^ ((long) te.xCoord << 8) ^ te.yCoord;
     }
 
     default boolean shouldDisplay() {

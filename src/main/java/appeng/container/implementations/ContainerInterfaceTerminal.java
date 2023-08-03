@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
+import appeng.helpers.InterfaceTerminalSupportedClassProvider;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
@@ -87,12 +88,12 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         if (host != null) {
             final IGridNode agn = host.getActionableNode();
             if (agn != null && agn.isActive()) {
-                var clzWithInterfaceSupport = StreamSupport.stream(grid.getMachinesClasses().spliterator(), false)
-                        .filter(IInterfaceTerminalSupport.class::isAssignableFrom).distinct().toArray(Class[]::new);
-                for (var clz : clzWithInterfaceSupport) {
+                for (var clz : InterfaceTerminalSupportedClassProvider.getSupportedClasses()) {
                     for (final IGridNode gn : this.grid.getMachines(clz)) {
                         final IInterfaceTerminalSupport interfaceTerminalSupport = (IInterfaceTerminalSupport) gn
                                 .getMachine();
+                        if (!gn.isActive() || !interfaceTerminalSupport.shouldDisplay()) continue;
+
                         final Collection<InvTracker> t = supportedInterfaces.get(interfaceTerminalSupport);
                         final String name = interfaceTerminalSupport.getName();
                         missing = t.isEmpty() || t.stream().anyMatch(it -> !it.unlocalizedName.equals(name));
@@ -106,6 +107,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         }
 
         if (total != this.supportedInterfaces.size() || missing) {
+            System.out.println("RegenList because " + total + " != " + this.supportedInterfaces.size() + " || " + missing);
             this.regenList(this.data);
         } else {
             for (final InvTracker inv : supportedInterfaces.values()) {
@@ -260,9 +262,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         if (host != null) {
             final IGridNode agn = host.getActionableNode();
             if (agn != null && agn.isActive()) {
-                var clzWithInterfaceSupport = StreamSupport.stream(grid.getMachinesClasses().spliterator(), false)
-                        .filter(IInterfaceTerminalSupport.class::isAssignableFrom).distinct().toArray(Class[]::new);
-                for (var clz : clzWithInterfaceSupport) {
+                for (var clz : InterfaceTerminalSupportedClassProvider.getSupportedClasses()) {
                     for (final IGridNode gn : this.grid.getMachines(clz)) {
                         final IInterfaceTerminalSupport terminalSupport = (IInterfaceTerminalSupport) gn.getMachine();
                         if (!gn.isActive() || !terminalSupport.shouldDisplay()) continue;
