@@ -1,9 +1,9 @@
 package appeng.helpers;
 
-import appeng.api.networking.IGridHost;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.TileEntity;
 
+import appeng.api.networking.IGridHost;
 import appeng.api.util.DimensionalCoord;
 
 public interface IInterfaceTerminalSupport extends IGridHost {

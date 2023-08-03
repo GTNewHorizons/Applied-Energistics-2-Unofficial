@@ -14,9 +14,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.StreamSupport;
 
-import appeng.helpers.InterfaceTerminalSupportedClassProvider;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
@@ -36,6 +34,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCompressedNBT;
 import appeng.helpers.IInterfaceTerminalSupport;
 import appeng.helpers.IInterfaceTerminalSupport.PatternsConfiguration;
+import appeng.helpers.InterfaceTerminalSupportedClassProvider;
 import appeng.helpers.InventoryAction;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.reporting.PartInterfaceTerminal;
@@ -107,7 +106,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         }
 
         if (total != this.supportedInterfaces.size() || missing) {
-            System.out.println("RegenList because " + total + " != " + this.supportedInterfaces.size() + " || " + missing);
+            System.out.println(
+                    "RegenList because " + total + " != " + this.supportedInterfaces.size() + " || " + missing);
             this.regenList(this.data);
         } else {
             for (final InvTracker inv : supportedInterfaces.values()) {
@@ -270,7 +270,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                         final var configurations = terminalSupport.getPatternsConfigurations();
 
                         for (int i = 0; i < configurations.length; ++i) {
-                            this.supportedInterfaces.put(terminalSupport, new InvTracker(terminalSupport, configurations[i], i));
+                            this.supportedInterfaces
+                                    .put(terminalSupport, new InvTracker(terminalSupport, configurations[i], i));
                         }
                     }
                 }
