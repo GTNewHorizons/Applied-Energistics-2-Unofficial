@@ -1,14 +1,14 @@
 package appeng.helpers;
 
-import appeng.api.networking.IGridHost;
+import java.util.HashSet;
+import java.util.Set;
+
 import appeng.parts.misc.PartInterface;
 import appeng.parts.p2p.PartP2PInterface;
 import appeng.tile.misc.TileInterface;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public class InterfaceTerminalSupportedClassProvider {
+
     private static final Set<Class<? extends IInterfaceTerminalSupport>> supportedClasses = new HashSet<>();
 
     static {
