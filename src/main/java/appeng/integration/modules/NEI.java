@@ -26,7 +26,10 @@ import appeng.client.gui.AEBaseMEGui;
 import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiCraftingTerm;
+import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.client.gui.implementations.GuiPatternTerm;
+import appeng.client.gui.implementations.GuiSkyChest;
+import appeng.client.gui.implementations.GuiWirelessTerm;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.helpers.Reflected;
@@ -46,6 +49,7 @@ import appeng.integration.modules.NEIHelpers.TerminalCraftingSlotFinder;
 import codechicken.nei.ItemsGrid;
 import codechicken.nei.LayoutManager;
 import codechicken.nei.SearchField.ISearchProvider;
+import codechicken.nei.api.IBookmarkContainerHandler;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.IStackPositioner;
 import codechicken.nei.guihook.GuiContainerManager;
@@ -64,6 +68,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     private Method registerUsageHandler;
     private Method registerNEIGuiHandler;
     private Method registerItemFilter;
+    private Method registerBookmarkContainerHandler;
 
     @Reflected
     public NEI() throws ClassNotFoundException {
@@ -73,6 +78,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         IntegrationHelper.testClassExistence(this, IContainerTooltipHandler.class);
         IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.ICraftingHandler.class);
         IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.IUsageHandler.class);
+        IntegrationHelper.testClassExistence(this, codechicken.nei.api.IBookmarkContainerHandler.class);
 
         this.apiClass = Class.forName("codechicken.nei.api.API");
     }
@@ -98,6 +104,15 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
                 && AEConfig.instance.isFeatureEnabled(AEFeature.EnableFacadeCrafting)) {
             this.registerRecipeHandler(new NEIFacadeRecipeHandler());
         }
+        this.registerBookmarkContainerHandler = this.apiClass
+                .getDeclaredMethod("registerBookmarkContainerHandler", Class.class, IBookmarkContainerHandler.class);
+        this.registerBookmarkContainerHandler.invoke(apiClass, GuiSkyChest.class, new NEIAEBookmarkContainerHandler());
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiCraftingTerm.class, new NEIAETerminalBookmarkContainerHandler());
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiMEMonitorable.class, new NEIAETerminalBookmarkContainerHandler());
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiWirelessTerm.class, new NEIAETerminalBookmarkContainerHandler());
 
         // large stack tooltips
         GuiContainerManager.addTooltipHandler(this);
