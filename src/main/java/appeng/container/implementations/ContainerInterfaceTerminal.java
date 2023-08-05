@@ -106,8 +106,6 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         }
 
         if (total != this.supportedInterfaces.size() || missing) {
-            System.out.println(
-                    "RegenList because " + total + " != " + this.supportedInterfaces.size() + " || " + missing);
             this.regenList(this.data);
         } else {
             for (final InvTracker inv : supportedInterfaces.values()) {
