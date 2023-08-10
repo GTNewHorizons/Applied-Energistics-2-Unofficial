@@ -54,8 +54,14 @@ public class AppEngRenderItem extends RenderItem {
             final ItemStack is, final int par4, final int par5, final String par6Str) {
         if (is != null) {
             boolean skip = false;
+            boolean showDurabilitybar = true;
+            boolean showStackSize = true;
+            boolean showCraftLabelText = true;
             for (ItemRenderHook hook : POST_HOOKS) {
                 skip |= hook.renderOverlay(fontRenderer, textureManager, is, par4, par5);
+                showDurabilitybar &= hook.showDurability(is);
+                showStackSize &= hook.showStackSize(is);
+                showCraftLabelText &= hook.showCraftLabelText(is);
             }
             if (skip) {
                 return;
@@ -67,7 +73,7 @@ public class AppEngRenderItem extends RenderItem {
             final boolean unicodeFlag = fontRenderer.getUnicodeFlag();
             fontRenderer.setUnicodeFlag(false);
 
-            if (is.getItem().showDurabilityBar(is)) {
+            if (showDurabilitybar && is.getItem().showDurabilityBar(is)) {
                 final double health = is.getItem().getDurabilityForDisplay(is);
                 final int j1 = (int) Math.round(13.0D - health * 13.0D);
                 final int k = (int) Math.round(255.0D - health * 255.0D);
@@ -93,7 +99,7 @@ public class AppEngRenderItem extends RenderItem {
                 GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             }
 
-            if (is.stackSize == 0) {
+            if (is.stackSize == 0 && showCraftLabelText) {
                 final String craftLabelText = AEConfig.instance.useTerminalUseLargeFont()
                         ? GuiText.LargeFontCraft.getLocal()
                         : GuiText.SmallFontCraft.getLocal();
@@ -116,7 +122,7 @@ public class AppEngRenderItem extends RenderItem {
 
             final long amount = this.aeStack != null ? this.aeStack.getStackSize() : is.stackSize;
 
-            if (amount != 0) {
+            if (amount != 0 && showStackSize) {
                 final String stackSize = this.getToBeRenderedStackSize(amount);
 
                 GL11.glDisable(GL11.GL_LIGHTING);
