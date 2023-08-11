@@ -11,6 +11,7 @@ import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartItem;
+import appeng.api.parts.PartItemStack;
 import appeng.me.GridAccessException;
 import appeng.me.cache.P2PCache;
 import appeng.util.Platform;
@@ -70,5 +71,13 @@ public abstract class PartP2PTunnelStatic<T extends PartP2PTunnelStatic> extends
             printConnectionInfo(player);
         }
         return false;
+    }
+
+    @Override
+    public ItemStack getItemStack(PartItemStack type) {
+        if (type == PartItemStack.World || type == PartItemStack.Network || type == PartItemStack.Wrench) {
+            return super.getItemStack(type);
+        }
+        return super.getItemStack(PartItemStack.Pick);
     }
 }
