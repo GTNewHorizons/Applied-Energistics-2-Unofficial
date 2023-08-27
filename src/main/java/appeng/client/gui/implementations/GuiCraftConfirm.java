@@ -18,6 +18,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.StatCollector;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
@@ -718,7 +719,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     @Override
     protected void keyTyped(final char character, final int key) {
         if (!this.checkHotbarKeys(key)) {
-            if (key == 28) {
+            if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
                 this.actionPerformed(this.start);
             }
             super.keyTyped(character, key);
