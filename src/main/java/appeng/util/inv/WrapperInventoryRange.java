@@ -14,8 +14,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-import appeng.tile.AEBaseInvTile;
-
 public class WrapperInventoryRange implements IInventory {
 
     private final IInventory src;
