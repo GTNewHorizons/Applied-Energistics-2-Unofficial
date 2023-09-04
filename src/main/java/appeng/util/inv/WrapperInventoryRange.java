@@ -93,10 +93,6 @@ public class WrapperInventoryRange implements IInventory {
 
     @Override
     public int getInventoryStackLimit() {
-        if (this.src instanceof AEBaseInvTile) {
-            IInventory internalInv = ((AEBaseInvTile) this.src).getInternalInventory();
-            return internalInv.getInventoryStackLimit();
-        }
         return this.src.getInventoryStackLimit();
     }
 

@@ -200,6 +200,10 @@ public class TileChest extends AENetworkPowerTile
         return g;
     }
 
+    public BaseActionSource getActionSource() {
+        return mySrc;
+    }
+
     @Override
     public int getCellStatus(final int slot) {
         if (Platform.isClient()) {

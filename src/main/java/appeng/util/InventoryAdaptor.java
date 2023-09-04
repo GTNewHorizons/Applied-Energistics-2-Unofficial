@@ -12,6 +12,9 @@ package appeng.util;
 
 import java.util.ArrayList;
 
+import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.data.IAEItemStack;
+import appeng.tile.storage.TileChest;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -56,7 +59,6 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         } else if (te instanceof TileEntityChest) {
             return new AdaptorIInventory(Platform.GetChestInv(te));
         } else if (te instanceof ISidedInventory si) {
-            final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
             if (te instanceof TileInterface) {
                 return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), (IInterfaceHost) te);
             } else if (te instanceof TileCableBus) {
@@ -66,15 +68,12 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
                 } else if (part instanceof PartP2PItems p2p) {
                     return new AdaptorP2PItem(p2p);
                 }
+            } else if (te instanceof TileChest) {
+                return new AdaptorMEChest((TileChest) te);
             }
-            int stackLimit = 0;
-            if (te instanceof AEBaseInvTile) {
-                stackLimit = ((AEBaseInvTile) te).getInternalInventory().getInventoryStackLimit();
-            }
+
+            final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
             if (si.getSizeInventory() > 0 && slots != null && slots.length > 0) {
-                if (stackLimit > 0) {
-                    return new AdaptorIInventory(new WrapperMCISidedInventory(si, d), stackLimit);
-                }
                 return new AdaptorIInventory(new WrapperMCISidedInventory(si, d));
             }
         } else if (te instanceof IInventory i) {
