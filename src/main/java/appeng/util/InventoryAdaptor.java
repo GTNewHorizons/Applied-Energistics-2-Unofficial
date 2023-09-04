@@ -12,9 +12,6 @@ package appeng.util;
 
 import java.util.ArrayList;
 
-import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.data.IAEItemStack;
-import appeng.tile.storage.TileChest;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -30,9 +27,9 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBetterStorage;
 import appeng.parts.p2p.PartP2PItems;
-import appeng.tile.AEBaseInvTile;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
+import appeng.tile.storage.TileChest;
 import appeng.util.inv.*;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
