@@ -1,4 +1,4 @@
-package appeng.util;
+package appeng.util.inv;
 
 import appeng.parts.p2p.PartP2PItems;
 import appeng.util.inv.AdaptorIInventory;
