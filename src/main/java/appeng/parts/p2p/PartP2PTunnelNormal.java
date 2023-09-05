@@ -17,7 +17,6 @@ import appeng.api.parts.IPartItem;
 import appeng.me.GridAccessException;
 import appeng.me.cache.P2PCache;
 import appeng.util.Platform;
-import buildcraft.api.tools.IToolWrench;
 
 /**
  * Normal P2P Tunnels can be attuned between each other, but cannot be attuned to Static P2P tunnels.
@@ -73,10 +72,12 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
                 }
             }
             mc.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
-        } else if (!player.isSneaking() && is != null && is.getItem() instanceof IToolWrench && !Platform.isClient()) {
-            printConnectionInfo(player);
-        } else if (tt != null) // attunement
-        {
+        } else if (!player.isSneaking()
+                && Platform.isWrench(player, is, (int) pos.xCoord, (int) pos.yCoord, (int) pos.zCoord)
+                && !Platform.isClient()) {
+                    printConnectionInfo(player);
+                    // spotless:off
+        } else if (tt != null) { // attunement
             ItemStack newType = null;
 
             final IParts parts = AEApi.instance().definitions().parts();
@@ -164,6 +165,7 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
                 return true;
             }
         }
+        // spotless:on
 
         return false;
     }
