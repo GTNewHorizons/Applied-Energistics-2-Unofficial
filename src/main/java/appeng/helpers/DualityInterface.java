@@ -95,7 +95,6 @@ import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
 import appeng.util.inv.WrapperInvSlot;
 import appeng.util.item.AEItemStack;
-import appeng.helpers.BlockingModeIgnoreList;
 import cofh.api.transport.IItemDuct;
 import cpw.mods.fml.common.Loader;
 

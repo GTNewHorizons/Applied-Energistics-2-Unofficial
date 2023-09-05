@@ -11,9 +11,9 @@ import appeng.api.config.Upgrades;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.helpers.BlockingModeIgnoreList;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
-import appeng.helpers.BlockingModeIgnoreList;
 import appeng.util.item.AEItemStack;
 
 public class AdaptorDualityInterface extends AdaptorIInventory {

@@ -2,24 +2,22 @@ package appeng.helpers;
 
 import java.util.ArrayList;
 
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import gregtech.api.enums.ItemList;
-import appeng.api.storage.data.IAEItemStack;
 
 public class BlockingModeIgnoreList {
-
 
     private final static ArrayList<String> Shapes = new ArrayList<String>();
     private final static ArrayList<String> Lenses = new ArrayList<String>();
     private final static ArrayList<String> Molds = new ArrayList<String>();
 
-    //Name + damage value from ItemList enums
+    // Name + damage value from ItemList enums
     private static String getUniqueIdentifier(ItemList item) {
         return item.getItem().getUnlocalizedName() + item.getItem().getDamage(item.get(1));
     }
-    //Name + damage value from existing ItemStacks
+
+    // Name + damage value from existing ItemStacks
     private static String getUniqueIdentifier(ItemStack is) {
         return is.getItem().getUnlocalizedName() + is.getItemDamage();
     }
@@ -27,7 +25,7 @@ public class BlockingModeIgnoreList {
     public static void registerIgnoredMaterials() {
 
         Molds.add(getUniqueIdentifier(ItemList.Shape_Mold_Bottle));
-        
+
         Molds.add(getUniqueIdentifier(ItemList.Shape_Mold_Plate));
         Molds.add(getUniqueIdentifier(ItemList.Shape_Mold_Ingot));
         Molds.add(getUniqueIdentifier(ItemList.Shape_Mold_Casing));
@@ -117,17 +115,16 @@ public class BlockingModeIgnoreList {
         Shapes.add(getUniqueIdentifier(ItemList.White_Dwarf_Shape_Extruder_Turbine_Blade));
         Shapes.add(getUniqueIdentifier(ItemList.White_Dwarf_Shape_Extruder_Small_Gear));
         Shapes.add(getUniqueIdentifier(ItemList.White_Dwarf_Shape_Extruder_ToolHeadDrill));
-        
 
     }
 
     public static boolean isIgnored(ItemStack is) {
         if (is != null) {
             String uniqueIdentifier = getUniqueIdentifier(is);
-            System.out.println(uniqueIdentifier);
-            System.out.println(Molds);
             if (is.getItem().getUnlocalizedName().equals("gt.integrated_circuit")) return true;
-            else if (Shapes.contains(uniqueIdentifier) || Lenses.contains(uniqueIdentifier) || Molds.contains(uniqueIdentifier)) return true;
+            else if (Shapes.contains(uniqueIdentifier) || Lenses.contains(uniqueIdentifier)
+                    || Molds.contains(uniqueIdentifier))
+                return true;
         }
         return false;
     }
