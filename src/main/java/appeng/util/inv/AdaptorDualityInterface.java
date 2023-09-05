@@ -13,6 +13,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
+import appeng.helpers.BlockingModeIgnoreList;
 import appeng.util.item.AEItemStack;
 
 public class AdaptorDualityInterface extends AdaptorIInventory {
@@ -56,7 +57,7 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
                 // This works okay, it'll loop as much as (or even less than) a normal inventory because the iterator
                 // hides empty slots or stacks of size 0
                 for (IAEItemStack stack : itemList) {
-                    if (!stack.getItem().getUnlocalizedName().equals("gt.integrated_circuit")) {
+                    if (!BlockingModeIgnoreList.isIgnored(stack.getItemStack())) {
                         hasMEItems = true;
                         break;
                     }

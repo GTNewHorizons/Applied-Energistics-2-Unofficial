@@ -95,6 +95,7 @@ import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
 import appeng.util.inv.WrapperInvSlot;
 import appeng.util.item.AEItemStack;
+import appeng.helpers.BlockingModeIgnoreList;
 import cofh.api.transport.IItemDuct;
 import cpw.mods.fml.common.Loader;
 
@@ -857,7 +858,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private boolean gtMachineHasOnlyCircuit(InventoryAdaptor ad) {
         for (ItemSlot i : ad) {
             ItemStack is = i.getItemStack();
-            if (is == null || is.getItem().getUnlocalizedName().equals("gt.integrated_circuit")) continue;
+            if (BlockingModeIgnoreList.isIgnored(is)) continue;
             return false;
         }
         return true;
