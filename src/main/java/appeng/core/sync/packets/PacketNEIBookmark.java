@@ -14,15 +14,13 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.networking.IGrid;
-import appeng.api.networking.IGridNode;
-import appeng.api.networking.energy.IEnergyGrid;
-import appeng.api.networking.storage.IStorageGrid;
+import appeng.api.networking.energy.IEnergySource;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
-import appeng.helpers.IContainerCraftingPacket;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
@@ -64,20 +62,14 @@ public class PacketNEIBookmark extends AppEngPacket {
         final EntityPlayerMP pmp = (EntityPlayerMP) player;
         final Container con = pmp.openContainer;
 
-        if (con instanceof IContainerCraftingPacket cct) {
-            final IGridNode node = cct.getNetworkNode();
-            if (node != null) {
-                final IGrid grid = node.getGrid();
-                if (grid == null) {
-                    return;
-                }
-
-                final IStorageGrid inv = grid.getCache(IStorageGrid.class);
-                final IMEMonitor<IAEItemStack> storage = inv.getItemInventory();
-                final IEnergyGrid energy = grid.getCache(IEnergyGrid.class);
+        if (con instanceof ContainerMEMonitorable monitorable) {
+            final IMEMonitor<IAEItemStack> monitor = monitorable.getMonitor();
+            if (monitor != null) {
+                final IEnergySource energy = monitorable.getPowerSource();
+                final BaseActionSource actionSource = monitorable.getActionSource();
 
                 final AEItemStack request = AEItemStack.create(bookmarkItem);
-                final IAEItemStack out = Platform.poweredExtraction(energy, storage, request, cct.getActionSource());
+                final IAEItemStack out = Platform.poweredExtraction(energy, monitor, request, actionSource);
                 if (out != null) {
                     final InventoryAdaptor adp = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
                     ItemStack outItem = out.getItemStack();

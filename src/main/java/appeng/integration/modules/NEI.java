@@ -108,11 +108,13 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
                 .getDeclaredMethod("registerBookmarkContainerHandler", Class.class, IBookmarkContainerHandler.class);
         this.registerBookmarkContainerHandler.invoke(apiClass, GuiSkyChest.class, new NEIAEBookmarkContainerHandler());
         this.registerBookmarkContainerHandler
-                .invoke(apiClass, GuiCraftingTerm.class, new NEIAETerminalBookmarkContainerHandler());
+                .invoke(apiClass, GuiCraftingTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Crafting
+                                                                                                       // Terminal
         this.registerBookmarkContainerHandler
-                .invoke(apiClass, GuiMEMonitorable.class, new NEIAETerminalBookmarkContainerHandler());
+                .invoke(apiClass, GuiMEMonitorable.class, new NEIAETerminalBookmarkContainerHandler()); // Terminal
         this.registerBookmarkContainerHandler
-                .invoke(apiClass, GuiWirelessTerm.class, new NEIAETerminalBookmarkContainerHandler());
+                .invoke(apiClass, GuiWirelessTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Wireless
+                                                                                                       // Terminal
 
         // large stack tooltips
         GuiContainerManager.addTooltipHandler(this);

@@ -388,6 +388,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
         return false;
     }
 
+    public IMEMonitor<IAEItemStack> getMonitor() {
+        return monitor;
+    }
+
     // to avoid duplicating this method in 2 pattern terminals
     protected void refillBlankPatterns(Slot slot) {
         if (Platform.isServer()) {
