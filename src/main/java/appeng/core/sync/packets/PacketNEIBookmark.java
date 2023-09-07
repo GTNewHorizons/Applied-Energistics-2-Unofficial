@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -58,7 +57,7 @@ public class PacketNEIBookmark extends AppEngPacket {
 
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
-        if (isInventoryFull(player)) return;
+        bookmarkItem.stackSize = fitStack(player, bookmarkItem);
         final EntityPlayerMP pmp = (EntityPlayerMP) player;
         final Container con = pmp.openContainer;
 
@@ -79,7 +78,23 @@ public class PacketNEIBookmark extends AppEngPacket {
         }
     }
 
-    private boolean isInventoryFull(final EntityPlayer player) {
-        return !Arrays.asList(player.inventory.mainInventory).contains(null);
+    private int fitStack(final EntityPlayer player, ItemStack itemStack) {
+        // itemStack will always be <= maxStackSize because of how the packets are received
+        ItemStack[] inv = player.inventory.mainInventory;
+        for (ItemStack slotStack : inv) {
+            if (slotStack == null) {
+                return itemStack.stackSize;
+            } else if (slotStack.isItemEqual(itemStack)) {
+                int sizeLeft = itemStack.getMaxStackSize() - slotStack.stackSize;
+                if (sizeLeft > 0) {
+                    if (sizeLeft - itemStack.stackSize > 0) {
+                        return itemStack.stackSize;
+                    } else {
+                        return sizeLeft;
+                    }
+                }
+            }
+        }
+        return 0;
     }
 }

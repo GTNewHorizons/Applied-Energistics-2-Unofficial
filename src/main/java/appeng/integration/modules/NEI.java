@@ -27,7 +27,9 @@ import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiCraftingTerm;
 import appeng.client.gui.implementations.GuiMEMonitorable;
+import appeng.client.gui.implementations.GuiMEPortableCell;
 import appeng.client.gui.implementations.GuiPatternTerm;
+import appeng.client.gui.implementations.GuiPatternTermEx;
 import appeng.client.gui.implementations.GuiSkyChest;
 import appeng.client.gui.implementations.GuiWirelessTerm;
 import appeng.core.AEConfig;
@@ -106,7 +108,8 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         }
         this.registerBookmarkContainerHandler = this.apiClass
                 .getDeclaredMethod("registerBookmarkContainerHandler", Class.class, IBookmarkContainerHandler.class);
-        this.registerBookmarkContainerHandler.invoke(apiClass, GuiSkyChest.class, new NEIAEBookmarkContainerHandler());
+        this.registerBookmarkContainerHandler.invoke(apiClass, GuiSkyChest.class, new NEIAEBookmarkContainerHandler()); // Skystone
+                                                                                                                        // chests
         this.registerBookmarkContainerHandler
                 .invoke(apiClass, GuiCraftingTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Crafting
                                                                                                        // Terminal
@@ -115,7 +118,14 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         this.registerBookmarkContainerHandler
                 .invoke(apiClass, GuiWirelessTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Wireless
                                                                                                        // Terminal
-
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiPatternTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Pattern
+                                                                                                      // terminal
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiPatternTermEx.class, new NEIAETerminalBookmarkContainerHandler()); // Big pattern
+                                                                                                        // terminal
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiMEPortableCell.class, new NEIAETerminalBookmarkContainerHandler()); // ME chest
         // large stack tooltips
         GuiContainerManager.addTooltipHandler(this);
         GuiContainerManager.addObjectHandler(this);
