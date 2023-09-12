@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import appeng.core.sync.packets.PacketIfaceTermUpdate;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -423,6 +424,10 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
             return true;
         }
         return false;
+    }
+
+    public void postUpdate(List<PacketIfaceTermUpdate.PacketEntry> updates) {
+
     }
 
     public void postUpdate(final NBTTagCompound in) {

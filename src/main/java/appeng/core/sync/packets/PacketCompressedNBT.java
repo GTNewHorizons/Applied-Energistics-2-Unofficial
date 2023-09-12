@@ -24,7 +24,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 
-import appeng.client.gui.implementations.GuiInterfaceTerminal;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import cpw.mods.fml.relauncher.Side;
@@ -89,8 +88,8 @@ public class PacketCompressedNBT extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
-        if (gs instanceof GuiInterfaceTerminal) {
-            ((GuiInterfaceTerminal) gs).postUpdate(this.in);
-        }
+        // if (gs instanceof GuiInterfaceTerminal) {
+        // ((GuiInterfaceTerminal) gs).postUpdate(this.in);
+        // }
     }
 }
