@@ -390,4 +390,9 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     public boolean shouldDisplay() {
         return IInterfaceHost.super.shouldDisplay() && !isOutput();
     }
+
+    @Override
+    public ItemStack getSelfRep() {
+        return this.getItemStack();
+    }
 }

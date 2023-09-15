@@ -386,4 +386,9 @@ public class PartInterface extends PartBasicState implements IGridTickable, ISto
     public void setPriority(final int newValue) {
         this.duality.setPriority(newValue);
     }
+
+    @Override
+    public ItemStack getSelfRep() {
+        return this.getItemStack();
+    }
 }
