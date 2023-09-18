@@ -79,7 +79,6 @@ public class AppEngRenderItem extends RenderItem {
                 final int k = (int) Math.round(255.0D - health * 255.0D);
 
                 GL11.glDisable(GL11.GL_LIGHTING);
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
                 GL11.glDisable(GL11.GL_TEXTURE_2D);
                 GL11.glDisable(GL11.GL_ALPHA_TEST);
                 GL11.glDisable(GL11.GL_BLEND);
@@ -95,7 +94,6 @@ public class AppEngRenderItem extends RenderItem {
                 GL11.glEnable(GL11.GL_ALPHA_TEST);
                 GL11.glEnable(GL11.GL_TEXTURE_2D);
                 GL11.glEnable(GL11.GL_LIGHTING);
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
                 GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             }
 
@@ -105,7 +103,6 @@ public class AppEngRenderItem extends RenderItem {
                         : GuiText.SmallFontCraft.getLocal();
 
                 GL11.glDisable(GL11.GL_LIGHTING);
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
                 GL11.glPushMatrix();
                 GL11.glScaled(scaleFactor, scaleFactor, scaleFactor);
 
@@ -117,7 +114,6 @@ public class AppEngRenderItem extends RenderItem {
 
                 GL11.glPopMatrix();
                 GL11.glEnable(GL11.GL_LIGHTING);
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
             }
 
             final long amount = this.aeStack != null ? this.aeStack.getStackSize() : is.stackSize;
@@ -126,7 +122,6 @@ public class AppEngRenderItem extends RenderItem {
                 final String stackSize = this.getToBeRenderedStackSize(amount);
 
                 GL11.glDisable(GL11.GL_LIGHTING);
-                GL11.glDisable(GL11.GL_DEPTH_TEST);
                 GL11.glPushMatrix();
                 GL11.glScaled(scaleFactor, scaleFactor, scaleFactor);
 
@@ -138,22 +133,10 @@ public class AppEngRenderItem extends RenderItem {
 
                 GL11.glPopMatrix();
                 GL11.glEnable(GL11.GL_LIGHTING);
-                GL11.glEnable(GL11.GL_DEPTH_TEST);
             }
 
             fontRenderer.setUnicodeFlag(unicodeFlag);
         }
-    }
-
-    private void renderQuad(final Tessellator par1Tessellator, final int par2, final int par3, final int par4,
-            final int par5, final int par6) {
-        par1Tessellator.startDrawingQuads();
-        par1Tessellator.setColorOpaque_I(par6);
-        par1Tessellator.addVertex(par2, par3, 0.0D);
-        par1Tessellator.addVertex(par2, par3 + par5, 0.0D);
-        par1Tessellator.addVertex(par2 + par4, par3 + par5, 0.0D);
-        par1Tessellator.addVertex(par2 + par4, par3, 0.0D);
-        par1Tessellator.draw();
     }
 
     private String getToBeRenderedStackSize(final long originalSize) {

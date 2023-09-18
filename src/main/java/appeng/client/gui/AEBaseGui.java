@@ -50,6 +50,7 @@ import appeng.client.me.InternalSlotME;
 import appeng.client.me.SlotDisconnected;
 import appeng.client.me.SlotME;
 import appeng.client.render.AppEngRenderItem;
+import appeng.client.render.TranslatedRenderItem;
 import appeng.container.AEBaseContainer;
 import appeng.container.slot.AppEngCraftingSlot;
 import appeng.container.slot.AppEngSlot;
@@ -85,7 +86,8 @@ public abstract class AEBaseGui extends GuiContainer {
     private final List<InternalSlotME> meSlots = new LinkedList<>();
     // drag y
     private final Set<Slot> drag_click = new HashSet<>();
-    private final AppEngRenderItem aeRenderItem = new AppEngRenderItem();
+    public static final AppEngRenderItem aeRenderItem = new AppEngRenderItem();
+    public static final TranslatedRenderItem translatedRenderItem = new TranslatedRenderItem();
     private GuiScrollbar scrollBar = null;
     private boolean disableShiftClick = false;
     private Stopwatch dbl_clickTimer = Stopwatch.createStarted();
@@ -784,8 +786,10 @@ public abstract class AEBaseGui extends GuiContainer {
         GL11.glEnable(GL11.GL_LIGHTING);
         GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glTranslatef(0.0f, 0.0f, 101.0f);
         RenderHelper.enableGUIStandardItemLighting();
         itemRender.renderItemAndEffectIntoGUI(this.fontRendererObj, this.mc.renderEngine, is, x, y);
+        GL11.glTranslatef(0.0f, 0.0f, -101.0f);
         GL11.glPopAttrib();
 
         itemRender.zLevel = 0.0F;
@@ -817,10 +821,9 @@ public abstract class AEBaseGui extends GuiContainer {
 
             RenderItem pIR = this.setItemRender(this.aeRenderItem);
             try {
-                this.zLevel = 100.0F;
-                itemRender.zLevel = 100.0F;
-
                 if (!this.isPowered()) {
+                    this.zLevel = 100.0F;
+                    itemRender.zLevel = 100.0F;
                     GL11.glDisable(GL11.GL_LIGHTING);
                     drawRect(
                             s.xDisplayPosition,
@@ -829,14 +832,14 @@ public abstract class AEBaseGui extends GuiContainer {
                             16 + s.yDisplayPosition,
                             GuiColors.ItemSlotOverlayUnpowered.getColor());
                     GL11.glEnable(GL11.GL_LIGHTING);
+                    this.zLevel = 0.0F;
+                    itemRender.zLevel = 0.0F;
+                } else {
+                    this.aeRenderItem.setAeStack(Platform.getAEStackInSlot(s));
+
+                    this.drawAESlot(s);
                 }
 
-                this.zLevel = 0.0F;
-                itemRender.zLevel = 0.0F;
-
-                this.aeRenderItem.setAeStack(Platform.getAEStackInSlot(s));
-
-                this.safeDrawSlot(s);
             } catch (final Exception err) {
                 AELog.warn("[AppEng] AE prevented crash while drawing slot: " + err.toString());
             }
@@ -940,7 +943,7 @@ public abstract class AEBaseGui extends GuiContainer {
 
                 if (s instanceof AppEngSlot) {
                     ((AppEngSlot) s).setDisplay(true);
-                    this.safeDrawSlot(s);
+                    this.drawMCSlot(s);
                 } else {
                     this.safeDrawSlot(s);
                 }
@@ -952,6 +955,39 @@ public abstract class AEBaseGui extends GuiContainer {
         }
         // do the usual for non-ME Slots.
         this.safeDrawSlot(s);
+    }
+
+    public void drawMCSlot(Slot slotIn) {
+        int i = slotIn.xDisplayPosition;
+        int j = slotIn.yDisplayPosition;
+        ItemStack itemstack = slotIn.getStack();
+        String s = null;
+
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        translatedRenderItem.zLevel = 100.0f;
+        translatedRenderItem
+                .renderItemAndEffectIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j);
+        translatedRenderItem.zLevel = 200.0f;
+        translatedRenderItem
+                .renderItemOverlayIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j, s);
+        translatedRenderItem.zLevel = 0.0f;
+    }
+
+    public void drawAESlot(Slot slotIn) {
+        int i = slotIn.xDisplayPosition;
+        int j = slotIn.yDisplayPosition;
+        ItemStack itemstack = slotIn.getStack();
+        String s = null;
+
+        this.zLevel = 100.0F;
+        itemRender.zLevel = 100.0F;
+        itemRender.renderItemAndEffectIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j);
+        itemRender.zLevel = 0.0F;
+
+        this.zLevel = 0.0F;
+        GL11.glTranslatef(0.0f, 0.0f, 200.0f);
+        aeRenderItem.renderItemOverlayIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j, s);
+        GL11.glTranslatef(0.0f, 0.0f, -200.0f);
     }
 
     private RenderItem setItemRender(final RenderItem item) {
