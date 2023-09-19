@@ -59,6 +59,10 @@ public final class RF implements IIntegrationModule {
 
         // Fluxduct
         this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 0);
+        this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 1);
+        this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 2);
+        this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 4);
+        this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 6);
 
         this.registerRFAttunement("EnderIO", "itemPowerConduit", OreDictionary.WILDCARD_VALUE);
         this.registerRFAttunement("EnderIO", "blockCapacitorBank", 0);
