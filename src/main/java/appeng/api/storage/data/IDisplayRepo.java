@@ -25,6 +25,14 @@ public interface IDisplayRepo {
 
     boolean hasPower();
 
+    /**
+     * Strictly for backwards compatibility. Use {@link #setPowered(boolean)} instead.
+     */
+    @Deprecated
+    default void setPower(final boolean hasPower) {
+        setPowered(hasPower);
+    }
+
     void setPowered(final boolean hasPower);
 
     int getRowSize();
@@ -34,4 +42,16 @@ public interface IDisplayRepo {
     String getSearchString();
 
     void setSearchString(@Nonnull final String searchString);
+
+    /**
+     * Set whether the display repo should resort the display on each update.
+     * 
+     * @param shouldResort if true, on each update the display resorts. Else the display does not sort on update. New
+     *                     entries are simply added to the end, and 0-count entries are silently removed.
+     */
+    default void setShouldResort(boolean shouldResort) {}
+
+    default boolean isResorting() {
+        return true;
+    }
 }

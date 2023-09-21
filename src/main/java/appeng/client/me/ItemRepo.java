@@ -12,27 +12,29 @@ package appeng.client.me;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiPredicate;
-import java.util.regex.Pattern;
 
 import javax.annotation.Nonnull;
 
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
-import appeng.api.config.*;
-import appeng.api.storage.IItemDisplayRegistry;
+import appeng.api.config.SearchBoxMode;
+import appeng.api.config.Settings;
+import appeng.api.config.SortDir;
+import appeng.api.config.SortOrder;
+import appeng.api.config.TypeFilter;
+import appeng.api.config.ViewItems;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IDisplayRepo;
-import appeng.api.storage.data.IItemList;
 import appeng.client.gui.widgets.IScrollSource;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.core.AEConfig;
 import appeng.items.storage.ItemViewCell;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
+import appeng.util.item.ItemTreeList;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
@@ -40,42 +42,57 @@ import cpw.mods.fml.relauncher.ReflectionHelper;
 
 public class ItemRepo implements IDisplayRepo {
 
-    private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
-    private final ArrayList<IAEItemStack> view = new ArrayList<>();
-    private final ArrayList<ItemStack> dsp = new ArrayList<>();
+    private final ItemTreeList list;
     private final IScrollSource src;
     private final ISortSource sortSrc;
-
+    private SortOrder cachedSortOrder;
+    private SortDir cachedSortDir;
+    private SearchMode cachedSearchMode;
+    private TypeFilter cachedTypeFilter;
     private int rowSize = 9;
 
-    private String searchString = "";
+    private String searchString;
+    private String cachedSearchString;
+    private String cachedSearchQuery;
     private IPartitionList<IAEItemStack> myPartitionList;
     private String NEIWord = null;
     private boolean hasPower;
+    private boolean resort = false;
 
     public ItemRepo(final IScrollSource src, final ISortSource sortSrc) {
         this.src = src;
         this.sortSrc = sortSrc;
+        // AE2, did you really have to make this API so miserable? >;(
+        this.list = new ItemTreeList(ItemSorters.CONFIG_BASED_SORT_BY_SIZE, this::filterView);
+        // Explicit null, so we *know* it hasn't been set yet.
+        this.cachedSearchString = null;
+        this.cachedSearchQuery = null;
+        this.cachedSearchMode = null;
+        this.cachedSortDir = null;
+        this.cachedSortOrder = null;
+        this.cachedTypeFilter = null;
+        this.searchString = "";
+        ItemSorters.init();
     }
 
     @Override
     public IAEItemStack getReferenceItem(int idx) {
         idx += this.src.getCurrentScroll() * this.rowSize;
 
-        if (idx >= this.view.size()) {
+        if (idx >= this.list.viewList().size()) {
             return null;
         }
-        return this.view.get(idx);
+        return this.list.viewList().get(idx);
     }
 
     @Override
     public ItemStack getItem(int idx) {
         idx += this.src.getCurrentScroll() * this.rowSize;
 
-        if (idx >= this.dsp.size()) {
+        if (idx >= this.list.displayList().size()) {
             return null;
         }
-        return this.dsp.get(idx);
+        return this.list.displayList().get(idx);
     }
 
     @Override
@@ -85,6 +102,7 @@ public class ItemRepo implements IDisplayRepo {
         if (st != null) {
             st.reset();
             st.add(is);
+            this.list.updateItem(st);
         } else {
             this.list.add(is);
         }
@@ -98,131 +116,115 @@ public class ItemRepo implements IDisplayRepo {
 
     @Override
     public void updateView() {
-        this.view.clear();
-        this.dsp.clear();
-
-        this.view.ensureCapacity(this.list.size());
-        this.dsp.ensureCapacity(this.list.size());
-
-        final Enum viewMode = this.sortSrc.getSortDisplay();
-        final Enum searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
-        final Enum typeFilter = this.sortSrc.getTypeFilter();
+        final Enum<?> searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
         if (searchMode == SearchBoxMode.NEI_AUTOSEARCH || searchMode == SearchBoxMode.NEI_MANUAL_SEARCH) {
             this.updateNEI(this.searchString);
         }
-
-        String innerSearch = this.searchString;
-        // final boolean terminalSearchToolTips =
-        // AEConfig.instance.settings.getSetting(Settings.SEARCH_TOOLTIPS) != YesNo.NO;
-        // boolean terminalSearchMods = Configuration.INSTANCE.settings.getSetting( Settings.SEARCH_MODS ) != YesNo.NO;
-        final SearchMode searchWhat;
-        if (innerSearch.length() == 0) {
-            searchWhat = SearchMode.ITEM;
+        boolean resortItems = false;
+        if (!searchString.equals(cachedSearchString)) {
+            cachedSearchString = searchString;
+            resortItems = true;
+            if (searchString.length() == 0) {
+                cachedSearchMode = SearchMode.ITEM;
+            } else {
+                switch (searchString.charAt(0)) {
+                    case '#' -> cachedSearchMode = SearchMode.TOOLTIPS;
+                    case '@' -> cachedSearchMode = SearchMode.MOD;
+                    case '$' -> cachedSearchMode = SearchMode.ORE;
+                    default -> cachedSearchMode = SearchMode.ITEM;
+                }
+                if (cachedSearchMode != SearchMode.ITEM) {
+                    cachedSearchQuery = searchString.substring(1);
+                } else {
+                    cachedSearchQuery = searchString;
+                }
+            }
+        }
+        final TypeFilter typeFilter = (TypeFilter) this.sortSrc.getTypeFilter();
+        if (cachedTypeFilter != typeFilter) {
+            cachedTypeFilter = typeFilter;
+        }
+        final SortOrder sortOrder = (SortOrder) this.sortSrc.getSortBy();
+        final SortDir sortDir = (SortDir) this.sortSrc.getSortDir();
+        if (cachedSortDir != sortDir) {
+            cachedSortDir = sortDir;
+            ItemSorters.setDirection(sortDir);
+            resortItems = true;
+        }
+        if (cachedSortOrder != sortOrder) {
+            cachedSortOrder = sortOrder;
+            resortItems = true;
+        }
+        if (resortItems || resort) {
+            list.refresh(ItemSorters.getSorter(sortOrder));
+            this.resort = false;
         } else {
-            searchWhat = switch (innerSearch.substring(0, 1)) {
-                case "#" -> SearchMode.TOOLTIPS;
-                case "@" -> SearchMode.MOD;
-                case "$" -> SearchMode.ORE;
-                default -> SearchMode.ITEM;
-            };
-            if (searchWhat != SearchMode.ITEM) innerSearch = innerSearch.substring(1);
+            list.refresh();
         }
-        Pattern m = null;
-        try {
-            m = Pattern.compile(innerSearch.toLowerCase(), Pattern.CASE_INSENSITIVE);
-        } catch (final Throwable ignore) {
-            try {
-                m = Pattern.compile(Pattern.quote(innerSearch.toLowerCase()), Pattern.CASE_INSENSITIVE);
-            } catch (final Throwable __) {
-                return;
-            }
-        }
-        IItemDisplayRegistry registry = AEApi.instance().registries().itemDisplay();
+    }
 
-        boolean notDone = false;
-        out: for (IAEItemStack is : this.list) {
-            // filter AEStack type
-            IAEItemStack finalIs = is;
-            if (registry.isBlacklisted(finalIs.getItem()) || registry.isBlacklisted(finalIs.getItem().getClass())) {
-                continue;
+    private boolean filterView(final IAEItemStack stack) {
+        // Type filter check
+        final TypeFilter typeFilter = cachedTypeFilter;
+        List<BiPredicate<TypeFilter, IAEItemStack>> filters = AEApi.instance().registries().itemDisplay()
+                .getItemFilters();
+        for (final BiPredicate<TypeFilter, IAEItemStack> f : filters) {
+            if (!f.test(typeFilter, stack)) {
+                return false;
             }
-            for (final BiPredicate<TypeFilter, IAEItemStack> filter : registry.getItemFilters()) {
-                if (!filter.test((TypeFilter) typeFilter, is)) continue out;
+        }
+        // Partition check
+        if (this.myPartitionList != null) {
+            if (!this.myPartitionList.isListed(stack)) {
+                return false;
             }
-            if (this.myPartitionList != null) {
-                if (!this.myPartitionList.isListed(is)) {
-                    continue;
+        }
+        // Search filter check
+        ViewItems viewMode = (ViewItems) this.sortSrc.getSortDisplay();
+        switch (viewMode) {
+            case CRAFTABLE -> {
+                if (!stack.isCraftable()) {
+                    return false;
                 }
             }
-
-            if (viewMode == ViewItems.CRAFTABLE && !is.isCraftable()) {
-                continue;
-            }
-
-            if (viewMode == ViewItems.CRAFTABLE) {
-                is = is.copy();
-                is.setStackSize(0);
-            }
-
-            if (viewMode == ViewItems.STORED && is.getStackSize() == 0) {
-                continue;
-            }
-            String dspName = null;
-            switch (searchWhat) {
-                case MOD -> dspName = Platform.getModId(is);
-                case ORE -> {
-                    OreReference ore = OreHelper.INSTANCE.isOre(is.getItemStack());
-                    if (ore != null) {
-                        dspName = String.join(" ", ore.getEquivalents());
-                    }
-                }
-                case TOOLTIPS -> dspName = String.join(" ", ((List<String>) Platform.getTooltip(is)));
-                default -> dspName = Platform.getItemDisplayName(is);
-            }
-
-            if (dspName == null) continue;
-
-            notDone = true;
-            if (m.matcher(dspName.toLowerCase()).find()) {
-                this.view.add(is);
-                notDone = false;
-            }
-
-            if (notDone && searchWhat == SearchMode.ITEM) {
-                for (final Object lp : Platform.getTooltip(is)) {
-                    if (lp instanceof String && m.matcher((CharSequence) lp).find()) {
-                        this.view.add(is);
-                        notDone = false;
-                        break;
-                    }
+            case STORED -> {
+                if (stack.getStackSize() <= 0) {
+                    return false;
                 }
             }
-
-            /*
-             * if ( terminalSearchMods && notDone ) { if ( m.matcher( Platform.getMod( is.getItemStack() ) ).find() ) {
-             * view.add( is ); notDone = false; } }
-             */
+            case ALL -> {
+                if (!stack.isCraftable() && stack.getStackSize() <= 0) {
+                    return false;
+                }
+            }
         }
-
-        final Enum SortBy = this.sortSrc.getSortBy();
-        final Enum SortDir = this.sortSrc.getSortDir();
-
-        ItemSorters.setDirection((appeng.api.config.SortDir) SortDir);
-        ItemSorters.init();
-
-        if (SortBy == SortOrder.MOD) {
-            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_MOD);
-        } else if (SortBy == SortOrder.AMOUNT) {
-            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_SIZE);
-        } else if (SortBy == SortOrder.INVTWEAKS) {
-            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS);
-        } else {
-            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_NAME);
+        // Search tag check
+        String dspName;
+        switch (cachedSearchMode) {
+            case MOD -> dspName = Platform.getModId(stack);
+            case ORE -> {
+                OreReference ore = OreHelper.INSTANCE.isOre(stack.getItemStack());
+                if (ore != null) {
+                    dspName = String.join(" ", ore.getEquivalents());
+                } else {
+                    return false;
+                }
+            }
+            case TOOLTIPS -> dspName = String.join(" ", (Platform.getTooltip(stack)));
+            default -> dspName = Platform.getItemDisplayName(stack);
         }
-
-        for (final IAEItemStack is : this.view) {
-            this.dsp.add(is.getItemStack());
+        if (dspName.toLowerCase().contains(cachedSearchString)) {
+            return true;
         }
+        // Tooltips
+        if (cachedSearchMode == SearchMode.ITEM) {
+            for (final CharSequence lp : Platform.getTooltip(stack)) {
+                if (lp instanceof String && cachedSearchString.contains(lp)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void updateNEI(final String filter) {
@@ -247,12 +249,12 @@ public class ItemRepo implements IDisplayRepo {
 
     @Override
     public int size() {
-        return this.view.size();
+        return this.list.viewList().size();
     }
 
     @Override
     public void clear() {
-        this.list.resetStatus();
+        this.list.clear();
     }
 
     @Override
@@ -283,6 +285,17 @@ public class ItemRepo implements IDisplayRepo {
     @Override
     public void setSearchString(@Nonnull final String searchString) {
         this.searchString = searchString;
+    }
+
+    @Override
+    public void setShouldResort(boolean shouldResort) {
+        this.list.shouldResort = shouldResort;
+        this.resort = true;
+    }
+
+    @Override
+    public boolean isResorting() {
+        return this.list.shouldResort;
     }
 
     enum SearchMode {

@@ -395,11 +395,8 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     @Override
     public boolean equals(final Object ia) {
         if (ia instanceof AEItemStack) {
-            return ((AEItemStack) ia).getDefinition().equals(this.getDefinition()); // && def.tagCompound ==
-            // ((AEItemStack)
-            // ia).def.tagCompound;
+            return ((AEItemStack) ia).getDefinition().equals(this.getDefinition());
         } else if (ia instanceof ItemStack is) {
-
             if (is.getItem() == this.getDefinition().getItem()
                     && is.getItemDamage() == this.getDefinition().getDamageValue()) {
                 final NBTTagCompound ta = this.getDefinition().getTagCompound();

@@ -15,6 +15,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -68,7 +69,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
     public static int craftingGridOffsetY;
 
     private static String memoryText = "";
-    private final IDisplayRepo repo;
+    protected final IDisplayRepo repo;
     private final int offsetX = 9;
     private final int MAGIC_HEIGHT_NUMBER = 114 + 1;
     private final int lowerTextureOffset = 0;
@@ -476,9 +477,19 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
     }
 
     @Override
+    public void handleKeyboardInput() {
+        super.handleKeyboardInput();
+        if (GuiScreen.isShiftKeyDown()) {
+            this.repo.setShouldResort(false);
+        } else if (!this.repo.isResorting()) {
+            this.repo.setShouldResort(true);
+            this.repo.updateView();
+        }
+    }
+
+    @Override
     protected void keyTyped(final char character, final int key) {
         if (!this.checkHotbarKeys(key)) {
-
             if (NEISearchField != null && (NEISearchField.focused() || searchField.isFocused())
                     && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
                 final boolean focused = searchField.isFocused();

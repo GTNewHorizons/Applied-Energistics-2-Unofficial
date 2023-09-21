@@ -12,9 +12,11 @@ package appeng.util;
 
 import java.util.Comparator;
 
+import javax.annotation.Nullable;
+
 import appeng.api.config.SortDir;
+import appeng.api.config.SortOrder;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IAEStack;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IInvTweaks;
@@ -24,14 +26,23 @@ public class ItemSorters {
     private static SortDir direction = SortDir.ASCENDING;
 
     public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_NAME = Comparator
-            .comparing(Platform::getItemDisplayName, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint);
-
+            .<IAEItemStack, String>comparing(
+                    Platform::getItemDisplayName,
+                    (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint)
+            .thenComparing(IAEItemStack::getStackSize, (a, b) -> Long.compare(b, a)).thenComparing(
+                    IAEItemStack::getItemStack,
+                    (a, b) -> a.getUnlocalizedName().compareToIgnoreCase(b.getUnlocalizedName()));
     public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_MOD = Comparator
             .comparing(Platform::getModId, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint)
-            .thenComparing(Platform::getItemDisplayName);
+            .thenComparing(Platform::getItemDisplayName).thenComparing(
+                    IAEItemStack::getItemStack,
+                    (a, b) -> a.getUnlocalizedName().compareToIgnoreCase(b.getUnlocalizedName()));
 
     public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_SIZE = Comparator
-            .comparing(IAEStack::getStackSize, (a, b) -> Long.compare(b, a) * direction.sortHint);
+            .comparing(IAEItemStack::getStackSize, (a, b) -> Long.compare(b, a) * direction.sortHint)
+            .thenComparing(Platform::getItemDisplayName).thenComparing(
+                    IAEItemStack::getItemStack,
+                    (a, b) -> a.getUnlocalizedName().compareToIgnoreCase(b.getUnlocalizedName()));
 
     private static IInvTweaks api;
     public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_INV_TWEAKS = new Comparator<>() {
@@ -75,5 +86,15 @@ public class ItemSorters {
 
     public static void setDirection(final SortDir direction) {
         ItemSorters.direction = direction;
+    }
+
+    @Nullable
+    public static Comparator<IAEItemStack> getSorter(SortOrder order) {
+        return switch (order) {
+            case AMOUNT -> ItemSorters.CONFIG_BASED_SORT_BY_SIZE;
+            case NAME -> ItemSorters.CONFIG_BASED_SORT_BY_NAME;
+            case MOD -> ItemSorters.CONFIG_BASED_SORT_BY_MOD;
+            case INVTWEAKS -> ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS;
+        };
     }
 }
