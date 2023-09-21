@@ -635,6 +635,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     CraftingMode.IGNORE_MISSING,
                     ButtonToolTips.CraftingModeIgnoreMissing,
                     ButtonToolTips.CraftingModeIgnoreMissingDesc);
+            this.registerApp(16 * 6 + 5, Settings.ACTIONS, ActionItems.EXTRA_OPTIONS, ButtonToolTips.ExtraOptions, "");
         }
     }
 
@@ -796,6 +797,10 @@ public class GuiImgButton extends GuiButton implements ITooltip {
     @Override
     public boolean isVisible() {
         return this.visible;
+    }
+
+    public boolean getMouseIn() {
+        return this.field_146123_n;
     }
 
     public void set(final Enum e) {

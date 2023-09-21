@@ -445,6 +445,8 @@ gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Only starts craft if a
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Ignore Missing Crafting Mode
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=Starts craft even if ingredients are missing from the ME System.
 
+gui.tooltips.appliedenergistics2.ExtraOptions=Extra Options
+
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=Energy Units
