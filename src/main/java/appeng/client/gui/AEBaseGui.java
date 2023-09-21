@@ -1015,6 +1015,10 @@ public abstract class AEBaseGui extends GuiContainer {
         this.mc.getTextureManager().bindTexture(loc);
     }
 
+    public void bindTexture(final ResourceLocation loc) {
+        mc.getTextureManager().bindTexture(loc);
+    }
+
     public void func_146977_a(final Slot s) {
         this.drawSlot(s);
     }
