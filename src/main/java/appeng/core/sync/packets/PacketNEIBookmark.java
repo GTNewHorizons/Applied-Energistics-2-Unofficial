@@ -79,22 +79,23 @@ public class PacketNEIBookmark extends AppEngPacket {
     }
 
     private int fitStack(final EntityPlayer player, ItemStack itemStack) {
+        // Check if the bookmark item fits fully or partially into the inventory
         // itemStack will always be <= maxStackSize because of how the packets are received
         ItemStack[] inv = player.inventory.mainInventory;
+        int remainingStackSize = itemStack.stackSize; // We want to fit this
         for (ItemStack slotStack : inv) {
-            if (slotStack == null) {
+            if (slotStack == null) { // Empty slot, stack fits completely
                 return itemStack.stackSize;
             } else if (slotStack.isItemEqual(itemStack)) {
-                int sizeLeft = itemStack.getMaxStackSize() - slotStack.stackSize;
-                if (sizeLeft > 0) {
-                    if (sizeLeft - itemStack.stackSize > 0) {
-                        return itemStack.stackSize;
-                    } else {
-                        return sizeLeft;
-                    }
+                remainingStackSize -= itemStack.getMaxStackSize() - slotStack.stackSize;
+                if (remainingStackSize < 0) {
+                    return itemStack.stackSize;
                 }
             }
         }
-        return 0;
+        if (remainingStackSize == itemStack.getMaxStackSize()) {
+            return 0; // Stack didn't fit at all
+        }
+        return itemStack.stackSize - remainingStackSize;
     }
 }
