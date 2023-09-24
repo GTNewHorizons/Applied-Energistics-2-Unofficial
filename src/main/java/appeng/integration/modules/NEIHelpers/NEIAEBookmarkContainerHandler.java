@@ -1,6 +1,7 @@
 package appeng.integration.modules.NEIHelpers;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -15,7 +16,7 @@ public class NEIAEBookmarkContainerHandler implements IBookmarkContainerHandler 
 
     @Override
     public void pullBookmarkItemsFromContainer(GuiContainer guiContainer, ArrayList<ItemStack> bookmarkItems) {
-        ArrayList<ItemStack> containerStacks = saveContainer(guiContainer.inventorySlots);
+        List<ItemStack> containerStacks = guiContainer.inventorySlots.getInventory();
         for (ItemStack bookmarkItem : bookmarkItems) {
 
             int bookmarkSizeBackup = bookmarkItem.stackSize;
@@ -49,7 +50,9 @@ public class NEIAEBookmarkContainerHandler implements IBookmarkContainerHandler 
     private void moveItems(GuiContainer container, int fromSlot, int transferAmount) {
         for (int i = 0; i < transferAmount; i++) {
             int toSlot = findValidPlayerInventoryDestination(container.inventorySlots, fromSlot);
-            if (toSlot == -1) return;
+            if (toSlot == -1) {
+                return;
+            }
             clickSlot(container, fromSlot, 0);
             clickSlot(container, toSlot, 1);
             clickSlot(container, fromSlot, 0);
@@ -62,37 +65,15 @@ public class NEIAEBookmarkContainerHandler implements IBookmarkContainerHandler 
 
     private int findValidPlayerInventoryDestination(Container container, int fromSlot) {
         ItemStack stackToMove = container.getSlot(fromSlot).getStack();
-        ArrayList<ItemStack> containerStacks = saveContainer(container);
-        for (int i = containerStacks.size() - 4 * 9; i < containerStacks.size(); i++) {
-            if (containerStacks.get(i) == null) {
+        for (int i = container.getInventory().size() - 4 * 9; i < container.getInventory().size(); i++) {
+            if (container.getInventory().get(i) == null) {
                 return i;
             }
-            int diff = stackToMove.getMaxStackSize() - containerStacks.get(i).stackSize;
-            if (containerStacks.get(i).isItemEqual(stackToMove) && diff > 0) {
+            int diff = stackToMove.getMaxStackSize() - container.getInventory().get(i).stackSize;
+            if (container.getInventory().get(i).isItemEqual(stackToMove) && diff > 0) {
                 return i;
             }
         }
         return -1;
-    }
-
-    public ArrayList<ItemStack> saveContainer(Container container) {
-        ArrayList<ItemStack> stacks = new ArrayList<>();
-        for (int i = 0; i < container.inventorySlots.size(); i++)
-            stacks.add(copyStack(container.getSlot(i).getStack()));
-
-        return stacks;
-    }
-
-    public static ItemStack copyStack(ItemStack itemstack, int i) {
-        if (itemstack == null) return null;
-
-        itemstack.stackSize += i;
-        return itemstack.splitStack(i);
-    }
-
-    public static ItemStack copyStack(ItemStack itemstack) {
-        if (itemstack == null) return null;
-
-        return copyStack(itemstack, itemstack.stackSize);
     }
 }
