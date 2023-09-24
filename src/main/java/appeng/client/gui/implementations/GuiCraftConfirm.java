@@ -11,7 +11,11 @@
 package appeng.client.gui.implementations;
 
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -31,7 +35,13 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.AEBaseGui;
-import appeng.client.gui.widgets.*;
+import appeng.client.gui.widgets.GuiCraftingCPUTable;
+import appeng.client.gui.widgets.GuiCraftingTree;
+import appeng.client.gui.widgets.GuiImgButton;
+import appeng.client.gui.widgets.GuiScrollbar;
+import appeng.client.gui.widgets.GuiSimpleImgButton;
+import appeng.client.gui.widgets.GuiTabButton;
+import appeng.client.gui.widgets.ICraftingCPUTableHolder;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.AEConfig;

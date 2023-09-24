@@ -19,7 +19,11 @@ import appeng.api.util.AEColor;
 import appeng.api.util.AEColoredItemDefinition;
 import appeng.core.FeatureHandlerRegistry;
 import appeng.core.FeatureRegistry;
-import appeng.core.features.*;
+import appeng.core.features.ActivityState;
+import appeng.core.features.ColoredItemDefinition;
+import appeng.core.features.IAEFeature;
+import appeng.core.features.IFeatureHandler;
+import appeng.core.features.ItemStackSrc;
 import appeng.items.parts.ItemMultiPart;
 import appeng.items.parts.PartType;
 

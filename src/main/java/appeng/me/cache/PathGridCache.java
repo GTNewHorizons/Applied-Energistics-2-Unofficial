@@ -10,13 +10,27 @@
 
 package appeng.me.cache;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.apache.logging.log4j.Level;
 
-import appeng.api.networking.*;
+import appeng.api.networking.GridFlags;
+import appeng.api.networking.IGrid;
+import appeng.api.networking.IGridBlock;
+import appeng.api.networking.IGridConnection;
+import appeng.api.networking.IGridHost;
+import appeng.api.networking.IGridMultiblock;
+import appeng.api.networking.IGridNode;
+import appeng.api.networking.IGridStorage;
 import appeng.api.networking.events.MENetworkBootingStatusChange;
 import appeng.api.networking.events.MENetworkChannelChanged;
 import appeng.api.networking.events.MENetworkControllerChange;
@@ -30,7 +44,13 @@ import appeng.core.features.AEFeature;
 import appeng.core.stats.Achievements;
 import appeng.me.GridConnection;
 import appeng.me.GridNode;
-import appeng.me.pathfinding.*;
+import appeng.me.pathfinding.AdHocChannelUpdater;
+import appeng.me.pathfinding.BackbonePathSegment;
+import appeng.me.pathfinding.ControllerChannelUpdater;
+import appeng.me.pathfinding.ControllerValidator;
+import appeng.me.pathfinding.IPathItem;
+import appeng.me.pathfinding.PathSegment;
+import appeng.me.pathfinding.TopologyStage;
 import appeng.tile.networking.TileController;
 import appeng.util.Platform;
 

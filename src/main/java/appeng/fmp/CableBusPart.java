@@ -11,7 +11,11 @@
 package appeng.fmp;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -25,7 +29,14 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.implementations.parts.IPartCable;
 import appeng.api.networking.IGridNode;
-import appeng.api.parts.*;
+import appeng.api.parts.IFacadeContainer;
+import appeng.api.parts.IFacadePart;
+import appeng.api.parts.IPart;
+import appeng.api.parts.IPartCollisionHelper;
+import appeng.api.parts.IPartItem;
+import appeng.api.parts.LayerFlags;
+import appeng.api.parts.PartItemStack;
+import appeng.api.parts.SelectedPart;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
@@ -45,7 +56,12 @@ import codechicken.lib.data.MCDataOutput;
 import codechicken.lib.raytracer.IndexedCuboid6;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Vector3;
-import codechicken.multipart.*;
+import codechicken.multipart.IMaskedRedstonePart;
+import codechicken.multipart.JCuboidPart;
+import codechicken.multipart.JNormalOcclusion;
+import codechicken.multipart.NormalOcclusionTest;
+import codechicken.multipart.NormallyOccludedPart;
+import codechicken.multipart.TMultiPart;
 import codechicken.multipart.scalatraits.TIInventoryTile;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

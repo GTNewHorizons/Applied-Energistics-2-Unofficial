@@ -19,7 +19,11 @@ import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.*;
+import appeng.api.config.ActionItems;
+import appeng.api.config.CopyMode;
+import appeng.api.config.FuzzyMode;
+import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiToggleButton;

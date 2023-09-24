@@ -30,7 +30,15 @@ import appeng.parts.p2p.PartP2PItems;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.storage.TileChest;
-import appeng.util.inv.*;
+import appeng.util.inv.AdaptorDualityInterface;
+import appeng.util.inv.AdaptorIInventory;
+import appeng.util.inv.AdaptorList;
+import appeng.util.inv.AdaptorMEChest;
+import appeng.util.inv.AdaptorP2PItem;
+import appeng.util.inv.AdaptorPlayerInventory;
+import appeng.util.inv.IInventoryDestination;
+import appeng.util.inv.ItemSlot;
+import appeng.util.inv.WrapperMCISidedInventory;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 

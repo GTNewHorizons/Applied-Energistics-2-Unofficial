@@ -12,7 +12,11 @@ package appeng.core;
 
 import appeng.api.definitions.IDefinitions;
 import appeng.api.parts.IPartHelper;
-import appeng.core.api.definitions.*;
+import appeng.core.api.definitions.ApiBlocks;
+import appeng.core.api.definitions.ApiItems;
+import appeng.core.api.definitions.ApiMaterials;
+import appeng.core.api.definitions.ApiParts;
+import appeng.core.api.definitions.DefinitionConstructor;
 
 /**
  * Internal implementation of the definitions for the API

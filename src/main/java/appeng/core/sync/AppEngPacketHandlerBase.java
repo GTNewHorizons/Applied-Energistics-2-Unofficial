@@ -15,7 +15,36 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-import appeng.core.sync.packets.*;
+import appeng.core.sync.packets.PacketAssemblerAnimation;
+import appeng.core.sync.packets.PacketClick;
+import appeng.core.sync.packets.PacketCompassRequest;
+import appeng.core.sync.packets.PacketCompassResponse;
+import appeng.core.sync.packets.PacketCompressedNBT;
+import appeng.core.sync.packets.PacketConfigButton;
+import appeng.core.sync.packets.PacketCraftRequest;
+import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
+import appeng.core.sync.packets.PacketCraftingItemInterface;
+import appeng.core.sync.packets.PacketCraftingRemainingOperations;
+import appeng.core.sync.packets.PacketCraftingTreeData;
+import appeng.core.sync.packets.PacketInventoryAction;
+import appeng.core.sync.packets.PacketLightning;
+import appeng.core.sync.packets.PacketMEInventoryUpdate;
+import appeng.core.sync.packets.PacketMatterCannon;
+import appeng.core.sync.packets.PacketMockExplosion;
+import appeng.core.sync.packets.PacketMultiPart;
+import appeng.core.sync.packets.PacketNEIDragClick;
+import appeng.core.sync.packets.PacketNEIRecipe;
+import appeng.core.sync.packets.PacketNewStorageDimension;
+import appeng.core.sync.packets.PacketPaintedEntity;
+import appeng.core.sync.packets.PacketPartPlacement;
+import appeng.core.sync.packets.PacketPartialItem;
+import appeng.core.sync.packets.PacketPatternSlot;
+import appeng.core.sync.packets.PacketPatternValueSet;
+import appeng.core.sync.packets.PacketProgressBar;
+import appeng.core.sync.packets.PacketSwapSlots;
+import appeng.core.sync.packets.PacketSwitchGuis;
+import appeng.core.sync.packets.PacketTransitionEffect;
+import appeng.core.sync.packets.PacketValueConfig;
 import io.netty.buffer.ByteBuf;
 
 public class AppEngPacketHandlerBase {

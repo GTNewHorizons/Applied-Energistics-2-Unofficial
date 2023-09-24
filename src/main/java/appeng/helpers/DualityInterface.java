@@ -10,7 +10,12 @@
 
 package appeng.helpers;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
@@ -29,7 +34,12 @@ import net.minecraftforge.common.util.ForgeDirection;
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.AEApi;
-import appeng.api.config.*;
+import appeng.api.config.Actionable;
+import appeng.api.config.AdvancedBlockingMode;
+import appeng.api.config.InsertionMode;
+import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
+import appeng.api.config.YesNo;
 import appeng.api.crafting.ICraftingIconProvider;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.implementations.IUpgradeableHost;

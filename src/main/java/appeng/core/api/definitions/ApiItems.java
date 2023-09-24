@@ -23,12 +23,29 @@ import appeng.items.misc.ItemCrystalSeed;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.items.misc.ItemPaintBall;
 import appeng.items.parts.ItemFacade;
-import appeng.items.storage.*;
+import appeng.items.storage.ItemAdvancedStorageCell;
+import appeng.items.storage.ItemBasicStorageCell;
+import appeng.items.storage.ItemCreativeStorageCell;
+import appeng.items.storage.ItemExtremeStorageCell;
+import appeng.items.storage.ItemSpatialStorageCell;
+import appeng.items.storage.ItemViewCell;
+import appeng.items.storage.ItemVoidStorageCell;
 import appeng.items.tools.ToolBiometricCard;
 import appeng.items.tools.ToolMemoryCard;
 import appeng.items.tools.ToolNetworkTool;
-import appeng.items.tools.powered.*;
-import appeng.items.tools.quartz.*;
+import appeng.items.tools.powered.ToolChargedStaff;
+import appeng.items.tools.powered.ToolColorApplicator;
+import appeng.items.tools.powered.ToolEntropyManipulator;
+import appeng.items.tools.powered.ToolMassCannon;
+import appeng.items.tools.powered.ToolPortableCell;
+import appeng.items.tools.powered.ToolWirelessTerminal;
+import appeng.items.tools.quartz.ToolQuartzAxe;
+import appeng.items.tools.quartz.ToolQuartzCuttingKnife;
+import appeng.items.tools.quartz.ToolQuartzHoe;
+import appeng.items.tools.quartz.ToolQuartzPickaxe;
+import appeng.items.tools.quartz.ToolQuartzSpade;
+import appeng.items.tools.quartz.ToolQuartzSword;
+import appeng.items.tools.quartz.ToolQuartzWrench;
 
 /**
  * Internal implementation for the API items

@@ -10,7 +10,12 @@
 
 package appeng.me.pathfinding;
 
-import java.util.*;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridMultiblock;

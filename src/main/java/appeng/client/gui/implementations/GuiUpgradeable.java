@@ -10,7 +10,7 @@
 
 package appeng.client.gui.implementations;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +23,13 @@ import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Mouse;
 
 import akka.japi.Pair;
-import appeng.api.config.*;
+import appeng.api.config.ActionItems;
+import appeng.api.config.FuzzyMode;
+import appeng.api.config.RedstoneMode;
+import appeng.api.config.SchedulingMode;
+import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
+import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;

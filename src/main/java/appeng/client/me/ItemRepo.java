@@ -22,7 +22,11 @@ import javax.annotation.Nonnull;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
-import appeng.api.config.*;
+import appeng.api.config.SearchBoxMode;
+import appeng.api.config.Settings;
+import appeng.api.config.SortOrder;
+import appeng.api.config.TypeFilter;
+import appeng.api.config.ViewItems;
 import appeng.api.storage.IItemDisplayRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IDisplayRepo;

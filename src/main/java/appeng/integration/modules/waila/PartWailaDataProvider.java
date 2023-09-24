@@ -23,7 +23,14 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 import appeng.api.parts.IPart;
-import appeng.integration.modules.waila.part.*;
+import appeng.integration.modules.waila.part.BasePartWailaDataProvider;
+import appeng.integration.modules.waila.part.ChannelWailaDataProvider;
+import appeng.integration.modules.waila.part.IPartWailaDataProvider;
+import appeng.integration.modules.waila.part.P2PStateWailaDataProvider;
+import appeng.integration.modules.waila.part.PartAccessor;
+import appeng.integration.modules.waila.part.PowerStateWailaDataProvider;
+import appeng.integration.modules.waila.part.StorageMonitorWailaDataProvider;
+import appeng.integration.modules.waila.part.Tracer;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 import mcp.mobius.waila.api.IWailaDataProvider;
