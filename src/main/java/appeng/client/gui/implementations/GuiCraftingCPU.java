@@ -38,6 +38,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.gui.widgets.ITooltip;
@@ -55,7 +56,7 @@ import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 
-public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
+public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiTooltipHandler {
 
     private static final int GUI_HEIGHT = 184;
     private static final int GUI_WIDTH = 238;
@@ -616,6 +617,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
         return ViewItems.ALL;
     }
 
+    @Override
     public ItemStack getHoveredStack() {
         return hoveredStack;
     }

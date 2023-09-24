@@ -22,7 +22,7 @@ import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-import appeng.client.gui.AEBaseMEGui;
+import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiCraftingTerm;
@@ -210,8 +210,8 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     @Override
     public List<String> handleItemTooltip(final GuiContainer guiScreen, final ItemStack stack, final int mouseX,
             final int mouseY, final List<String> currentToolTip) {
-        if (guiScreen instanceof AEBaseMEGui) {
-            return ((AEBaseMEGui) guiScreen).handleItemTooltip(stack, mouseX, mouseY, currentToolTip);
+        if (guiScreen instanceof IGuiTooltipHandler) {
+            return ((IGuiTooltipHandler) guiScreen).handleItemTooltip(stack, mouseX, mouseY, currentToolTip);
         }
 
         return currentToolTip;
@@ -228,8 +228,9 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
 
     @Override
     public ItemStack getStackUnderMouse(GuiContainer gui, int mousex, int mousey) {
-        if (gui instanceof GuiCraftConfirm) return ((GuiCraftConfirm) gui).getHoveredStack();
-        else if (gui instanceof GuiCraftingCPU) return ((GuiCraftingCPU) gui).getHoveredStack();
+        if (gui instanceof IGuiTooltipHandler) {
+            return ((IGuiTooltipHandler) gui).getHoveredStack();
+        }
         return null;
     }
 

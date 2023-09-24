@@ -35,6 +35,7 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.widgets.GuiCraftingCPUTable;
 import appeng.client.gui.widgets.GuiCraftingTree;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -63,7 +64,7 @@ import appeng.parts.reporting.PartTerminal;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 
-public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolder {
+public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolder, IGuiTooltipHandler {
 
     public static final int TREE_VIEW_TEXTURE_WIDTH = 238;
     public static final int TREE_VIEW_TEXTURE_HEIGHT = 238;
