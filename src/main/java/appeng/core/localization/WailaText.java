@@ -50,4 +50,24 @@ public enum WailaText {
     public String getUnlocalized() {
         return this.root + '.' + this.toString();
     }
+
+    /**
+     * Gets corresponding tooltip for different values of {@code #isActive}, {@code #isPowered} and {@code #isBooting}
+     *
+     * @param isActive  if part is active
+     * @param isPowered if part is powered
+     * @param isBooting if part is booting
+     * @return tooltip of the state
+     */
+    public static String getPowerState(final boolean isActive, final boolean isPowered, final boolean isBooting) {
+        if (isBooting) {
+            return WailaText.Booting.getLocal();
+        } else if (isActive && isPowered) {
+            return WailaText.DeviceOnline.getLocal();
+        } else if (isPowered) {
+            return WailaText.DeviceMissingChannel.getLocal();
+        } else {
+            return WailaText.DeviceOffline.getLocal();
+        }
+    }
 }
