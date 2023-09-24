@@ -32,6 +32,7 @@ import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketMatterCannon;
 import appeng.core.sync.packets.PacketMockExplosion;
 import appeng.core.sync.packets.PacketMultiPart;
+import appeng.core.sync.packets.PacketNEIBookmark;
 import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketNEIRecipe;
 import appeng.core.sync.packets.PacketNewStorageDimension;
