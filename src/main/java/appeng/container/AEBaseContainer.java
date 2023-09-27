@@ -677,8 +677,8 @@ public abstract class AEBaseContainer extends Container {
             }
 
             if (action == InventoryAction.MOVE_REGION) {
-                if (s instanceof SlotPatternTerm) return;
-                // SlotPatternTerm should't transfer its ItemStack to the Player
+                if (s instanceof SlotFake || s instanceof SlotPatternTerm) return;
+                // SlotPatternTerm shouldn't transfer its ItemStack to the player
 
                 final List<Slot> from = new LinkedList<>();
 
