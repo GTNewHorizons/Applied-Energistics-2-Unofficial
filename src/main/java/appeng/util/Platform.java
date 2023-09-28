@@ -858,12 +858,10 @@ public class Platform {
         }
 
         /*
-         * BuildCraft Wrench compat. It's ugly, I know as a Reflection allergist myself. By doing this, we
-         * 1. avoid a hard dependency on BC
-         * 2. allow mods that implement the IToolWrench interface to act as a wrench.
-         * For example, Thermal Expansion optionally extends the IToolWrench interface. If we relied on specific
-         * compatibility checks like before, we would need one for both BC and Thermal Expansion instead of this
-         * "catch-all" system.
+         * BuildCraft Wrench compat. It's ugly, I know as a Reflection allergist myself. By doing this, we 1. avoid a
+         * hard dependency on BC 2. allow mods that implement the IToolWrench interface to act as a wrench. For example,
+         * Thermal Expansion optionally extends the IToolWrench interface. If we relied on specific compatibility checks
+         * like before, we would need one for both BC and Thermal Expansion instead of this "catch-all" system.
          */
         try {
             Method canWrench;
