@@ -11,15 +11,18 @@
 package appeng.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -125,7 +128,6 @@ import appeng.util.item.AESharedNBT;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
-import buildcraft.api.tools.IToolWrench;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
@@ -144,8 +146,6 @@ public class Platform {
     public static final Block AIR_BLOCK = Blocks.air;
 
     public static final int DEF_OFFSET = 16;
-
-    private static final boolean isBuildCraftLoaded = Loader.isModLoaded("BuildCraft|Core");
 
     /*
      * random source, use it for item drop locations...
@@ -167,6 +167,8 @@ public class Platform {
     public static float getRandomFloat() {
         return RANDOM_GENERATOR.nextFloat();
     }
+
+    private static final Map<Item, Method> wrenchers = new HashMap<>(7);
 
     /**
      * Seed a random number generator from a world seed and grid location. The grid can be any arbitrary set of
@@ -850,13 +852,39 @@ public class Platform {
             return false;
         }
 
-        if (isBuildCraftLoaded && eq.getItem() instanceof IToolWrench wrench) {
-            return wrench.canWrench(player, x, y, z);
-        }
-
-        if (eq.getItem() instanceof IAEWrench wrench) {
+        Item itemWrench = eq.getItem();
+        if (itemWrench instanceof IAEWrench wrench) {
             return wrench.canWrench(eq, player, x, y, z);
         }
+
+        /*
+         * BuildCraft Wrench compat. It's ugly, I know as a Reflection allergist myself. By doing this, we
+         * 1. avoid a hard dependency on BC
+         * 2. allow mods that implement the IToolWrench interface to act as a wrench.
+         * For example, Thermal Expansion optionally extends the IToolWrench interface. If we relied on specific
+         * compatibility checks like before, we would need one for both BC and Thermal Expansion instead of this
+         * "catch-all" system.
+         */
+        try {
+            Method canWrench;
+
+            if (!wrenchers.containsKey(itemWrench)) {
+                // IToolWrench#canWrench(EntityPlayer, int, int, int)
+                canWrench = itemWrench.getClass()
+                        .getMethod("canWrench", EntityPlayer.class, int.class, int.class, int.class);
+                wrenchers.put(itemWrench, canWrench);
+            } else {
+                canWrench = wrenchers.get(itemWrench);
+                if (canWrench == null) {
+                    return false;
+                }
+            }
+
+            return (Boolean) canWrench.invoke(itemWrench, player, x, y, z);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+            wrenchers.put(itemWrench, null);
+        }
+
         return false;
     }
 
