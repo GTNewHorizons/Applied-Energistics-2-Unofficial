@@ -101,7 +101,7 @@ public enum GuiText {
     BeSubstitute,
     Yes,
     No,
-    AuthoredBy,
+    EncodedBy,
 
     MolecularAssembler,
 

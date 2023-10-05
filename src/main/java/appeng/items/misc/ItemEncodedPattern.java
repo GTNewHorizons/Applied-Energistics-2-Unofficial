@@ -148,7 +148,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         lines.add(beSubstitutionLabel + canBeSubstitute);
 
         if (!StringUtils.isNullOrEmpty(author)) {
-            lines.add(GuiText.AuthoredBy.getLocal(author));
+            lines.add(GuiText.EncodedBy.getLocal(author));
         }
     }
 
