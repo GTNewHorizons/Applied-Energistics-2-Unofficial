@@ -200,6 +200,7 @@ gui.appliedenergistics2.With=使用
 gui.appliedenergistics2.Substitute=启用替换:
 gui.appliedenergistics2.Yes=是
 gui.appliedenergistics2.No=否
+gui.appliedenergistics2.AuthoredBy=编写者：%s
 gui.appliedenergistics2.InWorldCrafting=AE2在世界中的合成
 gui.appliedenergistics2.inWorldFluix=将1个充能赛特斯石英水晶,1个下界石英和1个红石,相继扔进同一格水里,并等待一会儿.
 gui.appliedenergistics2.inWorldPurificationCertus=用赛特斯石英粉和沙子制作赛特斯石英种子,并扔进水里；使用晶体催生器可以让这个过程变得更快.
