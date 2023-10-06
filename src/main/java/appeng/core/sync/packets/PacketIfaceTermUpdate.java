@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import appeng.core.AELog;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,6 +14,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.client.gui.implementations.GuiInterfaceTerminal;
+import appeng.core.AELog;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.Reflected;
@@ -149,11 +149,12 @@ public class PacketIfaceTermUpdate extends AppEngPacket {
     }
 
     enum PacketType {
+
         ADD,
         REMOVE,
         OVERWRITE,
-        RENAME,
-        ;
+        RENAME,;
+
         public static final PacketType[] TYPES = PacketType.values();
 
         /**
