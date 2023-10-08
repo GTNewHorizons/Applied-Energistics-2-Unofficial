@@ -15,7 +15,6 @@ import appeng.api.parts.PartItemStack;
 import appeng.me.GridAccessException;
 import appeng.me.cache.P2PCache;
 import appeng.util.Platform;
-import buildcraft.api.tools.IToolWrench;
 
 /**
  * Static P2P tunnels cannot be attuned to. They can only be bound to each other.
@@ -67,9 +66,10 @@ public abstract class PartP2PTunnelStatic<T extends PartP2PTunnelStatic> extends
                 }
             }
             mc.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
-        } else if (!player.isSneaking() && is != null && is.getItem() instanceof IToolWrench && !Platform.isClient()) {
-            printConnectionInfo(player);
-        }
+        } else if (!player.isSneaking() && Platform.isServer()
+                && Platform.isWrench(player, is, (int) pos.xCoord, (int) pos.yCoord, (int) pos.zCoord)) {
+                    printConnectionInfo(player);
+                }
         return false;
     }
 

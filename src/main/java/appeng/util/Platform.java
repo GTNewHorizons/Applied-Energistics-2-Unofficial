@@ -126,6 +126,7 @@ import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
 import buildcraft.api.tools.IToolWrench;
+import cofh.api.item.IToolHammer;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
@@ -144,8 +145,6 @@ public class Platform {
     public static final Block AIR_BLOCK = Blocks.air;
 
     public static final int DEF_OFFSET = 16;
-
-    private static final boolean isBuildCraftLoaded = Loader.isModLoaded("BuildCraft|Core");
 
     /*
      * random source, use it for item drop locations...
@@ -844,18 +843,23 @@ public class Platform {
         return false;
     }
 
-    public static boolean isWrench(final EntityPlayer player, final ItemStack eq, final int x, final int y,
+    public static boolean isWrench(final EntityPlayer player, final ItemStack stack, final int x, final int y,
             final int z) {
-        if (eq == null) {
-            return false;
-        }
+        if (stack != null) {
+            Item itemWrench = stack.getItem();
+            if (itemWrench instanceof IAEWrench wrench) {
+                return wrench.canWrench(stack, player, x, y, z);
+            }
 
-        if (isBuildCraftLoaded && eq.getItem() instanceof IToolWrench wrench) {
-            return wrench.canWrench(player, x, y, z);
-        }
+            if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.CoFHWrench)
+                    && itemWrench instanceof IToolHammer wrench) {
+                return wrench.isUsable(stack, player, x, y, z);
+            }
 
-        if (eq.getItem() instanceof IAEWrench wrench) {
-            return wrench.canWrench(eq, player, x, y, z);
+            if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.BuildCraftCore)
+                    && itemWrench instanceof IToolWrench wrench) {
+                return wrench.canWrench(player, x, y, z);
+            }
         }
         return false;
     }
