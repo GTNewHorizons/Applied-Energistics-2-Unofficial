@@ -11,12 +11,15 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:OpenComputers:1.9.17-GTNH:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:waila:1.6.0:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Railcraft:9.15.0:api') {transitive = false}
-
     compileOnly('net.industrial-craft:industrialcraft-2:2.2.828-experimental:api')
     compileOnly('curse.maven:minefactory-reloaded-66672:2366150')
     compileOnly('pneumaticCraft:PneumaticCraft-1.7.10:1.12.7-152:api') {transitive = false}
     compileOnly('curse.maven:better-storage-232919:2731636')
     compileOnly('api:immibis:1')
+
+    // Uncomment to add thermal expansion + foundation for testing
+//    runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')
+//    runtimeOnlyNonPublishable('curse.maven:thermal-expansion-69163:2388759')
 
     testImplementation('junit:junit:4.12')
     functionalTestImplementation(platform('org.junit:junit-bom:5.9.2'))

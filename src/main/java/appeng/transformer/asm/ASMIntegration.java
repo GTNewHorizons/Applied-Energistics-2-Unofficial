@@ -35,14 +35,13 @@ public final class ASMIntegration implements IClassTransformer {
 
     @Reflected
     public ASMIntegration() {
-
-        /**
-         * Side, Display Name, ModID ClassPostFix
-         */
         for (final IntegrationType type : IntegrationType.values()) {
             IntegrationRegistry.INSTANCE.add(type);
         }
-
+        // These are kept so we don't have to search through git for stuff like this
+        /*
+         * Side, Display Name, ModID ClassPostFix
+         */
         // integrationModules.add( IntegrationSide.BOTH, "Thermal Expansion", "ThermalExpansion", IntegrationType.TE );
         // integrationModules.add( IntegrationSide.BOTH, "Mystcraft", "Mystcraft", IntegrationType.Mystcraft );
         // integrationModules.add( IntegrationSide.BOTH, "Greg Tech", "gregtech_addon", IntegrationType.GT );
