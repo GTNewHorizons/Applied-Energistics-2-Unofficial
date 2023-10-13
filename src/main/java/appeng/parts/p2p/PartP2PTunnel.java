@@ -279,7 +279,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
                 // :P
             }
             this.onTunnelConfigChange();
-            
+
             final NBTTagCompound data = this.getMemoryCardData();
             final ItemStack p2pItem = this.getItemStack(PartItemStack.Wrench);
             final String type = p2pItem.getUnlocalizedName();
