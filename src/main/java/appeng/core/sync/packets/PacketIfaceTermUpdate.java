@@ -13,7 +13,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants.NBT;
 
-import appeng.client.gui.implementations.GuiInterfaceTerminal;
+import appeng.client.gui.IInterfaceTerminalPostUpdate;
 import appeng.core.AELog;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -103,7 +103,7 @@ public class PacketIfaceTermUpdate extends AppEngPacket {
 
     /**
      * Adds a new entry. Fill out the rest of the command using the {@link PacketAdd#setItems(int, int, NBTTagList)} and
-     * {@link PacketAdd#setLoc(int, int, int, int)}.
+     * {@link PacketAdd#setLoc(int, int, int, int, int)}.
      *
      * @return the packet, which needs to have information filled out.
      */
@@ -143,8 +143,8 @@ public class PacketIfaceTermUpdate extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
-        if (gs instanceof GuiInterfaceTerminal) {
-            ((GuiInterfaceTerminal) gs).postUpdate(this.commands, this.statusFlags);
+        if (gs instanceof IInterfaceTerminalPostUpdate hasPostUpdate) {
+            hasPostUpdate.postUpdate(this.commands, this.statusFlags);
         }
     }
 
@@ -198,7 +198,7 @@ public class PacketIfaceTermUpdate extends AppEngPacket {
     public static class PacketAdd extends PacketEntry {
 
         public String name;
-        public int x, y, z, dim;
+        public int x, y, z, dim, side;
         public int rows, rowSize;
         public boolean online;
         public ItemStack selfRep, dispRep;
@@ -214,11 +214,12 @@ public class PacketIfaceTermUpdate extends AppEngPacket {
             super(buf);
         }
 
-        public PacketAdd setLoc(int x, int y, int z, int dim) {
+        public PacketAdd setLoc(int x, int y, int z, int dim, int side) {
             this.x = x;
             this.y = y;
             this.z = z;
             this.dim = dim;
+            this.side = side;
             return this;
         }
 
@@ -252,6 +253,7 @@ public class PacketIfaceTermUpdate extends AppEngPacket {
             buf.writeInt(y);
             buf.writeInt(z);
             buf.writeInt(dim);
+            buf.writeInt(side);
             buf.writeInt(rows);
             buf.writeInt(rowSize);
 
@@ -284,6 +286,7 @@ public class PacketIfaceTermUpdate extends AppEngPacket {
             this.y = buf.readInt();
             this.z = buf.readInt();
             this.dim = buf.readInt();
+            this.side = buf.readInt();
             this.rows = buf.readInt();
             this.rowSize = buf.readInt();
             int payloadSize = buf.readInt();

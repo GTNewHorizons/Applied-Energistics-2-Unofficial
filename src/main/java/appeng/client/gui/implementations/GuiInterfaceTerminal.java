@@ -48,6 +48,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
+import appeng.client.gui.IInterfaceTerminalPostUpdate;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.IDropToFillTextField;
@@ -89,7 +90,8 @@ import cpw.mods.fml.common.Loader;
  *
  * @author firenoo
  */
-public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextField, IGuiTooltipHandler {
+public class GuiInterfaceTerminal extends AEBaseGui
+        implements IDropToFillTextField, IGuiTooltipHandler, IInterfaceTerminalPostUpdate {
 
     public static final int HEADER_HEIGHT = 52;
     public static final int INV_HEIGHT = 98;
@@ -752,6 +754,7 @@ public class GuiInterfaceTerminal extends AEBaseGui implements IDropToFillTextFi
         return false;
     }
 
+    @Override
     public void postUpdate(List<PacketEntry> updates, int statusFlags) {
         if ((statusFlags & PacketIfaceTermUpdate.CLEAR_ALL_BIT) == PacketIfaceTermUpdate.CLEAR_ALL_BIT) {
             /* Should clear all client entries. */

@@ -42,6 +42,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketIfaceTermUpdate;
 import appeng.helpers.InventoryAction;
 import appeng.items.misc.ItemEncodedPattern;
+import appeng.parts.AEBasePart;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
@@ -305,7 +306,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     /* Add a new entry */
                     if (update == null) update = new PacketIfaceTermUpdate();
                     InvTracker entry = new InvTracker(nextId++, machine, node.isActive());
-                    update.addNewEntry(entry.id, entry.name, entry.online).setLoc(entry.x, entry.y, entry.z, entry.dim)
+                    update.addNewEntry(entry.id, entry.name, entry.online)
+                            .setLoc(entry.x, entry.y, entry.z, entry.dim, entry.side.ordinal())
                             .setItems(entry.rows, entry.rowSize, entry.invNbt)
                             .setReps(machine.getSelfRep(), machine.getDisplayRep());
                     tracked.put(machine, entry);
@@ -355,6 +357,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         private final int y;
         private final int z;
         private final int dim;
+        private final ForgeDirection side;
         private boolean online;
         private NBTTagList invNbt;
 
@@ -370,6 +373,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             this.y = location.y;
             this.z = location.z;
             this.dim = location.getDimension();
+            this.side = machine instanceof AEBasePart hasSide ? hasSide.getSide() : ForgeDirection.UNKNOWN;
             this.online = online;
             this.invNbt = new NBTTagList();
             updateNBT();
@@ -409,16 +413,4 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             }
         }
     }
-    //
-    // private static class PatternInvSlot extends WrapperInvSlot {
-    //
-    // public PatternInvSlot(final IInventory inv) {
-    // super(inv);
-    // }
-    //
-    // @Override
-    // public boolean isItemValid(final ItemStack itemstack) {
-    // return itemstack != null && itemstack.getItem() instanceof ItemEncodedPattern;
-    // }
-    // }
 }
