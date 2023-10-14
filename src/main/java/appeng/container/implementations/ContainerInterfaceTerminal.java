@@ -33,6 +33,7 @@ import com.google.common.primitives.Ints;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.security.IActionHost;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IIfaceTermViewable;
 import appeng.container.AEBaseContainer;
@@ -56,13 +57,13 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
     private PacketIfaceTermUpdate dirty;
     private boolean isDirty;
     private IGrid grid;
-    private PartInterfaceTerminal partRef;
+    private IActionHost anchor;
     private boolean wasOff;
 
-    public ContainerInterfaceTerminal(final InventoryPlayer ip, final PartInterfaceTerminal anchor) {
+    public ContainerInterfaceTerminal(final InventoryPlayer ip, final IActionHost anchor) {
         super(ip, anchor);
         assert anchor != null;
-        this.partRef = anchor;
+        this.anchor = anchor;
         if (Platform.isServer()) {
             this.grid = anchor.getActionableNode().getGrid();
             dirty = this.updateList();
@@ -88,7 +89,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             return;
         }
 
-        final IGridNode agn = this.partRef.getActionableNode();
+        final IGridNode agn = this.anchor.getActionableNode();
 
         if (!agn.isActive()) {
             /*
@@ -107,7 +108,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         }
         this.wasOff = false;
 
-        if (this.partRef.needsUpdate()) {
+        if (anchor instanceof PartInterfaceTerminal terminal && terminal.needsUpdate()) {
             PacketIfaceTermUpdate update = this.updateList();
             if (update != null) {
                 update.encode();
