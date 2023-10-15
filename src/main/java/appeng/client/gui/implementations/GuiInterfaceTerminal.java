@@ -75,6 +75,7 @@ import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
+import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
 
 /**
@@ -539,6 +540,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     translatedRenderItem
                             .renderItemAndEffectIntoGUI(fontRendererObj, mc.getTextureManager(), toRender, 0, 0);
                     GL11.glTranslatef(0.0f, 0.0f, ITEMSTACK_OVERLAY_Z - ITEMSTACK_Z);
+                    aeRenderItem.setAeStack(AEItemStack.create(toRender));
                     aeRenderItem.renderItemOverlayIntoGUI(fontRendererObj, mc.getTextureManager(), toRender, 0, 0);
                     aeRenderItem.zLevel = 0.0f;
                     RenderHelper.disableStandardItemLighting();
