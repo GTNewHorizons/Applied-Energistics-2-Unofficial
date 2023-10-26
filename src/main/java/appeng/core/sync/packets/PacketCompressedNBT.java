@@ -18,8 +18,6 @@ import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -85,11 +83,5 @@ public class PacketCompressedNBT extends AppEngPacket {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
-        final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-
-        // if (gs instanceof GuiInterfaceTerminal) {
-        // ((GuiInterfaceTerminal) gs).postUpdate(this.in);
-        // }
-    }
+    public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {}
 }
