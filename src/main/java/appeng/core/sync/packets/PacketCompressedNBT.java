@@ -86,10 +86,5 @@ public class PacketCompressedNBT extends AppEngPacket {
     @Override
     @SideOnly(Side.CLIENT)
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
-        final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-
-        // if (gs instanceof GuiInterfaceTerminal) {
-        // ((GuiInterfaceTerminal) gs).postUpdate(this.in);
-        // }
     }
 }

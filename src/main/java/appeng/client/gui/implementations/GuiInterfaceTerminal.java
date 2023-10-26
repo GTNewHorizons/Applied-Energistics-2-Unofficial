@@ -721,11 +721,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     || searchFieldNames.textboxKeyTyped(character, key)) {
                 return;
             }
-            // if (Character.isDigit(character) && character != '0') {
-            // // move hotbar to slot
-            // if (masterList.hoveredEntry != null && masterList.hoveredEntry.hoveredSlotIdx != -1) {
-            // }
-            // }
             super.keyTyped(character, key);
         }
     }
