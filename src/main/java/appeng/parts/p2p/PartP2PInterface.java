@@ -137,13 +137,13 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     @Override
     public NBTTagCompound getMemoryCardData() {
         final NBTTagCompound output = super.getMemoryCardData();
-        this.duality.cm.writeToNBT(output);
+        this.duality.getConfigManager().writeToNBT(output);
         return output;
     }
 
     @Override
     public void pasteMemoryCardData(PartP2PTunnel newTunnel, NBTTagCompound data) throws GridAccessException {
-        this.duality.cm.readFromNBT(data);
+        this.duality.getConfigManager().readFromNBT(data);
         super.pasteMemoryCardData(newTunnel, data);
     }
 

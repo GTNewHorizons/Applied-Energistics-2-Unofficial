@@ -110,7 +110,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private final IInterfaceHost iHost;
     private final BaseActionSource mySource;
     private final BaseActionSource interfaceRequestSource;
-    public final ConfigManager cm = new ConfigManager(this);
+    private final ConfigManager cm = new ConfigManager(this);
     private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, NUMBER_OF_CONFIG_SLOTS);
     private final AppEngInternalInventory storage = new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS);
     private final AppEngInternalInventory patterns = new AppEngInternalInventory(this, NUMBER_OF_PATTERN_SLOTS * 4);
