@@ -14,6 +14,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Vec3;
 
+import appeng.api.networking.events.MENetworkBootingStatusChange;
+import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.util.Platform;
@@ -23,6 +25,7 @@ public class PartInterfaceTerminal extends AbstractPartDisplay {
     private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartInterfaceTerm_Bright;
     private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartInterfaceTerm_Dark;
     private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartInterfaceTerm_Colored;
+    private boolean needsUpdate;
 
     public PartInterfaceTerminal(final ItemStack is) {
         super(is);
@@ -58,5 +61,22 @@ public class PartInterfaceTerminal extends AbstractPartDisplay {
     @Override
     public CableBusTextures getFrontDark() {
         return FRONT_DARK_ICON;
+    }
+
+    /**
+     * Indicates that the network has changed. Calling this will reset the flag.
+     */
+    public boolean needsUpdate() {
+        boolean ret = needsUpdate;
+
+        needsUpdate = false;
+        return ret;
+    }
+
+    @MENetworkEventSubscribe
+    public void onNetworkBootingChanged(MENetworkBootingStatusChange event) {
+        if (!event.isBooting) {
+            this.needsUpdate = true;
+        }
     }
 }

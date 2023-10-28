@@ -184,7 +184,8 @@ public enum ButtonToolTips {
     CraftingModeStandard,
     CraftingModeStandardDesc,
     CraftingModeIgnoreMissing,
-    CraftingModeIgnoreMissingDesc;
+    CraftingModeIgnoreMissingDesc,
+    ExtraOptions;
 
     private final String root;
 

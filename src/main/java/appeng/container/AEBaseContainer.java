@@ -14,7 +14,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -50,7 +54,15 @@ import appeng.client.me.InternalSlotME;
 import appeng.client.me.SlotME;
 import appeng.container.guisync.GuiSync;
 import appeng.container.guisync.SyncData;
-import appeng.container.slot.*;
+import appeng.container.slot.AppEngSlot;
+import appeng.container.slot.SlotCraftingMatrix;
+import appeng.container.slot.SlotCraftingTerm;
+import appeng.container.slot.SlotDisabled;
+import appeng.container.slot.SlotFake;
+import appeng.container.slot.SlotInaccessible;
+import appeng.container.slot.SlotPatternTerm;
+import appeng.container.slot.SlotPlayerHotBar;
+import appeng.container.slot.SlotPlayerInv;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInventoryAction;
@@ -665,8 +677,8 @@ public abstract class AEBaseContainer extends Container {
             }
 
             if (action == InventoryAction.MOVE_REGION) {
-                if (s instanceof SlotPatternTerm) return;
-                // SlotPatternTerm should't transfer its ItemStack to the Player
+                if (s instanceof SlotFake || s instanceof SlotPatternTerm) return;
+                // SlotPatternTerm shouldn't transfer its ItemStack to the player
 
                 final List<Slot> from = new LinkedList<>();
 

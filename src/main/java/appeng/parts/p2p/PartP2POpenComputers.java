@@ -30,7 +30,11 @@ import cpw.mods.fml.relauncher.SideOnly;
 import li.cil.oc.api.API;
 import li.cil.oc.api.Items;
 import li.cil.oc.api.Network;
-import li.cil.oc.api.network.*;
+import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.Message;
+import li.cil.oc.api.network.Node;
+import li.cil.oc.api.network.SidedEnvironment;
+import li.cil.oc.api.network.Visibility;
 
 @InterfaceList(
         value = { @Interface(iface = "li.cil.oc.api.network.Environment", iname = IntegrationType.OpenComputers),

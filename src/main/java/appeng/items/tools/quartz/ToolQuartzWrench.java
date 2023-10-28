@@ -13,6 +13,7 @@ package appeng.items.tools.quartz;
 import java.util.EnumSet;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -28,11 +29,15 @@ import appeng.core.features.AEFeature;
 import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
 import appeng.transformer.annotations.Integration.Interface;
+import appeng.transformer.annotations.Integration.InterfaceList;
 import appeng.util.Platform;
 import buildcraft.api.tools.IToolWrench;
+import cofh.api.item.IToolHammer;
 
-@Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore)
-public class ToolQuartzWrench extends AEBaseItem implements IAEWrench, IToolWrench {
+@InterfaceList(
+        value = { @Interface(iface = "cofh.api.item.IToolHammer", iname = IntegrationType.CoFHWrench),
+                @Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore) })
+public class ToolQuartzWrench extends AEBaseItem implements IAEWrench, IToolWrench, IToolHammer {
 
     public ToolQuartzWrench(final AEFeature type) {
         super(Optional.of(type.name()));
@@ -77,7 +82,6 @@ public class ToolQuartzWrench extends AEBaseItem implements IAEWrench, IToolWren
     }
 
     @Override
-    // public boolean shouldPassSneakingClickToBlock(World w, int x, int y, int z)
     public boolean doesSneakBypassUse(final World world, final int x, final int y, final int z,
             final EntityPlayer player) {
         return true;
@@ -88,6 +92,7 @@ public class ToolQuartzWrench extends AEBaseItem implements IAEWrench, IToolWren
         return true;
     }
 
+    /* IToolWrench - BC */
     @Override
     public boolean canWrench(final EntityPlayer player, final int x, final int y, final int z) {
         return true;
@@ -96,5 +101,16 @@ public class ToolQuartzWrench extends AEBaseItem implements IAEWrench, IToolWren
     @Override
     public void wrenchUsed(final EntityPlayer player, final int x, final int y, final int z) {
         player.swingItem();
+    }
+
+    /* IToolHammer - CoFH */
+    @Override
+    public boolean isUsable(ItemStack itemStack, EntityLivingBase entity, int x, int y, int z) {
+        return true;
+    }
+
+    @Override
+    public void toolUsed(ItemStack itemStack, EntityLivingBase entity, int x, int y, int z) {
+        entity.swingItem();
     }
 }

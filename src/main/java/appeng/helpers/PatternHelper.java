@@ -10,7 +10,12 @@
 
 package appeng.helpers;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
@@ -62,7 +67,13 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
         this.canSubstitute = encodedValue.getBoolean("substitute");
         this.canBeSubstitute = encodedValue.getBoolean("beSubstitute");
         this.patternItem = is;
-        this.pattern = AEItemStack.create(is);
+        if (encodedValue.hasKey("author")) {
+            final ItemStack forComparison = this.patternItem.copy();
+            forComparison.stackTagCompound.removeTag("author");
+            this.pattern = AEItemStack.create(forComparison);
+        } else {
+            this.pattern = AEItemStack.create(is);
+        }
 
         final List<IAEItemStack> in = new ArrayList<>();
         final List<IAEItemStack> out = new ArrayList<>();

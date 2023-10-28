@@ -14,8 +14,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-import appeng.tile.AEBaseInvTile;
-
 public class WrapperInventoryRange implements IInventory {
 
     private final IInventory src;
@@ -93,10 +91,6 @@ public class WrapperInventoryRange implements IInventory {
 
     @Override
     public int getInventoryStackLimit() {
-        if (this.src instanceof AEBaseInvTile) {
-            IInventory internalInv = ((AEBaseInvTile) this.src).getInternalInventory();
-            return internalInv.getInventoryStackLimit();
-        }
         return this.src.getInventoryStackLimit();
     }
 

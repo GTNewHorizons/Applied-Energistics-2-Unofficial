@@ -8,7 +8,11 @@ import net.minecraft.entity.player.InventoryPlayer;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.*;
+import appeng.api.config.ActionItems;
+import appeng.api.config.ItemSubstitution;
+import appeng.api.config.PatternBeSubstitution;
+import appeng.api.config.PatternSlotConfig;
+import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;

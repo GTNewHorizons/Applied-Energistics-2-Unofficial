@@ -13,6 +13,7 @@ package appeng.items.tools;
 import java.util.EnumSet;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -43,11 +44,15 @@ import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.NetworkToolViewer;
 import appeng.transformer.annotations.Integration.Interface;
+import appeng.transformer.annotations.Integration.InterfaceList;
 import appeng.util.Platform;
 import buildcraft.api.tools.IToolWrench;
+import cofh.api.item.IToolHammer;
 
-@Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore)
-public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, IToolWrench {
+@InterfaceList(
+        value = { @Interface(iface = "cofh.api.item.IToolHammer", iname = IntegrationType.CoFHWrench),
+                @Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore) })
+public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, IToolWrench, IToolHammer {
 
     public ToolNetworkTool() {
         super(Optional.absent());
@@ -192,6 +197,8 @@ public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, 
         return true;
     }
 
+    /* IToolWrench (BC) */
+
     @Override
     public boolean canWrench(final EntityPlayer player, final int x, final int y, final int z) {
         return true;
@@ -200,5 +207,17 @@ public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, 
     @Override
     public void wrenchUsed(final EntityPlayer player, final int x, final int y, final int z) {
         player.swingItem();
+    }
+
+    /* IToolHammer (CoFH) */
+
+    @Override
+    public boolean isUsable(ItemStack itemStack, EntityLivingBase entityLivingBase, int x, int y, int z) {
+        return true;
+    }
+
+    @Override
+    public void toolUsed(ItemStack itemStack, EntityLivingBase entity, int x, int y, int z) {
+        entity.swingItem();
     }
 }

@@ -18,7 +18,14 @@ import java.util.List;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
-import appeng.api.config.*;
+import appeng.api.config.CondenserOutput;
+import appeng.api.config.CraftingStatus;
+import appeng.api.config.PowerMultiplier;
+import appeng.api.config.PowerUnits;
+import appeng.api.config.SearchBoxMode;
+import appeng.api.config.Settings;
+import appeng.api.config.TerminalStyle;
+import appeng.api.config.YesNo;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.core.features.AEFeature;
@@ -102,6 +109,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int craftingCalculatorVersion = 2;
     public int maxCraftingSteps = 2_000_000;
     public int maxCraftingTreeVisualizationSize = 32 * 1024 * 1024; // 32 MiB
+    public boolean limitCraftingCPUSpill = true;
 
     public AEConfig(final File configFile) {
         super(configFile);
@@ -218,6 +226,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         // Clamp to 4kiB..1GiB
         this.maxCraftingTreeVisualizationSize = Math
                 .max(4096, Math.min(this.maxCraftingTreeVisualizationSize, 1024 * 1024 * 1024));
+        this.limitCraftingCPUSpill = this.get("misc", "LimitCraftingCPUSpill", this.limitCraftingCPUSpill)
+                .getBoolean(this.limitCraftingCPUSpill);
         this.clientSync();
 
         for (final AEFeature feature : AEFeature.values()) {

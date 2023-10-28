@@ -20,7 +20,10 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.*;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.Vec3;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import com.google.common.base.Optional;
@@ -38,6 +41,7 @@ import appeng.client.texture.CableBusTextures;
 import appeng.core.AEConfig;
 import appeng.core.localization.PlayerMessages;
 import appeng.me.GridAccessException;
+import appeng.me.cache.P2PCache;
 import appeng.me.cache.helpers.TunnelCollection;
 import appeng.parts.PartBasicState;
 import cpw.mods.fml.relauncher.Side;
@@ -183,6 +187,27 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         this.setFrequency(data.getLong("freq"));
     }
 
+    public NBTTagCompound getMemoryCardData() {
+        final NBTTagCompound output = new NBTTagCompound();
+
+        if (this.hasCustomName()) {
+            final NBTTagCompound dsp = new NBTTagCompound();
+            dsp.setString("Name", this.getCustomName());
+            output.setTag("display", dsp);
+        }
+        output.setLong("freq", this.getFrequency());
+
+        return output;
+    }
+
+    public void pasteMemoryCardData(PartP2PTunnel<?> newTunnel, NBTTagCompound data) throws GridAccessException {
+        final long freq = data.getLong("freq");
+        final P2PCache p2p = newTunnel.getProxy().getP2P();
+        p2p.updateFreq(newTunnel, freq);
+        PartP2PTunnel input = p2p.getInput(freq);
+        if (input != null) newTunnel.setCustomNameInternal(input.getCustomName());
+    }
+
     @Override
     public void writeToNBT(final NBTTagCompound data) {
         super.writeToNBT(data);
@@ -240,8 +265,6 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
             if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
 
-            final NBTTagCompound data = new NBTTagCompound();
-
             long newFreq = this.getFrequency();
             final boolean wasOutput = this.isOutput();
             this.setOutput(false);
@@ -255,15 +278,13 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             } catch (final GridAccessException e) {
                 // :P
             }
-
             this.onTunnelConfigChange();
 
+            final NBTTagCompound data = this.getMemoryCardData();
             final ItemStack p2pItem = this.getItemStack(PartItemStack.Wrench);
             final String type = p2pItem.getUnlocalizedName();
 
             p2pItem.writeToNBT(data);
-            data.setLong("freq", this.getFrequency());
-            if (hasCustomName()) data.setString("custom_name", getCustomName());
 
             mc.setMemoryCardContents(is, type + ".name", data);
             mc.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);

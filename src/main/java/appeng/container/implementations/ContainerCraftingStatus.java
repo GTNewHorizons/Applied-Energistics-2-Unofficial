@@ -10,7 +10,7 @@
 
 package appeng.container.implementations;
 
-import java.util.*;
+import java.util.List;
 
 import net.minecraft.entity.player.InventoryPlayer;
 

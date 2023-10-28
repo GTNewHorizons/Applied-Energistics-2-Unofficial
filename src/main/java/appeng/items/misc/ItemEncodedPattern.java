@@ -23,6 +23,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -104,6 +105,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final boolean isCrafting = encodedValue.getBoolean("crafting");
         final boolean substitute = encodedValue.getBoolean("substitute");
         final boolean beSubstitute = encodedValue.getBoolean("beSubstitute");
+        final String author = encodedValue.getString("author");
         IAEItemStack[] inItems;
         IAEItemStack[] outItems;
 
@@ -144,6 +146,10 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
 
         lines.add(substitutionLabel + canSubstitute);
         lines.add(beSubstitutionLabel + canBeSubstitute);
+
+        if (!StringUtils.isNullOrEmpty(author)) {
+            lines.add(GuiText.EncodedBy.getLocal(author));
+        }
     }
 
     @Override

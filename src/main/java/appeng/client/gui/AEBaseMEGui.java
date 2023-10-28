@@ -25,12 +25,13 @@ import appeng.core.AEConfig;
 import appeng.core.localization.ButtonToolTips;
 import appeng.util.Platform;
 
-public abstract class AEBaseMEGui extends AEBaseGui {
+public abstract class AEBaseMEGui extends AEBaseGui implements IGuiTooltipHandler {
 
     public AEBaseMEGui(final Container container) {
         super(container);
     }
 
+    @Override
     public List<String> handleItemTooltip(final ItemStack stack, final int mouseX, final int mouseY,
             final List<String> currentToolTip) {
         if (stack != null) {

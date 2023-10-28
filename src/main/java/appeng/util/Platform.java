@@ -14,7 +14,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
+import java.util.WeakHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,7 +36,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.inventory.*;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.inventory.InventoryLargeChest;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
@@ -42,7 +55,11 @@ import net.minecraft.server.management.PlayerManager;
 import net.minecraft.stats.Achievement;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
-import net.minecraft.util.*;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.StatCollector;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -53,7 +70,14 @@ import net.minecraftforge.oredict.OreDictionary;
 import com.mojang.authlib.GameProfile;
 
 import appeng.api.AEApi;
-import appeng.api.config.*;
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.Actionable;
+import appeng.api.config.FuzzyMode;
+import appeng.api.config.PowerMultiplier;
+import appeng.api.config.PowerUnits;
+import appeng.api.config.SearchBoxMode;
+import appeng.api.config.SecurityPermissions;
+import appeng.api.config.SortOrder;
 import appeng.api.definitions.IItemDefinition;
 import appeng.api.definitions.IMaterials;
 import appeng.api.definitions.IParts;
@@ -64,13 +88,21 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.*;
+import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.IActionHost;
+import appeng.api.networking.security.ISecurityGrid;
+import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.*;
+import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAETagCompound;
+import appeng.api.storage.data.IItemList;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.me.SlotME;
@@ -94,6 +126,7 @@ import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
 import buildcraft.api.tools.IToolWrench;
+import cofh.api.item.IToolHammer;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
@@ -810,20 +843,22 @@ public class Platform {
         return false;
     }
 
-    public static boolean isWrench(final EntityPlayer player, final ItemStack eq, final int x, final int y,
+    public static boolean isWrench(final EntityPlayer player, final ItemStack stack, final int x, final int y,
             final int z) {
-        if (eq != null) {
-            try {
-                if (eq.getItem() instanceof IToolWrench wrench) {
-                    return wrench.canWrench(player, x, y, z);
-                }
-            } catch (final Throwable ignore) { // explodes without BC
-
+        if (stack != null) {
+            Item itemWrench = stack.getItem();
+            if (itemWrench instanceof IAEWrench wrench) {
+                return wrench.canWrench(stack, player, x, y, z);
             }
 
-            if (eq.getItem() instanceof IAEWrench) {
-                final IAEWrench wrench = (IAEWrench) eq.getItem();
-                return wrench.canWrench(eq, player, x, y, z);
+            if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.CoFHWrench)
+                    && itemWrench instanceof IToolHammer wrench) {
+                return wrench.isUsable(stack, player, x, y, z);
+            }
+
+            if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.BuildCraftCore)
+                    && itemWrench instanceof IToolWrench wrench) {
+                return wrench.canWrench(player, x, y, z);
             }
         }
         return false;

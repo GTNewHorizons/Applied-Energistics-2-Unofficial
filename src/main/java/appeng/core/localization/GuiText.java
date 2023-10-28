@@ -101,6 +101,7 @@ public enum GuiText {
     BeSubstitute,
     Yes,
     No,
+    EncodedBy,
 
     MolecularAssembler,
 
@@ -218,6 +219,10 @@ public enum GuiText {
 
     public String getLocal() {
         return StatCollector.translateToLocal(this.getUnlocalized());
+    }
+
+    public String getLocal(Object... formatArgs) {
+        return StatCollector.translateToLocalFormatted(this.getUnlocalized(), formatArgs);
     }
 
     public String getUnlocalized() {

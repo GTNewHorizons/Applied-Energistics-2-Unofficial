@@ -10,7 +10,12 @@
 
 package appeng.server;
 
-import appeng.server.subcommands.*;
+import appeng.server.subcommands.ChunkLogger;
+import appeng.server.subcommands.Profile;
+import appeng.server.subcommands.Supporters;
+import appeng.server.subcommands.ToggleDebugPathfinding;
+import appeng.server.subcommands.ToggleDebugTiming;
+import appeng.server.subcommands.ToggleFullAccess;
 
 public enum Commands {
 

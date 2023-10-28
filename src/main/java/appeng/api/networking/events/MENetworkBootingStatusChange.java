@@ -22,4 +22,13 @@ import appeng.api.networking.IGridNode;
  * Note: Most machines just need to check {@link IGridNode}.isActive()
  */
 public class MENetworkBootingStatusChange extends MENetworkEvent {
+
+    /**
+     * Indicates whether the network has changed to this state when the event is posted.
+     */
+    public final boolean isBooting;
+
+    public MENetworkBootingStatusChange(boolean isBooting) {
+        this.isBooting = isBooting;
+    }
 }

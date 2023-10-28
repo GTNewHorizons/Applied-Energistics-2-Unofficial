@@ -40,33 +40,9 @@ public final class PowerStateWailaDataProvider extends BasePartWailaDataProvider
     public List<String> getWailaBody(final IPart part, final List<String> currentToolTip,
             final IWailaDataAccessor accessor, final IWailaConfigHandler config) {
         if (part instanceof IPowerChannelState state) {
-
-            currentToolTip.add(this.getToolTip(state.isActive(), state.isPowered(), state.isBooting()));
+            currentToolTip.add(WailaText.getPowerState(state.isActive(), state.isPowered(), state.isBooting()));
         }
 
         return currentToolTip;
-    }
-
-    /**
-     * Gets the corresponding tool tip for different values of {@code #isActive} and {@code #isPowered}
-     *
-     * @param isActive  if part is active
-     * @param isPowered if part is powered
-     * @return tooltip of the state
-     */
-    private String getToolTip(final boolean isActive, final boolean isPowered, final boolean isBooting) {
-        final String result;
-
-        if (isBooting) {
-            result = WailaText.Booting.getLocal();
-        } else if (isActive && isPowered) {
-            result = WailaText.DeviceOnline.getLocal();
-        } else if (isPowered) {
-            result = WailaText.DeviceMissingChannel.getLocal();
-        } else {
-            result = WailaText.DeviceOffline.getLocal();
-        }
-
-        return result;
     }
 }

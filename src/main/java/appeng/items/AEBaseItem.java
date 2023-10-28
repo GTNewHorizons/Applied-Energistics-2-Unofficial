@@ -20,7 +20,11 @@ import net.minecraft.item.ItemStack;
 
 import com.google.common.base.Optional;
 
-import appeng.core.features.*;
+import appeng.core.features.AEFeature;
+import appeng.core.features.FeatureNameExtractor;
+import appeng.core.features.IAEFeature;
+import appeng.core.features.IFeatureHandler;
+import appeng.core.features.ItemFeatureHandler;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 

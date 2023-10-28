@@ -27,6 +27,7 @@ public enum IntegrationType {
     RF(IntegrationSide.BOTH, "RedstoneFlux Power - Tiles", "CoFHAPI"),
 
     RFItem(IntegrationSide.BOTH, "RedstoneFlux Power - Items", "CoFHAPI"),
+    CoFHWrench(IntegrationSide.BOTH, "CoFHWrench", "CoFHAPI"),
 
     MFR(IntegrationSide.BOTH, "Mine Factory Reloaded", "MineFactoryReloaded"),
 

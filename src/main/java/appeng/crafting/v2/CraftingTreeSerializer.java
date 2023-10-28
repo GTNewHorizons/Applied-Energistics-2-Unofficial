@@ -5,7 +5,11 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.nio.ByteOrder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import net.minecraft.world.World;
 
@@ -16,8 +20,11 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AEConfig;
-import appeng.crafting.v2.resolvers.*;
+import appeng.crafting.v2.resolvers.CraftableItemResolver;
+import appeng.crafting.v2.resolvers.EmitableItemResolver;
+import appeng.crafting.v2.resolvers.ExtractItemResolver;
 import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver.IgnoreMissingItemTask;
+import appeng.crafting.v2.resolvers.SimulateMissingItemResolver;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.network.ByteBufUtils;

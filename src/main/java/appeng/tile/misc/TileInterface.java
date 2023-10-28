@@ -319,4 +319,9 @@ public class TileInterface extends AENetworkInvTile implements IGridTickable, IT
     public boolean isBooting() {
         return (clientFlags & BOOTING_FLAG) == BOOTING_FLAG;
     }
+
+    @Override
+    public ItemStack getSelfRep() {
+        return this.getItemFromTile(this);
+    }
 }

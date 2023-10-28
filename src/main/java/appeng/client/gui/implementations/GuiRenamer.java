@@ -5,6 +5,8 @@ import java.io.IOException;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
+import org.lwjgl.input.Keyboard;
+
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
@@ -70,7 +72,7 @@ public class GuiRenamer extends AEBaseGui implements IDropToFillTextField {
 
     @Override
     protected void keyTyped(final char character, final int key) {
-        if (key == 28) { // Enter
+        if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
             try {
                 NetworkHandler.instance
                         .sendToServer(new PacketValueConfig("QuartzKnife.ReName", this.textField.getText()));

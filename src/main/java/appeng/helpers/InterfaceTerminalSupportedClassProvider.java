@@ -1,27 +1,20 @@
 package appeng.helpers;
 
-import java.util.HashSet;
 import java.util.Set;
 
-import appeng.parts.misc.PartInterface;
-import appeng.parts.p2p.PartP2PInterface;
-import appeng.tile.misc.TileInterface;
-
+/**
+ * Interface Terminal Support handler.
+ *
+ * @deprecated This is being refactored to the API.
+ */
+@Deprecated
 public class InterfaceTerminalSupportedClassProvider {
 
-    private static final Set<Class<? extends IInterfaceTerminalSupport>> supportedClasses = new HashSet<>();
-
-    static {
-        supportedClasses.add(TileInterface.class);
-        supportedClasses.add(PartInterface.class);
-        supportedClasses.add(PartP2PInterface.class);
-    }
-
+    @Deprecated
     public static Set<Class<? extends IInterfaceTerminalSupport>> getSupportedClasses() {
-        return supportedClasses;
+        return null;
     }
 
-    public static void register(Class<? extends IInterfaceTerminalSupport> clazz) {
-        supportedClasses.add(clazz);
-    }
+    @Deprecated
+    public static void register(Class<? extends IInterfaceTerminalSupport> clazz) {}
 }

@@ -10,7 +10,12 @@
 
 package appeng.me.cache;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import net.minecraft.entity.player.EntityPlayer;
 

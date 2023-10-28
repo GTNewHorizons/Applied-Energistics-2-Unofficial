@@ -11,10 +11,9 @@ import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartItem;
+import appeng.api.parts.PartItemStack;
 import appeng.me.GridAccessException;
-import appeng.me.cache.P2PCache;
 import appeng.util.Platform;
-import buildcraft.api.tools.IToolWrench;
 
 /**
  * Static P2P tunnels cannot be attuned to. They can only be bound to each other.
@@ -35,7 +34,6 @@ public abstract class PartP2PTunnelStatic<T extends PartP2PTunnelStatic> extends
             final NBTTagCompound data = mc.getData(is);
 
             final ItemStack newType = ItemStack.loadItemStackFromNBT(data);
-            final long freq = data.getLong("freq");
 
             if (newType != null) {
                 if (newType.getItem() instanceof IPartItem partItem) {
@@ -49,10 +47,7 @@ public abstract class PartP2PTunnelStatic<T extends PartP2PTunnelStatic> extends
                             newTunnel.setOutput(true);
 
                             try {
-                                final P2PCache p2p = newTunnel.getProxy().getP2P();
-                                p2p.updateFreq(newTunnel, freq);
-                                PartP2PTunnel input = p2p.getInput(freq);
-                                if (input != null) newTunnel.setCustomNameInternal(input.getCustomName());
+                                pasteMemoryCardData(newTunnel, data);
                             } catch (final GridAccessException e) {
                                 // :P
                             }
@@ -66,9 +61,18 @@ public abstract class PartP2PTunnelStatic<T extends PartP2PTunnelStatic> extends
                 }
             }
             mc.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
-        } else if (!player.isSneaking() && is != null && is.getItem() instanceof IToolWrench && !Platform.isClient()) {
-            printConnectionInfo(player);
-        }
+        } else if (!player.isSneaking() && Platform.isServer()
+                && Platform.isWrench(player, is, (int) pos.xCoord, (int) pos.yCoord, (int) pos.zCoord)) {
+                    printConnectionInfo(player);
+                }
         return false;
+    }
+
+    @Override
+    public ItemStack getItemStack(PartItemStack type) {
+        if (type == PartItemStack.World || type == PartItemStack.Network || type == PartItemStack.Wrench) {
+            return super.getItemStack(type);
+        }
+        return super.getItemStack(PartItemStack.Pick);
     }
 }

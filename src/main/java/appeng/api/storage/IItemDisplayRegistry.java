@@ -55,5 +55,26 @@ public interface IItemDisplayRegistry {
          * @return whether to skip the regular rendering code.
          */
         boolean renderOverlay(FontRenderer fr, TextureManager tm, ItemStack is, int x, int y);
+
+        /**
+         * @return whether to show the durability bar
+         */
+        default boolean showDurability(ItemStack is) {
+            return true;
+        }
+
+        /**
+         * @return whether to show the stack count
+         */
+        default boolean showStackSize(ItemStack is) {
+            return true;
+        }
+
+        /**
+         * @return whether to show the CraftLabel
+         */
+        default boolean showCraftLabelText(ItemStack is) {
+            return true;
+        }
     }
 }

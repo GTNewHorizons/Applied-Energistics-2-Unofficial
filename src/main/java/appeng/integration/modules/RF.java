@@ -57,8 +57,16 @@ public final class RF implements IIntegrationModule {
         this.registerRFAttunement("ThermalExpansion", "Cell", OreDictionary.WILDCARD_VALUE);
         this.registerRFAttunement("ThermalExpansion", "Dynamo", OreDictionary.WILDCARD_VALUE);
 
-        // Fluxduct
+        // Leadstone Fluxduct
         this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 0);
+        // Hardened Fluxduct
+        this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 1);
+        // Redstone Fluxduct
+        this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 2);
+        // Resonant Fluxduct
+        this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 4);
+        // Cryo-Stabilized Fluxduct
+        this.registerRFAttunement("ThermalDynamics", "ThermalDynamics_0", 6);
 
         this.registerRFAttunement("EnderIO", "itemPowerConduit", OreDictionary.WILDCARD_VALUE);
         this.registerRFAttunement("EnderIO", "blockCapacitorBank", 0);

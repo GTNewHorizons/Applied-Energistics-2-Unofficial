@@ -35,6 +35,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.WorldCoord;
 import appeng.block.crafting.BlockAdvancedCraftingUnit;
+import appeng.core.AEConfig;
 import appeng.me.cluster.IAECluster;
 import appeng.me.cluster.IAEMultiBlock;
 import appeng.me.cluster.implementations.CraftingCPUCalculator;
@@ -272,17 +273,22 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
             for (IAEItemStack ais : inv.getAvailableItems(AEApi.instance().storage().createItemList())) {
                 ais = ais.copy();
                 ais.setStackSize(ais.getItemStack().getMaxStackSize());
-                while (true) {
+                while (!places.isEmpty()) {
                     final IAEItemStack g = inv
                             .extractItems(ais.copy(), Actionable.MODULATE, this.cluster.getActionSource());
                     if (g == null) {
                         break;
                     }
 
-                    final WorldCoord wc = places.poll();
-                    places.add(wc);
+                    final WorldCoord wc = places.removeFirst();
+                    if (!AEConfig.instance.limitCraftingCPUSpill) {
+                        places.add(wc);
+                    }
 
                     Platform.spawnDrops(this.worldObj, wc.x, wc.y, wc.z, Collections.singletonList(g.getItemStack()));
+                }
+                if (places.isEmpty()) {
+                    break;
                 }
             }
 

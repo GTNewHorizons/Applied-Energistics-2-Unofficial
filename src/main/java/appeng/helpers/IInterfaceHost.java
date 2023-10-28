@@ -10,11 +10,10 @@
 
 package appeng.helpers;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -24,9 +23,9 @@ import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingRequester;
+import appeng.api.util.IInterfaceViewable;
 
-public interface IInterfaceHost
-        extends ICraftingProvider, IUpgradeableHost, ICraftingRequester, IInterfaceTerminalSupport {
+public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICraftingRequester, IInterfaceViewable {
 
     DualityInterface getInterfaceDuality();
 
@@ -37,17 +36,7 @@ public interface IInterfaceHost
     void saveChanges();
 
     @Override
-    default PatternsConfiguration[] getPatternsConfigurations() {
-        DualityInterface dual = getInterfaceDuality();
-        List<PatternsConfiguration> patterns = new ArrayList<>();
-        for (int i = 0; i <= dual.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY); ++i) {
-            patterns.add(new PatternsConfiguration(i * 9, 9));
-        }
-        return patterns.toArray(new PatternsConfiguration[0]);
-    }
-
-    @Override
-    default IInventory getPatterns(int index) {
+    default IInventory getPatterns() {
         return getInterfaceDuality().getPatterns();
     }
 
@@ -62,7 +51,17 @@ public interface IInterfaceHost
     }
 
     @Override
-    default long getSortValue() {
-        return getInterfaceDuality().getSortValue();
+    default int rows() {
+        return getInterfaceDuality().getInstalledUpgrades(Upgrades.PATTERN_CAPACITY) + 1;
+    }
+
+    @Override
+    default int rowSize() {
+        return DualityInterface.NUMBER_OF_PATTERN_SLOTS;
+    }
+
+    @Override
+    default ItemStack getDisplayRep() {
+        return getInterfaceDuality().getCrafterIcon();
     }
 }

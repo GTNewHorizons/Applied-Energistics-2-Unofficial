@@ -202,6 +202,7 @@ gui.appliedenergistics2.Substitute=Using Substitutions:
 gui.appliedenergistics2.BeSubstitute=Can be a substitution:
 gui.appliedenergistics2.Yes=Yes
 gui.appliedenergistics2.No=No
+gui.appliedenergistics2.EncodedBy=Encoded by: %s
 gui.appliedenergistics2.InWorldCrafting=AE2 In World Crafting
 gui.appliedenergistics2.inWorldFluix=Drop 1 Charged Certus Quartz + 1 Nether Quartz + Redstone Dust into a puddle next to one another and wait a moment to receive 2 Fluix Crystals.
 gui.appliedenergistics2.inWorldPurificationCertus=Drop a Certus Quartz Seed made from Certus Quartz Dust and Sand into a puddle of water; to make the process faster add Crystal Growth Accelerators.
@@ -444,6 +445,8 @@ gui.tooltips.appliedenergistics2.CraftingModeStandard=Standard Crafting Mode
 gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Only starts craft if all ingredients are available in the ME System.
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Ignore Missing Crafting Mode
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=Starts craft even if ingredients are missing from the ME System.
+
+gui.tooltips.appliedenergistics2.ExtraOptions=Extra Options
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE

@@ -22,21 +22,38 @@ import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-import appeng.client.gui.AEBaseMEGui;
+import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiCraftingTerm;
+import appeng.client.gui.implementations.GuiMEMonitorable;
+import appeng.client.gui.implementations.GuiMEPortableCell;
 import appeng.client.gui.implementations.GuiPatternTerm;
+import appeng.client.gui.implementations.GuiPatternTermEx;
+import appeng.client.gui.implementations.GuiSkyChest;
+import appeng.client.gui.implementations.GuiWirelessTerm;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
 import appeng.integration.abstraction.INEI;
-import appeng.integration.modules.NEIHelpers.*;
+import appeng.integration.modules.NEIHelpers.NEIAEBookmarkContainerHandler;
+import appeng.integration.modules.NEIHelpers.NEIAEShapedRecipeHandler;
+import appeng.integration.modules.NEIHelpers.NEIAEShapelessRecipeHandler;
+import appeng.integration.modules.NEIHelpers.NEIAETerminalBookmarkContainerHandler;
+import appeng.integration.modules.NEIHelpers.NEICraftingHandler;
+import appeng.integration.modules.NEIHelpers.NEIFacadeRecipeHandler;
+import appeng.integration.modules.NEIHelpers.NEIGrinderRecipeHandler;
+import appeng.integration.modules.NEIHelpers.NEIGuiHandler;
+import appeng.integration.modules.NEIHelpers.NEIInscriberRecipeHandler;
+import appeng.integration.modules.NEIHelpers.NEIOreDictionaryFilter;
+import appeng.integration.modules.NEIHelpers.NEIWorldCraftingHandler;
+import appeng.integration.modules.NEIHelpers.TerminalCraftingSlotFinder;
 import codechicken.nei.ItemsGrid;
 import codechicken.nei.LayoutManager;
 import codechicken.nei.SearchField.ISearchProvider;
+import codechicken.nei.api.IBookmarkContainerHandler;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.IStackPositioner;
 import codechicken.nei.guihook.GuiContainerManager;
@@ -55,6 +72,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     private Method registerUsageHandler;
     private Method registerNEIGuiHandler;
     private Method registerItemFilter;
+    private Method registerBookmarkContainerHandler;
 
     @Reflected
     public NEI() throws ClassNotFoundException {
@@ -64,6 +82,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         IntegrationHelper.testClassExistence(this, IContainerTooltipHandler.class);
         IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.ICraftingHandler.class);
         IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.IUsageHandler.class);
+        IntegrationHelper.testClassExistence(this, codechicken.nei.api.IBookmarkContainerHandler.class);
 
         this.apiClass = Class.forName("codechicken.nei.api.API");
     }
@@ -89,7 +108,26 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
                 && AEConfig.instance.isFeatureEnabled(AEFeature.EnableFacadeCrafting)) {
             this.registerRecipeHandler(new NEIFacadeRecipeHandler());
         }
-
+        this.registerBookmarkContainerHandler = this.apiClass
+                .getDeclaredMethod("registerBookmarkContainerHandler", Class.class, IBookmarkContainerHandler.class);
+        this.registerBookmarkContainerHandler.invoke(apiClass, GuiSkyChest.class, new NEIAEBookmarkContainerHandler()); // Skystone
+                                                                                                                        // chests
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiCraftingTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Crafting
+                                                                                                       // Terminal
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiMEMonitorable.class, new NEIAETerminalBookmarkContainerHandler()); // Terminal
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiWirelessTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Wireless
+                                                                                                       // Terminal
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiPatternTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Pattern
+                                                                                                      // terminal
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiPatternTermEx.class, new NEIAETerminalBookmarkContainerHandler()); // Big pattern
+                                                                                                        // terminal
+        this.registerBookmarkContainerHandler
+                .invoke(apiClass, GuiMEPortableCell.class, new NEIAETerminalBookmarkContainerHandler()); // ME chest
         // large stack tooltips
         GuiContainerManager.addTooltipHandler(this);
         GuiContainerManager.addObjectHandler(this);
@@ -172,8 +210,8 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     @Override
     public List<String> handleItemTooltip(final GuiContainer guiScreen, final ItemStack stack, final int mouseX,
             final int mouseY, final List<String> currentToolTip) {
-        if (guiScreen instanceof AEBaseMEGui) {
-            return ((AEBaseMEGui) guiScreen).handleItemTooltip(stack, mouseX, mouseY, currentToolTip);
+        if (guiScreen instanceof IGuiTooltipHandler) {
+            return ((IGuiTooltipHandler) guiScreen).handleItemTooltip(stack, mouseX, mouseY, currentToolTip);
         }
 
         return currentToolTip;
@@ -190,8 +228,9 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
 
     @Override
     public ItemStack getStackUnderMouse(GuiContainer gui, int mousex, int mousey) {
-        if (gui instanceof GuiCraftConfirm) return ((GuiCraftConfirm) gui).getHoveredStack();
-        else if (gui instanceof GuiCraftingCPU) return ((GuiCraftingCPU) gui).getHoveredStack();
+        if (gui instanceof IGuiTooltipHandler) {
+            return ((IGuiTooltipHandler) gui).getHoveredStack();
+        }
         return null;
     }
 

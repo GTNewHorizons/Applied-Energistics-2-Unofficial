@@ -15,7 +15,13 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
-import appeng.crafting.v2.resolvers.*;
+import appeng.crafting.v2.resolvers.CraftableItemResolver;
+import appeng.crafting.v2.resolvers.CraftingRequestResolver;
+import appeng.crafting.v2.resolvers.CraftingTask;
+import appeng.crafting.v2.resolvers.EmitableItemResolver;
+import appeng.crafting.v2.resolvers.ExtractItemResolver;
+import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver;
+import appeng.crafting.v2.resolvers.SimulateMissingItemResolver;
 
 /**
  * You can register additional crafting handlers here
