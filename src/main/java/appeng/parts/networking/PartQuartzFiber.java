@@ -10,6 +10,7 @@
 
 package appeng.parts.networking;
 
+import java.lang.ref.WeakReference;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -45,6 +46,8 @@ public class PartQuartzFiber extends AEBasePart implements IEnergyGridProvider {
             "outer",
             this.getProxy().getMachineRepresentation(),
             true);
+
+    private WeakReference<IEnergyGrid> lastEnergyGrid = new WeakReference<>(null);
 
     public PartQuartzFiber(final ItemStack is) {
         super(is);
@@ -136,18 +139,44 @@ public class PartQuartzFiber extends AEBasePart implements IEnergyGridProvider {
     public double extractAEPower(final double amt, final Actionable mode, final Set<IEnergyGrid> seen) {
         double acquiredPower = 0;
 
-        try {
-            final IEnergyGrid eg = this.getProxy().getEnergy();
-            acquiredPower += eg.extractAEPower(amt - acquiredPower, mode, seen);
-        } catch (final GridAccessException e) {
-            // :P
+        IEnergyGrid energyGrid = lastEnergyGrid.get();
+        if (energyGrid != null && !seen.contains(energyGrid)) {
+            double extracted = energyGrid.extractAEPower(amt - acquiredPower, mode, seen);
+            if (extracted < 1e-8) {
+                lastEnergyGrid = new WeakReference<>(null);
+            } else {
+                acquiredPower += extracted;
+            }
         }
 
-        try {
-            final IEnergyGrid eg = this.outerProxy.getEnergy();
-            acquiredPower += eg.extractAEPower(amt - acquiredPower, mode, seen);
-        } catch (final GridAccessException e) {
-            // :P
+        if (acquiredPower < amt) {
+            try {
+                final IEnergyGrid eg = this.getProxy().getEnergy();
+                if (!seen.contains(eg)) {
+                    double extracted = eg.extractAEPower(amt - acquiredPower, mode, seen);
+                    if (extracted > 1e-8) {
+                        lastEnergyGrid = new WeakReference<>(eg);
+                        acquiredPower = acquiredPower + extracted;
+                    }
+                }
+            } catch (final GridAccessException e) {
+                // :P
+            }
+        }
+
+        if (acquiredPower < amt) {
+            try {
+                final IEnergyGrid eg = this.outerProxy.getEnergy();
+                if (!seen.contains(eg)) {
+                    double extracted = eg.extractAEPower(amt - acquiredPower, mode, seen);
+                    if (extracted > 1e-8) {
+                        lastEnergyGrid = new WeakReference<>(eg);
+                        acquiredPower = acquiredPower + extracted;
+                    }
+                }
+            } catch (final GridAccessException e) {
+                // :P
+            }
         }
 
         return acquiredPower;
@@ -183,14 +212,18 @@ public class PartQuartzFiber extends AEBasePart implements IEnergyGridProvider {
 
         try {
             final IEnergyGrid eg = this.getProxy().getEnergy();
-            demand += eg.getEnergyDemand(amt - demand, seen);
+            if (!seen.contains(eg)) {
+                demand += eg.getEnergyDemand(amt - demand, seen);
+            }
         } catch (final GridAccessException e) {
             // :P
         }
 
         try {
             final IEnergyGrid eg = this.outerProxy.getEnergy();
-            demand += eg.getEnergyDemand(amt - demand, seen);
+            if (!seen.contains(eg)) {
+                demand += eg.getEnergyDemand(amt - demand, seen);
+            }
         } catch (final GridAccessException e) {
             // :P
         }
@@ -202,14 +235,18 @@ public class PartQuartzFiber extends AEBasePart implements IEnergyGridProvider {
     public boolean calculateInfiniteStore(boolean currentInfinite, Set<IEnergyGrid> seen) {
         try {
             final IEnergyGrid eg = this.getProxy().getEnergy();
-            currentInfinite |= eg.calculateInfiniteStore(currentInfinite, seen);
+            if (!seen.contains(eg)) {
+                currentInfinite |= eg.calculateInfiniteStore(currentInfinite, seen);
+            }
         } catch (final GridAccessException e) {
             // :P
         }
 
         try {
             final IEnergyGrid eg = this.outerProxy.getEnergy();
-            currentInfinite |= eg.calculateInfiniteStore(currentInfinite, seen);
+            if (!seen.contains(eg)) {
+                currentInfinite |= eg.calculateInfiniteStore(currentInfinite, seen);
+            }
         } catch (final GridAccessException e) {
             // :P
         }

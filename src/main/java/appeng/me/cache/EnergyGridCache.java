@@ -10,6 +10,7 @@
 
 package appeng.me.cache;
 
+import java.lang.ref.WeakReference;
 import java.util.*;
 
 import com.google.common.collect.HashMultiset;
@@ -38,7 +39,7 @@ public class EnergyGridCache implements IEnergyGrid {
     /*
      * We only keep track of one extractable provider, since player usually only place energy cells in one place
      */
-    private IEnergyGridProvider lastExtractableGridProvider = null;
+    private WeakReference<IEnergyGridProvider> lastGridProvider = new WeakReference<>(null);
     private final IGrid myGrid;
     private final HashMap<IGridNode, IEnergyWatcher> watchers = new HashMap<>();
     private final Set<IEnergyGrid> localSeen = new HashSet<>();
@@ -157,7 +158,7 @@ public class EnergyGridCache implements IEnergyGrid {
             currentlyHasPower = this.extractAEPower(0.1, Actionable.SIMULATE, PowerMultiplier.CONFIG) > 0;
         }
 
-        // ticks since change..
+        // ticks since change.
         if (currentlyHasPower == this.hasPower) {
             this.ticksSinceHasPowerChange++;
         } else {
@@ -227,7 +228,9 @@ public class EnergyGridCache implements IEnergyGrid {
         if (mode == Actionable.SIMULATE) {
             extractedPower += this.simulateExtract(extractedPower, amt);
 
-            extractedPower = extractFromOtherGrids(amt, mode, seen, extractedPower);
+            if (extractedPower < amt) {
+                extractedPower = extractFromOtherGrids(amt, mode, seen, extractedPower);
+            }
 
             return extractedPower;
         } else {
@@ -235,7 +238,7 @@ public class EnergyGridCache implements IEnergyGrid {
             extractedPower = this.doExtract(extractedPower, amt);
         }
 
-        // got more then we wanted?
+        // got more than we wanted?
         if (extractedPower > amt) {
             this.extra = extractedPower - amt;
             this.globalAvailablePower -= amt;
@@ -244,7 +247,10 @@ public class EnergyGridCache implements IEnergyGrid {
             return amt;
         }
 
-        extractedPower = this.extractFromOtherGrids(amt, mode, seen, extractedPower);
+        // call only if we don't have enough power
+        if (extractedPower < amt) {
+            extractedPower = extractFromOtherGrids(amt, mode, seen, extractedPower);
+        }
 
         // go less or the correct amount?
         this.globalAvailablePower -= extractedPower;
@@ -253,22 +259,23 @@ public class EnergyGridCache implements IEnergyGrid {
     }
 
     private double extractFromOtherGrids(double amt, Actionable mode, Set<IEnergyGrid> seen, double extractedPower) {
-        if (extractedPower < amt) {
-            if (this.lastExtractableGridProvider != null) {
-                double extracted = this.lastExtractableGridProvider.extractAEPower(amt - extractedPower, mode, seen);
-                if (extracted < 1e-8) {
-                    this.lastExtractableGridProvider = null;
-                } else {
-                    extractedPower += extracted;
-                }
+        IEnergyGridProvider energyGridProvider = lastGridProvider.get();
+        if (energyGridProvider != null) {
+            double extracted = energyGridProvider.extractAEPower(amt - extractedPower, mode, seen);
+            if (extracted < 1e-8) {
+                lastGridProvider = new WeakReference<>(null);
+            } else {
+                extractedPower += extracted;
             }
+        }
 
+        if (extractedPower < amt) {
             final Iterator<IEnergyGridProvider> i = this.energyGridProviders.iterator();
             while (extractedPower < amt && i.hasNext()) {
                 IEnergyGridProvider provider = i.next();
                 double extracted = provider.extractAEPower(amt - extractedPower, mode, seen);
                 if (extracted > 1e-8) {
-                    this.lastExtractableGridProvider = provider;
+                    this.lastGridProvider = new WeakReference<>(provider);
                     extractedPower += extracted;
                 }
             }
@@ -298,7 +305,6 @@ public class EnergyGridCache implements IEnergyGrid {
             }
         } else {
             this.tickInjectionPerTick += amt - ignore;
-            // totalInjectionPastTicks[0] += i;
 
             while (amt > 0 && !this.requesters.isEmpty()) {
                 final IAEPowerStorage node = this.getFirstRequester();
@@ -403,7 +409,6 @@ public class EnergyGridCache implements IEnergyGrid {
             }
         }
 
-        // totalDrainPastTicks[0] += extractedPower;
         return extractedPower;
     }
 
@@ -482,6 +487,9 @@ public class EnergyGridCache implements IEnergyGrid {
     public void removeNode(final IGridNode node, final IGridHost machine) {
         if (machine instanceof IEnergyGridProvider) {
             this.energyGridProviders.remove(machine);
+            if (lastGridProvider.get() == machine) {
+                lastGridProvider = new WeakReference<>(null);
+            }
             // removing a quartz fiber will not cause a net to go from finite to infinite
             this.updateInfinite = true;
         }
