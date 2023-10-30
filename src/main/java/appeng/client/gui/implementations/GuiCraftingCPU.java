@@ -82,6 +82,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     private static final int ITEMSTACK_LEFT_OFFSET = 9;
     private static final int ITEMSTACK_TOP_OFFSET = 22;
+    private static final int ITEMS_PER_ROW = 3;
 
     private final ContainerCraftingCPU craftingCpu;
 
@@ -242,7 +243,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         final int size = this.visual.size();
 
         this.getScrollBar().setTop(SCROLLBAR_TOP).setLeft(SCROLLBAR_LEFT).setHeight(SCROLLBAR_HEIGHT);
-        this.getScrollBar().setRange(0, (size + 2) / 3 - rows, 1);
+        this.getScrollBar().setRange(0, (size + 2) / ITEMS_PER_ROW - rows, 1);
     }
 
     @Override
@@ -254,15 +255,15 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
         this.tooltip = -1;
 
-        final int offY = 23;
+        final int offY = SECTION_HEIGHT;
         int y = 0;
         int x = 0;
-        for (int z = 0; z <= 4 * rows; z++) {
-            final int minX = gx + 9 + x * 67;
-            final int minY = gy + 22 + y * offY;
+        for (int z = 0; z <= ITEMS_PER_ROW * rows; z++) {
+            final int minX = gx + ITEMSTACK_LEFT_OFFSET + x * SECTION_LENGTH;
+            final int minY = gy + ITEMSTACK_TOP_OFFSET + y * offY;
 
-            if (minX < mouseX && minX + 67 > mouseX) {
-                if (minY < mouseY && minY + offY - 2 > mouseY) {
+            if (minX < mouseX && minX + SECTION_LENGTH > mouseX) {
+                if (minY < mouseY && minY + offY > mouseY) {
                     this.tooltip = z;
                     break;
                 }
@@ -270,7 +271,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
             x++;
 
-            if (x > 2) {
+            if (x == ITEMS_PER_ROW) {
                 y++;
                 x = 0;
             }
@@ -315,8 +316,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
         int x = 0;
         int y = 0;
-        final int viewStart = this.getScrollBar().getCurrentScroll() * 3;
-        final int viewEnd = viewStart + 3 * rows;
+        final int viewStart = this.getScrollBar().getCurrentScroll() * ITEMS_PER_ROW;
+        final int viewEnd = viewStart + ITEMS_PER_ROW * rows;
 
         String dspToolTip = "";
         final List<String> lineList = new LinkedList<>();
