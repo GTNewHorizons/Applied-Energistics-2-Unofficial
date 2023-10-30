@@ -58,16 +58,19 @@ import appeng.util.ReadableNumberConverter;
 
 public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiTooltipHandler {
 
-    private static final int GUI_HEIGHT = 184;
-    private static final int GUI_WIDTH = 238;
+    protected static final int GUI_HEIGHT = 184;
+    protected static final int GUI_WIDTH = 238;
 
-    private static final int DISPLAYED_ROWS = 6;
+    protected static final int TEXTURE_BELOW_TOP_ROW_Y = 41;
+    protected static final int TEXTURE_ABOVE_BOTTOM_ROW_Y = 51;
+    protected static final int DISPLAYED_ROWS = 6;
 
-    private static final int SECTION_LENGTH = 67;
+    protected static final int SECTION_LENGTH = 67;
+    protected static final int SECTION_HEIGHT = 23;
 
-    private static final int SCROLLBAR_TOP = 19;
-    private static final int SCROLLBAR_LEFT = 218;
-    private static final int SCROLLBAR_HEIGHT = 137;
+    protected static final int SCROLLBAR_TOP = 19;
+    protected static final int SCROLLBAR_LEFT = 218;
+    protected static final int SCROLLBAR_HEIGHT = 137;
 
     private static final int CANCEL_LEFT_OFFSET = 163;
     private static final int CANCEL_TOP_OFFSET = 25;
@@ -82,9 +85,11 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     private final ContainerCraftingCPU craftingCpu;
 
-    private IItemList<IAEItemStack> storage = AEApi.instance().storage().createItemList();
-    private IItemList<IAEItemStack> active = AEApi.instance().storage().createItemList();
-    private IItemList<IAEItemStack> pending = AEApi.instance().storage().createItemList();
+    protected IItemList<IAEItemStack> storage = AEApi.instance().storage().createItemList();
+    protected IItemList<IAEItemStack> active = AEApi.instance().storage().createItemList();
+    protected IItemList<IAEItemStack> pending = AEApi.instance().storage().createItemList();
+
+    protected int rows = DISPLAYED_ROWS;
 
     private class RemainingOperations implements ITooltip {
 
@@ -152,7 +157,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         }
     }
 
-    private List<IAEItemStack> visual = new ArrayList<>();
+    protected List<IAEItemStack> visual = new ArrayList<>();
     private GuiButton cancel;
     private int tooltip = -1;
     private final RemainingOperations remainingOperations = new RemainingOperations();
@@ -237,7 +242,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         final int size = this.visual.size();
 
         this.getScrollBar().setTop(SCROLLBAR_TOP).setLeft(SCROLLBAR_LEFT).setHeight(SCROLLBAR_HEIGHT);
-        this.getScrollBar().setRange(0, (size + 2) / 3 - DISPLAYED_ROWS, 1);
+        this.getScrollBar().setRange(0, (size + 2) / 3 - rows, 1);
     }
 
     @Override
@@ -252,7 +257,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         final int offY = 23;
         int y = 0;
         int x = 0;
-        for (int z = 0; z <= 4 * 5; z++) {
+        for (int z = 0; z <= 4 * rows; z++) {
             final int minX = gx + 9 + x * 67;
             final int minY = gy + 22 + y * offY;
 
@@ -311,7 +316,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         int x = 0;
         int y = 0;
         final int viewStart = this.getScrollBar().getCurrentScroll() * 3;
-        final int viewEnd = viewStart + 3 * 6;
+        final int viewEnd = viewStart + 3 * rows;
 
         String dspToolTip = "";
         final List<String> lineList = new LinkedList<>();
