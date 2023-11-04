@@ -636,6 +636,16 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.CraftingModeIgnoreMissing,
                     ButtonToolTips.CraftingModeIgnoreMissingDesc);
             this.registerApp(16 * 6 + 5, Settings.ACTIONS, ActionItems.EXTRA_OPTIONS, ButtonToolTips.ExtraOptions, "");
+            this.registerApp(16*6 + 8,
+                    Settings.STICKY_MODE,
+                    YesNo.NO,
+                    ButtonToolTips.StickyModeOn,
+                    ButtonToolTips.StickyModeOnDesc);
+            this.registerApp(16*6 + 9,
+                    Settings.STICKY_MODE,
+                    YesNo.YES,
+                    ButtonToolTips.StickyModeOff,
+                    ButtonToolTips.StickyModeOffDesc);
         }
     }
 

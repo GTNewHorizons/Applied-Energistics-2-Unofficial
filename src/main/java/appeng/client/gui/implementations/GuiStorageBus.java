@@ -12,6 +12,7 @@ package appeng.client.gui.implementations;
 
 import java.io.IOException;
 
+import appeng.api.config.YesNo;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
@@ -42,6 +43,7 @@ public class GuiStorageBus extends GuiUpgradeable {
     private GuiTabButton priority;
     private GuiImgButton partition;
     private GuiImgButton clear;
+    private GuiImgButton stickyMode;
 
     public GuiStorageBus(final InventoryPlayer inventoryPlayer, final PartStorageBus te) {
         super(new ContainerStorageBus(inventoryPlayer, te));
@@ -65,14 +67,19 @@ public class GuiStorageBus extends GuiUpgradeable {
                 StorageFilter.EXTRACTABLE_ONLY);
         this.fuzzyMode = new GuiImgButton(
                 this.guiLeft - 18,
-                this.guiTop + 88,
+                this.guiTop + 108,
                 Settings.FUZZY_MODE,
                 FuzzyMode.IGNORE_ALL);
         this.oreFilter = new GuiImgButton(
                 this.guiLeft - 18,
-                this.guiTop + 88,
+                this.guiTop + 108,
                 Settings.ACTIONS,
                 ActionItems.ORE_FILTER);
+        this.stickyMode = new GuiImgButton(
+                this.guiLeft - 18,
+                this.guiTop + 88,
+                Settings.STICKY_MODE,
+                YesNo.NO);
 
         this.buttonList.add(
                 this.priority = new GuiTabButton(
@@ -88,6 +95,7 @@ public class GuiStorageBus extends GuiUpgradeable {
         this.buttonList.add(this.partition);
         this.buttonList.add(this.clear);
         this.buttonList.add(this.oreFilter);
+        this.buttonList.add(this.stickyMode);
     }
 
     @Override
@@ -114,6 +122,10 @@ public class GuiStorageBus extends GuiUpgradeable {
         if (this.rwMode != null) {
             this.rwMode.set(((ContainerStorageBus) this.cvb).getReadWriteMode());
         }
+
+        if (this.stickyMode != null) {
+            this.stickyMode.set(((ContainerStorageBus) this.cvb).getStickyMode());
+        }
     }
 
     @Override
@@ -139,6 +151,9 @@ public class GuiStorageBus extends GuiUpgradeable {
             } else if (btn == this.storageFilter) {
                 NetworkHandler.instance
                         .sendToServer(new PacketConfigButton(this.storageFilter.getSetting(), backwards));
+            } else if (btn == this.stickyMode) {
+                NetworkHandler.instance
+                        .sendToServer(new PacketConfigButton(this.stickyMode.getSetting(), backwards));
             }
         } catch (final IOException e) {
             AELog.debug(e);

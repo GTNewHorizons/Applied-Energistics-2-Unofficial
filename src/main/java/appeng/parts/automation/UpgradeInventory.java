@@ -37,6 +37,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
     private int oreFilterUpgrades = 0;
     private int patternCapacityUpgrades = 0;
     private int advancedBlockingUpgrades = 0;
+    private int stickyUpgrades = 0;
 
     public UpgradeInventory(final IAEAppEngInventory parent, final int s) {
         super(null, s);
@@ -85,6 +86,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
             case CRAFTING -> this.craftingUpgrades;
             case ORE_FILTER -> this.oreFilterUpgrades;
             case ADVANCED_BLOCKING -> this.advancedBlockingUpgrades;
+            case STICKY -> this.stickyUpgrades;
             default -> 0;
         };
     }
@@ -93,7 +95,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
 
     private void updateUpgradeInfo() {
         this.cached = true;
-        this.patternCapacityUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = this.advancedBlockingUpgrades = 0;
+        this.patternCapacityUpgrades = this.stickyUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = this.advancedBlockingUpgrades = 0;
 
         for (final ItemStack is : this) {
             if (is == null || is.getItem() == null || !(is.getItem() instanceof IUpgradeModule)) {
@@ -112,6 +114,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
                 case CRAFTING -> this.craftingUpgrades++;
                 case ORE_FILTER -> this.oreFilterUpgrades++;
                 case ADVANCED_BLOCKING -> this.advancedBlockingUpgrades++;
+                case STICKY -> this.stickyUpgrades++;
                 default -> {}
             }
         }
@@ -128,6 +131,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
         this.oreFilterUpgrades = Math.min(this.oreFilterUpgrades, this.getMaxInstalled(Upgrades.ORE_FILTER));
         this.advancedBlockingUpgrades = Math
                 .min(this.advancedBlockingUpgrades, this.getMaxInstalled(Upgrades.ADVANCED_BLOCKING));
+        this.stickyUpgrades = Math.min(this.stickyUpgrades, this.getMaxInstalled(Upgrades.STICKY));
     }
 
     @Override

@@ -45,6 +45,7 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
             boolean hasInverter = false;
             boolean hasFuzzy = false;
             boolean hasOreFilter = false;
+            boolean hasSticky = false;
 
             for (int x = 0; x < upgrades.getSizeInventory(); x++) {
                 final ItemStack is = upgrades.getStackInSlot(x);
@@ -55,6 +56,7 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
                             case FUZZY -> hasFuzzy = true;
                             case INVERTER -> hasInverter = true;
                             case ORE_FILTER -> hasOreFilter = true;
+                            case STICKY -> hasSticky = true;
                             default -> {}
                         }
                     }
@@ -71,7 +73,9 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
                         priorityList.add(AEItemStack.create(is));
                     }
                 }
-
+                if (hasSticky) {
+                    setSticky(true);
+                }
                 if (!priorityList.isEmpty()) {
                     if (hasFuzzy) {
                         this.setPartitionList(new FuzzyPriorityList<>(priorityList, fzMode));

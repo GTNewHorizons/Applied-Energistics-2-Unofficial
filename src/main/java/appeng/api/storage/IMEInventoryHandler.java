@@ -73,4 +73,13 @@ public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInve
      * @return true, if this inventory is valid for this pass.
      */
     boolean validForPass(int i);
+
+    /**
+     * Gets whether an inventory is "Sticky" i.e. only it and other sticky storages that have partitions
+     * with certain items are allowed to be put into sticky storages.
+     * @return
+     */
+    boolean getSticky();
+
+
 }

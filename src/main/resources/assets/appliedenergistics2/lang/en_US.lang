@@ -532,6 +532,7 @@ item.appliedenergistics2.ItemMaterial.CardSuperSpeed.name=Hyper-Acceleration Car
 item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Oredictionary Filter Card
 item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=Pattern Refiller Card
 item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=Advanced Blocking Card
+item.appliedenergistics2.ItemMaterial.CardSticky.name=Sticky Card
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³ Spatial Component
 item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=16³ Spatial Component

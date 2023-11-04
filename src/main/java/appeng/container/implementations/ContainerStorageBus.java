@@ -12,6 +12,7 @@ package appeng.container.implementations;
 
 import java.util.Iterator;
 
+import appeng.api.config.YesNo;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -40,8 +41,12 @@ public class ContainerStorageBus extends ContainerUpgradeable {
     @GuiSync(3)
     public AccessRestriction rwMode = AccessRestriction.READ_WRITE;
 
+
     @GuiSync(4)
     public StorageFilter storageFilter = StorageFilter.EXTRACTABLE_ONLY;
+
+    @GuiSync(7)
+    public YesNo stickyMode = YesNo.NO;
 
     public ContainerStorageBus(final InventoryPlayer ip, final PartStorageBus te) {
         super(ip, te);
@@ -128,6 +133,8 @@ public class ContainerStorageBus extends ContainerUpgradeable {
                     (AccessRestriction) this.getUpgradeable().getConfigManager().getSetting(Settings.ACCESS));
             this.setStorageFilter(
                     (StorageFilter) this.getUpgradeable().getConfigManager().getSetting(Settings.STORAGE_FILTER));
+            this.setStickyMode(
+                    (YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.STICKY_MODE));
         }
 
         this.standardDetectAndSendChanges();
@@ -178,10 +185,6 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         return this.rwMode;
     }
 
-    private void setReadWriteMode(final AccessRestriction rwMode) {
-        this.rwMode = rwMode;
-    }
-
     public StorageFilter getStorageFilter() {
         return this.storageFilter;
     }
@@ -189,4 +192,20 @@ public class ContainerStorageBus extends ContainerUpgradeable {
     private void setStorageFilter(final StorageFilter storageFilter) {
         this.storageFilter = storageFilter;
     }
+
+    public YesNo getStickyMode() {
+        return this.stickyMode;
+    }
+
+    private void setStickyMode(final YesNo stickyMode) {
+        this.stickyMode = stickyMode;
+    }
+    private void setReadWriteMode(final AccessRestriction rwMode) {
+        this.rwMode = rwMode;
+    }
+
+
+
+
+
 }

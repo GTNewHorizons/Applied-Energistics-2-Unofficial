@@ -444,6 +444,11 @@ public class CellInventory implements ICellInventory {
     }
 
     @Override
+    public boolean getStickyMode() {
+        return this.cellType.getStickyMode(this.cellItem);
+    }
+
+    @Override
     public IInventory getConfigInventory() {
         return this.cellType.getConfigInventory(this.cellItem);
     }

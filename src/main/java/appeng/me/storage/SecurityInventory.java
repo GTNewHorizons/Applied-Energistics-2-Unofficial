@@ -169,6 +169,11 @@ public class SecurityInventory implements IMEInventoryHandler<IAEItemStack> {
         return true;
     }
 
+    @Override
+    public boolean getSticky() {
+        return false;
+    }
+
     public IItemList<IAEItemStack> getStoredItems() {
         return this.storedItems;
     }

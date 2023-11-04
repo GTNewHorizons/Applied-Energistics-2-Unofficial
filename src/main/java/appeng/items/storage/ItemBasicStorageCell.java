@@ -238,6 +238,17 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
     }
 
     @Override
+    public boolean getStickyMode(ItemStack is) {
+        String stickyValue = Platform.openNbtData(is).getString("Sticky");
+        return "1".equals(stickyValue);
+    }
+
+    @Override
+    public void setStickyMode(ItemStack is, boolean value) {
+        Platform.openNbtData(is).setString("Sticky", value ? "1" : "0");
+    }
+
+    @Override
     public ItemStack onItemRightClick(final ItemStack stack, final World world, final EntityPlayer player) {
         this.disassembleDrive(stack, world, player);
         return stack;

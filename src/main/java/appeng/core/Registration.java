@@ -282,6 +282,7 @@ public final class Registration {
         target.materialCardFuzzy = this.converter.of(source.cardFuzzy());
         target.materialCardInverter = this.converter.of(source.cardInverter());
         target.materialCardCrafting = this.converter.of(source.cardCrafting());
+        target.materialCardSticky = this.converter.of(source.cardSticky());
 
         target.materialEnderDust = this.converter.of(source.enderDust());
         target.materialFlour = this.converter.of(source.flour());
@@ -634,64 +635,79 @@ public final class Registration {
         Upgrades.FUZZY.registerItem(items.cell1k(), 1);
         Upgrades.INVERTER.registerItem(items.cell1k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell1k(), 1);
+        Upgrades.STICKY.registerItem(items.cell1k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell4k(), 1);
         Upgrades.INVERTER.registerItem(items.cell4k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell4k(), 1);
+        Upgrades.STICKY.registerItem(items.cell4k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell16k(), 1);
         Upgrades.INVERTER.registerItem(items.cell16k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell16k(), 1);
+        Upgrades.STICKY.registerItem(items.cell16k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell64k(), 1);
         Upgrades.INVERTER.registerItem(items.cell64k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell64k(), 1);
+        Upgrades.STICKY.registerItem(items.cell64k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell256k(), 1);
         Upgrades.INVERTER.registerItem(items.cell256k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell256k(), 1);
+        Upgrades.STICKY.registerItem(items.cell256k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell1024k(), 1);
         Upgrades.INVERTER.registerItem(items.cell1024k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell1024k(), 1);
+        Upgrades.STICKY.registerItem(items.cell1024k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell4096k(), 1);
         Upgrades.INVERTER.registerItem(items.cell4096k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell4096k(), 1);
+        Upgrades.STICKY.registerItem(items.cell4096k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell16384k(), 1);
         Upgrades.INVERTER.registerItem(items.cell16384k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell16384k(), 1);
+        Upgrades.STICKY.registerItem(items.cell16384k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cellVoid(), 1);
         Upgrades.INVERTER.registerItem(items.cellVoid(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cellVoid(), 1);
+        Upgrades.STICKY.registerItem(items.cellVoid(), 1);
 
         Upgrades.FUZZY.registerItem(items.cellContainer(), 1);
         Upgrades.INVERTER.registerItem(items.cellContainer(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cellContainer(), 1);
+        Upgrades.STICKY.registerItem(items.cellContainer(), 1);
 
         Upgrades.FUZZY.registerItem(items.cellQuantum(), 1);
         Upgrades.INVERTER.registerItem(items.cellQuantum(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cellQuantum(), 1);
+        Upgrades.STICKY.registerItem(items.cellQuantum(), 1);
 
         Upgrades.FUZZY.registerItem(items.cellSingularity(), 1);
         Upgrades.INVERTER.registerItem(items.cellSingularity(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cellSingularity(), 1);
+        Upgrades.STICKY.registerItem(items.cellSingularity(), 1);
 
         Upgrades.FUZZY.registerItem(items.portableCell(), 1);
         Upgrades.INVERTER.registerItem(items.portableCell(), 1);
         Upgrades.ORE_FILTER.registerItem(items.portableCell(), 1);
+        Upgrades.STICKY.registerItem(items.portableCell(), 1);
 
         Upgrades.FUZZY.registerItem(items.viewCell(), 1);
         Upgrades.INVERTER.registerItem(items.viewCell(), 1);
         Upgrades.ORE_FILTER.registerItem(items.viewCell(), 1);
+        Upgrades.STICKY.registerItem(items.viewCell(), 1);
 
         // Storage Bus
         Upgrades.FUZZY.registerItem(parts.storageBus(), 1);
         Upgrades.INVERTER.registerItem(parts.storageBus(), 1);
         Upgrades.CAPACITY.registerItem(parts.storageBus(), 5);
         Upgrades.ORE_FILTER.registerItem(parts.storageBus(), 1);
+        Upgrades.STICKY.registerItem(parts.storageBus(), 1);
 
         // Formation Plane
         Upgrades.FUZZY.registerItem(parts.formationPlane(), 1);

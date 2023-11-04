@@ -35,6 +35,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cache.SecurityCache;
 import appeng.util.ItemSorters;
+import appeng.util.item.ItemList;
 
 public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
 
@@ -46,21 +47,30 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     private final SecurityCache security;
     // final TreeMultimap<Integer, IMEInventoryHandler<T>> priorityInventory;
     private final NavigableMap<Integer, List<IMEInventoryHandler<T>>> priorityInventory;
+    private final NavigableMap<Integer, List<IMEInventoryHandler<T>>> stickyPriorityInventory;
     private int myPass = 0;
 
     public NetworkInventoryHandler(final StorageChannel chan, final SecurityCache security) {
         this.myChannel = chan;
         this.security = security;
         this.priorityInventory = new TreeMap<>(PRIORITY_SORTER); // TreeMultimap.create(
+        this.stickyPriorityInventory = new TreeMap<>(PRIORITY_SORTER);
         // prioritySorter,
         // hashSorter );
     }
 
     public void addNewStorage(final IMEInventoryHandler<T> h) {
         final int priority = h.getPriority();
-        List<IMEInventoryHandler<T>> list = this.priorityInventory.computeIfAbsent(priority, k -> new ArrayList<>());
+        if (!h.getSticky())
+        {
+            List<IMEInventoryHandler<T>> list = this.priorityInventory.computeIfAbsent(priority, k -> new ArrayList<>());
+            list.add(h);
+        }
+        else {
+            List<IMEInventoryHandler<T>> listSticky = this.stickyPriorityInventory.computeIfAbsent(priority, k -> new ArrayList<>());
+            listSticky.add(h);
+        }
 
-        list.add(h);
     }
 
     @Override
@@ -70,6 +80,26 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
         }
 
         if (this.testPermission(src, SecurityPermissions.INJECT)) {
+            this.surface(this, type);
+            return input;
+        }
+
+        boolean stickyInventoryFound = false;
+        // For this pass we do return input if the item is able to go into a sticky inventory. We NEVER want to try and
+        // insert the item into a non-sticky inventory if it could already go into a sticky inventory.
+        for (final List<IMEInventoryHandler<T>> stickyInvList : this.stickyPriorityInventory.values()) {
+            Iterator<IMEInventoryHandler<T>> ii = stickyInvList.iterator();
+            while (ii.hasNext() && input != null) {
+                final IMEInventoryHandler<T> inv = ii.next();
+                if (inv.validForPass(1) && inv.canAccept(input)
+                        && (inv.isPrioritized(input) || inv.extractItems(input, Actionable.SIMULATE, src) != null)) {
+                    input = inv.injectItems(input, type, src);
+                    stickyInventoryFound = true;
+                }
+            }
+        }
+
+        if (stickyInventoryFound) {
             this.surface(this, type);
             return input;
         }
@@ -190,6 +220,20 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
             }
         }
 
+        final Iterator<List<IMEInventoryHandler<T>>> j = this.stickyPriorityInventory.descendingMap().values().iterator();
+
+        while (j.hasNext()) {
+            final List<IMEInventoryHandler<T>> invList = j.next();
+
+            final Iterator<IMEInventoryHandler<T>> jj = invList.iterator();
+            while (jj.hasNext() && output.getStackSize() < req) {
+                final IMEInventoryHandler<T> inv = jj.next();
+
+                request.setStackSize(req - output.getStackSize());
+                output.add(inv.extractItems(request, mode, src));
+            }
+        }
+
         this.surface(this, mode);
 
         if (output.getStackSize() <= 0) {
@@ -206,14 +250,21 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
         }
 
         // for (Entry<Integer, IMEInventoryHandler<T>> h : priorityInventory.entries())
-        for (final List<IMEInventoryHandler<T>> i : this.priorityInventory.values()) {
+        out = iterateInventories(out, priorityInventory);
+        out = iterateInventories(out, stickyPriorityInventory);
+
+        this.surface(this, Actionable.SIMULATE);
+
+        return out;
+    }
+
+    private IItemList<T> iterateInventories(IItemList out, NavigableMap<Integer, List<IMEInventoryHandler<T>>> map)
+    {
+        for (final List<IMEInventoryHandler<T>> i : map.values()) {
             for (final IMEInventoryHandler<T> j : i) {
                 out = j.getAvailableItems(out);
             }
         }
-
-        this.surface(this, Actionable.SIMULATE);
-
         return out;
     }
 
@@ -294,5 +345,10 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     @Override
     public boolean validForPass(final int i) {
         return true;
+    }
+
+    @Override
+    public boolean getSticky() {
+        return false;
     }
 }

@@ -14,6 +14,7 @@
 package appeng.api.storage;
 
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.FuzzyMode;
@@ -68,4 +69,16 @@ public interface ICellWorkbenchItem {
      * @param filter new ore dictionary filter
      */
     default void setOreFilter(ItemStack is, String filter) {}
+
+    /**
+     * @return the current sticky status.
+     */
+    boolean getStickyMode(ItemStack is);
+
+    /**
+     *
+     * @param is cell item
+     * @param value value to set the sticky mode one
+     */
+    void setStickyMode(ItemStack is, boolean value);
 }

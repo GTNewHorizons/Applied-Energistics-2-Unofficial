@@ -116,4 +116,9 @@ public class CreativeCellInventory implements IMEInventoryHandler<IAEItemStack> 
     public boolean validForPass(final int i) {
         return true;
     }
+
+    @Override
+    public boolean getSticky() {
+        return false;
+    }
 }

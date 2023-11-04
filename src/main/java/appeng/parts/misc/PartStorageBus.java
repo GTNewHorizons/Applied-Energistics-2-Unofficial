@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import appeng.api.config.YesNo;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -102,6 +103,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
         this.getConfigManager().registerSetting(Settings.ACCESS, AccessRestriction.READ_WRITE);
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
         this.getConfigManager().registerSetting(Settings.STORAGE_FILTER, StorageFilter.EXTRACTABLE_ONLY);
+        this.getConfigManager().registerSetting(Settings.STICKY_MODE, YesNo.NO);
         this.mySrc = new MachineSource(this);
     }
 
@@ -429,7 +431,9 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                             final IAEItemStack is = this.Config.getAEStackInSlot(x);
                             if (is != null) priorityList.add(is);
                         }
-
+                        if (this.getInstalledUpgrades(Upgrades.STICKY) > 0) {
+                            this.handler.setSticky(true);
+                        }
                         if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
                             this.handler.setPartitionList(
                                     new FuzzyPriorityList(

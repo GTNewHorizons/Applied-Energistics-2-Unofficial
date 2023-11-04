@@ -32,7 +32,7 @@ public enum Upgrades {
     REDSTONE(0),
     CRAFTING(0),
     PATTERN_REFILLER(0),
-
+    STICKY(0),
     /**
      * Diamond Tier Upgrades.
      */

@@ -94,6 +94,11 @@ public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler
         return true;
     }
 
+    @Override
+    public boolean getSticky() {
+        return false;
+    }
+
     StorageChannel getWrappedChannel() {
         return this.wrappedChannel;
     }

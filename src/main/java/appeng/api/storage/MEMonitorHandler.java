@@ -175,4 +175,9 @@ public class MEMonitorHandler<StackType extends IAEStack> implements IMEMonitor<
     public boolean validForPass(final int i) {
         return this.getHandler().validForPass(i);
     }
+
+    @Override
+    public boolean getSticky() {
+        return this.internalHandler.getSticky();
+    }
 }

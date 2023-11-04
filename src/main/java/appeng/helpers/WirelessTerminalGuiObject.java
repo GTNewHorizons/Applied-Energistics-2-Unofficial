@@ -198,6 +198,11 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     }
 
     @Override
+    public boolean getSticky() {
+        return false;
+    }
+
+    @Override
     public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSource src) {
         if (this.itemStorage != null) {
             return this.itemStorage.injectItems(input, type, src);

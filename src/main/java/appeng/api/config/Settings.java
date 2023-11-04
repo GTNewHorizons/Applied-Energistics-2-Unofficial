@@ -68,7 +68,9 @@ public enum Settings {
 
     ADVANCED_BLOCKING_MODE(EnumSet.allOf(AdvancedBlockingMode.class)),
 
-    CRAFTING_MODE(EnumSet.allOf(CraftingMode.class));
+    CRAFTING_MODE(EnumSet.allOf(CraftingMode.class)),
+
+    STICKY_MODE(EnumSet.of(YesNo.YES, YesNo.NO));
 
     private final EnumSet<? extends Enum<?>> values;
 

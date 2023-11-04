@@ -142,6 +142,14 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
     }
 
     @Override
+    public boolean getStickyMode(ItemStack is) {
+        return false;
+    }
+
+    @Override
+    public void setStickyMode(ItemStack is, boolean value) {}
+
+    @Override
     public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
             final boolean displayMoreInfo) {
         String filter = getOreFilter(stack);

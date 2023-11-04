@@ -63,6 +63,7 @@ public final class ApiMaterials implements IMaterials {
     private final IItemDefinition cell16384kPart;
     private final IItemDefinition emptyAdvancedStorageCell;
 
+    private final IItemDefinition cardSticky;
     private final IItemDefinition cardRedstone;
     private final IItemDefinition cardSpeed;
     private final IItemDefinition cardSuperSpeed;
@@ -162,6 +163,7 @@ public final class ApiMaterials implements IMaterials {
         this.emptyAdvancedStorageCell = new DamagedItemDefinition(
                 itemMultiMaterial.createMaterial(MaterialType.EmptyAdvancedStorageCell));
 
+        this.cardSticky = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardSticky));
         this.cardRedstone = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardRedstone));
         this.cardSpeed = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardSpeed));
         this.cardSuperSpeed = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardSuperSpeed));
@@ -417,6 +419,10 @@ public final class ApiMaterials implements IMaterials {
         return this.cardCrafting;
     }
 
+    @Override
+    public IItemDefinition cardSticky() {
+        return this.cardSticky;
+    }
     @Override
     public IItemDefinition enderDust() {
         return this.enderDust;
