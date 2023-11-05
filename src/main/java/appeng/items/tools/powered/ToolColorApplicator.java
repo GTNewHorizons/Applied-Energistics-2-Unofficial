@@ -495,5 +495,4 @@ public class ToolColorApplicator extends AEBasePoweredItem
     public void setOreFilter(ItemStack is, String filter) {
         Platform.openNbtData(is).setString("OreFilter", filter);
     }
-
 }

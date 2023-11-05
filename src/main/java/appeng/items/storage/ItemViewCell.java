@@ -141,7 +141,6 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
         Platform.openNbtData(is).setString("OreFilter", filter);
     }
 
-
     @Override
     public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
             final boolean displayMoreInfo) {

@@ -14,7 +14,6 @@
 package appeng.api.storage;
 
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.FuzzyMode;
@@ -69,5 +68,4 @@ public interface ICellWorkbenchItem {
      * @param filter new ore dictionary filter
      */
     default void setOreFilter(ItemStack is, String filter) {}
-
 }

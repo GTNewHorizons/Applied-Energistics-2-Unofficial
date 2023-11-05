@@ -12,7 +12,6 @@ package appeng.items.storage;
 
 import java.util.EnumSet;
 
-import appeng.util.Platform;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
@@ -59,6 +58,4 @@ public class ItemCreativeStorageCell extends AEBaseItem implements ICellWorkbenc
 
     @Override
     public void setOreFilter(ItemStack is, String filter) {}
-
-
 }
