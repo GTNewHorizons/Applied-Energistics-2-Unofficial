@@ -12,7 +12,6 @@ package appeng.client.gui.implementations;
 
 import java.io.IOException;
 
-import appeng.api.config.YesNo;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
@@ -23,6 +22,7 @@ import appeng.api.config.ActionItems;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
+import appeng.api.config.YesNo;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerStorageBus;
@@ -75,11 +75,7 @@ public class GuiStorageBus extends GuiUpgradeable {
                 this.guiTop + 108,
                 Settings.ACTIONS,
                 ActionItems.ORE_FILTER);
-        this.stickyMode = new GuiImgButton(
-                this.guiLeft - 18,
-                this.guiTop + 88,
-                Settings.STICKY_MODE,
-                YesNo.NO);
+        this.stickyMode = new GuiImgButton(this.guiLeft - 18, this.guiTop + 88, Settings.STICKY_MODE, YesNo.NO);
 
         this.buttonList.add(
                 this.priority = new GuiTabButton(
@@ -152,8 +148,7 @@ public class GuiStorageBus extends GuiUpgradeable {
                 NetworkHandler.instance
                         .sendToServer(new PacketConfigButton(this.storageFilter.getSetting(), backwards));
             } else if (btn == this.stickyMode) {
-                NetworkHandler.instance
-                        .sendToServer(new PacketConfigButton(this.stickyMode.getSetting(), backwards));
+                NetworkHandler.instance.sendToServer(new PacketConfigButton(this.stickyMode.getSetting(), backwards));
             }
         } catch (final IOException e) {
             AELog.debug(e);

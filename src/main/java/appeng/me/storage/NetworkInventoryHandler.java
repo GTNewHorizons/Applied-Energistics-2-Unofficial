@@ -35,7 +35,6 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cache.SecurityCache;
 import appeng.util.ItemSorters;
-import appeng.util.item.ItemList;
 
 public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
 
@@ -61,13 +60,13 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
 
     public void addNewStorage(final IMEInventoryHandler<T> h) {
         final int priority = h.getPriority();
-        if (!h.getSticky())
-        {
-            List<IMEInventoryHandler<T>> list = this.priorityInventory.computeIfAbsent(priority, k -> new ArrayList<>());
+        if (!h.getSticky()) {
+            List<IMEInventoryHandler<T>> list = this.priorityInventory
+                    .computeIfAbsent(priority, k -> new ArrayList<>());
             list.add(h);
-        }
-        else {
-            List<IMEInventoryHandler<T>> listSticky = this.stickyPriorityInventory.computeIfAbsent(priority, k -> new ArrayList<>());
+        } else {
+            List<IMEInventoryHandler<T>> listSticky = this.stickyPriorityInventory
+                    .computeIfAbsent(priority, k -> new ArrayList<>());
             listSticky.add(h);
         }
     }
@@ -219,7 +218,8 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
             }
         }
 
-        final Iterator<List<IMEInventoryHandler<T>>> j = this.stickyPriorityInventory.descendingMap().values().iterator();
+        final Iterator<List<IMEInventoryHandler<T>>> j = this.stickyPriorityInventory.descendingMap().values()
+                .iterator();
 
         while (j.hasNext()) {
             final List<IMEInventoryHandler<T>> invList = j.next();
@@ -257,8 +257,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
         return out;
     }
 
-    private IItemList<T> iterateInventories(IItemList out, NavigableMap<Integer, List<IMEInventoryHandler<T>>> map)
-    {
+    private IItemList<T> iterateInventories(IItemList out, NavigableMap<Integer, List<IMEInventoryHandler<T>>> map) {
         for (final List<IMEInventoryHandler<T>> i : map.values()) {
             for (final IMEInventoryHandler<T> j : i) {
                 out = j.getAvailableItems(out);

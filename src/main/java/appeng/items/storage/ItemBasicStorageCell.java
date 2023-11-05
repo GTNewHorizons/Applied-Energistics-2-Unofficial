@@ -240,7 +240,6 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
         Platform.openNbtData(is).setString("OreFilter", filter);
     }
 
-
     @Override
     public ItemStack onItemRightClick(final ItemStack stack, final World world, final EntityPlayer player) {
         this.disassembleDrive(stack, world, player);

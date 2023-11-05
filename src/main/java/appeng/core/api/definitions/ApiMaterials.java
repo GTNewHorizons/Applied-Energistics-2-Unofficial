@@ -423,6 +423,7 @@ public final class ApiMaterials implements IMaterials {
     public IItemDefinition cardSticky() {
         return this.cardSticky;
     }
+
     @Override
     public IItemDefinition enderDust() {
         return this.enderDust;

@@ -36,6 +36,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     private boolean hasReadAccess;
     protected boolean hasWriteAccess;
     protected boolean isSticky;
+
     public MEInventoryHandler(final IMEInventory<T> i, final StorageChannel channel) {
         if (i instanceof IMEInventoryHandler) {
             this.internal = (IMEInventoryHandler<T>) i;
