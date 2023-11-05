@@ -60,15 +60,5 @@ public class ItemCreativeStorageCell extends AEBaseItem implements ICellWorkbenc
     @Override
     public void setOreFilter(ItemStack is, String filter) {}
 
-    @Override
-    public boolean getStickyMode(ItemStack is) {
-        String stickyValue = Platform.openNbtData(is).getString("Sticky");
-        return "1".equals(stickyValue);
-    }
-
-    @Override
-    public void setStickyMode(ItemStack is, boolean value) {
-        Platform.openNbtData(is).setString("Sticky", value ? "1" : "0");
-    }
 
 }

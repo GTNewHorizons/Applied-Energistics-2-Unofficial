@@ -507,13 +507,4 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
         Platform.openNbtData(is).setString("OreFilter", filter);
     }
 
-    @Override
-    public boolean getStickyMode(ItemStack is) {
-        return false;
-    }
-
-    @Override
-    public void setStickyMode(ItemStack is, boolean value) {
-
-    }
 }

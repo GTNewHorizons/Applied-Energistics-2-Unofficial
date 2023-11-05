@@ -108,5 +108,4 @@ public interface ICellInventory extends IMEInventory<IAEItemStack> {
 
     String getOreFilter();
 
-    boolean getStickyMode();
 }

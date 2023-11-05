@@ -70,15 +70,4 @@ public interface ICellWorkbenchItem {
      */
     default void setOreFilter(ItemStack is, String filter) {}
 
-    /**
-     * @return the current sticky status.
-     */
-    boolean getStickyMode(ItemStack is);
-
-    /**
-     *
-     * @param is cell item
-     * @param value value to set the sticky mode one
-     */
-    void setStickyMode(ItemStack is, boolean value);
 }

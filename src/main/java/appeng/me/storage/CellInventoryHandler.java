@@ -63,6 +63,11 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
                 }
             }
             this.setWhitelist(hasInverter ? IncludeExclude.BLACKLIST : IncludeExclude.WHITELIST);
+
+            if (hasSticky) {
+                setSticky(true);
+            }
+
             if (hasOreFilter && !filter.isEmpty()) {
                 this.setPartitionList(new OreFilteredList(filter));
             } else {
@@ -72,9 +77,6 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
                     if (is != null) {
                         priorityList.add(AEItemStack.create(is));
                     }
-                }
-                if (hasSticky) {
-                    setSticky(true);
                 }
                 if (!priorityList.isEmpty()) {
                     if (hasFuzzy) {

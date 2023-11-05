@@ -94,15 +94,4 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
     public void setOreFilter(ItemStack is, String filter) {
         Platform.openNbtData(is).setString("OreFilter", filter);
     }
-
-    @Override
-    public boolean getStickyMode(ItemStack is) {
-        String stickyValue = Platform.openNbtData(is).getString("Sticky");
-        return "1".equals(stickyValue);
-    }
-
-    @Override
-    public void setStickyMode(ItemStack is, boolean value) {
-        Platform.openNbtData(is).setString("Sticky", value ? "1" : "0");
-    }
 }

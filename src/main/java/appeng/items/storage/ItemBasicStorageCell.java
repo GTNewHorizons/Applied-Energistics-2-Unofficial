@@ -126,7 +126,6 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
 
                 if (handler.isPreformatted()) {
                     String filter = cellInventory.getOreFilter();
-
                     if (filter.isEmpty()) {
                         final String list = (handler.getIncludeExcludeMode() == IncludeExclude.WHITELIST
                                 ? GuiText.Included
@@ -146,6 +145,10 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
                         }
                     } else {
                         lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);
+                    }
+
+                    if (handler.getSticky()) {
+                        lines.add(GuiText.Sticky.getLocal());
                     }
                 }
             }
@@ -237,16 +240,6 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
         Platform.openNbtData(is).setString("OreFilter", filter);
     }
 
-    @Override
-    public boolean getStickyMode(ItemStack is) {
-        String stickyValue = Platform.openNbtData(is).getString("Sticky");
-        return "1".equals(stickyValue);
-    }
-
-    @Override
-    public void setStickyMode(ItemStack is, boolean value) {
-        Platform.openNbtData(is).setString("Sticky", value ? "1" : "0");
-    }
 
     @Override
     public ItemStack onItemRightClick(final ItemStack stack, final World world, final EntityPlayer player) {

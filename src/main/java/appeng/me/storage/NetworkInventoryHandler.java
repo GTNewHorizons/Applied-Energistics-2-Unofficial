@@ -70,7 +70,6 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
             List<IMEInventoryHandler<T>> listSticky = this.stickyPriorityInventory.computeIfAbsent(priority, k -> new ArrayList<>());
             listSticky.add(h);
         }
-
     }
 
     @Override

@@ -141,13 +141,6 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
         Platform.openNbtData(is).setString("OreFilter", filter);
     }
 
-    @Override
-    public boolean getStickyMode(ItemStack is) {
-        return false;
-    }
-
-    @Override
-    public void setStickyMode(ItemStack is, boolean value) {}
 
     @Override
     public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
