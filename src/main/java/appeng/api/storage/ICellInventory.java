@@ -107,5 +107,4 @@ public interface ICellInventory extends IMEInventory<IAEItemStack> {
     int getStatusForCell();
 
     String getOreFilter();
-
 }
