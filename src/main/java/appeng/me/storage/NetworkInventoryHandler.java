@@ -344,5 +344,4 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     public boolean validForPass(final int i) {
         return true;
     }
-
 }
