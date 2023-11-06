@@ -700,7 +700,6 @@ public final class Registration {
         Upgrades.FUZZY.registerItem(items.viewCell(), 1);
         Upgrades.INVERTER.registerItem(items.viewCell(), 1);
         Upgrades.ORE_FILTER.registerItem(items.viewCell(), 1);
-        Upgrades.STICKY.registerItem(items.viewCell(), 1);
 
         // Storage Bus
         Upgrades.FUZZY.registerItem(parts.storageBus(), 1);

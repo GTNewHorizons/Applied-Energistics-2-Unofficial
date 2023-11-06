@@ -80,6 +80,8 @@ public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInve
      * 
      * @return
      */
-    boolean getSticky();
+    default boolean getSticky() {
+        return false;
+    }
 
 }

@@ -40,6 +40,7 @@ public class VoidCellInventory extends MEInventoryHandler<IAEItemStack> {
         boolean hasInverter = false;
         boolean hasFuzzy = false;
         boolean hasOreFilter = false;
+        boolean hasSticky = false;
 
         for (int x = 0; x < upgrades.getSizeInventory(); x++) {
             final ItemStack is = upgrades.getStackInSlot(x);
@@ -50,10 +51,14 @@ public class VoidCellInventory extends MEInventoryHandler<IAEItemStack> {
                         case FUZZY -> hasFuzzy = true;
                         case INVERTER -> hasInverter = true;
                         case ORE_FILTER -> hasOreFilter = true;
+                        case STICKY -> hasSticky = true;
                         default -> {}
                     }
                 }
             }
+        }
+        if (hasSticky) {
+            setSticky(true);
         }
         this.fuzzy = hasFuzzy;
         this.setWhitelist(hasInverter ? IncludeExclude.BLACKLIST : IncludeExclude.WHITELIST);

@@ -163,11 +163,6 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         return this.getHandler().validForPass(i);
     }
 
-    @Override
-    public boolean getSticky() {
-        return false;
-    }
-
     @Nullable
     @SuppressWarnings("unchecked")
     private IMEInventoryHandler<T> getHandler() {

@@ -185,11 +185,7 @@ public enum ButtonToolTips {
     CraftingModeStandardDesc,
     CraftingModeIgnoreMissing,
     CraftingModeIgnoreMissingDesc,
-    ExtraOptions,
-    StickyModeOn,
-    StickyModeOnDesc,
-    StickyModeOff,
-    StickyModeOffDesc;
+    ExtraOptions;
 
     private final String root;
 

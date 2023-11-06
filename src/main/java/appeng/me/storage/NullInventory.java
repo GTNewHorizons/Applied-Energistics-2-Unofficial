@@ -77,8 +77,4 @@ public class NullInventory<T extends IAEStack<T>> implements IMEInventoryHandler
         return i == 2;
     }
 
-    @Override
-    public boolean getSticky() {
-        return false;
-    }
 }

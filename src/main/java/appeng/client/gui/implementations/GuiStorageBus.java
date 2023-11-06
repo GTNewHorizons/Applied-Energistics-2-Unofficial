@@ -22,7 +22,6 @@ import appeng.api.config.ActionItems;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
-import appeng.api.config.YesNo;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerStorageBus;
@@ -43,7 +42,6 @@ public class GuiStorageBus extends GuiUpgradeable {
     private GuiTabButton priority;
     private GuiImgButton partition;
     private GuiImgButton clear;
-    private GuiImgButton stickyMode;
 
     public GuiStorageBus(final InventoryPlayer inventoryPlayer, final PartStorageBus te) {
         super(new ContainerStorageBus(inventoryPlayer, te));
@@ -67,15 +65,14 @@ public class GuiStorageBus extends GuiUpgradeable {
                 StorageFilter.EXTRACTABLE_ONLY);
         this.fuzzyMode = new GuiImgButton(
                 this.guiLeft - 18,
-                this.guiTop + 108,
+                this.guiTop + 88,
                 Settings.FUZZY_MODE,
                 FuzzyMode.IGNORE_ALL);
         this.oreFilter = new GuiImgButton(
                 this.guiLeft - 18,
-                this.guiTop + 108,
+                this.guiTop + 88,
                 Settings.ACTIONS,
                 ActionItems.ORE_FILTER);
-        this.stickyMode = new GuiImgButton(this.guiLeft - 18, this.guiTop + 88, Settings.STICKY_MODE, YesNo.NO);
 
         this.buttonList.add(
                 this.priority = new GuiTabButton(
@@ -91,7 +88,6 @@ public class GuiStorageBus extends GuiUpgradeable {
         this.buttonList.add(this.partition);
         this.buttonList.add(this.clear);
         this.buttonList.add(this.oreFilter);
-        this.buttonList.add(this.stickyMode);
     }
 
     @Override
@@ -107,20 +103,10 @@ public class GuiStorageBus extends GuiUpgradeable {
                 this.ySize - 96 + 3,
                 GuiColors.StorageBusInventory.getColor());
 
-        if (this.fuzzyMode instanceof GuiImgButton) {
-            this.fuzzyMode.set(this.cvb.getFuzzyMode());
-        }
-
-        if (this.storageFilter instanceof GuiImgButton) {
-            this.storageFilter.set(((ContainerStorageBus) this.cvb).getStorageFilter());
-        }
-
-        if (this.rwMode instanceof GuiImgButton) {
-            this.rwMode.set(((ContainerStorageBus) this.cvb).getReadWriteMode());
-        }
-
-        if (this.stickyMode instanceof GuiImgButton) {
-            this.stickyMode.set(((ContainerStorageBus) this.cvb).getStickyMode());
+        if (this.cvb instanceof ContainerStorageBus csb) {
+            this.storageFilter.set(csb.getStorageFilter());
+            this.rwMode.set(csb.getReadWriteMode());
+            this.fuzzyMode.set(csb.getFuzzyMode());
         }
     }
 
@@ -147,8 +133,6 @@ public class GuiStorageBus extends GuiUpgradeable {
             } else if (btn == this.storageFilter) {
                 NetworkHandler.instance
                         .sendToServer(new PacketConfigButton(this.storageFilter.getSetting(), backwards));
-            } else if (btn == this.stickyMode) {
-                NetworkHandler.instance.sendToServer(new PacketConfigButton(this.stickyMode.getSetting(), backwards));
             }
         } catch (final IOException e) {
             AELog.debug(e);

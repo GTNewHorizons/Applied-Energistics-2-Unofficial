@@ -398,11 +398,6 @@ public class CraftingGridCache
     }
 
     @Override
-    public boolean getSticky() {
-        return false;
-    }
-
-    @Override
     public IAEStack injectItems(IAEStack input, final Actionable type, final BaseActionSource src) {
         for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
             input = cpu.injectItems(input, type, src);

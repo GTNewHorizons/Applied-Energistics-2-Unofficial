@@ -345,8 +345,4 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
         return true;
     }
 
-    @Override
-    public boolean getSticky() {
-        return false;
-    }
 }

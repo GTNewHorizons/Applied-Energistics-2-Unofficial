@@ -91,8 +91,4 @@ public class VoidFluidInventory implements IMEInventoryHandler<IAEFluidStack> {
         return i == 2;
     }
 
-    @Override
-    public boolean getSticky() {
-        return false;
-    }
 }

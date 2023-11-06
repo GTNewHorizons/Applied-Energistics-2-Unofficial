@@ -250,11 +250,6 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
     }
 
     @Override
-    public boolean getSticky() {
-        return false;
-    }
-
-    @Override
     public IItemList<IAEItemStack> getAvailableItems(final IItemList out) {
         for (final CachedItemStack is : this.memory.values()) {
             out.addStorage(is.aeStack);
