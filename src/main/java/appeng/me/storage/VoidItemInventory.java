@@ -90,9 +90,4 @@ public class VoidItemInventory implements IMEInventoryHandler<IAEItemStack> {
     public boolean validForPass(final int i) {
         return i == 2;
     }
-
-    @Override
-    public boolean getSticky() {
-        return false;
-    }
 }
