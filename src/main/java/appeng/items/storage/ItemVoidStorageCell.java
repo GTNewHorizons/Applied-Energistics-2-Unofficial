@@ -56,6 +56,9 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
                 } else {
                     lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);
                 }
+                if (inv.getSticky()) {
+                    lines.add(GuiText.Sticky.getLocal());
+                }
             }
         }
     }

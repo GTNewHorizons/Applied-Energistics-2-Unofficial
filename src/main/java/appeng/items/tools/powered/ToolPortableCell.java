@@ -91,6 +91,9 @@ public class ToolPortableCell extends AEBasePoweredItem implements IStorageCell,
                                 + cd.getTotalItemTypes()
                                 + ' '
                                 + GuiText.Types.getLocal());
+                if (((CellInventoryHandler) cdi).getSticky()) {
+                    lines.add(GuiText.Sticky.getLocal());
+                }
             }
         }
     }
