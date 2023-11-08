@@ -115,6 +115,7 @@ public class GuiStorageBus extends GuiUpgradeable {
             }
         }
     }
+
     @Override
     protected String getBackground() {
         return "guis/storagebus.png";
