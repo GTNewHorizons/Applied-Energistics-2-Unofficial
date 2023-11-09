@@ -34,6 +34,10 @@ shapeless=
     ae2:ItemMaterial.BasicCard oredictionary:craftingTableWood
     -> ae2:ItemMaterial.CardCrafting
 
+shapeless=
+    ae2:ItemMaterial.BasicCard oredictionary:slimeball
+    -> ae2:ItemMaterial.CardSticky
+
 shaped=
     ae2:ItemMaterial.AdvCard ae2:ItemMaterial.Cell16kPart _,
     ae2:ItemMaterial.Cell16kPart ae2:ItemPart.Interface _,
