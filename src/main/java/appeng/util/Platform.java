@@ -10,6 +10,7 @@
 
 package appeng.util;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
@@ -150,7 +151,7 @@ public class Platform {
      * random source, use it for item drop locations...
      */
     private static final Random RANDOM_GENERATOR = new Random();
-    private static final WeakHashMap<World, EntityPlayer> FAKE_PLAYERS = new WeakHashMap<>();
+    private static final WeakHashMap<World, WeakReference<EntityPlayer>> FAKE_PLAYERS = new WeakHashMap<>();
     private static Field tagList;
     private static Class playerInstance;
     private static Method getOrCreateChunkWatcher;
@@ -880,13 +881,16 @@ public class Platform {
             throw new InvalidParameterException("World is null.");
         }
 
-        final EntityPlayer wrp = FAKE_PLAYERS.get(w);
-        if (wrp != null) {
-            return wrp;
+        final WeakReference<EntityPlayer> weakRef = FAKE_PLAYERS.get(w);
+        if (weakRef != null) {
+            EntityPlayer fakePlayer = weakRef.get();
+            if (fakePlayer != null) {
+                return fakePlayer;
+            }
         }
 
         final EntityPlayer p = FakePlayerFactory.get(w, fakeProfile);
-        FAKE_PLAYERS.put(w, p);
+        FAKE_PLAYERS.put(w, new WeakReference<>(p));
         return p;
     }
 
