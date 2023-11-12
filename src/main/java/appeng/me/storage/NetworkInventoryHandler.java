@@ -10,13 +10,9 @@
 
 package appeng.me.storage;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
 import javax.annotation.Nonnull;
 
@@ -34,41 +30,54 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cache.SecurityCache;
-import appeng.util.ItemSorters;
+import appeng.util.SortedArrayList;
 
 public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
 
     private static final ThreadLocal<LinkedList> DEPTH_MOD = new ThreadLocal<>();
     private static final ThreadLocal<LinkedList> DEPTH_SIM = new ThreadLocal<>();
-    private static final Comparator<Integer> PRIORITY_SORTER = (o1, o2) -> ItemSorters.compareInt(o2, o1);
+
+    /**
+     * Sorter for the {@link #priorityInventory} list. Sticky inventories are always first. The inventories are then
+     * sorted by priority (highest first), and then by placement pass (1 first, 1&2 second, 2 last).
+     */
+    private static final Comparator<IMEInventoryHandler<?>> STICKY_PRIORITY_PLACEMENT_PASS_SORTER = (o1, o2) -> {
+        int result = Boolean.compare(o2.getSticky(), o1.getSticky());
+        if (result != 0) {
+            return result;
+        }
+
+        result = o2.getPriority() - o1.getPriority();
+        if (result != 0) {
+            return result;
+        }
+
+        boolean o2ValidFor1 = o2.validForPass(1);
+        boolean o1ValidFor1 = o1.validForPass(1);
+        result = Boolean.compare(o2ValidFor1, o1ValidFor1);
+
+        if (result != 0) {
+            return result;
+        }
+
+        boolean o2ValidFor2 = o2.validForPass(2);
+        boolean o1ValidFor2 = o1.validForPass(2);
+        return Boolean.compare(o2ValidFor2, o1ValidFor2);
+    };
     private static int currentPass = 0;
     private final StorageChannel myChannel;
     private final SecurityCache security;
-    // final TreeMultimap<Integer, IMEInventoryHandler<T>> priorityInventory;
-    private final NavigableMap<Integer, List<IMEInventoryHandler<T>>> priorityInventory;
-    private final NavigableMap<Integer, List<IMEInventoryHandler<T>>> stickyPriorityInventory;
+    private final List<IMEInventoryHandler<T>> priorityInventory;
     private int myPass = 0;
 
     public NetworkInventoryHandler(final StorageChannel chan, final SecurityCache security) {
         this.myChannel = chan;
         this.security = security;
-        this.priorityInventory = new TreeMap<>(PRIORITY_SORTER); // TreeMultimap.create(
-        this.stickyPriorityInventory = new TreeMap<>(PRIORITY_SORTER);
-        // prioritySorter,
-        // hashSorter );
+        this.priorityInventory = new SortedArrayList<>(STICKY_PRIORITY_PLACEMENT_PASS_SORTER);
     }
 
     public void addNewStorage(final IMEInventoryHandler<T> h) {
-        final int priority = h.getPriority();
-        if (!h.getSticky()) {
-            List<IMEInventoryHandler<T>> list = this.priorityInventory
-                    .computeIfAbsent(priority, k -> new ArrayList<>());
-            list.add(h);
-        } else {
-            List<IMEInventoryHandler<T>> listSticky = this.stickyPriorityInventory
-                    .computeIfAbsent(priority, k -> new ArrayList<>());
-            listSticky.add(h);
-        }
+        this.priorityInventory.add(h);
     }
 
     @Override
@@ -82,48 +91,56 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
             return input;
         }
 
+        final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
+        final int size = priorityInventory.size();
+
+        int i = 0;
+        int passTwoStartIndex = -1;
         boolean stickyInventoryFound = false;
-        // For this pass we do return input if the item is able to go into a sticky inventory. We NEVER want to try and
-        // insert the item into a non-sticky inventory if it could already go into a sticky inventory.
-        for (final List<IMEInventoryHandler<T>> stickyInvList : this.stickyPriorityInventory.values()) {
-            Iterator<IMEInventoryHandler<T>> ii = stickyInvList.iterator();
-            while (ii.hasNext() && input != null) {
-                final IMEInventoryHandler<T> inv = ii.next();
-                if (inv.validForPass(1) && inv.canAccept(input)
-                        && (inv.isPrioritized(input) || inv.extractItems(input, Actionable.SIMULATE, src) != null)) {
-                    input = inv.injectItems(input, type, src);
-                    stickyInventoryFound = true;
-                }
+        for (; i < size && input != null; i++) {
+            final IMEInventoryHandler<T> inv = priorityInventory.get(i);
+            final boolean isSticky = inv.getSticky();
+
+            // The sorting guarantees no more sticky inventories will follow, so we're done here.
+            if (stickyInventoryFound && !isSticky) {
+                break;
+            }
+
+            // We remember at which index the second pass should start iterating
+            if (passTwoStartIndex == -1 && inv.validForPass(2)) {
+                passTwoStartIndex = i;
+            }
+
+            // Because the list is sorted by placement pass as well, we can stop here if the current inventory is not
+            // valid for pass 1. Note that the pass doesn't matter for sticky inventories.
+            boolean validForPass1 = isSticky || inv.validForPass(1);
+            if (!validForPass1) {
+                break;
+            }
+
+            if (inv.canAccept(input)
+                    && (inv.isPrioritized(input) || inv.extractItems(input, Actionable.SIMULATE, src) != null)) {
+                input = inv.injectItems(input, type, src);
+                stickyInventoryFound |= isSticky;
             }
         }
 
-        if (stickyInventoryFound) {
+        if (stickyInventoryFound || passTwoStartIndex == -1) {
             this.surface(this, type);
             return input;
         }
 
-        for (final List<IMEInventoryHandler<T>> invList : this.priorityInventory.values()) {
-            Iterator<IMEInventoryHandler<T>> ii = invList.iterator();
-            while (ii.hasNext() && input != null) {
-                final IMEInventoryHandler<T> inv = ii.next();
+        // We need to ignore prioritized inventories in the second pass. If they were not able to store everything
+        // during the first pass, they will do so in the second, but as this is stateless we will just report twice
+        // the amount of storable items.
+        // ignores craftingcache on the second pass.
+        i = passTwoStartIndex;
+        for (; i < size && input != null; i++) {
+            final IMEInventoryHandler<T> inv = priorityInventory.get(i);
 
-                if (inv.validForPass(1) && inv.canAccept(input)
-                        && (inv.isPrioritized(input) || inv.extractItems(input, Actionable.SIMULATE, src) != null)) {
-                    input = inv.injectItems(input, type, src);
-                }
-            }
-
-            // We need to ignore prioritized inventories in the second pass. If they were not able to store everything
-            // during the first pass, they will do so in the second, but as this is stateless we will just report twice
-            // the amount of storable items.
-            // ignores craftingcache on the second pass.
-            ii = invList.iterator();
-            while (ii.hasNext() && input != null) {
-                final IMEInventoryHandler<T> inv = ii.next();
-
-                if (inv.validForPass(2) && inv.canAccept(input) && !inv.isPrioritized(input)) {
-                    input = inv.injectItems(input, type, src);
-                }
+            // The sorting guarantees all of these are pass 2.
+            if (inv.canAccept(input) && !inv.isPrioritized(input)) {
+                input = inv.injectItems(input, type, src);
             }
         }
 
@@ -199,38 +216,18 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
             return null;
         }
 
-        final Iterator<List<IMEInventoryHandler<T>>> i = this.priorityInventory.descendingMap().values().iterator(); // priorityInventory.asMap().descendingMap().entrySet().iterator();
-
         final T output = request.copy();
         request = request.copy();
         output.setStackSize(0);
         final long req = request.getStackSize();
 
-        while (i.hasNext()) {
-            final List<IMEInventoryHandler<T>> invList = i.next();
+        final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
+        final int size = priorityInventory.size();
+        for (int i = 0; i < size && output.getStackSize() < req; i++) {
+            final IMEInventoryHandler<T> inv = priorityInventory.get(i);
 
-            final Iterator<IMEInventoryHandler<T>> ii = invList.iterator();
-            while (ii.hasNext() && output.getStackSize() < req) {
-                final IMEInventoryHandler<T> inv = ii.next();
-
-                request.setStackSize(req - output.getStackSize());
-                output.add(inv.extractItems(request, mode, src));
-            }
-        }
-
-        final Iterator<List<IMEInventoryHandler<T>>> j = this.stickyPriorityInventory.descendingMap().values()
-                .iterator();
-
-        while (j.hasNext()) {
-            final List<IMEInventoryHandler<T>> invList = j.next();
-
-            final Iterator<IMEInventoryHandler<T>> jj = invList.iterator();
-            while (jj.hasNext() && output.getStackSize() < req) {
-                final IMEInventoryHandler<T> inv = jj.next();
-
-                request.setStackSize(req - output.getStackSize());
-                output.add(inv.extractItems(request, mode, src));
-            }
+            request.setStackSize(req - output.getStackSize());
+            output.add(inv.extractItems(request, mode, src));
         }
 
         this.surface(this, mode);
@@ -248,21 +245,14 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
             return out;
         }
 
-        // for (Entry<Integer, IMEInventoryHandler<T>> h : priorityInventory.entries())
-        out = iterateInventories(out, priorityInventory);
-        out = iterateInventories(out, stickyPriorityInventory);
+        final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
+        final int size = priorityInventory.size();
+        for (int i = 0; i < size; i++) {
+            out = priorityInventory.get(i).getAvailableItems(out);
+        }
 
         this.surface(this, Actionable.SIMULATE);
 
-        return out;
-    }
-
-    private IItemList<T> iterateInventories(IItemList out, NavigableMap<Integer, List<IMEInventoryHandler<T>>> map) {
-        for (final List<IMEInventoryHandler<T>> i : map.values()) {
-            for (final IMEInventoryHandler<T> j : i) {
-                out = j.getAvailableItems(out);
-            }
-        }
         return out;
     }
 
@@ -274,16 +264,17 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
             return null;
         }
 
-        for (final List<IMEInventoryHandler<T>> i : this.priorityInventory.values()) {
-            for (final IMEInventoryHandler<T> j : i) {
-                final T stack = j.getAvailableItem(request);
-                if (stack != null && stack.getStackSize() > 0) {
-                    count += stack.getStackSize();
-                    if (count < 0) {
-                        // overflow
-                        count = Long.MAX_VALUE;
-                        break;
-                    }
+        final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
+        final int size = priorityInventory.size();
+        for (int i = 0; i < size; i++) {
+            IMEInventoryHandler<T> j = priorityInventory.get(i);
+            final T stack = j.getAvailableItem(request);
+            if (stack != null && stack.getStackSize() > 0) {
+                count += stack.getStackSize();
+                if (count < 0) {
+                    // overflow
+                    count = Long.MAX_VALUE;
+                    break;
                 }
             }
         }
