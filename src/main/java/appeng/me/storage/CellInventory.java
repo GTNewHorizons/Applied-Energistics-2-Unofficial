@@ -255,7 +255,7 @@ public class CellInventory implements ICellInventory {
             return null;
         }
 
-        final long size = Math.min(Integer.MAX_VALUE, request.getStackSize());
+        final long size = request.getStackSize();
 
         IAEItemStack results = null;
 
