@@ -94,7 +94,7 @@ public class TileCraftingStorageTile extends TileCraftingTile {
             return Integer.MAX_VALUE;
         }
 
-        return switch (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 7) {
+        return switch (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3) {
             default -> KILO_SCALAR * blockMultiplier;
             case 1 -> 4 * KILO_SCALAR * blockMultiplier;
             case 2 -> 16 * KILO_SCALAR * blockMultiplier;
