@@ -234,7 +234,7 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
         return false;
     }
 
-    public int getStorageBytes() {
+    public long getStorageBytes() {
         return 0;
     }
 

@@ -99,6 +99,13 @@ shapeless=
     -> ae2:BlockAdvancedCraftingStorage:3
 
 shapeless=
+    ae2:ItemExtremeStorageCell.Singularity
+    ae2:ItemExtremeStorageCell.Singularity
+    ae2:ItemExtremeStorageCell.Singularity
+    ae2:ItemExtremeStorageCell.Singularity
     ae2:BlockCraftingUnit:0
+    ae2:ItemExtremeStorageCell.Singularity
+    ae2:ItemExtremeStorageCell.Singularity
+    ae2:ItemExtremeStorageCell.Singularity
     ae2:ItemExtremeStorageCell.Singularity
     -> ae2:BlockSingularityCraftingStorage:0
