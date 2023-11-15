@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlocks;
 import appeng.block.crafting.BlockAdvancedCraftingStorage;
+import appeng.block.crafting.BlockSingularityCraftingStorage;
 
 public class TileCraftingStorageTile extends TileCraftingTile {
 
@@ -62,6 +63,11 @@ public class TileCraftingStorageTile extends TileCraftingTile {
                     return stack;
                 }
             }
+            default -> {
+                for (final ItemStack stack : blocks.craftingStorageSingularity().maybeStack(1).asSet()) {
+                    return stack;
+                }
+            }
         }
 
         return super.getItemFromTile(obj);
@@ -84,8 +90,11 @@ public class TileCraftingStorageTile extends TileCraftingTile {
         }
         Block block = this.worldObj.getBlock(this.xCoord, this.yCoord, this.zCoord);
         int blockMultiplier = block instanceof BlockAdvancedCraftingStorage ? 256 : 1;
+        if (block instanceof BlockSingularityCraftingStorage) {
+            return Integer.MAX_VALUE;
+        }
 
-        return switch (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3) {
+        return switch (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 7) {
             default -> KILO_SCALAR * blockMultiplier;
             case 1 -> 4 * KILO_SCALAR * blockMultiplier;
             case 2 -> 16 * KILO_SCALAR * blockMultiplier;

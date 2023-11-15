@@ -26,6 +26,7 @@ import appeng.block.crafting.BlockCraftingMonitor;
 import appeng.block.crafting.BlockCraftingStorage;
 import appeng.block.crafting.BlockCraftingUnit;
 import appeng.block.crafting.BlockMolecularAssembler;
+import appeng.block.crafting.BlockSingularityCraftingStorage;
 import appeng.block.grindstone.BlockCrank;
 import appeng.block.grindstone.BlockGrinder;
 import appeng.block.misc.BlockCellWorkbench;
@@ -140,6 +141,7 @@ public final class ApiBlocks implements IBlocks {
     private final ITileDefinition craftingStorage1024k;
     private final ITileDefinition craftingStorage4096k;
     private final ITileDefinition craftingStorage16384k;
+    private final ITileDefinition craftingStorageSingularity;
     private final ITileDefinition craftingMonitor;
     private final ITileDefinition molecularAssembler;
     private final ITileDefinition lightDetector;
@@ -234,6 +236,7 @@ public final class ApiBlocks implements IBlocks {
         this.craftingStorage1024k = new WrappedDamageItemDefinition(this.craftingStorage256k, 1);
         this.craftingStorage4096k = new WrappedDamageItemDefinition(this.craftingStorage256k, 2);
         this.craftingStorage16384k = new WrappedDamageItemDefinition(this.craftingStorage256k, 3);
+        this.craftingStorageSingularity = constructor.registerTileDefinition(new BlockSingularityCraftingStorage());
         this.craftingMonitor = constructor.registerTileDefinition(new BlockCraftingMonitor());
         this.molecularAssembler = constructor.registerTileDefinition(new BlockMolecularAssembler());
         this.lightDetector = constructor.registerTileDefinition(lightDetector);
@@ -660,6 +663,11 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition craftingStorage16384k() {
         return this.craftingStorage16384k;
+    }
+
+    @Override
+    public ITileDefinition craftingStorageSingularity() {
+        return this.craftingStorageSingularity;
     }
 
     @Override
