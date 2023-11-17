@@ -466,7 +466,8 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
                     downY += 5;
                     str = GuiText.ToCraftRequests.getLocal() + ": "
-                            + ReadableNumberConverter.INSTANCE.toWideReadableForm(pendingStack.getCountRequestableCrafts());
+                            + ReadableNumberConverter.INSTANCE
+                                    .toWideReadableForm(pendingStack.getCountRequestableCrafts());
                     w = 4 + this.fontRendererObj.getStringWidth(str);
                     this.fontRendererObj.drawString(
                             str,
