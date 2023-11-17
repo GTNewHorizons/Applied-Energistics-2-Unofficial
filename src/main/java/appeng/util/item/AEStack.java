@@ -20,6 +20,7 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
     private boolean isCraftable;
     private long stackSize;
     private long countRequestable;
+    private long countRequestableCrafts;
 
     static long getPacketValue(final byte type, final ByteBuf tag) {
         if (type == 0) {
@@ -58,6 +59,17 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
     @Override
     public StackType setCountRequestable(final long countRequestable) {
         this.countRequestable = countRequestable;
+        return (StackType) this;
+    }
+
+    @Override
+    public long getCountRequestableCrafts() {
+        return this.countRequestableCrafts;
+    }
+
+    @Override
+    public StackType setCountRequestableCrafts(long countRequestableCrafts) {
+        this.countRequestableCrafts = countRequestableCrafts;
         return (StackType) this;
     }
 
@@ -121,6 +133,9 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         // putPacketValue( i, priority );
         this.putPacketValue(i, this.stackSize);
         this.putPacketValue(i, this.countRequestable);
+        final byte mask2 = (byte) (this.getType(this.countRequestableCrafts));
+        i.writeByte(mask2);
+        this.putPacketValue(i, this.countRequestableCrafts);
     }
 
     private byte getType(final long num) {

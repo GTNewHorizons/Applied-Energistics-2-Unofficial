@@ -146,6 +146,7 @@ public final class ItemList implements IItemList<IAEItemStack> {
 
         if (st != null) {
             st.setCountRequestable(st.getCountRequestable() + option.getCountRequestable());
+            st.setCountRequestableCrafts(st.getCountRequestableCrafts() + option.getCountRequestableCrafts());
             return;
         }
 
@@ -153,6 +154,7 @@ public final class ItemList implements IItemList<IAEItemStack> {
         opt.setStackSize(0);
         opt.setCraftable(false);
         opt.setCountRequestable(option.getCountRequestable());
+        opt.setCountRequestableCrafts(option.getCountRequestableCrafts());
 
         this.putItemRecord(opt);
     }

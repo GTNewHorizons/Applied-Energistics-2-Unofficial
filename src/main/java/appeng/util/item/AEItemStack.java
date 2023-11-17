@@ -45,6 +45,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         this.setStackSize(is.getStackSize());
         this.setCraftable(is.isCraftable());
         this.setCountRequestable(is.getCountRequestable());
+        this.setCountRequestableCrafts(is.getCountRequestableCrafts());
     }
 
     private AEItemStack(final ItemStack is) {
@@ -87,6 +88,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         this.setStackSize(is.stackSize);
         this.setCraftable(false);
         this.setCountRequestable(0);
+        this.setCountRequestableCrafts(0);
 
         this.getDefinition().reHash();
         this.getDefinition().setIsOre(OreHelper.INSTANCE.isOre(is));
@@ -107,6 +109,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         item.setStackSize(i.getLong("Cnt"));
         item.setCountRequestable(i.getLong("Req"));
         item.setCraftable(i.getBoolean("Craft"));
+        item.setCountRequestableCrafts(i.getLong("ReqMade"));
         return item;
     }
 
@@ -148,6 +151,10 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         final long stackSize = getPacketValue(stackType, data);
         final long countRequestable = getPacketValue(countReqType, data);
 
+        final byte mask2 = data.readByte();
+        final byte countReqMadeType = (byte) ((mask2 & 0x1));
+        final long countRequestableCrafts = getPacketValue(countReqMadeType, data);
+
         final ItemStack itemstack = ItemStack.loadItemStackFromNBT(d);
         if (itemstack == null) {
             return null;
@@ -158,6 +165,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         item.setStackSize(stackSize);
         item.setCountRequestable(countRequestable);
         item.setCraftable(isCraftable);
+        item.setCountRequestableCrafts(countRequestableCrafts);
         return item;
     }
 
@@ -173,6 +181,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         this.incStackSize(option.getStackSize());
         this.setCountRequestable(this.getCountRequestable() + option.getCountRequestable());
         this.setCraftable(this.isCraftable() || option.isCraftable());
+        this.setCountRequestableCrafts(this.getCountRequestableCrafts() + option.getCountRequestableCrafts());
     }
 
     @Override
@@ -223,6 +232,8 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         } else {
             i.removeTag("tag");
         }
+
+        i.setLong("ReqMade", this.getCountRequestableCrafts());
     }
 
     @Override

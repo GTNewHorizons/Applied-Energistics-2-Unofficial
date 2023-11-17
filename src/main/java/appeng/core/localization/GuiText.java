@@ -142,6 +142,7 @@ public enum GuiText {
 
     FromStorage,
     ToCraft,
+    ToCraftRequests,
     CraftingPlan,
     CalculatingWait,
     Start,

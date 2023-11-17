@@ -59,6 +59,24 @@ public interface IAEStack<StackType extends IAEStack> {
     StackType setCountRequestable(long countRequestable);
 
     /**
+     * Number of requests made to achieve requested item count
+     *
+     * @return requests made during crafting simulation
+     */
+    default long getCountRequestableCrafts() {
+        return 0;
+    }
+
+    /**
+     * Change the number of requests made to achieve requested item count
+     *
+     * @param countRequestableCrafts requests made during crafting simulation
+     */
+    default StackType setCountRequestableCrafts(long countRequestableCrafts) {
+        return (StackType) this;
+    }
+
+    /**
      * true, if the item can be crafted.
      *
      * @return true, if it can be crafted.

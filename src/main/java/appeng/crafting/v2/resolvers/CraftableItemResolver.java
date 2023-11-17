@@ -505,7 +505,8 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             }
             for (IAEItemStack output : patternOutputs) {
                 targetPlan.addRequestable(
-                        output.copy().setStackSize(0).setCountRequestable(output.getStackSize() * totalCraftsDone));
+                        output.copy().setStackSize(0).setCountRequestable(output.getStackSize() * totalCraftsDone)
+                                .setCountRequestableCrafts(totalCraftsDone));
             }
         }
 
