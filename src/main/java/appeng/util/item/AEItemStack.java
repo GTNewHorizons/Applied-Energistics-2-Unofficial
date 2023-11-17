@@ -152,7 +152,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         final long countRequestable = getPacketValue(countReqType, data);
 
         final byte mask2 = data.readByte();
-        final byte countReqMadeType = (byte) ((mask2 & 0x1));
+        final byte countReqMadeType = (byte) ((mask2 & 0x3));
         final long countRequestableCrafts = getPacketValue(countReqMadeType, data);
 
         final ItemStack itemstack = ItemStack.loadItemStackFromNBT(d);

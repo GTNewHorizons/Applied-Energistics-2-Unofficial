@@ -90,6 +90,7 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         // priority = Integer.MIN_VALUE;
         this.setCountRequestable(0);
         this.setCraftable(false);
+        this.setCountRequestableCrafts(0);
         return (StackType) this;
     }
 

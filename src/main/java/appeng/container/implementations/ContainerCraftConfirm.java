@@ -157,6 +157,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                         final IAEItemStack toCraft = plannedItem.copy();
                         toCraft.reset();
                         toCraft.setStackSize(plannedItem.getCountRequestable());
+                        toCraft.setCountRequestableCrafts(plannedItem.getCountRequestableCrafts());
 
                         final IStorageGrid sg = this.getGrid().getCache(IStorageGrid.class);
                         final IMEInventory<IAEItemStack> items = sg.getItemInventory();
