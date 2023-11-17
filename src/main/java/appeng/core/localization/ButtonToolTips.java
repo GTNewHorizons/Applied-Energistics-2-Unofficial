@@ -185,7 +185,12 @@ public enum ButtonToolTips {
     CraftingModeStandardDesc,
     CraftingModeIgnoreMissing,
     CraftingModeIgnoreMissingDesc,
-    ExtraOptions;
+    ExtraOptions,
+
+    SwitchBytesInfo,
+    SwitchBytesInfo_Item,
+    SwitchBytesInfo_Fluid,
+    SwitchBytesInfo_Essentia;
 
     private final String root;
 

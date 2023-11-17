@@ -10,6 +10,7 @@
 
 package appeng.client.gui.implementations;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
@@ -43,17 +44,30 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private final ItemRepo repo;
     private final int rows = 4;
     private GuiImgButton units;
+    private GuiImgButton cell;
     private int tooltip = -1;
+    private final DecimalFormat df;
+    private final boolean isAdvanced;
+    private boolean isConsume;
+    private final StringBuilder sb;
+    private final String Equal;
+    private final String Minus;
 
     public GuiNetworkStatus(final InventoryPlayer inventoryPlayer, final INetworkTool te) {
         super(new ContainerNetworkStatus(inventoryPlayer, te));
         final GuiScrollbar scrollbar = new GuiScrollbar();
 
+        this.sb = new StringBuilder();
+        this.df = new DecimalFormat("#.##");
         this.setScrollBar(scrollbar);
         this.repo = new ItemRepo(scrollbar, this);
-        this.ySize = 153;
+        this.ySize = 183;
         this.xSize = 195;
         this.repo.setRowSize(5);
+        this.isAdvanced = te.getSize() != 3;
+        this.isConsume = true;
+        this.Equal = "=";
+        this.Minus = "-";
     }
 
     @Override
@@ -63,21 +77,39 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         final boolean backwards = Mouse.isButtonDown(1);
 
         if (btn == this.units) {
-            AEConfig.instance.nextPowerUnit(backwards);
-            this.units.set(AEConfig.instance.selectedPowerUnit());
+            if (this.isConsume) {
+                AEConfig.instance.nextPowerUnit(backwards);
+                this.units.set(AEConfig.instance.selectedPowerUnit());
+            } else {
+                this.isConsume = !this.isConsume;
+            }
+        } else if (btn == this.cell) {
+            if (!this.isConsume) {
+                AEConfig.instance.nextCellType(backwards);
+                this.cell.set(AEConfig.instance.selectedCellType());
+            } else {
+                this.isConsume = !this.isConsume;
+            }
         }
     }
 
     @Override
     public void initGui() {
         super.initGui();
-
         this.units = new GuiImgButton(
                 this.guiLeft - 18,
                 this.guiTop + 8,
                 Settings.POWER_UNITS,
                 AEConfig.instance.selectedPowerUnit());
         this.buttonList.add(this.units);
+        if (this.isAdvanced) {
+            this.cell = new GuiImgButton(
+                    this.guiLeft - 18,
+                    this.guiTop + 28,
+                    Settings.CELL_TYPE,
+                    AEConfig.instance.selectedCellType());
+            this.buttonList.add(this.cell);
+        }
     }
 
     @Override
@@ -114,95 +146,14 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
-
-        this.fontRendererObj
-                .drawString(GuiText.NetworkDetails.getLocal(), 8, 6, GuiColors.NetworkStatusDetails.getColor());
-
-        this.fontRendererObj.drawString(
-                GuiText.StoredPower.getLocal() + ": " + Platform.formatPowerLong(ns.getCurrentPower(), false),
-                13,
-                16,
-                GuiColors.NetworkStatusStoredPower.getColor());
-        this.fontRendererObj.drawString(
-                GuiText.MaxPower.getLocal() + ": " + Platform.formatPowerLong(ns.getMaxPower(), false),
-                13,
-                26,
-                GuiColors.NetworkStatusMaxPower.getColor());
-
-        this.fontRendererObj.drawString(
-                GuiText.PowerInputRate.getLocal() + ": " + Platform.formatPowerLong(ns.getAverageAddition(), true),
-                13,
-                143 - 10,
-                GuiColors.NetworkStatusPowerInputRate.getColor());
-        this.fontRendererObj.drawString(
-                GuiText.PowerUsageRate.getLocal() + ": " + Platform.formatPowerLong(ns.getPowerUsage(), true),
-                13,
-                143 - 20,
-                GuiColors.NetworkStatusPowerUsageRate.getColor());
-
-        final int sectionLength = 30;
-
-        int x = 0;
-        int y = 0;
-        final int xo = 12;
-        final int yo = 42;
-        final int viewStart = 0; // myScrollBar.getCurrentScroll() * 5;
-        final int viewEnd = viewStart + 5 * 4;
-
-        String toolTip = "";
-        int toolPosX = 0;
-        int toolPosY = 0;
-
-        for (int z = viewStart; z < Math.min(viewEnd, this.repo.size()); z++) {
-            final IAEItemStack refStack = this.repo.getReferenceItem(z);
-            if (refStack != null) {
-                GL11.glPushMatrix();
-                GL11.glScaled(0.5, 0.5, 0.5);
-
-                String str = Long.toString(refStack.getStackSize());
-                if (refStack.getStackSize() >= 10000) {
-                    str = Long.toString(refStack.getStackSize() / 1000) + 'k';
-                }
-
-                final int w = this.fontRendererObj.getStringWidth(str);
-                this.fontRendererObj.drawString(
-                        str,
-                        (int) ((x * sectionLength + xo + sectionLength - 19 - (w * 0.5)) * 2),
-                        (y * 18 + yo + 6) * 2,
-                        GuiColors.NetworkStatusItemCount.getColor());
-
-                GL11.glPopMatrix();
-                final int posX = x * sectionLength + xo + sectionLength - 18;
-                final int posY = y * 18 + yo;
-
-                if (this.tooltip == z - viewStart) {
-                    toolTip = Platform.getItemDisplayName(this.repo.getItem(z));
-
-                    toolTip += ('\n' + GuiText.Installed.getLocal() + ": " + (refStack.getStackSize()));
-                    if (refStack.getCountRequestable() > 0) {
-                        toolTip += ('\n' + GuiText.EnergyDrain.getLocal()
-                                + ": "
-                                + Platform.formatPowerLong(refStack.getCountRequestable(), true));
-                    }
-
-                    toolPosX = x * sectionLength + xo + sectionLength - 8;
-                    toolPosY = y * 18 + yo;
-                }
-
-                this.drawItem(posX, posY, this.repo.getItem(z));
-
-                x++;
-
-                if (x > 4) {
-                    y++;
-                    x = 0;
-                }
+        if (this.isConsume) drawConsume();
+        else {
+            switch (AEConfig.instance.selectedCellType()) {
+                case ITEM -> drawItemInfo();
+                case FLUID -> drawFluidInfo();
+                case ESSENTIA -> drawEssentiaInfo();
             }
-        }
 
-        if (this.tooltip >= 0 && toolTip.length() > 0) {
-            this.drawTooltip(toolPosX, toolPosY + 10, 0, toolTip);
         }
     }
 
@@ -295,5 +246,335 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     @Override
     public Enum getSortDisplay() {
         return ViewItems.ALL;
+    }
+
+    private void drawConsume() {
+        final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
+        String tempStr;
+        this.fontRendererObj
+                .drawString(GuiText.NetworkDetails.getLocal(), 8, 6, GuiColors.NetworkStatusDetails.getColor());
+
+        this.fontRendererObj.drawString(
+                GuiText.StoredPower.getLocal() + ": " + Platform.formatPowerLong(ns.getCurrentPower(), false),
+                13,
+                16,
+                GuiColors.NetworkStatusStoredPower.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.MaxPower.getLocal() + ": " + Platform.formatPowerLong(ns.getMaxPower(), false),
+                13,
+                26,
+                GuiColors.NetworkStatusMaxPower.getColor());
+
+        this.fontRendererObj.drawString(
+                GuiText.PowerInputRate.getLocal() + ": " + Platform.formatPowerLong(ns.getAverageAddition(), true),
+                13,
+                143 - 10,
+                GuiColors.NetworkStatusPowerInputRate.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.PowerUsageRate.getLocal() + ": " + Platform.formatPowerLong(ns.getPowerUsage(), true),
+                13,
+                143 - 20,
+                GuiColors.NetworkStatusPowerUsageRate.getColor());
+
+        // Item byte status
+        tempStr = ns.getItemBytesTotal() == 0 ? ""
+                : " (" + df.format(ns.getItemBytesUsed() * 100d / ns.getItemBytesTotal()) + "%)";
+        this.fontRendererObj.drawString(
+                GuiText.Items.getLocal() + ": "
+                        + Platform.formatByteLong(ns.getItemBytesUsed())
+                        + " / "
+                        + Platform.formatByteLong(ns.getItemBytesTotal())
+                        + tempStr,
+                13,
+                143,
+                GuiColors.DefaultBlack.getColor());
+
+        tempStr = ns.getFluidBytesTotal() == 0 ? ""
+                : " (" + df.format(ns.getFluidBytesUsed() * 100d / ns.getFluidBytesTotal()) + "%)";
+        // Fluid byte status
+        this.fontRendererObj.drawString(
+                GuiText.Fluids.getLocal() + ": "
+                        + Platform.formatByteLong(ns.getFluidBytesUsed())
+                        + " / "
+                        + Platform.formatByteLong(ns.getFluidBytesTotal())
+                        + tempStr,
+                13,
+                143 + 10,
+                GuiColors.DefaultBlack.getColor());
+
+        tempStr = ns.getEssentiaBytesTotal() == 0 ? ""
+                : " (" + df.format(ns.getEssentiaBytesUsed() * 100d / ns.getEssentiaBytesTotal()) + "%)";
+        // Essential byte status
+        this.fontRendererObj.drawString(
+                GuiText.Essentias.getLocal() + ": "
+                        + Platform.formatByteLong(ns.getEssentiaBytesUsed())
+                        + " / "
+                        + Platform.formatByteLong(ns.getEssentiaBytesTotal())
+                        + tempStr,
+                13,
+                143 + 20,
+                GuiColors.DefaultBlack.getColor());
+
+        final int sectionLength = 30;
+
+        int x = 0;
+        int y = 0;
+        final int xo = 12;
+        final int yo = 42;
+        final int viewStart = 0; // myScrollBar.getCurrentScroll() * 5;
+        final int viewEnd = viewStart + 5 * 4;
+
+        String toolTip = "";
+        int toolPosX = 0;
+        int toolPosY = 0;
+
+        for (int z = viewStart; z < Math.min(viewEnd, this.repo.size()); z++) {
+            final IAEItemStack refStack = this.repo.getReferenceItem(z);
+            if (refStack != null) {
+                GL11.glPushMatrix();
+                GL11.glScaled(0.5, 0.5, 0.5);
+
+                String str = Long.toString(refStack.getStackSize());
+                if (refStack.getStackSize() >= 10000) {
+                    str = Long.toString(refStack.getStackSize() / 1000) + 'k';
+                }
+
+                final int w = this.fontRendererObj.getStringWidth(str);
+                this.fontRendererObj.drawString(
+                        str,
+                        (int) ((x * sectionLength + xo + sectionLength - 19 - (w * 0.5)) * 2),
+                        (y * 18 + yo + 6) * 2,
+                        GuiColors.NetworkStatusItemCount.getColor());
+
+                GL11.glPopMatrix();
+                final int posX = x * sectionLength + xo + sectionLength - 18;
+                final int posY = y * 18 + yo;
+
+                if (this.tooltip == z - viewStart) {
+                    toolTip = Platform.getItemDisplayName(this.repo.getItem(z));
+
+                    toolTip += ('\n' + GuiText.Installed.getLocal() + ": " + (refStack.getStackSize()));
+                    if (refStack.getCountRequestable() > 0) {
+                        toolTip += ('\n' + GuiText.EnergyDrain.getLocal()
+                                + ": "
+                                + Platform.formatPowerLong(refStack.getCountRequestable(), true));
+                    }
+
+                    toolPosX = x * sectionLength + xo + sectionLength - 8;
+                    toolPosY = y * 18 + yo;
+                }
+
+                this.drawItem(posX, posY, this.repo.getItem(z));
+
+                x++;
+
+                if (x > 4) {
+                    y++;
+                    x = 0;
+                }
+            }
+        }
+
+        if (this.tooltip >= 0 && toolTip.length() > 0) {
+            this.drawTooltip(toolPosX, toolPosY + 10, 0, toolTip);
+        }
+
+    }
+
+    private GuiColors getCorrespondingColor(final double percentage) {
+        if (Double.isNaN(percentage)) {
+            return GuiColors.DefaultBlack;
+        } else {
+            if (percentage > 95) {
+                return GuiColors.WarningRed;
+            } else if (percentage > 75) {
+                return GuiColors.WarningOrange;
+            } else {
+                return GuiColors.DefaultBlack;
+            }
+        }
+    }
+
+    private String getProgressBar(final double percentage) {
+        int count = (int) Math.round(percentage / 5d);
+        sb.setLength(0);
+        sb.append('<');
+        for (int i = 0; i < 20; i++) {
+            if (i < count) sb.append(this.Equal);
+            else sb.append(this.Minus);
+        }
+        sb.append('>');
+        return sb.toString();
+    }
+
+    private void drawItemInfo() {
+        final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
+        String tempStr;
+        double tempDouble;
+        this.fontRendererObj
+                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.DefaultBlack.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.NetworkItemCellCount.getLocal() + " : " + ns.getItemCellCount(),
+                13,
+                16,
+                GuiColors.DefaultBlack.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.Green.getLocal() + " : "
+                        + ns.getItemCellG()
+                        + " "
+                        + GuiText.Orange.getLocal()
+                        + " : "
+                        + ns.getItemCellO()
+                        + " "
+                        + GuiText.Red.getLocal()
+                        + " : "
+                        + ns.getItemCellR(),
+                13,
+                26,
+                GuiColors.DefaultBlack.getColor());
+        // Item byte status
+        tempDouble = ns.getItemBytesUsed() * 100d / ns.getItemBytesTotal();
+        tempStr = ns.getItemBytesTotal() == 0 ? "(0%)" : " (" + df.format(tempDouble) + "%)";
+        this.fontRendererObj.drawString(
+                GuiText.BytesInfo.getLocal() + ": "
+                        + Platform.formatByteLong(ns.getItemBytesUsed())
+                        + " / "
+                        + Platform.formatByteLong(ns.getItemBytesTotal()),
+                13,
+                143 - 20,
+                getCorrespondingColor(tempDouble).getColor());
+        this.fontRendererObj.drawString(
+                getProgressBar(tempDouble) + tempStr,
+                13,
+                143 - 10,
+                getCorrespondingColor(tempDouble).getColor());
+
+        // Item type status
+        tempDouble = ns.getItemTypesUsed() * 100d / ns.getItemTypesTotal();
+        tempStr = ns.getItemTypesTotal() == 0 ? "(0%)" : " (" + df.format(tempDouble) + "%)";
+        this.fontRendererObj.drawString(
+                GuiText.TypesInfo.getLocal() + ": " + ns.getItemTypesUsed() + " / " + ns.getItemTypesTotal(),
+                13,
+                143,
+                getCorrespondingColor(tempDouble).getColor());
+        this.fontRendererObj.drawString(
+                getProgressBar(tempDouble) + tempStr,
+                13,
+                143 + 10,
+                getCorrespondingColor(tempDouble).getColor());
+    }
+
+    private void drawFluidInfo() {
+        final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
+        String tempStr;
+        double tempDouble;
+        this.fontRendererObj
+                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.DefaultBlack.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.NetworkFluidCellCount.getLocal() + " : " + ns.getFluidCellCount(),
+                13,
+                16,
+                GuiColors.DefaultBlack.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.Green.getLocal() + " : "
+                        + ns.getFluidCellG()
+                        + " "
+                        + GuiText.Orange.getLocal()
+                        + " : "
+                        + ns.getFluidCellO()
+                        + " "
+                        + GuiText.Red.getLocal()
+                        + " : "
+                        + ns.getFluidCellR(),
+                13,
+                26,
+                GuiColors.DefaultBlack.getColor());
+        // Fluid byte status
+        tempDouble = ns.getFluidBytesUsed() * 100d / ns.getFluidBytesTotal();
+        tempStr = ns.getFluidBytesTotal() == 0 ? "(0%)" : " (" + df.format(tempDouble) + "%)";
+        this.fontRendererObj.drawString(
+                GuiText.BytesInfo.getLocal() + ": "
+                        + Platform.formatByteLong(ns.getFluidBytesUsed())
+                        + " / "
+                        + Platform.formatByteLong(ns.getFluidBytesTotal()),
+                13,
+                143 - 20,
+                getCorrespondingColor(tempDouble).getColor());
+        this.fontRendererObj.drawString(
+                getProgressBar(tempDouble) + tempStr,
+                13,
+                143 - 10,
+                getCorrespondingColor(tempDouble).getColor());
+
+        // Fluid type status
+        tempDouble = ns.getFluidTypesUsed() * 100d / ns.getFluidTypesTotal();
+        tempStr = ns.getFluidTypesTotal() == 0 ? "(0%)" : " (" + df.format(tempDouble) + "%)";
+        this.fontRendererObj.drawString(
+                GuiText.TypesInfo.getLocal() + ": " + ns.getFluidTypesUsed() + " / " + ns.getFluidTypesTotal(),
+                13,
+                143,
+                getCorrespondingColor(tempDouble).getColor());
+        this.fontRendererObj.drawString(
+                getProgressBar(tempDouble) + tempStr,
+                13,
+                143 + 10,
+                getCorrespondingColor(tempDouble).getColor());
+    }
+
+    private void drawEssentiaInfo() {
+        final ContainerNetworkStatus ns = (ContainerNetworkStatus) this.inventorySlots;
+        String tempStr;
+        double tempDouble;
+        this.fontRendererObj
+                .drawString(GuiText.NetworkBytesDetails.getLocal(), 8, 6, GuiColors.DefaultBlack.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.NetworkEssentiaCellCount.getLocal() + " : " + ns.getEssentiaCellCount(),
+                13,
+                16,
+                GuiColors.DefaultBlack.getColor());
+        this.fontRendererObj.drawString(
+                GuiText.Green.getLocal() + " : "
+                        + ns.getEssentiaCellG()
+                        + " "
+                        + GuiText.Orange.getLocal()
+                        + " : "
+                        + ns.getEssentiaCellO()
+                        + " "
+                        + GuiText.Red.getLocal()
+                        + " : "
+                        + ns.getEssentiaCellR(),
+                13,
+                26,
+                GuiColors.DefaultBlack.getColor());
+        // Essentia byte status
+        tempDouble = ns.getEssentiaBytesUsed() * 100d / ns.getEssentiaBytesTotal();
+        tempStr = ns.getEssentiaBytesTotal() == 0 ? "(0%)" : " (" + df.format(tempDouble) + "%)";
+        this.fontRendererObj.drawString(
+                GuiText.BytesInfo.getLocal() + ": "
+                        + Platform.formatByteLong(ns.getEssentiaBytesUsed())
+                        + " / "
+                        + Platform.formatByteLong(ns.getEssentiaBytesTotal()),
+                13,
+                143 - 20,
+                getCorrespondingColor(tempDouble).getColor());
+        this.fontRendererObj.drawString(
+                getProgressBar(tempDouble) + tempStr,
+                13,
+                143 - 10,
+                getCorrespondingColor(tempDouble).getColor());
+
+        // Essentia type status
+        tempDouble = ns.getEssentiaTypesUsed() * 100d / ns.getEssentiaTypesTotal();
+        tempStr = ns.getEssentiaTypesTotal() == 0 ? "(0%)" : " (" + df.format(tempDouble) + "%)";
+        this.fontRendererObj.drawString(
+                GuiText.TypesInfo.getLocal() + ": " + ns.getEssentiaTypesUsed() + " / " + ns.getEssentiaTypesTotal(),
+                13,
+                143,
+                getCorrespondingColor(tempDouble).getColor());
+        this.fontRendererObj.drawString(
+                getProgressBar(tempDouble) + tempStr,
+                13,
+                143 + 10,
+                getCorrespondingColor(tempDouble).getColor());
     }
 }

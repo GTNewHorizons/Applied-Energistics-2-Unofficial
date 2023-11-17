@@ -53,4 +53,5 @@ public interface IStorageGrid extends IGridCache, IStorageMonitorable {
      * remove a provider added with addCellContainer
      */
     void unregisterCellProvider(ICellProvider cc);
+
 }

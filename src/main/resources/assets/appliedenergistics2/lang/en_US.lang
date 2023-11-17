@@ -151,6 +151,7 @@ gui.appliedenergistics2.StorageBus=Storage Bus
 gui.appliedenergistics2.EnergyDrain=Passive Drain
 gui.appliedenergistics2.Installed=Installed
 gui.appliedenergistics2.NetworkTool=Network Tool
+gui.appliedenergistics2.AdvancedNetworkTool=Advanced Network Tool
 gui.appliedenergistics2.PowerUsageRate=Energy Usage
 gui.appliedenergistics2.PowerInputRate=Energy Generation
 gui.appliedenergistics2.PortableCell=Portable Cell
@@ -273,6 +274,19 @@ gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=Hold shift click to h
 gui.appliedenergistics2.Nothing=Nothing
 gui.appliedenergistics2.VoidCellTooltip=Deletes §4everything§7 stored on it
 gui.appliedenergistics2.Deprecated=Deprecated, will be removed soon!
+
+gui.appliedenergistics2.NetworkBytesDetails=Network Bytes Details
+gui.appliedenergistics2.Items=Items
+gui.appliedenergistics2.Fluids=Fluids
+gui.appliedenergistics2.Essentias=Essen
+gui.appliedenergistics2.NetworkItemCellCount=Network Item Cell Count
+gui.appliedenergistics2.NetworkFluidCellCount=Network Fluid Cell Count
+gui.appliedenergistics2.NetworkEssentiaCellCount=Network Essentia Cell Count
+gui.appliedenergistics2.Green=Green
+gui.appliedenergistics2.Orange=Orange
+gui.appliedenergistics2.Red=Red
+gui.appliedenergistics2.TypesInfo=Types
+gui.appliedenergistics2.BytesInfo=Bytes
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
@@ -449,6 +463,11 @@ gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Ignore Missing Crafti
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=Starts craft even if ingredients are missing from the ME System.
 
 gui.tooltips.appliedenergistics2.ExtraOptions=Extra Options
+
+gui.tooltips.appliedenergistics2.SwitchBytesInfo=Cell Info
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Item=Item
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Fluid=Fluid
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Essentia=Essentia
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
@@ -653,6 +672,7 @@ item.appliedenergistics2.ToolNetherQuartzWrench.name=Nether Quartz Wrench
 item.appliedenergistics2.ItemPaintBall.name=Paint Ball
 item.appliedenergistics2.ToolPortableCell.name=Portable Cell
 item.appliedenergistics2.ToolNetworkTool.name=Network Tool
+item.appliedenergistics2.ToolAdvancedNetworkTool.name=Advanced Network Tool
 item.appliedenergistics2.ToolChargedStaff.name=Charged Staff
 item.appliedenergistics2.ToolEntropyManipulator.name=Entropy Manipulator
 item.appliedenergistics2.ToolMassCannon.name=Matter Cannon

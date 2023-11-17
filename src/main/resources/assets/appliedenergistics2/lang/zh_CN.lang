@@ -151,6 +151,7 @@ gui.appliedenergistics2.StorageBus=存储总线
 gui.appliedenergistics2.EnergyDrain=被动流失
 gui.appliedenergistics2.Installed=已安装
 gui.appliedenergistics2.NetworkTool=网络工具
+gui.appliedenergistics2.AdvancedNetworkTool=高级网络工具
 gui.appliedenergistics2.PowerUsageRate=耗能
 gui.appliedenergistics2.PowerInputRate=产能
 gui.appliedenergistics2.PortableCell=便携元件
@@ -264,6 +265,19 @@ gui.appliedenergistics2.HoldShiftForTooltip=按住Shift以查看拓展tooltip
 gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=shift点击,高亮ME接口
 gui.appliedenergistics2.VoidCellTooltip=删除§任何§7存储在里面的物品
 gui.appliedenergistics2.Nothing=无
+
+gui.appliedenergistics2.NetworkBytesDetails=网络存储信息
+gui.appliedenergistics2.Items=物品
+gui.appliedenergistics2.Fluids=流体
+gui.appliedenergistics2.Essentias=源质
+gui.appliedenergistics2.NetworkItemCellCount=网络物品元件数量
+gui.appliedenergistics2.NetworkFluidCellCount=网络流体元件数量
+gui.appliedenergistics2.NetworkEssentiaCellCount=网络源质元件数量
+gui.appliedenergistics2.Green=绿
+gui.appliedenergistics2.Orange=橙
+gui.appliedenergistics2.Red=红
+gui.appliedenergistics2.TypesInfo=种类
+gui.appliedenergistics2.BytesInfo=字节
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
@@ -414,6 +428,11 @@ gui.tooltips.appliedenergistics2.InsertionModePreferEmpty=优先向空槽输出
 gui.tooltips.appliedenergistics2.InsertionModePreferEmptyDesc=类似默认模式,但优先向空槽输出
 gui.tooltips.appliedenergistics2.InsertionModeOnlyEmpty=只向空槽输出
 gui.tooltips.appliedenergistics2.InsertionModeOnlyEmptyDesc=从前到后,不堆叠
+
+gui.tooltips.appliedenergistics2.SwitchBytesInfo=存储信息
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Item=物品
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Fluid=流体
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Essentia=源质
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
@@ -614,6 +633,7 @@ item.appliedenergistics2.ToolNetherQuartzWrench.name=下界石英扳手
 item.appliedenergistics2.ItemPaintBall.name=染色球
 item.appliedenergistics2.ToolPortableCell.name=便携元件
 item.appliedenergistics2.ToolNetworkTool.name=网络工具
+item.appliedenergistics2.ToolAdvancedNetworkTool.name=高级网络工具
 item.appliedenergistics2.ToolChargedStaff.name=充能手杖
 item.appliedenergistics2.ToolEntropyManipulator.name=熵变机械臂
 item.appliedenergistics2.ToolMassCannon.name=物质炮

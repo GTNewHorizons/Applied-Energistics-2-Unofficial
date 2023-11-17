@@ -30,6 +30,7 @@ import appeng.client.EffectType;
 import appeng.core.CommonHelper;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.items.tools.ToolAdvancedNetworkTool;
 import appeng.items.tools.ToolNetworkTool;
 import appeng.util.Platform;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -125,7 +126,8 @@ public class ServerHelper extends CommonHelper {
             for (int x = 0; x < InventoryPlayer.getHotbarSize(); x++) {
                 final ItemStack is = player.inventory.getStackInSlot(x);
 
-                if (is != null && is.getItem() instanceof ToolNetworkTool) {
+                if (is != null && (is.getItem() instanceof ToolNetworkTool
+                        || is.getItem() instanceof ToolAdvancedNetworkTool)) {
                     final NBTTagCompound c = is.getTagCompound();
                     if (c != null && c.getBoolean("hideFacades")) {
                         return CableRenderMode.CableView;

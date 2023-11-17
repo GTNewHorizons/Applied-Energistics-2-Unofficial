@@ -77,6 +77,10 @@ gui.appliedenergistics2.EUTunnel=EU
 gui.appliedenergistics2.RFTunnel=RF
 gui.appliedenergistics2.LightTunnel=光
 
+gui.appliedenergistics2.Items=物品
+gui.appliedenergistics2.Fluids=流體
+gui.appliedenergistics2.Essentias=源質
+
 gui.appliedenergistics2.security.extract.name=取出
 gui.appliedenergistics2.security.inject.name=存入
 gui.appliedenergistics2.security.craft.name=合成
@@ -105,6 +109,7 @@ gui.appliedenergistics2.StorageBus=存儲總線
 gui.appliedenergistics2.EnergyDrain=被動流失
 gui.appliedenergistics2.Installed=已安裝
 gui.appliedenergistics2.NetworkTool=網絡工具
+gui.appliedenergistics2.AdvancedNetworkTool=高級網絡工具
 gui.appliedenergistics2.PowerUsageRate=耗能
 gui.appliedenergistics2.PowerInputRate=產能
 gui.appliedenergistics2.PortableCell=便攜元件
@@ -184,6 +189,19 @@ gui.appliedenergistics2.CalculatingWait=正在計算,請等待...
 gui.appliedenergistics2.Clean=清空
 gui.appliedenergistics2.InvalidPattern=無效樣板
 
+gui.appliedenergistics2.NetworkBytesDetails=網絡存儲信息
+gui.appliedenergistics2.Items=物品
+gui.appliedenergistics2.Fluids=流體
+gui.appliedenergistics2.Essentias=源質
+gui.appliedenergistics2.NetworkItemCellCount=網絡物品元件數量
+gui.appliedenergistics2.NetworkFluidCellCount=網絡流體元件數量
+gui.appliedenergistics2.NetworkEssentiaCellCount=網絡源質元件數量
+gui.appliedenergistics2.Green=綠
+gui.appliedenergistics2.Orange=橙
+gui.appliedenergistics2.Red=紅
+gui.appliedenergistics2.TypesInfo=種類
+gui.appliedenergistics2.BytesInfo=字節
+
 gui.tooltips.appliedenergistics2.Stash=存儲物品
 gui.tooltips.appliedenergistics2.StashDesc=將合成槽的物品返回網絡
 gui.tooltips.appliedenergistics2.Substitutions=礦物詞典替換
@@ -258,6 +276,11 @@ gui.tooltips.appliedenergistics2.TerminalStyle_Full=全屏
 gui.tooltips.appliedenergistics2.TerminalStyle_Tall=長
 gui.tooltips.appliedenergistics2.TerminalStyle_Small=短
 gui.tooltips.appliedenergistics2.CraftingStatus=合成狀態
+
+gui.tooltips.appliedenergistics2.SwitchBytesInfo=存儲信息
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Item=物品
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Fluid=流體
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Essentia=源質
 
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=EU
@@ -410,6 +433,7 @@ item.appliedenergistics2.ToolNetherQuartzWrench.name=下界石英扳手
 item.appliedenergistics2.ItemPaintBall.name=染色球
 item.appliedenergistics2.ToolPortableCell.name=便攜元件
 item.appliedenergistics2.ToolNetworkTool.name=網絡工具
+item.appliedenergistics2.ToolAdvancedNetworkTool.name=高級網絡工具
 item.appliedenergistics2.ToolChargedStaff.name=充能手杖
 item.appliedenergistics2.ToolEntropyManipulator.name=熵變機械臂
 item.appliedenergistics2.ToolMassCannon.name=物質炮

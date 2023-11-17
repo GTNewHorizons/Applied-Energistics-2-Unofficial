@@ -49,6 +49,7 @@ public enum GuiText {
     PortableCell,
 
     NetworkTool,
+    AdvancedNetworkTool,
     PowerUsageRate,
     PowerInputRate,
     Installed,
@@ -207,7 +208,21 @@ public enum GuiText {
     VoidCellTooltip,
 
     // If a thing is deprecated
-    Deprecated;
+    Deprecated,
+
+    // Network bytes status
+    NetworkItemCellCount,
+    NetworkFluidCellCount,
+    NetworkEssentiaCellCount,
+    Green,
+    Orange,
+    Red,
+    NetworkBytesDetails,
+    Items,
+    Fluids,
+    Essentias,
+    TypesInfo,
+    BytesInfo;
 
     private final String root;
 

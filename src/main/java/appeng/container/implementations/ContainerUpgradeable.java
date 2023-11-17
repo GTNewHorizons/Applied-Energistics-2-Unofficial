@@ -25,6 +25,7 @@ import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.guiobjects.IGuiItem;
+import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.parts.IPart;
 import appeng.api.util.IConfigManager;
 import appeng.container.AEBaseContainer;
@@ -33,7 +34,7 @@ import appeng.container.slot.IOptionalSlotHost;
 import appeng.container.slot.OptionalSlotFake;
 import appeng.container.slot.OptionalSlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.items.contents.NetworkToolViewer;
+import appeng.items.tools.ToolAdvancedNetworkTool;
 import appeng.items.tools.ToolNetworkTool;
 import appeng.parts.automation.PartExportBus;
 import appeng.util.Platform;
@@ -55,7 +56,8 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
     public SchedulingMode schedulingMode = SchedulingMode.DEFAULT;
 
     private int tbSlot;
-    private NetworkToolViewer tbInventory;
+    // change to interface
+    private INetworkTool tbInventory;
 
     public ContainerUpgradeable(final InventoryPlayer ip, final IUpgradeableHost te) {
         super(ip, (TileEntity) (te instanceof TileEntity ? te : null), (IPart) (te instanceof IPart ? te : null));
@@ -84,25 +86,30 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
         final IInventory pi = this.getPlayerInv();
         for (int x = 0; x < pi.getSizeInventory(); x++) {
             final ItemStack pii = pi.getStackInSlot(x);
-            if (pii != null && pii.getItem() instanceof ToolNetworkTool) {
+            // Add ToolAdvancedNetworkTool recognition
+            if (pii != null
+                    && (pii.getItem() instanceof ToolNetworkTool || pii.getItem() instanceof ToolAdvancedNetworkTool)) {
                 this.lockPlayerInventorySlot(x);
                 this.tbSlot = x;
-                this.tbInventory = (NetworkToolViewer) ((IGuiItem) pii.getItem())
+                this.tbInventory = (INetworkTool) ((IGuiItem) pii.getItem())
                         .getGuiObject(pii, w, xCoord, yCoord, zCoord);
                 break;
             }
         }
 
         if (this.hasToolbox()) {
-            for (int v = 0; v < 3; v++) {
-                for (int u = 0; u < 3; u++) {
+            int size = this.tbInventory.getSize();
+            // For advanced toolbox to move down a little bit
+            int yBias = size == 3 ? 0 : 7;
+            for (int v = 0; v < size; v++) {
+                for (int u = 0; u < size; u++) {
                     this.addSlotToContainer(
                             (new SlotRestrictedInput(
                                     SlotRestrictedInput.PlacableItemType.UPGRADES,
                                     this.tbInventory,
-                                    u + v * 3,
+                                    u + v * size,
                                     186 + u * 18,
-                                    this.getHeight() - 82 + v * 18,
+                                    this.getHeight() - 82 - yBias + v * 18,
                                     this.getInventoryPlayer())).setPlayerSide());
                 }
             }
@@ -115,6 +122,10 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
 
     public boolean hasToolbox() {
         return this.tbInventory != null;
+    }
+
+    public int getToolboxSize() {
+        return this.tbInventory.getSize();
     }
 
     protected int getHeight() {

@@ -1867,4 +1867,33 @@ public class Platform {
     public static long ceilDiv(long a, long b) {
         return Math.addExact(Math.addExact(a, b), -1) / b;
     }
+
+    /**
+     * From bytes to K,M,G,T like
+     * 
+     * @param n Bytes number
+     * @return String that like 1G or 1.4T
+     */
+    public static String formatByteLong(final long n) {
+        int storageUnit = Long.toBinaryString(n).length() / 10;
+        final DecimalFormat df = new DecimalFormat("#.##");
+        switch (storageUnit) {
+            case 6:
+                return df.format((double) n / 1152921504606846976d) + " EB";
+            case 5:
+                return df.format((double) n / 1125899906842624d) + " PB";
+            case 4:
+                return df.format((double) n / 1099511627776d) + " TB";
+            case 3:
+                return df.format((double) n / 1073741824d) + " GB";
+            case 2:
+                return df.format((double) n / 1048576d) + " MB";
+            case 1:
+                return df.format((double) n / 1024d) + " kB";
+            case 0:
+                return df.format((double) n) + " B";
+            default:
+                return df.format((double) n) + " B";
+        }
+    }
 }

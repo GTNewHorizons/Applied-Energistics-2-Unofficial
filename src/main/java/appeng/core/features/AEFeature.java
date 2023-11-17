@@ -82,6 +82,7 @@ public enum AEFeature {
     IOPort(Constants.CATEGORY_STORAGE),
 
     NetworkTool(Constants.CATEGORY_NETWORK_TOOL),
+    AdvancedNetworkTool(Constants.CATEGORY_ADVANCED_NETWORK_TOOL),
 
     DenseEnergyCells(Constants.CATEGORY_HIGHER_CAPACITY),
     DenseCables(Constants.CATEGORY_HIGHER_CAPACITY),
@@ -174,6 +175,7 @@ public enum AEFeature {
         private static final String CATEGORY_RENDERING = "Rendering";
         private static final String CATEGORY_FACADES = "Facades";
         private static final String CATEGORY_NETWORK_TOOL = "NetworkTool";
+        private static final String CATEGORY_ADVANCED_NETWORK_TOOL = "AdvancedNetworkTool";
         private static final String CATEGORY_PORTABLE_CELL = "PortableCell";
     }
 }

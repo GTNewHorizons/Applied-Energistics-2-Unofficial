@@ -1,13 +1,3 @@
-/*
- * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2015, AlgorithmX2, All rights reserved. Applied
- * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version. Applied Energistics 2 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
- * Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
- * Applied Energistics 2. If not, see <http://www.gnu.org/licenses/lgpl>.
- */
-
 package appeng.items.tools;
 
 import java.util.EnumSet;
@@ -53,21 +43,15 @@ import cofh.api.item.IToolHammer;
 @InterfaceList(
         value = { @Interface(iface = "cofh.api.item.IToolHammer", iname = IntegrationType.CoFHWrench),
                 @Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore) })
-public class ToolNetworkTool extends AEBaseItem
+public class ToolAdvancedNetworkTool extends AEBaseItem
         implements IGuiItem, IAEWrench, IToolWrench, IToolHammer, HasServerSideToolLogic {
 
-    public ToolNetworkTool() {
+    public ToolAdvancedNetworkTool() {
         super(Optional.absent());
 
-        this.setFeature(EnumSet.of(AEFeature.NetworkTool));
+        this.setFeature(EnumSet.of(AEFeature.AdvancedNetworkTool));
         this.setMaxStackSize(1);
         this.setHarvestLevel("wrench", 0);
-    }
-
-    @Override
-    public IGuiItemObject getGuiObject(final ItemStack is, final World world, final int x, final int y, final int z) {
-        final TileEntity te = world.getTileEntity(x, y, z);
-        return new NetworkToolViewer(is, (IGridHost) (te instanceof IGridHost ? te : null), 3);
     }
 
     @Override
@@ -134,12 +118,6 @@ public class ToolNetworkTool extends AEBaseItem
     }
 
     @Override
-    public boolean doesSneakBypassUse(final World world, final int x, final int y, final int z,
-            final EntityPlayer player) {
-        return true;
-    }
-
-    @Override
     public boolean serverSideToolLogic(final ItemStack is, final EntityPlayer p, final World w, final int x,
             final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ) {
         if (side >= 0) {
@@ -181,7 +159,7 @@ public class ToolNetworkTool extends AEBaseItem
                 if (te instanceof IGridHost) {
                     Platform.openGUI(p, te, ForgeDirection.getOrientation(side), GuiBridge.GUI_NETWORK_STATUS);
                 } else {
-                    Platform.openGUI(p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_NETWORK_TOOL);
+                    Platform.openGUI(p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_ADVANCED_NETWORK_TOOL);
                 }
 
                 return true;
@@ -189,18 +167,21 @@ public class ToolNetworkTool extends AEBaseItem
                 b.onBlockActivated(w, x, y, z, p, side, hitX, hitY, hitZ);
             }
         } else {
-            Platform.openGUI(p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_NETWORK_TOOL);
+            Platform.openGUI(p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_ADVANCED_NETWORK_TOOL);
         }
-
         return false;
+    }
+
+    @Override
+    public boolean doesSneakBypassUse(final World world, final int x, final int y, final int z,
+            final EntityPlayer player) {
+        return true;
     }
 
     @Override
     public boolean canWrench(final ItemStack is, final EntityPlayer player, final int x, final int y, final int z) {
         return true;
     }
-
-    /* IToolWrench (BC) */
 
     @Override
     public boolean canWrench(final EntityPlayer player, final int x, final int y, final int z) {
@@ -212,8 +193,6 @@ public class ToolNetworkTool extends AEBaseItem
         player.swingItem();
     }
 
-    /* IToolHammer (CoFH) */
-
     @Override
     public boolean isUsable(ItemStack itemStack, EntityLivingBase entityLivingBase, int x, int y, int z) {
         return true;
@@ -223,4 +202,11 @@ public class ToolNetworkTool extends AEBaseItem
     public void toolUsed(ItemStack itemStack, EntityLivingBase entity, int x, int y, int z) {
         entity.swingItem();
     }
+
+    @Override
+    public IGuiItemObject getGuiObject(final ItemStack is, final World world, final int x, final int y, final int z) {
+        final TileEntity te = world.getTileEntity(x, y, z);
+        return new NetworkToolViewer(is, (IGridHost) (te instanceof IGridHost ? te : null), 5);
+    }
+
 }

@@ -23,6 +23,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
 import appeng.api.config.AdvancedBlockingMode;
+import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingMode;
 import appeng.api.config.CraftingStatus;
@@ -636,6 +637,26 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.CraftingModeIgnoreMissing,
                     ButtonToolTips.CraftingModeIgnoreMissingDesc);
             this.registerApp(16 * 6 + 5, Settings.ACTIONS, ActionItems.EXTRA_OPTIONS, ButtonToolTips.ExtraOptions, "");
+
+            this.registerApp(
+                    16 * 10 + 6,
+                    Settings.CELL_TYPE,
+                    CellType.ITEM,
+                    ButtonToolTips.SwitchBytesInfo,
+                    ButtonToolTips.SwitchBytesInfo_Item);
+            this.registerApp(
+                    16 * 10 + 7,
+                    Settings.CELL_TYPE,
+                    CellType.FLUID,
+                    ButtonToolTips.SwitchBytesInfo,
+                    ButtonToolTips.SwitchBytesInfo_Fluid);
+            this.registerApp(
+                    16 * 10 + 8,
+                    Settings.CELL_TYPE,
+                    CellType.ESSENTIA,
+                    ButtonToolTips.SwitchBytesInfo,
+                    ButtonToolTips.SwitchBytesInfo_Essentia);
+
         }
     }
 

@@ -26,12 +26,14 @@ import appeng.api.networking.IGridBlock;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
+import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
+import appeng.me.cache.GridStorageCache;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 
@@ -48,6 +50,78 @@ public class ContainerNetworkStatus extends AEBaseContainer {
 
     @GuiSync(3)
     public long maxPower;
+
+    @GuiSync(4)
+    public long itemBytesTotal;
+
+    @GuiSync(5)
+    public long itemBytesUsed;
+
+    @GuiSync(6)
+    public long itemTypesTotal;
+
+    @GuiSync(7)
+    public long itemTypesUsed;
+
+    @GuiSync(8)
+    public long itemCellG;
+
+    @GuiSync(9)
+    public long itemCellO;
+
+    @GuiSync(10)
+    public long itemCellR;
+
+    @GuiSync(11)
+    public long fluidBytesTotal;
+
+    @GuiSync(12)
+    public long fluidBytesUsed;
+
+    @GuiSync(13)
+    public long fluidTypesTotal;
+
+    @GuiSync(14)
+    public long fluidTypesUsed;
+
+    @GuiSync(15)
+    public long fluidCellG;
+
+    @GuiSync(16)
+    public long fluidCellO;
+
+    @GuiSync(17)
+    public long fluidCellR;
+
+    @GuiSync(18)
+    public long essentiaBytesTotal;
+
+    @GuiSync(19)
+    public long essentiaBytesUsed;
+
+    @GuiSync(20)
+    public long essentiaTypesTotal;
+
+    @GuiSync(21)
+    public long essentiaTypesUsed;
+
+    @GuiSync(22)
+    public long essentiaCellG;
+
+    @GuiSync(23)
+    public long essentiaCellO;
+
+    @GuiSync(24)
+    public long essentiaCellR;
+
+    @GuiSync(25)
+    public long itemCellCount;
+
+    @GuiSync(26)
+    public long fluidCellCount;
+
+    @GuiSync(27)
+    public long essentiaCellCount;
 
     private IGrid network;
     private int delay = 40;
@@ -121,6 +195,24 @@ public class ContainerNetworkStatus extends AEBaseContainer {
             } catch (final IOException e) {
                 // :P
             }
+            final GridStorageCache sg = this.network.getCache(IStorageGrid.class);
+            if (sg != null) {
+                this.itemBytesUsed = sg.getItemBytesUsed();
+                this.itemBytesTotal = sg.getItemBytesTotal();
+                this.itemCellG = sg.getItemCellG();
+                this.itemCellO = sg.getItemCellO();
+                this.itemCellR = sg.getItemCellR();
+                this.itemCellCount = sg.getItemCellCount();
+
+                this.itemTypesUsed = sg.getItemTypesUsed();
+                this.itemTypesTotal = sg.getItemTypesTotal();
+
+                this.fluidBytesUsed = sg.getFluidBytesUsed();
+                this.fluidBytesTotal = sg.getFluidBytesTotal();
+
+                this.essentiaBytesUsed = sg.getEssentiaBytesUsed();
+                this.essentiaBytesTotal = sg.getEssentiaBytesTotal();
+            }
         }
         super.detectAndSendChanges();
     }
@@ -155,5 +247,101 @@ public class ContainerNetworkStatus extends AEBaseContainer {
 
     private void setPowerUsage(final long powerUsage) {
         this.powerUsage = powerUsage;
+    }
+
+    public long getItemBytesTotal() {
+        return itemBytesTotal;
+    }
+
+    public long getItemBytesUsed() {
+        return itemBytesUsed;
+    }
+
+    public long getItemTypesTotal() {
+        return itemTypesTotal;
+    }
+
+    public long getItemTypesUsed() {
+        return itemTypesUsed;
+    }
+
+    public long getItemCellG() {
+        return itemCellG;
+    }
+
+    public long getItemCellO() {
+        return itemCellO;
+    }
+
+    public long getItemCellR() {
+        return itemCellR;
+    }
+
+    public long getFluidBytesTotal() {
+        return fluidBytesTotal;
+    }
+
+    public long getFluidBytesUsed() {
+        return fluidBytesUsed;
+    }
+
+    public long getFluidTypesTotal() {
+        return fluidTypesTotal;
+    }
+
+    public long getFluidTypesUsed() {
+        return fluidTypesUsed;
+    }
+
+    public long getFluidCellG() {
+        return fluidCellG;
+    }
+
+    public long getFluidCellO() {
+        return fluidCellO;
+    }
+
+    public long getFluidCellR() {
+        return fluidCellR;
+    }
+
+    public long getEssentiaBytesTotal() {
+        return essentiaBytesTotal;
+    }
+
+    public long getEssentiaBytesUsed() {
+        return essentiaBytesUsed;
+    }
+
+    public long getEssentiaTypesTotal() {
+        return essentiaTypesTotal;
+    }
+
+    public long getEssentiaTypesUsed() {
+        return essentiaTypesUsed;
+    }
+
+    public long getEssentiaCellG() {
+        return essentiaCellG;
+    }
+
+    public long getEssentiaCellO() {
+        return essentiaCellO;
+    }
+
+    public long getEssentiaCellR() {
+        return essentiaCellR;
+    }
+
+    public long getItemCellCount() {
+        return itemCellCount;
+    }
+
+    public long getFluidCellCount() {
+        return fluidCellCount;
+    }
+
+    public long getEssentiaCellCount() {
+        return essentiaCellCount;
     }
 }

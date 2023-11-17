@@ -46,6 +46,7 @@ import appeng.client.gui.GuiNull;
 import appeng.container.AEBaseContainer;
 import appeng.container.ContainerNull;
 import appeng.container.ContainerOpenContext;
+import appeng.container.implementations.ContainerAdvancedNetworkTool;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerChest;
 import appeng.container.implementations.ContainerCondenser;
@@ -141,6 +142,8 @@ public enum GuiBridge implements IGuiHandler {
     GUI_CRAFTING_CPU(ContainerCraftingCPU.class, TileCraftingTile.class, GuiHostType.WORLD, SecurityPermissions.CRAFT),
 
     GUI_NETWORK_TOOL(ContainerNetworkTool.class, INetworkTool.class, GuiHostType.ITEM, null),
+
+    GUI_ADVANCED_NETWORK_TOOL(ContainerAdvancedNetworkTool.class, INetworkTool.class, GuiHostType.ITEM, null),
 
     GUI_QUARTZ_KNIFE(ContainerQuartzKnife.class, QuartzKnifeObj.class, GuiHostType.ITEM, null),
 

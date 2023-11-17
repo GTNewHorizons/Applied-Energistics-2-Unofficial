@@ -114,6 +114,10 @@ public class TileChest extends AENetworkPowerTile
         this.setInternalPowerFlow(AccessRestriction.WRITE);
     }
 
+    public IMEInventory<IAEItemStack> getInternal(final StorageChannel channel) throws ChestNoHandler {
+        return (IMEInventory<IAEItemStack>) this.getHandler(channel);
+    }
+
     @Override
     protected void PowerEvent(final PowerEventType x) {
         if (x == PowerEventType.REQUEST_POWER) {
@@ -160,7 +164,7 @@ public class TileChest extends AENetworkPowerTile
         return 1;
     }
 
-    private IMEInventoryHandler getHandler(final StorageChannel channel) throws ChestNoHandler {
+    public IMEInventoryHandler getHandler(final StorageChannel channel) throws ChestNoHandler {
         if (!this.isCached) {
             this.itemCell = null;
             this.fluidCell = null;
