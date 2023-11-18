@@ -404,11 +404,11 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 if (stored != null && stored.getStackSize() > 0) {
                     lines++;
                 }
-                if (pendingStack != null && pendingStack.getStackSize() > 0) {
+                if (missingStack != null && missingStack.getStackSize() > 0) {
                     lines++;
                 }
                 if (pendingStack != null && pendingStack.getStackSize() > 0) {
-                    lines++;
+                    lines += 2;
                 }
 
                 final int negY = ((lines - 1) * 5) / 2;
