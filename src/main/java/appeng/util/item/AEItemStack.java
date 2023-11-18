@@ -233,7 +233,8 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
             i.removeTag("tag");
         }
 
-        i.setLong("ReqMade", this.getCountRequestableCrafts());
+        // Don't break any existing drive swapping automation in the world
+        if (this.getCountRequestableCrafts() != 0L) i.setLong("ReqMade", this.getCountRequestableCrafts());
     }
 
     @Override
