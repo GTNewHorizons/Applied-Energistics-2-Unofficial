@@ -94,7 +94,7 @@ public class GridStorageCache implements IStorageGrid {
 
     public GridStorageCache(final IGrid g) {
         this.myGrid = g;
-        this.networkBytesUpdateFrequency = AEConfig.instance.networkBytesUpdateFrequency * 20;
+        this.networkBytesUpdateFrequency = (int) (AEConfig.instance.networkBytesUpdateFrequency * 20);
         this.ticksCount = this.networkBytesUpdateFrequency;
     }
 
