@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import javax.annotation.Nonnull;
 
@@ -47,6 +48,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         // priority = is.priority;
         this.setCraftable(is.isCraftable());
         this.setCountRequestable(is.getCountRequestable());
+        this.setCountRequestableCrafts(is.getCountRequestableCrafts());
 
         this.myHash = is.myHash;
     }
@@ -61,6 +63,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         this.setStackSize(is.amount);
         this.setCraftable(false);
         this.setCountRequestable(0);
+        this.setCountRequestableCrafts(0);
 
         this.myHash = this.fluid.hashCode()
                 ^ (this.tagCompound == null ? 0 : System.identityHashCode(this.tagCompound));
@@ -76,6 +79,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         fluid.setStackSize(i.getLong("Cnt"));
         fluid.setCountRequestable(i.getLong("Req"));
         fluid.setCraftable(i.getBoolean("Craft"));
+        fluid.setCountRequestableCrafts(i.getLong("ReqMade"));
         return fluid;
     }
 
@@ -84,6 +88,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
             return null;
         }
         if (a instanceof AEFluidStack) {
+            // noinspection unchecked
             ((IAEStack<IAEFluidStack>) a).copy();
         }
         if (a instanceof FluidStack) {
@@ -107,7 +112,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         final byte[] name = new byte[len2];
         data.readBytes(name, 0, len2);
 
-        d.setString("FluidName", new String(name, "UTF-8"));
+        d.setString("FluidName", new String(name, StandardCharsets.UTF_8));
         d.setByte("Count", (byte) 0);
 
         if (hasTagCompound) {
@@ -124,6 +129,10 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         final long stackSize = getPacketValue(stackType, data);
         final long countRequestable = getPacketValue(countReqType, data);
 
+        final byte mask2 = data.readByte();
+        final byte countReqMadeType = (byte) ((mask2 & 0x3));
+        final long countRequestableCrafts = getPacketValue(countReqMadeType, data);
+
         final FluidStack fluidStack = FluidStack.loadFluidStackFromNBT(d);
         if (fluidStack == null) {
             return null;
@@ -134,6 +143,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         fluid.setStackSize(stackSize);
         fluid.setCountRequestable(countRequestable);
         fluid.setCraftable(isCraftable);
+        fluid.setCountRequestableCrafts(countRequestableCrafts);
         return fluid;
     }
 
@@ -149,6 +159,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         this.incStackSize(option.getStackSize());
         this.setCountRequestable(this.getCountRequestable() + option.getCountRequestable());
         this.setCraftable(this.isCraftable() || option.isCraftable());
+        this.setCountRequestableCrafts(this.getCountRequestableCrafts() + option.getCountRequestableCrafts());
     }
 
     @Override
@@ -194,6 +205,9 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         } else {
             i.removeTag("tag");
         }
+
+        // Don't break any existing drive swapping automation in the world
+        if (this.getCountRequestableCrafts() != 0L) i.setLong("ReqMade", this.getCountRequestableCrafts());
     }
 
     @Override
@@ -297,7 +311,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
 
     @Override
     void writeIdentity(final ByteBuf i) throws IOException {
-        final byte[] name = this.fluid.getName().getBytes("UTF-8");
+        final byte[] name = this.fluid.getName().getBytes(StandardCharsets.UTF_8);
         i.writeByte((byte) name.length);
         i.writeBytes(name);
     }
