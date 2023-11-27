@@ -62,24 +62,24 @@ public class GridStorageCache implements IStorageGrid {
     private final HashMap<IGridNode, IStackWatcher> watchers = new HashMap<>();
     private NetworkInventoryHandler<IAEItemStack> myItemNetwork;
     private NetworkInventoryHandler<IAEFluidStack> myFluidNetwork;
-    private long itemBytesTotal;
-    private long itemBytesUsed;
+    private double itemBytesTotal;
+    private double itemBytesUsed;
     private long itemTypesTotal;
     private long itemTypesUsed;
     private long itemCellG;
     private long itemCellO;
     private long itemCellR;
     private long itemCellCount;
-    private long fluidBytesTotal;
-    private long fluidBytesUsed;
+    private double fluidBytesTotal;
+    private double fluidBytesUsed;
     private long fluidTypesTotal;
     private long fluidTypesUsed;
     private long fluidCellG;
     private long fluidCellO;
     private long fluidCellR;
     private long fluidCellCount;
-    private long essentiaBytesTotal;
-    private long essentiaBytesUsed;
+    private double essentiaBytesTotal;
+    private double essentiaBytesUsed;
     private long essentiaTypesTotal;
     private long essentiaTypesUsed;
     private long essentiaCellG;
@@ -518,11 +518,11 @@ public class GridStorageCache implements IStorageGrid {
         this.essentiaCellCount = 0;
     }
 
-    public long getItemBytesTotal() {
+    public double getItemBytesTotal() {
         return itemBytesTotal;
     }
 
-    public long getItemBytesUsed() {
+    public double getItemBytesUsed() {
         return itemBytesUsed;
     }
 
@@ -550,11 +550,11 @@ public class GridStorageCache implements IStorageGrid {
         return itemCellCount;
     }
 
-    public long getFluidBytesTotal() {
+    public double getFluidBytesTotal() {
         return fluidBytesTotal;
     }
 
-    public long getFluidBytesUsed() {
+    public double getFluidBytesUsed() {
         return fluidBytesUsed;
     }
 
@@ -582,11 +582,11 @@ public class GridStorageCache implements IStorageGrid {
         return fluidCellCount;
     }
 
-    public long getEssentiaBytesTotal() {
+    public double getEssentiaBytesTotal() {
         return essentiaBytesTotal;
     }
 
-    public long getEssentiaBytesUsed() {
+    public double getEssentiaBytesUsed() {
         return essentiaBytesUsed;
     }
 

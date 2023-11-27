@@ -197,8 +197,8 @@ public class ContainerNetworkStatus extends AEBaseContainer {
             }
             final GridStorageCache sg = this.network.getCache(IStorageGrid.class);
             if (sg != null) {
-                this.itemBytesUsed = sg.getItemBytesUsed();
-                this.itemBytesTotal = sg.getItemBytesTotal();
+                this.itemBytesUsed = Double.doubleToLongBits(sg.getItemBytesUsed());
+                this.itemBytesTotal = Double.doubleToLongBits(sg.getItemBytesTotal());
                 this.itemCellG = sg.getItemCellG();
                 this.itemCellO = sg.getItemCellO();
                 this.itemCellR = sg.getItemCellR();
@@ -206,8 +206,8 @@ public class ContainerNetworkStatus extends AEBaseContainer {
                 this.itemTypesUsed = sg.getItemTypesUsed();
                 this.itemTypesTotal = sg.getItemTypesTotal();
 
-                this.fluidBytesUsed = sg.getFluidBytesUsed();
-                this.fluidBytesTotal = sg.getFluidBytesTotal();
+                this.fluidBytesUsed = Double.doubleToLongBits(sg.getFluidBytesUsed());
+                this.fluidBytesTotal = Double.doubleToLongBits(sg.getFluidBytesTotal());
                 this.fluidCellG = sg.getFluidCellG();
                 this.fluidCellO = sg.getFluidCellO();
                 this.fluidCellR = sg.getFluidCellR();
@@ -215,8 +215,8 @@ public class ContainerNetworkStatus extends AEBaseContainer {
                 this.fluidTypesUsed = sg.getFluidTypesUsed();
                 this.fluidTypesTotal = sg.getFluidTypesTotal();
 
-                this.essentiaBytesUsed = sg.getEssentiaBytesUsed();
-                this.essentiaBytesTotal = sg.getEssentiaBytesTotal();
+                this.essentiaBytesUsed = Double.doubleToLongBits(sg.getEssentiaBytesUsed());
+                this.essentiaBytesTotal = Double.doubleToLongBits(sg.getEssentiaBytesTotal());
                 this.essentiaCellG = sg.getEssentiaCellG();
                 this.essentiaCellO = sg.getEssentiaCellO();
                 this.essentiaCellR = sg.getEssentiaCellR();

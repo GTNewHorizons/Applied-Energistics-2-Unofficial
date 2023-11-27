@@ -159,6 +159,16 @@ public class Platform {
     private static GameProfile fakeProfile = new GameProfile(
             UUID.fromString("839eb18c-50bc-400c-8291-9383f09763e7"),
             "[AE2Player]");
+    private static final String[] BYTE_UNIT = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", "BB" };
+    private static final double[] BYTE_LIMIT;
+    private static final DecimalFormat df = new DecimalFormat("#.##");
+
+    static {
+        BYTE_LIMIT = new double[10];
+        for (int i = 0; i < 10; i++) {
+            BYTE_LIMIT[i] = Math.pow(2, i * 10);
+        }
+    }
 
     public static Random getRandom() {
         return RANDOM_GENERATOR;
@@ -1869,31 +1879,17 @@ public class Platform {
     }
 
     /**
-     * From bytes to K,M,G,T like
+     * From bytes to KB,MB,GB,TB like
      * 
      * @param n Bytes number
-     * @return String that like 1G or 1.4T
+     * @return String that like 1 GB or 1.4 TB
      */
-    public static String formatByteLong(final long n) {
-        int storageUnit = Long.toBinaryString(n).length() / 10;
-        final DecimalFormat df = new DecimalFormat("#.##");
-        switch (storageUnit) {
-            case 6:
-                return df.format((double) n / 1152921504606846976d) + " EB";
-            case 5:
-                return df.format((double) n / 1125899906842624d) + " PB";
-            case 4:
-                return df.format((double) n / 1099511627776d) + " TB";
-            case 3:
-                return df.format((double) n / 1073741824d) + " GB";
-            case 2:
-                return df.format((double) n / 1048576d) + " MB";
-            case 1:
-                return df.format((double) n / 1024d) + " kB";
-            case 0:
-                return df.format((double) n) + " B";
-            default:
-                return df.format((double) n) + " B";
+    public static String formatByteDouble(final double n) {
+        for (int i = 1; i < 10; i++) {
+            if (n < BYTE_LIMIT[i]) {
+                return df.format(n / BYTE_LIMIT[i - 1]) + " " + BYTE_UNIT[i - 1];
+            }
         }
+        return (n / BYTE_LIMIT[0]) + " " + BYTE_UNIT[0];
     }
 }
