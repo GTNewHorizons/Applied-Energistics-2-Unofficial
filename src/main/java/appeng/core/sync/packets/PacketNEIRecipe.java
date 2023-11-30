@@ -67,7 +67,14 @@ public class PacketNEIRecipe extends AppEngPacket {
                 if (list.tagCount() > 0) {
                     this.recipe[x] = new ItemStack[list.tagCount()];
                     for (int y = 0; y < list.tagCount(); y++) {
-                        this.recipe[x][y] = ItemStack.loadItemStackFromNBT(list.getCompoundTagAt(y));
+                        NBTTagCompound tag = list.getCompoundTagAt(y);
+                        ItemStack itemStack = ItemStack.loadItemStackFromNBT(tag);
+                        // Set the stack size again, but load it as a short
+                        if (itemStack != null) {
+                            itemStack.stackSize = tag.getShort("Count");
+                        }
+
+                        this.recipe[x][y] = itemStack;
                     }
                 }
             }

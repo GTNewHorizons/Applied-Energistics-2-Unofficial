@@ -90,6 +90,8 @@ public class NEICraftingHandler implements IOverlayHandler {
                             for (final ItemStack is : list) {
                                 final NBTTagCompound tag = new NBTTagCompound();
                                 is.writeToNBT(tag);
+                                // Overwrite the stack size as a short
+                                tag.setShort("Count", (short) is.stackSize);
                                 tags.appendTag(tag);
                                 if (limited) {
                                     final NBTTagCompound test = new NBTTagCompound();
