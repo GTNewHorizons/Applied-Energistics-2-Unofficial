@@ -58,14 +58,14 @@ public class NEICraftingHandler implements IOverlayHandler {
     }
 
     // if the packet becomes too large, limit each slot contents to 3k
-    private boolean testSize(final NBTTagCompound recipe) throws IOException {
+    private static boolean testSize(final NBTTagCompound recipe) throws IOException {
         final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         final DataOutputStream outputStream = new DataOutputStream(bytes);
         CompressedStreamTools.writeCompressed(recipe, outputStream);
         return bytes.size() > 3 * 1024;
     }
 
-    private NBTTagCompound packIngredients(GuiContainer gui, List<PositionedStack> ingredients, boolean limited)
+    public static NBTTagCompound packIngredients(GuiContainer gui, List<PositionedStack> ingredients, boolean limited)
             throws IOException {
         final NBTTagCompound recipe = new NBTTagCompound();
         for (final PositionedStack positionedStack : ingredients) {
