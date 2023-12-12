@@ -147,4 +147,6 @@ public interface IMaterials {
     IItemDefinition cardPatternRefiller();
 
     IItemDefinition cardAdvancedBlocking();
+
+    IItemDefinition cardLockCrafting();
 }

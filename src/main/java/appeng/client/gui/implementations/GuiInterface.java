@@ -17,6 +17,7 @@ import org.lwjgl.input.Mouse;
 
 import appeng.api.config.AdvancedBlockingMode;
 import appeng.api.config.InsertionMode;
+import appeng.api.config.LockCraftingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
@@ -40,6 +41,7 @@ public class GuiInterface extends GuiUpgradeable {
     private GuiImgButton insertionMode;
 
     private GuiImgButton advancedBlockingMode;
+    private GuiImgButton lockCraftingMode;
 
     public GuiInterface(final InventoryPlayer inventoryPlayer, final IInterfaceHost te) {
         super(new ContainerInterface(inventoryPlayer, te));
@@ -82,6 +84,14 @@ public class GuiInterface extends GuiUpgradeable {
                 AdvancedBlockingMode.DEFAULT);
         this.advancedBlockingMode.visible = this.bc.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0;
         this.buttonList.add(advancedBlockingMode);
+
+        this.lockCraftingMode = new GuiImgButton(
+                this.guiLeft - 18,
+                this.guiTop + 80,
+                Settings.LOCK_CRAFTING_MODE,
+                LockCraftingMode.NONE);
+        this.lockCraftingMode.visible = this.bc.getInstalledUpgrades(Upgrades.LOCK_CRAFTING) > 0;
+        this.buttonList.add(lockCraftingMode);
     }
 
     @Override
@@ -100,6 +110,10 @@ public class GuiInterface extends GuiUpgradeable {
 
         if (this.advancedBlockingMode != null) {
             this.advancedBlockingMode.set(((ContainerInterface) this.cvb).getAdvancedBlockingMode());
+        }
+
+        if (this.lockCraftingMode != null) {
+            this.lockCraftingMode.set(((ContainerInterface) this.cvb).getLockCraftingMode());
         }
 
         this.fontRendererObj.drawString(
@@ -146,6 +160,10 @@ public class GuiInterface extends GuiUpgradeable {
             NetworkHandler.instance
                     .sendToServer(new PacketConfigButton(this.advancedBlockingMode.getSetting(), backwards));
         }
+
+        if (btn == this.lockCraftingMode) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.lockCraftingMode.getSetting(), backwards));
+        }
     }
 
     @Override
@@ -153,6 +171,9 @@ public class GuiInterface extends GuiUpgradeable {
         super.handleButtonVisibility();
         if (this.advancedBlockingMode != null) {
             this.advancedBlockingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0);
+        }
+        if (this.lockCraftingMode != null) {
+            this.lockCraftingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.LOCK_CRAFTING) > 0);
         }
     }
 }

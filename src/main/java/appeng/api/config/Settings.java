@@ -72,7 +72,9 @@ public enum Settings {
 
     CELL_TYPE(EnumSet.allOf(CellType.class)),
 
-    STICKY_MODE(EnumSet.of(YesNo.YES, YesNo.NO));
+    STICKY_MODE(EnumSet.of(YesNo.YES, YesNo.NO)),
+
+    LOCK_CRAFTING_MODE(EnumSet.allOf(LockCraftingMode.class));
 
     private final EnumSet<? extends Enum<?>> values;
 

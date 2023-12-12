@@ -606,6 +606,9 @@ public final class Registration {
         Upgrades.PATTERN_CAPACITY.registerItem(parts.p2PTunnelMEInterface(), 3);
         Upgrades.ADVANCED_BLOCKING.registerItem(parts.iface(), 1);
         Upgrades.ADVANCED_BLOCKING.registerItem(blocks.iface(), 1);
+        Upgrades.LOCK_CRAFTING.registerItem(parts.iface(), 1);
+        Upgrades.LOCK_CRAFTING.registerItem(blocks.iface(), 1);
+        Upgrades.LOCK_CRAFTING.registerItem(parts.p2PTunnelMEInterface(), 1);
 
         // IO Port!
         Upgrades.SPEED.registerItem(blocks.iOPort(), 3);

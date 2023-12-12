@@ -57,3 +57,7 @@ shapeless=
 shapeless=
     ae2:ItemMaterial.AdvCard ae2:ItemPart.StorageBus ae2:ItemPart.LevelEmitter
     -> ae2:ItemMaterial.CardAdvancedBlocking
+
+shapeless=
+    ae2:ItemMaterial.AdvCard ae2:ItemMaterial.BlankPattern ae2:ItemMaterial.EngProcessor
+    -> ae2:ItemMaterial.CardLockCrafting

@@ -75,6 +75,7 @@ public final class ApiMaterials implements IMaterials {
     private final IItemDefinition cardOreFilter;
     private final IItemDefinition cardPatternRefiller;
     private final IItemDefinition cardAdvancedBlocking;
+    private final IItemDefinition cardLockCrafting;
     private final IItemDefinition enderDust;
     private final IItemDefinition flour;
     private final IItemDefinition goldDust;
@@ -178,6 +179,8 @@ public final class ApiMaterials implements IMaterials {
                 itemMultiMaterial.createMaterial(MaterialType.CardPatternRefiller));
         this.cardAdvancedBlocking = new DamagedItemDefinition(
                 itemMultiMaterial.createMaterial(MaterialType.CardAdvancedBlocking));
+        this.cardLockCrafting = new DamagedItemDefinition(
+                itemMultiMaterial.createMaterial(MaterialType.CardLockCrafting));
 
         this.enderDust = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.EnderDust));
         this.flour = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.Flour));
@@ -537,5 +540,10 @@ public final class ApiMaterials implements IMaterials {
     @Override
     public IItemDefinition cardAdvancedBlocking() {
         return this.cardAdvancedBlocking;
+    }
+
+    @Override
+    public IItemDefinition cardLockCrafting() {
+        return this.cardLockCrafting;
     }
 }

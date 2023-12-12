@@ -32,6 +32,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.config.ItemSubstitution;
 import appeng.api.config.LevelType;
+import appeng.api.config.LockCraftingMode;
 import appeng.api.config.OperationMode;
 import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.PatternSlotConfig;
@@ -624,6 +625,36 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     AdvancedBlockingMode.BLOCK_ON_ALL,
                     ButtonToolTips.AdvancedBlockingModeAll,
                     ButtonToolTips.AdvancedBlockingModeAllDesc);
+            this.registerApp(
+                    10,
+                    Settings.LOCK_CRAFTING_MODE,
+                    LockCraftingMode.NONE,
+                    ButtonToolTips.LockCraftingMode,
+                    ButtonToolTips.LockCraftingModeNone);
+            this.registerApp(
+                    2,
+                    Settings.LOCK_CRAFTING_MODE,
+                    LockCraftingMode.LOCK_UNTIL_PULSE,
+                    ButtonToolTips.LockCraftingMode,
+                    ButtonToolTips.LockCraftingUntilRedstonePulse);
+            this.registerApp(
+                    0,
+                    Settings.LOCK_CRAFTING_MODE,
+                    LockCraftingMode.LOCK_WHILE_HIGH,
+                    ButtonToolTips.LockCraftingMode,
+                    ButtonToolTips.LockCraftingWhileRedstoneHigh);
+            this.registerApp(
+                    1,
+                    Settings.LOCK_CRAFTING_MODE,
+                    LockCraftingMode.LOCK_WHILE_LOW,
+                    ButtonToolTips.LockCraftingMode,
+                    ButtonToolTips.LockCraftingWhileRedstoneLow);
+            this.registerApp(
+                    7,
+                    Settings.LOCK_CRAFTING_MODE,
+                    LockCraftingMode.LOCK_UNTIL_RESULT,
+                    ButtonToolTips.LockCraftingMode,
+                    ButtonToolTips.LockCraftingUntilResultReturned);
             this.registerApp(
                     16 + 2,
                     Settings.CRAFTING_MODE,

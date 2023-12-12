@@ -458,6 +458,13 @@ gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefaultDesc=Blocking interf
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeAll=Loose Mode
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeAllDesc=Blocking interfaces will block on any item in this ME system.
 
+gui.tooltips.appliedenergistics2.LockCraftingMode=Lock Crafting
+gui.tooltips.appliedenergistics2.LockCraftingModeNone=Never
+gui.tooltips.appliedenergistics2.LockCraftingUntilRedstonePulse=Until redstone pulse is received
+gui.tooltips.appliedenergistics2.LockCraftingUntilResultReturned=Until crafting result is returned
+gui.tooltips.appliedenergistics2.LockCraftingWhileRedstoneHigh=With redstone signal
+gui.tooltips.appliedenergistics2.LockCraftingWhileRedstoneLow=Without redstone signal
+
 gui.tooltips.appliedenergistics2.CraftingModeStandard=Standard Crafting Mode
 gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Only starts craft if all ingredients are available in the ME System.
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Ignore Missing Crafting Mode
@@ -511,6 +518,10 @@ waila.appliedenergistics2.P2PInputOneOutput=Linked (Input Side)
 waila.appliedenergistics2.P2PInputManyOutputs=Linked (Input Side) - %d Outputs
 waila.appliedenergistics2.P2POutput=Linked (Output Side)
 waila.appliedenergistics2.Booting=Network is booting
+waila.appliedenergistics2.CraftingLockedByLackOfRedstoneSignal=Locked by lack of redstone signal
+waila.appliedenergistics2.CraftingLockedByRedstoneSignal=Locked by redstone signal
+waila.appliedenergistics2.CraftingLockedUntilPulse=Waiting for redstone pulse to unlock
+waila.appliedenergistics2.CraftingLockedUntilResult=Waiting for results to unlock
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=1k ME Storage Cell
@@ -554,6 +565,7 @@ item.appliedenergistics2.ItemMaterial.CardSuperSpeed.name=Hyper-Acceleration Car
 item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Oredictionary Filter Card
 item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=Pattern Refiller Card
 item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=Advanced Blocking Card
+item.appliedenergistics2.ItemMaterial.CardLockCrafting.name=Locking Card
 item.appliedenergistics2.ItemMaterial.CardSticky.name=Sticky Card
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³ Spatial Component

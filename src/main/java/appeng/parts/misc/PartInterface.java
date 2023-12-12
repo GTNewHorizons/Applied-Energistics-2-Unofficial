@@ -199,6 +199,11 @@ public class PartInterface extends PartBasicState implements IGridTickable, ISto
     }
 
     @Override
+    public void onNeighborChanged() {
+        this.duality.updateRedstoneState();
+    }
+
+    @Override
     public boolean onPartActivate(final EntityPlayer p, final Vec3 pos) {
         if (p.isSneaking()) {
             return false;

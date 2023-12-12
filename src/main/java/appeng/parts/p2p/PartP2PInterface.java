@@ -174,6 +174,11 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     }
 
     @Override
+    public void onNeighborChanged() {
+        this.duality.updateRedstoneState();
+    }
+
+    @Override
     public boolean onPartActivate(final EntityPlayer p, final Vec3 pos) {
         AppEngInternalInventory patterns = (AppEngInternalInventory) this.duality.getPatterns();
         if (super.onPartActivate(p, pos)) {

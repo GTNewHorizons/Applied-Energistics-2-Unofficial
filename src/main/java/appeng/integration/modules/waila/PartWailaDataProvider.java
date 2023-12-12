@@ -28,6 +28,7 @@ import appeng.integration.modules.waila.part.ChannelWailaDataProvider;
 import appeng.integration.modules.waila.part.IPartWailaDataProvider;
 import appeng.integration.modules.waila.part.P2PStateWailaDataProvider;
 import appeng.integration.modules.waila.part.PartAccessor;
+import appeng.integration.modules.waila.part.PartInterfaceDataProvider;
 import appeng.integration.modules.waila.part.PowerStateWailaDataProvider;
 import appeng.integration.modules.waila.part.StorageMonitorWailaDataProvider;
 import appeng.integration.modules.waila.part.Tracer;
@@ -68,8 +69,9 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
         final IPartWailaDataProvider powerState = new PowerStateWailaDataProvider();
         final IPartWailaDataProvider p2pState = new P2PStateWailaDataProvider();
         final IPartWailaDataProvider partStack = new BasePartWailaDataProvider();
+        final IPartWailaDataProvider partInterface = new PartInterfaceDataProvider();
 
-        this.providers = Lists.newArrayList(channel, storageMonitor, powerState, p2pState, partStack);
+        this.providers = Lists.newArrayList(channel, storageMonitor, powerState, p2pState, partStack, partInterface);
     }
 
     @Override

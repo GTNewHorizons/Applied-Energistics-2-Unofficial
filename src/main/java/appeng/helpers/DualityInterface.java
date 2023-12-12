@@ -10,6 +10,7 @@
 
 package appeng.helpers;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.AdvancedBlockingMode;
 import appeng.api.config.InsertionMode;
+import appeng.api.config.LockCraftingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
@@ -130,6 +132,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private boolean isWorking = false;
     protected static final boolean EIO = Loader.isModLoaded("EnderIO");
 
+    private YesNo redstoneState = YesNo.UNDECIDED;
+    private UnlockCraftingEvent unlockEvent;
+    private List<IAEItemStack> unlockStacks;
+
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
         this.gridProxy = networkProxy;
         this.gridProxy.setFlags(GridFlags.REQUIRE_CHANNEL);
@@ -139,6 +145,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.cm.registerSetting(Settings.INTERFACE_TERMINAL, YesNo.YES);
         this.cm.registerSetting(Settings.INSERTION_MODE, InsertionMode.DEFAULT);
         this.cm.registerSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.DEFAULT);
+        this.cm.registerSetting(Settings.LOCK_CRAFTING_MODE, LockCraftingMode.NONE);
 
         this.iHost = ih;
         this.craftingTracker = new MultiCraftingTracker(this.iHost, 9);
@@ -190,6 +197,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     // :P
                 }
             }
+        } else if (inv == this.upgrades) {
+            if (this.getInstalledUpgrades(Upgrades.LOCK_CRAFTING) == 0) {
+                cm.putSetting(Settings.LOCK_CRAFTING_MODE, LockCraftingMode.NONE);
+                resetCraftingLock();
+            }
         }
     }
 
@@ -201,6 +213,23 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.cm.writeToNBT(data);
         this.craftingTracker.writeToNBT(data);
         data.setInteger("priority", this.priority);
+
+        if (unlockEvent == UnlockCraftingEvent.PULSE) {
+            data.setByte("unlockEvent", (byte) 1);
+        } else if (unlockEvent == UnlockCraftingEvent.RESULT) {
+            if (unlockStacks != null && !unlockStacks.isEmpty()) {
+                data.setByte("unlockEvent", (byte) 2);
+                NBTTagList stackList = new NBTTagList();
+                for (IAEItemStack stack : unlockStacks) {
+                    NBTTagCompound stackTag = new NBTTagCompound();
+                    stack.writeToNBT(stackTag);
+                    stackList.appendTag(stackTag);
+                }
+                data.setTag("unlockStacks", stackList);
+            } else {
+                AELog.error("Saving interface {}, locked waiting for stack, but stack is null!", iHost);
+            }
+        }
 
         final NBTTagList waitingToSend = new NBTTagList();
         if (this.waitingToSend != null) {
@@ -224,6 +253,34 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     this.addToSendList(is);
                 }
             }
+        }
+
+        var unlockEventType = data.getByte("unlockEvent");
+        this.unlockEvent = switch (unlockEventType) {
+            case 0 -> null;
+            case 1 -> UnlockCraftingEvent.PULSE;
+            case 2 -> UnlockCraftingEvent.RESULT;
+            default -> {
+                AELog.error("Unknown unlock event type {} in NBT for interface: {}", unlockEventType, data);
+                yield null;
+            }
+        };
+        if (this.unlockEvent == UnlockCraftingEvent.RESULT) {
+            NBTTagList stackList = data.getTagList("unlockStacks", 10);
+            for (int index = 0; index < stackList.tagCount(); index++) {
+                NBTTagCompound stackTag = stackList.getCompoundTagAt(index);
+                IAEItemStack unlockStack = AEItemStack.loadItemStackFromNBT(stackTag);
+                if (unlockStack == null) {
+                    AELog.error("Could not load unlock stack for interface from NBT: {}", data);
+                    continue;
+                }
+                if (this.unlockStacks == null) {
+                    this.unlockStacks = new ArrayList<>();
+                }
+                this.unlockStacks.add(unlockStack);
+            }
+        } else {
+            this.unlockStacks = null;
         }
 
         this.craftingTracker.readFromNBT(data);
@@ -620,6 +677,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     } else if (removed.stackSize != diff) {
                         throw new IllegalStateException("bad attempt at managing inventory. ( removeItems )");
                     }
+                    onStackReturnedToNetwork(AEItemStack.create(removed));
                 }
             } else if (this.craftingTracker.isBusy(x)) {
                 changed = this.handleCrafting(x, adaptor, itemStack);
@@ -741,6 +799,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             this.cancelCrafting();
         }
 
+        if (settingName == Settings.LOCK_CRAFTING_MODE) {
+            resetCraftingLock();
+        }
+
         this.markDirty();
     }
 
@@ -809,6 +871,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             return false;
         }
 
+        if (getCraftingLockedReason() != LockCraftingMode.NONE) {
+            return false;
+        }
+
         final TileEntity tile = this.iHost.getTileEntity();
         final World w = tile.getWorldObj();
 
@@ -829,6 +895,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             if (te instanceof ICraftingMachine cm) {
                 if (cm.acceptsPlans()) {
                     if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
+                        onPushPatternSuccess(patternDetails);
                         return true;
                     }
                     continue;
@@ -849,6 +916,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         }
                     }
                     this.pushItemsOut(possibleDirections);
+                    onPushPatternSuccess(patternDetails);
                     return true;
                 }
             } else if (EIO && te instanceof IItemDuct) {
@@ -858,15 +926,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     if (is != null) {
                         final ItemStack rest = ((IItemDuct) te).insertItem(s.getOpposite(), is);
                         if (!hadAcceptedSome && rest != null && rest.stackSize == is.stackSize) break; // conduit should
-                                                                                                       // accept all the
-                                                                                                       // pattern or
-                                                                                                       // nothing.
+                        // accept all the
+                        // pattern or
+                        // nothing.
                         hadAcceptedSome = true;
                         this.addToSendList(rest);
                     }
                 }
                 if (hadAcceptedSome) {
                     this.pushItemsOut(possibleDirections);
+                    onPushPatternSuccess(patternDetails);
                     return true;
                 }
             }
@@ -904,6 +973,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             busy = allAreBusy;
+        }
+
+        if (this.getCraftingLockedReason() != LockCraftingMode.NONE) {
+            busy = true;
         }
 
         return busy;
@@ -1178,6 +1251,118 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         } catch (final GridAccessException e) {
             // :P
         }
+    }
+
+    public void resetCraftingLock() {
+        if (unlockEvent != null) {
+            unlockEvent = null;
+            unlockStacks = null;
+            saveChanges();
+        }
+    }
+
+    private void onPushPatternSuccess(ICraftingPatternDetails pattern) {
+        resetCraftingLock();
+
+        LockCraftingMode lockMode = (LockCraftingMode) cm.getSetting(Settings.LOCK_CRAFTING_MODE);
+        switch (lockMode) {
+            case LOCK_UNTIL_PULSE -> {
+                unlockEvent = UnlockCraftingEvent.PULSE;
+                saveChanges();
+            }
+            case LOCK_UNTIL_RESULT -> {
+                unlockEvent = UnlockCraftingEvent.RESULT;
+                if (unlockStacks == null) {
+                    unlockStacks = new ArrayList<>();
+                }
+                for (IAEItemStack output : pattern.getCondensedOutputs()) {
+                    unlockStacks.add(output.copy());
+                }
+                saveChanges();
+            }
+        }
+    }
+
+    /**
+     * Gets if the crafting lock is in effect and why.
+     *
+     * @return LockCraftingMode.NONE if the lock isn't in effect
+     */
+    public LockCraftingMode getCraftingLockedReason() {
+        var lockMode = cm.getSetting(Settings.LOCK_CRAFTING_MODE);
+        if (lockMode == LockCraftingMode.LOCK_WHILE_LOW && !getRedstoneState()) {
+            // Crafting locked by redstone signal
+            return LockCraftingMode.LOCK_WHILE_LOW;
+        } else if (lockMode == LockCraftingMode.LOCK_WHILE_HIGH && getRedstoneState()) {
+            return LockCraftingMode.LOCK_WHILE_HIGH;
+        } else if (unlockEvent != null) {
+            // Crafting locked by waiting for unlock event
+            switch (unlockEvent) {
+                case PULSE -> {
+                    return LockCraftingMode.LOCK_UNTIL_PULSE;
+                }
+                case RESULT -> {
+                    return LockCraftingMode.LOCK_UNTIL_RESULT;
+                }
+            }
+        }
+        return LockCraftingMode.NONE;
+    }
+
+    /**
+     * @return Null if {@linkplain #getCraftingLockedReason()} is not {@link LockCraftingMode#LOCK_UNTIL_RESULT}.
+     */
+    public List<IAEItemStack> getUnlockStacks() {
+        return unlockStacks;
+    }
+
+    private void onStackReturnedToNetwork(IAEItemStack returnedStack) {
+        if (unlockEvent != UnlockCraftingEvent.RESULT) {
+            return; // If we're not waiting for the result, we don't care
+        }
+
+        if (unlockStacks == null) {
+            // Actually an error state...
+            AELog.error("interface was waiting for RESULT, but no result was set");
+            unlockEvent = null;
+            return;
+        }
+        for (Iterator<IAEItemStack> iterator = unlockStacks.iterator(); iterator.hasNext();) {
+            IAEItemStack unlockStack = iterator.next();
+            if (unlockStack.equals(returnedStack)) {
+                long amt = Math.min(unlockStack.getStackSize(), returnedStack.getStackSize());
+                unlockStack.decStackSize(amt);
+                if (unlockStack.getStackSize() <= 0) {
+                    iterator.remove();
+                }
+            }
+        }
+        if (unlockStacks.isEmpty()) {
+            unlockEvent = null;
+            unlockStacks = null;
+        }
+
+    }
+
+    public void updateRedstoneState() {
+        // reset cache to undecided
+        redstoneState = YesNo.UNDECIDED;
+
+        // If we're waiting for a pulse, update immediately
+        if (unlockEvent == UnlockCraftingEvent.PULSE && getRedstoneState()) {
+            unlockEvent = null; // Unlocked!
+        }
+        saveChanges(); // In any case, this needs to be changed since the state is now outdated
+    }
+
+    private boolean getRedstoneState() {
+        if (redstoneState == YesNo.UNDECIDED) {
+            TileEntity tile = this.getHost().getTile();
+            redstoneState = tile.getWorldObj().isBlockIndirectlyGettingPowered(tile.xCoord, tile.yCoord, tile.zCoord)
+                    ? YesNo.YES
+                    : YesNo.NO;
+        }
+        return redstoneState == YesNo.YES;
     }
 
     private static class InterfaceRequestSource extends MachineSource {

@@ -29,6 +29,11 @@ public enum WailaText {
     Unlocked,
     Showing,
 
+    CraftingLockedByRedstoneSignal,
+    CraftingLockedByLackOfRedstoneSignal,
+    CraftingLockedUntilPulse,
+    CraftingLockedUntilResult,
+
     Contains,
     Channels,
     Booting;

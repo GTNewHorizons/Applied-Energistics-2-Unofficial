@@ -42,7 +42,8 @@ public enum Upgrades {
     INVERTER(1),
     PATTERN_CAPACITY(1),
     ORE_FILTER(1),
-    ADVANCED_BLOCKING(1);
+    ADVANCED_BLOCKING(1),
+    LOCK_CRAFTING(1);
 
     /**
      * @deprecated use {@link Upgrades#getTier()}
