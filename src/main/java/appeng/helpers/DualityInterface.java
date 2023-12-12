@@ -800,7 +800,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
 
         if (settingName == Settings.LOCK_CRAFTING_MODE) {
-            resetCraftingLock();
+            if (unlockEvent != null && !unlockEvent.matches((LockCraftingMode) newValue)) {
+                resetCraftingLock();
+            }
         }
 
         this.markDirty();
@@ -1316,7 +1318,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return unlockStacks;
     }
 
-    private void onStackReturnedToNetwork(IAEItemStack returnedStack) {
+    /**
+     * Called when an ItemStack has been pushed into the network from the internal buffer. Public to enable other
+     * interface types (mainly AE2FC) to work with locking return mode.
+     */
+    public void onStackReturnedToNetwork(IAEItemStack returnedStack) {
         if (unlockEvent != UnlockCraftingEvent.RESULT) {
             return; // If we're not waiting for the result, we don't care
         }
@@ -1327,21 +1333,25 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             unlockEvent = null;
             return;
         }
+        boolean changed = false;
         for (Iterator<IAEItemStack> iterator = unlockStacks.iterator(); iterator.hasNext();) {
             IAEItemStack unlockStack = iterator.next();
             if (unlockStack.equals(returnedStack)) {
-                long amt = Math.min(unlockStack.getStackSize(), returnedStack.getStackSize());
-                unlockStack.decStackSize(amt);
+                changed = true;
+                unlockStack.decStackSize(returnedStack.getStackSize());
                 if (unlockStack.getStackSize() <= 0) {
                     iterator.remove();
                 }
+                break;
             }
         }
         if (unlockStacks.isEmpty()) {
             unlockEvent = null;
             unlockStacks = null;
         }
-
+        if (changed) {
+            saveChanges();
+        }
     }
 
     public void updateRedstoneState() {

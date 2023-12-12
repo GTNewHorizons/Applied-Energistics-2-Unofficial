@@ -9,8 +9,8 @@ public enum LockCraftingMode {
      */
     NONE,
     /**
-     * After pushing a pattern to an adjacent machine, the interface will not accept further crafts until a
-     * redstone pulse is received.
+     * After pushing a pattern to an adjacent machine, the interface will not accept further crafts until a redstone
+     * pulse is received.
      */
     LOCK_UNTIL_PULSE,
     /**
@@ -22,8 +22,8 @@ public enum LockCraftingMode {
      */
     LOCK_WHILE_LOW,
     /**
-     * After pushing a pattern to an adjacent machine, the interface will not accept further crafts until the
-     * primary pattern result is returned to the network through the interface.
+     * After pushing a pattern to an adjacent machine, the interface will not accept further crafts until the primary
+     * pattern result is returned to the network through the interface.
      */
     LOCK_UNTIL_RESULT
 }
