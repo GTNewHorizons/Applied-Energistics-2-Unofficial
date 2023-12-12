@@ -1351,8 +1351,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         // If we're waiting for a pulse, update immediately
         if (unlockEvent == UnlockCraftingEvent.PULSE && getRedstoneState()) {
             unlockEvent = null; // Unlocked!
+            saveChanges();
         }
-        saveChanges(); // In any case, this needs to be changed since the state is now outdated
     }
 
     private boolean getRedstoneState() {
