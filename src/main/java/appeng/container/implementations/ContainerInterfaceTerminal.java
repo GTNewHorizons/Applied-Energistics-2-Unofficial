@@ -302,7 +302,9 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                         if (update == null) update = new PacketInterfaceTerminalUpdate();
                         update.addOverwriteEntry(known.id).setOnline(false);
                     }
+                    visited.add(machine);
                 } else {
+                    if (!machine.shouldDisplay()) continue;
                     /* Add a new entry */
                     if (update == null) update = new PacketInterfaceTerminalUpdate();
                     InvTracker entry = new InvTracker(nextId++, machine, node.isActive());
@@ -312,8 +314,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                             .setReps(machine.getSelfRep(), machine.getDisplayRep());
                     tracked.put(machine, entry);
                     trackedById.put(entry.id, entry);
+                    visited.add(machine);
                 }
-                visited.add(machine);
             }
         }
 
