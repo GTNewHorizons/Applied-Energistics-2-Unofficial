@@ -322,8 +322,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.y = buf.readInt();
             this.z = buf.readInt();
             this.dim = buf.readInt();
-            this.side = buf.readInt();
-            this.rows = buf.readByte();
+            this.side = buf.readByte();
+            this.rows = buf.readInt();
             this.rowSize = buf.readInt();
             int payloadSize = buf.readInt();
             try (ByteBufInputStream stream = new ByteBufInputStream(buf, payloadSize)) {
