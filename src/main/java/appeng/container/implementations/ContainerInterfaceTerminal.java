@@ -101,6 +101,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                 PacketInterfaceTerminalUpdate update = new PacketInterfaceTerminalUpdate();
 
                 update.setDisconnect();
+                update.encode();
                 this.wasOff = true;
                 NetworkHandler.instance.sendTo(update, (EntityPlayerMP) this.getPlayerInv().player);
             }
