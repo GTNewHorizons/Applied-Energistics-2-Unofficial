@@ -558,7 +558,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     translatedRenderItem.zLevel = ITEM_STACK_Z - MAGIC_RENDER_ITEM_Z;
                     translatedRenderItem
                             .renderItemAndEffectIntoGUI(fontRendererObj, mc.getTextureManager(), toRender, 0, 0);
-                    GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z - ITEM_STACK_Z);
+                    GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
                     aeRenderItem.setAeStack(AEItemStack.create(toRender));
                     aeRenderItem.renderItemOverlayIntoGUI(fontRendererObj, mc.getTextureManager(), toRender, 0, 0);
                     aeRenderItem.zLevel = 0.0f;
