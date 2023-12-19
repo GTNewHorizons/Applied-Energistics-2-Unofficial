@@ -207,8 +207,15 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.tiles.push(te);
 
         if (te.isStorage()) {
-            this.availableStorage += te.getStorageBytes();
-            this.storage.add(te);
+            long additionalStorage = te.getStorageBytes();
+            if (Long.MAX_VALUE - additionalStorage >= this.availableStorage) {
+                // Safe to add as it does not cause overflow
+                this.availableStorage += additionalStorage;
+                this.storage.add(te);
+            } else {
+                // Prevent form CPU if storage overflowed
+                this.tiles.remove(te);
+            }
         } else if (te.isStatus()) {
             this.status.add((TileCraftingMonitorTile) te);
         } else if (te.isAccelerator()) {

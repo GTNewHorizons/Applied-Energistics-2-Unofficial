@@ -55,7 +55,9 @@ public class CraftingCPUCalculator extends MBCalculator {
 
     @Override
     public boolean verifyInternalStructure(final World w, final WorldCoord min, final WorldCoord max) {
-        boolean storage = false;
+        boolean isValid = true;
+        boolean hasStorage = false;
+        long totalBytes = 0L;
 
         for (int x = min.x; x <= max.x; x++) {
             for (int y = min.y; y <= max.y; y++) {
@@ -66,14 +68,20 @@ public class CraftingCPUCalculator extends MBCalculator {
                         return false;
                     }
 
-                    if (!storage && te instanceof TileCraftingTile) {
-                        storage = ((TileCraftingTile) te).getStorageBytes() > 0;
+                    if (isValid && te instanceof TileCraftingTile craftingTile) {
+                        long storageBytes = craftingTile.getStorageBytes();
+                        hasStorage |= storageBytes > 0;
+                        if (Long.MAX_VALUE - storageBytes >= totalBytes) {
+                            totalBytes += storageBytes;
+                        } else {
+                            isValid = false;
+                        }
                     }
                 }
             }
         }
 
-        return storage;
+        return hasStorage && isValid;
     }
 
     @Override
