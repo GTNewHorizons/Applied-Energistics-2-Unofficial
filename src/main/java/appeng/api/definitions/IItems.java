@@ -64,6 +64,8 @@ public interface IItems {
 
     IItemDefinition advancedNetworkTool();
 
+    IItemDefinition priorityCard();
+
     IItemDefinition portableCell();
 
     IItemDefinition cellCreative();

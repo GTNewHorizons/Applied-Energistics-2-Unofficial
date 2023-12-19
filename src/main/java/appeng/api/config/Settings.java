@@ -74,7 +74,9 @@ public enum Settings {
 
     STICKY_MODE(EnumSet.of(YesNo.YES, YesNo.NO)),
 
-    LOCK_CRAFTING_MODE(EnumSet.allOf(LockCraftingMode.class));
+    LOCK_CRAFTING_MODE(EnumSet.allOf(LockCraftingMode.class)),
+
+    PRIORITY_CARD_MODE(EnumSet.allOf(PriorityCardMode.class));
 
     private final EnumSet<? extends Enum<?>> values;
 

@@ -37,6 +37,7 @@ import appeng.api.config.OperationMode;
 import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.PatternSlotConfig;
 import appeng.api.config.PowerUnits;
+import appeng.api.config.PriorityCardMode;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.RelativeDirection;
 import appeng.api.config.SchedulingMode;
@@ -687,6 +688,37 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     CellType.ESSENTIA,
                     ButtonToolTips.SwitchBytesInfo,
                     ButtonToolTips.SwitchBytesInfo_Essentia);
+
+            this.registerApp(
+                    16 * 7 + 3,
+                    Settings.PRIORITY_CARD_MODE,
+                    PriorityCardMode.EDIT,
+                    ButtonToolTips.PriorityCardMode,
+                    ButtonToolTips.PriorityCardMode_Edit);
+            this.registerApp(
+                    16 * 7 + 4,
+                    Settings.PRIORITY_CARD_MODE,
+                    PriorityCardMode.VIEW,
+                    ButtonToolTips.PriorityCardMode,
+                    ButtonToolTips.PriorityCardMode_View);
+            this.registerApp(
+                    16 * 7 + 5,
+                    Settings.PRIORITY_CARD_MODE,
+                    PriorityCardMode.SET,
+                    ButtonToolTips.PriorityCardMode,
+                    ButtonToolTips.PriorityCardMode_Set);
+            this.registerApp(
+                    16 * 7 + 6,
+                    Settings.PRIORITY_CARD_MODE,
+                    PriorityCardMode.INC,
+                    ButtonToolTips.PriorityCardMode,
+                    ButtonToolTips.PriorityCardMode_Inc);
+            this.registerApp(
+                    16 * 7 + 7,
+                    Settings.PRIORITY_CARD_MODE,
+                    PriorityCardMode.DEC,
+                    ButtonToolTips.PriorityCardMode,
+                    ButtonToolTips.PriorityCardMode_Dec);
 
         }
     }

@@ -196,7 +196,14 @@ public enum ButtonToolTips {
     SwitchBytesInfo,
     SwitchBytesInfo_Item,
     SwitchBytesInfo_Fluid,
-    SwitchBytesInfo_Essentia;
+    SwitchBytesInfo_Essentia,
+
+    PriorityCardMode,
+    PriorityCardMode_Edit,
+    PriorityCardMode_View,
+    PriorityCardMode_Set,
+    PriorityCardMode_Inc,
+    PriorityCardMode_Dec;
 
     private final String root;
 

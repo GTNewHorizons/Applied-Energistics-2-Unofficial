@@ -48,6 +48,7 @@ import appeng.core.features.AETileBlockFeatureHandler;
 import appeng.core.features.IAEFeature;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.ICustomCollision;
+import appeng.items.tools.ToolPriorityCard;
 import appeng.items.tools.quartz.ToolQuartzCuttingKnife;
 import appeng.tile.AEBaseTile;
 import appeng.tile.networking.TileCableBus;
@@ -278,6 +279,12 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                     final AEBaseTile tile = this.getTileEntity(w, x, y, z);
                     if (tile == null) return false;
                     Platform.openGUI(player, tile, ForgeDirection.getOrientation(side), GuiBridge.GUI_RENAMER);
+                    return true;
+                }
+                if (is.getItem() instanceof ToolPriorityCard && !(this instanceof BlockCableBus)) {
+                    final AEBaseTile tile = this.getTileEntity(w, x, y, z);
+                    if (tile == null) return false;
+                    ToolPriorityCard.handleUse(player, tile, is, ForgeDirection.getOrientation(side));
                     return true;
                 }
             }

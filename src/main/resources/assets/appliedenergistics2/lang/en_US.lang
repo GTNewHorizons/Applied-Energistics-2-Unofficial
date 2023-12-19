@@ -106,6 +106,9 @@ chat.appliedenergistics2.InterfaceInOtherDim=Interface located at dimension: %d 
 chat.appliedenergistics2.InterfaceHighlighted=The interface is now highlighted at %d, %d, %d
 chat.appliedenergistics2.CraftingItemsWentMissing=Could not start craft, ingredient went missing: %d * %s
 chat.appliedenergistics2.FBOUnsupported=OpenGL FBOs not supported, cannot export image
+chat.appliedenergistics2.PriorityInvalidTarget=Target has no priority
+chat.appliedenergistics2.PriorityReadout=Current priority is %d
+chat.appliedenergistics2.PriorityConfigured=Updated priority to %d
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
 itemGroup.appliedenergistics2.facades=Applied Energistics 2 - Facades
@@ -269,6 +272,13 @@ gui.appliedenergistics2.SmallFontCraft=Craft
 gui.appliedenergistics2.LargeFontCraft=+
 gui.appliedenergistics2.Renamer=Custom Name: (Enter to set)
 gui.appliedenergistics2.OreFilterLabel=Ore dictionary filter
+gui.appliedenergistics2.PriorityCard=Priority Card
+gui.appliedenergistics2.PriorityCardTooltip=For all your prioritization needs!
+gui.appliedenergistics2.PriorityCardTooltipModeEdit=Mode: Edit priority
+gui.appliedenergistics2.PriorityCardTooltipModeView=Mode: Print priority
+gui.appliedenergistics2.PriorityCardTooltipModeSet=Mode: Apply priority
+gui.appliedenergistics2.PriorityCardTooltipModeInc=Mode: Apply and increment priority
+gui.appliedenergistics2.PriorityCardTooltipModeDec=Mode: Apply and decrement priority
 gui.appliedenergistics2.Sticky=Sticky
 gui.appliedenergistics2.HoldShiftForTooltip=Hold shift for extended tooltip
 gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=Hold shift click to highlight interface
@@ -476,6 +486,13 @@ gui.tooltips.appliedenergistics2.SwitchBytesInfo=Cell Info
 gui.tooltips.appliedenergistics2.SwitchBytesInfo_Item=Item
 gui.tooltips.appliedenergistics2.SwitchBytesInfo_Fluid=Fluid
 gui.tooltips.appliedenergistics2.SwitchBytesInfo_Essentia=Essentia
+
+gui.tooltips.appliedenergistics2.PriorityCardMode=Priority Card Mode
+gui.tooltips.appliedenergistics2.PriorityCardMode_Edit=Edit priority of targets.
+gui.tooltips.appliedenergistics2.PriorityCardMode_View=Print priority of targets.
+gui.tooltips.appliedenergistics2.PriorityCardMode_Set=Apply priority to targets.
+gui.tooltips.appliedenergistics2.PriorityCardMode_Inc=Apply priority to targets and increment by 1.
+gui.tooltips.appliedenergistics2.PriorityCardMode_Dec=Apply priority to targets and decrement by 1.
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
@@ -690,6 +707,7 @@ item.appliedenergistics2.ToolChargedStaff.name=Charged Staff
 item.appliedenergistics2.ToolEntropyManipulator.name=Entropy Manipulator
 item.appliedenergistics2.ToolMassCannon.name=Matter Cannon
 item.appliedenergistics2.ToolMemoryCard.name=Memory Card
+item.appliedenergistics2.ToolPriorityCard.name=Priority Card
 item.appliedenergistics2.ToolColorApplicator.name=Color Applicator
 item.appliedenergistics2.ToolWirelessTerminal.name=Wireless Terminal
 item.appliedenergistics2.ToolBiometricCard.name=Biometric Card

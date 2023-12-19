@@ -56,6 +56,7 @@ import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.ICustomNameObject;
 import appeng.helpers.IPriorityHost;
+import appeng.items.tools.ToolPriorityCard;
 import appeng.items.tools.quartz.ToolQuartzCuttingKnife;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
@@ -413,6 +414,15 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
         return false;
     }
 
+    private boolean usePriorityCard(final EntityPlayer player) {
+        final ItemStack is = player.inventory.getCurrentItem();
+        if (is != null && is.getItem() instanceof ToolPriorityCard) {
+            ToolPriorityCard.handleUse(player, this, is, side);
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public final boolean onActivate(final EntityPlayer player, final Vec3 pos) {
         // int x = (int) pos.xCoord, y = (int) pos.yCoord, z = (int) pos.zCoord;
@@ -427,7 +437,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 player.getEntityWorld());
         if (event.isCanceled()) return false;
 
-        if (this.useMemoryCard(player) || useRenamer(player)) return true;
+        if (this.useMemoryCard(player) || useRenamer(player) || usePriorityCard(player)) return true;
 
         return onPartActivate(player, pos);
     }

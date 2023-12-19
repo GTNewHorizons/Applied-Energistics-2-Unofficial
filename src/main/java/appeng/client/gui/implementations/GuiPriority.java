@@ -61,6 +61,10 @@ public class GuiPriority extends AEBaseGui {
         super(new ContainerPriority(inventoryPlayer, te));
     }
 
+    protected GuiPriority(final ContainerPriority container) {
+        super(container);
+    }
+
     @Override
     public void initGui() {
         super.initGui();
