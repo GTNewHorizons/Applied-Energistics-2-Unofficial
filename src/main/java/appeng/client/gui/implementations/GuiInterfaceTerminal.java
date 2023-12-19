@@ -44,6 +44,7 @@ import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
 import appeng.api.config.TerminalStyle;
+import appeng.api.config.YesNo;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
@@ -110,6 +111,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private final GuiImgButton guiButtonAssemblersOnly;
     private final GuiImgButton guiButtonBrokenRecipes;
     private final GuiImgButton terminalStyleBox;
+    private final GuiImgButton searchStringSave;
     private boolean onlyMolecularAssemblers = false;
     private boolean onlyBrokenRecipes = false;
     private boolean online;
@@ -118,6 +120,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private final List<String> extraOptionsText;
     private ItemStack tooltipStack;
     private final boolean neiPresent;
+    protected static String searchFieldInputsText = "";
+    protected static String searchFieldOutputsText = "";
+    protected static String searchFieldNamesText = "";
+
     /*
      * Z-level Map (FLOATS) 0.0 - BACKGROUND 1.0 - ItemStacks 2.0 - Slot color overlays 20.0 - ItemStack overlays 21.0 -
      * Slot mouse hover overlay 200.0 - Tooltips
@@ -163,6 +169,11 @@ public class GuiInterfaceTerminal extends AEBaseGui
         };
         searchFieldNames.setFocused(true);
 
+        searchStringSave = new GuiImgButton(
+                0,
+                0,
+                Settings.SAVE_SEARCH,
+                AEConfig.instance.preserveSearchBar ? YesNo.YES : YesNo.NO);
         guiButtonAssemblersOnly = new GuiImgButton(0, 0, Settings.ACTIONS, null);
         guiButtonHideFull = new GuiImgButton(0, 0, Settings.ACTIONS, null);
         guiButtonBrokenRecipes = new GuiImgButton(0, 0, Settings.ACTIONS, null);
@@ -205,8 +216,11 @@ public class GuiInterfaceTerminal extends AEBaseGui
         terminalStyleBox.xPosition = guiLeft - 18;
         terminalStyleBox.yPosition = guiTop + 8;
 
+        searchStringSave.xPosition = guiLeft - 18;
+        searchStringSave.yPosition = terminalStyleBox.yPosition + 18;
+
         guiButtonBrokenRecipes.xPosition = guiLeft - 18;
-        guiButtonBrokenRecipes.yPosition = terminalStyleBox.yPosition + 18;
+        guiButtonBrokenRecipes.yPosition = searchStringSave.yPosition + 18;
 
         guiButtonHideFull.xPosition = guiLeft - 18;
         guiButtonHideFull.yPosition = guiButtonBrokenRecipes.yPosition + 18;
@@ -214,12 +228,17 @@ public class GuiInterfaceTerminal extends AEBaseGui
         guiButtonAssemblersOnly.xPosition = guiLeft - 18;
         guiButtonAssemblersOnly.yPosition = guiButtonHideFull.yPosition + 18;
 
+        if (AEConfig.instance.preserveSearchBar || isSubGui()) {
+            setSearchString();
+        }
+
         this.setScrollBar();
         this.repositionSlots();
 
         buttonList.add(guiButtonAssemblersOnly);
         buttonList.add(guiButtonHideFull);
         buttonList.add(guiButtonBrokenRecipes);
+        buttonList.add(searchStringSave);
         buttonList.add(terminalStyleBox);
     }
 
@@ -311,11 +330,27 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 if (btn == this.terminalStyleBox) {
                     AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
                     initGui();
+                } else if (btn == searchStringSave) {
+                    AEConfig.instance.preserveSearchBar = next == YesNo.YES;
                 }
 
                 iBtn.set(next);
             }
         }
+    }
+
+    @Override
+    public void onGuiClosed() {
+        super.onGuiClosed();
+        searchFieldInputsText = searchFieldInputs.getText();
+        searchFieldOutputsText = searchFieldOutputs.getText();
+        searchFieldNamesText = searchFieldNames.getText();
+    }
+
+    public void setSearchString() {
+        searchFieldInputs.setText(searchFieldInputsText);
+        searchFieldOutputs.setText(searchFieldOutputsText);
+        searchFieldNames.setText(searchFieldNamesText);
     }
 
     @Override
