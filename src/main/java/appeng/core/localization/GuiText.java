@@ -185,6 +185,7 @@ public enum GuiText {
     Fuzzy,
     Filter,
     Sticky,
+    Contains,
 
     // Used in a terminal to indicate that an item is craftable
     SmallFontCraft,

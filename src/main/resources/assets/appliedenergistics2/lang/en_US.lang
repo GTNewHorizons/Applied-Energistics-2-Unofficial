@@ -280,6 +280,7 @@ gui.appliedenergistics2.PriorityCardTooltipModeSet=Mode: Apply priority
 gui.appliedenergistics2.PriorityCardTooltipModeInc=Mode: Apply and increment priority
 gui.appliedenergistics2.PriorityCardTooltipModeDec=Mode: Apply and decrement priority
 gui.appliedenergistics2.Sticky=Sticky
+gui.appliedenergistics2.Contains=Contains Item
 gui.appliedenergistics2.HoldShiftForTooltip=Hold shift for extended tooltip
 gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=Hold shift click to highlight interface
 gui.appliedenergistics2.Nothing=Nothing
