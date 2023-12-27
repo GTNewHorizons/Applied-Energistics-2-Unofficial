@@ -237,13 +237,20 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
     }
 
     @Override
+    public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
+        return itemstack != null && AEApi.instance().registries().cell().isCellHandled(itemstack);
+
+    }
+
+    @Override
     public boolean canInsertItem(final int slotIndex, final ItemStack insertingItem, final int side) {
-        for (final int inputSlotIndex : this.input) {
-            if (inputSlotIndex == slotIndex) {
-                return true;
+        if (isItemValidForSlot(slotIndex, insertingItem)) {
+            for (final int inputSlotIndex : this.input) {
+                if (inputSlotIndex == slotIndex) {
+                    return true;
+                }
             }
         }
-
         return false;
     }
 
