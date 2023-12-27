@@ -152,6 +152,12 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         }
     }
 
+    @Override
+    public void gridChanged() {
+        super.gridChanged();
+        updateTask();
+    }
+
     public void updateRedstoneState() {
         final YesNo currentState = this.worldObj.isBlockIndirectlyGettingPowered(this.xCoord, this.yCoord, this.zCoord)
                 ? YesNo.YES
