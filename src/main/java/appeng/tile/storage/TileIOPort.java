@@ -87,6 +87,11 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
             OUTPUT_SLOT_INDEX_CENTER_LEFT, OUTPUT_SLOT_INDEX_CENTER_RIGHT, OUTPUT_SLOT_INDEX_BOTTOM_LEFT,
             OUTPUT_SLOT_INDEX_BOTTOM_RIGHT };
 
+    private final int[] slots = { INPUT_SLOT_INDEX_TOP_LEFT, INPUT_SLOT_INDEX_TOP_RIGHT, INPUT_SLOT_INDEX_CENTER_LEFT,
+            INPUT_SLOT_INDEX_CENTER_RIGHT, INPUT_SLOT_INDEX_BOTTOM_LEFT, INPUT_SLOT_INDEX_BOTTOM_RIGHT,
+            OUTPUT_SLOT_INDEX_TOP_LEFT, OUTPUT_SLOT_INDEX_TOP_RIGHT, OUTPUT_SLOT_INDEX_CENTER_LEFT,
+            OUTPUT_SLOT_INDEX_CENTER_RIGHT, OUTPUT_SLOT_INDEX_BOTTOM_LEFT, OUTPUT_SLOT_INDEX_BOTTOM_RIGHT };
+
     private final AppEngInternalInventory cells;
     private final UpgradeInventory upgrades;
 
@@ -239,7 +244,6 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
     @Override
     public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
         return itemstack != null && AEApi.instance().registries().cell().isCellHandled(itemstack);
-
     }
 
     @Override
@@ -261,17 +265,12 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                 return true;
             }
         }
-
         return false;
     }
 
     @Override
     public int[] getAccessibleSlotsBySide(final ForgeDirection d) {
-        if (d == ForgeDirection.UP || d == ForgeDirection.DOWN) {
-            return this.input;
-        }
-
-        return this.output;
+        return slots;
     }
 
     @Override
