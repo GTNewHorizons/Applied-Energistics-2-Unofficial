@@ -68,6 +68,7 @@ import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.implementations.ContainerMEPortableCell;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
+import appeng.container.implementations.ContainerOptimizePatterns;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.container.implementations.ContainerPatternMulti;
 import appeng.container.implementations.ContainerPatternTerm;
@@ -204,6 +205,9 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_CRAFTING_CONFIRM(ContainerCraftConfirm.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),
+
+    GUI_OPTIMIZE_PATTERNS(ContainerOptimizePatterns.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
+            SecurityPermissions.BUILD),
 
     GUI_INTERFACE_TERMINAL(ContainerInterfaceTerminal.class, PartInterfaceTerminal.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),

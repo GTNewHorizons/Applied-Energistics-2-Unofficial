@@ -20,9 +20,9 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.input.Mouse;
 
-import akka.japi.Pair;
 import appeng.api.config.ActionItems;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.RedstoneMode;
@@ -270,15 +270,15 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
             for (int i = 0; i < this.inventorySlots.inventorySlots.size(); i++) {
                 Object slot = this.inventorySlots.inventorySlots.get(i);
                 if (slot instanceof SlotFake) {
-                    slots.add(new Pair<>((SlotFake) slot, i));
+                    slots.add(Pair.of((SlotFake) slot, i));
                 }
             }
         }
         for (Pair<SlotFake, Integer> fakeSlotPair : slots) {
-            SlotFake fakeSlot = fakeSlotPair.first();
+            SlotFake fakeSlot = fakeSlotPair.getKey();
             if (fakeSlot.isEnabled() && getSlotArea(fakeSlot).contains(mouseX, mouseY)) {
                 fakeSlot.putStack(draggedStack);
-                NetworkHandler.instance.sendToServer(new PacketNEIDragClick(draggedStack, fakeSlotPair.second()));
+                NetworkHandler.instance.sendToServer(new PacketNEIDragClick(draggedStack, fakeSlotPair.getValue()));
                 if (draggedStack != null) {
                     draggedStack.stackSize = 0;
                 }

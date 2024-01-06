@@ -78,6 +78,14 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     public static final int LIST_VIEW_TEXTURE_NONROW_HEIGHT = LIST_VIEW_TEXTURE_HEIGHT
             - (LIST_VIEW_TEXTURE_ABOVE_BOTTOM_ROW_Y - LIST_VIEW_TEXTURE_BELOW_TOP_ROW_Y)
             - 2 * LIST_VIEW_TEXTURE_ROW_HEIGHT;
+    public static final int LIST_VIEW_SETTINGS_START_Y = 206;
+    public static final int LIST_VIEW_SETTINGS_START_HEIGHT = 4;
+    public static final int LIST_VIEW_SETTINGS_MIDDLE_Y = LIST_VIEW_SETTINGS_START_Y + LIST_VIEW_SETTINGS_START_HEIGHT;
+    public static final int LIST_VIEW_SETTINGS_MIDDLE_HEIGHT = 25;
+    public static final int LIST_VIEW_SETTINGS_END_Y = LIST_VIEW_SETTINGS_MIDDLE_Y + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT;
+    public static final int LIST_VIEW_SETTINGS_END_HEIGHT = 4;
+    // public static final int LIST_VIEW_SETTINGS_X_END = 126;
+    public static final int LIST_VIEW_SETTINGS_WIDTH = 130;
 
     public enum DisplayMode {
 
@@ -88,6 +96,23 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             return switch (this) {
                 case LIST -> TREE;
                 case TREE -> LIST;
+                default -> throw new IllegalArgumentException(this.toString());
+            };
+        }
+    }
+
+    public enum SortMode {
+
+        DEFAULT,
+        BY_CRAFTS,
+        BY_AMOUNT,
+        BY_NAME;
+
+        public SortMode next() {
+            return switch (this) {
+                case DEFAULT, BY_NAME -> BY_CRAFTS;
+                case BY_CRAFTS -> BY_AMOUNT;
+                case BY_AMOUNT -> BY_NAME;
                 default -> throw new IllegalArgumentException(this.toString());
             };
         }
@@ -130,6 +155,9 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
     private DisplayMode displayMode = DisplayMode.LIST;
     private boolean tallMode;
+    private SortMode sortMode = SortMode.DEFAULT;
+    private boolean missingFirst = true;
+    private boolean pendingFirst = true;
 
     private GuiBridge OriginalGui;
     private GuiButton cancel;
@@ -138,6 +166,10 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     private GuiImgButton switchTallMode;
     private GuiSimpleImgButton takeScreenshot;
     private GuiTabButton switchDisplayMode;
+    private GuiButton sortingModeButton;
+    private GuiButton missingFirstButton;
+    private GuiButton pendingFirstButton;
+    private GuiButton optimizeButton;
     private int tooltip = -1;
     private ItemStack hoveredStack;
 
@@ -244,6 +276,43 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 itemRender);
         this.switchDisplayMode.setHideEdge(1);
         this.buttonList.add(this.switchDisplayMode);
+
+        this.sortingModeButton = new GuiButton(
+                0,
+                this.guiLeft + this.xSize + 2 + 4,
+                this.guiTop + 4 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 0,
+                123,
+                20,
+                "Sort mode: DEFAULT");
+        this.buttonList.add(this.sortingModeButton);
+
+        this.missingFirstButton = new GuiButton(
+                0,
+                this.guiLeft + this.xSize + 2 + 4,
+                this.guiTop + 4 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 1,
+                123,
+                20,
+                "Missing items first: ON");
+        this.buttonList.add(this.missingFirstButton);
+
+        this.pendingFirstButton = new GuiButton(
+                0,
+                this.guiLeft + this.xSize + 2 + 4,
+                this.guiTop + 4 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 2,
+                123,
+                20,
+                "Pending items first: ON");
+        this.buttonList.add(this.pendingFirstButton);
+
+        this.optimizeButton = new GuiButton(
+                0,
+                this.guiLeft + this.xSize + 2 + 4,
+                this.guiTop + 4 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 3,
+                123,
+                20,
+                "Optimize patterns");
+        this.optimizeButton.enabled = false;
+        this.buttonList.add(this.optimizeButton);
     }
 
     @Override
@@ -260,8 +329,10 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             }
         }
 
-        this.selectCPU.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation();
-        this.selectCPU.visible = (displayMode == DisplayMode.LIST);
+        this.selectCPU.enabled = this.optimizeButton.enabled = (displayMode == DisplayMode.LIST)
+                && !this.isSimulation();
+        this.selectCPU.visible = this.sortingModeButton.visible = this.missingFirstButton.visible = this.pendingFirstButton.visible = this.optimizeButton.visible = (displayMode
+                == DisplayMode.LIST);
         this.takeScreenshot.visible = (displayMode == DisplayMode.TREE);
 
         super.drawScreen(mouseX, mouseY, btn);
@@ -579,6 +650,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 } else {
                     this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
                 }
+                this.drawSettingsBG(offsetX, offsetY, mouseX, mouseY);
             }
             case TREE -> {
                 this.bindTexture("guis/craftingtree.png");
@@ -593,6 +665,36 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                         TREE_VIEW_TEXTURE_HEIGHT);
             }
         }
+    }
+
+    private void drawSettingsBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        // this.drawTexturedModalRect(offsetX + this.xSize + 2, offsetY, 0, LIST_VIEW_SETTINGS_Y,
+        // LIST_VIEW_SETTINGS_X_END + 4, (LIST_VIEW_SETTINGS_Y_END - LIST_VIEW_SETTINGS_Y) + 4);
+
+        this.drawTexturedModalRect(
+                offsetX + this.xSize + 2,
+                offsetY,
+                0,
+                LIST_VIEW_SETTINGS_START_Y,
+                LIST_VIEW_SETTINGS_WIDTH,
+                LIST_VIEW_SETTINGS_START_HEIGHT);
+        int i = 0;
+        for (; i < 4; i++) {
+            this.drawTexturedModalRect(
+                    offsetX + this.xSize + 2,
+                    offsetY + LIST_VIEW_SETTINGS_START_HEIGHT + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * i,
+                    0,
+                    LIST_VIEW_SETTINGS_MIDDLE_Y,
+                    LIST_VIEW_SETTINGS_WIDTH,
+                    LIST_VIEW_SETTINGS_MIDDLE_HEIGHT);
+        }
+        this.drawTexturedModalRect(
+                offsetX + this.xSize + 2,
+                offsetY + LIST_VIEW_SETTINGS_START_HEIGHT + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * i,
+                0,
+                LIST_VIEW_SETTINGS_END_Y,
+                LIST_VIEW_SETTINGS_WIDTH,
+                LIST_VIEW_SETTINGS_END_HEIGHT);
     }
 
     private void setScrollBar() {
@@ -651,20 +753,47 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     }
 
     Comparator<IAEItemStack> comparator = (i1, i2) -> {
-        if (missing.findPrecise(i1) != null) {
-            if (missing.findPrecise(i2) != null) return 0;
-            return -1;
-        } else if (missing.findPrecise(i2) != null) {
-            return 1;
-        } else {
-            return 0;
+        // missing items always first
+
+        IAEItemStack storage1 = storage.findPrecise(i1);
+        IAEItemStack storage2 = storage.findPrecise(i2);
+        IAEItemStack pending1 = pending.findPrecise(i1);
+        IAEItemStack pending2 = pending.findPrecise(i2);
+        IAEItemStack missing1 = missing.findPrecise(i1);
+        IAEItemStack missing2 = missing.findPrecise(i2);
+
+        if (missingFirst) {
+            if (missing1 != null && missing2 == null) return -1;
+            if (missing1 == null && missing2 != null) return 1;
         }
+
+        if (pendingFirst) {
+            if (pending1 != null && pending2 == null) return -1;
+            if (pending1 == null && pending2 != null) return 1;
+        }
+
+        if (sortMode == SortMode.DEFAULT) return 0;
+
+        if (pending1 != null && pending2 != null) {
+            if (sortMode == SortMode.BY_CRAFTS)
+                return (int) (pending2.getCountRequestableCrafts() - pending1.getCountRequestableCrafts());
+        }
+        if (sortMode == SortMode.BY_AMOUNT) {
+            int amount1 = (int) ((storage1 != null ? storage1.getStackSize() : 0)
+                    + (pending1 != null ? pending1.getStackSize() : 0)
+                    + (missing1 != null ? missing1.getStackSize() : 0));
+            int amount2 = (int) ((storage2 != null ? storage2.getStackSize() : 0)
+                    + (pending2 != null ? pending2.getStackSize() : 0)
+                    + (missing2 != null ? missing2.getStackSize() : 0));
+            return (int) (amount2 - amount1);
+        }
+        if (sortMode == SortMode.BY_NAME)
+            return i2.getItemStack().getDisplayName().compareTo(i1.getItemStack().getDisplayName());
+        return 0;
     };
 
     private void sortItems() {
-        if (!this.missing.isEmpty()) {
-            this.visual.sort(comparator);
-        }
+        this.visual.sort(comparator);
     }
 
     private void handleInput(final IItemList<IAEItemStack> s, final IAEItemStack l) {
@@ -775,6 +904,24 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             if (craftingTree != null) {
                 craftingTree.saveScreenshot();
             }
+        } else if (btn == this.sortingModeButton) {
+            this.sortMode = this.sortMode.next();
+            this.sortingModeButton.displayString = "Sort mode: " + this.sortMode.toString();
+            this.sortItems();
+        } else if (btn == this.missingFirstButton) {
+            this.missingFirst = !this.missingFirst;
+            this.missingFirstButton.displayString = "Missing items first: " + (this.missingFirst ? "ON" : "OFF");
+            this.sortItems();
+        } else if (btn == this.pendingFirstButton) {
+            this.pendingFirst = !this.pendingFirst;
+            this.pendingFirstButton.displayString = "Pending items first: " + (this.pendingFirst ? "ON" : "OFF");
+            this.sortItems();
+        } else if (btn == this.optimizeButton) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.OptimizePatterns", "Patterns"));
+            } catch (final Throwable e) {
+                AELog.debug(e);
+            }
         } else if (btn == this.start) {
             try {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.Start", "Start"));
@@ -826,7 +973,13 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     }
 
     public boolean hideItemPanelSlot(int x, int y, int w, int h) {
-        return cpuTable.hideItemPanelSlot(x - guiLeft, y - guiTop, w, h);
+        if (cpuTable.hideItemPanelSlot(x - guiLeft, y - guiTop, w, h)) return true;
+        int bruhx = x - guiLeft - this.xSize;
+        int bruhy = y - guiTop;
+        return bruhx >= -w && bruhx <= LIST_VIEW_SETTINGS_WIDTH
+                && bruhy >= -h
+                && bruhy <= (LIST_VIEW_SETTINGS_START_HEIGHT + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 4
+                        + LIST_VIEW_SETTINGS_END_HEIGHT);
     }
 
     protected void addMissingItemsToBookMark() {

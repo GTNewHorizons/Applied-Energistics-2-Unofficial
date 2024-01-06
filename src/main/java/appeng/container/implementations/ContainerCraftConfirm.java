@@ -250,6 +250,20 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         }
     }
 
+    public void optimizePatterns() {
+        // only V2 supported
+        if (this.result instanceof CraftingJobV2 && !this.isSimulation() && getGrid() != null) {
+            Platform.openGUI(
+                    this.getPlayerInv().player,
+                    this.getOpenContext().getTile(),
+                    this.getOpenContext().getSide(),
+                    GuiBridge.GUI_OPTIMIZE_PATTERNS);
+            if (this.getPlayerInv().player.openContainer instanceof ContainerOptimizePatterns cop) {
+                cop.setResult(this.result);
+            }
+        }
+    }
+
     public void switchToOriginalGUI() {
         GuiBridge originalGui = null;
 
