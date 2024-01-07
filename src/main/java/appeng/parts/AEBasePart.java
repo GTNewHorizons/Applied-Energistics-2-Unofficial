@@ -70,12 +70,12 @@ import io.netty.buffer.ByteBuf;
 
 public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, IUpgradeableHost, ICustomNameObject {
 
-    private final AENetworkProxy proxy;
-    private final ItemStack is;
-    private ISimplifiedBundle renderCache = null;
-    private TileEntity tile = null;
-    private IPartHost host = null;
-    private ForgeDirection side = null;
+    protected final AENetworkProxy proxy;
+    protected final ItemStack is;
+    protected ISimplifiedBundle renderCache = null;
+    protected TileEntity tile = null;
+    protected IPartHost host = null;
+    protected ForgeDirection side = null;
 
     public AEBasePart(final ItemStack is) {
         Preconditions.checkNotNull(is);

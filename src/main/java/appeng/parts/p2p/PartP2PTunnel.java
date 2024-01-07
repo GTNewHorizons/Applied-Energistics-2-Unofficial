@@ -50,8 +50,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicState {
 
     private final TunnelCollection type = new TunnelCollection<T>(null, this.getClass());
-    private boolean output;
-    private long freq;
+    public boolean output;
+    public long freq;
 
     public PartP2PTunnel(final ItemStack is) {
         super(is);

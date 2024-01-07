@@ -36,7 +36,7 @@ public abstract class PartBasicState extends AEBasePart implements IPowerChannel
     protected static final int CHANNEL_FLAG = 2;
     protected static final int BOOTING_FLAG = 4;
 
-    private int clientFlags = 0; // sent as byte.
+    protected int clientFlags = 0; // sent as byte.
 
     public PartBasicState(final ItemStack is) {
         super(is);
