@@ -210,12 +210,12 @@ public enum PartType {
     PatternTerminalEx(500, EnumSet.of(AEFeature.Patterns), EnumSet.noneOf(IntegrationType.class),
             PartPatternTerminalEx.class);
 
-    private final int baseDamage;
+    public final int baseDamage;
     private final Set<AEFeature> features;
     private final Set<IntegrationType> integrations;
     private final Class<? extends IPart> myPart;
     private final GuiText extraName;
-    private Constructor<? extends IPart> constructor;
+    public Constructor<? extends IPart> constructor;
 
     PartType(final int baseMetaValue, final Set<AEFeature> features, final Set<IntegrationType> integrations,
             final Class<? extends IPart> c) {
