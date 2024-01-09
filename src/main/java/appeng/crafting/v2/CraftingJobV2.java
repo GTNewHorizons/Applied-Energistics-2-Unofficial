@@ -38,10 +38,6 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
 
     protected volatile long totalByteCost = -1; // -1 means it needs to be recalculated
 
-    public CraftingContext getContext() {
-        return context;
-    }
-
     protected CraftingContext context;
     public CraftingRequest<IAEItemStack> originalRequest;
     protected ICraftingCallback callback;

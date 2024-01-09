@@ -96,10 +96,7 @@ public class PacketValueConfig extends AppEngPacket {
             qk.selectCPU(Integer.parseInt(this.Value));
         } else if (this.Name.equals("Terminal.Start") && c instanceof final ContainerCraftConfirm qk) {
             qk.startJob();
-        } else if(this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk){
-            qk.optimizePatterns();
-        }
-        else if (this.Name.equals("TileCrafting.Cancel") && c instanceof final ContainerCraftingCPU qk) {
+        } else if (this.Name.equals("TileCrafting.Cancel") && c instanceof final ContainerCraftingCPU qk) {
             qk.cancelCrafting();
         } else if (this.Name.equals("QuartzKnife.Name") && c instanceof final ContainerQuartzKnife qk) {
             qk.setName(this.Value);

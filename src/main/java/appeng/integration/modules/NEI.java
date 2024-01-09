@@ -28,7 +28,6 @@ import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiCraftingTerm;
 import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.client.gui.implementations.GuiMEPortableCell;
-import appeng.client.gui.implementations.GuiOptimizePatterns;
 import appeng.client.gui.implementations.GuiPatternTerm;
 import appeng.client.gui.implementations.GuiPatternTermEx;
 import appeng.client.gui.implementations.GuiSkyChest;
@@ -244,7 +243,6 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     public boolean shouldShowTooltip(GuiContainer gui) {
         if (gui instanceof GuiCraftConfirm) return ((GuiCraftConfirm) gui).getHoveredStack() == null;
         if (gui instanceof GuiCraftingCPU) return ((GuiCraftingCPU) gui).getHoveredStack() == null;
-        if (gui instanceof GuiOptimizePatterns) return ((GuiOptimizePatterns) gui).getHoveredStack() == null;
         return true;
     }
 

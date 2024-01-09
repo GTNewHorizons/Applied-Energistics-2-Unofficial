@@ -169,7 +169,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     private GuiButton sortingModeButton;
     private GuiButton missingFirstButton;
     private GuiButton pendingFirstButton;
-    private GuiButton optimizeButton;
     private int tooltip = -1;
     private ItemStack hoveredStack;
 
@@ -303,16 +302,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 20,
                 "Pending items first: ON");
         this.buttonList.add(this.pendingFirstButton);
-
-        this.optimizeButton = new GuiButton(
-                0,
-                this.guiLeft + this.xSize + 2 + 4,
-                this.guiTop + 4 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 3,
-                123,
-                20,
-                "Optimize patterns");
-        this.optimizeButton.enabled = false;
-        this.buttonList.add(this.optimizeButton);
     }
 
     @Override
@@ -329,9 +318,8 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             }
         }
 
-        this.selectCPU.enabled = this.optimizeButton.enabled = (displayMode == DisplayMode.LIST)
-                && !this.isSimulation();
-        this.selectCPU.visible = this.sortingModeButton.visible = this.missingFirstButton.visible = this.pendingFirstButton.visible = this.optimizeButton.visible = (displayMode
+        this.selectCPU.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation();
+        this.selectCPU.visible = this.sortingModeButton.visible = this.missingFirstButton.visible = this.pendingFirstButton.visible = (displayMode
                 == DisplayMode.LIST);
         this.takeScreenshot.visible = (displayMode == DisplayMode.TREE);
 
@@ -679,7 +667,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 LIST_VIEW_SETTINGS_WIDTH,
                 LIST_VIEW_SETTINGS_START_HEIGHT);
         int i = 0;
-        for (; i < 4; i++) {
+        for (; i < 3; i++) {
             this.drawTexturedModalRect(
                     offsetX + this.xSize + 2,
                     offsetY + LIST_VIEW_SETTINGS_START_HEIGHT + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * i,
@@ -916,12 +904,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             this.pendingFirst = !this.pendingFirst;
             this.pendingFirstButton.displayString = "Pending items first: " + (this.pendingFirst ? "ON" : "OFF");
             this.sortItems();
-        } else if (btn == this.optimizeButton) {
-            try {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.OptimizePatterns", "Patterns"));
-            } catch (final Throwable e) {
-                AELog.debug(e);
-            }
         } else if (btn == this.start) {
             try {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.Start", "Start"));
