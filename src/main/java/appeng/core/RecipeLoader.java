@@ -16,6 +16,7 @@ import java.net.URISyntaxException;
 
 import javax.annotation.Nonnull;
 
+import cpw.mods.fml.common.Loader;
 import org.apache.commons.io.FileUtils;
 
 import com.google.common.base.Preconditions;
@@ -39,6 +40,7 @@ public class RecipeLoader implements Runnable {
      * recipe path in the jar
      */
     private static final String ASSETS_RECIPE_PATH = "/assets/appliedenergistics2/recipes/";
+    private static final String ASSETS_EASY_RECIPE_PATH = "/assets/appliedenergistics2/recipes/";
 
     @Nonnull
     private final IRecipeHandler handler;
@@ -90,9 +92,17 @@ public class RecipeLoader implements Runnable {
             catch (final IOException | URISyntaxException e) {
                 AELog.debug(e);
                 this.handler.parseRecipes(new JarLoader(ASSETS_RECIPE_PATH), "index.recipe");
+                if (!Loader.isModLoaded("dreamcraft"))
+                {
+                    this.handler.parseRecipes(new JarLoader(ASSETS_EASY_RECIPE_PATH), "index.recipe");
+                }
             }
         } else {
             this.handler.parseRecipes(new JarLoader(ASSETS_RECIPE_PATH), "index.recipe");
+            if (!Loader.isModLoaded("dreamcraft"))
+            {
+                this.handler.parseRecipes(new JarLoader(ASSETS_EASY_RECIPE_PATH), "index.recipe");
+            }
         }
     }
 }
