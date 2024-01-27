@@ -9,7 +9,3 @@ shapeless=
 shapeless=
     ae2:BlockQuartzChiseled
     -> 4 ae2:ItemMaterial.CertusQuartzCrystal
-
-shapeless=
-    ae2:BlockFluix
-    -> 4 ae2:ItemMaterial.FluixCrystal

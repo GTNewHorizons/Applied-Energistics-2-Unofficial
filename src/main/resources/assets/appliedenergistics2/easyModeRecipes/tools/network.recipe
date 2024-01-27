@@ -1,0 +1,19 @@
+shaped=
+    ae2:BlockChest ae2:ItemMaterial.Cell1kPart ae2:BlockEnergyCell
+    -> ae2:ToolPortableCell
+
+shaped=
+    ae2:ItemMaterial.EngProcessor oredictionary:ingotIron oredictionary:ingotIron,
+    oredictionary:ingotGold oredictionary:dustRedstone oredictionary:ingotGold
+    -> ae2:ToolBiometricCard
+
+shaped=
+    ae2:ItemMaterial.CalcProcessor oredictionary:ingotIron oredictionary:ingotIron,
+    oredictionary:ingotGold oredictionary:dustRedstone oredictionary:ingotGold
+    -> ae2:ToolMemoryCard
+
+shaped=
+    ae2:ItemMaterial.FormationCore oredictionary:ingotIron _,
+    oredictionary:ingotIron ae2:ItemMaterial.Cell4kPart _,
+    _ _ ae2:BlockEnergyCell
+    -> ae2:ToolColorApplicator

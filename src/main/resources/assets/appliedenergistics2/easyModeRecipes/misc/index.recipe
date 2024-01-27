@@ -1,0 +1,6 @@
+import=misc/chest.recipe
+import=misc/deconstruction.recipe
+import=misc/fluixpreal.recipe
+import=misc/meteors.recipe
+import=misc/seeds.recipe
+import=misc/tinytnt.recipe

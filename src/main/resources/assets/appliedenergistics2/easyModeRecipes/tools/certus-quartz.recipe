@@ -1,0 +1,11 @@
+shaped=
+    oredictionary:crystalCertusQuartz _ oredictionary:crystalCertusQuartz,
+    _ oredictionary:crystalCertusQuartz _,
+    oredictionary:crystalCertusQuartz _ oredictionary:crystalCertusQuartz
+    -> ae2:ToolCertusQuartzWrench
+
+shaped=
+    _ _ oredictionary:stickWood,
+    oredictionary:ingotIron oredictionary:stickWood _,
+    oredictionary:crystalCertusQuartz oredictionary:crystalCertusQuartz _
+    -> ae2:ToolCertusQuartzCuttingKnife
