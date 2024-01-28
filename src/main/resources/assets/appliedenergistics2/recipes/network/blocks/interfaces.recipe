@@ -1,7 +1,3 @@
 shapeless=
-    ae2:ItemPart.Interface
-    -> ae2:BlockInterface
-
-shapeless=
     ae2:BlockInterface
     -> ae2:ItemPart.Interface
