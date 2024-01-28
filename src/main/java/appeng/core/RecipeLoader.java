@@ -16,7 +16,6 @@ import java.net.URISyntaxException;
 
 import javax.annotation.Nonnull;
 
-import cpw.mods.fml.common.Loader;
 import org.apache.commons.io.FileUtils;
 
 import com.google.common.base.Preconditions;
@@ -26,6 +25,7 @@ import appeng.recipes.CustomRecipeConfig;
 import appeng.recipes.loader.ConfigLoader;
 import appeng.recipes.loader.JarLoader;
 import appeng.recipes.loader.RecipeResourceCopier;
+import cpw.mods.fml.common.Loader;
 
 /**
  * handles the decision if recipes should be loaded from jar, loaded from file system or force copied from jar
@@ -92,15 +92,13 @@ public class RecipeLoader implements Runnable {
             catch (final IOException | URISyntaxException e) {
                 AELog.debug(e);
                 this.handler.parseRecipes(new JarLoader(ASSETS_RECIPE_PATH), "index.recipe");
-                if (!Loader.isModLoaded("dreamcraft"))
-                {
+                if (!Loader.isModLoaded("dreamcraft")) {
                     this.handler.parseRecipes(new JarLoader(ASSETS_EASY_RECIPE_PATH), "index.recipe");
                 }
             }
         } else {
             this.handler.parseRecipes(new JarLoader(ASSETS_RECIPE_PATH), "index.recipe");
-            if (!Loader.isModLoaded("dreamcraft"))
-            {
+            if (!Loader.isModLoaded("dreamcraft")) {
                 this.handler.parseRecipes(new JarLoader(ASSETS_EASY_RECIPE_PATH), "index.recipe");
             }
         }
