@@ -51,6 +51,8 @@ public class GuiPatternMulti extends AEBaseGui {
 
     private GuiBridge originalGui;
 
+    private static final int DEFAULT_VALUE = 0;
+
     @Reflected
     public GuiPatternMulti(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         super(new ContainerPatternMulti(inventoryPlayer, te));
@@ -97,7 +99,7 @@ public class GuiPatternMulti extends AEBaseGui {
             this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
         }
 
-        if (target instanceof PartPatternTerminalEx) {
+        else if (target instanceof PartPatternTerminalEx) {
             for (final ItemStack stack : parts.patternTerminalEx().maybeStack(1).asSet()) {
                 myIcon = stack;
             }
@@ -125,7 +127,7 @@ public class GuiPatternMulti extends AEBaseGui {
         this.amountToSet.setTextColor(GuiColors.CraftAmountToCraft.getColor());
         this.amountToSet.setVisible(true);
         this.amountToSet.setFocused(true);
-        this.amountToSet.setText(String.valueOf(0));
+        this.amountToSet.setText(String.valueOf(DEFAULT_VALUE));
         this.amountToSet.setSelectionPos(0);
     }
 
@@ -149,11 +151,11 @@ public class GuiPatternMulti extends AEBaseGui {
             int resultI;
 
             if (Double.isNaN(resultD)) {
-                resultI = 0;
+                resultI = DEFAULT_VALUE;
             } else {
                 resultI = (int) ArithHelper.round(resultD, 0);
             }
-            this.symbolSwitch.set(resultI > 0 ? ActionItems.MULTIPLY : ActionItems.DIVIDE);
+            this.symbolSwitch.set(resultI >= 0 ? ActionItems.MULTIPLY : ActionItems.DIVIDE);
             this.set.enabled = resultI < -1 || resultI > 1;
         } catch (final NumberFormatException e) {
             this.set.enabled = false;
@@ -187,16 +189,16 @@ public class GuiPatternMulti extends AEBaseGui {
                 int resultI;
 
                 if (Double.isNaN(resultD)) {
-                    resultI = 1;
+                    resultI = DEFAULT_VALUE;
                 } else {
                     resultI = (int) ArithHelper.round(resultD, 0);
                 }
-
-                NetworkHandler.instance.sendToServer(new PacketPatternMultiSet(this.originalGui.ordinal(), resultI));
+                if (resultI > 1 || resultI < -1) NetworkHandler.instance
+                        .sendToServer(new PacketPatternMultiSet(this.originalGui.ordinal(), resultI));
             }
         } catch (final NumberFormatException e) {
             // nope..
-            this.amountToSet.setText("1");
+            this.amountToSet.setText(String.valueOf(DEFAULT_VALUE));
         }
 
         final boolean isPlus = btn == this.plus1 || btn == this.plus10 || btn == this.plus100 || btn == this.plus1000;
@@ -212,12 +214,12 @@ public class GuiPatternMulti extends AEBaseGui {
             double resultD = -Calculator.conversion(out);
             int resultI;
             if (Double.isNaN(resultD)) {
-                resultI = 0;
+                resultI = DEFAULT_VALUE;
             } else {
                 resultI = (int) ArithHelper.round(resultD, 0);
             }
             out = Integer.toString(resultI);
-            this.symbolSwitch.set(resultI > 0 ? ActionItems.MULTIPLY : ActionItems.DIVIDE);
+            this.symbolSwitch.set(resultI >= 0 ? ActionItems.MULTIPLY : ActionItems.DIVIDE);
             this.amountToSet.setText(out);
         }
 
@@ -231,7 +233,7 @@ public class GuiPatternMulti extends AEBaseGui {
             int resultI;
 
             if (Double.isNaN(resultD)) {
-                resultI = 0;
+                resultI = DEFAULT_VALUE;
             } else {
                 resultI = (int) ArithHelper.round(resultD, 0);
             }
@@ -239,7 +241,7 @@ public class GuiPatternMulti extends AEBaseGui {
             resultI += i;
 
             out = Integer.toString(resultI);
-            this.symbolSwitch.set(resultI > 0 ? ActionItems.MULTIPLY : ActionItems.DIVIDE);
+            this.symbolSwitch.set(resultI >= 0 ? ActionItems.MULTIPLY : ActionItems.DIVIDE);
             this.amountToSet.setText(out);
         } catch (final NumberFormatException e) {
             // :P

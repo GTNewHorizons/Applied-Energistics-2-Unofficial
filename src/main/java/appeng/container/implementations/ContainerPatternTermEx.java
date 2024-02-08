@@ -1,5 +1,7 @@
 package appeng.container.implementations;
 
+import static appeng.container.implementations.ContainerPatternTerm.MULTIPLE_OF_BUTTON_CLICK;
+import static appeng.container.implementations.ContainerPatternTerm.MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT;
 import static appeng.container.implementations.ContainerPatternTerm.canMultiplyOrDivide;
 import static appeng.container.implementations.ContainerPatternTerm.multiplyOrDivideStacksInternal;
 
@@ -409,7 +411,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
     }
 
     public void doubleStacks(boolean isShift) {
-        multiplyOrDivideStacks(isShift ? 8 : 2);
+        multiplyOrDivideStacks(isShift ? MULTIPLE_OF_BUTTON_CLICK : MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT);
     }
 
     public void multiplyOrDivideStacks(int multi) {

@@ -63,6 +63,8 @@ import appeng.util.item.AEItemStack;
 public class ContainerPatternTerm extends ContainerMEMonitorable
         implements IAEAppEngInventory, IOptionalSlotHost, IContainerCraftingPacket {
 
+    public static final int MULTIPLE_OF_BUTTON_CLICK = 2;
+    public static final int MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT = 8;
     private final PartPatternTerminal patternTerminal;
     private final AppEngInternalInventory cOut = new AppEngInternalInventory(null, 1);
     private final IInventory crafting;
@@ -560,7 +562,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     }
 
     public void doubleStacks(boolean isShift) {
-        multiplyOrDivideStacks(isShift ? 8 : 2);
+        multiplyOrDivideStacks(isShift ? MULTIPLE_OF_BUTTON_CLICK : MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT);
     }
 
     static boolean canMultiplyOrDivide(SlotFake[] slots, int mult) {
