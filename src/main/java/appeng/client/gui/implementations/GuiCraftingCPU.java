@@ -436,7 +436,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     dspToolTip = Platform.getItemDisplayName(is);
 
                     if (lineList.size() > 0) {
-                        addItemTooltip(is, lineList);
+                        addItemTooltip(refStack, lineList);
                         dspToolTip = dspToolTip + '\n' + Joiner.on("\n").join(lineList);
                     }
 
@@ -463,16 +463,16 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     }
 
     @SuppressWarnings("unchecked")
-    protected void addItemTooltip(ItemStack is, List<String> lineList) {
+    protected void addItemTooltip(IAEItemStack refStack, List<String> lineList) {
         if (isShiftKeyDown()) {
-            List l = is.getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
+            final ItemStack is = refStack.copy().getItemStack();
+            final List l = is.getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
             if (!l.isEmpty()) l.remove(0);
             lineList.addAll(l);
             if (this.hoveredNbtStack == null || this.hoveredNbtStack.getItem() != is.getItem()) {
                 this.hoveredNbtStack = is;
                 try {
-                    NetworkHandler.instance.sendToServer(
-                            new PacketCraftingItemInterface(AEApi.instance().storage().createItemStack(is)));
+                    NetworkHandler.instance.sendToServer(new PacketCraftingItemInterface(refStack.copy()));
                 } catch (Exception ignored) {}
             } else {
                 NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
