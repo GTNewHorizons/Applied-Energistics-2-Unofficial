@@ -40,7 +40,7 @@ public class RecipeLoader implements Runnable {
      * recipe path in the jar
      */
     private static final String ASSETS_RECIPE_PATH = "/assets/appliedenergistics2/recipes/";
-    private static final String ASSETS_EASY_RECIPE_PATH = "/assets/appliedenergistics2/recipes/";
+    private static final String ASSETS_EASY_RECIPE_PATH = "/assets/appliedenergistics2/easyModeRecipes/";
 
     @Nonnull
     private final IRecipeHandler handler;
