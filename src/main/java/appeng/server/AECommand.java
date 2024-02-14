@@ -34,14 +34,6 @@ public final class AECommand extends CommandBase {
         return 0;
     }
 
-    /**
-     * wtf?
-     */
-    @Override
-    public int compareTo(final Object arg0) {
-        return 1;
-    }
-
     @Override
     public String getCommandName() {
         return "ae2";
