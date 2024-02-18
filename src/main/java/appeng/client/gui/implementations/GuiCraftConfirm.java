@@ -84,7 +84,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     public static final int LIST_VIEW_SETTINGS_MIDDLE_HEIGHT = 25;
     public static final int LIST_VIEW_SETTINGS_END_Y = LIST_VIEW_SETTINGS_MIDDLE_Y + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT;
     public static final int LIST_VIEW_SETTINGS_END_HEIGHT = 4;
-    // public static final int LIST_VIEW_SETTINGS_X_END = 126;
     public static final int LIST_VIEW_SETTINGS_WIDTH = 130;
 
     public enum DisplayMode {
@@ -103,14 +102,14 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
     public enum SortMode {
 
-        DEFAULT,
+        NONE,
         BY_CRAFTS,
         BY_AMOUNT,
         BY_NAME;
 
         public SortMode next() {
             return switch (this) {
-                case DEFAULT, BY_NAME -> BY_CRAFTS;
+                case NONE, BY_NAME -> BY_CRAFTS;
                 case BY_CRAFTS -> BY_AMOUNT;
                 case BY_AMOUNT -> BY_NAME;
                 default -> throw new IllegalArgumentException(this.toString());
@@ -155,7 +154,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
     private DisplayMode displayMode = DisplayMode.LIST;
     private boolean tallMode;
-    private SortMode sortMode = SortMode.DEFAULT;
+    private SortMode sortMode = SortMode.NONE;
     private boolean missingFirst = true;
     private boolean pendingFirst = true;
 
@@ -279,7 +278,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         this.sortingModeButton = new GuiButton(
                 0,
                 this.guiLeft + this.xSize + 2 + 4,
-                this.guiTop + 4 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 0,
+                this.guiTop + 6 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 0,
                 123,
                 20,
                 "Sort mode: DEFAULT");
@@ -288,7 +287,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         this.missingFirstButton = new GuiButton(
                 0,
                 this.guiLeft + this.xSize + 2 + 4,
-                this.guiTop + 4 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 1,
+                this.guiTop + 6 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 1,
                 123,
                 20,
                 "Missing items first: ON");
@@ -297,7 +296,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         this.pendingFirstButton = new GuiButton(
                 0,
                 this.guiLeft + this.xSize + 2 + 4,
-                this.guiTop + 4 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 2,
+                this.guiTop + 6 + LIST_VIEW_SETTINGS_MIDDLE_HEIGHT * 2,
                 123,
                 20,
                 "Pending items first: ON");
@@ -368,7 +367,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         String btnTextText = GuiText.CraftingCPU.getLocal() + ": " + GuiText.Automatic.getLocal();
         if (this.ccc.getSelectedCpu() >= 0) // && status.selectedCpu < status.cpus.size() )
         {
-            if (this.ccc.getName().length() > 0) {
+            if (!this.ccc.getName().isEmpty()) {
                 final String name = this.ccc.getName().substring(0, Math.min(20, this.ccc.getName().length()));
                 btnTextText = GuiText.CraftingCPU.getLocal() + ": " + name;
             } else {
@@ -552,7 +551,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
 
                 if (this.tooltip == z - viewStart) {
                     dspToolTip = Platform.getItemDisplayName(is);
-                    if (lineList.size() > 0) {
+                    if (!lineList.isEmpty()) {
                         addItemTooltip(is, lineList);
                         dspToolTip = dspToolTip + '\n' + Joiner.on("\n").join(lineList);
                     }
@@ -585,7 +584,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             }
         }
 
-        if (this.tooltip >= 0 && dspToolTip.length() > 0) {
+        if (this.tooltip >= 0 && !dspToolTip.isEmpty()) {
             this.drawTooltip(toolPosX, toolPosY + 10, 0, dspToolTip);
         }
     }
@@ -638,7 +637,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 } else {
                     this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
                 }
-                this.drawSettingsBG(offsetX, offsetY, mouseX, mouseY);
+                this.drawSettingsBG(offsetX, offsetY);
             }
             case TREE -> {
                 this.bindTexture("guis/craftingtree.png");
@@ -655,7 +654,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         }
     }
 
-    private void drawSettingsBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+    private void drawSettingsBG(final int offsetX, final int offsetY) {
         // this.drawTexturedModalRect(offsetX + this.xSize + 2, offsetY, 0, LIST_VIEW_SETTINGS_Y,
         // LIST_VIEW_SETTINGS_X_END + 4, (LIST_VIEW_SETTINGS_Y_END - LIST_VIEW_SETTINGS_Y) + 4);
 
@@ -760,7 +759,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             if (pending1 == null && pending2 != null) return 1;
         }
 
-        if (sortMode == SortMode.DEFAULT) return 0;
+        if (sortMode == SortMode.NONE) return 0;
 
         if (pending1 != null && pending2 != null) {
             if (sortMode == SortMode.BY_CRAFTS)
@@ -925,6 +924,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     }
 
     // expose GUI buttons for mod integrations
+    @SuppressWarnings("unused")
     public GuiButton getCancelButton() {
         return cancel;
     }
