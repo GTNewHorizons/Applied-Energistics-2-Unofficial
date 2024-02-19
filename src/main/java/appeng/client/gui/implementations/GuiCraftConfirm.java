@@ -608,7 +608,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 } else {
                     this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
                 }
-                // this.drawSettingsBG(offsetX, offsetY);
             }
             case TREE -> {
                 this.bindTexture("guis/craftingtree.png");
