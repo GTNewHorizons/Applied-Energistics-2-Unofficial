@@ -20,11 +20,13 @@ import net.minecraftforge.common.config.Property;
 
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
+import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.CraftingStatus;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnits;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
+import appeng.api.config.SortDir;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
 import appeng.api.util.IConfigManager;
@@ -152,6 +154,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.settings.registerSetting(Settings.SEARCH_MODE, SearchBoxMode.AUTOSEARCH);
         this.settings.registerSetting(Settings.SAVE_SEARCH, YesNo.NO);
         this.settings.registerSetting(Settings.CRAFTING_STATUS, CraftingStatus.TILE);
+        this.settings.registerSetting(Settings.CRAFTING_SORT_BY, CraftingSortOrder.NAME);
+        this.settings.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
 
         this.spawnChargedChance = (float) (1.0
                 - this.get("worldGen", "spawnChargedChance", 1.0 - this.spawnChargedChance)

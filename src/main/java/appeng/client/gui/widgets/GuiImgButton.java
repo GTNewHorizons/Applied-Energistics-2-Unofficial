@@ -26,6 +26,7 @@ import appeng.api.config.AdvancedBlockingMode;
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingMode;
+import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.CraftingStatus;
 import appeng.api.config.FullnessMode;
 import appeng.api.config.FuzzyMode;
@@ -53,6 +54,7 @@ import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.localization.ButtonToolTips;
+import appeng.core.localization.GuiText;
 
 public class GuiImgButton extends GuiButton implements ITooltip {
 
@@ -306,6 +308,32 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.SortBy,
                     ButtonToolTips.InventoryTweaks);
             this.registerApp(69, Settings.SORT_BY, SortOrder.MOD, ButtonToolTips.SortBy, ButtonToolTips.Mod);
+
+            this.registerApp(
+                    64,
+                    Settings.CRAFTING_SORT_BY,
+                    CraftingSortOrder.NAME,
+                    ButtonToolTips.SortBy,
+                    ButtonToolTips.ItemName);
+            this.registerApp(
+                    65,
+                    Settings.CRAFTING_SORT_BY,
+                    CraftingSortOrder.AMOUNT,
+                    ButtonToolTips.SortBy,
+                    ButtonToolTips.NumberOfItems);
+            this.registerApp(
+                    18,
+                    Settings.CRAFTING_SORT_BY,
+                    CraftingSortOrder.CRAFTS,
+                    ButtonToolTips.SortBy,
+                    GuiText.ToCraftRequests.getUnlocalized());
+
+            this.registerApp(
+                    69,
+                    Settings.CRAFTING_SORT_BY,
+                    CraftingSortOrder.MOD,
+                    ButtonToolTips.SortBy,
+                    ButtonToolTips.Mod);
 
             this.registerApp(
                     66,

@@ -31,6 +31,7 @@ public enum Settings {
 
     SORT_DIRECTION(EnumSet.allOf(SortDir.class)),
     SORT_BY(EnumSet.allOf(SortOrder.class)),
+    CRAFTING_SORT_BY(EnumSet.allOf(CraftingSortOrder.class)),
 
     SEARCH_TOOLTIPS(EnumSet.of(YesNo.YES, YesNo.NO)),
     VIEW_MODE(EnumSet.allOf(ViewItems.class)),
