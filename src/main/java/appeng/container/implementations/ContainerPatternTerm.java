@@ -562,7 +562,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     }
 
     public void doubleStacks(boolean isShift) {
-        multiplyOrDivideStacks(isShift ? MULTIPLE_OF_BUTTON_CLICK : MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT);
+        multiplyOrDivideStacks(isShift ? MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT : MULTIPLE_OF_BUTTON_CLICK);
     }
 
     static boolean canMultiplyOrDivide(SlotFake[] slots, int mult) {

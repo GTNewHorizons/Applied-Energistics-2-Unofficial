@@ -411,7 +411,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
     }
 
     public void doubleStacks(boolean isShift) {
-        multiplyOrDivideStacks(isShift ? MULTIPLE_OF_BUTTON_CLICK : MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT);
+        multiplyOrDivideStacks(isShift ? MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT : MULTIPLE_OF_BUTTON_CLICK);
     }
 
     public void multiplyOrDivideStacks(int multi) {
