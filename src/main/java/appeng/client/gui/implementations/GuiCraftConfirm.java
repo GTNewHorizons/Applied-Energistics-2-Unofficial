@@ -710,7 +710,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             return ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
                     * sortDir.sortHint;
         if (sortMode == CraftingSortOrder.MOD) {
-            int v = ((AEItemStack) i1).getModID().compareToIgnoreCase(((AEItemStack) i2).getDisplayName());
+            int v = ((AEItemStack) i1).getModID().compareToIgnoreCase(((AEItemStack) i2).getModID());
             return (v == 0
                     ? ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
                     : v) * sortDir.sortHint;
