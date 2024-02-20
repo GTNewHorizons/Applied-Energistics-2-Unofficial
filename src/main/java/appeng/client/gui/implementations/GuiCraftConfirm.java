@@ -693,18 +693,18 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         if (missing1 == null && missing2 != null) return 1;
 
         if (sortMode == CraftingSortOrder.CRAFTS) {
-            int amount1 = (int) (pending1 != null ? pending1.getCountRequestableCrafts() : 0);
-            int amount2 = (int) (pending2 != null ? pending2.getCountRequestableCrafts() : 0);
-            return (amount1 - amount2) * sortDir.sortHint;
+            long amount1 = (pending1 != null ? pending1.getCountRequestableCrafts() : 0);
+            long amount2 = (pending2 != null ? pending2.getCountRequestableCrafts() : 0);
+            return Long.compare(amount1, amount2) * sortDir.sortHint;
         }
         if (sortMode == CraftingSortOrder.AMOUNT) {
-            int amount1 = (int) ((storage1 != null ? storage1.getStackSize() : 0)
+            long amount1 = ((storage1 != null ? storage1.getStackSize() : 0)
                     + (pending1 != null ? pending1.getStackSize() : 0)
                     + (missing1 != null ? missing1.getStackSize() : 0));
-            int amount2 = (int) ((storage2 != null ? storage2.getStackSize() : 0)
+            long amount2 = ((storage2 != null ? storage2.getStackSize() : 0)
                     + (pending2 != null ? pending2.getStackSize() : 0)
                     + (missing2 != null ? missing2.getStackSize() : 0));
-            return (amount1 - amount2) * sortDir.sortHint;
+            return Long.compare(amount1, amount2) * sortDir.sortHint;
         }
         if (sortMode == CraftingSortOrder.NAME)
             return ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
