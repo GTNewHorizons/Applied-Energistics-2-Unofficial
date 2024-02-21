@@ -17,4 +17,5 @@ import=decorative/index.recipe
 import=materials/index.recipe
 import=misc/index.recipe
 import=network/index.recipe
+import=processing/index.recipe
 import=tools/index.recipe

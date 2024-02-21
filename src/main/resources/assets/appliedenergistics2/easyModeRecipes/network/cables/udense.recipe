@@ -1,0 +1,95 @@
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeWhite ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.White
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeBlack ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Black
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeRed ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Red
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeGreen ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Green
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeBrown ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Brown
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeBlue ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Blue
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyePurple ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Purple
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeCyan ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Cyan
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeLightGray ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.LightGray
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeGray ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Gray
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyePink ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Pink
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeLime ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Lime
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeYellow ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Yellow
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeLightBlue ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.LightBlue
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeMagenta ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Magenta
+
+shaped=
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart oredictionary:dyeOrange ae2:CableUltraDenseSmart,
+    ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart ae2:CableUltraDenseSmart
+    -> 8 ae2:CableUltraDenseSmart.Orange
