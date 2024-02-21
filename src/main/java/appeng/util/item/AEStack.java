@@ -21,6 +21,7 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
     private long stackSize;
     private long countRequestable;
     private long countRequestableCrafts;
+    private float usedPercent;
 
     static long getPacketValue(final byte type, final ByteBuf tag) {
         if (type == 0) {
@@ -49,6 +50,17 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
     public StackType setStackSize(final long ss) {
         this.stackSize = ss;
         return (StackType) this;
+    }
+
+    @Override
+    public StackType setUsedPercent(final float percent) {
+        this.usedPercent = percent;
+        return (StackType) this;
+    }
+
+    @Override
+    public float getUsedPercent() {
+        return this.usedPercent;
     }
 
     @Override
@@ -91,6 +103,7 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         this.setCountRequestable(0);
         this.setCraftable(false);
         this.setCountRequestableCrafts(0);
+        this.setUsedPercent(0);
         return (StackType) this;
     }
 
@@ -137,6 +150,8 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         final byte mask2 = (byte) (this.getType(this.countRequestableCrafts));
         i.writeByte(mask2);
         this.putPacketValue(i, this.countRequestableCrafts);
+
+        i.writeFloat(this.usedPercent);
     }
 
     private byte getType(final long num) {

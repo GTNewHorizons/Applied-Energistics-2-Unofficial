@@ -142,6 +142,7 @@ public enum GuiText {
     SwitchCraftingSimulationDisplayMode,
 
     FromStorage,
+    FromStoragePercent,
     ToCraft,
     ToCraftRequests,
     CraftingPlan,

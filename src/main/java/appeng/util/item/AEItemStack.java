@@ -46,6 +46,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         this.setCraftable(is.isCraftable());
         this.setCountRequestable(is.getCountRequestable());
         this.setCountRequestableCrafts(is.getCountRequestableCrafts());
+        this.setUsedPercent(is.getUsedPercent());
     }
 
     private AEItemStack(final ItemStack is) {
@@ -89,6 +90,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         this.setCraftable(false);
         this.setCountRequestable(0);
         this.setCountRequestableCrafts(0);
+        this.setUsedPercent(0);
 
         this.getDefinition().reHash();
         this.getDefinition().setIsOre(OreHelper.INSTANCE.isOre(is));
@@ -110,6 +112,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         item.setCountRequestable(i.getLong("Req"));
         item.setCraftable(i.getBoolean("Craft"));
         item.setCountRequestableCrafts(i.getLong("ReqMade"));
+        item.setUsedPercent(i.getFloat("UsedPercent"));
         return item;
     }
 
@@ -155,6 +158,8 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         final byte countReqMadeType = (byte) ((mask2 & 0x3));
         final long countRequestableCrafts = getPacketValue(countReqMadeType, data);
 
+        final float usedPercent = data.readFloat();
+
         final ItemStack itemstack = ItemStack.loadItemStackFromNBT(d);
         if (itemstack == null) {
             return null;
@@ -166,6 +171,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         item.setCountRequestable(countRequestable);
         item.setCraftable(isCraftable);
         item.setCountRequestableCrafts(countRequestableCrafts);
+        item.setUsedPercent(usedPercent);
         return item;
     }
 
@@ -182,6 +188,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         this.setCountRequestable(this.getCountRequestable() + option.getCountRequestable());
         this.setCraftable(this.isCraftable() || option.isCraftable());
         this.setCountRequestableCrafts(this.getCountRequestableCrafts() + option.getCountRequestableCrafts());
+        this.setUsedPercent(option.getUsedPercent());
     }
 
     @Override
@@ -235,6 +242,8 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
 
         // Don't break any existing drive swapping automation in the world
         if (this.getCountRequestableCrafts() != 0L) i.setLong("ReqMade", this.getCountRequestableCrafts());
+
+        if (this.getUsedPercent() != 0) i.setFloat("UsedPercent", this.getUsedPercent());
     }
 
     @Override
