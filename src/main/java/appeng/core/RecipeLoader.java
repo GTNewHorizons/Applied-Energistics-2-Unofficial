@@ -40,7 +40,7 @@ public class RecipeLoader implements Runnable {
      * recipe path in the jar
      */
     private static final String ASSETS_RECIPE_PATH = "/assets/appliedenergistics2/recipes/";
-    private static final String ASSETS_EASY_RECIPE_PATH = "/assets/appliedenergistics2/easyModeRecipes/";
+    private static final String ASSETS_GTNH_RECIPE_PATH = "/assets/appliedenergistics2/GTNHRecipes/";
 
     @Nonnull
     private final IRecipeHandler handler;
@@ -66,7 +66,7 @@ public class RecipeLoader implements Runnable {
 
     @Override
     public final void run() {
-        final String recipesFolder = Loader.isModLoaded("dreamcraft") ? ASSETS_RECIPE_PATH : ASSETS_EASY_RECIPE_PATH;
+        final String recipesFolder = Loader.isModLoaded("dreamcraft") ? ASSETS_GTNH_RECIPE_PATH : ASSETS_RECIPE_PATH;
         boolean useResourceFallBack = true;
 
         if (this.config.isEnabled()) {
