@@ -1,4 +1,9 @@
 shapeless=
+    ae2:CableCovered ae2:CableCovered ae2:CableCovered ae2:CableCovered 
+    oredictionary:dustRedstone oredictionary:dustGlowstone
+    -> ae2:CableDense.Fluix
+
+shapeless=
     ae2:CableDense mc:water_bucket
     -> ae2:CableDense.Fluix
 

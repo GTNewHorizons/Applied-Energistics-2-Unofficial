@@ -1,4 +1,8 @@
 shapeless=
+    ae2:ItemPart.QuartzFiber fluixCrystal fluixCrystal
+    -> 4 ae2:CableGlass.Fluix
+
+shapeless=
     ae2:CableGlass mc:water_bucket
     -> ae2:CableGlass.Fluix
 

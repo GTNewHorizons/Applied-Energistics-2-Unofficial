@@ -1,9 +1,4 @@
 shapeless=
-    ae2:CableCovered
-    oredictionary:dustRedstone oredictionary:dustGlowstone
-    -> ae2:CableSmart.Fluix
-
-shapeless=
     ae2:CableSmart mc:water_bucket
     -> ae2:CableSmart.Fluix
 

@@ -1,8 +1,4 @@
 shapeless=
-    ae2:CableCovered ae2:CableCovered ae2:CableCovered ae2:CableCovered
-    -> ae2:CableDenseCovered.Fluix
-
-shapeless=
     ae2:CableDenseCovered mc:water_bucket
     -> ae2:CableDenseCovered.Fluix
 

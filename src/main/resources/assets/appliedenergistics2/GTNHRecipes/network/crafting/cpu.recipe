@@ -1,0 +1,27 @@
+shapeless=
+    ae2:BlockCraftingUnit:3
+    ae2:BlockCraftingUnit:3
+    ae2:BlockCraftingUnit:3
+    ae2:BlockCraftingUnit:3
+    -> ae2:BlockAdvancedCraftingUnit:0
+
+shapeless=
+    ae2:BlockAdvancedCraftingUnit:0
+    ae2:BlockAdvancedCraftingUnit:0
+    ae2:BlockAdvancedCraftingUnit:0
+    ae2:BlockAdvancedCraftingUnit:0
+    -> ae2:BlockAdvancedCraftingUnit:1
+
+shapeless=
+    ae2:BlockAdvancedCraftingUnit:1
+    ae2:BlockAdvancedCraftingUnit:1
+    ae2:BlockAdvancedCraftingUnit:1
+    ae2:BlockAdvancedCraftingUnit:1
+    -> ae2:BlockAdvancedCraftingUnit:2
+
+shapeless=
+    ae2:BlockAdvancedCraftingUnit:2
+    ae2:BlockAdvancedCraftingUnit:2
+    ae2:BlockAdvancedCraftingUnit:2
+    ae2:BlockAdvancedCraftingUnit:2
+    -> ae2:BlockAdvancedCraftingUnit:3

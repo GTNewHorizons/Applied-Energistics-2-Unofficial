@@ -1,9 +1,4 @@
 shapeless=
-    ae2:CableGlass
-    wool
-    -> ae2:CableCovered.Fluix
-
-shapeless=
     ae2:CableCovered mc:water_bucket
     -> ae2:CableCovered.Fluix
 
