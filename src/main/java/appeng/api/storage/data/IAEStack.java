@@ -60,7 +60,7 @@ public interface IAEStack<StackType extends IAEStack> {
      */
     default StackType setUsedPercent(float percent) {
         return (StackType) this;
-    };
+    }
 
     /**
      * Same as getStackSize, but for requestable items. ( LP )
