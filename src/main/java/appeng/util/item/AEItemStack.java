@@ -158,7 +158,9 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         final byte countReqMadeType = (byte) ((mask2 & 0x3));
         final long countRequestableCrafts = getPacketValue(countReqMadeType, data);
 
-        final float usedPercent = data.readFloat();
+        final byte mask3 = data.readByte();
+        final byte usedPercentType = (byte) ((mask3 & 0x3));
+        final long longUsedPercent = getPacketValue(usedPercentType, data);
 
         final ItemStack itemstack = ItemStack.loadItemStackFromNBT(d);
         if (itemstack == null) {
@@ -171,7 +173,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         item.setCountRequestable(countRequestable);
         item.setCraftable(isCraftable);
         item.setCountRequestableCrafts(countRequestableCrafts);
-        item.setUsedPercent(usedPercent);
+        item.setUsedPercent(longUsedPercent / 100f);
         return item;
     }
 

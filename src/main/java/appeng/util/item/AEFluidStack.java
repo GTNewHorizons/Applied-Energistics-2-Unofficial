@@ -49,6 +49,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         this.setCraftable(is.isCraftable());
         this.setCountRequestable(is.getCountRequestable());
         this.setCountRequestableCrafts(is.getCountRequestableCrafts());
+        this.setUsedPercent(is.getUsedPercent());
 
         this.myHash = is.myHash;
     }
@@ -64,6 +65,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         this.setCraftable(false);
         this.setCountRequestable(0);
         this.setCountRequestableCrafts(0);
+        this.setUsedPercent(0);
 
         this.myHash = this.fluid.hashCode()
                 ^ (this.tagCompound == null ? 0 : System.identityHashCode(this.tagCompound));
@@ -80,6 +82,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         fluid.setCountRequestable(i.getLong("Req"));
         fluid.setCraftable(i.getBoolean("Craft"));
         fluid.setCountRequestableCrafts(i.getLong("ReqMade"));
+        fluid.setUsedPercent(i.getFloat("UsedPercent"));
         return fluid;
     }
 
@@ -133,6 +136,10 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         final byte countReqMadeType = (byte) ((mask2 & 0x3));
         final long countRequestableCrafts = getPacketValue(countReqMadeType, data);
 
+        final byte mask3 = data.readByte();
+        final byte usedPercentType = (byte) ((mask3 & 0x3));
+        final long longUsedPercent = getPacketValue(usedPercentType, data);
+
         final FluidStack fluidStack = FluidStack.loadFluidStackFromNBT(d);
         if (fluidStack == null) {
             return null;
@@ -144,6 +151,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         fluid.setCountRequestable(countRequestable);
         fluid.setCraftable(isCraftable);
         fluid.setCountRequestableCrafts(countRequestableCrafts);
+        fluid.setUsedPercent(longUsedPercent);
         return fluid;
     }
 
@@ -208,6 +216,8 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
 
         // Don't break any existing drive swapping automation in the world
         if (this.getCountRequestableCrafts() != 0L) i.setLong("ReqMade", this.getCountRequestableCrafts());
+
+        if (this.getUsedPercent() != 0) i.setFloat("UsedPercent", this.getUsedPercent());
     }
 
     @Override
