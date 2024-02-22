@@ -336,6 +336,13 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.Mod);
 
             this.registerApp(
+                    74,
+                    Settings.CRAFTING_SORT_BY,
+                    CraftingSortOrder.PERCENT,
+                    ButtonToolTips.SortBy,
+                    ButtonToolTips.UsedPercent);
+
+            this.registerApp(
                     66,
                     Settings.ACTIONS,
                     ActionItems.WRENCH,

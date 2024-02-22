@@ -741,6 +741,11 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                     ? ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
                     : v) * sortDir.sortHint;
         }
+        if (sortMode == CraftingSortOrder.PERCENT) {
+            float percent1 = (storage1 != null ? storage1.getUsedPercent() : 0);
+            float percent2 = (storage2 != null ? storage2.getUsedPercent() : 0);
+            return Float.compare(percent1, percent2) * sortDir.sortHint;
+        }
         return 0;
     };
 

@@ -112,6 +112,7 @@ public enum ButtonToolTips {
 
     Craft,
     Mod,
+    UsedPercent,
     DoesntDespawn,
     EmitterMode,
     CraftViaRedstone,

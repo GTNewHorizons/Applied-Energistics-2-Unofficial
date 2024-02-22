@@ -396,6 +396,7 @@ gui.tooltips.appliedenergistics2.LevelType_Energy=Energy
 gui.tooltips.appliedenergistics2.LevelType_Item=Item
 gui.tooltips.appliedenergistics2.InventoryTweaks=Inventory Tweaks
 gui.tooltips.appliedenergistics2.Mod=Mod
+gui.tooltips.appliedenergistics2.UsedPercent=Percentage
 gui.tooltips.appliedenergistics2.TerminalStyle=Terminal Style
 gui.tooltips.appliedenergistics2.TerminalStyle_Full=Full Screen Terminal
 gui.tooltips.appliedenergistics2.TerminalStyle_Tall=Tall Centered Terminal

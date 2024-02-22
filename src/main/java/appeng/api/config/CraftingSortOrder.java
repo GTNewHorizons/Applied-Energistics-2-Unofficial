@@ -4,5 +4,6 @@ public enum CraftingSortOrder {
     NAME,
     AMOUNT,
     CRAFTS,
-    MOD
+    MOD,
+    PERCENT
 }
