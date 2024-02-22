@@ -188,7 +188,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         this.setCountRequestable(this.getCountRequestable() + option.getCountRequestable());
         this.setCraftable(this.isCraftable() || option.isCraftable());
         this.setCountRequestableCrafts(this.getCountRequestableCrafts() + option.getCountRequestableCrafts());
-        this.setUsedPercent(option.getUsedPercent());
+        this.setUsedPercent(this.getUsedPercent() + option.getUsedPercent());
     }
 
     @Override
