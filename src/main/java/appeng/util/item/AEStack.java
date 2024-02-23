@@ -151,10 +151,10 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         i.writeByte(mask2);
         this.putPacketValue(i, this.countRequestableCrafts);
 
-        final short shortUsedPercent = (short) (this.usedPercent * 100);
-        final byte mask3 = (byte) (this.getType(shortUsedPercent));
+        final int intUsedPercent = (int) (this.usedPercent * 10000);
+        final byte mask3 = (byte) (this.getType(intUsedPercent));
         i.writeByte(mask3);
-        this.putPacketValue(i, shortUsedPercent);
+        this.putPacketValue(i, intUsedPercent);
     }
 
     private byte getType(final long num) {

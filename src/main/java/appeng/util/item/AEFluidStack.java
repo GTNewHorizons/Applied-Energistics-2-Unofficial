@@ -151,7 +151,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         fluid.setCountRequestable(countRequestable);
         fluid.setCraftable(isCraftable);
         fluid.setCountRequestableCrafts(countRequestableCrafts);
-        fluid.setUsedPercent(longUsedPercent / 100f);
+        fluid.setUsedPercent(longUsedPercent / 10000f);
         return fluid;
     }
 

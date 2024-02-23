@@ -1,5 +1,8 @@
 package appeng.util;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class RoundHelper {
 
     /**
@@ -13,7 +16,7 @@ public class RoundHelper {
         double roundedNumber = Math.round(number * Math.pow(10, n)) / Math.pow(10, n);
         double precision = 1 / Math.pow(10, n);
         if (roundedNumber < precision) {
-            return "<" + precision;
+            return "<" + new BigDecimal(precision).setScale(n, RoundingMode.DOWN).stripTrailingZeros().toPlainString();
         }
 
         int intNumber = (int) roundedNumber;

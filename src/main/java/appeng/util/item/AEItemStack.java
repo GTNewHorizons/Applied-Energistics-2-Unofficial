@@ -173,7 +173,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         item.setCountRequestable(countRequestable);
         item.setCraftable(isCraftable);
         item.setCountRequestableCrafts(countRequestableCrafts);
-        item.setUsedPercent(longUsedPercent / 100f);
+        item.setUsedPercent(longUsedPercent / 10000f);
         return item;
     }
 
