@@ -134,10 +134,8 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
 
         final byte mask2 = data.readByte();
         final byte countReqMadeType = (byte) ((mask2 & 0x3));
+        final byte usedPercentType = (byte) ((mask2 & 0xC) >> 2);
         final long countRequestableCrafts = getPacketValue(countReqMadeType, data);
-
-        final byte mask3 = data.readByte();
-        final byte usedPercentType = (byte) ((mask3 & 0x3));
         final long longUsedPercent = getPacketValue(usedPercentType, data);
 
         final FluidStack fluidStack = FluidStack.loadFluidStackFromNBT(d);

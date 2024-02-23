@@ -147,14 +147,11 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         // putPacketValue( i, priority );
         this.putPacketValue(i, this.stackSize);
         this.putPacketValue(i, this.countRequestable);
-        final byte mask2 = (byte) (this.getType(this.countRequestableCrafts));
+        final long longUsedPercent = (long) (this.usedPercent * 10000);
+        final byte mask2 = (byte) (this.getType(this.countRequestableCrafts) | (this.getType(longUsedPercent) << 2));
         i.writeByte(mask2);
         this.putPacketValue(i, this.countRequestableCrafts);
-
-        final int intUsedPercent = (int) (this.usedPercent * 10000);
-        final byte mask3 = (byte) (this.getType(intUsedPercent));
-        i.writeByte(mask3);
-        this.putPacketValue(i, intUsedPercent);
+        this.putPacketValue(i, longUsedPercent);
     }
 
     private byte getType(final long num) {
