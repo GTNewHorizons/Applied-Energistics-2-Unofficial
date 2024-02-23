@@ -519,9 +519,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                     }
                 }
 
-                if (stored != null && stored.getStackSize() > 0
-                        && missingStack == null
-                        && pendingStack == null) {
+                if (stored != null && stored.getStackSize() > 0 && missingStack == null && pendingStack == null) {
                     String str = GuiText.FromStoragePercent.getLocal() + ": "
                             + RoundHelper.toRoundedFormattedForm(stored.getUsedPercent(), 2)
                             + "%";
