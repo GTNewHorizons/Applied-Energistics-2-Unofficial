@@ -12,7 +12,7 @@ public class ColorPickHelper {
             color = GuiColors.CraftConfirmPercent50;
         } else if (threshold <= 75) {
             color = GuiColors.CraftConfirmPercent75;
-        } else if (threshold <= 100) {
+        } else {
             color = GuiColors.CraftConfirmPercent100;
         }
         return color;
