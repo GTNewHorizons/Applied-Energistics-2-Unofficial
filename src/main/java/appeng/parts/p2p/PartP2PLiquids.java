@@ -83,7 +83,7 @@ public class PartP2PLiquids extends PartP2PTunnelNormal<PartP2PLiquids> implemen
             list.add(input);
         }
 
-        int requestTotal = 0;
+        long requestTotal = 0;
 
         Iterator<PartP2PLiquids> i = list.iterator();
         while (i.hasNext()) {
@@ -116,7 +116,7 @@ public class PartP2PLiquids extends PartP2PTunnelNormal<PartP2PLiquids> implemen
                 throw new IllegalStateException("Invalid Recursion detected.");
             }
 
-            return Math.min(resource.amount, requestTotal);
+            return (int) Math.min(resource.amount, requestTotal);
         }
 
         int available = resource.amount;
@@ -142,6 +142,7 @@ public class PartP2PLiquids extends PartP2PTunnelNormal<PartP2PLiquids> implemen
 
             available -= l.tmpUsed;
             used += l.tmpUsed;
+            if (available == 0) break;
         }
 
         if (stack.pop() != this) {
