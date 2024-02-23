@@ -11,8 +11,9 @@ public class RoundHelper {
      */
     public static String toRoundedFormattedForm(float number, int n) {
         double roundedNumber = Math.round(number * Math.pow(10, n)) / Math.pow(10, n);
-        if (roundedNumber < 0.01) {
-            return "<0.01";
+        double precision = 1 / Math.pow(10, n);
+        if (roundedNumber < precision) {
+            return "<" + precision;
         }
 
         int intNumber = (int) roundedNumber;
