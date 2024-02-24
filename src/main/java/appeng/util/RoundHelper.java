@@ -16,14 +16,18 @@ public class RoundHelper {
         double roundedNumber = Math.round(number * Math.pow(10, n)) / Math.pow(10, n);
         double precision = 1 / Math.pow(10, n);
         if (roundedNumber < precision) {
-            return "<" + new BigDecimal(precision).setScale(n, RoundingMode.DOWN).stripTrailingZeros().toPlainString();
+            NumberFormat f = NumberFormat.getInstance();
+            f.setMaximumFractionDigits(n);
+            return "<" + f.format(precision);
         }
 
         int intNumber = (int) roundedNumber;
         // checks if there is a zero after the decimal point (for example 50 == 50.0)
         if (intNumber == roundedNumber) {
-            return Integer.toString(intNumber);
+            return NumberFormat.getInstance().format(intNumber);
         }
-        return Double.toString(roundedNumber);
+        NumberFormat f = NumberFormat.getInstance();
+        f.setMaximumFractionDigits(n);
+        return f.format(roundedNumber);
     }
 }
