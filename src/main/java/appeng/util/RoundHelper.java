@@ -1,5 +1,7 @@
 package appeng.util;
 
+import java.text.NumberFormat;
+
 public class RoundHelper {
 
     /**
