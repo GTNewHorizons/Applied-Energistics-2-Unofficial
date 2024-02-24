@@ -27,6 +27,7 @@ import appeng.api.config.PowerUnits;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
+import appeng.api.config.TerminalFontSize;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
 import appeng.api.util.IConfigManager;
@@ -79,7 +80,6 @@ public final class AEConfig extends Configuration implements IConfigurableObject
             "Brass", "Platinum", "Nickel", "Invar", "Aluminium", "Electrum", "Osmium", "Zinc" };
     public double oreDoublePercentage = 90.0;
     public boolean enableEffects = true;
-    public boolean useLargeFonts = false;
     public boolean useColoredCraftingStatus;
     public boolean preserveSearchBar = true;
     public boolean showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = false;
@@ -156,6 +156,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.settings.registerSetting(Settings.CRAFTING_STATUS, CraftingStatus.TILE);
         this.settings.registerSetting(Settings.CRAFTING_SORT_BY, CraftingSortOrder.NAME);
         this.settings.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
+        this.settings.registerSetting(Settings.TERMINAL_FONT_SIZE, TerminalFontSize.SMALL);
 
         this.spawnChargedChance = (float) (1.0
                 - this.get("worldGen", "spawnChargedChance", 1.0 - this.spawnChargedChance)
@@ -305,7 +306,6 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.disableColoredCableRecipesInNEI = this.get("Client", "disableColoredCableRecipesInNEI", true)
                 .getBoolean(true);
         this.enableEffects = this.get("Client", "enableEffects", true).getBoolean(true);
-        this.useLargeFonts = this.get("Client", "useTerminalUseLargeFont", false).getBoolean(false);
         this.useColoredCraftingStatus = this.get("Client", "useColoredCraftingStatus", true).getBoolean(true);
         this.preserveSearchBar = this.get("Client", "preserveSearchBar", true).getBoolean(true);
         this.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = this
@@ -503,8 +503,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         return this.settings;
     }
 
-    public boolean useTerminalUseLargeFont() {
-        return this.useLargeFonts;
+    public TerminalFontSize getTerminalFontSize() {
+        return (TerminalFontSize) settings.getSetting(Settings.TERMINAL_FONT_SIZE);
     }
 
     public int craftItemsByStackAmounts(final int i) {

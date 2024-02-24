@@ -4,22 +4,27 @@ import static appeng.client.render.AppEngRenderItem.POST_HOOKS;
 
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.item.ItemStack;
 
 import org.lwjgl.opengl.GL11;
 
+import appeng.api.config.TerminalFontSize;
 import appeng.api.storage.IItemDisplayRegistry.ItemRenderHook;
 
 /**
  * Uses translations instead of depth test to perform rendering.
  */
-public class TranslatedRenderItem extends RenderItem {
+public class TranslatedRenderItem extends AERenderItem {
 
     @Override
     public void renderItemOverlayIntoGUI(FontRenderer font, TextureManager texManager, ItemStack stack, int x, int y,
             String customText) {
+        renderItemOverlayIntoGUI(font, texManager, stack, x, y, customText, null);
+    }
+
+    public void renderItemOverlayIntoGUI(FontRenderer font, TextureManager texManager, ItemStack stack, int x, int y,
+            String customText, TerminalFontSize fontSize) {
         if (stack != null) {
             boolean skip = false;
             boolean showDurabilitybar = true;
@@ -37,10 +42,14 @@ public class TranslatedRenderItem extends RenderItem {
             GL11.glPushMatrix();
             if ((showStackSize && stack.stackSize > 1) || (showCraftLabelText && customText != null)) {
                 GL11.glTranslatef(0.0f, 0.0f, this.zLevel);
-                String s1 = customText == null ? String.valueOf(stack.stackSize) : customText;
                 GL11.glDisable(GL11.GL_LIGHTING);
                 GL11.glDisable(GL11.GL_BLEND);
-                font.drawStringWithShadow(s1, x + 19 - 2 - font.getStringWidth(s1), y + 6 + 3, 16777215);
+                this.drawStackSize(
+                        x,
+                        y,
+                        customText != null ? customText : getToBeRenderedStackSize(stack.stackSize, fontSize),
+                        font,
+                        fontSize);
                 GL11.glEnable(GL11.GL_LIGHTING);
                 GL11.glTranslatef(0.0f, 0.0f, -this.zLevel);
             }

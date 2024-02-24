@@ -77,7 +77,9 @@ public enum Settings {
 
     LOCK_CRAFTING_MODE(EnumSet.allOf(LockCraftingMode.class)),
 
-    PRIORITY_CARD_MODE(EnumSet.allOf(PriorityCardMode.class));
+    PRIORITY_CARD_MODE(EnumSet.allOf(PriorityCardMode.class)),
+
+    TERMINAL_FONT_SIZE(EnumSet.allOf(TerminalFontSize.class));
 
     private final EnumSet<? extends Enum<?>> values;
 

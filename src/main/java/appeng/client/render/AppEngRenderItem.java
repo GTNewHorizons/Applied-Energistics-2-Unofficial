@@ -17,21 +17,18 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 import org.lwjgl.opengl.GL11;
 
+import appeng.api.config.TerminalFontSize;
 import appeng.api.storage.IItemDisplayRegistry.ItemRenderHook;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.me.SlotME;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
-import appeng.util.ISlimReadableNumberConverter;
-import appeng.util.IWideReadableNumberConverter;
-import appeng.util.ReadableNumberConverter;
 
 /**
  * @author AlgorithmX2
@@ -39,10 +36,7 @@ import appeng.util.ReadableNumberConverter;
  * @version rv2
  * @since rv0
  */
-public class AppEngRenderItem extends RenderItem {
-
-    private static final ISlimReadableNumberConverter SLIM_CONVERTER = ReadableNumberConverter.INSTANCE;
-    private static final IWideReadableNumberConverter WIDE_CONVERTER = ReadableNumberConverter.INSTANCE;
+public class AppEngRenderItem extends AERenderItem {
 
     private IAEItemStack aeStack = null;
     private Slot slot = null;
@@ -76,11 +70,8 @@ public class AppEngRenderItem extends RenderItem {
             if (skip) {
                 return;
             }
-            final float scaleFactor = AEConfig.instance.useTerminalUseLargeFont() ? 0.85f : 0.5f;
-            final float inverseScaleFactor = 1.0f / scaleFactor;
-            final int offset = AEConfig.instance.useTerminalUseLargeFont() ? 0 : -1;
-
             final boolean unicodeFlag = fontRenderer.getUnicodeFlag();
+            final Enum fontSize = AEConfig.instance.getTerminalFontSize();
             fontRenderer.setUnicodeFlag(false);
 
             if (showDurabilitybar && is.getItem().showDurabilityBar(is)) {
@@ -108,20 +99,12 @@ public class AppEngRenderItem extends RenderItem {
             }
 
             if (is.stackSize == 0 && showCraftLabelText && aeStack != null && aeStack.isCraftable()) {
-                final String craftLabelText = AEConfig.instance.useTerminalUseLargeFont()
-                        ? GuiText.LargeFontCraft.getLocal()
-                        : GuiText.SmallFontCraft.getLocal();
+                final String craftLabelText = fontSize == TerminalFontSize.SMALL ? GuiText.SmallFontCraft.getLocal()
+                        : GuiText.LargeFontCraft.getLocal();
 
                 GL11.glDisable(GL11.GL_LIGHTING);
                 GL11.glPushMatrix();
-                GL11.glScaled(scaleFactor, scaleFactor, scaleFactor);
-
-                final int X = (int) (((float) par4 + offset
-                        + 16.0f
-                        - fontRenderer.getStringWidth(craftLabelText) * scaleFactor) * inverseScaleFactor);
-                final int Y = (int) (((float) par5 + offset + 16.0f - 7.0f * scaleFactor) * inverseScaleFactor);
-                fontRenderer.drawStringWithShadow(craftLabelText, X, Y, 16777215);
-
+                this.drawStackSize(par4, par5, craftLabelText, fontRenderer, fontSize);
                 GL11.glPopMatrix();
                 GL11.glEnable(GL11.GL_LIGHTING);
             }
@@ -131,31 +114,15 @@ public class AppEngRenderItem extends RenderItem {
             if ((amount != 0 && showStackSize) || (slot != null && slot instanceof SlotME
                     && ((SlotME) slot).getAEStack() != null
                     && !((SlotME) slot).getAEStack().isCraftable())) {
-                final String stackSize = this.getToBeRenderedStackSize(amount);
 
                 GL11.glDisable(GL11.GL_LIGHTING);
                 GL11.glPushMatrix();
-                GL11.glScaled(scaleFactor, scaleFactor, scaleFactor);
-
-                final int X = (int) (((float) par4 + offset
-                        + 16.0f
-                        - fontRenderer.getStringWidth(stackSize) * scaleFactor) * inverseScaleFactor);
-                final int Y = (int) (((float) par5 + offset + 16.0f - 7.0f * scaleFactor) * inverseScaleFactor);
-                fontRenderer.drawStringWithShadow(stackSize, X, Y, 16777215);
-
+                this.drawStackSize(par4, par5, amount, fontRenderer, fontSize);
                 GL11.glPopMatrix();
                 GL11.glEnable(GL11.GL_LIGHTING);
             }
 
             fontRenderer.setUnicodeFlag(unicodeFlag);
-        }
-    }
-
-    private String getToBeRenderedStackSize(final long originalSize) {
-        if (AEConfig.instance.useTerminalUseLargeFont()) {
-            return SLIM_CONVERTER.toSlimReadableForm(originalSize);
-        } else {
-            return WIDE_CONVERTER.toWideReadableForm(originalSize);
         }
     }
 
