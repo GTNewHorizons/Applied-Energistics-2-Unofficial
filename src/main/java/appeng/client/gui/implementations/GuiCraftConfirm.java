@@ -739,8 +739,10 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                     : v) * sortDir.sortHint;
         }
         if (sortMode == CraftingSortOrder.PERCENT) {
-            float percent1 = (storage1 != null && pending1 == null && missing1 == null ? storage1.getUsedPercent() : -1);
-            float percent2 = (storage2 != null && pending2 == null && missing2 == null ? storage2.getUsedPercent() : -1);
+            float percent1 = (storage1 != null && pending1 == null && missing1 == null ? storage1.getUsedPercent()
+                    : -1);
+            float percent2 = (storage2 != null && pending2 == null && missing2 == null ? storage2.getUsedPercent()
+                    : -1);
             return Float.compare(percent1, percent2) * sortDir.sortHint;
         }
         return 0;
