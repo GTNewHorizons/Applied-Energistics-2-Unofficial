@@ -11,7 +11,9 @@
 package appeng.client.gui.implementations;
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -224,7 +226,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     currentToolTip.remove(1);
                 }
 
-                currentToolTip.add(GuiText.Installed.getLocal() + ": " + (myStack.getStackSize()));
+                currentToolTip.add(GuiText.Installed.getLocal() + ": " + NumberFormat.getNumberInstance(Locale.US).format(myStack.getStackSize()));
                 currentToolTip.add(
                         GuiText.EnergyDrain.getLocal() + ": "
                                 + Platform.formatPowerLong(myStack.getCountRequestable(), true));
@@ -358,7 +360,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 if (this.tooltip == z - viewStart) {
                     toolTip = Platform.getItemDisplayName(this.repo.getItem(z));
 
-                    toolTip += ('\n' + GuiText.Installed.getLocal() + ": " + (refStack.getStackSize()));
+                    toolTip += ('\n' + GuiText.Installed.getLocal() + ": " + NumberFormat.getNumberInstance(Locale.US).format(refStack.getStackSize()));
                     if (refStack.getCountRequestable() > 0) {
                         toolTip += ('\n' + GuiText.EnergyDrain.getLocal()
                                 + ": "
