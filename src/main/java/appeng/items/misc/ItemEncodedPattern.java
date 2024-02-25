@@ -198,7 +198,10 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 recipeIsBroken = true;
             }
 
-            lines.add((first ? label : and) + NumberFormat.getNumberInstance(Locale.US).format(item.getStackSize()) + " " + Platform.getItemDisplayName(item));
+            lines.add(
+                    (first ? label : and) + NumberFormat.getNumberInstance(Locale.US).format(item.getStackSize())
+                            + " "
+                            + Platform.getItemDisplayName(item));
 
             if (GuiScreen.isShiftKeyDown()) {
                 final List l = item.getItemStack().getTooltip(player, displayMoreInfo);

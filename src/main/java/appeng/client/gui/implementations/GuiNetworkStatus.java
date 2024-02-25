@@ -226,7 +226,9 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     currentToolTip.remove(1);
                 }
 
-                currentToolTip.add(GuiText.Installed.getLocal() + ": " + NumberFormat.getNumberInstance(Locale.US).format(myStack.getStackSize()));
+                currentToolTip.add(
+                        GuiText.Installed.getLocal() + ": "
+                                + NumberFormat.getNumberInstance(Locale.US).format(myStack.getStackSize()));
                 currentToolTip.add(
                         GuiText.EnergyDrain.getLocal() + ": "
                                 + Platform.formatPowerLong(myStack.getCountRequestable(), true));
@@ -360,7 +362,9 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 if (this.tooltip == z - viewStart) {
                     toolTip = Platform.getItemDisplayName(this.repo.getItem(z));
 
-                    toolTip += ('\n' + GuiText.Installed.getLocal() + ": " + NumberFormat.getNumberInstance(Locale.US).format(refStack.getStackSize()));
+                    toolTip += ('\n' + GuiText.Installed.getLocal()
+                            + ": "
+                            + NumberFormat.getNumberInstance(Locale.US).format(refStack.getStackSize()));
                     if (refStack.getCountRequestable() > 0) {
                         toolTip += ('\n' + GuiText.EnergyDrain.getLocal()
                                 + ": "
