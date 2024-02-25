@@ -10,9 +10,11 @@
 
 package appeng.items.misc;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -196,7 +198,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 recipeIsBroken = true;
             }
 
-            lines.add((first ? label : and) + item.getStackSize() + " " + Platform.getItemDisplayName(item));
+            lines.add((first ? label : and) + NumberFormat.getNumberInstance(Locale.US).format(item.getStackSize()) + " " + Platform.getItemDisplayName(item));
 
             if (GuiScreen.isShiftKeyDown()) {
                 final List l = item.getItemStack().getTooltip(player, displayMoreInfo);
