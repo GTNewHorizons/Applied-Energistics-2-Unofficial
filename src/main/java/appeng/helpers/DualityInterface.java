@@ -30,6 +30,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.collect.ImmutableSet;
@@ -236,6 +237,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             for (final ItemStack is : this.waitingToSend) {
                 final NBTTagCompound item = new NBTTagCompound();
                 is.writeToNBT(item);
+                if (is.stackSize > Byte.MAX_VALUE) {
+                    item.setInteger("Count", is.stackSize);
+                }
                 waitingToSend.appendTag(item);
             }
         }
@@ -250,6 +254,12 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 final NBTTagCompound c = waitingList.getCompoundTagAt(x);
                 if (c != null) {
                     final ItemStack is = ItemStack.loadItemStackFromNBT(c);
+                    if (is == null) {
+                        continue;
+                    }
+                    if (c.hasKey("Count", NBT.TAG_INT)) {
+                        is.stackSize = c.getInteger("Count");
+                    }
                     this.addToSendList(is);
                 }
             }
