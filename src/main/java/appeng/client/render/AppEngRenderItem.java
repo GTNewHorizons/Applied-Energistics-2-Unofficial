@@ -71,7 +71,7 @@ public class AppEngRenderItem extends AERenderItem {
                 return;
             }
             final boolean unicodeFlag = fontRenderer.getUnicodeFlag();
-            final Enum fontSize = AEConfig.instance.getTerminalFontSize();
+            final TerminalFontSize fontSize = AEConfig.instance.getTerminalFontSize();
             fontRenderer.setUnicodeFlag(false);
 
             if (showDurabilitybar && is.getItem().showDurabilityBar(is)) {

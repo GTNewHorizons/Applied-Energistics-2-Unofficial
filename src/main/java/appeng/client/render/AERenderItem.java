@@ -15,11 +15,12 @@ public abstract class AERenderItem extends RenderItem {
     private static final ISlimReadableNumberConverter SLIM_CONVERTER = ReadableNumberConverter.INSTANCE;
     private static final IWideReadableNumberConverter WIDE_CONVERTER = ReadableNumberConverter.INSTANCE;
 
-    public void drawStackSize(int offsetX, int offsetY, long stackSize, FontRenderer font, Enum fontSize) {
+    public void drawStackSize(int offsetX, int offsetY, long stackSize, FontRenderer font, TerminalFontSize fontSize) {
         drawStackSize(offsetX, offsetY, getToBeRenderedStackSize(stackSize, fontSize), font, fontSize);
     }
 
-    public void drawStackSize(int offsetX, int offsetY, String customText, FontRenderer font, Enum fontSize) {
+    public void drawStackSize(int offsetX, int offsetY, String customText, FontRenderer font,
+            TerminalFontSize fontSize) {
         float scale = 1.0f;
         float shiftX = 0f;
         float shiftY = 0f;
@@ -71,7 +72,7 @@ public abstract class AERenderItem extends RenderItem {
         }
     }
 
-    protected String getToBeRenderedStackSize(final long originalSize, Enum fontSize) {
+    protected String getToBeRenderedStackSize(final long originalSize, TerminalFontSize fontSize) {
         if (fontSize == TerminalFontSize.LARGE) {
             return SLIM_CONVERTER.toSlimReadableForm(originalSize);
         } else {
