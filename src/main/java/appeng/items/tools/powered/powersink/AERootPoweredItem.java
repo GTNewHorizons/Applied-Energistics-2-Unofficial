@@ -11,7 +11,9 @@
 package appeng.items.tools.powered.powersink;
 
 import java.text.MessageFormat;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -56,8 +58,8 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
         final double percent = internalCurrentPower / internalMaxPower;
 
         lines.add(
-                GuiText.StoredEnergy.getLocal() + ':'
-                        + MessageFormat.format(" {0,number,#} ", internalCurrentPower)
+                GuiText.StoredEnergy.getLocal() + ": "
+                        + NumberFormat.getNumberInstance(Locale.US).format(internalCurrentPower)
                         + Platform.gui_localize(PowerUnits.AE.unlocalizedName)
                         + " - "
                         + MessageFormat.format(" {0,number,#.##%} ", percent));
