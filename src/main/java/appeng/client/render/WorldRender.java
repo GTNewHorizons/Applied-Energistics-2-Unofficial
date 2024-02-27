@@ -13,12 +13,13 @@ package appeng.client.render;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.gtnewhorizons.angelica.api.ThreadSafeISBRH;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.IItemRenderer.ItemRenderType;
+
+import com.gtnewhorizons.angelica.api.ThreadSafeISBRH;
 
 import appeng.block.AEBaseBlock;
 import appeng.core.AELog;
