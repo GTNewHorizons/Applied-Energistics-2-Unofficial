@@ -13,6 +13,7 @@ package appeng.client.render;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.gtnewhorizons.angelica.api.ThreadSafeISBRH;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.item.ItemStack;
@@ -27,6 +28,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
+@ThreadSafeISBRH(perThread = false)
 public final class WorldRender implements ISimpleBlockRenderingHandler {
 
     public static final WorldRender INSTANCE = new WorldRender();
