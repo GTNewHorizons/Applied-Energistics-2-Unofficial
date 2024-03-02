@@ -67,7 +67,7 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
 
         if (formed && renderer.overrideBlockTexture == null) {
             renderer = BusRenderer.INSTANCE.getRenderer();
-            final BusRenderHelper i = BusRenderHelper.INSTANCE;
+            final BusRenderHelper i = BusRenderHelper.instances.get();
             BusRenderer.INSTANCE.getRenderer().setFacade(true);
 
             renderer.blockAccess = w;

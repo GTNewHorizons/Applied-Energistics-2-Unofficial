@@ -40,7 +40,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public final class BusRenderHelper implements IPartRenderHelper {
 
-    public static final BusRenderHelper INSTANCE = new BusRenderHelper();
+    public static final ThreadLocal<BusRenderHelper> instances = ThreadLocal.withInitial(BusRenderHelper::new);
+
     private static final int HEX_WHITE = 0xffffff;
 
     private final BoundBoxCalculator bbc;
@@ -438,8 +439,8 @@ public final class BusRenderHelper implements IPartRenderHelper {
             final AEBaseBlock block = (AEBaseBlock) multiPart;
 
             final BlockRenderInfo info = block.getRendererInstance();
-            final ForgeDirection forward = BusRenderHelper.INSTANCE.az;
-            final ForgeDirection up = BusRenderHelper.INSTANCE.ay;
+            final ForgeDirection forward = BusRenderHelper.instances.get().az;
+            final ForgeDirection up = BusRenderHelper.instances.get().ay;
 
             renderer.uvRotateBottom = info.getTexture(ForgeDirection.DOWN)
                     .setFlip(BaseBlockRender.getOrientation(ForgeDirection.DOWN, forward, up));

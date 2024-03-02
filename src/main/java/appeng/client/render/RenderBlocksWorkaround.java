@@ -87,69 +87,35 @@ public class RenderBlocksWorkaround extends RenderBlocks {
         this.lightState.rZNeg = rZNeg;
     }
 
+    // spotless:off
     private boolean renderStandardBlockNoCalculations(final Block b, final int x, final int y, final int z) {
-        Tessellator.instance.setBrightness(this.lightState.bXPos);
+        final Tessellator tessellator = Tessellator.instance;
+        tessellator.setBrightness(this.lightState.bXPos);
         this.restoreAO(this.lightState.aoXPos, this.lightState.foXPos);
-        this.renderFaceXPos(
-                b,
-                x,
-                y,
-                z,
-                this.isUseTextures() ? this.lightState.rXPos
-                        : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.EAST.ordinal()));
+        this.renderFaceXPos(b, x, y, z, this.isUseTextures() ? this.lightState.rXPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.EAST.ordinal()));
 
-        Tessellator.instance.setBrightness(this.lightState.bXNeg);
+        tessellator.setBrightness(this.lightState.bXNeg);
         this.restoreAO(this.lightState.aoXNeg, this.lightState.foXNeg);
-        this.renderFaceXNeg(
-                b,
-                x,
-                y,
-                z,
-                this.isUseTextures() ? this.lightState.rXNeg
-                        : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.WEST.ordinal()));
+        this.renderFaceXNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rXNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.WEST.ordinal()));
 
-        Tessellator.instance.setBrightness(this.lightState.bYPos);
+        tessellator.setBrightness(this.lightState.bYPos);
         this.restoreAO(this.lightState.aoYPos, this.lightState.foYPos);
-        this.renderFaceYPos(
-                b,
-                x,
-                y,
-                z,
-                this.isUseTextures() ? this.lightState.rYPos
-                        : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.UP.ordinal()));
+        this.renderFaceYPos(b, x, y, z, this.isUseTextures() ? this.lightState.rYPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.UP.ordinal()));
 
-        Tessellator.instance.setBrightness(this.lightState.bYNeg);
+        tessellator.setBrightness(this.lightState.bYNeg);
         this.restoreAO(this.lightState.aoYNeg, this.lightState.foYNeg);
-        this.renderFaceYNeg(
-                b,
-                x,
-                y,
-                z,
-                this.isUseTextures() ? this.lightState.rYNeg
-                        : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.DOWN.ordinal()));
+        this.renderFaceYNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rYNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.DOWN.ordinal()));
 
-        Tessellator.instance.setBrightness(this.lightState.bZPos);
-        this.restoreAO(this.lightState.aoZPos, this.lightState.foZPos);
-        this.renderFaceZPos(
-                b,
-                x,
-                y,
-                z,
-                this.isUseTextures() ? this.lightState.rZPos
-                        : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.SOUTH.ordinal()));
+        tessellator.setBrightness(this.lightState.bZPos);
+        this.restoreAO(this.lightState.aoZPos, this.lightState.foZPos);this.renderFaceZPos(b, x, y, z, this.isUseTextures() ? this.lightState.rZPos : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.SOUTH.ordinal()));
 
-        Tessellator.instance.setBrightness(this.lightState.bZNeg);
+        tessellator.setBrightness(this.lightState.bZNeg);
         this.restoreAO(this.lightState.aoZNeg, this.lightState.foZNeg);
-        this.renderFaceZNeg(
-                b,
-                x,
-                y,
-                z,
-                this.isUseTextures() ? this.lightState.rZNeg
-                        : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.NORTH.ordinal()));
+        this.renderFaceZNeg(b, x, y, z, this.isUseTextures() ? this.lightState.rZNeg : this.getBlockIcon(b, this.blockAccess, x, y, z, ForgeDirection.NORTH.ordinal()));
 
         return true;
     }
+    // spotless:on
 
     private void restoreAO(final int[] z, final float[] c) {
         this.brightnessBottomLeft = z[0];
@@ -501,6 +467,7 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     }
 
     private void partialLightingColoring(final double u, final double v) {
+        final Tessellator tessellator = Tessellator.instance;
         final double rA = this.colorRedTopLeft * u + (1.0 - u) * this.colorRedTopRight;
         final double rB = this.colorRedBottomLeft * u + (1.0 - u) * this.colorRedBottomRight;
         final float r = (float) (rA * v + rB * (1.0 - v));
@@ -525,8 +492,8 @@ public class RenderBlocksWorkaround extends RenderBlocks {
 
         final int out = (high << 16) | low;
 
-        Tessellator.instance.setColorRGBA_F(r, g, b, this.getOpacity());
-        Tessellator.instance.setBrightness(out);
+        tessellator.setColorRGBA_F(r, g, b, this.getOpacity());
+        tessellator.setBrightness(out);
     }
 
     public boolean similarLighting(final Block blk, final IBlockAccess w, final int x, final int y, final int z,

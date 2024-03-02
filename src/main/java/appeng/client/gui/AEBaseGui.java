@@ -250,7 +250,7 @@ public abstract class AEBaseGui extends GuiContainer {
      */
     public void addTexturedRectToTesselator(float x0, float y0, float x1, float y1, float zLevel, float u0, float v0,
             float u1, float v1) {
-        Tessellator tessellator = Tessellator.instance;
+        final Tessellator tessellator = Tessellator.instance;
         tessellator.addVertexWithUV(x0, y1, this.zLevel, u0, v1);
         tessellator.addVertexWithUV(x1, y1, this.zLevel, u1, v1);
         tessellator.addVertexWithUV(x1, y0, this.zLevel, u1, v0);

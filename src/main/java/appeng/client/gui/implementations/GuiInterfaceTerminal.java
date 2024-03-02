@@ -355,11 +355,12 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        final Tessellator tessellator = Tessellator.instance;
         this.bindTexture(BACKGROUND);
         /* Draws the top part. */
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, xSize, HEADER_HEIGHT);
         /* Draws the middle part. */
-        Tessellator.instance.startDrawingQuads();
+        tessellator.startDrawingQuads();
         addTexturedRectToTesselator(
                 offsetX,
                 offsetY + HEADER_HEIGHT,
@@ -370,7 +371,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 (HEADER_HEIGHT + InterfaceSection.TITLE_HEIGHT + 1.0f) / 256.0f,
                 this.xSize / 256.0f,
                 (HEADER_HEIGHT + 106.0f) / 256.0f);
-        Tessellator.instance.draw();
+        tessellator.draw();
         /* Draw the bottom part */
         this.drawTexturedModalRect(offsetX, offsetY + HEADER_HEIGHT + viewHeight, 0, 158, xSize, INV_HEIGHT);
         if (online) {
@@ -518,7 +519,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
      */
     private int drawEntry(InterfaceTerminalEntry entry, int viewY, int titleBottom, int relMouseX, int relMouseY) {
         bindTexture(BACKGROUND);
-        Tessellator.instance.startDrawingQuads();
+        final Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
         int relY = 0;
         final int slotLeftMargin = (VIEW_WIDTH - entry.rowSize * 18);
 
@@ -546,7 +548,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         (173 + 18) / 256f);
             }
         }
-        Tessellator.instance.draw();
+        tessellator.draw();
         /* Draw button */
         if (viewY + entry.optionsButton.height > 0 && viewY < viewHeight) {
             entry.optionsButton.yPosition = viewY + 5;

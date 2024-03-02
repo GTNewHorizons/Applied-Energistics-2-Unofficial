@@ -72,7 +72,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
     protected final AENetworkProxy proxy;
     protected final ItemStack is;
-    protected ISimplifiedBundle renderCache = null;
+    protected ThreadLocal<ISimplifiedBundle> renderCache = new ThreadLocal<>();
     protected TileEntity tile = null;
     protected IPartHost host = null;
     protected ForgeDirection side = null;
@@ -505,11 +505,11 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
     }
 
     public ISimplifiedBundle getRenderCache() {
-        return this.renderCache;
+        return this.renderCache.get();
     }
 
     public void setRenderCache(final ISimplifiedBundle renderCache) {
-        this.renderCache = renderCache;
+        this.renderCache.set(renderCache);
     }
 
     private static int getSideIndexFromDirection(ForgeDirection direction) {

@@ -10,9 +10,6 @@
 
 package appeng.client.render;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.item.ItemStack;
@@ -29,20 +26,15 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
-@ThreadSafeISBRH(perThread = false)
+@ThreadSafeISBRH(perThread = true)
 public final class WorldRender implements ISimpleBlockRenderingHandler {
 
     public static final WorldRender INSTANCE = new WorldRender();
-    private final Map<AEBaseBlock, BaseBlockRender> blockRenders = new HashMap<>();
     private final int renderID = RenderingRegistry.getNextAvailableRenderId();
     private final RenderBlocks renderer = new RenderBlocks();
     private boolean hasError = false;
 
-    private WorldRender() {}
-
-    void setRender(final AEBaseBlock in, final BaseBlockRender r) {
-        this.blockRenders.put(in, r);
-    }
+    public WorldRender() {}
 
     @Override
     public void renderInventoryBlock(final Block block, final int metadata, final int modelID,

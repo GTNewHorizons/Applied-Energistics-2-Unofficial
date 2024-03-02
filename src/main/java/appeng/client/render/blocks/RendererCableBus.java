@@ -48,7 +48,7 @@ public class RendererCableBus extends BaseBlockRender<BlockCableBus, TileCableBu
             BusRenderer.INSTANCE.getRenderer().renderAllFaces = false;
         }
 
-        return BusRenderHelper.INSTANCE.getItemsRendered() > 0;
+        return BusRenderHelper.instances.get().getItemsRendered() > 0;
     }
 
     @Override

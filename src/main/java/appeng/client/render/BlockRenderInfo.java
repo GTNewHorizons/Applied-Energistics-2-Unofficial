@@ -21,13 +21,20 @@ import appeng.tile.AEBaseTile;
 public class BlockRenderInfo {
 
     private final BaseBlockRender<? extends AEBaseBlock, ? extends AEBaseTile> rendererInstance;
-    private final TmpFlippableIcon tmpTopIcon = new TmpFlippableIcon();
-    private final TmpFlippableIcon tmpBottomIcon = new TmpFlippableIcon();
-    private final TmpFlippableIcon tmpSouthIcon = new TmpFlippableIcon();
-    private final TmpFlippableIcon tmpNorthIcon = new TmpFlippableIcon();
-    private final TmpFlippableIcon tmpEastIcon = new TmpFlippableIcon();
-    private final TmpFlippableIcon tmpWestIcon = new TmpFlippableIcon();
-    private boolean useTmp = false;
+
+    private static class ThreadState {
+
+        private boolean useTmp = false;
+        private final TmpFlippableIcon tmpTopIcon = new TmpFlippableIcon();
+        private final TmpFlippableIcon tmpBottomIcon = new TmpFlippableIcon();
+        private final TmpFlippableIcon tmpSouthIcon = new TmpFlippableIcon();
+        private final TmpFlippableIcon tmpNorthIcon = new TmpFlippableIcon();
+        private final TmpFlippableIcon tmpEastIcon = new TmpFlippableIcon();
+        private final TmpFlippableIcon tmpWestIcon = new TmpFlippableIcon();
+    }
+
+    private final ThreadLocal<ThreadState> threadState = ThreadLocal.withInitial(ThreadState::new);
+    private boolean iconsSet = false;
     private FlippableIcon topIcon = null;
     private FlippableIcon bottomIcon = null;
     private FlippableIcon southIcon = null;
@@ -50,50 +57,53 @@ public class BlockRenderInfo {
     }
 
     public void setTemporaryRenderIcon(final IIcon icon) {
+        final ThreadState state = this.threadState.get();
         if (icon == null) {
-            this.useTmp = false;
+            state.useTmp = false;
         } else {
-            this.useTmp = true;
-            this.tmpTopIcon.setOriginal(icon);
-            this.tmpBottomIcon.setOriginal(icon);
-            this.tmpSouthIcon.setOriginal(icon);
-            this.tmpNorthIcon.setOriginal(icon);
-            this.tmpEastIcon.setOriginal(icon);
-            this.tmpWestIcon.setOriginal(icon);
+            state.useTmp = true;
+            state.tmpTopIcon.setOriginal(icon);
+            state.tmpBottomIcon.setOriginal(icon);
+            state.tmpSouthIcon.setOriginal(icon);
+            state.tmpNorthIcon.setOriginal(icon);
+            state.tmpEastIcon.setOriginal(icon);
+            state.tmpWestIcon.setOriginal(icon);
         }
     }
 
     public void setTemporaryRenderIcons(final IIcon nTopIcon, final IIcon nBottomIcon, final IIcon nSouthIcon,
             final IIcon nNorthIcon, final IIcon nEastIcon, final IIcon nWestIcon) {
-        this.tmpTopIcon.setOriginal(nTopIcon == null ? this.getTexture(ForgeDirection.UP) : nTopIcon);
-        this.tmpBottomIcon.setOriginal(nBottomIcon == null ? this.getTexture(ForgeDirection.DOWN) : nBottomIcon);
-        this.tmpSouthIcon.setOriginal(nSouthIcon == null ? this.getTexture(ForgeDirection.SOUTH) : nSouthIcon);
-        this.tmpNorthIcon.setOriginal(nNorthIcon == null ? this.getTexture(ForgeDirection.NORTH) : nNorthIcon);
-        this.tmpEastIcon.setOriginal(nEastIcon == null ? this.getTexture(ForgeDirection.EAST) : nEastIcon);
-        this.tmpWestIcon.setOriginal(nWestIcon == null ? this.getTexture(ForgeDirection.WEST) : nWestIcon);
-        this.useTmp = true;
+        final ThreadState state = this.threadState.get();
+        state.tmpTopIcon.setOriginal(nTopIcon == null ? this.getTexture(ForgeDirection.UP) : nTopIcon);
+        state.tmpBottomIcon.setOriginal(nBottomIcon == null ? this.getTexture(ForgeDirection.DOWN) : nBottomIcon);
+        state.tmpSouthIcon.setOriginal(nSouthIcon == null ? this.getTexture(ForgeDirection.SOUTH) : nSouthIcon);
+        state.tmpNorthIcon.setOriginal(nNorthIcon == null ? this.getTexture(ForgeDirection.NORTH) : nNorthIcon);
+        state.tmpEastIcon.setOriginal(nEastIcon == null ? this.getTexture(ForgeDirection.EAST) : nEastIcon);
+        state.tmpWestIcon.setOriginal(nWestIcon == null ? this.getTexture(ForgeDirection.WEST) : nWestIcon);
+        state.useTmp = true;
     }
 
     public FlippableIcon getTexture(final ForgeDirection dir) {
-        if (this.useTmp) {
+        final ThreadState state = this.threadState.get();
+        if (state.useTmp) {
             switch (dir) {
                 case DOWN -> {
-                    return this.tmpBottomIcon;
+                    return state.tmpBottomIcon;
                 }
                 case UP -> {
-                    return this.tmpTopIcon;
+                    return state.tmpTopIcon;
                 }
                 case NORTH -> {
-                    return this.tmpNorthIcon;
+                    return state.tmpNorthIcon;
                 }
                 case SOUTH -> {
-                    return this.tmpSouthIcon;
+                    return state.tmpSouthIcon;
                 }
                 case EAST -> {
-                    return this.tmpEastIcon;
+                    return state.tmpEastIcon;
                 }
                 case WEST -> {
-                    return this.tmpWestIcon;
+                    return state.tmpWestIcon;
                 }
                 default -> {}
             }

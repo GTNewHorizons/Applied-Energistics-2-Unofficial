@@ -42,6 +42,7 @@ import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.render.BusRenderHelper;
 import appeng.client.render.BusRenderer;
+import appeng.client.render.RenderBlocksWorkaround;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.features.AEFeature;
@@ -163,12 +164,14 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
     @Override
     public boolean renderStatic(final Vector3 pos, final int pass) {
         if (pass == 0 || (pass == 1 && AEConfig.instance.isFeatureEnabled(AEFeature.AlphaPass))) {
-            BusRenderHelper.INSTANCE.setPass(pass);
-            BusRenderer.INSTANCE.getRenderer().renderAllFaces = true;
-            BusRenderer.INSTANCE.getRenderer().blockAccess = this.world();
-            BusRenderer.INSTANCE.getRenderer().overrideBlockTexture = null;
+            final BusRenderHelper helper = BusRenderHelper.instances.get();
+            final RenderBlocksWorkaround rb = BusRenderer.INSTANCE.getRenderer();
+            helper.setPass(pass);
+            rb.renderAllFaces = true;
+            rb.blockAccess = this.world();
+            rb.overrideBlockTexture = null;
             this.getCableBus().renderStatic(pos.x, pos.y, pos.z);
-            return BusRenderHelper.INSTANCE.getItemsRendered() > 0;
+            return helper.getItemsRendered() > 0;
         }
         return false;
     }
@@ -176,7 +179,7 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
     @Override
     public void renderDynamic(final Vector3 pos, final float frame, final int pass) {
         if (pass == 0 || (pass == 1 && AEConfig.instance.isFeatureEnabled(AEFeature.AlphaPass))) {
-            BusRenderHelper.INSTANCE.setPass(pass);
+            BusRenderHelper.instances.get().setPass(pass);
             this.getCableBus().renderDynamic(pos.x, pos.y, pos.z);
         }
     }

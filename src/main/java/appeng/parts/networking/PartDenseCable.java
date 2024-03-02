@@ -162,6 +162,7 @@ public class PartDenseCable extends PartCable {
     @SideOnly(Side.CLIENT)
     public void renderStatic(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer) {
+        final Tessellator tessellator = Tessellator.instance;
         this.setRenderCache(rh.useSimplifiedRendering(x, y, z, this, this.getRenderCache()));
         rh.setTexture(this.getTexture(this.getCableColor()));
 
@@ -215,11 +216,11 @@ public class PartDenseCable extends PartCable {
                     renderer.uvRotateBottom = 0;
                     renderer.uvRotateSouth = 3;
                     renderer.uvRotateEast = 3;
-                    Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().blackVariant);
+                    tessellator.setBrightness(15 << 20 | 15 << 4);
+                    tessellator.setColorOpaque_I(this.getCableColor().blackVariant);
                     rh.setTexture(firstIcon, firstIcon, firstOffset, firstOffset, firstOffset, firstOffset);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().whiteVariant);
+                    tessellator.setColorOpaque_I(this.getCableColor().whiteVariant);
                     rh.setTexture(secondIcon, secondIcon, secondOffset, secondOffset, secondOffset, secondOffset);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
                 }
@@ -236,15 +237,15 @@ public class PartDenseCable extends PartCable {
                     ico.setFlip(false, true);
                     renderer.setRenderBounds(0, 3 / 16.0, 3 / 16.0, 16 / 16.0, 13 / 16.0, 13 / 16.0);
                     rh.renderBlockCurrentBounds(x, y, z, renderer);
-                    Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
+                    tessellator.setBrightness(15 << 20 | 15 << 4);
                     final FlippableIcon fpA = new FlippableIcon(firstIcon);
                     final FlippableIcon fpB = new FlippableIcon(secondIcon);
                     fpA.setFlip(true, false);
                     fpB.setFlip(true, false);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().blackVariant);
+                    tessellator.setColorOpaque_I(this.getCableColor().blackVariant);
                     rh.setTexture(firstOffset, firstOffset, firstOffset, firstOffset, firstIcon, fpA);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().whiteVariant);
+                    tessellator.setColorOpaque_I(this.getCableColor().whiteVariant);
                     rh.setTexture(secondOffset, secondOffset, secondOffset, secondOffset, secondIcon, fpB);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
                 }
@@ -257,11 +258,11 @@ public class PartDenseCable extends PartCable {
                     renderer.uvRotateWest = 1;
                     renderer.setRenderBounds(3 / 16.0, 3 / 16.0, 0, 13 / 16.0, 13 / 16.0, 16 / 16.0);
                     rh.renderBlockCurrentBounds(x, y, z, renderer);
-                    Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().blackVariant);
+                    tessellator.setBrightness(15 << 20 | 15 << 4);
+                    tessellator.setColorOpaque_I(this.getCableColor().blackVariant);
                     rh.setTexture(firstOffset, firstOffset, firstIcon, firstIcon, firstOffset, firstOffset);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().whiteVariant);
+                    tessellator.setColorOpaque_I(this.getCableColor().whiteVariant);
                     rh.setTexture(secondOffset, secondOffset, secondIcon, secondIcon, secondOffset, secondOffset);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
                 }
@@ -276,32 +277,13 @@ public class PartDenseCable extends PartCable {
     @SideOnly(Side.CLIENT)
     private void renderDenseConnection(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer, final int channels, final ForgeDirection of) {
+        final Tessellator tessellator = Tessellator.instance;
+
         final TileEntity te = this.getTile().getWorldObj()
                 .getTileEntity(x + of.offsetX, y + of.offsetY, z + of.offsetZ);
         final IPartHost partHost = te instanceof IPartHost ? (IPartHost) te : null;
         final IGridHost ghh = te instanceof IGridHost ? (IGridHost) te : null;
         AEColor myColor = this.getCableColor();
-        /*
-         * ( ghh != null && partHost != null && ghh.getCableConnectionType( of ) == AECableType.GLASS &&
-         * partHost.getPart( of.getOpposite() ) == null ) { isGlass = true; rh.setTexture( getGlassTexture( myColor =
-         * partHost.getColor() ) ); } else if ( partHost == null && ghh != null && ghh.getCableConnectionType( of ) !=
-         * AECableType.GLASS ) { rh.setTexture( getSmartTexture( myColor ) ); switch (of) { case DOWN: rh.setBounds( 3,
-         * 0, 3, 13, 4, 13 ); break; case EAST: rh.setBounds( 12, 3, 3, 16, 13, 13 ); break; case NORTH: rh.setBounds(
-         * 3, 3, 0, 13, 13, 4 ); break; case SOUTH: rh.setBounds( 3, 3, 12, 13, 13, 16 ); break; case UP: rh.setBounds(
-         * 3, 12, 3, 13, 16, 13 ); break; case WEST: rh.setBounds( 0, 3, 3, 4, 13, 13 ); break; default: return; }
-         * rh.renderBlock( x, y, z, renderer ); if ( true ) { setSmartConnectionRotations( of, renderer ); IIcon
-         * firstIcon = new TaughtIcon( getChannelTex( channels, false ).getIcon(), -0.2f ); IIcon secondIcon = new
-         * TaughtIcon( getChannelTex( channels, true ).getIcon(), -0.2f ); if ( of == ForgeDirection.EAST || of ==
-         * ForgeDirection.WEST ) { AEBaseBlock blk = (AEBaseBlock) rh.getBlock(); FlippableIcon ico =
-         * blk.getRendererInstance().getTexture( ForgeDirection.EAST ); ico.setFlip( false, true ); }
-         * Tessellator.INSTANCE.setBrightness( 15 << 20 | 15 << 5 ); Tessellator.INSTANCE.setColorOpaque_I(
-         * myColor.mediumVariant ); rh.setTexture( firstIcon, firstIcon, firstIcon, firstIcon, firstIcon, firstIcon );
-         * renderAllFaces( (AEBaseBlock) rh.getBlock(), x, y, z, renderer ); Tessellator.INSTANCE.setColorOpaque_I(
-         * myColor.whiteVariant ); rh.setTexture( secondIcon, secondIcon, secondIcon, secondIcon, secondIcon, secondIcon
-         * ); renderAllFaces( (AEBaseBlock) rh.getBlock(), x, y, z, renderer ); renderer.uvRotateBottom =
-         * renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop =
-         * renderer.uvRotateWest = 0; } rh.setTexture( getTexture( getCableColor() ) ); }
-         */
 
         rh.setFacesToRender(EnumSet.complementOf(EnumSet.of(of, of.getOpposite())));
         if (ghh != null && partHost != null
@@ -335,12 +317,12 @@ public class PartDenseCable extends PartCable {
             final IIcon firstIcon = new TaughtIcon(this.getChannelTex(channels, false).getIcon(), -0.2f);
             final IIcon secondIcon = new TaughtIcon(this.getChannelTex(channels, true).getIcon(), -0.2f);
 
-            Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-            Tessellator.instance.setColorOpaque_I(myColor.blackVariant);
+            tessellator.setBrightness(15 << 20 | 15 << 4);
+            tessellator.setColorOpaque_I(myColor.blackVariant);
             rh.setTexture(firstIcon, firstIcon, firstIcon, firstIcon, firstIcon, firstIcon);
             this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
-            Tessellator.instance.setColorOpaque_I(myColor.whiteVariant);
+            tessellator.setColorOpaque_I(myColor.whiteVariant);
             rh.setTexture(secondIcon, secondIcon, secondIcon, secondIcon, secondIcon, secondIcon);
             this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 

@@ -95,7 +95,7 @@ public class RenderBlockAssembler extends BaseBlockRender<BlockMolecularAssemble
     public boolean renderInWorld(final BlockMolecularAssembler maBlock, final IBlockAccess world, final int x,
             final int y, final int z, RenderBlocks renderer) {
         final TileMolecularAssembler tma = maBlock.getTileEntity(world, x, y, z);
-
+        final Tessellator tessellator = Tessellator.instance;
         if (BlockMolecularAssembler.isBooleanAlphaPass()) {
             if (tma.isPowered()) {
                 this.renderBlockBounds(
@@ -112,8 +112,8 @@ public class RenderBlockAssembler extends BaseBlockRender<BlockMolecularAssemble
                 final TaughtIcon lights = new TaughtIcon(
                         ExtraBlockTextures.BlockMolecularAssemblerLights.getIcon(),
                         -2.0f);
-                Tessellator.instance.setColorRGBA_F(1, 1, 1, 0.3f);
-                Tessellator.instance.setBrightness(14 << 20 | 14 << 4);
+                tessellator.setColorRGBA_F(1, 1, 1, 0.3f);
+                tessellator.setBrightness(14 << 20 | 14 << 4);
                 renderer.renderFaceXNeg(maBlock, x, y, z, lights);
                 renderer.renderFaceXPos(maBlock, x, y, z, lights);
                 renderer.renderFaceYNeg(maBlock, x, y, z, lights);
@@ -130,7 +130,7 @@ public class RenderBlockAssembler extends BaseBlockRender<BlockMolecularAssemble
 
         this.preRenderInWorld(maBlock, world, x, y, z, renderer);
 
-        tma.setLightCache(BusRenderHelper.INSTANCE.useSimplifiedRendering(x, y, z, this, tma.getLightCache()));
+        tma.setLightCache(BusRenderHelper.instances.get().useSimplifiedRendering(x, y, z, this, tma.getLightCache()));
 
         BusRenderer.INSTANCE.getRenderer().setFacade(true);
         final IOrientable te = this.getOrientable(maBlock, world, x, y, z);
@@ -186,7 +186,7 @@ public class RenderBlockAssembler extends BaseBlockRender<BlockMolecularAssemble
         this.renderBlockBounds(renderer, 1, 1, 1, 15, 15, 15, fdx, fdy, fdz);
         renderer.renderStandardBlock(maBlock, x, y, z);
 
-        BusRenderHelper.INSTANCE.normalRendering();
+        BusRenderHelper.instances.get().normalRendering();
 
         maBlock.getRendererInstance().setTemporaryRenderIcon(null);
 
