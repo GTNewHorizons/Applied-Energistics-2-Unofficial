@@ -503,6 +503,15 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         return this.settings;
     }
 
+    /**
+     * @deprecated Use the new method getTerminalFontSize() to get more options
+     * @return True if terminal large font is used, false otherwise
+     */
+    @Deprecated
+    public boolean useTerminalUseLargeFont() {
+        return getTerminalFontSize() == TerminalFontSize.LARGE;
+    }
+
     public TerminalFontSize getTerminalFontSize() {
         return (TerminalFontSize) settings.getSetting(Settings.TERMINAL_FONT_SIZE);
     }
