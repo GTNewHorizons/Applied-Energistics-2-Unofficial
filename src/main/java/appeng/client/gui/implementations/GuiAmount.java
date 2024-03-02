@@ -49,10 +49,10 @@ public abstract class GuiAmount extends AEBaseGui {
     public void initGui() {
         super.initGui();
 
-        final int a = AEConfig.instance.craftItemsByStackAmounts(0);
-        final int b = AEConfig.instance.craftItemsByStackAmounts(1);
-        final int c = AEConfig.instance.craftItemsByStackAmounts(2);
-        final int d = AEConfig.instance.craftItemsByStackAmounts(3);
+        final int a = this.getButtonQtyByIndex(0);
+        final int b = this.getButtonQtyByIndex(1);
+        final int c = this.getButtonQtyByIndex(2);
+        final int d = this.getButtonQtyByIndex(3);
 
         this.buttonList.add(this.plus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 26, 22, 20, "+" + a));
         this.buttonList.add(this.plus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 26, 28, 20, "+" + b));
@@ -94,6 +94,10 @@ public abstract class GuiAmount extends AEBaseGui {
     }
 
     protected abstract void setOriginGUI(Object target);
+
+    protected int getButtonQtyByIndex(int index){
+        return AEConfig.instance.craftItemsByStackAmounts(index);
+    }
 
     @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {

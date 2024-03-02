@@ -109,8 +109,6 @@ public class GuiPatternMulti extends GuiAmount {
 
         if (btn == this.symbolSwitch) {
             int resultI = -getAmount();
-
-            // this.symbolSwitch.set(resultI >= 0 ? ActionItems.MULTIPLY : ActionItems.DIVIDE);
             this.amountTextField.setText(Integer.toString(resultI));
         }
 
