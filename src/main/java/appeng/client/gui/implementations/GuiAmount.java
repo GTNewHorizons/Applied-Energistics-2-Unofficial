@@ -95,7 +95,7 @@ public abstract class GuiAmount extends AEBaseGui {
 
     protected abstract void setOriginGUI(Object target);
 
-    protected int getButtonQtyByIndex(int index){
+    protected int getButtonQtyByIndex(int index) {
         return AEConfig.instance.craftItemsByStackAmounts(index);
     }
 
