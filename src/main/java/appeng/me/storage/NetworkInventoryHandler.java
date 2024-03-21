@@ -264,7 +264,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
 
         final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
         final int size = priorityInventory.size();
-        for (int i = 0; i < size && output.getStackSize() < req; i++) {
+        for (int i = size - 1; i >= 0 && output.getStackSize() < req; i--) {
             final IMEInventoryHandler<T> inv = priorityInventory.get(i);
 
             request.setStackSize(req - output.getStackSize());
