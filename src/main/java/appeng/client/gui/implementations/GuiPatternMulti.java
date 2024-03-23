@@ -4,6 +4,8 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
+import com.gtnewhorizon.gtnhlib.util.parsing.MathExpressionParser;
+
 import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
@@ -22,6 +24,7 @@ import appeng.parts.reporting.PartPatternTerminal;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
+import cpw.mods.fml.common.Loader;
 
 public class GuiPatternMulti extends GuiAmount {
 
@@ -117,8 +120,12 @@ public class GuiPatternMulti extends GuiAmount {
     @Override
     protected int getAmount() {
         String out = this.amountTextField.getText();
-
-        double resultD = Calculator.conversion(out);
+        double resultD;
+        if (Loader.isModLoaded("gtnhlib")) {
+            resultD = MathExpressionParser.parse(out);
+        } else {
+            resultD = Calculator.conversion(out);
+        }
 
         if (Double.isNaN(resultD)) {
             return DEFAULT_VALUE;

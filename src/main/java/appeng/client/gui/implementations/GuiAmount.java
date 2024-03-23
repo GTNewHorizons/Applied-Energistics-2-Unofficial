@@ -7,6 +7,8 @@ import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 
+import com.gtnewhorizon.gtnhlib.util.parsing.MathExpressionParser;
+
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.AEBaseContainer;
@@ -19,6 +21,7 @@ import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.helpers.Reflected;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
+import cpw.mods.fml.common.Loader;
 
 public abstract class GuiAmount extends AEBaseGui {
 
@@ -150,7 +153,12 @@ public abstract class GuiAmount extends AEBaseGui {
 
     protected int getAmount() {
         String out = this.amountTextField.getText();
-        double resultD = Calculator.conversion(out);
+        double resultD;
+        if (Loader.isModLoaded("gtnhlib")) {
+            resultD = MathExpressionParser.parse(out);
+        } else {
+            resultD = Calculator.conversion(out);
+        }
 
         if (resultD <= 0 || Double.isNaN(resultD)) {
             return 0;

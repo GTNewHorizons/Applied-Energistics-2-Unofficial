@@ -19,6 +19,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import com.google.common.base.Joiner;
+import com.gtnewhorizon.gtnhlib.util.parsing.MathExpressionParser;
 
 import appeng.api.config.Settings;
 import appeng.api.config.TerminalStyle;
@@ -45,6 +46,7 @@ import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
+import cpw.mods.fml.common.Loader;
 
 public class GuiOptimizePatterns extends AEBaseGui implements IGuiTooltipHandler {
 
@@ -363,8 +365,13 @@ public class GuiOptimizePatterns extends AEBaseGui implements IGuiTooltipHandler
             super.keyTyped(character, key);
 
             String out = this.amountToCraft.getText();
+            double resultD;
+            if (Loader.isModLoaded("gtnhlib")) {
+                resultD = MathExpressionParser.parse(out);
+            } else {
+                resultD = Calculator.conversion(out);
+            }
 
-            double resultD = Calculator.conversion(out);
             int resultI;
 
             if (resultD <= 0 || Double.isNaN(resultD)) {
