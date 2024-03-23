@@ -25,10 +25,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.ICraftingPatternItem;
-import appeng.api.networking.IGrid;
-import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.networking.security.IActionHost;
 import appeng.api.util.IConfigManager;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.IOptionalSlotHost;
@@ -39,7 +36,6 @@ import appeng.container.slot.SlotRestrictedInput;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.me.cache.CraftingGridCache;
-import appeng.tile.misc.TilePatternOptimizationMatrix;
 import appeng.util.PatternMultiplierHelper;
 import appeng.util.Platform;
 
@@ -129,12 +125,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     public void detectAndSendChanges() {
         this.verifyPermissions(SecurityPermissions.BUILD, false);
 
-        if (Platform.isServer()) {
-            IGrid grid = getGrid();
-            if (grid != null) {
-                this.isAllowedToMultiplyPatterns = !grid.getMachines(TilePatternOptimizationMatrix.class).isEmpty();
-            }
-        }
+        this.isAllowedToMultiplyPatterns = true;
 
         if (patternRows != getPatternCapacityCardsInstalled()) patternRows = getPatternCapacityCardsInstalled();
         isEmpty = patternRows == -1;
@@ -201,18 +192,6 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         } catch (Throwable ignored) {}
         CraftingGridCache.unpauseRebuilds();
         this.standardDetectAndSendChanges();
-    }
-
-    private IGrid getGrid() {
-        final IActionHost host = this.getActionHost();
-
-        if (host != null) {
-            final IGridNode gn = host.getActionableNode();
-            if (gn != null) {
-                return gn.getGrid();
-            }
-        }
-        return null;
     }
 
     public YesNo getBlockingMode() {
