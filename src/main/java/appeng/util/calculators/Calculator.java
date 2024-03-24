@@ -3,13 +3,27 @@ package appeng.util.calculators;
 import java.util.Collections;
 import java.util.Stack;
 
+import com.gtnewhorizon.gtnhlib.util.parsing.MathExpressionParser;
+import com.gtnewhorizon.gtnhlib.util.parsing.MathExpressionParser.Context;
+
+import cpw.mods.fml.common.Loader;
+
 public class Calculator {
 
     private final Stack<String> postfixStack = new Stack<>();
     private final Stack<Character> opStack = new Stack<>();
     private final int[] operatPriority = new int[] { 0, 3, 2, 1, -1, 1, 0, 2 };
+    private static final boolean isGTNHLibLoaded = Loader.isModLoaded("gtnhlib");
+    private static final MathExpressionParser.Context ctx = isGTNHLibLoaded
+            ? new Context().setEmptyValue(0).setErrorValue(Double.NaN)
+            : null;
 
     public static double conversion(String expression) {
+        if (isGTNHLibLoaded) {
+            double result = MathExpressionParser.parse(expression, ctx);
+            if (ctx.wasSuccessful()) return result;
+        }
+
         double result = 0;
 
         if (expression == null) return Double.NaN;
