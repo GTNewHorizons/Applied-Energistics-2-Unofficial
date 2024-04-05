@@ -111,7 +111,7 @@ public class CellInventory implements ICellInventory {
         }
     }
 
-    private static boolean isStorageCell(final ItemStack itemStack) {
+    private static boolean isStorageCell(final IAEItemStack itemStack) {
         if (itemStack == null) {
             return false;
         }
@@ -175,10 +175,8 @@ public class CellInventory implements ICellInventory {
             return input;
         }
 
-        final ItemStack sharedItemStack = input.getItemStack();
-
-        if (CellInventory.isStorageCell(sharedItemStack)) {
-            final IMEInventory<IAEItemStack> meInventory = getCell(sharedItemStack, null);
+        if (CellInventory.isStorageCell(input)) {
+            final IMEInventory<IAEItemStack> meInventory = getCell(input.getItemStack(), null);
 
             if (meInventory != null && !this.isEmpty(meInventory)) {
                 return input;
