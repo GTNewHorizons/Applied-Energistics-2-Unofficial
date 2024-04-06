@@ -207,7 +207,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
     @Override
     public boolean onBlockActivated(final World w, final int x, final int y, final int z, final EntityPlayer player,
             final int side, final float hitX, final float hitY, final float hitZ) {
-        if (player != null) {
+        if (player != null && !w.isRemote) {
             final ItemStack is = player.inventory.getCurrentItem();
             if (is != null) {
                 if (Platform.isWrench(player, is, x, y, z) && player.isSneaking()) {
