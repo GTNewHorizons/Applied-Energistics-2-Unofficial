@@ -15,7 +15,9 @@ import static net.minecraft.client.gui.GuiScreen.isShiftKeyDown;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
@@ -46,7 +48,8 @@ import cpw.mods.fml.relauncher.ReflectionHelper;
 
 public class ItemRepo implements IDisplayRepo {
 
-    private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
+    private final IItemList<IAEItemStack> list = AEApi.instance().storage().createPrimitiveItemList();
+    private final Set<IAEItemStack> itemInView = new HashSet<>();
     private final ArrayList<IAEItemStack> view = new ArrayList<>();
     private final ArrayList<ItemStack> dsp = new ArrayList<>();
     private final ArrayList<IAEItemStack> cache = new ArrayList<>();
@@ -92,7 +95,7 @@ public class ItemRepo implements IDisplayRepo {
         if (st != null) {
             st.reset();
             st.add(is);
-            if (isShiftKeyDown() && this.view.contains(st)) {
+            if (isShiftKeyDown() && this.itemInView.contains(st)) {
                 this.view.get(this.view.indexOf(st)).setStackSize(st.getStackSize());
             }
         } else {
@@ -237,8 +240,10 @@ public class ItemRepo implements IDisplayRepo {
         } else {
             this.cache.clear();
         }
+        this.itemInView.clear();
         for (final IAEItemStack is : this.view) {
             this.dsp.add(is.getItemStack());
+            this.itemInView.add(is);
         }
         this.lastSearchString = this.searchString;
     }
