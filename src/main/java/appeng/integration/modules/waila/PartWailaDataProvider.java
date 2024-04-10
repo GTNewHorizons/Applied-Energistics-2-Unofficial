@@ -23,6 +23,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 import appeng.api.parts.IPart;
+import appeng.helpers.ICustomNameObject;
 import appeng.integration.modules.waila.part.BasePartWailaDataProvider;
 import appeng.integration.modules.waila.part.ChannelWailaDataProvider;
 import appeng.integration.modules.waila.part.IPartWailaDataProvider;
@@ -44,6 +45,8 @@ import mcp.mobius.waila.api.IWailaDataProvider;
  * @since rv2
  */
 public final class PartWailaDataProvider implements IWailaDataProvider {
+
+    private static final String NBT_PART_CUSTOM_NAME = "partCustomName";
 
     /**
      * Contains all providers
@@ -129,6 +132,9 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
             for (final IPartWailaDataProvider provider : this.providers) {
                 provider.getWailaBody(part, currentToolTip, accessor, config);
             }
+            if (accessor.getNBTData().hasKey(NBT_PART_CUSTOM_NAME)) {
+                currentToolTip.add(accessor.getNBTData().getString(NBT_PART_CUSTOM_NAME));
+            }
         }
 
         return currentToolTip;
@@ -166,6 +172,9 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
 
                 for (final IPartWailaDataProvider provider : this.providers) {
                     provider.getNBTData(player, part, te, tag, world, x, y, z);
+                }
+                if (part instanceof ICustomNameObject customNameObject && customNameObject.hasCustomName()) {
+                    tag.setString(NBT_PART_CUSTOM_NAME, customNameObject.getCustomName());
                 }
             }
         }
