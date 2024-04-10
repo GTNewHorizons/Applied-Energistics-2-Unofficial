@@ -176,7 +176,8 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
                 for (final IPartWailaDataProvider provider : this.providers) {
                     provider.getNBTData(player, part, te, tag, world, x, y, z);
                 }
-                if (part instanceof ICustomNameObject customNameObject && customNameObject.hasCustomName()) {
+                if (part instanceof ICustomNameObject customNameObject && customNameObject.hasCustomName()
+                        && !customNameObject.getCustomName().isEmpty()) {
                     tag.setString(NBT_PART_CUSTOM_NAME, customNameObject.getCustomName());
                 }
             }

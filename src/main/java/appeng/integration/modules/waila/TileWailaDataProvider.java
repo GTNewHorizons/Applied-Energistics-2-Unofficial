@@ -106,7 +106,8 @@ public final class TileWailaDataProvider implements IWailaDataProvider {
         for (final IWailaDataProvider provider : this.providers) {
             provider.getNBTData(player, te, tag, world, x, y, z);
         }
-        if (te instanceof ICustomNameObject customNameObject && customNameObject.hasCustomName()) {
+        if (te instanceof ICustomNameObject customNameObject && customNameObject.hasCustomName()
+                && !customNameObject.getCustomName().isEmpty()) {
             tag.setString(NBT_TILE_CUSTOM_NAME, customNameObject.getCustomName());
         }
 
