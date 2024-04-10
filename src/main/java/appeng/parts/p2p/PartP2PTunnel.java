@@ -205,7 +205,9 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         final P2PCache p2p = newTunnel.getProxy().getP2P();
         p2p.updateFreq(newTunnel, freq);
         PartP2PTunnel input = p2p.getInput(freq);
-        if (input != null) newTunnel.setCustomNameInternal(input.getCustomName());
+        if (input != null && input.hasCustomName()) {
+            newTunnel.setCustomNameInternal(input.getCustomName());
+        }
     }
 
     @Override
