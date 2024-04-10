@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 
 import com.google.common.collect.Lists;
@@ -81,7 +82,9 @@ public final class TileWailaDataProvider implements IWailaDataProvider {
             provider.getWailaBody(itemStack, currentToolTip, accessor, config);
         }
         if (accessor.getNBTData().hasKey(NBT_TILE_CUSTOM_NAME)) {
-            currentToolTip.add(accessor.getNBTData().getString(NBT_TILE_CUSTOM_NAME));
+            currentToolTip.add(
+                    EnumChatFormatting.WHITE.toString() + EnumChatFormatting.ITALIC
+                            + accessor.getNBTData().getString(NBT_TILE_CUSTOM_NAME));
         }
 
         return currentToolTip;

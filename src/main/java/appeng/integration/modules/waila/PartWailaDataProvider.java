@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
@@ -133,7 +134,9 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
                 provider.getWailaBody(part, currentToolTip, accessor, config);
             }
             if (accessor.getNBTData().hasKey(NBT_PART_CUSTOM_NAME)) {
-                currentToolTip.add(accessor.getNBTData().getString(NBT_PART_CUSTOM_NAME));
+                currentToolTip.add(
+                        EnumChatFormatting.WHITE.toString() + EnumChatFormatting.ITALIC
+                                + accessor.getNBTData().getString(NBT_PART_CUSTOM_NAME));
             }
         }
 
