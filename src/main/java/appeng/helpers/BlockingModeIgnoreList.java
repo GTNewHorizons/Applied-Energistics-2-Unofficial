@@ -4,7 +4,11 @@ import java.util.ArrayList;
 
 import net.minecraft.item.ItemStack;
 
+import cpw.mods.fml.common.Loader;
 import gregtech.api.enums.ItemList;
+import gregtech.api.enums.Materials;
+import gregtech.api.enums.OrePrefixes;
+import gregtech.api.util.GT_OreDictUnificator;
 
 public class BlockingModeIgnoreList {
 
@@ -116,15 +120,56 @@ public class BlockingModeIgnoreList {
         Shapes.add(getUniqueIdentifier(ItemList.White_Dwarf_Shape_Extruder_Small_Gear));
         Shapes.add(getUniqueIdentifier(ItemList.White_Dwarf_Shape_Extruder_ToolHeadDrill));
 
+        // Only use GT_OreDictUnificator if GTNH is loaded
+        if (Loader.isModLoaded("dreamcraft")) {
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Emerald, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Firestone, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Diamond, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Ruby, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Sapphire, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.GreenSapphire, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Olivine, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.NetherStar, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Topaz, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Tanzanite, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Amethyst, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Opal, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Jasper, 1)));
+            // Spinel
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.FoolsRuby, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.BlueTopaz, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Amber, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Dilithium, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Forcicium, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Forcillium, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Force, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.GarnetRed, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.GarnetYellow, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.EnderPearl, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.EnderEye, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.InfusedAir, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.InfusedFire, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.InfusedEarth, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.InfusedEntropy, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.InfusedOrder, 1)));
+            Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Glass, 1)));
+        }
     }
 
     public static boolean isIgnored(ItemStack is) {
         if (is != null) {
             String uniqueIdentifier = getUniqueIdentifier(is);
-            if (is.getItem().getUnlocalizedName().equals("gt.integrated_circuit")) return true;
+            String unlocalizedName = is.getItem().getUnlocalizedName();
+            if (unlocalizedName.equals("gt.integrated_circuit")) return true;
             else if (Shapes.contains(uniqueIdentifier) || Lenses.contains(uniqueIdentifier)
                     || Molds.contains(uniqueIdentifier))
                 return true;
+            else if (unlocalizedName.equals("gt.bwMetaGeneratedlens")) return true;
+            // Not a typo, this is the actual item ID.
+            else if (unlocalizedName.equals("item.ReinforcedGlassLense")) return true;
+            else if (unlocalizedName.equals("item.MysteriousCrystalLens")) return true;
+            else if (unlocalizedName.equals("item.RadoxPolymerLens")) return true;
+            else if (unlocalizedName.equals("item.ChromaticLens")) return true;
         }
         return false;
     }
