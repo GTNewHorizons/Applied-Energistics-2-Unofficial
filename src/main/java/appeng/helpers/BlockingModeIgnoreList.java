@@ -159,6 +159,8 @@ public class BlockingModeIgnoreList {
             String uniqueIdentifier = getUniqueIdentifier(is);
             String unlocalizedName = is.getItem().getUnlocalizedName();
             if (unlocalizedName.equals("gt.integrated_circuit")) return true;
+            else if (unlocalizedName.equals("item.BioRecipeSelector")) return true;
+            else if (unlocalizedName.equals("item.T3RecipeSelector")) return true;
             else if (Shapes.contains(uniqueIdentifier) || Lenses.contains(uniqueIdentifier)
                     || Molds.contains(uniqueIdentifier))
                 return true;
