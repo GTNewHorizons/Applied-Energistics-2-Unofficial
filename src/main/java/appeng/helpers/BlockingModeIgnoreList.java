@@ -2,9 +2,11 @@ package appeng.helpers;
 
 import java.util.ArrayList;
 
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.registry.GameRegistry;
 import gregtech.api.enums.ItemList;
 import gregtech.api.enums.Materials;
 import gregtech.api.enums.OrePrefixes;
@@ -15,6 +17,8 @@ public class BlockingModeIgnoreList {
     private final static ArrayList<String> Shapes = new ArrayList<String>();
     private final static ArrayList<String> Lenses = new ArrayList<String>();
     private final static ArrayList<String> Molds = new ArrayList<String>();
+
+    private final static ArrayList<Item> IgnoredItems = new ArrayList<Item>();
 
     // Name + damage value from ItemList enums
     private static String getUniqueIdentifier(ItemList item) {
@@ -151,25 +155,27 @@ public class BlockingModeIgnoreList {
             Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.InfusedEntropy, 1)));
             Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.InfusedOrder, 1)));
             Lenses.add(getUniqueIdentifier(GT_OreDictUnificator.get(OrePrefixes.lens, Materials.Glass, 1)));
+
+            IgnoredItems.add(GameRegistry.findItem("gregtech", "gt.integrated_circuit"));
+            IgnoredItems.add(GameRegistry.findItem("miscutils", "item.BioRecipeSelector"));
+            IgnoredItems.add(GameRegistry.findItem("miscutils", "item.T3RecipeSelector"));
+            IgnoredItems.add(GameRegistry.findItem("dreamcraft", "item.ReinforcedGlassLense"));
+            IgnoredItems.add(GameRegistry.findItem("dreamcraft", "item.MysteriousCrystalLens"));
+            IgnoredItems.add(GameRegistry.findItem("dreamcraft", "item.RadoxPolymerLens"));
+            IgnoredItems.add(GameRegistry.findItem("dreamcraft", "item.ChromaticLens"));
+            IgnoredItems.add(GameRegistry.findItem("bartworks", "gt.bwMetaGeneratedlens"));
         }
     }
 
     public static boolean isIgnored(ItemStack is) {
         if (is != null) {
             String uniqueIdentifier = getUniqueIdentifier(is);
-            String unlocalizedName = is.getItem().getUnlocalizedName();
-            if (unlocalizedName.equals("gt.integrated_circuit")) return true;
-            else if (unlocalizedName.equals("item.BioRecipeSelector")) return true;
-            else if (unlocalizedName.equals("item.T3RecipeSelector")) return true;
-            else if (Shapes.contains(uniqueIdentifier) || Lenses.contains(uniqueIdentifier)
+            Item item = is.getItem();
+
+            if (IgnoredItems.contains(item) || Shapes.contains(uniqueIdentifier)
+                    || Lenses.contains(uniqueIdentifier)
                     || Molds.contains(uniqueIdentifier))
                 return true;
-            else if (unlocalizedName.equals("gt.bwMetaGeneratedlens")) return true;
-            // Not a typo, this is the actual item ID.
-            else if (unlocalizedName.equals("item.ReinforcedGlassLense")) return true;
-            else if (unlocalizedName.equals("item.MysteriousCrystalLens")) return true;
-            else if (unlocalizedName.equals("item.RadoxPolymerLens")) return true;
-            else if (unlocalizedName.equals("item.ChromaticLens")) return true;
         }
         return false;
     }
