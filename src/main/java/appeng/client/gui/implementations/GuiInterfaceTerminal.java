@@ -467,17 +467,18 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         Iterator<InterfaceTerminalEntry> visible = section.getVisible();
         while (visible.hasNext()) {
-            if (viewY < viewHeight) {
+            InterfaceTerminalEntry entry = visible.next();
+            if (viewY + renderY + entry.rows * 18 + 1 > 0 && viewY + renderY < viewHeight) {
                 renderY += drawEntry(
-                        visible.next(),
+                        entry,
                         viewY + InterfaceSection.TITLE_HEIGHT + renderY,
                         title,
                         relMouseX,
                         relMouseY);
             } else {
-                InterfaceTerminalEntry entry = visible.next();
                 entry.dispY = -9999;
                 entry.optionsButton.yPosition = -1;
+                renderY += entry.rows * 18 + 1;
             }
         }
         /*
@@ -601,7 +602,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     aeRenderItem.zLevel = 0.0f;
                     RenderHelper.disableStandardItemLighting();
                     if (!tooltip) {
-                        if (entry.brokenRecipes[slotIdx]) {
+                        if (entry.slotIsBroken(slotIdx)) {
                             GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayInvalid.getColor());
                         } else if (entry.filteredRecipes[slotIdx]) {
@@ -1143,7 +1144,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         && entry.numItems == entry.rows * entry.rowSize) {
                     continue;
                 }
-                if (onlyBrokenRecipes && entry.numBrokenRecipes == 0) {
+                if (onlyBrokenRecipes && !entry.hasBrokenSlot()) {
                     continue;
                 }
                 // Find search terms
@@ -1221,8 +1222,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int guiHeight;
         int dispY = -9999;
         boolean online;
-        int numBrokenRecipes;
-        boolean[] brokenRecipes;
+        private Boolean[] brokenRecipes;
         int numItems = 0;
         /** Should recipe be filtered out/grayed out? */
         boolean[] filteredRecipes;
@@ -1247,7 +1247,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
             this.guiHeight = 18 * rows + 1;
-            this.brokenRecipes = new boolean[rows * rowSize];
+            this.brokenRecipes = new Boolean[rows * rowSize];
             this.filteredRecipes = new boolean[rows * rowSize];
         }
 
@@ -1271,7 +1271,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         public void fullItemUpdate(NBTTagList items, int newSize) {
             inv = new AppEngInternalInventory(null, newSize);
             rows = newSize / rowSize;
-            brokenRecipes = new boolean[newSize];
+            brokenRecipes = new Boolean[newSize];
             numItems = 0;
 
             for (int i = 0; i < inv.getSizeInventory(); ++i) {
@@ -1296,19 +1296,44 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
 
         private void setItemInSlot(ItemStack stack, int idx) {
-            final int oldBroke = brokenRecipes[idx] ? 1 : 0;
-            final int newBroke = recipeIsBroken(stack) ? 1 : 0;
             final int oldHasItem = inv.getStackInSlot(idx) != null ? 1 : 0;
             final int newHasItem = stack != null ? 1 : 0;
 
-            // Update broken recipe count
-            numBrokenRecipes += newBroke - oldBroke;
-            brokenRecipes[idx] = newBroke == 1;
             inv.setInventorySlotContents(idx, stack);
-            assert numBrokenRecipes >= 0;
             // Update item count
             numItems += newHasItem - oldHasItem;
             assert numItems >= 0;
+        }
+
+        public boolean hasBrokenSlot() {
+            boolean existsUnknown = false;
+
+            for (int idx = 0; idx < brokenRecipes.length; idx++) {
+                if (brokenRecipes[idx] == null) {
+                    existsUnknown = true;
+                } else if (brokenRecipes[idx] == true) {
+                    return true;
+                }
+            }
+
+            if (existsUnknown) {
+                for (int idx = 0; idx < brokenRecipes.length; idx++) {
+                    if (slotIsBroken(idx)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public boolean slotIsBroken(int idx) {
+
+            if (brokenRecipes[idx] == null) {
+                brokenRecipes[idx] = recipeIsBroken(inv.getStackInSlot(idx));
+            }
+
+            return brokenRecipes[idx];
         }
 
         public AppEngInternalInventory getInventory() {
