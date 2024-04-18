@@ -469,7 +469,8 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
 
         try {
             // force grid to update handlers...
-            this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
+            if (!(new Throwable().getStackTrace()[3].getMethodName().equals("cellUpdate")))
+                this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
         } catch (final GridAccessException e) {
             // :3
         }
