@@ -14,8 +14,6 @@ import java.util.EnumSet;
 
 import javax.annotation.Nullable;
 
-import appeng.client.texture.FlippableIcon;
-import appeng.client.texture.MissingIcon;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
@@ -33,6 +31,8 @@ import appeng.api.parts.IPartRenderHelper;
 import appeng.api.parts.ISimplifiedBundle;
 import appeng.block.AEBaseBlock;
 import appeng.block.networking.BlockCableBus;
+import appeng.client.texture.FlippableIcon;
+import appeng.client.texture.MissingIcon;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.tile.AEBaseTile;
@@ -477,7 +477,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
                     this.az);
 
             renderer.renderStandardBlock(block, x, y, z);
-            if(isTemp) {
+            if (isTemp) {
                 info.setTemporaryRenderIcon(null);
             }
         }
