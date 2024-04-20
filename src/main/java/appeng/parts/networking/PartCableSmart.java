@@ -184,7 +184,7 @@ public class PartCableSmart extends PartCable {
                     if (of == ForgeDirection.EAST || of == ForgeDirection.WEST) {
                         final AEBaseBlock blk = (AEBaseBlock) rh.getBlock();
                         final FlippableIcon ico = blk.getRendererInstance().getTexture(ForgeDirection.EAST);
-                        ico.setFlip(false, true);
+                        if(ico != null) ico.setFlip(false, true);
                     }
 
                     Tessellator.instance.setBrightness(15 << 20 | 15 << 4);

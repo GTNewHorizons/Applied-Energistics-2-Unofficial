@@ -30,7 +30,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public final class WorldRender implements ISimpleBlockRenderingHandler {
 
     public static final WorldRender INSTANCE = new WorldRender();
-    private final int renderID = RenderingRegistry.getNextAvailableRenderId();
+    private static final int renderID = RenderingRegistry.getNextAvailableRenderId();
     private final RenderBlocks renderer = new RenderBlocks();
     private boolean hasError = false;
 

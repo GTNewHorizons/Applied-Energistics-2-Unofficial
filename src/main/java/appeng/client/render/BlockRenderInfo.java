@@ -34,7 +34,6 @@ public class BlockRenderInfo {
     }
 
     private final ThreadLocal<ThreadState> threadState = ThreadLocal.withInitial(ThreadState::new);
-    private boolean iconsSet = false;
     private FlippableIcon topIcon = null;
     private FlippableIcon bottomIcon = null;
     private FlippableIcon southIcon = null;
@@ -81,6 +80,10 @@ public class BlockRenderInfo {
         state.tmpEastIcon.setOriginal(nEastIcon == null ? this.getTexture(ForgeDirection.EAST) : nEastIcon);
         state.tmpWestIcon.setOriginal(nWestIcon == null ? this.getTexture(ForgeDirection.WEST) : nWestIcon);
         state.useTmp = true;
+    }
+
+    public boolean hasTemporaryRenderIcons() {
+        return this.threadState.get().useTmp;
     }
 
     public FlippableIcon getTexture(final ForgeDirection dir) {

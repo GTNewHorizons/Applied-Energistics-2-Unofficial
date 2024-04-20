@@ -14,6 +14,8 @@ import java.util.EnumSet;
 
 import javax.annotation.Nullable;
 
+import appeng.client.texture.FlippableIcon;
+import appeng.client.texture.MissingIcon;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
@@ -441,7 +443,12 @@ public final class BusRenderHelper implements IPartRenderHelper {
             final BlockRenderInfo info = block.getRendererInstance();
             final ForgeDirection forward = BusRenderHelper.instances.get().az;
             final ForgeDirection up = BusRenderHelper.instances.get().ay;
-
+            boolean isTemp = false;
+            if (!info.isValid() && !info.hasTemporaryRenderIcons()) {
+                final FlippableIcon i = new FlippableIcon(new MissingIcon(this));
+                info.setTemporaryRenderIcon(i);
+                isTemp = true;
+            }
             renderer.uvRotateBottom = info.getTexture(ForgeDirection.DOWN)
                     .setFlip(BaseBlockRender.getOrientation(ForgeDirection.DOWN, forward, up));
             renderer.uvRotateTop = info.getTexture(ForgeDirection.UP)
@@ -470,6 +477,9 @@ public final class BusRenderHelper implements IPartRenderHelper {
                     this.az);
 
             renderer.renderStandardBlock(block, x, y, z);
+            if(isTemp) {
+                info.setTemporaryRenderIcon(null);
+            }
         }
     }
 
