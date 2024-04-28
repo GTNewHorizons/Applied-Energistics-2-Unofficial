@@ -103,9 +103,15 @@ public class TileInterface extends AENetworkInvTile implements IGridTickable, IT
                     this.pointAt.getOpposite());
         }
 
-        this.getProxy().setValidSides(EnumSet.complementOf(EnumSet.of(this.pointAt)));
         this.markForUpdate();
         this.markDirty();
+    }
+
+    @Override
+    public void setOrientation(ForgeDirection Forward, ForgeDirection Up) {
+        super.setOrientation(Forward, Up);
+        pointAt = Up;
+        this.getProxy().setValidSides(EnumSet.complementOf(EnumSet.of(pointAt)));
     }
 
     @Override
