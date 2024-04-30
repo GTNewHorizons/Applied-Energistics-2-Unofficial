@@ -538,9 +538,13 @@ public class PartCable extends AEBasePart implements IPartCable {
         }
 
         final AEColoredItemDefinition coveredCable = AEApi.instance().definitions().parts().cableCovered();
-        final ItemStack coveredCableStack = coveredCable.stack(AEColor.Transparent, 1);
+        IIcon val = coveredCable.stack(AEColor.Transparent, 1).getIconIndex();
 
-        return coveredCable.item(AEColor.Transparent).getIconIndex(coveredCableStack);
+        if (val == null) {
+            val = CableBusTextures.getMissing();
+        }
+
+        return val;
     }
 
     protected boolean nonLinear(final EnumSet<ForgeDirection> sides) {
