@@ -152,7 +152,8 @@ public class PartDenseCable extends PartCable {
     @Override
     public IIcon getTexture(final AEColor c) {
         if (c == AEColor.Transparent) {
-            return AEApi.instance().definitions().parts().cableSmart().stack(AEColor.Transparent, 1).getIconIndex();
+            CableBusTextures.checkTexture(
+                    AEApi.instance().definitions().parts().cableSmart().stack(AEColor.Transparent, 1).getIconIndex());
         }
 
         return this.getSmartTexture(c);
@@ -343,59 +344,25 @@ public class PartDenseCable extends PartCable {
     }
 
     protected IIcon getDenseTexture(final AEColor c) {
-        switch (c) {
-            case Black -> {
-                return CableBusTextures.MEDense_Black.getIcon();
-            }
-            case Blue -> {
-                return CableBusTextures.MEDense_Blue.getIcon();
-            }
-            case Brown -> {
-                return CableBusTextures.MEDense_Brown.getIcon();
-            }
-            case Cyan -> {
-                return CableBusTextures.MEDense_Cyan.getIcon();
-            }
-            case Gray -> {
-                return CableBusTextures.MEDense_Gray.getIcon();
-            }
-            case Green -> {
-                return CableBusTextures.MEDense_Green.getIcon();
-            }
-            case LightBlue -> {
-                return CableBusTextures.MEDense_LightBlue.getIcon();
-            }
-            case LightGray -> {
-                return CableBusTextures.MEDense_LightGrey.getIcon();
-            }
-            case Lime -> {
-                return CableBusTextures.MEDense_Lime.getIcon();
-            }
-            case Magenta -> {
-                return CableBusTextures.MEDense_Magenta.getIcon();
-            }
-            case Orange -> {
-                return CableBusTextures.MEDense_Orange.getIcon();
-            }
-            case Pink -> {
-                return CableBusTextures.MEDense_Pink.getIcon();
-            }
-            case Purple -> {
-                return CableBusTextures.MEDense_Purple.getIcon();
-            }
-            case Red -> {
-                return CableBusTextures.MEDense_Red.getIcon();
-            }
-            case White -> {
-                return CableBusTextures.MEDense_White.getIcon();
-            }
-            case Yellow -> {
-                return CableBusTextures.MEDense_Yellow.getIcon();
-            }
-            default -> {}
-        }
-
-        return this.getItemStack().getIconIndex();
+        return CableBusTextures.checkTexture(switch (c) {
+            case Black -> CableBusTextures.MEDense_Black.getIcon();
+            case Blue -> CableBusTextures.MEDense_Blue.getIcon();
+            case Brown -> CableBusTextures.MEDense_Brown.getIcon();
+            case Cyan -> CableBusTextures.MEDense_Cyan.getIcon();
+            case Gray -> CableBusTextures.MEDense_Gray.getIcon();
+            case Green -> CableBusTextures.MEDense_Green.getIcon();
+            case LightBlue -> CableBusTextures.MEDense_LightBlue.getIcon();
+            case LightGray -> CableBusTextures.MEDense_LightGrey.getIcon();
+            case Lime -> CableBusTextures.MEDense_Lime.getIcon();
+            case Magenta -> CableBusTextures.MEDense_Magenta.getIcon();
+            case Orange -> CableBusTextures.MEDense_Orange.getIcon();
+            case Pink -> CableBusTextures.MEDense_Pink.getIcon();
+            case Purple -> CableBusTextures.MEDense_Purple.getIcon();
+            case Red -> CableBusTextures.MEDense_Red.getIcon();
+            case White -> CableBusTextures.MEDense_White.getIcon();
+            case Yellow -> CableBusTextures.MEDense_Yellow.getIcon();
+            default -> this.getItemStack().getIconIndex();
+        });
     }
 
     private boolean isDense(final ForgeDirection of) {

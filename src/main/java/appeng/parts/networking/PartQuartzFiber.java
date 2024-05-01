@@ -33,6 +33,7 @@ import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.util.AECableType;
+import appeng.client.texture.CableBusTextures;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.parts.AEBasePart;
@@ -82,7 +83,7 @@ public class PartQuartzFiber extends AEBasePart implements IEnergyGridProvider {
     @SideOnly(Side.CLIENT)
     public void renderStatic(final int x, final int y, final int z, final IPartRenderHelper rh,
             final RenderBlocks renderer) {
-        final IIcon myIcon = this.getItemStack().getIconIndex();
+        final IIcon myIcon = CableBusTextures.checkTexture(this.getItemStack().getIconIndex());
         rh.setTexture(myIcon);
         rh.setBounds(6, 6, 10, 10, 10, 16);
         rh.renderBlock(x, y, z, renderer);
