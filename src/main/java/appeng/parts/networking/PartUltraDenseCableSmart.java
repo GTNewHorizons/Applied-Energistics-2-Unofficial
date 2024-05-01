@@ -26,8 +26,9 @@ public class PartUltraDenseCableSmart extends PartDenseCable {
     @Override
     public IIcon getTexture(final AEColor c) {
         if (c == AEColor.Transparent) {
-            return AEApi.instance().definitions().parts().cableUltraDenseSmart().stack(AEColor.Transparent, 1)
-                    .getIconIndex();
+            return CableBusTextures.checkTexture(
+                    AEApi.instance().definitions().parts().cableUltraDenseSmart().stack(AEColor.Transparent, 1)
+                            .getIconIndex());
         }
 
         return this.getDenseTexture(c);
@@ -35,58 +36,24 @@ public class PartUltraDenseCableSmart extends PartDenseCable {
 
     @Override
     protected IIcon getDenseTexture(final AEColor c) {
-        switch (c) {
-            case Black -> {
-                return CableBusTextures.MEUltraDense_Black.getIcon();
-            }
-            case Blue -> {
-                return CableBusTextures.MEUltraDense_Blue.getIcon();
-            }
-            case Brown -> {
-                return CableBusTextures.MEUltraDense_Brown.getIcon();
-            }
-            case Cyan -> {
-                return CableBusTextures.MEUltraDense_Cyan.getIcon();
-            }
-            case Gray -> {
-                return CableBusTextures.MEUltraDense_Gray.getIcon();
-            }
-            case Green -> {
-                return CableBusTextures.MEUltraDense_Green.getIcon();
-            }
-            case LightBlue -> {
-                return CableBusTextures.MEUltraDense_LightBlue.getIcon();
-            }
-            case LightGray -> {
-                return CableBusTextures.MEUltraDense_LightGrey.getIcon();
-            }
-            case Lime -> {
-                return CableBusTextures.MEUltraDense_Lime.getIcon();
-            }
-            case Magenta -> {
-                return CableBusTextures.MEUltraDense_Magenta.getIcon();
-            }
-            case Orange -> {
-                return CableBusTextures.MEUltraDense_Orange.getIcon();
-            }
-            case Pink -> {
-                return CableBusTextures.MEUltraDense_Pink.getIcon();
-            }
-            case Purple -> {
-                return CableBusTextures.MEUltraDense_Purple.getIcon();
-            }
-            case Red -> {
-                return CableBusTextures.MEUltraDense_Red.getIcon();
-            }
-            case White -> {
-                return CableBusTextures.MEUltraDense_White.getIcon();
-            }
-            case Yellow -> {
-                return CableBusTextures.MEUltraDense_Yellow.getIcon();
-            }
-            default -> {}
-        }
-
-        return this.getItemStack().getIconIndex();
+        return CableBusTextures.checkTexture(switch (c) {
+            case Black -> CableBusTextures.MEUltraDense_Black.getIcon();
+            case Blue -> CableBusTextures.MEUltraDense_Blue.getIcon();
+            case Brown -> CableBusTextures.MEUltraDense_Brown.getIcon();
+            case Cyan -> CableBusTextures.MEUltraDense_Cyan.getIcon();
+            case Gray -> CableBusTextures.MEUltraDense_Gray.getIcon();
+            case Green -> CableBusTextures.MEUltraDense_Green.getIcon();
+            case LightBlue -> CableBusTextures.MEUltraDense_LightBlue.getIcon();
+            case LightGray -> CableBusTextures.MEUltraDense_LightGrey.getIcon();
+            case Lime -> CableBusTextures.MEUltraDense_Lime.getIcon();
+            case Magenta -> CableBusTextures.MEUltraDense_Magenta.getIcon();
+            case Orange -> CableBusTextures.MEUltraDense_Orange.getIcon();
+            case Pink -> CableBusTextures.MEUltraDense_Pink.getIcon();
+            case Purple -> CableBusTextures.MEUltraDense_Purple.getIcon();
+            case Red -> CableBusTextures.MEUltraDense_Red.getIcon();
+            case White -> CableBusTextures.MEUltraDense_White.getIcon();
+            case Yellow -> CableBusTextures.MEUltraDense_Yellow.getIcon();
+            default -> this.getItemStack().getIconIndex();
+        });
     }
 }

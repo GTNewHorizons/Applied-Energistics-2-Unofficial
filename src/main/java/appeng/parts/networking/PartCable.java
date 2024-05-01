@@ -206,7 +206,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     }
 
     public IIcon getGlassTexture(final AEColor c) {
-        IIcon val = switch (c) {
+        return CableBusTextures.checkTexture(switch (c) {
             case Black -> CableBusTextures.MECable_Black.getIcon();
             case Blue -> CableBusTextures.MECable_Blue.getIcon();
             case Brown -> CableBusTextures.MECable_Brown.getIcon();
@@ -227,16 +227,7 @@ public class PartCable extends AEBasePart implements IPartCable {
                 final AEColoredItemDefinition cable = AEApi.instance().definitions().parts().cableGlass();
                 yield cable.stack(AEColor.Transparent, 1).getIconIndex();
             }
-        };
-
-        if (val == null) {
-            val = CableBusTextures.getMissing();
-        }
-
-        // this can't be null
-        assert val != null;
-
-        return val;
+        });
     }
 
     @Override
@@ -460,7 +451,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     }
 
     public IIcon getCoveredTexture(final AEColor c) {
-        IIcon val = switch (c) {
+        return CableBusTextures.checkTexture(switch (c) {
             case Black -> CableBusTextures.MECovered_Black.getIcon();
             case Blue -> CableBusTextures.MECovered_Blue.getIcon();
             case Brown -> CableBusTextures.MECovered_Brown.getIcon();
@@ -481,16 +472,7 @@ public class PartCable extends AEBasePart implements IPartCable {
                 final AEColoredItemDefinition coveredCable = AEApi.instance().definitions().parts().cableCovered();
                 yield coveredCable.stack(AEColor.Transparent, 1).getIconIndex();
             }
-        };
-
-        if (val == null) {
-            val = CableBusTextures.getMissing();
-        }
-
-        // this can't be null
-        assert val != null;
-
-        return val;
+        });
     }
 
     protected boolean nonLinear(final EnumSet<ForgeDirection> sides) {
@@ -708,7 +690,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     }
 
     IIcon getSmartTexture(final AEColor c) {
-        IIcon val = switch (c) {
+        return CableBusTextures.checkTexture(switch (c) {
             case Black -> CableBusTextures.MESmart_Black.getIcon();
             case Blue -> CableBusTextures.MESmart_Blue.getIcon();
             case Brown -> CableBusTextures.MESmart_Brown.getIcon();
@@ -729,16 +711,7 @@ public class PartCable extends AEBasePart implements IPartCable {
                 final AEColoredItemDefinition smartCable = AEApi.instance().definitions().parts().cableSmart();
                 yield smartCable.stack(AEColor.Transparent, 1).getIconIndex();
             }
-        };
-
-        if (val == null) {
-            val = CableBusTextures.getMissing();
-        }
-
-        // this can't be null
-        assert val != null;
-
-        return val;
+        });
     }
 
     @SideOnly(Side.CLIENT)

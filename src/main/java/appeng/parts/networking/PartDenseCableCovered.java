@@ -138,7 +138,8 @@ public class PartDenseCableCovered extends PartCable {
     @Override
     public IIcon getTexture(final AEColor c) {
         if (c == AEColor.Transparent) {
-            return AEApi.instance().definitions().parts().cableCovered().stack(AEColor.Transparent, 1).getIconIndex();
+            return CableBusTextures.checkTexture(
+                    AEApi.instance().definitions().parts().cableCovered().stack(AEColor.Transparent, 1).getIconIndex());
         }
 
         return this.getCoveredTexture(c);
@@ -256,59 +257,25 @@ public class PartDenseCableCovered extends PartCable {
     }
 
     protected IIcon getDenseCoveredTexture(final AEColor c) {
-        switch (c) {
-            case Black -> {
-                return CableBusTextures.MEDenseCovered_Black.getIcon();
-            }
-            case Blue -> {
-                return CableBusTextures.MEDenseCovered_Blue.getIcon();
-            }
-            case Brown -> {
-                return CableBusTextures.MEDenseCovered_Brown.getIcon();
-            }
-            case Cyan -> {
-                return CableBusTextures.MEDenseCovered_Cyan.getIcon();
-            }
-            case Gray -> {
-                return CableBusTextures.MEDenseCovered_Gray.getIcon();
-            }
-            case Green -> {
-                return CableBusTextures.MEDenseCovered_Green.getIcon();
-            }
-            case LightBlue -> {
-                return CableBusTextures.MEDenseCovered_LightBlue.getIcon();
-            }
-            case LightGray -> {
-                return CableBusTextures.MEDenseCovered_LightGrey.getIcon();
-            }
-            case Lime -> {
-                return CableBusTextures.MEDenseCovered_Lime.getIcon();
-            }
-            case Magenta -> {
-                return CableBusTextures.MEDenseCovered_Magenta.getIcon();
-            }
-            case Orange -> {
-                return CableBusTextures.MEDenseCovered_Orange.getIcon();
-            }
-            case Pink -> {
-                return CableBusTextures.MEDenseCovered_Pink.getIcon();
-            }
-            case Purple -> {
-                return CableBusTextures.MEDenseCovered_Purple.getIcon();
-            }
-            case Red -> {
-                return CableBusTextures.MEDenseCovered_Red.getIcon();
-            }
-            case White -> {
-                return CableBusTextures.MEDenseCovered_White.getIcon();
-            }
-            case Yellow -> {
-                return CableBusTextures.MEDenseCovered_Yellow.getIcon();
-            }
-            default -> {}
-        }
-
-        return this.getItemStack().getIconIndex();
+        return CableBusTextures.checkTexture(switch (c) {
+            case Black -> CableBusTextures.MEDenseCovered_Black.getIcon();
+            case Blue -> CableBusTextures.MEDenseCovered_Blue.getIcon();
+            case Brown -> CableBusTextures.MEDenseCovered_Brown.getIcon();
+            case Cyan -> CableBusTextures.MEDenseCovered_Cyan.getIcon();
+            case Gray -> CableBusTextures.MEDenseCovered_Gray.getIcon();
+            case Green -> CableBusTextures.MEDenseCovered_Green.getIcon();
+            case LightBlue -> CableBusTextures.MEDenseCovered_LightBlue.getIcon();
+            case LightGray -> CableBusTextures.MEDenseCovered_LightGrey.getIcon();
+            case Lime -> CableBusTextures.MEDenseCovered_Lime.getIcon();
+            case Magenta -> CableBusTextures.MEDenseCovered_Magenta.getIcon();
+            case Orange -> CableBusTextures.MEDenseCovered_Orange.getIcon();
+            case Pink -> CableBusTextures.MEDenseCovered_Pink.getIcon();
+            case Purple -> CableBusTextures.MEDenseCovered_Purple.getIcon();
+            case Red -> CableBusTextures.MEDenseCovered_Red.getIcon();
+            case White -> CableBusTextures.MEDenseCovered_White.getIcon();
+            case Yellow -> CableBusTextures.MEDenseCovered_Yellow.getIcon();
+            default -> this.getItemStack().getIconIndex();
+        });
     }
 
     private boolean isDense(final ForgeDirection of) {
