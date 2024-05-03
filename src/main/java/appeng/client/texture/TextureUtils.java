@@ -30,8 +30,10 @@ public class TextureUtils {
         return val;
     }
 
-    private static TextureAtlasSprite missingBlockTexture = null;
-    private static TextureAtlasSprite missingItemTexture = null;
+    @SideOnly(Side.CLIENT)
+    private static TextureAtlasSprite missingBlockTexture;
+    @SideOnly(Side.CLIENT)
+    private static TextureAtlasSprite missingItemTexture;
 
     @SideOnly(Side.CLIENT)
     public static IIcon getMissingBlock() {
