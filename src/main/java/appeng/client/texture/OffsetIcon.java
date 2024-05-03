@@ -22,7 +22,8 @@ public class OffsetIcon implements IIcon {
 
     private final IIcon p;
 
-    public OffsetIcon(final IIcon o, final float x, final float y) {
+    public OffsetIcon(IIcon o, final float x, final float y) {
+        o = TextureUtils.checkTexture(o);
         if (o == null) {
             throw new IllegalArgumentException("Cannot create a wrapper icon with a null icon.");
         }

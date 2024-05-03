@@ -11,8 +11,6 @@
 package appeng.client.texture;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.IIcon;
 
 import cpw.mods.fml.relauncher.Side;
@@ -33,9 +31,7 @@ public class MissingIcon implements IIcon {
 
     @SideOnly(Side.CLIENT)
     private IIcon getMissing() {
-        return ((TextureMap) Minecraft.getMinecraft().getTextureManager()
-                .getTexture(this.isBlock ? TextureMap.locationBlocksTexture : TextureMap.locationItemsTexture))
-                        .getAtlasSprite("missingno");
+        return isBlock ? TextureUtils.getMissingBlock() : TextureUtils.getMissingItem();
     }
 
     @Override

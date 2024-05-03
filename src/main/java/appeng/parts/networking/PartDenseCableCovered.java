@@ -37,6 +37,7 @@ import appeng.block.AEBaseBlock;
 import appeng.client.texture.CableBusTextures;
 import appeng.client.texture.FlippableIcon;
 import appeng.client.texture.OffsetIcon;
+import appeng.client.texture.TextureUtils;
 import appeng.helpers.Reflected;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
@@ -138,7 +139,7 @@ public class PartDenseCableCovered extends PartCable {
     @Override
     public IIcon getTexture(final AEColor c) {
         if (c == AEColor.Transparent) {
-            return CableBusTextures.checkTexture(
+            return TextureUtils.checkTexture(
                     AEApi.instance().definitions().parts().cableCovered().stack(AEColor.Transparent, 1).getIconIndex());
         }
 
@@ -257,7 +258,7 @@ public class PartDenseCableCovered extends PartCable {
     }
 
     protected IIcon getDenseCoveredTexture(final AEColor c) {
-        return CableBusTextures.checkTexture(switch (c) {
+        return TextureUtils.checkTexture(switch (c) {
             case Black -> CableBusTextures.MEDenseCovered_Black.getIcon();
             case Blue -> CableBusTextures.MEDenseCovered_Blue.getIcon();
             case Brown -> CableBusTextures.MEDenseCovered_Brown.getIcon();

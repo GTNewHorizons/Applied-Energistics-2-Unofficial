@@ -19,7 +19,8 @@ public class FullIcon implements IIcon {
 
     private final IIcon p;
 
-    public FullIcon(final IIcon o) {
+    public FullIcon(IIcon o) {
+        o = TextureUtils.checkTexture(o);
         if (o == null) {
             throw new IllegalArgumentException("Cannot create a wrapper icon with a null icon.");
         }

@@ -45,6 +45,7 @@ import appeng.block.AEBaseBlock;
 import appeng.client.texture.CableBusTextures;
 import appeng.client.texture.FlippableIcon;
 import appeng.client.texture.TaughtIcon;
+import appeng.client.texture.TextureUtils;
 import appeng.items.parts.ItemMultiPart;
 import appeng.me.GridAccessException;
 import appeng.parts.AEBasePart;
@@ -206,7 +207,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     }
 
     public IIcon getGlassTexture(final AEColor c) {
-        return CableBusTextures.checkTexture(switch (c) {
+        return TextureUtils.checkTexture(switch (c) {
             case Black -> CableBusTextures.MECable_Black.getIcon();
             case Blue -> CableBusTextures.MECable_Blue.getIcon();
             case Brown -> CableBusTextures.MECable_Brown.getIcon();
@@ -451,7 +452,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     }
 
     public IIcon getCoveredTexture(final AEColor c) {
-        return CableBusTextures.checkTexture(switch (c) {
+        return TextureUtils.checkTexture(switch (c) {
             case Black -> CableBusTextures.MECovered_Black.getIcon();
             case Blue -> CableBusTextures.MECovered_Blue.getIcon();
             case Brown -> CableBusTextures.MECovered_Brown.getIcon();
@@ -690,7 +691,7 @@ public class PartCable extends AEBasePart implements IPartCable {
     }
 
     IIcon getSmartTexture(final AEColor c) {
-        return CableBusTextures.checkTexture(switch (c) {
+        return TextureUtils.checkTexture(switch (c) {
             case Black -> CableBusTextures.MESmart_Black.getIcon();
             case Blue -> CableBusTextures.MESmart_Blue.getIcon();
             case Brown -> CableBusTextures.MESmart_Brown.getIcon();

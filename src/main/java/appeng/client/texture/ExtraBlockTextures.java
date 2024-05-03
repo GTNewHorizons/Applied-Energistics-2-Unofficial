@@ -10,7 +10,6 @@
 
 package appeng.client.texture;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
@@ -167,8 +166,7 @@ public enum ExtraBlockTextures {
 
     @SideOnly(Side.CLIENT)
     public static IIcon getMissing() {
-        return ((TextureMap) Minecraft.getMinecraft().getTextureManager().getTexture(TextureMap.locationBlocksTexture))
-                .getAtlasSprite("missingno");
+        return TextureUtils.getMissingBlock();
     }
 
     public String getName() {

@@ -8,6 +8,7 @@ import appeng.api.networking.GridFlags;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.client.texture.CableBusTextures;
+import appeng.client.texture.TextureUtils;
 import appeng.helpers.Reflected;
 
 public class PartUltraDenseCableCovered extends PartDenseCableCovered {
@@ -26,7 +27,7 @@ public class PartUltraDenseCableCovered extends PartDenseCableCovered {
     @Override
     public IIcon getTexture(final AEColor c) {
         if (c == AEColor.Transparent) {
-            return CableBusTextures.checkTexture(
+            return TextureUtils.checkTexture(
                     AEApi.instance().definitions().parts().cableUltraDenseCovered().stack(AEColor.Transparent, 1)
                             .getIconIndex());
         }
@@ -36,7 +37,7 @@ public class PartUltraDenseCableCovered extends PartDenseCableCovered {
 
     @Override
     protected IIcon getDenseCoveredTexture(final AEColor c) {
-        return CableBusTextures.checkTexture(switch (c) {
+        return TextureUtils.checkTexture(switch (c) {
             case Black -> CableBusTextures.MEUltraDenseCovered_Black.getIcon();
             case Blue -> CableBusTextures.MEUltraDenseCovered_Blue.getIcon();
             case Brown -> CableBusTextures.MEUltraDenseCovered_Brown.getIcon();

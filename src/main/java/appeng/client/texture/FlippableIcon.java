@@ -20,7 +20,8 @@ public class FlippableIcon implements IIcon {
     private boolean flip_u;
     private boolean flip_v;
 
-    public FlippableIcon(final IIcon o) {
+    public FlippableIcon(IIcon o) {
+        o = TextureUtils.checkTexture(o);
         if (o == null) {
             throw new IllegalArgumentException("Cannot create a wrapper icon with a null icon.");
         }

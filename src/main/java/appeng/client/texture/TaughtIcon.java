@@ -21,7 +21,8 @@ public class TaughtIcon implements IIcon {
 
     private final IIcon icon;
 
-    public TaughtIcon(final IIcon icon, final float tightness) {
+    public TaughtIcon(IIcon icon, final float tightness) {
+        icon = TextureUtils.checkTexture(icon);
         if (icon == null) {
             throw new IllegalArgumentException("Cannot create a wrapper icon with a null icon.");
         }
