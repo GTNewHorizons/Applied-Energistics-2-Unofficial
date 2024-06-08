@@ -30,7 +30,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
@@ -843,17 +846,23 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     if (player != null) {
                         final IAEItemStack missingStack = e.getMissing();
                         String missingName = "?";
+                        IChatComponent missingDisplayName = new ChatComponentText("?");
                         long missingCount = -1;
                         if (missingStack != null && missingStack.getItem() != null) {
-                            missingName = missingStack.getItem().getUnlocalizedName(missingStack.getItemStack());
+                            missingName = missingStack.getItemStack().getUnlocalizedName();
+                            if (StatCollector.canTranslate(missingName + ".name")
+                                    && StatCollector.translateToLocal(missingName + ".name")
+                                            .equals(missingStack.getItemStack().getDisplayName()))
+                                missingDisplayName = new ChatComponentTranslation(missingName + ".name");
+                            else missingDisplayName = new ChatComponentText(
+                                    missingStack.getItemStack().getDisplayName());
                             missingCount = missingStack.getStackSize();
                         }
                         player.addChatMessage(
                                 new ChatComponentTranslation(
                                         PlayerMessages.CraftingItemsWentMissing.getName(),
                                         missingCount,
-                                        missingName).appendText(" (")
-                                                .appendSibling(new ChatComponentTranslation(missingName + ".name"))
+                                        missingName).appendText(" (").appendSibling(missingDisplayName)
                                                 .appendText(")"));
                     }
                 } catch (Exception ex) {
