@@ -252,6 +252,7 @@ gui.appliedenergistics2.ToCraftRequests=Steps
 gui.appliedenergistics2.CraftingPlan=Crafting Plan
 gui.appliedenergistics2.Automatic=Automatic
 gui.appliedenergistics2.Start=Start
+gui.appliedenergistics2.Merge=Merge
 gui.appliedenergistics2.Missing=Missing
 gui.appliedenergistics2.NoCraftingTreeReceived=No crafting tree received
 gui.appliedenergistics2.CraftingStepLimitExceeded=Crafting step limit exceeded

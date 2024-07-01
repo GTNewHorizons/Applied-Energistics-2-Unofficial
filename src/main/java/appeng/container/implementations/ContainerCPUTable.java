@@ -90,6 +90,15 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
 
         // Select a suitable CPU if none is selected
         if (selectedCpuSerial == -1) {
+            // Default CPU selection prefers busy CPU if job can be merged
+            if (!preferBusyCPUs) {
+                for (CraftingCPUStatus c : cpus) {
+                    if (c.isBusy() && cpuFilter.test(c)) {
+                        selectCPU(c.getSerial());
+                        return;
+                    }
+                }
+            }
             // Try preferred CPUs first
             for (CraftingCPUStatus cpu : cpus) {
                 if (preferBusyCPUs == cpu.isBusy() && cpuFilter.test(cpu)) {

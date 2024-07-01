@@ -3,6 +3,7 @@ package appeng.client.gui.widgets;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.function.Predicate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -25,6 +26,7 @@ public class GuiCraftingCPUTable {
 
     private final AEBaseGui parent;
     private final ContainerCPUTable container;
+    private final Predicate<CraftingCPUStatus> jobMergeable;
 
     public static final int CPU_TABLE_WIDTH = 94;
     public static int CPU_TABLE_HEIGHT = 164;
@@ -38,9 +40,11 @@ public class GuiCraftingCPUTable {
 
     private String selectedCPUName = "";
 
-    public GuiCraftingCPUTable(AEBaseGui parent, ContainerCPUTable container) {
+    public GuiCraftingCPUTable(AEBaseGui parent, ContainerCPUTable container,
+            Predicate<CraftingCPUStatus> jobMergeable) {
         this.parent = parent;
         this.container = container;
+        this.jobMergeable = jobMergeable;
         this.cpuScrollbar = new GuiScrollbar();
         this.cpuScrollbar.setLeft(-16);
         this.cpuScrollbar.setTop(19);
@@ -96,6 +100,8 @@ public class GuiCraftingCPUTable {
                 if (cpu.getSerial() == selectedCpuSerial) {
                     if (!container.getCpuFilter().test(cpu)) {
                         GL11.glColor4f(1.0F, 0.25F, 0.25F, 1.0F);
+                    } else if (jobMergeable.test(cpu)) {
+                        GL11.glColor4f(1.0F, 1.0F, 0.25F, 1.0F);
                     } else {
                         GL11.glColor4f(0.0F, 0.8352F, 1.0F, 1.0F);
                     }
@@ -103,6 +109,8 @@ public class GuiCraftingCPUTable {
                     GL11.glColor4f(0.65F, 0.9F, 1.0F, 1.0F);
                 } else if (!container.getCpuFilter().test(cpu)) {
                     GL11.glColor4f(0.9F, 0.65F, 0.65F, 1.0F);
+                } else if (jobMergeable.test(cpu)) {
+                    GL11.glColor4f(1.0F, 1.0F, 0.7F, 1.0F);
                 } else {
                     GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                 }
@@ -194,7 +202,14 @@ public class GuiCraftingCPUTable {
                 tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getTotalItems()));
                 tooltip.append('\n');
             }
-            if (hoveredCpu.getStorage() > 0) {
+            if (hoveredCpu.getUsedStorage() > 0) {
+                tooltip.append(GuiText.BytesUsed.getLocal());
+                tooltip.append(": ");
+                tooltip.append(hoveredCpu.formatUsedStorage());
+                tooltip.append(" / ");
+                tooltip.append(hoveredCpu.formatStorage());
+                tooltip.append('\n');
+            } else if (hoveredCpu.getStorage() > 0) {
                 tooltip.append(GuiText.Bytes.getLocal());
                 tooltip.append(": ");
                 tooltip.append(hoveredCpu.formatStorage());
@@ -314,7 +329,13 @@ public class GuiCraftingCPUTable {
         for (int i = 0; i < cpus.size(); i++) {
             next = next % cpus.size();
             CraftingCPUStatus cpu = cpus.get(next);
-            if (cpu.isBusy() == preferBusy && container.getCpuFilter().test(cpu)) {
+            if (preferBusy) {
+                // If viewing crafting status, pick next busy CPU (subject to filter)
+                if (cpu.isBusy() && container.getCpuFilter().test(cpu)) {
+                    break;
+                }
+            } else if (container.getCpuFilter().test(cpu)) {
+                // If viewing crafting confirmation, pick next compatible CPU
                 break;
             } else {
                 next += next_increment;

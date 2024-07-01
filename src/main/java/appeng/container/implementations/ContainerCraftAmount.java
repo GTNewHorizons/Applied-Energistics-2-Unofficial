@@ -76,5 +76,8 @@ public class ContainerCraftAmount extends AEBaseContainer {
 
     public void openConfirmationGUI(EntityPlayer player, TileEntity te) {
         Platform.openGUI(player, te, this.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_CONFIRM);
+        if (player.openContainer instanceof ContainerCraftConfirm ccc) {
+            ccc.setItemToCraft(this.itemToCreate);
+        }
     }
 }

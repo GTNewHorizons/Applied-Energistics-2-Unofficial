@@ -507,7 +507,11 @@ public class CraftingGridCache
         if (target == null) {
             final List<CraftingCPUCluster> validCpusClusters = new ArrayList<>();
             for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
-                if (cpu.isActive() && !cpu.isBusy() && cpu.getAvailableStorage() >= job.getByteTotal()) {
+                if (cpu.isActive() && cpu.isBusy()
+                        && job.getOutput().isSameType(cpu.getFinalOutput())
+                        && cpu.getAvailableStorage() >= cpu.getUsedStorage() + job.getByteTotal()) {
+                    validCpusClusters.add(cpu);
+                } else if (cpu.isActive() && !cpu.isBusy() && cpu.getAvailableStorage() >= job.getByteTotal()) {
                     validCpusClusters.add(cpu);
                 }
             }
@@ -525,6 +529,9 @@ public class CraftingGridCache
 
                 @Override
                 public int compare(final CraftingCPUCluster firstCluster, final CraftingCPUCluster nextCluster) {
+                    if (firstCluster.isBusy() != nextCluster.isBusy()) {
+                        return Boolean.compare(nextCluster.isBusy(), firstCluster.isBusy());
+                    }
                     if (prioritizePower) return compareInternal(firstCluster, nextCluster);
                     else return compareInternal(nextCluster, firstCluster);
                 }
