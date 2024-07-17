@@ -172,7 +172,7 @@ public final class ApiItems implements IItems {
         this.cellSingularity = constructor.registerItemDefinition(
                 new ItemExtremeStorageCell("Singularity", Long.MAX_VALUE / 16, 1, 4096, 15000D));
         this.cellUniverse = constructor.registerItemDefinition(
-            new ItemExtremeStorageCell("Universe", Long.MAX_VALUE / 16, 63, 16384, 600000D));
+                new ItemExtremeStorageCell("Universe", Long.MAX_VALUE / 16, 63, 16384, 600000D));
 
         this.spatialCell2 = constructor.registerItemDefinition(new ItemSpatialStorageCell(2));
         this.spatialCell16 = constructor.registerItemDefinition(new ItemSpatialStorageCell(16));
