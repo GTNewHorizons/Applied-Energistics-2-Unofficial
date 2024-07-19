@@ -42,4 +42,9 @@ public interface IChestOrDrive extends ICellContainer, IGridHost, IOrientable {
      * @return if the device is online you should check this before providing any other information.
      */
     boolean isPowered();
+
+    @Deprecated
+    default boolean isCellBlinking(int slot) {
+        return false;
+    }
 }
