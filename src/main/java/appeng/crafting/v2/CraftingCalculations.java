@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.ToLongBiFunction;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.Level;
 
 import appeng.api.storage.data.IAEFluidStack;
@@ -18,18 +19,15 @@ import appeng.crafting.v2.resolvers.EmitableItemResolver;
 import appeng.crafting.v2.resolvers.ExtractItemResolver;
 import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver;
 import appeng.crafting.v2.resolvers.SimulateMissingItemResolver;
+import it.unimi.dsi.fastutil.objects.Object2ObjectArrayMap;
 
 /**
  * You can register additional crafting handlers here
  */
 public class CraftingCalculations {
 
-    private static final FastToIterateArrayBasedMultiMap<Class<? extends IAEStack<?>>, CraftingRequestResolver<?>> providers = new FastToIterateArrayBasedMultiMap<>(
-            Class.class,
-            CraftingRequestResolver.class);
-    private static final FastToIterateArrayBasedMultiMap<Class<? extends IAEStack<?>>, ToLongBiFunction<CraftingRequest<?>, Long>> byteAmountAdjusters = new FastToIterateArrayBasedMultiMap<>(
-            Class.class,
-            ToLongBiFunction.class);
+    private static final InternalMultiMap<Class<? extends IAEStack<?>>, CraftingRequestResolver<?>> providers = new InternalMultiMap<>();
+    private static final InternalMultiMap<Class<? extends IAEStack<?>>, ToLongBiFunction<CraftingRequest<?>, Long>> byteAmountAdjusters = new InternalMultiMap<>();
 
     /**
      * @param provider       A custom resolver that can provide potential solutions ({@link CraftingTask}) to crafting
@@ -39,7 +37,9 @@ public class CraftingCalculations {
      */
     public static <StackType extends IAEStack<StackType>> void registerProvider(
             CraftingRequestResolver<StackType> provider, Class<StackType> stackTypeClass) {
-        providers.put(stackTypeClass, provider);
+        providers.compute(
+                stackTypeClass,
+                (k, v) -> ArrayUtils.add(v == null ? new CraftingRequestResolver[0] : v, provider));
     }
 
     /**
@@ -50,7 +50,11 @@ public class CraftingCalculations {
      */
     public static <StackType extends IAEStack<StackType>> void registerByteAmountAdjuster(
             ToLongBiFunction<CraftingRequest<StackType>, Long> adjuster, Class<StackType> stackTypeClass) {
-        byteAmountAdjusters.put(stackTypeClass, (ToLongBiFunction<CraftingRequest<?>, Long>) (Object) adjuster);
+        byteAmountAdjusters.compute(
+                stackTypeClass,
+                (k, v) -> ArrayUtils.add(
+                        v == null ? new ToLongBiFunction[0] : v,
+                        (ToLongBiFunction<CraftingRequest<?>, Long>) (Object) adjuster));
     }
 
     @SuppressWarnings("unchecked")
@@ -58,10 +62,10 @@ public class CraftingCalculations {
             CraftingRequest<StackType> request, CraftingContext context) {
         final ArrayList<CraftingTask> allTasks = new ArrayList<>(4);
 
-        Class<? extends IAEStack<?>>[] keyArray = providers.keyArray();
-        int size = keyArray.length;
+        final Object[] keyArray = providers.keysArray();
+        final int size = keyArray.length;
         for (int i = 0; i < size; i++) {
-            Class<? extends IAEStack<?>> aClass = keyArray[i];
+            Class<? extends IAEStack<?>> aClass = (Class<? extends IAEStack<?>>) keyArray[i];
             if (aClass == null) {
                 // We never remove from the providers map, therefore the key array will never have holes, allowing us
                 // to exit early here
@@ -73,11 +77,6 @@ public class CraftingCalculations {
             }
 
             for (CraftingRequestResolver<?> resolver : providers.valuesArrayAt(i)) {
-                if (resolver == null) {
-                    // See comment on break above
-                    break;
-                }
-
                 try {
                     // Safety: Filtered by type using isAssignableFrom on the keys
                     final CraftingRequestResolver<StackType> provider = (CraftingRequestResolver<StackType>) resolver;
@@ -99,13 +98,14 @@ public class CraftingCalculations {
 
     public static <StackType extends IAEStack<StackType>> long adjustByteCost(CraftingRequest<StackType> request,
             long byteCost) {
-        Class<? extends IAEStack<?>>[] keyArray = byteAmountAdjusters.keyArray();
-        int size = keyArray.length;
+        final Object[] keyArray = byteAmountAdjusters.keysArray();
+        final int size = keyArray.length;
         for (int i = 0; i < size; i++) {
-            Class<? extends IAEStack<?>> aClass = keyArray[i];
+            Class<? extends IAEStack<?>> aClass = (Class<? extends IAEStack<?>>) keyArray[i];
             if (aClass == null) {
                 // We never remove from the byteAmountAdjusters map, therefore the key array will never have holes,
-                // allowing us to exit early here
+                // allowing us
+                // to exit early here
                 break;
             }
 
@@ -114,11 +114,6 @@ public class CraftingCalculations {
             }
 
             for (ToLongBiFunction<CraftingRequest<?>, Long> value : byteAmountAdjusters.valuesArrayAt(i)) {
-                if (value == null) {
-                    // See comment on break above
-                    break;
-                }
-
                 final ToLongBiFunction<CraftingRequest<StackType>, Long> adjuster = (ToLongBiFunction<CraftingRequest<StackType>, Long>) (Object) value;
                 byteCost = adjuster.applyAsLong(request, byteCost);
             }
@@ -134,5 +129,28 @@ public class CraftingCalculations {
         registerProvider(new EmitableItemResolver(), IAEItemStack.class);
         registerProvider(new CraftableItemResolver(), IAEItemStack.class);
         registerProvider(new IgnoreMissingItemResolver(), IAEItemStack.class);
+    }
+
+    private static final class InternalMultiMap<K, V> extends Object2ObjectArrayMap<K, V[]> {
+
+        public Object[] keysArray() {
+            return this.key;
+        }
+
+        public V[] valuesArrayAt(int index) {
+            // NOTE: Returning a V[] is only safe because registerProvider and registerByteAmountAdjuster create typed
+            // arrays when inserting values
+            return (V[]) this.value[index];
+        }
+
+        @Override
+        public boolean remove(Object key, Object value) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public V[] remove(Object k) {
+            throw new UnsupportedOperationException();
+        }
     }
 }
