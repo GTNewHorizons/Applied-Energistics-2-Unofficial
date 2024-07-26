@@ -522,9 +522,6 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
     }
 
     @Override
-    public void blinkCell(final int slot) {}
-
-    @Override
     @Method(iname = IntegrationType.BuildCraftTransport)
     public ConnectOverride overridePipeConnection(final PipeType type, final ForgeDirection with) {
         return type == PipeType.ITEM && with == this.getSide() ? ConnectOverride.CONNECT : ConnectOverride.DISCONNECT;

@@ -54,6 +54,9 @@ import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.networking.storage.IStorageGrid;
+import appeng.api.networking.ticking.IGridTickable;
+import appeng.api.networking.ticking.TickRateModulation;
+import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.ICellWorkbenchItem;
@@ -85,8 +88,8 @@ import appeng.util.Platform;
 import appeng.util.item.AEFluidStack;
 import io.netty.buffer.ByteBuf;
 
-public class TileChest extends AENetworkPowerTile
-        implements IMEChest, IFluidHandler, ITerminalHost, IPriorityHost, IConfigManagerHost, IColorableTile {
+public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHandler, ITerminalHost, IPriorityHost,
+        IConfigManagerHost, IColorableTile, IGridTickable {
 
     private static final ChestNoHandler NO_HANDLER = new ChestNoHandler();
     private static final int[] SIDES = { 0 };
@@ -96,8 +99,11 @@ public class TileChest extends AENetworkPowerTile
     private final BaseActionSource mySrc = new MachineSource(this);
     private final IConfigManager config = new ConfigManager(this);
     private ItemStack storageType;
-    private long lastStateChange = 0;
     private int priority = 0;
+    /**
+     * Bit mask representing the state of the cell and the active status of the chest. The lower 2 bits represent the
+     * state of the cell, the 3rd bit represents the active status of the chest.
+     */
     private int state = 0;
     private boolean wasActive = false;
     private AEColor paintedColor = AEColor.Transparent;
@@ -135,16 +141,14 @@ public class TileChest extends AENetworkPowerTile
     }
 
     private void recalculateDisplay() {
-        final int oldState = this.state;
+        int newState = 0;
 
         for (int x = 0; x < this.getCellCount(); x++) {
-            this.state |= (this.getCellStatus(x) << (3 * x));
+            newState |= (this.getCellStatus(x) << (2 * x));
         }
 
         if (this.isPowered()) {
-            this.state |= 0x40;
-        } else {
-            this.state &= ~0x40;
+            newState |= 0b100;
         }
 
         final boolean currentActive = this.getProxy().isActive();
@@ -157,9 +161,21 @@ public class TileChest extends AENetworkPowerTile
             }
         }
 
-        if (oldState != this.state) {
+        if (newState != this.state) {
             this.markForUpdate();
+            this.state = newState;
         }
+    }
+
+    @Override
+    public TickingRequest getTickingRequest(IGridNode node) {
+        return new TickingRequest(15, 15, false, false);
+    }
+
+    @Override
+    public TickRateModulation tickingRequest(IGridNode node, int ticksSinceLastCall) {
+        this.recalculateDisplay();
+        return TickRateModulation.SAME;
     }
 
     @Override
@@ -242,7 +258,7 @@ public class TileChest extends AENetworkPowerTile
     @Override
     public int getCellStatus(final int slot) {
         if (Platform.isClient()) {
-            return (this.state >> (slot * 3)) & 3;
+            return (this.state >> (slot * 2)) & 0b11;
         }
 
         final ItemStack cell = this.inv.getStackInSlot(1);
@@ -270,7 +286,7 @@ public class TileChest extends AENetworkPowerTile
     @Override
     public boolean isPowered() {
         if (Platform.isClient()) {
-            return (this.state & 0x40) == 0x40;
+            return (this.state & 0b100) == 0b100;
         }
 
         boolean gridPowered = this.getAECurrentPower() > 64;
@@ -282,16 +298,6 @@ public class TileChest extends AENetworkPowerTile
         }
 
         return super.getAECurrentPower() > 1 || gridPowered;
-    }
-
-    @Override
-    public boolean isCellBlinking(final int slot) {
-        final long now = this.worldObj.getTotalWorldTime();
-        if (now - this.lastStateChange > 8) {
-            return false;
-        }
-
-        return ((this.state >> (slot * 3 + 2)) & 0x01) == 0x01;
     }
 
     @Override
@@ -323,14 +329,14 @@ public class TileChest extends AENetworkPowerTile
         try {
             if (!this.getProxy().getEnergy().isNetworkPowered()) {
                 final double powerUsed = this.extractAEPower(idleUsage, Actionable.MODULATE, PowerMultiplier.CONFIG); // drain
-                if (powerUsed + 0.1 >= idleUsage != (this.state & 0x40) > 0) {
+                if (powerUsed + 0.1 >= idleUsage != (this.state & 0b100) > 0) {
                     this.recalculateDisplay();
                 }
             }
         } catch (final GridAccessException e) {
             final double powerUsed = this
                     .extractAEPower(this.getProxy().getIdlePowerUsage(), Actionable.MODULATE, PowerMultiplier.CONFIG); // drain
-            if (powerUsed + 0.1 >= idleUsage != (this.state & 0x40) > 0) {
+            if (powerUsed + 0.1 >= idleUsage != (this.state & 0b100) > 0) {
                 this.recalculateDisplay();
             }
         }
@@ -342,22 +348,6 @@ public class TileChest extends AENetworkPowerTile
 
     @TileEvent(TileEventType.NETWORK_WRITE)
     public void writeToStream_TileChest(final ByteBuf data) {
-        if (this.worldObj.getTotalWorldTime() - this.lastStateChange > 8) {
-            this.state = 0;
-        } else {
-            this.state &= 0x24924924; // just keep the blinks...
-        }
-
-        for (int x = 0; x < this.getCellCount(); x++) {
-            this.state |= (this.getCellStatus(x) << (3 * x));
-        }
-
-        if (this.isPowered()) {
-            this.state |= 0x40;
-        } else {
-            this.state &= ~0x40;
-        }
-
         data.writeByte(this.state);
         data.writeByte(this.paintedColor.ordinal());
 
@@ -375,7 +365,7 @@ public class TileChest extends AENetworkPowerTile
         final int oldState = this.state;
         final ItemStack oldType = this.storageType;
 
-        this.state = data.readByte();
+        this.state = data.readByte() & 0b111;
         final AEColor oldPaintedColor = this.paintedColor;
         this.paintedColor = AEColor.values()[data.readByte()];
 
@@ -387,9 +377,7 @@ public class TileChest extends AENetworkPowerTile
             this.storageType = new ItemStack(Item.getItemById(item & 0xffff), 1, item >> Platform.DEF_OFFSET);
         }
 
-        this.lastStateChange = this.worldObj.getTotalWorldTime();
-
-        return oldPaintedColor != this.paintedColor || (this.state & 0xDB6DB6DB) != (oldState & 0xDB6DB6DB)
+        return oldPaintedColor != this.paintedColor || this.state != oldState
                 || !Platform.isSameItemPrecise(oldType, this.storageType);
     }
 
@@ -562,19 +550,6 @@ public class TileChest extends AENetworkPowerTile
         } catch (final GridAccessException e) {
             // :P
         }
-    }
-
-    @Override
-    public void blinkCell(final int slot) {
-        final long now = this.worldObj.getTotalWorldTime();
-        if (now - this.lastStateChange > 8) {
-            this.state = 0;
-        }
-        this.lastStateChange = now;
-
-        this.state |= 1 << (slot * 3 + 2);
-
-        this.recalculateDisplay();
     }
 
     @Override
@@ -772,7 +747,7 @@ public class TileChest extends AENetworkPowerTile
                 // :(
             }
 
-            TileChest.this.blinkCell(0);
+            TileChest.this.recalculateDisplay();
         }
 
         @Override

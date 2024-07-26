@@ -400,11 +400,6 @@ public class PartFormationPlane extends PartUpgradeable
     }
 
     @Override
-    public void blinkCell(final int slot) {
-        // :P
-    }
-
-    @Override
     public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSource src) {
         if (this.blocked || input == null || input.getStackSize() <= 0) {
             return input;

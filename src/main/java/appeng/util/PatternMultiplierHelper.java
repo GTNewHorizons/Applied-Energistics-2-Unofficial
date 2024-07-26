@@ -78,7 +78,7 @@ public class PatternMultiplierHelper {
         for (int x = 0; x < inTag.tagCount(); x++) {
             final NBTTagCompound tag = inTag.getCompoundTagAt(x);
             if (tag.hasNoTags()) continue;
-            if (tag.hasKey("Count", 3)) {
+            if (tag.hasKey("Count")) {
                 tag.setInteger(
                         "Count",
                         isDividing ? tag.getInteger("Count") >> bitMultiplier
@@ -95,7 +95,7 @@ public class PatternMultiplierHelper {
         for (int x = 0; x < outTag.tagCount(); x++) {
             final NBTTagCompound tag = outTag.getCompoundTagAt(x);
             if (tag.hasNoTags()) continue;
-            if (tag.hasKey("Count", 3)) {
+            if (tag.hasKey("Count")) {
                 tag.setInteger(
                         "Count",
                         isDividing ? tag.getInteger("Count") >> bitMultiplier
