@@ -56,7 +56,7 @@ public class BlockChest extends AEBaseTileBlock {
             }
 
             if (GT_Utility.isStackInList(p.getHeldItem(), GregTech_API.sWireCutterList)) {
-                if (tg.lockCells()) {
+                if (tg.lockDigitalSingularityCells()) {
                     p.addChatMessage(PlayerMessages.ChestLocked.get());
                 }
                 return true;

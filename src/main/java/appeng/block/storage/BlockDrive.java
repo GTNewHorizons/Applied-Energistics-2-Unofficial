@@ -54,7 +54,7 @@ public class BlockDrive extends AEBaseTileBlock {
         if (tg != null) {
             if (Platform.isServer()) {
                 if (GT_Utility.isStackInList(p.getHeldItem(), GregTech_API.sWireCutterList)) {
-                    tg.lockCells();
+                    tg.lockDigitalSingularityCells();
                     p.addChatMessage(PlayerMessages.DriveLocked.get());
                     return true;
                 }

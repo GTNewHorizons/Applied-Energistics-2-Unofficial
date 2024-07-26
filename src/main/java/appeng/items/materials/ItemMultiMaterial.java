@@ -275,17 +275,22 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 
         if (player.isSneaking()) {
             final TileEntity te = world.getTileEntity(x, y, z);
-            if (te instanceof TileDrive drive) {
-                if (is != null && this.getType(is) == Upgrades.STICKY) {
-                    if (Platform.isServer()) {
-                        return drive.applyStickyToCells(player);
+            if (is != null && this.getType(is) == Upgrades.STICKY && Platform.isServer()) {
+                ItemStack hand = player.getHeldItem();
+                if (te instanceof TileDrive drive) {
+                    hand.stackSize = hand.stackSize - drive.applyStickyToDigitalSingularityCells(hand);
+                    player.inventory.setInventorySlotContents(
+                            player.inventory.currentItem,
+                            hand.stackSize == 0 ? null : hand);
+                    return true;
+                } else if(te instanceof TileChest chest) {
+                    if(chest.applyStickyToDigitalSingularityCells(hand) == 1) {
+                        hand.stackSize = hand.stackSize - 1;
+                        player.inventory.setInventorySlotContents(
+                                player.inventory.currentItem,
+                                hand.stackSize == 0 ? null : hand);
                     }
-                }
-            } else if (te instanceof TileChest chest) {
-                if (is != null && this.getType(is) == Upgrades.STICKY) {
-                    if (Platform.isServer()) {
-                        return chest.applyStickyToCells(player);
-                    }
+                    return true;
                 }
             }
             IInventory upgrades = null;

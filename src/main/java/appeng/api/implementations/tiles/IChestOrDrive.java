@@ -16,6 +16,7 @@ package appeng.api.implementations.tiles;
 import appeng.api.networking.IGridHost;
 import appeng.api.storage.ICellContainer;
 import appeng.api.util.IOrientable;
+import net.minecraft.item.ItemStack;
 
 public interface IChestOrDrive extends ICellContainer, IGridHost, IOrientable {
 
@@ -48,4 +49,8 @@ public interface IChestOrDrive extends ICellContainer, IGridHost, IOrientable {
      * @return is the cell currently blinking to show activity.
      */
     boolean isCellBlinking(int slot);
+
+    boolean lockDigitalSingularityCells();
+
+    int applyStickyToDigitalSingularityCells(ItemStack cards);
 }

@@ -10,16 +10,6 @@
 
 package appeng.tile.storage;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.common.util.ForgeDirection;
-
 import appeng.api.AEApi;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.tiles.IChestOrDrive;
@@ -37,6 +27,7 @@ import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.AECableType;
@@ -54,7 +45,16 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.item.ItemList;
+import com.google.common.base.Optional;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.ForgeDirection;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPriorityHost {
 
@@ -358,77 +358,89 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         this.worldObj.markTileEntityChunkModified(this.xCoord, this.yCoord, this.zCoord, this);
     }
 
-    public void lockCells() {
-        int idx = 0;
-        for (ICellHandler cellHandler : this.handlersBySlot) {
-            final ItemStack cell = this.inv.getStackInSlot(idx);
+    public static void partitionDigitalSingularityCellToItemOnCell(ICellInventoryHandler handler) {
+        ICellInventory cellInventory = handler.getCellInv();
+        if (cellInventory != null) {
+            if (cellInventory.getStoredItemTypes() != 0) {
+                ItemStack partition = handler.getAvailableItems(new ItemList()).getFirstItem().getItemStack().copy();
+                partition.stackSize = 1;
+                cellInventory.getConfigInventory().setInventorySlotContents(
+                        0,
+                        partition);
+            }
+        }
+    }
+
+    public static boolean applyStickyCardToDigitalSingularityCell(ICellHandler cellHandler, ItemStack cell, ISaveProvider host, ICellWorkbenchItem cellItem) {
+        final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, host, StorageChannel.ITEMS);
+        if (inv instanceof ICellInventoryHandler handler) {
+            final ICellInventory cellInventory = handler.getCellInv();
+            if (cellInventory != null && cellInventory.getStoredItemTypes() == 1) {
+                IInventory cellUpgrades = cellItem.getUpgradesInventory(cell);
+                int freeSlot = -1;
+                for (int i = 0; i < cellUpgrades.getSizeInventory(); i++) {
+                    if (freeSlot == -1 && cellUpgrades.getStackInSlot(i) == null) {
+                        freeSlot = i;
+                        continue;
+                    } else if (cellUpgrades.getStackInSlot(i) == null) {
+                        continue;
+                    }
+                    if (ItemMultiMaterial.instance.getType(cellUpgrades.getStackInSlot(i)) == Upgrades.STICKY) {
+                        freeSlot = -1;
+                        break;
+                    }
+                }
+                if (freeSlot != -1) {
+                    Optional<ItemStack> stickyCard = AEApi.instance().definitions().materials().cardSticky().maybeStack(1);
+                    if(stickyCard.isPresent()) {
+                        cellUpgrades.setInventorySlotContents(freeSlot, stickyCard.get());
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean lockDigitalSingularityCells() {
+        boolean res = false;
+        for (int i = 0; i < this.handlersBySlot.length; i++) {
+            ICellHandler cellHandler = this.handlersBySlot[i];
+            final ItemStack cell = this.inv.getStackInSlot(i);
             if (cellHandler == null || cell == null
                     || !(cell.getItem() instanceof ItemExtremeStorageCell)
                     || (cell.getItem() instanceof ItemExtremeStorageCell exCell && exCell.getTotalTypes(cell) != 1)) {
-                idx++;
                 continue;
             }
             final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, StorageChannel.ITEMS);
             if (inv instanceof ICellInventoryHandler handler) {
-                final ICellInventory cellInventory = handler.getCellInv();
-                if (cellInventory != null) {
-                    if (cellInventory.getStoredItemTypes() != 0) {
-                        cellInventory.getConfigInventory().setInventorySlotContents(
-                                0,
-                                handler.getAvailableItems(new ItemList()).getFirstItem().getItemStack());
-                    }
-                }
+                partitionDigitalSingularityCellToItemOnCell(handler);
+                res = true;
             }
-            idx++;
         }
-
+        return res;
     }
 
-    public boolean applyStickyToCells(EntityPlayer p) {
-        int idx = 0;
-        for (ICellHandler cellHandler : this.handlersBySlot) {
-            ItemStack cell = this.inv.getStackInSlot(idx);
+    public int applyStickyToDigitalSingularityCells(ItemStack cards) {
+        int res = 0;
+        for (int i = 0; i < this.handlersBySlot.length; i++) {
+            ICellHandler cellHandler = this.handlersBySlot[i];
+            ItemStack cell = this.inv.getStackInSlot(i);
             if (cellHandler == null || cell == null
                     || !(cell.getItem() instanceof ItemExtremeStorageCell)
                     || (cell.getItem() instanceof ItemExtremeStorageCell exCell && exCell.getTotalTypes(cell) != 1)) {
-                idx++;
                 continue;
             }
-            if (cell.getItem() instanceof ICellWorkbenchItem cellItem) {
-                final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, StorageChannel.ITEMS);
-                if (inv instanceof ICellInventoryHandler handler) {
-                    final ICellInventory cellInventory = handler.getCellInv();
-                    if (cellInventory != null && cellInventory.getStoredItemTypes() != 0
-                            && cellInventory.getConfigInventory().getSizeInventory() != 0) {
-                        IInventory cellUpgrades = cellItem.getUpgradesInventory(cell);
-                        int freeSlot = -1;
-                        for (int i = 0; i < cellUpgrades.getSizeInventory(); i++) {
-                            if (freeSlot == -1 && cellUpgrades.getStackInSlot(i) == null) {
-                                freeSlot = i;
-                                continue;
-                            } else if (cellUpgrades.getStackInSlot(i) == null) {
-                                continue;
-                            }
-                            if (ItemMultiMaterial.instance.getType(cellUpgrades.getStackInSlot(i)) == Upgrades.STICKY) {
-                                freeSlot = -1;
-                                break;
-                            }
-                        }
-                        if (freeSlot != -1) {
-                            ItemStack stickyCard = p.getHeldItem().copy();
-                            stickyCard.stackSize = 1;
-                            cellUpgrades.setInventorySlotContents(freeSlot, stickyCard);
-                            ItemStack heldItemStack = p.getHeldItem();
-                            heldItemStack.stackSize--;
-                            p.inventory.setInventorySlotContents(
-                                    p.inventory.currentItem,
-                                    heldItemStack.stackSize == 0 ? null : heldItemStack);
-                        }
-                    }
+            if (cell.getItem() instanceof ICellWorkbenchItem cellItem && res + 1 <= cards.stackSize) {
+                if(applyStickyCardToDigitalSingularityCell(cellHandler, cell, this, cellItem)) {
+                    res++;
                 }
             }
-            idx++;
         }
-        return false;
+        try {
+            this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
+        } catch (final GridAccessException ignored) { }
+        return res;
     }
 }
