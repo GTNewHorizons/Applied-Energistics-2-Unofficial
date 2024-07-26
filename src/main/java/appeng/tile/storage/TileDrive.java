@@ -10,6 +10,17 @@
 
 package appeng.tile.storage;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.ForgeDirection;
+
+import com.google.common.base.Optional;
+
 import appeng.api.AEApi;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.tiles.IChestOrDrive;
@@ -45,16 +56,7 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.item.ItemList;
-import com.google.common.base.Optional;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.common.util.ForgeDirection;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
 public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPriorityHost {
 
@@ -364,14 +366,13 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
             if (cellInventory.getStoredItemTypes() != 0) {
                 ItemStack partition = handler.getAvailableItems(new ItemList()).getFirstItem().getItemStack().copy();
                 partition.stackSize = 1;
-                cellInventory.getConfigInventory().setInventorySlotContents(
-                        0,
-                        partition);
+                cellInventory.getConfigInventory().setInventorySlotContents(0, partition);
             }
         }
     }
 
-    public static boolean applyStickyCardToDigitalSingularityCell(ICellHandler cellHandler, ItemStack cell, ISaveProvider host, ICellWorkbenchItem cellItem) {
+    public static boolean applyStickyCardToDigitalSingularityCell(ICellHandler cellHandler, ItemStack cell,
+            ISaveProvider host, ICellWorkbenchItem cellItem) {
         final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, host, StorageChannel.ITEMS);
         if (inv instanceof ICellInventoryHandler handler) {
             final ICellInventory cellInventory = handler.getCellInv();
@@ -391,8 +392,9 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
                     }
                 }
                 if (freeSlot != -1) {
-                    Optional<ItemStack> stickyCard = AEApi.instance().definitions().materials().cardSticky().maybeStack(1);
-                    if(stickyCard.isPresent()) {
+                    Optional<ItemStack> stickyCard = AEApi.instance().definitions().materials().cardSticky()
+                            .maybeStack(1);
+                    if (stickyCard.isPresent()) {
                         cellUpgrades.setInventorySlotContents(freeSlot, stickyCard.get());
                         return true;
                     }
@@ -433,14 +435,14 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
                 continue;
             }
             if (cell.getItem() instanceof ICellWorkbenchItem cellItem && res + 1 <= cards.stackSize) {
-                if(applyStickyCardToDigitalSingularityCell(cellHandler, cell, this, cellItem)) {
+                if (applyStickyCardToDigitalSingularityCell(cellHandler, cell, this, cellItem)) {
                     res++;
                 }
             }
         }
         try {
             this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
-        } catch (final GridAccessException ignored) { }
+        } catch (final GridAccessException ignored) {}
         return res;
     }
 }

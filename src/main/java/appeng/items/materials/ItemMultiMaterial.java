@@ -279,12 +279,11 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
                 ItemStack hand = player.getHeldItem();
                 if (te instanceof TileDrive drive) {
                     hand.stackSize = hand.stackSize - drive.applyStickyToDigitalSingularityCells(hand);
-                    player.inventory.setInventorySlotContents(
-                            player.inventory.currentItem,
-                            hand.stackSize == 0 ? null : hand);
+                    player.inventory
+                            .setInventorySlotContents(player.inventory.currentItem, hand.stackSize == 0 ? null : hand);
                     return true;
-                } else if(te instanceof TileChest chest) {
-                    if(chest.applyStickyToDigitalSingularityCells(hand) == 1) {
+                } else if (te instanceof TileChest chest) {
+                    if (chest.applyStickyToDigitalSingularityCells(hand) == 1) {
                         hand.stackSize = hand.stackSize - 1;
                         player.inventory.setInventorySlotContents(
                                 player.inventory.currentItem,

@@ -724,14 +724,15 @@ public class TileChest extends AENetworkPowerTile
         ItemStack cell = this.inv.getStackInSlot(1);
         if (cellHandler == null || cell == null
                 || !(cell.getItem() instanceof ItemExtremeStorageCell)
-                || (cell.getItem() instanceof ItemExtremeStorageCell exCell && exCell.getTotalTypes(cell) != 1) && cards.stackSize != 0) {
+                || (cell.getItem() instanceof ItemExtremeStorageCell exCell && exCell.getTotalTypes(cell) != 1)
+                        && cards.stackSize != 0) {
             return 0;
         }
         if (cell.getItem() instanceof ICellWorkbenchItem cellItem) {
-            if(TileDrive.applyStickyCardToDigitalSingularityCell(cellHandler, cell, this, cellItem)) {
+            if (TileDrive.applyStickyCardToDigitalSingularityCell(cellHandler, cell, this, cellItem)) {
                 try {
                     this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
-                } catch (final GridAccessException ignored) { }
+                } catch (final GridAccessException ignored) {}
                 return 1;
             }
         }

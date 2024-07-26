@@ -13,10 +13,11 @@
 
 package appeng.api.implementations.tiles;
 
+import net.minecraft.item.ItemStack;
+
 import appeng.api.networking.IGridHost;
 import appeng.api.storage.ICellContainer;
 import appeng.api.util.IOrientable;
-import net.minecraft.item.ItemStack;
 
 public interface IChestOrDrive extends ICellContainer, IGridHost, IOrientable {
 
