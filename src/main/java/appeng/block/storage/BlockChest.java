@@ -25,6 +25,8 @@ import appeng.client.render.blocks.RenderMEChest;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.GuiBridge;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
 import appeng.tile.storage.TileChest;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
@@ -55,7 +57,8 @@ public class BlockChest extends AEBaseTileBlock {
                 return true;
             }
 
-            if (GT_Utility.isStackInList(p.getHeldItem(), GregTech_API.sWireCutterList)) {
+            if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)
+                    && GT_Utility.isStackInList(p.getHeldItem(), GregTech_API.sWireCutterList)) {
                 if (tg.lockDigitalSingularityCells()) {
                     p.addChatMessage(PlayerMessages.ChestLocked.get());
                 }

@@ -410,9 +410,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         for (int i = 0; i < this.handlersBySlot.length; i++) {
             ICellHandler cellHandler = this.handlersBySlot[i];
             final ItemStack cell = this.inv.getStackInSlot(i);
-            if (cellHandler == null || cell == null
-                    || !(cell.getItem() instanceof ItemExtremeStorageCell)
-                    || (cell.getItem() instanceof ItemExtremeStorageCell exCell && exCell.getTotalTypes(cell) != 1)) {
+            if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
                 continue;
             }
             final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, StorageChannel.ITEMS);
@@ -429,9 +427,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         for (int i = 0; i < this.handlersBySlot.length; i++) {
             ICellHandler cellHandler = this.handlersBySlot[i];
             ItemStack cell = this.inv.getStackInSlot(i);
-            if (cellHandler == null || cell == null
-                    || !(cell.getItem() instanceof ItemExtremeStorageCell)
-                    || (cell.getItem() instanceof ItemExtremeStorageCell exCell && exCell.getTotalTypes(cell) != 1)) {
+            if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
                 continue;
             }
             if (cell.getItem() instanceof ICellWorkbenchItem cellItem && res + 1 <= cards.stackSize) {
@@ -439,6 +435,10 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
                     res++;
                 }
             }
+        }
+        if (this.isCached) {
+            this.isCached = false;
+            this.updateState();
         }
         try {
             this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());

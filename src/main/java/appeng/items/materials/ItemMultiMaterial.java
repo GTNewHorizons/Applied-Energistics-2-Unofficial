@@ -46,6 +46,7 @@ import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageComponent;
 import appeng.api.implementations.items.IUpgradeModule;
+import appeng.api.implementations.tiles.IChestOrDrive;
 import appeng.api.implementations.tiles.ISegmentedInventory;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
@@ -56,8 +57,6 @@ import appeng.core.features.IStackSrc;
 import appeng.core.features.MaterialStackSrc;
 import appeng.core.features.NameResolver;
 import appeng.items.AEBaseItem;
-import appeng.tile.storage.TileChest;
-import appeng.tile.storage.TileDrive;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 
@@ -277,18 +276,10 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
             final TileEntity te = world.getTileEntity(x, y, z);
             if (is != null && this.getType(is) == Upgrades.STICKY && Platform.isServer()) {
                 ItemStack hand = player.getHeldItem();
-                if (te instanceof TileDrive drive) {
-                    hand.stackSize = hand.stackSize - drive.applyStickyToDigitalSingularityCells(hand);
+                if (te instanceof IChestOrDrive chestOrDrive) {
+                    hand.stackSize = hand.stackSize - chestOrDrive.applyStickyToDigitalSingularityCells(hand);
                     player.inventory
                             .setInventorySlotContents(player.inventory.currentItem, hand.stackSize == 0 ? null : hand);
-                    return true;
-                } else if (te instanceof TileChest chest) {
-                    if (chest.applyStickyToDigitalSingularityCells(hand) == 1) {
-                        hand.stackSize = hand.stackSize - 1;
-                        player.inventory.setInventorySlotContents(
-                                player.inventory.currentItem,
-                                hand.stackSize == 0 ? null : hand);
-                    }
                     return true;
                 }
             }

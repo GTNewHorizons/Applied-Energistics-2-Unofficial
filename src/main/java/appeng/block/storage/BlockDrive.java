@@ -22,6 +22,8 @@ import appeng.client.render.blocks.RenderDrive;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.GuiBridge;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
 import appeng.tile.storage.TileDrive;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
@@ -53,9 +55,11 @@ public class BlockDrive extends AEBaseTileBlock {
         final TileDrive tg = this.getTileEntity(w, x, y, z);
         if (tg != null) {
             if (Platform.isServer()) {
-                if (GT_Utility.isStackInList(p.getHeldItem(), GregTech_API.sWireCutterList)) {
-                    tg.lockDigitalSingularityCells();
-                    p.addChatMessage(PlayerMessages.DriveLocked.get());
+                if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)
+                        && GT_Utility.isStackInList(p.getHeldItem(), GregTech_API.sWireCutterList)) {
+                    if (tg.lockDigitalSingularityCells()) {
+                        p.addChatMessage(PlayerMessages.DriveLocked.get());
+                    }
                     return true;
                 }
                 Platform.openGUI(p, tg, ForgeDirection.getOrientation(side), GuiBridge.GUI_DRIVE);
