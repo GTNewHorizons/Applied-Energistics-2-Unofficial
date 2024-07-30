@@ -129,17 +129,17 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList out, int iteration) {
         if (this.itemStorage != null) {
-            return this.itemStorage.getAvailableItems(out);
+            return this.itemStorage.getAvailableItems(out, iteration);
         }
         return out;
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         if (this.itemStorage != null) {
-            return this.itemStorage.getAvailableItem(request);
+            return this.itemStorage.getAvailableItem(request, iteration);
         }
         return null;
     }

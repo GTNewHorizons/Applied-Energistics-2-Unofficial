@@ -26,6 +26,7 @@ import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.util.IterationCounter;
 
 /**
  * Common implementation of a simple class that monitors injection/extraction of a inventory to send events to a list of
@@ -135,7 +136,7 @@ public class MEMonitorHandler<StackType extends IAEStack> implements IMEMonitor<
         if (this.hasChanged) {
             this.hasChanged = false;
             this.cachedList.resetStatus();
-            return this.getAvailableItems(this.cachedList);
+            return this.getAvailableItems(this.cachedList, IterationCounter.fetchNewId());
         }
 
         return this.cachedList;
@@ -152,13 +153,13 @@ public class MEMonitorHandler<StackType extends IAEStack> implements IMEMonitor<
     }
 
     @Override
-    public IItemList<StackType> getAvailableItems(final IItemList out) {
-        return this.getHandler().getAvailableItems(out);
+    public IItemList<StackType> getAvailableItems(final IItemList out, int iteration) {
+        return this.getHandler().getAvailableItems(out, iteration);
     }
 
     @Override
-    public StackType getAvailableItem(@Nonnull StackType request) {
-        return this.getHandler().getAvailableItem(request);
+    public StackType getAvailableItem(@Nonnull StackType request, int iteration) {
+        return this.getHandler().getAvailableItem(request, iteration);
     }
 
     @Override

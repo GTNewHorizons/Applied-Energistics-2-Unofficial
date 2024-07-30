@@ -48,6 +48,7 @@ import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
 import appeng.items.materials.MaterialType;
 import appeng.util.InventoryAdaptor;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -257,7 +258,8 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
                     .getCellInventory(stack, null, StorageChannel.ITEMS);
             if (inv != null && playerInventory.getCurrentItem() == stack) {
                 final InventoryAdaptor ia = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
-                final IItemList<IAEItemStack> list = inv.getAvailableItems(StorageChannel.ITEMS.createList());
+                final IItemList<IAEItemStack> list = inv
+                        .getAvailableItems(StorageChannel.ITEMS.createList(), IterationCounter.fetchNewId());
                 if (list.isEmpty() && ia != null) {
                     playerInventory.setInventorySlotContents(playerInventory.currentItem, null);
 

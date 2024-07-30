@@ -49,6 +49,7 @@ import appeng.me.storage.MEInventoryHandler;
 import appeng.me.storage.NetworkInventoryHandler;
 import appeng.tile.storage.TileChest;
 import appeng.tile.storage.TileDrive;
+import appeng.util.IterationCounter;
 
 public class GridStorageCache implements IStorageGrid {
 
@@ -345,10 +346,10 @@ public class GridStorageCache implements IStorageGrid {
 
             if (channel == StorageChannel.ITEMS) {
                 this.list = ((IMEInventoryHandler<IAEItemStack>) h)
-                        .getAvailableItems(AEApi.instance().storage().createItemList());
+                        .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
             } else if (channel == StorageChannel.FLUIDS) {
                 this.list = ((IMEInventoryHandler<IAEFluidStack>) h)
-                        .getAvailableItems(AEApi.instance().storage().createFluidList());
+                        .getAvailableItems(AEApi.instance().storage().createFluidList(), IterationCounter.fetchNewId());
             } else {
                 this.list = null;
             }

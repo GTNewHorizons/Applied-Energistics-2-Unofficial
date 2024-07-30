@@ -24,7 +24,7 @@ public interface IMEMonitor<T extends IAEStack> extends IMEInventoryHandler<T>, 
      */
     @Override
     @Deprecated
-    IItemList<T> getAvailableItems(IItemList out);
+    IItemList<T> getAvailableItems(IItemList out, int iteration);
 
     /**
      * Get access to the full item list of the network, preferred over {@link IMEInventory} .getAvailableItems(...)

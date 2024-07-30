@@ -1348,7 +1348,7 @@ public class Platform {
             myItems = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.ITEMS);
 
             if (myItems != null) {
-                for (final IAEItemStack is : myItems.getAvailableItems(itemChanges)) {
+                for (final IAEItemStack is : myItems.getAvailableItems(itemChanges, IterationCounter.fetchNewId())) {
                     is.setStackSize(-is.getStackSize());
                 }
             }
@@ -1356,7 +1356,7 @@ public class Platform {
             myFluids = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.FLUIDS);
 
             if (myFluids != null) {
-                for (final IAEFluidStack is : myFluids.getAvailableItems(fluidChanges)) {
+                for (final IAEFluidStack is : myFluids.getAvailableItems(fluidChanges, IterationCounter.fetchNewId())) {
                     is.setStackSize(-is.getStackSize());
                 }
             }
@@ -1366,13 +1366,13 @@ public class Platform {
             myItems = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.ITEMS);
 
             if (myItems != null) {
-                myItems.getAvailableItems(itemChanges);
+                myItems.getAvailableItems(itemChanges, IterationCounter.fetchNewId());
             }
 
             myFluids = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.FLUIDS);
 
             if (myFluids != null) {
-                myFluids.getAvailableItems(fluidChanges);
+                myFluids.getAvailableItems(fluidChanges, IterationCounter.fetchNewId());
             }
         }
         if (myItems == null) {

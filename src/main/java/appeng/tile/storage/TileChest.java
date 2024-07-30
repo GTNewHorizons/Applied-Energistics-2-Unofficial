@@ -58,6 +58,8 @@ import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.storage.ICellHandler;
+import appeng.api.storage.ICellInventoryHandler;
+import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
@@ -72,6 +74,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AEColor;
 import appeng.api.util.IConfigManager;
 import appeng.helpers.IPriorityHost;
+import appeng.items.storage.ItemExtremeStorageCell;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
 import appeng.tile.TileEvent;
@@ -676,6 +679,37 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @Override
     public void saveChanges(final IMEInventory cellInventory) {
         this.worldObj.markTileEntityChunkModified(this.xCoord, this.yCoord, this.zCoord, this);
+    }
+
+    public boolean lockDigitalSingularityCells() {
+        final ItemStack cell = this.inv.getStackInSlot(1);
+        if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
+            return false;
+        }
+        final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, StorageChannel.ITEMS);
+        if (inv instanceof ICellInventoryHandler handler) {
+            TileDrive.partitionDigitalSingularityCellToItemOnCell(handler);
+        }
+        return true;
+    }
+
+    public int applyStickyToDigitalSingularityCells(ItemStack cards) {
+        ItemStack cell = this.inv.getStackInSlot(1);
+        if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler) && cards.stackSize != 0) {
+            return 0;
+        }
+        if (cell.getItem() instanceof ICellWorkbenchItem cellItem) {
+            if (TileDrive.applyStickyCardToDigitalSingularityCell(cellHandler, cell, this, cellItem)) {
+                if (this.isCached) {
+                    this.isCached = false;
+                }
+                try {
+                    this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
+                } catch (final GridAccessException ignored) {}
+                return 1;
+            }
+        }
+        return 0;
     }
 
     private static class ChestNoHandler extends Exception {

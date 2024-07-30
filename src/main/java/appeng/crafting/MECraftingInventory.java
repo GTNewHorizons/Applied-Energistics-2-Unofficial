@@ -20,6 +20,7 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.util.IterationCounter;
 
 public class MECraftingInventory implements IMEInventory<IAEItemStack> {
 
@@ -73,7 +74,8 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
             this.injectedCache = null;
         }
 
-        this.localCache = this.target.getAvailableItems(AEApi.instance().storage().createItemList());
+        this.localCache = this.target
+                .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
 
         this.par = parent;
     }
@@ -136,7 +138,8 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
             this.injectedCache = null;
         }
 
-        this.localCache = target.getAvailableItems(AEApi.instance().storage().createItemList());
+        this.localCache = target
+                .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
         this.par = null;
     }
 
@@ -192,7 +195,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out, int iteration) {
         for (final IAEItemStack is : this.localCache) {
             out.add(is);
         }
@@ -201,7 +204,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         long count = 0;
         for (final IAEItemStack is : this.localCache) {
             if (is != null && is.getStackSize() > 0 && is.isSameType(request)) {

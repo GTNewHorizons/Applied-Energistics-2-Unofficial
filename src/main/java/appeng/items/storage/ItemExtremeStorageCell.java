@@ -13,12 +13,14 @@ import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
 import appeng.api.config.IncludeExclude;
+import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
+import appeng.util.IterationCounter;
 import appeng.util.item.ItemList;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -91,8 +93,9 @@ public class ItemExtremeStorageCell extends ItemBasicStorageCell {
                                 + ' '
                                 + GuiText.Types.getLocal());
 
-                if (cellInventory.getStoredItemTypes() != 0) {
-                    ItemStack itemStack = handler.getAvailableItems(new ItemList()).getFirstItem().getItemStack();
+                if (cellInventory.getTotalItemTypes() == 1 && cellInventory.getStoredItemTypes() != 0) {
+                    ItemStack itemStack = handler.getAvailableItems(new ItemList(), IterationCounter.fetchNewId())
+                            .getFirstItem().getItemStack();
                     lines.add(GuiText.Contains.getLocal() + ": " + itemStack.getDisplayName());
                 }
 
@@ -125,6 +128,12 @@ public class ItemExtremeStorageCell extends ItemBasicStorageCell {
                 }
             }
         }
+    }
+
+    public static boolean checkInvalidForLockingAndStickyCarding(ItemStack cell, ICellHandler cellHandler) {
+        return cellHandler == null || cell == null
+                || !(cell.getItem() instanceof ItemExtremeStorageCell)
+                || (cell.getItem() instanceof ItemExtremeStorageCell exCell && exCell.getTotalTypes(cell) != 1);
     }
 
 }

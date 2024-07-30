@@ -34,6 +34,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.util.IterationCounter;
 
 public final class DisassembleRecipe implements IRecipe {
 
@@ -97,7 +98,7 @@ public final class DisassembleRecipe implements IRecipe {
                             .getCellInventory(stackInSlot, null, StorageChannel.ITEMS);
                     if (cellInv != null) {
                         final IItemList<IAEItemStack> list = cellInv
-                                .getAvailableItems(StorageChannel.ITEMS.createList());
+                                .getAvailableItems(StorageChannel.ITEMS.createList(), IterationCounter.fetchNewId());
                         if (!list.isEmpty()) {
                             return null;
                         }

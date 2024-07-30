@@ -110,6 +110,8 @@ chat.appliedenergistics2.FBOUnsupported=OpenGL FBOs not supported, cannot export
 chat.appliedenergistics2.PriorityInvalidTarget=Target has no priority
 chat.appliedenergistics2.PriorityReadout=Current priority is %d
 chat.appliedenergistics2.PriorityConfigured=Updated priority to %d
+chat.appliedenergistics2.DriveLocked=Digital Singularity cells in drive were locked to the current item on them
+chat.appliedenergistics2.ChestLocked=Digital Singularity cell in chest was locked to the current item on it
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
 itemGroup.appliedenergistics2.facades=Applied Energistics 2 - Facades

@@ -85,6 +85,7 @@ import appeng.me.cluster.IAECluster;
 import appeng.tile.AEBaseTile;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.tile.crafting.TileCraftingTile;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -970,9 +971,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     }
                 }
             }
-            case STORAGE -> this.inventory.getAvailableItems(list);
+            case STORAGE -> this.inventory.getAvailableItems(list, IterationCounter.fetchNewId());
             default -> {
-                this.inventory.getAvailableItems(list);
+                this.inventory.getAvailableItems(list, IterationCounter.fetchNewId());
                 for (final IAEItemStack ais : this.waitingFor) {
                     list.add(ais);
                 }

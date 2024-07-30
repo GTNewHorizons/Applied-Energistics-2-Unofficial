@@ -54,22 +54,26 @@ public interface IMEInventory<StackType extends IAEStack> {
     /**
      * Request a full report of all available items, storage.
      *
-     * @param out the IItemList the results will be written too
+     * @param out       the IItemList the results will be written too
+     * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
+     *                  conflicts
      * @return returns same list that was passed in, is passed out
      */
-    IItemList<StackType> getAvailableItems(IItemList<StackType> out);
+    IItemList<StackType> getAvailableItems(IItemList<StackType> out, int iteration);
 
     /**
      * Request a report of how many of a single item type are available in storage. It falls back to
      * {@link IMEInventory#getAvailableItems} if a more optimized implementation is not present.
      *
-     * @param request The item type to search for, it does not get modified
+     * @param request   The item type to search for, it does not get modified
+     * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
+     *                  conflicts
      * @return A new stack with the stack size set to the count of items in storage, or null if none are present
      */
     @SuppressWarnings("unchecked") // changing the generic StackType to be correct here is too much of a breaking API
                                    // change
-    default StackType getAvailableItem(@Nonnull StackType request) {
-        return getAvailableItems((IItemList<StackType>) getChannel().createList()).findPrecise(request);
+    default StackType getAvailableItem(@Nonnull StackType request, int iteration) {
+        return getAvailableItems((IItemList<StackType>) getChannel().createList(), iteration).findPrecise(request);
     }
 
     /**

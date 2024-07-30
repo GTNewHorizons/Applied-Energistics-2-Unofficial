@@ -24,6 +24,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.InventoryAdaptor;
+import appeng.util.IterationCounter;
 import appeng.util.item.AEItemStack;
 
 public class IMEAdaptor extends InventoryAdaptor {
@@ -43,7 +44,8 @@ public class IMEAdaptor extends InventoryAdaptor {
     }
 
     private IItemList<IAEItemStack> getList() {
-        return this.target.getAvailableItems(AEApi.instance().storage().createItemList());
+        return this.target
+                .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
     }
 
     @Override

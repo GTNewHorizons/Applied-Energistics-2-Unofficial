@@ -64,6 +64,7 @@ import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.me.storage.CellInventoryHandler;
 import appeng.tile.misc.TilePaint;
 import appeng.util.ItemSorters;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.relauncher.Side;
@@ -247,7 +248,8 @@ public class ToolColorApplicator extends AEBasePoweredItem
         final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
                 .getCellInventory(is, null, StorageChannel.ITEMS);
         if (inv != null) {
-            final IItemList<IAEItemStack> itemList = inv.getAvailableItems(AEApi.instance().storage().createItemList());
+            final IItemList<IAEItemStack> itemList = inv
+                    .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
             if (anchor == null) {
                 final IAEItemStack firstItem = itemList.getFirstItem();
                 if (firstItem != null) {

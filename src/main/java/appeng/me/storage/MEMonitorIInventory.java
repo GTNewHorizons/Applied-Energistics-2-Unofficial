@@ -250,7 +250,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList out, int iteration) {
         for (final CachedItemStack is : this.memory.values()) {
             out.addStorage(is.aeStack);
         }
@@ -259,7 +259,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         long count = 0;
         for (final CachedItemStack is : this.memory.values()) {
             if (is != null && is.aeStack != null && is.aeStack.getStackSize() > 0 && is.aeStack.isSameType(request)) {

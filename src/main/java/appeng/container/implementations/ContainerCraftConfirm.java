@@ -56,6 +56,7 @@ import appeng.parts.reporting.PartPatternTerminal;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 
 public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingCPUSelectorContainer {
@@ -185,7 +186,8 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                         if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
                                 && (missing == null || missing.getStackSize() <= 0)) {
-                            long available = items.getAvailableItem(toExtract).getStackSize();
+                            long available = items.getAvailableItem(toExtract, IterationCounter.fetchNewId())
+                                    .getStackSize();
                             toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
                         }
 

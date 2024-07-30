@@ -13,6 +13,8 @@
 
 package appeng.api.implementations.tiles;
 
+import net.minecraft.item.ItemStack;
+
 import appeng.api.networking.IGridHost;
 import appeng.api.storage.ICellContainer;
 import appeng.api.util.IOrientable;
@@ -42,6 +44,10 @@ public interface IChestOrDrive extends ICellContainer, IGridHost, IOrientable {
      * @return if the device is online you should check this before providing any other information.
      */
     boolean isPowered();
+
+    boolean lockDigitalSingularityCells();
+
+    int applyStickyToDigitalSingularityCells(ItemStack cards);
 
     @Deprecated
     default boolean isCellBlinking(int slot) {
