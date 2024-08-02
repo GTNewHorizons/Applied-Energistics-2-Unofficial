@@ -68,7 +68,7 @@ public class DimensionalCoord extends WorldCoord {
     }
 
     public boolean isEqual(final DimensionalCoord c) {
-        return this.x == c.x && this.y == c.y && this.z == c.z && c.w == this.w;
+        return this.x == c.x && this.y == c.y && this.z == c.z && c.dimId == this.dimId;
     }
 
     private static void writeToNBT(final NBTTagCompound data, int x, int y, int z, int dimId) {
