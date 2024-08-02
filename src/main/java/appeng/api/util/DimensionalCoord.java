@@ -13,6 +13,7 @@
 
 package appeng.api.util;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,8 @@ import net.minecraft.world.World;
  */
 public class DimensionalCoord extends WorldCoord {
 
-    private final World w;
+    private static final WeakReference<World> NULL_WORLD = new WeakReference<>(null);
+    private final WeakReference<World> w;
     private final int dimId;
 
     public DimensionalCoord(final DimensionalCoord s) {
@@ -36,19 +38,19 @@ public class DimensionalCoord extends WorldCoord {
 
     public DimensionalCoord(final TileEntity s) {
         super(s);
-        this.w = s.getWorldObj();
-        this.dimId = this.w.provider.dimensionId;
+        this.w = new WeakReference<>(s.getWorldObj());
+        this.dimId = s.getWorldObj().provider.dimensionId;
     }
 
     public DimensionalCoord(final World _w, final int _x, final int _y, final int _z) {
         super(_x, _y, _z);
-        this.w = _w;
+        this.w = new WeakReference<>(_w);
         this.dimId = _w.provider.dimensionId;
     }
 
     public DimensionalCoord(final int _x, final int _y, final int _z, final int _dim) {
         super(_x, _y, _z);
-        this.w = null;
+        this.w = NULL_WORLD;
         this.dimId = _dim;
     }
 
@@ -117,11 +119,11 @@ public class DimensionalCoord extends WorldCoord {
     }
 
     public boolean isInWorld(final World world) {
-        return this.w == world;
+        return this.w.get() == world;
     }
 
     public World getWorld() {
-        return this.w;
+        return this.w.get();
     }
 
     public int getDimension() {
