@@ -19,6 +19,7 @@ import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.util.IterationCounter;
 
 /**
  * AE's Equivalent to IInventory, used to reading contents, and manipulating contents of ME Inventories.
@@ -53,13 +54,51 @@ public interface IMEInventory<StackType extends IAEStack> {
 
     /**
      * Request a full report of all available items, storage.
+     * 
+     * @deprecated use/override {@link #getAvailableItems(IItemList<StackType>,int)} instead
+     *
+     * @param out the IItemList the results will be written too
+     * @return returns same list that was passed in, is passed out
+     */
+    @Deprecated
+    default IItemList<StackType> getAvailableItems(IItemList<StackType> out) {
+        var ret = getAvailableItems(out, IterationCounter.incrementGlobalDepth());
+        IterationCounter.decrementGlobalDepth();
+        return ret;
+    }
+
+    /**
+     * Request a full report of all available items, storage.
      *
      * @param out       the IItemList the results will be written too
      * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
      *                  conflicts
      * @return returns same list that was passed in, is passed out
      */
-    IItemList<StackType> getAvailableItems(IItemList<StackType> out, int iteration);
+    default IItemList<StackType> getAvailableItems(IItemList<StackType> out, int iteration) {
+        IterationCounter.incrementGlobalDepthWith(iteration);
+        var ret = getAvailableItems(out);
+        IterationCounter.decrementGlobalDepth();
+        return ret;
+    }
+
+    /**
+     * Request a report of how many of a single item type are available in storage. It falls back to
+     * {@link IMEInventory#getAvailableItems} if a more optimized implementation is not present.
+     *
+     * @deprecated use/override {@link #getAvailableItem(StackType,int)} instead
+     *
+     * @param request The item type to search for, it does not get modified
+     * @return A new stack with the stack size set to the count of items in storage, or null if none are present
+     */
+    @SuppressWarnings("unchecked") // changing the generic StackType to be correct here is too much of a breaking API
+    // change
+    @Deprecated
+    default StackType getAvailableItem(@Nonnull StackType request) {
+        var ret = getAvailableItem(request, IterationCounter.incrementGlobalDepth());
+        IterationCounter.decrementGlobalDepth();
+        return ret;
+    }
 
     /**
      * Request a report of how many of a single item type are available in storage. It falls back to
