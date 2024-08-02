@@ -67,6 +67,7 @@ import appeng.core.localization.PlayerMessages;
 import appeng.core.stats.PlayerStatsRegistration;
 import appeng.helpers.BlockingModeIgnoreList;
 import appeng.hooks.AETrading;
+import appeng.hooks.SoundEventHandler;
 import appeng.hooks.TickHandler;
 import appeng.items.materials.ItemMultiMaterial;
 import appeng.me.cache.CraftingGridCache;
@@ -522,6 +523,8 @@ public final class Registration {
 
         FMLCommonHandler.instance().bus().register(TickHandler.INSTANCE);
         MinecraftForge.EVENT_BUS.register(TickHandler.INSTANCE);
+
+        MinecraftForge.EVENT_BUS.register(SoundEventHandler.INSTANCE);
 
         final PartPlacement pp = new PartPlacement();
         MinecraftForge.EVENT_BUS.register(pp);

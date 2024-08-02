@@ -90,6 +90,7 @@ public enum GuiText {
     FluidTunnel,
     OCTunnel,
     LightTunnel,
+    SoundTunnel,
     RFTunnel,
     PressureTunnel,
     GTTunnel,

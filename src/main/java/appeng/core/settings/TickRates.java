@@ -36,6 +36,8 @@ public enum TickRates {
 
     LightTunnel(5, 120),
 
+    SoundTunnel(20, 120),
+
     OpenComputersTunnel(1, 5),
 
     PressureTunnel(1, 120);

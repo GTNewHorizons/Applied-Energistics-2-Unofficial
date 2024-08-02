@@ -53,6 +53,7 @@ public final class ApiParts implements IParts {
     private final IItemDefinition p2PTunnelEU;
     private final IItemDefinition p2PTunnelRF;
     private final IItemDefinition p2PTunnelLight;
+    private final IItemDefinition p2PTunnelSound;
     private final IItemDefinition p2PTunnelOpenComputers;
     private final IItemDefinition p2PTunnelPneumaticCraft;
     private final IItemDefinition p2PTunnelGregtech;
@@ -105,6 +106,7 @@ public final class ApiParts implements IParts {
         this.p2PTunnelEU = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelEU));
         this.p2PTunnelRF = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelRF));
         this.p2PTunnelLight = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelLight));
+        this.p2PTunnelSound = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelSound));
         this.p2PTunnelOpenComputers = new DamagedItemDefinition(
                 itemMultiPart.createPart(PartType.P2PTunnelOpenComputers));
         this.p2PTunnelPneumaticCraft = new DamagedItemDefinition(itemMultiPart.createPart(PartType.P2PTunnelPressure));
@@ -270,6 +272,11 @@ public final class ApiParts implements IParts {
     @Override
     public IItemDefinition p2PTunnelLight() {
         return this.p2PTunnelLight;
+    }
+
+    @Override
+    public IItemDefinition p2PTunnelSound() {
+        return this.p2PTunnelSound;
     }
 
     @Override
