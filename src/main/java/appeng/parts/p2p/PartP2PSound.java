@@ -107,6 +107,13 @@ public class PartP2PSound extends PartP2PTunnelNormal<PartP2PSound> implements I
     @Override
     public void onTunnelNetworkChange() {
         this.onNeighborChanged();
+        if (this.customHandler != null) {
+            try {
+                this.customHandler.onSoundP2POutputUpdate(this, this.getOutputs());
+            } catch (GridAccessException e) {
+                // could not access output list, skip the update notification
+            }
+        }
     }
 
     @Override
