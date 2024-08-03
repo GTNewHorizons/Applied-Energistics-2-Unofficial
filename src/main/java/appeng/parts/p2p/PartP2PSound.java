@@ -67,10 +67,8 @@ public class PartP2PSound extends PartP2PTunnelNormal<PartP2PSound> implements I
             SoundEventHandler.INSTANCE.activateP2P(this);
         }
         if (neighbor instanceof ISoundP2PHandler handler) {
-            if (this.customHandler != handler) {
-                this.customHandler = handler;
-                handler.onSoundP2PAttach(this);
-            }
+            this.customHandler = handler;
+            handler.onSoundP2PAttach(this);
         } else {
             this.customHandler = null;
         }

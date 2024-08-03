@@ -17,7 +17,7 @@ public interface ISoundP2PHandler {
     }
 
     /**
-     * Invoked when a Sound P2P tunnel is attached to this block.
+     * Invoked when a Sound P2P tunnel is attached to this block, or the attached block sends an update notification.
      */
     default void onSoundP2PAttach(PartP2PSound p2p) {}
 
