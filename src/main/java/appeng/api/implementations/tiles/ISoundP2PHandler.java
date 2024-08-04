@@ -1,5 +1,6 @@
 package appeng.api.implementations.tiles;
 
+import appeng.me.cache.helpers.TunnelCollection;
 import appeng.parts.p2p.PartP2PSound;
 
 /**
@@ -16,7 +17,7 @@ public interface ISoundP2PHandler {
     }
 
     /**
-     * Invoked when a Sound P2P tunnel is attached to this block.
+     * Invoked when a Sound P2P tunnel is attached to this block, or the attached block sends an update notification.
      */
     default void onSoundP2PAttach(PartP2PSound p2p) {}
 
@@ -24,4 +25,9 @@ public interface ISoundP2PHandler {
      * Invoked when a Sound P2P tunnel is detached from this block (e.g. unloaded or removed).
      */
     default void onSoundP2PDetach(PartP2PSound p2p) {}
+
+    /**
+     * Invoked when one of the attached Sound P2P tunnels changes the list of output P2Ps.
+     */
+    default void onSoundP2POutputUpdate(PartP2PSound p2p, TunnelCollection<PartP2PSound> outputs) {}
 }
