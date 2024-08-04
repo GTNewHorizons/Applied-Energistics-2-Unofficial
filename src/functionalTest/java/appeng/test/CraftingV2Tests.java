@@ -29,6 +29,7 @@ import gregtech.api.enums.Materials;
 import gregtech.api.enums.OrePrefixes;
 import gregtech.api.util.GT_OreDictUnificator;
 import gregtech.common.items.GT_MetaGenerated_Tool_01;
+import gregtech.common.items.ID_MetaTool_01;
 
 public class CraftingV2Tests {
 
@@ -43,7 +44,7 @@ public class CraftingV2Tests {
         bronzeDoublePlate = GT_OreDictUnificator.get(OrePrefixes.plateDouble, Materials.Bronze, 1);
         bronzeIngot = Materials.Bronze.getIngots(1);
         gtHammer = GT_MetaGenerated_Tool_01.INSTANCE
-                .getToolWithStats(GT_MetaGenerated_Tool_01.HARDHAMMER, 1, Materials.VanadiumSteel, null, null);
+                .getToolWithStats(ID_MetaTool_01.HARDHAMMER.ID, 1, Materials.VanadiumSteel, null, null);
         ironDust = Materials.Iron.getDust(1);
         ironIngot = Materials.Iron.getIngots(1);
         ironPlate = Materials.Iron.getPlates(1);

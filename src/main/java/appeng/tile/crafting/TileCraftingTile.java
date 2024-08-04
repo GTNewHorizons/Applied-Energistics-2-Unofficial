@@ -45,6 +45,7 @@ import appeng.me.helpers.AENetworkProxyMultiblock;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 
 public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IPowerChannelState {
@@ -270,7 +271,8 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
                         this.cluster + " does not contain any kind of blocks, which were destroyed.");
             }
 
-            for (IAEItemStack ais : inv.getAvailableItems(AEApi.instance().storage().createItemList())) {
+            for (IAEItemStack ais : inv
+                    .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId())) {
                 ais = ais.copy();
                 ais.setStackSize(ais.getItemStack().getMaxStackSize());
                 while (!places.isEmpty()) {

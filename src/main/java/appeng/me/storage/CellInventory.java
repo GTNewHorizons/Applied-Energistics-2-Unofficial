@@ -35,6 +35,8 @@ import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.core.AELog;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 
@@ -158,7 +160,8 @@ public class CellInventory implements ICellInventory {
     }
 
     private boolean isEmpty(final IMEInventory<IAEItemStack> meInventory) {
-        return meInventory.getAvailableItems(AEApi.instance().storage().createItemList()).isEmpty();
+        return meInventory.getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId())
+                .isEmpty();
     }
 
     @Override
@@ -181,6 +184,13 @@ public class CellInventory implements ICellInventory {
             if (meInventory != null && !this.isEmpty(meInventory)) {
                 return input;
             }
+        }
+
+        if (input.isCraftable()) {
+            AELog.error(
+                    new Throwable(),
+                    "FATAL: DETECTED ILLEGAL ITEM TO BE INSERTED ON STORAGE CELL, PLEASE REPORT ON GITHUB! STACKTRACE:");
+            input.setCraftable(false);
         }
 
         final IAEItemStack l = this.getCellItems().findPrecise(input);
@@ -389,10 +399,15 @@ public class CellInventory implements ICellInventory {
                 }
             }
         }
+
+        if (this.cellItems.size() != types) {
+            // fix broken singularity cells
+            this.saveChanges();
+        }
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out, int iteration) {
         for (final IAEItemStack i : this.getCellItems()) {
             out.add(i);
         }
@@ -401,7 +416,7 @@ public class CellInventory implements ICellInventory {
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         long count = 0;
         for (final IAEItemStack is : this.getCellItems()) {
             if (is != null && is.getStackSize() > 0 && is.isSameType(request)) {

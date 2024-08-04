@@ -20,7 +20,8 @@ public enum PlayerMessages {
     LoadedSettings,
     SavedSettings,
     MachineNotPowered,
-
+    DriveLocked,
+    ChestLocked,
     isNowLocked,
     isNowUnlocked,
     AmmoDepleted,

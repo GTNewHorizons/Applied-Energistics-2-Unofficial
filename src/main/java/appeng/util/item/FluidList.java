@@ -12,17 +12,16 @@ package appeng.util.item;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IItemList;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public final class FluidList implements IItemList<IAEFluidStack> {
 
-    private final Map<IAEFluidStack, IAEFluidStack> records = new HashMap<>();
+    private final ObjectOpenHashSet<IAEFluidStack> records = new ObjectOpenHashSet<>();
 
     @Override
     public void add(final IAEFluidStack option) {
@@ -140,12 +139,12 @@ public final class FluidList implements IItemList<IAEFluidStack> {
 
     @Override
     public int size() {
-        return this.records.values().size();
+        return this.records.size();
     }
 
     @Override
     public Iterator<IAEFluidStack> iterator() {
-        return new MeaningfulFluidIterator<>(this.records.values().iterator());
+        return new MeaningfulFluidIterator<>(this.records.iterator());
     }
 
     @Override
@@ -159,7 +158,7 @@ public final class FluidList implements IItemList<IAEFluidStack> {
         return this.records.get(fluid);
     }
 
-    private IAEFluidStack putFluidRecord(final IAEFluidStack fluid) {
-        return this.records.put(fluid, fluid);
+    private void putFluidRecord(final IAEFluidStack fluid) {
+        this.records.add(fluid);
     }
 }

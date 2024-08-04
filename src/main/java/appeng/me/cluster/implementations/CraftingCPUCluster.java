@@ -85,6 +85,7 @@ import appeng.me.cluster.IAECluster;
 import appeng.tile.AEBaseTile;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.tile.crafting.TileCraftingTile;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -1013,9 +1014,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     }
                 }
             }
-            case STORAGE -> this.inventory.getAvailableItems(list);
+            case STORAGE -> this.inventory.getAvailableItems(list, IterationCounter.fetchNewId());
             default -> {
-                this.inventory.getAvailableItems(list);
+                this.inventory.getAvailableItems(list, IterationCounter.fetchNewId());
                 for (final IAEItemStack ais : this.waitingFor) {
                     list.add(ais);
                 }
@@ -1031,6 +1032,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void addStorage(final IAEItemStack extractItems) {
+        extractItems.setCraftable(false);
         this.inventory.injectItems(extractItems, Actionable.MODULATE, null);
     }
 
@@ -1164,6 +1166,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     public void readFromNBT(final NBTTagCompound data) {
         this.finalOutput = AEItemStack.loadItemStackFromNBT((NBTTagCompound) data.getTag("finalOutput"));
         for (final IAEItemStack ais : this.readList((NBTTagList) data.getTag("inventory"))) {
+            if (ais.isCraftable() && ais.getStackSize() == 0) // remove bugged items from CPU Clusters, they are
+                                                              // spamming injectItems every tick
+                continue;
+            ais.setCraftable(false);
             this.inventory.injectItems(ais, Actionable.MODULATE, this.machineSrc);
         }
 

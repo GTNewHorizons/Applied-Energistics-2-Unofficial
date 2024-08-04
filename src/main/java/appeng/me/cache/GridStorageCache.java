@@ -44,11 +44,12 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.AEConfig;
 import appeng.me.helpers.GenericInterestManager;
-import appeng.me.storage.DriveWatcher;
 import appeng.me.storage.ItemWatcher;
+import appeng.me.storage.MEInventoryHandler;
 import appeng.me.storage.NetworkInventoryHandler;
 import appeng.tile.storage.TileChest;
 import appeng.tile.storage.TileDrive;
+import appeng.util.IterationCounter;
 
 public class GridStorageCache implements IStorageGrid {
 
@@ -345,10 +346,10 @@ public class GridStorageCache implements IStorageGrid {
 
             if (channel == StorageChannel.ITEMS) {
                 this.list = ((IMEInventoryHandler<IAEItemStack>) h)
-                        .getAvailableItems(AEApi.instance().storage().createItemList());
+                        .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
             } else if (channel == StorageChannel.FLUIDS) {
                 this.list = ((IMEInventoryHandler<IAEFluidStack>) h)
-                        .getAvailableItems(AEApi.instance().storage().createFluidList());
+                        .getAvailableItems(AEApi.instance().storage().createFluidList(), IterationCounter.fetchNewId());
             } else {
                 this.list = null;
             }
@@ -383,7 +384,7 @@ public class GridStorageCache implements IStorageGrid {
                     // Item cells
                     for (IMEInventoryHandler<?> meih : icp.getCellArray(StorageChannel.ITEMS)) {
                         // exclude void cell
-                        if (((DriveWatcher<IAEItemStack>) meih).getInternal() instanceof ICellCacheRegistry iccr) {
+                        if (((MEInventoryHandler<?>) meih).getInternal() instanceof ICellCacheRegistry iccr) {
                             // exclude creative cell
                             if (iccr.canGetInv()) {
                                 itemBytesTotal += iccr.getTotalBytes();
@@ -402,7 +403,7 @@ public class GridStorageCache implements IStorageGrid {
                     // Essentia and Fluid cells
                     for (IMEInventoryHandler<?> meih : icp.getCellArray(StorageChannel.FLUIDS)) {
                         // exclude void cell
-                        if (((DriveWatcher<IAEItemStack>) meih).getInternal() instanceof ICellCacheRegistry iccr) {
+                        if (((MEInventoryHandler<?>) meih).getInternal() instanceof ICellCacheRegistry iccr) {
                             // exclude creative cell
                             if (iccr.canGetInv()) {
                                 if (iccr.getCellType() == ICellCacheRegistry.TYPE.FLUID) {

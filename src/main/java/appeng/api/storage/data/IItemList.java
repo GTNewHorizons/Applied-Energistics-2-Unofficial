@@ -13,7 +13,8 @@
 
 package appeng.api.storage.data;
 
-import java.util.ArrayList;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -70,10 +71,14 @@ public interface IItemList<StackType extends IAEStack> extends IItemContainer<St
     void resetStatus();
 
     default StackType[] toArray(StackType[] zeroSizedArray) {
-        ArrayList<StackType> output = new ArrayList<>(size());
+        int prevSize = size();
+        StackType[] output = (StackType[]) Array.newInstance(zeroSizedArray.getClass().getComponentType(), prevSize);
+
+        int i = 0;
         for (StackType stack : this) {
-            output.add(stack);
+            output[i++] = stack;
         }
-        return output.toArray(zeroSizedArray);
+
+        return i != prevSize ? Arrays.copyOf(output, i) : output;
     }
 }

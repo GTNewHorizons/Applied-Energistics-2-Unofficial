@@ -96,6 +96,7 @@ public final class ApiItems implements IItems {
     private final IItemDefinition cellContainer;
     private final IItemDefinition cellQuantum;
     private final IItemDefinition cellSingularity;
+    private final IItemDefinition cellUniverse;
 
     private final IItemDefinition spatialCell2;
     private final IItemDefinition spatialCell16;
@@ -170,6 +171,8 @@ public final class ApiItems implements IItems {
                 .registerItemDefinition(new ItemExtremeStorageCell("Quantum", Integer.MAX_VALUE / 16, 1, 8, 1000D));
         this.cellSingularity = constructor.registerItemDefinition(
                 new ItemExtremeStorageCell("Singularity", Long.MAX_VALUE / 16, 1, 4096, 15000D));
+        this.cellUniverse = constructor.registerItemDefinition(
+                new ItemExtremeStorageCell("Universe", Long.MAX_VALUE / 16, 63, 16384, 600000D));
 
         this.spatialCell2 = constructor.registerItemDefinition(new ItemSpatialStorageCell(2));
         this.spatialCell16 = constructor.registerItemDefinition(new ItemSpatialStorageCell(16));
@@ -380,6 +383,11 @@ public final class ApiItems implements IItems {
     @Override
     public IItemDefinition cellSingularity() {
         return this.cellSingularity;
+    }
+
+    @Override
+    public IItemDefinition cellUniverse() {
+        return this.cellUniverse;
     }
 
     @Override

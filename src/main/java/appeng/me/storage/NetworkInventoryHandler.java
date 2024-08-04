@@ -64,7 +64,6 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
         boolean o1ValidFor2 = o1.validForPass(2);
         return Boolean.compare(o2ValidFor2, o1ValidFor2);
     };
-    private static int currentPass = 0;
     private final StorageChannel myChannel;
     private final SecurityCache security;
     private final List<IMEInventoryHandler<T>> priorityInventory;
@@ -281,15 +280,15 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     }
 
     @Override
-    public IItemList<T> getAvailableItems(IItemList out) {
-        if (this.diveIteration(this, Actionable.SIMULATE)) {
+    public IItemList<T> getAvailableItems(IItemList out, int iteration) {
+        if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
             return out;
         }
 
         final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
         final int size = priorityInventory.size();
         for (int i = 0; i < size; i++) {
-            out = priorityInventory.get(i).getAvailableItems(out);
+            out = priorityInventory.get(i).getAvailableItems(out, iteration);
         }
 
         this.surface(this, Actionable.SIMULATE);
@@ -298,10 +297,10 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     }
 
     @Override
-    public T getAvailableItem(@Nonnull T request) {
+    public T getAvailableItem(@Nonnull T request, int iteration) {
         long count = 0;
 
-        if (this.diveIteration(this, Actionable.SIMULATE)) {
+        if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
             return null;
         }
 
@@ -309,7 +308,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
         final int size = priorityInventory.size();
         for (int i = 0; i < size; i++) {
             IMEInventoryHandler<T> j = priorityInventory.get(i);
-            final T stack = j.getAvailableItem(request);
+            final T stack = j.getAvailableItem(request, iteration);
             if (stack != null && stack.getStackSize() > 0) {
                 count += stack.getStackSize();
                 if (count < 0) {
@@ -325,20 +324,13 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
         return count == 0 ? null : request.copy().setStackSize(count);
     }
 
-    private boolean diveIteration(final NetworkInventoryHandler<T> networkInventoryHandler, final Actionable type) {
-        final LinkedList cDepth = this.getDepth(type);
-        if (cDepth.isEmpty()) {
-            currentPass++;
-            this.myPass = currentPass;
-        } else {
-            if (currentPass == this.myPass) {
-                return true;
-            } else {
-                this.myPass = currentPass;
-            }
+    private boolean diveIteration(final NetworkInventoryHandler<T> networkInventoryHandler, final Actionable type,
+            int iteration) {
+        if (iteration == this.myPass) {
+            return true;
         }
-
-        cDepth.push(this);
+        this.myPass = iteration;
+        this.getDepth(type).push(this);
         return false;
     }
 

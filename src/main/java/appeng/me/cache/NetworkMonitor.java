@@ -35,6 +35,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.storage.ItemWatcher;
+import appeng.util.IterationCounter;
 import appeng.util.item.LazyItemList;
 
 public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
@@ -100,8 +101,8 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
-    public IItemList<T> getAvailableItems(final IItemList out) {
-        return this.getHandler().getAvailableItems(out);
+    public IItemList<T> getAvailableItems(final IItemList out, int iteration) {
+        return this.getHandler().getAvailableItems(out, iteration);
     }
 
     @Override
@@ -125,7 +126,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         if (this.hasChanged) {
             this.hasChanged = false;
             this.cachedList.resetStatus();
-            return this.getAvailableItems(this.cachedList);
+            return this.getAvailableItems(this.cachedList, IterationCounter.fetchNewId());
         }
 
         return this.cachedList;
@@ -246,7 +247,8 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
                 final Collection<ItemWatcher> list = this.myGridCache.getInterestManager().get(changedItem);
 
                 if (!list.isEmpty()) {
-                    IAEStack<T> fullStack = this.getHandler().getAvailableItem(changedItem);
+                    IAEStack<T> fullStack = this.getHandler()
+                            .getAvailableItem(changedItem, IterationCounter.fetchNewId());
 
                     if (fullStack == null) {
                         fullStack = changedItem.copy();

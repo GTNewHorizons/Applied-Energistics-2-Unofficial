@@ -59,6 +59,7 @@ import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.WrapperInventoryRange;
 
@@ -380,7 +381,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         if (src instanceof IMEMonitor) {
             myList = ((IMEMonitor) src).getStorageList();
         } else {
-            myList = src.getAvailableItems(src.getChannel().createList());
+            myList = src.getAvailableItems(src.getChannel().createList(), IterationCounter.fetchNewId());
         }
 
         boolean didStuff;
@@ -466,7 +467,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         if (src instanceof IMEMonitor) {
             myList = ((IMEMonitor) src).getStorageList();
         } else {
-            myList = src.getAvailableItems(src.getChannel().createList());
+            myList = src.getAvailableItems(src.getChannel().createList(), IterationCounter.fetchNewId());
         }
 
         if (fm == FullnessMode.EMPTY) {

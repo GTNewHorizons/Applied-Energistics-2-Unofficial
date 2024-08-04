@@ -87,7 +87,7 @@ public class SecurityInventory implements IMEInventoryHandler<IAEItemStack> {
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList out, int iteration) {
         for (final IAEItemStack ais : this.getStoredItems()) {
             out.add(ais);
         }
@@ -96,7 +96,7 @@ public class SecurityInventory implements IMEInventoryHandler<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         long count = 0;
         for (final IAEItemStack is : this.getStoredItems()) {
             if (is != null && is.getStackSize() > 0 && is.isSameType(request)) {

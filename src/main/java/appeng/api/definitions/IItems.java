@@ -96,6 +96,8 @@ public interface IItems {
 
     IItemDefinition cellSingularity();
 
+    IItemDefinition cellUniverse();
+
     IItemDefinition spatialCell2();
 
     IItemDefinition spatialCell16();

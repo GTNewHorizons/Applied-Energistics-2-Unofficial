@@ -91,7 +91,7 @@ public class MinefactoryReloadedDeepStorageUnit implements IMEInventory<IAEItemS
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out, int iteration) {
         final ItemStack is = this.dsu.getStoredItemType();
         if (is != null) {
             out.add(AEItemStack.create(is));
@@ -100,7 +100,7 @@ public class MinefactoryReloadedDeepStorageUnit implements IMEInventory<IAEItemS
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         final ItemStack is = this.dsu.getStoredItemType();
         if (is != null && request.isSameType(is)) {
             return AEItemStack.create(is);

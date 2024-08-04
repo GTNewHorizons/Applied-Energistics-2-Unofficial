@@ -31,6 +31,7 @@ import appeng.container.guisync.GuiSync;
 import appeng.container.slot.OptionalSlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.parts.misc.PartStorageBus;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.iterators.NullIterator;
 
@@ -162,7 +163,8 @@ public class ContainerStorageBus extends ContainerUpgradeable {
 
         Iterator<IAEItemStack> i = new NullIterator<>();
         if (cellInv != null) {
-            final IItemList<IAEItemStack> list = cellInv.getAvailableItems(AEApi.instance().storage().createItemList());
+            final IItemList<IAEItemStack> list = cellInv
+                    .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
             i = list.iterator();
         }
 

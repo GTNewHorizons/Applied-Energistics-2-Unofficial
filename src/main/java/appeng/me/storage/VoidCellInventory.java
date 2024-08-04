@@ -101,12 +101,12 @@ public class VoidCellInventory extends MEInventoryHandler<IAEItemStack> {
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out) {
+    public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out, int iteration) {
         return out;
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         return null;
     }
 

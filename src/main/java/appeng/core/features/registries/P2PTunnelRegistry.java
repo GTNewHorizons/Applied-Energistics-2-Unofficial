@@ -44,6 +44,23 @@ public final class P2PTunnelRegistry implements IP2PTunnelRegistry {
          */
         this.addNewAttunement(new ItemStack(Blocks.torch), TunnelType.LIGHT);
         this.addNewAttunement(new ItemStack(Blocks.glowstone), TunnelType.LIGHT);
+        this.addNewAttunement(new ItemStack(Items.glowstone_dust), TunnelType.LIGHT);
+
+        // Sound
+        this.addNewAttunement(new ItemStack(Blocks.noteblock), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Blocks.jukebox), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_11), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_13), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_blocks), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_cat), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_chirp), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_far), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_mall), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_mellohi), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_stal), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_strad), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_wait), TunnelType.SOUND);
+        this.addNewAttunement(new ItemStack(Items.record_ward), TunnelType.SOUND);
 
         /**
          * attune based on most redstone base items.

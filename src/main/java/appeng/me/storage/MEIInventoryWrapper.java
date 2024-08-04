@@ -168,7 +168,7 @@ public class MEIInventoryWrapper implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out, int iteration) {
         for (int x = 0; x < this.target.getSizeInventory(); x++) {
             out.addStorage(AEItemStack.create(this.target.getStackInSlot(x)));
         }
@@ -177,7 +177,7 @@ public class MEIInventoryWrapper implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         long count = 0;
         for (int x = 0; x < this.target.getSizeInventory(); x++) {
             ItemStack stack = this.target.getStackInSlot(x);

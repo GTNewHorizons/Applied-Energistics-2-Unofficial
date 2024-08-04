@@ -58,7 +58,7 @@ public class BSCrate implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IItemList getAvailableItems(final IItemList out) {
+    public IItemList getAvailableItems(final IItemList out, int iteration) {
         for (final ItemStack is : this.crateStorage.getContents()) {
             out.add(AEItemStack.create(is));
         }
@@ -66,7 +66,7 @@ public class BSCrate implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         long count = 0;
         for (final ItemStack is : this.crateStorage.getContents()) {
             if (is != null && is.stackSize > 0 && Platform.isSameItemPrecise(is, request.getItemStack())) {

@@ -68,6 +68,7 @@ import appeng.items.misc.ItemPaintBall;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.me.storage.CellInventoryHandler;
 import appeng.tile.misc.TilePaint;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -128,7 +129,8 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
             final IMEInventory inv = AEApi.instance().registries().cell()
                     .getCellInventory(item, null, StorageChannel.ITEMS);
             if (inv != null) {
-                final IItemList itemList = inv.getAvailableItems(AEApi.instance().storage().createItemList());
+                final IItemList itemList = inv
+                        .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
                 IAEStack aeAmmo = itemList.getFirstItem();
                 if (aeAmmo instanceof IAEItemStack) {
                     shots = Math.min(shots, (int) aeAmmo.getStackSize());

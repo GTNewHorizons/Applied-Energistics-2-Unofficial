@@ -47,12 +47,12 @@ public class VoidFluidInventory implements IMEInventoryHandler<IAEFluidStack> {
     }
 
     @Override
-    public IItemList<IAEFluidStack> getAvailableItems(final IItemList out) {
+    public IItemList<IAEFluidStack> getAvailableItems(final IItemList out, int iteration) {
         return out;
     }
 
     @Override
-    public IAEFluidStack getAvailableItem(@Nonnull IAEFluidStack request) {
+    public IAEFluidStack getAvailableItem(@Nonnull IAEFluidStack request, int iteration) {
         return null;
     }
 

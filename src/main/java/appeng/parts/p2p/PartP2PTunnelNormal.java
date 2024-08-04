@@ -85,6 +85,11 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
                         newType = stack;
                     }
                 }
+                case SOUND -> {
+                    for (final ItemStack stack : parts.p2PTunnelSound().maybeStack(1).asSet()) {
+                        newType = stack;
+                    }
+                }
                 case RF_POWER -> {
                     for (final ItemStack stack : parts.p2PTunnelRF().maybeStack(1).asSet()) {
                         newType = stack;

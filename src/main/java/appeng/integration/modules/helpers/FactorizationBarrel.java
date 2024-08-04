@@ -122,7 +122,7 @@ public class FactorizationBarrel implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList out, int iteration) {
         final ItemStack i = this.fProxy.barrelGetItem(this.te);
         if (i != null) {
             i.stackSize = this.fProxy.barrelGetItemCount(this.te);
@@ -133,7 +133,7 @@ public class FactorizationBarrel implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         if (!this.containsItemType(request, false)) {
             return null;
         }

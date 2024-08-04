@@ -65,7 +65,7 @@ public class CreativeCellInventory implements IMEInventoryHandler<IAEItemStack> 
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList out, int iteration) {
         for (final IAEItemStack ais : this.itemListCache) {
             out.add(ais);
         }
@@ -73,7 +73,7 @@ public class CreativeCellInventory implements IMEInventoryHandler<IAEItemStack> 
     }
 
     @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request) {
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         final IAEItemStack local = this.itemListCache.findPrecise(request);
         if (local == null) {
             return null;

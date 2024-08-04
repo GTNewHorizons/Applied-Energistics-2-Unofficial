@@ -94,6 +94,7 @@ public enum AEFeature {
     P2PTunnelEU(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelLiquids(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelLight(Constants.CATEGORY_P2P_TUNNELS),
+    P2PTunnelSound(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelOpenComputers(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelPressure(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelGregtech(Constants.CATEGORY_P2P_TUNNELS),
