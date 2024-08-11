@@ -108,12 +108,24 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             this.allowSimulation = allowSimulation;
             this.isComplex = isComplex;
 
-            this.patternInputs = pattern.getCondensedInputs();
-            this.patternOutputs = pattern.getCondensedOutputs();
-            this.patternRecursionInputs = calculateRecursiveInputs(patternInputs, patternOutputs);
+            IAEItemStack[] patternInputs = pattern.getCondensedInputs();
+            IAEItemStack[] patternOutputs = pattern.getCondensedOutputs();
+            if (!hasRecursiveInputs(patternInputs, patternOutputs)) {
+                this.patternInputs = patternInputs;
+                this.patternOutputs = patternOutputs;
+                this.patternRecursionInputs = new IAEItemStack[0];
+            } else {
+                patternInputs = Arrays.stream(patternInputs).map(IAEItemStack::copy).toArray(IAEItemStack[]::new);
+                patternOutputs = Arrays.stream(patternOutputs).map(IAEItemStack::copy).toArray(IAEItemStack[]::new);
+
+                this.patternRecursionInputs = calculateRecursiveInputs(patternInputs, patternOutputs);
+                // Inputs or outputs have been modified, so we need to filter out empty stacks
+                this.patternInputs = filterMeaningfulStacks(patternInputs);
+                this.patternOutputs = filterMeaningfulStacks(patternOutputs);
+            }
 
             IAEItemStack matchingOutput = null;
-            for (IAEItemStack patternOutput : patternOutputs) {
+            for (IAEItemStack patternOutput : this.patternOutputs) {
                 if (isOutputSameAs(patternOutput)) {
                     matchingOutput = patternOutput;
                     break;
@@ -125,41 +137,6 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             }
 
             this.matchingOutput = matchingOutput;
-        }
-
-        private static IAEItemStack[] calculateRecursiveInputs(IAEItemStack[] pInputs, IAEItemStack[] pOutputs) {
-            IAEItemStack[] recInputs = null;
-            // While this is a O(n*m) algorithm, no allocations are needed except for the actual output.
-            for (IAEItemStack output : pOutputs) {
-                for (IAEItemStack input : pInputs) {
-                    if (!input.isSameType(output)) {
-                        continue;
-                    }
-
-                    final long netProduced = output.getStackSize() - input.getStackSize();
-
-                    IAEItemStack recInput;
-                    if (netProduced > 0) {
-                        recInput = input;
-                        input.setStackSize(0);
-                        output.setStackSize(netProduced);
-                    } else {
-                        // Ensure recInput.stackSize + input.stackSize == original input.stackSize
-                        recInput = input.copy().setStackSize(input.getStackSize() + netProduced);
-                        input.setStackSize(-netProduced);
-                        output.setStackSize(0);
-                    }
-
-                    if (recInputs == null) {
-                        recInputs = new IAEItemStack[] { recInput };
-                    } else {
-                        recInputs = Arrays.copyOf(recInputs, recInputs.length + 1);
-                        recInputs[recInputs.length - 1] = recInput;
-                    }
-                }
-            }
-
-            return recInputs == null ? new IAEItemStack[0] : recInputs;
         }
 
         @SuppressWarnings("unused")
@@ -174,9 +151,85 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             this.craftingMachine = serializer.readItemStack();
             this.totalCraftsDone = buffer.readLong();
 
-            this.patternInputs = pattern.getCondensedInputs();
-            this.patternOutputs = pattern.getCondensedOutputs();
-            this.patternRecursionInputs = calculateRecursiveInputs(patternInputs, patternOutputs);
+            IAEItemStack[] patternInputs = pattern.getCondensedInputs();
+            IAEItemStack[] patternOutputs = pattern.getCondensedOutputs();
+            if (!hasRecursiveInputs(patternInputs, patternOutputs)) {
+                this.patternInputs = patternInputs;
+                this.patternOutputs = patternOutputs;
+                this.patternRecursionInputs = new IAEItemStack[0];
+            } else {
+                patternInputs = Arrays.stream(patternInputs).map(IAEItemStack::copy).toArray(IAEItemStack[]::new);
+                patternOutputs = Arrays.stream(patternOutputs).map(IAEItemStack::copy).toArray(IAEItemStack[]::new);
+
+                this.patternRecursionInputs = calculateRecursiveInputs(patternInputs, patternOutputs);
+                // Inputs or outputs have been modified, so we need to filter out empty stacks
+                this.patternInputs = filterMeaningfulStacks(patternInputs);
+                this.patternOutputs = filterMeaningfulStacks(patternOutputs);
+            }
+        }
+
+        private static IAEItemStack[] calculateRecursiveInputs(IAEItemStack[] pInputs, IAEItemStack[] pOutputs) {
+            IAEItemStack[] recInputs = null;
+            // While this is a O(n*m) algorithm, no allocations are needed except for the actual output.
+            for (IAEItemStack output : pOutputs) {
+                for (IAEItemStack input : pInputs) {
+                    if (!input.equals(output)) {
+                        continue;
+                    }
+
+                    final long netProduced = output.getStackSize() - input.getStackSize();
+
+                    IAEItemStack recInput;
+                    if (netProduced > 0) {
+                        recInput = input.copy();
+                        input.setStackSize(0);
+                        output.setStackSize(netProduced);
+                    } else {
+                        // Ensure recInput.stackSize + input.stackSize == original input.stackSize
+                        recInput = input.copy().setStackSize(input.getStackSize() + netProduced);
+                        input.setStackSize(-netProduced);
+                        output.setStackSize(0);
+                    }
+
+                    if (!recInput.isMeaningful()) {
+                        continue;
+                    }
+
+                    if (recInputs == null) {
+                        recInputs = new IAEItemStack[] { recInput };
+                    } else {
+                        recInputs = Arrays.copyOf(recInputs, recInputs.length + 1);
+                        recInputs[recInputs.length - 1] = recInput;
+                    }
+                }
+            }
+
+            return recInputs == null ? new IAEItemStack[0] : recInputs;
+        }
+
+        private static boolean hasRecursiveInputs(IAEItemStack[] pInputs, IAEItemStack[] pOutputs) {
+            for (IAEItemStack output : pOutputs) {
+                for (IAEItemStack input : pInputs) {
+                    if (input.equals(output)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static IAEItemStack[] filterMeaningfulStacks(IAEItemStack[] stacks) {
+            int i = 0, j = 0;
+            for (; i < stacks.length; i++) {
+                IAEItemStack stack = stacks[i];
+                if (stack.isMeaningful()) {
+                    stacks[j] = stack;
+                    j++;
+                }
+            }
+
+            return i == j ? stacks : Arrays.copyOf(stacks, j);
         }
 
         @Override
