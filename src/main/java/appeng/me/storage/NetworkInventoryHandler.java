@@ -38,13 +38,13 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     private static final ThreadLocal<LinkedList> DEPTH_SIM = new ThreadLocal<>();
 
     /**
-     * Sorter for the {@link #priorityInventory} list. Crafting inventories are first followed by Sticky inventories.
-     * The inventories are then sorted by priority (highest first), and then by placement pass (1 first, 1&2 second, 2
-     * last).
+     * Sorter for the {@link #priorityInventory} list. AutoCrafting inventories are first followed by Sticky
+     * inventories. The inventories are then sorted by priority (highest first), and then by placement pass (1 first,
+     * 1&2 second, 2 last).
      */
     private static final Comparator<IMEInventoryHandler<?>> CRAFTING_STICKY_PRIORITY_PLACEMENT_PASS_SORTER = (o1,
             o2) -> {
-        int result = Boolean.compare(o2.getCraftingInventory(), o1.getCraftingInventory());
+        int result = Boolean.compare(o2.isAutoCraftingInventory(), o1.isAutoCraftingInventory());
         if (result != 0) {
             return result;
         }

@@ -398,7 +398,7 @@ public class CraftingGridCache
     }
 
     @Override
-    public boolean getCraftingInventory() {
+    public boolean isAutoCraftingInventory() {
         return true;
     }
 

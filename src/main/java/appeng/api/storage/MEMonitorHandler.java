@@ -183,7 +183,7 @@ public class MEMonitorHandler<StackType extends IAEStack> implements IMEMonitor<
     }
 
     @Override
-    public boolean getCraftingInventory() {
-        return this.internalHandler.getCraftingInventory();
+    public boolean isAutoCraftingInventory() {
+        return this.internalHandler.isAutoCraftingInventory();
     }
 }

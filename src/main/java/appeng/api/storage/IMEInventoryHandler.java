@@ -85,11 +85,12 @@ public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInve
     }
 
     /**
-     * Gets whether an inventory stores items for crafting. For example the {@link appeng.me.cache.CraftingGridCache}
+     * Gets whether an inventory stores items for auto crafting. For example the
+     * {@link appeng.me.cache.CraftingGridCache}
      *
-     * @return true if this inventory stores items for crafting
+     * @return true if this inventory stores items for auto crafting
      */
-    default boolean getCraftingInventory() {
+    default boolean isAutoCraftingInventory() {
         return false;
     }
 

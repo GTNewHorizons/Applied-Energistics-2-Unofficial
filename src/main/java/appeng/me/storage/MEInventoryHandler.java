@@ -36,7 +36,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     private boolean hasReadAccess;
     protected boolean hasWriteAccess;
     protected boolean isSticky;
-    protected boolean isCraftingInventory;
+    protected boolean isAutoCraftingInventory;
 
     public MEInventoryHandler(final IMEInventory<T> i, final StorageChannel channel) {
         if (i instanceof IMEInventoryHandler) {
@@ -172,12 +172,12 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     }
 
     @Override
-    public boolean getCraftingInventory() {
-        return isCraftingInventory || this.internal.getCraftingInventory();
+    public boolean isAutoCraftingInventory() {
+        return isAutoCraftingInventory || this.internal.isAutoCraftingInventory();
     }
 
-    public void setCraftingInventory(final boolean isCraftingInventory) {
-        this.isCraftingInventory = isCraftingInventory;
+    public void setIsAutoCraftingInventory(final boolean isCraftingInventory) {
+        this.isAutoCraftingInventory = isCraftingInventory;
     }
 
     public IMEInventory<T> getInternal() {
