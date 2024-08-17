@@ -31,7 +31,13 @@ import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.opengl.GL11;
 
 import appeng.api.AEApi;
-import appeng.api.parts.*;
+import appeng.api.parts.IBoxProvider;
+import appeng.api.parts.IFacadeContainer;
+import appeng.api.parts.IFacadePart;
+import appeng.api.parts.IPartCollisionHelper;
+import appeng.api.parts.IPartHost;
+import appeng.api.parts.IPartRenderHelper;
+import appeng.api.parts.ISimplifiedBundle;
 import appeng.client.render.BusRenderHelper;
 import appeng.client.render.RenderBlocksWorkaround;
 import appeng.core.AELog;

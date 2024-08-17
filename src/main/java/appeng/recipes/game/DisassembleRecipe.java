@@ -25,11 +25,16 @@ import net.minecraft.world.World;
 import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
-import appeng.api.definitions.*;
+import appeng.api.definitions.IBlocks;
+import appeng.api.definitions.IDefinitions;
+import appeng.api.definitions.IItemDefinition;
+import appeng.api.definitions.IItems;
+import appeng.api.definitions.IMaterials;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.util.IterationCounter;
 
 public final class DisassembleRecipe implements IRecipe {
 
@@ -93,7 +98,7 @@ public final class DisassembleRecipe implements IRecipe {
                             .getCellInventory(stackInSlot, null, StorageChannel.ITEMS);
                     if (cellInv != null) {
                         final IItemList<IAEItemStack> list = cellInv
-                                .getAvailableItems(StorageChannel.ITEMS.createList());
+                                .getAvailableItems(StorageChannel.ITEMS.createList(), IterationCounter.fetchNewId());
                         if (!list.isEmpty()) {
                             return null;
                         }

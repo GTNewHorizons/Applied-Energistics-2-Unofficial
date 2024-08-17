@@ -1,6 +1,10 @@
 package appeng.container.implementations;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 import javax.annotation.Nullable;
 
@@ -10,6 +14,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.util.ItemSorters;
+import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import io.netty.buffer.ByteBuf;
 
@@ -24,6 +29,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
     private final String name;
     private final int serial;
     private final long storage;
+    private final long usedStorage;
     private final long coprocessors;
     private final boolean isBusy;
     private final long totalItems;
@@ -35,6 +41,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.name = "ERROR";
         this.serial = 0;
         this.storage = 0;
+        this.usedStorage = 0;
         this.coprocessors = 0;
         this.isBusy = false;
         this.totalItems = 0;
@@ -49,10 +56,12 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.isBusy = cluster.isBusy();
         if (isBusy) {
             crafting = cluster.getFinalOutput();
+            usedStorage = cluster.getUsedStorage();
             totalItems = cluster.getStartItemCount();
             remainingItems = cluster.getRemainingItemCount();
         } else {
             crafting = null;
+            usedStorage = 0;
             totalItems = 0;
             remainingItems = 0;
         }
@@ -65,6 +74,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.name = i.getString("name");
         this.serial = i.getInteger("serial");
         this.storage = i.getLong("storage");
+        this.usedStorage = i.getLong("usedStorage");
         this.coprocessors = i.getLong("coprocessors");
         this.isBusy = i.getBoolean("isBusy");
         this.totalItems = i.getLong("totalItems");
@@ -90,6 +100,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         }
         i.setInteger("serial", serial);
         i.setLong("storage", storage);
+        i.setLong("usedStorage", usedStorage);
         i.setLong("coprocessors", coprocessors);
         i.setBoolean("isBusy", isBusy);
         i.setLong("totalItems", totalItems);
@@ -133,6 +144,10 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         return storage;
     }
 
+    public long getUsedStorage() {
+        return usedStorage;
+    }
+
     public long getCoprocessors() {
         return coprocessors;
     }
@@ -163,17 +178,10 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
     }
 
     public String formatStorage() {
-        long val = getStorage();
-        if (val > 4_000_000_000_000L) {
-            return String.format("%dT", val / 1024 / 1024 / 1024 / 1024);
-        } else if (val > 4_000_000_000L) {
-            return String.format("%dG", val / 1024 / 1024 / 1024);
-        } else if (val > 4_000_000L) {
-            return String.format("%dM", val / 1024 / 1024);
-        } else if (val > 4_000L) {
-            return String.format("%dk", val / 1024);
-        } else {
-            return Long.toString(val);
-        }
+        return Platform.formatByteDouble(getStorage());
+    }
+
+    public String formatUsedStorage() {
+        return Platform.formatByteDouble(getUsedStorage());
     }
 }

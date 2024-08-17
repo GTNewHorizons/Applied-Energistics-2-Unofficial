@@ -5,10 +5,13 @@ import java.io.IOException;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
+import org.lwjgl.input.Keyboard;
+
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerRenamer;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
@@ -35,7 +38,7 @@ public class GuiRenamer extends AEBaseGui implements IDropToFillTextField {
                 }
             }
         };
-        this.textField.setMaxStringLength(32);
+        this.textField.setMaxStringLength(AEConfig.instance.quartzKnifeInputLength);
     }
 
     @Override
@@ -69,7 +72,7 @@ public class GuiRenamer extends AEBaseGui implements IDropToFillTextField {
 
     @Override
     protected void keyTyped(final char character, final int key) {
-        if (key == 28) { // Enter
+        if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
             try {
                 NetworkHandler.instance
                         .sendToServer(new PacketValueConfig("QuartzKnife.ReName", this.textField.getText()));

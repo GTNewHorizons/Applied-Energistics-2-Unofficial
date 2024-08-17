@@ -11,7 +11,11 @@
 package appeng.fmp;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -25,12 +29,20 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.implementations.parts.IPartCable;
 import appeng.api.networking.IGridNode;
-import appeng.api.parts.*;
+import appeng.api.parts.IFacadeContainer;
+import appeng.api.parts.IFacadePart;
+import appeng.api.parts.IPart;
+import appeng.api.parts.IPartCollisionHelper;
+import appeng.api.parts.IPartItem;
+import appeng.api.parts.LayerFlags;
+import appeng.api.parts.PartItemStack;
+import appeng.api.parts.SelectedPart;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.render.BusRenderHelper;
 import appeng.client.render.BusRenderer;
+import appeng.client.render.RenderBlocksWorkaround;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.features.AEFeature;
@@ -45,7 +57,12 @@ import codechicken.lib.data.MCDataOutput;
 import codechicken.lib.raytracer.IndexedCuboid6;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Vector3;
-import codechicken.multipart.*;
+import codechicken.multipart.IMaskedRedstonePart;
+import codechicken.multipart.JCuboidPart;
+import codechicken.multipart.JNormalOcclusion;
+import codechicken.multipart.NormalOcclusionTest;
+import codechicken.multipart.NormallyOccludedPart;
+import codechicken.multipart.TMultiPart;
 import codechicken.multipart.scalatraits.TIInventoryTile;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -147,12 +164,14 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
     @Override
     public boolean renderStatic(final Vector3 pos, final int pass) {
         if (pass == 0 || (pass == 1 && AEConfig.instance.isFeatureEnabled(AEFeature.AlphaPass))) {
-            BusRenderHelper.INSTANCE.setPass(pass);
-            BusRenderer.INSTANCE.getRenderer().renderAllFaces = true;
-            BusRenderer.INSTANCE.getRenderer().blockAccess = this.world();
-            BusRenderer.INSTANCE.getRenderer().overrideBlockTexture = null;
+            final BusRenderHelper helper = BusRenderHelper.instances.get();
+            final RenderBlocksWorkaround rb = BusRenderer.INSTANCE.getRenderer();
+            helper.setPass(pass);
+            rb.renderAllFaces = true;
+            rb.blockAccess = this.world();
+            rb.overrideBlockTexture = null;
             this.getCableBus().renderStatic(pos.x, pos.y, pos.z);
-            return BusRenderHelper.INSTANCE.getItemsRendered() > 0;
+            return helper.getItemsRendered() > 0;
         }
         return false;
     }
@@ -160,7 +179,7 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
     @Override
     public void renderDynamic(final Vector3 pos, final float frame, final int pass) {
         if (pass == 0 || (pass == 1 && AEConfig.instance.isFeatureEnabled(AEFeature.AlphaPass))) {
-            BusRenderHelper.INSTANCE.setPass(pass);
+            BusRenderHelper.instances.get().setPass(pass);
             this.getCableBus().renderDynamic(pos.x, pos.y, pos.z);
         }
     }

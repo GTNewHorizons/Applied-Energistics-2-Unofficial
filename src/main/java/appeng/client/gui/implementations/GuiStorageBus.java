@@ -17,7 +17,11 @@ import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.*;
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.ActionItems;
+import appeng.api.config.FuzzyMode;
+import appeng.api.config.Settings;
+import appeng.api.config.StorageFilter;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerStorageBus;
@@ -99,16 +103,16 @@ public class GuiStorageBus extends GuiUpgradeable {
                 this.ySize - 96 + 3,
                 GuiColors.StorageBusInventory.getColor());
 
-        if (this.fuzzyMode != null) {
-            this.fuzzyMode.set(this.cvb.getFuzzyMode());
-        }
-
-        if (this.storageFilter != null) {
-            this.storageFilter.set(((ContainerStorageBus) this.cvb).getStorageFilter());
-        }
-
-        if (this.rwMode != null) {
-            this.rwMode.set(((ContainerStorageBus) this.cvb).getReadWriteMode());
+        if (this.cvb instanceof ContainerStorageBus csb) {
+            if (this.fuzzyMode != null) {
+                this.fuzzyMode.set(csb.getFuzzyMode());
+            }
+            if (this.storageFilter != null) {
+                this.storageFilter.set(csb.getStorageFilter());
+            }
+            if (this.rwMode != null) {
+                this.rwMode.set(csb.getReadWriteMode());
+            }
         }
     }
 

@@ -10,6 +10,8 @@
 
 package appeng.integration.modules.helpers;
 
+import javax.annotation.Nonnull;
+
 import net.mcft.copy.betterstorage.api.crate.ICrateStorage;
 import net.minecraft.item.ItemStack;
 
@@ -19,6 +21,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 
 public class BSCrate implements IMEInventory<IAEItemStack> {
@@ -55,11 +58,27 @@ public class BSCrate implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IItemList getAvailableItems(final IItemList out) {
+    public IItemList getAvailableItems(final IItemList out, int iteration) {
         for (final ItemStack is : this.crateStorage.getContents()) {
             out.add(AEItemStack.create(is));
         }
         return out;
+    }
+
+    @Override
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
+        long count = 0;
+        for (final ItemStack is : this.crateStorage.getContents()) {
+            if (is != null && is.stackSize > 0 && Platform.isSameItemPrecise(is, request.getItemStack())) {
+                count += is.stackSize;
+                if (count < 0) {
+                    // overflow
+                    count = Long.MAX_VALUE;
+                    break;
+                }
+            }
+        }
+        return count == 0 ? null : request.copy().setStackSize(count);
     }
 
     @Override

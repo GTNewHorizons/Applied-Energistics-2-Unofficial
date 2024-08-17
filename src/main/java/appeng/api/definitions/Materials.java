@@ -89,6 +89,8 @@ public class Materials {
 
     public AEItemDefinition materialCardCrafting;
 
+    public AEItemDefinition materialCardSticky;
+
     public AEItemDefinition materialEnderDust;
 
     public AEItemDefinition materialFlour;

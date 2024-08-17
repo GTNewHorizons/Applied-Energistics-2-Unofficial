@@ -6,13 +6,13 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import appeng.api.config.CraftingMode;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.localization.GuiText;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingContext;
 import appeng.crafting.v2.CraftingRequest;
-import appeng.crafting.v2.CraftingRequest.CraftingMode;
 import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
@@ -99,7 +99,7 @@ public class IgnoreMissingItemResolver implements CraftingRequestResolver<IAEIte
 
         @Override
         public String getTooltipText() {
-            return GuiText.PreCraftStart.getLocal() + ": " + fulfilled;
+            return GuiText.Missing.getLocal() + ": " + fulfilled;
         }
     }
 

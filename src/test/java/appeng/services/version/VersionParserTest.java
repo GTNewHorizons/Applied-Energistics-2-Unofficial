@@ -4,7 +4,12 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import appeng.services.version.exceptions.*;
+import appeng.services.version.exceptions.InvalidBuildException;
+import appeng.services.version.exceptions.InvalidChannelException;
+import appeng.services.version.exceptions.InvalidRevisionException;
+import appeng.services.version.exceptions.InvalidVersionException;
+import appeng.services.version.exceptions.MissingSeparatorException;
+import appeng.services.version.exceptions.VersionCheckerException;
 
 /**
  * Tests for {@link VersionParser}

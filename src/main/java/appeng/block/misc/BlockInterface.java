@@ -12,6 +12,7 @@ package appeng.block.misc;
 
 import java.util.EnumSet;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
@@ -57,6 +58,14 @@ public class BlockInterface extends AEBaseTileBlock {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onNeighborBlockChange(World worldIn, int x, int y, int z, Block neighbor) {
+        TileInterface tile = this.getTileEntity(worldIn, x, y, z);
+        if (tile != null) {
+            tile.getInterfaceDuality().updateRedstoneState();
+        }
     }
 
     @Override

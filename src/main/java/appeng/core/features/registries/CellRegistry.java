@@ -15,7 +15,11 @@ import java.util.List;
 
 import net.minecraft.item.ItemStack;
 
-import appeng.api.storage.*;
+import appeng.api.storage.ICellHandler;
+import appeng.api.storage.ICellRegistry;
+import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.ISaveProvider;
+import appeng.api.storage.StorageChannel;
 
 public class CellRegistry implements ICellRegistry {
 

@@ -59,6 +59,10 @@ public enum GuiColors {
     CraftConfirmCraftingPlan(0x404040),
     CraftConfirmSimulation(0x404040),
     CraftConfirmFromStorage(0x404040),
+    CraftConfirmPercent25(0x1c4ca6),
+    CraftConfirmPercent50(0x1a751e),
+    CraftConfirmPercent75(0xe3940b),
+    CraftConfirmPercent100(0x660f0f),
     CraftConfirmMissing(0x404040),
     CraftConfirmToCraft(0x404040),
 
@@ -86,6 +90,7 @@ public enum GuiColors {
     IOPortInventory(0x404040),
 
     NetworkStatusDetails(0x404040),
+    NetworkBytesDetails(0x404040),
     NetworkStatusStoredPower(0x404040),
     NetworkStatusMaxPower(0x404040),
     NetworkStatusPowerInputRate(0x404040),
@@ -93,7 +98,9 @@ public enum GuiColors {
     NetworkStatusItemCount(0x404040),
 
     NetworkToolTitle(0x404040),
+    AdvancedNetworkToolTitle(0x404040),
     NetworkToolInventory(0x404040),
+    AdvancedNetworkToolInventory(0x404040),
 
     OreFilterLabel(0x404040),
 
@@ -138,7 +145,10 @@ public enum GuiColors {
     NEIGrindstoneNoSecondOutput(0x000000),
 
     MEMonitorableTitle(0x404040),
-    MEMonitorableInventory(0x404040);
+    MEMonitorableInventory(0x404040),
+    DefaultBlack(0x404040),
+    WarningOrange(0xFBA900),
+    WarningRed(0xFB0000);
 
     private final String root;
     private final int color;

@@ -45,6 +45,24 @@ public interface IAEStack<StackType extends IAEStack> {
     StackType setStackSize(long stackSize);
 
     /**
+     * Percentage of items used during crafting
+     *
+     * @return Percentage of items used
+     */
+    default float getUsedPercent() {
+        return 0;
+    }
+
+    /**
+     * Change percentage of items used during crafting
+     *
+     * @param percent Percentage of items used
+     */
+    default StackType setUsedPercent(float percent) {
+        return (StackType) this;
+    }
+
+    /**
      * Same as getStackSize, but for requestable items. ( LP )
      *
      * @return basically itemStack.stackSize but for requestable items.
@@ -57,6 +75,24 @@ public interface IAEStack<StackType extends IAEStack> {
      * @return basically itemStack.stackSize = N but for setStackSize items.
      */
     StackType setCountRequestable(long countRequestable);
+
+    /**
+     * Number of requests made to achieve requested item count
+     *
+     * @return requests made during crafting simulation
+     */
+    default long getCountRequestableCrafts() {
+        return 0;
+    }
+
+    /**
+     * Change the number of requests made to achieve requested item count
+     *
+     * @param countRequestableCrafts requests made during crafting simulation
+     */
+    default StackType setCountRequestableCrafts(long countRequestableCrafts) {
+        return (StackType) this;
+    }
 
     /**
      * true, if the item can be crafted.

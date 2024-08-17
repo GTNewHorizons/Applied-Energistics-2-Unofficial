@@ -8,7 +8,11 @@ import net.minecraft.entity.player.InventoryPlayer;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.*;
+import appeng.api.config.ActionItems;
+import appeng.api.config.ItemSubstitution;
+import appeng.api.config.PatternBeSubstitution;
+import appeng.api.config.PatternSlotConfig;
+import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
@@ -18,7 +22,9 @@ import appeng.core.AppEng;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.helpers.InventoryAction;
 
 public class GuiPatternTermEx extends GuiMEMonitorable {
 
@@ -211,7 +217,12 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         final int currentScroll = this.processingScrollBar.getCurrentScroll();
         this.processingScrollBar.click(this, xCoord - this.guiLeft, yCoord - this.guiTop);
-        super.mouseClicked(xCoord, yCoord, btn);
+        if (btn == 2 && doubleBtn.mousePressed(this.mc, xCoord, yCoord)) { //
+            InventoryAction action = InventoryAction.SET_PATTERN_MULTI;
+
+            final PacketInventoryAction p = new PacketInventoryAction(action, 0, 0);
+            NetworkHandler.instance.sendToServer(p);
+        } else super.mouseClicked(xCoord, yCoord, btn);
 
         if (currentScroll != this.processingScrollBar.getCurrentScroll()) {
             changeActivePage();

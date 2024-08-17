@@ -16,11 +16,11 @@ import net.minecraft.item.ItemStack;
 import appeng.api.AEApi;
 import appeng.api.definitions.IComparableDefinition;
 import appeng.api.definitions.IItems;
+import appeng.api.implementations.HasServerSideToolLogic;
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
-import appeng.items.tools.ToolNetworkTool;
 import appeng.items.tools.powered.ToolColorApplicator;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -72,8 +72,8 @@ public class PacketClick extends AppEngPacket {
         final IComparableDefinition maybeColorApplicator = items.colorApplicator();
 
         if (is != null) {
-            if (is.getItem() instanceof ToolNetworkTool tnt) {
-                tnt.serverSideToolLogic(
+            if (is.getItem() instanceof HasServerSideToolLogic hsstl) {
+                hsstl.serverSideToolLogic(
                         is,
                         player,
                         player.worldObj,

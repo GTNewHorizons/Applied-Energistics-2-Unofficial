@@ -48,6 +48,7 @@ import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
 import appeng.items.materials.MaterialType;
 import appeng.util.InventoryAdaptor;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -126,7 +127,6 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
 
                 if (handler.isPreformatted()) {
                     String filter = cellInventory.getOreFilter();
-
                     if (filter.isEmpty()) {
                         final String list = (handler.getIncludeExcludeMode() == IncludeExclude.WHITELIST
                                 ? GuiText.Included
@@ -146,6 +146,10 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
                         }
                     } else {
                         lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);
+                    }
+
+                    if (handler.getSticky()) {
+                        lines.add(GuiText.Sticky.getLocal());
                     }
                 }
             }
@@ -219,12 +223,7 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
 
     @Override
     public FuzzyMode getFuzzyMode(final ItemStack is) {
-        final String fz = Platform.openNbtData(is).getString("FuzzyMode");
-        try {
-            return FuzzyMode.valueOf(fz);
-        } catch (final Throwable t) {
-            return FuzzyMode.IGNORE_ALL;
-        }
+        return FuzzyMode.fromItemStack(is);
     }
 
     @Override
@@ -259,7 +258,8 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
                     .getCellInventory(stack, null, StorageChannel.ITEMS);
             if (inv != null && playerInventory.getCurrentItem() == stack) {
                 final InventoryAdaptor ia = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
-                final IItemList<IAEItemStack> list = inv.getAvailableItems(StorageChannel.ITEMS.createList());
+                final IItemList<IAEItemStack> list = inv
+                        .getAvailableItems(StorageChannel.ITEMS.createList(), IterationCounter.fetchNewId());
                 if (list.isEmpty() && ia != null) {
                     playerInventory.setInventorySlotContents(playerInventory.currentItem, null);
 

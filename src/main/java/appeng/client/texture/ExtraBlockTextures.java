@@ -10,7 +10,6 @@
 
 package appeng.client.texture;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
@@ -118,6 +117,7 @@ public enum ExtraBlockTextures {
     BlockCraftingStorage1024k("BlockCraftingStorage1024k"),
     BlockCraftingStorage4096k("BlockCraftingStorage4096k"),
     BlockCraftingStorage16384k("BlockCraftingStorage16384k"),
+    BlockCraftingStorageSingularity("BlockCraftingStorageSingularity"),
 
     BlockCraftingAcceleratorFit("BlockCraftingAcceleratorFit"),
     BlockCraftingAccelerator4xFit("BlockCraftingAccelerator4xFit"),
@@ -140,6 +140,7 @@ public enum ExtraBlockTextures {
     BlockCraftingStorage1024kFit("BlockCraftingStorage1024kFit"),
     BlockCraftingStorage4096kFit("BlockCraftingStorage4096kFit"),
     BlockCraftingStorage16384kFit("BlockCraftingStorage16384kFit"),
+    BlockCraftingStorageSingularityFit("BlockCraftingStorageSingularityFit"),
 
     BlockCraftingUnitRing("BlockCraftingUnitRing"),
     BlockCraftingUnitRingLongRotated("BlockCraftingUnitRingLongRotated"),
@@ -165,8 +166,7 @@ public enum ExtraBlockTextures {
 
     @SideOnly(Side.CLIENT)
     public static IIcon getMissing() {
-        return ((TextureMap) Minecraft.getMinecraft().getTextureManager().getTexture(TextureMap.locationBlocksTexture))
-                .getAtlasSprite("missingno");
+        return TextureUtils.getMissingBlock();
     }
 
     public String getName() {

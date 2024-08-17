@@ -11,7 +11,10 @@
 package appeng.parts;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Random;
 
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.crash.CrashReportCategory;
@@ -39,7 +42,13 @@ import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.security.IActionHost;
-import appeng.api.parts.*;
+import appeng.api.parts.BusSupport;
+import appeng.api.parts.IPart;
+import appeng.api.parts.IPartCollisionHelper;
+import appeng.api.parts.IPartHost;
+import appeng.api.parts.IPartRenderHelper;
+import appeng.api.parts.ISimplifiedBundle;
+import appeng.api.parts.PartItemStack;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
@@ -47,6 +56,7 @@ import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.ICustomNameObject;
 import appeng.helpers.IPriorityHost;
+import appeng.items.tools.ToolPriorityCard;
 import appeng.items.tools.quartz.ToolQuartzCuttingKnife;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
@@ -60,12 +70,12 @@ import io.netty.buffer.ByteBuf;
 
 public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, IUpgradeableHost, ICustomNameObject {
 
-    private final AENetworkProxy proxy;
-    private final ItemStack is;
-    private ISimplifiedBundle renderCache = null;
-    private TileEntity tile = null;
-    private IPartHost host = null;
-    private ForgeDirection side = null;
+    protected final AENetworkProxy proxy;
+    protected final ItemStack is;
+    protected ThreadLocal<ISimplifiedBundle> renderCache = new ThreadLocal<>();
+    protected TileEntity tile = null;
+    protected IPartHost host = null;
+    protected ForgeDirection side = null;
 
     public AEBasePart(final ItemStack is) {
         Preconditions.checkNotNull(is);
@@ -404,6 +414,15 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
         return false;
     }
 
+    private boolean usePriorityCard(final EntityPlayer player) {
+        final ItemStack is = player.inventory.getCurrentItem();
+        if (is != null && is.getItem() instanceof ToolPriorityCard) {
+            ToolPriorityCard.handleUse(player, this, is, side);
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public final boolean onActivate(final EntityPlayer player, final Vec3 pos) {
         // int x = (int) pos.xCoord, y = (int) pos.yCoord, z = (int) pos.zCoord;
@@ -418,7 +437,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 player.getEntityWorld());
         if (event.isCanceled()) return false;
 
-        if (this.useMemoryCard(player) || useRenamer(player)) return true;
+        if (this.useMemoryCard(player) || useRenamer(player) || usePriorityCard(player)) return true;
 
         return onPartActivate(player, pos);
     }
@@ -486,11 +505,11 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
     }
 
     public ISimplifiedBundle getRenderCache() {
-        return this.renderCache;
+        return this.renderCache.get();
     }
 
     public void setRenderCache(final ISimplifiedBundle renderCache) {
-        this.renderCache = renderCache;
+        this.renderCache.set(renderCache);
     }
 
     private static int getSideIndexFromDirection(ForgeDirection direction) {

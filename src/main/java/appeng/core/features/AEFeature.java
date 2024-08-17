@@ -82,6 +82,7 @@ public enum AEFeature {
     IOPort(Constants.CATEGORY_STORAGE),
 
     NetworkTool(Constants.CATEGORY_NETWORK_TOOL),
+    AdvancedNetworkTool(Constants.CATEGORY_ADVANCED_NETWORK_TOOL),
 
     DenseEnergyCells(Constants.CATEGORY_HIGHER_CAPACITY),
     DenseCables(Constants.CATEGORY_HIGHER_CAPACITY),
@@ -93,6 +94,7 @@ public enum AEFeature {
     P2PTunnelEU(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelLiquids(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelLight(Constants.CATEGORY_P2P_TUNNELS),
+    P2PTunnelSound(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelOpenComputers(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelPressure(Constants.CATEGORY_P2P_TUNNELS),
     P2PTunnelGregtech(Constants.CATEGORY_P2P_TUNNELS),
@@ -131,6 +133,7 @@ public enum AEFeature {
     Patterns(Constants.CATEGORY_CRAFTING_FEATURES),
     CraftingCPU(Constants.CATEGORY_CRAFTING_FEATURES),
     XtremeCraftingCPU(Constants.CATEGORY_CRAFTING_FEATURES),
+    PatternsOptimizer(Constants.CATEGORY_CRAFTING_FEATURES),
 
     ChunkLoggerTrace(Constants.CATEGORY_COMMANDS, false);
 
@@ -174,6 +177,7 @@ public enum AEFeature {
         private static final String CATEGORY_RENDERING = "Rendering";
         private static final String CATEGORY_FACADES = "Facades";
         private static final String CATEGORY_NETWORK_TOOL = "NetworkTool";
+        private static final String CATEGORY_ADVANCED_NETWORK_TOOL = "AdvancedNetworkTool";
         private static final String CATEGORY_PORTABLE_CELL = "PortableCell";
     }
 }

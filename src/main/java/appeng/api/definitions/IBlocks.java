@@ -180,6 +180,8 @@ public interface IBlocks {
 
     ITileDefinition craftingStorage16384k();
 
+    ITileDefinition craftingStorageSingularity();
+
     ITileDefinition craftingMonitor();
 
     ITileDefinition molecularAssembler();
@@ -187,4 +189,6 @@ public interface IBlocks {
     ITileDefinition lightDetector();
 
     ITileDefinition paint();
+
+    ITileDefinition patternsOptimizationMatrix();
 }

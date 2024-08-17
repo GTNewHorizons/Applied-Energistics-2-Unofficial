@@ -20,6 +20,8 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
     private boolean isCraftable;
     private long stackSize;
     private long countRequestable;
+    private long countRequestableCrafts;
+    private float usedPercent;
 
     static long getPacketValue(final byte type, final ByteBuf tag) {
         if (type == 0) {
@@ -51,6 +53,17 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
     }
 
     @Override
+    public StackType setUsedPercent(final float percent) {
+        this.usedPercent = percent;
+        return (StackType) this;
+    }
+
+    @Override
+    public float getUsedPercent() {
+        return this.usedPercent;
+    }
+
+    @Override
     public long getCountRequestable() {
         return this.countRequestable;
     }
@@ -58,6 +71,17 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
     @Override
     public StackType setCountRequestable(final long countRequestable) {
         this.countRequestable = countRequestable;
+        return (StackType) this;
+    }
+
+    @Override
+    public long getCountRequestableCrafts() {
+        return this.countRequestableCrafts;
+    }
+
+    @Override
+    public StackType setCountRequestableCrafts(long countRequestableCrafts) {
+        this.countRequestableCrafts = countRequestableCrafts;
         return (StackType) this;
     }
 
@@ -78,6 +102,8 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         // priority = Integer.MIN_VALUE;
         this.setCountRequestable(0);
         this.setCraftable(false);
+        this.setCountRequestableCrafts(0);
+        this.setUsedPercent(0);
         return (StackType) this;
     }
 
@@ -121,6 +147,11 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         // putPacketValue( i, priority );
         this.putPacketValue(i, this.stackSize);
         this.putPacketValue(i, this.countRequestable);
+        final long longUsedPercent = (long) (this.usedPercent * 10000);
+        final byte mask2 = (byte) (this.getType(this.countRequestableCrafts) | (this.getType(longUsedPercent) << 2));
+        i.writeByte(mask2);
+        this.putPacketValue(i, this.countRequestableCrafts);
+        this.putPacketValue(i, longUsedPercent);
     }
 
     private byte getType(final long num) {

@@ -12,14 +12,17 @@ package appeng.container.implementations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.*;
+import net.minecraft.inventory.ICrafting;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.SlotCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
@@ -38,7 +41,13 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.ContainerNull;
 import appeng.container.guisync.GuiSync;
-import appeng.container.slot.*;
+import appeng.container.slot.IOptionalSlotHost;
+import appeng.container.slot.OptionalSlotFake;
+import appeng.container.slot.SlotFake;
+import appeng.container.slot.SlotFakeCraftingMatrix;
+import appeng.container.slot.SlotPatternOutputs;
+import appeng.container.slot.SlotPatternTerm;
+import appeng.container.slot.SlotRestrictedInput;
 import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.items.storage.ItemViewCell;
@@ -54,6 +63,8 @@ import appeng.util.item.AEItemStack;
 public class ContainerPatternTerm extends ContainerMEMonitorable
         implements IAEAppEngInventory, IOptionalSlotHost, IContainerCraftingPacket {
 
+    public static final int MULTIPLE_OF_BUTTON_CLICK = 2;
+    public static final int MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT = 8;
     private final PartPatternTerminal patternTerminal;
     private final AppEngInternalInventory cOut = new AppEngInternalInventory(null, 1);
     private final IInventory crafting;
@@ -257,6 +268,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         encodedValue.setBoolean("crafting", this.isCraftingMode());
         encodedValue.setBoolean("substitute", this.isSubstitute());
         encodedValue.setBoolean("beSubstitute", this.canBeSubstitute());
+        encodedValue.setString("author", this.getPlayerInv().player.getCommandSenderName());
 
         output.setTagCompound(encodedValue);
     }
@@ -549,45 +561,66 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         this.beSubstitute = beSubstitute;
     }
 
-    static boolean canDoubleStacks(SlotFake[] slots) {
-        List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
-        long emptyStots = enabledSlots.stream().filter(s -> s.getStack() == null).count();
-        long fullSlots = enabledSlots.stream().filter(s -> s.getStack() != null && s.getStack().stackSize * 2 > 127)
-                .count();
-        return fullSlots <= emptyStots && emptyStots < enabledSlots.size();
+    public void doubleStacks(int val) {
+        multiplyOrDivideStacks(
+                ((val & 1) != 0 ? MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT : MULTIPLE_OF_BUTTON_CLICK)
+                        * ((val & 2) != 0 ? -1 : 1));
     }
 
-    static void doubleStacksInternal(SlotFake[] slots) {
-        List<ItemStack> overFlowStacks = new ArrayList<>();
+    static boolean canMultiplyOrDivide(SlotFake[] slots, int mult) {
+        if (mult > 0) {
+            for (Slot s : slots) {
+                if (s.getStack() != null) {
+                    long val = (long) s.getStack().stackSize * mult;
+                    if (val > Integer.MAX_VALUE) return false;
+                }
+            }
+            return true;
+        } else if (mult < 0) {
+            mult = -mult;
+            for (Slot s : slots) {
+                if (s.getStack() != null) { // Although % is a very inefficient algorithm, it is not a performance issue
+                                            // here. :>
+                    if (s.getStack().stackSize % mult != 0) return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    static void multiplyOrDivideStacksInternal(SlotFake[] slots, int mult) {
         List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
-        for (final Slot s : enabledSlots) {
-            ItemStack st = s.getStack();
-            if (st == null) continue;
-            if (st.stackSize * 2 > 127) {
-                overFlowStacks.add(st.copy());
-            } else {
-                st.stackSize *= 2;
-                s.putStack(st);
+        if (mult > 0) {
+            for (final Slot s : enabledSlots) {
+                ItemStack st = s.getStack();
+                if (st != null) {
+                    st.stackSize *= mult;
+                    s.putStack(st);
+                }
+            }
+        } else if (mult < 0) {
+            mult = -mult;
+            for (final Slot s : enabledSlots) {
+                ItemStack st = s.getStack();
+                if (st != null) {
+                    st.stackSize /= mult;
+                    s.putStack(st);
+                }
             }
         }
-        Iterator<ItemStack> ow = overFlowStacks.iterator();
-        for (final Slot s : enabledSlots) {
-            if (!ow.hasNext()) break;
-            if (s.getStack() != null) continue;
-            s.putStack(ow.next());
-        }
-        assert !ow.hasNext();
     }
 
-    public void doubleStacks(boolean isShift) {
-        if (!isCraftingMode() && canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots)) {
-            doubleStacksInternal(this.craftingSlots);
-            doubleStacksInternal(this.outputSlots);
-            if (isShift) {
-                while (canDoubleStacks(craftingSlots) && canDoubleStacks(outputSlots)) {
-                    doubleStacksInternal(this.craftingSlots);
-                    doubleStacksInternal(this.outputSlots);
-                }
+    /**
+     * Multiply or divide a number
+     * 
+     * @param multi Positive numbers are multiplied and negative numbers are divided
+     */
+    public void multiplyOrDivideStacks(int multi) {
+        if (!isCraftingMode()) {
+            if (canMultiplyOrDivide(this.craftingSlots, multi) && canMultiplyOrDivide(this.outputSlots, multi)) {
+                multiplyOrDivideStacksInternal(this.craftingSlots, multi);
+                multiplyOrDivideStacksInternal(this.outputSlots, multi);
             }
             this.detectAndSendChanges();
         }

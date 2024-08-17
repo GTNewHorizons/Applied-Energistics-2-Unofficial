@@ -18,6 +18,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
+import appeng.api.storage.ICellCacheRegistry;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventory;
@@ -29,7 +30,8 @@ import appeng.util.prioitylist.FuzzyPriorityList;
 import appeng.util.prioitylist.OreFilteredList;
 import appeng.util.prioitylist.PrecisePriorityList;
 
-public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> implements ICellInventoryHandler {
+public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack>
+        implements ICellInventoryHandler, ICellCacheRegistry {
 
     CellInventoryHandler(final IMEInventory<IAEItemStack> c) {
         super(c, StorageChannel.ITEMS);
@@ -45,6 +47,7 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
             boolean hasInverter = false;
             boolean hasFuzzy = false;
             boolean hasOreFilter = false;
+            boolean hasSticky = false;
 
             for (int x = 0; x < upgrades.getSizeInventory(); x++) {
                 final ItemStack is = upgrades.getStackInSlot(x);
@@ -55,12 +58,18 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
                             case FUZZY -> hasFuzzy = true;
                             case INVERTER -> hasInverter = true;
                             case ORE_FILTER -> hasOreFilter = true;
+                            case STICKY -> hasSticky = true;
                             default -> {}
                         }
                     }
                 }
             }
             this.setWhitelist(hasInverter ? IncludeExclude.BLACKLIST : IncludeExclude.WHITELIST);
+
+            if (hasSticky) {
+                setSticky(true);
+            }
+
             if (hasOreFilter && !filter.isEmpty()) {
                 this.setPartitionList(new OreFilteredList(filter));
             } else {
@@ -71,7 +80,6 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
                         priorityList.add(AEItemStack.create(is));
                     }
                 }
-
                 if (!priorityList.isEmpty()) {
                     if (hasFuzzy) {
                         this.setPartitionList(new FuzzyPriorityList<>(priorityList, fzMode));
@@ -115,5 +123,50 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack> imple
         }
 
         return val;
+    }
+
+    @Override
+    public boolean canGetInv() {
+        return this.getCellInv() != null;
+    }
+
+    @Override
+    public long getTotalBytes() {
+        return this.getCellInv().getTotalBytes();
+    }
+
+    @Override
+    public long getFreeBytes() {
+        return this.getCellInv().getFreeBytes();
+    }
+
+    @Override
+    public long getUsedBytes() {
+        return this.getCellInv().getUsedBytes();
+    }
+
+    @Override
+    public long getTotalTypes() {
+        return this.getCellInv().getTotalItemTypes();
+    }
+
+    @Override
+    public long getFreeTypes() {
+        return this.getCellInv().getRemainingItemTypes();
+    }
+
+    @Override
+    public long getUsedTypes() {
+        return this.getCellInv().getStoredItemTypes();
+    }
+
+    @Override
+    public int getCellStatus() {
+        return this.getStatusForCell();
+    }
+
+    @Override
+    public TYPE getCellType() {
+        return TYPE.ITEM;
     }
 }

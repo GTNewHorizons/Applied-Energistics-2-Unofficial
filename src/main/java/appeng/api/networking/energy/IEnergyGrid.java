@@ -88,4 +88,9 @@ public interface IEnergyGrid extends IGridCache, IEnergySource, IEnergyGridProvi
      * @return Amount of power required to charge the grid, in AE.
      */
     double getEnergyDemand(double maxRequired);
+
+    /**
+     * internal use only
+     */
+    void setHasInfiniteStore(boolean infinite);
 }

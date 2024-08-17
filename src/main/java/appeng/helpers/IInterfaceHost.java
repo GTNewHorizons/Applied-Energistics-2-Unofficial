@@ -12,14 +12,20 @@ package appeng.helpers;
 
 import java.util.EnumSet;
 
+import net.minecraft.inventory.IInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
+import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingRequester;
+import appeng.api.util.IInterfaceViewable;
 
-public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICraftingRequester {
+public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICraftingRequester, IInterfaceViewable {
 
     DualityInterface getInterfaceDuality();
 
@@ -28,4 +34,39 @@ public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICr
     TileEntity getTileEntity();
 
     void saveChanges();
+
+    @Override
+    default IInventory getPatterns() {
+        return getInterfaceDuality().getPatterns();
+    }
+
+    @Override
+    default boolean shouldDisplay() {
+        return getInterfaceDuality().getConfigManager().getSetting(Settings.INTERFACE_TERMINAL) == YesNo.YES;
+    }
+
+    @Override
+    default boolean allowsPatternOptimization() {
+        return getInterfaceDuality().getConfigManager().getSetting(Settings.PATTERN_OPTIMIZATION) == YesNo.YES;
+    }
+
+    @Override
+    default String getName() {
+        return getInterfaceDuality().getTermName();
+    }
+
+    @Override
+    default int rows() {
+        return getInterfaceDuality().getInstalledUpgrades(Upgrades.PATTERN_CAPACITY) + 1;
+    }
+
+    @Override
+    default int rowSize() {
+        return DualityInterface.NUMBER_OF_PATTERN_SLOTS;
+    }
+
+    @Override
+    default ItemStack getDisplayRep() {
+        return getInterfaceDuality().getCrafterIcon();
+    }
 }

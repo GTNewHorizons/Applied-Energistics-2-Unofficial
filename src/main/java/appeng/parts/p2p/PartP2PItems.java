@@ -50,7 +50,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @Interface(iface = "buildcraft.api.transport.IPipeConnection", iname = IntegrationType.BuildCraftTransport)
-public class PartP2PItems extends PartP2PTunnel<PartP2PItems>
+public class PartP2PItems extends PartP2PTunnelNormal<PartP2PItems>
         implements IPipeConnection, ISidedInventory, IGridTickable {
 
     private final LinkedList<IInventory> which = new LinkedList<>();

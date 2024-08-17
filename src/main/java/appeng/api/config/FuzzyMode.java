@@ -13,6 +13,12 @@
 
 package appeng.api.config;
 
+import javax.annotation.Nonnull;
+
+import net.minecraft.item.ItemStack;
+
+import appeng.util.Platform;
+
 public enum FuzzyMode {
 
     // Note that percentage damaged, is the inverse of percentage durability.
@@ -32,5 +38,18 @@ public enum FuzzyMode {
 
     public int calculateBreakPoint(final int maxDamage) {
         return (int) ((this.percentage * maxDamage) / 100.0f);
+    }
+
+    @Nonnull
+    public static FuzzyMode fromItemStack(@Nonnull ItemStack is) {
+        final String fz = Platform.openNbtData(is).getString("FuzzyMode");
+        if (fz == null || fz.isEmpty()) {
+            return FuzzyMode.IGNORE_ALL;
+        }
+        try {
+            return FuzzyMode.valueOf(fz);
+        } catch (IllegalArgumentException ignored) {
+            return FuzzyMode.IGNORE_ALL;
+        }
     }
 }

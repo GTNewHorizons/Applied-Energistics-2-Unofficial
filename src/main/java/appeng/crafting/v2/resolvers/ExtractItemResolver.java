@@ -1,7 +1,11 @@
 package appeng.crafting.v2.resolvers;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 

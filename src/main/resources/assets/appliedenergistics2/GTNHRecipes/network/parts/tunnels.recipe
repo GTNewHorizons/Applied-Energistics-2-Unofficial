@@ -1,0 +1,7 @@
+shapeless=
+    ae2:ItemPart.P2PTunnelME ae2:ItemPart.Interface
+    -> ae2:ItemPart.P2PTunnelInterface
+
+shapeless=
+    ae2:ItemPart.P2PTunnelME ae2:BlockInterface
+    -> ae2:ItemPart.P2PTunnelInterface

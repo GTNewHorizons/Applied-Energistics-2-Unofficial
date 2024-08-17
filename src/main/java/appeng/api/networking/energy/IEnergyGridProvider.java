@@ -36,4 +36,9 @@ public interface IEnergyGridProvider {
      * internal use only
      */
     double getEnergyDemand(double d, Set<IEnergyGrid> seen);
+
+    /**
+     * internal use only
+     */
+    boolean calculateInfiniteStore(boolean currentInfinite, Set<IEnergyGrid> seen);
 }

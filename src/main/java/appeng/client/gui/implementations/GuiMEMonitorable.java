@@ -24,7 +24,11 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import appeng.api.AEApi;
-import appeng.api.config.*;
+import appeng.api.config.CraftingStatus;
+import appeng.api.config.SearchBoxMode;
+import appeng.api.config.Settings;
+import appeng.api.config.TerminalStyle;
+import appeng.api.config.YesNo;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.implementations.tiles.IMEChest;
 import appeng.api.implementations.tiles.IViewCellStorage;
@@ -35,7 +39,12 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.ActionKey;
 import appeng.client.gui.AEBaseMEGui;
-import appeng.client.gui.widgets.*;
+import appeng.client.gui.widgets.GuiImgButton;
+import appeng.client.gui.widgets.GuiScrollbar;
+import appeng.client.gui.widgets.GuiTabButton;
+import appeng.client.gui.widgets.IDropToFillTextField;
+import appeng.client.gui.widgets.ISortSource;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.me.InternalSlotME;
 import appeng.client.me.ItemRepo;
 import appeng.container.implementations.ContainerMEMonitorable;
@@ -347,6 +356,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
             this.searchField.setText(memoryText, true);
             repo.setSearchString(memoryText);
         }
+        this.searchField.setCursorPositionEnd();
 
         this.setScrollBar();
 

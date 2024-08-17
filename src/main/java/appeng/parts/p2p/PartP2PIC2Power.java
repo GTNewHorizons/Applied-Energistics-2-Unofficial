@@ -32,7 +32,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 @InterfaceList(
         value = { @Interface(iface = "ic2.api.energy.tile.IEnergySink", iname = IntegrationType.IC2),
                 @Interface(iface = "ic2.api.energy.tile.IEnergySource", iname = IntegrationType.IC2) })
-public class PartP2PIC2Power extends PartP2PTunnel<PartP2PIC2Power>
+public class PartP2PIC2Power extends PartP2PTunnelNormal<PartP2PIC2Power>
         implements ic2.api.energy.tile.IEnergySink, ic2.api.energy.tile.IEnergySource {
 
     // two packet buffering...

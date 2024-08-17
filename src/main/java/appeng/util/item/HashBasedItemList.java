@@ -10,15 +10,17 @@
 
 package appeng.util.item;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public final class HashBasedItemList implements IItemList<IAEItemStack> {
 
-    private final Map<IAEItemStack, IAEItemStack> records = new LinkedHashMap<>();
+    private final ObjectOpenHashSet<IAEItemStack> records = new ObjectOpenHashSet<>();
 
     @Override
     public void add(final IAEItemStack option) {
@@ -137,7 +139,7 @@ public final class HashBasedItemList implements IItemList<IAEItemStack> {
 
     @Override
     public Iterator<IAEItemStack> iterator() {
-        return new MeaningfulItemIterator<>(this.records.values().iterator());
+        return new MeaningfulItemIterator<>(this.records.iterator());
     }
 
     @Override
@@ -148,6 +150,6 @@ public final class HashBasedItemList implements IItemList<IAEItemStack> {
     }
 
     private void putItemRecord(final IAEItemStack itemStack) {
-        this.records.put(itemStack, itemStack);
+        this.records.add(itemStack);
     }
 }

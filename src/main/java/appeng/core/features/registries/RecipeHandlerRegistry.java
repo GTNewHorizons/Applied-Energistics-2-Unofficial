@@ -10,7 +10,11 @@
 
 package appeng.core.features.registries;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Locale;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 

@@ -30,6 +30,7 @@ import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.client.gui.implementations.GuiNetworkStatus;
+import appeng.client.gui.implementations.GuiOptimizePatterns;
 import appeng.core.AELog;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -145,6 +146,10 @@ public class PacketMEInventoryUpdate extends AppEngPacket {
 
         if (gs instanceof GuiNetworkStatus) {
             ((GuiNetworkStatus) gs).postUpdate(this.list);
+        }
+
+        if (gs instanceof GuiOptimizePatterns) {
+            ((GuiOptimizePatterns) gs).postUpdate(this.list, this.ref);
         }
     }
 

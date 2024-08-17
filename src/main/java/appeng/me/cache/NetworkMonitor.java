@@ -10,7 +10,11 @@
 
 package appeng.me.cache;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nonnegative;
@@ -31,6 +35,8 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.storage.ItemWatcher;
+import appeng.util.IterationCounter;
+import appeng.util.item.LazyItemList;
 
 public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 
@@ -95,8 +101,8 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
-    public IItemList<T> getAvailableItems(final IItemList out) {
-        return this.getHandler().getAvailableItems(out);
+    public IItemList<T> getAvailableItems(final IItemList out, int iteration) {
+        return this.getHandler().getAvailableItems(out, iteration);
     }
 
     @Override
@@ -120,7 +126,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         if (this.hasChanged) {
             this.hasChanged = false;
             this.cachedList.resetStatus();
-            return this.getAvailableItems(this.cachedList);
+            return this.getAvailableItems(this.cachedList, IterationCounter.fetchNewId());
         }
 
         return this.cachedList;
@@ -226,9 +232,13 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         this.notifyListenersOfChange(changes, src);
 
         for (final T changedItem : changes) {
+            if (changedItem == null) {
+                continue;
+            }
+
             T difference = changedItem;
 
-            if (!add && changedItem != null) {
+            if (!add) {
                 difference = changedItem.copy();
                 difference.setStackSize(-changedItem.getStackSize());
             }
@@ -237,7 +247,8 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
                 final Collection<ItemWatcher> list = this.myGridCache.getInterestManager().get(changedItem);
 
                 if (!list.isEmpty()) {
-                    IAEStack fullStack = this.getStorageList().findPrecise(changedItem);
+                    IAEStack<T> fullStack = this.getHandler()
+                            .getAvailableItem(changedItem, IterationCounter.fetchNewId());
 
                     if (fullStack == null) {
                         fullStack = changedItem.copy();
@@ -246,9 +257,9 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 
                     this.myGridCache.getInterestManager().enableTransactions();
 
+                    IItemList<T> itemList = new LazyItemList<>(this::getStorageList);
                     for (final ItemWatcher iw : list) {
-                        iw.getHost()
-                                .onStackChange(this.getStorageList(), fullStack, difference, src, this.getChannel());
+                        iw.getHost().onStackChange(itemList, fullStack, difference, src, this.getChannel());
                     }
 
                     this.myGridCache.getInterestManager().disableTransactions();

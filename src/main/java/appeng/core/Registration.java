@@ -30,7 +30,15 @@ import com.google.common.base.Preconditions;
 import appeng.api.AEApi;
 import appeng.api.IAppEngApi;
 import appeng.api.config.Upgrades;
-import appeng.api.definitions.*;
+import appeng.api.definitions.Blocks;
+import appeng.api.definitions.IBlocks;
+import appeng.api.definitions.IDefinitions;
+import appeng.api.definitions.IItems;
+import appeng.api.definitions.IMaterials;
+import appeng.api.definitions.IParts;
+import appeng.api.definitions.Items;
+import appeng.api.definitions.Materials;
+import appeng.api.definitions.Parts;
 import appeng.api.features.IRecipeHandlerRegistry;
 import appeng.api.features.IRegistryContainer;
 import appeng.api.features.IWirelessTermHandler;
@@ -57,10 +65,19 @@ import appeng.core.features.registries.entries.VoidCellHandler;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.stats.PlayerStatsRegistration;
+import appeng.helpers.BlockingModeIgnoreList;
 import appeng.hooks.AETrading;
+import appeng.hooks.SoundEventHandler;
 import appeng.hooks.TickHandler;
 import appeng.items.materials.ItemMultiMaterial;
-import appeng.me.cache.*;
+import appeng.me.cache.CraftingGridCache;
+import appeng.me.cache.EnergyGridCache;
+import appeng.me.cache.GridStorageCache;
+import appeng.me.cache.P2PCache;
+import appeng.me.cache.PathGridCache;
+import appeng.me.cache.SecurityCache;
+import appeng.me.cache.SpatialPylonCache;
+import appeng.me.cache.TickManagerCache;
 import appeng.me.storage.AEExternalHandler;
 import appeng.parts.PartPlacement;
 import appeng.recipes.AEItemResolver;
@@ -70,7 +87,19 @@ import appeng.recipes.game.DisassembleRecipe;
 import appeng.recipes.game.FacadeRecipe;
 import appeng.recipes.game.ShapedRecipe;
 import appeng.recipes.game.ShapelessRecipe;
-import appeng.recipes.handlers.*;
+import appeng.recipes.handlers.Crusher;
+import appeng.recipes.handlers.Grind;
+import appeng.recipes.handlers.GrindFZ;
+import appeng.recipes.handlers.HCCrusher;
+import appeng.recipes.handlers.Inscribe;
+import appeng.recipes.handlers.Macerator;
+import appeng.recipes.handlers.MekCrusher;
+import appeng.recipes.handlers.MekEnrichment;
+import appeng.recipes.handlers.Press;
+import appeng.recipes.handlers.Pulverizer;
+import appeng.recipes.handlers.Shaped;
+import appeng.recipes.handlers.Shapeless;
+import appeng.recipes.handlers.Smelt;
 import appeng.recipes.ores.OreDictionaryHandler;
 import appeng.spatial.BiomeGenStorage;
 import appeng.spatial.StorageWorldProvider;
@@ -255,6 +284,7 @@ public final class Registration {
         target.materialCardFuzzy = this.converter.of(source.cardFuzzy());
         target.materialCardInverter = this.converter.of(source.cardInverter());
         target.materialCardCrafting = this.converter.of(source.cardCrafting());
+        target.materialCardSticky = this.converter.of(source.cardSticky());
 
         target.materialEnderDust = this.converter.of(source.enderDust());
         target.materialFlour = this.converter.of(source.flour());
@@ -494,6 +524,8 @@ public final class Registration {
         FMLCommonHandler.instance().bus().register(TickHandler.INSTANCE);
         MinecraftForge.EVENT_BUS.register(TickHandler.INSTANCE);
 
+        MinecraftForge.EVENT_BUS.register(SoundEventHandler.INSTANCE);
+
         final PartPlacement pp = new PartPlacement();
         MinecraftForge.EVENT_BUS.register(pp);
         FMLCommonHandler.instance().bus().register(pp);
@@ -578,6 +610,9 @@ public final class Registration {
         Upgrades.PATTERN_CAPACITY.registerItem(parts.p2PTunnelMEInterface(), 3);
         Upgrades.ADVANCED_BLOCKING.registerItem(parts.iface(), 1);
         Upgrades.ADVANCED_BLOCKING.registerItem(blocks.iface(), 1);
+        Upgrades.LOCK_CRAFTING.registerItem(parts.iface(), 1);
+        Upgrades.LOCK_CRAFTING.registerItem(blocks.iface(), 1);
+        Upgrades.LOCK_CRAFTING.registerItem(parts.p2PTunnelMEInterface(), 1);
 
         // IO Port!
         Upgrades.SPEED.registerItem(blocks.iOPort(), 3);
@@ -607,54 +642,72 @@ public final class Registration {
         Upgrades.FUZZY.registerItem(items.cell1k(), 1);
         Upgrades.INVERTER.registerItem(items.cell1k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell1k(), 1);
+        Upgrades.STICKY.registerItem(items.cell1k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell4k(), 1);
         Upgrades.INVERTER.registerItem(items.cell4k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell4k(), 1);
+        Upgrades.STICKY.registerItem(items.cell4k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell16k(), 1);
         Upgrades.INVERTER.registerItem(items.cell16k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell16k(), 1);
+        Upgrades.STICKY.registerItem(items.cell16k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell64k(), 1);
         Upgrades.INVERTER.registerItem(items.cell64k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell64k(), 1);
+        Upgrades.STICKY.registerItem(items.cell64k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell256k(), 1);
         Upgrades.INVERTER.registerItem(items.cell256k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell256k(), 1);
+        Upgrades.STICKY.registerItem(items.cell256k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell1024k(), 1);
         Upgrades.INVERTER.registerItem(items.cell1024k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell1024k(), 1);
+        Upgrades.STICKY.registerItem(items.cell1024k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell4096k(), 1);
         Upgrades.INVERTER.registerItem(items.cell4096k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell4096k(), 1);
+        Upgrades.STICKY.registerItem(items.cell4096k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cell16384k(), 1);
         Upgrades.INVERTER.registerItem(items.cell16384k(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cell16384k(), 1);
+        Upgrades.STICKY.registerItem(items.cell16384k(), 1);
 
         Upgrades.FUZZY.registerItem(items.cellVoid(), 1);
         Upgrades.INVERTER.registerItem(items.cellVoid(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cellVoid(), 1);
+        Upgrades.STICKY.registerItem(items.cellVoid(), 1);
 
         Upgrades.FUZZY.registerItem(items.cellContainer(), 1);
         Upgrades.INVERTER.registerItem(items.cellContainer(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cellContainer(), 1);
+        Upgrades.STICKY.registerItem(items.cellContainer(), 1);
 
         Upgrades.FUZZY.registerItem(items.cellQuantum(), 1);
         Upgrades.INVERTER.registerItem(items.cellQuantum(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cellQuantum(), 1);
+        Upgrades.STICKY.registerItem(items.cellQuantum(), 1);
 
         Upgrades.FUZZY.registerItem(items.cellSingularity(), 1);
         Upgrades.INVERTER.registerItem(items.cellSingularity(), 1);
         Upgrades.ORE_FILTER.registerItem(items.cellSingularity(), 1);
+        Upgrades.STICKY.registerItem(items.cellSingularity(), 1);
+
+        Upgrades.FUZZY.registerItem(items.cellUniverse(), 1);
+        Upgrades.INVERTER.registerItem(items.cellUniverse(), 1);
+        Upgrades.ORE_FILTER.registerItem(items.cellUniverse(), 1);
+        Upgrades.STICKY.registerItem(items.cellUniverse(), 1);
 
         Upgrades.FUZZY.registerItem(items.portableCell(), 1);
         Upgrades.INVERTER.registerItem(items.portableCell(), 1);
         Upgrades.ORE_FILTER.registerItem(items.portableCell(), 1);
+        Upgrades.STICKY.registerItem(items.portableCell(), 1);
 
         Upgrades.FUZZY.registerItem(items.viewCell(), 1);
         Upgrades.INVERTER.registerItem(items.viewCell(), 1);
@@ -665,6 +718,7 @@ public final class Registration {
         Upgrades.INVERTER.registerItem(parts.storageBus(), 1);
         Upgrades.CAPACITY.registerItem(parts.storageBus(), 5);
         Upgrades.ORE_FILTER.registerItem(parts.storageBus(), 1);
+        Upgrades.STICKY.registerItem(parts.storageBus(), 1);
 
         // Formation Plane
         Upgrades.FUZZY.registerItem(parts.formationPlane(), 1);
@@ -774,5 +828,11 @@ public final class Registration {
          * initial recipe bake, if ore dictionary changes after this it re-bakes.
          */
         OreDictionaryHandler.INSTANCE.bakeRecipes();
+
+        /**
+         * Populate list of items that blocking mode should ignore
+         */
+        BlockingModeIgnoreList.registerIgnoredMaterials();
+
     }
 }

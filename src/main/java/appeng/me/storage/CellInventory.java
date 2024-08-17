@@ -13,6 +13,8 @@ package appeng.me.storage;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -26,9 +28,15 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.exceptions.AppEngException;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.networking.security.BaseActionSource;
-import appeng.api.storage.*;
+import appeng.api.storage.ICellInventory;
+import appeng.api.storage.IMEInventory;
+import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.ISaveProvider;
+import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.core.AELog;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 
@@ -105,7 +113,7 @@ public class CellInventory implements ICellInventory {
         }
     }
 
-    private static boolean isStorageCell(final ItemStack itemStack) {
+    private static boolean isStorageCell(final IAEItemStack itemStack) {
         if (itemStack == null) {
             return false;
         }
@@ -152,7 +160,8 @@ public class CellInventory implements ICellInventory {
     }
 
     private boolean isEmpty(final IMEInventory<IAEItemStack> meInventory) {
-        return meInventory.getAvailableItems(AEApi.instance().storage().createItemList()).isEmpty();
+        return meInventory.getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId())
+                .isEmpty();
     }
 
     @Override
@@ -169,14 +178,19 @@ public class CellInventory implements ICellInventory {
             return input;
         }
 
-        final ItemStack sharedItemStack = input.getItemStack();
-
-        if (CellInventory.isStorageCell(sharedItemStack)) {
-            final IMEInventory<IAEItemStack> meInventory = getCell(sharedItemStack, null);
+        if (CellInventory.isStorageCell(input)) {
+            final IMEInventory<IAEItemStack> meInventory = getCell(input.getItemStack(), null);
 
             if (meInventory != null && !this.isEmpty(meInventory)) {
                 return input;
             }
+        }
+
+        if (input.isCraftable()) {
+            AELog.error(
+                    new Throwable(),
+                    "FATAL: DETECTED ILLEGAL ITEM TO BE INSERTED ON STORAGE CELL, PLEASE REPORT ON GITHUB! STACKTRACE:");
+            input.setCraftable(false);
         }
 
         final IAEItemStack l = this.getCellItems().findPrecise(input);
@@ -216,11 +230,11 @@ public class CellInventory implements ICellInventory {
 
             if (remainingItemCount > 0) {
                 if (input.getStackSize() > remainingItemCount) {
-                    final IAEItemStack toReturn = AEItemStack.create(sharedItemStack);
+                    final IAEItemStack toReturn = input.copy();
                     toReturn.decStackSize(remainingItemCount);
 
                     if (mode == Actionable.MODULATE) {
-                        final IAEItemStack toWrite = AEItemStack.create(sharedItemStack);
+                        final IAEItemStack toWrite = input.copy();
                         toWrite.setStackSize(remainingItemCount);
 
                         this.cellItems.add(toWrite);
@@ -249,7 +263,7 @@ public class CellInventory implements ICellInventory {
             return null;
         }
 
-        final long size = Math.min(Integer.MAX_VALUE, request.getStackSize());
+        final long size = request.getStackSize();
 
         IAEItemStack results = null;
 
@@ -385,15 +399,36 @@ public class CellInventory implements ICellInventory {
                 }
             }
         }
+
+        if (this.cellItems.size() != types) {
+            // fix broken singularity cells
+            this.saveChanges();
+        }
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out, int iteration) {
         for (final IAEItemStack i : this.getCellItems()) {
             out.add(i);
         }
 
         return out;
+    }
+
+    @Override
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
+        long count = 0;
+        for (final IAEItemStack is : this.getCellItems()) {
+            if (is != null && is.getStackSize() > 0 && is.isSameType(request)) {
+                count += is.getStackSize();
+                if (count < 0) {
+                    // overflow
+                    count = Long.MAX_VALUE;
+                    break;
+                }
+            }
+        }
+        return count == 0 ? null : request.copy().setStackSize(count);
     }
 
     @Override

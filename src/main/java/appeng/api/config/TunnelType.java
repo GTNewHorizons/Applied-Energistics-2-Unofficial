@@ -21,6 +21,7 @@ public enum TunnelType {
     FLUID, // Fluid Tunnel
     ITEM, // Item Tunnel
     LIGHT, // Light Tunnel
+    SOUND,
     BUNDLED_REDSTONE, // Bundled Redstone Tunnel
     COMPUTER_MESSAGE, // Computer Message Tunnel
     PRESSURE, // PneumaticCraft Tunnel

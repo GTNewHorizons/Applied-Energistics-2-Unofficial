@@ -10,7 +10,13 @@
 
 package appeng.items.materials;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +46,7 @@ import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageComponent;
 import appeng.api.implementations.items.IUpgradeModule;
+import appeng.api.implementations.tiles.IChestOrDrive;
 import appeng.api.implementations.tiles.ISegmentedInventory;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
@@ -136,6 +143,8 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
             case CardCrafting -> Upgrades.CRAFTING;
             case CardPatternRefiller -> Upgrades.PATTERN_REFILLER;
             case CardAdvancedBlocking -> Upgrades.ADVANCED_BLOCKING;
+            case CardLockCrafting -> Upgrades.LOCK_CRAFTING;
+            case CardSticky -> Upgrades.STICKY;
             default -> null;
         };
     }
@@ -265,6 +274,15 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
 
         if (player.isSneaking()) {
             final TileEntity te = world.getTileEntity(x, y, z);
+            if (is != null && this.getType(is) == Upgrades.STICKY && Platform.isServer()) {
+                ItemStack hand = player.getHeldItem();
+                if (te instanceof IChestOrDrive chestOrDrive) {
+                    hand.stackSize = hand.stackSize - chestOrDrive.applyStickyToDigitalSingularityCells(hand);
+                    player.inventory
+                            .setInventorySlotContents(player.inventory.currentItem, hand.stackSize == 0 ? null : hand);
+                    return true;
+                }
+            }
             IInventory upgrades = null;
 
             if (te instanceof IPartHost) {

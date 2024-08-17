@@ -46,6 +46,9 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
     public boolean renderInWorld(final BlockDrive imb, final IBlockAccess world, final int x, final int y, final int z,
             final RenderBlocks renderer) {
         final TileDrive sp = imb.getTileEntity(world, x, y, z);
+        if (sp == null) {
+            return false;
+        }
         final ForgeDirection up = sp.getUp();
         final ForgeDirection forward = sp.getForward();
         final ForgeDirection west = Platform.crossProduct(forward, up);

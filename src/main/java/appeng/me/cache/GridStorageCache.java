@@ -32,14 +32,24 @@ import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IStackWatcher;
 import appeng.api.networking.storage.IStackWatcherHost;
 import appeng.api.networking.storage.IStorageGrid;
-import appeng.api.storage.*;
+import appeng.api.storage.ICellCacheRegistry;
+import appeng.api.storage.ICellContainer;
+import appeng.api.storage.ICellProvider;
+import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.core.AEConfig;
 import appeng.me.helpers.GenericInterestManager;
 import appeng.me.storage.ItemWatcher;
+import appeng.me.storage.MEInventoryHandler;
 import appeng.me.storage.NetworkInventoryHandler;
+import appeng.tile.storage.TileChest;
+import appeng.tile.storage.TileDrive;
+import appeng.util.IterationCounter;
 
 public class GridStorageCache implements IStorageGrid {
 
@@ -53,15 +63,54 @@ public class GridStorageCache implements IStorageGrid {
     private final HashMap<IGridNode, IStackWatcher> watchers = new HashMap<>();
     private NetworkInventoryHandler<IAEItemStack> myItemNetwork;
     private NetworkInventoryHandler<IAEFluidStack> myFluidNetwork;
+    private double itemBytesTotal;
+    private double itemBytesUsed;
+    private long itemTypesTotal;
+    private long itemTypesUsed;
+    private long itemCellG;
+    private long itemCellO;
+    private long itemCellR;
+    private long itemCellCount;
+    private double fluidBytesTotal;
+    private double fluidBytesUsed;
+    private long fluidTypesTotal;
+    private long fluidTypesUsed;
+    private long fluidCellG;
+    private long fluidCellO;
+    private long fluidCellR;
+    private long fluidCellCount;
+    private double essentiaBytesTotal;
+    private double essentiaBytesUsed;
+    private long essentiaTypesTotal;
+    private long essentiaTypesUsed;
+    private long essentiaCellG;
+    private long essentiaCellO;
+    private long essentiaCellR;
+    private long essentiaCellCount;
+    private int ticksCount;
+    private int networkBytesUpdateFrequency;
+    private static final int CELL_RED = 3;
+    private static final int CELL_ORANGE = 2;
+    private static final int CELL_GREEN = 1;
 
     public GridStorageCache(final IGrid g) {
         this.myGrid = g;
+        this.networkBytesUpdateFrequency = (int) (AEConfig.instance.networkBytesUpdateFrequency * 20);
+        this.ticksCount = this.networkBytesUpdateFrequency;
     }
 
     @Override
     public void onUpdateTick() {
         this.itemMonitor.onTick();
         this.fluidMonitor.onTick();
+
+        // update every 100Ticks by default
+        if (this.ticksCount < this.networkBytesUpdateFrequency) {
+            this.ticksCount++;
+        } else {
+            this.ticksCount = 0;
+            this.updateBytesInfo();
+        }
     }
 
     @Override
@@ -192,6 +241,7 @@ public class GridStorageCache implements IStorageGrid {
         this.fluidMonitor.forceUpdate();
 
         tracker.applyChanges();
+
     }
 
     private void postChangesToNetwork(final StorageChannel chan, final int upOrDown, final IItemList availableItems,
@@ -296,10 +346,10 @@ public class GridStorageCache implements IStorageGrid {
 
             if (channel == StorageChannel.ITEMS) {
                 this.list = ((IMEInventoryHandler<IAEItemStack>) h)
-                        .getAvailableItems(AEApi.instance().storage().createItemList());
+                        .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
             } else if (channel == StorageChannel.FLUIDS) {
                 this.list = ((IMEInventoryHandler<IAEFluidStack>) h)
-                        .getAvailableItems(AEApi.instance().storage().createFluidList());
+                        .getAvailableItems(AEApi.instance().storage().createFluidList(), IterationCounter.fetchNewId());
             } else {
                 this.list = null;
             }
@@ -324,5 +374,244 @@ public class GridStorageCache implements IStorageGrid {
                 rec.applyChanges();
             }
         }
+    }
+
+    private void updateBytesInfo() {
+        this.resetCellInfo();
+        try {
+            for (ICellProvider icp : this.activeCellProviders) {
+                if (icp instanceof TileDrive) {
+                    // Item cells
+                    for (IMEInventoryHandler<?> meih : icp.getCellArray(StorageChannel.ITEMS)) {
+                        // exclude void cell
+                        if (((MEInventoryHandler<?>) meih).getInternal() instanceof ICellCacheRegistry iccr) {
+                            // exclude creative cell
+                            if (iccr.canGetInv()) {
+                                itemBytesTotal += iccr.getTotalBytes();
+                                itemBytesUsed += iccr.getUsedBytes();
+                                switch (iccr.getCellStatus()) {
+                                    case CELL_GREEN -> itemCellG++;
+                                    case CELL_ORANGE -> itemCellO++;
+                                    case CELL_RED -> itemCellR++;
+                                }
+                                itemTypesTotal += iccr.getTotalTypes();
+                                itemTypesUsed += iccr.getUsedTypes();
+                                itemCellCount++;
+                            }
+                        }
+                    }
+                    // Essentia and Fluid cells
+                    for (IMEInventoryHandler<?> meih : icp.getCellArray(StorageChannel.FLUIDS)) {
+                        // exclude void cell
+                        if (((MEInventoryHandler<?>) meih).getInternal() instanceof ICellCacheRegistry iccr) {
+                            // exclude creative cell
+                            if (iccr.canGetInv()) {
+                                if (iccr.getCellType() == ICellCacheRegistry.TYPE.FLUID) {
+                                    fluidBytesTotal += iccr.getTotalBytes();
+                                    fluidBytesUsed += iccr.getUsedBytes();
+                                    switch (iccr.getCellStatus()) {
+                                        case CELL_GREEN -> fluidCellG++;
+                                        case CELL_ORANGE -> fluidCellO++;
+                                        case CELL_RED -> fluidCellR++;
+                                    }
+                                    fluidTypesTotal += iccr.getTotalTypes();
+                                    fluidTypesUsed += iccr.getUsedTypes();
+                                    fluidCellCount++;
+                                } else if (iccr.getCellType() == ICellCacheRegistry.TYPE.ESSENTIA) {
+                                    essentiaBytesTotal += iccr.getTotalBytes();
+                                    essentiaBytesUsed += iccr.getUsedBytes();
+                                    switch (iccr.getCellStatus()) {
+                                        case CELL_GREEN -> essentiaCellG++;
+                                        case CELL_ORANGE -> essentiaCellO++;
+                                        case CELL_RED -> essentiaCellR++;
+                                    }
+                                    essentiaTypesTotal += iccr.getTotalTypes();
+                                    essentiaTypesUsed += iccr.getUsedTypes();
+                                    essentiaCellCount++;
+                                }
+                            }
+                        }
+
+                    }
+                } else if (icp instanceof TileChest tc) {
+                    // Check if chest is clear
+                    if (tc.getStackInSlot(1) == null) continue;
+                    IMEInventoryHandler handler = tc.getInternalHandler(StorageChannel.ITEMS);
+                    if (handler != null) {
+                        if (handler instanceof ICellCacheRegistry iccr) {
+                            // exclude creative cell
+                            if (iccr.canGetInv()) {
+                                itemBytesTotal += iccr.getTotalBytes();
+                                itemBytesUsed += iccr.getUsedBytes();
+                                switch (iccr.getCellStatus()) {
+                                    case CELL_GREEN -> itemCellG++;
+                                    case CELL_ORANGE -> itemCellO++;
+                                    case CELL_RED -> itemCellR++;
+                                }
+                                itemTypesTotal += iccr.getTotalTypes();
+                                itemTypesUsed += iccr.getUsedTypes();
+                                itemCellCount++;
+                            }
+                        }
+                    } else {
+                        handler = tc.getInternalHandler(StorageChannel.FLUIDS);
+                        // exclude void cell
+                        if (handler instanceof ICellCacheRegistry iccr) {
+                            // exclude creative cell
+                            if (iccr.canGetInv()) {
+                                if (iccr.getCellType() == ICellCacheRegistry.TYPE.FLUID) {
+                                    fluidBytesTotal += iccr.getTotalBytes();
+                                    fluidBytesUsed += iccr.getUsedBytes();
+                                    switch (iccr.getCellStatus()) {
+                                        case CELL_GREEN -> fluidCellG++;
+                                        case CELL_ORANGE -> fluidCellO++;
+                                        case CELL_RED -> fluidCellR++;
+                                    }
+                                    fluidTypesTotal += iccr.getTotalTypes();
+                                    fluidTypesUsed += iccr.getUsedTypes();
+                                    fluidCellCount++;
+                                } else if (iccr.getCellType() == ICellCacheRegistry.TYPE.ESSENTIA) {
+                                    essentiaBytesTotal += iccr.getTotalBytes();
+                                    essentiaBytesUsed += iccr.getUsedBytes();
+                                    switch (iccr.getCellStatus()) {
+                                        case CELL_GREEN -> essentiaCellG++;
+                                        case CELL_ORANGE -> essentiaCellO++;
+                                        case CELL_RED -> essentiaCellR++;
+                                    }
+                                    essentiaTypesTotal += iccr.getTotalTypes();
+                                    essentiaTypesUsed += iccr.getUsedTypes();
+                                    essentiaCellCount++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // XD Normally won't be here, just normally..
+        }
+    }
+
+    private void resetCellInfo() {
+        this.itemBytesTotal = 0;
+        this.itemBytesUsed = 0;
+        this.itemTypesTotal = 0;
+        this.itemTypesUsed = 0;
+        this.itemCellG = 0;
+        this.itemCellO = 0;
+        this.itemCellR = 0;
+        this.itemCellCount = 0;
+        this.fluidBytesTotal = 0;
+        this.fluidBytesUsed = 0;
+        this.fluidTypesTotal = 0;
+        this.fluidTypesUsed = 0;
+        this.fluidCellG = 0;
+        this.fluidCellO = 0;
+        this.fluidCellR = 0;
+        this.fluidCellCount = 0;
+        this.essentiaBytesTotal = 0;
+        this.essentiaBytesUsed = 0;
+        this.essentiaTypesTotal = 0;
+        this.essentiaTypesUsed = 0;
+        this.essentiaCellG = 0;
+        this.essentiaCellO = 0;
+        this.essentiaCellR = 0;
+        this.essentiaCellCount = 0;
+    }
+
+    public double getItemBytesTotal() {
+        return itemBytesTotal;
+    }
+
+    public double getItemBytesUsed() {
+        return itemBytesUsed;
+    }
+
+    public long getItemTypesTotal() {
+        return itemTypesTotal;
+    }
+
+    public long getItemTypesUsed() {
+        return itemTypesUsed;
+    }
+
+    public long getItemCellG() {
+        return itemCellG;
+    }
+
+    public long getItemCellO() {
+        return itemCellO;
+    }
+
+    public long getItemCellR() {
+        return itemCellR;
+    }
+
+    public long getItemCellCount() {
+        return itemCellCount;
+    }
+
+    public double getFluidBytesTotal() {
+        return fluidBytesTotal;
+    }
+
+    public double getFluidBytesUsed() {
+        return fluidBytesUsed;
+    }
+
+    public long getFluidTypesTotal() {
+        return fluidTypesTotal;
+    }
+
+    public long getFluidTypesUsed() {
+        return fluidTypesUsed;
+    }
+
+    public long getFluidCellG() {
+        return fluidCellG;
+    }
+
+    public long getFluidCellO() {
+        return fluidCellO;
+    }
+
+    public long getFluidCellR() {
+        return fluidCellR;
+    }
+
+    public long getFluidCellCount() {
+        return fluidCellCount;
+    }
+
+    public double getEssentiaBytesTotal() {
+        return essentiaBytesTotal;
+    }
+
+    public double getEssentiaBytesUsed() {
+        return essentiaBytesUsed;
+    }
+
+    public long getEssentiaTypesTotal() {
+        return essentiaTypesTotal;
+    }
+
+    public long getEssentiaTypesUsed() {
+        return essentiaTypesUsed;
+    }
+
+    public long getEssentiaCellG() {
+        return essentiaCellG;
+    }
+
+    public long getEssentiaCellO() {
+        return essentiaCellO;
+    }
+
+    public long getEssentiaCellR() {
+        return essentiaCellR;
+    }
+
+    public long getEssentiaCellCount() {
+        return essentiaCellCount;
     }
 }

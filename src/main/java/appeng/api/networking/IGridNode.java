@@ -147,14 +147,4 @@ public interface IGridNode {
      * @param playerID new player id
      */
     void setPlayerID(int playerID);
-
-    /**
-     * Reflects the networks status, returns true only if the network is powered. The grid channels may be
-     * recalculating.
-     *
-     * @return true if the Network node is powered.
-     */
-    default boolean isActiveOrBooting() {
-        return isActive();
-    }
 }

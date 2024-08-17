@@ -18,6 +18,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
+import appeng.api.config.TerminalFontSize;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.me.SlotME;
 import appeng.container.slot.SlotFake;
@@ -25,19 +26,20 @@ import appeng.core.AEConfig;
 import appeng.core.localization.ButtonToolTips;
 import appeng.util.Platform;
 
-public abstract class AEBaseMEGui extends AEBaseGui {
+public abstract class AEBaseMEGui extends AEBaseGui implements IGuiTooltipHandler {
 
     public AEBaseMEGui(final Container container) {
         super(container);
     }
 
+    @Override
     public List<String> handleItemTooltip(final ItemStack stack, final int mouseX, final int mouseY,
             final List<String> currentToolTip) {
         if (stack != null) {
             final Slot s = this.getSlot(mouseX, mouseY);
             final boolean isSlotME = s instanceof SlotME;
             if (isSlotME || s instanceof SlotFake) {
-                final int BigNumber = AEConfig.instance.useTerminalUseLargeFont() ? 999 : 9999;
+                final int BigNumber = AEConfig.instance.getTerminalFontSize() == TerminalFontSize.SMALL ? 9999 : 999;
 
                 IAEItemStack myStack = null;
 
@@ -82,7 +84,7 @@ public abstract class AEBaseMEGui extends AEBaseGui {
     public void renderToolTip(final ItemStack stack, final int x, final int y) {
         final Slot s = this.getSlot(x, y);
         if ((s instanceof SlotME || s instanceof SlotFake) && stack != null) {
-            final int BigNumber = AEConfig.instance.useTerminalUseLargeFont() ? 999 : 9999;
+            final int BigNumber = AEConfig.instance.getTerminalFontSize() == TerminalFontSize.SMALL ? 9999 : 999;
 
             IAEItemStack myStack = null;
 

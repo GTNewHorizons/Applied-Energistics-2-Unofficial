@@ -23,7 +23,11 @@ import net.minecraftforge.event.ForgeEventFactory;
 import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
-import appeng.api.config.*;
+import appeng.api.config.Settings;
+import appeng.api.config.SortDir;
+import appeng.api.config.SortOrder;
+import appeng.api.config.TypeFilter;
+import appeng.api.config.ViewItems;
 import appeng.api.features.IWirelessTermHandler;
 import appeng.api.util.IConfigManager;
 import appeng.core.AEConfig;

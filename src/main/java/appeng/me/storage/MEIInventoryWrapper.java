@@ -10,6 +10,8 @@
 
 package appeng.me.storage;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
@@ -166,12 +168,29 @@ public class MEIInventoryWrapper implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out, int iteration) {
         for (int x = 0; x < this.target.getSizeInventory(); x++) {
             out.addStorage(AEItemStack.create(this.target.getStackInSlot(x)));
         }
 
         return out;
+    }
+
+    @Override
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
+        long count = 0;
+        for (int x = 0; x < this.target.getSizeInventory(); x++) {
+            ItemStack stack = this.target.getStackInSlot(x);
+            if (stack != null && stack.stackSize > 0 && Platform.isSameItemPrecise(stack, request.getItemStack())) {
+                count += stack.stackSize;
+                if (count < 0) {
+                    // overflow
+                    count = Long.MAX_VALUE;
+                    break;
+                }
+            }
+        }
+        return count == 0 ? null : request.copy().setStackSize(count);
     }
 
     @Override

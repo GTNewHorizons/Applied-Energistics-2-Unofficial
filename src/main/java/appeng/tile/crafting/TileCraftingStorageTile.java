@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlocks;
 import appeng.block.crafting.BlockAdvancedCraftingStorage;
+import appeng.block.crafting.BlockSingularityCraftingStorage;
 
 public class TileCraftingStorageTile extends TileCraftingTile {
 
@@ -24,46 +25,46 @@ public class TileCraftingStorageTile extends TileCraftingTile {
     @Override
     protected ItemStack getItemFromTile(final Object obj) {
         final IBlocks blocks = AEApi.instance().definitions().blocks();
-        final int storage = ((TileCraftingTile) obj).getStorageBytes() / KILO_SCALAR;
+        final long storage = ((TileCraftingTile) obj).getStorageBytes() / KILO_SCALAR;
 
-        switch (storage) {
-            case 4 -> {
-                for (final ItemStack stack : blocks.craftingStorage4k().maybeStack(1).asSet()) {
-                    return stack;
-                }
-            }
-            case 16 -> {
-                for (final ItemStack stack : blocks.craftingStorage16k().maybeStack(1).asSet()) {
-                    return stack;
-                }
-            }
-            case 64 -> {
-                for (final ItemStack stack : blocks.craftingStorage64k().maybeStack(1).asSet()) {
-                    return stack;
-                }
-            }
-            case 256 -> {
-                for (final ItemStack stack : blocks.craftingStorage256k().maybeStack(1).asSet()) {
-                    return stack;
-                }
-            }
-            case 1024 -> {
-                for (final ItemStack stack : blocks.craftingStorage1024k().maybeStack(1).asSet()) {
-                    return stack;
-                }
-            }
-            case 4096 -> {
-                for (final ItemStack stack : blocks.craftingStorage4096k().maybeStack(1).asSet()) {
-                    return stack;
-                }
-            }
-            case 16384 -> {
-                for (final ItemStack stack : blocks.craftingStorage16384k().maybeStack(1).asSet()) {
-                    return stack;
-                }
+        if (storage == 4) {
+            for (final ItemStack stack : blocks.craftingStorage4k().maybeStack(1).asSet()) {
+                return stack;
             }
         }
-
+        if (storage == 16) {
+            for (final ItemStack stack : blocks.craftingStorage16k().maybeStack(1).asSet()) {
+                return stack;
+            }
+        }
+        if (storage == 64) {
+            for (final ItemStack stack : blocks.craftingStorage64k().maybeStack(1).asSet()) {
+                return stack;
+            }
+        }
+        if (storage == 256) {
+            for (final ItemStack stack : blocks.craftingStorage256k().maybeStack(1).asSet()) {
+                return stack;
+            }
+        }
+        if (storage == 1024) {
+            for (final ItemStack stack : blocks.craftingStorage1024k().maybeStack(1).asSet()) {
+                return stack;
+            }
+        }
+        if (storage == 4096) {
+            for (final ItemStack stack : blocks.craftingStorage4096k().maybeStack(1).asSet()) {
+                return stack;
+            }
+        }
+        if (storage == 16384) {
+            for (final ItemStack stack : blocks.craftingStorage16384k().maybeStack(1).asSet()) {
+                return stack;
+            }
+        }
+        for (final ItemStack stack : blocks.craftingStorageSingularity().maybeStack(1).asSet()) {
+            return stack;
+        }
         return super.getItemFromTile(obj);
     }
 
@@ -78,12 +79,15 @@ public class TileCraftingStorageTile extends TileCraftingTile {
     }
 
     @Override
-    public int getStorageBytes() {
+    public long getStorageBytes() {
         if (this.worldObj == null || this.notLoaded()) {
             return 0;
         }
         Block block = this.worldObj.getBlock(this.xCoord, this.yCoord, this.zCoord);
         int blockMultiplier = block instanceof BlockAdvancedCraftingStorage ? 256 : 1;
+        if (block instanceof BlockSingularityCraftingStorage) {
+            return Long.MAX_VALUE;
+        }
 
         return switch (this.worldObj.getBlockMetadata(this.xCoord, this.yCoord, this.zCoord) & 3) {
             default -> KILO_SCALAR * blockMultiplier;

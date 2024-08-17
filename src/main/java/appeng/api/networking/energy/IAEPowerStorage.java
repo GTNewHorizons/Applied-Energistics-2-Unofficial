@@ -54,4 +54,13 @@ public interface IAEPowerStorage extends IEnergySource {
      * @return access restriction what the network can do
      */
     AccessRestriction getPowerFlow();
+
+    /**
+     * Whether this power store fulfills all power consumption for free
+     * 
+     * @return true if is creative energy cell, false otherwise
+     */
+    default boolean isInfinite() {
+        return false;
+    }
 }

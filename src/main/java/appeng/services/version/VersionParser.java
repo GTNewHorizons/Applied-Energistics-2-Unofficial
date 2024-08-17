@@ -17,7 +17,12 @@ import javax.annotation.Nonnull;
 
 import com.google.common.base.Preconditions;
 
-import appeng.services.version.exceptions.*;
+import appeng.services.version.exceptions.InvalidBuildException;
+import appeng.services.version.exceptions.InvalidChannelException;
+import appeng.services.version.exceptions.InvalidRevisionException;
+import appeng.services.version.exceptions.InvalidVersionException;
+import appeng.services.version.exceptions.MissingSeparatorException;
+import appeng.services.version.exceptions.VersionCheckerException;
 
 /**
  * can parse a version in form of rv2-beta-8 or rv2.beta.8

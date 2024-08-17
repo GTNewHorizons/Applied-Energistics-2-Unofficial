@@ -1,0 +1,23 @@
+shaped=
+    ae2:ItemMaterial.AdvCard ae2:ItemMaterial.Cell16kPart _,
+    ae2:ItemMaterial.Cell16kPart ae2:ItemPart.Interface _,
+    _ _ _
+    -> ae2:ItemMaterial.CardPatternCapacity
+
+shaped=
+    ae2:ItemMaterial.AdvCard ae2:ItemMaterial.Cell16kPart _,
+    ae2:ItemMaterial.Cell16kPart ae2:BlockInterface _,
+    _ _ _
+    -> ae2:ItemMaterial.CardPatternCapacity
+
+shapeless=
+    ae2:ItemMaterial.BasicCard ae2:ItemPart.ImportBus ae2:ItemMaterial.BlankPattern
+    -> ae2:ItemMaterial.CardPatternRefiller
+
+shapeless=
+    ae2:ItemMaterial.AdvCard ae2:ItemPart.StorageBus ae2:ItemPart.LevelEmitter
+    -> ae2:ItemMaterial.CardAdvancedBlocking
+
+shapeless=
+    ae2:ItemMaterial.AdvCard ae2:ItemMaterial.BlankPattern ae2:ItemMaterial.EngProcessor
+    -> ae2:ItemMaterial.CardLockCrafting

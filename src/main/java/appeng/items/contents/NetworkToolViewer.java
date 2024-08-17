@@ -24,15 +24,22 @@ public class NetworkToolViewer implements INetworkTool {
     private final AppEngInternalInventory inv;
     private final ItemStack is;
     private final IGridHost gh;
+    private final int size;
 
-    public NetworkToolViewer(final ItemStack is, final IGridHost gHost) {
+    public NetworkToolViewer(final ItemStack is, final IGridHost gHost, final int size) {
         this.is = is;
         this.gh = gHost;
-        this.inv = new AppEngInternalInventory(null, 9);
+        this.size = size;
+        this.inv = new AppEngInternalInventory(null, (int) Math.pow(size, size));
         if (is.hasTagCompound()) // prevent crash when opening network status screen.
         {
             this.inv.readFromNBT(Platform.openNbtData(is), "inv");
         }
+    }
+
+    @Override
+    public int getSize() {
+        return this.size;
     }
 
     @Override

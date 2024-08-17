@@ -26,25 +26,55 @@ import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
 
 import appeng.api.AEApi;
-import appeng.api.config.*;
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.Actionable;
+import appeng.api.config.PowerMultiplier;
+import appeng.api.config.SecurityPermissions;
+import appeng.api.config.Settings;
+import appeng.api.config.SortDir;
+import appeng.api.config.SortOrder;
+import appeng.api.config.TypeFilter;
+import appeng.api.config.ViewItems;
 import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.implementations.tiles.IMEChest;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
-import appeng.api.networking.events.*;
+import appeng.api.networking.events.MENetworkCellArrayUpdate;
+import appeng.api.networking.events.MENetworkChannelsChanged;
+import appeng.api.networking.events.MENetworkEventSubscribe;
+import appeng.api.networking.events.MENetworkPowerStatusChange;
+import appeng.api.networking.events.MENetworkPowerStorage;
 import appeng.api.networking.events.MENetworkPowerStorage.PowerEventType;
-import appeng.api.networking.security.*;
+import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.IActionHost;
+import appeng.api.networking.security.ISecurityGrid;
+import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.networking.storage.IStorageGrid;
-import appeng.api.storage.*;
+import appeng.api.networking.ticking.IGridTickable;
+import appeng.api.networking.ticking.TickRateModulation;
+import appeng.api.networking.ticking.TickingRequest;
+import appeng.api.storage.ICellHandler;
+import appeng.api.storage.ICellInventoryHandler;
+import appeng.api.storage.ICellWorkbenchItem;
+import appeng.api.storage.IMEInventory;
+import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.IMEMonitorHandlerReceiver;
+import appeng.api.storage.IStorageMonitorable;
+import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.MEMonitorHandler;
+import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AEColor;
 import appeng.api.util.IConfigManager;
 import appeng.helpers.IPriorityHost;
+import appeng.items.storage.ItemExtremeStorageCell;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
 import appeng.tile.TileEvent;
@@ -58,8 +88,8 @@ import appeng.util.Platform;
 import appeng.util.item.AEFluidStack;
 import io.netty.buffer.ByteBuf;
 
-public class TileChest extends AENetworkPowerTile
-        implements IMEChest, IFluidHandler, ITerminalHost, IPriorityHost, IConfigManagerHost, IColorableTile {
+public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHandler, ITerminalHost, IPriorityHost,
+        IConfigManagerHost, IColorableTile, IGridTickable {
 
     private static final ChestNoHandler NO_HANDLER = new ChestNoHandler();
     private static final int[] SIDES = { 0 };
@@ -69,8 +99,11 @@ public class TileChest extends AENetworkPowerTile
     private final BaseActionSource mySrc = new MachineSource(this);
     private final IConfigManager config = new ConfigManager(this);
     private ItemStack storageType;
-    private long lastStateChange = 0;
     private int priority = 0;
+    /**
+     * Bit mask representing the state of the cell and the active status of the chest. The lower 2 bits represent the
+     * state of the cell, the 3rd bit represents the active status of the chest.
+     */
     private int state = 0;
     private boolean wasActive = false;
     private AEColor paintedColor = AEColor.Transparent;
@@ -90,6 +123,10 @@ public class TileChest extends AENetworkPowerTile
         this.setInternalPowerFlow(AccessRestriction.WRITE);
     }
 
+    public IMEInventory<IAEItemStack> getInternal(final StorageChannel channel) throws ChestNoHandler {
+        return (IMEInventory<IAEItemStack>) this.getHandler(channel);
+    }
+
     @Override
     protected void PowerEvent(final PowerEventType x) {
         if (x == PowerEventType.REQUEST_POWER) {
@@ -104,16 +141,14 @@ public class TileChest extends AENetworkPowerTile
     }
 
     private void recalculateDisplay() {
-        final int oldState = this.state;
+        int newState = 0;
 
         for (int x = 0; x < this.getCellCount(); x++) {
-            this.state |= (this.getCellStatus(x) << (3 * x));
+            newState |= (this.getCellStatus(x) << (2 * x));
         }
 
         if (this.isPowered()) {
-            this.state |= 0x40;
-        } else {
-            this.state &= ~0x40;
+            newState |= 0b100;
         }
 
         final boolean currentActive = this.getProxy().isActive();
@@ -126,9 +161,21 @@ public class TileChest extends AENetworkPowerTile
             }
         }
 
-        if (oldState != this.state) {
+        if (newState != this.state) {
             this.markForUpdate();
+            this.state = newState;
         }
+    }
+
+    @Override
+    public TickingRequest getTickingRequest(IGridNode node) {
+        return new TickingRequest(15, 15, false, false);
+    }
+
+    @Override
+    public TickRateModulation tickingRequest(IGridNode node, int ticksSinceLastCall) {
+        this.recalculateDisplay();
+        return TickRateModulation.SAME;
     }
 
     @Override
@@ -136,7 +183,11 @@ public class TileChest extends AENetworkPowerTile
         return 1;
     }
 
-    private IMEInventoryHandler getHandler(final StorageChannel channel) throws ChestNoHandler {
+    public IMEInventoryHandler getInternalHandler(final StorageChannel channel) {
+        return this.cellHandler.getCellInventory(this.inv.getStackInSlot(1), this, channel);
+    }
+
+    public IMEInventoryHandler getHandler(final StorageChannel channel) throws ChestNoHandler {
         if (!this.isCached) {
             this.itemCell = null;
             this.fluidCell = null;
@@ -200,10 +251,14 @@ public class TileChest extends AENetworkPowerTile
         return g;
     }
 
+    public BaseActionSource getActionSource() {
+        return mySrc;
+    }
+
     @Override
     public int getCellStatus(final int slot) {
         if (Platform.isClient()) {
-            return (this.state >> (slot * 3)) & 3;
+            return (this.state >> (slot * 2)) & 0b11;
         }
 
         final ItemStack cell = this.inv.getStackInSlot(1);
@@ -231,7 +286,7 @@ public class TileChest extends AENetworkPowerTile
     @Override
     public boolean isPowered() {
         if (Platform.isClient()) {
-            return (this.state & 0x40) == 0x40;
+            return (this.state & 0b100) == 0b100;
         }
 
         boolean gridPowered = this.getAECurrentPower() > 64;
@@ -243,16 +298,6 @@ public class TileChest extends AENetworkPowerTile
         }
 
         return super.getAECurrentPower() > 1 || gridPowered;
-    }
-
-    @Override
-    public boolean isCellBlinking(final int slot) {
-        final long now = this.worldObj.getTotalWorldTime();
-        if (now - this.lastStateChange > 8) {
-            return false;
-        }
-
-        return ((this.state >> (slot * 3 + 2)) & 0x01) == 0x01;
     }
 
     @Override
@@ -284,14 +329,14 @@ public class TileChest extends AENetworkPowerTile
         try {
             if (!this.getProxy().getEnergy().isNetworkPowered()) {
                 final double powerUsed = this.extractAEPower(idleUsage, Actionable.MODULATE, PowerMultiplier.CONFIG); // drain
-                if (powerUsed + 0.1 >= idleUsage != (this.state & 0x40) > 0) {
+                if (powerUsed + 0.1 >= idleUsage != (this.state & 0b100) > 0) {
                     this.recalculateDisplay();
                 }
             }
         } catch (final GridAccessException e) {
             final double powerUsed = this
                     .extractAEPower(this.getProxy().getIdlePowerUsage(), Actionable.MODULATE, PowerMultiplier.CONFIG); // drain
-            if (powerUsed + 0.1 >= idleUsage != (this.state & 0x40) > 0) {
+            if (powerUsed + 0.1 >= idleUsage != (this.state & 0b100) > 0) {
                 this.recalculateDisplay();
             }
         }
@@ -303,22 +348,6 @@ public class TileChest extends AENetworkPowerTile
 
     @TileEvent(TileEventType.NETWORK_WRITE)
     public void writeToStream_TileChest(final ByteBuf data) {
-        if (this.worldObj.getTotalWorldTime() - this.lastStateChange > 8) {
-            this.state = 0;
-        } else {
-            this.state &= 0x24924924; // just keep the blinks...
-        }
-
-        for (int x = 0; x < this.getCellCount(); x++) {
-            this.state |= (this.getCellStatus(x) << (3 * x));
-        }
-
-        if (this.isPowered()) {
-            this.state |= 0x40;
-        } else {
-            this.state &= ~0x40;
-        }
-
         data.writeByte(this.state);
         data.writeByte(this.paintedColor.ordinal());
 
@@ -336,7 +365,7 @@ public class TileChest extends AENetworkPowerTile
         final int oldState = this.state;
         final ItemStack oldType = this.storageType;
 
-        this.state = data.readByte();
+        this.state = data.readByte() & 0b111;
         final AEColor oldPaintedColor = this.paintedColor;
         this.paintedColor = AEColor.values()[data.readByte()];
 
@@ -348,9 +377,7 @@ public class TileChest extends AENetworkPowerTile
             this.storageType = new ItemStack(Item.getItemById(item & 0xffff), 1, item >> Platform.DEF_OFFSET);
         }
 
-        this.lastStateChange = this.worldObj.getTotalWorldTime();
-
-        return oldPaintedColor != this.paintedColor || (this.state & 0xDB6DB6DB) != (oldState & 0xDB6DB6DB)
+        return oldPaintedColor != this.paintedColor || this.state != oldState
                 || !Platform.isSameItemPrecise(oldType, this.storageType);
     }
 
@@ -526,19 +553,6 @@ public class TileChest extends AENetworkPowerTile
     }
 
     @Override
-    public void blinkCell(final int slot) {
-        final long now = this.worldObj.getTotalWorldTime();
-        if (now - this.lastStateChange > 8) {
-            this.state = 0;
-        }
-        this.lastStateChange = now;
-
-        this.state |= 1 << (slot * 3 + 2);
-
-        this.recalculateDisplay();
-    }
-
-    @Override
     public int fill(final ForgeDirection from, final FluidStack resource, final boolean doFill) {
         final double req = resource.amount / 500.0;
         final double available = this.extractAEPower(req, Actionable.SIMULATE, PowerMultiplier.CONFIG);
@@ -667,6 +681,37 @@ public class TileChest extends AENetworkPowerTile
         this.worldObj.markTileEntityChunkModified(this.xCoord, this.yCoord, this.zCoord, this);
     }
 
+    public boolean lockDigitalSingularityCells() {
+        final ItemStack cell = this.inv.getStackInSlot(1);
+        if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
+            return false;
+        }
+        final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, StorageChannel.ITEMS);
+        if (inv instanceof ICellInventoryHandler handler) {
+            TileDrive.partitionDigitalSingularityCellToItemOnCell(handler);
+        }
+        return true;
+    }
+
+    public int applyStickyToDigitalSingularityCells(ItemStack cards) {
+        ItemStack cell = this.inv.getStackInSlot(1);
+        if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler) && cards.stackSize != 0) {
+            return 0;
+        }
+        if (cell.getItem() instanceof ICellWorkbenchItem cellItem) {
+            if (TileDrive.applyStickyCardToDigitalSingularityCell(cellHandler, cell, this, cellItem)) {
+                if (this.isCached) {
+                    this.isCached = false;
+                }
+                try {
+                    this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
+                } catch (final GridAccessException ignored) {}
+                return 1;
+            }
+        }
+        return 0;
+    }
+
     private static class ChestNoHandler extends Exception {
 
         private static final long serialVersionUID = 7995805326136526631L;
@@ -702,7 +747,7 @@ public class TileChest extends AENetworkPowerTile
                 // :(
             }
 
-            TileChest.this.blinkCell(0);
+            TileChest.this.recalculateDisplay();
         }
 
         @Override

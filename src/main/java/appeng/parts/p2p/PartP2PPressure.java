@@ -33,7 +33,7 @@ import pneumaticCraft.api.tileentity.IAirHandler;
 import pneumaticCraft.api.tileentity.ISidedPneumaticMachine;
 
 @Interface(iface = "pneumaticCraft.api.tileentity.ISidedPneumaticMachine", iname = IntegrationType.PneumaticCraft)
-public final class PartP2PPressure extends PartP2PTunnel<PartP2PPressure>
+public final class PartP2PPressure extends PartP2PTunnelNormal<PartP2PPressure>
         implements ISidedPneumaticMachine, IGridTickable {
 
     private static final String PRESSURE_NBT_TAG = "pneumaticCraft";

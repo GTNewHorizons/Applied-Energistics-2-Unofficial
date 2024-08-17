@@ -24,8 +24,12 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.*;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -64,6 +68,7 @@ import appeng.items.misc.ItemPaintBall;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.me.storage.CellInventoryHandler;
 import appeng.tile.misc.TilePaint;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -124,7 +129,8 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
             final IMEInventory inv = AEApi.instance().registries().cell()
                     .getCellInventory(item, null, StorageChannel.ITEMS);
             if (inv != null) {
-                final IItemList itemList = inv.getAvailableItems(AEApi.instance().storage().createItemList());
+                final IItemList itemList = inv
+                        .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
                 IAEStack aeAmmo = itemList.getFirstItem();
                 if (aeAmmo instanceof IAEItemStack) {
                     shots = Math.min(shots, (int) aeAmmo.getStackSize());
@@ -440,12 +446,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
 
     @Override
     public FuzzyMode getFuzzyMode(final ItemStack is) {
-        final String fz = Platform.openNbtData(is).getString("FuzzyMode");
-        try {
-            return FuzzyMode.valueOf(fz);
-        } catch (final Throwable t) {
-            return FuzzyMode.IGNORE_ALL;
-        }
+        return FuzzyMode.fromItemStack(is);
     }
 
     @Override

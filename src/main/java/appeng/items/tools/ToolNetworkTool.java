@@ -13,6 +13,7 @@ package appeng.items.tools;
 import java.util.EnumSet;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -25,6 +26,7 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
 import com.google.common.base.Optional;
 
+import appeng.api.implementations.HasServerSideToolLogic;
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.implementations.items.IAEWrench;
@@ -43,11 +45,16 @@ import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.NetworkToolViewer;
 import appeng.transformer.annotations.Integration.Interface;
+import appeng.transformer.annotations.Integration.InterfaceList;
 import appeng.util.Platform;
 import buildcraft.api.tools.IToolWrench;
+import cofh.api.item.IToolHammer;
 
-@Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore)
-public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, IToolWrench {
+@InterfaceList(
+        value = { @Interface(iface = "cofh.api.item.IToolHammer", iname = IntegrationType.CoFHWrench),
+                @Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore) })
+public class ToolNetworkTool extends AEBaseItem
+        implements IGuiItem, IAEWrench, IToolWrench, IToolHammer, HasServerSideToolLogic {
 
     public ToolNetworkTool() {
         super(Optional.absent());
@@ -60,7 +67,7 @@ public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, 
     @Override
     public IGuiItemObject getGuiObject(final ItemStack is, final World world, final int x, final int y, final int z) {
         final TileEntity te = world.getTileEntity(x, y, z);
-        return new NetworkToolViewer(is, (IGridHost) (te instanceof IGridHost ? te : null));
+        return new NetworkToolViewer(is, (IGridHost) (te instanceof IGridHost ? te : null), 3);
     }
 
     @Override
@@ -132,6 +139,7 @@ public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, 
         return true;
     }
 
+    @Override
     public boolean serverSideToolLogic(final ItemStack is, final EntityPlayer p, final World w, final int x,
             final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ) {
         if (side >= 0) {
@@ -192,6 +200,8 @@ public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, 
         return true;
     }
 
+    /* IToolWrench (BC) */
+
     @Override
     public boolean canWrench(final EntityPlayer player, final int x, final int y, final int z) {
         return true;
@@ -200,5 +210,17 @@ public class ToolNetworkTool extends AEBaseItem implements IGuiItem, IAEWrench, 
     @Override
     public void wrenchUsed(final EntityPlayer player, final int x, final int y, final int z) {
         player.swingItem();
+    }
+
+    /* IToolHammer (CoFH) */
+
+    @Override
+    public boolean isUsable(ItemStack itemStack, EntityLivingBase entityLivingBase, int x, int y, int z) {
+        return true;
+    }
+
+    @Override
+    public void toolUsed(ItemStack itemStack, EntityLivingBase entity, int x, int y, int z) {
+        entity.swingItem();
     }
 }

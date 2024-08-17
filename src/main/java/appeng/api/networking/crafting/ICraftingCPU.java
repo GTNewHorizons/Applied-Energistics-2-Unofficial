@@ -37,6 +37,13 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
     long getAvailableStorage();
 
     /**
+     * @return the storage used by an active crafting job in bytes
+     */
+    default long getUsedStorage() {
+        return 0;
+    }
+
+    /**
      * @return the number of co-processors in the CPU.
      */
     int getCoProcessors();

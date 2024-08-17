@@ -25,6 +25,7 @@ import appeng.recipes.CustomRecipeConfig;
 import appeng.recipes.loader.ConfigLoader;
 import appeng.recipes.loader.JarLoader;
 import appeng.recipes.loader.RecipeResourceCopier;
+import cpw.mods.fml.common.Loader;
 
 /**
  * handles the decision if recipes should be loaded from jar, loaded from file system or force copied from jar
@@ -39,6 +40,7 @@ public class RecipeLoader implements Runnable {
      * recipe path in the jar
      */
     private static final String ASSETS_RECIPE_PATH = "/assets/appliedenergistics2/recipes/";
+    private static final String ASSETS_GTNH_RECIPE_PATH = "/assets/appliedenergistics2/GTNHRecipes/";
 
     @Nonnull
     private final IRecipeHandler handler;
@@ -64,9 +66,12 @@ public class RecipeLoader implements Runnable {
 
     @Override
     public final void run() {
+        final String recipesFolder = Loader.isModLoaded("dreamcraft") ? ASSETS_GTNH_RECIPE_PATH : ASSETS_RECIPE_PATH;
+        boolean useResourceFallBack = true;
+
         if (this.config.isEnabled()) {
             // setup copying
-            final RecipeResourceCopier copier = new RecipeResourceCopier("assets/appliedenergistics2/recipes/");
+            final RecipeResourceCopier copier = new RecipeResourceCopier(recipesFolder.substring(1));
 
             final File generatedRecipesDir = new File(this.recipeDirectory, "generated");
             final File userRecipesDir = new File(this.recipeDirectory, "user");
@@ -85,14 +90,17 @@ public class RecipeLoader implements Runnable {
 
                 // parse recipes prioritising the user scripts by using the generated as template
                 this.handler.parseRecipes(new ConfigLoader(generatedRecipesDir, userRecipesDir), "index.recipe");
+
+                useResourceFallBack = false;
             }
             // on failure use jar parsing
             catch (final IOException | URISyntaxException e) {
                 AELog.debug(e);
-                this.handler.parseRecipes(new JarLoader(ASSETS_RECIPE_PATH), "index.recipe");
             }
-        } else {
-            this.handler.parseRecipes(new JarLoader(ASSETS_RECIPE_PATH), "index.recipe");
+        }
+
+        if (useResourceFallBack) {
+            this.handler.parseRecipes(new JarLoader(recipesFolder), "index.recipe");
         }
     }
 }

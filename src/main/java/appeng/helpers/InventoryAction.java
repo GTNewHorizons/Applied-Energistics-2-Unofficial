@@ -31,4 +31,5 @@ public enum InventoryAction {
     AUTO_CRAFT,
     PLACE_SINGLE,
     SET_PATTERN_VALUE,
+    SET_PATTERN_MULTI,
 }

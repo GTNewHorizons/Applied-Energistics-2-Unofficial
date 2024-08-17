@@ -6,6 +6,10 @@ shapeless=
     wrench monitor ae2:ItemMaterial.CalcProcessor oredictionary:chestWood
     -> ae2:ToolNetworkTool
     
+shapeless=
+	ae2:ToolNetworkTool ae2:ItemPart.ConversionMonitor ae2:ItemMaterial.Cell64kPart ae2:ItemMaterial.CardCapacity
+	-> ae2:ToolAdvancedNetworkTool
+    
 shaped=
     ae2:ItemMaterial.EngProcessor oredictionary:ingotIron oredictionary:ingotIron,
     oredictionary:ingotGold oredictionary:dustRedstone oredictionary:ingotGold
@@ -15,6 +19,11 @@ shaped=
     ae2:ItemMaterial.CalcProcessor oredictionary:ingotIron oredictionary:ingotIron,
     oredictionary:ingotGold oredictionary:dustRedstone oredictionary:ingotGold
     -> ae2:ToolMemoryCard
+
+shaped=
+    ae2:ItemMaterial.EngProcessor oredictionary:ingotIron oredictionary:ingotIron,
+    oredictionary:gemDiamond oredictionary:dustRedstone oredictionary:gemDiamond
+    -> ae2:ToolPriorityCard
     
 shaped=
     ae2:ItemMaterial.FormationCore oredictionary:ingotIron _,

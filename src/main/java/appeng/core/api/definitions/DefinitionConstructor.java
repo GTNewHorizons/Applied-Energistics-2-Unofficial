@@ -19,7 +19,11 @@ import appeng.api.util.AEColor;
 import appeng.api.util.AEColoredItemDefinition;
 import appeng.core.FeatureHandlerRegistry;
 import appeng.core.FeatureRegistry;
-import appeng.core.features.*;
+import appeng.core.features.ActivityState;
+import appeng.core.features.ColoredItemDefinition;
+import appeng.core.features.IAEFeature;
+import appeng.core.features.IFeatureHandler;
+import appeng.core.features.ItemStackSrc;
 import appeng.items.parts.ItemMultiPart;
 import appeng.items.parts.PartType;
 
@@ -81,10 +85,15 @@ public class DefinitionConstructor {
     }
 
     final AEColoredItemDefinition constructColoredDefinition(final ItemMultiPart target, final PartType type) {
+        return constructColoredDefinition(target, type, false);
+    }
+
+    final AEColoredItemDefinition constructColoredDefinition(final ItemMultiPart target, final PartType type,
+            boolean deprecated) {
         final ColoredItemDefinition definition = new ColoredItemDefinition();
 
         for (final AEColor color : AEColor.values()) {
-            final ItemStackSrc multiPartSource = target.createPart(type, color);
+            final ItemStackSrc multiPartSource = target.createPart(type, color, deprecated);
 
             definition.add(color, multiPartSource);
         }

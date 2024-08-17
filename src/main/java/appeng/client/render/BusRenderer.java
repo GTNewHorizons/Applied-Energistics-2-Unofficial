@@ -10,8 +10,8 @@
 
 package appeng.client.render;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
@@ -39,8 +39,8 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class BusRenderer implements IItemRenderer {
 
     public static final BusRenderer INSTANCE = new BusRenderer();
-    private static final Map<Integer, IPart> RENDER_PART = new HashMap<>();
-    private final RenderBlocksWorkaround renderer = new RenderBlocksWorkaround();
+    private static final Map<Integer, IPart> RENDER_PART = new ConcurrentHashMap<>();
+    private final ThreadLocal<RenderBlocksWorkaround> renderer = ThreadLocal.withInitial(RenderBlocksWorkaround::new);
 
     @Override
     public boolean handleRenderType(final ItemStack item, final ItemRenderType type) {
@@ -58,7 +58,9 @@ public class BusRenderer implements IItemRenderer {
         if (item == null) {
             return;
         }
-
+        Tessellator tessellator = Tessellator.instance;
+        BusRenderHelper busRenderer = BusRenderHelper.instances.get();
+        RenderBlocksWorkaround renderer = this.getRenderer();
         GL11.glPushMatrix();
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -95,20 +97,20 @@ public class BusRenderer implements IItemRenderer {
         GL11.glScaled(1.2, 1.2, 1.);
 
         GL11.glColor4f(1, 1, 1, 1);
-        Tessellator.instance.setColorOpaque_F(1, 1, 1);
-        Tessellator.instance.setBrightness(14 << 20 | 14 << 4);
+        tessellator.setColorOpaque_F(1, 1, 1);
+        tessellator.setBrightness(14 << 20 | 14 << 4);
 
-        BusRenderHelper.INSTANCE.setBounds(0, 0, 0, 1, 1, 1);
-        BusRenderHelper.INSTANCE.setTexture(null);
-        BusRenderHelper.INSTANCE.setInvColor(0xffffff);
-        this.getRenderer().blockAccess = ClientHelper.proxy.getWorld();
+        busRenderer.setBounds(0, 0, 0, 1, 1, 1);
+        busRenderer.setTexture(null);
+        busRenderer.setInvColor(0xffffff);
+        renderer.blockAccess = ClientHelper.proxy.getWorld();
 
-        BusRenderHelper.INSTANCE.setOrientation(ForgeDirection.EAST, ForgeDirection.UP, ForgeDirection.SOUTH);
+        busRenderer.setOrientation(ForgeDirection.EAST, ForgeDirection.UP, ForgeDirection.SOUTH);
 
-        this.getRenderer().uvRotateBottom = this.getRenderer().uvRotateEast = this.getRenderer().uvRotateNorth = this
-                .getRenderer().uvRotateSouth = this.getRenderer().uvRotateTop = this.getRenderer().uvRotateWest = 0;
-        this.getRenderer().useInventoryTint = false;
-        this.getRenderer().overrideBlockTexture = null;
+        renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = this
+                .getRenderer().uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
+        renderer.useInventoryTint = false;
+        renderer.overrideBlockTexture = null;
 
         if (item.getItem() instanceof IFacadeItem fi) {
             final IFacadePart fp = fi.createPartFromItemStack(item, ForgeDirection.SOUTH);
@@ -119,7 +121,7 @@ public class BusRenderer implements IItemRenderer {
             }
 
             if (fp != null) {
-                fp.renderInventory(BusRenderHelper.INSTANCE, this.getRenderer());
+                fp.renderInventory(busRenderer, renderer);
             }
         } else {
             final IPart ip = this.getRenderer(item, (IPartItem) item.getItem());
@@ -130,12 +132,12 @@ public class BusRenderer implements IItemRenderer {
                     GL11.glTranslatef(0.0f, 0.0f, -0.04f * (8 - depth) - 0.06f);
                 }
 
-                ip.renderInventory(BusRenderHelper.INSTANCE, this.getRenderer());
+                ip.renderInventory(busRenderer, renderer);
             }
         }
 
-        this.getRenderer().uvRotateBottom = this.getRenderer().uvRotateEast = this.getRenderer().uvRotateNorth = this
-                .getRenderer().uvRotateSouth = this.getRenderer().uvRotateTop = this.getRenderer().uvRotateWest = 0;
+        renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = this
+                .getRenderer().uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
 
         GL11.glPopAttrib();
         GL11.glPopMatrix();
@@ -158,6 +160,6 @@ public class BusRenderer implements IItemRenderer {
     }
 
     public RenderBlocksWorkaround getRenderer() {
-        return this.renderer;
+        return this.renderer.get();
     }
 }

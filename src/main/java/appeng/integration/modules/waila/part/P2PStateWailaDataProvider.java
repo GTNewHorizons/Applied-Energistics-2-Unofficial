@@ -73,7 +73,6 @@ public final class P2PStateWailaDataProvider extends BasePartWailaDataProvider {
                 final String local = ButtonToolTips.P2PFrequency.getLocal();
 
                 currentToolTip.add(String.format(local, freqTooltip));
-                if (nbtData.hasKey(TAG_CUSTOMNAME)) currentToolTip.add(nbtData.getString(TAG_CUSTOMNAME));
             }
         }
 
@@ -88,8 +87,6 @@ public final class P2PStateWailaDataProvider extends BasePartWailaDataProvider {
             if (!tunnel.isPowered()) {
                 return tag;
             }
-
-            if (tunnel.hasCustomName()) tag.setString(TAG_CUSTOMNAME, tunnel.getCustomName());
 
             tag.setLong(TAG_P2P_FREQUENCY, tunnel.getFrequency());
 

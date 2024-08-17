@@ -6,6 +6,7 @@ import net.minecraft.client.gui.GuiButton;
 import org.lwjgl.opengl.GL11;
 
 import appeng.client.texture.ExtraBlockTextures;
+import appeng.util.Platform;
 
 public class GuiSimpleImgButton extends GuiButton implements ITooltip {
 
@@ -54,7 +55,21 @@ public class GuiSimpleImgButton extends GuiButton implements ITooltip {
 
     @Override
     public String getMessage() {
-        return tooltip;
+        if (Platform.isServer()) {
+            return tooltip;
+        }
+
+        if (!tooltip.contains("\n")) {
+            return tooltip;
+        }
+
+        int i = tooltip.indexOf("\n");
+        String name = tooltip.substring(0, i);
+        String value = tooltip.substring(i + 1);
+
+        value = Minecraft.getMinecraft().fontRenderer.wrapFormattedStringToWidth(value, 150);
+
+        return name + '\n' + value;
     }
 
     @Override

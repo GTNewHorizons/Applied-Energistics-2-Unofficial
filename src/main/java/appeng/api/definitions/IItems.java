@@ -62,6 +62,10 @@ public interface IItems {
 
     IItemDefinition networkTool();
 
+    IItemDefinition advancedNetworkTool();
+
+    IItemDefinition priorityCard();
+
     IItemDefinition portableCell();
 
     IItemDefinition cellCreative();
@@ -91,6 +95,8 @@ public interface IItems {
     IItemDefinition cellQuantum();
 
     IItemDefinition cellSingularity();
+
+    IItemDefinition cellUniverse();
 
     IItemDefinition spatialCell2();
 

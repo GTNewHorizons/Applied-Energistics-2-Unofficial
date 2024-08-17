@@ -1,7 +1,12 @@
 package appeng.container.implementations;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.WeakHashMap;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -85,6 +90,15 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
 
         // Select a suitable CPU if none is selected
         if (selectedCpuSerial == -1) {
+            // Default CPU selection prefers busy CPU if job can be merged
+            if (!preferBusyCPUs) {
+                for (CraftingCPUStatus c : cpus) {
+                    if (c.isBusy() && cpuFilter.test(c)) {
+                        selectCPU(c.getSerial());
+                        return;
+                    }
+                }
+            }
             // Try preferred CPUs first
             for (CraftingCPUStatus cpu : cpus) {
                 if (preferBusyCPUs == cpu.isBusy() && cpuFilter.test(cpu)) {

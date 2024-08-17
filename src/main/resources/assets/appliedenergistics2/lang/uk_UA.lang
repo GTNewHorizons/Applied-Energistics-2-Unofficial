@@ -1,0 +1,737 @@
+# Blocks
+tile.appliedenergistics2.BlockCableBus.name=AE2 кабель та/або шина
+tile.appliedenergistics2.BlockCellWorkbench.name=Верстак для роботи з дисками
+tile.appliedenergistics2.BlockCharger.name=Зарядний пристрій
+tile.appliedenergistics2.BlockChest.name=ME-Скриня
+tile.appliedenergistics2.BlockCondenser.name=Конденсатор матерії
+tile.appliedenergistics2.BlockController.name=МЕ-Контролер
+tile.appliedenergistics2.BlockCrank.name=Дерев’яна ручка
+tile.appliedenergistics2.BlockCreativeEnergyCell.name=Творчий накопичувач енергії
+tile.appliedenergistics2.BlockDenseEnergyCell.name=Щільний накопичувач енергії
+tile.appliedenergistics2.BlockEnergyCell.name=Накопичувач енергії
+tile.appliedenergistics2.BlockDrive.name=ME-Привід
+tile.appliedenergistics2.BlockEnergyAcceptor.name=Приймач енергії
+tile.appliedenergistics2.BlockGrinder.name=Кварцовий точильний камінь
+tile.appliedenergistics2.BlockMatrixFrame.name=Каркас матриці
+tile.appliedenergistics2.BlockIOPort.name=ME-Порт вводу/виводу
+tile.appliedenergistics2.BlockInscriber.name=Штампувальний прес
+tile.appliedenergistics2.BlockInterface.name=Постачальник шаблонів
+tile.appliedenergistics2.BlockQuantumLinkChamber.name=МЕ-Камера квантового зв'язку
+tile.appliedenergistics2.BlockQuantumRing.name=МЕ-Квантове кільце
+tile.appliedenergistics2.BlockFluix.name=Блок мінливого кристалу
+tile.appliedenergistics2.BlockQuartz.name=Блок істинного кварцу
+tile.appliedenergistics2.BlockQuartzChiseled.name=Точений блок істинного кварцу
+tile.appliedenergistics2.BlockQuartzGlass.name=Кварцове скло
+tile.appliedenergistics2.BlockQuartzLamp.name=Яскраве кварцове скло
+tile.appliedenergistics2.BlockQuartzPillar.name=Колона з істинного кварцу
+tile.appliedenergistics2.BlockQuartzTorch.name=Заряджений кварцовий світильник
+tile.appliedenergistics2.BlockLightDetector.name=Детектор світла
+tile.appliedenergistics2.BlockSpatialIOPort.name=Просторовий порт IO
+tile.appliedenergistics2.BlockSpatialPylon.name=Просторовий пілон
+tile.appliedenergistics2.BlockTinyTNT.name=Крихітний динаміт
+tile.appliedenergistics2.BlockVibrationChamber.name=Вібраційна камера
+tile.appliedenergistics2.BlockWireless.name=ME-Бездротова точка доступу
+tile.appliedenergistics2.OreQuartz.name=Руда істинного кварцу
+tile.appliedenergistics2.OreQuartzCharged.name=Руда зарядженного істиного кварцу
+tile.appliedenergistics2.BlockSecurity.name=ME-Термінал безпеки
+tile.appliedenergistics2.BlockQuartzGrowthAccelerator.name=Прискорювач росту кристалів
+tile.appliedenergistics2.BlockSkyStone.name=Небесний камінь
+tile.appliedenergistics2.BlockSkyStone.Block.name=Небесний камінь
+tile.appliedenergistics2.BlockSkyStone.Brick.name=Цегла з небесного каменю
+tile.appliedenergistics2.BlockSkyStone.SmallBrick.name=Дрібна цегла з небесного каменю
+tile.appliedenergistics2.BlockSkyChest.name=Скриня з небесного каменю
+tile.appliedenergistics2.BlockSkyChest.Block.name=Скриня з небесного каменю
+tile.appliedenergistics2.BlockSkyCompass.name=Метеоритний компас
+tile.appliedenergistics2.BlockCraftingMonitor.name=Монітор створення
+tile.appliedenergistics2.BlockCraftingStorage.name=1К Сховище для створення
+tile.appliedenergistics2.BlockCraftingStorage4k.name=4К Сховище для створення
+tile.appliedenergistics2.BlockCraftingStorage16k.name=16К Сховище для створення
+tile.appliedenergistics2.BlockCraftingStorage64k.name=64К Сховище для створення
+tile.appliedenergistics2.BlockCraftingStorage256k.name=256К Сховище для створення
+tile.appliedenergistics2.BlockCraftingStorage1024k.name=1024К Сховище для створення
+tile.appliedenergistics2.BlockCraftingStorage4096k.name=4096К Сховище для створення
+tile.appliedenergistics2.BlockCraftingStorage16384k.name=16384К Сховище для створення
+tile.appliedenergistics2.BlockCraftingAccelerator.name=Блок сумісної обробки
+tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4-ох ядерний блок сумісної обробки
+tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16-ти ядерний блок сумісної обробки
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64-ох ядерний блок сумісної обробки
+tile.appliedenergistics2.BlockCraftingAccelerator256x.name=256-и ядерний блок сумісної обробки
+tile.appliedenergistics2.BlockCraftingAccelerator1024x.name=1024-ох ядерний блок сумісної обробки
+tile.appliedenergistics2.BlockCraftingAccelerator4096x.name=4096-и ядерний блок сумісної обробки
+tile.appliedenergistics2.BlockCraftingUnit.name=Блок створення
+tile.appliedenergistics2.BlockMolecularAssembler.name=Молекулярний збирач
+
+# Stairs
+tile.appliedenergistics2.ChiseledQuartzStairBlock.name=Виточені сходи з істинного кварцу
+tile.appliedenergistics2.FluixStairBlock.name=Сходи з мінливого кристалу
+tile.appliedenergistics2.QuartzPillarStairBlock.name=Сходи з колони істинного кварцу
+tile.appliedenergistics2.QuartzStairBlock.name=Сходи з істинного кварцу
+tile.appliedenergistics2.SkyStoneBlockStairBlock.name=Сходи з небесного каменю
+tile.appliedenergistics2.SkyStoneBrickStairBlock.name=Цегляні сходи з небесного каменю
+tile.appliedenergistics2.SkyStoneSmallBrickStairBlock.name=Сходи з дрібної цегли з небесного каменю
+tile.appliedenergistics2.SkyStoneStairBlock.name=Сходи з небесного каменю
+
+# Slabs
+tile.appliedenergistics2.ChiseledQuartzSlabBlock.name=Плита з точеного істинного кварцу
+tile.appliedenergistics2.FluixSlabBlock.name=Плита з мінливого кристалу
+tile.appliedenergistics2.QuartzPillarSlabBlock.name=Плита з колони істинного кварцу
+tile.appliedenergistics2.QuartzSlabBlock.name=Плита з істинного кварцу
+tile.appliedenergistics2.SkyStoneBlockSlabBlock.name=Плита з небесного каменю
+tile.appliedenergistics2.SkyStoneBrickSlabBlock.name=Цегляна плита з небесного каменя
+tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.name=Плита з дрібної цегли небесного каменю
+tile.appliedenergistics2.SkyStoneSlabBlock.name=Плита з небесного каменю
+
+# Chat Messages
+chat.appliedenergistics2.ChestCannotReadStorageCell=ME скриня не може зчитати диск зберігання.
+chat.appliedenergistics2.SettingCleared=Карта пам'яті очищена.
+chat.appliedenergistics2.OutOfRange=Бездротова мережа поза зоною досяжності.
+chat.appliedenergistics2.InvalidMachine=Неможливо відновити конфігурацію для цього пристрою.
+chat.appliedenergistics2.LoadedSettings=Завантажено конфігурацію пристрою з карти пам'яті.
+chat.appliedenergistics2.DeviceNotPowered=Недостатньо енергії для пристрою.
+chat.appliedenergistics2.DeviceNotWirelessTerminal=Пристрій не є бездротовим терміналом.
+chat.appliedenergistics2.DeviceNotLinked=Пристрій не прив'язано.
+chat.appliedenergistics2.StationCanNotBeLocated=Станцію не вдається знайти.
+chat.appliedenergistics2.MachineNotPowered=У механізму відсутнє живлення.
+chat.appliedenergistics2.CommunicationError=Помилка з'єднання з мережею.
+chat.appliedenergistics2.SavedSettings=Успішно збережено налаштування.
+chat.appliedenergistics2.AmmoDepleted=Боєприпаси вичерпані.
+chat.appliedenergistics2.isNowLocked=Монітор заблоковано.
+chat.appliedenergistics2.isNowUnlocked=Монітор розблоковано.
+chat.appliedenergistics2.TunnelNotConnected=Тунель не з'єднаний.
+chat.appliedenergistics2.TunnelInputIsAt=Вхід до тунелю знаходиться за (%d, %d, %d)
+chat.appliedenergistics2.TunnelHasNoOutputs=Тунель не має виходів.
+chat.appliedenergistics2.TunnelOutputsAreAt=Виходи з тунелю знаходяться за:
+chat.appliedenergistics2.InterfaceInOtherDim=Інтерфейс розташований у вимірі: %d і не може бути підсвідчений
+chat.appliedenergistics2.InterfaceHighlighted=Інтерфейс тепер підсвідчуються за %d, %d, %d
+chat.appliedenergistics2.CraftingItemsWentMissing=Не вдалося почати крафт, інгредієнт був пропущений: %d * %s
+chat.appliedenergistics2.FBOUnsupported=OpenGL FBOs не підтримуються, не можна експортувати зображення
+# Creative Tabs
+itemGroup.appliedenergistics2=Applied Energistics 2
+itemGroup.appliedenergistics2.facades=Applied Energistics 2 - Фасади
+
+# GUI
+gui.appliedenergistics2.CraftingTerminal=Термінал створення
+gui.appliedenergistics2.METunnel=МЕ
+gui.appliedenergistics2.ItemTunnel=Предмет
+gui.appliedenergistics2.FluidTunnel=Рідина
+gui.appliedenergistics2.RedstoneTunnel=Редстоун
+gui.appliedenergistics2.EUTunnel=EU
+gui.appliedenergistics2.RFTunnel=RF
+gui.appliedenergistics2.LightTunnel=Світло
+gui.appliedenergistics2.OCTunnel=OpenComputers
+gui.appliedenergistics2.PressureTunnel=Тиск
+gui.appliedenergistics2.GTTunnel=GT EU
+gui.appliedenergistics2.IFACETunnel=ME Інтерфейс
+
+gui.appliedenergistics2.security.extract.name=Забирати
+gui.appliedenergistics2.security.inject.name=Класти
+gui.appliedenergistics2.security.craft.name=Створювати
+gui.appliedenergistics2.security.build.name=Побудувати
+gui.appliedenergistics2.security.security.name=Безпека
+
+gui.appliedenergistics2.security.extract.tip=Користувач може забирати предмети зі сховища.
+gui.appliedenergistics2.security.inject.tip=Користувачеві дозволено класти нові предмети у сховище.
+gui.appliedenergistics2.security.craft.tip=Користувач може розпочинати нові задачі на створення.
+gui.appliedenergistics2.security.build.tip=Користувач може змінювати фізичну структуру мережі та вносити зміни до конфігурації.
+gui.appliedenergistics2.security.security.tip=Користувач може отримати доступ до терміналу безпеки мережі та модифікувати його.
+
+gui.appliedenergistics2.Efficiency=Ефективність
+gui.appliedenergistics2.RequiredPower=Необхідна енергія
+gui.appliedenergistics2.StoredPower=Накопичена енергія
+gui.appliedenergistics2.MaxPower=Максимальна енергія
+gui.appliedenergistics2.QuartzCuttingKnife=Кварцовий ріжучий ніж
+gui.appliedenergistics2.Inscriber=Штампувальний прес
+gui.appliedenergistics2.Wireless=Бездротова точка доступу
+gui.appliedenergistics2.WirelessTerminal=Бездротовий термінал
+gui.appliedenergistics2.NoPermissions=Дозволи не вибрано
+gui.appliedenergistics2.SecurityCardEditor=Редактор біометричних карток
+gui.appliedenergistics2.Encoded=Закодований
+gui.appliedenergistics2.Priority=Пріоритет
+gui.appliedenergistics2.StorageBus=МЕ-шина зберігання
+gui.appliedenergistics2.EnergyDrain=Пасивне споживання
+gui.appliedenergistics2.Installed=Встановлено
+gui.appliedenergistics2.NetworkTool=Діагностика мережі
+gui.appliedenergistics2.PowerUsageRate=Використання енергії
+gui.appliedenergistics2.PowerInputRate=Генерація енергії
+gui.appliedenergistics2.PortableCell=Портативний диск
+gui.appliedenergistics2.Security=Термінал безпеки
+gui.appliedenergistics2.CellWorkbench=Верстак для роботи з дисками
+gui.appliedenergistics2.QuantumLinkChamber=Камера квантового зв'язку
+gui.appliedenergistics2.IOPort=ME-Порт вводу/виводу
+gui.appliedenergistics2.Chest=ME-Скриня
+gui.appliedenergistics2.Condenser=Конденсатор матерії
+gui.appliedenergistics2.Config=Конфігурація
+gui.appliedenergistics2.Drive=ME-Привід
+gui.appliedenergistics2.ExportBus=ME-Шина експорту
+gui.appliedenergistics2.GrindStone=Точильний камінь
+gui.appliedenergistics2.ImportBus=МЕ-Шина імпорту
+gui.appliedenergistics2.Interface=ME-Інтерфейс
+gui.appliedenergistics2.LevelEmitter=ME Випромінювач рівня енергії
+gui.appliedenergistics2.Of=з
+gui.appliedenergistics2.Patterns=Шаблони
+gui.appliedenergistics2.SpatialIOPort=Просторовий порт IO
+gui.appliedenergistics2.StoredEnergy=Накопичена енергія
+gui.appliedenergistics2.StoredItems=Накопичені предмети
+gui.appliedenergistics2.StoredStacks=Накопічені стеки
+gui.appliedenergistics2.Terminal=Термінал
+gui.appliedenergistics2.InterfaceTerminal=Термінал Інтерфейсів
+gui.appliedenergistics2.InterfaceTerminalHint=Показати або Приховати в терміналі інтерфейсів.
+gui.appliedenergistics2.FormationPlane=Площина формування
+gui.appliedenergistics2.VibrationChamber=Вібраційна камера
+gui.appliedenergistics2.NetworkDetails=Деталі мережі
+gui.appliedenergistics2.StorageCells=МЕ-Диск зберігання
+gui.appliedenergistics2.IOBuses=МЕ-Шина імпорту/експорту
+gui.appliedenergistics2.Stores=Зберігає
+gui.appliedenergistics2.BytesUsed=Байтів використано
+gui.appliedenergistics2.Types=Типів
+gui.appliedenergistics2.Blank=Порожній.
+gui.appliedenergistics2.Unlinked=Без зв'язку
+gui.appliedenergistics2.Linked=Прив'язаний
+gui.appliedenergistics2.StoredSize=Збережений розмір
+gui.appliedenergistics2.SkyChest=Скриня з небесного каменю
+gui.appliedenergistics2.PatternTerminal=Термінал шаблонів
+gui.appliedenergistics2.PatternTerminalEx=Термінал обробки шаблонів
+gui.appliedenergistics2.CraftingPattern=Створення шаблону
+gui.appliedenergistics2.MolecularAssembler=Молекулярний збирач
+gui.appliedenergistics2.ProcessingPattern=Шаблон обробки
+gui.appliedenergistics2.Crafts=Створення
+gui.appliedenergistics2.And=і
+gui.appliedenergistics2.Creates=Створює
+gui.appliedenergistics2.With=з
+gui.appliedenergistics2.Substitute=Використовува заміщюванні:
+gui.appliedenergistics2.BeSubstitute=Може бути заміщенно:
+gui.appliedenergistics2.Yes=Так
+gui.appliedenergistics2.No=Ні
+gui.appliedenergistics2.InWorldCrafting=AE2 у світовому створенні
+gui.appliedenergistics2.inWorldFluix=Киньте 1 заряджений істинний кварц + 1 Пекельний кварц + 1 редстоун в воду поруч один з одним і почекайте трохи, щоб отримати 2 мінливих кристали.
+gui.appliedenergistics2.inWorldPurificationCertus=Киньте насіння істинного кварцу, зроблене з порошоку істинного кварцу та піску, у воду; Щоб пришвидшити процес, додайте прискорювач росту кристалів.
+gui.appliedenergistics2.inWorldPurificationNether=Киньте насіння Пекельного кварцу, зроблене з порошоку пекельного кварцу та піску, у воду; Щоб пришвидшити процес, додайте прискорювач росту кристалів.
+gui.appliedenergistics2.inWorldPurificationFluix=Киньте насіння мінливого кристалу, зроблене з порошоку мінливого кристалу та пісоку, у воду; Щоб пришвидшити процес, додайте прискорювач росту кристалів.
+gui.appliedenergistics2.inWorldSingularity=Для створення киньте 1 сингулярність і 1 Порошок Енду та спричиніть вибух у межах досяжності цих предметів.
+gui.appliedenergistics2.ChargedQuartz=Заряджений істинний кварц створюється шляхом повіщення незарядженого кристалу істинниго кварцу у зарядний пристрій та подачі живлення.
+gui.appliedenergistics2.ChargedQuartzFind=Заряджений істинний кварц зустрічається у світі досить рідко, зовні він схожий на звичайний істинний кварц, за винятком того, що виблискує.
+gui.appliedenergistics2.NoSecondOutput=Немає вторинної продукції
+gui.appliedenergistics2.OfSecondOutput=%1$d%% шанс на вторинну продукцію.
+gui.appliedenergistics2.MultipleOutputs=%1$d%% вторинної, %2$d%% третинної продукції.
+gui.appliedenergistics2.SelectAmount=Виберіть кількість
+gui.appliedenergistics2.CopyMode=Режим копіювання
+gui.appliedenergistics2.CopyModeDesc=Визначає, чи буде очищено вміст панелі конфігурації при вийманні диска.
+gui.appliedenergistics2.Next=Далі
+gui.appliedenergistics2.Lumen=Сяючий
+gui.appliedenergistics2.Empty=Порожній
+gui.appliedenergistics2.Stored=Зберігається
+gui.appliedenergistics2.Cancel=Скасувати
+gui.appliedenergistics2.ETAFormat=HH:mm:ss
+gui.appliedenergistics2.SwitchCraftingSimulationDisplayMode=Перемикання режиму відображення (Список/Дерево)
+gui.appliedenergistics2.Crafting=Створення
+gui.appliedenergistics2.Scheduled=Заплановано
+gui.appliedenergistics2.CraftingStatus=Статус створення
+gui.appliedenergistics2.RemainingOperations=Простоюючі процесори
+gui.appliedenergistics2.FromStorage=Доступно
+gui.appliedenergistics2.ToCraft=Потрібно створити
+gui.appliedenergistics2.CraftingPlan=План створення
+gui.appliedenergistics2.Automatic=Автоматично
+gui.appliedenergistics2.Start=Почати
+gui.appliedenergistics2.Missing=Пропущено
+gui.appliedenergistics2.NoCraftingTreeReceived=Не отримано жодного дерева створення
+gui.appliedenergistics2.CraftingStepLimitExceeded=Перевищено ліміт етапів створення
+gui.appliedenergistics2.RequestedItem=Вимагається предмет
+gui.appliedenergistics2.SimulationIncomplete=Моделювання незавершене
+gui.appliedenergistics2.Bytes=Сховище
+gui.appliedenergistics2.Set=Встановити
+gui.appliedenergistics2.Simulation=Моделювання
+gui.appliedenergistics2.CoProcessors=Співпроцесори
+gui.appliedenergistics2.CraftingCPU=Створення процесора
+gui.appliedenergistics2.NoCraftingCPUs=Процесори для створення не доступні
+gui.appliedenergistics2.CalculatingWait=Обчислення, будь ласка зачекайте...
+gui.appliedenergistics2.Clean=Очистити
+gui.appliedenergistics2.InvalidPattern=Неправильний шаблон
+gui.appliedenergistics2.UnknownItem=Невідомий предмет
+gui.appliedenergistics2.Range=Діапазон
+gui.appliedenergistics2.TransparentFacades=Прозорі фасади
+gui.appliedenergistics2.TransparentFacadesHint=Керує видимістю фасадів, коли мережевий інструмент знаходиться на панелі інструментів.
+gui.appliedenergistics2.CPUs=Процессор
+gui.appliedenergistics2.NoCraftingJobs=Немає активного завдання на створення
+gui.appliedenergistics2.FacadeCrafting=Виготовлення фасадів
+gui.appliedenergistics2.inWorldCraftingPresses=Шаблони для створення знаходяться в центрі метеоритів, які можна знайти по всьому світу, їх можна знайти за допомогою метеоритного компасу.
+gui.appliedenergistics2.Included=Включено
+gui.appliedenergistics2.Excluded=Виключено
+gui.appliedenergistics2.Partitioned=Розділений
+gui.appliedenergistics2.PartitionedOre=Фільтр словника руд
+gui.appliedenergistics2.Precise=Точно
+gui.appliedenergistics2.Fuzzy=Нечіткий
+gui.appliedenergistics2.Filter=Фільтр
+gui.appliedenergistics2.SmallFontCraft=Створення
+gui.appliedenergistics2.LargeFontCraft=+
+gui.appliedenergistics2.Renamer=Користувацьке ім'я: (Введіть, щоб встановити)
+gui.appliedenergistics2.OreFilterLabel=Фільтр словника руд
+gui.appliedenergistics2.HoldShiftForTooltip=Утримуйте клавішу Shift для розширеної підказки
+gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=Утримуйте клавішу Shift, щоб підсвітити інтерфейс
+gui.appliedenergistics2.Nothing=Нічого
+gui.appliedenergistics2.VoidCellTooltip=Видаляє §4все§7, що зберігається на ньому
+gui.appliedenergistics2.Deprecated=Застаріле, буде видалене найближчим часом!
+
+# GUI Colors - ARGB
+gui.color.appliedenergistics2.SearchboxFocused=6E000000
+gui.color.appliedenergistics2.SearchboxUnfocused=00000000
+gui.color.appliedenergistics2.SearchboxFocused=6E000000
+gui.color.appliedenergistics2.SearchboxUnfocused=00000000
+gui.color.appliedenergistics2.ItemSlotOverlayUnpowered=66111111
+gui.color.appliedenergistics2.ItemSlotOverlayInvalid=66ff6666
+gui.color.appliedenergistics2.CraftConfirmMissingItem=1AFF0000
+gui.color.appliedenergistics2.CraftingCPUActive=5A45A021
+gui.color.appliedenergistics2.CraftingCPUScheduled=FF787878
+gui.color.appliedenergistics2.InterfaceTerminalMatch=2A00FF00
+
+# GUI Tooltips
+gui.tooltips.appliedenergistics2.Stash=Зберегти предмети
+gui.tooltips.appliedenergistics2.StashDesc=Повернути предмети на сітці створення до мережевого сховища.
+gui.tooltips.appliedenergistics2.Substitutions=Заміни по рудному словнику
+gui.tooltips.appliedenergistics2.SubstitutionsDescEnabled=Дозволяє замінювати вхідні компоненти.
+gui.tooltips.appliedenergistics2.SubstitutionsDescDisabled=Запобігає заміні вхідних компонентів.
+gui.tooltips.appliedenergistics2.BeSubstitutions=Використовувати як заміну
+gui.tooltips.appliedenergistics2.BeSubstitutionsDescEnabled=Дозволяє створення заміни вхідних компонентів.
+gui.tooltips.appliedenergistics2.BeSubstitutionsDescDisabled=Забороняє створення заміни вхідних компонентів. Якщо всі доступні для інгредієнта шаблони вимкнено для заміни, симулятор створення буде поводитися з ними так, як якщо б вони були ввімкнені для заміни.
+
+gui.tooltips.appliedenergistics2.PatternSlotConfigTitle=Перемкнути режим створення шаблону
+gui.tooltips.appliedenergistics2.PatternSlotConfigInfo=Перемкнути режим створення шаблону між (16 -> 4) та (4 -> 16)
+gui.tooltips.appliedenergistics2.Encode=Закодувати шаблон
+gui.tooltips.appliedenergistics2.EncodeDescription=Запишіть введений шаблон до поточного закодованого шаблону або до доступного порожнього шаблону. Утримуйте клавішу Shift, щоб перенести шаблон безпосередньо в інвентар. Утримуйте Shift+Control, щоб закодувати весь стек.
+
+gui.tooltips.appliedenergistics2.FuzzyMode=Нечітке порівняння
+gui.tooltips.appliedenergistics2.FZPercent_25=Розділити шкоду на 25%
+gui.tooltips.appliedenergistics2.FZPercent_50=Розділити шкоду на 50%
+gui.tooltips.appliedenergistics2.FZPercent_75=Розділити шкоду на 75%
+gui.tooltips.appliedenergistics2.FZPercent_99=Розділити шкоду на 99%
+
+gui.tooltips.appliedenergistics2.SortOrder=Порядок сортування
+gui.tooltips.appliedenergistics2.SortBy=Сортувати за
+gui.tooltips.appliedenergistics2.FZIgnoreAll=Будь-який збіг
+gui.tooltips.appliedenergistics2.TransferDirection=Напрямок передачі
+gui.tooltips.appliedenergistics2.TransferToNetwork=Передати дані до мережі
+gui.tooltips.appliedenergistics2.TransferToStorageCell=Передати дані до диску зберігання
+gui.tooltips.appliedenergistics2.ToggleSortDirection=Переключити напрямок передачі
+
+gui.tooltips.appliedenergistics2.StoredItems=Збережені предмети
+gui.tooltips.appliedenergistics2.StoredCraftable=Зберігається / Створюється
+gui.tooltips.appliedenergistics2.View=Вигляд
+gui.tooltips.appliedenergistics2.RedstoneMode=Редстоун режим
+gui.tooltips.appliedenergistics2.OperationMode=Режим роботи
+gui.tooltips.appliedenergistics2.NumberOfItems=Кількість предметів
+gui.tooltips.appliedenergistics2.ItemName=Назва предмета
+gui.tooltips.appliedenergistics2.PowerUnits=Одиниці енергії
+gui.tooltips.appliedenergistics2.IOMode=Режим входу/виходу
+gui.tooltips.appliedenergistics2.CondenserOutput=ME-Конденсатор - Вихід
+gui.tooltips.appliedenergistics2.PartitionStorage=Розділ сховища
+gui.tooltips.appliedenergistics2.Clear=Очистити
+gui.tooltips.appliedenergistics2.TrashController=Видалення за допомогою Shift / Space.
+
+gui.tooltips.appliedenergistics2.InterfaceBlockingMode=Режим блокування
+gui.tooltips.appliedenergistics2.InterfaceCraftingMode=Режим створення
+gui.tooltips.appliedenergistics2.Trash=Знищити предмети
+gui.tooltips.appliedenergistics2.MatterBalls=Конденсувати в кулі матерії\n%s за предмет
+gui.tooltips.appliedenergistics2.Singularity=Конденсувати в сингулярність\n%s за предмет
+gui.tooltips.appliedenergistics2.Read=Тільки забирати
+gui.tooltips.appliedenergistics2.Write=Тільки вставляти
+gui.tooltips.appliedenergistics2.ReadWrite=Двонаправлений
+
+gui.tooltips.appliedenergistics2.AlwaysActive=Завжди активний
+gui.tooltips.appliedenergistics2.ActiveWithoutSignal=Активний без сигналу
+gui.tooltips.appliedenergistics2.ActiveWithSignal=Активний з сигналом
+gui.tooltips.appliedenergistics2.ActiveOnPulse=Активувати один раз за імпульс
+gui.tooltips.appliedenergistics2.EmitLevelsBelow=Випромінювати сигнал, коли рівень нижче ліміту.
+gui.tooltips.appliedenergistics2.EmitLevelAbove=Випромінювати сигнал, коли рівень вищий або дорівнює ліміту.
+
+gui.tooltips.appliedenergistics2.SearchMode_Auto=Авто пошук
+gui.tooltips.appliedenergistics2.SearchMode_Standard=Стандартний пошук
+gui.tooltips.appliedenergistics2.SearchMode_NEIAuto=Синхронізований авто пошук NEI
+gui.tooltips.appliedenergistics2.SearchMode_NEIStandard=Синхронізований стандартний пошук NEI
+gui.tooltips.appliedenergistics2.SearchMode=Режим поля пошуку
+
+gui.tooltips.appliedenergistics2.PartitionStorageHint=Конфігурує розділ на основі поточних збережених об'єктів.
+gui.tooltips.appliedenergistics2.ClearSettings=Очистити конфігурацію/налаштування
+gui.tooltips.appliedenergistics2.Craftable=Створювальні
+gui.tooltips.appliedenergistics2.MoveWhenEmpty=Перемістити до виводу, коли порожній.
+gui.tooltips.appliedenergistics2.MoveWhenWorkIsDone=Перемістити до виводу, коли робота виконана.
+gui.tooltips.appliedenergistics2.MoveWhenFull=Перемістити до виводу, коли заповниться.
+gui.tooltips.appliedenergistics2.Disabled=Вимкнений
+gui.tooltips.appliedenergistics2.Enable=Увімкнений
+gui.tooltips.appliedenergistics2.Blocking=Не штовхати предмети для створення, якщо в інвентарі є предмети.
+gui.tooltips.appliedenergistics2.NonBlocking=Ігнорувати вміст цільового інвентарю.
+gui.tooltips.appliedenergistics2.Craft=Поведінка створення
+gui.tooltips.appliedenergistics2.CraftOnly=Не використовувати збережені предмети, створювати лише під час експорту.
+gui.tooltips.appliedenergistics2.CraftEither=Використовувати збережені предмети або створити під час експорту.
+gui.tooltips.appliedenergistics2.LevelType=Тип рівня
+gui.tooltips.appliedenergistics2.LevelType_Energy=Енергія
+gui.tooltips.appliedenergistics2.LevelType_Item=Предмет
+gui.tooltips.appliedenergistics2.InventoryTweaks=Inventory Tweaks
+gui.tooltips.appliedenergistics2.Mod=Мод
+gui.tooltips.appliedenergistics2.TerminalStyle=Стиль терміналу
+gui.tooltips.appliedenergistics2.TerminalStyle_Full=Повноекранний термінал
+gui.tooltips.appliedenergistics2.TerminalStyle_Tall=Високий центрований термінал
+gui.tooltips.appliedenergistics2.TerminalStyle_Small=Малий центрований термінал
+gui.tooltips.appliedenergistics2.SaveAsImage=Зберегти як зображення
+
+gui.tooltips.appliedenergistics2.DoesntDespawn=Цей предмет не зникне.
+gui.tooltips.appliedenergistics2.EmitterMode=Режим випромінювача створення
+gui.tooltips.appliedenergistics2.CraftViaRedstone=Випромінювати сигнал редстоуну для виготовлення предмета.
+gui.tooltips.appliedenergistics2.EmitWhenCrafting=Випромінювати сигнал редстоуну, коли предмет створюється.
+
+gui.tooltips.appliedenergistics2.ReportInaccessibleItems=Повідомити про недоступні предмети
+gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=Так: предмети, які не можна витягнути будуть видимими.
+gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=Ні: Видимі лише предмети, що можна витягнути.
+
+gui.tooltips.appliedenergistics2.TypeFilter=Тип фільтру
+gui.tooltips.appliedenergistics2.TypeFilterShowAll=Показати все
+gui.tooltips.appliedenergistics2.TypeFilterShowItemsOnly=Показати тільки предмети
+gui.tooltips.appliedenergistics2.TypeFilterShowFluidsOnly=Показувати тільки краплі рідин
+
+gui.tooltips.appliedenergistics2.BlockPlacement=Розміщення блоків
+gui.tooltips.appliedenergistics2.BlockPlacementYes=Блоки будуть розміщатись як блоки.
+gui.tooltips.appliedenergistics2.BlockPlacementNo=Блоки будуть випадати як предмети.
+
+gui.tooltips.appliedenergistics2.SchedulingMode=Режим планування
+gui.tooltips.appliedenergistics2.SchedulingModeDefault=Експортуйте перший предмет, доки мережа не спорожніє, а потім спробуйте експортувати наступні.
+gui.tooltips.appliedenergistics2.SchedulingModeRoundRobin=Експорт з використанням циклічного режиму.
+gui.tooltips.appliedenergistics2.SchedulingModeRandom=Експортувати предмети у випадковому режимі.
+
+gui.tooltips.appliedenergistics2.ItemsStored=Збережені предмети: %s
+gui.tooltips.appliedenergistics2.ItemCount=Кількість предметів: %s
+gui.tooltips.appliedenergistics2.ItemsRequestable=Необхідні предмети: %s
+gui.tooltips.appliedenergistics2.P2PFrequency=Частота: %s
+gui.tooltips.appliedenergistics2.OreFilterHint=Відфільтрувати предмети за назвами зі словника руд
+gui.tooltips.appliedenergistics2.OreFilter=Фільтр словника руд
+gui.tooltips.appliedenergistics2.SearchStringTooltip=Клацніть ПКМ, щоб очистити рядок пошуку
+gui.tooltips.appliedenergistics2.SaveSearchString=Зберігати рядок пошуку
+gui.tooltips.appliedenergistics2.SaveSearchStringYes=Так
+gui.tooltips.appliedenergistics2.SaveSearchStringNo=Ні
+gui.tooltips.appliedenergistics2.DoublePattern=Подвоїти шаблон
+gui.tooltips.appliedenergistics2.DoublePatternHint=Подвоїти розмір стеку входів та виходів шаблону, якщо це можливо. x8, коли shift утримується.
+gui.tooltips.appliedenergistics2.CraftingStatus=Статус створення
+gui.tooltips.appliedenergistics2.CraftingStatusDesc=Відкриває вікно стану створення
+gui.tooltips.appliedenergistics2.ToggleMolecularAssemblers=Перемкнути відображення тільки інтерфейсів створення
+gui.tooltips.appliedenergistics2.ToggleMolecularAssemblersDescOff=Показати всі інтерфейси
+gui.tooltips.appliedenergistics2.ToggleMolecularAssemblersDescOn=Показувати тільки інтерфейси на молекулярних асемблерах
+gui.tooltips.appliedenergistics2.ToggleShowFullInterfaces=Перемкнути відображення інтерфейсів із заповненими слотами
+gui.tooltips.appliedenergistics2.ToggleShowFullInterfacesOnDesc=Показати всі інтерфейси
+gui.tooltips.appliedenergistics2.ToggleShowFullInterfacesOffDesc=Показувати тільки інтерфейси з вільними слотами
+gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterface=Перемкнути відображення інтерфейсів з недійсними шаблонами
+gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOnDesc=Показати всі інтерфейси
+gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOffDesc=Показати лише інтерфейси з недійсними шаблонами
+gui.tooltips.appliedenergistics2.HighlightInterface=Виділити інтерфейс
+gui.tooltips.appliedenergistics2.SearchFieldInputs=Вхід рецепту
+gui.tooltips.appliedenergistics2.SearchFieldOutputs=Вихід рецепту
+gui.tooltips.appliedenergistics2.SearchFieldNames=Назви інтерфейсів
+
+gui.tooltips.appliedenergistics2.InsertionModeDefault=Режим вставки за замовчуванням
+gui.tooltips.appliedenergistics2.InsertionModeDefaultDesc=Від першого до останнього, об'єднайте стаки за потреби
+gui.tooltips.appliedenergistics2.InsertionModePreferEmpty=Вставка надає перевагу порожнім слотам
+gui.tooltips.appliedenergistics2.InsertionModePreferEmptyDesc=Те саме, що й за замовчуванням, але спочатку спробуйте порожні слоти
+gui.tooltips.appliedenergistics2.InsertionModeOnlyEmpty=Вставляти лише у порожні слоти
+gui.tooltips.appliedenergistics2.InsertionModeOnlyEmptyDesc=Від першого до останнього, не об'єднує стеки
+
+gui.tooltips.appliedenergistics2.SidelessModeSided=Односторонній режим
+gui.tooltips.appliedenergistics2.SidelessModeSidedDesc=Кожна рідина доступна тільки з одного певного боку
+gui.tooltips.appliedenergistics2.SidelessModeSideless=Безбічний режим
+gui.tooltips.appliedenergistics2.SidelessModeSidelessDesc=Всі рідини доступні з усіх боків
+
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefault=Режим блокування за замовчуванням
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefaultDesc=Блокування інтерфейсів слідує звичайним правилам блокування (ігнорування мікросхем тощо.)
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeAll=Вільний режим
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeAllDesc=Блокування інтерфейсів заблокує будь-який предмет у цій системі ME.
+
+gui.tooltips.appliedenergistics2.CraftingModeStandard=Стандартний режим створення
+gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Створення крафта починається лише тоді, коли всі інгредієнти доступні в системі ME.
+gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Режим "Ігнорування наявності ігредієнтів"
+gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=Починає створювення, навіть якщо інгредієнти відсутні в системі ME.
+
+# Units
+gui.appliedenergistics2.units.appliedenergstics=AE
+gui.appliedenergistics2.units.ic2=EU
+gui.appliedenergistics2.units.mekanism=Джоулі
+gui.appliedenergistics2.units.rotarycraft=Вати
+gui.appliedenergistics2.units.thermalexpansion=RF
+
+# Colors
+gui.appliedenergistics2.White=Білий
+gui.appliedenergistics2.Orange=Помаранчевий
+gui.appliedenergistics2.Magenta=Пурпурний
+gui.appliedenergistics2.LightBlue=Блакитний
+gui.appliedenergistics2.Yellow=Жовтий
+gui.appliedenergistics2.Lime=Лаймовий
+gui.appliedenergistics2.Pink=Рожевий
+gui.appliedenergistics2.Gray=Сірий
+gui.appliedenergistics2.LightGray=Світло-сірий
+gui.appliedenergistics2.Cyan=Блакитний
+gui.appliedenergistics2.Purple=Фіолетовий
+gui.appliedenergistics2.Blue=Синій
+gui.appliedenergistics2.Brown=Коричневий
+gui.appliedenergistics2.Green=Зелений
+gui.appliedenergistics2.Red=Червоний
+gui.appliedenergistics2.Black=Чорний
+gui.appliedenergistics2.Fluix=Мінливий
+
+# Waila
+waila.appliedenergistics2.Crafting=Створення
+waila.appliedenergistics2.DeviceOnline=Пристрій увімкнено
+waila.appliedenergistics2.DeviceOffline=Пристрій вимкнено
+waila.appliedenergistics2.DeviceMissingChannel=У пристрою відсутній канал
+waila.appliedenergistics2.Locked=Заблоковано
+waila.appliedenergistics2.Unlocked=Розблоковано
+waila.appliedenergistics2.Showing=Показує
+waila.appliedenergistics2.Contains=Містить
+waila.appliedenergistics2.Channels=%1$d з %2$d каналів
+waila.appliedenergistics2.P2PUnlinked=Не пов'язано
+waila.appliedenergistics2.P2PInputOneOutput=Пов'язано (вхідна сторона)
+waila.appliedenergistics2.P2PInputManyOutputs=Пов'язано (вхідна сторона) - %d виходів
+waila.appliedenergistics2.P2POutput=Пов'язано (вихідна сторона)
+waila.appliedenergistics2.Booting=Мережа завантажується
+
+# Items
+item.appliedenergistics2.ItemBasicStorageCell.1k.name=1k ME диск зберігання
+item.appliedenergistics2.ItemBasicStorageCell.4k.name=4k ME диск зберігання
+item.appliedenergistics2.ItemBasicStorageCell.16k.name=16k ME диск зберігання
+item.appliedenergistics2.ItemBasicStorageCell.64k.name=64k ME диск зберігання
+item.appliedenergistics2.ItemAdvancedStorageCell.256k.name=256k ME диск зберігання
+item.appliedenergistics2.ItemAdvancedStorageCell.1024k.name=1024k ME диск зберігання
+item.appliedenergistics2.ItemAdvancedStorageCell.4096k.name=4096k ME диск зберігання
+item.appliedenergistics2.ItemAdvancedStorageCell.16384k.name=16384k ME диск зберігання
+item.appliedenergistics2.ItemExtremeStorageCell.Container.name=ME Диск для збереження блоків
+item.appliedenergistics2.ItemExtremeStorageCell.Quantum.name=ME Квантовий диск зберігання
+item.appliedenergistics2.ItemExtremeStorageCell.Singularity.name=ME Сингулярний диск зберігання
+item.appliedenergistics2.ItemCreativeStorageCell.name=Творча ME диск зберігання
+item.appliedenergistics2.ItemVoidStorageCell.name=Пустотний ME диск зберігання
+item.appliedenergistics2.ItemEncodedPattern.name=Закодований шаблон
+item.appliedenergistics2.ItemViewCell.name=Диск для відображення
+item.appliedenergistics2.ItemFacade.name=Кабельний фасад
+
+item.appliedenergistics2.ItemCrystalSeed.Certus.name=Насіння істинного кварцу
+item.appliedenergistics2.ItemCrystalSeed.Nether.name=Насіння пекельного кварцу
+item.appliedenergistics2.ItemCrystalSeed.Fluix.name=Насіння мінливого кристалу
+
+item.appliedenergistics2.ItemPart.InvalidType.name=Вимкнений предмет
+item.appliedenergistics2.ItemMaterial.InvalidType.name=Цей предмет вимкнено.
+
+item.appliedenergistics2.ItemMaterial.BlankPattern.name=Порожній шаблон
+item.appliedenergistics2.ItemMaterial.FormationCore.name=Ядро формування
+item.appliedenergistics2.ItemMaterial.AnnihilationCore.name=Ядро знищення
+item.appliedenergistics2.ItemMaterial.BasicCard.name=Базова карта
+item.appliedenergistics2.ItemMaterial.AdvCard.name=Просунута карта
+
+
+item.appliedenergistics2.ItemMaterial.CardCapacity.name=Карта ємності
+item.appliedenergistics2.ItemMaterial.CardPatternCapacity.name=Карта ємності шаблонів
+item.appliedenergistics2.ItemMaterial.CardFuzzy.name=Нечітка карта
+item.appliedenergistics2.ItemMaterial.CardInverter.name=Карта інвертування
+item.appliedenergistics2.ItemMaterial.CardRedstone.name=Карта редстоуна
+item.appliedenergistics2.ItemMaterial.CardSpeed.name=Карта прискорення
+item.appliedenergistics2.ItemMaterial.CardSuperSpeed.name=Карта гіперприскорення
+item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Карта фільтрації по словнику руд 
+item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=Карта автозавантаження шаблону
+item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=Карта просунутого блокування
+
+item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³ Компонент зберігання
+item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=16³ Компонент зберігання
+item.appliedenergistics2.ItemMaterial.Cell128SpatialPart.name=128³ Компонент зберігання
+
+item.appliedenergistics2.ItemMaterial.Cell1kPart.name=1k ME Компонент зберігання
+item.appliedenergistics2.ItemMaterial.Cell4kPart.name=4k ME Компонент зберігання
+item.appliedenergistics2.ItemMaterial.Cell16kPart.name=16k ME Компонент зберігання
+item.appliedenergistics2.ItemMaterial.Cell64kPart.name=64k ME Компонент зберігання
+item.appliedenergistics2.ItemMaterial.Cell256kPart.name=256k ME Компонент зберігання
+item.appliedenergistics2.ItemMaterial.Cell1024kPart.name=1024k ME Компонент зберігання
+item.appliedenergistics2.ItemMaterial.Cell4096kPart.name=4096k ME Компонент зберігання
+item.appliedenergistics2.ItemMaterial.Cell16384kPart.name=16384k ME Компонент зберігання
+
+item.appliedenergistics2.ItemMaterial.CertusQuartzCrystal.name=Кристал істинного кварцу
+item.appliedenergistics2.ItemMaterial.CertusQuartzCrystalCharged.name=Кристал зарядженого істиного кварцу
+item.appliedenergistics2.ItemMaterial.CertusQuartzDust.name=Порошок істинного кварцу
+item.appliedenergistics2.ItemMaterial.EmptyStorageCell.name=ME Основа диску
+item.appliedenergistics2.ItemMaterial.EmptyAdvancedStorageCell.name=ME Просунута основа диску
+item.appliedenergistics2.ItemMaterial.EnderDust.name=Порошок Енду
+
+item.appliedenergistics2.ItemMaterial.Flour.name=Борошно
+item.appliedenergistics2.ItemMaterial.FluixCrystal.name=Мінливий кристал
+item.appliedenergistics2.ItemMaterial.FluixDust.name=Порошок мінливого кристалу
+item.appliedenergistics2.ItemMaterial.FluixPearl.name=Мінлива перлина
+
+item.appliedenergistics2.ItemMaterial.GoldDust.name=Золотий порошок
+item.appliedenergistics2.ItemMaterial.IronDust.name=Залізний порошок
+item.appliedenergistics2.ItemMaterial.IronNugget.name=Залізний самородок
+
+
+item.appliedenergistics2.ItemMaterial.MatterBall.name=Куля з матерії
+item.appliedenergistics2.ItemMaterial.NetherQuartzDust.name=Порошок пекельного кварцу
+item.appliedenergistics2.ItemMaterial.PurifiedCertusQuartzCrystal.name=Чистий істинний кварц
+item.appliedenergistics2.ItemMaterial.PurifiedFluixCrystal.name=Чистий мінливий кристал
+item.appliedenergistics2.ItemMaterial.PurifiedNetherQuartzCrystal.name=Чистий пекельний кварц
+item.appliedenergistics2.ItemMaterial.QESingularity.name=Квантова заплутана сингулярність
+item.appliedenergistics2.ItemMaterial.Silicon.name=Кремній
+item.appliedenergistics2.ItemMaterial.Singularity.name=Сингулярність
+item.appliedenergistics2.ItemMaterial.Wireless.name=Бездротовий приймач
+item.appliedenergistics2.ItemMaterial.WirelessBooster.name=Бездротовий підсилювач
+item.appliedenergistics2.ItemMaterial.WoodenGear.name=Дерев'яна шестерня
+
+item.appliedenergistics2.ItemMaterial.NamePress.name=Схема штампа для викарбовування імені
+item.appliedenergistics2.ItemMaterial.EngProcessorPress.name=Схема штампа для інженерних елементів
+item.appliedenergistics2.ItemMaterial.CalcProcessorPress.name=Схема штампа для розрахункових елементів
+item.appliedenergistics2.ItemMaterial.LogicProcessorPress.name=Схема штампа для логічних елементів
+item.appliedenergistics2.ItemMaterial.SiliconPress.name=Схема штампа для кремнієвих елементів
+
+item.appliedenergistics2.ItemMaterial.EngProcessorPrint.name=Штампований інженерний процесор
+item.appliedenergistics2.ItemMaterial.CalcProcessorPrint.name=Штампований обчислювальний процесор
+item.appliedenergistics2.ItemMaterial.LogicProcessorPrint.name=Штампований логічний процесор
+item.appliedenergistics2.ItemMaterial.SiliconPrint.name=Штампований кремній
+
+item.appliedenergistics2.ItemMaterial.EngProcessor.name=Інженерний процесор
+item.appliedenergistics2.ItemMaterial.CalcProcessor.name=Обчислювальний процесор
+item.appliedenergistics2.ItemMaterial.LogicProcessor.name=Логічний процесор
+item.appliedenergistics2.ItemMaterial.LogicProcessorAsm.name=Незавершений логічний процесор
+
+item.appliedenergistics2.ItemMaterial.SkyDust.name=Порошок небесного каменю
+item.appliedenergistics2.ItemMaterial.CardCrafting.name=Карта створення
+
+item.appliedenergistics2.ItemPart.FormationPlane.name=ME Площина формування
+item.appliedenergistics2.ItemPart.AnnihilationPlane.name=ME Площина руйнування
+item.appliedenergistics2.ItemPart.IdentityAnnihilationPlane.name=ME ідентифікуюча площина винищення
+item.appliedenergistics2.ItemPart.CableAnchor.name=Кабельний анкер
+item.appliedenergistics2.ItemPart.CableCovered.name=ME Покритий кабель
+item.appliedenergistics2.ItemPart.CableGlass.name=ME Скляний кабель
+item.appliedenergistics2.ItemPart.CableSmart.name=ME Розумний кабель
+item.appliedenergistics2.ItemPart.CableDense.name=ME Щільний розумний кабель
+item.appliedenergistics2.ItemPart.CableDenseCovered.name=ME Щільний покритий кабель
+item.appliedenergistics2.ItemPart.CableUltraDenseCovered.name=ME покритий магістральний кабель
+item.appliedenergistics2.ItemPart.CableUltraDenseSmart.name=ME розмуний магістральний кабель
+item.appliedenergistics2.ItemPart.StorageMonitor.name=ME Монітор сховища
+item.appliedenergistics2.ItemPart.ConversionMonitor.name=ME Монітор перетворення
+item.appliedenergistics2.ItemPart.SemiDarkMonitor.name=Освітлювальна панель
+item.appliedenergistics2.ItemPart.Monitor.name=Яскрава освітлювальна панель
+item.appliedenergistics2.ItemPart.DarkMonitor.name=Темна освітлювальна панель
+
+item.appliedenergistics2.ItemPart.ExportBus.name=ME-Шина експорту
+item.appliedenergistics2.ItemPart.ImportBus.name=МЕ-Шина імпорту
+item.appliedenergistics2.ItemPart.Interface.name=ME Інтерфейс
+item.appliedenergistics2.ItemPart.LevelEmitter.name=ME Випромінювач рівня енергії
+item.appliedenergistics2.ItemPart.P2PTunnel.name=P2P тунель
+item.appliedenergistics2.ItemPart.PatternTerminal.name=ME Термінал шаблонів
+item.appliedenergistics2.ItemPart.PatternTerminalEx.name=ME Термінал обробки шаблонів
+item.appliedenergistics2.ItemPart.QuartzFiber.name=Кварцове волокно
+item.appliedenergistics2.ItemPart.StorageBus.name=ME Шина зберігання
+item.appliedenergistics2.ItemPart.Terminal.name=ME Термінал
+item.appliedenergistics2.ItemPart.CraftingTerminal.name=ME Термінал створення
+item.appliedenergistics2.ItemPart.InterfaceTerminal.name=ME Термінал інтерфейсу
+item.appliedenergistics2.ItemPart.InvertedToggleBus.name=МЕ інвертована шина перемикання
+item.appliedenergistics2.ItemPart.ToggleBus.name=МЕ шина перемикання
+item.appliedenergistics2.ItemPart.CraftingMonitor.name=ME Монітор створення
+
+item.appliedenergistics2.ItemSpatialStorageCell.128Cubed.name=128³ диск зберігання простору
+item.appliedenergistics2.ItemSpatialStorageCell.16Cubed.name=16³ диск зберігання простору
+item.appliedenergistics2.ItemSpatialStorageCell.2Cubed.name=2³ диск зберігання простору
+
+item.appliedenergistics2.ToolCertusQuartzAxe.name=Сокира істинного кварцу
+item.appliedenergistics2.ToolCertusQuartzCuttingKnife.name=Ніж істинного кварцу
+item.appliedenergistics2.ToolCertusQuartzHoe.name=Мотика істинного кварцу
+item.appliedenergistics2.ToolCertusQuartzPickaxe.name=Кайло істинного кварцу
+item.appliedenergistics2.ToolCertusQuartzSpade.name=Лопата істинного кварцу
+item.appliedenergistics2.ToolCertusQuartzSword.name=Меч істинного кварцу
+item.appliedenergistics2.ToolCertusQuartzWrench.name=Ключ істинного кварцу
+
+item.appliedenergistics2.ToolNetherQuartzAxe.name=Сокира пекельного кварцу
+item.appliedenergistics2.ToolNetherQuartzCuttingKnife.name=Ніж пекельного кварцу
+item.appliedenergistics2.ToolNetherQuartzHoe.name=Мотика пекельного кварцу
+item.appliedenergistics2.ToolNetherQuartzPickaxe.name=Кайло пекельного кварцу
+item.appliedenergistics2.ToolNetherQuartzSpade.name=Лопата пекельного кварцу
+item.appliedenergistics2.ToolNetherQuartzSword.name=Меч пекельного кварцу
+item.appliedenergistics2.ToolNetherQuartzWrench.name=Ключ пекельного кварцу
+
+item.appliedenergistics2.ItemPaintBall.name=Кулька з фарбою
+item.appliedenergistics2.ToolPortableCell.name=Портативний диск
+item.appliedenergistics2.ToolNetworkTool.name=Мережевий інструмент
+item.appliedenergistics2.ToolChargedStaff.name=Жезл заряджання
+item.appliedenergistics2.ToolEntropyManipulator.name=Маніпулятор ентропії
+item.appliedenergistics2.ToolMassCannon.name=Матеріальна пушка
+item.appliedenergistics2.ToolMemoryCard.name=Карта пам'яті
+item.appliedenergistics2.ToolColorApplicator.name=Аплікатор кольорів
+item.appliedenergistics2.ToolWirelessTerminal.name=Бездротовий термінал
+item.appliedenergistics2.ToolBiometricCard.name=Біометрична карта
+
+item.appliedenergistics2.ToolDebugCard.name=Творча.Карта відлагодження
+item.appliedenergistics2.ToolReplicatorCard.name=Творча.Карта реплікації
+
+# Commands
+commands.ae2.usage=Команди надані Applied Energistics 2 - використовуйте /ae2 list для списку та /ae2 help _____ для допомоги.
+commands.ae2.permissions=Ви не маєте прав для виконання цієї команди.
+commands.ae2.ChunkLogger=Перемикає завантаження та вивантаження чанків у журнал сервера. (ОП)
+commands.ae2.ChunkLoggerOn=Ведення журналу чанків увімкнено
+commands.ae2.ChunkLoggerOff=Ведення журналу чанків вимкнено
+commands.ae2.Supporters=Відображає список прибічників AE2
+commands.ae2.Profiler=Команда профілювання сітки, передайте <x y z [вимір]> якогось Tile в сітці, щоб почати/зупинити профілювання
+commands.ae2.ProfilerStart=Профілювання почато
+commands.ae2.ProfilerFailed=Немає AE Tile тут
+commands.ae2.ProfilerGridDown=Ця мережа вимкнена
+commands.ae2.ProfilerStop=Середня кількість наносекунд, які займає ця мережа за такт:
+commands.ae2.ProfilerFailedDim=Нема такого виміру
+commands.ae2.ToggleFullAccess=Перемкнути повний доступ ОП AE, ігноруючи налаштування терміналу безпеки
+commands.ae2.ToggleDebugTiming=Перемкнути ведення журналу менджера відлагодження Tick
+commands.ae2.ToggleDebugPathfinding=Перемкнути пошук шляху журналу відлагодження
+
+# Achievements
+achievement.ae2.Compass=Мисливець за метеоритами
+achievement.ae2.Compass.desc=Зробіть метеоритний компас
+achievement.ae2.Presses=Невідома технологія
+achievement.ae2.Presses.desc=Знайдіть прес процесора
+achievement.ae2.SpatialIO=Просторова координація
+achievement.ae2.SpatialIO.desc=Створіть просторовий порт вводу-виводу
+achievement.ae2.SpatialIOExplorer=Щоб сміливо йти
+achievement.ae2.SpatialIOExplorer.desc=Зберігаються в просторовій камері
+achievement.ae2.StorageCell=Краще, ніж скрині
+achievement.ae2.StorageCell.desc=Зробіть комірку для зберігання
+achievement.ae2.IOPort=Перетасувати комірки зберігання
+achievement.ae2.IOPort.desc=Створіть порт вводу-виводу
+achievement.ae2.CraftingTerminal=Більший (Набагато) стіл
+achievement.ae2.CraftingTerminal.desc=Створіть термінал створення
+achievement.ae2.PatternTerminal=Маестро створення
+achievement.ae2.PatternTerminal.desc=Створіть термінал шаблонів 
+achievement.ae2.ChargedQuartz=Розряд
+achievement.ae2.ChargedQuartz.desc=Знайдіть заряджений кварц
+achievement.ae2.Fluix=Неприродне
+achievement.ae2.Fluix.desc=Створюйте мінливі кристали
+achievement.ae2.Charger=Створення мінливого
+achievement.ae2.Charger.desc=Зробіть зарядний пристрій
+achievement.ae2.CrystalGrowthAccelerator=Прискорювач – це стриманність
+achievement.ae2.CrystalGrowthAccelerator.desc=Створіть прискорювач росту кристалів
+achievement.ae2.GlassCable=Мінливе енергетичне підключення
+achievement.ae2.GlassCable.desc=Зробіть ME скляний кабель
+achievement.ae2.Networking1=Мережевий початківець
+achievement.ae2.Networking1.desc=Використайте 8 каналів за допомогою пристроїв у мережі.
+achievement.ae2.Controller=Мережевий комутатор
+achievement.ae2.Controller.desc=Зробіть контроллер
+achievement.ae2.Networking2=Мережевий інженер 
+achievement.ae2.Networking2.desc=Використайте 128 каналів за допомогою пристроїв у мережі.
+achievement.ae2.Networking3=Мережевий адміністратор
+achievement.ae2.Networking3.desc=Використайте 2048 каналів за допомогою пристроїв у мережі.
+achievement.ae2.P2P=Мережа точка-точка
+achievement.ae2.P2P.desc=Створіть тунель P2P
+achievement.ae2.Recursive=Рекурсивна мережа
+achievement.ae2.Recursive.desc=Розмістіть на інтерфейс шину зберігання.
+achievement.ae2.CraftingCPU=Крафт нового покоління
+achievement.ae2.CraftingCPU.desc=Створіть блок створення
+achievement.ae2.Facade=Мережева естетика
+achievement.ae2.Facade.desc=Створіть кабельний фасад
+achievement.ae2.NetworkTool=Діагностика мережі
+achievement.ae2.NetworkTool.desc=Створіть мережевий інструмент
+achievement.ae2.PortableCell=Кочовий диск
+achievement.ae2.PortableCell.desc=Створіть портативний диск
+achievement.ae2.StorageBus=Безмежний потенціал
+achievement.ae2.StorageBus.desc=Зробіть шину зберіганн
+achievement.ae2.QNB=Квантове тунелювання
+achievement.ae2.QNB.desc=Зробіть квантовий зв'язок
+
+# Stats
+stat.ae2.ItemsInserted=Збережено предметів в ME-Сховище
+stat.ae2.ItemsExtracted=Витягнуто предметів з ME-Сховища
+stat.ae2.TurnedCranks=Зламано рукояток
+
+# Keys
+key.appliedenergistics2.category=Applied Energistics 2
+key.toggle_focus.desc=Перемкнути фокус вікна пошуку

@@ -27,6 +27,7 @@ public enum IntegrationType {
     RF(IntegrationSide.BOTH, "RedstoneFlux Power - Tiles", "CoFHAPI"),
 
     RFItem(IntegrationSide.BOTH, "RedstoneFlux Power - Items", "CoFHAPI"),
+    CoFHWrench(IntegrationSide.BOTH, "CoFHWrench", "CoFHAPI"),
 
     MFR(IntegrationSide.BOTH, "Mine Factory Reloaded", "MineFactoryReloaded"),
 
@@ -62,7 +63,9 @@ public enum IntegrationType {
 
     Chisel(IntegrationSide.BOTH, "Chisel", "chisel"),
 
-    Jabba(IntegrationSide.BOTH, "Jabba", "JABBA");
+    Jabba(IntegrationSide.BOTH, "Jabba", "JABBA"),
+
+    ThaumicTinkerer(IntegrationSide.BOTH, "Thaumic Tinkerer", "ThaumicTinkerer");
 
     public final IntegrationSide side;
     public final String dspName;

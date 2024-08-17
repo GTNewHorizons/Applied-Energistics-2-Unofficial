@@ -45,20 +45,10 @@ public final class PowerStateWailaDataProvider extends BaseWailaDataProvider {
         final TileEntity te = accessor.getTileEntity();
 
         if (te instanceof IPowerChannelState state) {
-
             final boolean isActive = state.isActive();
             final boolean isPowered = state.isPowered();
             final boolean isBooting = state.isBooting();
-
-            if (isBooting) {
-                currentToolTip.add(WailaText.Booting.getLocal());
-            } else if (isActive && isPowered) {
-                currentToolTip.add(WailaText.DeviceOnline.getLocal());
-            } else if (isPowered) {
-                currentToolTip.add(WailaText.DeviceMissingChannel.getLocal());
-            } else {
-                currentToolTip.add(WailaText.DeviceOffline.getLocal());
-            }
+            currentToolTip.add(WailaText.getPowerState(isActive, isPowered, isBooting));
         }
 
         return currentToolTip;

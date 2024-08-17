@@ -20,18 +20,58 @@ import appeng.api.definitions.IBlocks;
 import appeng.api.definitions.ITileDefinition;
 import appeng.api.util.IOrientableBlock;
 import appeng.block.AEBaseSlabBlock;
-import appeng.block.crafting.*;
+import appeng.block.crafting.BlockAdvancedCraftingStorage;
+import appeng.block.crafting.BlockAdvancedCraftingUnit;
+import appeng.block.crafting.BlockCraftingMonitor;
+import appeng.block.crafting.BlockCraftingStorage;
+import appeng.block.crafting.BlockCraftingUnit;
+import appeng.block.crafting.BlockMolecularAssembler;
+import appeng.block.crafting.BlockSingularityCraftingStorage;
 import appeng.block.grindstone.BlockCrank;
 import appeng.block.grindstone.BlockGrinder;
-import appeng.block.misc.*;
-import appeng.block.networking.*;
+import appeng.block.misc.BlockCellWorkbench;
+import appeng.block.misc.BlockCharger;
+import appeng.block.misc.BlockCondenser;
+import appeng.block.misc.BlockInscriber;
+import appeng.block.misc.BlockInterface;
+import appeng.block.misc.BlockLightDetector;
+import appeng.block.misc.BlockPaint;
+import appeng.block.misc.BlockPatternOptimizationMatrix;
+import appeng.block.misc.BlockQuartzGrowthAccelerator;
+import appeng.block.misc.BlockQuartzTorch;
+import appeng.block.misc.BlockSecurity;
+import appeng.block.misc.BlockSkyCompass;
+import appeng.block.misc.BlockTinyTNT;
+import appeng.block.misc.BlockVibrationChamber;
+import appeng.block.networking.BlockCableBus;
+import appeng.block.networking.BlockController;
+import appeng.block.networking.BlockCreativeEnergyCell;
+import appeng.block.networking.BlockDenseEnergyCell;
+import appeng.block.networking.BlockEnergyAcceptor;
+import appeng.block.networking.BlockEnergyCell;
+import appeng.block.networking.BlockWireless;
 import appeng.block.qnb.BlockQuantumLinkChamber;
 import appeng.block.qnb.BlockQuantumRing;
-import appeng.block.solids.*;
+import appeng.block.solids.BlockFluix;
+import appeng.block.solids.BlockQuartz;
+import appeng.block.solids.BlockQuartzChiseled;
+import appeng.block.solids.BlockQuartzGlass;
+import appeng.block.solids.BlockQuartzLamp;
+import appeng.block.solids.BlockQuartzPillar;
+import appeng.block.solids.BlockSkyStone;
+import appeng.block.solids.OreQuartz;
+import appeng.block.solids.OreQuartzCharged;
 import appeng.block.spatial.BlockMatrixFrame;
 import appeng.block.spatial.BlockSpatialIOPort;
 import appeng.block.spatial.BlockSpatialPylon;
-import appeng.block.stair.*;
+import appeng.block.stair.ChiseledQuartzStairBlock;
+import appeng.block.stair.FluixStairBlock;
+import appeng.block.stair.QuartzPillarStairBlock;
+import appeng.block.stair.QuartzStairBlock;
+import appeng.block.stair.SkyStoneBlockStairBlock;
+import appeng.block.stair.SkyStoneBrickStairBlock;
+import appeng.block.stair.SkyStoneSmallBrickStairBlock;
+import appeng.block.stair.SkyStoneStairBlock;
 import appeng.block.storage.BlockChest;
 import appeng.block.storage.BlockDrive;
 import appeng.block.storage.BlockIOPort;
@@ -102,10 +142,12 @@ public final class ApiBlocks implements IBlocks {
     private final ITileDefinition craftingStorage1024k;
     private final ITileDefinition craftingStorage4096k;
     private final ITileDefinition craftingStorage16384k;
+    private final ITileDefinition craftingStorageSingularity;
     private final ITileDefinition craftingMonitor;
     private final ITileDefinition molecularAssembler;
     private final ITileDefinition lightDetector;
     private final ITileDefinition paint;
+    private final ITileDefinition patternOptimizationMatrix;
     private final IBlockDefinition skyStoneStair;
     private final IBlockDefinition skyStoneBlockStair;
     private final IBlockDefinition skyStoneBrickStair;
@@ -196,10 +238,12 @@ public final class ApiBlocks implements IBlocks {
         this.craftingStorage1024k = new WrappedDamageItemDefinition(this.craftingStorage256k, 1);
         this.craftingStorage4096k = new WrappedDamageItemDefinition(this.craftingStorage256k, 2);
         this.craftingStorage16384k = new WrappedDamageItemDefinition(this.craftingStorage256k, 3);
+        this.craftingStorageSingularity = constructor.registerTileDefinition(new BlockSingularityCraftingStorage());
         this.craftingMonitor = constructor.registerTileDefinition(new BlockCraftingMonitor());
         this.molecularAssembler = constructor.registerTileDefinition(new BlockMolecularAssembler());
         this.lightDetector = constructor.registerTileDefinition(lightDetector);
         this.paint = constructor.registerTileDefinition(new BlockPaint());
+        this.patternOptimizationMatrix = constructor.registerTileDefinition(new BlockPatternOptimizationMatrix());
 
         this.skyStoneStair = constructor.registerBlockDefinition(new SkyStoneStairBlock(skyStone, 0));
         this.skyStoneBlockStair = constructor.registerBlockDefinition(new SkyStoneBlockStairBlock(skyStone, 1));
@@ -625,6 +669,11 @@ public final class ApiBlocks implements IBlocks {
     }
 
     @Override
+    public ITileDefinition craftingStorageSingularity() {
+        return this.craftingStorageSingularity;
+    }
+
+    @Override
     public ITileDefinition craftingMonitor() {
         return this.craftingMonitor;
     }
@@ -642,6 +691,11 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition paint() {
         return this.paint;
+    }
+
+    @Override
+    public ITileDefinition patternsOptimizationMatrix() {
+        return this.patternOptimizationMatrix;
     }
 
     public IBlockDefinition chunkLoader() {

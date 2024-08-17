@@ -56,6 +56,9 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
                 } else {
                     lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);
                 }
+                if (inv.getSticky()) {
+                    lines.add(GuiText.Sticky.getLocal());
+                }
             }
         }
     }
@@ -77,12 +80,7 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
 
     @Override
     public FuzzyMode getFuzzyMode(ItemStack is) {
-        final String fz = Platform.openNbtData(is).getString("FuzzyMode");
-        try {
-            return FuzzyMode.valueOf(fz);
-        } catch (final Throwable t) {
-            return FuzzyMode.IGNORE_ALL;
-        }
+        return FuzzyMode.fromItemStack(is);
     }
 
     @Override

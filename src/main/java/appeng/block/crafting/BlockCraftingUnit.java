@@ -26,7 +26,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderBlockCraftingCPU;
 import appeng.client.texture.ExtraBlockTextures;
-import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.core.sync.GuiBridge;
 import appeng.tile.crafting.TileCraftingTile;
@@ -36,13 +35,12 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockCraftingUnit extends AEBaseTileBlock {
 
-    boolean XtremeCraftingCPU = AEConfig.instance.isFeatureEnabled(AEFeature.XtremeCraftingCPU);
     static final int FLAG_FORMED = 8;
 
     public BlockCraftingUnit() {
         super(Material.iron);
 
-        this.hasSubtypes = XtremeCraftingCPU;
+        this.hasSubtypes = true;
         this.setTileEntity(TileCraftingTile.class);
         this.setFeature(EnumSet.of(AEFeature.CraftingCPU));
     }
@@ -87,11 +85,9 @@ public class BlockCraftingUnit extends AEBaseTileBlock {
     @SideOnly(Side.CLIENT)
     public void getCheckedSubBlocks(final Item item, final CreativeTabs tabs, final List<ItemStack> itemStacks) {
         itemStacks.add(new ItemStack(this, 1, 0));
-        if (XtremeCraftingCPU) {
-            itemStacks.add(new ItemStack(this, 1, 1));
-            itemStacks.add(new ItemStack(this, 1, 2));
-            itemStacks.add(new ItemStack(this, 1, 3));
-        }
+        itemStacks.add(new ItemStack(this, 1, 1));
+        itemStacks.add(new ItemStack(this, 1, 2));
+        itemStacks.add(new ItemStack(this, 1, 3));
     }
 
     @Override

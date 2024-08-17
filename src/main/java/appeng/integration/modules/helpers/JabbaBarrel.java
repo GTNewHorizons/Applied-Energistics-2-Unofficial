@@ -89,7 +89,7 @@ public class JabbaBarrel implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out) {
+    public IItemList<IAEItemStack> getAvailableItems(final IItemList<IAEItemStack> out, int iteration) {
         final ItemStack is = this.barrel.getStoredItemType();
         if (is != null) {
             out.add(AEItemStack.create(is));

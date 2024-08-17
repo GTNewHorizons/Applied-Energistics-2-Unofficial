@@ -8,7 +8,11 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.*;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -23,7 +27,7 @@ import gregtech.api.interfaces.tileentity.IEnergyConnected;
 import gregtech.api.util.GT_Utility;
 import ic2.api.energy.tile.IEnergySink;
 
-public class PartP2PGT5Power extends PartP2PTunnel<PartP2PGT5Power> implements IPartGT5Power {
+public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implements IPartGT5Power {
 
     private TileEntity cachedTarget;
     private boolean isCachedTargetValid;

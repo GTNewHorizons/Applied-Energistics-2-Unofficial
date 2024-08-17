@@ -132,8 +132,8 @@ public class TickManagerCache implements ITickManager {
     public void removeNode(final IGridNode gridNode, final IGridHost machine) {
         if (machine instanceof IGridTickable) {
             this.alertable.remove(gridNode);
-            this.sleeping.remove(gridNode);
-            this.awake.remove(gridNode);
+            this.upcomingTicks.remove(this.sleeping.remove(gridNode));
+            this.upcomingTicks.remove(this.awake.remove(gridNode));
         }
     }
 
@@ -197,6 +197,7 @@ public class TickManagerCache implements ITickManager {
             final TickTracker gt = this.awake.get(node);
             this.awake.remove(node);
             this.sleeping.put(node, gt);
+            this.upcomingTicks.remove(gt);
 
             return true;
         }

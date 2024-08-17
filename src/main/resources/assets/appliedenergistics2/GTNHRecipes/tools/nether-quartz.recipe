@@ -1,0 +1,29 @@
+shaped=
+    oredictionary:crystalNetherQuartz oredictionary:crystalNetherQuartz,
+    oredictionary:crystalNetherQuartz oredictionary:stickWood,
+    _ oredictionary:stickWood
+    -> ae2:ToolNetherQuartzAxe
+
+shaped=
+    oredictionary:crystalNetherQuartz oredictionary:crystalNetherQuartz oredictionary:crystalNetherQuartz,
+    _ oredictionary:stickWood _,
+    _ oredictionary:stickWood _
+    -> ae2:ToolNetherQuartzPickaxe
+
+shaped=
+    oredictionary:crystalNetherQuartz,
+    oredictionary:stickWood,
+    oredictionary:stickWood
+    -> ae2:ToolNetherQuartzSpade
+
+shaped=
+    oredictionary:crystalNetherQuartz,
+    oredictionary:crystalNetherQuartz,
+    oredictionary:stickWood
+    -> ae2:ToolNetherQuartzSword
+
+shaped=
+    oredictionary:crystalNetherQuartz oredictionary:crystalNetherQuartz,
+    _ oredictionary:stickWood,
+    _ oredictionary:stickWood
+    -> ae2:ToolNetherQuartzHoe

@@ -17,7 +17,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 /**
- * Implemented on AE's wrench(s) as a substitute for if BC's API is not available.
+ * Implemented on AE's wrench(s)
  */
 public interface IAEWrench {
 

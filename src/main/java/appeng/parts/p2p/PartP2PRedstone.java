@@ -27,7 +27,7 @@ import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class PartP2PRedstone extends PartP2PTunnel<PartP2PRedstone> {
+public class PartP2PRedstone extends PartP2PTunnelNormal<PartP2PRedstone> {
 
     private int power;
     private boolean recursive = false;

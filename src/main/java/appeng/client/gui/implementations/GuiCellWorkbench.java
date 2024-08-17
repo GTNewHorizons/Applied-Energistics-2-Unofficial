@@ -19,7 +19,11 @@ import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.*;
+import appeng.api.config.ActionItems;
+import appeng.api.config.CopyMode;
+import appeng.api.config.FuzzyMode;
+import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiToggleButton;
@@ -135,7 +139,18 @@ public class GuiCellWorkbench extends GuiUpgradeable {
             }
         }
         if (this.hasToolbox()) {
-            this.drawTexturedModalRect(offsetX + 178, offsetY + this.ySize - 90, 178, 161, 68, 68);
+            // this.drawTexturedModalRect(offsetX + 178, offsetY + this.ySize - 90, 178, 161, 68, 68);
+            switch (this.getToolboxSize()) {
+                case 3 -> this
+                        .drawTexturedModalRect(offsetX + 178, offsetY + this.ySize - 90, 178, this.ySize - 90, 68, 68);
+                case 5 -> {
+                    this.bindTexture(this.getAdvancedBackground());
+                    // It's too big, so move it up a little bit
+                    this.drawTexturedModalRect(offsetX + 178, offsetY + this.ySize - 90 - 7, 0, 0, 104, 104);
+                }
+                default -> this
+                        .drawTexturedModalRect(offsetX + 178, offsetY + this.ySize - 90, 178, this.ySize - 90, 68, 68);
+            }
         }
     }
 

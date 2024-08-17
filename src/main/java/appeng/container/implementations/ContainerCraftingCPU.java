@@ -11,11 +11,15 @@
 package appeng.container.implementations;
 
 import java.io.IOException;
+import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ICrafting;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
@@ -33,6 +37,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketCompressedNBT;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -51,7 +56,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
     private String cpuName = null;
 
     @GuiSync(0)
-    public long eta = -1;
+    public long elapsed = -1;
 
     public ContainerCraftingCPU(final InventoryPlayer ip, final Object te) {
         super(ip, te);
@@ -108,11 +113,11 @@ public class ContainerCraftingCPU extends AEBaseContainer
             this.list.resetStatus();
             this.getMonitor().getListOfItem(this.list, CraftingItemList.ALL);
             this.getMonitor().addListener(this, null);
-            this.setEstimatedTime(0);
+            this.setElapsedTime(0);
         } else {
             this.setMonitor(null);
             this.cpuName = "";
-            this.setEstimatedTime(-1);
+            this.setElapsedTime(-1);
         }
     }
 
@@ -120,7 +125,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
         if (this.getMonitor() != null) {
             this.getMonitor().cancel();
         }
-        this.setEstimatedTime(-1);
+        this.setElapsedTime(-1);
     }
 
     @Override
@@ -144,18 +149,24 @@ public class ContainerCraftingCPU extends AEBaseContainer
     public void detectAndSendChanges() {
         if (Platform.isServer() && this.getMonitor() != null && !this.list.isEmpty()) {
             try {
-                if (this.getEstimatedTime() >= 0) {
-                    final long elapsedTime = this.getMonitor().getElapsedTime();
-                    final double remainingItems = this.getMonitor().getRemainingItemCount();
-                    final double startItems = this.getMonitor().getStartItemCount();
-                    final long eta = (long) (elapsedTime / Math.max(1d, (startItems - remainingItems))
-                            * remainingItems);
-                    this.setEstimatedTime(eta);
+                this.setElapsedTime(this.getMonitor().getElapsedTime());
+
+                NBTTagCompound nbttc = new NBTTagCompound();
+                NBTTagList tagList = new NBTTagList();
+                List<String> playersFollowingCurrentCraft = this.getPlayersFollowingCurrentCraft();
+
+                if (playersFollowingCurrentCraft != null) {
+                    for (String name : playersFollowingCurrentCraft) {
+                        tagList.appendTag(new NBTTagString(name));
+                    }
                 }
+                nbttc.setTag("playNameList", tagList);
 
                 final PacketMEInventoryUpdate a = new PacketMEInventoryUpdate((byte) 0);
                 final PacketMEInventoryUpdate b = new PacketMEInventoryUpdate((byte) 1);
                 final PacketMEInventoryUpdate c = new PacketMEInventoryUpdate((byte) 2);
+
+                final PacketCompressedNBT d = new PacketCompressedNBT(nbttc);
 
                 for (final IAEItemStack out : this.list) {
                     a.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.STORAGE));
@@ -166,21 +177,24 @@ public class ContainerCraftingCPU extends AEBaseContainer
                 this.list.resetStatus();
 
                 for (final Object g : this.crafters) {
-                    if (g instanceof EntityPlayer) {
+                    if (g instanceof EntityPlayerMP epmp) {
                         if (!a.isEmpty()) {
-                            NetworkHandler.instance.sendTo(a, (EntityPlayerMP) g);
+                            NetworkHandler.instance.sendTo(a, epmp);
                         }
 
                         if (!b.isEmpty()) {
-                            NetworkHandler.instance.sendTo(b, (EntityPlayerMP) g);
+                            NetworkHandler.instance.sendTo(b, epmp);
                         }
 
                         if (!c.isEmpty()) {
-                            NetworkHandler.instance.sendTo(c, (EntityPlayerMP) g);
+                            NetworkHandler.instance.sendTo(c, epmp);
                         }
+
+                        NetworkHandler.instance.sendTo(d, epmp);
+
                         NetworkHandler.instance.sendTo(
                                 new PacketCraftingRemainingOperations(this.getMonitor().getRemainingOperations()),
-                                (EntityPlayerMP) g);
+                                epmp);
                     }
                 }
             } catch (final IOException e) {
@@ -223,12 +237,12 @@ public class ContainerCraftingCPU extends AEBaseContainer
         this.cpuName = name;
     }
 
-    public long getEstimatedTime() {
-        return this.eta;
+    public long getElapsedTime() {
+        return this.elapsed;
     }
 
-    private void setEstimatedTime(final long eta) {
-        this.eta = eta;
+    private void setElapsedTime(final long elapsed) {
+        this.elapsed = elapsed;
     }
 
     CraftingCPUCluster getMonitor() {
@@ -245,5 +259,18 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
     private void setNetwork(final IGrid network) {
         this.network = network;
+    }
+
+    public void togglePlayerFollowStatus(final String name) {
+        if (this.getMonitor() != null) {
+            this.getMonitor().togglePlayerFollowStatus(name);
+        }
+    }
+
+    public List<String> getPlayersFollowingCurrentCraft() {
+        if (this.getMonitor() != null) {
+            return this.getMonitor().getPlayersFollowingCurrentCraft();
+        }
+        return null;
     }
 }

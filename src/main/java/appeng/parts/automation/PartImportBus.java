@@ -16,7 +16,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Vec3;
 
 import appeng.api.AEApi;
-import appeng.api.config.*;
+import appeng.api.config.Actionable;
+import appeng.api.config.FuzzyMode;
+import appeng.api.config.PowerMultiplier;
+import appeng.api.config.RedstoneMode;
+import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;

@@ -91,6 +91,9 @@ public class ToolPortableCell extends AEBasePoweredItem implements IStorageCell,
                                 + cd.getTotalItemTypes()
                                 + ' '
                                 + GuiText.Types.getLocal());
+                if (((CellInventoryHandler) cdi).getSticky()) {
+                    lines.add(GuiText.Sticky.getLocal());
+                }
             }
         }
     }
@@ -157,12 +160,7 @@ public class ToolPortableCell extends AEBasePoweredItem implements IStorageCell,
 
     @Override
     public FuzzyMode getFuzzyMode(final ItemStack is) {
-        final String fz = Platform.openNbtData(is).getString("FuzzyMode");
-        try {
-            return FuzzyMode.valueOf(fz);
-        } catch (final Throwable t) {
-            return FuzzyMode.IGNORE_ALL;
-        }
+        return FuzzyMode.fromItemStack(is);
     }
 
     @Override

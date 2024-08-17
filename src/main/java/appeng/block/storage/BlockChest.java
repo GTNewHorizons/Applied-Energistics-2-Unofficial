@@ -25,10 +25,14 @@ import appeng.client.render.blocks.RenderMEChest;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.GuiBridge;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
 import appeng.tile.storage.TileChest;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import gregtech.api.GregTech_API;
+import gregtech.api.util.GT_Utility;
 
 public class BlockChest extends AEBaseTileBlock {
 
@@ -50,6 +54,14 @@ public class BlockChest extends AEBaseTileBlock {
         final TileChest tg = this.getTileEntity(w, x, y, z);
         if (tg != null && !p.isSneaking()) {
             if (Platform.isClient()) {
+                return true;
+            }
+
+            if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)
+                    && GT_Utility.isStackInList(p.getHeldItem(), GregTech_API.sWireCutterList)) {
+                if (tg.lockDigitalSingularityCells()) {
+                    p.addChatMessage(PlayerMessages.ChestLocked.get());
+                }
                 return true;
             }
 

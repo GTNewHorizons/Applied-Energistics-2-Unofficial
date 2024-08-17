@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
@@ -23,7 +24,16 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
 import appeng.api.parts.IPart;
-import appeng.integration.modules.waila.part.*;
+import appeng.helpers.ICustomNameObject;
+import appeng.integration.modules.waila.part.BasePartWailaDataProvider;
+import appeng.integration.modules.waila.part.ChannelWailaDataProvider;
+import appeng.integration.modules.waila.part.IPartWailaDataProvider;
+import appeng.integration.modules.waila.part.P2PStateWailaDataProvider;
+import appeng.integration.modules.waila.part.PartAccessor;
+import appeng.integration.modules.waila.part.PartInterfaceDataProvider;
+import appeng.integration.modules.waila.part.PowerStateWailaDataProvider;
+import appeng.integration.modules.waila.part.StorageMonitorWailaDataProvider;
+import appeng.integration.modules.waila.part.Tracer;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 import mcp.mobius.waila.api.IWailaDataProvider;
@@ -36,6 +46,8 @@ import mcp.mobius.waila.api.IWailaDataProvider;
  * @since rv2
  */
 public final class PartWailaDataProvider implements IWailaDataProvider {
+
+    private static final String NBT_PART_CUSTOM_NAME = "partCustomName";
 
     /**
      * Contains all providers
@@ -61,8 +73,9 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
         final IPartWailaDataProvider powerState = new PowerStateWailaDataProvider();
         final IPartWailaDataProvider p2pState = new P2PStateWailaDataProvider();
         final IPartWailaDataProvider partStack = new BasePartWailaDataProvider();
+        final IPartWailaDataProvider partInterface = new PartInterfaceDataProvider();
 
-        this.providers = Lists.newArrayList(channel, storageMonitor, powerState, p2pState, partStack);
+        this.providers = Lists.newArrayList(channel, storageMonitor, powerState, p2pState, partStack, partInterface);
     }
 
     @Override
@@ -120,6 +133,11 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
             for (final IPartWailaDataProvider provider : this.providers) {
                 provider.getWailaBody(part, currentToolTip, accessor, config);
             }
+            if (accessor.getNBTData().hasKey(NBT_PART_CUSTOM_NAME)) {
+                currentToolTip.add(
+                        EnumChatFormatting.WHITE.toString() + EnumChatFormatting.ITALIC
+                                + accessor.getNBTData().getString(NBT_PART_CUSTOM_NAME));
+            }
         }
 
         return currentToolTip;
@@ -157,6 +175,10 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
 
                 for (final IPartWailaDataProvider provider : this.providers) {
                     provider.getNBTData(player, part, te, tag, world, x, y, z);
+                }
+                if (part instanceof ICustomNameObject customNameObject && customNameObject.hasCustomName()
+                        && !customNameObject.getCustomName().isEmpty()) {
+                    tag.setString(NBT_PART_CUSTOM_NAME, customNameObject.getCustomName());
                 }
             }
         }

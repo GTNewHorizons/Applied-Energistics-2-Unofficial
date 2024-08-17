@@ -78,6 +78,10 @@ public interface IParts {
 
     IItemDefinition p2PTunnelLight();
 
+    default IItemDefinition p2PTunnelSound() {
+        return null;
+    }
+
     IItemDefinition p2PTunnelOpenComputers();
 
     IItemDefinition p2PTunnelPneumaticCraft();

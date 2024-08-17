@@ -11,6 +11,7 @@
 package appeng.container.implementations;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -55,7 +56,11 @@ import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartPatternTerminal;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
+import appeng.tile.misc.TilePatternOptimizationMatrix;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingCPUSelectorContainer {
 
@@ -83,8 +88,14 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
     @GuiSync(7)
     public String myName = "";
 
-    @GuiSync.Recurse(8)
+    @GuiSync(8)
+    public boolean isAllowedToRunPatternOptimization = false;
+
+    @GuiSync.Recurse(9)
     public final ContainerCPUTable cpuTable;
+
+    @GuiSync(10)
+    public String serializedItemToCraft = "";
 
     public ContainerCraftConfirm(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
@@ -119,6 +130,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         }
 
         this.setNoCPU(this.cpuTable.getCPUs().isEmpty());
+
+        IGrid grid = getGrid();
+        if (grid != null) this.isAllowedToRunPatternOptimization = !getGrid()
+                .getMachines(TilePatternOptimizationMatrix.class).isEmpty();
 
         super.detectAndSendChanges();
 
@@ -157,6 +172,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                         final IAEItemStack toCraft = plannedItem.copy();
                         toCraft.reset();
                         toCraft.setStackSize(plannedItem.getCountRequestable());
+                        toCraft.setCountRequestableCrafts(plannedItem.getCountRequestableCrafts());
 
                         final IStorageGrid sg = this.getGrid().getCache(IStorageGrid.class);
                         final IMEInventory<IAEItemStack> items = sg.getItemInventory();
@@ -172,6 +188,13 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                             }
 
                             missing.setStackSize(missing.getStackSize() - toExtract.getStackSize());
+                        }
+
+                        if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
+                                && (missing == null || missing.getStackSize() <= 0)) {
+                            long available = items.getAvailableItem(toExtract, IterationCounter.fetchNewId())
+                                    .getStackSize();
+                            toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
                         }
 
                         if (toExtract.getStackSize() > 0) {
@@ -228,7 +251,28 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         return h.getActionableNode().getGrid();
     }
 
-    private boolean cpuMatches(final CraftingCPUStatus c) {
+    private IAEItemStack getItemToCraft() {
+        try {
+            ByteBuf deserialized = Unpooled.wrappedBuffer(serializedItemToCraft.getBytes(StandardCharsets.ISO_8859_1));
+            return AEApi.instance().storage().readItemFromPacket(deserialized);
+        } catch (IOException e) {
+            AELog.debug(e);
+            AELog.debug("Deserializing IAEItemStack Failed");
+            return null;
+        }
+    }
+
+    public boolean cpuCraftingSameItem(final CraftingCPUStatus c) {
+        if (c.getCrafting() == null || this.getItemToCraft() == null) {
+            return false;
+        }
+        return c.getCrafting().isSameType(this.getItemToCraft());
+    }
+
+    public boolean cpuMatches(final CraftingCPUStatus c) {
+        if (c.isBusy() && this.cpuCraftingSameItem(c)) {
+            return c.getStorage() >= this.getUsedBytes() + c.getUsedStorage();
+        }
         return c.getStorage() >= this.getUsedBytes() && !c.isBusy();
     }
 
@@ -245,6 +289,22 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
             this.setAutoStart(false);
             if (g != null) {
                 this.switchToOriginalGUI();
+            }
+        }
+    }
+
+    public void optimizePatterns() {
+        // only V2 supported
+        if (this.result instanceof CraftingJobV2 && !this.isSimulation()
+                && getGrid() != null
+                && !getGrid().getMachines(TilePatternOptimizationMatrix.class).isEmpty()) {
+            Platform.openGUI(
+                    this.getPlayerInv().player,
+                    this.getOpenContext().getTile(),
+                    this.getOpenContext().getSide(),
+                    GuiBridge.GUI_OPTIMIZE_PATTERNS);
+            if (this.getPlayerInv().player.openContainer instanceof ContainerOptimizePatterns cop) {
+                cop.setResult(this.result);
             }
         }
     }
@@ -374,5 +434,16 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
     public void setJob(final Future<ICraftingJob> job) {
         this.job = job;
+    }
+
+    public void setItemToCraft(@Nonnull final IAEItemStack itemToCraft) {
+        try {
+            ByteBuf serialized = Unpooled.buffer();
+            itemToCraft.writeToPacket(serialized);
+            this.serializedItemToCraft = serialized.toString(StandardCharsets.ISO_8859_1);
+        } catch (IOException e) {
+            AELog.debug(e);
+            AELog.debug("Deserializing IAEItemStack Failed");
+        }
     }
 }

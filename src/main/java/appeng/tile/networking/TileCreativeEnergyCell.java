@@ -56,6 +56,11 @@ public class TileCreativeEnergyCell extends AENetworkTile implements IAEPowerSto
     }
 
     @Override
+    public boolean isInfinite() {
+        return true;
+    }
+
+    @Override
     public double extractAEPower(final double amt, final Actionable mode, final PowerMultiplier pm) {
         return amt;
     }

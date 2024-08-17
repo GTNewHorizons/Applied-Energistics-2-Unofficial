@@ -13,7 +13,11 @@
 
 package appeng.api;
 
-import appeng.api.definitions.*;
+import appeng.api.definitions.Blocks;
+import appeng.api.definitions.IDefinitions;
+import appeng.api.definitions.Items;
+import appeng.api.definitions.Materials;
+import appeng.api.definitions.Parts;
 import appeng.api.exceptions.FailedConnection;
 import appeng.api.features.IRegistryContainer;
 import appeng.api.networking.IGridBlock;

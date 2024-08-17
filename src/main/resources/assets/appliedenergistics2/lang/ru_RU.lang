@@ -263,6 +263,9 @@ gui.tooltips.appliedenergistics2.StashDesc=Возвращает предметы
 gui.tooltips.appliedenergistics2.Substitutions=Ore-Dict замещения
 gui.tooltips.appliedenergistics2.SubstitutionsDescEnabled=Разрешить замены входных компонентов.
 gui.tooltips.appliedenergistics2.SubstitutionsDescDisabled=Предотвратить замены входных компонентов.
+gui.tooltips.appliedenergistics2.BeSubstitutions=Использовать в качестве замены
+gui.tooltips.appliedenergistics2.BeSubstitutionsDescEnabled=Разрешить в качестве замены входных компонентов.
+gui.tooltips.appliedenergistics2.BeSubstitutionsDescDisabled=Запретить в качестве замены входных компонентов. Если все шаблоны для ингредиента запрещены в качестве замены, то симулятор создания посчитает их разрешенными.
 
 gui.tooltips.appliedenergistics2.PatternSlotConfigTitle=Переключить режим терминала
 gui.tooltips.appliedenergistics2.PatternSlotConfigInfo=Переключить режим слота шаблона между (16 -> 4) и (4 -> 16)

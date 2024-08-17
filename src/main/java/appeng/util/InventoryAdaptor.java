@@ -26,15 +26,25 @@ import appeng.helpers.IInterfaceHost;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBetterStorage;
-import appeng.tile.AEBaseInvTile;
+import appeng.integration.abstraction.IThaumicTinkerer;
+import appeng.parts.p2p.PartP2PItems;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
-import appeng.util.inv.*;
+import appeng.tile.storage.TileChest;
+import appeng.util.inv.AdaptorDualityInterface;
+import appeng.util.inv.AdaptorIInventory;
+import appeng.util.inv.AdaptorList;
+import appeng.util.inv.AdaptorMEChest;
+import appeng.util.inv.AdaptorP2PItem;
+import appeng.util.inv.AdaptorPlayerInventory;
+import appeng.util.inv.IInventoryDestination;
+import appeng.util.inv.ItemSlot;
+import appeng.util.inv.WrapperMCISidedInventory;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
     // returns an appropriate adaptor, or null
-    public static InventoryAdaptor getAdaptor(final Object te, final ForgeDirection d) {
+    public static InventoryAdaptor getAdaptor(Object te, final ForgeDirection d) {
         if (te == null) {
             return null;
         }
@@ -42,6 +52,14 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         final IBetterStorage bs = (IBetterStorage) (IntegrationRegistry.INSTANCE.isEnabled(
                 IntegrationType.BetterStorage) ? IntegrationRegistry.INSTANCE.getInstance(IntegrationType.BetterStorage)
                         : null);
+        final IThaumicTinkerer tt = (IThaumicTinkerer) (IntegrationRegistry.INSTANCE
+                .isEnabled(IntegrationType.ThaumicTinkerer)
+                        ? IntegrationRegistry.INSTANCE.getInstance(IntegrationType.ThaumicTinkerer)
+                        : null);
+
+        if (tt != null && tt.isTransvectorInterface(te)) {
+            te = tt.getTile(te);
+        }
 
         if (te instanceof EntityPlayer) {
             return new AdaptorIInventory(new AdaptorPlayerInventory(((EntityPlayer) te).inventory, false));
@@ -55,23 +73,21 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         } else if (te instanceof TileEntityChest) {
             return new AdaptorIInventory(Platform.GetChestInv(te));
         } else if (te instanceof ISidedInventory si) {
-            final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
             if (te instanceof TileInterface) {
                 return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), (IInterfaceHost) te);
             } else if (te instanceof TileCableBus) {
                 IPart part = ((TileCableBus) te).getPart(d);
                 if (part instanceof IInterfaceHost host) {
                     return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), host);
+                } else if (part instanceof PartP2PItems p2p) {
+                    return new AdaptorP2PItem(p2p);
                 }
+            } else if (te instanceof TileChest) {
+                return new AdaptorMEChest((TileChest) te);
             }
-            int stackLimit = 0;
-            if (te instanceof AEBaseInvTile) {
-                stackLimit = ((AEBaseInvTile) te).getInternalInventory().getInventoryStackLimit();
-            }
+
+            final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
             if (si.getSizeInventory() > 0 && slots != null && slots.length > 0) {
-                if (stackLimit > 0) {
-                    return new AdaptorIInventory(new WrapperMCISidedInventory(si, d), stackLimit);
-                }
                 return new AdaptorIInventory(new WrapperMCISidedInventory(si, d));
             }
         } else if (te instanceof IInventory i) {

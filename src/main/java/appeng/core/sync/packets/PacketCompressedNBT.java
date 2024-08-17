@@ -10,7 +10,11 @@
 
 package appeng.core.sync.packets;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -20,7 +24,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 
-import appeng.client.gui.implementations.GuiInterfaceTerminal;
+import appeng.client.gui.implementations.GuiCraftingStatus;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import cpw.mods.fml.relauncher.Side;
@@ -84,9 +88,8 @@ public class PacketCompressedNBT extends AppEngPacket {
     @SideOnly(Side.CLIENT)
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-
-        if (gs instanceof GuiInterfaceTerminal) {
-            ((GuiInterfaceTerminal) gs).postUpdate(this.in);
+        if (gs instanceof GuiCraftingStatus gcs) {
+            gcs.postUpdate(in);
         }
     }
 }

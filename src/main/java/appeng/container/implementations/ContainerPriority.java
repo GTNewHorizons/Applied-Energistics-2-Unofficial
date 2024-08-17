@@ -13,10 +13,9 @@ package appeng.container.implementations;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.config.SecurityPermissions;
-import appeng.api.parts.IPart;
+import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.helpers.IPriorityHost;
@@ -34,9 +33,9 @@ public class ContainerPriority extends AEBaseContainer {
     @GuiSync(2)
     public long PriorityValue = -1;
 
-    public ContainerPriority(final InventoryPlayer ip, final IPriorityHost te) {
-        super(ip, (TileEntity) (te instanceof TileEntity ? te : null), (IPart) (te instanceof IPart ? te : null));
-        this.priHost = te;
+    public ContainerPriority(final InventoryPlayer ip, final IPriorityHost host) {
+        super(ip, host);
+        this.priHost = host;
     }
 
     @SideOnly(Side.CLIENT)
@@ -53,7 +52,9 @@ public class ContainerPriority extends AEBaseContainer {
     @Override
     public void detectAndSendChanges() {
         super.detectAndSendChanges();
-        this.verifyPermissions(SecurityPermissions.BUILD, false);
+        if (!(priHost instanceof IGuiItemObject)) {
+            this.verifyPermissions(SecurityPermissions.BUILD, false);
+        }
 
         if (Platform.isServer()) {
             this.PriorityValue = this.priHost.getPriority();

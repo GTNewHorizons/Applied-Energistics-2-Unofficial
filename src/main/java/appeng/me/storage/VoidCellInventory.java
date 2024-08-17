@@ -1,10 +1,16 @@
 package appeng.me.storage;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
-import appeng.api.config.*;
+import appeng.api.config.AccessRestriction;
+import appeng.api.config.Actionable;
+import appeng.api.config.FuzzyMode;
+import appeng.api.config.IncludeExclude;
+import appeng.api.config.Upgrades;
 import appeng.api.exceptions.AppEngException;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.networking.security.BaseActionSource;
@@ -34,6 +40,7 @@ public class VoidCellInventory extends MEInventoryHandler<IAEItemStack> {
         boolean hasInverter = false;
         boolean hasFuzzy = false;
         boolean hasOreFilter = false;
+        boolean hasSticky = false;
 
         for (int x = 0; x < upgrades.getSizeInventory(); x++) {
             final ItemStack is = upgrades.getStackInSlot(x);
@@ -44,10 +51,14 @@ public class VoidCellInventory extends MEInventoryHandler<IAEItemStack> {
                         case FUZZY -> hasFuzzy = true;
                         case INVERTER -> hasInverter = true;
                         case ORE_FILTER -> hasOreFilter = true;
+                        case STICKY -> hasSticky = true;
                         default -> {}
                     }
                 }
             }
+        }
+        if (hasSticky) {
+            setSticky(true);
         }
         this.fuzzy = hasFuzzy;
         this.setWhitelist(hasInverter ? IncludeExclude.BLACKLIST : IncludeExclude.WHITELIST);
@@ -90,8 +101,13 @@ public class VoidCellInventory extends MEInventoryHandler<IAEItemStack> {
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out) {
+    public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out, int iteration) {
         return out;
+    }
+
+    @Override
+    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
+        return null;
     }
 
     @Override

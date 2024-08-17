@@ -20,7 +20,8 @@ public enum PlayerMessages {
     LoadedSettings,
     SavedSettings,
     MachineNotPowered,
-
+    DriveLocked,
+    ChestLocked,
     isNowLocked,
     isNowUnlocked,
     AmmoDepleted,
@@ -37,10 +38,18 @@ public enum PlayerMessages {
     TunnelOutputsAreAt,
     InterfaceInOtherDim,
     InterfaceHighlighted,
-    CraftingItemsWentMissing;
+    CraftingItemsWentMissing,
+    PriorityInvalidTarget,
+    PriorityReadout,
+    PriorityConfigured,
+    FinishCraftingRemind;
 
     public IChatComponent get() {
         return new ChatComponentTranslation(this.getName());
+    }
+
+    public IChatComponent get(Object... args) {
+        return new ChatComponentTranslation(this.getName(), args);
     }
 
     public String getName() {

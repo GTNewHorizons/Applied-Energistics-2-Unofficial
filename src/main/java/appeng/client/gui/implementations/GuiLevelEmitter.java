@@ -17,7 +17,12 @@ import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.*;
+import appeng.api.config.FuzzyMode;
+import appeng.api.config.LevelType;
+import appeng.api.config.RedstoneMode;
+import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
+import appeng.api.config.YesNo;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiNumberBox;
 import appeng.container.implementations.ContainerLevelEmitter;

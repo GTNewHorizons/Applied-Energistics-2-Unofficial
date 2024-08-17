@@ -31,7 +31,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
-public class PartP2PLight extends PartP2PTunnel<PartP2PLight> implements IGridTickable {
+public class PartP2PLight extends PartP2PTunnelNormal<PartP2PLight> implements IGridTickable {
 
     private int lastValue = 0;
     private float opacity = -1;

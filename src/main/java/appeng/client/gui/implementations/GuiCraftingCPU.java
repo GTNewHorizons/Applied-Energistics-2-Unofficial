@@ -38,6 +38,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.gui.widgets.ITooltip;
@@ -55,18 +56,21 @@ import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 
-public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
+public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiTooltipHandler {
 
-    private static final int GUI_HEIGHT = 184;
-    private static final int GUI_WIDTH = 238;
+    protected static final int GUI_HEIGHT = 184;
+    protected static final int GUI_WIDTH = 238;
 
-    private static final int DISPLAYED_ROWS = 6;
+    protected static final int TEXTURE_BELOW_TOP_ROW_Y = 41;
+    protected static final int TEXTURE_ABOVE_BOTTOM_ROW_Y = 51;
+    protected static final int DISPLAYED_ROWS = 6;
 
-    private static final int SECTION_LENGTH = 67;
+    protected static final int SECTION_LENGTH = 67;
+    protected static final int SECTION_HEIGHT = 23;
 
-    private static final int SCROLLBAR_TOP = 19;
-    private static final int SCROLLBAR_LEFT = 218;
-    private static final int SCROLLBAR_HEIGHT = 137;
+    protected static final int SCROLLBAR_TOP = 19;
+    protected static final int SCROLLBAR_LEFT = 218;
+    protected static final int SCROLLBAR_HEIGHT = 137;
 
     private static final int CANCEL_LEFT_OFFSET = 163;
     private static final int CANCEL_TOP_OFFSET = 25;
@@ -78,12 +82,15 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
 
     private static final int ITEMSTACK_LEFT_OFFSET = 9;
     private static final int ITEMSTACK_TOP_OFFSET = 22;
+    private static final int ITEMS_PER_ROW = 3;
 
     private final ContainerCraftingCPU craftingCpu;
 
-    private IItemList<IAEItemStack> storage = AEApi.instance().storage().createItemList();
-    private IItemList<IAEItemStack> active = AEApi.instance().storage().createItemList();
-    private IItemList<IAEItemStack> pending = AEApi.instance().storage().createItemList();
+    protected IItemList<IAEItemStack> storage = AEApi.instance().storage().createItemList();
+    protected IItemList<IAEItemStack> active = AEApi.instance().storage().createItemList();
+    protected IItemList<IAEItemStack> pending = AEApi.instance().storage().createItemList();
+
+    protected int rows = DISPLAYED_ROWS;
 
     private class RemainingOperations implements ITooltip {
 
@@ -151,7 +158,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
         }
     }
 
-    private List<IAEItemStack> visual = new ArrayList<>();
+    protected List<IAEItemStack> visual = new ArrayList<>();
     private GuiButton cancel;
     private int tooltip = -1;
     private final RemainingOperations remainingOperations = new RemainingOperations();
@@ -236,7 +243,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
         final int size = this.visual.size();
 
         this.getScrollBar().setTop(SCROLLBAR_TOP).setLeft(SCROLLBAR_LEFT).setHeight(SCROLLBAR_HEIGHT);
-        this.getScrollBar().setRange(0, (size + 2) / 3 - DISPLAYED_ROWS, 1);
+        this.getScrollBar().setRange(0, (size + 2) / ITEMS_PER_ROW - rows, 1);
     }
 
     @Override
@@ -248,15 +255,15 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
 
         this.tooltip = -1;
 
-        final int offY = 23;
+        final int offY = SECTION_HEIGHT;
         int y = 0;
         int x = 0;
-        for (int z = 0; z <= 4 * 5; z++) {
-            final int minX = gx + 9 + x * 67;
-            final int minY = gy + 22 + y * offY;
+        for (int z = 0; z <= ITEMS_PER_ROW * rows; z++) {
+            final int minX = gx + ITEMSTACK_LEFT_OFFSET + x * SECTION_LENGTH;
+            final int minY = gy + ITEMSTACK_TOP_OFFSET + y * offY;
 
-            if (minX < mouseX && minX + 67 > mouseX) {
-                if (minY < mouseY && minY + offY - 2 > mouseY) {
+            if (minX < mouseX && minX + SECTION_LENGTH > mouseX) {
+                if (minY < mouseY && minY + offY > mouseY) {
                     this.tooltip = z;
                     break;
                 }
@@ -264,7 +271,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
 
             x++;
 
-            if (x > 2) {
+            if (x == ITEMS_PER_ROW) {
                 y++;
                 x = 0;
             }
@@ -290,12 +297,18 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         String title = this.getGuiDisplayName(GuiText.CraftingStatus.getLocal());
 
-        if (this.craftingCpu.getEstimatedTime() > 0 && !this.visual.isEmpty()) {
-            final long etaInMilliseconds = TimeUnit.MILLISECONDS
-                    .convert(this.craftingCpu.getEstimatedTime(), TimeUnit.NANOSECONDS);
-            final String etaTimeText = DurationFormatUtils
-                    .formatDuration(etaInMilliseconds, GuiText.ETAFormat.getLocal());
-            title += " - " + etaTimeText;
+        if (this.craftingCpu.getElapsedTime() > 0 && !this.visual.isEmpty()) {
+            final long elapsedInMilliseconds = TimeUnit.MILLISECONDS
+                    .convert(this.craftingCpu.getElapsedTime(), TimeUnit.NANOSECONDS);
+            final String elapsedTimeText = DurationFormatUtils
+                    .formatDuration(elapsedInMilliseconds, GuiText.ETAFormat.getLocal());
+
+            // If title is empty, don't show that ' - '
+            if (title.length() == 0) {
+                title = elapsedTimeText;
+            } else {
+                title += " - " + elapsedTimeText;
+            }
         }
         updateRemainingOperations();
         this.fontRendererObj.drawString(
@@ -309,8 +322,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
 
         int x = 0;
         int y = 0;
-        final int viewStart = this.getScrollBar().getCurrentScroll() * 3;
-        final int viewEnd = viewStart + 3 * 6;
+        final int viewStart = this.getScrollBar().getCurrentScroll() * ITEMS_PER_ROW;
+        final int viewEnd = viewStart + ITEMS_PER_ROW * rows;
 
         String dspToolTip = "";
         final List<String> lineList = new LinkedList<>();
@@ -429,7 +442,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
                     dspToolTip = Platform.getItemDisplayName(is);
 
                     if (lineList.size() > 0) {
-                        addItemTooltip(is, lineList);
+                        addItemTooltip(refStack, lineList);
                         dspToolTip = dspToolTip + '\n' + Joiner.on("\n").join(lineList);
                     }
 
@@ -456,16 +469,16 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
     }
 
     @SuppressWarnings("unchecked")
-    protected void addItemTooltip(ItemStack is, List<String> lineList) {
+    protected void addItemTooltip(IAEItemStack refStack, List<String> lineList) {
         if (isShiftKeyDown()) {
-            List l = is.getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
+            final ItemStack is = refStack.copy().getItemStack();
+            final List l = is.getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
             if (!l.isEmpty()) l.remove(0);
             lineList.addAll(l);
             if (this.hoveredNbtStack == null || this.hoveredNbtStack.getItem() != is.getItem()) {
                 this.hoveredNbtStack = is;
                 try {
-                    NetworkHandler.instance.sendToServer(
-                            new PacketCraftingItemInterface(AEApi.instance().storage().createItemStack(is)));
+                    NetworkHandler.instance.sendToServer(new PacketCraftingItemInterface(refStack.copy()));
                 } catch (Exception ignored) {}
             } else {
                 NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
@@ -616,6 +629,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource {
         return ViewItems.ALL;
     }
 
+    @Override
     public ItemStack getHoveredStack() {
         return hoveredStack;
     }
