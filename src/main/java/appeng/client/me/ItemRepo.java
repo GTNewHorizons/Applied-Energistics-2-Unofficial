@@ -124,8 +124,6 @@ public class ItemRepo implements IDisplayRepo {
             return;
         }
 
-        System.out.println("updateView");
-
         IItemDisplayRegistry registry = AEApi.instance().registries().itemDisplay();
 
         out: for (IAEItemStack is : this.list) {
