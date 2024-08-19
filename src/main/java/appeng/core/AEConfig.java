@@ -64,6 +64,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int quartzOresPerCluster = 4;
     public int quartzOresClusterAmount = 15;
     public final int chargedChange = 4;
+    @Deprecated
     public int quartzKnifeInputLength = 32;
     public int minMeteoriteDistance = 707;
     public int minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
@@ -310,8 +311,6 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.preserveSearchBar = this.get("Client", "preserveSearchBar", true).getBoolean(true);
         this.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = this
                 .get("Client", "showOnlyInterfacesWithFreeSlotsInInterfaceTerminal", false).getBoolean(false);
-        this.quartzKnifeInputLength = this.get("Client", "quartzKnifeInputLength", this.quartzKnifeInputLength)
-                .getInt(this.quartzKnifeInputLength);
         this.MEMonitorableSmallSize = this.get("Client", "MEMonitorableSmallSize", 6).getInt(6);
         this.InterfaceTerminalSmallSize = this.get("Client", "InterfaceTerminalSmallSize", 6).getInt(6);
         // load buttons..

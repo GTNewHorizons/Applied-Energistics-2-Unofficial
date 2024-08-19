@@ -19,7 +19,6 @@ import net.minecraft.client.gui.GuiTextField;
 
 import org.lwjgl.input.Keyboard;
 
-import appeng.core.AEConfig;
 import appeng.core.localization.GuiColors;
 import codechicken.nei.FormattedTextField.TextFormatter;
 
@@ -70,7 +69,7 @@ public class MEGuiTextField implements ITooltip {
         h = height;
 
         field.setEnableBackgroundDrawing(false);
-        field.setMaxStringLength(AEConfig.instance.quartzKnifeInputLength);
+        field.setMaxStringLength(256);
         field.setTextColor(GuiColors.SearchboxText.getColor());
         field.setCursorPositionZero();
 

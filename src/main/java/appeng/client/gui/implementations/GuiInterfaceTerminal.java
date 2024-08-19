@@ -948,9 +948,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     public void setTextFieldValue(final String displayName, final int mousex, final int mousey, final ItemStack stack) {
         if (searchFieldInputs.isMouseIn(mousex, mousey)) {
-            searchFieldInputs.setText(displayName);
+            searchFieldInputs.setText(NEI.searchField.getEscapedSearchText(displayName));
         } else if (searchFieldOutputs.isMouseIn(mousex, mousey)) {
-            searchFieldOutputs.setText(displayName);
+            searchFieldOutputs.setText(NEI.searchField.getEscapedSearchText(displayName));
         } else if (searchFieldNames.isMouseIn(mousex, mousey)) {
             searchFieldNames.setText(displayName);
         }

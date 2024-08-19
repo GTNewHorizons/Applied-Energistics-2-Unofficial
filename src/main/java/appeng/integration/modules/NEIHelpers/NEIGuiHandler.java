@@ -1,34 +1,28 @@
 package appeng.integration.modules.NEIHelpers;
 
-import java.util.regex.Pattern;
-
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraftforge.fluids.FluidStack;
 
 import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingStatus;
 import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import codechicken.nei.api.INEIGuiAdapter;
+import codechicken.nei.recipe.StackInfo;
 
 public class NEIGuiHandler extends INEIGuiAdapter {
-
-    protected static final Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
 
     @Override
     public boolean handleDragNDrop(GuiContainer gui, int mousex, int mousey, ItemStack draggedStack, int button) {
 
-        if (draggedStack != null && draggedStack.getItem() != null && gui instanceof IDropToFillTextField gmm) {
+        if (draggedStack != null && draggedStack.getItem() != null
+                && (gui instanceof IDropToFillTextField gmm)
+                && gmm.isOverTextField(mousex, mousey)) {
+            gmm.setTextFieldValue(getItemStackText(draggedStack), mousex, mousey, draggedStack.copy());
 
-            if (gmm.isOverTextField(mousex, mousey)) {
-                gmm.setTextFieldValue(
-                        formattingText(draggedStack.getDisplayName()),
-                        mousex,
-                        mousey,
-                        draggedStack.copy());
-                return true;
-            }
+            return true;
         }
 
         return super.handleDragNDrop(gui, mousex, mousey, draggedStack, button);
@@ -47,8 +41,16 @@ public class NEIGuiHandler extends INEIGuiAdapter {
         return false;
     }
 
-    protected String formattingText(final String displayName) {
-        return SPECIAL_REGEX_CHARS.matcher(EnumChatFormatting.getTextWithoutFormattingCodes(displayName))
-                .replaceAll("\\\\$0");
+    protected static String getItemStackText(ItemStack stack) {
+        final FluidStack fluidStack = StackInfo.isFluidContainer(stack) ? null : StackInfo.getFluid(stack);
+        String displayName;
+
+        if (fluidStack != null) {
+            displayName = fluidStack.getLocalizedName();
+        } else {
+            displayName = stack.getDisplayName();
+        }
+
+        return EnumChatFormatting.getTextWithoutFormattingCodes(displayName);
     }
 }

@@ -53,8 +53,6 @@ public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField {
             }
         };
 
-        this.textField.setMaxStringLength(120);
-
         if (NEI.searchField.existsSearchField()) {
             this.textField.setFormatter(new OreFilterTextFormatter());
         }

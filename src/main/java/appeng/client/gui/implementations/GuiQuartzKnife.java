@@ -47,7 +47,6 @@ public class GuiQuartzKnife extends AEBaseGui implements IDropToFillTextField {
                 }
             }
         };
-        this.textField.setMaxStringLength(32);
     }
 
     @Override

@@ -602,7 +602,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
     }
 
     public void setTextFieldValue(final String displayName, final int mousex, final int mousey, final ItemStack stack) {
-        searchField.setText(displayName);
+        searchField.setText(NEI.searchField.getEscapedSearchText(displayName));
     }
 
     @Override
