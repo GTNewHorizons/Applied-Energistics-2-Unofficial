@@ -39,9 +39,8 @@ public class NEISearchField {
     }
 
     public String getEscapedSearchText(String text) {
-        final SearchField searchField = getSearchField();
 
-        if (searchField != null) {
+        if (existsSearchField()) {
             return SearchField.getEscapedSearchText(text);
         }
 
