@@ -292,6 +292,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             buf.writeByte(side);
             buf.writeInt(rows);
             buf.writeInt(rowSize);
+            buf.writeBoolean(online);
 
             ByteBuf tempBuf = Unpooled.directBuffer(256);
             try {
@@ -325,6 +326,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.side = buf.readByte();
             this.rows = buf.readInt();
             this.rowSize = buf.readInt();
+            this.online = buf.readBoolean();
+
             int payloadSize = buf.readInt();
             try (ByteBufInputStream stream = new ByteBufInputStream(buf, payloadSize)) {
                 NBTTagCompound payload = CompressedStreamTools.readCompressed(stream);
