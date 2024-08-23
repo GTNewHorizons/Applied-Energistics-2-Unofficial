@@ -856,7 +856,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
             if (owCmd.itemsValid) {
                 if (owCmd.allItemUpdate) {
-                    entry.fullItemUpdate(owCmd.items, owCmd.validIndices.length);
+                    entry.fullItemUpdate(owCmd.items, owCmd.items.tagCount());
                 } else {
                     entry.partialItemUpdate(owCmd.items, owCmd.validIndices);
                 }
