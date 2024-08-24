@@ -288,7 +288,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     }
 
                     /* Status changed? */
-                    boolean isActive = node.isActive() || machine.shouldDisplay();
+                    boolean isActive = node.isActive();
 
                     if (!known.online && isActive) {
                         /* Node offline -> online */

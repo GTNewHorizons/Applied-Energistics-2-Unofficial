@@ -292,6 +292,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             buf.writeByte(side);
             buf.writeInt(rows);
             buf.writeInt(rowSize);
+            buf.writeBoolean(online);
 
             ByteBuf tempBuf = Unpooled.directBuffer(256);
             try {
@@ -325,6 +326,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.side = buf.readByte();
             this.rows = buf.readInt();
             this.rowSize = buf.readInt();
+            this.online = buf.readBoolean();
+
             int payloadSize = buf.readInt();
             try (ByteBufInputStream stream = new ByteBufInputStream(buf, payloadSize)) {
                 NBTTagCompound payload = CompressedStreamTools.readCompressed(stream);
@@ -512,11 +515,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             }
             /* Decide whether to read item list or not */
             if ((flags & ITEMS_VALID) == ITEMS_VALID) {
+                this.itemsValid = true;
                 if ((flags & ALL_ITEM_UPDATE_BIT) == ALL_ITEM_UPDATE_BIT) {
                     this.allItemUpdate = true;
                 } else {
                     int numItems = buf.readInt();
-                    this.itemsValid = true;
                     this.validIndices = new int[numItems];
                     for (int i = 0; i < numItems; ++i) {
                         this.validIndices[i] = buf.readInt();

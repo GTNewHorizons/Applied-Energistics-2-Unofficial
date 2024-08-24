@@ -856,7 +856,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
             if (owCmd.itemsValid) {
                 if (owCmd.allItemUpdate) {
-                    entry.fullItemUpdate(owCmd.items, owCmd.validIndices.length);
+                    entry.fullItemUpdate(owCmd.items, owCmd.items.tagCount());
                 } else {
                     entry.partialItemUpdate(owCmd.items, owCmd.validIndices);
                 }
@@ -1143,6 +1143,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
             String output = GuiInterfaceTerminal.this.searchFieldOutputs.getText().toLowerCase();
 
             for (InterfaceTerminalEntry entry : entries) {
+                if (!entry.online) continue;
+
                 var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
                 entry.dispY = -9999;
                 if (onlyMolecularAssemblers
