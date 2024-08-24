@@ -1143,7 +1143,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             String output = GuiInterfaceTerminal.this.searchFieldOutputs.getText().toLowerCase();
 
             for (InterfaceTerminalEntry entry : entries) {
-                if(!entry.online) continue;
+                if (!entry.online) continue;
 
                 var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
                 entry.dispY = -9999;
