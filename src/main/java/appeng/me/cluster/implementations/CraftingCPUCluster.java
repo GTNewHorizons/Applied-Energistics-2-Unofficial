@@ -417,21 +417,23 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         if (!this.playersFollowingCurrentCraft.isEmpty()) {
 
+            final World clusterWorld = this.getWorld();
             final String elapsedTimeText = DurationFormatUtils.formatDuration(
                     TimeUnit.MILLISECONDS.convert(this.getElapsedTime(), TimeUnit.NANOSECONDS),
                     GuiText.ETAFormat.getLocal());
 
-            IChatComponent messageWaitToSend = PlayerMessages.FinishCraftingRemind.get(
+            final IChatComponent messageWaitToSend = PlayerMessages.FinishCraftingRemind.get(
                     new ChatComponentText(EnumChatFormatting.GREEN + String.valueOf(this.numsOfOutput)),
                     this.finalOutput.getItemStack().func_151000_E(),
                     new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText));
 
             for (String playerName : this.playersFollowingCurrentCraft) {
                 // Get each EntityPlayer
-                EntityPlayer pl = this.getWorld().getPlayerEntityByName(playerName);
+                EntityPlayer pl = clusterWorld.getPlayerEntityByName(playerName);
                 if (pl != null) {
                     // Send message to player
                     pl.addChatMessage(messageWaitToSend);
+                    clusterWorld.playSoundAtEntity(pl, "random.levelup", 1f, 1f);
                 }
             }
         }
