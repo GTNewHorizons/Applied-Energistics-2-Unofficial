@@ -25,7 +25,7 @@ import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartedEvent;
-import gregtech.GT_Mod;
+import gregtech.GTMod;
 
 // Most of these don't matter as this mod never gets published
 @Mod(
@@ -38,8 +38,8 @@ public class AppengTestMod {
     @EventHandler
     public void preInit(FMLPreInitializationEvent ev) {
         // Disable GT5u messing with vanilla recipes for unit tests
-        GT_Mod.gregtechproxy.mNerfedWoodPlank = false;
-        GT_Mod.gregtechproxy.mNerfedVanillaTools = false;
+        GTMod.gregtechproxy.mNerfedWoodPlank = false;
+        GTMod.gregtechproxy.mNerfedVanillaTools = false;
     }
 
     @EventHandler

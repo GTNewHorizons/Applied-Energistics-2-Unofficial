@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 
+import gregtech.common.items.IDMetaTool01;
+import gregtech.common.items.MetaGeneratedTool01;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -27,9 +29,7 @@ import appeng.util.item.AEItemStack;
 import appeng.util.item.ItemList;
 import gregtech.api.enums.Materials;
 import gregtech.api.enums.OrePrefixes;
-import gregtech.api.util.GT_OreDictUnificator;
-import gregtech.common.items.GT_MetaGenerated_Tool_01;
-import gregtech.common.items.ID_MetaTool_01;
+import gregtech.api.util.GTOreDictUnificator;
 
 public class CraftingV2Tests {
 
@@ -41,10 +41,10 @@ public class CraftingV2Tests {
 
     public CraftingV2Tests() {
         bronzePlate = Materials.Bronze.getPlates(1);
-        bronzeDoublePlate = GT_OreDictUnificator.get(OrePrefixes.plateDouble, Materials.Bronze, 1);
+        bronzeDoublePlate = GTOreDictUnificator.get(OrePrefixes.plateDouble, Materials.Bronze, 1);
         bronzeIngot = Materials.Bronze.getIngots(1);
-        gtHammer = GT_MetaGenerated_Tool_01.INSTANCE
-                .getToolWithStats(ID_MetaTool_01.HARDHAMMER.ID, 1, Materials.VanadiumSteel, null, null);
+        gtHammer = MetaGeneratedTool01.INSTANCE
+                .getToolWithStats(IDMetaTool01.HARDHAMMER.ID, 1, Materials.VanadiumSteel, null, null);
         ironDust = Materials.Iron.getDust(1);
         ironIngot = Materials.Iron.getIngots(1);
         ironPlate = Materials.Iron.getPlates(1);

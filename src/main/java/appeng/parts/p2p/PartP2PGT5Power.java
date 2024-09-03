@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 
 import javax.annotation.Nullable;
 
+import gregtech.api.GregTechAPI;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -21,10 +22,10 @@ import appeng.me.GridAccessException;
 import cofh.api.energy.IEnergyReceiver;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import gregtech.api.GregTech_API;
-import gregtech.api.enums.GT_Values;
+import gregtech.api.GregTechAPI;
+import gregtech.api.enums.GTValues;
 import gregtech.api.interfaces.tileentity.IEnergyConnected;
-import gregtech.api.util.GT_Utility;
+import gregtech.api.util.GTUtility;
 import ic2.api.energy.tile.IEnergySink;
 
 public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implements IPartGT5Power {
@@ -177,43 +178,43 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
 
                             return rUsedAmperes;
                         }
-                    } else if (GregTech_API.mOutputRF && te instanceof IEnergyReceiver) {
-                        int rfOut = (int) (aVoltage * (long) GregTech_API.mEUtoRF / 100L);
+                    } else if (GregTechAPI.mOutputRF && te instanceof IEnergyReceiver) {
+                        int rfOut = (int) (aVoltage * (long) GregTechAPI.mEUtoRF / 100L);
                         if (((IEnergyReceiver) te).receiveEnergy(oppositeSide, rfOut, true) == rfOut) {
                             ((IEnergyReceiver) te).receiveEnergy(oppositeSide, rfOut, false);
                             return 1L;
                         }
 
-                        if (GregTech_API.mRFExplosions && GregTech_API.sMachineExplosions
+                        if (GregTechAPI.mRFExplosions && GregTechAPI.sMachineExplosions
                                 && ((IEnergyReceiver) te).getMaxEnergyStored(oppositeSide) < rfOut * 600
-                                && rfOut > 32 * GregTech_API.mEUtoRF / 100) {
-                            float tStrength = (long) rfOut < GT_Values.V[0] ? 1.0F
-                                    : ((long) rfOut < GT_Values.V[1] ? 2.0F
-                                            : ((long) rfOut < GT_Values.V[2] ? 3.0F
-                                                    : ((long) rfOut < GT_Values.V[3] ? 4.0F
-                                                            : ((long) rfOut < GT_Values.V[4] ? 5.0F
-                                                                    : ((long) rfOut < GT_Values.V[4] * 2L ? 6.0F
-                                                                            : ((long) rfOut < GT_Values.V[5] ? 7.0F
-                                                                                    : ((long) rfOut < GT_Values.V[6]
+                                && rfOut > 32 * GregTechAPI.mEUtoRF / 100) {
+                            float tStrength = (long) rfOut < GTValues.V[0] ? 1.0F
+                                    : ((long) rfOut < GTValues.V[1] ? 2.0F
+                                            : ((long) rfOut < GTValues.V[2] ? 3.0F
+                                                    : ((long) rfOut < GTValues.V[3] ? 4.0F
+                                                            : ((long) rfOut < GTValues.V[4] ? 5.0F
+                                                                    : ((long) rfOut < GTValues.V[4] * 2L ? 6.0F
+                                                                            : ((long) rfOut < GTValues.V[5] ? 7.0F
+                                                                                    : ((long) rfOut < GTValues.V[6]
                                                                                             ? 8.0F
                                                                                             : ((long) rfOut
-                                                                                                    < GT_Values.V[7]
+                                                                                                    < GTValues.V[7]
                                                                                                             ? 9.0F
                                                                                                             : 10.0F))))))));
                             int tX = te.xCoord;
                             int tY = te.yCoord;
                             int tZ = te.zCoord;
                             World tWorld = te.getWorldObj();
-                            GT_Utility.sendSoundToPlayers(
+                            GTUtility.sendSoundToPlayers(
                                     tWorld,
-                                    GregTech_API.sSoundList.get(209),
+                                    GregTechAPI.sSoundList.get(209),
                                     1.0F,
                                     -1.0F,
                                     tX,
                                     tY,
                                     tZ);
                             tWorld.setBlock(tX, tY, tZ, Blocks.air);
-                            if (GregTech_API.sMachineExplosions) {
+                            if (GregTechAPI.sMachineExplosions) {
                                 tWorld.createExplosion(
                                         null,
                                         (double) tX + 0.5D,
