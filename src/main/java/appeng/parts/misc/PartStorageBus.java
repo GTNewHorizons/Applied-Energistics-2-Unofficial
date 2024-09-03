@@ -470,6 +470,10 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                     // could use a new setting that is applied via button or a card too
                     this.handler.setIsExtractFilterActive(currentAccess == AccessRestriction.READ);
 
+                    if (this.getInstalledUpgrades(Upgrades.STICKY) > 0) {
+                        this.handler.setSticky(true);
+                    }
+
                     if (this.oreFilterString.isEmpty()) {
                         final IItemList<IAEItemStack> priorityList = AEApi.instance().storage().createItemList();
 
@@ -478,9 +482,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                             final IAEItemStack is = this.Config.getAEStackInSlot(x);
                             if (is != null) priorityList.add(is);
                         }
-                        if (this.getInstalledUpgrades(Upgrades.STICKY) > 0) {
-                            this.handler.setSticky(true);
-                        }
+
                         if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
                             FuzzyPriorityList<IAEItemStack> partitionList = new FuzzyPriorityList<>(
                                     priorityList,
