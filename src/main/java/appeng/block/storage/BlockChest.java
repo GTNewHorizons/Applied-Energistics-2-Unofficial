@@ -57,12 +57,14 @@ public class BlockChest extends AEBaseTileBlock {
                 return true;
             }
 
-            if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)
-                    && GTUtility.isStackInList(p.getHeldItem(), GregTechAPI.sWireCutterList)) {
-                if (tg.lockDigitalSingularityCells()) {
-                    p.addChatMessage(PlayerMessages.ChestLocked.get());
+            if (Loader.isModLoaded("dreamcraft")) {
+                if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)
+                        && GTUtility.isStackInList(p.getHeldItem(), GregTechAPI.sWireCutterList)) {
+                    if (tg.lockDigitalSingularityCells()) {
+                        p.addChatMessage(PlayerMessages.ChestLocked.get());
+                    }
+                    return true;
                 }
-                return true;
             }
 
             if (side != tg.getUp().ordinal()) {

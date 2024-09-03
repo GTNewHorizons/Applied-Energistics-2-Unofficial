@@ -54,7 +54,7 @@ public class BlockDrive extends AEBaseTileBlock {
 
         final TileDrive tg = this.getTileEntity(w, x, y, z);
         if (tg != null) {
-            if (Platform.isServer()) {
+            if (Platform.isServer() && Loader.isModLoaded("dreamcraft")) {
                 if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)
                         && GTUtility.isStackInList(p.getHeldItem(), GregTechAPI.sWireCutterList)) {
                     if (tg.lockDigitalSingularityCells()) {
