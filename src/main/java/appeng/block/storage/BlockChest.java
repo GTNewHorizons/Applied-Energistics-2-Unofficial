@@ -29,6 +29,7 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.tile.storage.TileChest;
 import appeng.util.Platform;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.GregTechAPI;
