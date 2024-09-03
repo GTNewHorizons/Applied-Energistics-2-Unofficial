@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 
 import javax.annotation.Nullable;
 
-import gregtech.api.GregTechAPI;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
