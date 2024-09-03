@@ -83,6 +83,7 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
                         Actionable.MODULATE,
                         context.actionSource);
                 if (extracted != null && extracted.getStackSize() > 0) {
+                    extracted.setCraftable(false);
                     request.fulfill(this, extracted, context);
                     removedList.add(extracted.copy());
                 }
@@ -105,6 +106,7 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
                     if (extracted == null || extracted.getStackSize() <= 0) {
                         continue;
                     }
+                    extracted.setCraftable(false);
                     request.fulfill(this, extracted, context);
                     removedList.add(extracted.copy());
                 }
