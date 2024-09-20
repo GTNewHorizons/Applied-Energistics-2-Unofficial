@@ -76,20 +76,23 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
         this.preRenderInWorld(imb, world, x, y, z, renderer);
 
         final int stat = sp.getCellStatus(0);
+        final int type = sp.getCellType(0);
         final boolean result = renderer.renderStandardBlock(imb, x, y, z);
 
         this.selectFace(renderer, west, up, forward, 5, 16 - 5, 9, 12);
 
-        int offsetV = 8;
+        int offsetU = 4;
+        int offsetV = 9 - type * 4;
         if (stat == 0) {
-            offsetV = 3;
+            // Right up corner
+            offsetU = -4;
+            offsetV = 8;
         }
 
         int b = world.getLightBrightnessForSkyBlocks(x + forward.offsetX, y + forward.offsetY, z + forward.offsetZ, 0);
         Tessellator.instance.setBrightness(b);
         Tessellator.instance.setColorOpaque_I(0xffffff);
 
-        final int offsetU = -4;
         final FlippableIcon flippableIcon = new FlippableIcon(
                 new OffsetIcon(ExtraBlockTextures.MEStorageCellTextures.getIcon(), offsetU, offsetV));
 
@@ -118,9 +121,12 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
                 Tessellator.instance.setColorOpaque_I(0x00ff00);
             }
             if (stat == 2) {
-                Tessellator.instance.setColorOpaque_I(0xffaa00);
+                Tessellator.instance.setColorOpaque_I(0x00aaff);
             }
             if (stat == 3) {
+                Tessellator.instance.setColorOpaque_I(0xffaa00);
+            }
+            if (stat == 4) {
                 Tessellator.instance.setColorOpaque_I(0xff0000);
             }
             this.selectFace(renderer, west, up, forward, 9, 10, 11, 12);

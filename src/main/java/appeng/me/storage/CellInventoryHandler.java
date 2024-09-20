@@ -118,8 +118,8 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack>
     public int getStatusForCell() {
         int val = this.getCellInv().getStatusForCell();
 
-        if (val == 1 && this.isPreformatted()) {
-            val = 2;
+        if ((val == 1 || val == 2) && this.isPreformatted()) {
+            val = 3;
         }
 
         return val;

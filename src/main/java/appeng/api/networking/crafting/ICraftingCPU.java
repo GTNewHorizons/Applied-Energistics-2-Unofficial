@@ -18,6 +18,9 @@ import javax.annotation.Nullable;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.util.CraftCancelListener;
+import appeng.api.util.CraftCompleteListener;
+import appeng.api.util.CraftUpdateListener;
 
 public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
 
@@ -74,4 +77,21 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
     default long getStartItemCount() {
         return 0;
     }
+
+    /**
+     * @param craftCompleteListener a callback that is called when task is complete
+     */
+    default void addOnCompleteListener(CraftCompleteListener craftCompleteListener) {}
+
+    /**
+     * @param onCancelListener a callback that is called when task is canceled
+     */
+    default void addOnCancelListener(CraftCancelListener onCancelListener) {}
+
+    /**
+     * called when craft executes, passing number of tasks executed to Listener
+     * 
+     * @param onCraftingStatusUpdate
+     */
+    default void addOnCraftingUpdateListener(CraftUpdateListener onCraftingStatusUpdate) {}
 }

@@ -10,6 +10,7 @@
 
 package appeng.client.gui.implementations;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
@@ -39,6 +40,8 @@ import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketNetworkStatusSelected;
 import appeng.util.Platform;
 
 public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
@@ -56,6 +59,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private final String Minus;
     private double totalBytes;
     private double usedBytes;
+    private final int counterNumberGap = 20;
 
     public GuiNetworkStatus(final InventoryPlayer inventoryPlayer, final INetworkTool te) {
         super(new ContainerNetworkStatus(inventoryPlayer, te));
@@ -79,6 +83,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         super.actionPerformed(btn);
 
         final boolean backwards = Mouse.isButtonDown(1);
+        boolean oldConsume = this.isConsume;
 
         if (btn == this.units) {
             if (this.isConsume) {
@@ -93,6 +98,14 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 this.cell.set(AEConfig.instance.selectedCellType());
             } else {
                 this.isConsume = !this.isConsume;
+            }
+        }
+
+        if (oldConsume != this.isConsume) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketNetworkStatusSelected(this.isConsume));
+            } catch (IOException ignored) {
+                // XD
             }
         }
     }
@@ -324,6 +337,10 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 143 + 20,
                 GuiColors.DefaultBlack.getColor());
 
+        this.drawItemRepo();
+    }
+
+    private void drawItemRepo() {
         final int sectionLength = 30;
 
         int x = 0;
@@ -370,7 +387,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                                 + ": "
                                 + Platform.formatPowerLong(refStack.getCountRequestable(), true));
                     }
-
                     toolPosX = x * sectionLength + xo + sectionLength - 8;
                     toolPosY = y * 18 + yo;
                 }
@@ -389,7 +405,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         if (this.tooltip >= 0 && toolTip.length() > 0) {
             this.drawTooltip(toolPosX, toolPosY + 10, 0, toolTip);
         }
-
     }
 
     private GuiColors getCorrespondingColor(final double percentage) {
@@ -397,9 +412,9 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             return GuiColors.DefaultBlack;
         } else {
             if (percentage > 95) {
-                return GuiColors.WarningRed;
+                return GuiColors.CellStatusRed;
             } else if (percentage > 75) {
-                return GuiColors.WarningOrange;
+                return GuiColors.CellStatusOrange;
             } else {
                 return GuiColors.DefaultBlack;
             }
@@ -429,20 +444,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 16,
                 GuiColors.DefaultBlack.getColor());
-        this.fontRendererObj.drawString(
-                GuiText.Green.getLocal() + " : "
-                        + ns.getItemCellG()
-                        + " "
-                        + GuiText.Orange.getLocal()
-                        + " : "
-                        + ns.getItemCellO()
-                        + " "
-                        + GuiText.Red.getLocal()
-                        + " : "
-                        + ns.getItemCellR(),
-                13,
-                26,
-                GuiColors.DefaultBlack.getColor());
+
+        this.drawAllCellCount(ns.getItemCellG(), ns.getItemCellB(), ns.getItemCellO(), ns.getItemCellR());
 
         // Item byte status
         totalBytes = Double.longBitsToDouble(ns.getItemBytesTotal());
@@ -476,6 +479,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143 + 10,
                 getCorrespondingColor(tempDouble).getColor());
+
+        this.drawItemRepo();
     }
 
     private void drawFluidInfo() {
@@ -489,20 +494,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 16,
                 GuiColors.DefaultBlack.getColor());
-        this.fontRendererObj.drawString(
-                GuiText.Green.getLocal() + " : "
-                        + ns.getFluidCellG()
-                        + " "
-                        + GuiText.Orange.getLocal()
-                        + " : "
-                        + ns.getFluidCellO()
-                        + " "
-                        + GuiText.Red.getLocal()
-                        + " : "
-                        + ns.getFluidCellR(),
-                13,
-                26,
-                GuiColors.DefaultBlack.getColor());
+
+        this.drawAllCellCount(ns.getFluidCellG(), ns.getFluidCellB(), ns.getFluidCellO(), ns.getFluidCellR());
 
         // Fluid byte status
         totalBytes = Double.longBitsToDouble(ns.getFluidBytesTotal());
@@ -536,6 +529,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143 + 10,
                 getCorrespondingColor(tempDouble).getColor());
+
+        this.drawItemRepo();
     }
 
     private void drawEssentiaInfo() {
@@ -549,20 +544,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 16,
                 GuiColors.DefaultBlack.getColor());
-        this.fontRendererObj.drawString(
-                GuiText.Green.getLocal() + " : "
-                        + ns.getEssentiaCellG()
-                        + " "
-                        + GuiText.Orange.getLocal()
-                        + " : "
-                        + ns.getEssentiaCellO()
-                        + " "
-                        + GuiText.Red.getLocal()
-                        + " : "
-                        + ns.getEssentiaCellR(),
-                13,
-                26,
-                GuiColors.DefaultBlack.getColor());
+
+        this.drawAllCellCount(
+                ns.getEssentiaCellG(),
+                ns.getEssentiaCellB(),
+                ns.getEssentiaCellO(),
+                ns.getEssentiaCellR());
 
         // Essentia byte status
         totalBytes = Double.longBitsToDouble(ns.getEssentiaBytesTotal());
@@ -596,5 +583,37 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143 + 10,
                 getCorrespondingColor(tempDouble).getColor());
+
+        this.drawItemRepo();
+    }
+
+    private void drawAllCellCount(final long greenCellNum, final long blueCellNum, final long orangeCellNum,
+            final long redCellNum) {
+        this.fontRendererObj
+                .drawString(GuiText.NetworkCellStatus.getLocal() + ":", 13, 27, GuiColors.DefaultBlack.getColor());
+
+        int numStartAt = this.fontRendererObj.getStringWidth(GuiText.NetworkCellStatus.getLocal() + ":") + 20;
+
+        this.fontRendererObj.drawString(
+                String.valueOf(greenCellNum),
+                numStartAt + this.counterNumberGap * 0,
+                27,
+                GuiColors.CellStatusGreen.getColor());
+        this.fontRendererObj.drawString(
+                String.valueOf(blueCellNum),
+                numStartAt + this.counterNumberGap * 1,
+                27,
+                GuiColors.CellStatusBlue.getColor());
+        this.fontRendererObj.drawString(
+                String.valueOf(orangeCellNum),
+                numStartAt + this.counterNumberGap * 2,
+                27,
+                GuiColors.CellStatusOrange.getColor());
+        this.fontRendererObj.drawString(
+                String.valueOf(redCellNum),
+                numStartAt + this.counterNumberGap * 3,
+                27,
+                GuiColors.CellStatusRed.getColor());
+
     }
 }

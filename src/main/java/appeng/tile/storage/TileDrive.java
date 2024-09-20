@@ -36,6 +36,7 @@ import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
+import appeng.api.storage.ICellCacheRegistry;
 import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
@@ -68,8 +69,8 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     /**
      * Masks the part of {@link #state} that contains information
      */
-    private static final int STATE_MASK = 0b111111111111111111111;
-    private static final int STATE_ACTIVE_MASK = 1 << 20;
+    private static final int STATE_MASK = 0b1111111111111111111111111111111;
+    private static final int STATE_ACTIVE_MASK = 1 << 30;
 
     private final int[] sides = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     private final AppEngInternalInventory inv = new AppEngInternalInventory(this, INV_SIZE);
@@ -85,6 +86,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
      * drive.
      */
     private int state = 0;
+    private int type = 0;
     private int priority = 0;
     private boolean wasActive = false;
 
@@ -96,6 +98,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     @TileEvent(TileEventType.NETWORK_WRITE)
     public void writeToStream_TileDrive(final ByteBuf data) {
         data.writeInt(this.state);
+        data.writeInt(this.type);
     }
 
     @Override
@@ -106,7 +109,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     @Override
     public int getCellStatus(final int slot) {
         if (Platform.isClient()) {
-            return (this.state >> (slot * 2)) & 0b11;
+            return (this.state >> (slot * 3)) & 0b111;
         }
 
         final ItemStack cell = this.inv.getStackInSlot(2);
@@ -133,6 +136,33 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     }
 
     @Override
+    public int getCellType(final int slot) {
+        if (Platform.isClient()) {
+            return (this.type >> (slot * 2)) & 0b11;
+        }
+
+        final MEInventoryHandler<IAEItemStack> handler = this.invBySlot[slot];
+        if (handler == null) {
+            return 0;
+        }
+        if (handler.getInternal() instanceof ICellCacheRegistry iccr) {
+            switch (iccr.getCellType()) {
+                case ITEM:
+                    return 0;
+                case FLUID:
+                    return 1;
+                case ESSENTIA:
+                    return 2;
+            }
+        }
+        return 0;
+    }
+
+    public MEInventoryHandler<IAEItemStack> getCellInvBySlot(final int slot) {
+        return this.invBySlot[slot];
+    }
+
+    @Override
     public TickingRequest getTickingRequest(IGridNode node) {
         return new TickingRequest(15, 15, false, false);
     }
@@ -155,8 +185,10 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileDrive(final ByteBuf data) {
         final int oldState = this.state;
+        final int oldType = this.type;
         this.state = data.readInt() & STATE_MASK;
-        return this.state != oldState;
+        this.type = data.readInt();
+        return this.state != oldState || this.type != oldType;
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
@@ -177,6 +209,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
 
     private void recalculateDisplay() {
         int newState = 0;
+        int newType = 0;
         final boolean currentActive = this.getProxy().isActive();
         if (currentActive) {
             newState |= STATE_ACTIVE_MASK;
@@ -192,12 +225,14 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         }
 
         for (int x = 0; x < this.getCellCount(); x++) {
-            newState |= ((this.getCellStatus(x) & 0b11) << (2 * x));
+            newState |= ((this.getCellStatus(x) & 0b111) << (3 * x));
+            newType |= ((this.getCellType(x) & 0b11) << (2 * x));
         }
 
-        if (this.state != newState) {
+        if (this.state != newState || this.type != newType) {
             this.markForUpdate();
             this.state = newState;
+            this.type = newType;
         }
     }
 

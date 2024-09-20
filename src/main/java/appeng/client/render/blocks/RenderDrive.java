@@ -63,81 +63,86 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
         final int b = world
                 .getLightBrightnessForSkyBlocks(x + forward.offsetX, y + forward.offsetY, z + forward.offsetZ, 0);
 
+        int spin = 0;
+
+        switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
+            case 1 -> {
+                switch (up) {
+                    case UP -> spin = 3;
+                    case DOWN -> spin = 1;
+                    case NORTH -> spin = 0;
+                    case SOUTH -> spin = 2;
+                    default -> {}
+                }
+            }
+            case -1 -> {
+                switch (up) {
+                    case UP -> spin = 1;
+                    case DOWN -> spin = 3;
+                    case NORTH -> spin = 0;
+                    case SOUTH -> spin = 2;
+                    default -> {}
+                }
+            }
+            case -2 -> {
+                switch (up) {
+                    case EAST -> spin = 1;
+                    case WEST -> spin = 3;
+                    case NORTH -> spin = 2;
+                    case SOUTH -> spin = 0;
+                    default -> {}
+                }
+            }
+            case 2 -> {
+                switch (up) {
+                    case EAST -> spin = 1;
+                    case WEST -> spin = 3;
+                    case NORTH -> spin = 0;
+                    case SOUTH -> spin = 0;
+                    default -> {}
+                }
+            }
+            case 3 -> {
+                switch (up) {
+                    case UP -> spin = 2;
+                    case DOWN -> spin = 0;
+                    case EAST -> spin = 3;
+                    case WEST -> spin = 1;
+                    default -> {}
+                }
+            }
+            case -3 -> {
+                switch (up) {
+                    case UP -> spin = 2;
+                    case DOWN -> spin = 0;
+                    case EAST -> spin = 1;
+                    case WEST -> spin = 3;
+                    default -> {}
+                }
+            }
+        }
+
         for (int yy = 0; yy < 5; yy++) {
             for (int xx = 0; xx < 2; xx++) {
                 final int stat = sp.getCellStatus(yy * 2 + (1 - xx));
+                final int type = sp.getCellType(yy * 2 + (1 - xx));
 
                 this.selectFace(renderer, west, up, forward, 2 + xx * 7, 7 + xx * 7, 1 + yy * 3, 3 + yy * 3);
-
-                int spin = 0;
-
-                switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
-                    case 1 -> {
-                        switch (up) {
-                            case UP -> spin = 3;
-                            case DOWN -> spin = 1;
-                            case NORTH -> spin = 0;
-                            case SOUTH -> spin = 2;
-                            default -> {}
-                        }
-                    }
-                    case -1 -> {
-                        switch (up) {
-                            case UP -> spin = 1;
-                            case DOWN -> spin = 3;
-                            case NORTH -> spin = 0;
-                            case SOUTH -> spin = 2;
-                            default -> {}
-                        }
-                    }
-                    case -2 -> {
-                        switch (up) {
-                            case EAST -> spin = 1;
-                            case WEST -> spin = 3;
-                            case NORTH -> spin = 2;
-                            case SOUTH -> spin = 0;
-                            default -> {}
-                        }
-                    }
-                    case 2 -> {
-                        switch (up) {
-                            case EAST -> spin = 1;
-                            case WEST -> spin = 3;
-                            case NORTH -> spin = 0;
-                            case SOUTH -> spin = 0;
-                            default -> {}
-                        }
-                    }
-                    case 3 -> {
-                        switch (up) {
-                            case UP -> spin = 2;
-                            case DOWN -> spin = 0;
-                            case EAST -> spin = 3;
-                            case WEST -> spin = 1;
-                            default -> {}
-                        }
-                    }
-                    case -3 -> {
-                        switch (up) {
-                            case UP -> spin = 2;
-                            case DOWN -> spin = 0;
-                            case EAST -> spin = 1;
-                            case WEST -> spin = 3;
-                            default -> {}
-                        }
-                    }
-                }
 
                 double u1 = ico.getInterpolatedU((spin % 4 < 2) ? 1 : 6);
                 double u2 = ico.getInterpolatedU(((spin + 1) % 4 < 2) ? 1 : 6);
                 double u3 = ico.getInterpolatedU(((spin + 2) % 4 < 2) ? 1 : 6);
                 double u4 = ico.getInterpolatedU(((spin + 3) % 4 < 2) ? 1 : 6);
 
-                int m = 1;
-                int mx = 3;
+                // item 1 3
+                // fluid 5 7
+                // essentia 9 11
+                // none 13 15
+                int m = 1 + type * 4;
+                int mx = 3 + type * 4;
                 if (stat == 0) {
-                    m = 4;
-                    mx = 5;
+                    m = 13;
+                    mx = 15;
                 }
 
                 double v1 = ico.getInterpolatedV(((spin + 1) % 4 < 2) ? m : mx);
@@ -334,9 +339,12 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                         Tessellator.instance.setColorOpaque_I(0x00ff00);
                     }
                     if (stat == 2) {
-                        Tessellator.instance.setColorOpaque_I(0xffaa00);
+                        Tessellator.instance.setColorOpaque_I(0x00aaff);
                     }
                     if (stat == 3) {
+                        Tessellator.instance.setColorOpaque_I(0xffaa00);
+                    }
+                    if (stat == 4) {
                         Tessellator.instance.setColorOpaque_I(0xff0000);
                     }
 

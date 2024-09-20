@@ -11,6 +11,7 @@
 package appeng.container.implementations;
 
 import java.io.IOException;
+import java.util.Map.Entry;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -18,7 +19,10 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import com.gtnewhorizon.gtnhlib.util.map.ItemStackMap;
+
 import appeng.api.AEApi;
+import appeng.api.config.CellType;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.networking.IGrid;
@@ -31,6 +35,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
+import appeng.core.AEConfig;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.me.cache.GridStorageCache;
@@ -67,64 +72,74 @@ public class ContainerNetworkStatus extends AEBaseContainer {
     public long itemCellG;
 
     @GuiSync(9)
-    public long itemCellO;
+    public long itemCellB;
 
     @GuiSync(10)
-    public long itemCellR;
+    public long itemCellO;
 
     @GuiSync(11)
-    public long fluidBytesTotal;
+    public long itemCellR;
 
     @GuiSync(12)
-    public long fluidBytesUsed;
+    public long fluidBytesTotal;
 
     @GuiSync(13)
-    public long fluidTypesTotal;
+    public long fluidBytesUsed;
 
     @GuiSync(14)
-    public long fluidTypesUsed;
+    public long fluidTypesTotal;
 
     @GuiSync(15)
-    public long fluidCellG;
+    public long fluidTypesUsed;
 
     @GuiSync(16)
-    public long fluidCellO;
+    public long fluidCellG;
 
     @GuiSync(17)
-    public long fluidCellR;
+    public long fluidCellB;
 
     @GuiSync(18)
-    public long essentiaBytesTotal;
+    public long fluidCellO;
 
     @GuiSync(19)
-    public long essentiaBytesUsed;
+    public long fluidCellR;
 
     @GuiSync(20)
-    public long essentiaTypesTotal;
+    public long essentiaBytesTotal;
 
     @GuiSync(21)
-    public long essentiaTypesUsed;
+    public long essentiaBytesUsed;
 
     @GuiSync(22)
-    public long essentiaCellG;
+    public long essentiaTypesTotal;
 
     @GuiSync(23)
-    public long essentiaCellO;
+    public long essentiaTypesUsed;
 
     @GuiSync(24)
-    public long essentiaCellR;
+    public long essentiaCellG;
 
     @GuiSync(25)
-    public long itemCellCount;
+    public long essentiaCellB;
 
     @GuiSync(26)
-    public long fluidCellCount;
+    public long essentiaCellO;
 
     @GuiSync(27)
+    public long essentiaCellR;
+
+    @GuiSync(28)
+    public long itemCellCount;
+
+    @GuiSync(29)
+    public long fluidCellCount;
+
+    @GuiSync(30)
     public long essentiaCellCount;
 
     private IGrid network;
     private int delay = 40;
+    private boolean isConsume = true;
 
     public ContainerNetworkStatus(final InventoryPlayer ip, final INetworkTool te) {
         super(ip, null, null);
@@ -167,26 +182,46 @@ public class ContainerNetworkStatus extends AEBaseContainer {
 
             try {
                 final PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
+                final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
 
-                for (final Class<? extends IGridHost> machineClass : this.network.getMachinesClasses()) {
-                    final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
-                    for (final IGridNode machine : this.network.getMachines(machineClass)) {
-                        final IGridBlock blk = machine.getGridBlock();
-                        final ItemStack is = blk.getMachineRepresentation();
-                        if (is != null && is.getItem() != null) {
-                            final IAEItemStack ais = AEItemStack.create(is);
-                            ais.setStackSize(1);
-                            ais.setCountRequestable(
-                                    (long) PowerMultiplier.CONFIG.multiply(blk.getIdlePowerUsage() * 100.0));
-                            list.add(ais);
+                // Network machine
+                if (this.isConsume) {
+                    for (final Class<? extends IGridHost> machineClass : this.network.getMachinesClasses()) {
+                        for (final IGridNode machine : this.network.getMachines(machineClass)) {
+                            final IGridBlock blk = machine.getGridBlock();
+                            final ItemStack is = blk.getMachineRepresentation();
+                            if (is != null && is.getItem() != null) {
+                                final IAEItemStack ais = AEItemStack.create(is);
+                                ais.setStackSize(1);
+                                ais.setCountRequestable(
+                                        (long) PowerMultiplier.CONFIG.multiply(blk.getIdlePowerUsage() * 100.0));
+                                list.add(ais);
+                            }
                         }
                     }
 
-                    for (final IAEItemStack ais : list) {
-                        piu.appendItem(ais);
+                } else {
+                    // Networ Cells
+                    final GridStorageCache sg = this.network.getCache(IStorageGrid.class);
+                    CellType selectedCellType = AEConfig.instance.selectedCellType();
+                    ItemStackMap<Integer> cells = switch (selectedCellType) {
+                        case ITEM -> sg.getItemCells();
+                        case FLUID -> sg.getFluidCells();
+                        case ESSENTIA -> sg.getEssentiaCells();
+                    };
+
+                    for (Entry<ItemStack, Integer> set : cells.entrySet()) {
+                        final IAEItemStack ais = AEItemStack.create(set.getKey());
+                        ais.setStackSize(set.getValue());
+                        list.add(ais);
                     }
                 }
 
+                for (final IAEItemStack ais : list) {
+                    piu.appendItem(ais);
+                }
+
+                // Send packet
                 for (final Object c : this.crafters) {
                     if (c instanceof EntityPlayer) {
                         NetworkHandler.instance.sendTo(piu, (EntityPlayerMP) c);
@@ -195,11 +230,13 @@ public class ContainerNetworkStatus extends AEBaseContainer {
             } catch (final IOException e) {
                 // :P
             }
+
             final GridStorageCache sg = this.network.getCache(IStorageGrid.class);
             if (sg != null) {
                 this.itemBytesUsed = Double.doubleToLongBits(sg.getItemBytesUsed());
                 this.itemBytesTotal = Double.doubleToLongBits(sg.getItemBytesTotal());
                 this.itemCellG = sg.getItemCellG();
+                this.itemCellB = sg.getItemCellB();
                 this.itemCellO = sg.getItemCellO();
                 this.itemCellR = sg.getItemCellR();
                 this.itemCellCount = sg.getItemCellCount();
@@ -209,6 +246,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
                 this.fluidBytesUsed = Double.doubleToLongBits(sg.getFluidBytesUsed());
                 this.fluidBytesTotal = Double.doubleToLongBits(sg.getFluidBytesTotal());
                 this.fluidCellG = sg.getFluidCellG();
+                this.fluidCellB = sg.getFluidCellB();
                 this.fluidCellO = sg.getFluidCellO();
                 this.fluidCellR = sg.getFluidCellR();
                 this.fluidCellCount = sg.getFluidCellCount();
@@ -218,6 +256,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
                 this.essentiaBytesUsed = Double.doubleToLongBits(sg.getEssentiaBytesUsed());
                 this.essentiaBytesTotal = Double.doubleToLongBits(sg.getEssentiaBytesTotal());
                 this.essentiaCellG = sg.getEssentiaCellG();
+                this.essentiaCellB = sg.getEssentiaCellB();
                 this.essentiaCellO = sg.getEssentiaCellO();
                 this.essentiaCellR = sg.getEssentiaCellR();
                 this.essentiaCellCount = sg.getEssentiaCellCount();
@@ -226,6 +265,10 @@ public class ContainerNetworkStatus extends AEBaseContainer {
             }
         }
         super.detectAndSendChanges();
+    }
+
+    public void setConsume(boolean isConsume) {
+        this.isConsume = isConsume;
     }
 
     public long getCurrentPower() {
@@ -280,6 +323,10 @@ public class ContainerNetworkStatus extends AEBaseContainer {
         return itemCellG;
     }
 
+    public long getItemCellB() {
+        return itemCellB;
+    }
+
     public long getItemCellO() {
         return itemCellO;
     }
@@ -308,6 +355,10 @@ public class ContainerNetworkStatus extends AEBaseContainer {
         return fluidCellG;
     }
 
+    public long getFluidCellB() {
+        return fluidCellB;
+    }
+
     public long getFluidCellO() {
         return fluidCellO;
     }
@@ -334,6 +385,10 @@ public class ContainerNetworkStatus extends AEBaseContainer {
 
     public long getEssentiaCellG() {
         return essentiaCellG;
+    }
+
+    public long getEssentiaCellB() {
+        return essentiaCellB;
     }
 
     public long getEssentiaCellO() {

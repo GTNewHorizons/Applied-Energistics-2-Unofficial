@@ -88,11 +88,13 @@ public interface ICellHandler {
     /**
      * 0 - cell is missing.
      * <p>
-     * 1 - green, ( usually means available room for types or items. )
+     * 1 - green, ( usually means the cell is 100% free )
      * <p>
-     * 2 - orange, ( usually means available room for items, but not types. )
+     * 2 - blue, ( usually means available room for types or items. )
      * <p>
-     * 3 - red, ( usually means the cell is 100% full )
+     * 3 - orange, ( usually means available room for items, but not types. )
+     * <p>
+     * 4 - red, ( usually means the cell is 100% full )
      *
      * @param is      the cell item. ( use the handler for any details you can )
      * @param handler the handler for the cell is provides for reference, you can cast this to your handler.

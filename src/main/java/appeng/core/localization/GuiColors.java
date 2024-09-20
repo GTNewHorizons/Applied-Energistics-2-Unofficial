@@ -147,8 +147,10 @@ public enum GuiColors {
     MEMonitorableTitle(0x404040),
     MEMonitorableInventory(0x404040),
     DefaultBlack(0x404040),
-    WarningOrange(0xFBA900),
-    WarningRed(0xFB0000);
+    CellStatusOrange(0xFBA900),
+    CellStatusRed(0xFB0000),
+    CellStatusBlue(0x00AAFF),
+    CellStatusGreen(0x00FF00);
 
     private final String root;
     private final int color;

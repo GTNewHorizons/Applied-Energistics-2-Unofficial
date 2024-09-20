@@ -57,6 +57,7 @@ import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
+import appeng.api.storage.ICellCacheRegistry;
 import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.ICellWorkbenchItem;
@@ -105,6 +106,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
      * state of the cell, the 3rd bit represents the active status of the chest.
      */
     private int state = 0;
+    private int type = 0;
     private boolean wasActive = false;
     private AEColor paintedColor = AEColor.Transparent;
     private boolean isCached = false;
@@ -142,13 +144,15 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
     private void recalculateDisplay() {
         int newState = 0;
+        int newType = 0;
 
         for (int x = 0; x < this.getCellCount(); x++) {
-            newState |= (this.getCellStatus(x) << (2 * x));
+            newState |= (this.getCellStatus(x) << (3 * x));
+            newType |= (this.getCellType(x) << (2 * x));
         }
 
         if (this.isPowered()) {
-            newState |= 0b100;
+            newState |= 0b1000;
         }
 
         final boolean currentActive = this.getProxy().isActive();
@@ -161,9 +165,10 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             }
         }
 
-        if (newState != this.state) {
+        if (this.state != newState || this.type != newType) {
             this.markForUpdate();
             this.state = newState;
+            this.type = newType;
         }
     }
 
@@ -258,7 +263,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @Override
     public int getCellStatus(final int slot) {
         if (Platform.isClient()) {
-            return (this.state >> (slot * 2)) & 0b11;
+            return (this.state >> (slot * 3)) & 0b111;
         }
 
         final ItemStack cell = this.inv.getStackInSlot(1);
@@ -284,9 +289,46 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     }
 
     @Override
+    public int getCellType(final int slot) {
+        if (Platform.isClient()) {
+            return (this.type >> (slot * 2)) & 0b11;
+        }
+
+        final ItemStack cell = this.inv.getStackInSlot(1);
+        final ICellHandler ch = AEApi.instance().registries().cell().getHandler(cell);
+        ChestMonitorHandler tempCMH = null;
+        if (ch != null) {
+            try {
+                final IMEInventoryHandler handler = this.getHandler(StorageChannel.ITEMS);
+                if (handler instanceof ChestMonitorHandler CMH) {
+                    tempCMH = CMH;
+                }
+            } catch (final ChestNoHandler ignored) {}
+            try {
+                final IMEInventoryHandler handler = this.getHandler(StorageChannel.FLUIDS);
+                if (handler instanceof ChestMonitorHandler CMH) {
+                    tempCMH = CMH;
+                }
+            } catch (final ChestNoHandler ignored) {}
+            if (tempCMH != null && tempCMH.getInternalHandler() instanceof ICellCacheRegistry iccr) {
+                switch (iccr.getCellType()) {
+                    case ITEM:
+                        return 0;
+                    case FLUID:
+                        return 1;
+                    case ESSENTIA:
+                        return 2;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    @Override
     public boolean isPowered() {
         if (Platform.isClient()) {
-            return (this.state & 0b100) == 0b100;
+            return (this.state & 0b1000) == 0b1000;
         }
 
         boolean gridPowered = this.getAECurrentPower() > 64;
@@ -329,14 +371,14 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         try {
             if (!this.getProxy().getEnergy().isNetworkPowered()) {
                 final double powerUsed = this.extractAEPower(idleUsage, Actionable.MODULATE, PowerMultiplier.CONFIG); // drain
-                if (powerUsed + 0.1 >= idleUsage != (this.state & 0b100) > 0) {
+                if (powerUsed + 0.1 >= idleUsage != (this.state & 0b1000) > 0) {
                     this.recalculateDisplay();
                 }
             }
         } catch (final GridAccessException e) {
             final double powerUsed = this
                     .extractAEPower(this.getProxy().getIdlePowerUsage(), Actionable.MODULATE, PowerMultiplier.CONFIG); // drain
-            if (powerUsed + 0.1 >= idleUsage != (this.state & 0b100) > 0) {
+            if (powerUsed + 0.1 >= idleUsage != (this.state & 0b1000) > 0) {
                 this.recalculateDisplay();
             }
         }
@@ -349,6 +391,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @TileEvent(TileEventType.NETWORK_WRITE)
     public void writeToStream_TileChest(final ByteBuf data) {
         data.writeByte(this.state);
+        data.writeByte(this.type);
         data.writeByte(this.paintedColor.ordinal());
 
         final ItemStack is = this.inv.getStackInSlot(1);
@@ -363,9 +406,11 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileChest(final ByteBuf data) {
         final int oldState = this.state;
+        final int oldTypes = this.type;
         final ItemStack oldType = this.storageType;
 
-        this.state = data.readByte() & 0b111;
+        this.state = data.readByte() & 0b1111;
+        this.type = data.readByte() & 0b11;
         final AEColor oldPaintedColor = this.paintedColor;
         this.paintedColor = AEColor.values()[data.readByte()];
 
@@ -378,6 +423,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         }
 
         return oldPaintedColor != this.paintedColor || this.state != oldState
+                || this.type != oldTypes
                 || !Platform.isSameItemPrecise(oldType, this.storageType);
     }
 

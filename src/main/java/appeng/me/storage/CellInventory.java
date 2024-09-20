@@ -540,12 +540,15 @@ public class CellInventory implements ICellInventory {
 
     @Override
     public int getStatusForCell() {
-        if (this.canHoldNewItem()) {
+        if (this.getStoredItemCount() == 0) {
             return 1;
         }
-        if (this.getRemainingItemCount() > 0) {
+        if (this.canHoldNewItem()) {
             return 2;
         }
-        return 3;
+        if (this.getRemainingItemCount() > 0) {
+            return 3;
+        }
+        return 4;
     }
 }
