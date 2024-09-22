@@ -1518,4 +1518,51 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         private long value;
     }
+
+    private static class CraftNotification {
+
+        private ItemStack finalOutput;
+        private long outputsCount;
+        private long elapsedTime;
+
+        public CraftNotification() {
+            this.finalOutput = null;
+            this.outputsCount = 0L;
+            this.elapsedTime = 0L;
+        }
+
+        public CraftNotification(ItemStack finalOutput, long outputsCount, long elapsedTime) {
+            this.finalOutput = finalOutput;
+            this.outputsCount = outputsCount;
+            this.elapsedTime = elapsedTime;
+        }
+
+        public IChatComponent createMessage() {
+            final String elapsedTimeText = DurationFormatUtils.formatDuration(
+                    TimeUnit.MILLISECONDS.convert(this.elapsedTime, TimeUnit.NANOSECONDS),
+                    GuiText.ETAFormat.getLocal());
+            return PlayerMessages.FinishCraftingRemind.get(
+                    new ChatComponentText(EnumChatFormatting.GREEN + String.valueOf(this.outputsCount)),
+                    this.finalOutput.func_151000_E(),
+                    new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText));
+        }
+
+        public void readFromNBT(NBTTagCompound tag) {
+            if (tag.hasKey("finalOutput")) {
+                this.finalOutput = ItemStack.loadItemStackFromNBT(tag.getCompoundTag("finalOutput"));
+            }
+            this.outputsCount = tag.getLong("outputsCount");
+            this.elapsedTime = tag.getLong("elapsedTime");
+        }
+
+        public void writeToNBT(NBTTagCompound tag) {
+            if (this.finalOutput != null) {
+                NBTTagCompound finalOutputTag = new NBTTagCompound();
+                this.finalOutput.writeToNBT(finalOutputTag);
+                tag.setTag("finalOutput", finalOutputTag);
+            }
+            tag.setLong("outputsCount", this.outputsCount);
+            tag.setLong("elapsedTime", this.elapsedTime);
+        }
+    }
 }
