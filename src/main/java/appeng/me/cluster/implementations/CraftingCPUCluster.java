@@ -150,25 +150,27 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private long remainingItemCount;
     private long numsOfOutput;
 
+    private final Map<String, List<CraftNotification>> unreadNotifications = new HashMap<>();
+
     private final List<CraftCompleteListener> defaultOnComplete = Arrays
             .asList((finalOutput, numsOfOutput, elapsedTime) -> {
                 if (!this.playersFollowingCurrentCraft.isEmpty()) {
-                    final String elapsedTimeText = DurationFormatUtils.formatDuration(
-                            TimeUnit.MILLISECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS),
-                            GuiText.ETAFormat.getLocal());
-
-                    final IChatComponent messageWaitToSend = PlayerMessages.FinishCraftingRemind.get(
-                            new ChatComponentText(EnumChatFormatting.GREEN + String.valueOf(numsOfOutput)),
-                            finalOutput.func_151000_E(),
-                            new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText));
+                    final CraftNotification notification = new CraftNotification(
+                            finalOutput,
+                            numsOfOutput,
+                            elapsedTime);
+                    final IChatComponent messageToSend = notification.createMessage();
 
                     for (String playerName : this.playersFollowingCurrentCraft) {
                         // Get each EntityPlayer
                         EntityPlayer player = getPlayerByName(playerName);
                         if (player != null) {
                             // Send message to player
-                            player.addChatMessage(messageWaitToSend);
+                            player.addChatMessage(messageToSend);
                             player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
+                        } else {
+                            this.unreadNotifications.computeIfAbsent(playerName, name -> new ArrayList<>())
+                                    .add(notification);
                         }
                     }
                 }
@@ -1231,6 +1233,23 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             data.setTag("playerNameList", nbtTagList);
         }
 
+        if (!this.unreadNotifications.isEmpty()) {
+            NBTTagList unreadNotificationsTag = new NBTTagList();
+            for (Entry<String, List<CraftNotification>> entry : this.unreadNotifications.entrySet()) {
+                NBTTagList notificationsTag = new NBTTagList();
+                for (CraftNotification notification : entry.getValue()) {
+                    NBTTagCompound tag = new NBTTagCompound();
+                    notification.writeToNBT(tag);
+                    notificationsTag.appendTag(tag);
+                }
+                NBTTagCompound playerTag = new NBTTagCompound();
+                playerTag.setString("playerName", entry.getKey());
+                playerTag.setTag("notifications", notificationsTag);
+                unreadNotificationsTag.appendTag(playerTag);
+            }
+            data.setTag("unreadNotifications", unreadNotificationsTag);
+        }
+
         if (this.myLastLink != null) {
             final NBTTagCompound link = new NBTTagCompound();
             this.myLastLink.writeToNBT(link);
@@ -1374,6 +1393,24 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         } catch (IOException | ClassNotFoundException e) {
             // should not affect normal persistence even if there's mistake here.
             AELog.error(e, "Could not load notification listeners from NBT");
+        }
+
+        if (data.getTag("unreadNotifications") instanceof NBTTagList unreadNotificationsTag) {
+            for (int i = 0; i < unreadNotificationsTag.tagCount(); i++) {
+                NBTTagCompound playerTag = unreadNotificationsTag.getCompoundTagAt(i);
+                String playerName = playerTag.getString("playerName");
+                List<CraftNotification> notifications = new ArrayList<>();
+                if (playerTag.getTag("notifications") instanceof NBTTagList notificationsTag) {
+                    for (int j = 0; j < notificationsTag.tagCount(); j++) {
+                        final CraftNotification notification = new CraftNotification();
+                        notification.readFromNBT(notificationsTag.getCompoundTagAt(j));
+                        notifications.add(notification);
+                    }
+                }
+                if (!notifications.isEmpty()) {
+                    this.unreadNotifications.put(playerName, notifications);
+                }
+            }
         }
     }
 
