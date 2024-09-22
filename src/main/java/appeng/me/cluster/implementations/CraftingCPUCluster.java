@@ -150,35 +150,34 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private long remainingItemCount;
     private long numsOfOutput;
 
-    private List<CraftCompleteListener> defaultOnComplete = Arrays.asList((finalOutput, numsOfOutput, elapsedTime) -> {
-        if (!this.playersFollowingCurrentCraft.isEmpty()) {
-            final String elapsedTimeText = DurationFormatUtils.formatDuration(
-                    TimeUnit.MILLISECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS),
-                    GuiText.ETAFormat.getLocal());
+    private final List<CraftCompleteListener> defaultOnComplete = Arrays
+            .asList((finalOutput, numsOfOutput, elapsedTime) -> {
+                if (!this.playersFollowingCurrentCraft.isEmpty()) {
+                    final String elapsedTimeText = DurationFormatUtils.formatDuration(
+                            TimeUnit.MILLISECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS),
+                            GuiText.ETAFormat.getLocal());
 
-            final IChatComponent messageWaitToSend = PlayerMessages.FinishCraftingRemind.get(
-                    new ChatComponentText(EnumChatFormatting.GREEN + String.valueOf(numsOfOutput)),
-                    finalOutput.func_151000_E(),
-                    new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText));
+                    final IChatComponent messageWaitToSend = PlayerMessages.FinishCraftingRemind.get(
+                            new ChatComponentText(EnumChatFormatting.GREEN + String.valueOf(numsOfOutput)),
+                            finalOutput.func_151000_E(),
+                            new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText));
 
-            for (String playerName : this.playersFollowingCurrentCraft) {
-                // Get each EntityPlayer
-                EntityPlayer player = getPlayerByName(playerName);
-                if (player != null) {
-                    // Send message to player
-                    player.addChatMessage(messageWaitToSend);
-                    player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
+                    for (String playerName : this.playersFollowingCurrentCraft) {
+                        // Get each EntityPlayer
+                        EntityPlayer player = getPlayerByName(playerName);
+                        if (player != null) {
+                            // Send message to player
+                            player.addChatMessage(messageWaitToSend);
+                            player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
+                        }
+                    }
                 }
-            }
-        }
-    });
+            });
 
     private List<CraftCompleteListener> craftCompleteListeners = initializeDefaultOnCompleteListener();
-
-    private List<CraftUpdateListener> craftUpdateListeners = new ArrayList<>();
-
-    private List<CraftCancelListener> onCancelListeners = new ArrayList<>();
-    private List<String> playersFollowingCurrentCraft = new ArrayList<>();
+    private final List<CraftUpdateListener> craftUpdateListeners = new ArrayList<>();
+    private final List<CraftCancelListener> craftCancelListeners = new ArrayList<>();
+    private final List<String> playersFollowingCurrentCraft = new ArrayList<>();
 
     public CraftingCPUCluster(final WorldCoord min, final WorldCoord max) {
         this.min = min;
@@ -209,7 +208,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     @Override
     public void addOnCancelListener(CraftCancelListener onCancelListener) {
-        this.onCancelListeners.add(onCancelListener);
+        this.craftCancelListeners.add(onCancelListener);
     }
 
     @Override
@@ -487,8 +486,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.isComplete = true;
         this.playersFollowingCurrentCraft.clear();
         this.craftCompleteListeners = initializeDefaultOnCompleteListener();
-        this.onCancelListeners.clear(); // complete listener will clean external state
-                                        // so cancel listener is not called here.
+        this.craftCancelListeners.clear(); // complete listener will clean external state
+                                           // so cancel listener is not called here.
         this.craftUpdateListeners.clear();
     }
 
@@ -612,10 +611,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.finalOutput = null;
         this.updateCPU();
         this.craftCompleteListeners = initializeDefaultOnCompleteListener();
-        for (Runnable onCancelListener : this.onCancelListeners) {
+        for (Runnable onCancelListener : this.craftCancelListeners) {
             onCancelListener.run();
         }
-        this.onCancelListeners.clear();
+        this.craftCancelListeners.clear();
         this.craftUpdateListeners.clear();
         this.storeItems(); // marks dirty
     }
@@ -909,7 +908,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.playersFollowingCurrentCraft.clear();
 
             if (ci.commit(src)) {
-                onCancelListeners.clear();
+                craftCancelListeners.clear();
                 craftUpdateListeners.clear();
                 craftCompleteListeners = initializeDefaultOnCompleteListener(); // clear all possible listeners
                 // when it comes to a new craft,
@@ -1217,11 +1216,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         data.setLong("numsOfOutput", this.numsOfOutput);
         try {
             data.setTag("craftCompleteListeners", persistListeners(1, craftCompleteListeners));
-            data.setTag("onCancelListeners", persistListeners(0, onCancelListeners));
+            data.setTag("onCancelListeners", persistListeners(0, craftCancelListeners));
             data.setTag("craftStatusListeners", persistListeners(0, craftUpdateListeners));
         } catch (IOException e) {
             // should not affect normal persistence even if there's mistake here.
-            e.printStackTrace();
+            AELog.error(e, "Could not save notification listeners to NBT");
         }
 
         if (!this.playersFollowingCurrentCraft.isEmpty()) {
@@ -1354,7 +1353,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.numsOfOutput = data.getLong("numsOfOutput");
 
         NBTBase tag = data.getTag("playerNameList");
-        if (tag != null && tag instanceof NBTTagList ntl) {
+        if (tag instanceof NBTTagList ntl) {
             this.playersFollowingCurrentCraft.clear();
             for (int index = 0; index < ntl.tagCount(); index++) {
                 this.playersFollowingCurrentCraft.add(ntl.getStringTagAt(index));
@@ -1370,11 +1369,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
         try {
             unpersistListeners(1, craftCompleteListeners, data.getCompoundTag("craftCompleteListeners"));
-            unpersistListeners(0, onCancelListeners, data.getCompoundTag("onCancelListeners"));
+            unpersistListeners(0, craftCancelListeners, data.getCompoundTag("onCancelListeners"));
             unpersistListeners(0, craftUpdateListeners, data.getCompoundTag("craftStatusListeners"));
         } catch (IOException | ClassNotFoundException e) {
             // should not affect normal persistence even if there's mistake here.
-            e.printStackTrace();
+            AELog.error(e, "Could not load notification listeners from NBT");
         }
     }
 
@@ -1477,13 +1476,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return playersFollowingCurrentCraft;
     }
 
-    public boolean togglePlayerFollowStatus(final String name) {
+    public void togglePlayerFollowStatus(final String name) {
         if (this.playersFollowingCurrentCraft.contains(name)) {
             this.playersFollowingCurrentCraft.remove(name);
-            return true;
         } else {
             this.playersFollowingCurrentCraft.add(name);
-            return false;
         }
     }
 
