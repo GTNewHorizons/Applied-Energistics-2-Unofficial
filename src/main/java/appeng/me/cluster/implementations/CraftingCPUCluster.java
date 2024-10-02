@@ -108,6 +108,8 @@ import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 
 public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
@@ -186,6 +188,20 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.max = max;
     }
 
+    @SubscribeEvent
+    public void onPlayerLogIn(PlayerLoggedInEvent event) {
+        final EntityPlayer player = event.player;
+        final String playerName = player.getCommandSenderName();
+        if (this.unreadNotifications.containsKey(playerName)) {
+            List<CraftNotification> notifications = this.unreadNotifications.get(playerName);
+            for (CraftNotification notification : notifications) {
+                player.addChatMessage(notification.createMessage());
+            }
+            player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
+            this.unreadNotifications.remove(playerName);
+        }
+    }
+
     @Override
     public IAEItemStack getFinalOutput() {
         return finalOutput;
@@ -251,6 +267,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             return;
         }
         this.isDestroyed = true;
+
+        FMLCommonHandler.instance().bus().unregister(this);
 
         boolean posted = false;
 
@@ -997,7 +1015,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         } catch (Exception ex) {
             AELog.error(ex, "Could not notify player of crafting failure");
         }
-        // AELog.error( e );
     }
 
     public ICraftingLink mergeJob(final IGrid g, final ICraftingJob job, final BaseActionSource src) {
@@ -1312,6 +1329,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         this.updateCPU();
         this.updateName();
+
     }
 
     private <T> void unpersistListeners(int from, List<T> toAdd, NBTTagCompound tagCompound)
