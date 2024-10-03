@@ -109,12 +109,12 @@ public abstract class AEBaseMEGui extends AEBaseGui implements IGuiTooltipHandle
                                     + NumberFormat.getNumberInstance(Locale.US).format(myStack.getCountRequestable()));
                 }
 
-                this.drawTooltip(x, y, 0, join(currentToolTip, "\n"));
+                this.drawTooltip(x, y, currentToolTip.toArray(new String[0]));
             } else if (stack.stackSize > BigNumber) {
                 final List<String> var4 = stack
                         .getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
                 var4.add("Items Stored: " + NumberFormat.getNumberInstance(Locale.US).format(stack.stackSize));
-                this.drawTooltip(x, y, 0, join(var4, "\n"));
+                this.drawTooltip(x, y, var4.toArray(new String[0]));
                 return;
             }
         }

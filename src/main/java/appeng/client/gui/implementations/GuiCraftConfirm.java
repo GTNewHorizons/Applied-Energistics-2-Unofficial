@@ -321,12 +321,12 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 == DisplayMode.LIST);
         this.takeScreenshot.visible = (displayMode == DisplayMode.TREE);
 
-        super.drawScreen(mouseX, mouseY, btn);
-
         switch (displayMode) {
             case LIST -> drawListScreen(mouseX, mouseY, btn);
             case TREE -> drawTreeScreen(mouseX, mouseY, btn);
         }
+
+        super.drawScreen(mouseX, mouseY, btn);
     }
 
     private void drawListScreen(final int mouseX, final int mouseY, final float btn) {
@@ -605,18 +605,18 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         }
 
         if (this.tooltip >= 0 && !dspToolTip.isEmpty()) {
-            this.drawTooltip(toolPosX, toolPosY + 10, 0, dspToolTip);
+            this.drawTooltip(toolPosX, toolPosY + 10, dspToolTip);
         }
     }
 
     private void drawTreeFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         final CraftingJobV2 jobTree = this.jobTree;
         if (jobTree == null) {
-            this.drawTooltip(16, 48, 0, GuiText.NoCraftingTreeReceived.getLocal());
+            this.drawTooltip(16, 48, GuiText.NoCraftingTreeReceived.getLocal());
             return;
         }
         if (jobTree.getOutput() == null) {
-            this.drawTooltip(16, 48, 0, GuiText.Nothing.getLocal());
+            this.drawTooltip(16, 48, GuiText.Nothing.getLocal());
             return;
         }
 

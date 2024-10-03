@@ -592,9 +592,9 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
-        super.drawScreen(mouseX, mouseY, btn);
-
         handleTooltip(mouseX, mouseY, searchField);
+
+        super.drawScreen(mouseX, mouseY, btn);
     }
 
     public boolean isOverTextField(final int mousex, final int mousey) {

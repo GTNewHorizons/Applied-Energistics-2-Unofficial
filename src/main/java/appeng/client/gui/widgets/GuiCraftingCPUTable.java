@@ -222,7 +222,7 @@ public class GuiCraftingCPUTable {
                 tooltip.append('\n');
             }
             if (tooltip.length() > 0) {
-                parent.drawTooltip(mouseX - offsetX, mouseY - offsetY, 0, tooltip.toString());
+                parent.drawTooltip(mouseX - offsetX, mouseY - offsetY, tooltip.toString());
             }
         }
     }

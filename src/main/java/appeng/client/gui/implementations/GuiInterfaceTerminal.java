@@ -307,11 +307,11 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         terminalStyleBox.set(AEConfig.instance.settings.getSetting(Settings.TERMINAL_STYLE));
 
-        super.drawScreen(mouseX, mouseY, btn);
-
         handleTooltip(mouseX, mouseY, searchFieldInputs);
         handleTooltip(mouseX, mouseY, searchFieldOutputs);
         handleTooltip(mouseX, mouseY, searchFieldNames);
+
+        super.drawScreen(mouseX, mouseY, btn);
     }
 
     @Override

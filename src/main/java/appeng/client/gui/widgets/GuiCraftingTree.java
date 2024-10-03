@@ -130,7 +130,7 @@ public class GuiCraftingTree {
             if (tooltip == null) {
                 tooltip = request.getTooltipText();
             }
-            parent.drawTooltip(mouseX, mouseY, 0, tooltip);
+            parent.drawTooltip(mouseX, mouseY, tooltip);
         }
     }
 
@@ -181,7 +181,7 @@ public class GuiCraftingTree {
             if (tooltip == null) {
                 tooltip = resolver.task.getTooltipText();
             }
-            parent.drawTooltip(mouseX, mouseY, 0, tooltip);
+            parent.drawTooltip(mouseX, mouseY, tooltip);
         }
     }
 
