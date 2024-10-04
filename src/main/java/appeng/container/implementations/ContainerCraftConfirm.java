@@ -251,7 +251,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         return h.getActionableNode().getGrid();
     }
 
-    private IAEItemStack getItemToCraft() {
+    public IAEItemStack getItemToCraft() {
         try {
             ByteBuf deserialized = Unpooled.wrappedBuffer(serializedItemToCraft.getBytes(StandardCharsets.ISO_8859_1));
             return AEApi.instance().storage().readItemFromPacket(deserialized);

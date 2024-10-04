@@ -970,7 +970,13 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 missing.add(iaeItemStack.getItemStack());
             }
 
-            NEI.instance.addToBookmark(jobTree.getOutput().getItemStack(), missing);
+            final IAEItemStack outputStack = ((ContainerCraftConfirm) this.inventorySlots).getItemToCraft();
+
+            if (outputStack != null) {
+                NEI.instance.addToBookmark(outputStack.getItemStack(), missing);
+            } else {
+                NEI.instance.addToBookmark(null, missing);
+            }
         }
     }
 
