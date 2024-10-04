@@ -259,10 +259,14 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         ItemsGrid grid = LayoutManager.bookmarkPanel.getGrid();
         grid.setPage(grid.getNumPages() - 1);
 
-        BookmarkRecipe recipe = new BookmarkRecipe(output);
-        recipe.recipeId = new BookmarkRecipeId("craft-confirm", missing);
-        recipe.ingredients = missing;
+        if (output != null) {
+            BookmarkRecipe recipe = new BookmarkRecipe(output);
+            recipe.recipeId = new BookmarkRecipeId("craft-confirm", missing);
+            recipe.ingredients = missing;
 
-        LayoutManager.bookmarkPanel.addBookmarkGroup(Arrays.asList(recipe), BookmarkViewMode.TODO_LIST, false);
+            LayoutManager.bookmarkPanel.addBookmarkGroup(Arrays.asList(recipe), BookmarkViewMode.TODO_LIST, false);
+        } else {
+            LayoutManager.bookmarkPanel.addBookmarkGroup(missing, BookmarkViewMode.DEFAULT);
+        }
     }
 }
