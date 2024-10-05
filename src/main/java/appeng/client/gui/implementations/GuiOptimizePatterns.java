@@ -149,8 +149,6 @@ public class GuiOptimizePatterns extends AEBaseGui implements IGuiTooltipHandler
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float btn) {
-        super.drawScreen(mouseX, mouseY, btn);
-
         final int gx = (this.width - this.xSize) / 2;
         final int gy = (this.height - this.ySize) / 2;
 
@@ -178,6 +176,7 @@ public class GuiOptimizePatterns extends AEBaseGui implements IGuiTooltipHandler
             }
         }
 
+        super.drawScreen(mouseX, mouseY, btn);
     }
 
     @Override
@@ -318,7 +317,7 @@ public class GuiOptimizePatterns extends AEBaseGui implements IGuiTooltipHandler
         }
 
         if (this.tooltip >= 0 && !dspToolTip.isEmpty()) {
-            this.drawTooltip(toolPosX, toolPosY + 10, 0, dspToolTip);
+            this.drawTooltip(toolPosX, toolPosY + 10, dspToolTip);
         }
     }
 

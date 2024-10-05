@@ -277,8 +277,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             }
         }
 
-        super.drawScreen(mouseX, mouseY, btn);
         this.handleTooltip(mouseX, mouseY, remainingOperations);
+        super.drawScreen(mouseX, mouseY, btn);
     }
 
     private void updateRemainingOperations() {
@@ -464,7 +464,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         }
 
         if (this.tooltip >= 0 && dspToolTip.length() > 0) {
-            this.drawTooltip(toolPosX, toolPosY + 10, 0, dspToolTip);
+            this.drawTooltip(toolPosX, toolPosY + 10, dspToolTip);
         }
     }
 

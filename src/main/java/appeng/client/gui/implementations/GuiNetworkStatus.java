@@ -232,7 +232,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             } catch (final Throwable ignore) {}
 
             if (myStack != null) {
-                final List currentToolTip = stack
+                final List<String> currentToolTip = stack
                         .getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
 
                 while (currentToolTip.size() > 1) {
@@ -246,7 +246,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                         GuiText.EnergyDrain.getLocal() + ": "
                                 + Platform.formatPowerLong(myStack.getCountRequestable(), true));
 
-                this.drawTooltip(x, y, 0, join(currentToolTip, "\n"));
+                this.drawTooltip(x, y, currentToolTip.toArray(new String[0]));
             }
         }
         // super.drawItemStackTooltip( stack, x, y );
@@ -403,7 +403,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         }
 
         if (this.tooltip >= 0 && toolTip.length() > 0) {
-            this.drawTooltip(toolPosX, toolPosY + 10, 0, toolTip);
+            this.drawTooltip(toolPosX, toolPosY + 10, toolTip);
         }
     }
 

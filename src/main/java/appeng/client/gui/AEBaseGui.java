@@ -13,6 +13,7 @@ package appeng.client.gui;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -23,7 +24,6 @@ import java.util.concurrent.TimeUnit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -32,6 +32,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -80,11 +81,55 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
+import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.guihook.GuiContainerManager;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 
 public abstract class AEBaseGui extends GuiContainer {
+
+    private static class AEGuiTooltip {
+
+        private int shiftX = 0;
+        private int shiftY = 0;
+
+        private int x = 0;
+        private int y = 0;
+        public String[] lines = null;
+
+        public void set(final int x, final int y, final String message) {
+            set(x, y, message != null && !message.isEmpty() ? message.split("\n") : null);
+        }
+
+        public void set(final int x, final int y, final String[] lines) {
+            this.lines = lines;
+            this.x = this.shiftX + x;
+            this.y = this.shiftY + y;
+        }
+
+        public void shift(int shiftX, int shiftY) {
+            this.shiftX = shiftX;
+            this.shiftY = shiftY;
+        }
+
+        public void draw() {
+            if (!isEmpty()) {
+                List<String> list = new ArrayList<>();
+                list.add(this.lines[0] + GuiDraw.TOOLTIP_LINESPACE);
+
+                for (int i = 1; i < this.lines.length; i++) {
+                    list.add(EnumChatFormatting.GRAY + this.lines[i].replace("\u00a0", " "));
+                }
+
+                GuiDraw.drawMultilineTip(this.x + 12, this.y - 12, list);
+                this.lines = null;
+            }
+        }
+
+        public boolean isEmpty() {
+            return this.lines == null || this.lines.length == 0;
+        }
+    }
 
     private static boolean switchingGuis;
     private final List<InternalSlotME> meSlots = new LinkedList<>();
@@ -92,6 +137,7 @@ public abstract class AEBaseGui extends GuiContainer {
     private final Set<Slot> drag_click = new HashSet<>();
     public static final AppEngRenderItem aeRenderItem = new AppEngRenderItem();
     public static final TranslatedRenderItem translatedRenderItem = new TranslatedRenderItem();
+    private final AEGuiTooltip currentToolTip = new AEGuiTooltip();
     private GuiScrollbar scrollBar = null;
     private boolean disableShiftClick = false;
     private Stopwatch dbl_clickTimer = Stopwatch.createStarted();
@@ -129,7 +175,7 @@ public abstract class AEBaseGui extends GuiContainer {
         super.initGui();
 
         final List<Slot> slots = this.getInventorySlots();
-        slots.removeIf(slot -> slot instanceof SlotME);
+        slots.removeIf(SlotME.class::isInstance);
 
         for (final InternalSlotME me : this.meSlots) {
             slots.add(new SlotME(me));
@@ -150,115 +196,37 @@ public abstract class AEBaseGui extends GuiContainer {
                 handleTooltip(mouseX, mouseY, (ITooltip) c);
             }
         }
+
+        this.currentToolTip.draw();
     }
 
     protected void handleTooltip(int mouseX, int mouseY, ITooltip tooltip) {
-        final int x = tooltip.xPos(); // ((GuiImgButton) c).xPosition;
-        int y = tooltip.yPos(); // ((GuiImgButton) c).yPosition;
+        final int x = tooltip.xPos();
+        final int y = tooltip.yPos();
 
-        if (x < mouseX && x + tooltip.getWidth() > mouseX && tooltip.isVisible()) {
-            if (y < mouseY && y + tooltip.getHeight() > mouseY) {
-                if (y < 15) {
-                    y = 15;
-                }
-
-                final String msg = tooltip.getMessage();
-                if (msg != null && !msg.isEmpty()) {
-                    this.drawTooltip(x + 11, y + 4, 0, msg);
-                }
-            }
+        if (tooltip.isVisible() && x < mouseX
+                && x + tooltip.getWidth() > mouseX
+                && y < mouseY
+                && y + tooltip.getHeight() > mouseY) {
+            drawTooltip(x + 11, Math.max(y, 15) + 4, tooltip.getMessage());
         }
     }
 
+    @Deprecated
     public void drawTooltip(final int x, final int y, final int forceWidth, final String message) {
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-        RenderHelper.disableStandardItemLighting();
-        GL11.glDisable(GL11.GL_LIGHTING);
-        GL11.glDisable(GL11.GL_DEPTH_TEST);
-        final String[] lines = message.split("\n");
+        drawTooltip(x, y, message);
+    }
 
-        if (lines.length > 0) {
-            int width = 0;
-            int left;
-            int top;
-
-            for (left = 0; left < lines.length; ++left) {
-                top = this.fontRendererObj.getStringWidth(lines[left]);
-
-                if (top > width) {
-                    width = top;
-                }
-            }
-
-            left = x + 12;
-            top = y - 12;
-            int height = 8;
-
-            if (lines.length > 1) {
-                height += 2 + (lines.length - 1) * 10;
-            }
-
-            ScaledResolution scaledresolution = new ScaledResolution(
-                    this.mc,
-                    this.mc.displayWidth,
-                    this.mc.displayHeight);
-
-            if (top + height + 6 > scaledresolution.getScaledHeight()) {
-                top = scaledresolution.getScaledHeight() - height - 6;
-            }
-
-            if (forceWidth > 0) {
-                width = forceWidth;
-            }
-
-            if (left + width + 6 > scaledresolution.getScaledWidth()) {
-                left = scaledresolution.getScaledWidth() - width - 6;
-            }
-
-            this.zLevel = 300.0F;
-            itemRender.zLevel = 300.0F;
-            final int color1 = 0xF0100010;
-            this.drawGradientRect(left - 3, top - 4, left + width + 3, top - 3, color1, color1);
-            this.drawGradientRect(left - 3, top + height + 3, left + width + 3, top + height + 4, color1, color1);
-            this.drawGradientRect(left - 3, top - 3, left + width + 3, top + height + 3, color1, color1);
-            this.drawGradientRect(left - 4, top - 3, left - 3, top + height + 3, color1, color1);
-            this.drawGradientRect(left + width + 3, top - 3, left + width + 4, top + height + 3, color1, color1);
-            final int color2 = 0x505000FF;
-            final int color3 = 0x5028007F; // (color2 & 16711422) >> 1 | color2 & -16777216;
-            this.drawGradientRect(left - 3, top - 3 + 1, left - 3 + 1, top + height + 3 - 1, color2, color3);
-            this.drawGradientRect(
-                    left + width + 2,
-                    top - 3 + 1,
-                    left + width + 3,
-                    top + height + 3 - 1,
-                    color2,
-                    color3);
-            this.drawGradientRect(left - 3, top - 3, left + width + 3, top - 3 + 1, color2, color2);
-            this.drawGradientRect(left - 3, top + height + 2, left + width + 3, top + height + 3, color3, color3);
-
-            for (int var13 = 0; var13 < lines.length; ++var13) {
-                String var14 = lines[var13];
-
-                if (var13 == 0) {
-                    var14 = '\u00a7' + Integer.toHexString(15) + var14;
-                } else {
-                    var14 = "\u00a77" + var14;
-                }
-
-                this.fontRendererObj.drawStringWithShadow(var14, left, top, -1);
-
-                if (var13 == 0) {
-                    top += 2;
-                }
-
-                top += 10;
-            }
-
-            this.zLevel = 0.0F;
-            itemRender.zLevel = 0.0F;
+    public void drawTooltip(final int x, final int y, final String message) {
+        if (message != null && !message.isEmpty()) {
+            drawTooltip(x, y, message.split("\n"));
         }
-        GL11.glPopAttrib();
+    }
+
+    public void drawTooltip(final int x, final int y, final String[] lines) {
+        if (lines != null && lines.length > 0) {
+            this.currentToolTip.set(x, y, lines);
+        }
     }
 
     /**
@@ -336,23 +304,25 @@ public abstract class AEBaseGui extends GuiContainer {
 
     @Override
     protected final void drawGuiContainerForegroundLayer(final int x, final int y) {
-        final int ox = this.guiLeft; // (width - xSize) / 2;
-        final int oy = this.guiTop; // (height - ySize) / 2;
+        final int ox = this.guiLeft;
+        final int oy = this.guiTop;
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 
         if (this.getScrollBar() != null) {
             this.getScrollBar().draw(this);
         }
 
+        this.currentToolTip.shift(ox, oy);
         this.drawFG(ox, oy, x, y);
+        this.currentToolTip.shift(0, 0);
     }
 
     public abstract void drawFG(int offsetX, int offsetY, int mouseX, int mouseY);
 
     @Override
     protected final void drawGuiContainerBackgroundLayer(final float f, final int x, final int y) {
-        final int ox = this.guiLeft; // (width - xSize) / 2;
-        final int oy = this.guiTop; // (height - ySize) / 2;
+        final int ox = this.guiLeft;
+        final int oy = this.guiTop;
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.drawBG(ox, oy, x, y);
 
