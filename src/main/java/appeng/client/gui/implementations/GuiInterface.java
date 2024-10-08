@@ -42,6 +42,7 @@ public class GuiInterface extends GuiUpgradeable {
 
     private GuiTabButton priority;
     private GuiImgButton BlockMode;
+    private GuiImgButton SBlockMode;
     private GuiToggleButton interfaceMode;
     private GuiImgButton insertionMode;
     private GuiSimpleImgButton doublePatterns;
@@ -69,6 +70,8 @@ public class GuiInterface extends GuiUpgradeable {
 
         this.BlockMode = new GuiImgButton(this.guiLeft - 18, this.guiTop + offset, Settings.BLOCK, YesNo.NO);
         this.buttonList.add(this.BlockMode);
+        this.SBlockMode = new GuiImgButton(this.guiLeft - 36, this.guiTop + offset, Settings.SBLOCK, YesNo.NO);
+        this.buttonList.add(this.SBlockMode);
 
         offset += 18;
 
@@ -133,6 +136,9 @@ public class GuiInterface extends GuiUpgradeable {
         if (this.BlockMode != null) {
             this.BlockMode.set(((ContainerInterface) this.cvb).getBlockingMode());
         }
+        if (this.SBlockMode != null) {
+            this.SBlockMode.set(((ContainerInterface) this.cvb).getSBlockingMode());
+        }
 
         if (this.interfaceMode != null) {
             this.interfaceMode.setState(((ContainerInterface) this.cvb).getInterfaceTerminalMode() == YesNo.YES);
@@ -196,6 +202,9 @@ public class GuiInterface extends GuiUpgradeable {
 
         if (btn == this.BlockMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.BlockMode.getSetting(), backwards));
+        }
+        if (btn == this.SBlockMode) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.SBlockMode.getSetting(), backwards));
         }
 
         if (btn == this.insertionMode) {
