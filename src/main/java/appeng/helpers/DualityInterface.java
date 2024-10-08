@@ -909,7 +909,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             if (te instanceof ICraftingMachine cm) {
                 if (cm.acceptsPlans()) {
                     if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
-                        if (this.isSuperBlocking()){
+                        if (this.isSuperBlocking()) {
                             this.LastInputHash = patternDetails.hashCode();
                         }
                         onPushPatternSuccess(patternDetails);
@@ -922,7 +922,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
-                if (this.LastInputHash != patternDetails.hashCode() && this.isBlocking() && ad.containsItems() && !inventoryCountsAsEmpty(te, ad, s.getOpposite()))
+                if (this.LastInputHash != patternDetails.hashCode() && this.isBlocking()
+                        && ad.containsItems()
+                        && !inventoryCountsAsEmpty(te, ad, s.getOpposite()))
                     continue;
 
                 if (acceptsItems(ad, table, getInsertionMode())) {
@@ -932,7 +934,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                             this.addToSendList(ad.addItems(is, getInsertionMode()));
                         }
                     }
-                    if (this.isSuperBlocking()){
+                    if (this.isSuperBlocking()) {
                         this.LastInputHash = patternDetails.hashCode();
                     }
                     this.pushItemsOut(possibleDirections);
@@ -954,7 +956,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     }
                 }
                 if (hadAcceptedSome) {
-                    if (this.isSuperBlocking()){
+                    if (this.isSuperBlocking()) {
                         this.LastInputHash = patternDetails.hashCode();
                     }
                     this.pushItemsOut(possibleDirections);
@@ -976,7 +978,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         boolean busy = false;
 
         if (this.isBlocking()) {
-            if (this.isSuperBlocking()){
+            if (this.isSuperBlocking()) {
                 return false;
             }
             final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
@@ -1015,6 +1017,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private boolean isBlocking() {
         return this.cm.getSetting(Settings.BLOCK) == YesNo.YES;
     }
+
     private boolean isSuperBlocking() {
         return this.cm.getSetting(Settings.SBLOCK) == YesNo.YES;
     }
