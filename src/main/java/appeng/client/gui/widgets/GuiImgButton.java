@@ -486,7 +486,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.InterfaceSBlockingMode,
                     ButtonToolTips.SBlocking);
             this.registerApp(
-                    16 + 4,
+                    16 + 5,
                     Settings.SBLOCK,
                     YesNo.NO,
                     ButtonToolTips.InterfaceSBlockingMode,
