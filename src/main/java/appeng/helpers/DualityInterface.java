@@ -597,16 +597,21 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             for (final ForgeDirection s : possibleDirections) {
                 final TileEntity te = w
                         .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+
                 if (te == null) {
                     continue;
                 }
-                try {
-                    if (te instanceof IInterfaceHost host
-                            && host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+
+                if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
+
+                if (te instanceof IInterfaceHost host) {
+                    try {
+                        if (host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+                            continue;
+                        }
+                    } catch (GridAccessException e) {
                         continue;
                     }
-                } catch (GridAccessException e) {
-                    continue;
                 }
 
                 final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
@@ -893,18 +898,14 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         final World w = tile.getWorldObj();
 
         final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
+        EnumSet<ForgeDirection> out = EnumSet.noneOf(ForgeDirection.class);
         for (final ForgeDirection s : possibleDirections) {
             final TileEntity te = w
                     .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
-            if (te instanceof IInterfaceHost) {
-                try {
-                    if (((IInterfaceHost) te).getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
-                        continue;
-                    }
-                } catch (final GridAccessException e) {
-                    continue;
-                }
-            }
+
+            if (te == null) continue;
+
+            if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
 
             if (te instanceof ICraftingMachine cm) {
                 if (cm.acceptsPlans()) {
@@ -918,11 +919,20 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     continue;
                 }
             }
-            if (te != null && te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
+
+            if (te instanceof IInterfaceHost) {
+                try {
+                    if (((IInterfaceHost) te).getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+                        continue;
+                    }
+                } catch (final GridAccessException e) {
+                    continue;
+                }
+            }
 
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
-                if (this.LastInputHash != patternDetails.hashCode() && this.isBlocking()
+                if (this.isBlocking() && !(this.isSuperBlocking() && this.LastInputHash == patternDetails.hashCode())
                         && ad.containsItems()
                         && !inventoryCountsAsEmpty(te, ad, s.getOpposite()))
                     continue;
@@ -937,7 +947,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     if (this.isSuperBlocking()) {
                         this.LastInputHash = patternDetails.hashCode();
                     }
-                    this.pushItemsOut(possibleDirections);
+                    out.add(s);
+                    this.pushItemsOut(out);
                     onPushPatternSuccess(patternDetails);
                     return true;
                 }
@@ -959,7 +970,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     if (this.isSuperBlocking()) {
                         this.LastInputHash = patternDetails.hashCode();
                     }
-                    this.pushItemsOut(possibleDirections);
+                    out.add(s);
+                    this.pushItemsOut(out);
                     onPushPatternSuccess(patternDetails);
                     return true;
                 }
