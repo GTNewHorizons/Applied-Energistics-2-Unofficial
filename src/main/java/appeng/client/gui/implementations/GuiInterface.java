@@ -42,7 +42,7 @@ public class GuiInterface extends GuiUpgradeable {
 
     private GuiTabButton priority;
     private GuiImgButton BlockMode;
-    private GuiImgButton Smart_BlockMode;
+    private GuiImgButton SmartBlockMode;
     private GuiToggleButton interfaceMode;
     private GuiImgButton insertionMode;
     private GuiSimpleImgButton doublePatterns;
@@ -70,8 +70,8 @@ public class GuiInterface extends GuiUpgradeable {
 
         this.BlockMode = new GuiImgButton(this.guiLeft - 18, this.guiTop + offset, Settings.BLOCK, YesNo.NO);
         this.buttonList.add(this.BlockMode);
-        this.Smart_BlockMode = new GuiImgButton(this.guiLeft - 36, this.guiTop + offset, Settings.SMART_BLOCK, YesNo.NO);
-        this.buttonList.add(this.Smart_BlockMode);
+        this.SmartBlockMode = new GuiImgButton(this.guiLeft - 36, this.guiTop + offset, Settings.SMART_BLOCK, YesNo.NO);
+        this.buttonList.add(this.SmartBlockMode);
 
         offset += 18;
 
@@ -136,8 +136,8 @@ public class GuiInterface extends GuiUpgradeable {
         if (this.BlockMode != null) {
             this.BlockMode.set(((ContainerInterface) this.cvb).getBlockingMode());
         }
-        if (this.Smart_BlockMode != null) {
-            this.Smart_BlockMode.set(((ContainerInterface) this.cvb).getSmartBlockingMode());
+        if (this.SmartBlockMode != null) {
+            this.SmartBlockMode.set(((ContainerInterface) this.cvb).getSmartBlockingMode());
         }
 
         if (this.interfaceMode != null) {
@@ -203,8 +203,8 @@ public class GuiInterface extends GuiUpgradeable {
         if (btn == this.BlockMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.BlockMode.getSetting(), backwards));
         }
-        if (btn == this.Smart_BlockMode) {
-            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.Smart_BlockMode.getSetting(), backwards));
+        if (btn == this.SmartBlockMode) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.SmartBlockMode.getSetting(), backwards));
         }
 
         if (btn == this.insertionMode) {
