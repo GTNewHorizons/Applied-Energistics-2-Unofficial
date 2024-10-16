@@ -136,7 +136,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private YesNo redstoneState = YesNo.UNDECIDED;
     private UnlockCraftingEvent unlockEvent;
     private List<IAEItemStack> unlockStacks;
-    private int LastInputHash = 0;
+    private int lastInputHash = 0;
 
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
         this.gridProxy = networkProxy;
@@ -144,7 +144,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         this.upgrades = new StackUpgradeInventory(this.gridProxy.getMachineRepresentation(), this, 4);
         this.cm.registerSetting(Settings.BLOCK, YesNo.NO);
-        this.cm.registerSetting(Settings.SBLOCK, YesNo.NO);
+        this.cm.registerSetting(Settings.SMART_BLOCK, YesNo.NO);
         this.cm.registerSetting(Settings.INTERFACE_TERMINAL, YesNo.YES);
         this.cm.registerSetting(Settings.INSERTION_MODE, InsertionMode.DEFAULT);
         this.cm.registerSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.DEFAULT);
@@ -910,8 +910,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             if (te instanceof ICraftingMachine cm) {
                 if (cm.acceptsPlans()) {
                     if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
-                        if (this.isSuperBlocking()) {
-                            this.LastInputHash = patternDetails.hashCode();
+                        if (this.isSmartBlocking()) {
+                            this.lastInputHash = patternDetails.hashCode();
                         }
                         onPushPatternSuccess(patternDetails);
                         return true;
@@ -932,7 +932,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
-                if (this.isBlocking() && !(this.isSuperBlocking() && this.LastInputHash == patternDetails.hashCode())
+                if (this.isBlocking() && !(this.isSmartBlocking() && this.lastInputHash == patternDetails.hashCode())
                         && ad.containsItems()
                         && !inventoryCountsAsEmpty(te, ad, s.getOpposite()))
                     continue;
@@ -944,8 +944,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                             this.addToSendList(ad.addItems(is, getInsertionMode()));
                         }
                     }
-                    if (this.isSuperBlocking()) {
-                        this.LastInputHash = patternDetails.hashCode();
+                    if (this.isSmartBlocking()) {
+                        this.lastInputHash = patternDetails.hashCode();
                     }
                     out.add(s);
                     this.pushItemsOut(out);
@@ -967,8 +967,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     }
                 }
                 if (hadAcceptedSome) {
-                    if (this.isSuperBlocking()) {
-                        this.LastInputHash = patternDetails.hashCode();
+                    if (this.isSmartBlocking()) {
+                        this.lastInputHash = patternDetails.hashCode();
                     }
                     out.add(s);
                     this.pushItemsOut(out);
@@ -990,7 +990,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         boolean busy = false;
 
         if (this.isBlocking()) {
-            if (this.isSuperBlocking()) {
+            if (this.isSmartBlocking()) {
                 return false;
             }
             final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
@@ -1030,8 +1030,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.cm.getSetting(Settings.BLOCK) == YesNo.YES;
     }
 
-    private boolean isSuperBlocking() {
-        return this.cm.getSetting(Settings.SBLOCK) == YesNo.YES;
+    private boolean isSmartBlocking() {
+        return this.cm.getSetting(Settings.SMART_BLOCK) == YesNo.YES;
     }
 
     private InsertionMode getInsertionMode() {

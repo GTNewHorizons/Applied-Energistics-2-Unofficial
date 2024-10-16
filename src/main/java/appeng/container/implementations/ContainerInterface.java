@@ -161,7 +161,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     @Override
     protected void loadSettingsFromHost(final IConfigManager cm) {
         this.setBlockingMode((YesNo) cm.getSetting(Settings.BLOCK));
-        this.setSBlockingMode((YesNo) cm.getSetting(Settings.SBLOCK));
+        this.setSmartBlockingMode((YesNo) cm.getSetting(Settings.SMART_BLOCK));
         this.setInterfaceTerminalMode((YesNo) cm.getSetting(Settings.INTERFACE_TERMINAL));
         this.setInsertionMode((InsertionMode) cm.getSetting(Settings.INSERTION_MODE));
         this.setPatternOptimization((YesNo) cm.getSetting(Settings.PATTERN_OPTIMIZATION));
@@ -206,11 +206,11 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         this.bMode = bMode;
     }
 
-    public YesNo getSBlockingMode() {
+    public YesNo getSmartBlockingMode() {
         return this.sbMode;
     }
 
-    private void setSBlockingMode(final YesNo sbMode) {
+    private void setSmartBlockingMode(final YesNo sbMode) {
         this.sbMode = sbMode;
     }
 
