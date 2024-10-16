@@ -373,6 +373,7 @@ gui.tooltips.appliedenergistics2.Clear=Clear
 gui.tooltips.appliedenergistics2.TrashController=Deletion via Shift / Space Clicking.
 
 gui.tooltips.appliedenergistics2.InterfaceBlockingMode=Blocking Mode
+gui.tooltips.appliedenergistics2.InterfaceSmartBlockingMode=Smart Blocking Mode
 gui.tooltips.appliedenergistics2.InterfaceCraftingMode=Crafting Mode
 gui.tooltips.appliedenergistics2.Trash=Destroy Items
 gui.tooltips.appliedenergistics2.MatterBalls=Condense Into Matter Balls\n%s per item
@@ -404,6 +405,8 @@ gui.tooltips.appliedenergistics2.Disabled=Disabled
 gui.tooltips.appliedenergistics2.Enable=Enabled
 gui.tooltips.appliedenergistics2.Blocking=Do not push crafting items if inventory contains items.
 gui.tooltips.appliedenergistics2.NonBlocking=Ignore the contents of the target inventory.
+gui.tooltips.appliedenergistics2.SmartBlocking=Allow insert same recipe.
+gui.tooltips.appliedenergistics2.NonSmartBlocking=Regular blocking mode behavior.
 gui.tooltips.appliedenergistics2.Craft=Crafting Behavior
 gui.tooltips.appliedenergistics2.CraftOnly=Do not use stocked items, only craft items while exporting.
 gui.tooltips.appliedenergistics2.CraftEither=Use stocked items, or craft items while exporting.

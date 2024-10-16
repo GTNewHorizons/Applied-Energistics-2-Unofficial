@@ -136,6 +136,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private YesNo redstoneState = YesNo.UNDECIDED;
     private UnlockCraftingEvent unlockEvent;
     private List<IAEItemStack> unlockStacks;
+    private int lastInputHash = 0;
 
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
         this.gridProxy = networkProxy;
@@ -143,6 +144,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         this.upgrades = new StackUpgradeInventory(this.gridProxy.getMachineRepresentation(), this, 4);
         this.cm.registerSetting(Settings.BLOCK, YesNo.NO);
+        this.cm.registerSetting(Settings.SMART_BLOCK, YesNo.NO);
         this.cm.registerSetting(Settings.INTERFACE_TERMINAL, YesNo.YES);
         this.cm.registerSetting(Settings.INSERTION_MODE, InsertionMode.DEFAULT);
         this.cm.registerSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.DEFAULT);
@@ -595,16 +597,21 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             for (final ForgeDirection s : possibleDirections) {
                 final TileEntity te = w
                         .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+
                 if (te == null) {
                     continue;
                 }
-                try {
-                    if (te instanceof IInterfaceHost host
-                            && host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+
+                if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
+
+                if (te instanceof IInterfaceHost host) {
+                    try {
+                        if (host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+                            continue;
+                        }
+                    } catch (GridAccessException e) {
                         continue;
                     }
-                } catch (GridAccessException e) {
-                    continue;
                 }
 
                 final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
@@ -883,7 +890,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         if (this.hasItemsToSend() || !this.gridProxy.isActive() || !this.craftingList.contains(patternDetails)) {
             return false;
         }
-
         if (getCraftingLockedReason() != LockCraftingMode.NONE) {
             return false;
         }
@@ -892,9 +898,28 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         final World w = tile.getWorldObj();
 
         final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
+        EnumSet<ForgeDirection> out = EnumSet.noneOf(ForgeDirection.class);
         for (final ForgeDirection s : possibleDirections) {
             final TileEntity te = w
                     .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+
+            if (te == null) continue;
+
+            if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
+
+            if (te instanceof ICraftingMachine cm) {
+                if (cm.acceptsPlans()) {
+                    if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
+                        if (this.isSmartBlocking()) {
+                            this.lastInputHash = patternDetails.hashCode();
+                        }
+                        onPushPatternSuccess(patternDetails);
+                        return true;
+                    }
+                    continue;
+                }
+            }
+
             if (te instanceof IInterfaceHost) {
                 try {
                     if (((IInterfaceHost) te).getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
@@ -905,20 +930,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
             }
 
-            if (te instanceof ICraftingMachine cm) {
-                if (cm.acceptsPlans()) {
-                    if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
-                        onPushPatternSuccess(patternDetails);
-                        return true;
-                    }
-                    continue;
-                }
-            }
-            if (te != null && te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
-
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
-                if (this.isBlocking() && ad.containsItems() && !inventoryCountsAsEmpty(te, ad, s.getOpposite()))
+                if (this.isBlocking() && !(this.isSmartBlocking() && this.lastInputHash == patternDetails.hashCode())
+                        && ad.containsItems()
+                        && !inventoryCountsAsEmpty(te, ad, s.getOpposite()))
                     continue;
 
                 if (acceptsItems(ad, table, getInsertionMode())) {
@@ -928,7 +944,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                             this.addToSendList(ad.addItems(is, getInsertionMode()));
                         }
                     }
-                    this.pushItemsOut(possibleDirections);
+                    if (this.isSmartBlocking()) {
+                        this.lastInputHash = patternDetails.hashCode();
+                    }
+                    out.add(s);
+                    this.pushItemsOut(out);
                     onPushPatternSuccess(patternDetails);
                     return true;
                 }
@@ -947,7 +967,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     }
                 }
                 if (hadAcceptedSome) {
-                    this.pushItemsOut(possibleDirections);
+                    if (this.isSmartBlocking()) {
+                        this.lastInputHash = patternDetails.hashCode();
+                    }
+                    out.add(s);
+                    this.pushItemsOut(out);
                     onPushPatternSuccess(patternDetails);
                     return true;
                 }
@@ -966,6 +990,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         boolean busy = false;
 
         if (this.isBlocking()) {
+            if (this.isSmartBlocking()) {
+                return false;
+            }
             final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
             final TileEntity tile = this.iHost.getTileEntity();
             final World w = tile.getWorldObj();
@@ -1001,6 +1028,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     private boolean isBlocking() {
         return this.cm.getSetting(Settings.BLOCK) == YesNo.YES;
+    }
+
+    private boolean isSmartBlocking() {
+        return this.cm.getSetting(Settings.SMART_BLOCK) == YesNo.YES;
     }
 
     private InsertionMode getInsertionMode() {

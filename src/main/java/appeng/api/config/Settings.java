@@ -41,6 +41,7 @@ public enum Settings {
     IO_DIRECTION(EnumSet.of(RelativeDirection.LEFT, RelativeDirection.RIGHT)),
 
     BLOCK(EnumSet.of(YesNo.YES, YesNo.NO)),
+    SMART_BLOCK(EnumSet.of(YesNo.YES, YesNo.NO)),
     OPERATION_MODE(EnumSet.allOf(OperationMode.class)),
 
     FULLNESS_MODE(EnumSet.allOf(FullnessMode.class)),
