@@ -65,6 +65,8 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
             } else {
                 hasMEItems = !dual.getItemInventory().getStorageList().isEmpty();
             }
+
+            hasMEItems |= !dual.getFluidInventory().getStorageList().isEmpty();
         }
         return hasMEItems || super.containsItems();
     }
