@@ -46,7 +46,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     @GuiSync(3)
     public YesNo bMode = YesNo.NO;
 
-    @GuiSync(14)
+    @GuiSync(15)
     public YesNo sbMode = YesNo.NO;
 
     @GuiSync(4)
