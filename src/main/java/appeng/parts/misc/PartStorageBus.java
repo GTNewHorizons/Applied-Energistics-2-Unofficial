@@ -226,7 +226,8 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                 if (!this.readOncePass) {
                     AccessRestriction currentAccess = (AccessRestriction) this.getConfigManager()
                             .getSetting(Settings.ACCESS);
-                    if (!currentAccess.hasPermission(AccessRestriction.READ) && !this.getInternalHandler().isVisible()) {
+                    if (!currentAccess.hasPermission(AccessRestriction.READ)
+                            && !this.getInternalHandler().isVisible()) {
                         return;
                     }
                 }
