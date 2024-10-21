@@ -279,7 +279,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
         return this.list;
     }
 
-    private StorageFilter getMode() {
+    public StorageFilter getMode() {
         return this.mode;
     }
 

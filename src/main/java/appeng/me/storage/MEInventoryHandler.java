@@ -17,6 +17,7 @@ import javax.annotation.Nonnull;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.IncludeExclude;
+import appeng.api.config.StorageFilter;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
@@ -116,7 +117,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
-        if (!this.hasReadAccess) {
+        if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
 
@@ -125,6 +126,10 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         } else {
             return this.internal.getAvailableItems(out, iteration);
         }
+    }
+
+    public boolean isVisible() {
+        return this.internal instanceof MEMonitorIInventory inv && inv.getMode() == StorageFilter.NONE;
     }
 
     protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
@@ -141,7 +146,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     @Override
     public T getAvailableItem(@Nonnull T request, int iteration) {
-        if (!this.hasReadAccess) {
+        if (!this.hasReadAccess && !isVisible()) {
             return null;
         }
 
