@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.text.NumberFormat;
 
 import javax.annotation.Nullable;
 
@@ -177,8 +178,21 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         return ItemSorters.compareLong(o.getStorage(), this.getStorage());
     }
 
+    public String formatCoprocessors() {
+        return NumberFormat.getInstance().format(getCoprocessors());
+    }
+
+    public String formatShorterCoprocessors() {
+        return Platform.formatNumberLong(getCoprocessors());
+    }
+
     public String formatStorage() {
         return Platform.formatByteDouble(getStorage());
+    }
+
+    public String formatStorageWithoutB() {
+        String tempStr = Platform.formatByteDouble(getStorage());
+        return tempStr.substring(0, tempStr.length() - 1);
     }
 
     public String formatUsedStorage() {
