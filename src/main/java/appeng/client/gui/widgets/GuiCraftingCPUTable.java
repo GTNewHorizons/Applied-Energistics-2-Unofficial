@@ -161,17 +161,23 @@ public class GuiCraftingCPUTable {
                     GL11.glTranslatef(x + CPU_TABLE_SLOT_WIDTH - 19, y + 3, 0);
                     parent.drawItem(0, 0, craftingStack.getItemStack());
                 } else {
-                    final int iconIndex = 16 * 4 + 3;
-                    parent.bindTexture("guis/states.png");
-                    final int uv_y = iconIndex / 16;
-                    final int uv_x = iconIndex - uv_y * 16;
 
                     GL11.glScalef(0.5f, 0.5f, 1.0f);
                     GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-                    parent.drawTexturedModalRect(0, 0, uv_x * 16, uv_y * 16, 16, 16);
-                    GL11.glTranslatef(18.0f, 2.0f, 0.0f);
-                    GL11.glScalef(1.5f, 1.5f, 1.0f);
-                    font.drawString(cpu.formatStorage(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor());
+                    parent.bindTexture("guis/states.png");
+                    parent.drawTexturedModalRect(0, 0, 3 * 16, 4 * 16, 16, 16);
+                    GL11.glColor4f(0.5F, 0.5F, 0.5F, 1.0F);
+                    parent.drawTexturedModalRect(16 * 4, 0, 8 * 16, 1 * 16, 16, 16);
+                    GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+                    GL11.glTranslatef(18.0f, 6.0f, 0.0f);
+                    GL11.glScalef(1.2f, 1.2f, 0.8f);
+
+                    font.drawString(cpu.formatStorageWithoutB(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor());
+                    font.drawString(
+                            cpu.formatShorterCoprocessors(),
+                            16 * 3 + 9,
+                            0,
+                            GuiColors.CraftingStatusCPUStorage.getColor());
                 }
                 GL11.glPopMatrix();
             }
@@ -218,7 +224,7 @@ public class GuiCraftingCPUTable {
             if (hoveredCpu.getCoprocessors() > 0) {
                 tooltip.append(GuiText.CoProcessors.getLocal());
                 tooltip.append(": ");
-                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getCoprocessors()));
+                tooltip.append(hoveredCpu.formatCoprocessors());
                 tooltip.append('\n');
             }
             if (tooltip.length() > 0) {

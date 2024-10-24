@@ -160,7 +160,9 @@ public class Platform {
             UUID.fromString("839eb18c-50bc-400c-8291-9383f09763e7"),
             "[AE2Player]");
     private static final String[] BYTE_UNIT = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB", "BB" };
+    private static final String[] NUM_UNIT = { "K", "M", "B", "T" };
     private static final double[] BYTE_LIMIT;
+    private static final long[] NUM_LIMIT = { 1_000, 1_000_000, 1_000_000_000, 1_000_000_000_000l };
     private static final DecimalFormat df = new DecimalFormat("#.##");
 
     static {
@@ -1885,11 +1887,23 @@ public class Platform {
      * @return String that like 1 GB or 1.4 TB
      */
     public static String formatByteDouble(final double n) {
-        for (int i = 1; i < 10; i++) {
+        for (int i = 1; i < BYTE_LIMIT.length; i++) {
             if (n < BYTE_LIMIT[i]) {
                 return df.format(n / BYTE_LIMIT[i - 1]) + " " + BYTE_UNIT[i - 1];
             }
         }
         return (n / BYTE_LIMIT[0]) + " " + BYTE_UNIT[0];
+    }
+
+    public static String formatNumberLong(final long n) {
+        if (n > 1_000) {
+            for (int i = 1; i < NUM_LIMIT.length; i++) {
+                if (n < NUM_LIMIT[i]) {
+                    return String.valueOf(n / NUM_LIMIT[i - 1]) + " " + NUM_UNIT[i - 1];
+                }
+            }
+        }
+
+        return String.valueOf(n);
     }
 }
