@@ -171,15 +171,15 @@ public class GuiCraftingCPUTable {
                     parent.drawItem(
                             16 * 4,
                             0,
-                            AEApi.instance().definitions().blocks().craftingStorage1k().maybeStack(1).orNull());
+                            AEApi.instance().definitions().blocks().craftingAccelerator().maybeStack(1).orNull());
                     GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                     GL11.glTranslatef(18.0f, 6.0f, 0.0f);
-                    GL11.glScalef(1.2f, 1.2f, 0.8f);
+                    GL11.glScalef(1.1f, 1.1f, 1f);
 
                     font.drawString(cpu.formatStorageWithoutB(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor());
                     font.drawString(
                             cpu.formatShorterCoprocessors(),
-                            16 * 3 + 9,
+                            16 * 3 + 11,
                             0,
                             GuiColors.CraftingStatusCPUStorage.getColor());
                 }
