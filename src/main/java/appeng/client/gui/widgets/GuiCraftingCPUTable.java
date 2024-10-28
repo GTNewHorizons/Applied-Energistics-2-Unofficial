@@ -11,6 +11,7 @@ import net.minecraft.client.gui.FontRenderer;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import appeng.api.AEApi;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerCPUTable;
@@ -167,7 +168,10 @@ public class GuiCraftingCPUTable {
                     parent.bindTexture("guis/states.png");
                     parent.drawTexturedModalRect(0, 0, 3 * 16, 4 * 16, 16, 16);
                     GL11.glColor4f(0.5F, 0.5F, 0.5F, 1.0F);
-                    parent.drawTexturedModalRect(16 * 4, 0, 8 * 16, 1 * 16, 16, 16);
+                    parent.drawItem(
+                            16 * 4,
+                            0,
+                            AEApi.instance().definitions().blocks().craftingStorage1k().maybeStack(1).orNull());
                     GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                     GL11.glTranslatef(18.0f, 6.0f, 0.0f);
                     GL11.glScalef(1.2f, 1.2f, 0.8f);
