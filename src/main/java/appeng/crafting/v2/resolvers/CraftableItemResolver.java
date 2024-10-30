@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import appeng.crafting.v2.resolvers.CraftingTask.State;
 import net.minecraft.world.World;
 
 import org.apache.logging.log4j.Level;
@@ -131,12 +132,12 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                     break;
                 }
             }
-            if (matchingOutput == null) {
-                state = State.FAILURE;
-                throw new IllegalStateException("Invalid pattern crafting step for " + request);
-            }
 
             this.matchingOutput = matchingOutput;
+
+            if (matchingOutput == null) {
+                state = State.FAILURE;
+            }
         }
 
         @SuppressWarnings("unused")
@@ -658,10 +659,16 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             if (context.isPatternComplex(pattern)) {
                 logComplexPattrn(pattern, request.remainingToProcess);
                 for (int i = 0; i < request.remainingToProcess; i++) {
-                    tasks.add(new CraftFromPatternTask(request, pattern, priority, false, true));
+                    CraftFromPatternTask task = new CraftFromPatternTask(request, pattern, priority, false, true);
+                    if (task.getState() != State.FAILURE) {
+                        tasks.add(task);
+                    }
                 }
             } else {
-                tasks.add(new CraftFromPatternTask(request, pattern, priority, false, false));
+                CraftFromPatternTask task = new CraftFromPatternTask(request, pattern, priority, false, false);
+                if (task.getState() != State.FAILURE) {
+                    tasks.add(task);
+                }
             }
             priority--;
         }
@@ -670,11 +677,16 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             ICraftingPatternDetails pattern = patterns.get(0);
             if (context.isPatternComplex(pattern)) {
                 for (int i = 0; i < request.remainingToProcess; i++) {
-                    tasks.add(new CraftFromPatternTask(request, pattern, priority, true, true));
+                    CraftFromPatternTask task = new CraftFromPatternTask(request, pattern, priority, true, true);
+                    if (task.getState() != State.FAILURE) {
+                        tasks.add(task);
+                    }
                 }
             } else {
-                tasks.add(
-                        new CraftFromPatternTask(request, pattern, CraftingTask.PRIORITY_SIMULATE_CRAFT, true, false));
+                CraftFromPatternTask task = new CraftFromPatternTask(request, pattern, CraftingTask.PRIORITY_SIMULATE_CRAFT, true, false);
+                if (task.getState() != State.FAILURE) {
+                    tasks.add(task);
+                }
             }
         }
 
