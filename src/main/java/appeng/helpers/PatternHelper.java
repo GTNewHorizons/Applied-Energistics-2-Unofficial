@@ -11,10 +11,9 @@
 package appeng.helpers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import net.minecraft.inventory.InventoryCrafting;
@@ -383,7 +382,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     }
 
     public static IAEItemStack[] convertToCondensedList(final IAEItemStack[] items) {
-        final Map<IAEItemStack, IAEItemStack> tmp = new HashMap<>();
+        final LinkedHashMap<IAEItemStack, IAEItemStack> tmp = new LinkedHashMap<>();
 
         for (final IAEItemStack io : items) {
 
