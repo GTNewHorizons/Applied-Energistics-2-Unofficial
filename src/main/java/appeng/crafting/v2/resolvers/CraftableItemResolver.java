@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
-import appeng.crafting.v2.resolvers.CraftingTask.State;
 import net.minecraft.world.World;
 
 import org.apache.logging.log4j.Level;
@@ -35,6 +34,7 @@ import appeng.crafting.v2.CraftingRequest;
 import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
 import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
+import appeng.crafting.v2.resolvers.CraftingTask.State;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
@@ -683,7 +683,12 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
                     }
                 }
             } else {
-                CraftFromPatternTask task = new CraftFromPatternTask(request, pattern, CraftingTask.PRIORITY_SIMULATE_CRAFT, true, false);
+                CraftFromPatternTask task = new CraftFromPatternTask(
+                        request,
+                        pattern,
+                        CraftingTask.PRIORITY_SIMULATE_CRAFT,
+                        true,
+                        false);
                 if (task.getState() != State.FAILURE) {
                     tasks.add(task);
                 }
