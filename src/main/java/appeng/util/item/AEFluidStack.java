@@ -72,11 +72,11 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     }
 
     public static IAEFluidStack loadFluidStackFromNBT(final NBTTagCompound i) {
-        final ItemStack itemstack = ItemStack.loadItemStackFromNBT(i);
-        if (itemstack == null) {
+        final FluidStack fluidstack = FluidStack.loadFluidStackFromNBT(i);
+        if (fluidstack == null) {
             return null;
         }
-        final AEFluidStack fluid = AEFluidStack.create(itemstack);
+        final AEFluidStack fluid = AEFluidStack.create(fluidstack);
         // fluid.priority = i.getInteger( "Priority" );
         fluid.setStackSize(i.getLong("Cnt"));
         fluid.setCountRequestable(i.getLong("Req"));
