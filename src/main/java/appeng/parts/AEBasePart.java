@@ -474,6 +474,9 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
     @Override
     public void onPlacement(final EntityPlayer player, final ItemStack held, final ForgeDirection side) {
         this.proxy.setOwner(player);
+        if (this.useStandardMemoryCard() && held.hasTagCompound() && held.getTagCompound().hasKey("memoryCardData")) {
+            this.uploadSettings(SettingsFrom.MEMORY_CARD, held.getTagCompound().getCompoundTag("memoryCardData"));
+        }
     }
 
     @Override

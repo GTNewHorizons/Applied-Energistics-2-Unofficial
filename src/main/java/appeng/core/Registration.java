@@ -14,6 +14,7 @@ import java.io.File;
 
 import javax.annotation.Nonnull;
 
+import appeng.recipes.game.PreConfiguredPartRecipe;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -576,6 +577,10 @@ public final class Registration {
                     FacadeRecipe.class,
                     Category.SHAPED,
                     "after:minecraft:shaped");
+        }
+
+        if (AEConfig.instance.isFeatureEnabled(AEFeature.EnablePreConfiguredCrafting)) {
+            GameRegistry.addRecipe(new PreConfiguredPartRecipe());
         }
     }
 
