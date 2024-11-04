@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -36,6 +37,8 @@ public class GuiCraftingCPUTable {
     public static final int CPU_TABLE_SLOT_YOFF = 0;
     public static final int CPU_TABLE_SLOT_WIDTH = 67;
     public static final int CPU_TABLE_SLOT_HEIGHT = 23;
+    public static final ItemStack CRAFTING_ACCELERATOR = AEApi.instance().definitions().blocks().craftingAccelerator()
+            .maybeStack(1).orNull();
 
     private final GuiScrollbar cpuScrollbar;
 
@@ -168,15 +171,12 @@ public class GuiCraftingCPUTable {
                     parent.bindTexture("guis/states.png");
                     parent.drawTexturedModalRect(0, 0, 3 * 16, 4 * 16, 16, 16);
                     GL11.glColor4f(0.5F, 0.5F, 0.5F, 1.0F);
-                    parent.drawItem(
-                            16 * 4,
-                            0,
-                            AEApi.instance().definitions().blocks().craftingAccelerator().maybeStack(1).orNull());
+                    parent.drawItem(16 * 4, 0, CRAFTING_ACCELERATOR);
                     GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
                     GL11.glTranslatef(18.0f, 6.0f, 0.0f);
                     GL11.glScalef(1.1f, 1.1f, 1f);
 
-                    font.drawString(cpu.formatStorageWithoutB(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor());
+                    font.drawString(cpu.formatStorage(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor());
                     font.drawString(
                             cpu.formatShorterCoprocessors(),
                             16 * 3 + 11,

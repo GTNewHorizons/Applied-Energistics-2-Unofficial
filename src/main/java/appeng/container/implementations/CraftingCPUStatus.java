@@ -190,11 +190,6 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         return Platform.formatByteDouble(getStorage());
     }
 
-    public String formatStorageWithoutB() {
-        String tempStr = Platform.formatByteDouble(getStorage());
-        return tempStr.substring(0, tempStr.length() - 1);
-    }
-
     public String formatUsedStorage() {
         return Platform.formatByteDouble(getUsedStorage());
     }
