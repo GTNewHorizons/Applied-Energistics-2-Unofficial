@@ -119,8 +119,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private final GuiImgButton terminalStyleBox;
     private final GuiImgButton searchStringSave;
     private final GuiImgButton guiButtonSectionOrder;
+    private final GuiImgButton guiButtonHideP2POutputs;
     private boolean onlyMolecularAssemblers = false;
     private boolean onlyBrokenRecipes = false;
+    private boolean hideP2POutputs = true;
     private boolean online;
     /** The height of the viewport. */
     private int viewHeight;
@@ -185,6 +187,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         guiButtonHideFull = new GuiImgButton(0, 0, Settings.ACTIONS, null);
         guiButtonBrokenRecipes = new GuiImgButton(0, 0, Settings.ACTIONS, null);
         guiButtonSectionOrder = new GuiImgButton(0, 0, Settings.INTERFACE_TERMINAL_SECTION_ORDER, StringOrder.NATURAL);
+        guiButtonHideP2POutputs = new GuiImgButton(0, 0, Settings.ACTIONS, null);
 
         terminalStyleBox = new GuiImgButton(0, 0, Settings.TERMINAL_STYLE, null);
 
@@ -242,6 +245,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
         guiButtonAssemblersOnly.xPosition = guiLeft - 18;
         guiButtonAssemblersOnly.yPosition = guiButtonHideFull.yPosition + 18;
 
+        guiButtonHideP2POutputs.xPosition = guiLeft - 18;
+        guiButtonHideP2POutputs.yPosition = guiButtonAssemblersOnly.yPosition + 18;
+
         if (AEConfig.instance.preserveSearchBar || isSubGui()) {
             setSearchString();
         }
@@ -255,6 +261,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         buttonList.add(guiButtonSectionOrder);
         buttonList.add(searchStringSave);
         buttonList.add(terminalStyleBox);
+        buttonList.add(guiButtonHideP2POutputs);
     }
 
     protected void repositionSlots() {
@@ -304,6 +311,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 onlyBrokenRecipes ? ActionItems.TOGGLE_SHOW_ONLY_INVALID_PATTERN_OFF
                         : ActionItems.TOGGLE_SHOW_ONLY_INVALID_PATTERN_ON);
         guiButtonSectionOrder.set(AEConfig.instance.settings.getSetting(Settings.INTERFACE_TERMINAL_SECTION_ORDER));
+        guiButtonHideP2POutputs
+                .set(hideP2POutputs ? ActionItems.TOGGLE_SHOW_P2P_OUTPUTS_ON : ActionItems.TOGGLE_SHOW_P2P_OUTPUTS_OFF);
 
         terminalStyleBox.set(AEConfig.instance.settings.getSetting(Settings.TERMINAL_STYLE));
 
@@ -336,6 +345,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
             masterList.markDirty();
         } else if (btn == guiButtonBrokenRecipes) {
             onlyBrokenRecipes = !onlyBrokenRecipes;
+            masterList.markDirty();
+        } else if (btn == guiButtonHideP2POutputs) {
+            hideP2POutputs = !hideP2POutputs;
             masterList.markDirty();
         } else if (btn instanceof GuiImgButton iBtn) {
             if (iBtn.getSetting() != Settings.ACTIONS) {
@@ -853,7 +865,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.name,
                     addCmd.rows,
                     addCmd.rowSize,
-                    addCmd.online).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim)
+                    addCmd.online,
+                    addCmd.p2pOutput).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1170,6 +1183,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
             for (InterfaceTerminalEntry entry : entries) {
                 if (!entry.online) continue;
 
+                if (hideP2POutputs && entry.p2pOutput) {
+                    continue;
+                }
                 var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
                 entry.dispY = -9999;
                 if (onlyMolecularAssemblers
@@ -1258,13 +1274,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int guiHeight;
         int dispY = -9999;
         boolean online;
+        boolean p2pOutput;
         private Boolean[] brokenRecipes;
         int numItems = 0;
         /** Should recipe be filtered out/grayed out? */
         boolean[] filteredRecipes;
         private int hoveredSlotIdx = -1;
 
-        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, boolean online) {
+        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, boolean online, boolean p2pOutput) {
             this.id = id;
             if (StatCollector.canTranslate(name)) {
                 this.dispName = StatCollector.translateToLocal(name);
@@ -1280,6 +1297,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.rows = rows;
             this.rowSize = rowSize;
             this.online = online;
+            this.p2pOutput = p2pOutput;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
             this.guiHeight = 18 * rows + 1;

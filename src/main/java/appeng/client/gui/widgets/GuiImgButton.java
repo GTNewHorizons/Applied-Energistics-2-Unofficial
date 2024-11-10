@@ -627,6 +627,19 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ToggleMolecularAssemblers,
                     ButtonToolTips.ToggleMolecularAssemblersDescOff);
             this.registerApp(
+                    10 + 5 * 16,
+                    Settings.ACTIONS,
+                    ActionItems.TOGGLE_SHOW_P2P_OUTPUTS_OFF,
+                    ButtonToolTips.ToggleShowP2POutputs,
+                    ButtonToolTips.ToggleShowP2POutputsDescOff);
+            this.registerApp(
+                    11 + 5 * 16,
+                    Settings.ACTIONS,
+                    ActionItems.TOGGLE_SHOW_P2P_OUTPUTS_ON,
+                    ButtonToolTips.ToggleShowP2POutputs,
+                    ButtonToolTips.ToggleShowP2POutputsDescOn);
+
+            this.registerApp(
                     6 + 6 * 16,
                     Settings.ACTIONS,
                     ActionItems.HIGHLIGHT_INTERFACE,

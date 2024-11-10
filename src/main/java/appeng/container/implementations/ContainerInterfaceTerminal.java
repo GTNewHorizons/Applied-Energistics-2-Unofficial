@@ -43,6 +43,7 @@ import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.helpers.InventoryAction;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.AEBasePart;
+import appeng.parts.p2p.PartP2PTunnel;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
@@ -311,7 +312,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     update.addNewEntry(entry.id, entry.name, entry.online)
                             .setLoc(entry.x, entry.y, entry.z, entry.dim, entry.side.ordinal())
                             .setItems(entry.rows, entry.rowSize, entry.invNbt)
-                            .setReps(machine.getSelfRep(), machine.getDisplayRep());
+                            .setReps(machine.getSelfRep(), machine.getDisplayRep())
+                            .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput());
                     tracked.put(machine, entry);
                     trackedById.put(entry.id, entry);
                     visited.add(machine);
