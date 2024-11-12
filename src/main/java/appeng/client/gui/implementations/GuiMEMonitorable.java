@@ -199,6 +199,7 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
                 iBtn.set(next);
 
                 if (next.getClass() == SearchBoxMode.class || next.getClass() == TerminalStyle.class) {
+                    memoryText = this.searchField.getText();
                     this.reinitalize();
                 }
             }
