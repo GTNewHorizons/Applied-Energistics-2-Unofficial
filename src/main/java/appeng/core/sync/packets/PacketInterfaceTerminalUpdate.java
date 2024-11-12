@@ -237,6 +237,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public int x, y, z, dim, side;
         public int rows, rowSize;
         public boolean online;
+        public boolean p2pOutput;
         public ItemStack selfRep, dispRep;
         public NBTTagList items;
 
@@ -248,6 +249,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
 
         PacketAdd(ByteBuf buf) throws IOException {
             super(buf);
+        }
+
+        public PacketAdd setP2POutput(boolean p2pOutput) {
+            this.p2pOutput = p2pOutput;
+            return this;
         }
 
         public PacketAdd setLoc(int x, int y, int z, int dim, int side) {
@@ -293,6 +299,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             buf.writeInt(rows);
             buf.writeInt(rowSize);
             buf.writeBoolean(online);
+            buf.writeBoolean(p2pOutput);
 
             ByteBuf tempBuf = Unpooled.directBuffer(256);
             try {
@@ -327,6 +334,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.rows = buf.readInt();
             this.rowSize = buf.readInt();
             this.online = buf.readBoolean();
+            this.p2pOutput = buf.readBoolean();
 
             int payloadSize = buf.readInt();
             try (ByteBufInputStream stream = new ByteBufInputStream(buf, payloadSize)) {
@@ -385,6 +393,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     + rowSize
                     + ", online="
                     + online
+                    + ", p2pOutput="
+                    + p2pOutput
                     + ", selfRep="
                     + selfRep
                     + ", dispRep="

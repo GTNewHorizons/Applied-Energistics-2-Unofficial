@@ -853,7 +853,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.name,
                     addCmd.rows,
                     addCmd.rowSize,
-                    addCmd.online).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim)
+                    addCmd.online,
+                    addCmd.p2pOutput).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1168,7 +1169,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             String output = GuiInterfaceTerminal.this.searchFieldOutputs.getText().toLowerCase();
 
             for (InterfaceTerminalEntry entry : entries) {
-                if (!entry.online) continue;
+                if (!entry.online || entry.p2pOutput) continue;
 
                 var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
                 entry.dispY = -9999;
@@ -1258,13 +1259,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int guiHeight;
         int dispY = -9999;
         boolean online;
+        boolean p2pOutput;
         private Boolean[] brokenRecipes;
         int numItems = 0;
         /** Should recipe be filtered out/grayed out? */
         boolean[] filteredRecipes;
         private int hoveredSlotIdx = -1;
 
-        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, boolean online) {
+        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, boolean online, boolean p2pOutput) {
             this.id = id;
             if (StatCollector.canTranslate(name)) {
                 this.dispName = StatCollector.translateToLocal(name);
@@ -1280,6 +1282,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.rows = rows;
             this.rowSize = rowSize;
             this.online = online;
+            this.p2pOutput = p2pOutput;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
             this.guiHeight = 18 * rows + 1;
