@@ -15,7 +15,6 @@ import org.lwjgl.opengl.GL11;
 
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.WorldCoord;
-import appeng.core.localization.PlayerMessages;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 // taken from McJty's McJtyLib
@@ -26,22 +25,19 @@ public class BlockPosHighlighter {
     private static final int MIN_TIME = 3000;
     private static final int MAX_TIME = MIN_TIME * 10;
 
-    public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces) {
+    public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String foundMsg,
+            String wrongDimMsg) {
         clear();
         int highlightDuration = MIN_TIME;
         for (DimensionalCoord coord : interfaces) {
-            if (player.worldObj.provider.dimensionId != coord.getDimension()) {
-                player.addChatMessage(
-                        new ChatComponentTranslation(
-                                PlayerMessages.InterfaceInOtherDim.getName(),
-                                coord.getDimension()));
+            if (player.worldObj.provider.dimensionId == coord.getDimension()) {
+                if (foundMsg != null) {
+                    player.addChatMessage(new ChatComponentTranslation(foundMsg, coord.x, coord.y, coord.z));
+                }
             } else {
-                player.addChatMessage(
-                        new ChatComponentTranslation(
-                                PlayerMessages.InterfaceHighlighted.getName(),
-                                coord.x,
-                                coord.y,
-                                coord.z));
+                if (wrongDimMsg != null) {
+                    player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, coord.getDimension()));
+                }
             }
             highlightedBlocks.add(coord);
             highlightDuration = Math.max(

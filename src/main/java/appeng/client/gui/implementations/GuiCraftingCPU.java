@@ -46,6 +46,7 @@ import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
@@ -202,7 +203,11 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
             // when using the highlight feature in the crafting GUI we want to show all the interfaces
             // that currently received items so the player can see if the items are processed properly
-            BlockPosHighlighter.highlightBlocks(mc.thePlayer, DimensionalCoord.readAsListFromNBT(data));
+            BlockPosHighlighter.highlightBlocks(
+                    mc.thePlayer,
+                    DimensionalCoord.readAsListFromNBT(data),
+                    PlayerMessages.InterfaceHighlighted.getName(),
+                    PlayerMessages.InterfaceInOtherDim.getName());
             mc.thePlayer.closeScreen();
         }
         super.mouseClicked(xCoord, yCoord, btn);

@@ -65,6 +65,7 @@ import appeng.core.CommonHelper;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate.PacketEntry;
@@ -1387,8 +1388,11 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 optionsButton.func_146113_a(mc.getSoundHandler());
                 // When using the highlight from the interface terminal, we want it to only
                 // highlight the interface containing the patterns and not any output p2p interfaces
-                BlockPosHighlighter
-                        .highlightBlocks(mc.thePlayer, Collections.singletonList(new DimensionalCoord(x, y, z, dim)));
+                BlockPosHighlighter.highlightBlocks(
+                        mc.thePlayer,
+                        Collections.singletonList(new DimensionalCoord(x, y, z, dim)),
+                        PlayerMessages.InterfaceHighlighted.getName(),
+                        PlayerMessages.InterfaceInOtherDim.getName());
                 mc.thePlayer.closeScreen();
                 return true;
             }
