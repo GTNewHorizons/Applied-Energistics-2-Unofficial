@@ -22,7 +22,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ChatComponentTranslation;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
@@ -36,7 +35,6 @@ import appeng.api.config.ViewItems;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.DimensionalCoord;
-import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.widgets.GuiScrollbar;
@@ -48,7 +46,6 @@ import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
@@ -203,23 +200,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         if (this.hoveredNbtStack != null && isShiftKeyDown()) {
             NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
-            WorldCoord blockPos2 = new WorldCoord(
-                    (int) mc.thePlayer.posX,
-                    (int) mc.thePlayer.posY,
-                    (int) mc.thePlayer.posZ);
-            BlockPosHighlighter.clear();
-            for (DimensionalCoord blockPos : DimensionalCoord.readAsListFromNBT(data)) {
-                BlockPosHighlighter.highlightBlock(
-                        blockPos,
-                        System.currentTimeMillis() + 500 * WorldCoord.getTaxicabDistance(blockPos, blockPos2),
-                        false);
-                mc.thePlayer.addChatMessage(
-                        new ChatComponentTranslation(
-                                PlayerMessages.InterfaceHighlighted.getName(),
-                                blockPos.x,
-                                blockPos.y,
-                                blockPos.z));
-            }
+            BlockPosHighlighter.highlightBlocks(mc.thePlayer, DimensionalCoord.readAsListFromNBT(data));
             mc.thePlayer.closeScreen();
         }
         super.mouseClicked(xCoord, yCoord, btn);

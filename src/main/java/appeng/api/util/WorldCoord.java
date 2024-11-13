@@ -13,6 +13,7 @@
 
 package appeng.api.util;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -120,6 +121,13 @@ public class WorldCoord {
         long dx = Math.abs(blockPos.x - blockPos2.x);
         long dy = Math.abs(blockPos.y - blockPos2.y);
         long dz = Math.abs(blockPos.z - blockPos2.z);
+        return dx + dy + dz;
+    }
+
+    public static int getTaxicabDistance(WorldCoord blockPos, EntityPlayer player) {
+        int dx = Math.abs(blockPos.x - (int) player.posX);
+        int dy = Math.abs(blockPos.y - (int) player.posY);
+        int dz = Math.abs(blockPos.z - (int) player.posZ);
         return dx + dy + dz;
     }
 

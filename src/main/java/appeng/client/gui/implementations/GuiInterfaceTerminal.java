@@ -12,6 +12,7 @@ package appeng.client.gui.implementations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,7 +32,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -49,7 +49,6 @@ import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
 import appeng.api.util.DimensionalCoord;
-import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.IInterfaceTerminalPostUpdate;
@@ -66,7 +65,6 @@ import appeng.core.CommonHelper;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate.PacketEntry;
@@ -1387,26 +1385,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     && mouseY > Math.max(optionsButton.yPosition, InterfaceSection.TITLE_HEIGHT)
                     && mouseY <= Math.min(optionsButton.yPosition + optionsButton.height, viewHeight)) {
                 optionsButton.func_146113_a(mc.getSoundHandler());
-                DimensionalCoord blockPos = new DimensionalCoord(x, y, z, dim);
-                /* View in world */
-                WorldCoord blockPos2 = new WorldCoord(
-                        (int) mc.thePlayer.posX,
-                        (int) mc.thePlayer.posY,
-                        (int) mc.thePlayer.posZ);
-                if (mc.theWorld.provider.dimensionId != dim) {
-                    mc.thePlayer.addChatMessage(
-                            new ChatComponentTranslation(PlayerMessages.InterfaceInOtherDim.getName(), dim));
-                } else {
-                    BlockPosHighlighter.highlightBlock(
-                            blockPos,
-                            System.currentTimeMillis() + 500 * WorldCoord.getTaxicabDistance(blockPos, blockPos2));
-                    mc.thePlayer.addChatMessage(
-                            new ChatComponentTranslation(
-                                    PlayerMessages.InterfaceHighlighted.getName(),
-                                    blockPos.x,
-                                    blockPos.y,
-                                    blockPos.z));
-                }
+                BlockPosHighlighter
+                        .highlightBlocks(mc.thePlayer, Collections.singletonList(new DimensionalCoord(x, y, z, dim)));
                 mc.thePlayer.closeScreen();
                 return true;
             }

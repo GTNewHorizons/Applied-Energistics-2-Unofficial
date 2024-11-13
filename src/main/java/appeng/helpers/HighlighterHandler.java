@@ -26,7 +26,7 @@ public class HighlighterHandler {
             return;
         }
         long time = System.currentTimeMillis();
-        if (time > BlockPosHighlighter.getExpireHighlight()) {
+        if (time > BlockPosHighlighter.getExpireHighlightTime()) {
             BlockPosHighlighter.clear();
             return;
         }
