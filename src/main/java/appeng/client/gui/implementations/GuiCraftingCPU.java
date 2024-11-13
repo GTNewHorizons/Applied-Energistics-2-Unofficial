@@ -200,6 +200,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         if (this.hoveredNbtStack != null && isShiftKeyDown()) {
             NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
+            // when using the highlight feature in the crafting GUI we want to show all the interfaces
+            // that currently received items so the player can see if the items are processed properly
             BlockPosHighlighter.highlightBlocks(mc.thePlayer, DimensionalCoord.readAsListFromNBT(data));
             mc.thePlayer.closeScreen();
         }

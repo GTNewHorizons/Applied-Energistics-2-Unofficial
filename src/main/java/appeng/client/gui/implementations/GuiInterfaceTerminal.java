@@ -1385,6 +1385,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     && mouseY > Math.max(optionsButton.yPosition, InterfaceSection.TITLE_HEIGHT)
                     && mouseY <= Math.min(optionsButton.yPosition + optionsButton.height, viewHeight)) {
                 optionsButton.func_146113_a(mc.getSoundHandler());
+                // When using the highlight from the interface terminal, we want it to only
+                // highlight the interface containing the patterns and not any output p2p interfaces
                 BlockPosHighlighter
                         .highlightBlocks(mc.thePlayer, Collections.singletonList(new DimensionalCoord(x, y, z, dim)));
                 mc.thePlayer.closeScreen();
