@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import javax.imageio.ImageIO;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.event.ClickEvent;
@@ -55,7 +56,7 @@ public class GuiCraftingTree {
     private CraftingRequest<?> request;
 
     // Y -> list of nodes sorted by X
-    private TreeMap<Integer, ArrayList<Node>> treeNodes = new TreeMap<>();
+    private final TreeMap<Integer, ArrayList<Node>> treeNodes = new TreeMap<>();
     private int treeWidth, treeHeight;
 
     public static final int X_SPACING = 24;
@@ -323,15 +324,30 @@ public class GuiCraftingTree {
 
     private Node tooltipNode;
 
+    /**
+     * @param mouseX mouse position relative to the right of the gui, not the screen
+     * @param mouseY mouse position relative to the top of the gui, not the screen
+     */
     public void onMouseWheel(int mouseX, int mouseY, int wheel) {
-        mouseX -= widgetX;
-        mouseY -= widgetY;
-        final float oldZoom = zoomLevel;
-        zoomLevel *= (float) Math.pow(1.4, wheel);
-        zoomLevel = MathHelper.clamp_float(zoomLevel, 0.1f, 8.0f);
-        // Zoom into the mouse cursor position, instead of top-left corner
-        scrollX += mouseX / oldZoom - mouseX / zoomLevel;
-        scrollY += mouseY / oldZoom - mouseY / zoomLevel;
+        if (GuiScreen.isShiftKeyDown()) { // move right and left
+            // scroll down moves the elements to the left
+            scrollX -= wheel * widgetW / (5F * zoomLevel);
+            scrollX = MathHelper.clamp_float(scrollX, -widgetW / zoomLevel + 4, treeWidth - 4);
+        } else if (GuiScreen.isCtrlKeyDown()) { // zoom in and out
+            // scroll down makes elements smaller
+            mouseX -= widgetX;
+            mouseY -= widgetY;
+            final float oldZoom = zoomLevel;
+            zoomLevel *= (float) Math.pow(1.4, wheel);
+            zoomLevel = MathHelper.clamp_float(zoomLevel, 0.1f, 8.0f);
+            // Zoom into the mouse cursor position, instead of top-left corner
+            scrollX += mouseX / oldZoom - mouseX / zoomLevel;
+            scrollY += mouseY / oldZoom - mouseY / zoomLevel;
+        } else { // move up and down
+            // scroll down makes the elements go up
+            scrollY -= wheel * widgetH / (5F * zoomLevel);
+            scrollY = MathHelper.clamp_float(scrollY, -widgetH / zoomLevel + 4, treeHeight - 4);
+        }
     }
 
     public void draw(int guiMouseX, int guiMouseY) {
