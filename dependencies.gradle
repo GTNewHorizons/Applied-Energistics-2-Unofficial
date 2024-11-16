@@ -5,12 +5,12 @@ dependencies {
     implementation('curse.maven:cofh-core-69162:2388751')
 
     compileOnlyApi('com.github.GTNewHorizons:Angelica:1.0.0-beta18:api')
-    compileOnly("com.github.GTNewHorizons:GTNHLib:0.5.19:dev") {transitive = false}
+    compileOnly("com.github.GTNewHorizons:GTNHLib:0.5.20:dev") {transitive = false}
     compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.10.2:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.39:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.9.16:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.5.0:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.50.61:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.50.67:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.4.6:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.0:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:OpenComputers:1.10.27-GTNH:api') {transitive = false}
@@ -34,7 +34,7 @@ dependencies {
     functionalTestImplementation('org.junit.platform:junit-platform-engine')
     functionalTestImplementation('org.junit.platform:junit-platform-launcher')
     functionalTestImplementation('org.junit.platform:junit-platform-reporting')
-    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.50.61:dev') {
+    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.50.67:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
     }
 
