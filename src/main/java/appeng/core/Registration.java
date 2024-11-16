@@ -285,6 +285,7 @@ public final class Registration {
         target.materialCardInverter = this.converter.of(source.cardInverter());
         target.materialCardCrafting = this.converter.of(source.cardCrafting());
         target.materialCardSticky = this.converter.of(source.cardSticky());
+        target.materialCardRegulator = this.converter.of(source.cardRegulator());
 
         target.materialEnderDust = this.converter.of(source.enderDust());
         target.materialFlour = this.converter.of(source.flour());
@@ -637,6 +638,7 @@ public final class Registration {
         Upgrades.SPEED.registerItem(parts.exportBus(), 4);
         Upgrades.CRAFTING.registerItem(parts.exportBus(), 1);
         Upgrades.ORE_FILTER.registerItem(parts.exportBus(), 1);
+        Upgrades.REGULATOR.registerItem(parts.exportBus(), 1);
 
         // Storage Cells
         Upgrades.FUZZY.registerItem(items.cell1k(), 1);

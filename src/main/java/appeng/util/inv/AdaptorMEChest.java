@@ -13,7 +13,7 @@ public class AdaptorMEChest extends AdaptorIInventory {
     private final TileChest meChest;
 
     public AdaptorMEChest(TileChest meChest) {
-        super(meChest.getInternalInventory());
+        super(meChest.getInternalInventory(), meChest.getInternalInventory().getInventoryStackLimit());
         this.meChest = meChest;
     }
 

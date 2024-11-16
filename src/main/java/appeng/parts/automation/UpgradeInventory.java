@@ -39,6 +39,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
     private int advancedBlockingUpgrades = 0;
     private int lockCraftingUpgrades = 0;
     private int stickyUpgrades = 0;
+    private int regulatorUpgrade = 0;
 
     public UpgradeInventory(final IAEAppEngInventory parent, final int s) {
         super(null, s);
@@ -89,6 +90,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
             case ADVANCED_BLOCKING -> this.advancedBlockingUpgrades;
             case LOCK_CRAFTING -> this.lockCraftingUpgrades;
             case STICKY -> this.stickyUpgrades;
+            case REGULATOR -> this.regulatorUpgrade;
             default -> 0;
         };
     }
@@ -118,6 +120,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
                 case ADVANCED_BLOCKING -> this.advancedBlockingUpgrades++;
                 case LOCK_CRAFTING -> this.lockCraftingUpgrades++;
                 case STICKY -> this.stickyUpgrades++;
+                case REGULATOR -> this.regulatorUpgrade++;
                 default -> {}
             }
         }
@@ -136,6 +139,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
                 .min(this.advancedBlockingUpgrades, this.getMaxInstalled(Upgrades.ADVANCED_BLOCKING));
         this.lockCraftingUpgrades = Math.min(this.lockCraftingUpgrades, this.getMaxInstalled(Upgrades.LOCK_CRAFTING));
         this.stickyUpgrades = Math.min(this.stickyUpgrades, this.getMaxInstalled(Upgrades.STICKY));
+        this.regulatorUpgrade = Math.min(this.regulatorUpgrade, this.getMaxInstalled(Upgrades.REGULATOR));
     }
 
     @Override

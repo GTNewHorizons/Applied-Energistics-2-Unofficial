@@ -16,6 +16,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import appeng.container.implementations.ContainerRegulatorCard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
@@ -116,6 +117,8 @@ public class PacketValueConfig extends AppEngPacket {
             pc.setPriority(Integer.parseInt(this.Value), player);
         } else if (this.Name.equals("OreFilter") && c instanceof ContainerOreFilter fc) {
             fc.setFilter(this.Value);
+        } else if (this.Name.equals("RegulatorSettings") && c instanceof ContainerRegulatorCard fc) {
+            fc.setRegulatorSettings(this.Value);
         } else if (this.Name.equals("LevelEmitter.Value") && c instanceof ContainerLevelEmitter lvc) {
             lvc.setLevel(Long.parseLong(this.Value), player);
         } else if (this.Name.startsWith("PatternTerminal.") && c instanceof final ContainerPatternTerm cpt) {

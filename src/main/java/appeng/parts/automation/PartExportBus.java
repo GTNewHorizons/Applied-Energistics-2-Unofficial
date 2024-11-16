@@ -10,6 +10,7 @@
 
 package appeng.parts.automation;
 
+import appeng.me.cache.TickManagerCache;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -263,6 +264,9 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
 
     @Override
     public TickingRequest getTickingRequest(final IGridNode node) {
+        if (getRegulatorMode()) {
+            return new TickingRequest(this.regulatorTicks, this.regulatorTicks, this.isSleeping(), false);
+        }
         return new TickingRequest(TickRates.ExportBus.getMin(), TickRates.ExportBus.getMax(), this.isSleeping(), false);
     }
 

@@ -12,6 +12,7 @@ package appeng.parts.automation;
 
 import java.util.function.Predicate;
 
+import appeng.helpers.IRegulatorCard;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -28,13 +29,16 @@ import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 
-public abstract class PartSharedItemBus extends PartUpgradeable implements IGridTickable, IOreFilterable {
+public abstract class PartSharedItemBus extends PartUpgradeable implements IGridTickable, IOreFilterable, IRegulatorCard {
 
     private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, 9);
     private int adaptorHash = 0;
     private InventoryAdaptor adaptor;
     private boolean lastRedstone = false;
     protected String oreFilterString = "";
+    protected String t = "";
+    protected int regulatorAmount = 1000;
+    protected int regulatorTicks = 20;
     protected Predicate<IAEItemStack> filterPredicate = null;
 
     public PartSharedItemBus(final ItemStack is) {
@@ -55,6 +59,8 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
         super.readFromNBT(extra);
         this.getConfig().readFromNBT(extra, "config");
         this.oreFilterString = extra.getString("filter");
+        this.regulatorAmount = extra.getInteger("regulatorAmount");
+        this.regulatorTicks = extra.getInteger("regulatorTicks");
     }
 
     @Override
@@ -62,6 +68,8 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
         super.writeToNBT(extra);
         this.getConfig().writeToNBT(extra, "config");
         extra.setString("filter", this.oreFilterString);
+        extra.setInteger("regulatorAmount", this.regulatorAmount);
+        extra.setInteger("regulatorTicks", this.regulatorTicks);
     }
 
     @Override
@@ -109,13 +117,31 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
     }
 
     protected int calculateItemsToSend() {
-        return switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
-            default -> 1;
-            case 1 -> 8;
-            case 2 -> 32;
-            case 3 -> 64;
-            case 4 -> 96;
-        };
+        int amount = 1;
+        switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
+            case 4:
+                amount = 96;
+            case 3:
+                amount = 64;
+            case 2:
+                amount = 32;
+            case 1:
+                amount =  8;
+        }
+        switch (this.getInstalledUpgrades(Upgrades.SUPERSPEED)) {
+            case 4:
+                amount = 65536;
+            case 3:
+                amount = 16384;
+            case 2:
+                amount = 2048;
+            case 1:
+                amount = 256;
+        }
+        if (this.getInstalledUpgrades(Upgrades.REGULATOR) > 0) {
+            amount = this.regulatorAmount;
+        }
+        return amount;
     }
 
     /**
@@ -171,5 +197,21 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
     public void setFilter(String filter) {
         oreFilterString = filter;
         filterPredicate = null;
+    }
+
+    protected boolean getRegulatorMode() {
+        return this.getInstalledUpgrades(Upgrades.REGULATOR) > 0;
+    }
+
+    @Override
+    public String getRegulatorSettings() {
+        return regulatorAmount + ":" + regulatorTicks;
+    }
+
+    @Override
+    public void setRegulatorSettings(String settings) {
+        String[] rs = settings.split(":");
+        regulatorAmount = Integer.parseInt(rs[0]);
+        regulatorTicks = Integer.parseInt(rs[1]);
     }
 }

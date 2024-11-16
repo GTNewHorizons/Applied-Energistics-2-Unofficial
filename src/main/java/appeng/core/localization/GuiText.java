@@ -249,7 +249,10 @@ public enum GuiText {
     TypesInfo,
     BytesInfo,
     ToFollow,
-    ToUnfollow;
+    ToUnfollow,
+    RegulatorCardLabel,
+    RegulatorCardAmount,
+    RegulatorCardTicks;
 
     private final String root;
 

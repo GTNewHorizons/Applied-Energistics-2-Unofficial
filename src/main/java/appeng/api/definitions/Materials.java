@@ -91,6 +91,8 @@ public class Materials {
 
     public AEItemDefinition materialCardSticky;
 
+    public AEItemDefinition materialCardRegulator;
+
     public AEItemDefinition materialEnderDust;
 
     public AEItemDefinition materialFlour;

@@ -150,7 +150,10 @@ public enum GuiColors {
     CellStatusOrange(0xFBA900),
     CellStatusRed(0xFB0000),
     CellStatusBlue(0x00AAFF),
-    CellStatusGreen(0x00FF00);
+    CellStatusGreen(0x00FF00),
+    RegulatorCardLabel(0x404040),
+    RegulatorCardAmount(0x404040),
+    RegulatorCardTicks(0x404040),;
 
     private final String root;
     private final int color;

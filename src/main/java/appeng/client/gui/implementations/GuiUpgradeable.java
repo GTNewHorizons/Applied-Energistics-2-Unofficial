@@ -60,6 +60,7 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
     protected GuiImgButton craftMode;
     protected GuiImgButton schedulingMode;
     protected GuiImgButton oreFilter;
+    protected GuiImgButton regulatorCard;
 
     public GuiUpgradeable(final InventoryPlayer inventoryPlayer, final IUpgradeableHost te) {
         this(new ContainerUpgradeable(inventoryPlayer, te));
@@ -119,12 +120,18 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
                 this.guiTop + 28,
                 Settings.ACTIONS,
                 ActionItems.ORE_FILTER);
+        this.regulatorCard = new GuiImgButton(
+                this.guiLeft - 18,
+                this.guiTop + 46,
+                Settings.ACTIONS,
+                ActionItems.REGULATOR_CARD);
 
         this.buttonList.add(this.craftMode);
         this.buttonList.add(this.redstoneMode);
         this.buttonList.add(this.fuzzyMode);
         this.buttonList.add(this.schedulingMode);
         this.buttonList.add(this.oreFilter);
+        this.buttonList.add(this.regulatorCard);
     }
 
     @Override
@@ -202,6 +209,9 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
         if (this.oreFilter != null) {
             this.oreFilter.setVisibility(this.bc.getInstalledUpgrades(Upgrades.ORE_FILTER) > 0);
         }
+        if (this.regulatorCard != null) {
+            this.regulatorCard.setVisibility(this.bc.getInstalledUpgrades(Upgrades.REGULATOR) > 0);
+        }
     }
 
     protected String getBackground() {
@@ -244,6 +254,10 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
 
         if (btn == this.oreFilter) {
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_ORE_FILTER));
+        }
+
+        if (btn == this.regulatorCard) {
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_REGULATOR_CARD));
         }
     }
 
