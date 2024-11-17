@@ -533,6 +533,10 @@ gui.tooltips.appliedenergistics2.ToUnfollow=Click to stop following this craft\n
 gui.tooltips.appliedenergistics2.StringOrder=Sorting
 gui.tooltips.appliedenergistics2.StringOrderNatural=Default
 gui.tooltips.appliedenergistics2.StringOrderAlphanum=Natural Order
+gui.tooltips.appliedenergistics2.RegulatorCardLabel=Regulator Settings
+gui.tooltips.appliedenergistics2.RegulatorCardHint=Set Amount, Ticks and Stock mode
+gui.tooltips.appliedenergistics2.RegulatorCardStockLabel=Toggle Stock Mode
+gui.tooltips.appliedenergistics2.RegulatorCardStockHint=Keep item stock
 
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE

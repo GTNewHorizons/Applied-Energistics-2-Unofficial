@@ -22,6 +22,7 @@ public enum ActionItems {
     SLOT_CONFIG,
     ORE_FILTER,
     REGULATOR_CARD,
+    REGULATOR_CARD_STOCK,
     DOUBLE,
     MULTIPLY,
     DIVIDE,

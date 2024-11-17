@@ -22,8 +22,11 @@ public class ContainerRegulatorCard extends AEBaseContainer {
     @SideOnly(Side.CLIENT)
     private MEGuiTextField ticksField;
 
+    @SideOnly(Side.CLIENT)
+    private MEGuiTextField stockModeField;
+
     @GuiSync(69)
-    public String regulatorSettings = "1000:20";
+    public String regulatorSettings;
 
     public ContainerRegulatorCard(final InventoryPlayer ip, final IRegulatorCard te) {
         super(ip, (TileEntity) (te instanceof TileEntity ? te : null), (IPart) (te instanceof IPart ? te : null));
@@ -33,15 +36,16 @@ public class ContainerRegulatorCard extends AEBaseContainer {
     @SideOnly(Side.CLIENT)
     public void setAmountField(final MEGuiTextField f) {
         this.amountField = f;
-        String[] rs = regulatorSettings.split(":");
-        this.amountField.setText(rs[0]);
     }
 
     @SideOnly(Side.CLIENT)
     public void setTicksField(final MEGuiTextField f) {
         this.ticksField = f;
-        String[] rs = regulatorSettings.split(":");
-        this.ticksField.setText(rs[1]);
+    }
+
+    @SideOnly(Side.CLIENT)
+    public void setStockModeField(final MEGuiTextField f) {
+        this.stockModeField = f;
     }
 
     public void setRegulatorSettings(final String newValue) {
@@ -61,6 +65,11 @@ public class ContainerRegulatorCard extends AEBaseContainer {
             String[] rs = regulatorSettings.split(":");
             this.amountField.setText(rs[0]);
             this.ticksField.setText(rs[1]);
+            if (Boolean.parseBoolean(rs[2])) {
+                this.stockModeField.setText("Active");
+            } else {
+                this.stockModeField.setText("Not Active");
+            }
         }
         super.onUpdate(field, oldValue, newValue);
     }

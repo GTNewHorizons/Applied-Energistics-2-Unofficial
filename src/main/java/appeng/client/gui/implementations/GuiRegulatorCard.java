@@ -1,6 +1,11 @@
 package appeng.client.gui.implementations;
 
+import appeng.api.config.ActionItems;
+import appeng.api.config.RedstoneMode;
+import appeng.api.config.Settings;
+import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
@@ -20,8 +25,10 @@ import appeng.parts.automation.PartSharedItemBus;
 import appeng.parts.misc.PartStorageBus;
 import appeng.tile.misc.TileCellWorkbench;
 import appeng.util.prioitylist.OreFilteredList.OreFilterTextFormatter;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.oredict.OreDictionary;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -32,32 +39,33 @@ public class GuiRegulatorCard extends AEBaseGui {
 
     private MEGuiTextField amountField;
     private MEGuiTextField ticksField;
+    private MEGuiTextField stockModeLabel;
+    private GuiImgButton stockModeButtonActive;
+    private boolean stockMode;
 
     public GuiRegulatorCard(InventoryPlayer ip, IRegulatorCard obj) {
         super(new ContainerRegulatorCard(ip, obj));
         this.xSize = 256;
 
-        this.amountField = new MEGuiTextField(75, 12) {
-
+        this.amountField = new MEGuiTextField(75, 12);
+        this.ticksField = new MEGuiTextField(40, 12);
+        this.stockModeLabel = new MEGuiTextField(70,12) {
             @Override
             public void onTextChange(final String oldText) {
-                final String amountText = getAmountText();
-                if (!amountText.equals(oldText)) {
-                    ((ContainerRegulatorCard) inventorySlots).setRegulatorSettings(filterRegulatorSettings(amountText, getTicksText()));
+                final String text = getText();
+                if (text == "Active"){
+                    stockMode = true;
+                } else if (text == "Not Active"){
+                    stockMode = false;
                 }
             }
         };
+        this.stockModeButtonActive = new GuiImgButton(
+                this.guiLeft,
+                this.guiTop,
+                Settings.ACTIONS,
+                ActionItems.REGULATOR_CARD_STOCK);
 
-        this.ticksField = new MEGuiTextField(40, 12) {
-
-            @Override
-            public void onTextChange(final String oldText) {;
-                final String ticksText = getTicksText();
-                if (!ticksText.equals(oldText)) {
-                    ((ContainerRegulatorCard) inventorySlots).setRegulatorSettings(filterRegulatorSettings(getAmountText() ,ticksText));
-                }
-            }
-        };
     }
 
     @Override
@@ -66,10 +74,20 @@ public class GuiRegulatorCard extends AEBaseGui {
 
         this.amountField.x = this.guiLeft + 64;
         this.amountField.y = this.guiTop + 32;
+
         this.ticksField.x = this.guiLeft + 152;
         this.ticksField.y = this.guiTop + 32;
+
+        this.stockModeLabel.x = this.guiLeft + 84;
+        this.stockModeLabel.y = this.guiTop + 48;
+
+        this.stockModeButtonActive.xPosition = this.guiLeft + 64;
+        this.stockModeButtonActive.yPosition = this.guiTop + 46;
+
+        this.buttonList.add(this.stockModeButtonActive);
         ((ContainerRegulatorCard) this.inventorySlots).setAmountField(this.amountField);
         ((ContainerRegulatorCard) this.inventorySlots).setTicksField(this.ticksField);
+        ((ContainerRegulatorCard) this.inventorySlots).setStockModeField(this.stockModeLabel);
     }
 
     @Override
@@ -77,20 +95,15 @@ public class GuiRegulatorCard extends AEBaseGui {
         super.onGuiClosed();
     }
 
-    public String getAmountText() {
-        return this.amountField.getText();
-    }
-
-    public String getTicksText() {
-        return this.ticksField.getText();
-    }
-
     public String filterRegulatorSettings(final String amount, final String ticks) {
         String s = "1000:20";
         if (amount != "" && ticks != "") {
             try {
-                Integer.parseInt(amount);
-                s = amount + ":";
+                if (Integer.parseInt(amount) == 0) {
+                    s = "1:";
+                } else {
+                    s = amount + ":";
+                }
             } catch (Exception ignored) {
                 s = Integer.MAX_VALUE + ":";
             }
@@ -98,6 +111,8 @@ public class GuiRegulatorCard extends AEBaseGui {
                 final int m = Integer.parseInt(ticks);
                 if (m > 72000) {
                     s += "72000";
+                } else if (m == 0) {
+                    s += "1";
                 } else {
                     s += ticks;
                 }
@@ -125,12 +140,20 @@ public class GuiRegulatorCard extends AEBaseGui {
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
         this.amountField.drawTextBox();
         this.ticksField.drawTextBox();
+        this.stockModeLabel.drawTextBox();
     }
 
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         this.amountField.mouseClicked(xCoord, yCoord, btn);
         this.ticksField.mouseClicked(xCoord, yCoord, btn);
+        if (this.stockModeButtonActive.mousePressed(mc,xCoord,yCoord)) {
+            if (!stockMode) {
+                this.stockModeLabel.setText("Active");
+            } else {
+                this.stockModeLabel.setText("Not Active");
+            }
+        }
         super.mouseClicked(xCoord, yCoord, btn);
     }
 
@@ -138,7 +161,7 @@ public class GuiRegulatorCard extends AEBaseGui {
     protected void keyTyped(final char character, final int key) {
         if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
             try {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("RegulatorSettings", filterRegulatorSettings(this.amountField.getText(), this.ticksField.getText())));
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("RegulatorSettings", filterRegulatorSettings(this.amountField.getText(), this.ticksField.getText()) + ":" + stockMode));
             } catch (IOException e) {
                 AELog.debug(e);
             }

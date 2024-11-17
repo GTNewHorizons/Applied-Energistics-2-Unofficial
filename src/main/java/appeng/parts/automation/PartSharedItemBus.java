@@ -36,9 +36,11 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
     private InventoryAdaptor adaptor;
     private boolean lastRedstone = false;
     protected String oreFilterString = "";
-    protected String t = "";
-    protected int regulatorAmount = 1000;
-    protected int regulatorTicks = 20;
+    protected boolean regulatorMode = false;
+    protected boolean regulatorStockMode = false;
+    public int regulatorAmount = 1000;
+    private int regulatorTicks = 20;
+    private int regulatorTickCount = 0;
     protected Predicate<IAEItemStack> filterPredicate = null;
 
     public PartSharedItemBus(final ItemStack is) {
@@ -51,6 +53,7 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
             oreFilterString = "";
             filterPredicate = null;
         }
+        regulatorMode = getInstalledUpgrades(Upgrades.REGULATOR) == 1;
         this.updateState();
     }
 
@@ -59,6 +62,8 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
         super.readFromNBT(extra);
         this.getConfig().readFromNBT(extra, "config");
         this.oreFilterString = extra.getString("filter");
+        this.regulatorMode = extra.getBoolean("regulatorMode");
+        this.regulatorStockMode = extra.getBoolean("regulatorStockMode");
         this.regulatorAmount = extra.getInteger("regulatorAmount");
         this.regulatorTicks = extra.getInteger("regulatorTicks");
     }
@@ -68,6 +73,8 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
         super.writeToNBT(extra);
         this.getConfig().writeToNBT(extra, "config");
         extra.setString("filter", this.oreFilterString);
+        extra.setBoolean("regulatorMode", this.regulatorMode);
+        extra.setBoolean("regulatorStockMode", this.regulatorStockMode);
         extra.setInteger("regulatorAmount", this.regulatorAmount);
         extra.setInteger("regulatorTicks", this.regulatorTicks);
     }
@@ -117,31 +124,14 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
     }
 
     protected int calculateItemsToSend() {
-        int amount = 1;
-        switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
-            case 4:
-                amount = 96;
-            case 3:
-                amount = 64;
-            case 2:
-                amount = 32;
-            case 1:
-                amount =  8;
-        }
-        switch (this.getInstalledUpgrades(Upgrades.SUPERSPEED)) {
-            case 4:
-                amount = 65536;
-            case 3:
-                amount = 16384;
-            case 2:
-                amount = 2048;
-            case 1:
-                amount = 256;
-        }
-        if (this.getInstalledUpgrades(Upgrades.REGULATOR) > 0) {
-            amount = this.regulatorAmount;
-        }
-        return amount;
+        if (this.regulatorMode) return this.regulatorAmount;
+        return switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
+            case 1 -> 8;
+            case 2 -> 32;
+            case 3 -> 64;
+            case 4 -> 96;
+            default -> 1;
+        };
     }
 
     /**
@@ -199,13 +189,18 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
         filterPredicate = null;
     }
 
-    protected boolean getRegulatorMode() {
-        return this.getInstalledUpgrades(Upgrades.REGULATOR) > 0;
+    public boolean regulatorTicks() {
+        regulatorTickCount++;
+        if (regulatorTickCount >= regulatorTicks) {
+            regulatorTickCount = 0;
+            return true;
+        }
+        return false;
     }
 
     @Override
     public String getRegulatorSettings() {
-        return regulatorAmount + ":" + regulatorTicks;
+        return regulatorAmount + ":" + regulatorTicks + ":" + regulatorStockMode;
     }
 
     @Override
@@ -213,5 +208,6 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
         String[] rs = settings.split(":");
         regulatorAmount = Integer.parseInt(rs[0]);
         regulatorTicks = Integer.parseInt(rs[1]);
+        regulatorStockMode = Boolean.parseBoolean(rs[2]);
     }
 }

@@ -165,6 +165,7 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
 
     @Override
     public TickingRequest getTickingRequest(final IGridNode node) {
+        if (regulatorMode) return new TickingRequest(1, 1, false, false);
         return new TickingRequest(
                 TickRates.ImportBus.getMin(),
                 TickRates.ImportBus.getMax(),
@@ -179,7 +180,7 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
 
     @Override
     protected TickRateModulation doBusWork() {
-        if (!this.getProxy().isActive() || !this.canDoBusWork()) {
+        if (!this.getProxy().isActive() || !this.canDoBusWork()  || !(regulatorMode && regulatorTicks())) {
             return TickRateModulation.IDLE;
         }
 
@@ -291,7 +292,7 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
 
     private int calculateMaximumAmountToImport(final InventoryAdaptor myAdaptor, final IAEItemStack whatToImport,
             final IMEMonitor<IAEItemStack> inv, final FuzzyMode fzMode) {
-        final int toSend = Math.min(this.itemToSend, 64);
+        int toSend = this.itemToSend;
         final ItemStack itemStackToImport;
 
         if (whatToImport == null) {
@@ -302,6 +303,17 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
 
         final IAEItemStack itemAmountNotStorable;
         final ItemStack simResult;
+        if (this.regulatorMode && this.regulatorStockMode && whatToImport != null) {
+            IAEItemStack id = inv.getAvailableItem(whatToImport, this.regulatorAmount);
+            if (id != null) {
+                int t = (int) id.getStackSize();
+                if (t == this.regulatorAmount){
+                    return 0;
+                } else if ((toSend - t) > 0) {
+                    toSend = toSend - t;
+                }
+            }
+        }
         if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
             simResult = myAdaptor.simulateSimilarRemove(toSend, itemStackToImport, fzMode, this.configDestination(inv));
         } else {

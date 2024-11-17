@@ -630,6 +630,7 @@ public final class Registration {
         Upgrades.CAPACITY.registerItem(parts.importBus(), 2);
         Upgrades.SPEED.registerItem(parts.importBus(), 4);
         Upgrades.ORE_FILTER.registerItem(parts.importBus(), 1);
+        Upgrades.REGULATOR.registerItem(parts.importBus(), 1);
 
         // Export Bus
         Upgrades.FUZZY.registerItem(parts.exportBus(), 1);

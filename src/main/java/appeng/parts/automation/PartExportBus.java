@@ -11,6 +11,8 @@
 package appeng.parts.automation;
 
 import appeng.me.cache.TickManagerCache;
+import appeng.util.inv.IInventoryDestination;
+import appeng.util.inv.ItemSlot;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -56,6 +58,8 @@ import appeng.util.prioitylist.OreFilteredList;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+import java.util.Iterator;
+
 public class PartExportBus extends PartSharedItemBus implements ICraftingRequester {
 
     private final MultiCraftingTracker craftingTracker = new MultiCraftingTracker(this, 9);
@@ -91,7 +95,7 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
 
     @Override
     protected TickRateModulation doBusWork() {
-        if (!this.getProxy().isActive() || !this.canDoBusWork()) {
+        if (!this.getProxy().isActive() || !this.canDoBusWork() || !(regulatorMode && regulatorTicks())) {
             return TickRateModulation.IDLE;
         }
 
@@ -142,6 +146,17 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
                                 }
                             }
                         } else {
+                            if (this.regulatorMode && this.regulatorStockMode) {
+                                ItemStack in = destination.simulateRemove((int) this.itemToSend, ais.getItemStack(), null); //get number of item in target inventory
+                                if (in != null) {
+                                    int t = in.stackSize;
+                                    if (t >= this.itemToSend) {
+                                        this.itemToSend = 0;
+                                    } else if ((this.itemToSend - t) > 0) {
+                                        this.itemToSend = this.itemToSend - t;
+                                    }
+                                }
+                            }
                             this.pushItemIntoTarget(destination, energy, inv, ais);
                         }
 
@@ -264,9 +279,7 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
 
     @Override
     public TickingRequest getTickingRequest(final IGridNode node) {
-        if (getRegulatorMode()) {
-            return new TickingRequest(this.regulatorTicks, this.regulatorTicks, this.isSleeping(), false);
-        }
+        if (regulatorMode) return new TickingRequest(1, 1, false, false);
         return new TickingRequest(TickRates.ExportBus.getMin(), TickRates.ExportBus.getMax(), this.isSleeping(), false);
     }
 
