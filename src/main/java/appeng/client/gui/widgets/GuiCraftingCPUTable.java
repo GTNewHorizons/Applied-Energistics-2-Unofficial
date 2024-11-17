@@ -294,7 +294,7 @@ public class GuiCraftingCPUTable {
      */
     public void mouseClickMove(int xCoord, int yCoord) {
         if (cpuScrollbar != null) {
-            cpuScrollbar.click(parent, xCoord, yCoord);
+            cpuScrollbar.clickMove(yCoord);
         }
     }
 

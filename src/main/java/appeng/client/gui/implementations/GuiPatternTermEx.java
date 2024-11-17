@@ -232,7 +232,7 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
     @Override
     protected void mouseClickMove(final int x, final int y, final int c, final long d) {
         final int currentScroll = this.processingScrollBar.getCurrentScroll();
-        this.processingScrollBar.click(this, x - this.guiLeft, y - this.guiTop);
+        this.processingScrollBar.clickMove(y - this.guiTop);
         super.mouseClickMove(x, y, c, d);
 
         if (currentScroll != this.processingScrollBar.getCurrentScroll()) {

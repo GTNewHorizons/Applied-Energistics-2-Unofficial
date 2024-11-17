@@ -383,7 +383,7 @@ public abstract class AEBaseGui extends GuiContainer {
         final ItemStack itemstack = this.mc.thePlayer.inventory.getItemStack();
 
         if (this.getScrollBar() != null) {
-            this.getScrollBar().click(this, x - this.guiLeft, y - this.guiTop);
+            this.getScrollBar().clickMove(y - this.guiTop);
         }
 
         if (slot instanceof SlotFake && itemstack != null) {
