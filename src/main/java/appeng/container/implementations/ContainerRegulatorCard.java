@@ -1,6 +1,5 @@
 package appeng.container.implementations;
 
-import appeng.helpers.IRegulatorCard;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.tileentity.TileEntity;
 
@@ -8,6 +7,7 @@ import appeng.api.parts.IPart;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
+import appeng.helpers.IRegulatorCard;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;

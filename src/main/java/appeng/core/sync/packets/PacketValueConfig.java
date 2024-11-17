@@ -16,7 +16,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import appeng.container.implementations.ContainerRegulatorCard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
@@ -41,6 +40,7 @@ import appeng.container.implementations.ContainerPatternTerm;
 import appeng.container.implementations.ContainerPatternTermEx;
 import appeng.container.implementations.ContainerPriority;
 import appeng.container.implementations.ContainerQuartzKnife;
+import appeng.container.implementations.ContainerRegulatorCard;
 import appeng.container.implementations.ContainerRenamer;
 import appeng.container.implementations.ContainerSecurity;
 import appeng.container.implementations.ContainerStorageBus;

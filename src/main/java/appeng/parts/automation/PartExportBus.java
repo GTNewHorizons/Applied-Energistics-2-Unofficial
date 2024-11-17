@@ -10,9 +10,6 @@
 
 package appeng.parts.automation;
 
-import appeng.me.cache.TickManagerCache;
-import appeng.util.inv.IInventoryDestination;
-import appeng.util.inv.ItemSlot;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -57,8 +54,6 @@ import appeng.util.item.AEItemStack;
 import appeng.util.prioitylist.OreFilteredList;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
-import java.util.Iterator;
 
 public class PartExportBus extends PartSharedItemBus implements ICraftingRequester {
 
@@ -147,7 +142,11 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
                             }
                         } else {
                             if (this.regulatorMode && this.regulatorStockMode) {
-                                ItemStack in = destination.simulateRemove((int) this.itemToSend, ais.getItemStack(), null); //get number of item in target inventory
+                                ItemStack in = destination
+                                        .simulateRemove((int) this.itemToSend, ais.getItemStack(), null); // get number
+                                                                                                          // of item in
+                                                                                                          // target
+                                                                                                          // inventory
                                 if (in != null) {
                                     int t = in.stackSize;
                                     if (t >= this.itemToSend) {

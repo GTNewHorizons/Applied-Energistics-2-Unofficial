@@ -1,15 +1,17 @@
 package appeng.client.gui.implementations;
 
+import java.io.IOException;
+
+import net.minecraft.entity.player.InventoryPlayer;
+
+import org.lwjgl.input.Keyboard;
+
 import appeng.api.config.ActionItems;
-import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
-import appeng.api.config.YesNo;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
-import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
-import appeng.container.implementations.ContainerOreFilter;
 import appeng.container.implementations.ContainerRegulatorCard;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
@@ -18,22 +20,9 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.helpers.IOreFilterable;
 import appeng.helpers.IRegulatorCard;
-import appeng.integration.modules.NEI;
 import appeng.parts.automation.PartSharedItemBus;
 import appeng.parts.misc.PartStorageBus;
-import appeng.tile.misc.TileCellWorkbench;
-import appeng.util.prioitylist.OreFilteredList.OreFilterTextFormatter;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumChatFormatting;
-import net.minecraftforge.oredict.OreDictionary;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
-
-import java.io.IOException;
 
 public class GuiRegulatorCard extends AEBaseGui {
 
@@ -49,13 +38,14 @@ public class GuiRegulatorCard extends AEBaseGui {
 
         this.amountField = new MEGuiTextField(75, 12);
         this.ticksField = new MEGuiTextField(40, 12);
-        this.stockModeLabel = new MEGuiTextField(70,12) {
+        this.stockModeLabel = new MEGuiTextField(70, 12) {
+
             @Override
             public void onTextChange(final String oldText) {
                 final String text = getText();
-                if (text == "Active"){
+                if (text == "Active") {
                     stockMode = true;
-                } else if (text == "Not Active"){
+                } else if (text == "Not Active") {
                     stockMode = false;
                 }
             }
@@ -121,7 +111,7 @@ public class GuiRegulatorCard extends AEBaseGui {
             }
         } else if (amount == "" && ticks != "") {
             s = "1000:" + ticks;
-        } else if (ticks == ""){
+        } else if (ticks == "") {
             s = amount + ":20";
         }
         return s;
@@ -129,9 +119,12 @@ public class GuiRegulatorCard extends AEBaseGui {
 
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
-        this.fontRendererObj.drawString(GuiText.RegulatorCardLabel.getLocal(), 58, 6, GuiColors.RegulatorCardLabel.getColor());
-        this.fontRendererObj.drawString(GuiText.RegulatorCardAmount.getLocal(), 64, 23, GuiColors.RegulatorCardAmount.getColor());
-        this.fontRendererObj.drawString(GuiText.RegulatorCardTicks.getLocal(), 152, 23, GuiColors.RegulatorCardTicks.getColor());
+        this.fontRendererObj
+                .drawString(GuiText.RegulatorCardLabel.getLocal(), 58, 6, GuiColors.RegulatorCardLabel.getColor());
+        this.fontRendererObj
+                .drawString(GuiText.RegulatorCardAmount.getLocal(), 64, 23, GuiColors.RegulatorCardAmount.getColor());
+        this.fontRendererObj
+                .drawString(GuiText.RegulatorCardTicks.getLocal(), 152, 23, GuiColors.RegulatorCardTicks.getColor());
     }
 
     @Override
@@ -147,7 +140,7 @@ public class GuiRegulatorCard extends AEBaseGui {
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         this.amountField.mouseClicked(xCoord, yCoord, btn);
         this.ticksField.mouseClicked(xCoord, yCoord, btn);
-        if (this.stockModeButtonActive.mousePressed(mc,xCoord,yCoord)) {
+        if (this.stockModeButtonActive.mousePressed(mc, xCoord, yCoord)) {
             if (!stockMode) {
                 this.stockModeLabel.setText("Active");
             } else {
@@ -161,7 +154,11 @@ public class GuiRegulatorCard extends AEBaseGui {
     protected void keyTyped(final char character, final int key) {
         if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
             try {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("RegulatorSettings", filterRegulatorSettings(this.amountField.getText(), this.ticksField.getText()) + ":" + stockMode));
+                NetworkHandler.instance.sendToServer(
+                        new PacketValueConfig(
+                                "RegulatorSettings",
+                                filterRegulatorSettings(this.amountField.getText(), this.ticksField.getText()) + ":"
+                                        + stockMode));
             } catch (IOException e) {
                 AELog.debug(e);
             }
@@ -173,8 +170,9 @@ public class GuiRegulatorCard extends AEBaseGui {
             if (OriginalGui != null) NetworkHandler.instance.sendToServer(new PacketSwitchGuis(OriginalGui));
             else this.mc.thePlayer.closeScreen();
 
-        } else if (!(this.amountField.textboxKeyTyped(character, key) || this.ticksField.textboxKeyTyped(character, key))) {
-            super.keyTyped(character, key);
-        }
+        } else if (!(this.amountField.textboxKeyTyped(character, key)
+                || this.ticksField.textboxKeyTyped(character, key))) {
+                    super.keyTyped(character, key);
+                }
     }
 }

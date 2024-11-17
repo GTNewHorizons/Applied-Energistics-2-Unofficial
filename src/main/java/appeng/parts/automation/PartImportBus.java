@@ -180,7 +180,7 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
 
     @Override
     protected TickRateModulation doBusWork() {
-        if (!this.getProxy().isActive() || !this.canDoBusWork()  || !(regulatorMode && regulatorTicks())) {
+        if (!this.getProxy().isActive() || !this.canDoBusWork() || !(regulatorMode && regulatorTicks())) {
             return TickRateModulation.IDLE;
         }
 
@@ -307,7 +307,7 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
             IAEItemStack id = inv.getAvailableItem(whatToImport, this.regulatorAmount);
             if (id != null) {
                 int t = (int) id.getStackSize();
-                if (t == this.regulatorAmount){
+                if (t == this.regulatorAmount) {
                     return 0;
                 } else if ((toSend - t) > 0) {
                     toSend = toSend - t;

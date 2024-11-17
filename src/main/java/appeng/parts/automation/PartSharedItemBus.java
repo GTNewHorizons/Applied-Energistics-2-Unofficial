@@ -12,7 +12,6 @@ package appeng.parts.automation;
 
 import java.util.function.Predicate;
 
-import appeng.helpers.IRegulatorCard;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -24,12 +23,14 @@ import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.helpers.IOreFilterable;
+import appeng.helpers.IRegulatorCard;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 
-public abstract class PartSharedItemBus extends PartUpgradeable implements IGridTickable, IOreFilterable, IRegulatorCard {
+public abstract class PartSharedItemBus extends PartUpgradeable
+        implements IGridTickable, IOreFilterable, IRegulatorCard {
 
     private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, 9);
     private int adaptorHash = 0;
