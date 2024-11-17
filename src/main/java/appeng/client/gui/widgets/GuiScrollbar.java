@@ -31,6 +31,7 @@ public class GuiScrollbar implements IScrollSource {
     private int minScroll = 0;
     private int currentScroll = 0;
     private boolean visible = true;
+    private boolean isLatestClickOnScrollbar;
 
     public void setTexture(final String base, final String file, final int shiftX, final int shiftY) {
         txtBase = base;
@@ -133,8 +134,22 @@ public class GuiScrollbar implements IScrollSource {
         if (this.getRange() == 0) {
             return;
         }
-
         if (this.contains(x, y)) {
+            this.currentScroll = (y - this.displayY);
+            this.currentScroll = this.minScroll + ((this.currentScroll * 2 * this.getRange() / this.height));
+            this.currentScroll = (this.currentScroll + 1) >> 1;
+            this.applyRange();
+            isLatestClickOnScrollbar = true;
+        } else {
+            isLatestClickOnScrollbar = false;
+        }
+    }
+
+    public void clickMove(final int y) {
+        if (this.getRange() == 0 || !isLatestClickOnScrollbar) {
+            return;
+        }
+        if (y >= this.displayY && y <= this.displayY + this.height) {
             this.currentScroll = (y - this.displayY);
             this.currentScroll = this.minScroll + ((this.currentScroll * 2 * this.getRange() / this.height));
             this.currentScroll = (this.currentScroll + 1) >> 1;
