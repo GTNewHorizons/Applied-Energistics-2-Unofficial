@@ -12,6 +12,7 @@ package appeng.client.gui.implementations;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,7 +32,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -49,7 +49,6 @@ import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
 import appeng.api.util.DimensionalCoord;
-import appeng.api.util.WorldCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.IInterfaceTerminalPostUpdate;
@@ -858,7 +857,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.name,
                     addCmd.rows,
                     addCmd.rowSize,
-                    addCmd.online).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim)
+                    addCmd.online,
+                    addCmd.p2pOutput).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1173,7 +1173,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             String output = GuiInterfaceTerminal.this.searchFieldOutputs.getText().toLowerCase();
 
             for (InterfaceTerminalEntry entry : entries) {
-                if (!entry.online) continue;
+                if (!entry.online || entry.p2pOutput) continue;
 
                 var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
                 entry.dispY = -9999;
@@ -1263,13 +1263,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int guiHeight;
         int dispY = -9999;
         boolean online;
+        boolean p2pOutput;
         private Boolean[] brokenRecipes;
         int numItems = 0;
         /** Should recipe be filtered out/grayed out? */
         boolean[] filteredRecipes;
         private int hoveredSlotIdx = -1;
 
-        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, boolean online) {
+        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, boolean online, boolean p2pOutput) {
             this.id = id;
             if (StatCollector.canTranslate(name)) {
                 this.dispName = StatCollector.translateToLocal(name);
@@ -1285,6 +1286,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.rows = rows;
             this.rowSize = rowSize;
             this.online = online;
+            this.p2pOutput = p2pOutput;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
             this.guiHeight = 18 * rows + 1;
@@ -1389,26 +1391,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     && mouseY > Math.max(optionsButton.yPosition, InterfaceSection.TITLE_HEIGHT)
                     && mouseY <= Math.min(optionsButton.yPosition + optionsButton.height, viewHeight)) {
                 optionsButton.func_146113_a(mc.getSoundHandler());
-                DimensionalCoord blockPos = new DimensionalCoord(x, y, z, dim);
-                /* View in world */
-                WorldCoord blockPos2 = new WorldCoord(
-                        (int) mc.thePlayer.posX,
-                        (int) mc.thePlayer.posY,
-                        (int) mc.thePlayer.posZ);
-                if (mc.theWorld.provider.dimensionId != dim) {
-                    mc.thePlayer.addChatMessage(
-                            new ChatComponentTranslation(PlayerMessages.InterfaceInOtherDim.getName(), dim));
-                } else {
-                    BlockPosHighlighter.highlightBlock(
-                            blockPos,
-                            System.currentTimeMillis() + 500 * WorldCoord.getTaxicabDistance(blockPos, blockPos2));
-                    mc.thePlayer.addChatMessage(
-                            new ChatComponentTranslation(
-                                    PlayerMessages.InterfaceHighlighted.getName(),
-                                    blockPos.x,
-                                    blockPos.y,
-                                    blockPos.z));
-                }
+                // When using the highlight from the interface terminal, we want it to only
+                // highlight the interface containing the patterns and not any output p2p interfaces
+                BlockPosHighlighter.highlightBlocks(
+                        mc.thePlayer,
+                        Collections.singletonList(new DimensionalCoord(x, y, z, dim)),
+                        PlayerMessages.InterfaceHighlighted.getName(),
+                        PlayerMessages.InterfaceInOtherDim.getName());
                 mc.thePlayer.closeScreen();
                 return true;
             }
