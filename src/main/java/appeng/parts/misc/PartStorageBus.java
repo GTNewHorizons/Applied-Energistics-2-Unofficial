@@ -18,7 +18,6 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
-import appeng.api.parts.PartItemStack;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -51,6 +50,7 @@ import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
+import appeng.api.parts.PartItemStack;
 import appeng.api.storage.ICellContainer;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
@@ -115,7 +115,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
         this.getConfigManager().registerSetting(Settings.STORAGE_FILTER, StorageFilter.EXTRACTABLE_ONLY);
         this.getConfigManager().registerSetting(Settings.STICKY_MODE, YesNo.NO);
         this.mySrc = new MachineSource(this);
-        if (is.getTagCompound() != null){
+        if (is.getTagCompound() != null) {
             NBTTagCompound tag = is.getTagCompound();
             if (tag.hasKey("priority")) {
                 priority = tag.getInteger("priority");
@@ -127,8 +127,8 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
     }
 
     @Override
-    public ItemStack getItemStack(final PartItemStack type){
-        if (type == PartItemStack.Wrench){
+    public ItemStack getItemStack(final PartItemStack type) {
+        if (type == PartItemStack.Wrench) {
             final NBTTagCompound tag = new NBTTagCompound();
             tag.setInteger("priority", priority);
             final ItemStack copy = this.is.copy();
