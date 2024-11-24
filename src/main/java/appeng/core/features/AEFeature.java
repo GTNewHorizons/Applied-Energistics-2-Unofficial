@@ -125,6 +125,7 @@ public enum AEFeature {
     InWorldPurification(Constants.CATEGORY_CRAFTING),
     InterfaceTerminal(Constants.CATEGORY_CRAFTING),
     EnableDisassemblyCrafting(Constants.CATEGORY_CRAFTING),
+    EnablePreConfiguredCrafting(Constants.CATEGORY_CRAFTING),
 
     AlphaPass(Constants.CATEGORY_RENDERING),
     PaintBalls(Constants.CATEGORY_TOOLS),
