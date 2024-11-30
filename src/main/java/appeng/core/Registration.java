@@ -617,6 +617,7 @@ public final class Registration {
         // IO Port!
         Upgrades.SPEED.registerItem(blocks.iOPort(), 3);
         Upgrades.SUPERSPEED.registerItem(blocks.iOPort(), 3);
+        Upgrades.SUPERSPEEDGOD.registerItem(blocks.iOPort(), 3);
         Upgrades.REDSTONE.registerItem(blocks.iOPort(), 1);
 
         // Level Emitter!
