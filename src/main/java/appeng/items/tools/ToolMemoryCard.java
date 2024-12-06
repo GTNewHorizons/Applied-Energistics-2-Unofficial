@@ -56,7 +56,12 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
 
             lines.add(String.format(local, freqTooltip));
         }
-        if (data.hasKey("custom_name")) lines.add(data.getString("custom_name"));
+
+        if (data.hasKey("custom_name")) {
+            lines.add(data.getString("custom_name"));
+        } else if (data.hasKey("display") && data.getCompoundTag("display").hasKey("Name")) {
+            lines.add(data.getCompoundTag("display").getString("Name"));
+        }
     }
 
     /**
