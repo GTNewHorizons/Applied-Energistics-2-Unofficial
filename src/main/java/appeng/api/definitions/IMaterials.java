@@ -149,4 +149,6 @@ public interface IMaterials {
     IItemDefinition cardAdvancedBlocking();
 
     IItemDefinition cardLockCrafting();
+
+    IItemDefinition cardSuperSpeedGod();
 }
