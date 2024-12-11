@@ -73,6 +73,7 @@ import appeng.integration.IntegrationType;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
 import appeng.me.storage.MEMonitorIInventory;
+import appeng.me.storage.StorageBusInventoryHandler;
 import appeng.parts.automation.PartUpgradeable;
 import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.InvOperation;
@@ -480,7 +481,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                 if (inv != null) {
                     this.checkInterfaceVsStorageBus(target, this.getSide().getOpposite());
 
-                    this.handler = new MEInventoryHandler<IAEItemStack>(inv, StorageChannel.ITEMS);
+                    this.handler = new StorageBusInventoryHandler<>(inv, StorageChannel.ITEMS);
 
                     AccessRestriction currentAccess = (AccessRestriction) this.getConfigManager()
                             .getSetting(Settings.ACCESS);
