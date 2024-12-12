@@ -299,6 +299,12 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
             case 3 -> ItemsToMove *= 1024;
         }
 
+        switch (this.getInstalledUpgrades(Upgrades.SUPERSPEEDGOD)) {
+            case 1 -> ItemsToMove = 1_000_000;
+            case 2 -> ItemsToMove = 1_000_000_000L;
+            case 3 -> ItemsToMove = 1_000_000_000_000L;
+        }
+
         try {
             final IMEInventory<IAEItemStack> itemNet = this.getProxy().getStorage().getItemInventory();
             final IMEInventory<IAEFluidStack> fluidNet = this.getProxy().getStorage().getFluidInventory();
