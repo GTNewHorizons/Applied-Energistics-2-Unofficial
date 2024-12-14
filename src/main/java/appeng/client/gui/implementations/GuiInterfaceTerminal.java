@@ -909,11 +909,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         final NBTTagList tags = encodedValue.getTagList(in ? "in" : "out", NBT.TAG_COMPOUND);
         final boolean containsInvalidDisplayName = GuiText.UnknownItem.getLocal().toLowerCase().contains(searchTerm);
-        Predicate<ItemStack> itemFilter = (is) -> Platform
-                .getItemDisplayName(AEApi.instance().storage().createItemStack(is)).toLowerCase().contains(searchTerm);
+        Predicate<ItemStack> itemFilter;
 
         if (NEI.searchField.existsSearchField()) {
             itemFilter = NEI.searchField.getFilter(searchTerm);
+        } else {
+            itemFilter = is -> Platform.getItemDisplayName(AEApi.instance().storage().createItemStack(is)).toLowerCase()
+                    .contains(searchTerm);
         }
 
         for (int i = 0; i < tags.tagCount(); i++) {
