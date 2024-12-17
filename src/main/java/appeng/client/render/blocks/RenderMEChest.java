@@ -81,12 +81,11 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
 
         this.selectFace(renderer, west, up, forward, 5, 16 - 5, 9, 12);
 
-        int offsetU = 4;
+        int offsetU = -4;
         int offsetV = 9 - type * 4;
         if (stat == 0) {
-            // Right up corner
-            offsetU = -4;
-            offsetV = 8;
+            // Bottom middle right
+            offsetV = -5;
         }
 
         int b = world.getLightBrightnessForSkyBlocks(x + forward.offsetX, y + forward.offsetY, z + forward.offsetZ, 0);

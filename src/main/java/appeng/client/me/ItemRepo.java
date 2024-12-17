@@ -107,17 +107,14 @@ public class ItemRepo implements IDisplayRepo {
         this.dsp.ensureCapacity(this.list.size());
 
         final Enum viewMode = this.sortSrc.getSortDisplay();
-        final Enum searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
         final Enum typeFilter = this.sortSrc.getTypeFilter();
-        Predicate<IAEItemStack> itemFilter = getFilter(this.searchString);
+        Predicate<IAEItemStack> itemFilter;
 
         if (NEI.searchField.existsSearchField()) {
-            if (searchMode == SearchBoxMode.NEI_AUTOSEARCH || searchMode == SearchBoxMode.NEI_MANUAL_SEARCH) {
-                NEI.searchField.setText(this.searchString);
-            }
-
             final Predicate<ItemStack> neiFilter = NEI.searchField.getFilter(this.searchString);
             itemFilter = is -> neiFilter.test(is.getItemStack());
+        } else {
+            itemFilter = getFilter(this.searchString);
         }
 
         if (itemFilter == null) {
@@ -180,7 +177,7 @@ public class ItemRepo implements IDisplayRepo {
 
     private Predicate<IAEItemStack> getFilter(String innerSearch) {
 
-        if (innerSearch.length() == 0) {
+        if (innerSearch.isEmpty()) {
             return stack -> true;
         }
 
@@ -266,5 +263,12 @@ public class ItemRepo implements IDisplayRepo {
     @Override
     public void setSearchString(@Nonnull final String searchString) {
         this.searchString = searchString;
+
+        if (NEI.searchField.existsSearchField()) {
+            final Enum searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
+            if (searchMode == SearchBoxMode.NEI_AUTOSEARCH || searchMode == SearchBoxMode.NEI_MANUAL_SEARCH) {
+                NEI.searchField.setText(this.searchString);
+            }
+        }
     }
 }
