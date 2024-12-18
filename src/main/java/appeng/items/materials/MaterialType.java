@@ -117,7 +117,8 @@ public enum MaterialType {
     CardPatternRefiller(62),
     CardAdvancedBlocking(63),
     CardSticky(64),
-    CardLockCrafting(65);
+    CardLockCrafting(65),
+    CardSuperSpeedGod(66);
 
     private final EnumSet<AEFeature> features;
     // IIcon for the material.
