@@ -145,6 +145,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private boolean isComplete = true;
     private int remainingOperations;
     private boolean somethingChanged;
+    private boolean isFakeCrafting;
 
     private long lastTime;
     private long elapsedTime;
@@ -497,6 +498,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         craftCompleteListeners.forEach(f -> f.apply(this.finalOutput.getItemStack(), this.numsOfOutput, elapsedTime));
+        this.isFakeCrafting = false;
         this.usedStorage = 0;
         this.remainingItemCount = 0;
         this.startItemCount = 0;
@@ -688,6 +690,21 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (this.remainingOperations > 0 && !this.somethingChanged) {
             this.waiting = true;
         }
+
+        if (this.isFakeCrafting) {
+            final IAEItemStack is = this.waitingFor.findPrecise(this.finalOutput);
+            if (is != null) {
+                long stackSize = is.getStackSize();
+                is.decStackSize(stackSize);
+                this.markDirty();
+                this.postCraftingStatusChange(is);
+                this.finalOutput.decStackSize(stackSize);
+                if (this.finalOutput.getStackSize() <= 0) {
+                    this.completeJob();
+                }
+                this.updateCPU();
+            }
+        }
     }
 
     private void executeCrafting(final IEnergyGrid eg, final CraftingGridCache cc) {
@@ -787,6 +804,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     this.somethingChanged = true;
                     this.remainingOperations--;
                     pushedPattern = true;
+                    this.isFakeCrafting = (m instanceof DualityInterface di && di.isFakeCraftingMode());
 
                     for (final IAEItemStack out : details.getCondensedOutputs()) {
                         this.postChange(out, this.machineSrc);
@@ -816,7 +834,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 Platform.getPlayer((WorldServer) this.getWorld()),
                                 details.getOutput(ic, this.getWorld()),
                                 ic);
-
                         for (int x = 0; x < ic.getSizeInventory(); x++) {
                             final ItemStack output = Platform.getContainerItem(ic.getStackInSlot(x));
                             if (output != null) {
@@ -837,6 +854,15 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     }
 
                     if (this.remainingOperations == 0) {
+                        // if (m instanceof DualityInterface di && di.isFakeCraftingMode()) {
+                        // final IAEItemStack is = this.waitingFor.findPrecise(this.finalOutput);
+                        // long stackSize = is.getStackSize();
+                        // is.decStackSize(stackSize);
+                        // this.markDirty();
+                        // this.postCraftingStatusChange(is);
+                        // this.finalOutput.decStackSize(stackSize);
+                        // this.updateCPU();
+                        // }
                         return;
                     }
                 }
@@ -934,6 +960,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 // when it comes to a new craft,
                 if (job.getOutput() != null) {
                     this.finalOutput = job.getOutput();
+                    this.isFakeCrafting = false;
                     this.waiting = false;
                     this.isComplete = false;
                     this.usedStorage = job.getByteTotal();

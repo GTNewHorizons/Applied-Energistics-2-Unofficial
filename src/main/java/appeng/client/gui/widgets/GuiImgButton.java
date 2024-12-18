@@ -29,6 +29,7 @@ import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingMode;
 import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.CraftingStatus;
+import appeng.api.config.FakeCraftingMode;
 import appeng.api.config.FullnessMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
@@ -718,6 +719,18 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     LockCraftingMode.LOCK_UNTIL_RESULT,
                     ButtonToolTips.LockCraftingMode,
                     ButtonToolTips.LockCraftingUntilResultReturned);
+            this.registerApp(
+                    16 * 13 + 4,
+                    Settings.FAKE_CRAFTING_MOED,
+                    FakeCraftingMode.FAKE,
+                    ButtonToolTips.FakeCraftingMode,
+                    ButtonToolTips.FakeCraftingOn);
+            this.registerApp(
+                    16 * 13 + 5,
+                    Settings.FAKE_CRAFTING_MOED,
+                    FakeCraftingMode.NONE,
+                    ButtonToolTips.FakeCraftingMode,
+                    ButtonToolTips.FakeCraftingOff);
             this.registerApp(
                     16 + 2,
                     Settings.CRAFTING_MODE,

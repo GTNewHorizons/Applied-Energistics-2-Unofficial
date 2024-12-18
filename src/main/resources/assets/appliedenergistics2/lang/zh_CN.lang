@@ -507,6 +507,10 @@ gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=在ME系统内原
 
 gui.tooltips.appliedenergistics2.ExtraOptions=额外选项
 
+gui.tooltips.appliedenergistics2.FakeCraftingMode=伪合成
+gui.tooltips.appliedenergistics2.FakeCraftingOn=伪合成开启
+gui.tooltips.appliedenergistics2.FakeCraftingOff=伪合成关闭
+
 gui.tooltips.appliedenergistics2.SwitchBytesInfo=存储信息
 gui.tooltips.appliedenergistics2.SwitchBytesInfo_Item=物品
 gui.tooltips.appliedenergistics2.SwitchBytesInfo_Fluid=流体
@@ -620,6 +624,7 @@ item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=空白样板重�
 item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=高级阻挡卡
 item.appliedenergistics2.ItemMaterial.CardLockCrafting.name=Locking Card
 item.appliedenergistics2.ItemMaterial.CardSticky.name=粘性卡
+item.appliedenergistics2.ItemMaterial.CardFakeCrafting.name=伪合成卡
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³-空间组件
 item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=16³-空间组件

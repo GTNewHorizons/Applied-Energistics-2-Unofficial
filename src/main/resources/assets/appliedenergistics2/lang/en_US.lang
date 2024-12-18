@@ -510,6 +510,10 @@ gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Only starts craft if a
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Ignore Missing Crafting Mode
 gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=Starts craft even if ingredients are missing from the ME System.
 
+gui.tooltips.appliedenergistics2.FakeCraftingMode=Fake Crafting
+gui.tooltips.appliedenergistics2.FakeCraftingOn=Fake Crafting Mode
+gui.tooltips.appliedenergistics2.FakeCraftingOff=Standard Crafting Mode
+
 gui.tooltips.appliedenergistics2.ExtraOptions=Extra Options
 
 gui.tooltips.appliedenergistics2.SwitchBytesInfo=Cell Info
@@ -625,6 +629,7 @@ item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=Pattern Refiller 
 item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=Advanced Blocking Card
 item.appliedenergistics2.ItemMaterial.CardLockCrafting.name=Locking Card
 item.appliedenergistics2.ItemMaterial.CardSticky.name=Sticky Card
+item.appliedenergistics2.ItemMaterial.CardFakeCrafting.name=Fake Crafting Card
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³ Spatial Component
 item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=16³ Spatial Component
