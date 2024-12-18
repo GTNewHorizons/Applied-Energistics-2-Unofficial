@@ -51,6 +51,7 @@ public enum Settings {
     LEVEL_TYPE(EnumSet.allOf(LevelType.class)),
 
     TERMINAL_STYLE(EnumSet.of(TerminalStyle.TALL, TerminalStyle.SMALL)),
+    HIDE_STORED(EnumSet.of(YesNo.YES, YesNo.NO)),
     COPY_MODE(EnumSet.allOf(CopyMode.class)),
 
     INTERFACE_TERMINAL(EnumSet.of(YesNo.YES, YesNo.NO)),

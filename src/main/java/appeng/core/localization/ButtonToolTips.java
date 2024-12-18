@@ -97,6 +97,7 @@ public enum ButtonToolTips {
     TerminalStyle_Tall,
     TerminalStyle_Small,
     SaveAsImage,
+    HideStored,
 
     Stash,
     StashDesc,
