@@ -46,6 +46,8 @@ public class Parts {
 
     public AEItemDefinition partQuartzFiber;
 
+    public AEItemDefinition partCreativeEnergy;
+
     public AEItemDefinition partToggleBus;
 
     public AEItemDefinition partInvertedToggleBus;

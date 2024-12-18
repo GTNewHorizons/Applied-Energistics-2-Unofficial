@@ -712,6 +712,7 @@ item.appliedenergistics2.ItemPart.P2PTunnel.name=P2P Tunnel
 item.appliedenergistics2.ItemPart.PatternTerminal.name=ME Pattern Terminal
 item.appliedenergistics2.ItemPart.PatternTerminalEx.name=ME Processing Pattern Terminal
 item.appliedenergistics2.ItemPart.QuartzFiber.name=Quartz Fiber
+item.appliedenergistics2.ItemPart.PartCreativeEnergy.name=Creative Energy Anchor
 item.appliedenergistics2.ItemPart.StorageBus.name=ME Storage Bus
 item.appliedenergistics2.ItemPart.Terminal.name=ME Terminal
 item.appliedenergistics2.ItemPart.CraftingTerminal.name=ME Crafting Terminal

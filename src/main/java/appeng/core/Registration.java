@@ -336,6 +336,7 @@ public final class Registration {
         // target.partLumenCableGlass = source.lumenCableGlass();
         // target.partLumenCableDense = source.lumenCableDense();
         target.partQuartzFiber = this.converter.of(source.quartzFiber());
+        target.partCreativeEnergy = this.converter.of(source.partCreativeEnergy());
         target.partToggleBus = this.converter.of(source.toggleBus());
         target.partInvertedToggleBus = this.converter.of(source.invertedToggleBus());
         target.partStorageBus = this.converter.of(source.storageBus());

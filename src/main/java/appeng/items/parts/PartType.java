@@ -33,6 +33,7 @@ import appeng.parts.misc.PartToggleBus;
 import appeng.parts.networking.PartCableCovered;
 import appeng.parts.networking.PartCableGlass;
 import appeng.parts.networking.PartCableSmart;
+import appeng.parts.networking.PartCreativeEnergy;
 import appeng.parts.networking.PartDenseCable;
 import appeng.parts.networking.PartDenseCableCovered;
 import appeng.parts.networking.PartQuartzFiber;
@@ -131,6 +132,9 @@ public enum PartType {
     CableAnchor(120, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartCableAnchor.class),
 
     QuartzFiber(140, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartQuartzFiber.class),
+
+    PartCreativeEnergy(690, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+            PartCreativeEnergy.class),
 
     Monitor(160, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartPanel.class),
 

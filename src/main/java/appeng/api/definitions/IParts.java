@@ -44,6 +44,8 @@ public interface IParts {
 
     IItemDefinition quartzFiber();
 
+    IItemDefinition partCreativeEnergy();
+
     IItemDefinition toggleBus();
 
     IItemDefinition invertedToggleBus();
