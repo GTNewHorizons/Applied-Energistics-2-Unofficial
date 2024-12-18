@@ -4,16 +4,16 @@ dependencies {
     implementation('com.github.GTNewHorizons:NotEnoughItems:2.6.51-GTNH:dev')
     implementation('curse.maven:cofh-core-69162:2388751')
 
-    compileOnlyApi('com.github.GTNewHorizons:Angelica:1.0.0-beta25:api')
+    compileOnlyApi('com.github.GTNewHorizons:Angelica:1.0.0-beta26:api')
     compileOnly("com.github.GTNewHorizons:GTNHLib:0.5.22:dev") {transitive = false}
     compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.10.2:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.39:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.9.19:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.5.0:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.04:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.10:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.4.6:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.0:api') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:OpenComputers:1.10.27-GTNH:api') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:OpenComputers:1.11.1-GTNH:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:waila:1.8.2:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Railcraft:9.15.15:api') {transitive = false}
     compileOnly('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev')  {transitive = false }
@@ -34,7 +34,7 @@ dependencies {
     functionalTestImplementation('org.junit.platform:junit-platform-engine')
     functionalTestImplementation('org.junit.platform:junit-platform-launcher')
     functionalTestImplementation('org.junit.platform:junit-platform-reporting')
-    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.04:dev') {
+    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.10:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
     }
 
