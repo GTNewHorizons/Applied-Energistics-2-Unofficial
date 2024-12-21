@@ -297,13 +297,13 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.TerminalStyle,
                     ButtonToolTips.TerminalStyle_Full);
             this.registerApp(
-                    16 * 13 + 4,
+                    16 * 13 + 6,
                     Settings.HIDE_STORED,
                     YesNo.NO,
                     ButtonToolTips.HideStored,
                     ButtonToolTips.Disabled);
             this.registerApp(
-                    16 * 13 + 5,
+                    16 * 13 + 7,
                     Settings.HIDE_STORED,
                     YesNo.YES,
                     ButtonToolTips.HideStored,
