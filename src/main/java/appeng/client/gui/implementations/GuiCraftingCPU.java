@@ -162,7 +162,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     protected List<IAEItemStack> visual = new ArrayList<>();
     private GuiButton cancel;
     protected List<IAEItemStack> visualHiddenStored = new ArrayList<>();
-    private GuiImgButton toggleHideStored;
+    protected GuiImgButton toggleHideStored;
     protected boolean hideStored;
     private int tooltip = -1;
     private final RemainingOperations remainingOperations = new RemainingOperations();
@@ -207,6 +207,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             AEConfig.instance.getConfigManager().putSetting(Settings.HIDE_STORED, hideStored ? YesNo.YES : YesNo.NO);
             this.toggleHideStored.set(hideStored ? YesNo.YES : YesNo.NO);
             hideStoredSorting();
+            this.setScrollBar();
         }
 
     }

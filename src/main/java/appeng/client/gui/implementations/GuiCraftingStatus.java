@@ -145,6 +145,8 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
             switchTallMode.set(tallMode ? TerminalStyle.TALL : TerminalStyle.SMALL);
             recalculateScreenSize();
             this.setWorldAndResolution(mc, width, height);
+        } else if (btn == this.toggleHideStored) {
+            this.setScrollBar();
         }
     }
 
