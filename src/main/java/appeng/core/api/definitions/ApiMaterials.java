@@ -67,6 +67,7 @@ public final class ApiMaterials implements IMaterials {
     private final IItemDefinition cardRedstone;
     private final IItemDefinition cardSpeed;
     private final IItemDefinition cardSuperSpeed;
+    private final IItemDefinition cardSuperSpeedGod;
     private final IItemDefinition cardCapacity;
     private final IItemDefinition cardPatternCapacity;
     private final IItemDefinition cardFuzzy;
@@ -169,6 +170,8 @@ public final class ApiMaterials implements IMaterials {
         this.cardRedstone = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardRedstone));
         this.cardSpeed = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardSpeed));
         this.cardSuperSpeed = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardSuperSpeed));
+        this.cardSuperSpeedGod = new DamagedItemDefinition(
+                itemMultiMaterial.createMaterial(MaterialType.CardSuperSpeedGod));
         this.cardCapacity = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardCapacity));
         this.cardPatternCapacity = new DamagedItemDefinition(
                 itemMultiMaterial.createMaterial(MaterialType.CardPatternCapacity));
@@ -553,5 +556,10 @@ public final class ApiMaterials implements IMaterials {
     @Override
     public IItemDefinition cardFakeCrafting() {
         return this.cardFakeCrafting;
+    }
+
+    @Override
+    public IItemDefinition cardSuperSpeedGod() {
+        return this.cardSuperSpeedGod;
     }
 }
