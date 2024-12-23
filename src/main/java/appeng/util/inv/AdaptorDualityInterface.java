@@ -9,6 +9,7 @@ import appeng.api.config.InsertionMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.helpers.BlockingModeIgnoreList;
@@ -65,8 +66,8 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
             } else {
                 hasMEItems = !dual.getItemInventory().getStorageList().isEmpty();
             }
-
-            hasMEItems |= !dual.getFluidInventory().getStorageList().isEmpty();
+            IMEMonitor<IAEFluidStack> dualFluidInventory = dual.getFluidInventory();
+            if (dualFluidInventory != null) hasMEItems |= !dualFluidInventory.getStorageList().isEmpty();
         }
         return hasMEItems || super.containsItems();
     }
