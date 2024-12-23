@@ -80,7 +80,7 @@ public class IgnoreMissingItemResolver implements CraftingRequestResolver<IAEIte
         @Override
         public void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
                 MECraftingInventory craftingInv) {
-            cpuCluster.addEmitable(this.request.stack.copy());
+            cpuCluster.addEmitable(this.request.stack.copy().setStackSize(fulfilled));
             // It's just called that, and it has little to do with the level emitter
         }
 

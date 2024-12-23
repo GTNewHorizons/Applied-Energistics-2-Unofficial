@@ -137,6 +137,7 @@ public class CraftingGridCache
         this.craftingLinks.values().removeIf(craftingLinkNexus -> craftingLinkNexus.isDead(this.grid, this));
 
         for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
+            cpu.tryExtractItems();
             cpu.updateCraftingLogic(this.grid, this.energyGrid, this);
         }
     }

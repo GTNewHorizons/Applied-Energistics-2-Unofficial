@@ -108,6 +108,10 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
         return job;
     }
 
+    public CraftingMode getCraftingMode() {
+        return this.originalRequest.craftingMode;
+    }
+
     public ByteBuf serialize() {
         try {
             final CraftingTreeSerializer serializer = new CraftingTreeSerializer(context.world);
