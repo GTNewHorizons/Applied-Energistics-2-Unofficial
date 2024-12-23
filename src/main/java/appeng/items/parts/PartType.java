@@ -133,9 +133,6 @@ public enum PartType {
 
     QuartzFiber(140, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartQuartzFiber.class),
 
-    PartCreativeEnergy(690, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
-            PartCreativeEnergy.class),
-
     Monitor(160, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartPanel.class),
 
     SemiDarkMonitor(180, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartSemiDarkPanel.class),
@@ -216,7 +213,10 @@ public enum PartType {
             PartInterfaceTerminal.class),
 
     PatternTerminalEx(500, EnumSet.of(AEFeature.Patterns), EnumSet.noneOf(IntegrationType.class),
-            PartPatternTerminalEx.class);
+            PartPatternTerminalEx.class),
+
+    PartCreativeEnergy(690, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+            PartCreativeEnergy.class);
 
     public final int baseDamage;
     private final Set<AEFeature> features;
