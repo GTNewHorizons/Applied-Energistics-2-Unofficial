@@ -299,6 +299,8 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
             case 3 -> ItemsToMove *= 1024;
         }
 
+        long maxMoved = ItemsToMove;
+
         try {
             final IMEInventory<IAEItemStack> itemNet = this.getProxy().getStorage().getItemInventory();
             final IMEInventory<IAEFluidStack> fluidNet = this.getProxy().getStorage().getFluidInventory();
@@ -338,7 +340,12 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                             }
                         }
 
-                        if (ItemsToMove > 0 && this.shouldMove(itemInv, fluidInv) && !this.moveSlot(x)) {
+                        final FullnessMode fm = (FullnessMode) this.manager.getSetting(Settings.FULLNESS_MODE);
+
+                        // We didn't do any work
+                        if (fm == FullnessMode.HALF && ItemsToMove == maxMoved) {
+
+                        } else if (ItemsToMove > 0 && this.shouldMove(itemInv, fluidInv) && !this.moveSlot(x)) {
                             return TickRateModulation.IDLE;
                         }
 
