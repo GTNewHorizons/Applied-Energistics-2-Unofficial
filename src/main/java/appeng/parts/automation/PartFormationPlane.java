@@ -542,6 +542,8 @@ public class PartFormationPlane extends PartUpgradeable
                                     side.offsetY,
                                     side.offsetZ);
                             maxStorage -= is.stackSize;
+                        } else {
+                            worked = false;
                         }
                     }
                 } else {
