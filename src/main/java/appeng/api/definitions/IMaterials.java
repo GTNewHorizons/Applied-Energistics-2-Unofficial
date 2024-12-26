@@ -152,5 +152,5 @@ public interface IMaterials {
 
     IItemDefinition cardFakeCrafting();
 
-    IItemDefinition cardSuperSpeedGod();
+    IItemDefinition cardSuperluminalSpeed();
 }

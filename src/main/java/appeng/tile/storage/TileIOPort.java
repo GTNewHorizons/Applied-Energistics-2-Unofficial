@@ -299,10 +299,10 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
             case 3 -> ItemsToMove *= 1024;
         }
 
-        switch (this.getInstalledUpgrades(Upgrades.SUPERSPEEDGOD)) {
-            case 1 -> ItemsToMove = 1_000_000;
-            case 2 -> ItemsToMove = 1_000_000_000L;
-            case 3 -> ItemsToMove = 1_000_000_000_000L;
+        switch (this.getInstalledUpgrades(Upgrades.SUPERLUMINALSPEED)) {
+            case 1 -> ItemsToMove *= 131_072;
+            case 2 -> ItemsToMove *= 8_388_608;
+            case 3 -> ItemsToMove *= 536_870_912;
         }
 
         try {

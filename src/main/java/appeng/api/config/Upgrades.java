@@ -45,7 +45,7 @@ public enum Upgrades {
     ADVANCED_BLOCKING(1),
     LOCK_CRAFTING(1),
     FAKE_CRAFTING(1),
-    SUPERSPEEDGOD(1);
+    SUPERLUMINALSPEED(1);
 
     /**
      * @deprecated use {@link Upgrades#getTier()}
