@@ -151,4 +151,6 @@ public interface IMaterials {
     IItemDefinition cardLockCrafting();
 
     IItemDefinition cardFakeCrafting();
+
+    IItemDefinition cardSuperluminalSpeed();
 }

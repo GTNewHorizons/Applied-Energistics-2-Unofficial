@@ -30,6 +30,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
     private int fuzzyUpgrades = 0;
     private int speedUpgrades = 0;
     private int superSpeedUpgrades = 0;
+    private int SuperluminalSpeedUpgrades = 0;
     private int redstoneUpgrades = 0;
     private int capacityUpgrades = 0;
     private int inverterUpgrades = 0;
@@ -91,6 +92,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
             case LOCK_CRAFTING -> this.lockCraftingUpgrades;
             case STICKY -> this.stickyUpgrades;
             case FAKE_CRAFTING -> this.fakeCraftingUpgrades;
+            case SUPERLUMINALSPEED -> this.SuperluminalSpeedUpgrades;
             default -> 0;
         };
     }
@@ -99,7 +101,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
 
     private void updateUpgradeInfo() {
         this.cached = true;
-        this.patternCapacityUpgrades = this.stickyUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = this.advancedBlockingUpgrades = this.lockCraftingUpgrades = this.fakeCraftingUpgrades = 0;
+        this.patternCapacityUpgrades = this.SuperluminalSpeedUpgrades = this.stickyUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = this.advancedBlockingUpgrades = this.lockCraftingUpgrades = this.fakeCraftingUpgrades = 0;
 
         for (final ItemStack is : this) {
             if (is == null || is.getItem() == null || !(is.getItem() instanceof IUpgradeModule)) {
@@ -121,6 +123,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
                 case LOCK_CRAFTING -> this.lockCraftingUpgrades++;
                 case STICKY -> this.stickyUpgrades++;
                 case FAKE_CRAFTING -> this.fakeCraftingUpgrades++;
+                case SUPERLUMINALSPEED -> this.SuperluminalSpeedUpgrades++;
                 default -> {}
             }
         }
@@ -140,6 +143,8 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
         this.lockCraftingUpgrades = Math.min(this.lockCraftingUpgrades, this.getMaxInstalled(Upgrades.LOCK_CRAFTING));
         this.fakeCraftingUpgrades = Math.min(this.fakeCraftingUpgrades, this.getMaxInstalled(Upgrades.FAKE_CRAFTING));
         this.stickyUpgrades = Math.min(this.stickyUpgrades, this.getMaxInstalled(Upgrades.STICKY));
+        this.SuperluminalSpeedUpgrades = Math
+                .min(this.SuperluminalSpeedUpgrades, this.getMaxInstalled(Upgrades.SUPERLUMINALSPEED));
     }
 
     @Override

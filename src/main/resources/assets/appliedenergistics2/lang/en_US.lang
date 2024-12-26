@@ -627,6 +627,7 @@ item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=Advanced Blockin
 item.appliedenergistics2.ItemMaterial.CardLockCrafting.name=Locking Card
 item.appliedenergistics2.ItemMaterial.CardSticky.name=Sticky Card
 item.appliedenergistics2.ItemMaterial.CardFakeCrafting.name=Fake Crafting Card
+item.appliedenergistics2.ItemMaterial.CardSuperluminalSpeed.name=Superluminal Acceleration Card
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³ Spatial Component
 item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=16³ Spatial Component
