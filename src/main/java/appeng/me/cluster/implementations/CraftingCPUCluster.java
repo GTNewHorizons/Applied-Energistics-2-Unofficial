@@ -51,6 +51,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.apache.logging.log4j.Level;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -1615,10 +1616,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         if (extractedItems != null) {
                             IAEStack notInjected = injectItems(extractedItems, Actionable.MODULATE, this.machineSrc);
                             if (notInjected != null) { // not sure if this even need, but still
-                                for (String playerName : MinecraftServer.getServer().getAllUsernames()) {
-                                    getPlayerByName(playerName).addChatMessage(
-                                            new ChatComponentText("MISSING MODE OVERFLOW! TELL DEVS ASAP!"));
-                                }
+                                AELog.logSimple(Level.INFO, "MISSING MODE OVERFLOW! TELL DEVS ASAP!");
                                 pg.getItemInventory()
                                         .injectItems((IAEItemStack) notInjected, Actionable.MODULATE, this.machineSrc);
                             }
