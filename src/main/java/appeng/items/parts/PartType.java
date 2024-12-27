@@ -33,6 +33,7 @@ import appeng.parts.misc.PartToggleBus;
 import appeng.parts.networking.PartCableCovered;
 import appeng.parts.networking.PartCableGlass;
 import appeng.parts.networking.PartCableSmart;
+import appeng.parts.networking.PartCreativeEnergy;
 import appeng.parts.networking.PartDenseCable;
 import appeng.parts.networking.PartDenseCableCovered;
 import appeng.parts.networking.PartQuartzFiber;
@@ -212,7 +213,10 @@ public enum PartType {
             PartInterfaceTerminal.class),
 
     PatternTerminalEx(500, EnumSet.of(AEFeature.Patterns), EnumSet.noneOf(IntegrationType.class),
-            PartPatternTerminalEx.class);
+            PartPatternTerminalEx.class),
+
+    PartCreativeEnergy(690, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
+            PartCreativeEnergy.class);
 
     public final int baseDamage;
     private final Set<AEFeature> features;

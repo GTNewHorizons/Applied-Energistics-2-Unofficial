@@ -336,6 +336,7 @@ public final class Registration {
         // target.partLumenCableGlass = source.lumenCableGlass();
         // target.partLumenCableDense = source.lumenCableDense();
         target.partQuartzFiber = this.converter.of(source.quartzFiber());
+        target.partCreativeEnergy = this.converter.of(source.partCreativeEnergy());
         target.partToggleBus = this.converter.of(source.toggleBus());
         target.partInvertedToggleBus = this.converter.of(source.invertedToggleBus());
         target.partStorageBus = this.converter.of(source.storageBus());
@@ -610,6 +611,8 @@ public final class Registration {
         Upgrades.PATTERN_CAPACITY.registerItem(parts.p2PTunnelMEInterface(), 3);
         Upgrades.ADVANCED_BLOCKING.registerItem(parts.iface(), 1);
         Upgrades.ADVANCED_BLOCKING.registerItem(blocks.iface(), 1);
+        Upgrades.FAKE_CRAFTING.registerItem(parts.iface(), 1);
+        Upgrades.FAKE_CRAFTING.registerItem(blocks.iface(), 1);
         Upgrades.LOCK_CRAFTING.registerItem(parts.iface(), 1);
         Upgrades.LOCK_CRAFTING.registerItem(blocks.iface(), 1);
         Upgrades.LOCK_CRAFTING.registerItem(parts.p2PTunnelMEInterface(), 1);
@@ -617,6 +620,7 @@ public final class Registration {
         // IO Port!
         Upgrades.SPEED.registerItem(blocks.iOPort(), 3);
         Upgrades.SUPERSPEED.registerItem(blocks.iOPort(), 3);
+        Upgrades.SUPERLUMINALSPEED.registerItem(blocks.iOPort(), 3);
         Upgrades.REDSTONE.registerItem(blocks.iOPort(), 1);
 
         // Level Emitter!

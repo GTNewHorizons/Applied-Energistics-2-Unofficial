@@ -140,9 +140,13 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(this.originalGui));
         } else if (btn == this.switchTallMode) {
             tallMode = !tallMode;
+            AEConfig.instance.getConfigManager()
+                    .putSetting(Settings.TERMINAL_STYLE, tallMode ? TerminalStyle.TALL : TerminalStyle.SMALL);
             switchTallMode.set(tallMode ? TerminalStyle.TALL : TerminalStyle.SMALL);
             recalculateScreenSize();
             this.setWorldAndResolution(mc, width, height);
+        } else if (btn == this.toggleHideStored) {
+            this.setScrollBar();
         }
     }
 
@@ -307,7 +311,12 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
     }
 
     private void setScrollBar() {
-        final int size = this.visual.size();
+        int size;
+        if (this.hideStored) {
+            size = this.visualHiddenStored.size();
+        } else {
+            size = this.visual.size();
+        }
 
         this.getScrollBar().setTop(SCROLLBAR_TOP).setLeft(SCROLLBAR_LEFT).setHeight(ySize - 47);
         this.getScrollBar().setRange(0, (size + 2) / 3 - this.rows, 1);

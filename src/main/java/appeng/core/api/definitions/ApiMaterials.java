@@ -67,6 +67,7 @@ public final class ApiMaterials implements IMaterials {
     private final IItemDefinition cardRedstone;
     private final IItemDefinition cardSpeed;
     private final IItemDefinition cardSuperSpeed;
+    private final IItemDefinition cardSuperluminalSpeed;
     private final IItemDefinition cardCapacity;
     private final IItemDefinition cardPatternCapacity;
     private final IItemDefinition cardFuzzy;
@@ -76,6 +77,7 @@ public final class ApiMaterials implements IMaterials {
     private final IItemDefinition cardPatternRefiller;
     private final IItemDefinition cardAdvancedBlocking;
     private final IItemDefinition cardLockCrafting;
+    private final IItemDefinition cardFakeCrafting;
     private final IItemDefinition enderDust;
     private final IItemDefinition flour;
     private final IItemDefinition goldDust;
@@ -168,6 +170,8 @@ public final class ApiMaterials implements IMaterials {
         this.cardRedstone = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardRedstone));
         this.cardSpeed = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardSpeed));
         this.cardSuperSpeed = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardSuperSpeed));
+        this.cardSuperluminalSpeed = new DamagedItemDefinition(
+                itemMultiMaterial.createMaterial(MaterialType.CardSuperluminalSpeed));
         this.cardCapacity = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardCapacity));
         this.cardPatternCapacity = new DamagedItemDefinition(
                 itemMultiMaterial.createMaterial(MaterialType.CardPatternCapacity));
@@ -181,6 +185,8 @@ public final class ApiMaterials implements IMaterials {
                 itemMultiMaterial.createMaterial(MaterialType.CardAdvancedBlocking));
         this.cardLockCrafting = new DamagedItemDefinition(
                 itemMultiMaterial.createMaterial(MaterialType.CardLockCrafting));
+        this.cardFakeCrafting = new DamagedItemDefinition(
+                itemMultiMaterial.createMaterial(MaterialType.CardFakeCrafting));
 
         this.enderDust = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.EnderDust));
         this.flour = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.Flour));
@@ -545,5 +551,15 @@ public final class ApiMaterials implements IMaterials {
     @Override
     public IItemDefinition cardLockCrafting() {
         return this.cardLockCrafting;
+    }
+
+    @Override
+    public IItemDefinition cardFakeCrafting() {
+        return this.cardFakeCrafting;
+    }
+
+    @Override
+    public IItemDefinition cardSuperluminalSpeed() {
+        return this.cardSuperluminalSpeed;
     }
 }

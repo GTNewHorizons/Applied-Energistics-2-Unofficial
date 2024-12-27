@@ -1038,6 +1038,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return (InsertionMode) cm.getSetting(Settings.INSERTION_MODE);
     }
 
+    public boolean isFakeCraftingMode() {
+        return this.getInstalledUpgrades(Upgrades.FAKE_CRAFTING) != 0;
+    }
+
     private static boolean acceptsItems(final InventoryAdaptor ad, final InventoryCrafting table,
             final InsertionMode insertionMode) {
         for (int x = 0; x < table.getSizeInventory(); x++) {
