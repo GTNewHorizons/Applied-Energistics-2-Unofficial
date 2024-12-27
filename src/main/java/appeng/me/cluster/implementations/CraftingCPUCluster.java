@@ -51,12 +51,14 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.apache.logging.log4j.Level;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.config.CraftingMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.Upgrades;
@@ -138,6 +140,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private IAEItemStack finalOutput;
     private boolean waiting = false;
     private IItemList<IAEItemStack> waitingFor = AEApi.instance().storage().createItemList();
+    private IItemList<IAEItemStack> waitingForMissing = AEApi.instance().storage().createItemList();
     private long availableStorage = 0;
     private long usedStorage = 0;
     private MachineSource machineSrc = null;
@@ -145,12 +148,15 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private boolean isComplete = true;
     private int remainingOperations;
     private boolean somethingChanged;
+    private boolean isFakeCrafting;
 
     private long lastTime;
     private long elapsedTime;
     private long startItemCount;
     private long remainingItemCount;
     private long numsOfOutput;
+    private int countToTryExtractItems;
+    private boolean isMissingMode;
 
     private final Map<String, List<CraftNotification>> unreadNotifications = new HashMap<>();
 
@@ -334,6 +340,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         final IAEItemStack what = (IAEItemStack) input.copy();
         final IAEItemStack is = this.waitingFor.findPrecise(what);
+        final IAEItemStack ism = this.waitingForMissing.findPrecise(what);
 
         if (type == Actionable.SIMULATE) // causes crafting to lock up?
         {
@@ -374,6 +381,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                 if (is.getStackSize() >= what.getStackSize()) {
                     is.decStackSize(what.getStackSize());
+                    if (ism != null) ism.decStackSize(what.getStackSize());
 
                     this.updateElapsedTime(what);
                     this.markDirty();
@@ -410,6 +418,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 what.decStackSize(is.getStackSize());
 
                 is.setStackSize(0);
+                if (ism != null) ism.setStackSize(0);
 
                 if (Objects.equals(finalOutput, insert)) {
                     IAEStack leftover = input;
@@ -497,6 +506,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         craftCompleteListeners.forEach(f -> f.apply(this.finalOutput.getItemStack(), this.numsOfOutput, elapsedTime));
+        this.isFakeCrafting = false;
         this.usedStorage = 0;
         this.remainingItemCount = 0;
         this.startItemCount = 0;
@@ -688,6 +698,21 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (this.remainingOperations > 0 && !this.somethingChanged) {
             this.waiting = true;
         }
+
+        if (this.isFakeCrafting) {
+            final IAEItemStack is = this.waitingFor.findPrecise(this.finalOutput);
+            if (is != null) {
+                long stackSize = is.getStackSize();
+                is.decStackSize(stackSize);
+                this.markDirty();
+                this.postCraftingStatusChange(is);
+                this.finalOutput.decStackSize(stackSize);
+                if (this.finalOutput.getStackSize() <= 0) {
+                    this.completeJob();
+                }
+                this.updateCPU();
+            }
+        }
     }
 
     private void executeCrafting(final IEnergyGrid eg, final CraftingGridCache cc) {
@@ -787,6 +812,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     this.somethingChanged = true;
                     this.remainingOperations--;
                     pushedPattern = true;
+                    this.isFakeCrafting = (m instanceof DualityInterface di && di.isFakeCraftingMode());
 
                     for (final IAEItemStack out : details.getCondensedOutputs()) {
                         this.postChange(out, this.machineSrc);
@@ -816,7 +842,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 Platform.getPlayer((WorldServer) this.getWorld()),
                                 details.getOutput(ic, this.getWorld()),
                                 ic);
-
                         for (int x = 0; x < ic.getSizeInventory(); x++) {
                             final ItemStack output = Platform.getContainerItem(ic.getStackInSlot(x));
                             if (output != null) {
@@ -934,10 +959,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 // when it comes to a new craft,
                 if (job.getOutput() != null) {
                     this.finalOutput = job.getOutput();
+                    this.isFakeCrafting = false;
                     this.waiting = false;
                     this.isComplete = false;
                     this.usedStorage = job.getByteTotal();
                     this.numsOfOutput = job.getOutput().getStackSize();
+                    this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
                     this.markDirty();
 
                     this.updateCPU();
@@ -1028,6 +1055,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 this.finalOutput.add(job.getOutput());
                 this.usedStorage += job.getByteTotal();
                 this.numsOfOutput += job.getOutput().getStackSize();
+                this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
 
                 this.prepareStepCount();
                 this.markDirty();
@@ -1161,6 +1189,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     public void addEmitable(final IAEItemStack i) {
         this.waitingFor.add(i);
+        this.waitingForMissing.add(i);
         this.postCraftingStatusChange(i);
     }
 
@@ -1233,6 +1262,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         data.setBoolean("isComplete", this.isComplete);
         data.setLong("usedStorage", this.usedStorage);
         data.setLong("numsOfOutput", this.numsOfOutput);
+        data.setBoolean("isMissingMode", this.isMissingMode);
         try {
             data.setTag("craftCompleteListeners", persistListeners(1, craftCompleteListeners));
             data.setTag("onCancelListeners", persistListeners(0, craftCancelListeners));
@@ -1282,6 +1312,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         data.setTag("tasks", list);
 
         data.setTag("waitingFor", this.writeList(this.waitingFor));
+        data.setTag("waitingForMissing", this.writeList(this.waitingForMissing));
 
         data.setLong("elapsedTime", this.getElapsedTime());
         data.setLong("startItemCount", this.getStartItemCount());
@@ -1382,12 +1413,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         for (final IAEItemStack is : this.waitingFor) {
             this.postCraftingStatusChange(is.copy());
         }
+        this.waitingForMissing = this.readList((NBTTagList) data.getTag("waitingForMissing"));
 
         this.lastTime = System.nanoTime();
         this.elapsedTime = data.getLong("elapsedTime");
         this.startItemCount = data.getLong("startItemCount");
         this.remainingItemCount = data.getLong("remainingItemCount");
         this.numsOfOutput = data.getLong("numsOfOutput");
+        this.isMissingMode = data.getBoolean("isMissingMode");
 
         NBTBase tag = data.getTag("playerNameList");
         if (tag instanceof NBTTagList ntl) {
@@ -1566,6 +1599,33 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             return 0;
         } else {
             return this.remainingOperations;
+        }
+    }
+
+    public void tryExtractItems() {
+        if (!isMissingMode || this.waitingForMissing.isEmpty()) return;
+        if (countToTryExtractItems > 1200) {
+            countToTryExtractItems = 0;
+            for (IAEItemStack waitingForItem : this.waitingForMissing) {
+                final IGrid grid = this.getGrid();
+                if (grid != null) {
+                    final IStorageGrid pg = grid.getCache(IStorageGrid.class);
+                    if (pg != null) {
+                        IAEItemStack extractedItems = pg.getItemInventory()
+                                .extractItems(waitingForItem, Actionable.MODULATE, this.machineSrc);
+                        if (extractedItems != null) {
+                            IAEStack notInjected = injectItems(extractedItems, Actionable.MODULATE, this.machineSrc);
+                            if (notInjected != null) { // not sure if this even need, but still
+                                AELog.logSimple(Level.INFO, "MISSING MODE OVERFLOW! TELL DEVS ASAP!");
+                                pg.getItemInventory()
+                                        .injectItems((IAEItemStack) notInjected, Actionable.MODULATE, this.machineSrc);
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            countToTryExtractItems++;
         }
     }
 

@@ -38,6 +38,10 @@ public enum PlayerMessages {
     TunnelOutputsAreAt,
     InterfaceInOtherDim,
     InterfaceHighlighted,
+    LevelEmitterInAnotherDim,
+    LevelEmitterHighlighted,
+    P2PInAnotherDim,
+    P2PHighlighted,
     CraftingItemsWentMissing,
     PriorityInvalidTarget,
     PriorityReadout,
@@ -53,6 +57,6 @@ public enum PlayerMessages {
     }
 
     public String getName() {
-        return "chat.appliedenergistics2." + this.toString();
+        return "chat.appliedenergistics2." + this.name();
     }
 }

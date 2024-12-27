@@ -620,6 +620,7 @@ item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=空白样板重�
 item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=高级阻挡卡
 item.appliedenergistics2.ItemMaterial.CardLockCrafting.name=Locking Card
 item.appliedenergistics2.ItemMaterial.CardSticky.name=粘性卡
+item.appliedenergistics2.ItemMaterial.CardFakeCrafting.name=伪合成卡
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³-空间组件
 item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=16³-空间组件

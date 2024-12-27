@@ -15,6 +15,7 @@ package appeng.api.networking.crafting;
 
 import java.util.concurrent.Future;
 
+import appeng.api.config.CraftingMode;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
@@ -61,6 +62,10 @@ public interface ICraftingJob {
      */
     default boolean supportsCPUCluster(final ICraftingCPU cluster) {
         return false;
+    }
+
+    default CraftingMode getCraftingMode() {
+        return null;
     }
 
     /**

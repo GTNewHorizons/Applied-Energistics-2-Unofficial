@@ -76,7 +76,7 @@ public class NEISearchField {
 
         if (searchField != null) {
             final ItemFilter filter = searchField.getFilter(filterText);
-            return stack -> filter.matches(stack);
+            return filter::matches;
         }
 
         return null;

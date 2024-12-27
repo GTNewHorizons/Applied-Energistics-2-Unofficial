@@ -36,6 +36,7 @@ public final class ApiParts implements IParts {
     // private final AEColoredItemDefinition lumenCableGlass;
     // private final AEColoredItemDefinition lumenCableDense;
     private final IItemDefinition quartzFiber;
+    private final IItemDefinition partCreativeEnergy;
     private final IItemDefinition toggleBus;
     private final IItemDefinition invertedToggleBus;
     private final IItemDefinition storageBus;
@@ -88,6 +89,7 @@ public final class ApiParts implements IParts {
         // this.lumenCableGlass = Optional.absent(); // has yet to be implemented, no PartType defined for it yet
         // this.lumenCableDense = Optional.absent(); // has yet to be implemented, no PartType defined for it yet
         this.quartzFiber = new DamagedItemDefinition(itemMultiPart.createPart(PartType.QuartzFiber));
+        this.partCreativeEnergy = new DamagedItemDefinition(itemMultiPart.createPart(PartType.PartCreativeEnergy));
         this.toggleBus = new DamagedItemDefinition(itemMultiPart.createPart(PartType.ToggleBus));
         this.invertedToggleBus = new DamagedItemDefinition(itemMultiPart.createPart(PartType.InvertedToggleBus));
         this.storageBus = new DamagedItemDefinition(itemMultiPart.createPart(PartType.StorageBus));
@@ -187,6 +189,11 @@ public final class ApiParts implements IParts {
     @Override
     public IItemDefinition quartzFiber() {
         return this.quartzFiber;
+    }
+
+    @Override
+    public IItemDefinition partCreativeEnergy() {
+        return this.partCreativeEnergy;
     }
 
     @Override

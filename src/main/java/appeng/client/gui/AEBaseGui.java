@@ -84,7 +84,6 @@ import appeng.util.item.AEItemStack;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.guihook.GuiContainerManager;
 import cpw.mods.fml.common.Loader;
-import cpw.mods.fml.common.ObfuscationReflectionHelper;
 
 public abstract class AEBaseGui extends GuiContainer {
 
@@ -384,7 +383,7 @@ public abstract class AEBaseGui extends GuiContainer {
         final ItemStack itemstack = this.mc.thePlayer.inventory.getItemStack();
 
         if (this.getScrollBar() != null) {
-            this.getScrollBar().click(this, x - this.guiLeft, y - this.guiTop);
+            this.getScrollBar().clickMove(y - this.guiTop);
         }
 
         if (slot instanceof SlotFake && itemstack != null) {
@@ -628,15 +627,6 @@ public abstract class AEBaseGui extends GuiContainer {
 
     @Override
     protected boolean checkHotbarKeys(final int keyCode) {
-        final Slot theSlot;
-
-        try {
-            theSlot = ObfuscationReflectionHelper
-                    .getPrivateValue(GuiContainer.class, this, "theSlot", "field_147006_u", "f");
-        } catch (final Throwable t) {
-            return false;
-        }
-
         if (this.mc.thePlayer.inventory.getItemStack() == null && theSlot != null) {
             for (int j = 0; j < 9; ++j) {
                 if (keyCode == this.mc.gameSettings.keyBindsHotbar[j].getKeyCode()) {
