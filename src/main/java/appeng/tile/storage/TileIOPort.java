@@ -329,7 +329,8 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
             for (int x = 0; x < 6; x++) {
                 final ItemStack is = this.cells.getStackInSlot(x);
                 if (is != null) {
-                    if ((FullnessMode) this.manager.getSetting(Settings.FULLNESS_MODE) != FullnessMode.HALF && moveQueue[x] == 1) {
+                    if ((FullnessMode) this.manager.getSetting(Settings.FULLNESS_MODE) != FullnessMode.HALF
+                            && moveQueue[x] == 1) {
                         moveQueue[x] = !this.moveSlot(x) ? 1 : 0;
                     } else {
                         if (ItemsToMove > 0) {
