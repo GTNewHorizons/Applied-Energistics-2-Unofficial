@@ -634,6 +634,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         final ImmutableSet<IAEItemStack> items = ImmutableSet.copyOf(this.waitingFor);
 
         this.waitingFor.resetStatus();
+        this.waitingForMissing.resetStatus();
 
         for (final IAEItemStack is : items) {
             this.postCraftingStatusChange(is);
@@ -948,6 +949,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         try {
             this.waitingFor.resetStatus();
+            this.waitingForMissing.resetStatus();
             job.startCrafting(ci, this, src);
 
             // Clear the follow list by default
