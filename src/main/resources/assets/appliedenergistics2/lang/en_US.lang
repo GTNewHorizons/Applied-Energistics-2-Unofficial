@@ -117,6 +117,7 @@ chat.appliedenergistics2.PriorityConfigured=Updated priority to %d
 chat.appliedenergistics2.DriveLocked=Digital Singularity cells in drive were locked to the current item on them
 chat.appliedenergistics2.ChestLocked=Digital Singularity cell in chest was locked to the current item on it
 chat.appliedenergistics2.FinishCraftingRemind=Crafting of %s * %s finished in %s.
+chat.appliedenergistics2.CraftingCantExtract=Can't extract required amount of ingredient from storage: %d / %d | %s
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -402,9 +403,9 @@ gui.tooltips.appliedenergistics2.SearchMode=Search Box Mode
 gui.tooltips.appliedenergistics2.PartitionStorageHint=Configures Partition based on currently stored items.
 gui.tooltips.appliedenergistics2.ClearSettings=Clear Config/Settings
 gui.tooltips.appliedenergistics2.Craftable=Craftable
-gui.tooltips.appliedenergistics2.MoveWhenEmpty=Move to output when empty.
+gui.tooltips.appliedenergistics2.MoveWhenEmpty=Move to output when cell is empty or network was emptied.
 gui.tooltips.appliedenergistics2.MoveWhenWorkIsDone=Move to output when work is done.
-gui.tooltips.appliedenergistics2.MoveWhenFull=Move to output when full.
+gui.tooltips.appliedenergistics2.MoveWhenFull=Move to output when cell is full or network was filled.
 gui.tooltips.appliedenergistics2.Disabled=Disabled
 gui.tooltips.appliedenergistics2.Enable=Enabled
 gui.tooltips.appliedenergistics2.Blocking=Do not push crafting items if inventory contains items.
