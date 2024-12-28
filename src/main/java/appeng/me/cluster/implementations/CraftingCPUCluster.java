@@ -1573,14 +1573,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         final Iterator<Entry<IMEMonitorHandlerReceiver<IAEItemStack>, Object>> i = this.getListeners();
-        // protect integrity
-        if (i.hasNext()) {
-            while (i.hasNext()) {
-                final Entry<IMEMonitorHandlerReceiver<IAEItemStack>, Object> o = i.next();
-                final IMEMonitorHandlerReceiver<IAEItemStack> receiver = o.getKey();
-                if (receiver instanceof ContainerCraftingCPU cccpu) {
-                    cccpu.sendUpdateFollowPacket(playersFollowingCurrentCraft);
-                }
+        while (i.hasNext()) {
+            if (i.next().getKey() instanceof ContainerCraftingCPU cccpu) {
+                cccpu.sendUpdateFollowPacket(playersFollowingCurrentCraft);
             }
         }
     }
