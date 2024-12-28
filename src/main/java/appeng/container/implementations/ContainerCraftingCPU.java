@@ -145,6 +145,28 @@ public class ContainerCraftingCPU extends AEBaseContainer
         }
     }
 
+    public void sendUpdateFollowPacket(List<String> playersFollowingCurrentCraft) {
+        NBTTagCompound nbttc = new NBTTagCompound();
+        NBTTagList tagList = new NBTTagList();
+
+        if (playersFollowingCurrentCraft != null) {
+            for (String name : playersFollowingCurrentCraft) {
+                tagList.appendTag(new NBTTagString(name));
+            }
+        }
+        nbttc.setTag("playNameList", tagList);
+
+        for (final Object g : this.crafters) {
+            if (g instanceof EntityPlayerMP epmp) {
+                try {
+                    NetworkHandler.instance.sendTo(new PacketCompressedNBT(nbttc), epmp);
+                } catch (final IOException e) {
+                    // :P
+                }
+            }
+        }
+    }
+
     @Override
     public void detectAndSendChanges() {
         if (Platform.isServer() && this.getMonitor() != null && !this.list.isEmpty()) {
