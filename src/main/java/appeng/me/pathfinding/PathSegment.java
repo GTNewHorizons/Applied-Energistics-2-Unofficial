@@ -47,13 +47,6 @@ public class PathSegment {
             for (final IPathItem pi : i.getPossibleOptions()) {
                 final EnumSet<GridFlags> flags = pi.getFlags();
                 if (!this.closed.contains(pi)) {
-                    boolean stopHere = false;
-                    if (flags.contains(GridFlags.ULTRA_DENSE_CAPACITY)
-                            && stage == TopologyStage.CONTROLLER_TO_BACKBONE) {
-                        backbone.computeIfAbsent(pi, k -> new BackbonePathSegment(pi, pgc, semiOpen, closed))
-                                .addControllerRoute(i);
-                        stopHere = true;
-                    }
                     pi.setControllerRoute(i, true);
 
                     if (flags.contains(GridFlags.REQUIRE_CHANNEL) && stage != TopologyStage.BACKBONE) {
@@ -77,10 +70,8 @@ public class PathSegment {
                         }
                     }
 
-                    if (!stopHere) {
-                        this.closed.add(pi);
-                        this.open.add(pi);
-                    }
+                    this.closed.add(pi);
+                    this.open.add(pi);
                 } else if (stage == TopologyStage.BACKBONE) {
                     BackbonePathSegment bb = backbone.get(pi);
                     if (bb != null && bb != this) {

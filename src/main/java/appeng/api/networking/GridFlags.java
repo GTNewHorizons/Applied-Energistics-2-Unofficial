@@ -54,9 +54,4 @@ public enum GridFlags {
      * the order they are processed in.
      */
     PREFERRED,
-
-    /**
-     * This node can transmit 128 signals, this should only apply to Tier3 Cables only.
-     */
-    ULTRA_DENSE_CAPACITY
 }

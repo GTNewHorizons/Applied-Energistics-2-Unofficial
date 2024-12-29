@@ -186,7 +186,6 @@ public class GridNode implements IGridNode, IPathItem {
 
     private int getCompressedChannelsIndex(final EnumSet<GridFlags> set) {
         if (set.contains(GridFlags.CANNOT_CARRY)) return 0;
-        else if (set.contains(GridFlags.ULTRA_DENSE_CAPACITY)) return 3;
         else if (set.contains(GridFlags.DENSE_CAPACITY)) return 2;
         return 1;
     }
@@ -427,13 +426,6 @@ public class GridNode implements IGridNode, IPathItem {
         if (!this.isValidDirection(dir)) {
             return false;
         }
-
-        // only connect ultra dense cable to dense cables
-        if (hasFlag(GridFlags.ULTRA_DENSE_CAPACITY) && !hasFlag(GridFlags.DENSE_CAPACITY)
-                && !(from.hasFlag(GridFlags.ULTRA_DENSE_CAPACITY)
-                        || (from.hasFlag(GridFlags.DENSE_CAPACITY) && !from.hasFlag(GridFlags.CANNOT_CARRY))))
-            return false;
-
         return from.getColor().matches(this.getColor());
     }
 
