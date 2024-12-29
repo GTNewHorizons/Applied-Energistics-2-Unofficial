@@ -11,12 +11,10 @@
 package appeng.me.cache;
 
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import net.minecraftforge.common.util.ForgeDirection;
@@ -45,19 +43,16 @@ import appeng.core.stats.Achievements;
 import appeng.me.GridConnection;
 import appeng.me.GridNode;
 import appeng.me.pathfinding.AdHocChannelUpdater;
-import appeng.me.pathfinding.BackbonePathSegment;
 import appeng.me.pathfinding.ControllerChannelUpdater;
 import appeng.me.pathfinding.ControllerValidator;
 import appeng.me.pathfinding.IPathItem;
 import appeng.me.pathfinding.PathSegment;
-import appeng.me.pathfinding.TopologyStage;
 import appeng.tile.networking.TileController;
 import appeng.util.Platform;
 
 public class PathGridCache implements IPathingGrid {
 
     private final LinkedList<PathSegment> active = new LinkedList<>();
-    private final Map<IPathItem, BackbonePathSegment> backbone = new HashMap<>();
     private final Set<TileController> controllers = new HashSet<>();
     private final Set<IGridNode> requireChannels = new HashSet<>();
     private final Set<IGridNode> blockDense = new HashSet<>();
@@ -134,45 +129,18 @@ public class PathGridCache implements IPathingGrid {
             }
         }
 
-        if (!this.active.isEmpty() || !backbone.isEmpty() || this.ticksUntilReady > 0) {
-            boolean firstStage = !this.active.isEmpty();
+        if (!this.active.isEmpty() || this.ticksUntilReady > 0) {
             final Iterator<PathSegment> i = this.active.iterator();
             while (i.hasNext()) {
                 final PathSegment pat = i.next();
-                if (pat.step(backbone, TopologyStage.CONTROLLER_TO_BACKBONE)) {
+                if (pat.step()) {
                     pat.setDead(true);
                     i.remove();
                 }
             }
-            if (active.isEmpty() && !backbone.isEmpty()) {
-                if (firstStage) {
-                    for (BackbonePathSegment ps : backbone.values()) {
-                        BackbonePathSegment.reset(backbone);
-                        // noinspection StatementWithEmptyBody
-                        while (!ps.step(backbone, TopologyStage.BACKBONE)) {} // just establish backbone topology, that
-                                                                              // is fast
-                        ps.selectControllerRoute();
-                    }
-                    BackbonePathSegment.reset(backbone);
-                } else {
-                    final Iterator<BackbonePathSegment> bsi = this.backbone.values().iterator();
-                    boolean hasAliveSegments = false;
-                    while (bsi.hasNext()) {
-                        final PathSegment pat = bsi.next();
-                        if (pat.isDead()) continue;
-                        hasAliveSegments = true;
-                        if (pat.step(backbone, TopologyStage.PERIPHERALS)) pat.setDead(true);
-                    }
-                    if (AEConfig.instance.debugPathFinding) {
-                        AELog.debug("Pathfinding: Backbone 2nd phase, hasAliveSegments = %b", hasAliveSegments);
-                    }
-                    if (!hasAliveSegments) backbone.clear();
-                }
-            }
-
             this.ticksUntilReady--;
 
-            if (this.active.isEmpty() && this.backbone.isEmpty() && this.ticksUntilReady <= 0) {
+            if (this.active.isEmpty() && this.ticksUntilReady <= 0) {
                 if (this.controllerState == ControllerState.CONTROLLER_ONLINE) {
                     final Iterator<TileController> controllerIterator = this.controllers.iterator();
                     if (controllerIterator.hasNext()) {
@@ -365,7 +333,7 @@ public class PathGridCache implements IPathingGrid {
 
     @Override
     public boolean isNetworkBooting() {
-        return (!this.active.isEmpty() || !this.backbone.isEmpty()) && !this.booting;
+        return !this.active.isEmpty() && !this.booting;
     }
 
     @Override
@@ -377,7 +345,6 @@ public class PathGridCache implements IPathingGrid {
     public void repath() {
         // clean up...
         this.active.clear();
-        this.backbone.clear();
         this.setChannelsByBlocks(0);
         this.updateNetwork = true;
     }
@@ -404,17 +371,5 @@ public class PathGridCache implements IPathingGrid {
 
     public void setChannelsInUse(final int channelsInUse) {
         this.channelsInUse = channelsInUse;
-    }
-
-    public boolean isValidBackboneConnection(IPathItem pi) {
-        BackbonePathSegment bs = backbone.get(pi);
-        if (bs == null) return false;
-        return bs.isValid();
-    }
-
-    public void repathBackboneConnection(IPathItem pi) {
-        BackbonePathSegment bs = backbone.get(pi);
-        if (bs == null) return;
-        if (!bs.switchControllerRoute()) bs.transferToNeighbours();
     }
 }

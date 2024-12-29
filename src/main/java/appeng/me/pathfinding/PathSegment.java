@@ -14,7 +14,6 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import appeng.api.networking.GridFlags;
@@ -26,9 +25,9 @@ public class PathSegment {
 
     private final PathGridCache pgc;
     private final Set<IPathItem> semiOpen;
-    protected final Set<IPathItem> closed;
+    private final Set<IPathItem> closed;
     private boolean isDead;
-    protected List<IPathItem> open;
+    private List<IPathItem> open;
 
     public PathSegment(final PathGridCache myPGC, final List<IPathItem> open, final Set<IPathItem> semiOpen,
             final Set<IPathItem> closed) {
@@ -39,7 +38,7 @@ public class PathSegment {
         this.setDead(false);
     }
 
-    public boolean step(Map<IPathItem, BackbonePathSegment> backbone, TopologyStage stage) {
+    public boolean step() {
         final List<IPathItem> oldOpen = this.open;
         this.open = new LinkedList<>();
 
@@ -49,7 +48,7 @@ public class PathSegment {
                 if (!this.closed.contains(pi)) {
                     pi.setControllerRoute(i, true);
 
-                    if (flags.contains(GridFlags.REQUIRE_CHANNEL) && stage != TopologyStage.BACKBONE) {
+                    if (flags.contains(GridFlags.REQUIRE_CHANNEL)) {
                         // close the semi open.
                         if (!this.semiOpen.contains(pi)) {
                             final boolean worked = this.useChannel(pi, flags.contains(GridFlags.COMPRESSED_CHANNEL));
@@ -72,11 +71,6 @@ public class PathSegment {
 
                     this.closed.add(pi);
                     this.open.add(pi);
-                } else if (stage == TopologyStage.BACKBONE) {
-                    BackbonePathSegment bb = backbone.get(pi);
-                    if (bb != null && bb != this) {
-                        bb.addPathToNeighbour((BackbonePathSegment) this, i);
-                    }
                 }
             }
         }
@@ -90,16 +84,10 @@ public class PathSegment {
                 return false;
         }
 
-        boolean haveBlockingNode = false;
-        IPathItem lastBackboneConnection = null;
         for (IPathItem pi = start; pi != null; pi = pi.getControllerRoute()) {
             this.pgc.setChannelsByBlocks(this.pgc.getChannelsByBlocks() + 1);
             pi.incrementChannelCount(1);
-            if (!pi.canSupportMoreChannels()) haveBlockingNode = true;
-            if (pgc.isValidBackboneConnection(pi)) lastBackboneConnection = pi;
         }
-
-        if (haveBlockingNode && lastBackboneConnection != null) pgc.repathBackboneConnection(lastBackboneConnection);
 
         this.pgc.setChannelsInUse(this.pgc.getChannelsInUse() + 1);
         return true;
