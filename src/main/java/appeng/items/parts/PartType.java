@@ -37,8 +37,6 @@ import appeng.parts.networking.PartCreativeEnergy;
 import appeng.parts.networking.PartDenseCable;
 import appeng.parts.networking.PartDenseCableCovered;
 import appeng.parts.networking.PartQuartzFiber;
-import appeng.parts.networking.PartUltraDenseCableCovered;
-import appeng.parts.networking.PartUltraDenseCableSmart;
 import appeng.parts.p2p.PartP2PGT5Power;
 import appeng.parts.p2p.PartP2PIC2Power;
 import appeng.parts.p2p.PartP2PInterface;
@@ -100,23 +98,6 @@ public enum PartType {
 
     CableDenseCovered(520, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class),
             PartDenseCableCovered.class) {
-
-        @Override
-        public boolean isCable() {
-            return true;
-        }
-    },
-
-    CableUltraDenseCovered(540, EnumSet.of(AEFeature.UltraDenseCables), EnumSet.noneOf(IntegrationType.class),
-            PartUltraDenseCableCovered.class) {
-
-        @Override
-        public boolean isCable() {
-            return true;
-        }
-    },
-    CableUltraDenseSmart(560, EnumSet.of(AEFeature.UltraDenseCables), EnumSet.noneOf(IntegrationType.class),
-            PartUltraDenseCableSmart.class) {
 
         @Override
         public boolean isCable() {

@@ -21,7 +21,6 @@ import appeng.api.parts.IPart;
 import appeng.core.localization.WailaText;
 import appeng.parts.networking.PartCableSmart;
 import appeng.parts.networking.PartDenseCable;
-import appeng.parts.networking.PartUltraDenseCableSmart;
 import gnu.trove.map.TObjectShortMap;
 import gnu.trove.map.hash.TObjectShortHashMap;
 import mcp.mobius.waila.api.IWailaConfigHandler;
@@ -65,8 +64,7 @@ public final class ChannelWailaDataProvider extends BasePartWailaDataProvider {
             final IWailaDataAccessor accessor, final IWailaConfigHandler config) {
         if (part instanceof PartCableSmart || part instanceof PartDenseCable) {
             final short usedChannels = this.getUsedChannels(part, accessor.getNBTData());
-            final int maxChannels = ((part instanceof PartUltraDenseCableSmart) ? 128
-                    : ((part instanceof PartDenseCable) ? 32 : 8));
+            final int maxChannels = (part instanceof PartDenseCable) ? 32 : 8;
 
             final String formattedToolTip = String.format(WailaText.Channels.getLocal(), usedChannels, maxChannels);
             currentToolTip.add(formattedToolTip);

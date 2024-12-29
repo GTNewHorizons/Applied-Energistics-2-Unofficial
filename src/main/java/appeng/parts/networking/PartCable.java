@@ -100,10 +100,6 @@ public class PartCable extends AEBasePart implements IPartCable {
                 newPart = parts.cableDense().stack(newColor, 1);
             } else if (this.getCableConnectionType() == AECableType.DENSE_COVERED) {
                 newPart = parts.cableDenseCovered().stack(newColor, 1);
-            } else if (this.getCableConnectionType() == AECableType.ULTRA_DENSE) {
-                newPart = parts.cableUltraDenseSmart().stack(newColor, 1);
-            } else if (this.getCableConnectionType() == AECableType.ULTRA_DENSE_SMART) {
-                newPart = parts.cableUltraDenseCovered().stack(newColor, 1);
             }
 
             boolean hasPermission = true;

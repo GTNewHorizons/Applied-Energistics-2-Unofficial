@@ -1744,14 +1744,6 @@ public class Platform {
             if (parts.cableDenseCovered().sameAs(AEColor.Transparent, stack)) {
                 return stack;
             }
-
-            if (parts.cableUltraDenseCovered().sameAs(AEColor.Transparent, stack)) {
-                return stack;
-            }
-
-            if (parts.cableUltraDenseSmart().sameAs(AEColor.Transparent, stack)) {
-                return stack;
-            }
         }
 
         return is;
