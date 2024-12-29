@@ -29,7 +29,6 @@ import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartHost;
 import appeng.api.util.AECableType;
-import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.settings.TickRates;
 import appeng.hooks.TickHandler;
@@ -46,9 +45,7 @@ public class PartP2PTunnelME extends PartP2PTunnelNormal<PartP2PTunnelME> implem
     public PartP2PTunnelME(final ItemStack is) {
         super(is);
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL, GridFlags.COMPRESSED_CHANNEL);
-        if (AEConfig.instance.p2pBackboneTransfer) this.outerProxy
-                .setFlags(GridFlags.DENSE_CAPACITY, GridFlags.ULTRA_DENSE_CAPACITY, GridFlags.CANNOT_CARRY_COMPRESSED);
-        else this.outerProxy.setFlags(GridFlags.DENSE_CAPACITY, GridFlags.CANNOT_CARRY_COMPRESSED);
+        this.outerProxy.setFlags(GridFlags.DENSE_CAPACITY, GridFlags.CANNOT_CARRY_COMPRESSED);
     }
 
     @Override
