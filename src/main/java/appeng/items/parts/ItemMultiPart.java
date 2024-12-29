@@ -35,13 +35,14 @@ import com.google.common.base.Preconditions;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
 import appeng.api.AEApi;
-import appeng.api.exceptions.MissingDefinition;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHelper;
 import appeng.api.parts.IPartItem;
 import appeng.api.util.AEColor;
+import appeng.client.texture.TextureUtils;
 import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.core.features.AEFeature;
 import appeng.core.features.ActivityState;
 import appeng.core.features.ItemStackSrc;
@@ -171,11 +172,12 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
         }
 
         final String formattedRegistered = Arrays.toString(this.registered.keySet().toArray());
-        throw new MissingDefinition(
+        AELog.error(
                 "Tried to get the icon from a non-existent part with damage value " + dmg
                         + ". There were registered: "
                         + formattedRegistered
                         + '.');
+        return TextureUtils.getMissingItem();
     }
 
     @Override
