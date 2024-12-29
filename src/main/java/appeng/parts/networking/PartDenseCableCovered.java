@@ -286,9 +286,7 @@ public class PartDenseCableCovered extends PartCable {
                 this.getTile().zCoord + of.offsetZ);
         if (te instanceof IGridHost) {
             final AECableType t = ((IGridHost) te).getCableConnectionType(of.getOpposite());
-            return t == AECableType.DENSE || t == AECableType.DENSE_COVERED
-                    || t == AECableType.ULTRA_DENSE
-                    || t == AECableType.ULTRA_DENSE_SMART;
+            return t == AECableType.DENSE || t == AECableType.DENSE_COVERED;
         }
         return false;
     }

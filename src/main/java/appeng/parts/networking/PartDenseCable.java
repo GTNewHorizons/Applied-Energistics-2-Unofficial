@@ -373,9 +373,7 @@ public class PartDenseCable extends PartCable {
                 this.getTile().zCoord + of.offsetZ);
         if (te instanceof IGridHost) {
             final AECableType t = ((IGridHost) te).getCableConnectionType(of.getOpposite());
-            return t == AECableType.DENSE || t == AECableType.DENSE_COVERED
-                    || t == AECableType.ULTRA_DENSE_SMART
-                    || t == AECableType.ULTRA_DENSE;
+            return t == AECableType.DENSE || t == AECableType.DENSE_COVERED;
         }
         return false;
     }

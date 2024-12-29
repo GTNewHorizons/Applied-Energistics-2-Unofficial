@@ -43,15 +43,4 @@ public enum AECableType {
      * Dense Covered Cable, represents a tier 2 block that can carry 32 channels that should render as covered.
      */
     DENSE_COVERED,
-
-    /**
-     * Ultra Dense Cable, represents a tier 3 block that can carry 128 channels.
-     */
-    ULTRA_DENSE,
-
-    /**
-     * Ultra Dense Cable, represents a tier 3 block that can carry 128 channels and renders as smart (4 channels per
-     * line).
-     */
-    ULTRA_DENSE_SMART
 }
