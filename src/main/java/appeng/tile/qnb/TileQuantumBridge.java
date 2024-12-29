@@ -59,9 +59,7 @@ public class TileQuantumBridge extends AENetworkInvTile implements IAEMultiBlock
 
     public TileQuantumBridge() {
         this.getProxy().setValidSides(EnumSet.noneOf(ForgeDirection.class));
-        if (AEConfig.instance.quantumBridgeBackboneTransfer)
-            this.getProxy().setFlags(GridFlags.DENSE_CAPACITY, GridFlags.ULTRA_DENSE_CAPACITY);
-        else this.getProxy().setFlags(GridFlags.DENSE_CAPACITY);
+        this.getProxy().setFlags(GridFlags.DENSE_CAPACITY);
         this.getProxy().setIdlePowerUsage(22);
         this.internalInventory.setMaxStackSize(1);
     }

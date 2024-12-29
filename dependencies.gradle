@@ -1,7 +1,7 @@
 // Add your dependencies here
 
 dependencies {
-    implementation('com.github.GTNewHorizons:NotEnoughItems:2.7.4-GTNH:dev')
+    implementation('com.github.GTNewHorizons:NotEnoughItems:2.7.8-GTNH:dev')
     implementation('curse.maven:cofh-core-69162:2388751')
 
     compileOnlyApi('com.github.GTNewHorizons:Angelica:1.0.0-beta28:api')
@@ -10,7 +10,7 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.39:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.10.0:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.5.0:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.33:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.36:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.0:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.0:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:OpenComputers:1.11.1-GTNH:api') {transitive = false}
@@ -34,7 +34,7 @@ dependencies {
     functionalTestImplementation('org.junit.platform:junit-platform-engine')
     functionalTestImplementation('org.junit.platform:junit-platform-launcher')
     functionalTestImplementation('org.junit.platform:junit-platform-reporting')
-    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.33:dev') {
+    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.36:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
     }
 
@@ -42,6 +42,6 @@ dependencies {
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:Baubles:1.0.4:dev')
     runtimeOnlyNonPublishable('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev')
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:ThaumicEnergistics:1.7.0-GTNH:dev') { transitive = false }
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.4.2-gtnh:dev') { transitive = false }
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.4.4-gtnh:dev') { transitive = false }
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:BloodMagic:1.6.9")  { transitive = false }
 }
