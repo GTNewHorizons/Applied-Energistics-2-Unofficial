@@ -375,10 +375,30 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
 
                             // If work is done, check if the cell should be moved and try to move it to the output
                             // If the cell failed to move, queue moving the cell before doing any further work on it
-                            if (ItemsToMove > 0 && this.shouldMove(itemInv, fluidInv, ItemsToMove != maxMoved)) {
-                                moveQueue[x] = !this.moveSlot(x) ? 1 : 0;
-                                if (moveQueue[x] == 1) {
-                                    return TickRateModulation.IDLE;
+                            if (ItemsToMove > 0) {
+                                if (this.shouldMove(itemInv, fluidInv, ItemsToMove != maxMoved)) {
+                                    moveQueue[x] = !this.moveSlot(x) ? 1 : 0;
+                                    if (moveQueue[x] == 1) {
+                                        return TickRateModulation.IDLE;
+                                    }
+                                } else {
+                                    // Try moving something else instead
+                                    if ((FullnessMode) this.manager.getSetting(Settings.FULLNESS_MODE)
+                                            != FullnessMode.HALF) {
+                                        for (int y = x + 1; y < 6; y++) {
+                                            if (moveQueue[y] == 1) {
+                                                final ItemStack is2 = this.cells.getStackInSlot(x);
+                                                if (is != null) {
+                                                    moveQueue[y] = !this.moveSlot(y) ? 1 : 0;
+                                                    if (moveQueue[y] == 1) {
+                                                        return TickRateModulation.IDLE;
+                                                    } else {
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
