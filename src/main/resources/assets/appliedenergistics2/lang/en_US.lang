@@ -60,8 +60,12 @@ tile.appliedenergistics2.BlockCraftingAccelerator256x.name=256 Core Co-Processin
 tile.appliedenergistics2.BlockCraftingAccelerator1024x.name=1024 Core Co-Processing Unit
 tile.appliedenergistics2.BlockCraftingAccelerator4096x.name=4096 Core Co-Processing Unit
 tile.appliedenergistics2.BlockCraftingUnit.name=Crafting Unit
+tile.appliedenergistics2.BlockAdvancedCraftingStorage.name=Crafting Storage
+tile.appliedenergistics2.BlockAdvancedCraftingUnit.name=Crafting Unit
 tile.appliedenergistics2.BlockMolecularAssembler.name=Molecular Assembler
 tile.appliedenergistics2.BlockPatternOptimizationMatrix.name=Pattern Optimization Matrix
+tile.appliedenergistics2.BlockSingularityCraftingStorage.name=Singularity Crafting Storage
+tile.appliedenergistics2.BlockPaint.name=Paint
 
 # Stairs
 tile.appliedenergistics2.ChiseledQuartzStairBlock.name=Chiseled Certus Quartz Stairs
@@ -75,13 +79,21 @@ tile.appliedenergistics2.SkyStoneStairBlock.name=Sky Stone Stairs
 
 # Slabs
 tile.appliedenergistics2.ChiseledQuartzSlabBlock.name=Chiseled Certus Quartz Slabs
+tile.appliedenergistics2.ChiseledQuartzSlabBlock.double.name=Chiseled Certus Quartz Slabs
 tile.appliedenergistics2.FluixSlabBlock.name=Fluix Slabs
+tile.appliedenergistics2.FluixSlabBlock.double.name=Fluix Slabs
 tile.appliedenergistics2.QuartzPillarSlabBlock.name=Certus Quartz Pillar Slabs
+tile.appliedenergistics2.QuartzPillarSlabBlock.double.name=Certus Quartz Pillar Slabs
 tile.appliedenergistics2.QuartzSlabBlock.name=Certus Quartz Slabs
+tile.appliedenergistics2.QuartzSlabBlock.double.name=Certus Quartz Slabs
 tile.appliedenergistics2.SkyStoneBlockSlabBlock.name=Sky Stone Block Slabs
+tile.appliedenergistics2.SkyStoneBlockSlabBlock.double.name=Sky Stone Block Slabs
 tile.appliedenergistics2.SkyStoneBrickSlabBlock.name=Sky Stone Brick Slabs
+tile.appliedenergistics2.SkyStoneBrickSlabBlock.double.name=Sky Stone Brick Slabs
 tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.name=Sky Stone Small Brick Slabs
+tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.double.name=Sky Stone Small Brick Slabs
 tile.appliedenergistics2.SkyStoneSlabBlock.name=Sky Stone Slabs
+tile.appliedenergistics2.SkyStoneSlabBlock.double.name=Sky Stone Slabs
 
 # Chat Messages
 chat.appliedenergistics2.ChestCannotReadStorageCell=ME Chest cannot read storage cell.
@@ -601,12 +613,16 @@ item.appliedenergistics2.ItemEncodedPattern.name=Encoded Pattern
 item.appliedenergistics2.ItemViewCell.name=View Cell
 item.appliedenergistics2.ItemFacade.name=Cable Facade
 
+item.appliedenergistics2.ItemCrystalSeed.name=Seed
 item.appliedenergistics2.ItemCrystalSeed.Certus.name=Certus Quartz Seed
 item.appliedenergistics2.ItemCrystalSeed.Nether.name=Nether Quartz Seed
 item.appliedenergistics2.ItemCrystalSeed.Fluix.name=Fluix Seed
 
 item.appliedenergistics2.ItemPart.InvalidType.name=Disabled Item
 item.appliedenergistics2.ItemMaterial.InvalidType.name=This Item Is Disabled.
+
+item.appliedenergistics2.ItemMaterial.name=ME Component
+item.appliedenergistics2.ItemPart.name=ME Cable and/or Bus
 
 item.appliedenergistics2.ItemMaterial.BlankPattern.name=Blank Pattern
 item.appliedenergistics2.ItemMaterial.FormationCore.name=Formation Core
