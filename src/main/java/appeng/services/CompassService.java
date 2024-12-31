@@ -13,9 +13,10 @@ package appeng.services;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -38,27 +39,23 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 public final class CompassService {
 
     private static final int CHUNK_SIZE = 16;
+    private static final int CLEANUP_TIMEOUT_IN_SECONDS = 60;
 
-    private final Map<World, CompassReader> worldSet = new HashMap<>(10);
-    private final ExecutorService executor;
-
+    private final Map<World, AutoClosingCompassReader> worldSet = new HashMap<>(10);
+    private final ScheduledExecutorService executor;
     /**
      * AE2 Folder for each world
      */
     private final File worldCompassFolder;
 
-    private int jobSize;
-
     public CompassService(@Nonnull final File worldCompassFolder, @Nonnull final ThreadFactory factory) {
         Preconditions.checkNotNull(worldCompassFolder);
 
         this.worldCompassFolder = worldCompassFolder;
-        this.executor = Executors.newSingleThreadExecutor(factory);
-        this.jobSize = 0;
+        this.executor = Executors.newSingleThreadScheduledExecutor(factory);
     }
 
     public Future<?> getCompassDirection(final DimensionalCoord coord, final int maxRange, final ICompassCallback cc) {
-        this.jobSize++;
         return this.executor.submit(new CMDirectionRequest(coord, maxRange, cc));
     }
 
@@ -70,18 +67,14 @@ public final class CompassService {
     @SubscribeEvent
     public void unloadWorld(final WorldEvent.Unload event) {
         if (Platform.isServer() && this.worldSet.containsKey(event.world)) {
-            final CompassReader compassReader = this.worldSet.remove(event.world);
+            final AutoClosingCompassReader compassReader = this.worldSet.remove(event.world);
 
             compassReader.close();
         }
     }
 
-    private int jobSize() {
-        return this.jobSize;
-    }
-
     private void cleanUp() {
-        for (final CompassReader cr : this.worldSet.values()) {
+        for (final AutoClosingCompassReader cr : this.worldSet.values()) {
             cr.close();
         }
     }
@@ -102,8 +95,6 @@ public final class CompassService {
     }
 
     public Future<?> updateArea(final World w, final int x, final int y, final int z) {
-        this.jobSize++;
-
         final int cx = x >> 4;
         final int cdy = y >> 5;
         final int cz = z >> 4;
@@ -135,9 +126,8 @@ public final class CompassService {
 
         try {
             this.executor.awaitTermination(6, TimeUnit.MINUTES);
-            this.jobSize = 0;
 
-            for (final CompassReader cr : this.worldSet.values()) {
+            for (final AutoClosingCompassReader cr : this.worldSet.values()) {
                 cr.close();
             }
 
@@ -148,14 +138,15 @@ public final class CompassService {
     }
 
     private CompassReader getReader(final World w) {
-        CompassReader cr = this.worldSet.get(w);
+        AutoClosingCompassReader cr = this.worldSet.get(w);
 
         if (cr == null) {
-            cr = new CompassReader(w.provider.dimensionId, this.worldCompassFolder);
+            CompassReader reader = new CompassReader(w.provider.dimensionId, this.worldCompassFolder);
+            cr = new AutoClosingCompassReader(reader, this.executor);
             this.worldSet.put(w, cr);
         }
 
-        return cr;
+        return cr.get();
     }
 
     private int dist(final int ax, final int az, final int bx, final int bz) {
@@ -191,14 +182,8 @@ public final class CompassService {
 
         @Override
         public void run() {
-            CompassService.this.jobSize--;
-
             final CompassReader cr = CompassService.this.getReader(this.world);
             cr.setHasBeacon(this.chunkX, this.chunkZ, this.doubleChunkY, this.value);
-
-            if (CompassService.this.jobSize() < 2) {
-                CompassService.this.cleanUp();
-            }
         }
     }
 
@@ -216,8 +201,6 @@ public final class CompassService {
 
         @Override
         public void run() {
-            CompassService.this.jobSize--;
-
             final int cx = this.coord.x >> 4;
             final int cz = this.coord.z >> 4;
 
@@ -226,11 +209,6 @@ public final class CompassService {
             // Am I standing on it?
             if (cr.hasBeacon(cx, cz)) {
                 this.callback.calculatedDirection(true, true, -999, 0);
-
-                if (CompassService.this.jobSize() < 2) {
-                    CompassService.this.cleanUp();
-                }
-
                 return;
             }
 
@@ -291,21 +269,54 @@ public final class CompassService {
                             false,
                             CompassService.this.rad(cx, cz, chosen_x, chosen_z),
                             CompassService.this.dist(cx, cz, chosen_x, chosen_z));
-
-                    if (CompassService.this.jobSize() < 2) {
-                        CompassService.this.cleanUp();
-                    }
-
                     return;
                 }
             }
 
             // didn't find shit...
             this.callback.calculatedDirection(false, true, -999, 999);
+        }
+    }
 
-            if (CompassService.this.jobSize() < 2) {
-                CompassService.this.cleanUp();
+    /**
+     * A small helper class that wraps a {@link CompassReader}. <br />
+     * Its job is to close the associated {@link CompassReader} once it wasn't retrieved for
+     * {@link CompassService#CLEANUP_TIMEOUT_IN_SECONDS} seconds. <br />
+     * Callers must not cache the result of {@link AutoClosingCompassReader#get}, as that would defeat the purpose of
+     * this class.
+     */
+    private static class AutoClosingCompassReader {
+
+        private final CompassReader cr;
+        private final ScheduledExecutorService executorService;
+
+        private final Runnable closeTask = new Runnable() {
+
+            @Override
+            public void run() {
+                cr.close();
             }
+        };
+        private ScheduledFuture<?> scheduledCloseTask = null;
+
+        public AutoClosingCompassReader(CompassReader cr, ScheduledExecutorService executorService) {
+            this.cr = cr;
+            this.executorService = executorService;
+        }
+
+        public CompassReader get() {
+            if (scheduledCloseTask != null) {
+                scheduledCloseTask.cancel(/* interruptIfRunning */ false);
+            }
+            scheduledCloseTask = executorService.schedule(closeTask, CLEANUP_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+            return cr;
+        }
+
+        public void close() {
+            if (scheduledCloseTask != null) {
+                scheduledCloseTask.cancel(/* interruptIfRunning */ false);
+            }
+            cr.close();
         }
     }
 }
