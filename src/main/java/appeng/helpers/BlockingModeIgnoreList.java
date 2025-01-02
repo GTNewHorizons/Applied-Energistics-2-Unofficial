@@ -17,6 +17,7 @@ public class BlockingModeIgnoreList {
     private final static ArrayList<String> Shapes = new ArrayList<String>();
     private final static ArrayList<String> Lenses = new ArrayList<String>();
     private final static ArrayList<String> Molds = new ArrayList<String>();
+    private final static ArrayList<String> QFTCatalysts = new ArrayList<String>();
 
     private final static ArrayList<Item> IgnoredItems = new ArrayList<Item>();
 
@@ -164,7 +165,30 @@ public class BlockingModeIgnoreList {
             IgnoredItems.add(GameRegistry.findItem("dreamcraft", "item.RadoxPolymerLens"));
             IgnoredItems.add(GameRegistry.findItem("dreamcraft", "item.ChromaticLens"));
             IgnoredItems.add(GameRegistry.findItem("bartworks", "gt.bwMetaGeneratedlens"));
+
         }
+
+        if (Loader.isModLoaded("gtplusplus")){//GT++
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mPlatinumGroupCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mPlasticPolymerCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mRubberPolymerCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mAdhesionPromoterCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mTitaTungstenIndiumCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mRadioactivityCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mRareEarthGroupCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mSimpleNaquadahCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mAdvancedNaquadahCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mRawIntelligenceCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mUltimatePlasticCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mBiologicalIntelligenceCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.TemporalHarmonyCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mLimpidWaterCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mFlawlessWaterCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mParticleAccelerationCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mSynchrotronCapableCatalyst));
+            QFTCatalysts.add(temUtils.getSimpleStack(GenericChem.mAlgagenicGrowthPromoterCatalyst));
+        }                                          
+                                                   
 
         if (Loader.isModLoaded("AWWayofTime")) { // blood magic
             IgnoredItems.add(GameRegistry.findItem("AWWayofTime", "weakBloodOrb"));
@@ -191,7 +215,8 @@ public class BlockingModeIgnoreList {
 
             if (IgnoredItems.contains(item) || Shapes.contains(uniqueIdentifier)
                     || Lenses.contains(uniqueIdentifier)
-                    || Molds.contains(uniqueIdentifier))
+                    || Molds.contains(uniqueIdentifier)
+                    || QFTCatalysts.contains(uniqueIdentifier))
                 return true;
         }
         return false;
