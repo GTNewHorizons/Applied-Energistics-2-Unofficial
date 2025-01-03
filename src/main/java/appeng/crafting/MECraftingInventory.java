@@ -47,6 +47,10 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
     private final boolean logMissing;
     private final IItemList<IAEItemStack> missingCache;
 
+    private final IItemList<IAEItemStack> failedToExtract = AEApi.instance().storage().createItemList();
+    private MECraftingInventory cpuinv;
+    private boolean isMissingMode;
+
     public MECraftingInventory() {
         this.localCache = AEApi.instance().storage().createItemList();
         this.extractedCache = null;
@@ -233,6 +237,18 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
         return StorageChannel.ITEMS;
     }
 
+    public IItemList<IAEItemStack> getExtractFailedList() {
+        return failedToExtract;
+    }
+
+    public void setMissingMode(boolean b) {
+        this.isMissingMode = b;
+    }
+
+    public void setCpuInventory(MECraftingInventory cp) {
+        this.cpuinv = cp;
+    }
+
     public IItemList<IAEItemStack> getItemList() {
         return this.localCache;
     }
@@ -240,6 +256,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
     public boolean commit(final BaseActionSource src) {
         final IItemList<IAEItemStack> added = AEApi.instance().storage().createItemList();
         final IItemList<IAEItemStack> pulled = AEApi.instance().storage().createItemList();
+        failedToExtract.resetStatus();
         boolean failed = false;
 
         if (this.logInjections) {
@@ -268,9 +285,22 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
                 pulled.add(result = this.target.extractItems(extra, Actionable.MODULATE, src));
 
                 if (result == null || result.getStackSize() != extra.getStackSize()) {
-                    failed = true;
-                    handleCraftExtractFailure(extra, result, src);
-                    break;
+                    if (isMissingMode) {
+                        if (result == null) {
+                            failedToExtract.add(extra.copy());
+                            cpuinv.localCache.findPrecise(extra).setStackSize(0);
+                            extra.setStackSize(0);
+                        } else if (result.getStackSize() != extra.getStackSize()) {
+                            failedToExtract
+                                    .add(extra.copy().setStackSize(extra.getStackSize() - result.getStackSize()));
+                            cpuinv.localCache.findPrecise(extra).setStackSize(result.getStackSize());
+                            extra.setStackSize(result.getStackSize());
+                        }
+                    } else {
+                        failed = true;
+                        handleCraftExtractFailure(extra, result, src);
+                        break;
+                    }
                 }
             }
         }

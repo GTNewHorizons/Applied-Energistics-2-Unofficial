@@ -923,6 +923,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.markDirty();
     }
 
+    public boolean isMissingMode() {
+        return this.isMissingMode;
+    }
+
     public ICraftingLink submitJob(final IGrid g, final ICraftingJob job, final BaseActionSource src,
             final ICraftingRequester requestingMachine) {
         if (this.myLastLink != null && this.isBusy()
@@ -946,6 +950,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         final IStorageGrid sg = g.getCache(IStorageGrid.class);
         final IMEInventory<IAEItemStack> storage = sg.getItemInventory();
         final MECraftingInventory ci = new MECraftingInventory(storage, true, false, false);
+        this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
+        ci.setMissingMode(this.isMissingMode);
+        ci.setCpuInventory(this.inventory);
 
         try {
             this.waitingFor.resetStatus();
@@ -967,7 +974,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     this.isComplete = false;
                     this.usedStorage = job.getByteTotal();
                     this.numsOfOutput = job.getOutput().getStackSize();
-                    this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
+                    for (IAEItemStack fte : ci.getExtractFailedList()) {
+                        this.waitingForMissing.add(fte);
+                    }
+                    for (IAEItemStack wfm : this.waitingForMissing) {
+                        this.waitingFor.add(wfm);
+                    }
                     this.markDirty();
 
                     this.updateCPU();
@@ -1000,6 +1012,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     return whatLink;
                 }
             } else {
+                this.waitingForMissing.resetStatus();
                 this.tasks.clear();
                 this.providers.clear();
                 this.inventory.getItemList().resetStatus();
@@ -1191,9 +1204,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void addEmitable(final IAEItemStack i) {
-        this.waitingFor.add(i);
         this.waitingForMissing.add(i);
-        this.postCraftingStatusChange(i);
     }
 
     public void addCrafting(final ICraftingPatternDetails details, final long crafts) {
@@ -1613,7 +1624,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void tryExtractItems() {
-        if (!isMissingMode || this.waitingForMissing.isEmpty()) return;
+        if (this.waitingForMissing.isEmpty()) return;
         if (countToTryExtractItems > 1200) {
             countToTryExtractItems = 0;
             for (IAEItemStack waitingForItem : this.waitingForMissing) {

@@ -20,6 +20,7 @@ import net.minecraft.world.World;
 import org.apache.logging.log4j.Level;
 
 import appeng.api.config.Actionable;
+import appeng.api.config.CraftingMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
@@ -659,13 +660,23 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
             if (context.isPatternComplex(pattern)) {
                 logComplexPattrn(pattern, request.remainingToProcess);
                 for (int i = 0; i < request.remainingToProcess; i++) {
-                    CraftFromPatternTask task = new CraftFromPatternTask(request, pattern, priority, false, true);
+                    CraftFromPatternTask task = new CraftFromPatternTask(
+                            request,
+                            pattern,
+                            priority,
+                            request.craftingMode == CraftingMode.IGNORE_MISSING,
+                            true);
                     if (task.getState() != State.FAILURE) {
                         tasks.add(task);
                     }
                 }
             } else {
-                CraftFromPatternTask task = new CraftFromPatternTask(request, pattern, priority, false, false);
+                CraftFromPatternTask task = new CraftFromPatternTask(
+                        request,
+                        pattern,
+                        priority,
+                        request.craftingMode == CraftingMode.IGNORE_MISSING,
+                        false);
                 if (task.getState() != State.FAILURE) {
                     tasks.add(task);
                 }

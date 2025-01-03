@@ -173,7 +173,19 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
                 if (stack.getStackSize() > 0) {
                     IAEItemStack extracted = craftingInv.extractItems(stack, Actionable.MODULATE, context.actionSource);
                     if (extracted == null || extracted.getStackSize() != stack.getStackSize()) {
-                        throw new CraftBranchFailure(stack, stack.getStackSize());
+                        if (cpuCluster.isMissingMode()) {
+                            if (extracted == null) {
+                                cpuCluster.addEmitable(stack.copy());
+                                stack.setStackSize(0);
+                                continue;
+                            } else if (extracted.getStackSize() != stack.getStackSize()) {
+                                cpuCluster.addEmitable(
+                                        stack.copy().setStackSize(stack.getStackSize() - extracted.getStackSize()));
+                                stack.setStackSize(extracted.getStackSize());
+                            }
+                        } else {
+                            throw new CraftBranchFailure(stack, stack.getStackSize());
+                        }
                     }
                     cpuCluster.addStorage(extracted);
                 }
