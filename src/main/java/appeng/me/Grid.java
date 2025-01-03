@@ -36,7 +36,7 @@ public class Grid implements IGrid {
 
     private final NetworkEventBus eventBus = new NetworkEventBus();
     private final Map<Class<? extends IGridHost>, MachineSet> machines = new HashMap<>();
-    private final Map<Class<? extends IGridCache>, GridCacheWrapper> caches = new HashMap<>();
+    private final Map<Class<? extends IGridCache>, IGridCache> caches = new HashMap<>();
     private GridNode pivot;
     private int priority; // how import is this network?
     private GridStorage myStorage;
@@ -56,7 +56,7 @@ public class Grid implements IGrid {
             final Class<? extends IGridCache> valueClass = value.getClass();
 
             this.eventBus.readClass(key, valueClass);
-            this.caches.put(key, new GridCacheWrapper(value));
+            this.caches.put(key, value);
         }
 
         this.postEvent(new MENetworkPostCacheConstruction());
@@ -73,7 +73,7 @@ public class Grid implements IGrid {
         return this.myStorage;
     }
 
-    Map<Class<? extends IGridCache>, GridCacheWrapper> getCaches() {
+    Map<Class<? extends IGridCache>, IGridCache> getCaches() {
         return this.caches;
     }
 
@@ -179,7 +179,7 @@ public class Grid implements IGrid {
     @Override
     @SuppressWarnings("unchecked")
     public <C extends IGridCache> C getCache(final Class<? extends IGridCache> iface) {
-        return (C) this.caches.get(iface).getCache();
+        return (C) this.caches.get(iface);
     }
 
     @Override

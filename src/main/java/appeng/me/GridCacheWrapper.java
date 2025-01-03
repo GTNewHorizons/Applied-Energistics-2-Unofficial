@@ -15,6 +15,7 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.IGridStorage;
 
+/** @deprecated Use `.getClass().getName()` on IGridCache instances directly instead of `getName` */
 public class GridCacheWrapper implements IGridCache {
 
     private final IGridCache myCache;
