@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import appeng.api.networking.IGridCache;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkEvent;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -79,10 +80,10 @@ public class NetworkEventBus {
             if (subscribers != null) {
                 for (final Entry<Class, MENetworkEventInfo> subscriber : subscribers.entrySet()) {
                     final MENetworkEventInfo target = subscriber.getValue();
-                    final GridCacheWrapper cache = g.getCaches().get(subscriber.getKey());
+                    final IGridCache cache = g.getCaches().get(subscriber.getKey());
                     if (cache != null) {
                         x++;
-                        target.invoke(cache.getCache(), e);
+                        target.invoke(cache, e);
                     }
 
                     for (final IGridNode obj : g.getMachines(subscriber.getKey())) {
