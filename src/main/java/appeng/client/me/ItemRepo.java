@@ -11,7 +11,9 @@
 package appeng.client.me;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -57,6 +59,7 @@ public class ItemRepo implements IDisplayRepo {
     private Map<IAEItemStack, Boolean> searchCache = new WeakHashMap<>();
     private IPartitionList<IAEItemStack> myPartitionList;
     private boolean hasPower;
+    private boolean paused = false;
 
     public ItemRepo(final IScrollSource src, final ISortSource sortSrc) {
         this.src = src;
@@ -103,12 +106,60 @@ public class ItemRepo implements IDisplayRepo {
 
     @Override
     public void updateView() {
-        this.view.clear();
+        if (this.paused) {
+            // Update existing view with new data
+            for (int i = 0; i < this.view.size(); i++) {
+                IAEItemStack entry = this.view.get(i);
+                IAEItemStack serverEntry = this.list.findPrecise(entry);
+                if (serverEntry == null) {
+                    entry.setStackSize(0);
+                } else {
+                    this.view.set(i, serverEntry);
+                }
+            }
+
+            // Append newly added item stacks to the end of the view
+            Set<IAEItemStack> viewSet = new HashSet<>(this.view);
+            ArrayList<IAEItemStack> entriesToAdd = new ArrayList<>();
+            for (IAEItemStack serverEntry : this.list) {
+                if (!viewSet.contains(serverEntry)) {
+                    entriesToAdd.add(serverEntry);
+                }
+            }
+            addEntriesToView(entriesToAdd);
+        } else {
+            this.view.clear();
+            this.view.ensureCapacity(this.list.size());
+            addEntriesToView(this.list);
+        }
+
+        // Don't sort the view if paused.
+        if (!this.paused) {
+            final Enum SortBy = this.sortSrc.getSortBy();
+            final Enum SortDir = this.sortSrc.getSortDir();
+
+            ItemSorters.setDirection((appeng.api.config.SortDir) SortDir);
+            ItemSorters.init();
+
+            if (SortBy == SortOrder.MOD) {
+                this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_MOD);
+            } else if (SortBy == SortOrder.AMOUNT) {
+                this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_SIZE);
+            } else if (SortBy == SortOrder.INVTWEAKS) {
+                this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS);
+            } else {
+                this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_NAME);
+            }
+        }
+
         this.dsp.clear();
-
-        this.view.ensureCapacity(this.list.size());
         this.dsp.ensureCapacity(this.list.size());
+        for (final IAEItemStack is : this.view) {
+            this.dsp.add(is.getItemStack());
+        }
+    }
 
+    private void addEntriesToView(Iterable<IAEItemStack> entries) {
         final Enum viewMode = this.sortSrc.getSortDisplay();
         final Enum typeFilter = this.sortSrc.getTypeFilter();
         Predicate<IAEItemStack> itemFilter = null;
@@ -124,7 +175,7 @@ public class ItemRepo implements IDisplayRepo {
 
         IItemDisplayRegistry registry = AEApi.instance().registries().itemDisplay();
 
-        out: for (IAEItemStack is : this.list) {
+        out: for (IAEItemStack is : entries) {
             if (viewMode == ViewItems.CRAFTABLE && !is.isCraftable()) {
                 continue;
             }
@@ -154,26 +205,6 @@ public class ItemRepo implements IDisplayRepo {
 
                 this.view.add(is);
             }
-        }
-
-        final Enum SortBy = this.sortSrc.getSortBy();
-        final Enum SortDir = this.sortSrc.getSortDir();
-
-        ItemSorters.setDirection((appeng.api.config.SortDir) SortDir);
-        ItemSorters.init();
-
-        if (SortBy == SortOrder.MOD) {
-            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_MOD);
-        } else if (SortBy == SortOrder.AMOUNT) {
-            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_SIZE);
-        } else if (SortBy == SortOrder.INVTWEAKS) {
-            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS);
-        } else {
-            this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_NAME);
-        }
-
-        for (final IAEItemStack is : this.view) {
-            this.dsp.add(is.getItemStack());
         }
     }
 
@@ -276,5 +307,22 @@ public class ItemRepo implements IDisplayRepo {
             }
         }
 
+    }
+
+    @Override
+    public boolean isPaused() {
+        return this.paused;
+    }
+
+    @Override
+    public void setPaused(boolean paused) {
+        if (this.paused != paused) {
+            this.paused = paused;
+
+            // Update view when un-paused
+            if (!paused) {
+                updateView();
+            }
+        }
     }
 }

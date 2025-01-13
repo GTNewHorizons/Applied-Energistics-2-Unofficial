@@ -34,4 +34,8 @@ public interface IDisplayRepo {
     String getSearchString();
 
     void setSearchString(@Nonnull final String searchString);
+
+    boolean isPaused();
+
+    void setPaused(boolean paused);
 }

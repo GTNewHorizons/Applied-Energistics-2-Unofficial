@@ -37,7 +37,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     private IPartitionList<T> myExtractPartitionList;
 
     private AccessRestriction cachedAccessRestriction;
-    private boolean hasReadAccess;
+    protected boolean hasReadAccess;
     protected boolean hasWriteAccess;
     protected boolean isSticky;
     protected boolean isExtractFilterActive;
