@@ -88,7 +88,8 @@ public class AppEngRenderItem extends AERenderItem {
                 GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
             }
 
-            if (is.stackSize == 0 && showCraftLabelText) {
+            // Display "craftable" text
+            if (is.stackSize == 0 && showCraftLabelText && this.aeStack != null && this.aeStack.isCraftable()) {
                 final String craftLabelText = fontSize == TerminalFontSize.SMALL ? GuiText.SmallFontCraft.getLocal()
                         : GuiText.LargeFontCraft.getLocal();
 
@@ -99,10 +100,9 @@ public class AppEngRenderItem extends AERenderItem {
                 GL11.glEnable(GL11.GL_LIGHTING);
             }
 
+            // Display stack quantity
             final long amount = this.aeStack != null ? this.aeStack.getStackSize() : is.stackSize;
-
-            if (amount != 0 && showStackSize) {
-
+            if (showStackSize) {
                 GL11.glDisable(GL11.GL_LIGHTING);
                 GL11.glPushMatrix();
                 this.drawStackSize(par4, par5, amount, fontRenderer, fontSize);

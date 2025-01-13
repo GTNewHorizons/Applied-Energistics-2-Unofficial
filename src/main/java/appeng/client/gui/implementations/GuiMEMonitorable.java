@@ -617,6 +617,14 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
         super.handleMouseClick(p_146984_1_, p_146984_2_, p_146984_3_, p_146984_4_);
     }
 
+    @Override
+    public void handleKeyboardInput() {
+        super.handleKeyboardInput();
+
+        // Pause the terminal when holding shift
+        this.repo.setPaused(hasShiftDown());
+    }
+
     public boolean hideItemPanelSlot(int tx, int ty, int tw, int th) {
 
         if (this.viewCell) {
@@ -641,5 +649,9 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
         }
 
         return false;
+    }
+
+    private boolean hasShiftDown() {
+        return Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
     }
 }
