@@ -59,6 +59,8 @@ public class CellInventory implements ICellInventory {
     private IItemList<IAEItemStack> cellItems;
     private final ItemStack cellItem;
     private IStorageCell cellType;
+    private boolean cardVoid = false;
+    private boolean cardDistribution = false;
 
     private CellInventory(final ItemStack o, final ISaveProvider container) throws AppEngException {
         if (itemSlots == null) {
@@ -98,6 +100,21 @@ public class CellInventory implements ICellInventory {
         }
         if (this.maxItemTypes < 1) {
             this.maxItemTypes = 1;
+        }
+
+        final IInventory upgrades = this.getUpgradesInventory();
+        for (int x = 0; x < upgrades.getSizeInventory(); x++) {
+            final ItemStack is = upgrades.getStackInSlot(x);
+            if (is != null && is.getItem() instanceof IUpgradeModule) {
+                final Upgrades u = ((IUpgradeModule) is.getItem()).getType(is);
+                if (u != null) {
+                    switch (u) {
+                        case VOID -> cardVoid = true;
+                        case DISTRIBUTION -> cardDistribution = true;
+                        default -> {}
+                    }
+                }
+            }
         }
 
         this.container = container;
@@ -193,22 +210,6 @@ public class CellInventory implements ICellInventory {
                     new Throwable(),
                     "FATAL: DETECTED ILLEGAL ITEM TO BE INSERTED ON STORAGE CELL, PLEASE REPORT ON GITHUB! STACKTRACE:");
             input.setCraftable(false);
-        }
-        boolean cardVoid = false;
-        boolean cardDistribution = false;
-        final IInventory upgrades = this.getUpgradesInventory();
-        for (int x = 0; x < upgrades.getSizeInventory(); x++) {
-            final ItemStack is = upgrades.getStackInSlot(x);
-            if (is != null && is.getItem() instanceof IUpgradeModule) {
-                final Upgrades u = ((IUpgradeModule) is.getItem()).getType(is);
-                if (u != null) {
-                    switch (u) {
-                        case VOID -> cardVoid = true;
-                        case DISTRIBUTION -> cardDistribution = true;
-                        default -> {}
-                    }
-                }
-            }
         }
 
         final IAEItemStack l = this.getCellItems().findPrecise(input);
