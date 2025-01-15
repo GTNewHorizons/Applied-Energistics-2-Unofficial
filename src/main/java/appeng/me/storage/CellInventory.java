@@ -562,7 +562,7 @@ public class CellInventory implements ICellInventory {
         }
         if (types == 0) types = this.getTotalItemTypes();
         if (l != null) {
-            remaining = (this.getTotalBytes() / types) - (l.getStackSize() / 8) - getBytesPerType();
+            remaining = (((this.getTotalBytes() / types) - (int) Math.ceil((double)l.getStackSize() / 8) - getBytesPerType()) * 8) + (8 - l.getStackSize() % 8);
         } else {
             remaining = ((this.getTotalBytes() / types) - this.getBytesPerType()) * 8L;
         }
