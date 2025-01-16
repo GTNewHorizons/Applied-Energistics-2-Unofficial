@@ -59,7 +59,7 @@ public class CellInventory implements ICellInventory {
     private IItemList<IAEItemStack> cellItems;
     private final ItemStack cellItem;
     private IStorageCell cellType;
-    private boolean cardVoid = false;
+    private boolean cardVoidOverflow = false;
     private boolean cardDistribution = false;
 
     private CellInventory(final ItemStack o, final ISaveProvider container) throws AppEngException {
@@ -109,7 +109,7 @@ public class CellInventory implements ICellInventory {
                 final Upgrades u = ((IUpgradeModule) is.getItem()).getType(is);
                 if (u != null) {
                     switch (u) {
-                        case VOID -> cardVoid = true;
+                        case VOID_OVERFLOW -> cardVoidOverflow = true;
                         case DISTRIBUTION -> cardDistribution = true;
                         default -> {}
                     }
@@ -223,7 +223,7 @@ public class CellInventory implements ICellInventory {
             }
 
             if (remainingItemSlots <= 0) {
-                if (cardVoid) {
+                if (cardVoidOverflow) {
                     return null;
                 }
                 return input;
@@ -563,7 +563,8 @@ public class CellInventory implements ICellInventory {
         }
         if (types == 0) types = this.getTotalItemTypes();
         if (l != null) {
-            remaining = (((this.getTotalBytes() / types) - (int) Math.ceil((double)l.getStackSize() / 8) - getBytesPerType()) * 8) + (8 - l.getStackSize() % 8);
+            remaining = (((this.getTotalBytes() / types) - (int) Math.ceil((double) l.getStackSize() / 8)
+                    - getBytesPerType()) * 8) + (8 - l.getStackSize() % 8);
         } else {
             remaining = ((this.getTotalBytes() / types) - this.getBytesPerType()) * 8L;
         }

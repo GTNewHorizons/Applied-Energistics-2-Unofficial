@@ -120,7 +120,7 @@ public enum MaterialType {
     CardLockCrafting(65),
     CardFakeCrafting(66),
     CardSuperluminalSpeed(67),
-    CardVoid(68),
+    CardVoidOverflow(68),
     CardDistribution(69);
 
     private final EnumSet<AEFeature> features;

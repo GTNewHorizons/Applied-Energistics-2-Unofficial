@@ -154,7 +154,7 @@ public interface IMaterials {
 
     IItemDefinition cardSuperluminalSpeed();
 
-    IItemDefinition cardVoid();
+    IItemDefinition cardVoidOverflow();
 
     IItemDefinition cardDistribution();
 }

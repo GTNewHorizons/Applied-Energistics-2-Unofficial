@@ -78,7 +78,7 @@ public final class ApiMaterials implements IMaterials {
     private final IItemDefinition cardAdvancedBlocking;
     private final IItemDefinition cardLockCrafting;
     private final IItemDefinition cardFakeCrafting;
-    private final IItemDefinition cardVoid;
+    private final IItemDefinition cardVoidOverflow;
     private final IItemDefinition cardDistribution;
     private final IItemDefinition enderDust;
     private final IItemDefinition flour;
@@ -189,7 +189,8 @@ public final class ApiMaterials implements IMaterials {
                 itemMultiMaterial.createMaterial(MaterialType.CardLockCrafting));
         this.cardFakeCrafting = new DamagedItemDefinition(
                 itemMultiMaterial.createMaterial(MaterialType.CardFakeCrafting));
-        this.cardVoid = new DamagedItemDefinition(itemMultiMaterial.createMaterial(MaterialType.CardVoid));
+        this.cardVoidOverflow = new DamagedItemDefinition(
+                itemMultiMaterial.createMaterial(MaterialType.CardVoidOverflow));
         this.cardDistribution = new DamagedItemDefinition(
                 itemMultiMaterial.createMaterial(MaterialType.CardDistribution));
 
@@ -569,8 +570,8 @@ public final class ApiMaterials implements IMaterials {
     }
 
     @Override
-    public IItemDefinition cardVoid() {
-        return this.cardVoid;
+    public IItemDefinition cardVoidOverflow() {
+        return this.cardVoidOverflow;
     }
 
     @Override
