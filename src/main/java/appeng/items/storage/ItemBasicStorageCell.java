@@ -35,8 +35,6 @@ import appeng.api.exceptions.MissingDefinition;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.implementations.items.IUpgradeModule;
-import appeng.api.storage.ICellInventory;
-import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
@@ -49,6 +47,8 @@ import appeng.items.AEBaseItem;
 import appeng.items.contents.CellConfig;
 import appeng.items.contents.CellUpgrades;
 import appeng.items.materials.MaterialType;
+import appeng.me.storage.CellInventory;
+import appeng.me.storage.CellInventoryHandler;
 import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
@@ -107,8 +107,8 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
         final IMEInventoryHandler<?> inventory = AEApi.instance().registries().cell()
                 .getCellInventory(stack, null, StorageChannel.ITEMS);
 
-        if (inventory instanceof ICellInventoryHandler handler) {
-            final ICellInventory cellInventory = handler.getCellInv();
+        if (inventory instanceof CellInventoryHandler handler) {
+            final CellInventory cellInventory = (CellInventory) handler.getCellInv();
 
             if (cellInventory != null) {
                 lines.add(
@@ -123,7 +123,7 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
                         NumberFormat.getInstance().format(cellInventory.getStoredItemTypes()) + " "
                                 + GuiText.Of.getLocal()
                                 + ' '
-                                + NumberFormat.getInstance().format(cellInventory.getTotalItemTypes())
+                                + NumberFormat.getInstance().format(cellInventory.getMaxItemTypes())
                                 + ' '
                                 + GuiText.Types.getLocal());
 
@@ -152,6 +152,17 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
 
                     if (handler.getSticky()) {
                         lines.add(GuiText.Sticky.getLocal());
+                    }
+                }
+                List<Object> restricted = handler.getRestricted();
+                if (restricted != null && ((long) restricted.get(0) != 0 || (byte) restricted.get(1) != 0)) {
+                    lines.add(GuiText.Restricted.getLocal());
+                    if (GuiScreen.isShiftKeyDown()) {
+                        NumberFormat nf = NumberFormat.getNumberInstance();
+                        if ((long) restricted.get(0) != 0)
+                            lines.add(GuiText.MaxItems.getLocal() + " " + nf.format((long) restricted.get(0)));
+                        if ((byte) restricted.get(1) != 0)
+                            lines.add(GuiText.MaxTypes.getLocal() + " " + restricted.get(1));
                     }
                 }
             }
@@ -338,7 +349,9 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
                 + ","
                 + Platform.openNbtData(is).getByte("cellRestrictionTypes")
                 + ","
-                + Platform.openNbtData(is).getLong("cellRestrictionAmount");
+                + Platform.openNbtData(is).getLong("cellRestrictionAmount")
+                + ","
+                + "item";
     }
 
     @Override

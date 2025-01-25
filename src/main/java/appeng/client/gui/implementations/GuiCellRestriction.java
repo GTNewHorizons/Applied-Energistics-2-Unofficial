@@ -83,10 +83,41 @@ public class GuiCellRestriction extends AEBaseGui {
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
         this.fontRendererObj.drawString(GuiText.CellRestriction.getLocal(), 58, 6, GuiColors.DefaultBlack.getColor());
-        this.fontRendererObj.drawString(GuiText.SelectAmount.getLocal(), 64, 23, GuiColors.DefaultBlack.getColor());
+        String type = cellData.getCellType();
+        switch (type) {
+            case "item":
+                this.fontRendererObj
+                        .drawString(GuiText.NumberOfItems.getLocal(), 64, 23, GuiColors.DefaultBlack.getColor());
+                break;
+            case "fluid":
+                this.fontRendererObj
+                        .drawString(GuiText.NumberOfFluids.getLocal(), 64, 23, GuiColors.DefaultBlack.getColor());
+                break;
+        }
         this.fontRendererObj.drawString(GuiText.Types.getLocal(), 162, 23, GuiColors.DefaultBlack.getColor());
         this.fontRendererObj
                 .drawString(GuiText.CellRestrictionTips.getLocal(), 64, 50, GuiColors.DefaultBlack.getColor());
+        switch (type) {
+            case "item":
+                this.fontRendererObj.drawString(
+                        GuiText.ItemsPerByte.getLocal() + " " + cellData.getPerByte(),
+                        64,
+                        60,
+                        GuiColors.DefaultBlack.getColor());
+                break;
+            case "fluid":
+                this.fontRendererObj.drawString(
+                        GuiText.FluidsPerByte.getLocal() + " " + cellData.getPerByte(),
+                        64,
+                        60,
+                        GuiColors.DefaultBlack.getColor());
+                break;
+        }
+        this.fontRendererObj.drawString(
+                GuiText.BytesPerType.getLocal() + " " + cellData.getPerType(),
+                64,
+                70,
+                GuiColors.DefaultBlack.getColor());
     }
 
     @Override

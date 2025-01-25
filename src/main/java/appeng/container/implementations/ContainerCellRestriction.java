@@ -23,6 +23,7 @@ public class ContainerCellRestriction extends AEBaseContainer {
         private Integer totalTypes;
         private Integer perType;
         private Integer perByte;
+        private String cellType;
 
         public void setPerType(Integer perType) {
             this.perType = perType;
@@ -40,6 +41,10 @@ public class ContainerCellRestriction extends AEBaseContainer {
             this.perByte = perByte;
         }
 
+        public void setCellType(String cellType) {
+            this.cellType = cellType;
+        }
+
         public Integer getPerType() {
             return perType;
         }
@@ -54,6 +59,10 @@ public class ContainerCellRestriction extends AEBaseContainer {
 
         public Integer getPerByte() {
             return perByte;
+        }
+
+        public String getCellType() {
+            return cellType;
         }
     }
 
@@ -105,11 +114,12 @@ public class ContainerCellRestriction extends AEBaseContainer {
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
         if (field.equals("cellRestriction") && (this.amountField != null && this.typesField != null)) {
-            List<String> newData = Arrays.asList(cellRestriction.split(",", 6));
+            List<String> newData = Arrays.asList(cellRestriction.split(",", 7));
             this.cellData.setTotalBytes(Long.parseLong(newData.get(0)));
             this.cellData.setTotalTypes(Integer.parseInt(newData.get(1)));
             this.cellData.setPerType(Integer.parseInt(newData.get(2)));
             this.cellData.setPerByte(Integer.parseInt(newData.get(3)));
+            this.cellData.setCellType(newData.get(6));
             this.typesField.setMaxStringLength(cellData.getTotalTypes().toString().length());
             this.amountField.setMaxStringLength(
                     String.valueOf((cellData.getTotalBytes() - cellData.getPerType()) * cellData.getPerByte())

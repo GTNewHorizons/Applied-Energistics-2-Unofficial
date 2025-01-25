@@ -10,7 +10,9 @@
 
 package appeng.me.storage;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -543,6 +545,10 @@ public class CellInventory implements ICellInventory {
         return this.maxItemTypes;
     }
 
+    public long getMaxItemTypes() {
+        return this.maxItemTypes;
+    }
+
     @Override
     public long getStoredItemCount() {
         return this.storedItemCount;
@@ -624,5 +630,9 @@ public class CellInventory implements ICellInventory {
             return 3;
         }
         return 4;
+    }
+
+    public List<Object> getRestriction() {
+        return Arrays.asList(restrictionLong, restrictionTypes);
     }
 }
