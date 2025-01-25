@@ -2,9 +2,6 @@ package appeng.client.gui.implementations;
 
 import java.io.IOException;
 
-import appeng.util.calculators.ArithHelper;
-import appeng.util.calculators.Calculator;
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Keyboard;
@@ -21,6 +18,8 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICellRestriction;
+import appeng.util.calculators.ArithHelper;
+import appeng.util.calculators.Calculator;
 
 public class GuiCellRestriction extends AEBaseGui {
 
@@ -74,9 +73,8 @@ public class GuiCellRestriction extends AEBaseGui {
             //
         }
         try {
-            restrictionAmount = Math.min(
-                    amount,
-                    (cellData.getTotalBytes() - cellData.getPerType()) * cellData.getPerByte());
+            restrictionAmount = Math
+                    .min(amount, (cellData.getTotalBytes() - cellData.getPerType()) * cellData.getPerByte());
         } catch (Exception ignored) {
             //
         }
