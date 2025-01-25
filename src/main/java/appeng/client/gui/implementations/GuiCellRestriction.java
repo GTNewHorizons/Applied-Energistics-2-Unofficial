@@ -107,7 +107,7 @@ public class GuiCellRestriction extends AEBaseGui {
                 break;
             case "fluid":
                 this.fontRendererObj.drawString(
-                        GuiText.FluidsPerByte.getLocal() + " " + cellData.getPerByte(),
+                        GuiText.FluidsPerByte.getLocal() + " " + cellData.getPerByte() + " mB",
                         64,
                         60,
                         GuiColors.DefaultBlack.getColor());

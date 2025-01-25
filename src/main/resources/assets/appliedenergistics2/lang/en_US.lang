@@ -344,7 +344,7 @@ gui.appliedenergistics2.MaxTypes=Max Types:
 gui.appliedenergistics2.NumberOfItems=Number of items
 gui.appliedenergistics2.NumberOfFluids=Number of fluids
 gui.appliedenergistics2.ItemsPerByte=Items per byte:
-gui.appliedenergistics2.FluidsPerByte=Fluid per byte:
+gui.appliedenergistics2.FluidsPerByte=Fluids per byte:
 gui.appliedenergistics2.BytesPerType=Bytes per type:
 
 # GUI Colors - ARGB
