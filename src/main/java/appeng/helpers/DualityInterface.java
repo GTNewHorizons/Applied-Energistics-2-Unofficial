@@ -56,6 +56,7 @@ import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
+import appeng.api.networking.events.MENetworkCraftingPushedPattern;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.MachineSource;
@@ -86,6 +87,7 @@ import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
+import appeng.tile.networking.TileCableBus;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
@@ -885,6 +887,47 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return isEmpty;
     }
 
+    public void notifyPushedPattern(IInterfaceHost pushingHost) {
+        if (this.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) == 0) return;
+        final TileEntity tile = this.iHost.getTileEntity();
+        final World w = tile.getWorldObj();
+
+        final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
+
+        for (ForgeDirection s : possibleDirections) {
+            final TileEntity te = w
+                    .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+            if (te == null) continue;
+            try {
+                if (te instanceof IInterfaceHost host) {
+
+                    if (host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+                        continue;
+                    }
+                    if (host == pushingHost) {
+                        continue;
+                    }
+                    host.getInterfaceDuality().receivePatternPushedEvent();
+
+                } else if (te instanceof TileCableBus cableBus) {
+                    IPart part = cableBus.getPart(s.getOpposite());
+                    if (part instanceof IInterfaceHost host) {
+                        if (host == pushingHost) {
+                            continue;
+                        }
+                        host.getInterfaceDuality().receivePatternPushedEvent();
+                    }
+                }
+            } catch (final GridAccessException e) {
+                continue;
+            }
+        }
+    }
+
+    public void receivePatternPushedEvent() {
+        this.lastInputHash = 0;
+    }
+
     @Override
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
         if (this.hasItemsToSend() || !this.gridProxy.isActive() || !this.craftingList.contains(patternDetails)) {
@@ -910,10 +953,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             if (te instanceof ICraftingMachine cm) {
                 if (cm.acceptsPlans()) {
                     if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
-                        if (this.isSmartBlocking()) {
-                            this.lastInputHash = patternDetails.hashCode();
-                        }
-                        onPushPatternSuccess(patternDetails);
+                        onPushPatternSuccess(te, s.getOpposite(), patternDetails);
                         return true;
                     }
                     continue;
@@ -944,12 +984,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                             this.addToSendList(ad.addItems(is, getInsertionMode()));
                         }
                     }
-                    if (this.isSmartBlocking()) {
-                        this.lastInputHash = patternDetails.hashCode();
-                    }
                     out.add(s);
                     this.pushItemsOut(out);
-                    onPushPatternSuccess(patternDetails);
+                    onPushPatternSuccess(te, s.getOpposite(), patternDetails);
                     return true;
                 }
             } else if (EIO && te instanceof IItemDuct) {
@@ -967,12 +1004,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     }
                 }
                 if (hadAcceptedSome) {
-                    if (this.isSmartBlocking()) {
-                        this.lastInputHash = patternDetails.hashCode();
-                    }
                     out.add(s);
                     this.pushItemsOut(out);
-                    onPushPatternSuccess(patternDetails);
+                    onPushPatternSuccess(te, s.getOpposite(), patternDetails);
                     return true;
                 }
             }
@@ -1309,7 +1343,32 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
     }
 
-    private void onPushPatternSuccess(ICraftingPatternDetails pattern) {
+    private void onPushPatternSuccess(TileEntity te, ForgeDirection s, ICraftingPatternDetails pattern) {
+        if (this.isSmartBlocking()) {
+            this.lastInputHash = pattern.hashCode();
+            if (te instanceof IInterfaceHost oppositeHost) {
+                try {
+                    if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+                        oppositeHost.getInterfaceDuality().gridProxy.getGrid()
+                                .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
+                    }
+                } catch (GridAccessException e) {
+                    // :P
+                }
+            } else if (te instanceof TileCableBus cableBus) {
+                IPart part = cableBus.getPart(s);
+                if (part instanceof IInterfaceHost oppositeHost) {
+                    try {
+                        if (oppositeHost.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
+                            oppositeHost.getInterfaceDuality().gridProxy.getGrid()
+                                    .postEvent(new MENetworkCraftingPushedPattern(this.iHost));
+                        }
+                    } catch (GridAccessException e) {
+                        // :P
+                    }
+                }
+            }
+        }
         resetCraftingLock();
 
         LockCraftingMode lockMode = (LockCraftingMode) cm.getSetting(Settings.LOCK_CRAFTING_MODE);
