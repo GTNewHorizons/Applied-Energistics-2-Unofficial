@@ -2,6 +2,9 @@ package appeng.client.gui.implementations;
 
 import java.io.IOException;
 
+import appeng.util.calculators.ArithHelper;
+import appeng.util.calculators.Calculator;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Keyboard;
@@ -60,7 +63,7 @@ public class GuiCellRestriction extends AEBaseGui {
     public String filterCellRestriction() {
 
         String types = this.typesField.getText();
-        String amount = this.amountField.getText();
+        long amount = getAmount();
 
         int restrictionTypes = 0;
         long restrictionAmount = 0;
@@ -72,7 +75,7 @@ public class GuiCellRestriction extends AEBaseGui {
         }
         try {
             restrictionAmount = Math.min(
-                    Long.parseLong(amount),
+                    amount,
                     (cellData.getTotalBytes() - cellData.getPerType()) * cellData.getPerByte());
         } catch (Exception ignored) {
             //
@@ -148,5 +151,16 @@ public class GuiCellRestriction extends AEBaseGui {
                 || this.typesField.textboxKeyTyped(character, key))) {
                     super.keyTyped(character, key);
                 }
+    }
+
+    private long getAmount() {
+        String out = this.amountField.getText();
+        double resultD = Calculator.conversion(out);
+
+        if (resultD <= 0 || Double.isNaN(resultD)) {
+            return 0;
+        } else {
+            return (long) ArithHelper.round(resultD, 0);
+        }
     }
 }
