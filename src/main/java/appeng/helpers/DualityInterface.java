@@ -535,6 +535,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.storage;
     }
 
+    public List<ItemStack> getWaitingToSend() {
+        return this.waitingToSend;
+    }
+
     public void markDirty() {
         for (int slot = 0; slot < this.storage.getSizeInventory(); slot++) {
             this.onChangeInventory(this.storage, slot, InvOperation.markDirty, null, null);
