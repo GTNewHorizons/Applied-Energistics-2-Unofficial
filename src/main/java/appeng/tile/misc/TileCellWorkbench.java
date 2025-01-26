@@ -24,6 +24,7 @@ import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.util.IConfigManager;
+import appeng.helpers.ICellRestriction;
 import appeng.helpers.IOreFilterable;
 import appeng.tile.AEBaseTile;
 import appeng.tile.TileEvent;
@@ -36,7 +37,7 @@ import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 
 public class TileCellWorkbench extends AEBaseTile
-        implements IUpgradeableHost, IAEAppEngInventory, IConfigManagerHost, IOreFilterable {
+        implements IUpgradeableHost, IAEAppEngInventory, IConfigManagerHost, IOreFilterable, ICellRestriction {
 
     private final AppEngInternalInventory cell = new AppEngInternalInventory(this, 1);
     private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, 63);
@@ -233,5 +234,18 @@ public class TileCellWorkbench extends AEBaseTile
         ItemStack is = this.cell.getStackInSlot(0);
         if (is != null && is.getItem() instanceof ICellWorkbenchItem)
             ((ICellWorkbenchItem) is.getItem()).setOreFilter(is, filter);
+    }
+
+    @Override
+    public String getCellData(ItemStack n) {
+        ItemStack is = this.cell.getStackInSlot(0);
+        if (is != null && is.getItem() instanceof ICellRestriction icr) return icr.getCellData(is);
+        return null;
+    }
+
+    @Override
+    public void setCellRestriction(ItemStack n, String newData) {
+        ItemStack is = this.cell.getStackInSlot(0);
+        if (is != null && is.getItem() instanceof ICellRestriction icr) icr.setCellRestriction(is, newData);
     }
 }

@@ -47,6 +47,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.ContainerNull;
 import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerAdvancedNetworkTool;
+import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerChest;
 import appeng.container.implementations.ContainerCondenser;
@@ -88,6 +89,7 @@ import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
 import appeng.container.implementations.ContainerWirelessTerm;
 import appeng.core.stats.Achievements;
+import appeng.helpers.ICellRestriction;
 import appeng.helpers.ICustomNameObject;
 import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IOreFilterable;
@@ -217,7 +219,9 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_RENAMER(ContainerRenamer.class, ICustomNameObject.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
 
-    GUI_ORE_FILTER(ContainerOreFilter.class, IOreFilterable.class, GuiHostType.ITEM_OR_WORLD, null);
+    GUI_ORE_FILTER(ContainerOreFilter.class, IOreFilterable.class, GuiHostType.ITEM_OR_WORLD, null),
+
+    GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null);
 
     private final Class tileClass;
     private final Class containerClass;

@@ -222,7 +222,10 @@ public enum ButtonToolTips {
 
     StringOrder,
     StringOrderNatural,
-    StringOrderAlphanum;
+    StringOrderAlphanum,
+
+    CellRestrictionLabel,
+    CellRestrictionHint;
 
     private final String root;
 

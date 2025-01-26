@@ -10,6 +10,8 @@
 
 package appeng.me.storage;
 
+import java.util.List;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
@@ -168,5 +170,14 @@ public class CellInventoryHandler extends MEInventoryHandler<IAEItemStack>
     @Override
     public TYPE getCellType() {
         return TYPE.ITEM;
+    }
+
+    public List<Object> getRestricted() {
+        ICellInventory cellInventory = this.getCellInv();
+        if (cellInventory instanceof CellInventory ci) {
+            return ci.getRestriction();
+
+        }
+        return null;
     }
 }
