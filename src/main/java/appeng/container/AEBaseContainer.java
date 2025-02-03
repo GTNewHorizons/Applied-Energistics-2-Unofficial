@@ -54,6 +54,7 @@ import appeng.client.me.InternalSlotME;
 import appeng.client.me.SlotME;
 import appeng.container.guisync.GuiSync;
 import appeng.container.guisync.SyncData;
+import appeng.container.implementations.ContainerUpgradeable;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
 import appeng.container.slot.SlotCraftingTerm;
@@ -70,6 +71,8 @@ import appeng.core.sync.packets.PacketPartialItem;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
 import appeng.helpers.InventoryAction;
+import appeng.items.materials.ItemMultiMaterial;
+import appeng.parts.automation.StackUpgradeInventory;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
@@ -520,7 +523,15 @@ public abstract class AEBaseContainer extends Container {
                     if (d instanceof SlotDisabled || d instanceof SlotME) {
                         continue;
                     }
-
+                    
+                    // For shift click upgrade card logic
+                    if(ItemMultiMaterial.instance.getType(tis) != null && this instanceof ContainerUpgradeable) {
+                    	// Check source or target
+                    	if(!((d.inventory instanceof StackUpgradeInventory) || (clickSlot.inventory instanceof StackUpgradeInventory))) {
+                    		continue;
+                    	}
+                    }
+                    
                     if (d.isItemValid(tis)) {
                         if (d.getHasStack()) {
                             final ItemStack t = d.getStack();
