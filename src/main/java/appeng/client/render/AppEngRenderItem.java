@@ -102,7 +102,8 @@ public class AppEngRenderItem extends AERenderItem {
 
             // Display stack quantity
             final long amount = this.aeStack != null ? this.aeStack.getStackSize() : is.stackSize;
-            if (showStackSize && (amount > 0 || !this.aeStack.isCraftable())) {
+            final boolean isCraftable = this.aeStack != null && this.aeStack.isCraftable();
+            if (showStackSize && (amount > 0 || !isCraftable)) {
                 GL11.glDisable(GL11.GL_LIGHTING);
                 GL11.glPushMatrix();
                 this.drawStackSize(par4, par5, amount, fontRenderer, fontSize);
