@@ -523,15 +523,16 @@ public abstract class AEBaseContainer extends Container {
                     if (d instanceof SlotDisabled || d instanceof SlotME) {
                         continue;
                     }
-                    
+
                     // For shift click upgrade card logic
-                    if(ItemMultiMaterial.instance.getType(tis) != null && this instanceof ContainerUpgradeable) {
-                    	// Check source or target
-                    	if(!((d.inventory instanceof StackUpgradeInventory) || (clickSlot.inventory instanceof StackUpgradeInventory))) {
-                    		continue;
-                    	}
+                    if (ItemMultiMaterial.instance.getType(tis) != null && this instanceof ContainerUpgradeable) {
+                        // Check source or target
+                        if (!((d.inventory instanceof StackUpgradeInventory)
+                                || (clickSlot.inventory instanceof StackUpgradeInventory))) {
+                            continue;
+                        }
                     }
-                    
+
                     if (d.isItemValid(tis)) {
                         if (d.getHasStack()) {
                             final ItemStack t = d.getStack();
