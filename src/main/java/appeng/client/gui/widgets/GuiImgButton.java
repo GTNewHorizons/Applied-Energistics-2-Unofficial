@@ -807,6 +807,13 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.StringOrder,
                     ButtonToolTips.StringOrderAlphanum);
 
+            this.registerApp(
+                    16 * 6 + 8,
+                    Settings.ACTIONS,
+                    ActionItems.CELL_RESTRICTION,
+                    ButtonToolTips.CellRestrictionLabel,
+                    ButtonToolTips.CellRestrictionHint);
+
         }
     }
 

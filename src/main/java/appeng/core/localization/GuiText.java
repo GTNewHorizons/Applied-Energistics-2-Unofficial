@@ -249,7 +249,18 @@ public enum GuiText {
     TypesInfo,
     BytesInfo,
     ToFollow,
-    ToUnfollow;
+    ToUnfollow,
+    CellRestriction,
+    CellRestrictionTips,
+    Restricted,
+    MaxItems,
+    MaxFluid,
+    MaxTypes,
+    NumberOfItems,
+    NumberOfFluids,
+    ItemsPerByte,
+    FluidsPerByte,
+    BytesPerType;
 
     private final String root;
 

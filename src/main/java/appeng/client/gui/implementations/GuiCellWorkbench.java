@@ -29,7 +29,9 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.core.localization.GuiText;
+import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.tile.misc.TileCellWorkbench;
 import appeng.util.Platform;
@@ -41,6 +43,7 @@ public class GuiCellWorkbench extends GuiUpgradeable {
     private GuiImgButton clear;
     private GuiImgButton partition;
     private GuiToggleButton copyMode;
+    protected GuiImgButton cellRestriction;
 
     public GuiCellWorkbench(final InventoryPlayer inventoryPlayer, final TileCellWorkbench te) {
         super(new ContainerCellWorkbench(inventoryPlayer, te));
@@ -69,12 +72,18 @@ public class GuiCellWorkbench extends GuiUpgradeable {
                 this.guiTop + 68,
                 Settings.ACTIONS,
                 ActionItems.ORE_FILTER);
+        this.cellRestriction = new GuiImgButton(
+                this.guiLeft + 134,
+                this.guiTop + 8,
+                Settings.ACTIONS,
+                ActionItems.CELL_RESTRICTION);
 
         this.buttonList.add(this.fuzzyMode);
         this.buttonList.add(this.partition);
         this.buttonList.add(this.clear);
         this.buttonList.add(this.copyMode);
         this.buttonList.add(this.oreFilter);
+        this.buttonList.add(this.cellRestriction);
     }
 
     @Override
@@ -174,6 +183,7 @@ public class GuiCellWorkbench extends GuiUpgradeable {
         }
         this.fuzzyMode.setVisibility(!hasOreFilter && hasFuzzy);
         this.oreFilter.setVisibility(hasOreFilter);
+        this.cellRestriction.setVisibility(this.workbench.haveCellRestrictAble());
     }
 
     @Override
@@ -207,6 +217,8 @@ public class GuiCellWorkbench extends GuiUpgradeable {
                 fz = Platform.rotateEnum(fz, backwards, Settings.FUZZY_MODE.getPossibleValues());
 
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("CellWorkbench.Fuzzy", fz.name()));
+            } else if (btn == this.cellRestriction) {
+                NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_CELL_RESTRICTION));
             } else {
                 super.actionPerformed(btn);
             }
