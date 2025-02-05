@@ -148,6 +148,7 @@ public abstract class AEBaseGui extends GuiContainer {
         super(container);
         this.subGui = switchingGuis;
         switchingGuis = false;
+        aeRenderItem.parent = this;
     }
 
     protected static String join(final Collection<String> toolTip, final String delimiter) {
