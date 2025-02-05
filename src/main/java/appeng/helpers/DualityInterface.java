@@ -181,26 +181,31 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         if (this.isWorking) {
             return;
         }
+
         if (inv == this.config) {
             this.readConfig();
-        } else if (inv == this.patterns && (removed != null || added != null)) {
-            this.updateCraftingList();
-        } else if (inv == this.storage && slot >= 0) {
-            final boolean had = this.hasWorkToDo();
+        } else if (inv == this.patterns) {
+            if (removed != null || added != null) {
+                this.updateCraftingList();
+            }
+        } else if (inv == this.storage) {
+            if (slot >= 0) {
+                final boolean had = this.hasWorkToDo();
 
-            this.updatePlan(slot);
+                this.updatePlan(slot);
 
-            final boolean now = this.hasWorkToDo();
+                final boolean now = this.hasWorkToDo();
 
-            if (had != now) {
-                try {
-                    if (now) {
-                        this.gridProxy.getTick().alertDevice(this.gridProxy.getNode());
-                    } else {
-                        this.gridProxy.getTick().sleepDevice(this.gridProxy.getNode());
+                if (had != now) {
+                    try {
+                        if (now) {
+                            this.gridProxy.getTick().alertDevice(this.gridProxy.getNode());
+                        } else {
+                            this.gridProxy.getTick().sleepDevice(this.gridProxy.getNode());
+                        }
+                    } catch (final GridAccessException e) {
+                        // :P
                     }
-                } catch (final GridAccessException e) {
-                    // :P
                 }
             }
         } else if (inv == this.upgrades) {
@@ -389,7 +394,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         for (int x = 0; x < accountedFor.length; x++) {
             if (!accountedFor[x]) {
-                this.addToCraftingList(this.patterns.getStackInSlot(x));
+                this.addToCraftingList(x);
             }
         }
 
@@ -469,7 +474,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
     }
 
-    protected void addToCraftingList(final ItemStack is) {
+    protected void addToCraftingList(final int slot) {
+        final ItemStack is = this.patterns.getStackInSlot(slot);
+
         if (is == null) {
             return;
         }
@@ -482,6 +489,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     this.craftingList = new LinkedList<>();
                 }
 
+                details.setPriority(36 * this.getPriority() + slot);
                 this.craftingList.add(details);
             }
         }
@@ -1118,7 +1126,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     public void provideCrafting(final ICraftingProviderHelper craftingTracker) {
         if (this.gridProxy.isActive() && this.craftingList != null) {
             for (final ICraftingPatternDetails details : this.craftingList) {
-                details.setPriority(this.priority);
                 craftingTracker.addCraftingOption(this, details);
             }
         }
@@ -1331,6 +1338,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     public void setPriority(final int newValue) {
         this.priority = newValue;
         this.markDirty();
+
+        // Update the priority of stored patterns.
+        this.craftingList = null;
+        this.updateCraftingList();
 
         try {
             this.gridProxy.getGrid().postEvent(new MENetworkCraftingPatternChange(this, this.gridProxy.getNode()));

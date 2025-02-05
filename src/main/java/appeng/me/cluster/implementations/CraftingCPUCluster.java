@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
@@ -121,8 +123,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private final WorldCoord min;
     private final WorldCoord max;
     private final int[] usedOps = new int[3];
-    private final Map<ICraftingPatternDetails, TaskProgress> tasks = new HashMap<>();
-    private Map<ICraftingPatternDetails, TaskProgress> workableTasks = new HashMap<>();
+    private final Comparator<ICraftingPatternDetails> priorityComparator = Comparator
+            .comparing(ICraftingPatternDetails::getPriority);
+    private final Map<ICraftingPatternDetails, TaskProgress> tasks = new TreeMap<>(priorityComparator);
     private HashSet<ICraftingMedium> knownBusyMediums = new HashSet<>();
     // INSTANCE sate
     private final LinkedList<TileCraftingTile> tiles = new LinkedList<>();
@@ -682,19 +685,19 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         final int started = this.remainingOperations;
 
         // Shallow copy tasks so we may remove them after visiting
-        this.workableTasks = new HashMap<>(this.tasks);
+        ArrayList<Entry<ICraftingPatternDetails, TaskProgress>> sortedTasks = new ArrayList<>(this.tasks.entrySet());
+        sortedTasks.sort(Map.Entry.comparingByKey(priorityComparator));
         this.knownBusyMediums.clear();
         if (this.remainingOperations > 0) {
             do {
                 this.somethingChanged = false;
-                this.executeCrafting(eg, cc);
+                this.executeCrafting(eg, cc, sortedTasks);
             } while (this.somethingChanged && this.remainingOperations > 0);
         }
         this.usedOps[2] = this.usedOps[1];
         this.usedOps[1] = this.usedOps[0];
         this.usedOps[0] = started - this.remainingOperations;
 
-        this.workableTasks.clear();
         this.knownBusyMediums.clear();
 
         if (this.remainingOperations > 0 && !this.somethingChanged) {
@@ -717,8 +720,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    private void executeCrafting(final IEnergyGrid eg, final CraftingGridCache cc) {
-        final Iterator<Entry<ICraftingPatternDetails, TaskProgress>> i = this.workableTasks.entrySet().iterator();
+    private void executeCrafting(final IEnergyGrid eg, final CraftingGridCache cc,
+            ArrayList<Entry<ICraftingPatternDetails, TaskProgress>> sortedTasks) {
+        final Iterator<Entry<ICraftingPatternDetails, TaskProgress>> i = sortedTasks.iterator();
 
         int executedTasks = 0;
         while (i.hasNext()) {
