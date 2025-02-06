@@ -247,7 +247,7 @@ public class GuiCraftingCPUTable {
                 parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY + y, 0, 41, CPU_TABLE_WIDTH, 23);
                 y += 23;
             }
-            parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY + y, 0, 132, CPU_TABLE_WIDTH, 31);
+            parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY + y, 0, 133, CPU_TABLE_WIDTH, 31);
         } else {
             parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY, 0, 0, CPU_TABLE_WIDTH, CPU_TABLE_HEIGHT);
         }
