@@ -20,6 +20,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -778,21 +780,21 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         this.visual.sort(comparator);
     }
 
-    private void handleInput(final IItemList<IAEItemStack> s, final IAEItemStack l) {
-        IAEItemStack a = s.findPrecise(l);
+    private void handleInput(final IItemList<IAEItemStack> s, @Nonnull final IAEItemStack stack) {
+        IAEItemStack a = s.findPrecise(stack);
 
-        if (l.getStackSize() <= 0) {
+        if (stack.getStackSize() <= 0) {
             if (a != null) {
                 a.reset();
             }
         } else {
             if (a == null) {
-                s.add(l.copy());
-                a = s.findPrecise(l);
+                s.add(stack.copy());
+                a = s.findPrecise(stack);
             }
 
             if (a != null) {
-                a.setStackSize(l.getStackSize());
+                a.setStackSize(stack.getStackSize());
             }
         }
     }

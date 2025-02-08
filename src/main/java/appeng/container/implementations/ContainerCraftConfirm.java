@@ -158,8 +158,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                             ? new PacketMEInventoryUpdate((byte) 2)
                             : null;
 
-                    final IItemList<IAEItemStack> plan = AEApi.instance().storage().createItemList();
-                    this.result.populatePlan(plan);
+                    final IItemList<IAEItemStack> plan = this.result.createPlan();
 
                     this.setUsedBytes(this.result.getByteTotal());
 

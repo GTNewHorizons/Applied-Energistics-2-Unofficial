@@ -21,10 +21,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IItemList;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.test.mockme.MockAESystem;
 import appeng.util.item.AEItemStack;
-import appeng.util.item.ItemList;
 import gregtech.api.enums.Materials;
 import gregtech.api.enums.OrePrefixes;
 import gregtech.api.util.GTOreDictUnificator;
@@ -87,8 +87,7 @@ public class CraftingV2Tests {
 
     private void assertJobPlanEquals(CraftingJobV2 job, IAEItemStack... stacks) {
         assertTrue(job.isDone());
-        ItemList plan = new ItemList();
-        job.populatePlan(plan);
+        final IItemList<IAEItemStack> plan = job.createPlan();
         for (IAEItemStack stack : stacks) {
             IAEItemStack matching = plan.findPrecise(stack);
             assertNotNull(matching, stack::toString);

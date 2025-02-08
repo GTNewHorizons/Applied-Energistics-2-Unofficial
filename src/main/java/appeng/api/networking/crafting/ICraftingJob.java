@@ -35,12 +35,12 @@ public interface ICraftingJob {
     long getByteTotal();
 
     /**
-     * Populates the plan list with stack size, and requestable values that represent the stored, and crafting job
-     * contents respectively.
+     * Creates a plan for the crafting job.
      *
-     * @param plan plan
+     * @return A list of {@link IAEItemStack} representing the items involved in the crafting job, including both stored
+     *         and requestable values.
      */
-    void populatePlan(IItemList<IAEItemStack> plan);
+    IItemList<IAEItemStack> createPlan();
 
     /**
      * @return the final output of the job.

@@ -22,6 +22,7 @@ import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
+import appeng.util.item.ItemList;
 
 public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack> {
 
@@ -160,10 +161,12 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
+        public IItemList<IAEItemStack> createPlan() {
+            IItemList<IAEItemStack> plan = new ItemList();
             for (IAEItemStack removed : removedFromSystem) {
-                targetPlan.add(removed.copy());
+                plan.add(removed.copy());
             }
+            return plan;
         }
 
         @Override

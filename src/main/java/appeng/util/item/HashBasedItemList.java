@@ -13,6 +13,8 @@ package appeng.util.item;
 import java.util.Collection;
 import java.util.Iterator;
 
+import javax.annotation.Nonnull;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
@@ -23,21 +25,24 @@ public final class HashBasedItemList implements IItemList<IAEItemStack> {
     private final ObjectOpenHashSet<IAEItemStack> records = new ObjectOpenHashSet<>();
 
     @Override
-    public void add(final IAEItemStack option) {
-        if (option == null) {
-            return;
-        }
-
-        final IAEItemStack st = this.records.get(option);
+    public void add(@Nonnull final IAEItemStack stack) {
+        final IAEItemStack st = this.records.get(stack);
 
         if (st != null) {
-            st.add(option);
+            st.add(stack);
             return;
         }
 
-        final IAEItemStack opt = option.copy();
+        final IAEItemStack opt = stack.copy();
 
         this.putItemRecord(opt);
+    }
+
+    @Override
+    public void addAll(@Nonnull final IItemList<IAEItemStack> stacks) {
+        for (IAEItemStack stack : stacks) {
+            this.add(stack);
+        }
     }
 
     @Override

@@ -325,8 +325,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
     @Override
     public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
             final BaseActionSource source) {
-        for (final IAEItemStack is : change) {
-            this.items.add(is);
+        for (final IAEItemStack stack : change) {
+            this.items.add(stack);
         }
     }
 

@@ -87,14 +87,14 @@ public class ItemRepo implements IDisplayRepo {
     }
 
     @Override
-    public void postUpdate(final IAEItemStack is) {
-        final IAEItemStack st = this.list.findPrecise(is);
+    public void postUpdate(@Nonnull final IAEItemStack stack) {
+        final IAEItemStack st = this.list.findPrecise(stack);
 
         if (st != null) {
             st.reset();
-            st.add(is);
+            st.add(stack);
         } else {
-            this.list.add(is);
+            this.list.add(stack);
         }
     }
 

@@ -17,6 +17,8 @@ import java.util.LinkedList;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import javax.annotation.Nonnull;
+
 import net.minecraftforge.oredict.OreDictionary;
 
 import appeng.api.config.FuzzyMode;
@@ -30,21 +32,24 @@ public final class ItemList implements IItemList<IAEItemStack> {
     private final ObjectOpenHashSet<IAEItemStack> setRecords = new ObjectOpenHashSet<>();
 
     @Override
-    public void add(final IAEItemStack option) {
-        if (option == null) {
-            return;
-        }
-
-        final IAEItemStack st = this.setRecords.get(option);
+    public void add(@Nonnull final IAEItemStack stack) {
+        final IAEItemStack st = this.setRecords.get(stack);
 
         if (st != null) {
-            st.add(option);
+            st.add(stack);
             return;
         }
 
-        final IAEItemStack opt = option.copy();
+        final IAEItemStack opt = stack.copy();
 
         this.putItemRecord(opt);
+    }
+
+    @Override
+    public void addAll(@Nonnull final IItemList<IAEItemStack> stacks) {
+        for (IAEItemStack stack : stacks) {
+            this.add(stack);
+        }
     }
 
     @Override

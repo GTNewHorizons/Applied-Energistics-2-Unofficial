@@ -29,6 +29,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.container.ContainerNull;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
+import appeng.util.item.ItemList;
 import cpw.mods.fml.common.FMLCommonHandler;
 
 public class CraftingTreeProcess {
@@ -260,15 +261,16 @@ public class CraftingTreeProcess {
         }
     }
 
-    void getPlan(final IItemList<IAEItemStack> plan) {
+    IItemList<IAEItemStack> createPlan() {
+        IItemList<IAEItemStack> plan = new ItemList();
         for (IAEItemStack i : this.details.getOutputs()) {
             i = i.copy();
             i.setCountRequestable(i.getStackSize() * this.crafts);
             plan.addRequestable(i);
         }
-
-        for (final CraftingTreeNode pro : this.nodes.keySet()) {
-            pro.getPlan(plan);
+        for (final CraftingTreeNode node : this.nodes.keySet()) {
+            plan.addAll(node.createPlan());
         }
+        return plan;
     }
 }

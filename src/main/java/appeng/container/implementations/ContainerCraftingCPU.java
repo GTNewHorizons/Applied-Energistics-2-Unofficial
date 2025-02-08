@@ -234,10 +234,8 @@ public class ContainerCraftingCPU extends AEBaseContainer
     @Override
     public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
             final BaseActionSource actionSource) {
-        for (IAEItemStack is : change) {
-            is = is.copy();
-            is.setStackSize(1);
-            this.list.add(is);
+        for (IAEItemStack stack : change) {
+            this.list.add(stack.copy().setStackSize(1));
         }
     }
 

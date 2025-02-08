@@ -27,6 +27,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.util.item.ItemList;
 
 public class CraftingTreeNode {
 
@@ -323,7 +324,9 @@ public class CraftingTreeNode {
         }
     }
 
-    void getPlan(final IItemList<IAEItemStack> plan) {
+    IItemList<IAEItemStack> createPlan() {
+        IItemList<IAEItemStack> plan = new ItemList();
+
         if (this.missing > 0) {
             final IAEItemStack o = this.what.copy();
             o.setStackSize(this.missing);
@@ -340,9 +343,11 @@ public class CraftingTreeNode {
             plan.add(i.copy());
         }
 
-        for (final CraftingTreeProcess pro : this.nodes) {
-            pro.getPlan(plan);
+        for (final CraftingTreeProcess node : this.nodes) {
+            plan.addAll(node.createPlan());
         }
+
+        return plan;
     }
 
     int getSlot() {

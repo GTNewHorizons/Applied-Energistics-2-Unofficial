@@ -39,6 +39,7 @@ import appeng.crafting.v2.resolvers.CraftingTask.State;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
+import appeng.util.item.ItemList;
 import io.netty.buffer.ByteBuf;
 
 public class CraftableItemResolver implements CraftingRequestResolver<IAEItemStack> {
@@ -563,15 +564,17 @@ public class CraftableItemResolver implements CraftingRequestResolver<IAEItemSta
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
+        public IItemList<IAEItemStack> createPlan() {
+            IItemList<IAEItemStack> plan = new ItemList();
             if (totalCraftsDone == 0) {
-                return;
+                return plan;
             }
             for (IAEItemStack output : patternOutputs) {
-                targetPlan.addRequestable(
+                plan.addRequestable(
                         output.copy().setStackSize(0).setCountRequestable(output.getStackSize() * totalCraftsDone)
                                 .setCountRequestableCrafts(totalCraftsDone));
             }
+            return plan;
         }
 
         @Override

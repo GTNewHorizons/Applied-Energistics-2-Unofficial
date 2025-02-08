@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
+import javax.annotation.Nonnull;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IItemList;
@@ -24,21 +26,23 @@ public final class FluidList implements IItemList<IAEFluidStack> {
     private final ObjectOpenHashSet<IAEFluidStack> records = new ObjectOpenHashSet<>();
 
     @Override
-    public void add(final IAEFluidStack option) {
-        if (option == null) {
-            return;
-        }
-
-        final IAEFluidStack st = this.getFluidRecord(option);
+    public void add(@Nonnull final IAEFluidStack stack) {
+        final IAEFluidStack st = this.getFluidRecord(stack);
 
         if (st != null) {
-            st.add(option);
+            st.add(stack);
             return;
         }
 
-        final IAEFluidStack opt = option.copy();
+        final IAEFluidStack opt = stack.copy();
 
         this.putFluidRecord(opt);
+    }
+
+    public void addAll(@Nonnull final IItemList<IAEFluidStack> stacks) {
+        for (IAEFluidStack stack : stacks) {
+            this.add(stack);
+        }
     }
 
     @Override

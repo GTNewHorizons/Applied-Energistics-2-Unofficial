@@ -26,6 +26,7 @@ import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
 import appeng.crafting.v2.resolvers.CraftingTask;
 import appeng.hooks.TickHandler;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.util.item.ItemList;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -160,10 +161,12 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
     }
 
     @Override
-    public void populatePlan(IItemList<IAEItemStack> plan) {
+    public IItemList<IAEItemStack> createPlan() {
+        IItemList<IAEItemStack> plan = new ItemList();
         for (CraftingTask task : context.getResolvedTasks()) {
-            task.populatePlan(plan);
+            plan.addAll(task.createPlan());
         }
+        return plan;
     }
 
     @Override

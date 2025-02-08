@@ -17,6 +17,7 @@ import appeng.crafting.v2.CraftingRequest.UsedResolverEntry;
 import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.util.item.ItemList;
 
 /**
  * A single action that can be performed to solve a {@link CraftingRequest}. Can have multiple inputs and outputs,
@@ -81,7 +82,9 @@ public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStac
 
     public abstract void fullRefund(CraftingContext context);
 
-    public abstract void populatePlan(IItemList<IAEItemStack> targetPlan);
+    public IItemList<IAEItemStack> createPlan() {
+        return new ItemList();
+    }
 
     public abstract void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
             MECraftingInventory craftingInv);

@@ -41,6 +41,7 @@ import appeng.core.AELog;
 import appeng.hooks.TickHandler;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.util.item.ItemList;
 
 public class CraftingJob implements ICraftingJob, Runnable {
 
@@ -241,10 +242,8 @@ public class CraftingJob implements ICraftingJob, Runnable {
     }
 
     @Override
-    public void populatePlan(final IItemList<IAEItemStack> plan) {
-        if (this.getTree() != null) {
-            this.getTree().getPlan(plan);
-        }
+    public IItemList<IAEItemStack> createPlan() {
+        return this.getTree() != null ? this.getTree().createPlan() : new ItemList();
     }
 
     @Override
