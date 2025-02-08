@@ -1562,7 +1562,7 @@ public class Platform {
             if (src.isPlayer()) {
                 return gridProxy.getSecurity().hasPermission(((PlayerSource) src).player, SecurityPermissions.BUILD);
             } else if (src.isMachine()) {
-                final IActionHost te = ((MachineSource) src).via;
+                final IActionHost te = ((MachineSource) src).actionHost;
                 final IGridNode n = te.getActionableNode();
                 if (n == null) {
                     return false;

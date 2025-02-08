@@ -39,7 +39,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.implementations.tiles.IColorableTile;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.InternalActionSource;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventory;
@@ -110,7 +110,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
                 .getCellInventory(is, null, StorageChannel.ITEMS);
         if (inv != null) {
             final IAEItemStack option = inv
-                    .extractItems(AEItemStack.create(paintBall), Actionable.SIMULATE, new BaseActionSource());
+                    .extractItems(AEItemStack.create(paintBall), Actionable.SIMULATE, new InternalActionSource());
 
             if (option != null) {
                 paintBall = option.getItemStack();
@@ -135,7 +135,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
                             inv.extractItems(
                                     AEItemStack.create(paintBall),
                                     Actionable.MODULATE,
-                                    new BaseActionSource());
+                                    new InternalActionSource());
                             this.extractAEPower(is, powerPerUse);
                             return true;
                         }
@@ -149,7 +149,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
                         .getTileEntity(x + orientation.offsetX, y + orientation.offsetY, z + orientation.offsetZ);
                 if (this.getAECurrentPower(is) > powerPerUse && testBlk instanceof BlockPaint
                         && painted instanceof TilePaint) {
-                    inv.extractItems(AEItemStack.create(paintBall), Actionable.MODULATE, new BaseActionSource());
+                    inv.extractItems(AEItemStack.create(paintBall), Actionable.MODULATE, new InternalActionSource());
                     this.extractAEPower(is, powerPerUse);
                     ((TilePaint) painted).cleanSide(orientation.getOpposite());
                     return true;
@@ -173,7 +173,10 @@ public class ToolColorApplicator extends AEBasePoweredItem
                             ForgeDirection.getOrientation(side),
                             color,
                             p)) {
-                        inv.extractItems(AEItemStack.create(paintBall), Actionable.MODULATE, new BaseActionSource());
+                        inv.extractItems(
+                                AEItemStack.create(paintBall),
+                                Actionable.MODULATE,
+                                new InternalActionSource());
                         this.extractAEPower(is, powerPerUse);
                         return true;
                     }

@@ -13,6 +13,7 @@ import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.InternalActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
@@ -31,7 +32,7 @@ public class MockAESystem implements ICellProvider {
 
     public final World world;
     public final MockGrid grid = new MockGrid();
-    public final BaseActionSource dummyActionSource = new BaseActionSource();
+    public final BaseActionSource internalActionSource = new InternalActionSource();
     public final CraftingGridCache cgCache;
     public final GridStorageCache sgCache;
     private boolean dirtyPatterns = false;
@@ -45,11 +46,11 @@ public class MockAESystem implements ICellProvider {
 
     public MockAESystem addStoredItem(ItemStack stack) {
         final IAEItemStack aeStack = AEItemStack.create(stack);
-        this.itemStorage.injectItems(aeStack, Actionable.MODULATE, dummyActionSource);
+        this.itemStorage.injectItems(aeStack, Actionable.MODULATE, internalActionSource);
         this.sgCache.postAlterationOfStoredItems(
                 StorageChannel.ITEMS,
                 Collections.singletonList(aeStack),
-                dummyActionSource);
+                internalActionSource);
         return this;
     }
 
@@ -58,7 +59,7 @@ public class MockAESystem implements ICellProvider {
             dirtyPatterns = false;
             this.cgCache.setMockPatternsFromMethods();
         }
-        return new CraftingJobV2(world, grid, dummyActionSource, AEItemStack.create(request), null);
+        return new CraftingJobV2(world, grid, internalActionSource, AEItemStack.create(request), null);
     }
 
     public PatternBuilder newProcessingPattern() {

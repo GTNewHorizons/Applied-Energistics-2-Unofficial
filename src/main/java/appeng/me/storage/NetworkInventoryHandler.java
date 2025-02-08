@@ -213,7 +213,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
             }
         } else if (src.isMachine()) {
             if (this.security.isAvailable()) {
-                final IGridNode n = ((MachineSource) src).via.getActionableNode();
+                final IGridNode n = ((MachineSource) src).actionHost.getActionableNode();
                 if (n == null) {
                     return true;
                 }

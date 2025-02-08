@@ -13,12 +13,21 @@
 
 package appeng.api.networking.security;
 
-public class MachineSource extends BaseActionSource {
+/**
+ * Represents an action initiated by a machine.
+ */
+public class MachineSource implements BaseActionSource {
 
-    public final IActionHost via;
+    /** The machine responsible for the action. */
+    public final IActionHost actionHost;
 
-    public MachineSource(final IActionHost v) {
-        this.via = v;
+    /**
+     * Creates a new machine action source.
+     *
+     * @param actionHost The machine performing the action.
+     */
+    public MachineSource(final IActionHost actionHost) {
+        this.actionHost = actionHost;
     }
 
     @Override

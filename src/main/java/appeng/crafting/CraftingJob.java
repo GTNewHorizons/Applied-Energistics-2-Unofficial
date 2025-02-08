@@ -307,7 +307,7 @@ public class CraftingJob implements ICraftingJob, Runnable {
             final String actionSource;
 
             if (this.actionSrc instanceof MachineSource) {
-                final IActionHost machineSource = ((MachineSource) this.actionSrc).via;
+                final IActionHost machineSource = ((MachineSource) this.actionSrc).actionHost;
                 final IGridNode actionableNode = machineSource.getActionableNode();
                 final IGridHost machine = actionableNode.getMachine();
                 final DimensionalCoord location = actionableNode.getGridBlock().getLocation();

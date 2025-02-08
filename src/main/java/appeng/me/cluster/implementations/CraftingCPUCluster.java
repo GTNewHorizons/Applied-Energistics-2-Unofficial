@@ -543,7 +543,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private TileCraftingTile getCore() {
-        return (TileCraftingTile) this.machineSrc.via;
+        return (TileCraftingTile) this.machineSrc.actionHost;
     }
 
     private IGrid getGrid() {
