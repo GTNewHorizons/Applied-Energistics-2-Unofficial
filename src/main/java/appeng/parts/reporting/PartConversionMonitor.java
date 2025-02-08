@@ -20,7 +20,7 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.PlayerSource;
+import appeng.api.networking.security.PlayerSourceV2;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.texture.CableBusTextures;
@@ -81,7 +81,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                             final IAEItemStack insertItem = input.copy();
                             insertItem.setStackSize(targetStack.stackSize);
                             final IAEItemStack failedToInsert = Platform
-                                    .poweredInsert(energy, cell, insertItem, new PlayerSource(player, this));
+                                    .poweredInsert(energy, cell, insertItem, new PlayerSourceV2(player, this));
                             player.inventory.setInventorySlotContents(
                                     x,
                                     failedToInsert == null ? null : failedToInsert.getItemStack());
@@ -89,7 +89,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                     }
                 } else {
                     final IAEItemStack failedToInsert = Platform
-                            .poweredInsert(energy, cell, input, new PlayerSource(player, this));
+                            .poweredInsert(energy, cell, input, new PlayerSourceV2(player, this));
                     player.inventory.setInventorySlotContents(
                             player.inventory.currentItem,
                             failedToInsert == null ? null : failedToInsert.getItemStack());
@@ -117,7 +117,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                 input.setStackSize(is.getMaxStackSize());
 
                 final IAEItemStack retrieved = Platform
-                        .poweredExtraction(energy, cell, input, new PlayerSource(player, this));
+                        .poweredExtraction(energy, cell, input, new PlayerSourceV2(player, this));
                 if (retrieved != null) {
                     ItemStack newItems = retrieved.getItemStack();
                     final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);

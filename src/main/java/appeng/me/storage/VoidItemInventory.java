@@ -14,7 +14,7 @@ import javax.annotation.Nonnull;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
@@ -30,7 +30,7 @@ public class VoidItemInventory implements IMEInventoryHandler<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSource src) {
+    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSourceV2 src) {
         if (mode == Actionable.SIMULATE) {
             return null;
         }
@@ -42,7 +42,7 @@ public class VoidItemInventory implements IMEInventoryHandler<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSourceV2 src) {
         return null;
     }
 

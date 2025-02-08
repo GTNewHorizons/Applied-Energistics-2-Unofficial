@@ -34,7 +34,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.definitions.IDefinitions;
-import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.MachineSourceV2;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
@@ -447,7 +447,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                         this.getCellInventory().injectItems(
                                 AEItemStack.create(failed),
                                 Actionable.MODULATE,
-                                new MachineSource(this.getPatternTerminal()));
+                                new MachineSourceV2(this.getPatternTerminal()));
                     }
                 }
             }

@@ -29,10 +29,10 @@ import appeng.api.networking.crafting.ICraftingCallback;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingJob;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.security.IActionHost;
-import appeng.api.networking.security.MachineSource;
-import appeng.api.networking.security.PlayerSource;
+import appeng.api.networking.security.MachineSourceV2;
+import appeng.api.networking.security.PlayerSourceV2;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
@@ -60,7 +60,7 @@ public class CraftingJob implements ICraftingJob, Runnable {
     private boolean simulate = false;
     private MECraftingInventory availableCheck;
     private long bytes = 0;
-    private final BaseActionSource actionSrc;
+    private final BaseActionSourceV2 actionSrc;
     private final ICraftingCallback callback;
     private boolean running = false;
     private boolean done = false;
@@ -71,7 +71,7 @@ public class CraftingJob implements ICraftingJob, Runnable {
         return w;
     }
 
-    public CraftingJob(final World w, final IGrid grid, final BaseActionSource actionSrc, final IAEItemStack what,
+    public CraftingJob(final World w, final IGrid grid, final BaseActionSourceV2 actionSrc, final IAEItemStack what,
             final ICraftingCallback callback) {
         this.world = this.wrapWorld(w);
         this.output = what.copy();
@@ -305,14 +305,14 @@ public class CraftingJob implements ICraftingJob, Runnable {
             final long elapsedTime = timer.elapsed(TimeUnit.MILLISECONDS);
             final String actionSource;
 
-            if (this.actionSrc instanceof MachineSource) {
-                final IActionHost machineSource = ((MachineSource) this.actionSrc).getActionHost();
+            if (this.actionSrc instanceof MachineSourceV2) {
+                final IActionHost machineSource = ((MachineSourceV2) this.actionSrc).getActionHost();
                 final IGridNode actionableNode = machineSource.getActionableNode();
                 final IGridHost machine = actionableNode.getMachine();
                 final DimensionalCoord location = actionableNode.getGridBlock().getLocation();
 
                 actionSource = String.format(LOG_MACHINE_SOURCE_DETAILS, machine, location);
-            } else if (this.actionSrc instanceof PlayerSource source) {
+            } else if (this.actionSrc instanceof PlayerSourceV2 source) {
                 final EntityPlayer player = source.getPlayer();
 
                 actionSource = player.toString();
@@ -330,7 +330,7 @@ public class CraftingJob implements ICraftingJob, Runnable {
     }
 
     @Override
-    public void startCrafting(MECraftingInventory storage, ICraftingCPU craftingCPUCluster, BaseActionSource src) {
+    public void startCrafting(MECraftingInventory storage, ICraftingCPU craftingCPUCluster, BaseActionSourceV2 src) {
         CraftingCPUCluster cluster = (CraftingCPUCluster) craftingCPUCluster;
         this.tree.setJob(storage, cluster, src);
     }

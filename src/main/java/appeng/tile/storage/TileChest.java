@@ -47,11 +47,11 @@ import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.events.MENetworkPowerStorage;
 import appeng.api.networking.events.MENetworkPowerStorage.PowerEventType;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.ISecurityGrid;
-import appeng.api.networking.security.MachineSource;
-import appeng.api.networking.security.PlayerSource;
+import appeng.api.networking.security.MachineSourceV2;
+import appeng.api.networking.security.PlayerSourceV2;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.networking.ticking.IGridTickable;
@@ -97,7 +97,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     private static final int[] FRONT = { 1 };
     private static final int[] NO_SLOTS = {};
     private final AppEngInternalInventory inv = new AppEngInternalInventory(this, 2, Integer.MAX_VALUE, true);
-    private final BaseActionSource mySrc = new MachineSource(this);
+    private final BaseActionSourceV2 mySrc = new MachineSourceV2(this);
     private final IConfigManager config = new ConfigManager(this);
     private ItemStack storageType;
     private int priority = 0;
@@ -256,7 +256,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         return g;
     }
 
-    public BaseActionSource getActionSource() {
+    public BaseActionSourceV2 getActionSource() {
         return mySrc;
     }
 
@@ -661,7 +661,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     }
 
     @Override
-    public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSource src) {
+    public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSourceV2 src) {
         if (Platform.canAccess(this.getProxy(), src) && side != this.getForward()) {
             return this;
         }
@@ -788,7 +788,8 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         }
 
         @Override
-        public void postChange(final IBaseMonitor<T> monitor, final Iterable<T> change, final BaseActionSource source) {
+        public void postChange(final IBaseMonitor<T> monitor, final Iterable<T> change,
+                final BaseActionSourceV2 source) {
             try {
                 if (TileChest.this.getProxy().isActive()) {
                     TileChest.this.getProxy().getStorage()
@@ -822,8 +823,8 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         }
 
         @Override
-        public T injectItems(final T input, final Actionable mode, final BaseActionSource src) {
-            if (src.isPlayer() && !this.securityCheck(((PlayerSource) src).getPlayer(), SecurityPermissions.INJECT)) {
+        public T injectItems(final T input, final Actionable mode, final BaseActionSourceV2 src) {
+            if (src.isPlayer() && !this.securityCheck(((PlayerSourceV2) src).getPlayer(), SecurityPermissions.INJECT)) {
                 return input;
             }
             return super.injectItems(input, mode, src);
@@ -856,8 +857,9 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         }
 
         @Override
-        public T extractItems(final T request, final Actionable mode, final BaseActionSource src) {
-            if (src.isPlayer() && !this.securityCheck(((PlayerSource) src).getPlayer(), SecurityPermissions.EXTRACT)) {
+        public T extractItems(final T request, final Actionable mode, final BaseActionSourceV2 src) {
+            if (src.isPlayer()
+                    && !this.securityCheck(((PlayerSourceV2) src).getPlayer(), SecurityPermissions.EXTRACT)) {
                 return null;
             }
             return super.extractItems(request, mode, src);

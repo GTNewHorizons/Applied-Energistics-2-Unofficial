@@ -43,10 +43,10 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.ISecurityGrid;
-import appeng.api.networking.security.PlayerSource;
+import appeng.api.networking.security.PlayerSourceV2;
 import appeng.api.parts.IPart;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.data.IAEItemStack;
@@ -81,7 +81,7 @@ import appeng.util.item.AEItemStack;
 public abstract class AEBaseContainer extends Container {
 
     private final InventoryPlayer invPlayer;
-    private final BaseActionSource mySrc;
+    private final BaseActionSourceV2 mySrc;
     private final HashSet<Integer> locked = new HashSet<>();
     private final TileEntity tileEntity;
     private final IPart part;
@@ -107,7 +107,7 @@ public abstract class AEBaseContainer extends Container {
         this.tileEntity = myTile;
         this.part = myPart;
         this.obj = gio;
-        this.mySrc = new PlayerSource(ip.player, this.getActionHost());
+        this.mySrc = new PlayerSourceV2(ip.player, this.getActionHost());
         this.prepareSync();
     }
 
@@ -162,7 +162,7 @@ public abstract class AEBaseContainer extends Container {
             throw new IllegalArgumentException("Must have a valid anchor, instead " + anchor + " in " + ip);
         }
 
-        this.mySrc = new PlayerSource(ip.player, this.getActionHost());
+        this.mySrc = new PlayerSourceV2(ip.player, this.getActionHost());
 
         this.prepareSync();
     }
@@ -254,7 +254,7 @@ public abstract class AEBaseContainer extends Container {
         this.clientRequestedTargetItem = stack == null ? null : stack.copy();
     }
 
-    public BaseActionSource getActionSource() {
+    public BaseActionSourceV2 getActionSource() {
         return this.mySrc;
     }
 

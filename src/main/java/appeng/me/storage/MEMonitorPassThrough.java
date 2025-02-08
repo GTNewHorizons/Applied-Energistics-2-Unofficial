@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
@@ -30,7 +30,7 @@ public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T
         implements IMEMonitor<T>, IMEMonitorHandlerReceiver<T> {
 
     private final HashMap<IMEMonitorHandlerReceiver<T>, Object> listeners = new HashMap<>();
-    private BaseActionSource changeSource;
+    private BaseActionSourceV2 changeSource;
     private IMEMonitor<T> monitor;
 
     public MEMonitorPassThrough(final IMEInventory<T> i, final StorageChannel channel) {
@@ -101,7 +101,7 @@ public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T
     }
 
     @Override
-    public void postChange(final IBaseMonitor<T> monitor, final Iterable<T> change, final BaseActionSource source) {
+    public void postChange(final IBaseMonitor<T> monitor, final Iterable<T> change, final BaseActionSourceV2 source) {
         final Iterator<Entry<IMEMonitorHandlerReceiver<T>, Object>> i = this.listeners.entrySet().iterator();
         while (i.hasNext()) {
             final Entry<IMEMonitorHandlerReceiver<T>, Object> e = i.next();
@@ -128,11 +128,11 @@ public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T
         }
     }
 
-    private BaseActionSource getChangeSource() {
+    private BaseActionSourceV2 getChangeSource() {
         return this.changeSource;
     }
 
-    public void setChangeSource(final BaseActionSource changeSource) {
+    public void setChangeSource(final BaseActionSourceV2 changeSource) {
         this.changeSource = changeSource;
     }
 }

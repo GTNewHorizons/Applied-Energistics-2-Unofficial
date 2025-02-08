@@ -11,35 +11,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package appeng.api.storage;
-
-import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.common.util.ForgeDirection;
-
-import appeng.api.IAppEngApi;
-import appeng.api.networking.security.BaseActionSourceV2;
+package appeng.api.networking.security;
 
 /**
- * A Registry of External Storage handlers.
- * <p>
- * Do not implement obtain via {@link IAppEngApi}.registries().getExternalStorageRegistry()
+ * Represents the source of an action within the network.
  */
-public interface IExternalStorageRegistry {
+public interface BaseActionSourceV2 {
 
     /**
-     * A registry for StorageBus interactions
-     *
-     * @param esh storage handler
+     * @return true if the action originates from a player, false otherwise.
      */
-    void addExternalStorageInterface(IExternalStorageHandler esh);
+    default boolean isPlayer() {
+        return false;
+    }
 
     /**
-     * @param te       tile entity
-     * @param opposite direction
-     * @param channel  channel
-     * @param mySrc    source
-     * @return the handler for a given tile / forge direction
+     * @return true if the action originates from a machine, false otherwise.
      */
-    IExternalStorageHandler getHandler(TileEntity te, ForgeDirection opposite, StorageChannel channel,
-            BaseActionSourceV2 mySrc);
+    default boolean isMachine() {
+        return false;
+    }
+
+    /**
+     * @return true if the action originates from internal processing, false otherwise.
+     */
+    default boolean isInternal() {
+        return false;
+    }
 }

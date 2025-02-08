@@ -20,8 +20,8 @@ import net.minecraft.util.StatCollector;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.PlayerSource;
+import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.PlayerSourceV2;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageChannel;
@@ -93,7 +93,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
         this.par = parent;
     }
 
-    public MECraftingInventory(final IMEMonitor<IAEItemStack> target, final BaseActionSource src,
+    public MECraftingInventory(final IMEMonitor<IAEItemStack> target, final BaseActionSourceV2 src,
             final boolean logExtracted, final boolean logInjections, final boolean logMissing) {
         this.target = target;
         this.logExtracted = logExtracted;
@@ -158,7 +158,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSource src) {
+    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSourceV2 src) {
         if (input == null) {
             return null;
         }
@@ -174,7 +174,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSourceV2 src) {
         if (request == null) {
             return null;
         }
@@ -254,7 +254,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
         return this.localCache;
     }
 
-    public boolean commit(final BaseActionSource src) {
+    public boolean commit(final BaseActionSourceV2 src) {
         final IItemList<IAEItemStack> added = AEApi.instance().storage().createItemList();
         final IItemList<IAEItemStack> pulled = AEApi.instance().storage().createItemList();
         failedToExtract.resetStatus();
@@ -339,13 +339,13 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
     }
 
     private void handleCraftExtractFailure(final IAEItemStack expected, final IAEItemStack extracted,
-            final BaseActionSource src) {
-        if (!(src instanceof PlayerSource)) {
+            final BaseActionSourceV2 src) {
+        if (!(src instanceof PlayerSourceV2)) {
             return;
         }
 
         try {
-            EntityPlayer player = ((PlayerSource) src).getPlayer();
+            EntityPlayer player = ((PlayerSourceV2) src).getPlayer();
             if (player != null) {
                 if (expected != null && expected.getItem() != null) {
                     IChatComponent missingDisplayName;

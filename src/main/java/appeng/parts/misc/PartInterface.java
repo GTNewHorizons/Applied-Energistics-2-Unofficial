@@ -38,7 +38,7 @@ import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkCraftingPushedPattern;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -354,7 +354,7 @@ public class PartInterface extends PartBasicState implements IGridTickable, ISto
     }
 
     @Override
-    public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSource src) {
+    public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSourceV2 src) {
         return this.duality.getMonitorable(side, src, this);
     }
 

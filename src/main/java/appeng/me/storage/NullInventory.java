@@ -14,7 +14,7 @@ import javax.annotation.Nonnull;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
@@ -23,12 +23,12 @@ import appeng.api.storage.data.IItemList;
 public class NullInventory<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
 
     @Override
-    public T injectItems(final T input, final Actionable mode, final BaseActionSource src) {
+    public T injectItems(final T input, final Actionable mode, final BaseActionSourceV2 src) {
         return input;
     }
 
     @Override
-    public T extractItems(final T request, final Actionable mode, final BaseActionSource src) {
+    public T extractItems(final T request, final Actionable mode, final BaseActionSourceV2 src) {
         return null;
     }
 

@@ -13,29 +13,14 @@
 
 package appeng.api.networking.security;
 
-/**
- * Represents the source of an action within the network.
- */
-public interface BaseActionSource {
+@Deprecated
+public class BaseActionSource {
 
-    /**
-     * @return true if the action originates from a player, false otherwise.
-     */
-    default boolean isPlayer() {
+    public boolean isPlayer() {
         return false;
     }
 
-    /**
-     * @return true if the action originates from a machine, false otherwise.
-     */
-    default boolean isMachine() {
-        return false;
-    }
-
-    /**
-     * @return true if the action originates from internal processing, false otherwise.
-     */
-    default boolean isInternal() {
+    public boolean isMachine() {
         return false;
     }
 }

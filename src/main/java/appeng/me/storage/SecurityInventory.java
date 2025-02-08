@@ -19,8 +19,8 @@ import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.implementations.items.IBiometricCard;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.PlayerSource;
+import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.PlayerSourceV2;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
@@ -38,7 +38,7 @@ public class SecurityInventory implements IMEInventoryHandler<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSource src) {
+    public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSourceV2 src) {
         if (this.hasPermission(src)) {
             if (AEApi.instance().definitions().items().biometricCard().isSameAs(input.getItemStack())) {
                 if (this.canAccept(input)) {
@@ -55,11 +55,11 @@ public class SecurityInventory implements IMEInventoryHandler<IAEItemStack> {
         return input;
     }
 
-    private boolean hasPermission(final BaseActionSource src) {
+    private boolean hasPermission(final BaseActionSourceV2 src) {
         if (src.isPlayer()) {
             try {
                 return this.securityTile.getProxy().getSecurity()
-                        .hasPermission(((PlayerSource) src).getPlayer(), SecurityPermissions.SECURITY);
+                        .hasPermission(((PlayerSourceV2) src).getPlayer(), SecurityPermissions.SECURITY);
             } catch (final GridAccessException e) {
                 // :P
             }
@@ -68,7 +68,7 @@ public class SecurityInventory implements IMEInventoryHandler<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSourceV2 src) {
         if (this.hasPermission(src)) {
             final IAEItemStack target = this.getStoredItems().findPrecise(request);
             if (target != null) {

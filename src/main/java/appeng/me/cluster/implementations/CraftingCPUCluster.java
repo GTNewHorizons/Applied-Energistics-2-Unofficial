@@ -77,9 +77,9 @@ import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.events.MENetworkCraftingCpuChange;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.MachineSource;
-import appeng.api.networking.security.PlayerSource;
+import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.MachineSourceV2;
+import appeng.api.networking.security.PlayerSourceV2;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
@@ -144,7 +144,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private IItemList<IAEItemStack> waitingForMissing = AEApi.instance().storage().createItemList();
     private long availableStorage = 0;
     private long usedStorage = 0;
-    private MachineSource machineSrc = null;
+    private MachineSourceV2 machineSrc = null;
     private int accelerator = 0;
     private boolean isComplete = true;
     private int remainingOperations;
@@ -300,7 +300,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     void addTile(final TileCraftingTile te) {
         if (this.machineSrc == null || te.isCoreBlock()) {
-            this.machineSrc = new MachineSource(te);
+            this.machineSrc = new MachineSourceV2(te);
         }
 
         te.setCoreBlock(false);
@@ -334,7 +334,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return false;
     }
 
-    public IAEStack injectItems(final IAEStack input, final Actionable type, final BaseActionSource src) {
+    public IAEStack injectItems(final IAEStack input, final Actionable type, final BaseActionSourceV2 src) {
         if (!(input instanceof IAEItemStack)) {
             return input;
         }
@@ -451,7 +451,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return input;
     }
 
-    private void postChange(final IAEItemStack diff, final BaseActionSource src) {
+    private void postChange(final IAEItemStack diff, final BaseActionSourceV2 src) {
         final Iterator<Entry<IMEMonitorHandlerReceiver<IAEItemStack>, Object>> i = this.getListeners();
 
         // protect integrity
@@ -927,7 +927,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return this.isMissingMode;
     }
 
-    public ICraftingLink submitJob(final IGrid g, final ICraftingJob job, final BaseActionSource src,
+    public ICraftingLink submitJob(final IGrid g, final ICraftingJob job, final BaseActionSourceV2 src,
             final ICraftingRequester requestingMachine) {
         if (this.myLastLink != null && this.isBusy()
                 && this.finalOutput.isSameType(job.getOutput())
@@ -1028,13 +1028,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return null;
     }
 
-    private void handleCraftBranchFailure(final CraftBranchFailure e, final BaseActionSource src) {
-        if (!(src instanceof PlayerSource)) {
+    private void handleCraftBranchFailure(final CraftBranchFailure e, final BaseActionSourceV2 src) {
+        if (!(src instanceof PlayerSourceV2)) {
             return;
         }
 
         try {
-            EntityPlayer player = ((PlayerSource) src).getPlayer();
+            EntityPlayer player = ((PlayerSourceV2) src).getPlayer();
             if (player != null) {
                 final IAEItemStack missingStack = e.getMissing();
                 String missingName = "?";
@@ -1060,7 +1060,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    public ICraftingLink mergeJob(final IGrid g, final ICraftingJob job, final BaseActionSource src) {
+    public ICraftingLink mergeJob(final IGrid g, final ICraftingJob job, final BaseActionSourceV2 src) {
         final IStorageGrid sg = g.getCache(IStorageGrid.class);
         final IMEInventory<IAEItemStack> storage = sg.getItemInventory();
         final MECraftingInventory ci = new MECraftingInventory(storage, true, false, false);
@@ -1096,7 +1096,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     @Override
-    public BaseActionSource getActionSource() {
+    public BaseActionSourceV2 getActionSource() {
         return this.machineSrc;
     }
 

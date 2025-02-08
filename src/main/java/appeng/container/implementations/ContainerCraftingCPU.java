@@ -28,7 +28,7 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.CraftingItemList;
 import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.data.IAEItemStack;
@@ -233,7 +233,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
     @Override
     public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
-            final BaseActionSource actionSource) {
+            final BaseActionSourceV2 actionSource) {
         for (IAEItemStack stack : change) {
             this.list.add(stack.copy().setStackSize(1));
         }

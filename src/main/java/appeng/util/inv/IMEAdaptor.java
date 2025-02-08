@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableList;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
@@ -30,10 +30,10 @@ import appeng.util.item.AEItemStack;
 public class IMEAdaptor extends InventoryAdaptor {
 
     private final IMEInventory<IAEItemStack> target;
-    private final BaseActionSource src;
+    private final BaseActionSourceV2 src;
     private int maxSlots = 0;
 
-    public IMEAdaptor(final IMEInventory<IAEItemStack> input, final BaseActionSource src) {
+    public IMEAdaptor(final IMEInventory<IAEItemStack> input, final BaseActionSourceV2 src) {
         this.target = input;
         this.src = src;
     }

@@ -25,8 +25,8 @@ import appeng.api.config.Upgrades;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.MachineSourceV2;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
@@ -50,7 +50,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public class PartImportBus extends PartSharedItemBus implements IInventoryDestination {
 
-    private final BaseActionSource source;
+    private final BaseActionSourceV2 source;
     private IMEInventory<IAEItemStack> destination = null;
     private IAEItemStack lastItemChecked = null;
     private int itemToSend; // used in tickingRequest
@@ -62,7 +62,7 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
 
         this.getConfigManager().registerSetting(Settings.REDSTONE_CONTROLLED, RedstoneMode.IGNORE);
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
-        this.source = new MachineSource(this);
+        this.source = new MachineSourceV2(this);
     }
 
     @Override

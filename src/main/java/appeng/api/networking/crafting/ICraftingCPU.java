@@ -15,7 +15,7 @@ package appeng.api.networking.crafting;
 
 import javax.annotation.Nullable;
 
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.CraftCancelListener;
@@ -32,7 +32,7 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
     /**
      * @return the action source for the CPU.
      */
-    BaseActionSource getActionSource();
+    BaseActionSourceV2 getActionSource();
 
     /**
      * @return the available storage in bytes

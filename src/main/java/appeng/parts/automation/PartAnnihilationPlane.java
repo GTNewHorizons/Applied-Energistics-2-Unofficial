@@ -39,8 +39,8 @@ import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.MachineSourceV2;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
@@ -71,7 +71,7 @@ public class PartAnnihilationPlane extends PartBasicState implements IGridTickab
     private static final IIcon ACTIVE_ICON = CableBusTextures.BlockAnnihilationPlaneOn.getIcon();
     private static final int MAX_CACHE_TIME = 60;
 
-    private final BaseActionSource mySrc = new MachineSource(this);
+    private final BaseActionSourceV2 mySrc = new MachineSourceV2(this);
     private EntityPlayer owner = null;
     private boolean isAccepting = true;
     private boolean breaking = false;

@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.networking.crafting.ICraftingGrid;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.security.InternalActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
@@ -32,7 +32,7 @@ public class MockAESystem implements ICellProvider {
 
     public final World world;
     public final MockGrid grid = new MockGrid();
-    public final BaseActionSource internalActionSource = new InternalActionSource();
+    public final BaseActionSourceV2 internalActionSource = new InternalActionSource();
     public final CraftingGridCache cgCache;
     public final GridStorageCache sgCache;
     private boolean dirtyPatterns = false;

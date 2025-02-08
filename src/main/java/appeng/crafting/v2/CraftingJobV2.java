@@ -16,7 +16,7 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingCallback;
 import appeng.api.networking.crafting.ICraftingJob;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.AELog;
@@ -56,12 +56,12 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
 
     protected State state = State.RUNNING;
 
-    public CraftingJobV2(final World world, final IGrid meGrid, final BaseActionSource actionSource,
+    public CraftingJobV2(final World world, final IGrid meGrid, final BaseActionSourceV2 actionSource,
             final IAEItemStack what, final ICraftingCallback callback) {
         this(world, meGrid, actionSource, what, CraftingMode.STANDARD, callback);
     }
 
-    public CraftingJobV2(final World world, final IGrid meGrid, final BaseActionSource actionSource,
+    public CraftingJobV2(final World world, final IGrid meGrid, final BaseActionSourceV2 actionSource,
             final IAEItemStack what, final CraftingMode craftingMode, final ICraftingCallback callback) {
         this.context = new CraftingContext(world, meGrid, actionSource);
         this.callback = callback;
@@ -248,7 +248,7 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
     }
 
     @Override
-    public void startCrafting(MECraftingInventory storage, ICraftingCPU rawCluster, BaseActionSource src) {
+    public void startCrafting(MECraftingInventory storage, ICraftingCPU rawCluster, BaseActionSourceV2 src) {
         if (this.state == State.RUNNING) {
             throw new IllegalStateException(
                     "Trying to start crafting a not fully calculated job for " + originalRequest.toString());

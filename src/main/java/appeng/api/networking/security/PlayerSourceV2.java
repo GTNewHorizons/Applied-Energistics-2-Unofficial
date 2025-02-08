@@ -11,35 +11,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package appeng.api.storage;
+package appeng.api.networking.security;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.common.util.ForgeDirection;
-
-import appeng.api.IAppEngApi;
-import appeng.api.networking.security.BaseActionSourceV2;
+import net.minecraft.entity.player.EntityPlayer;
 
 /**
- * A Registry of External Storage handlers.
- * <p>
- * Do not implement obtain via {@link IAppEngApi}.registries().getExternalStorageRegistry()
+ * Represents an action initiated by a player.
  */
-public interface IExternalStorageRegistry {
+public class PlayerSourceV2 implements BaseActionSourceV2 {
+
+    /** The player responsible for the action. */
+    private final EntityPlayer player;
+
+    /** The machine or interface used to perform the action. */
+    private final IActionHost actionHost;
 
     /**
-     * A registry for StorageBus interactions
+     * Creates a new player action source.
      *
-     * @param esh storage handler
+     * @param player     The player performing the action.
+     * @param actionHost The machine or interface used.
      */
-    void addExternalStorageInterface(IExternalStorageHandler esh);
+    public PlayerSourceV2(final EntityPlayer player, final IActionHost actionHost) {
+        this.player = player;
+        this.actionHost = actionHost;
+    }
 
-    /**
-     * @param te       tile entity
-     * @param opposite direction
-     * @param channel  channel
-     * @param mySrc    source
-     * @return the handler for a given tile / forge direction
-     */
-    IExternalStorageHandler getHandler(TileEntity te, ForgeDirection opposite, StorageChannel channel,
-            BaseActionSourceV2 mySrc);
+    @Override
+    public boolean isPlayer() {
+        return true;
+    }
+
+    public EntityPlayer getPlayer() {
+        return this.player;
+    }
+
+    public IActionHost getActionHost() {
+        return this.actionHost;
+    }
 }

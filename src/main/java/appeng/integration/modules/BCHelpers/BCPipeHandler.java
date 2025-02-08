@@ -13,7 +13,7 @@ package appeng.integration.modules.BCHelpers;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
@@ -25,7 +25,7 @@ public class BCPipeHandler implements IExternalStorageHandler {
 
     @Override
     public boolean canHandle(final TileEntity te, final ForgeDirection d, final StorageChannel chan,
-            final BaseActionSource mySrc) {
+            final BaseActionSourceV2 mySrc) {
         if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.BuildCraftTransport)) {
             final IBuildCraftTransport bc = (IBuildCraftTransport) IntegrationRegistry.INSTANCE
                     .getInstance(IntegrationType.BuildCraftTransport);
@@ -38,7 +38,7 @@ public class BCPipeHandler implements IExternalStorageHandler {
 
     @Override
     public IMEInventory getInventory(final TileEntity te, final ForgeDirection d, final StorageChannel chan,
-            final BaseActionSource src) {
+            final BaseActionSourceV2 src) {
         if (chan == StorageChannel.ITEMS) {
             return new BCPipeInventory(te, d);
         }

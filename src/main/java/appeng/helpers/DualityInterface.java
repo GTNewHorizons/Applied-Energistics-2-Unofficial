@@ -57,9 +57,9 @@ import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkCraftingPushedPattern;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.security.IActionHost;
-import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.MachineSourceV2;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -113,8 +113,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private final MultiCraftingTracker craftingTracker;
     protected final AENetworkProxy gridProxy;
     private final IInterfaceHost iHost;
-    private final BaseActionSource mySource;
-    private final BaseActionSource interfaceRequestSource;
+    private final BaseActionSourceV2 mySource;
+    private final BaseActionSourceV2 interfaceRequestSource;
     private final ConfigManager cm = new ConfigManager(this);
     private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, NUMBER_OF_CONFIG_SLOTS);
     private final AppEngInternalInventory storage = new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS);
@@ -156,7 +156,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.iHost = ih;
         this.craftingTracker = new MultiCraftingTracker(this.iHost, 9);
 
-        final MachineSource actionSource = new MachineSource(this.iHost);
+        final MachineSourceV2 actionSource = new MachineSourceV2(this.iHost);
         this.mySource = actionSource;
         this.fluids.setChangeSource(actionSource);
         this.items.setChangeSource(actionSource);
@@ -845,7 +845,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.craftingTracker.cancel();
     }
 
-    public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSource src,
+    public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSourceV2 src,
             final IStorageMonitorable myInterface) {
         if (Platform.canAccess(this.gridProxy, src)) {
             return myInterface;
@@ -1314,7 +1314,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
     }
 
-    public BaseActionSource getActionSource() {
+    public BaseActionSourceV2 getActionSource() {
         return interfaceRequestSource;
     }
 
@@ -1484,7 +1484,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return redstoneState == YesNo.YES;
     }
 
-    private static class InterfaceRequestSource extends MachineSource {
+    private static class InterfaceRequestSource extends MachineSourceV2 {
 
         public InterfaceRequestSource(final IActionHost v) {
             super(v);
@@ -1495,11 +1495,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         public InterfaceInventory(final DualityInterface tileInterface) {
             super(new AdaptorIInventory(tileInterface.storage));
-            this.setActionSource(new MachineSource(DualityInterface.this.iHost));
+            this.setActionSource(new MachineSourceV2(DualityInterface.this.iHost));
         }
 
         @Override
-        public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSource src) {
+        public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSourceV2 src) {
             if (src instanceof InterfaceRequestSource) {
                 return input;
             }
@@ -1509,7 +1509,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         @Override
         public IAEItemStack extractItems(final IAEItemStack request, final Actionable type,
-                final BaseActionSource src) {
+                final BaseActionSourceV2 src) {
             if (src instanceof InterfaceRequestSource) {
                 return null;
             }

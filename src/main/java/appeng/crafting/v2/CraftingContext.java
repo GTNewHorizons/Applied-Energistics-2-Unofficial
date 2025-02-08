@@ -31,7 +31,7 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingMedium;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
@@ -56,7 +56,7 @@ public final class CraftingContext {
     public final World world;
     public final IGrid meGrid;
     public final ICraftingGrid craftingGrid;
-    public BaseActionSource actionSource;
+    public BaseActionSourceV2 actionSource;
 
     /**
      * A working copy of the AE system's item list used for modelling what happens as crafting requests get resolved.
@@ -110,7 +110,7 @@ public final class CraftingContext {
     private final IdentityHashMap<ICraftingPatternDetails, Boolean> isPatternComplexCache = new IdentityHashMap<>();
     private final ClassToInstanceMap<Object> userCaches = MutableClassToInstanceMap.create();
 
-    public CraftingContext(@Nonnull World world, @Nonnull IGrid meGrid, @Nonnull BaseActionSource actionSource) {
+    public CraftingContext(@Nonnull World world, @Nonnull IGrid meGrid, @Nonnull BaseActionSourceV2 actionSource) {
         this.world = world;
         this.meGrid = meGrid;
         this.craftingGrid = meGrid.getCache(ICraftingGrid.class);

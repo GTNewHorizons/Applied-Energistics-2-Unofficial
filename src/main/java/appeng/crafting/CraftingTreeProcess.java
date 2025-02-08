@@ -23,7 +23,7 @@ import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.container.ContainerNull;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
@@ -152,7 +152,7 @@ public class CraftingTreeProcess {
         return (remaining / stackSize) + (remaining % stackSize != 0 ? 1 : 0);
     }
 
-    void request(final MECraftingInventory inv, final long i, final BaseActionSource src)
+    void request(final MECraftingInventory inv, final long i, final BaseActionSourceV2 src)
             throws CraftBranchFailure, InterruptedException {
         this.job.handlePausing();
 
@@ -251,7 +251,7 @@ public class CraftingTreeProcess {
     }
 
     void setJob(final MECraftingInventory storage, final CraftingCPUCluster craftingCPUCluster,
-            final BaseActionSource src) throws CraftBranchFailure {
+            final BaseActionSourceV2 src) throws CraftBranchFailure {
         craftingCPUCluster.addCrafting(this.details, this.crafts);
 
         for (final CraftingTreeNode pro : this.nodes.keySet()) {

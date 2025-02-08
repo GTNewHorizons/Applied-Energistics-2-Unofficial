@@ -62,7 +62,7 @@ import appeng.api.networking.events.MENetworkCraftingCpuChange;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPostCacheConstruction;
-import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.BaseActionSourceV2;
 import appeng.api.networking.security.InternalActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
@@ -406,7 +406,7 @@ public class CraftingGridCache
     }
 
     @Override
-    public IAEStack injectItems(IAEStack input, final Actionable type, final BaseActionSource src) {
+    public IAEStack injectItems(IAEStack input, final Actionable type, final BaseActionSourceV2 src) {
         for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
             input = cpu.injectItems(input, type, src);
         }
@@ -415,7 +415,7 @@ public class CraftingGridCache
     }
 
     @Override
-    public IAEStack extractItems(final IAEStack request, final Actionable mode, final BaseActionSource src) {
+    public IAEStack extractItems(final IAEStack request, final Actionable mode, final BaseActionSourceV2 src) {
         return null;
     }
 
@@ -479,13 +479,14 @@ public class CraftingGridCache
     }
 
     @Override
-    public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
-            final IAEItemStack slotItem, final ICraftingCallback cb) {
+    public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid,
+            final BaseActionSourceV2 actionSrc, final IAEItemStack slotItem, final ICraftingCallback cb) {
         return beginCraftingJob(world, grid, actionSrc, slotItem, CraftingMode.STANDARD, cb);
     }
 
-    public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
-            final IAEItemStack slotItem, final CraftingMode craftingMode, final ICraftingCallback cb) {
+    public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid,
+            final BaseActionSourceV2 actionSrc, final IAEItemStack slotItem, final CraftingMode craftingMode,
+            final ICraftingCallback cb) {
         if (world == null || grid == null || actionSrc == null || slotItem == null) {
             throw new IllegalArgumentException("Invalid Crafting Job Request");
         }
@@ -501,7 +502,7 @@ public class CraftingGridCache
 
     @Override
     public ICraftingLink submitJob(final ICraftingJob job, final ICraftingRequester requestingMachine,
-            final ICraftingCPU target, final boolean prioritizePower, final BaseActionSource src) {
+            final ICraftingCPU target, final boolean prioritizePower, final BaseActionSourceV2 src) {
         if (job.isSimulation()) {
             return null;
         }

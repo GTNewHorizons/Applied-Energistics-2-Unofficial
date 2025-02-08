@@ -40,8 +40,8 @@ import appeng.api.networking.events.MENetworkCellArrayUpdate;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.MachineSourceV2;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.ITickManager;
@@ -93,7 +93,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class PartStorageBus extends PartUpgradeable implements IGridTickable, ICellContainer,
         IMEMonitorHandlerReceiver<IAEItemStack>, IPipeConnection, IPriorityHost, IOreFilterable {
 
-    private final BaseActionSource mySrc;
+    private final BaseActionSourceV2 mySrc;
     private final AppEngInternalAEInventory Config = new AppEngInternalAEInventory(this, 63);
     private int priority = 0;
     private boolean cached = false;
@@ -115,7 +115,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
         this.getConfigManager().registerSetting(Settings.STORAGE_FILTER, StorageFilter.EXTRACTABLE_ONLY);
         this.getConfigManager().registerSetting(Settings.STICKY_MODE, YesNo.NO);
-        this.mySrc = new MachineSource(this);
+        this.mySrc = new MachineSourceV2(this);
         if (is.getTagCompound() != null) {
             NBTTagCompound tag = is.getTagCompound();
             if (tag.hasKey("priority")) {
@@ -243,7 +243,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
 
     @Override
     public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
-            final BaseActionSource source) {
+            final BaseActionSourceV2 source) {
         try {
             if (this.getProxy().isActive()) {
                 if (!this.readOncePass) {
@@ -474,7 +474,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
 
                 if (inv instanceof MEMonitorIInventory h) {
                     h.setMode((StorageFilter) this.getConfigManager().getSetting(Settings.STORAGE_FILTER));
-                    h.setActionSource(new MachineSource(this));
+                    h.setActionSource(new MachineSourceV2(this));
                     this.monitor = h;
                 }
 

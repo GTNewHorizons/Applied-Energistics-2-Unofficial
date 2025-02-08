@@ -11,35 +11,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package appeng.api.storage;
-
-import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.common.util.ForgeDirection;
-
-import appeng.api.IAppEngApi;
-import appeng.api.networking.security.BaseActionSourceV2;
+package appeng.api.networking.security;
 
 /**
- * A Registry of External Storage handlers.
- * <p>
- * Do not implement obtain via {@link IAppEngApi}.registries().getExternalStorageRegistry()
+ * Represents an action initiated by a machine.
  */
-public interface IExternalStorageRegistry {
+public class MachineSourceV2 implements BaseActionSourceV2 {
+
+    /** The machine responsible for the action. */
+    private final IActionHost actionHost;
 
     /**
-     * A registry for StorageBus interactions
+     * Creates a new machine action source.
      *
-     * @param esh storage handler
+     * @param actionHost The machine performing the action.
      */
-    void addExternalStorageInterface(IExternalStorageHandler esh);
+    public MachineSourceV2(final IActionHost actionHost) {
+        this.actionHost = actionHost;
+    }
 
-    /**
-     * @param te       tile entity
-     * @param opposite direction
-     * @param channel  channel
-     * @param mySrc    source
-     * @return the handler for a given tile / forge direction
-     */
-    IExternalStorageHandler getHandler(TileEntity te, ForgeDirection opposite, StorageChannel channel,
-            BaseActionSourceV2 mySrc);
+    @Override
+    public boolean isMachine() {
+        return true;
+    }
+
+    public IActionHost getActionHost() {
+        return this.actionHost;
+    }
 }

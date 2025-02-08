@@ -31,8 +31,8 @@ import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.MachineSourceV2;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -96,7 +96,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
     private final AppEngInternalInventory cells;
     private final UpgradeInventory upgrades;
 
-    private final BaseActionSource mySrc;
+    private final BaseActionSourceV2 mySrc;
 
     private YesNo lastRedstoneState;
     private ItemStack currentCell;
@@ -112,7 +112,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         this.manager.registerSetting(Settings.FULLNESS_MODE, FullnessMode.EMPTY);
         this.manager.registerSetting(Settings.OPERATION_MODE, OperationMode.EMPTY);
         this.cells = new AppEngInternalInventory(this, 12);
-        this.mySrc = new MachineSource(this);
+        this.mySrc = new MachineSourceV2(this);
         this.lastRedstoneState = YesNo.UNDECIDED;
 
         final Block ioPortBlock = AEApi.instance().definitions().blocks().iOPort().maybeBlock().get();
