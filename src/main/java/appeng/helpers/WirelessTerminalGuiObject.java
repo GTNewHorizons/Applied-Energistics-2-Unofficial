@@ -31,7 +31,7 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.IMachineSet;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEMonitor;
@@ -198,7 +198,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     }
 
     @Override
-    public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSourceV2 src) {
+    public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSource src) {
         if (this.itemStorage != null) {
             return this.itemStorage.injectItems(input, type, src);
         }
@@ -206,7 +206,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     }
 
     @Override
-    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSourceV2 src) {
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
         if (this.itemStorage != null) {
             return this.itemStorage.extractItems(request, mode, src);
         }

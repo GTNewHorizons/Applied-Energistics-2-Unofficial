@@ -16,7 +16,7 @@ import net.mcft.copy.betterstorage.api.crate.ICrateStorage;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.Actionable;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
@@ -33,7 +33,7 @@ public class BSCrate implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSourceV2 src) {
+    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSource src) {
         if (mode == Actionable.SIMULATE) {
             return null;
         }
@@ -47,7 +47,7 @@ public class BSCrate implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSourceV2 src) {
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
         if (mode == Actionable.SIMULATE) {
             final int howMany = this.crateStorage.getItemCount(request.getItemStack());
             return howMany > request.getStackSize() ? request : request.copy().setStackSize(howMany);

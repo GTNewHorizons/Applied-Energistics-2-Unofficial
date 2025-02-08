@@ -19,7 +19,7 @@ import net.minecraftforge.fluids.FluidStack;
 import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IStorageHelper;
 import appeng.api.storage.data.IAEFluidStack;
@@ -78,13 +78,13 @@ public class ApiStorage implements IStorageHelper {
 
     @Override
     public IAEItemStack poweredExtraction(final IEnergySource energy, final IMEInventory<IAEItemStack> cell,
-            final IAEItemStack request, final BaseActionSourceV2 src) {
+            final IAEItemStack request, final BaseActionSource src) {
         return Platform.poweredExtraction(energy, cell, request, src);
     }
 
     @Override
     public IAEItemStack poweredInsert(final IEnergySource energy, final IMEInventory<IAEItemStack> cell,
-            final IAEItemStack input, final BaseActionSourceV2 src) {
+            final IAEItemStack input, final BaseActionSource src) {
         return Platform.poweredInsert(energy, cell, input, src);
     }
 }

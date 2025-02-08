@@ -14,7 +14,7 @@ import javax.annotation.Nonnull;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
@@ -40,12 +40,12 @@ public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler
     }
 
     @Override
-    public T injectItems(final T input, final Actionable type, final BaseActionSourceV2 src) {
+    public T injectItems(final T input, final Actionable type, final BaseActionSource src) {
         return this.internal.injectItems(input, type, src);
     }
 
     @Override
-    public T extractItems(final T request, final Actionable type, final BaseActionSourceV2 src) {
+    public T extractItems(final T request, final Actionable type, final BaseActionSource src) {
         return this.internal.extractItems(request, type, src);
     }
 

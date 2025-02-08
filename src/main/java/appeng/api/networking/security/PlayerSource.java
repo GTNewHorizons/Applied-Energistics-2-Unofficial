@@ -15,19 +15,38 @@ package appeng.api.networking.security;
 
 import net.minecraft.entity.player.EntityPlayer;
 
-@Deprecated
-public class PlayerSource extends BaseActionSource {
+/**
+ * Represents an action initiated by a player.
+ */
+public class PlayerSource implements BaseActionSource {
 
-    public final EntityPlayer player;
-    public final IActionHost via;
+    /** The player responsible for the action. */
+    private final EntityPlayer player;
 
-    public PlayerSource(final EntityPlayer p, final IActionHost v) {
-        this.player = p;
-        this.via = v;
+    /** The machine or interface used to perform the action. */
+    private final IActionHost actionHost;
+
+    /**
+     * Creates a new player action source.
+     *
+     * @param player     The player performing the action.
+     * @param actionHost The machine or interface used.
+     */
+    public PlayerSource(final EntityPlayer player, final IActionHost actionHost) {
+        this.player = player;
+        this.actionHost = actionHost;
     }
 
     @Override
     public boolean isPlayer() {
         return true;
+    }
+
+    public EntityPlayer getPlayer() {
+        return this.player;
+    }
+
+    public IActionHost getActionHost() {
+        return this.actionHost;
     }
 }

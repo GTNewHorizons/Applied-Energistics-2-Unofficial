@@ -16,7 +16,7 @@ package appeng.api.networking.crafting;
 import java.util.concurrent.Future;
 
 import appeng.api.config.CraftingMode;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.crafting.MECraftingInventory;
@@ -72,5 +72,5 @@ public interface ICraftingJob {
      * Begins crafting on a CPU cluster
      */
     default void startCrafting(final MECraftingInventory storage, final ICraftingCPU craftingCPUCluster,
-            final BaseActionSourceV2 src) {}
+            final BaseActionSource src) {}
 }

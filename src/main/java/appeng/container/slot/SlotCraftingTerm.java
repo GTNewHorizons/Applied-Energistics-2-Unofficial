@@ -22,7 +22,7 @@ import net.minecraft.item.crafting.IRecipe;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.data.IAEItemStack;
@@ -42,12 +42,12 @@ public class SlotCraftingTerm extends AppEngCraftingSlot {
     private final IInventory craftInv;
     private final IInventory pattern;
 
-    private final BaseActionSourceV2 mySrc;
+    private final BaseActionSource mySrc;
     private final IEnergySource energySrc;
     private final IStorageMonitorable storage;
     private final IContainerCraftingPacket container;
 
-    public SlotCraftingTerm(final EntityPlayer player, final BaseActionSourceV2 mySrc, final IEnergySource energySrc,
+    public SlotCraftingTerm(final EntityPlayer player, final BaseActionSource mySrc, final IEnergySource energySrc,
             final IStorageMonitorable storage, final IInventory cMatrix, final IInventory secondMatrix,
             final IInventory output, final int x, final int y, final IContainerCraftingPacket ccp) {
         super(player, cMatrix, output, 0, x, y);

@@ -30,8 +30,8 @@ import appeng.api.networking.events.MENetworkCellArrayUpdate;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
-import appeng.api.networking.security.BaseActionSourceV2;
-import appeng.api.networking.security.MachineSourceV2;
+import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
@@ -76,7 +76,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     private final AppEngInternalInventory inv = new AppEngInternalInventory(this, INV_SIZE);
     private final ICellHandler[] handlersBySlot = new ICellHandler[INV_SIZE];
     private final MEInventoryHandler<IAEItemStack>[] invBySlot = new MEInventoryHandler[INV_SIZE];
-    private final BaseActionSourceV2 mySrc;
+    private final BaseActionSource mySrc;
     private boolean isCached = false;
     private List<MEInventoryHandler<?>> items = new ArrayList<>(INV_SIZE);
     private List<MEInventoryHandler<?>> fluids = new ArrayList<>(INV_SIZE);
@@ -91,7 +91,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     private boolean wasActive = false;
 
     public TileDrive() {
-        this.mySrc = new MachineSourceV2(this);
+        this.mySrc = new MachineSource(this);
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
     }
 

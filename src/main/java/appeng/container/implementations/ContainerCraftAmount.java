@@ -20,9 +20,9 @@ import net.minecraft.world.World;
 
 import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.IGrid;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
-import appeng.api.networking.security.PlayerSourceV2;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.container.AEBaseContainer;
@@ -58,8 +58,8 @@ public class ContainerCraftAmount extends AEBaseContainer {
         return this.getPlayerInv().player.worldObj;
     }
 
-    public BaseActionSourceV2 getActionSrc() {
-        return new PlayerSourceV2(this.getPlayerInv().player, (IActionHost) this.getTarget());
+    public BaseActionSource getActionSrc() {
+        return new PlayerSource(this.getPlayerInv().player, (IActionHost) this.getTarget());
     }
 
     public Slot getCraftingItem() {

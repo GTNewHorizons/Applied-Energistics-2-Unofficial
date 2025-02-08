@@ -14,7 +14,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.networking.IGridNode;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 
 public interface IContainerCraftingPacket {
 
@@ -32,7 +32,7 @@ public interface IContainerCraftingPacket {
     /**
      * @return who are we?
      */
-    BaseActionSourceV2 getActionSource();
+    BaseActionSource getActionSource();
 
     /**
      * @return consume items?

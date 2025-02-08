@@ -13,7 +13,7 @@ package appeng.integration.modules.helpers;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
@@ -25,13 +25,13 @@ public class FactorizationHandler implements IExternalStorageHandler {
 
     @Override
     public boolean canHandle(final TileEntity te, final ForgeDirection d, final StorageChannel chan,
-            final BaseActionSourceV2 mySrc) {
+            final BaseActionSource mySrc) {
         return chan == StorageChannel.ITEMS && FZ.instance.isBarrel(te);
     }
 
     @Override
     public IMEInventory getInventory(final TileEntity te, final ForgeDirection d, final StorageChannel chan,
-            final BaseActionSourceV2 src) {
+            final BaseActionSource src) {
         if (chan == StorageChannel.ITEMS) {
             return new MEMonitorIInventory(new IMEAdaptor(FZ.instance.getFactorizationBarrel(te), src));
         }

@@ -22,7 +22,7 @@ import net.minecraftforge.fluids.FluidStack;
 import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
@@ -94,7 +94,7 @@ public interface IStorageHelper {
      * @return items that successfully extracted.
      */
     IAEItemStack poweredExtraction(IEnergySource energy, IMEInventory<IAEItemStack> cell, IAEItemStack request,
-            BaseActionSourceV2 src);
+            BaseActionSource src);
 
     /**
      * use energy from energy, to inject input items into cell, at the request of src
@@ -106,5 +106,5 @@ public interface IStorageHelper {
      * @return items that failed to insert.
      */
     IAEItemStack poweredInsert(IEnergySource energy, IMEInventory<IAEItemStack> cell, IAEItemStack input,
-            BaseActionSourceV2 src);
+            BaseActionSource src);
 }

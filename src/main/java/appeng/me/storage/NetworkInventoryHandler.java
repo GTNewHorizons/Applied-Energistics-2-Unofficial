@@ -21,10 +21,10 @@ import appeng.api.config.Actionable;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.ISecurityGrid;
-import appeng.api.networking.security.MachineSourceV2;
-import appeng.api.networking.security.PlayerSourceV2;
+import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
@@ -87,7 +87,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     }
 
     @Override
-    public T injectItems(T input, final Actionable type, final BaseActionSourceV2 src) {
+    public T injectItems(T input, final Actionable type, final BaseActionSource src) {
         if (this.diveList(this, type)) {
             return input;
         }
@@ -206,14 +206,14 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
         return false;
     }
 
-    private boolean testPermission(final BaseActionSourceV2 src, final SecurityPermissions permission) {
+    private boolean testPermission(final BaseActionSource src, final SecurityPermissions permission) {
         if (src.isPlayer()) {
-            if (!this.security.hasPermission(((PlayerSourceV2) src).getPlayer(), permission)) {
+            if (!this.security.hasPermission(((PlayerSource) src).getPlayer(), permission)) {
                 return true;
             }
         } else if (src.isMachine()) {
             if (this.security.isAvailable()) {
-                final IGridNode n = ((MachineSourceV2) src).getActionHost().getActionableNode();
+                final IGridNode n = ((MachineSource) src).getActionHost().getActionableNode();
                 if (n == null) {
                     return true;
                 }
@@ -253,7 +253,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     }
 
     @Override
-    public T extractItems(T request, final Actionable mode, final BaseActionSourceV2 src) {
+    public T extractItems(T request, final Actionable mode, final BaseActionSource src) {
         if (this.diveList(this, mode)) {
             return null;
         }

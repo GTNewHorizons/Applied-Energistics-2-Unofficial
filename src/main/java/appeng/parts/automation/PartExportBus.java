@@ -32,8 +32,8 @@ import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.networking.energy.IEnergyGrid;
-import appeng.api.networking.security.BaseActionSourceV2;
-import appeng.api.networking.security.MachineSourceV2;
+import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
@@ -58,7 +58,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class PartExportBus extends PartSharedItemBus implements ICraftingRequester {
 
     private final MultiCraftingTracker craftingTracker = new MultiCraftingTracker(this, 9);
-    private final BaseActionSourceV2 mySrc;
+    private final BaseActionSource mySrc;
     private long itemToSend = 1;
     private boolean didSomething = false;
     private int nextSlot = 0;
@@ -71,7 +71,7 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
         this.getConfigManager().registerSetting(Settings.CRAFT_ONLY, YesNo.NO);
         this.getConfigManager().registerSetting(Settings.SCHEDULING_MODE, SchedulingMode.DEFAULT);
-        this.mySrc = new MachineSourceV2(this);
+        this.mySrc = new MachineSource(this);
     }
 
     @Override

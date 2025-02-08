@@ -47,7 +47,7 @@ import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.networking.storage.IStackWatcher;
 import appeng.api.networking.storage.IStackWatcherHost;
@@ -299,7 +299,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
 
     @Override
     public void onStackChange(final IItemList o, final IAEStack fullStack, final IAEStack diffStack,
-            final BaseActionSourceV2 src, final StorageChannel chan) {
+            final BaseActionSource src, final StorageChannel chan) {
         if (chan == StorageChannel.ITEMS && fullStack.equals(this.config.getAEStackInSlot(0))
                 && this.getInstalledUpgrades(Upgrades.FUZZY) == 0) {
             this.lastReportedValue = fullStack.getStackSize();
@@ -354,7 +354,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
 
     @Override
     public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
-            final BaseActionSourceV2 actionSource) {
+            final BaseActionSource actionSource) {
         if (canDoWork()) {
             if (delayedUpdatesQueued) {
                 delayedUpdatesQueued = false;

@@ -16,7 +16,7 @@ package appeng.api.storage;
 import javax.annotation.Nonnull;
 
 import appeng.api.config.Actionable;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
@@ -41,7 +41,7 @@ public interface IMEInventory<StackType extends IAEStack> {
      * @param src   action source
      * @return returns the number of items not added.
      */
-    StackType injectItems(StackType input, Actionable type, BaseActionSourceV2 src);
+    StackType injectItems(StackType input, Actionable type, BaseActionSource src);
 
     /**
      * Extract the specified item from the ME Inventory
@@ -50,7 +50,7 @@ public interface IMEInventory<StackType extends IAEStack> {
      * @param mode    simulate, or perform action?
      * @return returns the number of items extracted, null
      */
-    StackType extractItems(StackType request, Actionable mode, BaseActionSourceV2 src);
+    StackType extractItems(StackType request, Actionable mode, BaseActionSource src);
 
     /**
      * Request a full report of all available items, storage.

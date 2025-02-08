@@ -30,7 +30,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import appeng.api.implementations.parts.IPartStorageMonitor;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IStackWatcher;
 import appeng.api.networking.storage.IStackWatcherHost;
 import appeng.api.parts.IPartRenderHelper;
@@ -343,7 +343,7 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
 
     @Override
     public void onStackChange(final IItemList o, final IAEStack fullStack, final IAEStack diffStack,
-            final BaseActionSourceV2 src, final StorageChannel chan) {
+            final BaseActionSource src, final StorageChannel chan) {
         if (this.configuredItem != null) {
             if (fullStack == null) {
                 this.configuredItem.setStackSize(0);

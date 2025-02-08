@@ -16,7 +16,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.Actionable;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
@@ -36,7 +36,7 @@ public class MEIInventoryWrapper implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack injectItems(final IAEItemStack iox, final Actionable mode, final BaseActionSourceV2 src) {
+    public IAEItemStack injectItems(final IAEItemStack iox, final Actionable mode, final BaseActionSource src) {
         final ItemStack input = iox.getItemStack();
 
         if (this.adaptor != null) {
@@ -104,7 +104,7 @@ public class MEIInventoryWrapper implements IMEInventory<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSourceV2 src) {
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
         final ItemStack Req = request.getItemStack();
 
         int request_stackSize = Req.stackSize;

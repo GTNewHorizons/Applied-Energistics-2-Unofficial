@@ -18,7 +18,7 @@ import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.packets.PacketPatternSlot;
@@ -29,7 +29,7 @@ public class SlotPatternTerm extends SlotCraftingTerm {
     private final int groupNum;
     private final IOptionalSlotHost host;
 
-    public SlotPatternTerm(final EntityPlayer player, final BaseActionSourceV2 mySrc, final IEnergySource energySrc,
+    public SlotPatternTerm(final EntityPlayer player, final BaseActionSource mySrc, final IEnergySource energySrc,
             final IStorageMonitorable storage, final IInventory cMatrix, final IInventory secondMatrix,
             final IInventory output, final int x, final int y, final IOptionalSlotHost h, final int groupNumber,
             final IContainerCraftingPacket c) {

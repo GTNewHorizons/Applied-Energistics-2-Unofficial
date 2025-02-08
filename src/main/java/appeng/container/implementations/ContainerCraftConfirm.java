@@ -33,9 +33,9 @@ import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingJob;
 import appeng.api.networking.crafting.ICraftingLink;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
-import appeng.api.networking.security.PlayerSourceV2;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.ITerminalHost;
@@ -341,8 +341,8 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         }
     }
 
-    private BaseActionSourceV2 getActionSrc() {
-        return new PlayerSourceV2(this.getPlayerInv().player, (IActionHost) this.getTarget());
+    private BaseActionSource getActionSrc() {
+        return new PlayerSource(this.getPlayerInv().player, (IActionHost) this.getTarget());
     }
 
     @Override

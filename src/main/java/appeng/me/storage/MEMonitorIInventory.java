@@ -25,7 +25,7 @@ import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.StorageFilter;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
@@ -42,7 +42,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
     private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
     private final HashMap<IMEMonitorHandlerReceiver<IAEItemStack>, Object> listeners = new HashMap<>();
     private final NavigableMap<Integer, CachedItemStack> memory;
-    private BaseActionSourceV2 mySource;
+    private BaseActionSource mySource;
     private StorageFilter mode = StorageFilter.EXTRACTABLE_ONLY;
 
     public MEMonitorIInventory(final InventoryAdaptor adaptor) {
@@ -61,7 +61,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSourceV2 src) {
+    public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSource src) {
         ItemStack out = null;
 
         if (type == Actionable.SIMULATE) {
@@ -85,7 +85,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack extractItems(final IAEItemStack request, final Actionable type, final BaseActionSourceV2 src) {
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable type, final BaseActionSource src) {
         ItemStack out = null;
         int toExtract = (int) Math.min(Integer.MAX_VALUE, request.getStackSize());
 
@@ -287,11 +287,11 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
         this.mode = mode;
     }
 
-    private BaseActionSourceV2 getActionSource() {
+    private BaseActionSource getActionSource() {
         return this.mySource;
     }
 
-    public void setActionSource(final BaseActionSourceV2 mySource) {
+    public void setActionSource(final BaseActionSource mySource) {
         this.mySource = mySource;
     }
 

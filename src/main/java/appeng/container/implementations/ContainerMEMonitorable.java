@@ -42,7 +42,7 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.parts.IPart;
 import appeng.api.storage.IMEMonitor;
@@ -324,7 +324,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     @Override
     public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
-            final BaseActionSourceV2 source) {
+            final BaseActionSource source) {
         for (final IAEItemStack stack : change) {
             this.items.add(stack);
         }

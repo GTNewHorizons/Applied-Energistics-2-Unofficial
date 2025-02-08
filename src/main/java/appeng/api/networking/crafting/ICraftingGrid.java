@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSet;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridCache;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 
 public interface ICraftingGrid extends IGridCache {
@@ -55,7 +55,7 @@ public interface ICraftingGrid extends IGridCache {
      * @return a future which will at an undetermined point in the future get you the {@link ICraftingJob} do not wait
      *         on this, your be waiting forever.
      */
-    Future<ICraftingJob> beginCraftingJob(World world, IGrid grid, BaseActionSourceV2 actionSrc, IAEItemStack craftWhat,
+    Future<ICraftingJob> beginCraftingJob(World world, IGrid grid, BaseActionSource actionSrc, IAEItemStack craftWhat,
             ICraftingCallback callback);
 
     /**
@@ -74,7 +74,7 @@ public interface ICraftingGrid extends IGridCache {
      *         return state.
      */
     ICraftingLink submitJob(ICraftingJob job, ICraftingRequester requestingMachine, ICraftingCPU target,
-            boolean prioritizePower, BaseActionSourceV2 src);
+            boolean prioritizePower, BaseActionSource src);
 
     /**
      * @return list of all the crafting cpus on the grid

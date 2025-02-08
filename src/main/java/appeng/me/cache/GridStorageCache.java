@@ -28,11 +28,11 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.IGridStorage;
 import appeng.api.networking.events.MENetworkCellArrayUpdate;
 import appeng.api.networking.events.MENetworkEventSubscribe;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.ISecurityGrid;
 import appeng.api.networking.security.InternalActionSource;
-import appeng.api.networking.security.MachineSourceV2;
+import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IStackWatcher;
 import appeng.api.networking.storage.IStackWatcherHost;
 import appeng.api.networking.storage.IStorageGrid;
@@ -184,9 +184,9 @@ public class GridStorageCache implements IStorageGrid {
             this.inactiveCellProviders.remove(cc);
             this.activeCellProviders.add(cc);
 
-            BaseActionSourceV2 actionSrc = new InternalActionSource();
+            BaseActionSource actionSrc = new InternalActionSource();
             if (cc instanceof IActionHost) {
-                actionSrc = new MachineSourceV2((IActionHost) cc);
+                actionSrc = new MachineSource((IActionHost) cc);
             }
 
             for (final IMEInventoryHandler<IAEItemStack> h : cc.getCellArray(StorageChannel.ITEMS)) {
@@ -206,10 +206,10 @@ public class GridStorageCache implements IStorageGrid {
             this.activeCellProviders.remove(cc);
             this.inactiveCellProviders.add(cc);
 
-            BaseActionSourceV2 actionSrc = new InternalActionSource();
+            BaseActionSource actionSrc = new InternalActionSource();
 
             if (cc instanceof IActionHost) {
-                actionSrc = new MachineSourceV2((IActionHost) cc);
+                actionSrc = new MachineSource((IActionHost) cc);
             }
 
             for (final IMEInventoryHandler<IAEItemStack> h : cc.getCellArray(StorageChannel.ITEMS)) {
@@ -258,7 +258,7 @@ public class GridStorageCache implements IStorageGrid {
     }
 
     private void postChangesToNetwork(final StorageChannel chan, final int upOrDown, final IItemList availableItems,
-            final BaseActionSourceV2 src) {
+            final BaseActionSource src) {
         switch (chan) {
             case FLUIDS -> this.fluidMonitor.postChange(upOrDown > 0, availableItems, src);
             case ITEMS -> this.itemMonitor.postChange(upOrDown > 0, availableItems, src);
@@ -306,7 +306,7 @@ public class GridStorageCache implements IStorageGrid {
 
     @Override
     public void postAlterationOfStoredItems(final StorageChannel chan, final Iterable<? extends IAEStack> input,
-            final BaseActionSourceV2 src) {
+            final BaseActionSource src) {
         if (chan == StorageChannel.ITEMS) {
             this.itemMonitor.postChange(true, (Iterable<IAEItemStack>) input, src);
         } else if (chan == StorageChannel.FLUIDS) {
@@ -349,10 +349,10 @@ public class GridStorageCache implements IStorageGrid {
         final StorageChannel channel;
         final int up_or_down;
         final IItemList list;
-        final BaseActionSourceV2 src;
+        final BaseActionSource src;
 
         public CellChangeTrackerRecord(final StorageChannel channel, final int i,
-                final IMEInventoryHandler<? extends IAEStack> h, final BaseActionSourceV2 actionSrc) {
+                final IMEInventoryHandler<? extends IAEStack> h, final BaseActionSource actionSrc) {
             this.channel = channel;
             this.up_or_down = i;
             this.src = actionSrc;
@@ -378,7 +378,7 @@ public class GridStorageCache implements IStorageGrid {
         final List<CellChangeTrackerRecord> data = new LinkedList<>();
 
         public void postChanges(final StorageChannel channel, final int i,
-                final IMEInventoryHandler<? extends IAEStack> h, final BaseActionSourceV2 actionSrc) {
+                final IMEInventoryHandler<? extends IAEStack> h, final BaseActionSource actionSrc) {
             this.data.add(new CellChangeTrackerRecord(channel, i, h, actionSrc));
         }
 

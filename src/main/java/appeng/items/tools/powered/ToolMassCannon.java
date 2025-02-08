@@ -41,7 +41,7 @@ import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IStorageCell;
-import appeng.api.networking.security.PlayerSourceV2;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventory;
@@ -148,7 +148,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
                         }
 
                         ammo.stackSize = 1;
-                        aeAmmo = inv.extractItems(aeAmmo, Actionable.MODULATE, new PlayerSourceV2(p, null));
+                        aeAmmo = inv.extractItems(aeAmmo, Actionable.MODULATE, new PlayerSource(p, null));
                         if (aeAmmo == null) {
                             return item;
                         }

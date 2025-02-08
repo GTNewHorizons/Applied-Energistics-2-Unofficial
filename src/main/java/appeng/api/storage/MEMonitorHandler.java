@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableList;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
@@ -63,7 +63,7 @@ public class MEMonitorHandler<StackType extends IAEStack> implements IMEMonitor<
     }
 
     @Override
-    public StackType injectItems(final StackType input, final Actionable mode, final BaseActionSourceV2 src) {
+    public StackType injectItems(final StackType input, final Actionable mode, final BaseActionSource src) {
         if (mode == Actionable.SIMULATE) {
             return this.getHandler().injectItems(input, mode, src);
         }
@@ -75,7 +75,7 @@ public class MEMonitorHandler<StackType extends IAEStack> implements IMEMonitor<
     }
 
     private StackType monitorDifference(final IAEStack original, final StackType leftOvers, final boolean extraction,
-            final BaseActionSourceV2 src) {
+            final BaseActionSource src) {
         final StackType diff = (StackType) original.copy();
 
         if (extraction) {
@@ -91,11 +91,11 @@ public class MEMonitorHandler<StackType extends IAEStack> implements IMEMonitor<
         return leftOvers;
     }
 
-    protected void postChangesToListeners(final Iterable<StackType> changes, final BaseActionSourceV2 src) {
+    protected void postChangesToListeners(final Iterable<StackType> changes, final BaseActionSource src) {
         this.notifyListenersOfChange(changes, src);
     }
 
-    protected void notifyListenersOfChange(final Iterable<StackType> diff, final BaseActionSourceV2 src) {
+    protected void notifyListenersOfChange(final Iterable<StackType> diff, final BaseActionSource src) {
         this.hasChanged = true; // need to update the cache.
         final Iterator<Entry<IMEMonitorHandlerReceiver<StackType>, Object>> i = this.getListeners();
         while (i.hasNext()) {
@@ -114,7 +114,7 @@ public class MEMonitorHandler<StackType extends IAEStack> implements IMEMonitor<
     }
 
     @Override
-    public StackType extractItems(final StackType request, final Actionable mode, final BaseActionSourceV2 src) {
+    public StackType extractItems(final StackType request, final Actionable mode, final BaseActionSource src) {
         if (mode == Actionable.SIMULATE) {
             return this.getHandler().extractItems(request, mode, src);
         }

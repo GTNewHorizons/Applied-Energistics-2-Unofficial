@@ -89,11 +89,11 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.ISecurityGrid;
-import appeng.api.networking.security.MachineSourceV2;
-import appeng.api.networking.security.PlayerSourceV2;
+import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
@@ -1262,7 +1262,7 @@ public class Platform {
     }
 
     public static <StackType extends IAEStack> StackType poweredExtraction(final IEnergySource energy,
-            final IMEInventory<StackType> cell, final StackType request, final BaseActionSourceV2 src) {
+            final IMEInventory<StackType> cell, final StackType request, final BaseActionSource src) {
         final StackType possible = cell.extractItems((StackType) request.copy(), Actionable.SIMULATE, src);
 
         long retrieved = 0;
@@ -1281,7 +1281,7 @@ public class Platform {
             final StackType ret = cell.extractItems(possible, Actionable.MODULATE, src);
 
             if (ret != null && src.isPlayer()) {
-                Stats.ItemsExtracted.addToPlayer(((PlayerSourceV2) src).getPlayer(), (int) ret.getStackSize());
+                Stats.ItemsExtracted.addToPlayer(((PlayerSource) src).getPlayer(), (int) ret.getStackSize());
             }
 
             return ret;
@@ -1291,7 +1291,7 @@ public class Platform {
     }
 
     public static <StackType extends IAEStack> StackType poweredInsert(final IEnergySource energy,
-            final IMEInventory<StackType> cell, final StackType input, final BaseActionSourceV2 src) {
+            final IMEInventory<StackType> cell, final StackType input, final BaseActionSource src) {
         final StackType possible = cell.injectItems((StackType) input.copy(), Actionable.SIMULATE, src);
 
         long stored = input.getStackSize();
@@ -1320,7 +1320,7 @@ public class Platform {
 
                 if (src.isPlayer()) {
                     final long diff = original - split.getStackSize();
-                    Stats.ItemsInserted.addToPlayer(((PlayerSourceV2) src).getPlayer(), (int) diff);
+                    Stats.ItemsInserted.addToPlayer(((PlayerSource) src).getPlayer(), (int) diff);
                 }
 
                 return split;
@@ -1330,7 +1330,7 @@ public class Platform {
 
             if (src.isPlayer()) {
                 final long diff = ret == null ? input.getStackSize() : input.getStackSize() - ret.getStackSize();
-                Stats.ItemsInserted.addToPlayer(((PlayerSourceV2) src).getPlayer(), (int) diff);
+                Stats.ItemsInserted.addToPlayer(((PlayerSource) src).getPlayer(), (int) diff);
             }
 
             return ret;
@@ -1341,7 +1341,7 @@ public class Platform {
 
     @SuppressWarnings("unchecked")
     public static void postChanges(final IStorageGrid gs, final ItemStack removed, final ItemStack added,
-            final BaseActionSourceV2 src) {
+            final BaseActionSource src) {
         final IItemList<IAEItemStack> itemChanges = AEApi.instance().storage().createItemList();
         final IItemList<IAEFluidStack> fluidChanges = AEApi.instance().storage().createFluidList();
         IMEInventory<IAEItemStack> myItems = null;
@@ -1385,7 +1385,7 @@ public class Platform {
     }
 
     public static <T extends IAEStack<T>> void postListChanges(final IItemList<T> before, final IItemList<T> after,
-            final IMEMonitorHandlerReceiver<T> meMonitorPassthrough, final BaseActionSourceV2 source) {
+            final IMEMonitorHandlerReceiver<T> meMonitorPassthrough, final BaseActionSource source) {
         final LinkedList<T> changes = new LinkedList<>();
 
         for (final T is : before) {
@@ -1557,13 +1557,13 @@ public class Platform {
         player.rotationYaw = player.prevCameraYaw = player.cameraYaw = yaw;
     }
 
-    public static boolean canAccess(final AENetworkProxy gridProxy, final BaseActionSourceV2 src) {
+    public static boolean canAccess(final AENetworkProxy gridProxy, final BaseActionSource src) {
         try {
             if (src.isPlayer()) {
                 return gridProxy.getSecurity()
-                        .hasPermission(((PlayerSourceV2) src).getPlayer(), SecurityPermissions.BUILD);
+                        .hasPermission(((PlayerSource) src).getPlayer(), SecurityPermissions.BUILD);
             } else if (src.isMachine()) {
-                final IActionHost te = ((MachineSourceV2) src).getActionHost();
+                final IActionHost te = ((MachineSource) src).getActionHost();
                 final IGridNode n = te.getActionableNode();
                 if (n == null) {
                     return false;
@@ -1579,7 +1579,7 @@ public class Platform {
         }
     }
 
-    public static ItemStack extractItemsByRecipe(final IEnergySource energySrc, final BaseActionSourceV2 mySrc,
+    public static ItemStack extractItemsByRecipe(final IEnergySource energySrc, final BaseActionSource mySrc,
             final IMEMonitor<IAEItemStack> src, final World w, final IRecipe r, final ItemStack output,
             final InventoryCrafting ci, final ItemStack providedTemplate, final int slot,
             final IItemList<IAEItemStack> items, final Actionable realForFake,
@@ -1600,7 +1600,7 @@ public class Platform {
                 1);
     }
 
-    public static ItemStack extractItemsByRecipe(final IEnergySource energySrc, final BaseActionSourceV2 mySrc,
+    public static ItemStack extractItemsByRecipe(final IEnergySource energySrc, final BaseActionSource mySrc,
             final IMEMonitor<IAEItemStack> src, final World w, final IRecipe r, final ItemStack output,
             final InventoryCrafting ci, final ItemStack providedTemplate, final int slot,
             final IItemList<IAEItemStack> items, final Actionable realForFake,

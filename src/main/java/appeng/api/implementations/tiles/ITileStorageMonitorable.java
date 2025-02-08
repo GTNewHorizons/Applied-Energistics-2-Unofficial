@@ -15,7 +15,7 @@ package appeng.api.implementations.tiles;
 
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IStorageMonitorable;
 
 /**
@@ -23,5 +23,5 @@ import appeng.api.storage.IStorageMonitorable;
  */
 public interface ITileStorageMonitorable {
 
-    IStorageMonitorable getMonitorable(ForgeDirection side, BaseActionSourceV2 src);
+    IStorageMonitorable getMonitorable(ForgeDirection side, BaseActionSource src);
 }

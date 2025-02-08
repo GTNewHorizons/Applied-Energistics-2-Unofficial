@@ -14,7 +14,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
@@ -25,13 +25,13 @@ public class ExternalIInv implements IExternalStorageHandler {
 
     @Override
     public boolean canHandle(final TileEntity te, final ForgeDirection d, final StorageChannel channel,
-            final BaseActionSourceV2 mySrc) {
+            final BaseActionSource mySrc) {
         return channel == StorageChannel.ITEMS && te instanceof IInventory;
     }
 
     @Override
     public IMEInventory getInventory(final TileEntity te, final ForgeDirection d, final StorageChannel channel,
-            final BaseActionSourceV2 src) {
+            final BaseActionSource src) {
         final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, d);
 
         if (channel == StorageChannel.ITEMS && ad != null) {

@@ -29,7 +29,7 @@ import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -355,7 +355,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     }
 
     @Override
-    public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSourceV2 src) {
+    public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSource src) {
         return this.duality.getMonitorable(side, src, this);
     }
 

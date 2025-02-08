@@ -13,7 +13,7 @@ import appeng.api.config.IncludeExclude;
 import appeng.api.config.Upgrades;
 import appeng.api.exceptions.AppEngException;
 import appeng.api.implementations.items.IUpgradeModule;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
@@ -91,12 +91,12 @@ public class VoidCellInventory extends MEInventoryHandler<IAEItemStack> {
     }
 
     @Override
-    public IAEItemStack injectItems(IAEItemStack input, Actionable type, BaseActionSourceV2 src) {
+    public IAEItemStack injectItems(IAEItemStack input, Actionable type, BaseActionSource src) {
         return this.canAccept(input) ? null : input;
     }
 
     @Override
-    public IAEItemStack extractItems(IAEItemStack request, Actionable mode, BaseActionSourceV2 src) {
+    public IAEItemStack extractItems(IAEItemStack request, Actionable mode, BaseActionSource src) {
         return null;
     }
 

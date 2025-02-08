@@ -27,7 +27,7 @@ import com.google.common.collect.Lists;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.events.MENetworkStorageEvent;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
@@ -79,7 +79,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
-    public T extractItems(final T request, final Actionable mode, final BaseActionSourceV2 src) {
+    public T extractItems(final T request, final Actionable mode, final BaseActionSource src) {
         if (mode == Actionable.SIMULATE) {
             return this.getHandler().extractItems(request, mode, src);
         }
@@ -133,7 +133,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
-    public T injectItems(final T input, final Actionable mode, final BaseActionSourceV2 src) {
+    public T injectItems(final T input, final Actionable mode, final BaseActionSource src) {
         if (mode == Actionable.SIMULATE) {
             return this.getHandler().injectItems(input, mode, src);
         }
@@ -184,7 +184,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     private T monitorDifference(final IAEStack original, final T leftOvers, final boolean extraction,
-            final BaseActionSourceV2 src) {
+            final BaseActionSource src) {
         final T diff = (T) original.copy();
 
         if (extraction) {
@@ -200,7 +200,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         return leftOvers;
     }
 
-    private void notifyListenersOfChange(final Iterable<T> diff, final BaseActionSourceV2 src) {
+    private void notifyListenersOfChange(final Iterable<T> diff, final BaseActionSource src) {
         this.hasChanged = true;
         final Iterator<Entry<IMEMonitorHandlerReceiver<T>, Object>> i = this.getListeners();
 
@@ -215,11 +215,11 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         }
     }
 
-    private void postChangesToListeners(final Iterable<T> changes, final BaseActionSourceV2 src) {
+    private void postChangesToListeners(final Iterable<T> changes, final BaseActionSource src) {
         this.postChange(true, changes, src);
     }
 
-    protected void postChange(final boolean add, final Iterable<T> changes, final BaseActionSourceV2 src) {
+    protected void postChange(final boolean add, final Iterable<T> changes, final BaseActionSource src) {
         if (localDepthSemaphore > 0 || GLOBAL_DEPTH.contains(this)) {
             return;
         }

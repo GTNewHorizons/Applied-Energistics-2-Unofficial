@@ -17,7 +17,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.IAppEngApi;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 
 /**
  * A Registry of External Storage handlers.
@@ -41,5 +41,5 @@ public interface IExternalStorageRegistry {
      * @return the handler for a given tile / forge direction
      */
     IExternalStorageHandler getHandler(TileEntity te, ForgeDirection opposite, StorageChannel channel,
-            BaseActionSourceV2 mySrc);
+            BaseActionSource mySrc);
 }

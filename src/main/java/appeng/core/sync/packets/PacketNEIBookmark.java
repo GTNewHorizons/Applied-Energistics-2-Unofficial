@@ -14,7 +14,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.container.implementations.ContainerMEMonitorable;
@@ -65,7 +65,7 @@ public class PacketNEIBookmark extends AppEngPacket {
             final IMEMonitor<IAEItemStack> monitor = monitorable.getMonitor();
             if (monitor != null) {
                 final IEnergySource energy = monitorable.getPowerSource();
-                final BaseActionSourceV2 actionSource = monitorable.getActionSource();
+                final BaseActionSource actionSource = monitorable.getActionSource();
 
                 final AEItemStack request = AEItemStack.create(bookmarkItem);
                 final IAEItemStack out = Platform.poweredExtraction(energy, monitor, request, actionSource);

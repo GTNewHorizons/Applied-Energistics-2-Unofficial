@@ -31,7 +31,7 @@ import appeng.api.config.Upgrades;
 import appeng.api.exceptions.AppEngException;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.implementations.items.IUpgradeModule;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
@@ -190,7 +190,7 @@ public class CellInventory implements ICellInventory {
     }
 
     @Override
-    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSourceV2 src) {
+    public IAEItemStack injectItems(final IAEItemStack input, final Actionable mode, final BaseActionSource src) {
         if (input == null) {
             return null;
         }
@@ -300,7 +300,7 @@ public class CellInventory implements ICellInventory {
     }
 
     @Override
-    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSourceV2 src) {
+    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
         if (request == null) {
             return null;
         }

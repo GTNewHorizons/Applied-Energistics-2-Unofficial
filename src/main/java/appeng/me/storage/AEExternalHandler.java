@@ -14,7 +14,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.implementations.tiles.ITileStorageMonitorable;
-import appeng.api.networking.security.BaseActionSourceV2;
+import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IStorageMonitorable;
@@ -27,7 +27,7 @@ public class AEExternalHandler implements IExternalStorageHandler {
 
     @Override
     public boolean canHandle(final TileEntity te, final ForgeDirection d, final StorageChannel channel,
-            final BaseActionSourceV2 mySrc) {
+            final BaseActionSource mySrc) {
         if (channel == StorageChannel.ITEMS && te instanceof ITileStorageMonitorable) {
             return ((ITileStorageMonitorable) te).getMonitorable(d, mySrc) != null;
         }
@@ -37,7 +37,7 @@ public class AEExternalHandler implements IExternalStorageHandler {
 
     @Override
     public IMEInventory getInventory(final TileEntity te, final ForgeDirection d, final StorageChannel channel,
-            final BaseActionSourceV2 src) {
+            final BaseActionSource src) {
         if (te instanceof TileCondenser) {
             if (channel == StorageChannel.ITEMS) {
                 return new VoidItemInventory((TileCondenser) te);
