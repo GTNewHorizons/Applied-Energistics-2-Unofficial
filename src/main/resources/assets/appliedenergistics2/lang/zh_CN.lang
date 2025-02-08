@@ -257,6 +257,7 @@ gui.appliedenergistics2.ToCraftRequests=合成次数
 gui.appliedenergistics2.CraftingPlan=合成计划
 gui.appliedenergistics2.Automatic=自动分配
 gui.appliedenergistics2.Start=开始
+gui.appliedenergistics2.StartWithFollow=开始并订阅
 gui.appliedenergistics2.Merge=合并
 gui.appliedenergistics2.Missing=缺失
 gui.appliedenergistics2.NoCraftingTreeReceived=未收到合成树

@@ -158,6 +158,7 @@ public enum GuiText {
     CraftingPlan,
     CalculatingWait,
     Start,
+    StartWithFollow,
     Merge,
     Bytes,
     Set,

@@ -151,6 +151,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     private GuiBridge OriginalGui;
     private GuiButton cancel;
     private GuiButton start;
+    private GuiButton startWithFollow;
     private GuiButton selectCPU;
     private GuiImgButton switchTallMode;
     private GuiSimpleImgButton takeScreenshot;
@@ -168,7 +169,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         this.craftingTree = new GuiCraftingTree(this, 9, 19, 203, 192);
         this.tallMode = AEConfig.instance.getConfigManager().getSetting(Settings.TERMINAL_STYLE) == TerminalStyle.TALL;
         recalculateScreenSize();
-
         scrollbar = new GuiScrollbar();
         this.setScrollBar(scrollbar);
 
@@ -224,6 +224,15 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 GuiText.Start.getLocal());
         this.start.enabled = false;
         this.buttonList.add(this.start);
+        this.startWithFollow = new GuiButton(
+                0,
+                this.guiLeft + (219 - 100) / 2,
+                this.guiTop + this.ySize - 25,
+                100,
+                20,
+                GuiText.StartWithFollow.getLocal());
+        this.startWithFollow.enabled = false;
+        this.buttonList.add(this.startWithFollow);
 
         this.selectCPU = new GuiButton(
                 0,
@@ -299,6 +308,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         cpuTable.drawScreen();
 
         this.start.enabled = !(this.ccc.hasNoCPU() || this.isSimulation());
+        this.startWithFollow.enabled = this.start.enabled;
         if (this.start.enabled) {
             CraftingCPUStatus selected = this.cpuTable.getContainer().getSelectedCPU();
             if (selected != null && this.ccc.cpuCraftingSameItem(selected)) {
@@ -907,6 +917,13 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         } else if (btn == this.start) {
             try {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.Start", "Start"));
+            } catch (final Throwable e) {
+                AELog.debug(e);
+            }
+        } else if (btn == this.startWithFollow) {
+            final String playerName = this.mc.thePlayer.getCommandSenderName();
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.StartWithFollow", playerName));
             } catch (final Throwable e) {
                 AELog.debug(e);
             }

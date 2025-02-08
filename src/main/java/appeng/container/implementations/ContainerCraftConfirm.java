@@ -293,6 +293,24 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         }
     }
 
+    public void startJob(String playerName) {
+        if (this.result != null && !this.isSimulation() && getGrid() != null) {
+            final ICraftingGrid cc = this.getGrid().getCache(ICraftingGrid.class);
+            CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
+            final ICraftingLink g = cc.submitJob(
+                    this.result,
+                    null,
+                    (selected == null) ? null : selected.getServerCluster(),
+                    true,
+                    this.getActionSrc());
+            selected.getServerCluster().togglePlayerFollowStatus(playerName);
+            this.setAutoStart(false);
+            if (g != null) {
+                this.switchToOriginalGUI();
+            }
+        }
+    }
+
     public void optimizePatterns() {
         // only V2 supported
         if (this.result instanceof CraftingJobV2 && !this.isSimulation()

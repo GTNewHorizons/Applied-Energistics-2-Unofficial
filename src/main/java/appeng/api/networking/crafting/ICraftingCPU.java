@@ -79,6 +79,14 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
     }
 
     /**
+     * When player name is follow this crafting will remove it from follow list </br>
+     * Otherwise will add it into follow list
+     * 
+     * @param name
+     */
+    public default void togglePlayerFollowStatus(String name) {}
+
+    /**
      * @param craftCompleteListener a callback that is called when task is complete
      */
     default void addOnCompleteListener(CraftCompleteListener craftCompleteListener) {}
