@@ -19,7 +19,7 @@ package appeng.api.networking.security;
 public class MachineSource implements BaseActionSource {
 
     /** The machine responsible for the action. */
-    public final IActionHost actionHost;
+    private final IActionHost actionHost;
 
     /**
      * Creates a new machine action source.
@@ -33,5 +33,9 @@ public class MachineSource implements BaseActionSource {
     @Override
     public boolean isMachine() {
         return true;
+    }
+
+    public IActionHost getActionHost() {
+        return this.actionHost;
     }
 }

@@ -344,7 +344,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
         }
 
         try {
-            EntityPlayer player = ((PlayerSource) src).player;
+            EntityPlayer player = ((PlayerSource) src).getPlayer();
             if (player != null) {
                 if (expected != null && expected.getItem() != null) {
                     IChatComponent missingDisplayName;

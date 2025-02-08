@@ -59,7 +59,7 @@ public class SecurityInventory implements IMEInventoryHandler<IAEItemStack> {
         if (src.isPlayer()) {
             try {
                 return this.securityTile.getProxy().getSecurity()
-                        .hasPermission(((PlayerSource) src).player, SecurityPermissions.SECURITY);
+                        .hasPermission(((PlayerSource) src).getPlayer(), SecurityPermissions.SECURITY);
             } catch (final GridAccessException e) {
                 // :P
             }

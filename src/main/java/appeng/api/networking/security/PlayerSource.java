@@ -21,10 +21,10 @@ import net.minecraft.entity.player.EntityPlayer;
 public class PlayerSource implements BaseActionSource {
 
     /** The player responsible for the action. */
-    public final EntityPlayer player;
+    private final EntityPlayer player;
 
     /** The machine or interface used to perform the action. */
-    public final IActionHost actionHost;
+    private final IActionHost actionHost;
 
     /**
      * Creates a new player action source.
@@ -40,5 +40,13 @@ public class PlayerSource implements BaseActionSource {
     @Override
     public boolean isPlayer() {
         return true;
+    }
+
+    public EntityPlayer getPlayer() {
+        return this.player;
+    }
+
+    public IActionHost getActionHost() {
+        return this.actionHost;
     }
 }

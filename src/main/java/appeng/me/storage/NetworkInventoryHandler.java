@@ -208,12 +208,12 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
 
     private boolean testPermission(final BaseActionSource src, final SecurityPermissions permission) {
         if (src.isPlayer()) {
-            if (!this.security.hasPermission(((PlayerSource) src).player, permission)) {
+            if (!this.security.hasPermission(((PlayerSource) src).getPlayer(), permission)) {
                 return true;
             }
         } else if (src.isMachine()) {
             if (this.security.isAvailable()) {
-                final IGridNode n = ((MachineSource) src).actionHost.getActionableNode();
+                final IGridNode n = ((MachineSource) src).getActionHost().getActionableNode();
                 if (n == null) {
                     return true;
                 }

@@ -1281,7 +1281,7 @@ public class Platform {
             final StackType ret = cell.extractItems(possible, Actionable.MODULATE, src);
 
             if (ret != null && src.isPlayer()) {
-                Stats.ItemsExtracted.addToPlayer(((PlayerSource) src).player, (int) ret.getStackSize());
+                Stats.ItemsExtracted.addToPlayer(((PlayerSource) src).getPlayer(), (int) ret.getStackSize());
             }
 
             return ret;
@@ -1320,7 +1320,7 @@ public class Platform {
 
                 if (src.isPlayer()) {
                     final long diff = original - split.getStackSize();
-                    Stats.ItemsInserted.addToPlayer(((PlayerSource) src).player, (int) diff);
+                    Stats.ItemsInserted.addToPlayer(((PlayerSource) src).getPlayer(), (int) diff);
                 }
 
                 return split;
@@ -1330,7 +1330,7 @@ public class Platform {
 
             if (src.isPlayer()) {
                 final long diff = ret == null ? input.getStackSize() : input.getStackSize() - ret.getStackSize();
-                Stats.ItemsInserted.addToPlayer(((PlayerSource) src).player, (int) diff);
+                Stats.ItemsInserted.addToPlayer(((PlayerSource) src).getPlayer(), (int) diff);
             }
 
             return ret;
@@ -1560,9 +1560,10 @@ public class Platform {
     public static boolean canAccess(final AENetworkProxy gridProxy, final BaseActionSource src) {
         try {
             if (src.isPlayer()) {
-                return gridProxy.getSecurity().hasPermission(((PlayerSource) src).player, SecurityPermissions.BUILD);
+                return gridProxy.getSecurity()
+                        .hasPermission(((PlayerSource) src).getPlayer(), SecurityPermissions.BUILD);
             } else if (src.isMachine()) {
-                final IActionHost te = ((MachineSource) src).actionHost;
+                final IActionHost te = ((MachineSource) src).getActionHost();
                 final IGridNode n = te.getActionableNode();
                 if (n == null) {
                     return false;

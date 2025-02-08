@@ -307,14 +307,14 @@ public class CraftingJob implements ICraftingJob, Runnable {
             final String actionSource;
 
             if (this.actionSrc instanceof MachineSource) {
-                final IActionHost machineSource = ((MachineSource) this.actionSrc).actionHost;
+                final IActionHost machineSource = ((MachineSource) this.actionSrc).getActionHost();
                 final IGridNode actionableNode = machineSource.getActionableNode();
                 final IGridHost machine = actionableNode.getMachine();
                 final DimensionalCoord location = actionableNode.getGridBlock().getLocation();
 
                 actionSource = String.format(LOG_MACHINE_SOURCE_DETAILS, machine, location);
             } else if (this.actionSrc instanceof PlayerSource source) {
-                final EntityPlayer player = source.player;
+                final EntityPlayer player = source.getPlayer();
 
                 actionSource = player.toString();
             } else {
