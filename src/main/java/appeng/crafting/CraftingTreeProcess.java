@@ -25,7 +25,6 @@ import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IItemList;
 import appeng.container.ContainerNull;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
@@ -260,15 +259,11 @@ public class CraftingTreeProcess {
         }
     }
 
-    void getPlan(final IItemList<IAEItemStack> plan) {
-        for (IAEItemStack i : this.details.getOutputs()) {
-            i = i.copy();
-            i.setCountRequestable(i.getStackSize() * this.crafts);
-            plan.addRequestable(i);
-        }
+    public Map<CraftingTreeNode, Long> getNodes() {
+        return this.nodes;
+    }
 
-        for (final CraftingTreeNode pro : this.nodes.keySet()) {
-            pro.getPlan(plan);
-        }
+    public long getCrafts() {
+        return this.crafts;
     }
 }

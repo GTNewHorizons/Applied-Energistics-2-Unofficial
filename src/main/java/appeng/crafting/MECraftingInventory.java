@@ -120,7 +120,8 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
 
         this.localCache = AEApi.instance().storage().createItemList();
         for (final IAEItemStack is : target.getStorageList()) {
-            this.localCache.add(target.extractItems(is, Actionable.SIMULATE, src));
+            IAEItemStack stack = target.extractItems(is, Actionable.SIMULATE, src);
+            if (stack != null) this.localCache.add(stack);
         }
 
         this.par = null;
@@ -344,7 +345,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
         }
 
         try {
-            EntityPlayer player = ((PlayerSource) src).player;
+            EntityPlayer player = ((PlayerSource) src).getPlayer();
             if (player != null) {
                 if (expected != null && expected.getItem() != null) {
                     IChatComponent missingDisplayName;

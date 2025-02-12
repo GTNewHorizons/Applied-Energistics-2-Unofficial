@@ -16,6 +16,7 @@ import appeng.crafting.v2.CraftingRequest;
 import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.util.item.ItemList;
 
 public class IgnoreMissingItemResolver implements CraftingRequestResolver<IAEItemStack> {
 
@@ -71,10 +72,12 @@ public class IgnoreMissingItemResolver implements CraftingRequestResolver<IAEIte
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
-            if (fulfilled > 0 && request.stack instanceof IAEItemStack) {
-                targetPlan.addRequestable(request.stack.copy().setCountRequestable(fulfilled));
+        public IItemList<IAEItemStack> createPlan() {
+            IItemList<IAEItemStack> plan = new ItemList();
+            if (fulfilled > 0 && request.stack != null) {
+                plan.addRequestable(request.stack.copy().setCountRequestable(fulfilled));
             }
+            return plan;
         }
 
         @Override

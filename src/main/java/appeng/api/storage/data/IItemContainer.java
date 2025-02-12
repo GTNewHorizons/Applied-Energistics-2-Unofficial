@@ -15,6 +15,8 @@ package appeng.api.storage.data;
 
 import java.util.Collection;
 
+import javax.annotation.Nonnull;
+
 import appeng.api.config.FuzzyMode;
 
 /**
@@ -27,11 +29,20 @@ import appeng.api.config.FuzzyMode;
 public interface IItemContainer<StackType extends IAEStack> {
 
     /**
-     * add a stack to the list, this will merge the stack with an item already in the list if found.
+     * Adds a stack to the list. If an identical stack is already present, the new stack will be merged with the
+     * existing one.
      *
-     * @param option added stack
+     * @param stack The stack to add. Cannot be null.
      */
-    void add(StackType option); // adds stack as is
+    void add(@Nonnull final StackType stack); // adds stack as is
+
+    /**
+     * Adds a list of stacks to the collection. Each stack will be merged with an existing one if found, or added if
+     * not.
+     *
+     * @param stacks A list of stacks to add. Cannot be null.
+     */
+    void addAll(@Nonnull final IItemList<StackType> stacks);
 
     /**
      * @param i compared item

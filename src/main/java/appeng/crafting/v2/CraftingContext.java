@@ -35,7 +35,6 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
-import appeng.api.storage.data.IItemList;
 import appeng.container.ContainerNull;
 import appeng.core.AEConfig;
 import appeng.crafting.MECraftingInventory;
@@ -394,11 +393,6 @@ public final class CraftingContext {
 
         @Override
         public void fullRefund(CraftingContext context) {
-            // no-op
-        }
-
-        @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
             // no-op
         }
 

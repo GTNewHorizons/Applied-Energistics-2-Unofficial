@@ -41,6 +41,7 @@ import appeng.core.AELog;
 import appeng.hooks.TickHandler;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.util.item.ItemList;
 
 public class CraftingJob implements ICraftingJob, Runnable {
 
@@ -241,10 +242,8 @@ public class CraftingJob implements ICraftingJob, Runnable {
     }
 
     @Override
-    public void populatePlan(final IItemList<IAEItemStack> plan) {
-        if (this.getTree() != null) {
-            this.getTree().getPlan(plan);
-        }
+    public IItemList<IAEItemStack> createPlan() {
+        return this.getTree() != null ? this.getTree().createPlan() : new ItemList();
     }
 
     @Override
@@ -307,14 +306,14 @@ public class CraftingJob implements ICraftingJob, Runnable {
             final String actionSource;
 
             if (this.actionSrc instanceof MachineSource) {
-                final IActionHost machineSource = ((MachineSource) this.actionSrc).via;
+                final IActionHost machineSource = ((MachineSource) this.actionSrc).getActionHost();
                 final IGridNode actionableNode = machineSource.getActionableNode();
                 final IGridHost machine = actionableNode.getMachine();
                 final DimensionalCoord location = actionableNode.getGridBlock().getLocation();
 
                 actionSource = String.format(LOG_MACHINE_SOURCE_DETAILS, machine, location);
             } else if (this.actionSrc instanceof PlayerSource source) {
-                final EntityPlayer player = source.player;
+                final EntityPlayer player = source.getPlayer();
 
                 actionSource = player.toString();
             } else {
