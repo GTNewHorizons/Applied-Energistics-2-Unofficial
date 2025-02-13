@@ -38,12 +38,12 @@ public class PartThroughputMonitor extends AbstractPartMonitor implements IGridT
         Minute("/m", 1_200),
         Hour("/h", 72_000);
 
-        String unit_str;
-        int unit_multi;
+        String label;
+        int totalTicks;
 
-        TimeUnit(String unit_str, int unit_multi) {
-            this.unit_multi = unit_multi;
-            this.unit_str = unit_str;
+        TimeUnit(String label, int totalTicks) {
+            this.totalTicks = totalTicks;
+            this.label = label;
         }
 
         public TimeUnit getNext() {
@@ -69,7 +69,7 @@ public class PartThroughputMonitor extends AbstractPartMonitor implements IGridT
     private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartThroughputMonitor_Colored;
     private static final CableBusTextures FRONT_COLORED_ICON_LOCKED = CableBusTextures.PartThroughputMonitor_Dark_Locked;
 
-    private TimeUnit TU;
+    private TimeUnit timeMode;
     private double itemNumsChange;
     private long lastStackSize;
 
@@ -78,7 +78,7 @@ public class PartThroughputMonitor extends AbstractPartMonitor implements IGridT
         super(is);
         this.itemNumsChange = 0;
         this.lastStackSize = -1;
-        this.TU = TimeUnit.Tick;
+        this.timeMode = TimeUnit.Tick;
     }
 
     @Override
@@ -99,26 +99,26 @@ public class PartThroughputMonitor extends AbstractPartMonitor implements IGridT
     @Override
     public void readFromNBT(final NBTTagCompound data) {
         super.readFromNBT(data);
-        this.TU = TimeUnit.fromOrdinal(data.getInteger("TU"));
+        this.timeMode = TimeUnit.fromOrdinal(data.getInteger("timeMode"));
     }
 
     @Override
     public void writeToNBT(final NBTTagCompound data) {
         super.writeToNBT(data);
-        data.setInteger("timeMode", this.TU.ordinal());
+        data.setInteger("timeMode", this.timeMode.ordinal());
     }
 
     @Override
     public void writeToStream(final ByteBuf data) throws IOException {
         super.writeToStream(data);
-        data.writeInt(this.TU.ordinal());
+        data.writeInt(this.timeMode.ordinal());
         data.writeDouble(this.itemNumsChange);
     }
 
     @Override
     public boolean readFromStream(final ByteBuf data) throws IOException {
         boolean needRedraw = super.readFromStream(data);
-        this.TU = TimeUnit.fromOrdinal(data.readInt());
+        this.timeMode = TimeUnit.fromOrdinal(data.readInt());
         this.itemNumsChange = data.readDouble();
         return needRedraw;
     }
@@ -137,7 +137,7 @@ public class PartThroughputMonitor extends AbstractPartMonitor implements IGridT
             return false;
         }
 
-        this.TU = this.TU.getNext();
+        this.timeMode = this.timeMode.getNext();
         this.host.markForUpdate();
 
         return true;
@@ -153,7 +153,7 @@ public class PartThroughputMonitor extends AbstractPartMonitor implements IGridT
 
         final String renderedStackSizeChange = (this.itemNumsChange > 0 ? "+" : "")
                 + (Platform.formatNumberDoubleRestrictedByWidth(this.itemNumsChange, 3))
-                + (this.TU.unit_str);
+                + (this.timeMode.label);
 
         final FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
         int width = fr.getStringWidth(renderedStackSize);
@@ -195,7 +195,7 @@ public class PartThroughputMonitor extends AbstractPartMonitor implements IGridT
             long nowStackSize = this.getDisplayed().getStackSize();
             if (this.lastStackSize != -1) {
                 long changeStackSize = nowStackSize - this.lastStackSize;
-                this.itemNumsChange = (changeStackSize * this.TU.unit_multi) / TicksSinceLastCall;
+                this.itemNumsChange = (changeStackSize * this.timeMode.totalTicks) / TicksSinceLastCall;
                 this.host.markForUpdate();
             }
             this.lastStackSize = nowStackSize;
