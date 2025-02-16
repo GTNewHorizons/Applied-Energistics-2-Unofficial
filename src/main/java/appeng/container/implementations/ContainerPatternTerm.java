@@ -567,7 +567,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                         * ((val & 2) != 0 ? -1 : 1));
     }
 
-    static boolean canMultiplyOrDivide(SlotFake[] slots, int mult) {
+    static boolean canMultiplyOrDivide(SlotFake[] slots, long mult) {
         if (mult > 0) {
             for (Slot s : slots) {
                 if (s.getStack() != null) {
@@ -589,7 +589,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         return false;
     }
 
-    static void multiplyOrDivideStacksInternal(SlotFake[] slots, int mult) {
+    static void multiplyOrDivideStacksInternal(SlotFake[] slots, long mult) {
         List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
         if (mult > 0) {
             for (final Slot s : enabledSlots) {
@@ -616,7 +616,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
      * 
      * @param multi Positive numbers are multiplied and negative numbers are divided
      */
-    public void multiplyOrDivideStacks(int multi) {
+    public void multiplyOrDivideStacks(long multi) {
         if (!isCraftingMode()) {
             if (canMultiplyOrDivide(this.craftingSlots, multi) && canMultiplyOrDivide(this.outputSlots, multi)) {
                 multiplyOrDivideStacksInternal(this.craftingSlots, multi);

@@ -20,7 +20,7 @@ import io.netty.buffer.Unpooled;
 public class PacketPatternValueSet extends AppEngPacket {
 
     private final GuiBridge originGui;
-    private final int amount;
+    private final long amount;
     private final int valueIndex;
 
     public PacketPatternValueSet(final ByteBuf stream) {
@@ -29,7 +29,7 @@ public class PacketPatternValueSet extends AppEngPacket {
         this.valueIndex = stream.readInt();
     }
 
-    public PacketPatternValueSet(int originalGui, int amount, int valueIndex) {
+    public PacketPatternValueSet(int originalGui, long amount, int valueIndex) {
         this.originGui = GuiBridge.values()[originalGui];
         this.amount = amount;
         this.valueIndex = valueIndex;
@@ -38,7 +38,7 @@ public class PacketPatternValueSet extends AppEngPacket {
 
         data.writeInt(this.getPacketID());
         data.writeInt(originalGui);
-        data.writeInt(this.amount);
+        data.writeLong(this.amount);
         data.writeInt(this.valueIndex);
 
         this.configureWrite(data);

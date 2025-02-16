@@ -80,7 +80,7 @@ public class GuiPatternMulti extends GuiAmount {
         this.nextBtn.displayString = GuiText.Set.getLocal();
 
         try {
-            int resultI = getAmount();
+            long resultI = getAmount();
 
             this.symbolSwitch.set(resultI >= 0 ? ActionItems.MULTIPLY : ActionItems.DIVIDE);
             this.nextBtn.enabled = resultI < -1 || resultI > 1;
@@ -98,7 +98,7 @@ public class GuiPatternMulti extends GuiAmount {
         try {
 
             if (btn == this.nextBtn && btn.enabled) {
-                int resultI = getAmount();
+                long resultI = getAmount();
                 if (resultI > 1 || resultI < -1) NetworkHandler.instance
                         .sendToServer(new PacketPatternMultiSet(this.originalGui.ordinal(), resultI));
             }
@@ -108,14 +108,14 @@ public class GuiPatternMulti extends GuiAmount {
         }
 
         if (btn == this.symbolSwitch) {
-            int resultI = -getAmount();
-            this.amountTextField.setText(Integer.toString(resultI));
+            long resultI = -getAmount();
+            this.amountTextField.setText(Long.toString(resultI));
         }
 
     }
 
     @Override
-    protected int getAmount() {
+    protected long getAmount() {
         String out = this.amountTextField.getText();
 
         double resultD = Calculator.conversion(out);
@@ -123,7 +123,7 @@ public class GuiPatternMulti extends GuiAmount {
         if (Double.isNaN(resultD)) {
             return DEFAULT_VALUE;
         } else {
-            return (int) ArithHelper.round(resultD, 0);
+            return (long) ArithHelper.round(resultD, 0);
         }
     }
 

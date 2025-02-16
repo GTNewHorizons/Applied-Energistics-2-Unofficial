@@ -120,7 +120,7 @@ public class GuiCraftAmount extends GuiAmount {
 
         try {
 
-            int resultI = getAmount();
+            long resultI = getAmount();
 
             this.nextBtn.enabled = resultI > 0;
         } catch (final NumberFormatException e) {

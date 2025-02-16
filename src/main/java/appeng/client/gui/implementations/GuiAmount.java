@@ -148,14 +148,14 @@ public abstract class GuiAmount extends AEBaseGui {
         return resultL;
     }
 
-    protected int getAmount() {
+    protected long getAmount() {
         String out = this.amountTextField.getText();
         double resultD = Calculator.conversion(out);
 
         if (resultD <= 0 || Double.isNaN(resultD)) {
             return 0;
         } else {
-            return (int) ArithHelper.round(resultD, 0);
+            return (long) ArithHelper.round(resultD, 0);
         }
     }
 

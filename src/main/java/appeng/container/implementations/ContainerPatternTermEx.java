@@ -416,7 +416,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
                         * ((val & 2) != 0 ? -1 : 1));
     }
 
-    public void multiplyOrDivideStacks(int multi) {
+    public void multiplyOrDivideStacks(long multi) {
         if (canMultiplyOrDivide(this.craftingSlots, multi) && canMultiplyOrDivide(this.outputSlots, multi)) {
             multiplyOrDivideStacksInternal(this.craftingSlots, multi);
             multiplyOrDivideStacksInternal(this.outputSlots, multi);

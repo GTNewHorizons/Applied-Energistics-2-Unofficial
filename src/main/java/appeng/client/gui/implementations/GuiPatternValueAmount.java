@@ -80,7 +80,7 @@ public class GuiPatternValueAmount extends GuiAmount {
         this.nextBtn.enabled = valueIndex >= 0;
 
         try {
-            int resultI = getAmount();
+            long resultI = getAmount();
             this.nextBtn.enabled = resultI > 0;
         } catch (final NumberFormatException e) {
             this.nextBtn.enabled = false;
