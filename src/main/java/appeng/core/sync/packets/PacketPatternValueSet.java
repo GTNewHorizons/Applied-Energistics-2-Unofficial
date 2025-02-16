@@ -25,7 +25,7 @@ public class PacketPatternValueSet extends AppEngPacket {
 
     public PacketPatternValueSet(final ByteBuf stream) {
         this.originGui = GuiBridge.values()[stream.readInt()];
-        this.amount = stream.readInt();
+        this.amount = stream.readLong();
         this.valueIndex = stream.readInt();
     }
 
