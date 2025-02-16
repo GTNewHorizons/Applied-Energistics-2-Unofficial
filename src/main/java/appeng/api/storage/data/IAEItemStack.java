@@ -16,8 +16,6 @@ package appeng.api.storage.data;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-import appeng.helpers.ItemStackLong;
-
 /**
  * An alternate version of ItemStack for AE to keep tabs on things easier, and to support larger storage. stackSizes of
  * getItemStack will be capped.
@@ -36,14 +34,6 @@ public interface IAEItemStack extends IAEStack<IAEItemStack> {
      * @return new ItemStack
      */
     ItemStack getItemStack();
-
-    /**
-     * 
-     * /** creates am ItemStackLong for the item.
-     *
-     * @return new ItemStack
-     */
-    ItemStackLong getItemStackLong();
 
     /**
      * 

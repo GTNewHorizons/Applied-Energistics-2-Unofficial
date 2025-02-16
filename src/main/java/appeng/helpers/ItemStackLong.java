@@ -15,20 +15,14 @@ public class ItemStackLong {
     /// Creates new ItemStackLong from ItemStack.
     /// It copies the stackSize from the passed ItemStack.
     public ItemStackLong(ItemStack itemStack) {
-        this.itemStack = this.itemStack;
-        this.stackSize = this.itemStack.stackSize;
+        this.itemStack = itemStack;
+        this.stackSize = itemStack.stackSize;
     }
 
     /// Creates new ItemStackLong from ItemStack and stack size.
     public ItemStackLong(ItemStack itemStack, long stackSize) {
         this.itemStack = itemStack;
         this.stackSize = stackSize;
-    }
-
-    // Copy constructor.
-    public ItemStackLong(tectech.util.ItemStackLong itemStackLong) {
-        this.itemStack = itemStackLong.itemStack;
-        this.stackSize = itemStackLong.stackSize;
     }
 
     public long getStackSize() {

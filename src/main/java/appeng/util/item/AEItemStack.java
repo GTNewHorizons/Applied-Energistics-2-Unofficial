@@ -29,7 +29,6 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAETagCompound;
-import appeng.helpers.ItemStackLong;
 import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
@@ -378,13 +377,6 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         }
 
         return is;
-    }
-
-    @Override
-    public ItemStackLong getItemStackLong() {
-        ItemStackLong stack = new ItemStackLong(getItemStack());
-        stack.stackSize = this.getStackSize();
-        return stack;
     }
 
     @Override
