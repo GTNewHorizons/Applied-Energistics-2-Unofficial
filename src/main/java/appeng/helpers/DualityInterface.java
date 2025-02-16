@@ -77,6 +77,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
+import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
 import appeng.core.settings.TickRates;
 import appeng.me.GridAccessException;
 import appeng.me.helpers.AENetworkProxy;
@@ -880,7 +881,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private boolean tileHasOnlyIgnoredItems(InventoryAdaptor ad) {
         for (ItemSlot i : ad) {
             ItemStack is = i.getItemStack();
-            if (BlockingModeIgnoreList.isIgnored(is) || is == null) continue;
+            if (is == null || BlockingModeIgnoreItemRegistry.instance().isIgnored(is)) continue;
             return false;
         }
         return true;

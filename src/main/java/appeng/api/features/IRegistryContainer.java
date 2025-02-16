@@ -73,6 +73,9 @@ public interface IRegistryContainer {
      */
     IInscriberRegistry inscriber();
 
+    /**
+     * Allows you to register certain class to be displayed on interface terminals.
+     */
     IInterfaceTerminalRegistry interfaceTerminal();
 
     /**
@@ -84,6 +87,11 @@ public interface IRegistryContainer {
      * get access to the p2p tunnel registry.
      */
     IP2PTunnelRegistry p2pTunnel();
+
+    /**
+     * Allows you to register items that are ignored by blocking mode of interfaces.
+     */
+    IBlockingModeIgnoreItemRegistry blockingModeIgnoreItem();
 
     /**
      * get access to the ammo registry.

@@ -10,6 +10,7 @@
 
 package appeng.core.features.registries;
 
+import appeng.api.features.IBlockingModeIgnoreItemRegistry;
 import appeng.api.features.IGrinderRegistry;
 import appeng.api.features.IInscriberRegistry;
 import appeng.api.features.IInterfaceTerminalRegistry;
@@ -49,6 +50,7 @@ public class RegistryContainer implements IRegistryContainer {
     private final IWirelessTermRegistry wireless = new WirelessRegistry();
     private final IGridCacheRegistry gridCache = new GridCacheRegistry();
     private final IP2PTunnelRegistry p2pTunnel = new P2PTunnelRegistry();
+    private final IBlockingModeIgnoreItemRegistry blockingModeIgnoreItem = new BlockingModeIgnoreItemRegistry();
     private final IMovableRegistry movable = new MovableTileRegistry();
     private final IMatterCannonAmmoRegistry matterCannonReg = new MatterCannonAmmoRegistry();
     private final IPlayerRegistry playerRegistry = new PlayerRegistry();
@@ -112,6 +114,11 @@ public class RegistryContainer implements IRegistryContainer {
     @Override
     public IP2PTunnelRegistry p2pTunnel() {
         return this.p2pTunnel;
+    }
+
+    @Override
+    public IBlockingModeIgnoreItemRegistry blockingModeIgnoreItem() {
+        return this.blockingModeIgnoreItem;
     }
 
     @Override
