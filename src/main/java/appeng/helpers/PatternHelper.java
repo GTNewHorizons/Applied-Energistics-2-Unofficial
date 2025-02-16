@@ -365,13 +365,13 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
                 continue;
             }
 
-            ItemStack gs = Platform.loadItemStackFromNBT(tag);
+            ItemStackLong gs = Platform.loadItemStackLongFromNBT(tag);
 
             if (gs == null && unknownItem != null) {
-                gs = unknownItem.copy();
+                gs = new ItemStackLong(unknownItem.copy());
             }
 
-            final IAEItemStack ae = AEApi.instance().storage().createItemStack(gs);
+            final IAEItemStack ae = AEApi.instance().storage().createItemStackLong(gs);
 
             if (ae != null || saveOrder) {
                 items.add(ae);

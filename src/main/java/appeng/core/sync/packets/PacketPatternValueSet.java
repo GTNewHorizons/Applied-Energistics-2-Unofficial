@@ -58,7 +58,7 @@ public class PacketPatternValueSet extends AppEngPacket {
                         Slot slot = player.openContainer.getSlot(valueIndex);
                         if (slot != null && slot.getHasStack()) {
                             ItemStack nextStack = slot.getStack().copy();
-                            nextStack.stackSize = amount;
+                            nextStack.stackSize = 0;
                             slot.putStack(nextStack);
                         }
                     }

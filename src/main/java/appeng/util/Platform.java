@@ -115,6 +115,7 @@ import appeng.core.features.AEFeature;
 import appeng.core.stats.Stats;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.GuiHostType;
+import appeng.helpers.ItemStackLong;
 import appeng.hooks.TickHandler;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
@@ -1843,9 +1844,23 @@ public class Platform {
         return stack;
     }
 
+    public static ItemStackLong loadItemStackLongFromNBT(NBTTagCompound tagCompound) {
+        ItemStackLong stack = ItemStackLong.loadItemStackFromNBT(tagCompound);
+        if (stack != null) {
+            stack.stackSize = tagCompound.getLong("CountLong");
+        }
+        return stack;
+    }
+
     public static NBTTagCompound writeItemStackToNBT(ItemStack is, NBTTagCompound tagCompound) {
         is.writeToNBT(tagCompound);
         tagCompound.setInteger("Count", is.stackSize);
+        return tagCompound;
+    }
+
+    public static NBTTagCompound writeItemStackLongToNBT(ItemStackLong is, NBTTagCompound tagCompound) {
+        is.writeToNBT(tagCompound);
+        tagCompound.setLong("CountLong", is.stackSize);
         return tagCompound;
     }
 
