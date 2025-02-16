@@ -455,7 +455,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
 
     @Override
     public String toString() {
-        return this.getItemStack().toString();
+        return this.getStackSize() + "x" + this.getItem().getUnlocalizedName() + "@" + this.getItemDamage();
     }
 
     @Override
