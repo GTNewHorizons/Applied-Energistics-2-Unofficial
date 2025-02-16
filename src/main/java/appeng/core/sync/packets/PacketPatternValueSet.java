@@ -2,7 +2,6 @@ package appeng.core.sync.packets;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Slot;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.networking.IGridHost;
@@ -10,6 +9,7 @@ import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerPatternTerm;
 import appeng.container.implementations.ContainerPatternTermEx;
 import appeng.container.implementations.ContainerPatternValueAmount;
+import appeng.container.slot.SlotFake;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
@@ -53,14 +53,11 @@ public class PacketPatternValueSet extends AppEngPacket {
                 if (context != null) {
                     final TileEntity te = context.getTile();
                     Platform.openGUI(player, te, cpv.getOpenContext().getSide(), originGui);
-                    if (player.openContainer instanceof ContainerPatternTerm
-                            || player.openContainer instanceof ContainerPatternTermEx) {
-                        Slot slot = player.openContainer.getSlot(valueIndex);
-                        if (slot != null && slot.getHasStack()) {
-                            ItemStack nextStack = slot.getStack().copy();
-                            nextStack.stackSize = 0;
-                            slot.putStack(nextStack);
-                        }
+                    if (player.openContainer instanceof ContainerPatternTerm cpt) {
+                        SlotFake slot = (SlotFake) cpt.getSlot(valueIndex);
+                        slot.getAEInventoryStack().setStackSize(amount);
+                    } else if (player.openContainer instanceof ContainerPatternTermEx cpt) {
+                        // TODO
                     }
                 }
             }

@@ -15,14 +15,23 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.data.IAEItemStack;
+import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.util.item.AEItemStack;
 
 public class SlotFake extends AppEngSlot {
 
     private IAEItemStack aeStack;
+    private IAEItemStack inventoryAEStack;
 
     public SlotFake(final IInventory inv, final int idx, final int x, final int y) {
         super(inv, idx, x, y);
+        if (inv instanceof AppEngInternalAEInventory aeInv) {
+            inventoryAEStack = aeInv.getAEStackInSlot(idx);
+        }
+    }
+
+    public IAEItemStack getAEInventoryStack() {
+        return inventoryAEStack;
     }
 
     @Override
