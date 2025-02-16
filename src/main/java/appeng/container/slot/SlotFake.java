@@ -21,17 +21,13 @@ import appeng.util.item.AEItemStack;
 public class SlotFake extends AppEngSlot {
 
     private IAEItemStack aeStack;
-    private IAEItemStack inventoryAEStack;
+    private AppEngInternalAEInventory aeInv;
 
     public SlotFake(final IInventory inv, final int idx, final int x, final int y) {
         super(inv, idx, x, y);
         if (inv instanceof AppEngInternalAEInventory aeInv) {
-            inventoryAEStack = aeInv.getAEStackInSlot(idx);
+            this.aeInv = aeInv;
         }
-    }
-
-    public IAEItemStack getAEInventoryStack() {
-        return inventoryAEStack;
     }
 
     @Override
@@ -63,5 +59,9 @@ public class SlotFake extends AppEngSlot {
 
     public IAEItemStack getAEStack() {
         return aeStack;
+    }
+
+    public AppEngInternalAEInventory getAEInv() {
+        return aeInv;
     }
 }

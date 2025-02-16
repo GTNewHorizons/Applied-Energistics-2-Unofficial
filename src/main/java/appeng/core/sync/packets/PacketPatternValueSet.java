@@ -1,7 +1,6 @@
 package appeng.core.sync.packets;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Slot;
 import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.networking.IGridHost;
@@ -55,7 +54,7 @@ public class PacketPatternValueSet extends AppEngPacket {
                     Platform.openGUI(player, te, cpv.getOpenContext().getSide(), originGui);
                     if (player.openContainer instanceof ContainerPatternTerm cpt) {
                         SlotFake slot = (SlotFake) cpt.getSlot(valueIndex);
-                        slot.getAEInventoryStack().setStackSize(amount);
+                        slot.getAEInv().getAEStackInSlot(slot.getSlotIndex()).setStackSize(amount);
                     } else if (player.openContainer instanceof ContainerPatternTermEx cpt) {
                         // TODO
                     }
