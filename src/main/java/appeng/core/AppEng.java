@@ -75,7 +75,7 @@ public final class AppEng {
                     + '.' // revisionVersion
                     + net.minecraftforge.common.ForgeVersion.buildVersion
                     + ",);" // buildVersion
-                    + "required-after:gtnhlib@[0.3.3,)"; // require gtnhlib
+                    + "required-after:gtnhlib@[0.6.11,)"; // require gtnhlib
 
     @Nonnull
     private static final AppEng INSTANCE = new AppEng();
