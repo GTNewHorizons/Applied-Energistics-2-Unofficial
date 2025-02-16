@@ -22,11 +22,10 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
-import appeng.helpers.ItemStackLong;
 import appeng.helpers.PatternHelper;
 import appeng.helpers.Reflected;
+import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.tile.inventory.AppEngInternalInventoryLong;
 import appeng.tile.inventory.InvOperation;
 
 public class PartPatternTerminal extends AbstractPartTerminal {
@@ -35,9 +34,9 @@ public class PartPatternTerminal extends AbstractPartTerminal {
     private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
     private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
 
-    private final AppEngInternalInventoryLong crafting = new AppEngInternalInventoryLong(this, 9) {};
+    private final AppEngInternalAEInventory crafting = new AppEngInternalAEInventory(this, 9) {};
 
-    private final AppEngInternalInventoryLong output = new AppEngInternalInventoryLong(this, 3) {};
+    private final AppEngInternalAEInventory output = new AppEngInternalAEInventory(this, 3) {};
 
     private final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
 
@@ -142,13 +141,15 @@ public class PartPatternTerminal extends AbstractPartTerminal {
 
                     for (int x = 0; x < this.crafting.getSizeInventory() && x < inItems.length; x++) {
                         if (inItems[x] != null) {
-                            this.crafting.setInventorySlotContents(x, inItems[x].getItemStackLong());
+                            this.crafting.setInventorySlotContents(x, inItems[x].getItemStack());
+                            this.crafting.getAEStackInSlot(x).setStackSize(inItems[x].getStackSize());
                         }
                     }
 
                     for (int x = 0; x < this.output.getSizeInventory() && x < outItems.length; x++) {
                         if (outItems[x] != null) {
-                            this.output.setInventorySlotContents(x, outItems[x].getItemStackLong());
+                            this.output.setInventorySlotContents(x, outItems[x].getItemStack());
+                            this.output.getAEStackInSlot(x).setStackSize(outItems[x].getStackSize());
                         }
                     }
                 }
@@ -160,21 +161,12 @@ public class PartPatternTerminal extends AbstractPartTerminal {
         this.getHost().markForSave();
     }
 
-    public void onChangeInventory(final AppEngInternalInventoryLong inv, final int slot, final InvOperation mc,
-            final ItemStackLong removedStack, final ItemStackLong newStack) {
-        if (inv == this.crafting) {
-            this.fixCraftingRecipes();
-        }
-
-        this.getHost().markForSave();
-    }
-
     private void fixCraftingRecipes() {
         if (this.craftingMode) {
             for (int x = 0; x < this.crafting.getSizeInventory(); x++) {
-                final ItemStackLong is = this.crafting.getStackInSlot(x);
+                final IAEItemStack is = this.crafting.getAEStackInSlot(x);
                 if (is != null) {
-                    is.stackSize = 1;
+                    is.setStackSize(1);
                 }
             }
         }
