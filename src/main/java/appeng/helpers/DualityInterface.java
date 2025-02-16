@@ -10,6 +10,8 @@
 
 package appeng.helpers;
 
+import static com.gtnewhorizon.gtnhlib.capability.Capabilities.getCapability;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -1231,8 +1233,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
             }
 
-            if (directedTile instanceof ICraftingIconProvider) {
-                final ItemStack icon = ((ICraftingIconProvider) directedTile).getMachineCraftingIcon();
+            ICraftingIconProvider craftingIconProvider = getCapability(directedTile, ICraftingIconProvider.class);
+            if (craftingIconProvider != null) {
+                final ItemStack icon = craftingIconProvider.getMachineCraftingIcon();
                 if (icon != null) {
                     if (customName != null) {
                         icon.setStackDisplayName(customName);
