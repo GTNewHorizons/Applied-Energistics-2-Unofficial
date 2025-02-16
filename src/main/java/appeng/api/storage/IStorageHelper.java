@@ -26,7 +26,6 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
-import appeng.helpers.ItemStackLong;
 import io.netty.buffer.ByteBuf;
 
 public interface IStorageHelper {
@@ -44,8 +43,6 @@ public interface IStorageHelper {
      * @return a new INSTANCE of {@link IAEItemStack} from a MC {@link ItemStack}
      */
     IAEItemStack createItemStack(ItemStack is);
-
-    IAEItemStack createItemStackLong(ItemStackLong is);
 
     /**
      * @param is A FluidStack

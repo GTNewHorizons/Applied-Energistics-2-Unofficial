@@ -26,7 +26,6 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.crafting.CraftingLink;
-import appeng.helpers.ItemStackLong;
 import appeng.util.Platform;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
@@ -45,13 +44,6 @@ public class ApiStorage implements IStorageHelper {
     @Override
     public IAEItemStack createItemStack(final ItemStack is) {
         return AEItemStack.create(is);
-    }
-
-    @Override
-    public IAEItemStack createItemStackLong(final ItemStackLong is) {
-        AEItemStack stack = AEItemStack.create(is.itemStack);
-        stack.setStackSize(is.stackSize);
-        return stack;
     }
 
     @Override
