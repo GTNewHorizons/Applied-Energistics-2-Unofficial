@@ -63,6 +63,7 @@ import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPostCacheConstruction;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.InternalActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
@@ -241,7 +242,8 @@ public class CraftingGridCache
         this.emitableItems.clear();
 
         // update the stuff that was in the list...
-        this.storageGrid.postAlterationOfStoredItems(StorageChannel.ITEMS, oldItems.keySet(), new BaseActionSource());
+        this.storageGrid
+                .postAlterationOfStoredItems(StorageChannel.ITEMS, oldItems.keySet(), new InternalActionSource());
 
         // re-create list..
         for (final ICraftingProvider provider : this.craftingProviders) {
@@ -253,7 +255,7 @@ public class CraftingGridCache
         this.storageGrid.postAlterationOfStoredItems(
                 StorageChannel.ITEMS,
                 this.craftableItems.keySet(),
-                new BaseActionSource());
+                new InternalActionSource());
     }
 
     /** Only for unit test usage */

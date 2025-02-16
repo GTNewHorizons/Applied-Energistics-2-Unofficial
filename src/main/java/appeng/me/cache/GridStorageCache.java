@@ -31,6 +31,7 @@ import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.ISecurityGrid;
+import appeng.api.networking.security.InternalActionSource;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IStackWatcher;
 import appeng.api.networking.storage.IStackWatcherHost;
@@ -183,7 +184,7 @@ public class GridStorageCache implements IStorageGrid {
             this.inactiveCellProviders.remove(cc);
             this.activeCellProviders.add(cc);
 
-            BaseActionSource actionSrc = new BaseActionSource();
+            BaseActionSource actionSrc = new InternalActionSource();
             if (cc instanceof IActionHost) {
                 actionSrc = new MachineSource((IActionHost) cc);
             }
@@ -205,7 +206,7 @@ public class GridStorageCache implements IStorageGrid {
             this.activeCellProviders.remove(cc);
             this.inactiveCellProviders.add(cc);
 
-            BaseActionSource actionSrc = new BaseActionSource();
+            BaseActionSource actionSrc = new InternalActionSource();
 
             if (cc instanceof IActionHost) {
                 actionSrc = new MachineSource((IActionHost) cc);

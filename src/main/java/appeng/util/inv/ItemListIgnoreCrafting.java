@@ -13,35 +13,38 @@ package appeng.util.inv;
 import java.util.Collection;
 import java.util.Iterator;
 
+import javax.annotation.Nonnull;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 
-public class ItemListIgnoreCrafting<T extends IAEStack> implements IItemList<T> {
+public class ItemListIgnoreCrafting<StackType extends IAEStack> implements IItemList<StackType> {
 
-    private final IItemList<T> target;
+    private final IItemList<StackType> target;
 
-    public ItemListIgnoreCrafting(final IItemList<T> cla) {
+    public ItemListIgnoreCrafting(final IItemList<StackType> cla) {
         this.target = cla;
     }
 
     @Override
-    public void add(T option) {
-        if (option != null && option.isCraftable()) {
-            option = (T) option.copy();
-            option.setCraftable(false);
-        }
+    public void add(@Nonnull final StackType stack) {
+        this.target.add((StackType) stack.copy().setCraftable(false));
+    }
 
-        this.target.add(option);
+    public void addAll(@Nonnull final IItemList<StackType> stacks) {
+        for (StackType stack : stacks) {
+            this.add(stack);
+        }
     }
 
     @Override
-    public T findPrecise(final T i) {
+    public StackType findPrecise(final StackType i) {
         return this.target.findPrecise(i);
     }
 
     @Override
-    public Collection<T> findFuzzy(final T input, final FuzzyMode fuzzy) {
+    public Collection<StackType> findFuzzy(final StackType input, final FuzzyMode fuzzy) {
         return this.target.findFuzzy(input, fuzzy);
     }
 
@@ -51,22 +54,22 @@ public class ItemListIgnoreCrafting<T extends IAEStack> implements IItemList<T> 
     }
 
     @Override
-    public void addStorage(final T option) {
+    public void addStorage(final StackType option) {
         this.target.addStorage(option);
     }
 
     @Override
-    public void addCrafting(final T option) {
+    public void addCrafting(final StackType option) {
         // nothing.
     }
 
     @Override
-    public void addRequestable(final T option) {
+    public void addRequestable(final StackType option) {
         this.target.addRequestable(option);
     }
 
     @Override
-    public T getFirstItem() {
+    public StackType getFirstItem() {
         return this.target.getFirstItem();
     }
 
@@ -76,7 +79,7 @@ public class ItemListIgnoreCrafting<T extends IAEStack> implements IItemList<T> 
     }
 
     @Override
-    public Iterator<T> iterator() {
+    public Iterator<StackType> iterator() {
         return this.target.iterator();
     }
 

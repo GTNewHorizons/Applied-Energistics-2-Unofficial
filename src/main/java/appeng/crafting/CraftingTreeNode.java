@@ -13,6 +13,7 @@ package appeng.crafting;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Stack;
 
 import net.minecraft.world.World;
 
@@ -27,6 +28,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.util.item.ItemList;
 
 public class CraftingTreeNode {
 
@@ -323,26 +325,43 @@ public class CraftingTreeNode {
         }
     }
 
-    void getPlan(final IItemList<IAEItemStack> plan) {
-        if (this.missing > 0) {
-            final IAEItemStack o = this.what.copy();
-            o.setStackSize(this.missing);
-            plan.add(o);
+    IItemList<IAEItemStack> createPlan() {
+        IItemList<IAEItemStack> plan = new ItemList();
+        Stack<CraftingTreeNode> nodeStack = new Stack<>();
+        nodeStack.push(this);
+
+        while (!nodeStack.isEmpty()) {
+            CraftingTreeNode node = nodeStack.pop();
+
+            if (node.missing > 0) {
+                final IAEItemStack o = node.what.copy();
+                o.setStackSize(node.missing);
+                plan.add(o);
+            }
+
+            if (node.howManyEmitted > 0) {
+                final IAEItemStack i = node.what.copy();
+                i.setCountRequestable(node.howManyEmitted);
+                plan.addRequestable(i);
+            }
+
+            for (final IAEItemStack i : node.used) {
+                plan.add(i.copy());
+            }
+
+            for (final CraftingTreeProcess pro : node.nodes) {
+                for (IAEItemStack i : pro.details.getOutputs()) {
+                    i = i.copy();
+                    i.setCountRequestable(i.getStackSize() * pro.getCrafts());
+                    plan.addRequestable(i);
+                }
+                for (final CraftingTreeNode child : pro.getNodes().keySet()) {
+                    nodeStack.push(child);
+                }
+            }
         }
 
-        if (this.howManyEmitted > 0) {
-            final IAEItemStack i = this.what.copy();
-            i.setCountRequestable(this.howManyEmitted);
-            plan.addRequestable(i);
-        }
-
-        for (final IAEItemStack i : this.used) {
-            plan.add(i.copy());
-        }
-
-        for (final CraftingTreeProcess pro : this.nodes) {
-            pro.getPlan(plan);
-        }
+        return plan;
     }
 
     int getSlot() {

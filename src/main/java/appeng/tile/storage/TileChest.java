@@ -823,7 +823,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
         @Override
         public T injectItems(final T input, final Actionable mode, final BaseActionSource src) {
-            if (src.isPlayer() && !this.securityCheck(((PlayerSource) src).player, SecurityPermissions.INJECT)) {
+            if (src.isPlayer() && !this.securityCheck(((PlayerSource) src).getPlayer(), SecurityPermissions.INJECT)) {
                 return input;
             }
             return super.injectItems(input, mode, src);
@@ -857,7 +857,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
         @Override
         public T extractItems(final T request, final Actionable mode, final BaseActionSource src) {
-            if (src.isPlayer() && !this.securityCheck(((PlayerSource) src).player, SecurityPermissions.EXTRACT)) {
+            if (src.isPlayer() && !this.securityCheck(((PlayerSource) src).getPlayer(), SecurityPermissions.EXTRACT)) {
                 return null;
             }
             return super.extractItems(request, mode, src);

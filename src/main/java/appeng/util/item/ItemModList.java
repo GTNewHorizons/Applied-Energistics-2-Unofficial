@@ -12,10 +12,13 @@ package appeng.util.item;
 
 import java.util.Collection;
 
+import javax.annotation.Nonnull;
+
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemContainer;
+import appeng.api.storage.data.IItemList;
 
 public class ItemModList implements IItemContainer<IAEItemStack> {
 
@@ -27,18 +30,25 @@ public class ItemModList implements IItemContainer<IAEItemStack> {
     }
 
     @Override
-    public void add(final IAEItemStack option) {
-        IAEItemStack over = this.overrides.findPrecise(option);
+    public void add(@Nonnull final IAEItemStack stack) {
+        IAEItemStack over = this.overrides.findPrecise(stack);
         if (over == null) {
-            over = this.backingStore.findPrecise(option);
+            over = this.backingStore.findPrecise(stack);
             if (over == null) {
-                this.overrides.add(option);
+                this.overrides.add(stack);
             } else {
-                option.add(over);
-                this.overrides.add(option);
+                stack.add(over);
+                this.overrides.add(stack);
             }
         } else {
-            this.overrides.add(option);
+            this.overrides.add(stack);
+        }
+    }
+
+    @Override
+    public void addAll(@Nonnull final IItemList<IAEItemStack> stacks) {
+        for (IAEItemStack item : stacks) {
+            this.add(item);
         }
     }
 

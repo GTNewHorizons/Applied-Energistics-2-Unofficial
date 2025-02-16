@@ -7,6 +7,8 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import javax.annotation.Nonnull;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -37,8 +39,15 @@ public final class LazyItemList<StackType extends IAEStack<StackType>> implement
     }
 
     @Override
-    public void add(StackType option) {
-        getCachedOrCompute().add(option);
+    public void add(@Nonnull final StackType stack) {
+        getCachedOrCompute().add(stack);
+    }
+
+    @Override
+    public void addAll(@Nonnull final IItemList<StackType> stacks) {
+        for (StackType stack : stacks) {
+            this.add(stack);
+        }
     }
 
     @Override

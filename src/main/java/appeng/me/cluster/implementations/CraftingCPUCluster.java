@@ -547,7 +547,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private TileCraftingTile getCore() {
-        return (TileCraftingTile) this.machineSrc.via;
+        return (TileCraftingTile) this.machineSrc.getActionHost();
     }
 
     private IGrid getGrid() {
@@ -1038,7 +1038,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         try {
-            EntityPlayer player = ((PlayerSource) src).player;
+            EntityPlayer player = ((PlayerSource) src).getPlayer();
             if (player != null) {
                 final IAEItemStack missingStack = e.getMissing();
                 String missingName = "?";
