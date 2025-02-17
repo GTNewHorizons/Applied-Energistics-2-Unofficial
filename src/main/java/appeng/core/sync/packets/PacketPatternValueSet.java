@@ -54,7 +54,7 @@ public class PacketPatternValueSet extends AppEngPacket {
                     Platform.openGUI(player, te, cpv.getOpenContext().getSide(), originGui);
                     if (player.openContainer instanceof ContainerPatternTerm cpt) {
                         SlotFake slot = (SlotFake) cpt.getSlot(valueIndex);
-                        slot.getAEInv().getAEStackInSlot(slot.getSlotIndex()).setStackSize(amount);
+                        slot.getAEStack().setStackSize(amount);
                     } else if (player.openContainer instanceof ContainerPatternTermEx cpt) {
                         // TODO
                     }

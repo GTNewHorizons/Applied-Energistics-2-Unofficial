@@ -74,6 +74,12 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     private final SlotRestrictedInput patternSlotIN;
     private final SlotRestrictedInput patternSlotOUT;
 
+    @GuiSync(143)
+    public String aeStackSizeCraftingSlots = "";
+
+    @GuiSync(144)
+    public String aeStackSizeOutputSlots = "";
+
     @GuiSync(97)
     public boolean craftingMode = true;
 
@@ -458,6 +464,9 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public void detectAndSendChanges() {
         super.detectAndSendChanges();
         if (Platform.isServer()) {
+            this.aeStackSizeCraftingSlots = this.patternTerminal.getAEStackSizeCraftingSlots();
+            this.aeStackSizeOutputSlots = this.patternTerminal.getAEStackSizeOutputSlots();
+
             if (this.isCraftingMode() != this.getPatternTerminal().isCraftingRecipe()) {
                 this.setCraftingMode(this.getPatternTerminal().isCraftingRecipe());
                 this.updateOrderOfOutputSlots();
@@ -475,6 +484,22 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         if (field.equals("craftingMode")) {
             this.getAndUpdateOutput();
             this.updateOrderOfOutputSlots();
+        }
+
+        if (field.equals("aeStackSizeCraftingSlots") && !((String) newValue).isEmpty()) {
+            String[] newVal = ((String) newValue).split(",");
+            for (int i = 0; i < newVal.length; i++) {
+                if (this.craftingSlots[i].getAEStack() != null)
+                    this.craftingSlots[i].getAEStack().setStackSize(Long.parseLong(newVal[i]));
+            }
+        }
+
+        if (field.equals("aeStackSizeOutputSlots") && !((String) newValue).isEmpty()) {
+            String[] newVal = ((String) newValue).split(",");
+            for (int i = 0; i < newVal.length; i++) {
+                if (this.outputSlots[i].getAEStack() != null)
+                    this.outputSlots[i].getAEStack().setStackSize(Long.parseLong(newVal[i]));
+            }
         }
     }
 
