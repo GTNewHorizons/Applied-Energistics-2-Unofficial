@@ -157,12 +157,12 @@ public abstract class AEBaseGui extends GuiContainer {
         return joiner.join(toolTip);
     }
 
-    protected int getQty(final GuiButton btn) {
+    protected long getQty(final GuiButton btn) {
         try {
             final DecimalFormat df = new DecimalFormat("+#;-#");
-            return df.parse(btn.displayString).intValue();
+            return df.parse(btn.displayString).longValue();
         } catch (final ParseException e) {
-            return 0;
+            return 0L;
         }
     }
 

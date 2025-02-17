@@ -18,14 +18,14 @@ import io.netty.buffer.Unpooled;
 public class PacketPatternMultiSet extends AppEngPacket {
 
     private final GuiBridge originGui;
-    private final int multi;
+    private final long multi;
 
     public PacketPatternMultiSet(final ByteBuf stream) {
         this.originGui = GuiBridge.values()[stream.readInt()];
         this.multi = stream.readInt();
     }
 
-    public PacketPatternMultiSet(int originalGui, int multi) {
+    public PacketPatternMultiSet(int originalGui, long multi) {
         this.originGui = GuiBridge.values()[originalGui];
         this.multi = multi;
 
@@ -33,7 +33,7 @@ public class PacketPatternMultiSet extends AppEngPacket {
 
         data.writeInt(this.getPacketID());
         data.writeInt(originalGui);
-        data.writeInt(this.multi);
+        data.writeLong(this.multi);
 
         this.configureWrite(data);
     }
