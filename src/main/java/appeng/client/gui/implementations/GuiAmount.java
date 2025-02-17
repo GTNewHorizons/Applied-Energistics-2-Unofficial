@@ -134,7 +134,7 @@ public abstract class GuiAmount extends AEBaseGui {
         }
     }
 
-    protected long addOrderAmount(final int i) {
+    protected long addOrderAmount(final long i) {
         long resultL = getAmountLong();
 
         if (resultL == 1 && i > 1) {
@@ -153,7 +153,7 @@ public abstract class GuiAmount extends AEBaseGui {
         double resultD = Calculator.conversion(out);
 
         if (resultD <= 0 || Double.isNaN(resultD)) {
-            return 0;
+            return 0L;
         } else {
             return (long) ArithHelper.round(resultD, 0);
         }

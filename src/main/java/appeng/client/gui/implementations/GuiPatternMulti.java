@@ -25,7 +25,7 @@ import appeng.util.calculators.Calculator;
 
 public class GuiPatternMulti extends GuiAmount {
 
-    private static final int DEFAULT_VALUE = 0;
+    private static final long DEFAULT_VALUE = 0L;
     private GuiImgButton symbolSwitch;
 
     @Reflected
@@ -128,7 +128,7 @@ public class GuiPatternMulti extends GuiAmount {
     }
 
     @Override
-    protected long addOrderAmount(final int i) {
+    protected long addOrderAmount(final long i) {
         return i + getAmount();
     }
 
