@@ -91,10 +91,12 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
             }
 
             if (gs != null && (!this.isCrafting || !gs.hasTagCompound())) {
+                final AEItemStack aeStack = AEItemStack.create(gs);
+                aeStack.setStackSize(tag.getLong("Count"));
+                in.add(aeStack);
                 this.markItemAs(x, gs, TestStatus.ACCEPT);
             }
 
-            in.add(AEApi.instance().storage().createItemStack(gs));
             if (this.isCrafting) // processing recipes are not tested anyway
             {
                 this.testFrame.setInventorySlotContents(x, gs);
