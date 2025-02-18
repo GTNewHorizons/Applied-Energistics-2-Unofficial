@@ -79,7 +79,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 
         for (int x = 0; x < inTag.tagCount(); x++) {
             final NBTTagCompound tag = inTag.getCompoundTagAt(x);
-            final ItemStack gs = Platform.loadItemStackFromNBT(tag);
+            final ItemStack gs = Platform.loadItemStackFromNBT(tag); // TODO get correct count here!
 
             if (gs == null && !tag.hasNoTags()) {
                 throw new IllegalStateException("No pattern here!");

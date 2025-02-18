@@ -222,8 +222,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public void encode() {
         ItemStack output = this.patternSlotOUT.getStack();
 
-        final ItemStack[] in = this.getInputs();
-        final ItemStack[] out = this.getOutputs();
+        final IAEItemStack[] in = this.getInputs();
+        final ItemStack[] out = this.getOutputs(); // TODO must be IAEItemStack[] as well
 
         // if there is no input, this would be silly.
         if (in == null || out == null) {
@@ -259,10 +259,10 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         final NBTTagCompound encodedValue = new NBTTagCompound();
 
         final NBTTagList tagIn = new NBTTagList();
-        final NBTTagList tagOut = new NBTTagList();
+        final NBTTagList tagOut = new NBTTagList(); // TODO
 
-        for (final ItemStack i : in) {
-            tagIn.appendTag(this.createItemTag(i));
+        for (final IAEItemStack i : in) {
+            tagIn.appendTag(this.createAEItemTag(i));
         }
 
         for (final ItemStack i : out) {
@@ -279,12 +279,12 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         output.setTagCompound(encodedValue);
     }
 
-    private ItemStack[] getInputs() {
-        final ItemStack[] input = new ItemStack[9];
+    private IAEItemStack[] getInputs() {
+        final IAEItemStack[] input = new IAEItemStack[9];
         boolean hasValue = false;
 
         for (int x = 0; x < this.craftingSlots.length; x++) {
-            input[x] = this.craftingSlots[x].getStack();
+            input[x] = this.craftingSlots[x].getAEStack();
             if (input[x] != null) {
                 hasValue = true;
             }
@@ -344,6 +344,18 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         if (i != null) {
             i.writeToNBT(c);
             c.setInteger("Count", i.stackSize);
+        }
+
+        return c;
+    }
+
+    private NBTBase createAEItemTag(final IAEItemStack i) {
+        final NBTTagCompound c = new NBTTagCompound();
+
+        if (i != null) {
+            i.getItemStack().writeToNBT(c);
+            c.removeTag("Count");
+            c.setLong("Count", i.getStackSize());
         }
 
         return c;
