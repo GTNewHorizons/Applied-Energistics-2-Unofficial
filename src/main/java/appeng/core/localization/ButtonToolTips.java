@@ -225,7 +225,10 @@ public enum ButtonToolTips {
     StringOrderAlphanum,
 
     CellRestrictionLabel,
-    CellRestrictionHint;
+    CellRestrictionHint,
+
+    SearchGotoNext,
+    SearchGotoPrev;
 
     private final String root;
 
