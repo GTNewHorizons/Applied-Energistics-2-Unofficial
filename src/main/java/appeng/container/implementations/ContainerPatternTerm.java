@@ -272,9 +272,28 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         encodedValue.setBoolean("crafting", this.isCraftingMode());
         encodedValue.setBoolean("substitute", this.isSubstitute());
         encodedValue.setBoolean("beSubstitute", this.canBeSubstitute());
+        encodedValue.setBoolean("isLong", isLongPattern());
         encodedValue.setString("author", this.getPlayerInv().player.getCommandSenderName());
 
         output.setTagCompound(encodedValue);
+    }
+
+    private boolean isLongPattern() {
+        final IAEItemStack[] in = this.getInputs();
+        final IAEItemStack[] out = this.getOutputs();
+
+        if (in == null || out == null) {
+            return false;
+        }
+
+        for (IAEItemStack ais : in) {
+            if (ais.getStackSize() > Integer.MAX_VALUE) return true;
+        }
+
+        for (IAEItemStack ais : out) {
+            if (ais.getStackSize() > Integer.MAX_VALUE) return true;
+        }
+        return false;
     }
 
     private IAEItemStack[] getInputs() {

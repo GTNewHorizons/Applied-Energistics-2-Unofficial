@@ -53,6 +53,7 @@ import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingLink;
+import appeng.api.networking.crafting.ICraftingLongPattern;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
@@ -103,7 +104,7 @@ import cofh.api.transport.IItemDuct;
 import cpw.mods.fml.common.Loader;
 
 public class DualityInterface implements IGridTickable, IStorageMonitorable, IInventoryDestination, IAEAppEngInventory,
-        IConfigManagerHost, ICraftingProvider, IUpgradeableHost, IPriorityHost {
+        IConfigManagerHost, ICraftingProvider, IUpgradeableHost, IPriorityHost, ICraftingLongPattern {
 
     public static final int NUMBER_OF_STORAGE_SLOTS = 9;
     public static final int NUMBER_OF_CONFIG_SLOTS = 9;

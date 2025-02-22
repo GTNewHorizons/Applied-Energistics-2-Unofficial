@@ -72,6 +72,7 @@ import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingJob;
 import appeng.api.networking.crafting.ICraftingLink;
+import appeng.api.networking.crafting.ICraftingLongPattern;
 import appeng.api.networking.crafting.ICraftingMedium;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.crafting.ICraftingProvider;
@@ -799,15 +800,19 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     if (!found) {
                         // put stuff back..
                         for (int x = 0; x < ic.getSizeInventory(); x++) {
-                            final ItemStack is = ic.getStackInSlot(x);
-                            if (is != null) {
-                                this.inventory
-                                        .injectItems(AEItemStack.create(is), Actionable.MODULATE, this.machineSrc);
+                            final IAEItemStack ais = ic.getAEStackInSlot(x);
+                            if (ais != null) {
+                                this.inventory.injectItems(ais, Actionable.MODULATE, this.machineSrc);
                             }
                         }
                         ic = null;
                         break;
                     }
+                }
+
+                if (details.getPattern().getTagCompound().getBoolean("isLong")
+                        && !(m instanceof ICraftingLongPattern)) {
+                    continue;
                 }
 
                 if (m.pushPattern(details, ic)) {
@@ -880,9 +885,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             if (ic != null) {
                 // put stuff back..
                 for (int x = 0; x < ic.getSizeInventory(); x++) {
-                    final ItemStack is = ic.getStackInSlot(x);
-                    if (is != null) {
-                        this.inventory.injectItems(AEItemStack.create(is), Actionable.MODULATE, this.machineSrc);
+                    final IAEItemStack ais = ic.getAEStackInSlot(x);
+                    if (ais != null) {
+                        this.inventory.injectItems(ais, Actionable.MODULATE, this.machineSrc);
                     }
                 }
             }

@@ -76,7 +76,7 @@ public class AEInventoryCrafting extends InventoryCrafting {
     public void setInventorySlotContents(int index, IAEItemStack stack) {
         this.stackListAE[index] = stack;
         this.eventHandler.onCraftMatrixChanged(this);
-        super.setInventorySlotContents(index, stack.getItemStack());
+        super.setInventorySlotContents(index, stack != null ? stack.getItemStack() : null);
     }
 
     public boolean isItemValidForSlot(int index, IAEItemStack stack) {
