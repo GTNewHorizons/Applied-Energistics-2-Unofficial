@@ -38,4 +38,24 @@ public class AdaptorMEChest extends AdaptorIInventory {
                 .injectItems(AEItemStack.create(toBeSimulated), Actionable.SIMULATE, meChest.getActionSource());
         return result == null ? null : result.getItemStack();
     }
+
+    @Override
+    public IAEItemStack simulateAdd(IAEItemStack toBeSimulated, InsertionMode insertionMode) {
+        if (meChest.getItemInventory() == null) {
+            return toBeSimulated;
+        }
+
+        return (IAEItemStack) meChest.getItemInventory()
+                .injectItems(toBeSimulated, Actionable.SIMULATE, meChest.getActionSource());
+    }
+
+    @Override
+    public IAEItemStack addItems(IAEItemStack toBeAdded, InsertionMode insertionMode) {
+        if (meChest.getItemInventory() == null) {
+            return toBeAdded;
+        }
+
+        return (IAEItemStack) meChest.getItemInventory()
+                .injectItems(toBeAdded, Actionable.MODULATE, meChest.getActionSource());
+    }
 }

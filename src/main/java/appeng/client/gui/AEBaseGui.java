@@ -79,6 +79,7 @@ import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
+import appeng.items.misc.ItemEncodedPattern;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import codechicken.lib.gui.GuiDraw;
@@ -792,6 +793,21 @@ public abstract class AEBaseGui extends GuiContainer {
     }
 
     private void drawSlot(final Slot s) {
+        if (s instanceof SlotRestrictedInput && s.getHasStack()
+                && s.getStack().getItem() instanceof ItemEncodedPattern iep) {
+            final IAEItemStack ais = iep.getAEOutput(s.getStack());
+            if (ais == null) return;
+            if (ais.getStackSize() == 1) {
+                this.safeDrawSlot(s);
+                return;
+            }
+
+            RenderItem pIR = this.setItemRender(this.aeRenderItem);
+            this.aeRenderItem.setAeStack(ais);
+            this.drawAEPattern(s, ais);
+            this.setItemRender(pIR);
+            return;
+        }
         if (s instanceof SlotME || s instanceof SlotFake) {
             IAEItemStack stack = Platform.getAEStackInSlot(s);
             if (s instanceof SlotFake && stack != null && stack.getStackSize() == 1) {
@@ -969,6 +985,23 @@ public abstract class AEBaseGui extends GuiContainer {
         int i = slotIn.xDisplayPosition;
         int j = slotIn.yDisplayPosition;
         ItemStack itemstack = slotIn.getStack();
+        String s = null;
+
+        this.zLevel = 100.0F;
+        itemRender.zLevel = 100.0F;
+        itemRender.renderItemAndEffectIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j);
+        itemRender.zLevel = 0.0F;
+
+        this.zLevel = 0.0F;
+        GL11.glTranslatef(0.0f, 0.0f, 200.0f);
+        aeRenderItem.renderItemOverlayIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j, s);
+        GL11.glTranslatef(0.0f, 0.0f, -200.0f);
+    }
+
+    public void drawAEPattern(Slot slotIn, IAEItemStack ais) {
+        int i = slotIn.xDisplayPosition;
+        int j = slotIn.yDisplayPosition;
+        ItemStack itemstack = ais.getItemStack();
         String s = null;
 
         this.zLevel = 100.0F;

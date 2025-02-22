@@ -36,8 +36,8 @@ import appeng.util.item.AEItemStack;
 public class PatternHelper implements ICraftingPatternDetails, Comparable<PatternHelper> {
 
     private final ItemStack patternItem;
-    private final InventoryCrafting crafting = new InventoryCrafting(new ContainerNull(), 3, 3);
-    private final InventoryCrafting testFrame = new InventoryCrafting(new ContainerNull(), 3, 3);
+    private final AEInventoryCrafting crafting = new AEInventoryCrafting(new ContainerNull(), 3, 3);
+    private final AEInventoryCrafting testFrame = new AEInventoryCrafting(new ContainerNull(), 3, 3);
     private final ItemStack correctOutput;
     private final IRecipe standardRecipe;
     private final IAEItemStack[] condensedInputs;
@@ -79,7 +79,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 
         for (int x = 0; x < inTag.tagCount(); x++) {
             final NBTTagCompound tag = inTag.getCompoundTagAt(x);
-            final ItemStack gs = Platform.loadItemStackFromNBT(tag); // TODO get correct count here!
+            final IAEItemStack gs = AEItemStack.loadItemStackFromNBT(tag);
 
             if (gs == null && !tag.hasNoTags()) {
                 throw new IllegalStateException("No pattern here!");
@@ -91,10 +91,8 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
             }
 
             if (gs != null && (!this.isCrafting || !gs.hasTagCompound())) {
-                final AEItemStack aeStack = AEItemStack.create(gs);
-                aeStack.setStackSize(tag.getLong("Count"));
-                in.add(aeStack);
-                this.markItemAs(x, gs, TestStatus.ACCEPT);
+                in.add(gs);
+                this.markItemAs(x, gs.getItemStack(), TestStatus.ACCEPT);
             }
 
             if (this.isCrafting) // processing recipes are not tested anyway
@@ -118,10 +116,10 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 
             for (int x = 0; x < outTag.tagCount(); x++) {
                 final NBTTagCompound tag = outTag.getCompoundTagAt(x);
-                final ItemStack gs = Platform.loadItemStackFromNBT(tag);
+                final IAEItemStack gs = AEItemStack.loadItemStackFromNBT(tag);
 
                 if (gs != null) {
-                    out.add(AEApi.instance().storage().createItemStack(gs));
+                    out.add(gs);
                 } else if (!tag.hasNoTags()) {
                     throw new IllegalStateException("No pattern here!");
                 }

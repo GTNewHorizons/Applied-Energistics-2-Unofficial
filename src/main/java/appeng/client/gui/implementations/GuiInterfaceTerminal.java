@@ -48,6 +48,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
@@ -79,7 +80,6 @@ import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
-import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
 
 /**
@@ -611,18 +611,27 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         && relMouseY < Math.min(viewY + rowYBot, viewHeight);
                 if (stack != null) {
                     final ItemEncodedPattern iep = (ItemEncodedPattern) stack.getItem();
-                    final ItemStack toRender = iep.getOutput(stack);
+                    final IAEItemStack toRender = iep.getAEOutput(stack);
 
                     GL11.glPushMatrix();
                     GL11.glTranslatef(colLeft, viewY + rowYTop + 1, ITEM_STACK_Z);
                     GL11.glEnable(GL12.GL_RESCALE_NORMAL);
                     RenderHelper.enableGUIStandardItemLighting();
                     translatedRenderItem.zLevel = ITEM_STACK_Z - MAGIC_RENDER_ITEM_Z;
-                    translatedRenderItem
-                            .renderItemAndEffectIntoGUI(fontRendererObj, mc.getTextureManager(), toRender, 0, 0);
+                    translatedRenderItem.renderItemAndEffectIntoGUI(
+                            fontRendererObj,
+                            mc.getTextureManager(),
+                            toRender.getItemStack(),
+                            0,
+                            0);
                     GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
-                    aeRenderItem.setAeStack(AEItemStack.create(toRender));
-                    aeRenderItem.renderItemOverlayIntoGUI(fontRendererObj, mc.getTextureManager(), toRender, 0, 0);
+                    aeRenderItem.setAeStack(toRender);
+                    aeRenderItem.renderItemOverlayIntoGUI(
+                            fontRendererObj,
+                            mc.getTextureManager(),
+                            toRender.getItemStack(),
+                            0,
+                            0);
                     aeRenderItem.zLevel = 0.0f;
                     RenderHelper.disableStandardItemLighting();
                     if (!tooltip) {

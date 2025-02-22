@@ -52,6 +52,12 @@ public class SlotFake extends AppEngSlot {
         super.putStack(is);
     }
 
+    public void putAEStack(IAEItemStack ais) {
+        if (ais != null) {
+            this.aeStack = ais;
+        }
+    }
+
     @Override
     public boolean canTakeStack(final EntityPlayer par1EntityPlayer) {
         return false;

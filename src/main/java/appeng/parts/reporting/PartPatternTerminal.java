@@ -60,28 +60,6 @@ public class PartPatternTerminal extends AbstractPartTerminal {
         }
     }
 
-    public String getAEStackSizeCraftingSlots() {
-        StringBuilder ar = new StringBuilder();
-        for (int i = 0; i < crafting.getSizeInventory(); i++) {
-            ar.append(crafting.getAEStackInSlot(i) != null ? crafting.getAEStackInSlot(i).getStackSize() : 0);
-            if (i < crafting.getSizeInventory()) {
-                ar.append(",");
-            }
-        }
-        return ar.toString();
-    }
-
-    public String getAEStackSizeOutputSlots() {
-        StringBuilder ar = new StringBuilder();
-        for (int i = 0; i < output.getSizeInventory(); i++) {
-            ar.append(output.getAEStackInSlot(i) != null ? output.getAEStackInSlot(i).getStackSize() : 0);
-            if (i < output.getSizeInventory()) {
-                ar.append(",");
-            }
-        }
-        return ar.toString();
-    }
-
     @Override
     public void readFromNBT(final NBTTagCompound data) {
         super.readFromNBT(data);

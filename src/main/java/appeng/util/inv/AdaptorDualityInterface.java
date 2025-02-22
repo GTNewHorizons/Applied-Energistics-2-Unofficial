@@ -71,4 +71,18 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
         }
         return hasMEItems || super.containsItems();
     }
+
+    @Override
+    public IAEItemStack simulateAdd(IAEItemStack toBeSimulated, InsertionMode insertionMode) {
+        IMEMonitor<IAEItemStack> monitor = interfaceHost.getInterfaceDuality().getItemInventory();
+        return monitor
+                .injectItems(toBeSimulated, Actionable.SIMULATE, interfaceHost.getInterfaceDuality().getActionSource());
+    }
+
+    @Override
+    public IAEItemStack addItems(IAEItemStack toBeAdded, InsertionMode insertionMode) {
+        IMEMonitor<IAEItemStack> monitor = interfaceHost.getInterfaceDuality().getItemInventory();
+        return monitor
+                .injectItems(toBeAdded, Actionable.MODULATE, interfaceHost.getInterfaceDuality().getActionSource());
+    }
 }

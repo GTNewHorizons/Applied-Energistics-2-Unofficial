@@ -4,7 +4,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
@@ -12,6 +11,7 @@ import appeng.api.definitions.IDefinitions;
 import appeng.api.definitions.IParts;
 import appeng.api.storage.ITerminalHost;
 import appeng.container.implementations.ContainerPatternValueAmount;
+import appeng.container.slot.SlotFake;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
@@ -31,8 +31,8 @@ public class GuiPatternValueAmount extends GuiAmount {
         super(new ContainerPatternValueAmount(inventoryPlayer, te));
         GuiContainer gui = (GuiContainer) Minecraft.getMinecraft().currentScreen;
         if (gui != null && gui.theSlot != null && gui.theSlot.getHasStack()) {
-            Slot slot = gui.theSlot;
-            originalAmount = slot.getStack().stackSize;
+            SlotFake slot = (SlotFake) gui.theSlot;
+            originalAmount = slot.getAEStack().getStackSize();
             valueIndex = slot.slotNumber;
         } else {
             valueIndex = -1;

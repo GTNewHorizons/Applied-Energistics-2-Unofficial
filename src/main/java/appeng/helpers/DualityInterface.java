@@ -133,6 +133,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private int priority;
     public List<ICraftingPatternDetails> craftingList = null;
     private List<ItemStack> waitingToSend = null;
+    private List<IAEItemStack> waitingToSendAE = null;
     private IMEInventory<IAEItemStack> destination;
     private boolean isWorking = false;
     protected static final boolean EIO = Loader.isModLoaded("EnderIO");
@@ -256,6 +257,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         }
         data.setTag("waitingToSend", waitingToSend);
+
+        final NBTTagList waitingToSendAE = new NBTTagList();
+        if (this.waitingToSendAE != null) {
+            for (final IAEItemStack ais : this.waitingToSendAE) {
+                final NBTTagCompound item = new NBTTagCompound();
+                ais.writeToNBT(item);
+                waitingToSendAE.appendTag(item);
+            }
+        }
+        data.setTag("waitingToSendAE", waitingToSendAE);
     }
 
     public void readFromNBT(final NBTTagCompound data) {
@@ -271,6 +282,21 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     }
                     if (c.hasKey("Count", NBT.TAG_INT)) {
                         is.stackSize = c.getInteger("Count");
+                    }
+                    this.addToSendList(is);
+                }
+            }
+        }
+
+        this.waitingToSendAE = null;
+        final NBTTagList waitingListAE = data.getTagList("waitingToSendAE", 10);
+        if (waitingListAE != null) {
+            for (int x = 0; x < waitingListAE.tagCount(); x++) {
+                final NBTTagCompound c = waitingListAE.getCompoundTagAt(x);
+                if (c != null) {
+                    final IAEItemStack is = AEItemStack.loadItemStackFromNBT(c);
+                    if (is == null) {
+                        continue;
                     }
                     this.addToSendList(is);
                 }
@@ -326,6 +352,24 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
 
         this.waitingToSend.add(is);
+
+        try {
+            this.gridProxy.getTick().wakeDevice(this.gridProxy.getNode());
+        } catch (final GridAccessException e) {
+            // :P
+        }
+    }
+
+    private void addToSendList(final IAEItemStack is) {
+        if (is == null) {
+            return;
+        }
+
+        if (this.waitingToSendAE == null) {
+            this.waitingToSendAE = new LinkedList<>();
+        }
+
+        this.waitingToSendAE.add(is);
 
         try {
             this.gridProxy.getTick().wakeDevice(this.gridProxy.getNode());
@@ -547,10 +591,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.storage;
     }
 
-    public List<ItemStack> getWaitingToSend() {
-        return this.waitingToSend;
-    }
-
     public void markDirty() {
         for (int slot = 0; slot < this.storage.getSizeInventory(); slot++) {
             this.onChangeInventory(this.storage, slot, InvOperation.markDirty, null, null);
@@ -598,15 +638,15 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     // Returns if it successfully sent some items
     private boolean pushItemsOut(final EnumSet<ForgeDirection> possibleDirections) {
+        boolean sentSomething = pushAEItemsOut(possibleDirections);
         if (!this.hasItemsToSend()) {
-            return false;
+            return sentSomething;
         }
 
         final TileEntity tile = this.iHost.getTileEntity();
         final World w = tile.getWorldObj();
 
-        final Iterator<ItemStack> i = this.waitingToSend.iterator();
-        boolean sentSomething = false;
+        final Iterator<ItemStack> i = this.waitingToSend.iterator();;
         while (i.hasNext()) {
             ItemStack whatToSend = i.next();
 
@@ -658,6 +698,68 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         if (this.waitingToSend.isEmpty()) {
             this.waitingToSend = null;
+        }
+        return sentSomething;
+    }
+
+    private boolean pushAEItemsOut(final EnumSet<ForgeDirection> possibleDirections) {
+        if (this.waitingToSendAE == null || this.waitingToSendAE.isEmpty()) {
+            return false;
+        }
+
+        final TileEntity tile = this.iHost.getTileEntity();
+        final World w = tile.getWorldObj();
+
+        final Iterator<IAEItemStack> i = this.waitingToSendAE.iterator();
+        boolean sentSomething = false;
+        while (i.hasNext()) {
+            IAEItemStack whatToSend = i.next();
+
+            for (final ForgeDirection s : possibleDirections) {
+                final TileEntity te = w
+                        .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+
+                if (te == null) {
+                    continue;
+                }
+
+                if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
+
+                if (te instanceof IInterfaceHost host) {
+                    try {
+                        if (host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+                            continue;
+                        }
+                    } catch (GridAccessException e) {
+                        continue;
+                    }
+                }
+
+                final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
+                IAEItemStack Result = whatToSend;
+                if (ad instanceof AdaptorIInventory aii) {
+                    Result = aii.addItems(whatToSend, getInsertionMode());
+                }
+                if (Result == null) {
+                    whatToSend = null;
+                    sentSomething = true;
+                } else {
+                    sentSomething |= Result.getStackSize() < whatToSend.getStackSize();
+                    whatToSend.setStackSize(Result.getStackSize());
+                }
+
+                if (whatToSend == null) {
+                    break;
+                }
+            }
+
+            if (whatToSend == null) {
+                i.remove();
+            }
+        }
+
+        if (this.waitingToSendAE.isEmpty()) {
+            this.waitingToSendAE = null;
         }
         return sentSomething;
     }
@@ -992,16 +1094,30 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     continue;
 
                 if (acceptsItems(ad, table, getInsertionMode())) {
-                    for (int x = 0; x < table.getSizeInventory(); x++) {
-                        final ItemStack is = table.getStackInSlot(x);
-                        if (is != null) {
-                            this.addToSendList(ad.addItems(is, getInsertionMode()));
+                    if (ad instanceof AdaptorIInventory aii) {
+                        AEInventoryCrafting aic = (AEInventoryCrafting) table;
+                        for (int x = 0; x < aic.getSizeInventory(); x++) {
+                            final IAEItemStack ais = aic.getAEStackInSlot(x);
+                            if (ais != null) {
+                                this.addToSendList(aii.addItems(ais, getInsertionMode()));
+                            }
                         }
+                        out.add(s);
+                        this.pushItemsOut(out);
+                        onPushPatternSuccess(te, s.getOpposite(), patternDetails);
+                        return true;
+                    } else {
+                        for (int x = 0; x < table.getSizeInventory(); x++) {
+                            final ItemStack is = table.getStackInSlot(x);
+                            if (is != null) {
+                                this.addToSendList(ad.addItems(is, getInsertionMode()));
+                            }
+                        }
+                        out.add(s);
+                        this.pushItemsOut(out);
+                        onPushPatternSuccess(te, s.getOpposite(), patternDetails);
+                        return true;
                     }
-                    out.add(s);
-                    this.pushItemsOut(out);
-                    onPushPatternSuccess(te, s.getOpposite(), patternDetails);
-                    return true;
                 }
             } else if (EIO && te instanceof IItemDuct) {
                 boolean hadAcceptedSome = false;
@@ -1092,35 +1208,70 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     private static boolean acceptsItems(final InventoryAdaptor ad, final InventoryCrafting table,
             final InsertionMode insertionMode) {
-        for (int x = 0; x < table.getSizeInventory(); x++) {
-            ItemStack is = table.getStackInSlot(x);
-            if (is == null) {
-                continue;
-            }
-            is = is.copy();
-            boolean moreItemsMayFit;
-            do {
-                final int originalCount = is.stackSize;
-                final ItemStack remainingAfterSimulatedAdd = ad.simulateAdd(is.copy(), insertionMode);
-                final int remainingCount;
-                if (remainingAfterSimulatedAdd != null) {
-                    if (remainingAfterSimulatedAdd.isItemEqual(is)) {
-                        remainingCount = originalCount - remainingAfterSimulatedAdd.stackSize;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    remainingCount = 0;
+        AEInventoryCrafting aic = (AEInventoryCrafting) table;
+        if (ad instanceof AdaptorIInventory aii) {
+            for (int x = 0; x < aic.getSizeInventory(); x++) {
+                IAEItemStack ais = aic.getAEStackInSlot(x);
+                if (ais == null) {
+                    continue;
                 }
-                is.stackSize = remainingCount;
-                moreItemsMayFit = (remainingCount > 0) && (remainingCount < originalCount);
-            } while (moreItemsMayFit);
-            if (is.stackSize > 0) {
-                // Can't fit all of the items
-                return false;
+                ais = ais.copy();
+                boolean moreItemsMayFit;
+                do {
+                    final long originalCount = ais.getStackSize();
+                    final IAEItemStack remainingAfterSimulatedAdd = aii.simulateAdd(ais.copy(), insertionMode);
+                    final long remainingCount;
+                    if (remainingAfterSimulatedAdd != null) {
+                        if (remainingAfterSimulatedAdd.isSameType(ais)) {
+                            remainingCount = originalCount - remainingAfterSimulatedAdd.getStackSize();
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        remainingCount = 0;
+                    }
+                    ais.setStackSize(remainingCount);
+                    moreItemsMayFit = (remainingCount > 0) && (remainingCount < originalCount);
+                } while (moreItemsMayFit);
+                if (ais.getStackSize() > 0) {
+                    // Can't fit all of the items
+                    return false;
+                }
             }
-        }
 
+        } else {
+            for (int x = 0; x < table.getSizeInventory(); x++) {
+                if (aic.getAEStackInSlot(x) == null && aic.getAEStackInSlot(x).getStackSize() > Integer.MAX_VALUE)
+                    continue;
+                ItemStack is = table.getStackInSlot(x);
+                if (is == null) {
+                    continue;
+                }
+                is = is.copy();
+                boolean moreItemsMayFit;
+                do {
+                    final int originalCount = is.stackSize;
+                    final ItemStack remainingAfterSimulatedAdd = ad.simulateAdd(is.copy(), insertionMode);
+                    final int remainingCount;
+                    if (remainingAfterSimulatedAdd != null) {
+                        if (remainingAfterSimulatedAdd.isItemEqual(is)) {
+                            remainingCount = originalCount - remainingAfterSimulatedAdd.stackSize;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        remainingCount = 0;
+                    }
+                    is.stackSize = remainingCount;
+                    moreItemsMayFit = (remainingCount > 0) && (remainingCount < originalCount);
+                } while (moreItemsMayFit);
+                if (is.stackSize > 0) {
+                    // Can't fit all of the items
+                    return false;
+                }
+            }
+
+        }
         return true;
     }
 
