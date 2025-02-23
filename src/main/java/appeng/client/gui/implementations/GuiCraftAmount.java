@@ -120,7 +120,7 @@ public class GuiCraftAmount extends GuiAmount {
 
         try {
 
-            int resultI = getAmount();
+            long resultI = getAmount();
 
             this.nextBtn.enabled = resultI > 0;
         } catch (final NumberFormatException e) {
@@ -147,7 +147,7 @@ public class GuiCraftAmount extends GuiAmount {
             if (btn == this.nextBtn && btn.enabled) {
                 NetworkHandler.instance.sendToServer(
                         new PacketCraftRequest(
-                                addOrderAmount(0),
+                                addOrderAmount(0L),
                                 isShiftKeyDown(),
                                 (CraftingMode) this.craftingMode.getCurrentValue()));
             }

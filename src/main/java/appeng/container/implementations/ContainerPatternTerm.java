@@ -10,6 +10,7 @@
 
 package appeng.container.implementations;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,10 +49,13 @@ import appeng.container.slot.SlotFakeCraftingMatrix;
 import appeng.container.slot.SlotPatternOutputs;
 import appeng.container.slot.SlotPatternTerm;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketPatternSlot;
+import appeng.core.sync.packets.PacketUpdateAESlot;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.items.storage.ItemViewCell;
 import appeng.parts.reporting.PartPatternTerminal;
+import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
@@ -216,8 +220,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public void encode() {
         ItemStack output = this.patternSlotOUT.getStack();
 
-        final ItemStack[] in = this.getInputs();
-        final ItemStack[] out = this.getOutputs();
+        final IAEItemStack[] in = this.getInputs();
+        final IAEItemStack[] out = this.getOutputs();
 
         // if there is no input, this would be silly.
         if (in == null || out == null) {
@@ -255,12 +259,12 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         final NBTTagList tagIn = new NBTTagList();
         final NBTTagList tagOut = new NBTTagList();
 
-        for (final ItemStack i : in) {
-            tagIn.appendTag(this.createItemTag(i));
+        for (final IAEItemStack i : in) {
+            tagIn.appendTag(this.createAEItemTag(i));
         }
 
-        for (final ItemStack i : out) {
-            tagOut.appendTag(this.createItemTag(i));
+        for (final IAEItemStack i : out) {
+            tagOut.appendTag(this.createAEItemTag(i));
         }
 
         encodedValue.setTag("in", tagIn);
@@ -268,17 +272,36 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         encodedValue.setBoolean("crafting", this.isCraftingMode());
         encodedValue.setBoolean("substitute", this.isSubstitute());
         encodedValue.setBoolean("beSubstitute", this.canBeSubstitute());
+        encodedValue.setBoolean("isLong", isLongPattern());
         encodedValue.setString("author", this.getPlayerInv().player.getCommandSenderName());
 
         output.setTagCompound(encodedValue);
     }
 
-    private ItemStack[] getInputs() {
-        final ItemStack[] input = new ItemStack[9];
+    private boolean isLongPattern() {
+        final IAEItemStack[] in = this.getInputs();
+        final IAEItemStack[] out = this.getOutputs();
+
+        if (in == null || out == null) {
+            return false;
+        }
+
+        for (IAEItemStack ais : in) {
+            if (ais != null && ais.getStackSize() > Integer.MAX_VALUE) return true;
+        }
+
+        for (IAEItemStack ais : out) {
+            if (ais != null && ais.getStackSize() > Integer.MAX_VALUE) return true;
+        }
+        return false;
+    }
+
+    private IAEItemStack[] getInputs() {
+        final IAEItemStack[] input = new IAEItemStack[9];
         boolean hasValue = false;
 
         for (int x = 0; x < this.craftingSlots.length; x++) {
-            input[x] = this.craftingSlots[x].getStack();
+            input[x] = this.craftingSlots[x].getAEStack();
             if (input[x] != null) {
                 hasValue = true;
             }
@@ -291,28 +314,28 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         return null;
     }
 
-    private ItemStack[] getOutputs() {
+    private IAEItemStack[] getOutputs() {
         if (this.isCraftingMode()) {
             final ItemStack out = this.getAndUpdateOutput();
 
             if (out != null && out.stackSize > 0) {
-                return new ItemStack[] { out };
+                return new IAEItemStack[] { AEItemStack.create(out) };
             }
         } else {
-            final List<ItemStack> list = new ArrayList<>(3);
+            final List<IAEItemStack> list = new ArrayList<>(3);
             boolean hasValue = false;
 
             for (final OptionalSlotFake outputSlot : this.outputSlots) {
-                final ItemStack out = outputSlot.getStack();
+                final IAEItemStack out = outputSlot.getAEStack();
 
-                if (out != null && out.stackSize > 0) {
+                if (out != null && out.getStackSize() > 0) {
                     list.add(out);
                     hasValue = true;
                 }
             }
 
             if (hasValue) {
-                return list.toArray(new ItemStack[0]);
+                return list.toArray(new IAEItemStack[0]);
             }
         }
 
@@ -332,12 +355,11 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         return isPattern;
     }
 
-    private NBTBase createItemTag(final ItemStack i) {
+    private NBTBase createAEItemTag(final IAEItemStack i) {
         final NBTTagCompound c = new NBTTagCompound();
 
         if (i != null) {
             i.writeToNBT(c);
-            c.setInteger("Count", i.stackSize);
         }
 
         return c;
@@ -463,6 +485,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                 this.updateOrderOfOutputSlots();
             }
 
+            updateSlots();
+
             this.substitute = this.patternTerminal.isSubstitution();
             this.beSubstitute = this.patternTerminal.canBeSubstitution();
         }
@@ -482,6 +506,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public void onSlotChange(final Slot s) {
         if (!Platform.isServer()) return;
         if (s == this.patternSlotOUT) {
+            if (s.getHasStack()) updateSlotsOnPatternInject();
             for (final Object crafter : this.crafters) {
                 final ICrafting icrafting = (ICrafting) crafter;
 
@@ -497,6 +522,48 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         } else if (s == patternRefiller && patternRefiller.getStack() != null) {
             refillBlankPatterns(patternSlotIN);
             detectAndSendChanges();
+        }
+    }
+
+    public void updateSlotsOnPatternInject() {
+        for (final Object crafter : this.crafters) {
+            final EntityPlayerMP emp = (EntityPlayerMP) crafter;
+            for (final Object g : this.inventorySlots) {
+                if (((Slot) g).getHasStack()) {
+                    if (g instanceof SlotFakeCraftingMatrix sf) {
+                        AppEngInternalAEInventory inv = (AppEngInternalAEInventory) this.patternTerminal
+                                .getInventoryByName("crafting");
+                        sf.putAEStack(inv.getAEStackInSlot(sf.getSlotIndex()));
+                        try {
+                            NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
+                        } catch (IOException ignored) {}
+                    } else if (g instanceof SlotPatternOutputs sf) {
+                        AppEngInternalAEInventory inv = (AppEngInternalAEInventory) this.patternTerminal
+                                .getInventoryByName("output");
+                        sf.putAEStack(inv.getAEStackInSlot(sf.getSlotIndex()));
+                        try {
+                            NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
+                        } catch (IOException ignored) {}
+                    }
+                }
+            }
+        }
+    }
+
+    public void updateSlots() {
+        for (final Object crafter : this.crafters) {
+            final EntityPlayerMP emp = (EntityPlayerMP) crafter;
+            for (final Object g : this.inventorySlots) {
+                if (g instanceof SlotPatternOutputs || g instanceof SlotFakeCraftingMatrix) {
+                    final SlotFake sri = (SlotFake) g;
+                    if (sri.getHasStack()) {
+                        try {
+                            NetworkHandler.instance
+                                    .sendTo(new PacketUpdateAESlot(sri.slotNumber, sri.getAEStack()), emp);
+                        } catch (IOException ignored) {}
+                    }
+                }
+            }
         }
     }
 
@@ -567,21 +634,22 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                         * ((val & 2) != 0 ? -1 : 1));
     }
 
-    static boolean canMultiplyOrDivide(SlotFake[] slots, int mult) {
+    static boolean canMultiplyOrDivide(SlotFake[] slots, long mult) {
         if (mult > 0) {
-            for (Slot s : slots) {
-                if (s.getStack() != null) {
-                    long val = (long) s.getStack().stackSize * mult;
-                    if (val > Integer.MAX_VALUE) return false;
+            for (SlotFake s : slots) {
+                if (s.getAEStack() != null) {
+                    double val = (double) s.getAEStack().getStackSize() * mult;
+                    if (val > Long.MAX_VALUE) return false;
                 }
             }
             return true;
         } else if (mult < 0) {
             mult = -mult;
-            for (Slot s : slots) {
-                if (s.getStack() != null) { // Although % is a very inefficient algorithm, it is not a performance issue
-                                            // here. :>
-                    if (s.getStack().stackSize % mult != 0) return false;
+            for (SlotFake s : slots) {
+                if (s.getAEStack() != null) { // Although % is a very inefficient algorithm, it is not a performance
+                                              // issue
+                                              // here. :>
+                    if (s.getAEStack().getStackSize() % mult != 0) return false;
                 }
             }
             return true;
@@ -589,23 +657,21 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         return false;
     }
 
-    static void multiplyOrDivideStacksInternal(SlotFake[] slots, int mult) {
+    static void multiplyOrDivideStacksInternal(SlotFake[] slots, long mult) {
         List<SlotFake> enabledSlots = Arrays.stream(slots).filter(SlotFake::isEnabled).collect(Collectors.toList());
         if (mult > 0) {
-            for (final Slot s : enabledSlots) {
-                ItemStack st = s.getStack();
+            for (final SlotFake s : enabledSlots) {
+                IAEItemStack st = s.getAEStack();
                 if (st != null) {
-                    st.stackSize *= mult;
-                    s.putStack(st);
+                    st.setStackSize(st.getStackSize() * mult);
                 }
             }
         } else if (mult < 0) {
             mult = -mult;
-            for (final Slot s : enabledSlots) {
-                ItemStack st = s.getStack();
+            for (final SlotFake s : enabledSlots) {
+                IAEItemStack st = s.getAEStack();
                 if (st != null) {
-                    st.stackSize /= mult;
-                    s.putStack(st);
+                    st.setStackSize(st.getStackSize() / mult);
                 }
             }
         }
@@ -616,7 +682,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
      * 
      * @param multi Positive numbers are multiplied and negative numbers are divided
      */
-    public void multiplyOrDivideStacks(int multi) {
+    public void multiplyOrDivideStacks(long multi) {
         if (!isCraftingMode()) {
             if (canMultiplyOrDivide(this.craftingSlots, multi) && canMultiplyOrDivide(this.outputSlots, multi)) {
                 multiplyOrDivideStacksInternal(this.craftingSlots, multi);
