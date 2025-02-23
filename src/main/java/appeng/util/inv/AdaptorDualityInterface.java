@@ -14,10 +14,11 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.helpers.BlockingModeIgnoreList;
 import appeng.helpers.DualityInterface;
+import appeng.helpers.IDigitalInventory;
 import appeng.helpers.IInterfaceHost;
 import appeng.util.item.AEItemStack;
 
-public class AdaptorDualityInterface extends AdaptorIInventory {
+public class AdaptorDualityInterface extends AdaptorIInventory implements IDigitalInventory {
 
     public final IInterfaceHost interfaceHost;
 
@@ -73,14 +74,14 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
     }
 
     @Override
-    public IAEItemStack simulateAdd(IAEItemStack toBeSimulated, InsertionMode insertionMode) {
+    public IAEItemStack simulateAdd(IAEItemStack toBeSimulated) {
         IMEMonitor<IAEItemStack> monitor = interfaceHost.getInterfaceDuality().getItemInventory();
         return monitor
                 .injectItems(toBeSimulated, Actionable.SIMULATE, interfaceHost.getInterfaceDuality().getActionSource());
     }
 
     @Override
-    public IAEItemStack addItems(IAEItemStack toBeAdded, InsertionMode insertionMode) {
+    public IAEItemStack addItems(IAEItemStack toBeAdded) {
         IMEMonitor<IAEItemStack> monitor = interfaceHost.getInterfaceDuality().getItemInventory();
         return monitor
                 .injectItems(toBeAdded, Actionable.MODULATE, interfaceHost.getInterfaceDuality().getActionSource());

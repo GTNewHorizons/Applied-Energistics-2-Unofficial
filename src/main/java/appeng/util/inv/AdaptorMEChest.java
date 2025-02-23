@@ -5,10 +5,11 @@ import net.minecraft.item.ItemStack;
 import appeng.api.config.Actionable;
 import appeng.api.config.InsertionMode;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.helpers.IDigitalInventory;
 import appeng.tile.storage.TileChest;
 import appeng.util.item.AEItemStack;
 
-public class AdaptorMEChest extends AdaptorIInventory {
+public class AdaptorMEChest extends AdaptorIInventory implements IDigitalInventory {
 
     private final TileChest meChest;
 
@@ -40,7 +41,7 @@ public class AdaptorMEChest extends AdaptorIInventory {
     }
 
     @Override
-    public IAEItemStack simulateAdd(IAEItemStack toBeSimulated, InsertionMode insertionMode) {
+    public IAEItemStack simulateAdd(IAEItemStack toBeSimulated) {
         if (meChest.getItemInventory() == null) {
             return toBeSimulated;
         }
@@ -50,7 +51,7 @@ public class AdaptorMEChest extends AdaptorIInventory {
     }
 
     @Override
-    public IAEItemStack addItems(IAEItemStack toBeAdded, InsertionMode insertionMode) {
+    public IAEItemStack addItems(IAEItemStack toBeAdded) {
         if (meChest.getItemInventory() == null) {
             return toBeAdded;
         }

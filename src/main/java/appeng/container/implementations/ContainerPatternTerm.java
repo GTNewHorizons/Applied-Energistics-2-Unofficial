@@ -287,11 +287,11 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         }
 
         for (IAEItemStack ais : in) {
-            if (ais.getStackSize() > Integer.MAX_VALUE) return true;
+            if (ais != null && ais.getStackSize() > Integer.MAX_VALUE) return true;
         }
 
         for (IAEItemStack ais : out) {
-            if (ais.getStackSize() > Integer.MAX_VALUE) return true;
+            if (ais != null && ais.getStackSize() > Integer.MAX_VALUE) return true;
         }
         return false;
     }

@@ -17,10 +17,8 @@ import net.minecraft.item.ItemStack;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
-import appeng.util.item.AEItemStack;
 
 public class AdaptorIInventory extends InventoryAdaptor {
 
@@ -206,24 +204,6 @@ public class AdaptorIInventory extends InventoryAdaptor {
     @Override
     public ItemStack simulateAdd(ItemStack toBeSimulated, InsertionMode insertionMode) {
         return this.addItems(toBeSimulated, false, insertionMode);
-    }
-
-    public IAEItemStack simulateAdd(final IAEItemStack toBeSimulated) {
-        if (toBeSimulated.getStackSize() > Integer.MAX_VALUE) return toBeSimulated;
-        return AEItemStack.create(this.addItems(toBeSimulated.getItemStack(), false, InsertionMode.DEFAULT));
-    }
-
-    public IAEItemStack simulateAdd(IAEItemStack toBeSimulated, InsertionMode insertionMode) {
-        if (toBeSimulated.getStackSize() > Integer.MAX_VALUE) return toBeSimulated;
-        return AEItemStack.create(this.addItems(toBeSimulated.getItemStack(), false, insertionMode));
-    }
-
-    public IAEItemStack addItems(final IAEItemStack toBeAdded) {
-        return AEItemStack.create(this.addItems(toBeAdded.getItemStack(), true, InsertionMode.DEFAULT));
-    }
-
-    public IAEItemStack addItems(IAEItemStack toBeAdded, InsertionMode insertionMode) {
-        return AEItemStack.create(this.addItems(toBeAdded.getItemStack(), true, insertionMode));
     }
 
     @Override
