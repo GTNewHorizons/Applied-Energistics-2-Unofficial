@@ -18,6 +18,11 @@ public class AdaptorMEChest extends AdaptorIInventory {
     }
 
     @Override
+    public ItemStack addItems(final ItemStack toBeAdded) {
+        return this.addItems(toBeAdded, InsertionMode.DEFAULT);
+    }
+
+    @Override
     public ItemStack addItems(ItemStack toBeAdded, InsertionMode insertionMode) {
         if (meChest.getItemInventory() == null) {
             return toBeAdded;
@@ -26,6 +31,11 @@ public class AdaptorMEChest extends AdaptorIInventory {
         IAEItemStack result = (IAEItemStack) meChest.getItemInventory()
                 .injectItems(AEItemStack.create(toBeAdded), Actionable.MODULATE, meChest.getActionSource());
         return result == null ? null : result.getItemStack();
+    }
+
+    @Override
+    public ItemStack simulateAdd(final ItemStack toBeSimulated) {
+        return this.simulateAdd(toBeSimulated, InsertionMode.DEFAULT);
     }
 
     @Override
