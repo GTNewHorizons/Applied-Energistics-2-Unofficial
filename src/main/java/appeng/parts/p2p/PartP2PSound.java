@@ -10,6 +10,8 @@
 
 package appeng.parts.p2p;
 
+import static com.gtnewhorizon.gtnhlib.capability.Capabilities.getCapability;
+
 import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
@@ -66,7 +68,8 @@ public class PartP2PSound extends PartP2PTunnelNormal<PartP2PSound> implements I
         if (alive && !isOutput()) {
             SoundEventHandler.INSTANCE.activateP2P(this);
         }
-        if (neighbor instanceof ISoundP2PHandler handler) {
+        ISoundP2PHandler handler = getCapability(neighbor, ISoundP2PHandler.class);
+        if (handler != null) {
             this.customHandler = handler;
             handler.onSoundP2PAttach(this);
         } else {
