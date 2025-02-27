@@ -83,7 +83,7 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
                     return new AdaptorP2PItem(p2p);
                 }
             } else if (te instanceof TileChest) {
-                return new AdaptorMEChest((TileChest) te);
+                return new AdaptorMEChest(new WrapperMCISidedInventory(si, d), (TileChest) te);
             }
 
             final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());

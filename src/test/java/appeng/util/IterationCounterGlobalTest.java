@@ -17,7 +17,7 @@ public class IterationCounterGlobalTest {
 
     @Test
     public void incrementGlobalDepthIterationTest() {
-        var prev = IterationCounter.fetchNewId();
+        int prev = IterationCounter.fetchNewId();
         IterationCounter.incrementGlobalDepthWith(prev);
         IterationCounter.decrementGlobalDepth();
         assertEquals(IterationCounter.incrementGlobalDepth(), prev + 1);
