@@ -262,11 +262,14 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             for (int x = 0; x < waitingList.tagCount(); x++) {
                 final NBTTagCompound c = waitingList.getCompoundTagAt(x);
                 if (c != null) {
-                    final IAEItemStack is = AEItemStack.loadItemStackFromNBT(c);
-                    if (is == null) {
+                    final IAEItemStack ais = AEItemStack.loadItemStackFromNBT(c);
+                    if (ais == null) {
                         continue;
                     }
-                    this.addToSendList(is);
+                    if (ais.getStackSize() == 0) {
+                        final IAEItemStack is = AEItemStack.create(ItemStack.loadItemStackFromNBT(c));
+                        this.addToSendList(is);
+                    } else this.addToSendList(ais);
                 }
             }
         }
@@ -602,10 +605,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         boolean sentSomething = false;
 
         final Iterator<IAEItemStack> i = this.waitingToSend.iterator();;
-        List<IAEItemStack> updated = new ArrayList<>();
         while (i.hasNext()) {
             IAEItemStack whatToSend = i.next();
-            ItemStack wts = whatToSend.getItemStack();
 
             for (final ForgeDirection s : possibleDirections) {
                 final TileEntity te = w
@@ -630,7 +631,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
                 ItemStack Result = whatToSend.getItemStack();
                 if (ad != null) {
-                    if (ad instanceof IDigitalInventory idi) {
+                    if (ad instanceof IDigitalInventory idi && idi.isDigitalMode()) {
                         IAEItemStack aeResult = idi.addItems(whatToSend);
                         if (aeResult == null) {
                             whatToSend = null;
@@ -639,53 +640,42 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                             sentSomething |= aeResult.getStackSize() < whatToSend.getStackSize();
                             whatToSend.setStackSize(aeResult.getStackSize());
                         }
+
+                        if (whatToSend == null) {
+                            break;
+                        } else continue;
+                    } else {
+                        Result = ad.addItems(whatToSend.getItemStack(), getInsertionMode());
                     }
-                    Result = ad.addItems(wts, getInsertionMode());
                 } else if (EIO && te instanceof IItemDuct) {
-                    Result = ((IItemDuct) te).insertItem(s.getOpposite(), wts);
+                    Result = ((IItemDuct) te).insertItem(s.getOpposite(), whatToSend.getItemStack());
                 }
                 if (Result == null) {
-                    wts = null;
-                    sentSomething = true;
-                } else {
-                    sentSomething |= Result.stackSize < wts.stackSize;
-                    wts.stackSize = Result.stackSize;
-                    wts.setTagCompound(Result.getTagCompound());
-                }
-
-                if (whatToSend == null || wts == null) {
-                    break;
-                }
-            }
-
-            if (whatToSend != null) {
-                if (whatToSend.getStackSize() > Integer.MAX_VALUE) {
-                    if (wts == null) {
+                    if (whatToSend.getStackSize() > Integer.MAX_VALUE) {
                         whatToSend.setStackSize(whatToSend.getStackSize() - Integer.MAX_VALUE);
                     } else {
-                        whatToSend.setStackSize(whatToSend.getStackSize() - (Integer.MAX_VALUE - wts.stackSize));
-                    }
-                } else {
-                    if (wts == null) {
                         whatToSend = null;
-                    } else {
-                        whatToSend.setStackSize(wts.stackSize);
                     }
-                }
-            }
+                    sentSomething = true;
+                } else {
+                    if (whatToSend.getStackSize() > Integer.MAX_VALUE) {
+                        whatToSend.setStackSize(whatToSend.getStackSize() - (Integer.MAX_VALUE - Result.stackSize));
+                    } else {
+                        whatToSend.setStackSize(Result.stackSize);
+                    }
+                    sentSomething |= Result.stackSize < whatToSend.getItemStack().stackSize;
 
-            if (wts != null && whatToSend != null) {
-                updated.add(AEItemStack.create(wts).setStackSize(whatToSend.getStackSize()));
-                i.remove();
+                    ((AEItemStack) whatToSend).copyTagCompoundFromItemStack(Result);
+                }
+
+                if (whatToSend == null) {
+                    break;
+                }
             }
 
             if (whatToSend == null) {
                 i.remove();
             }
-        }
-
-        if (!updated.isEmpty()) {
-            this.waitingToSend.addAll(updated);
         }
 
         if (this.waitingToSend.isEmpty()) {
@@ -1024,7 +1014,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     continue;
 
                 if (acceptsItems(ad, table, getInsertionMode())) {
-                    if (ad instanceof IDigitalInventory idi) {
+                    if (ad instanceof IDigitalInventory idi && idi.isDigitalMode()) {
                         AEInventoryCrafting aic = (AEInventoryCrafting) table;
                         for (int x = 0; x < aic.getSizeInventory(); x++) {
                             final IAEItemStack ais = aic.getAEStackInSlot(x);
@@ -1150,32 +1140,30 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
             }
         } else {
-            for (int x = 0; x < table.getSizeInventory(); x++) {
-                if (aic.getAEStackInSlot(x) != null && aic.getAEStackInSlot(x).getStackSize() > Integer.MAX_VALUE)
-                    return false;
-                ItemStack is = table.getStackInSlot(x);
+            for (int x = 0; x < aic.getSizeInventory(); x++) {
+                IAEItemStack is = aic.getAEStackInSlot(x);
                 if (is == null) {
                     continue;
                 }
                 is = is.copy();
                 boolean moreItemsMayFit;
                 do {
-                    final int originalCount = is.stackSize;
-                    final ItemStack remainingAfterSimulatedAdd = ad.simulateAdd(is.copy(), insertionMode);
-                    final int remainingCount;
+                    final long originalCount = is.getStackSize();
+                    final ItemStack remainingAfterSimulatedAdd = ad.simulateAdd(is.getItemStack(), insertionMode);
+                    final long remainingCount;
                     if (remainingAfterSimulatedAdd != null) {
-                        if (remainingAfterSimulatedAdd.isItemEqual(is)) {
+                        if (remainingAfterSimulatedAdd.isItemEqual(is.getItemStack())) {
                             remainingCount = originalCount - remainingAfterSimulatedAdd.stackSize;
                         } else {
                             return false;
                         }
                     } else {
-                        remainingCount = 0;
+                        remainingCount = originalCount - is.getItemStack().stackSize;
                     }
-                    is.stackSize = remainingCount;
+                    is.setStackSize(remainingCount);
                     moreItemsMayFit = (remainingCount > 0) && (remainingCount < originalCount);
                 } while (moreItemsMayFit);
-                if (is.stackSize > 0) {
+                if (is.getStackSize() > 0) {
                     // Can't fit all of the items
                     return false;
                 }

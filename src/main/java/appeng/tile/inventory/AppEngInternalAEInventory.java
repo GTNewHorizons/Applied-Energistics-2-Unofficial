@@ -166,6 +166,10 @@ public class AppEngInternalAEInventory implements IInventory, Iterable<ItemStack
         }
     }
 
+    public void setAEInventorySlotContents(final int slot, final IAEItemStack newItemStack) {
+        this.inv[slot] = newItemStack;
+    }
+
     @Override
     public String getInventoryName() {
         return "appeng-internal";

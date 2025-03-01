@@ -141,15 +141,13 @@ public class PartPatternTerminal extends AbstractPartTerminal {
 
                     for (int x = 0; x < this.crafting.getSizeInventory() && x < inItems.length; x++) {
                         if (inItems[x] != null) {
-                            this.crafting.setInventorySlotContents(x, inItems[x].getItemStack());
-                            this.crafting.getAEStackInSlot(x).setStackSize(inItems[x].getStackSize());
+                            this.crafting.setAEInventorySlotContents(x, inItems[x]);
                         }
                     }
 
                     for (int x = 0; x < this.output.getSizeInventory() && x < outItems.length; x++) {
                         if (outItems[x] != null) {
-                            this.output.setInventorySlotContents(x, outItems[x].getItemStack());
-                            this.output.getAEStackInSlot(x).setStackSize(outItems[x].getStackSize());
+                            this.output.setAEInventorySlotContents(x, outItems[x]);
                         }
                     }
                 }

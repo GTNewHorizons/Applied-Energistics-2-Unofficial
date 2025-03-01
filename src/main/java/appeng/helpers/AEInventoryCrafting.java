@@ -2,14 +2,16 @@ package appeng.helpers;
 
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.data.IAEItemStack;
+import appeng.util.item.AEItemStack;
 
 public class AEInventoryCrafting extends InventoryCrafting {
 
     private IAEItemStack[] stackListAE;
     private int inventoryWidthAE;
-    private Container eventHandler;
+    public Container eventHandler;
 
     public AEInventoryCrafting(Container cont, int width, int height) {
         super(cont, width, height);
@@ -71,6 +73,13 @@ public class AEInventoryCrafting extends InventoryCrafting {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public void setInventorySlotContents(int index, ItemStack stack) {
+        this.stackListAE[index] = AEItemStack.create(stack);
+        this.eventHandler.onCraftMatrixChanged(this);
+        super.setInventorySlotContents(index, stack);
     }
 
     public void setInventorySlotContents(int index, IAEItemStack stack) {

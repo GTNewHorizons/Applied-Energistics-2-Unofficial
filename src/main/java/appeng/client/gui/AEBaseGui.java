@@ -804,7 +804,7 @@ public abstract class AEBaseGui extends GuiContainer {
 
             RenderItem pIR = this.setItemRender(this.aeRenderItem);
             this.aeRenderItem.setAeStack(ais);
-            this.drawAEPattern(s, ais);
+            this.drawAESlot(s);
             this.setItemRender(pIR);
             return;
         }
@@ -985,23 +985,6 @@ public abstract class AEBaseGui extends GuiContainer {
         int i = slotIn.xDisplayPosition;
         int j = slotIn.yDisplayPosition;
         ItemStack itemstack = slotIn.getStack();
-        String s = null;
-
-        this.zLevel = 100.0F;
-        itemRender.zLevel = 100.0F;
-        itemRender.renderItemAndEffectIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j);
-        itemRender.zLevel = 0.0F;
-
-        this.zLevel = 0.0F;
-        GL11.glTranslatef(0.0f, 0.0f, 200.0f);
-        aeRenderItem.renderItemOverlayIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j, s);
-        GL11.glTranslatef(0.0f, 0.0f, -200.0f);
-    }
-
-    public void drawAEPattern(Slot slotIn, IAEItemStack ais) {
-        int i = slotIn.xDisplayPosition;
-        int j = slotIn.yDisplayPosition;
-        ItemStack itemstack = ais.getItemStack();
         String s = null;
 
         this.zLevel = 100.0F;

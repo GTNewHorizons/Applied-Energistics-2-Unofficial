@@ -485,8 +485,6 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                 this.updateOrderOfOutputSlots();
             }
 
-            updateSlots();
-
             this.substitute = this.patternTerminal.isSubstitution();
             this.beSubstitute = this.patternTerminal.canBeSubstitution();
         }
@@ -503,48 +501,66 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     }
 
     @Override
-    public void onSlotChange(final Slot s) {
-        if (!Platform.isServer()) return;
-        if (s == this.patternSlotOUT) {
-            if (s.getHasStack()) updateSlotsOnPatternInject();
-            for (final Object crafter : this.crafters) {
-                final ICrafting icrafting = (ICrafting) crafter;
+    public void addCraftingToCrafters(ICrafting c) {
+        super.addCraftingToCrafters(c);
+        updateSlots();
+    }
 
-                for (final Object g : this.inventorySlots) {
-                    if (g instanceof OptionalSlotFake || g instanceof SlotFakeCraftingMatrix) {
-                        final Slot sri = (Slot) g;
-                        icrafting.sendSlotContents(this, sri.slotNumber, sri.getStack());
+    @Override
+    public void onSlotChange(final Slot s) {
+        if (Platform.isServer()) {
+            if (s == this.patternSlotOUT) {
+                if (s.getHasStack()) updateSlotsOnPatternInject();
+                for (final Object crafter : this.crafters) {
+                    final ICrafting icrafting = (ICrafting) crafter;
+
+                    for (final Object g : this.inventorySlots) {
+                        if (g instanceof OptionalSlotFake || g instanceof SlotFakeCraftingMatrix) {
+                            final Slot sri = (Slot) g;
+                            icrafting.sendSlotContents(this, sri.slotNumber, sri.getStack());
+                        }
+                    }
+                    ((EntityPlayerMP) icrafting).isChangingQuantityOnly = false;
+                }
+                this.detectAndSendChanges();
+            } else if (s == patternRefiller && patternRefiller.getStack() != null) {
+                refillBlankPatterns(patternSlotIN);
+                detectAndSendChanges();
+            } else if (s instanceof SlotFake sf) {
+                for (final Object crafter : this.crafters) {
+                    final EntityPlayerMP emp = (EntityPlayerMP) crafter;
+                    if (sf.getHasStack()) {
+                        try {
+                            NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
+                        } catch (IOException ignored) {}
                     }
                 }
-                ((EntityPlayerMP) icrafting).isChangingQuantityOnly = false;
             }
-            this.detectAndSendChanges();
-        } else if (s == patternRefiller && patternRefiller.getStack() != null) {
-            refillBlankPatterns(patternSlotIN);
-            detectAndSendChanges();
         }
     }
 
     public void updateSlotsOnPatternInject() {
         for (final Object crafter : this.crafters) {
             final EntityPlayerMP emp = (EntityPlayerMP) crafter;
-            for (final Object g : this.inventorySlots) {
-                if (((Slot) g).getHasStack()) {
-                    if (g instanceof SlotFakeCraftingMatrix sf) {
-                        AppEngInternalAEInventory inv = (AppEngInternalAEInventory) this.patternTerminal
-                                .getInventoryByName("crafting");
-                        sf.putAEStack(inv.getAEStackInSlot(sf.getSlotIndex()));
-                        try {
-                            NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
-                        } catch (IOException ignored) {}
-                    } else if (g instanceof SlotPatternOutputs sf) {
-                        AppEngInternalAEInventory inv = (AppEngInternalAEInventory) this.patternTerminal
-                                .getInventoryByName("output");
-                        sf.putAEStack(inv.getAEStackInSlot(sf.getSlotIndex()));
-                        try {
-                            NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
-                        } catch (IOException ignored) {}
-                    }
+            for (final SlotFakeCraftingMatrix sfcm : this.craftingSlots) {
+                if (sfcm.getHasStack()) {
+                    AppEngInternalAEInventory inv = (AppEngInternalAEInventory) this.patternTerminal
+                            .getInventoryByName("crafting");
+                    sfcm.putAEStack(inv.getAEStackInSlot(sfcm.getSlotIndex()));
+                    try {
+                        NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sfcm.slotNumber, sfcm.getAEStack()), emp);
+                    } catch (IOException ignored) {}
+                }
+            }
+
+            for (final OptionalSlotFake osf : this.outputSlots) {
+                if (osf.getHasStack()) {
+                    AppEngInternalAEInventory inv = (AppEngInternalAEInventory) this.patternTerminal
+                            .getInventoryByName("output");
+                    osf.putAEStack(inv.getAEStackInSlot(osf.getSlotIndex()));
+                    try {
+                        NetworkHandler.instance.sendTo(new PacketUpdateAESlot(osf.slotNumber, osf.getAEStack()), emp);
+                    } catch (IOException ignored) {}
                 }
             }
         }
@@ -553,17 +569,30 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public void updateSlots() {
         for (final Object crafter : this.crafters) {
             final EntityPlayerMP emp = (EntityPlayerMP) crafter;
-            for (final Object g : this.inventorySlots) {
-                if (g instanceof SlotPatternOutputs || g instanceof SlotFakeCraftingMatrix) {
-                    final SlotFake sri = (SlotFake) g;
-                    if (sri.getHasStack()) {
-                        try {
-                            NetworkHandler.instance
-                                    .sendTo(new PacketUpdateAESlot(sri.slotNumber, sri.getAEStack()), emp);
-                        } catch (IOException ignored) {}
-                    }
+
+            for (final SlotFakeCraftingMatrix sfcm : this.craftingSlots) {
+                if (sfcm.getHasStack()) {
+                    try {
+                        NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sfcm.slotNumber, sfcm.getAEStack()), emp);
+                    } catch (IOException ignored) {}
                 }
             }
+
+            for (final OptionalSlotFake osf : this.outputSlots) {
+                if (osf.getHasStack()) {
+                    try {
+                        NetworkHandler.instance.sendTo(new PacketUpdateAESlot(osf.slotNumber, osf.getAEStack()), emp);
+                    } catch (IOException ignored) {}
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onCraftMatrixChanged(IInventory p_75130_1_) {
+        super.onCraftMatrixChanged(p_75130_1_);
+        if (Platform.isServer()) {
+            p_75130_1_.markDirty();
         }
     }
 

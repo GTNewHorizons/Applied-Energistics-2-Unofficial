@@ -14,8 +14,8 @@ import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.PatternHelper;
 import appeng.helpers.Reflected;
+import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.tile.inventory.BiggerAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 
 public class PartPatternTerminalEx extends AbstractPartTerminal {
@@ -24,8 +24,8 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
     private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
     private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
 
-    private final AppEngInternalInventory crafting = new BiggerAppEngInventory(this, 32);
-    private final AppEngInternalInventory output = new BiggerAppEngInventory(this, 32);
+    private final AppEngInternalAEInventory crafting = new AppEngInternalAEInventory(this, 32);
+    private final AppEngInternalAEInventory output = new AppEngInternalAEInventory(this, 32);
     private final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
 
     private boolean substitute = false;
@@ -147,19 +147,19 @@ public class PartPatternTerminalEx extends AbstractPartTerminal {
 
                     for (int x = 0; x < this.crafting.getSizeInventory() && x < inItems.length; x++) {
                         if (inItems[x] != null) {
-                            this.crafting.setInventorySlotContents(x, inItems[x].getItemStack());
+                            this.crafting.setAEInventorySlotContents(x, inItems[x]);
                         }
                     }
 
                     if (inverted) {
                         for (int x = 0; x < this.output.getSizeInventory() && x < outItems.length; x++) {
                             if (outItems[x] != null) {
-                                this.output.setInventorySlotContents(x, outItems[x].getItemStack());
+                                this.output.setAEInventorySlotContents(x, outItems[x]);
                             }
                         }
                     } else {
                         for (int x = 0; x < outItems.length && x < 8; x++) {
-                            this.output.setInventorySlotContents(x >= 4 ? 12 + x : x, outItems[x].getItemStack());
+                            this.output.setAEInventorySlotContents(x >= 4 ? 12 + x : x, outItems[x]);
                         }
                     }
                 }

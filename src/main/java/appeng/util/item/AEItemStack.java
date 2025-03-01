@@ -351,6 +351,13 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return this.getDefinition().getTagCompound();
     }
 
+    public void copyTagCompoundFromItemStack(ItemStack is) {
+        final NBTTagCompound tagCompound = is.getTagCompound();
+        if (tagCompound != null) {
+            this.getDefinition().setTagCompound((AESharedNBT) AESharedNBT.getSharedTagCompound(tagCompound, is));
+        }
+    }
+
     @Override
     public boolean isItem() {
         return true;

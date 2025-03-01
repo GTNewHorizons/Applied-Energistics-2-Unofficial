@@ -8,6 +8,7 @@ import net.minecraft.entity.player.EntityPlayer;
 
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.implementations.GuiPatternTerm;
+import appeng.client.gui.implementations.GuiPatternTermEx;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.util.item.AEItemStack;
@@ -74,6 +75,8 @@ public class PacketUpdateAESlot extends AppEngPacket {
 
         if (gs instanceof GuiPatternTerm gpt) {
             gpt.setSlotAE(this.slotId, this.slotItem);
+        } else if (gs instanceof GuiPatternTermEx gpte) {
+            gpte.setSlotAE(this.slotId, this.slotItem);
         }
     }
 }
