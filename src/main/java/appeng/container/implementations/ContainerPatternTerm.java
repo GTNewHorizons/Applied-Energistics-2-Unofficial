@@ -510,7 +510,6 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
     public void onSlotChange(final Slot s) {
         if (Platform.isServer()) {
             if (s == this.patternSlotOUT) {
-                if (s.getHasStack()) updateSlotsOnPatternInject();
                 for (final Object crafter : this.crafters) {
                     final ICrafting icrafting = (ICrafting) crafter;
 
@@ -522,6 +521,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
                     }
                     ((EntityPlayerMP) icrafting).isChangingQuantityOnly = false;
                 }
+                if (s.getHasStack()) updateSlotsOnPatternInject();
                 this.detectAndSendChanges();
             } else if (s == patternRefiller && patternRefiller.getStack() != null) {
                 refillBlankPatterns(patternSlotIN);

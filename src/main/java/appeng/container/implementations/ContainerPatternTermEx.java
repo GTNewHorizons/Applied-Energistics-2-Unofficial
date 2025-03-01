@@ -367,8 +367,6 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
         if (!Platform.isServer()) return;
         if (s == this.patternSlotOUT) {
             inverted = patternTerminal.isInverted();
-            if (s.getHasStack()) updateSlotsOnPatternInject();
-
             for (final Object crafter : this.crafters) {
                 final ICrafting icrafting = (ICrafting) crafter;
 
@@ -380,7 +378,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
                 }
                 ((EntityPlayerMP) icrafting).isChangingQuantityOnly = false;
             }
-
+            if (s.getHasStack()) updateSlotsOnPatternInject();
             this.detectAndSendChanges();
         } else if (s == patternRefiller && patternRefiller.getStack() != null) {
             refillBlankPatterns(patternSlotIN);
