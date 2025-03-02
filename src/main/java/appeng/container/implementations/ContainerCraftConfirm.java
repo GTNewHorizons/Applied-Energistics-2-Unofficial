@@ -344,12 +344,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
             originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
         }
 
-        if (ah instanceof PartPatternTerminal) {
-            originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-
         if (ah instanceof PartPatternTerminalEx) {
             originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
+        } else if (ah instanceof PartPatternTerminal) {
+            originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
         }
 
         if (originalGui != null && this.getOpenContext() != null) {

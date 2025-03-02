@@ -461,6 +461,7 @@ public abstract class ContainerPatternTermBase extends ContainerMEMonitorable
             if (canMultiplyOrDivide(this.craftingSlots, multi) && canMultiplyOrDivide(this.outputSlots, multi)) {
                 multiplyOrDivideStacksInternal(this.craftingSlots, multi);
                 multiplyOrDivideStacksInternal(this.outputSlots, multi);
+                this.updateSlots();
             }
             this.detectAndSendChanges();
         }

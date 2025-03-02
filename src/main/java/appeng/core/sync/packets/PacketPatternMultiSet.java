@@ -6,8 +6,7 @@ import net.minecraft.tileentity.TileEntity;
 import appeng.api.networking.IGridHost;
 import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerPatternMulti;
-import appeng.container.implementations.ContainerPatternTerm;
-import appeng.container.implementations.ContainerPatternTermEx;
+import appeng.container.implementations.ContainerPatternTermBase;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
@@ -22,7 +21,7 @@ public class PacketPatternMultiSet extends AppEngPacket {
 
     public PacketPatternMultiSet(final ByteBuf stream) {
         this.originGui = GuiBridge.values()[stream.readInt()];
-        this.multi = stream.readInt();
+        this.multi = stream.readLong();
     }
 
     public PacketPatternMultiSet(int originalGui, long multi) {
@@ -47,10 +46,8 @@ public class PacketPatternMultiSet extends AppEngPacket {
                 if (context != null) {
                     final TileEntity te = context.getTile();
                     Platform.openGUI(player, te, cpv.getOpenContext().getSide(), originGui);
-                    if (player.openContainer instanceof ContainerPatternTerm cpt) {
-                        cpt.multiplyOrDivideStacks(multi);
-                    } else if (player.openContainer instanceof ContainerPatternTermEx cpt) {
-                        cpt.multiplyOrDivideStacks(multi);
+                    if (player.openContainer instanceof ContainerPatternTermBase cptb) {
+                        cptb.multiplyOrDivideStacks(multi);
                     }
                 }
             }

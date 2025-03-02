@@ -89,12 +89,10 @@ public class GuiOptimizePatterns extends AEBaseGui implements IGuiTooltipHandler
             this.OriginalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
         }
 
-        if (te instanceof PartPatternTerminal) {
-            this.OriginalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-
         if (te instanceof PartPatternTerminalEx) {
             this.OriginalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
+        } else if (te instanceof PartPatternTerminal) {
+            this.OriginalGui = GuiBridge.GUI_PATTERN_TERMINAL;
         }
     }
 
