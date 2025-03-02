@@ -79,6 +79,7 @@ import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
+import appeng.items.misc.ItemEncodedPattern;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import codechicken.lib.gui.GuiDraw;
@@ -157,12 +158,12 @@ public abstract class AEBaseGui extends GuiContainer {
         return joiner.join(toolTip);
     }
 
-    protected int getQty(final GuiButton btn) {
+    protected long getQty(final GuiButton btn) {
         try {
             final DecimalFormat df = new DecimalFormat("+#;-#");
-            return df.parse(btn.displayString).intValue();
+            return df.parse(btn.displayString).longValue();
         } catch (final ParseException e) {
-            return 0;
+            return 0L;
         }
     }
 
@@ -792,6 +793,21 @@ public abstract class AEBaseGui extends GuiContainer {
     }
 
     private void drawSlot(final Slot s) {
+        if (s instanceof SlotRestrictedInput && s.getHasStack()
+                && s.getStack().getItem() instanceof ItemEncodedPattern iep) {
+            final IAEItemStack ais = iep.getAEOutput(s.getStack());
+            if (ais == null) return;
+            if (ais.getStackSize() == 1) {
+                this.safeDrawSlot(s);
+                return;
+            }
+
+            RenderItem pIR = this.setItemRender(this.aeRenderItem);
+            this.aeRenderItem.setAeStack(ais);
+            this.drawAESlot(s);
+            this.setItemRender(pIR);
+            return;
+        }
         if (s instanceof SlotME || s instanceof SlotFake) {
             IAEItemStack stack = Platform.getAEStackInSlot(s);
             if (s instanceof SlotFake && stack != null && stack.getStackSize() == 1) {

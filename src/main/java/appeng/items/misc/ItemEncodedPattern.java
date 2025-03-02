@@ -45,7 +45,7 @@ import appeng.util.Platform;
 public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternItem {
 
     // rather simple client side caching.
-    private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<>();
+    private static final Map<ItemStack, IAEItemStack> SIMPLE_CACHE = new WeakHashMap<>();
 
     public ItemEncodedPattern() {
         this.setFeature(EnumSet.of(AEFeature.Patterns));
@@ -164,7 +164,30 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
     }
 
     public ItemStack getOutput(final ItemStack item) {
-        ItemStack out = SIMPLE_CACHE.get(item);
+        IAEItemStack out = SIMPLE_CACHE.get(item);
+
+        if (out != null) {
+            return out.getItemStack();
+        }
+
+        final World w = CommonHelper.proxy.getWorld();
+
+        if (w == null) {
+            return null;
+        }
+
+        final ICraftingPatternDetails details = this.getPatternForItem(item, w);
+
+        if (details == null) {
+            return null;
+        }
+
+        SIMPLE_CACHE.put(item, out = details.getCondensedOutputs()[0]);
+        return out.getItemStack();
+    }
+
+    public IAEItemStack getAEOutput(final ItemStack item) {
+        IAEItemStack out = SIMPLE_CACHE.get(item);
 
         if (out != null) {
             return out;
@@ -182,7 +205,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             return null;
         }
 
-        SIMPLE_CACHE.put(item, out = details.getCondensedOutputs()[0].getItemStack());
+        SIMPLE_CACHE.put(item, out = details.getCondensedOutputs()[0]);
         return out;
     }
 
