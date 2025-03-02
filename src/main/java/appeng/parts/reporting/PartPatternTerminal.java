@@ -30,23 +30,24 @@ import appeng.tile.inventory.InvOperation;
 
 public class PartPatternTerminal extends AbstractPartTerminal {
 
-    private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartPatternTerm_Bright;
-    private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
-    private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
+    protected static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartPatternTerm_Bright;
+    protected static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
+    protected static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
 
-    private final AppEngInternalAEInventory crafting = new AppEngInternalAEInventory(this, 9) {};
+    protected AppEngInternalAEInventory crafting;
+    protected AppEngInternalAEInventory output;
+    protected final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
 
-    private final AppEngInternalAEInventory output = new AppEngInternalAEInventory(this, 3) {};
-
-    private final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
-
-    private boolean craftingMode = true;
-    private boolean substitute = false;
-    private boolean beSubstitute = false;
+    protected boolean craftingMode = true;
+    protected boolean substitute = false;
+    protected boolean beSubstitute = false;
+    protected boolean inverted = true;
 
     @Reflected
     public PartPatternTerminal(final ItemStack is) {
         super(is);
+        this.crafting = new AppEngInternalAEInventory(this, 9);
+        this.output = new AppEngInternalAEInventory(this, 3);
     }
 
     @Override
@@ -92,10 +93,14 @@ public class PartPatternTerminal extends AbstractPartTerminal {
             y = this.getTile().yCoord;
             z = this.getTile().zCoord;
         }
+        if (this instanceof PartPatternTerminalEx && GuiBridge.GUI_PATTERN_TERMINAL_EX
+                .hasPermissions(this.getHost().getTile(), x, y, z, this.getSide(), p)) {
+            return GuiBridge.GUI_PATTERN_TERMINAL_EX;
+        } else
+            if (GuiBridge.GUI_PATTERN_TERMINAL.hasPermissions(this.getHost().getTile(), x, y, z, this.getSide(), p)) {
+                return GuiBridge.GUI_PATTERN_TERMINAL;
+            }
 
-        if (GuiBridge.GUI_PATTERN_TERMINAL.hasPermissions(this.getHost().getTile(), x, y, z, this.getSide(), p)) {
-            return GuiBridge.GUI_PATTERN_TERMINAL;
-        }
         return GuiBridge.GUI_ME;
     }
 
@@ -131,6 +136,11 @@ public class PartPatternTerminal extends AbstractPartTerminal {
                     this.setSubstitution(substitute);
                     this.setCanBeSubstitution(beSubstitute);
 
+                    if (this instanceof PartPatternTerminalEx ppte) {
+                        ppte.setInverted(inItems.length <= 8 && outItems.length >= 8);
+                        ppte.setActivePage(0);
+                    }
+
                     for (int x = 0; x < this.crafting.getSizeInventory(); x++) {
                         this.crafting.setInventorySlotContents(x, null);
                     }
@@ -145,9 +155,15 @@ public class PartPatternTerminal extends AbstractPartTerminal {
                         }
                     }
 
-                    for (int x = 0; x < this.output.getSizeInventory() && x < outItems.length; x++) {
-                        if (outItems[x] != null) {
-                            this.output.setAEInventorySlotContents(x, outItems[x]);
+                    if (inverted) {
+                        for (int x = 0; x < this.output.getSizeInventory() && x < outItems.length; x++) {
+                            if (outItems[x] != null) {
+                                this.output.setAEInventorySlotContents(x, outItems[x]);
+                            }
+                        }
+                    } else {
+                        for (int x = 0; x < outItems.length && x < 8; x++) {
+                            this.output.setAEInventorySlotContents(x >= 4 ? 12 + x : x, outItems[x]);
                         }
                     }
                 }
@@ -225,5 +241,9 @@ public class PartPatternTerminal extends AbstractPartTerminal {
     @Override
     public CableBusTextures getFrontDark() {
         return FRONT_DARK_ICON;
+    }
+
+    public boolean isInverted() {
+        return inverted;
     }
 }

@@ -5,10 +5,8 @@ import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.networking.IGridHost;
 import appeng.container.ContainerOpenContext;
-import appeng.container.implementations.ContainerPatternTerm;
-import appeng.container.implementations.ContainerPatternTermEx;
+import appeng.container.implementations.ContainerPatternTermBase;
 import appeng.container.implementations.ContainerPatternValueAmount;
-import appeng.container.slot.SlotFake;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
@@ -52,14 +50,8 @@ public class PacketPatternValueSet extends AppEngPacket {
                 if (context != null) {
                     final TileEntity te = context.getTile();
                     Platform.openGUI(player, te, cpv.getOpenContext().getSide(), originGui);
-                    if (player.openContainer instanceof ContainerPatternTerm cpt) {
-                        SlotFake slot = (SlotFake) cpt.getSlot(valueIndex);
-                        slot.getAEStack().setStackSize(amount);
-                        cpt.onSlotChange(slot);
-                    } else if (player.openContainer instanceof ContainerPatternTermEx cpte) {
-                        SlotFake slot = (SlotFake) cpte.getSlot(valueIndex);
-                        slot.getAEStack().setStackSize(amount);
-                        cpte.onSlotChange(slot);
+                    if (player.openContainer instanceof ContainerPatternTermBase cptb) {
+                        cptb.setPatternValue(valueIndex, amount);
                     }
                 }
             }
