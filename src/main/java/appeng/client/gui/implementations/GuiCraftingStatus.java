@@ -236,6 +236,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
             this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
         }
         this.cpuTable.drawBG(offsetX, offsetY);
+        drawSearch();
     }
 
     @Override

@@ -37,6 +37,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
+import appeng.core.localization.GuiText;
 import appeng.crafting.v2.CraftingRequest;
 import appeng.crafting.v2.CraftingRequest.UsedResolverEntry;
 import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
@@ -64,6 +65,10 @@ public class GuiCraftingTree {
     public static final int RESOLVER_CHILD_Y_SPACING = 12;
     public final int textColor = GuiColors.SearchboxText.getColor();
     private static long animationFrame = System.currentTimeMillis() / 500;
+    private String search = "";
+    private ArrayList<Node> goToData = new ArrayList<Node>();
+    private int searchGotoIndex = -1;
+    private Node needHighlight;
 
     private abstract class Node {
 
@@ -116,7 +121,15 @@ public class GuiCraftingTree {
 
         @Override
         public void drawImpl() {
-            drawSlotOutline(x, y, request.wasSimulated ? 0xCCAAAA : 0xAAAAAA, false);
+            int color = request.wasSimulated ? 0xCCAAAA : 0xAAAAAA;
+            if (!search.isEmpty() && goToData.contains(this)) {
+                if (needHighlight.equals(this)) {
+                    color = GuiColors.SearchGoToHighlight.getColor();
+                } else {
+                    color = GuiColors.SearchHighlight.getColor();
+                }
+            }
+            drawSlotOutline(x, y, color, false);
             drawStack(x, y, getDisplayItemForRequest(request), true);
             if (request.wasSimulated) {
                 parent.bindTexture("guis/states.png");
@@ -148,7 +161,15 @@ public class GuiCraftingTree {
         @Override
         public void drawImpl() {
             parent.bindTexture("guis/states.png");
-            drawSlotOutline(x, y, 0x777777, true);
+            int color = 0x777777;
+            if (!search.isEmpty() && goToData.contains(this)) {
+                if (needHighlight.equals(this)) {
+                    color = GuiColors.SearchGoToHighlight.getColor();
+                } else {
+                    color = GuiColors.SearchHighlight.getColor();
+                }
+            }
+            drawSlotOutline(x, y, color, true);
             List<CraftingRequest<IAEItemStack>> children = null;
             long displayCount = resolver.resolvedStack.getStackSize();
             if (resolver.task instanceof ExtractItemTask) {
@@ -291,6 +312,55 @@ public class GuiCraftingTree {
                 currentChild++;
             }
         }
+    }
+
+    private String getTaskNodeDescription(final TaskNode nd) {
+        if (nd.resolver.task instanceof ExtractItemTask) {
+            return GuiText.StoredItems.getLocal();
+        } else if (nd.resolver.task instanceof CraftFromPatternTask) {
+            return GuiText.Crafting.getLocal();
+        } else if (nd.resolver.task instanceof EmitItemTask) {
+            return GuiText.LevelEmitter.getLocal();
+        } else if (nd.resolver.task instanceof SimulateMissingItemResolver.ConjureItemTask
+                || nd.resolver.task instanceof IgnoreMissingItemTask) {
+                    return GuiText.Missing.getLocal();
+                }
+        return "";
+    }
+
+    public void updateSearchGoToList(String s) {
+        needHighlight = null;
+        searchGotoIndex = -1;
+        goToData.clear();
+        search = s;
+        if (search.isEmpty()) return;
+
+        for (ArrayList<Node> row : treeNodes.values()) {
+            for (Node node : row) {
+                if (node instanceof TaskNode tNode && getTaskNodeDescription(tNode).toLowerCase().contains(search)) {
+                    goToData.add(node);
+                } else if (node instanceof RequestNode rNode
+                        && Platform.getItemDisplayName(rNode.request.stack).toLowerCase().contains(search)) {
+                            goToData.add(node);
+                        }
+            }
+        }
+        searchGoTo(true);
+    }
+
+    public void searchGoTo(boolean forward) {
+        if (search.isEmpty() || goToData.isEmpty()) return;
+        if (forward) {
+            searchGotoIndex++;
+            if (searchGotoIndex >= goToData.size()) searchGotoIndex = 0;
+        } else {
+            if (searchGotoIndex <= 0) searchGotoIndex = goToData.size();
+            searchGotoIndex--;
+        }
+        final Node nd = goToData.get(searchGotoIndex);
+        needHighlight = nd;
+        scrollX = nd.x - nd.height;
+        scrollY = nd.y - nd.width;
     }
 
     public void setRequest(final CraftingRequest<?> request) {

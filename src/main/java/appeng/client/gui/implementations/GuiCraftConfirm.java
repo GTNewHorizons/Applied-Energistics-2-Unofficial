@@ -41,6 +41,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
+import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.GuiCraftingCPUTable;
 import appeng.client.gui.widgets.GuiCraftingTree;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -48,6 +49,7 @@ import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.GuiSimpleImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.ICraftingCPUTableHolder;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.CraftingCPUStatus;
 import appeng.core.AEConfig;
@@ -159,8 +161,14 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     private GuiImgButton sortingModeButton;
     private GuiImgButton sortingDirectionButton;
     private GuiSimpleImgButton optimizeButton;
+    private GuiAeButton findNext;
+    private GuiAeButton findPrev;
+    private MEGuiTextField searchField;
     private int tooltip = -1;
     private ItemStack hoveredStack;
+    private ArrayList<Integer> goToData = new ArrayList<>();
+    private int searchGotoIndex = -1;
+    private IAEItemStack needHighlight;
 
     final GuiScrollbar scrollbar;
 
@@ -300,6 +308,40 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 ButtonToolTips.OptimizePatterns.getLocal());
         this.optimizeButton.enabled = false;
         this.buttonList.add(this.optimizeButton);
+
+        this.searchField = new MEGuiTextField(52, 12, "Search") {
+
+            @Override
+            public void onTextChange(String oldText) {
+                super.onTextChange(oldText);
+                switch (displayMode) {
+                    case LIST -> updateSearchGoToList();
+                    case TREE -> craftingTree.updateSearchGoToList(this.getText().toLowerCase());
+                }
+            }
+        };
+        this.searchField.x = this.guiLeft + this.xSize - 101;
+        this.searchField.y = this.guiTop + 5;
+
+        this.findPrev = new GuiAeButton(
+                0,
+                this.guiLeft + this.xSize - 48,
+                this.guiTop + 6,
+                10,
+                10,
+                "↑",
+                ButtonToolTips.SearchGotoPrev.getLocal());
+        this.buttonList.add(this.findPrev);
+
+        this.findNext = new GuiAeButton(
+                0,
+                this.guiLeft + this.xSize - 36,
+                this.guiTop + 6,
+                10,
+                10,
+                "↓",
+                ButtonToolTips.SearchGotoNext.getLocal());
+        this.buttonList.add(this.findNext);
     }
 
     @Override
@@ -421,6 +463,38 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             case LIST -> drawListFG(offsetX, offsetY, mouseX, mouseY);
             case TREE -> drawTreeFG(offsetX, offsetY, mouseX, mouseY);
         }
+    }
+
+    private void updateSearchGoToList() {
+        needHighlight = null;
+        searchGotoIndex = -1;
+        goToData.clear();
+        if (this.searchField.getText().isEmpty()) return;
+        String s = this.searchField.getText().toLowerCase();
+        int visCount = 0;
+        for (IAEItemStack aeis : this.visual) {
+            if (aeis != null && Platform.getItemDisplayName(aeis).toLowerCase().contains(s)) {
+                goToData.add(visCount);
+            }
+            visCount++;
+        }
+        searchGoTo(true);
+    }
+
+    private void searchGoTo(boolean forward) {
+        String s = this.searchField.getText().toLowerCase();
+        if (s.isEmpty() || goToData.isEmpty()) return;
+        if (forward) {
+            searchGotoIndex++;
+            if (searchGotoIndex >= goToData.size()) searchGotoIndex = 0;
+        } else {
+            if (searchGotoIndex <= 0) searchGotoIndex = goToData.size();
+            searchGotoIndex--;
+        }
+
+        IAEItemStack aeis = this.visual.get(goToData.get(searchGotoIndex));
+        this.getScrollBar().setCurrentScroll(goToData.get(searchGotoIndex) / 3 - this.rows / 2);
+        needHighlight = aeis.copy();
     }
 
     private void drawListFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
@@ -607,6 +681,18 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                             GuiColors.CraftConfirmMissingItem.getColor());
                 }
 
+                if (!this.searchField.getText().isEmpty() && goToData.contains(z)) {
+                    final int startX = x * (1 + sectionLength) + xo;
+                    final int startY = posY - 4;
+                    final int color = needHighlight != null && needHighlight.isSameType(refStack)
+                            ? GuiColors.SearchGoToHighlight.getColor()
+                            : GuiColors.SearchHighlight.getColor();
+                    drawVerticalLine(startX, startY, startY + offY, color);
+                    drawVerticalLine(startX + sectionLength - 1, startY, startY + offY, color);
+                    drawHorizontalLine(startX + 1, startX + sectionLength - 2, startY + 1, color);
+                    drawHorizontalLine(startX + 1, startX + sectionLength - 2, startY + offY - 1, color);
+                }
+
                 x++;
 
                 if (x > 2) {
@@ -683,6 +769,9 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                         TREE_VIEW_TEXTURE_HEIGHT);
             }
         }
+        this.bindTexture("guis/searchField.png");
+        this.drawTexturedModalRect(this.guiLeft + this.xSize - 101, this.guiTop + 5, 0, 0, 52, 12);
+        this.searchField.drawTextBox();
     }
 
     private void setScrollBar() {
@@ -870,7 +959,9 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
                 this.actionPerformed(this.start);
             }
-            super.keyTyped(character, key);
+            if (!(this.searchField.textboxKeyTyped(character, key))) {
+                super.keyTyped(character, key);
+            }
         }
     }
 
@@ -889,6 +980,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             this.displayMode = this.displayMode.next();
             recalculateScreenSize();
             this.setWorldAndResolution(mc, width, height);
+            this.searchField.setText("");
         } else if (btn == this.takeScreenshot) {
             if (craftingTree != null) {
                 craftingTree.saveScreenshot();
@@ -929,6 +1021,16 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             } catch (final Throwable e) {
                 AELog.debug(e);
             }
+        } else if (btn == this.findNext) {
+            switch (displayMode) {
+                case LIST -> searchGoTo(true);
+                case TREE -> craftingTree.searchGoTo(true);
+            }
+        } else if (btn == this.findPrev) {
+            switch (displayMode) {
+                case LIST -> searchGoTo(false);
+                case TREE -> craftingTree.searchGoTo(false);
+            }
         }
     }
 
@@ -953,6 +1055,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     protected void mouseClicked(int xCoord, int yCoord, int btn) {
         super.mouseClicked(xCoord, yCoord, btn);
         cpuTable.mouseClicked(xCoord - guiLeft, yCoord - guiTop, btn);
+        this.searchField.mouseClicked(xCoord, yCoord, btn);
     }
 
     @Override

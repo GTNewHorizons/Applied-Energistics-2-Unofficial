@@ -265,7 +265,7 @@ gui.appliedenergistics2.ETAFormat=HH:mm:ss
 gui.appliedenergistics2.SwitchCraftingSimulationDisplayMode=Switch display mode (List/Tree)
 gui.appliedenergistics2.Crafting=Crafting
 gui.appliedenergistics2.Scheduled=Scheduled
-gui.appliedenergistics2.CraftingStatus=Crafting Status
+gui.appliedenergistics2.CraftingStatus=Status
 gui.appliedenergistics2.RemainingOperations=Idle Processors
 gui.appliedenergistics2.FromStorage=Available
 gui.appliedenergistics2.FromStoragePercent=Used
@@ -562,6 +562,9 @@ gui.tooltips.appliedenergistics2.StringOrderNatural=Default
 gui.tooltips.appliedenergistics2.StringOrderAlphanum=Natural Order
 gui.tooltips.appliedenergistics2.CellRestrictionLabel=Cell Restriction
 gui.tooltips.appliedenergistics2.CellRestrictionHint=Setup Cell Restriction
+
+gui.tooltips.appliedenergistics2.SearchGotoNext=Find next
+gui.tooltips.appliedenergistics2.SearchGotoPrev=Find prev
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=Energy Units
