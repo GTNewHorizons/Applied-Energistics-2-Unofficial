@@ -78,6 +78,7 @@ public class AdaptorMEChest extends AdaptorIInventory implements IDigitalInvento
 
         return (IAEItemStack) meChest.getItemInventory()
                 .injectItems(toBeAdded, Actionable.MODULATE, meChest.getActionSource());
+    }
 
     private ItemStack addCell(final ItemStack cell, final boolean modulate) {
         // Snippet of AdaptorIInventory to prevent invalid stacks from transferring

@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
@@ -244,10 +245,10 @@ public abstract class AEBaseGui extends GuiContainer {
     }
 
     /**
-     * Like {@link net.minecraft.client.gui.Gui#drawTexturedModalRect(int, int, int, int, int, int)} but draws the
-     * texture in 9 patches, stretching the middle patch in X&Y directions. The north, east, west and south patches are
-     * stretched along one axis, and the corner patches are rendered in 1:1 scale to preserve corner texture quality. A
-     * 256x256 GUI texture size is assumed like in the vanilla function.
+     * Like {@link Gui#drawTexturedModalRect(int, int, int, int, int, int)} but draws the texture in 9 patches,
+     * stretching the middle patch in X&Y directions. The north, east, west and south patches are stretched along one
+     * axis, and the corner patches are rendered in 1:1 scale to preserve corner texture quality. A 256x256 GUI texture
+     * size is assumed like in the vanilla function.
      *
      * @see <a href="https://developer.android.com/develop/ui/views/graphics/drawables#nine-patch">Android documentation
      *      for a more detailed description.</a>
@@ -793,26 +794,19 @@ public abstract class AEBaseGui extends GuiContainer {
     }
 
     private void drawSlot(final Slot s) {
-        if (s instanceof SlotRestrictedInput && s.getHasStack()
-                && s.getStack().getItem() instanceof ItemEncodedPattern iep) {
-            final IAEItemStack ais = iep.getAEOutput(s.getStack());
-            if (ais == null) return;
-            if (ais.getStackSize() == 1) {
-                this.safeDrawSlot(s);
-                return;
-            }
-
-            RenderItem pIR = this.setItemRender(this.aeRenderItem);
-            this.aeRenderItem.setAeStack(ais);
-            this.drawAESlot(s);
-            this.setItemRender(pIR);
-            return;
-        }
-        if (s instanceof SlotME || s instanceof SlotFake) {
-            IAEItemStack stack = Platform.getAEStackInSlot(s);
-            if (s instanceof SlotFake && stack != null && stack.getStackSize() == 1) {
-                this.safeDrawSlot(s);
-                return;
+        if (s instanceof SlotME || s instanceof SlotFake
+                || (s instanceof SlotRestrictedInput && s.getStack() != null
+                        && s.getStack().getItem() instanceof ItemEncodedPattern)) {
+            ItemStack itemstack = s.getStack();
+            IAEItemStack ais = null;
+            if (itemstack != null && itemstack.getItem() instanceof ItemEncodedPattern iep) {
+                ais = iep.getAEOutput(itemstack);
+            } else {
+                IAEItemStack stack = Platform.getAEStackInSlot(s);
+                if (s instanceof SlotFake && stack != null && stack.getStackSize() == 1) {
+                    this.safeDrawSlot(s);
+                    return;
+                }
             }
 
             RenderItem pIR = this.setItemRender(this.aeRenderItem);
@@ -831,7 +825,8 @@ public abstract class AEBaseGui extends GuiContainer {
                     this.zLevel = 0.0F;
                     itemRender.zLevel = 0.0F;
                 } else {
-                    this.aeRenderItem.setAeStack(Platform.getAEStackInSlot(s));
+
+                    this.aeRenderItem.setAeStack(ais != null ? ais : Platform.getAEStackInSlot(s));
 
                     this.drawAESlot(s);
                 }
@@ -985,6 +980,9 @@ public abstract class AEBaseGui extends GuiContainer {
         int i = slotIn.xDisplayPosition;
         int j = slotIn.yDisplayPosition;
         ItemStack itemstack = slotIn.getStack();
+        if (itemstack != null && itemstack.getItem() instanceof ItemEncodedPattern iep) {
+            itemstack = iep.getAEOutput(itemstack).getItemStack();
+        }
         String s = null;
 
         this.zLevel = 100.0F;
