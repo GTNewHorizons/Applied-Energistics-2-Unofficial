@@ -23,6 +23,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import gregtech.api.GregTechAPI;
 import gregtech.api.enums.GTValues;
+import gregtech.api.enums.SoundResource;
 import gregtech.api.interfaces.tileentity.IEnergyConnected;
 import gregtech.api.util.GTUtility;
 import ic2.api.energy.tile.IEnergySink;
@@ -206,7 +207,7 @@ public class PartP2PGT5Power extends PartP2PTunnelNormal<PartP2PGT5Power> implem
                             World tWorld = te.getWorldObj();
                             GTUtility.sendSoundToPlayers(
                                     tWorld,
-                                    GregTechAPI.sSoundList.get(209),
+                                    SoundResource.IC2_MACHINES_MACHINE_OVERLOAD,
                                     1.0F,
                                     -1.0F,
                                     tX,
