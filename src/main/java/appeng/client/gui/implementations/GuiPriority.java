@@ -191,7 +191,7 @@ public class GuiPriority extends AEBaseGui {
         }
     }
 
-    private void addQty(final int i) {
+    private void addQty(final long i) {
         try {
             String out = this.priority.getText();
 

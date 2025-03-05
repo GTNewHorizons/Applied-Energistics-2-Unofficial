@@ -14,10 +14,12 @@ import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.PatternSlotConfig;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.container.implementations.ContainerPatternTermEx;
 import appeng.container.slot.AppEngSlot;
+import appeng.container.slot.SlotFake;
 import appeng.core.AppEng;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
@@ -271,5 +273,9 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
         } catch (final IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setSlotAE(final int slotId, final IAEItemStack ais) {
+        ((SlotFake) this.inventorySlots.inventorySlots.get(slotId)).putAEStack(ais);
     }
 }

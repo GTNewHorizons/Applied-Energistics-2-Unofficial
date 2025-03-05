@@ -6,11 +6,12 @@ import net.minecraft.item.ItemStack;
 import appeng.api.config.Actionable;
 import appeng.api.config.InsertionMode;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.helpers.IDigitalInventory;
 import appeng.me.storage.CellInventory;
 import appeng.tile.storage.TileChest;
 import appeng.util.item.AEItemStack;
 
-public class AdaptorMEChest extends AdaptorIInventory {
+public class AdaptorMEChest extends AdaptorIInventory implements IDigitalInventory {
 
     private final TileChest meChest;
     private final IInventory i;
@@ -57,6 +58,26 @@ public class AdaptorMEChest extends AdaptorIInventory {
         IAEItemStack result = (IAEItemStack) meChest.getItemInventory()
                 .injectItems(AEItemStack.create(toBeSimulated), Actionable.SIMULATE, meChest.getActionSource());
         return result == null ? null : result.getItemStack();
+    }
+
+    @Override
+    public IAEItemStack simulateAdd(IAEItemStack toBeSimulated) {
+        if (meChest.getItemInventory() == null) {
+            return toBeSimulated;
+        }
+
+        return (IAEItemStack) meChest.getItemInventory()
+                .injectItems(toBeSimulated, Actionable.SIMULATE, meChest.getActionSource());
+    }
+
+    @Override
+    public IAEItemStack addItems(IAEItemStack toBeAdded) {
+        if (meChest.getItemInventory() == null) {
+            return toBeAdded;
+        }
+
+        return (IAEItemStack) meChest.getItemInventory()
+                .injectItems(toBeAdded, Actionable.MODULATE, meChest.getActionSource());
     }
 
     private ItemStack addCell(final ItemStack cell, final boolean modulate) {
