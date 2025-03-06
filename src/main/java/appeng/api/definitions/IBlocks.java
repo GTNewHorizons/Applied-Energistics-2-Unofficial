@@ -123,6 +123,8 @@ public interface IBlocks {
      */
     ITileDefinition controller();
 
+    ITileDefinition creativeEnergyController();
+
     ITileDefinition drive();
 
     ITileDefinition chest();

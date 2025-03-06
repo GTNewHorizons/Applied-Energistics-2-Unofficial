@@ -18,6 +18,7 @@ import net.minecraft.world.World;
 
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderBlockController;
+import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.features.AEFeature;
 import appeng.tile.networking.TileController;
 import cpw.mods.fml.relauncher.Side;
@@ -44,5 +45,16 @@ public class BlockController extends AEBaseTileBlock {
     @SideOnly(Side.CLIENT)
     protected RenderBlockController getRenderer() {
         return new RenderBlockController();
+    }
+
+    public ExtraBlockTextures getRenderTexture(int id) {
+        return switch (id) {
+            case 0 -> ExtraBlockTextures.BlockControllerPowered;
+            case 1 -> ExtraBlockTextures.BlockControllerColumnPowered;
+            case 2 -> ExtraBlockTextures.BlockControllerColumn;
+            case 3 -> ExtraBlockTextures.BlockControllerInsideA;
+            case 4 -> ExtraBlockTextures.BlockControllerInsideB;
+            default -> throw new IllegalStateException("Unexpected value: " + id);
+        };
     }
 }

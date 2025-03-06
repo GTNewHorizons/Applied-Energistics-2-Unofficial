@@ -5,6 +5,7 @@ tile.appliedenergistics2.BlockCharger.name=Charger
 tile.appliedenergistics2.BlockChest.name=ME Chest
 tile.appliedenergistics2.BlockCondenser.name=Matter Condenser
 tile.appliedenergistics2.BlockController.name=ME Controller
+tile.appliedenergistics2.BlockCreativeEnergyController.name=ME Self Powered Controller
 tile.appliedenergistics2.BlockCrank.name=Wooden Crank
 tile.appliedenergistics2.BlockCreativeEnergyCell.name=Creative Energy Cell
 tile.appliedenergistics2.BlockDenseEnergyCell.name=Dense Energy Cell
