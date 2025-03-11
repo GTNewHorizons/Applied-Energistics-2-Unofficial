@@ -1,8 +1,5 @@
 package appeng.container.implementations;
 
-import java.util.Arrays;
-import java.util.List;
-
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.tileentity.TileEntity;
 
@@ -114,18 +111,18 @@ public class ContainerCellRestriction extends AEBaseContainer {
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
         if (field.equals("cellRestriction") && (this.amountField != null && this.typesField != null)) {
-            List<String> newData = Arrays.asList(cellRestriction.split(",", 7));
-            this.cellData.setTotalBytes(Long.parseLong(newData.get(0)));
-            this.cellData.setTotalTypes(Integer.parseInt(newData.get(1)));
-            this.cellData.setPerType(Integer.parseInt(newData.get(2)));
-            this.cellData.setPerByte(Integer.parseInt(newData.get(3)));
-            this.cellData.setCellType(newData.get(6));
+            String[] newData = cellRestriction.split(",", 7);
+            this.cellData.setTotalBytes(Long.parseLong(newData[0]));
+            this.cellData.setTotalTypes(Integer.parseInt(newData[1]));
+            this.cellData.setPerType(Integer.parseInt(newData[2]));
+            this.cellData.setPerByte(Integer.parseInt(newData[3]));
+            this.cellData.setCellType(newData[6]);
             this.typesField.setMaxStringLength(cellData.getTotalTypes().toString().length());
             this.amountField.setMaxStringLength(
                     String.valueOf((cellData.getTotalBytes() - cellData.getPerType()) * cellData.getPerByte())
                             .length());
-            this.typesField.setText(newData.get(4));
-            this.amountField.setText(newData.get(5));
+            this.typesField.setText(newData[4]);
+            this.amountField.setText(newData[5]);
         }
         super.onUpdate(field, oldValue, newValue);
     }

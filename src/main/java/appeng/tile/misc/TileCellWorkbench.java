@@ -10,7 +10,6 @@
 
 package appeng.tile.misc;
 
-import java.util.Arrays;
 import java.util.List;
 
 import net.minecraft.inventory.IInventory;
@@ -255,9 +254,9 @@ public class TileCellWorkbench extends AEBaseTile
     @Override
     public void setCellRestriction(ItemStack n, String newData) {
         if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
-            List<String> data = Arrays.asList(newData.split(",", 2));
-            cellRestrictTypes = Byte.parseByte(data.get(0));
-            cellRestrictAmount = Long.parseLong(data.get(1));
+            String[] s = newData.split(",", 2);
+            cellRestrictTypes = Byte.parseByte(s[0]);
+            cellRestrictAmount = Long.parseLong(s[1]);
         }
 
         ItemStack is = this.cell.getStackInSlot(0);
