@@ -46,6 +46,7 @@ import appeng.block.misc.BlockVibrationChamber;
 import appeng.block.networking.BlockCableBus;
 import appeng.block.networking.BlockController;
 import appeng.block.networking.BlockCreativeEnergyCell;
+import appeng.block.networking.BlockCreativeEnergyController;
 import appeng.block.networking.BlockDenseEnergyCell;
 import appeng.block.networking.BlockEnergyAcceptor;
 import appeng.block.networking.BlockEnergyCell;
@@ -114,6 +115,7 @@ public final class ApiBlocks implements IBlocks {
     private final ITileDefinition spatialIOPort;
     private final ITileDefinition multiPart;
     private final ITileDefinition controller;
+    private final ITileDefinition creativeEnergyController;
     private final ITileDefinition drive;
     private final ITileDefinition chest;
     private final ITileDefinition iface;
@@ -210,6 +212,7 @@ public final class ApiBlocks implements IBlocks {
         this.spatialIOPort = constructor.registerTileDefinition(new BlockSpatialIOPort());
         this.multiPart = constructor.registerTileDefinition(new BlockCableBus());
         this.controller = constructor.registerTileDefinition(new BlockController());
+        this.creativeEnergyController = constructor.registerTileDefinition(new BlockCreativeEnergyController());
         this.drive = constructor.registerTileDefinition(new BlockDrive());
         this.chest = constructor.registerTileDefinition(new BlockChest());
         this.iface = constructor.registerTileDefinition(new BlockInterface());
@@ -530,6 +533,11 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition controller() {
         return this.controller;
+    }
+
+    @Override
+    public ITileDefinition creativeEnergyController() {
+        return this.creativeEnergyController;
     }
 
     @Override
