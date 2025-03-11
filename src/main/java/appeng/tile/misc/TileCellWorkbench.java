@@ -10,6 +10,7 @@
 
 package appeng.tile.misc;
 
+import java.util.Arrays;
 import java.util.List;
 
 import net.minecraft.inventory.IInventory;
@@ -46,6 +47,8 @@ public class TileCellWorkbench extends AEBaseTile
     private IInventory cacheUpgrades = null;
     private IInventory cacheConfig = null;
     private boolean locked = false;
+    private long cellRestrictAmount;
+    private byte cellRestrictTypes;
 
     public TileCellWorkbench() {
         this.manager.registerSetting(Settings.COPY_MODE, CopyMode.CLEAR_ON_REMOVE);
@@ -135,6 +138,12 @@ public class TileCellWorkbench extends AEBaseTile
 
             this.cacheUpgrades = null;
             this.cacheConfig = null;
+
+            if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
+                ItemStack is = this.cell.getStackInSlot(0);
+                if (is != null && is.getItem() instanceof ICellRestriction icr)
+                    icr.setCellRestriction(is, cellRestrictTypes + "," + cellRestrictAmount);
+            }
 
             final IInventory configInventory = this.getCellConfigInventory();
             if (configInventory != null) {
@@ -245,6 +254,12 @@ public class TileCellWorkbench extends AEBaseTile
 
     @Override
     public void setCellRestriction(ItemStack n, String newData) {
+        if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
+            List<String> data = Arrays.asList(newData.split(",", 2));
+            cellRestrictTypes = Byte.parseByte(data.get(0));
+            cellRestrictAmount = Long.parseLong(data.get(1));
+        }
+
         ItemStack is = this.cell.getStackInSlot(0);
         if (is != null && is.getItem() instanceof ICellRestriction icr) icr.setCellRestriction(is, newData);
     }
