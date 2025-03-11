@@ -1118,4 +1118,8 @@ public abstract class AEBaseGui extends GuiContainer {
     public int getYSize() {
         return ySize;
     }
+
+    public void setSlotAE(final int slotId, final IAEItemStack ais) {
+        ((SlotFake) this.inventorySlots.inventorySlots.get(slotId)).putAEStack(ais);
+    }
 }

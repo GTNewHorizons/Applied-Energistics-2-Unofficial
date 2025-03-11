@@ -125,6 +125,12 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return new AEItemStack(stack);
     }
 
+    public static boolean areAEItemStacksEqual(IAEItemStack firstStack, IAEItemStack otherStack) {
+        return firstStack == null && otherStack == null || (firstStack != null && otherStack != null
+                && firstStack.getStackSize() == otherStack.getStackSize()
+                && firstStack.equals(otherStack));
+    }
+
     public static IAEItemStack loadItemStackFromPacket(final ByteBuf data) throws IOException {
         final byte mask = data.readByte();
         // byte PriorityType = (byte) (mask & 0x03);

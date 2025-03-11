@@ -1,14 +1,11 @@
 package appeng.container.implementations;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.inventory.Slot;
@@ -24,15 +21,10 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.IOptionalSlotHost;
-import appeng.container.slot.OptionalSlotFake;
 import appeng.container.slot.SlotFake;
-import appeng.container.slot.SlotFakeCraftingMatrix;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketUpdateAESlot;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.parts.reporting.PartPatternTerminal;
-import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
@@ -249,105 +241,18 @@ public abstract class ContainerPatternTermBase extends ContainerMEMonitorable
     }
 
     @Override
-    public void addCraftingToCrafters(ICrafting c) {
-        super.addCraftingToCrafters(c);
-        updateSlots();
-    }
-
-    @Override
     public void onSlotChange(final Slot s) {
         if (Platform.isServer()) {
-            if (s == this.patternSlotOUT) {
-                for (final Object crafter : this.crafters) {
-                    final ICrafting icrafting = (ICrafting) crafter;
-
-                    for (final Slot g : this.inventorySlots) {
-                        if (g instanceof OptionalSlotFake || g instanceof SlotFakeCraftingMatrix) {
-                            icrafting.sendSlotContents(this, g.slotNumber, g.getStack());
-                        }
-                    }
-                    ((EntityPlayerMP) icrafting).isChangingQuantityOnly = false;
-                }
-                this.detectAndSendChanges();
-                if (s.getHasStack()) updateSlotsOnPatternInject();
-            } else if (s == patternRefiller && patternRefiller.getStack() != null) {
+            if (s == patternRefiller && patternRefiller.getStack() != null) {
                 refillBlankPatterns(patternSlotIN);
-                detectAndSendChanges();
-            } else if (s instanceof SlotFake sf) {
-                for (final Object crafter : this.crafters) {
-                    final EntityPlayerMP emp = (EntityPlayerMP) crafter;
-                    if (sf.getHasStack()) {
-                        try {
-                            NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
-                        } catch (IOException ignored) {}
-                    }
-                }
             }
-        }
-    }
-
-    public void updateSlotsOnPatternInject() {
-        for (final Object crafter : this.crafters) {
-            final EntityPlayerMP emp = (EntityPlayerMP) crafter;
-            for (final SlotFake sf : this.craftingSlots) {
-                if (sf.getHasStack()) {
-                    AppEngInternalAEInventory inv = (AppEngInternalAEInventory) this.patternTerminal
-                            .getInventoryByName("crafting");
-                    sf.putAEStack(inv.getAEStackInSlot(sf.getSlotIndex()));
-                    try {
-                        NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
-                    } catch (IOException ignored) {}
-                }
-            }
-
-            for (final SlotFake sf : this.outputSlots) {
-                if (sf.getHasStack()) {
-                    AppEngInternalAEInventory inv = (AppEngInternalAEInventory) this.patternTerminal
-                            .getInventoryByName("output");
-                    sf.putAEStack(inv.getAEStackInSlot(sf.getSlotIndex()));
-                    try {
-                        NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
-                    } catch (IOException ignored) {}
-                }
-            }
-        }
-    }
-
-    public void updateSlots() {
-        for (final Object crafter : this.crafters) {
-            final EntityPlayerMP emp = (EntityPlayerMP) crafter;
-
-            for (final SlotFake sf : this.craftingSlots) {
-                if (sf.getHasStack()) {
-                    try {
-                        NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
-                    } catch (IOException ignored) {}
-                }
-            }
-
-            for (final SlotFake sf : this.outputSlots) {
-                if (sf.getHasStack()) {
-                    try {
-                        NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, sf.getAEStack()), emp);
-                    } catch (IOException ignored) {}
-                }
-            }
-        }
-    }
-
-    @Override
-    public void onCraftMatrixChanged(IInventory p_75130_1_) {
-        super.onCraftMatrixChanged(p_75130_1_);
-        if (Platform.isServer()) {
-            p_75130_1_.markDirty();
+            this.detectAndSendChanges();
         }
     }
 
     public void setPatternValue(int index, long amount) {
         SlotFake sf = (SlotFake) this.inventorySlots.get(index);
         sf.getAEStack().setStackSize(amount);
-        this.inventoryItemStacks.set(index, sf.getStack());
-        onSlotChange(sf);
     }
 
     public void clear() {
@@ -461,7 +366,6 @@ public abstract class ContainerPatternTermBase extends ContainerMEMonitorable
             if (canMultiplyOrDivide(this.craftingSlots, multi) && canMultiplyOrDivide(this.outputSlots, multi)) {
                 multiplyOrDivideStacksInternal(this.craftingSlots, multi);
                 multiplyOrDivideStacksInternal(this.outputSlots, multi);
-                this.updateSlots();
             }
             this.detectAndSendChanges();
         }

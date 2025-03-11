@@ -54,7 +54,7 @@ import appeng.client.me.InternalSlotME;
 import appeng.client.me.SlotME;
 import appeng.container.guisync.GuiSync;
 import appeng.container.guisync.SyncData;
-import appeng.container.implementations.ContainerCellWorkbench;
+import appeng.container.implementations.ContainerCellWorkbench.Upgrades;
 import appeng.container.implementations.ContainerUpgradeable;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
@@ -69,6 +69,7 @@ import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketPartialItem;
+import appeng.core.sync.packets.PacketUpdateAESlot;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
 import appeng.helpers.InventoryAction;
@@ -81,6 +82,7 @@ import appeng.util.item.AEItemStack;
 
 public abstract class AEBaseContainer extends Container {
 
+    private List<IAEItemStack> inventoryAEItemStacks = new ArrayList();
     private final InventoryPlayer invPlayer;
     private final BaseActionSource mySrc;
     private final HashSet<Integer> locked = new HashSet<>();
@@ -365,6 +367,7 @@ public abstract class AEBaseContainer extends Container {
 
     @Override
     protected Slot addSlotToContainer(final Slot newSlot) {
+        this.inventoryAEItemStacks.add(null);
         if (newSlot instanceof AppEngSlot s) {
             s.setContainer(this);
             return super.addSlotToContainer(newSlot);
@@ -383,6 +386,26 @@ public abstract class AEBaseContainer extends Container {
 
                 for (final SyncData sd : this.syncData.values()) {
                     sd.tick(icrafting);
+                }
+            }
+
+            for (int i = 0; i < this.inventorySlots.size(); ++i) {
+                if (this.inventorySlots.get(i) instanceof SlotFake sf) {
+                    IAEItemStack ias = sf.getAEStack();
+                    IAEItemStack ias1 = this.inventoryAEItemStacks.get(i);
+
+                    if (!AEItemStack.areAEItemStacksEqual(ias, ias1)) {
+                        ias1 = ias == null ? null : ias.copy();
+                        this.inventoryAEItemStacks.set(i, ias1);
+                        this.inventoryItemStacks.set(i, ias == null ? null : ias1.getItemStack());
+
+                        for (ICrafting crafter : this.crafters) {
+                            final EntityPlayerMP emp = (EntityPlayerMP) crafter;
+                            try {
+                                NetworkHandler.instance.sendTo(new PacketUpdateAESlot(sf.slotNumber, ias1), emp);
+                            } catch (IOException ignored) {}
+                        }
+                    }
                 }
             }
         }
@@ -532,7 +555,7 @@ public abstract class AEBaseContainer extends Container {
                             // Check source or target
                             if (!((d.inventory instanceof UpgradeInventory)
                                     || (clickSlot.inventory instanceof UpgradeInventory)
-                                    || (d.inventory instanceof ContainerCellWorkbench.Upgrades))) {
+                                    || (d.inventory instanceof Upgrades))) {
                                 continue;
                             }
                         }
