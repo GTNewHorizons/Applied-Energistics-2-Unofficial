@@ -36,7 +36,8 @@ public interface IAEItemStack extends IAEStack<IAEItemStack> {
     ItemStack getItemStack();
 
     /**
-     * is there NBT Data for this item?
+     * 
+     * /** is there NBT Data for this item?
      *
      * @return if there is
      */

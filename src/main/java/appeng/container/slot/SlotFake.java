@@ -15,6 +15,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.data.IAEItemStack;
+import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.util.item.AEItemStack;
 
 public class SlotFake extends AppEngSlot {
@@ -47,12 +48,24 @@ public class SlotFake extends AppEngSlot {
         super.putStack(is);
     }
 
+    public void putAEStack(IAEItemStack ais) {
+        if (this.inventory instanceof AppEngInternalAEInventory aei) {
+            aei.setAEInventorySlotContents(this.getSlotIndex(), ais);
+            this.onSlotChanged();
+        } else {
+            this.aeStack = ais;
+        }
+    }
+
     @Override
     public boolean canTakeStack(final EntityPlayer par1EntityPlayer) {
         return false;
     }
 
     public IAEItemStack getAEStack() {
-        return aeStack;
+        if (this.inventory instanceof AppEngInternalAEInventory aei) {
+            return aei.getAEStackInSlot(this.getSlotIndex());
+        }
+        return this.aeStack;
     }
 }
