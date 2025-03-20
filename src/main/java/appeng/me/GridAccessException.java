@@ -13,4 +13,10 @@ package appeng.me;
 public class GridAccessException extends Exception {
 
     private static final long serialVersionUID = 3914554394866375300L;
+
+    public GridAccessException() {
+        // Disable stack captures
+        // If you need a stack from this exception, just comment out this constructor
+        super(null, null, false, false);
+    }
 }
