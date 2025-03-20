@@ -12,11 +12,14 @@ package appeng.items.misc;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
@@ -41,6 +44,7 @@ import appeng.core.localization.GuiText;
 import appeng.helpers.PatternHelper;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
+import cpw.mods.fml.common.registry.GameRegistry;
 
 public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternItem {
 
@@ -104,7 +108,6 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         }
 
         final ICraftingPatternDetails details = this.getPatternForItem(stack, player.worldObj);
-        final boolean isCrafting = encodedValue.getBoolean("crafting");
         final boolean substitute = encodedValue.getBoolean("substitute");
         final boolean beSubstitute = encodedValue.getBoolean("beSubstitute");
         final String author = encodedValue.getString("author");
@@ -128,29 +131,43 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final List<String> in = new ArrayList<>();
         final List<String> out = new ArrayList<>();
 
-        final String substitutionLabel = GuiText.Substitute.getLocal() + " ";
-        final String beSubstitutionLabel = GuiText.BeSubstitute.getLocal() + " ";
+        final String substitutionLabel = EnumChatFormatting.YELLOW + GuiText.Substitute.getLocal()
+                + " "
+                + EnumChatFormatting.RESET;
+        final String beSubstitutionLabel = EnumChatFormatting.YELLOW + GuiText.BeSubstitute.getLocal()
+                + " "
+                + EnumChatFormatting.RESET;
         final String canSubstitute = substitute ? GuiText.Yes.getLocal() : GuiText.No.getLocal();
         final String canBeSubstitute = beSubstitute ? GuiText.Yes.getLocal() : GuiText.No.getLocal();
-        final String label = (isCrafting ? GuiText.Crafts.getLocal() : GuiText.Creates.getLocal()) + ": ";
-        final String and = " " + GuiText.And.getLocal() + " ";
-        final String with = GuiText.With.getLocal() + ": ";
+        final String result = (outItems.length > 1 ? EnumChatFormatting.DARK_AQUA + GuiText.Results.getLocal()
+                : EnumChatFormatting.DARK_AQUA + GuiText.Result.getLocal()) + ":" + EnumChatFormatting.RESET;
+        final String ingredients = (inItems.length > 1 ? EnumChatFormatting.DARK_GREEN + GuiText.Ingredients.getLocal()
+                : EnumChatFormatting.DARK_GREEN + GuiText.Ingredient.getLocal()) + ": " + EnumChatFormatting.RESET;
+        final String holdShift = EnumChatFormatting.GRAY + GuiText.HoldShift.getLocal() + EnumChatFormatting.RESET;
 
-        recipeIsBroken = addInformation(player, inItems, in, with, and, displayMoreInfo) || recipeIsBroken;
-        recipeIsBroken = addInformation(player, outItems, out, label, and, displayMoreInfo) || recipeIsBroken;
+        recipeIsBroken = addInformation(player, inItems, in, ingredients, displayMoreInfo, EnumChatFormatting.GREEN)
+                || recipeIsBroken;
+        recipeIsBroken = addInformation(player, outItems, out, result, displayMoreInfo, EnumChatFormatting.AQUA)
+                || recipeIsBroken;
 
         if (recipeIsBroken) {
             lines.add(EnumChatFormatting.RED + GuiText.InvalidPattern.getLocal());
-        }
+        } else {
+            lines.addAll(out);
+            if (GuiScreen.isShiftKeyDown()) {
+                lines.addAll(in);
+            } else {
+                lines.add(holdShift);
+            }
 
-        lines.addAll(out);
-        lines.addAll(in);
+            lines.add(substitutionLabel + canSubstitute);
+            lines.add(beSubstitutionLabel + canBeSubstitute);
 
-        lines.add(substitutionLabel + canSubstitute);
-        lines.add(beSubstitutionLabel + canBeSubstitute);
-
-        if (!StringUtils.isNullOrEmpty(author)) {
-            lines.add(GuiText.EncodedBy.getLocal(author));
+            if (!StringUtils.isNullOrEmpty(author)) {
+                lines.add(
+                        EnumChatFormatting.LIGHT_PURPLE + GuiText.EncodedBy.getLocal(author)
+                                + EnumChatFormatting.RESET);
+            }
         }
     }
 
@@ -187,30 +204,49 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
     }
 
     private boolean addInformation(final EntityPlayer player, final IAEItemStack[] items, final List<String> lines,
-            final String label, final String and, final boolean displayMoreInfo) {
+            String label, final boolean displayMoreInfo, EnumChatFormatting color) {
         final ItemStack unknownItem = new ItemStack(Blocks.fire);
         boolean recipeIsBroken = false;
         boolean first = true;
+        List<IAEItemStack> itemsList = Arrays.asList(items);
+        List<IAEItemStack> sortedItems = itemsList.stream()
+                .sorted(Comparator.comparingLong(IAEItemStack::getStackSize).reversed()).collect(Collectors.toList());
+        boolean isFluid = false;
 
-        for (final IAEItemStack item : items) {
+        for (final IAEItemStack item : sortedItems) {
 
             if (!recipeIsBroken && item.equals(unknownItem)) {
                 recipeIsBroken = true;
             }
 
-            lines.add(
-                    (first ? label : and) + NumberFormat.getNumberInstance(Locale.US).format(item.getStackSize())
-                            + " "
-                            + Platform.getItemDisplayName(item));
+            if (item.getItemStack().getItem() == GameRegistry.findItem("ae2fc", "fluid_drop")) {
+                label = EnumChatFormatting.GOLD + label;
+                color = EnumChatFormatting.GOLD;
+                isFluid = true;
+            }
 
-            if (GuiScreen.isShiftKeyDown()) {
-                final List l = item.getItemStack().getTooltip(player, displayMoreInfo);
-
-                if (!l.isEmpty()) {
-                    l.remove(0);
-                }
-
-                lines.addAll(l);
+            if (first) {
+                lines.add(label);
+                lines.add(
+                        "   " + EnumChatFormatting.WHITE
+                                + NumberFormat.getNumberInstance(Locale.US).format(item.getStackSize())
+                                + EnumChatFormatting.RESET
+                                + (isFluid ? EnumChatFormatting.WHITE + "L" : " ")
+                                + EnumChatFormatting.RESET
+                                + color
+                                + (isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
+                                        : Platform.getItemDisplayName(item)));
+            }
+            if (!first) {
+                lines.add(
+                        "   " + EnumChatFormatting.WHITE
+                                + NumberFormat.getNumberInstance(Locale.US).format(item.getStackSize())
+                                + EnumChatFormatting.RESET
+                                + (isFluid ? EnumChatFormatting.WHITE + "L" : " ")
+                                + EnumChatFormatting.RESET
+                                + color
+                                + (isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
+                                        : Platform.getItemDisplayName(item)));
             }
 
             first = false;
