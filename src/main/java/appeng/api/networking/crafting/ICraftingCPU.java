@@ -15,6 +15,7 @@ package appeng.api.networking.crafting;
 
 import javax.annotation.Nullable;
 
+import appeng.api.config.CraftingAllow;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.data.IAEItemStack;
@@ -102,4 +103,15 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
      * @param onCraftingStatusUpdate
      */
     default void addOnCraftingUpdateListener(CraftUpdateListener onCraftingStatusUpdate) {}
+
+    /**
+     * get this cpu's crafting allow mode
+     * 
+     * @return mode of this cpu
+     */
+    public default CraftingAllow getCraftingAllowMode() {
+        return CraftingAllow.ALLOW_ALL;
+    }
+
+    public default void changeCraftingAllowMode(CraftingAllow mode) {}
 }

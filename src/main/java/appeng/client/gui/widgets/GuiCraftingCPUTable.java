@@ -89,6 +89,7 @@ public class GuiCraftingCPUTable {
         CraftingCPUStatus hoveredCpu = hitCpu(mouseX - guiLeft, mouseY - guiTop);
         final ItemStack craftingAccelerator = AEApi.instance().definitions().blocks().craftingAccelerator()
                 .maybeStack(1).orNull();
+        final ItemStack cell64k = AEApi.instance().definitions().items().cell64k().maybeStack(1).orNull();
         {
             FontRenderer font = Minecraft.getMinecraft().fontRenderer;
             for (int i = firstCpu; i < firstCpu + CPU_TABLE_SLOTS; i++) {
@@ -165,23 +166,32 @@ public class GuiCraftingCPUTable {
                     GL11.glTranslatef(x + CPU_TABLE_SLOT_WIDTH - 19, y + 3, 0);
                     parent.drawItem(0, 0, craftingStack.getItemStack());
                 } else {
+                    parent.bindTexture("guis/states.png");
 
                     GL11.glScalef(0.5f, 0.5f, 1.0f);
+
                     GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-                    parent.bindTexture("guis/states.png");
-                    parent.drawTexturedModalRect(0, 0, 3 * 16, 4 * 16, 16, 16);
+                    parent.drawItem(0, 0, cell64k);
+                    switch (cpu.allowMode()) {
+                        case ALLOW_ALL -> parent.drawTexturedModalRect(16 * 7 - 1, 0, 16 * 3, 16 * 14, 16, 16);
+                        case ONLY_PLAYER -> parent.drawTexturedModalRect(16 * 7 - 1, 0, 16 * 4, 16 * 14, 16, 16);
+                        case ONLY_NONPLAYER -> parent.drawTexturedModalRect(16 * 7 - 1, 0, 16 * 5, 16 * 14, 16, 16);
+                    }
                     GL11.glColor4f(0.5F, 0.5F, 0.5F, 1.0F);
-                    parent.drawItem(16 * 4 + 4, 0, craftingAccelerator);
+
+                    parent.drawItem(16 * 4, 0, craftingAccelerator);
                     GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+
                     GL11.glTranslatef(18.0f, 6.0f, 0.0f);
                     GL11.glScalef(1.1f, 1.1f, 1f);
 
                     font.drawString(cpu.formatStorage(), 0, 0, GuiColors.CraftingStatusCPUStorage.getColor());
                     font.drawString(
                             cpu.formatShorterCoprocessors(),
-                            16 * 3 + 15,
+                            16 * 4 - 5,
                             0,
                             GuiColors.CraftingStatusCPUStorage.getColor());
+
                 }
                 GL11.glPopMatrix();
             }

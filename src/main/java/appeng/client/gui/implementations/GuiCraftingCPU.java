@@ -29,6 +29,7 @@ import org.lwjgl.opengl.GL11;
 import com.google.common.base.Joiner;
 
 import appeng.api.AEApi;
+import appeng.api.config.CraftingAllow;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -173,6 +174,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     private ItemStack hoveredNbtStack;
     private GuiAeButton findNext;
     private GuiAeButton findPrev;
+    private GuiImgButton changeAllow;
     private MEGuiTextField searchField;
     private ArrayList<Integer> goToData = new ArrayList<>();
     private int searchGotoIndex = -1;
@@ -221,6 +223,13 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             searchGoTo(true);
         } else if (btn == this.findPrev) {
             searchGoTo(false);
+        } else if (btn == this.changeAllow) {
+            String msg = String.valueOf(((CraftingAllow) this.changeAllow.getCurrentValue()).ordinal());
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("TileCrafting.Allow", msg));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
         }
 
     }
@@ -291,6 +300,13 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 "↓",
                 ButtonToolTips.SearchGotoNext.getLocal());
         this.buttonList.add(this.findNext);
+
+        this.changeAllow = new GuiImgButton(
+                this.guiLeft - 20,
+                this.guiTop + 2,
+                Settings.CRAFTING_ALLOW,
+                CraftingAllow.ALLOW_ALL);
+        this.buttonList.add(this.changeAllow);
     }
 
     private void setScrollBar() {
@@ -307,6 +323,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
         this.cancel.enabled = !this.visual.isEmpty();
+        this.changeAllow.set(CraftingAllow.values()[this.craftingCpu.allow]);
 
         final int gx = (this.width - this.xSize) / 2;
         final int gy = (this.height - this.ySize) / 2;
