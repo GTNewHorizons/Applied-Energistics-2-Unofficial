@@ -65,7 +65,7 @@ public interface IChestOrDrive extends ICellContainer, IGridHost, IOrientable {
 
     boolean toggleItemStorageCellLocking();
 
-    int applyStickyToDigitalSingularityCells(ItemStack cards);
+    int applyStickyToItemStorageCells(ItemStack cards);
 
     @Deprecated
     default boolean isCellBlinking(int slot) {

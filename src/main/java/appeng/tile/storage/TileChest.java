@@ -751,7 +751,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         return true;
     }
 
-    public int applyStickyToDigitalSingularityCells(ItemStack cards) {
+    public int applyStickyToItemStorageCells(ItemStack cards) {
         ItemStack cell = this.inv.getStackInSlot(1);
         if (ItemBasicStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler) && cards.stackSize != 0) {
             return 0;

@@ -464,7 +464,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         return res;
     }
 
-    public int applyStickyToDigitalSingularityCells(ItemStack cards) {
+    public int applyStickyToItemStorageCells(ItemStack cards) {
         int res = 0;
         for (int i = 0; i < this.handlersBySlot.length; i++) {
             ICellHandler cellHandler = this.handlersBySlot[i];
