@@ -125,6 +125,12 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return new AEItemStack(stack);
     }
 
+    public static boolean areAEItemStacksEqual(IAEItemStack firstStack, IAEItemStack otherStack) {
+        return firstStack == null && otherStack == null || (firstStack != null && otherStack != null
+                && firstStack.getStackSize() == otherStack.getStackSize()
+                && firstStack.equals(otherStack));
+    }
+
     public static IAEItemStack loadItemStackFromPacket(final ByteBuf data) throws IOException {
         final byte mask = data.readByte();
         // byte PriorityType = (byte) (mask & 0x03);
@@ -351,6 +357,13 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return this.getDefinition().getTagCompound();
     }
 
+    public void copyTagCompoundFromItemStack(ItemStack is) {
+        final NBTTagCompound tagCompound = is.getTagCompound();
+        if (tagCompound != null) {
+            this.getDefinition().setTagCompound((AESharedNBT) AESharedNBT.getSharedTagCompound(tagCompound, is));
+        }
+    }
+
     @Override
     public boolean isItem() {
         return true;
@@ -455,7 +468,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
 
     @Override
     public String toString() {
-        return this.getItemStack().toString();
+        return this.getStackSize() + "x" + this.getItem().getUnlocalizedName() + "@" + this.getItemDamage();
     }
 
     @Override

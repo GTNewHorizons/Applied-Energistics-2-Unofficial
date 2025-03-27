@@ -90,18 +90,16 @@ public class GuiCraftAmount extends GuiAmount {
             this.originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
         }
 
-        if (target instanceof PartPatternTerminal) {
+        if (target instanceof PartPatternTerminalEx) {
             for (final ItemStack stack : parts.patternTerminal().maybeStack(1).asSet()) {
                 myIcon = stack;
             }
-            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-
-        if (target instanceof PartPatternTerminalEx) {
+            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
+        } else if (target instanceof PartPatternTerminal) {
             for (final ItemStack stack : parts.patternTerminalEx().maybeStack(1).asSet()) {
                 myIcon = stack;
             }
-            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
+            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
         }
     }
 
@@ -120,7 +118,7 @@ public class GuiCraftAmount extends GuiAmount {
 
         try {
 
-            int resultI = getAmount();
+            long resultI = getAmount();
 
             this.nextBtn.enabled = resultI > 0;
         } catch (final NumberFormatException e) {
@@ -147,7 +145,7 @@ public class GuiCraftAmount extends GuiAmount {
             if (btn == this.nextBtn && btn.enabled) {
                 NetworkHandler.instance.sendToServer(
                         new PacketCraftRequest(
-                                addOrderAmount(0),
+                                addOrderAmount(0L),
                                 isShiftKeyDown(),
                                 (CraftingMode) this.craftingMode.getCurrentValue()));
             }
