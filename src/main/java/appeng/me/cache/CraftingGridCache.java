@@ -40,6 +40,7 @@ import com.google.common.collect.Multimap;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
+import appeng.api.config.CraftingAllow;
 import appeng.api.config.CraftingMode;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
@@ -513,12 +514,23 @@ public class CraftingGridCache
         if (target == null) {
             final List<CraftingCPUCluster> validCpusClusters = new ArrayList<>();
             for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
-                if (cpu.isActive() && cpu.isBusy()
+
+                boolean canOrder = false;
+                // This cpu can be merge
+                canOrder |= (cpu.isActive() && cpu.isBusy()
                         && job.getOutput().isSameType(cpu.getFinalOutput())
-                        && cpu.getAvailableStorage() >= cpu.getUsedStorage() + job.getByteTotal()) {
-                    validCpusClusters.add(cpu);
-                } else if (cpu.isActive() && !cpu.isBusy() && cpu.getAvailableStorage() >= job.getByteTotal()) {
-                    validCpusClusters.add(cpu);
+                        && cpu.getAvailableStorage() >= cpu.getUsedStorage() + job.getByteTotal());
+                // Or this cpu is idle
+                canOrder |= (cpu.isActive() && !cpu.isBusy() && cpu.getAvailableStorage() >= job.getByteTotal());
+
+                if (canOrder) {
+                    if (src.isPlayer() && cpu.getCraftingAllowMode() != CraftingAllow.ONLY_NONPLAYER) {
+                        // If is player requests and CraftingAllowMode is not ONLY_NONPLAYER
+                        validCpusClusters.add(cpu);
+                    } else if (!src.isPlayer() && cpu.getCraftingAllowMode() != CraftingAllow.ONLY_PLAYER) {
+                        // If is non-player requests and CraftingAllowMode is not ONLY_PLAYER
+                        validCpusClusters.add(cpu);
+                    }
                 }
             }
 

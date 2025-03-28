@@ -108,6 +108,7 @@ public class PacketValueConfig extends AppEngPacket {
         	switch(this.Name) {
         	case "TileCrafting.Cancel" -> qk.cancelCrafting();
         	case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
+        	case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
         	}
         } else if (this.Name.equals("QuartzKnife.Name") && c instanceof final ContainerQuartzKnife qk) {
             qk.setName(this.Value);

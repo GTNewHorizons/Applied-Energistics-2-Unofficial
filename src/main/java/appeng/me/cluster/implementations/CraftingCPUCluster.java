@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableSet;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.config.CraftingAllow;
 import appeng.api.config.CraftingMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.PowerMultiplier;
@@ -162,6 +163,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private long numsOfOutput;
     private int countToTryExtractItems;
     private boolean isMissingMode;
+    private CraftingAllow craftingAllowMode = CraftingAllow.ALLOW_ALL;
 
     private final Map<String, List<CraftNotification>> unreadNotifications = new HashMap<>();
 
@@ -1281,6 +1283,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         data.setLong("usedStorage", this.usedStorage);
         data.setLong("numsOfOutput", this.numsOfOutput);
         data.setBoolean("isMissingMode", this.isMissingMode);
+        data.setInteger("craftingAllowMode", this.craftingAllowMode.ordinal());
         try {
             data.setTag("craftCompleteListeners", persistListeners(1, craftCompleteListeners));
             data.setTag("onCancelListeners", persistListeners(0, craftCancelListeners));
@@ -1406,6 +1409,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.waiting = data.getBoolean("waiting");
         this.isComplete = data.getBoolean("isComplete");
         this.usedStorage = data.getLong("usedStorage");
+        this.craftingAllowMode = CraftingAllow.values()[(data.getInteger("craftingAllowMode"))];
 
         if (data.hasKey("link")) {
             final NBTTagCompound link = data.getCompoundTag("link");
@@ -1704,5 +1708,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             tag.setLong("outputsCount", this.outputsCount);
             tag.setLong("elapsedTime", this.elapsedTime);
         }
+    }
+
+    public CraftingAllow getCraftingAllowMode() {
+        return this.craftingAllowMode;
+    }
+
+    public void changeCraftingAllowMode(CraftingAllow mode) {
+        this.craftingAllowMode = mode;
+        this.markDirty();
     }
 }
