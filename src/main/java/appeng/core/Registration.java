@@ -764,6 +764,9 @@ public final class Registration {
         // Inscriber
         Upgrades.SPEED.registerItem(blocks.inscriber(), 3);
 
+        // Grower
+        Upgrades.SPEED.registerItem(blocks.grower(), 3);
+
         // Terminals
         Upgrades.PATTERN_REFILLER.registerItem(parts.patternTerminal(), 1);
         Upgrades.PATTERN_REFILLER.registerItem(parts.patternTerminalEx(), 1);

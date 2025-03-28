@@ -68,6 +68,9 @@ import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
+import org.lwjgl.input.Keyboard;
+
+import com.gtnewhorizon.gtnhlib.keybind.SyncedKeybind;
 import com.mojang.authlib.GameProfile;
 
 import appeng.api.AEApi;
@@ -164,6 +167,8 @@ public class Platform {
     private static final double[] BYTE_LIMIT;
     private static final int DIVISION_BASE = 1000;
     private static final DecimalFormat df = new DecimalFormat("#.##");
+    public static final SyncedKeybind keyBindLCtrl = SyncedKeybind.create(Keyboard.KEY_LCONTROL);
+    public static final SyncedKeybind keyBindTab = SyncedKeybind.create(Keyboard.KEY_TAB);
 
     static {
         BYTE_LIMIT = new double[10];

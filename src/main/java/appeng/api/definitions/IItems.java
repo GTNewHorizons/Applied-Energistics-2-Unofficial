@@ -108,6 +108,8 @@ public interface IItems {
 
     IItemDefinition crystalSeed();
 
+    IItemDefinition toolSuperWirelessKit();
+
     // rv1
     IItemDefinition encodedPattern();
 

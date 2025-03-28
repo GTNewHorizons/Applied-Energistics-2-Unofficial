@@ -17,6 +17,8 @@ import java.util.EnumSet;
 
 import javax.annotation.Nonnull;
 
+import appeng.items.tools.ToolNetworkVisualiser.VisualisationModes;
+
 public enum Settings {
 
     LEVEL_EMITTER_MODE(EnumSet.allOf(LevelEmitterMode.class)),
@@ -84,7 +86,17 @@ public enum Settings {
 
     TERMINAL_FONT_SIZE(EnumSet.allOf(TerminalFontSize.class)),
 
-    INTERFACE_TERMINAL_SECTION_ORDER(EnumSet.allOf(StringOrder.class));
+    INTERFACE_TERMINAL_SECTION_ORDER(EnumSet.allOf(StringOrder.class)),
+
+    SUPER_WIRELESS_TOOL(EnumSet.allOf(SuperWirelessTool.class)),
+
+    SUPER_WIRELESS_TOOL_ADVANCED(EnumSet.allOf(SuperWirelessToolAdvanced.class)),
+
+    SUPER_WIRELESS_TOOL_GROUP_BY(EnumSet.allOf(SuperWirelessToolGroupBy.class)),
+
+    SUPER_WIRELESS_TOOL_HIDE_BOUNDED(EnumSet.of(YesNo.YES, YesNo.NO)),
+
+    NETWORK_VISUALISER(EnumSet.allOf(VisualisationModes.class));
 
     private final EnumSet<? extends Enum<?>> values;
 
