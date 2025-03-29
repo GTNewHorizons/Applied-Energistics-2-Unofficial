@@ -1,6 +1,7 @@
 package appeng.client.gui.widgets;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.function.Predicate;
@@ -41,6 +42,21 @@ public class GuiCraftingCPUTable {
     private final GuiScrollbar cpuScrollbar;
 
     private String selectedCPUName = "";
+    private static final DecimalFormat DF = new DecimalFormat("#.##");
+
+    private static int processBarStartColorInt = GuiColors.ProcessBarStartColor.getColor();
+    private static final int[] PROCESS_BAR_START_COLOR_INT_ARR = new int[] { (processBarStartColorInt >> 24) & 0xFF,
+            (processBarStartColorInt >> 16) & 0xFF, (processBarStartColorInt >> 8) & 0xFF,
+            processBarStartColorInt & 0xFF };
+
+    private static int processBarMiddleColorInt = GuiColors.ProcessBarMiddleColor.getColor();
+    private static final int[] PROCESS_BAR_MIDDLE_COLOR_INT_ARR = new int[] { (processBarMiddleColorInt >> 24) & 0xFF,
+            (processBarMiddleColorInt >> 16) & 0xFF, (processBarMiddleColorInt >> 8) & 0xFF,
+            processBarMiddleColorInt & 0xFF };
+
+    private static int processBarEndColorInt = GuiColors.ProcessBarEndColor.getColor();
+    private static final int[] PROCESS_BAR_END_COLOR_INT_ARR = new int[] { (processBarEndColorInt >> 24) & 0xFF,
+            (processBarEndColorInt >> 16) & 0xFF, (processBarEndColorInt >> 8) & 0xFF, processBarEndColorInt & 0xFF };
 
     public GuiCraftingCPUTable(AEBaseGui parent, ContainerCPUTable container,
             Predicate<CraftingCPUStatus> jobMergeable) {
@@ -155,15 +171,27 @@ public class GuiCraftingCPUTable {
                     parent.drawTexturedModalRect(0, 0, uv_x * 16, uv_y * 16, 16, 16);
                     GL11.glTranslatef(18.0f, 2.0f, 0.0f);
                     String amount = NumberFormat.getInstance().format(craftingStack.getStackSize());
+                    double craftingPercentage = (double) (cpu.getTotalItems() - Math.max(cpu.getRemainingItems(), 0))
+                            / (double) cpu.getTotalItems();
                     if (amount.length() > 9) {
                         amount = ReadableNumberConverter.INSTANCE.toWideReadableForm(craftingStack.getStackSize());
                     }
                     GL11.glScalef(1.5f, 1.5f, 1.0f);
                     font.drawString(amount, 0, 0, GuiColors.CraftingStatusCPUAmount.getColor());
+
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
                     GL11.glTranslatef(x + CPU_TABLE_SLOT_WIDTH - 19, y + 3, 0);
                     parent.drawItem(0, 0, craftingStack.getItemStack());
+
+                    GL11.glPopMatrix();
+                    GL11.glPushMatrix();
+                    AEBaseGui.drawRect(
+                            x,
+                            y + CPU_TABLE_SLOT_HEIGHT - 3,
+                            x + (int) ((CPU_TABLE_SLOT_WIDTH - 1) * craftingPercentage),
+                            y + CPU_TABLE_SLOT_HEIGHT - 2,
+                            this.calculateGradientColor(craftingPercentage));
                 } else {
 
                     GL11.glScalef(0.5f, 0.5f, 1.0f);
@@ -356,5 +384,25 @@ public class GuiCraftingCPUTable {
         if (next < cpuScrollbar.getCurrentScroll() || next >= cpuScrollbar.getCurrentScroll() + CPU_TABLE_SLOTS) {
             cpuScrollbar.setCurrentScroll(next);
         }
+    }
+
+    private int calculateGradientColor(double percentage) {
+        int start[] = null;
+        int end[] = null;
+        double ratio = 0;
+        if (percentage <= 0.5) {
+            start = PROCESS_BAR_START_COLOR_INT_ARR;
+            end = PROCESS_BAR_MIDDLE_COLOR_INT_ARR;
+            ratio = percentage * 2;
+        } else {
+            start = PROCESS_BAR_MIDDLE_COLOR_INT_ARR;
+            end = PROCESS_BAR_END_COLOR_INT_ARR;
+            ratio = (percentage - 0.5d) * 2;
+        }
+        int a = (int) (start[0] + ratio * (end[0] - start[0]));
+        int r = (int) (start[1] + ratio * (end[1] - start[1]));
+        int g = (int) (start[2] + ratio * (end[2] - start[2]));
+        int b = (int) (start[3] + ratio * (end[3] - start[3]));
+        return (a << 24) | (r << 16) | (g << 8) | (b);
     }
 }
