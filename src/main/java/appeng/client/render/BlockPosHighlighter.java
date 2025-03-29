@@ -24,6 +24,7 @@ public class BlockPosHighlighter {
     private static long expireHighlightTime;
     private static final int MIN_TIME = 3000;
     private static final int MAX_TIME = MIN_TIME * 10;
+    private static String name;
 
     public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String foundMsg,
             String wrongDimMsg) {
@@ -32,11 +33,19 @@ public class BlockPosHighlighter {
         for (DimensionalCoord coord : interfaces) {
             if (player.worldObj.provider.dimensionId == coord.getDimension()) {
                 if (foundMsg != null) {
-                    player.addChatMessage(new ChatComponentTranslation(foundMsg, coord.x, coord.y, coord.z));
+                    if (name.isEmpty()) {
+                        player.addChatMessage(new ChatComponentTranslation(foundMsg, coord.x, coord.y, coord.z));
+                    } else {
+                        player.addChatMessage(new ChatComponentTranslation(foundMsg, name, coord.x, coord.y, coord.z));
+                    }
                 }
             } else {
                 if (wrongDimMsg != null) {
-                    player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, coord.getDimension()));
+                    if (name.isEmpty()) {
+                        player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, coord.getDimension()));
+                    } else {
+                        player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, name, coord.getDimension()));
+                    }
                 }
             }
             highlightedBlocks.add(coord);
@@ -45,6 +54,13 @@ public class BlockPosHighlighter {
                     MathHelper.clamp_int(500 * WorldCoord.getTaxicabDistance(coord, player), MIN_TIME, MAX_TIME));
         }
         expireHighlightTime = System.currentTimeMillis() + highlightDuration;
+    }
+
+    public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String foundName,
+            String foundMsg, String wrongDimMsg) {
+        name = foundName;
+        highlightBlocks(player, interfaces, foundMsg, wrongDimMsg);
+        name = "";
     }
 
     private static void clear() {
