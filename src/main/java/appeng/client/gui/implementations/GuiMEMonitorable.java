@@ -473,40 +473,47 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
 
     @Override
     protected void keyTyped(final char character, final int key) {
-        if (!this.checkHotbarKeys(key)) {
+        if (!isAutoFocus) {
+            keyTypedResolver(character, key, false);
+        } else if (!this.checkHotbarKeys(key)) {
+            keyTypedResolver(character, key, true);
+        }
+    }
 
-            if (NEI.searchField.existsSearchField()) {
+    private void keyTypedResolver(final char character, final int key, boolean hotBarCheckPassed) {
+        if (NEI.searchField.existsSearchField()) {
 
-                if ((NEI.searchField.focused() || searchField.isFocused())
-                        && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
-                    final boolean focused = searchField.isFocused();
-                    searchField.setFocused(!focused);
-                    NEI.searchField.setFocus(focused);
-                    return;
-                }
-
-                if (NEI.searchField.focused()) {
-                    return;
-                }
-            }
-
-            if (searchField.isFocused() && key == Keyboard.KEY_RETURN) {
-                searchField.setFocused(false);
+            if ((NEI.searchField.focused() || searchField.isFocused())
+                    && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
+                final boolean focused = searchField.isFocused();
+                searchField.setFocused(!focused);
+                NEI.searchField.setFocus(focused);
                 return;
             }
 
-            if (character == ' ' && searchField.getText().isEmpty()) {
+            if (NEI.searchField.focused()) {
                 return;
             }
+        }
 
-            final boolean mouseInGui = this
-                    .isPointInRegion(0, 0, this.xSize, this.ySize, this.currentMouseX, this.currentMouseY);
+        if (searchField.isFocused() && key == Keyboard.KEY_RETURN) {
+            searchField.setFocused(false);
+            return;
+        }
 
-            if (this.isAutoFocus && !searchField.isFocused() && mouseInGui) {
-                searchField.setFocused(true);
-            }
+        if (character == ' ' && searchField.getText().isEmpty()) {
+            return;
+        }
 
-            if (!searchField.textboxKeyTyped(character, key)) {
+        final boolean mouseInGui = this
+                .isPointInRegion(0, 0, this.xSize, this.ySize, this.currentMouseX, this.currentMouseY);
+
+        if (this.isAutoFocus && !searchField.isFocused() && mouseInGui) {
+            searchField.setFocused(true);
+        }
+
+        if (!searchField.textboxKeyTyped(character, key)) {
+            if (hotBarCheckPassed || !this.checkHotbarKeys(key)) {
                 super.keyTyped(character, key);
             }
         }

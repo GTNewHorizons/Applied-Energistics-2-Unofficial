@@ -350,7 +350,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         cpuTable.drawScreen();
 
         this.start.enabled = !(this.ccc.hasNoCPU() || this.isSimulation());
-        this.startWithFollow.enabled = this.start.enabled;
         if (this.start.enabled) {
             CraftingCPUStatus selected = this.cpuTable.getContainer().getSelectedCPU();
             if (selected != null && this.ccc.cpuCraftingSameItem(selected)) {
@@ -362,6 +361,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 this.start.enabled = false;
             }
         }
+        this.startWithFollow.enabled = this.start.enabled;
 
         this.selectCPU.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation();
         this.optimizeButton.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation()
