@@ -68,7 +68,6 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.amountTextField.x = this.guiLeft + 39;
         this.amountTextField.y = this.guiTop + 44;
         this.amountTextField.setFocused(true);
-        this.amountTextField.setCursorPositionEnd();
         ((ContainerLevelEmitter) this.inventorySlots).setTextField(this.amountTextField);
         this.validateText();
     }
@@ -185,33 +184,32 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
         if (btn == this.setButton && this.setButton.enabled) {
             try {
-                NetworkHandler.instance
-                        .sendToServer(new PacketValueConfig("LevelEmitter.Value", Long.toString(this.getAmountLong())));
+                final String amountString = Long.toString(this.getAmountLong());
+                this.amountTextField.setText(amountString);
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("LevelEmitter.Value", amountString));
             } catch (final IOException e) {
                 AELog.debug(e);
             }
-        }
-
-        if (btn == this.craftingMode) {
+        } else if (btn == this.craftingMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.craftingMode.getSetting(), backwards));
-        }
-
-        if (btn == this.levelMode) {
+        } else if (btn == this.levelMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.levelMode.getSetting(), backwards));
-        }
+        } else {
+            final boolean isPlus = btn == this.plus1 || btn == this.plus10
+                    || btn == this.plus100
+                    || btn == this.plus1000;
+            final boolean isMinus = btn == this.minus1 || btn == this.minus10
+                    || btn == this.minus100
+                    || btn == this.minus1000;
 
-        final boolean isPlus = btn == this.plus1 || btn == this.plus10 || btn == this.plus100 || btn == this.plus1000;
-        final boolean isMinus = btn == this.minus1 || btn == this.minus10
-                || btn == this.minus100
-                || btn == this.minus1000;
-
-        if (isPlus || isMinus) {
-            long resultI = addOrderAmount(this.getQty(btn));
-            this.amountTextField.setText(Long.toString(resultI));
+            if (isPlus || isMinus) {
+                long result = addOrderAmount(this.getQty(btn));
+                this.amountTextField.setText(Long.toString(result));
+            }
         }
     }
 
-    protected long addOrderAmount(final int i) {
+    private long addOrderAmount(final int i) {
         long resultL = getAmountLong();
 
         if (resultL == 1 && i > 1) {
@@ -225,7 +223,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         return resultL;
     }
 
-    protected long getAmountLong() {
+    private long getAmountLong() {
         String out = this.amountTextField.getText();
         double resultD = Calculator.conversion(out);
 

@@ -53,7 +53,6 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
     @SideOnly(Side.CLIENT)
     public void setTextField(final MEGuiTextField level) {
         this.textField = level;
-        this.textField.setText(String.valueOf(this.EmitterValue));
     }
 
     public void setLevel(final long l, final EntityPlayer player) {
@@ -142,6 +141,10 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
         if (field.equals("EmitterValue")) {
             if (this.textField != null) {
                 this.textField.setText(String.valueOf(this.EmitterValue));
+
+                if (String.valueOf(oldValue).equals("-1")) {
+                    this.textField.setCursorPositionEnd();
+                }
             }
         }
     }
