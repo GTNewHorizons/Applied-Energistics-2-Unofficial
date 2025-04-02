@@ -199,7 +199,6 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
 
     public String formatShorterCoprocessors() {
         return NUMBER_CONVERTER.toWideReadableForm(getCoprocessors());
-        // return Platform.formatNumberLong(getCoprocessors());
     }
 
     public String formatStorage() {

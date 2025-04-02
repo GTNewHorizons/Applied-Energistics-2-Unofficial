@@ -32,4 +32,5 @@ public enum InventoryAction {
     PLACE_SINGLE,
     SET_PATTERN_VALUE,
     SET_PATTERN_MULTI,
+    RENAME_PATTERN_ITEM
 }

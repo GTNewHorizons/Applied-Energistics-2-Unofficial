@@ -59,6 +59,7 @@ public class GuiCraftAmount extends GuiAmount {
                         CraftingMode.STANDARD));
 
         this.amountTextField.setText("1");
+        this.amountTextField.setCursorPositionEnd();
         this.amountTextField.setSelectionPos(0);
     }
 

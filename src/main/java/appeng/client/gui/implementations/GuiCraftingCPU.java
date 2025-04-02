@@ -47,6 +47,7 @@ import appeng.client.gui.widgets.ISortSource;
 import appeng.client.gui.widgets.ITooltip;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.render.BlockPosHighlighter;
+import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
@@ -57,7 +58,9 @@ import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
+import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.helpers.InventoryAction;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 
@@ -94,6 +97,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     protected IItemList<IAEItemStack> storage = AEApi.instance().storage().createItemList();
     protected IItemList<IAEItemStack> active = AEApi.instance().storage().createItemList();
     protected IItemList<IAEItemStack> pending = AEApi.instance().storage().createItemList();
+
+    private IAEItemStack hoveredAEStack = null;
 
     protected int rows = DISPLAYED_ROWS;
 
@@ -236,7 +241,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
-        if (this.hoveredNbtStack != null && isShiftKeyDown()) {
+        if (isShiftKeyDown() && this.hoveredNbtStack != null) {
             NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
             // when using the highlight feature in the crafting GUI we want to show all the interfaces
             // that currently received items so the player can see if the items are processed properly
@@ -246,6 +251,13 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     PlayerMessages.InterfaceHighlighted.getName(),
                     PlayerMessages.InterfaceInOtherDim.getName());
             mc.thePlayer.closeScreen();
+        } else if (hoveredAEStack != null && btn == 2) {
+            ((AEBaseContainer) inventorySlots).setTargetStack(hoveredAEStack);
+            final PacketInventoryAction p = new PacketInventoryAction(
+                    InventoryAction.AUTO_CRAFT,
+                    inventorySlots.inventorySlots.size(),
+                    0);
+            NetworkHandler.instance.sendToServer(p);
         }
         super.mouseClicked(xCoord, yCoord, btn);
         this.searchField.mouseClicked(xCoord, yCoord, btn);
@@ -527,6 +539,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                             GuiColors.CraftingCPUAmount.getColor());
 
                     if (this.tooltip == z - viewStart) {
+                        hoveredAEStack = refStack;
                         lineList.add(
                                 GuiText.Crafting.getLocal() + ": "
                                         + NumberFormat.getInstance().format(activeStack.getStackSize()));
