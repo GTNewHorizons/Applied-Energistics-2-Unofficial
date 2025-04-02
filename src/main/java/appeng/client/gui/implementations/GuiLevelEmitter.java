@@ -15,6 +15,7 @@ import java.io.IOException;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import appeng.api.config.FuzzyMode;
@@ -24,20 +25,22 @@ import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.client.gui.widgets.GuiImgButton;
-import appeng.client.gui.widgets.GuiNumberBox;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
-import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.parts.automation.PartLevelEmitter;
+import appeng.util.calculators.ArithHelper;
+import appeng.util.calculators.Calculator;
 
 public class GuiLevelEmitter extends GuiUpgradeable {
 
-    private GuiNumberBox level;
+    private MEGuiTextField amountTextField;
+    private boolean isValidText;
 
     private GuiButton plus1;
     private GuiButton plus10;
@@ -47,6 +50,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     private GuiButton minus10;
     private GuiButton minus100;
     private GuiButton minus1000;
+
+    private GuiButton setButton;
 
     private GuiImgButton levelMode;
     private GuiImgButton craftingMode;
@@ -59,19 +64,13 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     public void initGui() {
         super.initGui();
 
-        this.level = new GuiNumberBox(
-                this.fontRendererObj,
-                this.guiLeft + 24,
-                this.guiTop + 43,
-                79,
-                this.fontRendererObj.FONT_HEIGHT,
-                Long.class);
-        this.level.setEnableBackgroundDrawing(false);
-        this.level.setMaxStringLength(16);
-        this.level.setTextColor(GuiColors.LevelEmitterValue.getColor());
-        this.level.setVisible(true);
-        this.level.setFocused(true);
-        ((ContainerLevelEmitter) this.inventorySlots).setTextField(this.level);
+        this.amountTextField = new MEGuiTextField(90, 12);
+        this.amountTextField.x = this.guiLeft + 23;
+        this.amountTextField.y = this.guiTop + 42;
+        this.amountTextField.setFocused(true);
+        this.amountTextField.setCursorPositionEnd();
+        ((ContainerLevelEmitter) this.inventorySlots).setTextField(this.amountTextField);
+        this.validateText();
     }
 
     @Override
@@ -112,6 +111,15 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.buttonList.add(this.minus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 59, 32, 20, "-" + c));
         this.buttonList.add(this.minus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 59, 38, 20, "-" + d));
 
+        this.buttonList.add(
+                this.setButton = new GuiButton(
+                        0,
+                        this.guiLeft + 128 + 16,
+                        this.guiTop + 38,
+                        28,
+                        20,
+                        GuiText.Set.getLocal()));
+
         this.buttonList.add(this.levelMode);
         this.buttonList.add(this.redstoneMode);
         this.buttonList.add(this.fuzzyMode);
@@ -123,7 +131,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         final boolean notCraftingMode = this.bc.getInstalledUpgrades(Upgrades.CRAFTING) == 0;
 
         // configure enabled status...
-        this.level.setEnabled(notCraftingMode);
+        this.amountTextField.setEnabled(notCraftingMode);
+        this.setButton.enabled = notCraftingMode && this.isValidText;
         this.plus1.enabled = notCraftingMode;
         this.plus10.enabled = notCraftingMode;
         this.plus100.enabled = notCraftingMode;
@@ -149,7 +158,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         super.drawBG(offsetX, offsetY, mouseX, mouseY);
-        this.level.drawTextBox();
+        this.amountTextField.drawTextBox();
     }
 
     @Override
@@ -174,6 +183,15 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
         final boolean backwards = Mouse.isButtonDown(1);
 
+        if (btn == this.setButton && this.setButton.enabled) {
+            try {
+                NetworkHandler.instance
+                        .sendToServer(new PacketValueConfig("LevelEmitter.Value", Long.toString(this.getAmountLong())));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
+        }
+
         if (btn == this.craftingMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.craftingMode.getSetting(), backwards));
         }
@@ -188,73 +206,64 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                 || btn == this.minus1000;
 
         if (isPlus || isMinus) {
-            this.addQty(this.getQty(btn));
+            long resultI = addOrderAmount(this.getQty(btn));
+            this.amountTextField.setText(Long.toString(resultI));
         }
     }
 
-    private void addQty(final long i) {
-        try {
-            String Out = this.level.getText();
+    protected long addOrderAmount(final int i) {
+        long resultL = getAmountLong();
 
-            boolean Fixed = false;
-            while (Out.startsWith("0") && Out.length() > 1) {
-                Out = Out.substring(1);
-                Fixed = true;
-            }
-
-            if (Fixed) {
-                this.level.setText(Out);
-            }
-
-            if (Out.isEmpty()) {
-                Out = "0";
-            }
-
-            long result = Long.parseLong(Out);
-            result += i;
-            if (result < 0) {
-                result = 0;
-            }
-
-            this.level.setText(Out = Long.toString(result));
-
-            NetworkHandler.instance.sendToServer(new PacketValueConfig("LevelEmitter.Value", Out));
-        } catch (final NumberFormatException e) {
-            // nope..
-            this.level.setText("0");
-        } catch (final IOException e) {
-            AELog.debug(e);
+        if (resultL == 1 && i > 1) {
+            resultL = 0;
         }
+
+        resultL += i;
+        if (resultL < 1) {
+            resultL = 1;
+        }
+        return resultL;
+    }
+
+    protected long getAmountLong() {
+        String out = this.amountTextField.getText();
+        double resultD = Calculator.conversion(out);
+
+        if (resultD <= 0 || Double.isNaN(resultD)) {
+            return 0;
+        } else {
+            return (long) ArithHelper.round(resultD, 0);
+        }
+    }
+
+    private void validateText() {
+        String text = this.amountTextField.getText();
+        double resultD = Calculator.conversion(text);
+        this.isValidText = !Double.isNaN(resultD);
+    }
+
+    @Override
+    protected void mouseClicked(int xCoord, int yCoord, int btn) {
+        final boolean notCraftingMode = this.bc.getInstalledUpgrades(Upgrades.CRAFTING) == 0;
+        if (notCraftingMode) {
+            this.amountTextField.mouseClicked(xCoord, yCoord, btn);
+        }
+
+        super.mouseClicked(xCoord, yCoord, btn);
     }
 
     @Override
     protected void keyTyped(final char character, final int key) {
         if (!this.checkHotbarKeys(key)) {
-            if ((key == 211 || key == 205 || key == 203 || key == 14 || Character.isDigit(character))
-                    && this.level.textboxKeyTyped(character, key)) {
-                try {
-                    String Out = this.level.getText();
-
-                    boolean Fixed = false;
-                    while (Out.startsWith("0") && Out.length() > 1) {
-                        Out = Out.substring(1);
-                        Fixed = true;
-                    }
-
-                    if (Fixed) {
-                        this.level.setText(Out);
-                    }
-
-                    if (Out.isEmpty()) {
-                        Out = "0";
-                    }
-
-                    NetworkHandler.instance.sendToServer(new PacketValueConfig("LevelEmitter.Value", Out));
-                } catch (final IOException e) {
-                    AELog.debug(e);
-                }
+            if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
+                this.actionPerformed(this.setButton);
             } else {
-                super.keyTyped(character, key);
+                boolean typedTextbox = this.amountTextField.textboxKeyTyped(character, key);
+                if (typedTextbox) {
+                    this.validateText();
+                } else {
+                    super.keyTyped(character, key);
+                }
             }
         }
     }

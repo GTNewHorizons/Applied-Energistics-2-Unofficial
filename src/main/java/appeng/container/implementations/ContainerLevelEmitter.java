@@ -10,7 +10,6 @@
 
 package appeng.container.implementations;
 
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
@@ -21,6 +20,7 @@ import appeng.api.config.RedstoneMode;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.SlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
@@ -34,7 +34,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
     private final PartLevelEmitter lvlEmitter;
 
     @SideOnly(Side.CLIENT)
-    private GuiTextField textField;
+    private MEGuiTextField textField;
 
     @GuiSync(2)
     public LevelType lvType;
@@ -51,7 +51,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
     }
 
     @SideOnly(Side.CLIENT)
-    public void setTextField(final GuiTextField level) {
+    public void setTextField(final MEGuiTextField level) {
         this.textField = level;
         this.textField.setText(String.valueOf(this.EmitterValue));
     }

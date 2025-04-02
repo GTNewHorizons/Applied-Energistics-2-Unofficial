@@ -215,6 +215,10 @@ public class MEGuiTextField implements ITooltip {
         }
     }
 
+    public void setEnabled(boolean enabled) {
+        this.field.setEnabled(enabled);
+    }
+
     public void setMaxStringLength(final int size) {
         field.setMaxStringLength(size);
     }
