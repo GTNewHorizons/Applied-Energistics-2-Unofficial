@@ -327,7 +327,7 @@ public class PathGridCache implements IPathingGrid {
     }
 
     @MENetworkEventSubscribe
-    void updateNodReq(final MENetworkChannelChanged ev) {
+    public void updateNodReq(final MENetworkChannelChanged ev) {
         final IGridNode gridNode = ev.node;
 
         if (AEConfig.instance.debugPathFinding) {

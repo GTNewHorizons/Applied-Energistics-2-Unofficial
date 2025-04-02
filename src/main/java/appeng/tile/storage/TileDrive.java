@@ -407,7 +407,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, host, StorageChannel.ITEMS);
         if (inv instanceof ICellInventoryHandler handler) {
             final ICellInventory cellInventory = handler.getCellInv();
-            if (cellInventory != null && cellInventory.getStoredItemTypes() == 1) {
+            if (cellInventory != null && cellInventory.getStoredItemTypes() > 0) {
                 IInventory cellUpgrades = cellItem.getUpgradesInventory(cell);
                 int freeSlot = -1;
                 for (int i = 0; i < cellUpgrades.getSizeInventory(); i++) {
