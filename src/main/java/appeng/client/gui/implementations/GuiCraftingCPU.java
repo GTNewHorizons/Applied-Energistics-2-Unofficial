@@ -29,6 +29,7 @@ import org.lwjgl.opengl.GL11;
 import com.google.common.base.Joiner;
 
 import appeng.api.AEApi;
+import appeng.api.config.CraftingAllow;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -46,6 +47,7 @@ import appeng.client.gui.widgets.ISortSource;
 import appeng.client.gui.widgets.ITooltip;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.render.BlockPosHighlighter;
+import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
@@ -56,7 +58,9 @@ import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
+import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.helpers.InventoryAction;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 
@@ -93,6 +97,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     protected IItemList<IAEItemStack> storage = AEApi.instance().storage().createItemList();
     protected IItemList<IAEItemStack> active = AEApi.instance().storage().createItemList();
     protected IItemList<IAEItemStack> pending = AEApi.instance().storage().createItemList();
+
+    private IAEItemStack hoveredAEStack = null;
 
     protected int rows = DISPLAYED_ROWS;
 
@@ -173,6 +179,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     private ItemStack hoveredNbtStack;
     private GuiAeButton findNext;
     private GuiAeButton findPrev;
+    private GuiImgButton changeAllow;
     private MEGuiTextField searchField;
     private ArrayList<Integer> goToData = new ArrayList<>();
     private int searchGotoIndex = -1;
@@ -221,13 +228,20 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             searchGoTo(true);
         } else if (btn == this.findPrev) {
             searchGoTo(false);
+        } else if (btn == this.changeAllow) {
+            String msg = String.valueOf(((CraftingAllow) this.changeAllow.getCurrentValue()).ordinal());
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("TileCrafting.Allow", msg));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
         }
 
     }
 
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
-        if (this.hoveredNbtStack != null && isShiftKeyDown()) {
+        if (isShiftKeyDown() && this.hoveredNbtStack != null) {
             NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
             // when using the highlight feature in the crafting GUI we want to show all the interfaces
             // that currently received items so the player can see if the items are processed properly
@@ -237,6 +251,13 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     PlayerMessages.InterfaceHighlighted.getName(),
                     PlayerMessages.InterfaceInOtherDim.getName());
             mc.thePlayer.closeScreen();
+        } else if (hoveredAEStack != null && btn == 2) {
+            ((AEBaseContainer) inventorySlots).setTargetStack(hoveredAEStack);
+            final PacketInventoryAction p = new PacketInventoryAction(
+                    InventoryAction.AUTO_CRAFT,
+                    inventorySlots.inventorySlots.size(),
+                    0);
+            NetworkHandler.instance.sendToServer(p);
         }
         super.mouseClicked(xCoord, yCoord, btn);
         this.searchField.mouseClicked(xCoord, yCoord, btn);
@@ -291,6 +312,13 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 "↓",
                 ButtonToolTips.SearchGotoNext.getLocal());
         this.buttonList.add(this.findNext);
+
+        this.changeAllow = new GuiImgButton(
+                this.guiLeft - 20,
+                this.guiTop + 2,
+                Settings.CRAFTING_ALLOW,
+                CraftingAllow.ALLOW_ALL);
+        this.buttonList.add(this.changeAllow);
     }
 
     private void setScrollBar() {
@@ -307,6 +335,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
         this.cancel.enabled = !this.visual.isEmpty();
+        this.changeAllow.set(CraftingAllow.values()[this.craftingCpu.allow]);
 
         final int gx = (this.width - this.xSize) / 2;
         final int gy = (this.height - this.ySize) / 2;
@@ -510,6 +539,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                             GuiColors.CraftingCPUAmount.getColor());
 
                     if (this.tooltip == z - viewStart) {
+                        hoveredAEStack = refStack;
                         lineList.add(
                                 GuiText.Crafting.getLocal() + ": "
                                         + NumberFormat.getInstance().format(activeStack.getStackSize()));

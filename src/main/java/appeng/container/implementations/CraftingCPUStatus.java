@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 
+import appeng.api.config.CraftingAllow;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.util.IWideReadableNumberConverter;
@@ -40,6 +41,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
     private final long totalItems;
     private final long remainingItems;
     private final IAEItemStack crafting;
+    private final CraftingAllow allowMode;
 
     public CraftingCPUStatus() {
         this.serverCluster = null;
@@ -52,6 +54,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.totalItems = 0;
         this.remainingItems = 0;
         this.crafting = null;
+        this.allowMode = CraftingAllow.ALLOW_ALL;
     }
 
     public CraftingCPUStatus(ICraftingCPU cluster, int serial) {
@@ -72,6 +75,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         }
         this.storage = cluster.getAvailableStorage();
         this.coprocessors = cluster.getCoProcessors();
+        this.allowMode = cluster.getCraftingAllowMode();
     }
 
     public CraftingCPUStatus(NBTTagCompound i) {
@@ -85,6 +89,8 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.totalItems = i.getLong("totalItems");
         this.remainingItems = i.getLong("remainingItems");
         this.crafting = i.hasKey("crafting") ? AEItemStack.loadItemStackFromNBT(i.getCompoundTag("crafting")) : null;
+        this.allowMode = i.hasKey("allowMode") ? CraftingAllow.values()[i.getInteger("allowMode")]
+                : CraftingAllow.ALLOW_ALL;
     }
 
     public CraftingCPUStatus(ByteBuf packet) throws IOException {
@@ -115,6 +121,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
             crafting.writeToNBT(stack);
             i.setTag("crafting", stack);
         }
+        i.setInteger("allowMode", this.allowMode.ordinal());
     }
 
     public void writeToPacket(ByteBuf i) throws IOException {
@@ -173,6 +180,10 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         return isBusy;
     }
 
+    public CraftingAllow allowMode() {
+        return allowMode;
+    }
+
     @Override
     public int compareTo(CraftingCPUStatus o) {
         final int a = ItemSorters.compareLong(o.getCoprocessors(), this.getCoprocessors());
@@ -188,7 +199,6 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
 
     public String formatShorterCoprocessors() {
         return NUMBER_CONVERTER.toWideReadableForm(getCoprocessors());
-        // return Platform.formatNumberLong(getCoprocessors());
     }
 
     public String formatStorage() {

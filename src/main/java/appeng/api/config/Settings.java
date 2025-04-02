@@ -84,7 +84,9 @@ public enum Settings {
 
     TERMINAL_FONT_SIZE(EnumSet.allOf(TerminalFontSize.class)),
 
-    INTERFACE_TERMINAL_SECTION_ORDER(EnumSet.allOf(StringOrder.class));
+    INTERFACE_TERMINAL_SECTION_ORDER(EnumSet.allOf(StringOrder.class)),
+
+    CRAFTING_ALLOW(EnumSet.allOf(CraftingAllow.class));
 
     private final EnumSet<? extends Enum<?>> values;
 

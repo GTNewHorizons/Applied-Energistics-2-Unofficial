@@ -10,7 +10,14 @@
 
 package appeng.me;
 
+import appeng.core.AEConfig;
+
 public class GridAccessException extends Exception {
 
     private static final long serialVersionUID = 3914554394866375300L;
+
+    public GridAccessException() {
+        // Disable stack captures by default
+        super(null, null, false, AEConfig.instance.captureGAEStacks);
+    }
 }

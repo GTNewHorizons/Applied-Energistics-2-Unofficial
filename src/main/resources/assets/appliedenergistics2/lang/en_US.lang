@@ -359,6 +359,9 @@ gui.color.appliedenergistics2.CraftConfirmMissingItem=1AFF0000
 gui.color.appliedenergistics2.CraftingCPUActive=5A45A021
 gui.color.appliedenergistics2.CraftingCPUScheduled=FF787878
 gui.color.appliedenergistics2.InterfaceTerminalMatch=2A00FF00
+gui.color.appliedenergistics2.ProcessBarStartColor=FFE60A00
+gui.color.appliedenergistics2.ProcessBarMiddleColor=FFE6E600
+gui.color.appliedenergistics2.ProcessBarEndColor=FF0AE600
 
 # GUI Tooltips
 gui.tooltips.appliedenergistics2.Stash=Store Items
@@ -566,6 +569,12 @@ gui.tooltips.appliedenergistics2.CellRestrictionHint=Setup Cell Restriction
 
 gui.tooltips.appliedenergistics2.SearchGotoNext=Find next
 gui.tooltips.appliedenergistics2.SearchGotoPrev=Find prev
+
+gui.tooltips.appliedenergistics2.CPUAllowMode=Crafting requests limitation
+gui.tooltips.appliedenergistics2.CPUAllowAllDesc=Allow all crafting requests
+gui.tooltips.appliedenergistics2.CPUOnlyAllowPlayerDesc=Only allow crafting requests from player
+gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=Only allow crafting requests from non-player
+
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=Energy Units

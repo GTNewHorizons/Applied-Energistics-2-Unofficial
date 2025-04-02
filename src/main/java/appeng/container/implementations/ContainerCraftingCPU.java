@@ -23,6 +23,7 @@ import net.minecraft.nbt.NBTTagString;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
+import appeng.api.config.CraftingAllow;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
@@ -57,6 +58,9 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
     @GuiSync(0)
     public long elapsed = -1;
+
+    @GuiSync(1)
+    public int allow = 0;
 
     public ContainerCraftingCPU(final InventoryPlayer ip, final Object te) {
         super(ip, te);
@@ -114,6 +118,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
             this.getMonitor().getListOfItem(this.list, CraftingItemList.ALL);
             this.getMonitor().addListener(this, null);
             this.setElapsedTime(0);
+            this.allow = this.getMonitor().getCraftingAllowMode().ordinal();
         } else {
             this.setMonitor(null);
             this.cpuName = "";
@@ -292,6 +297,21 @@ public class ContainerCraftingCPU extends AEBaseContainer
     public List<String> getPlayersFollowingCurrentCraft() {
         if (this.getMonitor() != null) {
             return this.getMonitor().getPlayersFollowingCurrentCraft();
+        }
+        return null;
+    }
+
+    public void changeAllowMode(String msg) {
+        if (this.getMonitor() != null) {
+            CraftingAllow newAllowMode = CraftingAllow.values()[Integer.valueOf(msg)].next();
+            this.getMonitor().changeCraftingAllowMode(newAllowMode);
+            this.allow = newAllowMode.ordinal();
+        }
+    }
+
+    public CraftingAllow getAllowMode() {
+        if (this.getMonitor() != null) {
+            return this.getMonitor().getCraftingAllowMode();
         }
         return null;
     }

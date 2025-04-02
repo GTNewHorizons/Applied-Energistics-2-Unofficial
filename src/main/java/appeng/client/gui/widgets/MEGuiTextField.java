@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 
 import org.lwjgl.input.Keyboard;
@@ -124,6 +125,17 @@ public class MEGuiTextField implements ITooltip {
         field.setCanLoseFocus(true);
     }
 
+    public void mouseClickedNoFocusDrop(final int xPos, final int yPos, final int button) {
+        if (this.isMouseIn(xPos, yPos)) {
+            field.setCanLoseFocus(false);
+            if (button == 1) {
+                setText("");
+            } else {
+                field.mouseClicked(xPos, yPos, button);
+            }
+        }
+    }
+
     /**
      * Checks if the mouse is within the element
      *
@@ -144,7 +156,46 @@ public class MEGuiTextField implements ITooltip {
         }
 
         final String oldText = getText();
-        boolean handled = field.textboxKeyTyped(keyChar, keyID);
+        boolean handled;
+        switch (keyID) {
+            case 203 -> {
+                if (GuiScreen.isShiftKeyDown()) {
+                    if (!GuiScreen.isCtrlKeyDown()) {
+                        field.setSelectionPos(field.getNthWordFromPos(-1, field.getSelectionEnd()));
+                    } else {
+                        field.setSelectionPos(field.getSelectionEnd() - 1);
+                    }
+                } else if (!GuiScreen.isCtrlKeyDown() && !field.getSelectedText().isEmpty()) {
+                    field.setCursorPosition(field.getNthWordFromCursor(-1));
+                } else if (GuiScreen.isCtrlKeyDown()) {
+                    field.setCursorPosition(field.getNthWordFromCursor(-1));
+                } else {
+                    field.moveCursorBy(-1);
+                }
+
+                handled = true;
+            }
+
+            case 205 -> {
+                if (GuiScreen.isShiftKeyDown()) {
+                    if (!GuiScreen.isCtrlKeyDown()) {
+                        field.setSelectionPos(field.getNthWordFromPos(1, field.getSelectionEnd()));
+                    } else {
+                        field.setSelectionPos(field.getSelectionEnd() + 1);
+                    }
+                } else if (!GuiScreen.isCtrlKeyDown() && !field.getSelectedText().isEmpty()) {
+                    field.setCursorPosition(field.getNthWordFromCursor(1));
+                } else if (GuiScreen.isCtrlKeyDown()) {
+                    field.setCursorPosition(field.getNthWordFromCursor(1));
+                } else {
+                    field.moveCursorBy(1);
+                }
+
+                handled = true;
+            }
+
+            default -> handled = field.textboxKeyTyped(keyChar, keyID);
+        }
 
         if (!handled && (keyID == Keyboard.KEY_RETURN || keyID == Keyboard.KEY_NUMPADENTER
                 || keyID == Keyboard.KEY_ESCAPE)) {
@@ -215,6 +266,10 @@ public class MEGuiTextField implements ITooltip {
         }
     }
 
+    public void setEnabled(boolean enabled) {
+        this.field.setEnabled(enabled);
+    }
+
     public void setMaxStringLength(final int size) {
         field.setMaxStringLength(size);
     }
@@ -239,6 +294,10 @@ public class MEGuiTextField implements ITooltip {
     @Override
     public boolean isVisible() {
         return field.getVisible();
+    }
+
+    public void setSelectionPos(int pos) {
+        field.setSelectionPos(pos);
     }
 
     @Override

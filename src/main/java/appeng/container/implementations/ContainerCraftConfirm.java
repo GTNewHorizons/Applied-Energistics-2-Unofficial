@@ -27,6 +27,7 @@ import net.minecraft.world.World;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.config.CraftingAllow;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingCPU;
@@ -270,6 +271,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
     }
 
     public boolean cpuMatches(final CraftingCPUStatus c) {
+        if (c.allowMode() == CraftingAllow.ONLY_NONPLAYER) return false;
         if (this.getUsedBytes() <= 0) return false;
         if (c.isBusy() && this.cpuCraftingSameItem(c)) {
             return c.getStorage() >= this.getUsedBytes() + c.getUsedStorage();

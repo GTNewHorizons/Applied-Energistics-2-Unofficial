@@ -90,6 +90,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 
     public boolean debugLogTiming = false;
     public boolean debugPathFinding = false;
+    public boolean captureGAEStacks = false;
     public int wirelessTerminalBattery = 1600000;
     public int entropyManipulatorBattery = 200000;
     public int matterCannonBattery = 200000;
@@ -233,6 +234,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.craftingCalculatorVersion = this.get("debug", "CraftingCalculatorVersion", this.craftingCalculatorVersion)
                 .getInt(this.craftingCalculatorVersion);
         this.craftingCalculatorVersion = Math.max(1, Math.min(this.craftingCalculatorVersion, 2));
+        this.captureGAEStacks = this.get("debug", "CaptureGridAccessExceptionStacks", false).getBoolean();
         this.maxCraftingSteps = this.get("misc", "MaxCraftingSteps", this.maxCraftingSteps)
                 .getInt(this.maxCraftingSteps);
         this.maxCraftingTreeVisualizationSize = this

@@ -44,6 +44,7 @@ public class GuiPatternValueAmount extends GuiAmount {
     public void initGui() {
         super.initGui();
         this.amountTextField.setText(String.valueOf(originalAmount));
+        this.amountTextField.setCursorPositionEnd();
         this.amountTextField.setSelectionPos(0);
     }
 
