@@ -65,8 +65,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         super.initGui();
 
         this.amountTextField = new MEGuiTextField(90, 12);
-        this.amountTextField.x = this.guiLeft + 23;
-        this.amountTextField.y = this.guiTop + 42;
+        this.amountTextField.x = this.guiLeft + 39;
+        this.amountTextField.y = this.guiTop + 44;
         this.amountTextField.setFocused(true);
         this.amountTextField.setCursorPositionEnd();
         ((ContainerLevelEmitter) this.inventorySlots).setTextField(this.amountTextField);
@@ -106,16 +106,16 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.buttonList.add(this.plus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 17, 32, 20, "+" + c));
         this.buttonList.add(this.plus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 17, 38, 20, "+" + d));
 
-        this.buttonList.add(this.minus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 59, 22, 20, "-" + a));
-        this.buttonList.add(this.minus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 59, 28, 20, "-" + b));
-        this.buttonList.add(this.minus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 59, 32, 20, "-" + c));
-        this.buttonList.add(this.minus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 59, 38, 20, "-" + d));
+        this.buttonList.add(this.minus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 63, 22, 20, "-" + a));
+        this.buttonList.add(this.minus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 63, 28, 20, "-" + b));
+        this.buttonList.add(this.minus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 63, 32, 20, "-" + c));
+        this.buttonList.add(this.minus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 63, 38, 20, "-" + d));
 
         this.buttonList.add(
                 this.setButton = new GuiButton(
                         0,
-                        this.guiLeft + 128 + 16,
-                        this.guiTop + 38,
+                        this.guiLeft + 134,
+                        this.guiTop + 40,
                         28,
                         20,
                         GuiText.Set.getLocal()));

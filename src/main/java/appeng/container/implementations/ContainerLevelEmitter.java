@@ -106,10 +106,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
         }
 
         final IInventory inv = this.getUpgradeable().getInventoryByName("config");
-        final int y = 40;
-        final int x = 80 + 44;
-
-        this.addSlotToContainer(new SlotFakeTypeOnly(inv, 0, x, y));
+        this.addSlotToContainer(new SlotFakeTypeOnly(inv, 0, 17, 42));
     }
 
     @Override
