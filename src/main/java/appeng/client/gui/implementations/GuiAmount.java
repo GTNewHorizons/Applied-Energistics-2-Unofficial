@@ -1,7 +1,6 @@
 package appeng.client.gui.implementations;
 
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 
@@ -9,9 +8,9 @@ import org.lwjgl.input.Keyboard;
 
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiTabButton;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
 import appeng.core.AEConfig;
-import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
@@ -22,7 +21,7 @@ import appeng.util.calculators.Calculator;
 
 public abstract class GuiAmount extends AEBaseGui {
 
-    protected GuiTextField amountTextField;
+    protected MEGuiTextField amountTextField;
     protected GuiTabButton originalGuiBtn;
 
     protected GuiButton nextBtn;
@@ -80,16 +79,10 @@ public abstract class GuiAmount extends AEBaseGui {
                             itemRender));
         }
 
-        this.amountTextField = new GuiTextField(
-                this.fontRendererObj,
-                this.guiLeft + 62,
-                this.guiTop + 57,
-                59,
-                this.fontRendererObj.FONT_HEIGHT);
-        this.amountTextField.setEnableBackgroundDrawing(false);
+        this.amountTextField = new MEGuiTextField(61, 12);
+        this.amountTextField.x = this.guiLeft + 60;
+        this.amountTextField.y = this.guiTop + 55;
         this.amountTextField.setMaxStringLength(16);
-        this.amountTextField.setTextColor(GuiColors.CraftAmountToCraft.getColor());
-        this.amountTextField.setVisible(true);
         this.amountTextField.setFocused(true);
     }
 
@@ -114,6 +107,12 @@ public abstract class GuiAmount extends AEBaseGui {
             this.amountTextField.textboxKeyTyped(character, key);
             super.keyTyped(character, key);
         }
+    }
+
+    @Override
+    protected void mouseClicked(int xCoord, int yCoord, int btn) {
+        super.mouseClicked(xCoord, yCoord, btn);
+        this.amountTextField.mouseClickedNoFocusDrop(xCoord, yCoord, btn);
     }
 
     @Override

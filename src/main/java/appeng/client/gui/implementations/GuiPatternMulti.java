@@ -43,8 +43,10 @@ public class GuiPatternMulti extends GuiAmount {
                         this.guiTop + 53,
                         Settings.ACTIONS,
                         ActionItems.MULTIPLY));
-        this.amountTextField.xPosition = this.guiLeft + 50;
+        this.amountTextField.x = this.guiLeft + 48;
+        this.amountTextField.w = 73;
         this.amountTextField.setText(String.valueOf(DEFAULT_VALUE));
+        this.amountTextField.setCursorPositionEnd();
         this.amountTextField.setSelectionPos(0);
     }
 
