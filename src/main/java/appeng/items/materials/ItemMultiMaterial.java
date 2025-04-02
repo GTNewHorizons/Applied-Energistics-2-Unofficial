@@ -281,7 +281,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
             if (is != null && this.getType(is) == Upgrades.STICKY && Platform.isServer()) {
                 ItemStack hand = player.getHeldItem();
                 if (te instanceof IChestOrDrive chestOrDrive) {
-                    hand.stackSize = hand.stackSize - chestOrDrive.applyStickyToDigitalSingularityCells(hand);
+                    hand.stackSize = hand.stackSize - chestOrDrive.applyStickyToItemStorageCells(hand);
                     player.inventory
                             .setInventorySlotContents(player.inventory.currentItem, hand.stackSize == 0 ? null : hand);
                     return true;

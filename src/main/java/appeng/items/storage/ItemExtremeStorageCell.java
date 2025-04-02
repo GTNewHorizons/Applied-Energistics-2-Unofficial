@@ -13,7 +13,6 @@ import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
 import appeng.api.config.IncludeExclude;
-import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventory;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
@@ -128,12 +127,6 @@ public class ItemExtremeStorageCell extends ItemBasicStorageCell {
                 }
             }
         }
-    }
-
-    public static boolean checkInvalidForLockingAndStickyCarding(ItemStack cell, ICellHandler cellHandler) {
-        return cellHandler == null || cell == null
-                || !(cell.getItem() instanceof ItemExtremeStorageCell)
-                || (cell.getItem() instanceof ItemExtremeStorageCell exCell && exCell.getTotalTypes(cell) != 1);
     }
 
 }

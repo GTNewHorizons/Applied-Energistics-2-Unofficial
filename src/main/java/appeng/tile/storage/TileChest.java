@@ -75,7 +75,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AEColor;
 import appeng.api.util.IConfigManager;
 import appeng.helpers.IPriorityHost;
-import appeng.items.storage.ItemExtremeStorageCell;
+import appeng.items.storage.ItemBasicStorageCell;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
 import appeng.tile.TileEvent;
@@ -732,25 +732,32 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         this.worldObj.markTileEntityChunkModified(this.xCoord, this.yCoord, this.zCoord, this);
     }
 
-    public boolean lockDigitalSingularityCells() {
+    public boolean toggleItemStorageCellLocking() {
         final ItemStack cell = this.inv.getStackInSlot(1);
-        if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
+        if (ItemBasicStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
             return false;
         }
         final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, StorageChannel.ITEMS);
         if (inv instanceof ICellInventoryHandler handler) {
-            TileDrive.partitionDigitalSingularityCellToItemOnCell(handler);
+            if (ItemBasicStorageCell.cellIsPartitioned(handler)) {
+                TileDrive.unpartitionStorageCell(handler);
+            } else {
+                TileDrive.partitionStorageCellToItemsOnCell(handler);
+            }
+            try {
+                this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
+            } catch (final GridAccessException ignored) {}
         }
         return true;
     }
 
-    public int applyStickyToDigitalSingularityCells(ItemStack cards) {
+    public int applyStickyToItemStorageCells(ItemStack cards) {
         ItemStack cell = this.inv.getStackInSlot(1);
-        if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler) && cards.stackSize != 0) {
+        if (ItemBasicStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler) && cards.stackSize != 0) {
             return 0;
         }
         if (cell.getItem() instanceof ICellWorkbenchItem cellItem) {
-            if (TileDrive.applyStickyCardToDigitalSingularityCell(cellHandler, cell, this, cellItem)) {
+            if (TileDrive.applyStickyCardToItemStorageCell(cellHandler, cell, this, cellItem)) {
                 if (this.isCached) {
                     this.isCached = false;
                 }

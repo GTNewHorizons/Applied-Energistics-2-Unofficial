@@ -50,7 +50,7 @@ import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.helpers.IPriorityHost;
 import appeng.items.materials.ItemMultiMaterial;
-import appeng.items.storage.ItemExtremeStorageCell;
+import appeng.items.storage.ItemBasicStorageCell;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
 import appeng.tile.TileEvent;
@@ -376,24 +376,38 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         this.worldObj.markTileEntityChunkModified(this.xCoord, this.yCoord, this.zCoord, this);
     }
 
-    public static void partitionDigitalSingularityCellToItemOnCell(ICellInventoryHandler handler) {
+    public static void partitionStorageCellToItemsOnCell(ICellInventoryHandler handler) {
         ICellInventory cellInventory = handler.getCellInv();
         if (cellInventory != null) {
             if (cellInventory.getStoredItemTypes() != 0) {
-                ItemStack partition = handler.getAvailableItems(new ItemList(), IterationCounter.fetchNewId())
-                        .getFirstItem().getItemStack().copy();
-                partition.stackSize = 1;
-                cellInventory.getConfigInventory().setInventorySlotContents(0, partition);
+                int idx = 0;
+                for (IAEItemStack partitionAEItemStack : handler
+                        .getAvailableItems(new ItemList(), IterationCounter.fetchNewId())) {
+                    ItemStack partition = partitionAEItemStack.getItemStack().copy();
+                    partition.stackSize = 1;
+                    cellInventory.getConfigInventory().setInventorySlotContents(idx++, partition);
+                }
+                cellInventory.getConfigInventory().markDirty();
             }
         }
     }
 
-    public static boolean applyStickyCardToDigitalSingularityCell(ICellHandler cellHandler, ItemStack cell,
-            ISaveProvider host, ICellWorkbenchItem cellItem) {
+    public static void unpartitionStorageCell(ICellInventoryHandler handler) {
+        ICellInventory cellInventory = handler.getCellInv();
+        if (cellInventory != null) {
+            for (int i = 0; i < cellInventory.getConfigInventory().getSizeInventory(); i++) {
+                cellInventory.getConfigInventory().setInventorySlotContents(i, null);
+            }
+            cellInventory.getConfigInventory().markDirty();
+        }
+    }
+
+    public static boolean applyStickyCardToItemStorageCell(ICellHandler cellHandler, ItemStack cell, ISaveProvider host,
+            ICellWorkbenchItem cellItem) {
         final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, host, StorageChannel.ITEMS);
         if (inv instanceof ICellInventoryHandler handler) {
             final ICellInventory cellInventory = handler.getCellInv();
-            if (cellInventory != null && cellInventory.getStoredItemTypes() == 1) {
+            if (cellInventory != null && cellInventory.getStoredItemTypes() > 0) {
                 IInventory cellUpgrades = cellItem.getUpgradesInventory(cell);
                 int freeSlot = -1;
                 for (int i = 0; i < cellUpgrades.getSizeInventory(); i++) {
@@ -422,33 +436,44 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         return false;
     }
 
-    public boolean lockDigitalSingularityCells() {
+    public boolean toggleItemStorageCellLocking() {
         boolean res = false;
         for (int i = 0; i < this.handlersBySlot.length; i++) {
             ICellHandler cellHandler = this.handlersBySlot[i];
             final ItemStack cell = this.inv.getStackInSlot(i);
-            if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
+            if (ItemBasicStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
                 continue;
             }
             final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, StorageChannel.ITEMS);
             if (inv instanceof ICellInventoryHandler handler) {
-                partitionDigitalSingularityCellToItemOnCell(handler);
+                if (ItemBasicStorageCell.cellIsPartitioned(handler)) {
+                    unpartitionStorageCell(handler);
+                } else {
+                    partitionStorageCellToItemsOnCell(handler);
+                }
                 res = true;
             }
         }
+        if (this.isCached) {
+            this.isCached = false;
+            this.updateState();
+        }
+        try {
+            this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
+        } catch (final GridAccessException ignored) {}
         return res;
     }
 
-    public int applyStickyToDigitalSingularityCells(ItemStack cards) {
+    public int applyStickyToItemStorageCells(ItemStack cards) {
         int res = 0;
         for (int i = 0; i < this.handlersBySlot.length; i++) {
             ICellHandler cellHandler = this.handlersBySlot[i];
             ItemStack cell = this.inv.getStackInSlot(i);
-            if (ItemExtremeStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
+            if (ItemBasicStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
                 continue;
             }
             if (cell.getItem() instanceof ICellWorkbenchItem cellItem && res + 1 <= cards.stackSize) {
-                if (applyStickyCardToDigitalSingularityCell(cellHandler, cell, this, cellItem)) {
+                if (applyStickyCardToItemStorageCell(cellHandler, cell, this, cellItem)) {
                     res++;
                 }
             }

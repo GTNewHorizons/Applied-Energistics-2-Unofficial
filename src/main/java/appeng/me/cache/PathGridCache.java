@@ -48,6 +48,7 @@ import appeng.me.pathfinding.ControllerValidator;
 import appeng.me.pathfinding.IPathItem;
 import appeng.me.pathfinding.PathSegment;
 import appeng.tile.networking.TileController;
+import appeng.tile.networking.TileCreativeEnergyController;
 import appeng.util.Platform;
 
 public class PathGridCache implements IPathingGrid {
@@ -114,6 +115,19 @@ public class PathGridCache implements IPathingGrid {
                 // myGrid.getPivot().beginVisit( new AdHocChannelUpdater( 0 )
                 // );
                 for (final IGridNode node : this.myGrid.getMachines(TileController.class)) {
+                    closedList.add((IPathItem) node);
+                    for (final IGridConnection gcc : node.getConnections()) {
+                        final GridConnection gc = (GridConnection) gcc;
+                        if (!(gc.getOtherSide(node).getMachine() instanceof TileController)) {
+                            final List<IPathItem> open = new LinkedList<>();
+                            closedList.add(gc);
+                            open.add(gc);
+                            gc.setControllerRoute((GridNode) node, true);
+                            this.active.add(new PathSegment(this, open, this.semiOpen, closedList));
+                        }
+                    }
+                }
+                for (final IGridNode node : this.myGrid.getMachines(TileCreativeEnergyController.class)) {
                     closedList.add((IPathItem) node);
                     for (final IGridConnection gcc : node.getConnections()) {
                         final GridConnection gc = (GridConnection) gcc;
@@ -313,7 +327,7 @@ public class PathGridCache implements IPathingGrid {
     }
 
     @MENetworkEventSubscribe
-    void updateNodReq(final MENetworkChannelChanged ev) {
+    public void updateNodReq(final MENetworkChannelChanged ev) {
         final IGridNode gridNode = ev.node;
 
         if (AEConfig.instance.debugPathFinding) {

@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
 
 import com.gtnewhorizon.gtnhlib.util.map.ItemStackMap;
 
+import appeng.api.AEApi;
 import appeng.api.features.IBlockingModeIgnoreItemRegistry;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -43,6 +44,12 @@ public class BlockingModeIgnoreItemRegistry implements IBlockingModeIgnoreItemRe
     }
 
     public void registerDefault() {
+        register(AEApi.instance().definitions().materials().calcProcessorPress().maybeStack(1).orNull());
+        register(AEApi.instance().definitions().materials().engProcessorPress().maybeStack(1).orNull());
+        register(AEApi.instance().definitions().materials().logicProcessorPress().maybeStack(1).orNull());
+        register(AEApi.instance().definitions().materials().namePress().maybeStack(1).orNull());
+        register(AEApi.instance().definitions().materials().siliconPress().maybeStack(1).orNull());
+
         if (Loader.isModLoaded("AWWayofTime")) { // blood magic
             register(GameRegistry.findItem("AWWayofTime", "weakBloodOrb"));
             register(GameRegistry.findItem("AWWayofTime", "apprenticeBloodOrb"));

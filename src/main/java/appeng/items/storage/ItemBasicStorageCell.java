@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,6 +36,8 @@ import appeng.api.exceptions.MissingDefinition;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.implementations.items.IUpgradeModule;
+import appeng.api.storage.ICellHandler;
+import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
@@ -98,6 +101,19 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
     @SuppressWarnings("Guava")
     public ItemBasicStorageCell(final Optional<String> subName) {
         super(subName);
+    }
+
+    public static boolean checkInvalidForLockingAndStickyCarding(ItemStack cell, ICellHandler cellHandler) {
+        return cellHandler == null || cell == null
+                || !(cell.getItem() instanceof ItemBasicStorageCell)
+                || (cell.getItem() instanceof ItemBasicStorageCell storageCell && storageCell.getTotalTypes(cell) == 0);
+    }
+
+    public static boolean cellIsPartitioned(ICellInventoryHandler cellHandler) {
+        return cellHandler != null && cellHandler.getCellInv() != null
+                && cellHandler.getCellInv().getConfigInventory() != null
+                && IntStream.range(0, cellHandler.getCellInv().getConfigInventory().getSizeInventory())
+                        .anyMatch(i -> cellHandler.getCellInv().getConfigInventory().getStackInSlot(i) != null);
     }
 
     @SideOnly(Side.CLIENT)

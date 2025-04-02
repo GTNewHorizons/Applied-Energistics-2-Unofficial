@@ -273,16 +273,29 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.fontRendererObj
                 .drawString(GuiText.NetworkDetails.getLocal(), 8, 6, GuiColors.NetworkStatusDetails.getColor());
 
-        this.fontRendererObj.drawString(
-                GuiText.StoredPower.getLocal() + ": " + Platform.formatPowerLong(ns.getCurrentPower(), false),
-                13,
-                16,
-                GuiColors.NetworkStatusStoredPower.getColor());
-        this.fontRendererObj.drawString(
-                GuiText.MaxPower.getLocal() + ": " + Platform.formatPowerLong(ns.getMaxPower(), false),
-                13,
-                26,
-                GuiColors.NetworkStatusMaxPower.getColor());
+        if (ns.isPowerInfinite()) {
+            this.fontRendererObj.drawString(
+                    GuiText.StoredPower.getLocal() + ": ∞",
+                    13,
+                    16,
+                    GuiColors.NetworkStatusStoredPower.getColor());
+            this.fontRendererObj.drawString(
+                    GuiText.MaxPower.getLocal() + ": ∞",
+                    13,
+                    26,
+                    GuiColors.NetworkStatusMaxPower.getColor());
+        } else {
+            this.fontRendererObj.drawString(
+                    GuiText.StoredPower.getLocal() + ": " + Platform.formatPowerLong(ns.getCurrentPower(), false),
+                    13,
+                    16,
+                    GuiColors.NetworkStatusStoredPower.getColor());
+            this.fontRendererObj.drawString(
+                    GuiText.MaxPower.getLocal() + ": " + Platform.formatPowerLong(ns.getMaxPower(), false),
+                    13,
+                    26,
+                    GuiColors.NetworkStatusMaxPower.getColor());
+        }
 
         this.fontRendererObj.drawString(
                 GuiText.PowerInputRate.getLocal() + ": " + Platform.formatPowerLong(ns.getAverageAddition(), true),

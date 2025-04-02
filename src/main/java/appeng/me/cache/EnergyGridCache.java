@@ -382,6 +382,11 @@ public class EnergyGridCache implements IEnergyGrid {
     }
 
     @Override
+    public boolean getHasInfiniteStore() {
+        return this.infinite;
+    }
+
+    @Override
     public boolean calculateInfiniteStore(boolean currentInfinite, Set<IEnergyGrid> seen) {
         if (!seen.add(this)) {
             return currentInfinite;

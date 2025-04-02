@@ -61,8 +61,8 @@ public class BlockChest extends AEBaseTileBlock {
             if (Loader.isModLoaded("dreamcraft")) {
                 if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)
                         && GTUtility.isStackInList(p.getHeldItem(), GregTechAPI.sWireCutterList)) {
-                    if (tg.lockDigitalSingularityCells()) {
-                        p.addChatMessage(PlayerMessages.ChestLocked.get());
+                    if (tg.toggleItemStorageCellLocking()) {
+                        p.addChatMessage(PlayerMessages.ChestLockingToggled.get());
                     }
                     return true;
                 }
