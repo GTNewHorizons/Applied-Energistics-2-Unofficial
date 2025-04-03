@@ -12,12 +12,14 @@ package appeng.core.sync.packets;
 
 import java.io.IOException;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.ClientHelper;
+import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.container.AEBaseContainer;
 import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerCraftAmount;
@@ -181,6 +183,8 @@ public class PacketInventoryAction extends AppEngPacket {
             } else {
                 ClientHelper.proxy.getPlayers().get(0).inventory.setItemStack(this.slotItem.getItemStack());
             }
+        } else if (Minecraft.getMinecraft().currentScreen instanceof GuiMEMonitorable gmm) {
+            gmm.setPin(slotItem, slot);
         }
     }
 }

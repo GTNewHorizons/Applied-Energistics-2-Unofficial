@@ -55,6 +55,7 @@ import appeng.client.me.SlotME;
 import appeng.container.guisync.GuiSync;
 import appeng.container.guisync.SyncData;
 import appeng.container.implementations.ContainerCellWorkbench;
+import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.implementations.ContainerUpgradeable;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
@@ -707,6 +708,16 @@ public abstract class AEBaseContainer extends Container {
 
                 for (final Slot fr : from) {
                     this.transferStackInSlot(player, fr.slotNumber);
+                }
+            }
+
+            if (action == InventoryAction.SET_PIN) {
+                if (this instanceof ContainerMEMonitorable cmm) {
+                    if (id == -1) {
+                        cmm.setPin(null, slot);
+                    } else if (player.inventory.getItemStack() != null) {
+                        cmm.setPin(player.inventory.getItemStack(), slot);
+                    }
                 }
             }
 

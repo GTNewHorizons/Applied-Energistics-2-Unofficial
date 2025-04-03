@@ -233,7 +233,11 @@ public enum ButtonToolTips {
     CPUAllowMode,
     CPUAllowAllDesc,
     CPUOnlyAllowPlayerDesc,
-    CPUOnlyAllowNonPlayerDesc;
+    CPUOnlyAllowNonPlayerDesc,
+
+    PinsSection,
+    PinsSectionActive,
+    PinsSectionDisabled;
 
     private final String root;
 
