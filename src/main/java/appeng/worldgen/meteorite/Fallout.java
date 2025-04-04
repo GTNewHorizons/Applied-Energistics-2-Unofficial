@@ -38,7 +38,12 @@ public class Fallout {
         } else if (random > 0.8) {
             this.putter.put(w, x, y, z, Blocks.stone);
         } else if (random > 0.7) {
-            this.putter.put(w, x, y, z, Blocks.grass);
+            if(w.getWorld().getBiomeGenForCoords(x, z).topBlock == Blocks.grass) {
+                this.putter.put(w, x, y, z, Blocks.grass);
+            }
+            else {
+                this.putter.put(w, x, y, z, Blocks.dirt);
+            }
         } else if (random > 0.6) {
             for (final Block skyStoneBlock : this.skyStoneDefinition.maybeBlock().asSet()) {
                 this.putter.put(w, x, y, z, skyStoneBlock);
