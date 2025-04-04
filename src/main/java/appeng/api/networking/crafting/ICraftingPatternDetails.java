@@ -99,4 +99,10 @@ public interface ICraftingPatternDetails {
      * @param priority priority of pattern
      */
     void setPriority(int priority);
+
+    default void patternJustUsed() {}
+
+    default long patternLastUsed() {
+        return 0;
+    }
 }

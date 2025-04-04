@@ -401,4 +401,16 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
 
         return tmp.values().toArray(new IAEItemStack[0]);
     }
+
+    @Override
+    public void patternJustUsed() {
+        NBTTagCompound tag = Platform.openNbtData(patternItem);
+        tag.setLong("lastUsed", System.currentTimeMillis());
+    }
+
+    @Override
+    public long patternLastUsed() {
+        NBTTagCompound tag = Platform.openNbtData(patternItem);
+        return tag.getLong("lastUsed");
+    }
 }
