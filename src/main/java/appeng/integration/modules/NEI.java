@@ -44,6 +44,7 @@ import appeng.integration.modules.NEIHelpers.NEIAEBookmarkContainerHandler;
 import appeng.integration.modules.NEIHelpers.NEIAEShapedRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIAEShapelessRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIAETerminalBookmarkContainerHandler;
+import appeng.integration.modules.NEIHelpers.NEICellViewHandler;
 import appeng.integration.modules.NEIHelpers.NEICraftingHandler;
 import appeng.integration.modules.NEIHelpers.NEIFacadeRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIGrinderRecipeHandler;
@@ -109,6 +110,9 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         this.registerRecipeHandler(new NEIAEShapelessRecipeHandler());
         this.registerRecipeHandler(new NEIInscriberRecipeHandler());
         this.registerRecipeHandler(new NEIWorldCraftingHandler());
+
+        this.registerUsageHandler.invoke(this.apiClass, new NEICellViewHandler());
+
         if (AEConfig.instance.isFeatureEnabled(AEFeature.GrindStone)) {
             this.registerRecipeHandler(new NEIGrinderRecipeHandler());
         }
