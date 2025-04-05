@@ -17,7 +17,7 @@ import net.minecraft.util.ResourceLocation;
 import appeng.api.config.TerminalFontSize;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
-import appeng.client.render.AERenderItem;
+import appeng.client.render.StackSizeRenderer;
 import appeng.core.localization.GuiText;
 import appeng.me.storage.CellInventory;
 import appeng.me.storage.CellInventoryHandler;
@@ -42,11 +42,7 @@ public class NEICellViewHandler implements IUsageHandler {
         }
     }
 
-    private static class StackSizeRender extends AERenderItem {
-    }
-
     private static final ResourceLocation SLOT_TEXTURE_LOCATION = new ResourceLocation("nei", "textures/slot.png");
-    private static final StackSizeRender STACK_SIZE_RENDER = new StackSizeRender();
     private static final int OFFSET_X = 2;
     private static final int INFO_OFFSET_Y = 4;
     private static final int ITEMS_OFFSET_Y = INFO_OFFSET_Y + Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT * 2 + 6;
@@ -136,7 +132,7 @@ public class NEICellViewHandler implements IUsageHandler {
                 0);
 
         for (ViewItemStack viewStack : this.stacks) {
-            STACK_SIZE_RENDER.drawStackSize(
+            StackSizeRenderer.drawStackSize(
                     viewStack.stack.relx,
                     viewStack.stack.rely,
                     viewStack.stackSize,

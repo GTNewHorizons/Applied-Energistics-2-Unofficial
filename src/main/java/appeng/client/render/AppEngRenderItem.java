@@ -17,6 +17,7 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.item.ItemStack;
 
@@ -36,7 +37,7 @@ import appeng.core.localization.GuiText;
  * @version rv2
  * @since rv0
  */
-public class AppEngRenderItem extends AERenderItem {
+public class AppEngRenderItem extends RenderItem {
 
     public AEBaseGui parent;
 
@@ -103,7 +104,7 @@ public class AppEngRenderItem extends AERenderItem {
 
                     GL11.glDisable(GL11.GL_LIGHTING);
                     GL11.glPushMatrix();
-                    this.drawStackSize(par4, par5, craftLabelText, fontRenderer, fontSize);
+                    StackSizeRenderer.drawStackSize(par4, par5, craftLabelText, fontRenderer, fontSize);
                     GL11.glPopMatrix();
                     GL11.glEnable(GL11.GL_LIGHTING);
                 } else {
@@ -125,7 +126,7 @@ public class AppEngRenderItem extends AERenderItem {
             if (showStackSize && (amount > 0 || !isCraftable)) {
                 GL11.glDisable(GL11.GL_LIGHTING);
                 GL11.glPushMatrix();
-                this.drawStackSize(par4, par5, amount, fontRenderer, fontSize);
+                StackSizeRenderer.drawStackSize(par4, par5, amount, fontRenderer, fontSize);
                 GL11.glPopMatrix();
                 GL11.glEnable(GL11.GL_LIGHTING);
             }

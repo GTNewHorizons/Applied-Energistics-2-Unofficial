@@ -4,6 +4,7 @@ import static appeng.client.render.AppEngRenderItem.POST_HOOKS;
 
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.item.ItemStack;
 
@@ -15,7 +16,7 @@ import appeng.api.storage.IItemDisplayRegistry.ItemRenderHook;
 /**
  * Uses translations instead of depth test to perform rendering.
  */
-public class TranslatedRenderItem extends AERenderItem {
+public class TranslatedRenderItem extends RenderItem {
 
     @Override
     public void renderItemOverlayIntoGUI(FontRenderer font, TextureManager texManager, ItemStack stack, int x, int y,
@@ -44,10 +45,11 @@ public class TranslatedRenderItem extends AERenderItem {
                 GL11.glTranslatef(0.0f, 0.0f, this.zLevel);
                 GL11.glDisable(GL11.GL_LIGHTING);
                 GL11.glDisable(GL11.GL_BLEND);
-                this.drawStackSize(
+                StackSizeRenderer.drawStackSize(
                         x,
                         y,
-                        customText != null ? customText : getToBeRenderedStackSize(stack.stackSize, fontSize),
+                        customText != null ? customText
+                                : StackSizeRenderer.getToBeRenderedStackSize(stack.stackSize, fontSize),
                         font,
                         fontSize);
                 GL11.glEnable(GL11.GL_LIGHTING);
