@@ -14,12 +14,13 @@ import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
+import appeng.api.AEApi;
 import appeng.api.config.TerminalFontSize;
+import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.render.StackSizeRenderer;
 import appeng.core.localization.GuiText;
-import appeng.me.storage.CellInventory;
 import appeng.me.storage.CellInventoryHandler;
 import appeng.util.Platform;
 import appeng.util.item.ItemList;
@@ -56,18 +57,22 @@ public class NEICellViewHandler implements IUsageHandler {
         stacks.clear();
 
         if (ingredients.length > 0 && ingredients[0] instanceof ItemStack ingredient
-                && CellInventory.getCell(ingredient, null) instanceof CellInventoryHandler handler) {
+                && AEApi.instance().registries().cell().getCellInventory(
+                        ingredient,
+                        null,
+                        StorageChannel.ITEMS) instanceof CellInventoryHandler handler
+                && handler.getTotalBytes() > 0) {
             this.cellHandler = handler;
 
             ItemList list = new ItemList();
             handler.getAvailableItems(list, appeng.util.IterationCounter.fetchNewId());
 
-            List<IAEItemStack> sorted = new ArrayList<>();
-            list.iterator().forEachRemaining(sorted::add);
-            sorted.sort(Comparator.comparing(IAEStack::getStackSize, Comparator.reverseOrder()));
+            List<IAEItemStack> sortedStacks = new ArrayList<>();
+            list.iterator().forEachRemaining(sortedStacks::add);
+            sortedStacks.sort(Comparator.comparing(IAEStack::getStackSize, Comparator.reverseOrder()));
 
             int count = 0;
-            for (IAEItemStack item : sorted) {
+            for (IAEItemStack item : sortedStacks) {
                 ItemStack stack = item.getItemStack();
                 long stackSize = stack.stackSize;
                 stack.stackSize = 1;
