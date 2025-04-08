@@ -1,5 +1,7 @@
 package appeng.integration.modules.NEIHelpers;
 
+import static net.minecraft.util.EnumChatFormatting.GRAY;
+
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -191,6 +193,15 @@ public class NEICellViewHandler implements IUsageHandler {
 
     @Override
     public List<String> handleItemTooltip(GuiRecipe<?> gui, ItemStack stack, List<String> currenttip, int recipe) {
+        if (stack == null) return currenttip;
+
+        this.stacks.stream().filter(viewStack -> viewStack.stack.item.equals(stack)).findFirst().ifPresent(
+                viewItemStack -> currenttip.add(
+                        1,
+                        GRAY + GuiText.Stored.getLocal()
+                                + ": "
+                                + NumberFormat.getNumberInstance().format(viewItemStack.stackSize)));
+
         return currenttip;
     }
 
