@@ -56,8 +56,6 @@ public class NEICellViewHandler implements IUsageHandler {
 
     @Override
     public IUsageHandler getUsageHandler(String inputId, Object... ingredients) {
-        stacks.clear();
-
         if (ingredients.length > 0 && ingredients[0] instanceof ItemStack ingredient
                 && AEApi.instance().registries().cell().getCellInventory(
                         ingredient,
@@ -73,6 +71,7 @@ public class NEICellViewHandler implements IUsageHandler {
             list.iterator().forEachRemaining(sortedStacks::add);
             sortedStacks.sort(Comparator.comparing(IAEStack::getStackSize, Comparator.reverseOrder()));
 
+            stacks.clear();
             int count = 0;
             for (IAEItemStack item : sortedStacks) {
                 ItemStack stack = item.getItemStack();
