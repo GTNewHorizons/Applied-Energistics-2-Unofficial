@@ -61,9 +61,50 @@ public class ItemRepo implements IDisplayRepo {
     private boolean hasPower;
     private boolean paused = false;
 
+    private IAEItemStack[] pins = new IAEItemStack[9];
+
     public ItemRepo(final IScrollSource src, final ISortSource sortSrc) {
         this.src = src;
         this.sortSrc = sortSrc;
+    }
+
+    @Override
+    public void setPin(IAEItemStack pin, int idx) {
+        if (pin == null) {
+            if (pins[idx] != null) {
+                list.add(pins[idx]);
+                pins[idx] = null;
+            }
+        } else {
+            IAEItemStack ais = list.findPrecise(pin);
+            IAEItemStack inPins = null;
+
+            for (int i = idx + 1; i < pins.length; i++) {
+                if (pins[i] != null && pins[i].isSameType(pin)) {
+                    inPins = pins[i].copy();
+                    pins[i] = null;
+                }
+            }
+
+            if (!pin.isSameType(pins[idx])) {
+                if (pins[idx] != null) list.add(pins[idx]);
+                if (ais != null) {
+                    pins[idx] = ais.copy();
+                    ais.reset();
+                } else {
+                    if (inPins != null) {
+                        pins[idx] = inPins;
+                    } else {
+                        pins[idx] = pin;
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public IAEItemStack getPin(int idx) {
+        return pins[idx];
     }
 
     @Override
@@ -90,6 +131,14 @@ public class ItemRepo implements IDisplayRepo {
     public void postUpdate(final IAEItemStack is) {
         final IAEItemStack st = this.list.findPrecise(is);
 
+        for (IAEItemStack pin : pins) {
+            if (pin != null && pin.isSameType(is)) {
+                pin.reset();
+                pin.add(is);
+                return;
+            }
+        }
+
         if (st != null) {
             st.reset();
             st.add(is);
@@ -114,7 +163,15 @@ public class ItemRepo implements IDisplayRepo {
                 if (serverEntry == null) {
                     entry.setStackSize(0);
                 } else {
-                    this.view.set(i, serverEntry);
+                    boolean notPin = true;
+                    for (IAEItemStack pin : pins) {
+                        if (pin != null && pin.isSameType(serverEntry)) {
+                            notPin = false;
+                            entry.setStackSize(0);
+                            break;
+                        }
+                    }
+                    if (notPin) this.view.set(i, serverEntry);
                 }
             }
 
