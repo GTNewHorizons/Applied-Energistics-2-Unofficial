@@ -1312,6 +1312,13 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return null;
     }
 
+    @Override
+    public BlockingMode getBlockingMode() {
+        if (this.isBlocking() && this.isSmartBlocking()) return BlockingMode.SMART_BLOCKING;
+        if (this.isBlocking()) return BlockingMode.BLOCKING;
+        return BlockingMode.NONE;
+    }
+
     public String getTermName() {
         if (((ICustomNameObject) this.iHost).hasCustomName()) {
             return ((ICustomNameObject) this.iHost).getCustomName();
