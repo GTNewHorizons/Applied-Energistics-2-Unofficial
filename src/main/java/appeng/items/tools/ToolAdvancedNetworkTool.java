@@ -20,6 +20,7 @@ import appeng.api.implementations.HasServerSideToolLogic;
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.implementations.items.IAEWrench;
+import appeng.api.implementations.items.INetworkToolItem;
 import appeng.api.networking.IGridHost;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.SelectedPart;
@@ -44,7 +45,7 @@ import cofh.api.item.IToolHammer;
         value = { @Interface(iface = "cofh.api.item.IToolHammer", iname = IntegrationType.CoFHWrench),
                 @Interface(iface = "buildcraft.api.tools.IToolWrench", iname = IntegrationType.BuildCraftCore) })
 public class ToolAdvancedNetworkTool extends AEBaseItem
-        implements IGuiItem, IAEWrench, IToolWrench, IToolHammer, HasServerSideToolLogic {
+        implements IGuiItem, IAEWrench, IToolWrench, IToolHammer, HasServerSideToolLogic, INetworkToolItem {
 
     public ToolAdvancedNetworkTool() {
         super(Optional.absent());
@@ -206,7 +207,11 @@ public class ToolAdvancedNetworkTool extends AEBaseItem
     @Override
     public IGuiItemObject getGuiObject(final ItemStack is, final World world, final int x, final int y, final int z) {
         final TileEntity te = world.getTileEntity(x, y, z);
-        return new NetworkToolViewer(is, (IGridHost) (te instanceof IGridHost ? te : null), 5);
+        return new NetworkToolViewer(is, (IGridHost) (te instanceof IGridHost ? te : null), getInventorySize());
     }
 
+    @Override
+    public int getInventorySize() {
+        return 5;
+    }
 }
