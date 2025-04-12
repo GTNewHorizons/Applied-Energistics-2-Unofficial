@@ -518,9 +518,11 @@ public class Platform {
         if (tagList == null) {
             try {
                 tagList = lB.getClass().getDeclaredField("tagList");
+                tagList.setAccessible(true);
             } catch (final Throwable t) {
                 try {
                     tagList = lB.getClass().getDeclaredField("field_74747_a");
+                    tagList.setAccessible(true);
                 } catch (final Throwable z) {
                     AELog.debug(t);
                     AELog.debug(z);
@@ -529,7 +531,6 @@ public class Platform {
         }
 
         try {
-            tagList.setAccessible(true);
             return (List<NBTBase>) tagList.get(lB);
         } catch (final Throwable t) {
             AELog.debug(t);
