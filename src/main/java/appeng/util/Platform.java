@@ -11,7 +11,6 @@
 package appeng.util;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.text.DecimalFormat;
@@ -152,7 +151,6 @@ public class Platform {
      */
     private static final Random RANDOM_GENERATOR = new Random();
     private static final WeakHashMap<World, WeakReference<EntityPlayer>> FAKE_PLAYERS = new WeakHashMap<>();
-    private static Field tagList;
     private static Class playerInstance;
     private static Method getOrCreateChunkWatcher;
     private static Method sendToAllPlayersWatchingChunk;
@@ -463,8 +461,8 @@ public class Platform {
                         return false;
                     }
 
-                    final List<NBTBase> tag = tagList(lA);
-                    final List<NBTBase> aTag = tagList(lB);
+                    final List<NBTBase> tag = lA.tagList;
+                    final List<NBTBase> aTag = lB.tagList;
                     if (tag.size() != aTag.size()) {
                         return false;
                     }
@@ -514,31 +512,6 @@ public class Platform {
         return false;
     }
 
-    private static List<NBTBase> tagList(final NBTTagList lB) {
-        if (tagList == null) {
-            try {
-                tagList = lB.getClass().getDeclaredField("tagList");
-                tagList.setAccessible(true);
-            } catch (final Throwable t) {
-                try {
-                    tagList = lB.getClass().getDeclaredField("field_74747_a");
-                    tagList.setAccessible(true);
-                } catch (final Throwable z) {
-                    AELog.debug(t);
-                    AELog.debug(z);
-                }
-            }
-        }
-
-        try {
-            return (List<NBTBase>) tagList.get(lB);
-        } catch (final Throwable t) {
-            AELog.debug(t);
-        }
-
-        return new ArrayList<>();
-    }
-
     /*
      * Orderless hash on NBT Data, used to work thought huge piles fast, but ignores the order just in case MC decided
      * to change it... WHICH IS BAD...
@@ -565,7 +538,7 @@ public class Platform {
                 final NBTTagList lA = (NBTTagList) nbt;
                 hash += 9 * lA.tagCount();
 
-                final List<NBTBase> l = tagList(lA);
+                final List<NBTBase> l = lA.tagList;
                 for (int x = 0; x < l.size(); x++) {
                     hash += ((Integer) x).hashCode() ^ NBTOrderlessHash(l.get(x));
                 }
