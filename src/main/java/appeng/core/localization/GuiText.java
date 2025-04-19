@@ -215,6 +215,9 @@ public enum GuiText {
     // processing pattern terminal
     PatternTerminalEx,
 
+    // View Cell
+    ViewCellToggleKey,
+
     // renaming GUI label
     Renamer,
 

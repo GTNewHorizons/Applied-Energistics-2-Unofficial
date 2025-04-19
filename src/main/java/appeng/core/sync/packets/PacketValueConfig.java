@@ -35,6 +35,7 @@ import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerInterface;
 import appeng.container.implementations.ContainerLevelEmitter;
+import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.container.implementations.ContainerPatternTerm;
@@ -100,8 +101,10 @@ public class PacketValueConfig extends AppEngPacket {
         	qk.startJob(this.Value);
         } else if (this.Name.equals("Terminal.Start") && c instanceof final ContainerCraftConfirm qk) {
         	qk.startJob();
-        } else if(this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk){
+        } else if(this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk) {
             qk.optimizePatterns();
+        } else if (this.Name.equals("Terminal.UpdateViewCell") && c instanceof final ContainerMEMonitorable qk) {
+            qk.toggleViewCell(Integer.parseInt(this.Value));
         } else if(this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk){
             qk.doublePatterns(Integer.parseInt(this.Value));
         } else if(this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPU qk) {
