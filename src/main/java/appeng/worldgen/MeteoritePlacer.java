@@ -11,6 +11,7 @@
 package appeng.worldgen;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +44,7 @@ import appeng.worldgen.meteorite.FalloutSand;
 import appeng.worldgen.meteorite.FalloutSnow;
 import appeng.worldgen.meteorite.IMeteoriteWorld;
 import appeng.worldgen.meteorite.MeteoriteBlockPutter;
+import cpw.mods.fml.common.registry.GameRegistry;
 
 public final class MeteoritePlacer {
 
@@ -90,6 +92,30 @@ public final class MeteoritePlacer {
             validSpawn.add(Blocks.ice);
             validSpawn.add(Blocks.snow);
             validSpawn.add(Blocks.stained_hardened_clay);
+
+            for (String block : AEConfig.instance.meteoriteValidBlocks) {
+                try {
+                    String[] parts = block.split(":");
+                    if (parts.length != 2) {
+                        System.err.println(
+                                "AE2: Invalid Block ID Format for validSpawnBlockWhiteList: " + block
+                                        + " | Error: Too Many Semicolons");
+                    }
+                    Block blk = GameRegistry.findBlock(parts[0], parts[1]);
+                    if (blk != null) {
+                        validSpawn.add(blk);
+                    } else {
+                        System.err.println(
+                                "AE2: Could not find block in registry for validSpawnBlockWhiteList: " + block
+                                        + " | Error: Block not found");
+                    }
+                } catch (Exception e) {
+                    System.err.println(
+                            "AE2: errored while whitelisting meteorite block spawns: " + e.getLocalizedMessage()
+                                    + " | Error: Unknown | Stacktrace: "
+                                    + Arrays.toString(e.getStackTrace()));
+                }
+            }
 
             invalidSpawn.clear();
             invalidSpawn.addAll(skyStoneDefinition.maybeBlock().asSet());
