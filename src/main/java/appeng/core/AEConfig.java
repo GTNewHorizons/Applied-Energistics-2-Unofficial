@@ -111,6 +111,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     private double WirelessBaseRange = 16;
     private double WirelessBoosterRangeMultiplier = 1;
     private double WirelessBoosterExp = 1.5;
+    private double WirelessConnectorPowerBase = 1D;
+    private double WirelessConnectorPowerDistanceMultiplier = .1D;
     public int levelEmitterDelay = 40;
     public int craftingCalculatorVersion = 2;
     public int maxCraftingSteps = 2_000_000;
@@ -195,6 +197,15 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .getDouble(this.WirelessBoosterRangeMultiplier);
         this.WirelessBoosterExp = this.get("wireless", "WirelessBoosterExp", this.WirelessBoosterExp)
                 .getDouble(this.WirelessBoosterExp);
+        this.WirelessConnectorPowerBase = this
+                .get("wireless", "WirelessConnectorPowerBase", this.WirelessConnectorPowerBase)
+                .getDouble(this.WirelessConnectorPowerBase);
+        this.WirelessConnectorPowerDistanceMultiplier = this
+                .get(
+                        "wireless",
+                        "WirelessConnectorPowerDistanceMultiplier",
+                        this.WirelessConnectorPowerDistanceMultiplier)
+                .getDouble(this.WirelessConnectorPowerDistanceMultiplier);
         this.WirelessTerminalDrainMultiplier = this
                 .get("wireless", "WirelessTerminalDrainMultiplier", this.WirelessTerminalDrainMultiplier)
                 .getDouble(this.WirelessTerminalDrainMultiplier);
@@ -385,6 +396,14 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public double wireless_getPowerDrain(final int boosters) {
         return this.WirelessBaseCost
                 + this.WirelessCostMultiplier * Math.pow(boosters, 1 + boosters / this.WirelessHighWirelessCount);
+    }
+
+    public double getWirelessConnectorPowerBase() {
+        return this.WirelessConnectorPowerBase;
+    }
+
+    public double getWirelessConnectorPowerDistanceMultiplier() {
+        return this.WirelessConnectorPowerDistanceMultiplier;
     }
 
     @Override
