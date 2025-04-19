@@ -105,6 +105,11 @@ public enum GuiText {
     CraftingPattern,
     ProcessingPattern,
     Crafts,
+    HoldShift,
+    Result,
+    Results,
+    Ingredients,
+    Ingredient,
     Creates,
     And,
     With,
@@ -262,7 +267,9 @@ public enum GuiText {
     NumberOfFluids,
     ItemsPerByte,
     FluidsPerByte,
-    BytesPerType;
+    BytesPerType,
+
+    CellView;
 
     private final String root;
 

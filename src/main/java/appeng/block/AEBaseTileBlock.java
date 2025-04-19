@@ -37,6 +37,7 @@ import net.minecraftforge.event.world.BlockEvent;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 
+import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
 import appeng.api.implementations.tiles.IColorableTile;
@@ -48,8 +49,10 @@ import appeng.core.features.AETileBlockFeatureHandler;
 import appeng.core.features.IAEFeature;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.ICustomCollision;
+import appeng.items.tools.ToolMemoryCard;
 import appeng.items.tools.ToolPriorityCard;
 import appeng.items.tools.quartz.ToolQuartzCuttingKnife;
+import appeng.parts.automation.UpgradeInventory;
 import appeng.tile.AEBaseTile;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.storage.TileSkyChest;
@@ -257,6 +260,13 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                             final NBTTagCompound data = t.downloadSettings(SettingsFrom.MEMORY_CARD);
                             if (data != null) {
                                 memoryCard.setMemoryCardContents(is, name, data);
+
+                                if (t instanceof IUpgradeableHost iuh) {
+                                    ToolMemoryCard.setUpgradesInfo(
+                                            data,
+                                            (UpgradeInventory) iuh.getInventoryByName("upgrades"));
+                                }
+
                                 memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
                                 return true;
                             }
@@ -267,6 +277,12 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
                         if (this.getUnlocalizedName().equals(name)) {
                             final AEBaseTile t = this.getTileEntity(w, x, y, z);
                             t.uploadSettings(SettingsFrom.MEMORY_CARD, data);
+
+                            if (t instanceof IUpgradeableHost iuh && data.hasKey("upgradesList")) {
+                                UpgradeInventory up = (UpgradeInventory) iuh.getInventoryByName("upgrades");
+                                ToolMemoryCard.insertUpgrades(data, player, up);
+                            }
+
                             memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
                         } else {
                             memoryCard.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);

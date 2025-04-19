@@ -26,7 +26,7 @@ public class Fallout {
         } else if (random > 0.8) {
             this.putter.put(w, x, y, z, Blocks.cobblestone);
         } else if (random > 0.7) {
-            this.putter.put(w, x, y, z, Blocks.dirt);
+            this.putter.put(w, x, y, z, w.getWorld().getBiomeGenForCoords(x, z).fillerBlock);
         } else {
             this.putter.put(w, x, y, z, Blocks.gravel);
         }
@@ -38,7 +38,7 @@ public class Fallout {
         } else if (random > 0.8) {
             this.putter.put(w, x, y, z, Blocks.stone);
         } else if (random > 0.7) {
-            this.putter.put(w, x, y, z, Blocks.grass);
+            this.putter.put(w, x, y, z, w.getWorld().getBiomeGenForCoords(x, z).topBlock);
         } else if (random > 0.6) {
             for (final Block skyStoneBlock : this.skyStoneDefinition.maybeBlock().asSet()) {
                 this.putter.put(w, x, y, z, skyStoneBlock);

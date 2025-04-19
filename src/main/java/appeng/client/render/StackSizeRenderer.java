@@ -1,25 +1,20 @@
 package appeng.client.render;
 
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.entity.RenderItem;
 
 import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.TerminalFontSize;
-import appeng.util.ISlimReadableNumberConverter;
-import appeng.util.IWideReadableNumberConverter;
 import appeng.util.ReadableNumberConverter;
 
-public abstract class AERenderItem extends RenderItem {
+public class StackSizeRenderer {
 
-    private static final ISlimReadableNumberConverter SLIM_CONVERTER = ReadableNumberConverter.INSTANCE;
-    private static final IWideReadableNumberConverter WIDE_CONVERTER = ReadableNumberConverter.INSTANCE;
-
-    public void drawStackSize(int offsetX, int offsetY, long stackSize, FontRenderer font, TerminalFontSize fontSize) {
+    public static void drawStackSize(int offsetX, int offsetY, long stackSize, FontRenderer font,
+            TerminalFontSize fontSize) {
         drawStackSize(offsetX, offsetY, getToBeRenderedStackSize(stackSize, fontSize), font, fontSize);
     }
 
-    public void drawStackSize(int offsetX, int offsetY, String customText, FontRenderer font,
+    public static void drawStackSize(int offsetX, int offsetY, String customText, FontRenderer font,
             TerminalFontSize fontSize) {
         float scale = 1.0f;
         float shiftX = 0f;
@@ -72,11 +67,11 @@ public abstract class AERenderItem extends RenderItem {
         }
     }
 
-    protected String getToBeRenderedStackSize(final long originalSize, TerminalFontSize fontSize) {
+    public static String getToBeRenderedStackSize(final long originalSize, TerminalFontSize fontSize) {
         if (fontSize == TerminalFontSize.LARGE) {
-            return SLIM_CONVERTER.toSlimReadableForm(originalSize);
+            return ReadableNumberConverter.INSTANCE.toSlimReadableForm(originalSize);
         } else {
-            return WIDE_CONVERTER.toWideReadableForm(originalSize);
+            return ReadableNumberConverter.INSTANCE.toWideReadableForm(originalSize);
         }
     }
 }

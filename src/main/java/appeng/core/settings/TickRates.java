@@ -26,7 +26,7 @@ public enum TickRates {
 
     Inscriber(1, 1),
 
-    IOPort(1, 5),
+    IOPort(1, 1),
 
     VibrationChamber(10, 40),
 

@@ -56,10 +56,12 @@ import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.ICustomNameObject;
 import appeng.helpers.IPriorityHost;
+import appeng.items.tools.ToolMemoryCard;
 import appeng.items.tools.ToolPriorityCard;
 import appeng.items.tools.quartz.ToolQuartzCuttingKnife;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.helpers.IGridProxyable;
+import appeng.parts.automation.UpgradeInventory;
 import appeng.parts.networking.PartCable;
 import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.util.Platform;
@@ -387,6 +389,9 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 final NBTTagCompound data = this.downloadSettings(SettingsFrom.MEMORY_CARD);
                 if (data != null) {
                     memoryCard.setMemoryCardContents(memCardIS, name, data);
+
+                    ToolMemoryCard.setUpgradesInfo(data, (UpgradeInventory) this.getInventoryByName("upgrades"));
+
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
                 }
             } else {
@@ -394,6 +399,12 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 final NBTTagCompound data = memoryCard.getData(memCardIS);
                 if (name.equals(storedName)) {
                     this.uploadSettings(SettingsFrom.MEMORY_CARD, data);
+
+                    if (data.hasKey("upgradesList")) {
+                        UpgradeInventory up = (UpgradeInventory) getInventoryByName("upgrades");
+                        ToolMemoryCard.insertUpgrades(data, player, up);
+                    }
+
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
                 } else {
                     memoryCard.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);

@@ -26,6 +26,7 @@ import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.core.AELog;
 import appeng.util.InventoryAdaptor;
 
 public class MultiCraftingTracker {
@@ -46,7 +47,12 @@ public class MultiCraftingTracker {
             final NBTTagCompound link = extra.getCompoundTag("links-" + x);
 
             if (link != null && !link.hasNoTags()) {
-                this.setLink(x, AEApi.instance().storage().loadCraftingLink(link, this.owner));
+                try {
+                    this.setLink(x, AEApi.instance().storage().loadCraftingLink(link, this.owner));
+                } catch (Throwable t) {
+                    AELog.error("Could not load crafting link! Slot=%s, Tag=%s, Owner=%s", x, link, owner);
+                    AELog.error(t);
+                }
             }
         }
     }

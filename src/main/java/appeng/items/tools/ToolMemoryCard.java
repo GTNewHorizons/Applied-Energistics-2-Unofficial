@@ -10,23 +10,31 @@
 
 package appeng.items.tools;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import appeng.api.implementations.items.IMemoryCard;
+import appeng.api.implementations.items.INetworkToolItem;
 import appeng.api.implementations.items.MemoryCardMessages;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.items.AEBaseItem;
+import appeng.items.contents.NetworkToolViewer;
+import appeng.items.materials.ItemMultiMaterial;
+import appeng.parts.automation.UpgradeInventory;
 import appeng.util.Platform;
 
 public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
@@ -142,5 +150,78 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
     public boolean doesSneakBypassUse(final World world, final int x, final int y, final int z,
             final EntityPlayer player) {
         return true;
+    }
+
+    public static void setUpgradesInfo(NBTTagCompound data, UpgradeInventory ui) {
+        if (ui != null) {
+            NBTTagList tagList = new NBTTagList();
+            for (int i = 0; i < ui.getSizeInventory(); i++) {
+                ItemStack uis = ui.getStackInSlot(i);
+                NBTTagCompound newIs = new NBTTagCompound();
+                if (uis != null) {
+                    uis.writeToNBT(newIs);
+                }
+                tagList.appendTag(newIs);
+            }
+            if (tagList.tagCount() > 0) data.setTag("upgradesList", tagList);
+        }
+    }
+
+    public static void insertUpgrades(final NBTTagCompound data, EntityPlayer player, UpgradeInventory up) {
+        NBTTagList tagList = data.getTagList("upgradesList", 10);
+        List<ItemStack> memoryList = new ArrayList<>(Collections.nCopies(tagList.tagCount(), null)); // Preserve order
+
+        for (int i = 0; i < tagList.tagCount(); i++) {
+            if (up.getStackInSlot(i) == null) {
+                ItemStack item = ItemStack.loadItemStackFromNBT(tagList.getCompoundTagAt(i));
+                memoryList.set(i, item);
+            }
+        }
+
+        if (!memoryList.stream().allMatch(Objects::isNull)) {
+            int resolved = 0;
+            for (int j = 0; j < player.inventory.getSizeInventory(); j++) {
+                ItemStack pi = player.inventory.getStackInSlot(j);
+                if (pi != null) {
+                    if (pi.getItem() instanceof ItemMultiMaterial) {
+                        for (ItemStack is : memoryList) {
+                            if (is != null && is.stackSize > 0 && is.isItemEqual(pi)) {
+                                is.stackSize = 0;
+                                player.inventory.decrStackSize(j, 1);
+                                player.onUpdate();
+                                resolved++;
+                            }
+                        }
+
+                        if (resolved == memoryList.size()) break;
+                    } else if (pi.getItem() instanceof INetworkToolItem inti) {
+                        NetworkToolViewer ntv = new NetworkToolViewer(pi, null, inti.getInventorySize());
+                        for (int k = 0; k < ntv.getSizeInventory(); k++) {
+                            ItemStack isv = ntv.getStackInSlot(k);
+                            if (isv != null) {
+                                for (ItemStack is : memoryList) {
+                                    if (is != null && is.stackSize > 0 && is.isItemEqual(isv)) {
+                                        is.stackSize = 0;
+                                        resolved++;
+                                        ntv.decrStackSize(k, 1);
+                                        ntv.markDirty();
+                                    }
+                                }
+
+                                if (resolved == memoryList.size()) break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < memoryList.size(); i++) {
+                ItemStack is = memoryList.get(i);
+                if (is != null && is.stackSize == 0) {
+                    is.stackSize = 1;
+                    up.setInventorySlotContents(i, is);
+                }
+            }
+        }
     }
 }
