@@ -43,9 +43,12 @@ import appeng.core.CommonHelper;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.helpers.PatternHelper;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
+import gregtech.common.items.ItemIntegratedCircuit;
 
 public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternItem {
 
@@ -53,6 +56,11 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
     private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<>();
     private static Item FLUID_DROP_ITEM;
     private static boolean checkedCache = false;
+    private static boolean isGTLoaded = false;
+
+    static {
+        isGTLoaded = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT);
+    }
 
     public ItemEncodedPattern() {
         this.setFeature(EnumSet.of(AEFeature.Patterns));
@@ -237,28 +245,31 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 isFluid = false;
             }
 
+            String itemCountText = NumberFormat.getNumberInstance(Locale.US).format(itemCount);
+            String itemText = "";
+            if (isGTLoaded) {
+                itemText = isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
+                        : item.getItem() instanceof ItemIntegratedCircuit
+                                ? Platform.getItemDisplayName(item) + " " + item.getItemStack().getItemDamage()
+                                : Platform.getItemDisplayName(item);
+            } else {
+                itemText = isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
+                        : Platform.getItemDisplayName(item);
+            }
+            String fullText = "   " + EnumChatFormatting.WHITE
+                    + itemCountText
+                    + EnumChatFormatting.RESET
+                    + (isFluid ? EnumChatFormatting.WHITE + "L" : " ")
+                    + EnumChatFormatting.RESET
+                    + color
+                    + itemText;
+
             if (first) {
                 lines.add(label);
-                lines.add(
-                        "   " + EnumChatFormatting.WHITE
-                                + NumberFormat.getNumberInstance(Locale.US).format(itemCount)
-                                + EnumChatFormatting.RESET
-                                + (isFluid ? EnumChatFormatting.WHITE + "L" : " ")
-                                + EnumChatFormatting.RESET
-                                + color
-                                + (isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
-                                        : Platform.getItemDisplayName(item)));
+                lines.add(fullText);
             }
             if (!first) {
-                lines.add(
-                        "   " + EnumChatFormatting.WHITE
-                                + NumberFormat.getNumberInstance(Locale.US).format(itemCount)
-                                + EnumChatFormatting.RESET
-                                + (isFluid ? EnumChatFormatting.WHITE + "L" : " ")
-                                + EnumChatFormatting.RESET
-                                + color
-                                + (isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
-                                        : Platform.getItemDisplayName(item)));
+                lines.add(fullText);
             }
 
             first = false;
