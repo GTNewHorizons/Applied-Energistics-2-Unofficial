@@ -11,6 +11,7 @@
 package appeng.worldgen;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -43,6 +44,7 @@ import appeng.worldgen.meteorite.FalloutSand;
 import appeng.worldgen.meteorite.FalloutSnow;
 import appeng.worldgen.meteorite.IMeteoriteWorld;
 import appeng.worldgen.meteorite.MeteoriteBlockPutter;
+import cpw.mods.fml.common.registry.GameRegistry;
 
 public final class MeteoritePlacer {
 
@@ -90,6 +92,30 @@ public final class MeteoritePlacer {
             validSpawn.add(Blocks.ice);
             validSpawn.add(Blocks.snow);
             validSpawn.add(Blocks.stained_hardened_clay);
+
+            for (String block : AEConfig.instance.meteoriteValidBlocks) {
+                try {
+                    String[] parts = block.split(":");
+                    if (parts.length != 2) {
+                        System.err.println(
+                                "AE2: Invalid Block ID Format for validSpawnBlockWhiteList: " + block
+                                        + " | Error: Too Many Semicolons");
+                    }
+                    Block blk = GameRegistry.findBlock(parts[0], parts[1]);
+                    if (blk != null) {
+                        validSpawn.add(blk);
+                    } else {
+                        System.err.println(
+                                "AE2: Could not find block in registry for validSpawnBlockWhiteList: " + block
+                                        + " | Error: Block not found");
+                    }
+                } catch (Exception e) {
+                    System.err.println(
+                            "AE2: errored while whitelisting meteorite block spawns: " + e.getLocalizedMessage()
+                                    + " | Error: Unknown | Stacktrace: "
+                                    + Arrays.toString(e.getStackTrace()));
+                }
+            }
 
             invalidSpawn.clear();
             invalidSpawn.addAll(skyStoneDefinition.maybeBlock().asSet());
@@ -296,9 +322,12 @@ public final class MeteoritePlacer {
 
             final TileEntity te = w.getTileEntity(x, y, z);
             if (te instanceof IInventory) {
+
+                /*-------------------This is the loot-------------------*/
                 final Random lootRng = new Random(this.seed + SEED_OFFSET_CHEST_LOOT);
                 final InventoryAdaptor ap = InventoryAdaptor.getAdaptor(te, ForgeDirection.UP);
 
+                /*-------------------Presses-------------------*/
                 final ArrayList<ItemStack> pressTypes = new ArrayList<>(4);
                 final IMaterials materials = AEApi.instance().definitions().materials();
                 pressTypes.addAll(materials.calcProcessorPress().maybeStack(1).asSet());
@@ -314,10 +343,13 @@ public final class MeteoritePlacer {
                     pressTypes.remove(lootRng.nextInt(pressTypes.size()));
                 }
 
+
                 for (ItemStack toAdd : pressTypes) {
                     ap.addItems(toAdd);
                 }
+                /*-------------------Presses-------------------*/
 
+                /*-------------------Nuggets-------------------*/
                 final List<ItemStack> nuggetLoot = new ArrayList<>();
                 nuggetLoot.addAll(OreDictionary.getOres("nuggetIron"));
                 nuggetLoot.addAll(OreDictionary.getOres("nuggetCopper"));
@@ -350,6 +382,22 @@ public final class MeteoritePlacer {
                         // Add nothing
                     }
                 }
+                /*-------------------CONFIG JSON FORMAT-------------------*//*
+                {
+                    "map": {
+                        "0": [
+                            {
+                                "item": "minecraft:gold_nugget",
+                                    "meta_data": 0,
+                                    "min_value": 0,
+                                    "max_value": 12,
+                                    "weight": 1,
+                                    "exclusiveGroupID": 1
+                            }
+                        ]
+                    }
+                }
+                *//*-------------------This is the loot-------------------*/
             }
         }
     }
