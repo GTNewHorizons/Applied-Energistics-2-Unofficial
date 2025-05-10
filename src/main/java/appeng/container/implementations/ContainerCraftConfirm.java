@@ -193,9 +193,11 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                         if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
                                 && (missing == null || missing.getStackSize() <= 0)) {
-                            long available = items.getAvailableItem(toExtract, IterationCounter.fetchNewId())
-                                    .getStackSize();
-                            toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
+                            IAEItemStack availableStack = items
+                                    .getAvailableItem(toExtract, IterationCounter.fetchNewId());
+                            long available = (availableStack == null) ? 0 : availableStack.getStackSize();
+                            if (available > 0) toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
+                            else toExtract.setUsedPercent(0f);
                         }
 
                         if (toExtract.getStackSize() > 0) {
