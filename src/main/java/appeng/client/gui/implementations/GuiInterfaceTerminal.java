@@ -254,7 +254,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         guiButtonUseSubstitute.xPosition = guiLeft - 18;
         guiButtonUseSubstitute.yPosition = guiButtonAssemblersOnly.yPosition + 18;
 
-        offsetY = guiButtonUseSubstitute.yPosition; //last button pos for ae2fc
+        offsetY = guiButtonUseSubstitute.yPosition; // last button pos for ae2fc
 
         setSearchString();
 
