@@ -71,6 +71,7 @@ import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketPartialItem;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
+import appeng.helpers.IPinsHandler;
 import appeng.helpers.InventoryAction;
 import appeng.items.materials.ItemMultiMaterial;
 import appeng.parts.automation.UpgradeInventory;
@@ -707,6 +708,16 @@ public abstract class AEBaseContainer extends Container {
 
                 for (final Slot fr : from) {
                     this.transferStackInSlot(player, fr.slotNumber);
+                }
+            }
+
+            if (action == InventoryAction.SET_PIN) {
+                if (this instanceof IPinsHandler iph) {
+                    if (id == -1) {
+                        iph.setPin(null, slot);
+                    } else if (player.inventory.getItemStack() != null) {
+                        iph.setPin(player.inventory.getItemStack(), slot);
+                    }
                 }
             }
 

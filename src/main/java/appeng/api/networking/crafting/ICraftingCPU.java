@@ -106,7 +106,7 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
 
     /**
      * get this cpu's crafting allow mode
-     * 
+     *
      * @return mode of this cpu
      */
     public default CraftingAllow getCraftingAllowMode() {
@@ -114,4 +114,6 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
     }
 
     public default void changeCraftingAllowMode(CraftingAllow mode) {}
+
+    default void resetFinalOutput() {}
 }
