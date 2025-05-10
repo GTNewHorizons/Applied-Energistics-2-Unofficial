@@ -34,6 +34,7 @@ import appeng.items.tools.ToolAdvancedNetworkTool;
 import appeng.items.tools.ToolBiometricCard;
 import appeng.items.tools.ToolMemoryCard;
 import appeng.items.tools.ToolNetworkTool;
+import appeng.items.tools.ToolNetworkVisualiser;
 import appeng.items.tools.ToolPriorityCard;
 import appeng.items.tools.powered.ToolChargedStaff;
 import appeng.items.tools.powered.ToolColorApplicator;
@@ -119,6 +120,8 @@ public final class ApiItems implements IItems {
     private final IItemDefinition toolDebugCard;
     private final IItemDefinition toolReplicatorCard;
 
+    private final IItemDefinition toolNetworkVisualiser;
+
     public ApiItems(final DefinitionConstructor constructor) {
         this.certusQuartzAxe = constructor.registerItemDefinition(new ToolQuartzAxe(AEFeature.CertusQuartzTools));
         this.certusQuartzHoe = constructor.registerItemDefinition(new ToolQuartzHoe(AEFeature.CertusQuartzTools));
@@ -193,6 +196,7 @@ public final class ApiItems implements IItems {
         this.toolMeteoritePlacer = constructor.registerItemDefinition(new ToolMeteoritePlacer());
         this.toolDebugCard = constructor.registerItemDefinition(new ToolDebugCard());
         this.toolReplicatorCard = constructor.registerItemDefinition(new ToolReplicatorCard());
+        this.toolNetworkVisualiser = constructor.registerItemDefinition(new ToolNetworkVisualiser());
     }
 
     @Override
@@ -453,5 +457,9 @@ public final class ApiItems implements IItems {
 
     public IItemDefinition toolReplicatorCard() {
         return this.toolReplicatorCard;
+    }
+
+    public IItemDefinition toolNetworkVisualiser() {
+        return this.toolNetworkVisualiser;
     }
 }
