@@ -233,7 +233,10 @@ public enum ButtonToolTips {
     CPUAllowMode,
     CPUAllowAllDesc,
     CPUOnlyAllowPlayerDesc,
-    CPUOnlyAllowNonPlayerDesc;
+    CPUOnlyAllowNonPlayerDesc,
+    ToggleShowOnlySubstitute,
+    ToggleShowOnlySubstituteOnDesc,
+    ToggleShowOnlySubstituteOffDesc;
 
     private final String root;
 

@@ -130,6 +130,7 @@ public abstract class GuiAmount extends AEBaseGui {
         if (isPlus || isMinus) {
             long resultI = addOrderAmount(this.getQty(btn));
             this.amountTextField.setText(Long.toString(resultI));
+            amountTextField.setCursorPositionEnd();
         }
     }
 

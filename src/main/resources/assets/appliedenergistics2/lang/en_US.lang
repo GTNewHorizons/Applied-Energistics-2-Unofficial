@@ -581,6 +581,10 @@ gui.tooltips.appliedenergistics2.CPUAllowAllDesc=Allow all crafting requests
 gui.tooltips.appliedenergistics2.CPUOnlyAllowPlayerDesc=Only allow crafting requests from player
 gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=Only allow crafting requests from non-player
 
+gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Toggles showing interfaces with patterns with substitutions enabled
+gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Showing all interfaces
+gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOffDesc=Showing only interfaces with patterns with substitutions enabled
+
 # Units
 gui.appliedenergistics2.units.appliedenergstics=AE
 gui.appliedenergistics2.units.ic2=Energy Units
