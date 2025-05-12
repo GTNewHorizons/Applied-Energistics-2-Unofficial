@@ -19,7 +19,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.Vec3;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.config.Actionable;
@@ -52,10 +51,12 @@ import appeng.helpers.MultiCraftingTracker;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.me.cache.NetworkMonitor;
+import appeng.me.storage.NetworkInventoryHandler;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import appeng.util.prioitylist.OreFilteredList;
+import appeng.util.IterationCounter;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -109,6 +110,7 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
             final FuzzyMode fzMode = (FuzzyMode) this.getConfigManager().getSetting(Settings.FUZZY_MODE);
             final SchedulingMode schedulingMode = (SchedulingMode) this.getConfigManager()
                     .getSetting(Settings.SCHEDULING_MODE);
+            final int iteration = IterationCounter.fetchNewId();
 
             if (destination != null) {
                 if (this.getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
@@ -143,19 +145,21 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
                              * used is the overriden one found in the .java file.
                              */
 
-                            final Collection<IAEItemStack> fzlist = ((NetworkMonitor<IAEItemStack>) gridInv)
-                                    .getHandler().getSortedFuzzyItems(
-                                            new ArrayList<>(),
-                                            ais,
-                                            fzMode,
-                                            appeng.util.IterationCounter.fetchNewId());
+                             if (gridInv instanceof NetworkMonitor<?>) {
+                                final Collection<IAEItemStack> fzlist = ((NetworkMonitor<IAEItemStack>) gridInv)
+                                        .getHandler().getSortedFuzzyItems(
+                                                new ArrayList<>(),
+                                                ais,
+                                                fzMode,
+                                                iteration);
 
-                            for (final IAEItemStack o : ImmutableList.copyOf(fzlist)) {
-                                this.pushItemIntoTarget(destination, energy, gridInv, o);
-                            }
-                            if (this.itemToSend <= 0) {
-                                break;
-                            }
+                                for (final IAEItemStack o : fzlist) {
+                                    this.pushItemIntoTarget(destination, energy, gridInv, o);
+                                }
+                                if (this.itemToSend <= 0) {
+                                    break;
+                                }
+                             }
 
                         } else {
                             this.pushItemIntoTarget(destination, energy, gridInv, ais);
