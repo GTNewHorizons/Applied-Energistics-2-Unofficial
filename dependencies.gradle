@@ -15,7 +15,6 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:OpenComputers:1.11.13-GTNH:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:waila:1.8.4:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:waila:1.8.4:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Railcraft:9.16.26:api') {transitive = false}
     compileOnly('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev')  {transitive = false }
     compileOnly('net.industrial-craft:industrialcraft-2:2.2.828-experimental:api')
