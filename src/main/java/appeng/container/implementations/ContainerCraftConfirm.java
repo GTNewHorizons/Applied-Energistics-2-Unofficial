@@ -25,6 +25,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 
+import com.glodblock.github.common.item.ItemFluidDrop;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.CraftingAllow;
@@ -40,7 +42,9 @@ import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
@@ -177,6 +181,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                         final IStorageGrid sg = this.getGrid().getCache(IStorageGrid.class);
                         final IMEInventory<IAEItemStack> items = sg.getItemInventory();
+                        final IMEInventory<IAEFluidStack> fluids = sg.getFluidInventory();
 
                         IAEItemStack missing = null;
                         if (missingUpdate != null && this.result.isSimulation()) {
@@ -193,8 +198,14 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                         if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
                                 && (missing == null || missing.getStackSize() <= 0)) {
-                            IAEItemStack availableStack = items
-                                    .getAvailableItem(toExtract, IterationCounter.fetchNewId());
+                            IAEStack<?> availableStack;
+                            if (toExtract.getItem() instanceof ItemFluidDrop) {
+                                availableStack = fluids.getAvailableItem(
+                                        ItemFluidDrop.getAeFluidStack(toExtract),
+                                        IterationCounter.fetchNewId());
+                            } else {
+                                availableStack = items.getAvailableItem(toExtract, IterationCounter.fetchNewId());
+                            }
                             long available = (availableStack == null) ? 0 : availableStack.getStackSize();
                             if (available > 0) toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
                             else toExtract.setUsedPercent(0f);

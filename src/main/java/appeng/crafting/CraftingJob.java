@@ -79,7 +79,7 @@ public class CraftingJob implements ICraftingJob, Runnable {
         this.callback = callback;
         final ICraftingGrid cc = grid.getCache(ICraftingGrid.class);
         final IStorageGrid sg = grid.getCache(IStorageGrid.class);
-        this.original = new MECraftingInventory(sg.getItemInventory(), actionSrc, false, false, false);
+        this.original = new MECraftingInventory(sg, actionSrc, false, false, false);
 
         this.setTree(this.getCraftingTree(cc, what));
         this.availableCheck = null;
@@ -90,11 +90,11 @@ public class CraftingJob implements ICraftingJob, Runnable {
     }
 
     void refund(final IAEItemStack o) {
-        this.availableCheck.injectItems(o, Actionable.MODULATE, this.actionSrc);
+        this.availableCheck.injectItems(o, Actionable.MODULATE);
     }
 
     IAEItemStack checkUse(final IAEItemStack available) {
-        return this.availableCheck.extractItems(available, Actionable.MODULATE, this.actionSrc);
+        return this.availableCheck.extractItems(available, Actionable.MODULATE);
     }
 
     void addTask(IAEItemStack what, final long crafts, final ICraftingPatternDetails details, final int depth) {

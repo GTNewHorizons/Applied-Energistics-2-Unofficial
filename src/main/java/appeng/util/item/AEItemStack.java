@@ -28,6 +28,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAETagCompound;
 import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -404,6 +405,14 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     }
 
     @Override
+    public boolean isSameType(final Object otherStack) {
+        if (otherStack instanceof AEItemStack ais) return isSameType(ais);
+        else if (otherStack instanceof ItemStack is) return isSameType(is);
+
+        return false;
+    }
+
+    @Override
     public boolean isSameType(final ItemStack otherStack) {
         if (otherStack == null) {
             return false;
@@ -479,6 +488,15 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
                 : this.compareNBT(b.getDefinition());
     }
 
+    @Override
+    public int compareTo(final IAEStack<?> b) {
+        if (b instanceof AEItemStack ais) {
+            return compareTo(ais);
+        }
+        final int diff = this.hashCode() - b.hashCode();
+        return Integer.compare(diff, 0);
+    }
+
     private int compareNBT(final AEItemDef b) {
         final int nbt = this.compare(
                 (this.getDefinition().getTagCompound() == null ? 0 : this.getDefinition().getTagCompound().getHash()),
@@ -504,12 +522,18 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return this.getDefinition().setTooltip(Platform.getTooltip(this.getItemStack()));
     }
 
+    @Override
     public String getDisplayName() {
         if (this.getDefinition().getDisplayName() == null) {
             this.getDefinition().setDisplayName(Platform.getItemDisplayName(this.getItemStack()));
         }
 
         return this.getDefinition().getDisplayName();
+    }
+
+    @Override
+    public String getUnlocalizedName() {
+        return getItem().getUnlocalizedName();
     }
 
     public String getModID() {

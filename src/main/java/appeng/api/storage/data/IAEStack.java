@@ -23,6 +23,10 @@ import io.netty.buffer.ByteBuf;
 
 public interface IAEStack<StackType extends IAEStack> {
 
+    public static final byte ST_NULL = 0;
+    public static final byte ST_ITEM = 1;
+    public static final byte ST_FLUID = 2;
+
     /**
      * add two stacks together
      *
@@ -222,4 +226,14 @@ public interface IAEStack<StackType extends IAEStack> {
      * @return ITEM or FLUID
      */
     StorageChannel getChannel();
+
+    boolean isSameType(StackType stack);
+
+    boolean isSameType(Object stack);
+
+    int compareTo(final IAEStack<?> b);
+
+    String getUnlocalizedName();
+
+    String getDisplayName();
 }

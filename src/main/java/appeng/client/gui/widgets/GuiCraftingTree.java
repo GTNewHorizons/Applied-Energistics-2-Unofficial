@@ -1,5 +1,7 @@
 package appeng.client.gui.widgets;
 
+import static appeng.util.Platform.stackConvert;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.IntBuffer;
@@ -31,7 +33,6 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.AEBaseGui;
@@ -686,9 +687,7 @@ public class GuiCraftingTree {
 
     private void drawStack(final int x, final int y, final IAEStack<?> stack, boolean drawCount) {
         final int textColor = GuiColors.SearchboxText.getColor();
-        if (stack instanceof IAEItemStack) {
-            parent.drawItem(x, y, ((IAEItemStack) stack).getItemStack());
-        } else if (stack instanceof IAEFluidStack) {}
+        parent.drawItem(x, y, stackConvert(stack).getItemStack());
         if (drawCount) {
             drawSmallStackCount(x, y, (stack == null) ? 0L : stack.getStackSize(), textColor);
         }

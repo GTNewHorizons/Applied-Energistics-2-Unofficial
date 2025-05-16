@@ -117,9 +117,9 @@ public final class CraftingContext {
         this.craftingGrid = meGrid.getCache(ICraftingGrid.class);
         this.actionSource = actionSource;
         final IStorageGrid sg = meGrid.getCache(IStorageGrid.class);
-        this.itemModel = new MECraftingInventory(sg.getItemInventory(), this.actionSource, true, false, true);
+        this.itemModel = new MECraftingInventory(sg, this.actionSource, true, false, true);
         this.byproductsInventory = new MECraftingInventory();
-        this.availableCache = new MECraftingInventory(sg.getItemInventory(), this.actionSource, false, false, false);
+        this.availableCache = new MECraftingInventory(sg, this.actionSource, false, false, false);
         this.availablePatterns = craftingGrid.getCraftingPatterns();
     }
 
@@ -398,7 +398,7 @@ public final class CraftingContext {
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
+        public void populatePlan(IItemList<IAEStack<?>> targetPlan) {
             // no-op
         }
 

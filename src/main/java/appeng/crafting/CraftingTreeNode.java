@@ -10,6 +10,8 @@
 
 package appeng.crafting;
 
+import static appeng.util.Platform.stackConvert;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,6 +26,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
@@ -107,7 +110,15 @@ public class CraftingTreeNode {
         this.what.setStackSize(l);
         if (this.getSlot() >= 0 && this.parent != null && this.parent.details.isCraftable()) {
             final Collection<IAEItemStack> itemList;
-            final IItemList<IAEItemStack> inventoryList = inv.getItemList();
+            final IItemList<IAEItemStack> inventoryList = AEApi.instance().storage().createItemList();
+
+            for (IAEItemStack ae : inv.getItemList()) {
+                inventoryList.add(ae);
+            }
+
+            for (IAEFluidStack ae : inv.getFluidList()) {
+                inventoryList.add(stackConvert(ae));
+            }
 
             if (this.parent.details.canSubstitute()) {
                 itemList = inventoryList.findFuzzy(this.what, FuzzyMode.IGNORE_ALL);
@@ -126,7 +137,7 @@ public class CraftingTreeNode {
                     fuzz = fuzz.copy();
                     fuzz.setStackSize(l);
 
-                    final IAEItemStack available = inv.extractItems(fuzz, Actionable.MODULATE, src);
+                    IAEItemStack available = inv.extractItems(fuzz, Actionable.MODULATE);
 
                     if (available != null) {
                         if (!this.exhausted) {
@@ -150,11 +161,11 @@ public class CraftingTreeNode {
         } else {
             final Collection<IAEItemStack> itemList;
             if (this.parent != null && this.parent.details.canSubstitute()) {
-                itemList = inv.getItemList().findFuzzy(this.what, FuzzyMode.IGNORE_ALL);
+                itemList = inv.findFuzzy(this.what, FuzzyMode.IGNORE_ALL);
             } else {
                 itemList = Lists.newArrayList();
 
-                final IAEItemStack item = inv.getItemList().findPrecise(this.what);
+                final IAEItemStack item = inv.findPrecise(this.what);
 
                 if (item != null) {
                     itemList.add(item);
@@ -163,7 +174,7 @@ public class CraftingTreeNode {
             for (IAEItemStack ias : itemList) {
                 IAEItemStack tmp = ias.copy();
                 tmp.setStackSize(what.getStackSize());
-                final IAEItemStack available = inv.extractItems(tmp, Actionable.MODULATE, src);
+                final IAEItemStack available = inv.extractItems(tmp, Actionable.MODULATE);
                 if (available != null) {
                     if (!this.exhausted) {
                         final IAEItemStack is = this.job.checkUse(available);
@@ -206,7 +217,7 @@ public class CraftingTreeNode {
 
                 madeWhat.setStackSize(l);
 
-                final IAEItemStack available = inv.extractItems(madeWhat, Actionable.MODULATE, src);
+                final IAEItemStack available = inv.findPrecise(madeWhat);
 
                 if (available != null) {
                     this.bytes += available.getStackSize();
@@ -226,10 +237,7 @@ public class CraftingTreeNode {
                         final MECraftingInventory subInv = new MECraftingInventory(inv, true, true, true);
                         pro.request(subInv, 1, src);
 
-                        final IAEItemStack available = subInv.extractItems(
-                                pro.getAmountCrafted(this.what).setStackSize(l),
-                                Actionable.MODULATE,
-                                src);
+                        final IAEItemStack available = inv.findPrecise(pro.getAmountCrafted(this.what).setStackSize(l));
 
                         if (available != null) {
                             if (!subInv.commit(src)) {
@@ -303,7 +311,7 @@ public class CraftingTreeNode {
     public void setJob(final MECraftingInventory storage, final CraftingCPUCluster craftingCPUCluster,
             final BaseActionSource src) {
         for (final IAEItemStack i : this.used) {
-            final IAEItemStack ex = storage.extractItems(i, Actionable.MODULATE, src);
+            final IAEItemStack ex = storage.findPrecise(i);
 
             if (ex == null || ex.getStackSize() != i.getStackSize()) {
                 throw new CraftBranchFailure(i, i.getStackSize());

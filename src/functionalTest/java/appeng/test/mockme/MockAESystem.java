@@ -18,12 +18,12 @@ import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.helpers.PatternHelper;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cache.GridStorageCache;
 import appeng.me.storage.MEPassThrough;
+import appeng.me.storage.NullInventory;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 
@@ -146,7 +146,7 @@ public class MockAESystem implements ICellProvider {
     }
 
     // Simulated inventories
-    private final MECraftingInventory itemStorage = new MECraftingInventory();
+    private final NullInventory<IAEItemStack> itemStorage = new NullInventory<>();
     private final IMEInventoryHandler<IAEItemStack> storageHandler = new MEPassThrough<>(
             itemStorage,
             StorageChannel.ITEMS);

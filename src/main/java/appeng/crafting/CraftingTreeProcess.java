@@ -179,7 +179,7 @@ public class CraftingTreeProcess {
                 final IAEItemStack o = AEApi.instance().storage().createItemStack(is);
                 if (o != null) {
                     this.bytes++;
-                    inv.injectItems(o, Actionable.MODULATE, src);
+                    inv.injectItems(o, Actionable.MODULATE);
                 }
             }
         } else {
@@ -193,7 +193,7 @@ public class CraftingTreeProcess {
                     final IAEItemStack o = AEApi.instance().storage().createItemStack(is);
                     if (o != null) {
                         this.bytes++;
-                        inv.injectItems(o, Actionable.MODULATE, src);
+                        inv.injectItems(o, Actionable.MODULATE);
                     }
                 }
             }
@@ -205,7 +205,7 @@ public class CraftingTreeProcess {
         for (final IAEItemStack out : this.details.getCondensedOutputs()) {
             final IAEItemStack o = out.copy();
             o.setStackSize(o.getStackSize() * i);
-            inv.injectItems(o, Actionable.MODULATE, src);
+            inv.injectItems(o, Actionable.MODULATE);
         }
 
         this.crafts += i;

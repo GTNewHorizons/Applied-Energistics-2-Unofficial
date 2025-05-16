@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.localization.GuiText;
 import appeng.crafting.CraftBranchFailure;
@@ -23,29 +23,29 @@ import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
 
-public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack> {
+public class ExtractItemResolver<StackType extends IAEStack<StackType>> implements CraftingRequestResolver<StackType> {
 
-    public static class ExtractItemTask extends CraftingTask<IAEItemStack> {
+    public static class ExtractItemTask<StackType extends IAEStack<StackType>> extends CraftingTask<StackType> {
 
-        public final ArrayList<IAEItemStack> removedFromSystem = new ArrayList<>();
-        public final ArrayList<IAEItemStack> removedFromByproducts = new ArrayList<>();
+        public final ArrayList<IAEStack<?>> removedFromSystem = new ArrayList<>();
+        public final ArrayList<IAEStack<?>> removedFromByproducts = new ArrayList<>();
 
-        public ExtractItemTask(CraftingRequest<IAEItemStack> request) {
+        public ExtractItemTask(CraftingRequest<StackType> request) {
             super(request, CraftingTask.PRIORITY_EXTRACT); // always try to extract items first
         }
 
         @SuppressWarnings("unused")
         public ExtractItemTask(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
             super(serializer, parent);
-            serializer.readList(removedFromSystem, serializer::readItemStack);
-            serializer.readList(removedFromByproducts, serializer::readItemStack);
+            serializer.readList(removedFromSystem, serializer::readStack);
+            serializer.readList(removedFromByproducts, serializer::readStack);
         }
 
         @Override
         public List<? extends ITreeSerializable> serializeTree(CraftingTreeSerializer serializer) throws IOException {
             super.serializeTree(serializer);
-            serializer.writeList(removedFromSystem, serializer::writeItemStack);
-            serializer.writeList(removedFromByproducts, serializer::writeItemStack);
+            serializer.writeList(removedFromSystem, serializer::writeStack);
+            serializer.writeList(removedFromByproducts, serializer::writeStack);
             return Collections.emptyList();
         }
 
@@ -74,14 +74,12 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
             return new StepOutput(Collections.emptyList());
         }
 
-        private void extractExact(CraftingContext context, MECraftingInventory source, List<IAEItemStack> removedList) {
-            IAEItemStack exactMatching = source.getItemList().findPrecise(request.stack);
+        private void extractExact(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList) {
+            StackType exactMatching = source.extractItems(request.stack, Actionable.SIMULATE);
             if (exactMatching != null) {
                 final long requestSize = Math.min(request.remainingToProcess, exactMatching.getStackSize());
-                final IAEItemStack extracted = source.extractItems(
-                        exactMatching.copy().setStackSize(requestSize),
-                        Actionable.MODULATE,
-                        context.actionSource);
+                final StackType extracted = source
+                        .extractItems(exactMatching.copy().setStackSize(requestSize), Actionable.MODULATE);
                 if (extracted != null && extracted.getStackSize() > 0) {
                     extracted.setCraftable(false);
                     request.fulfill(this, extracted, context);
@@ -90,19 +88,16 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
             }
         }
 
-        private void extractFuzzy(CraftingContext context, MECraftingInventory source, List<IAEItemStack> removedList) {
-            Collection<IAEItemStack> fuzzyMatching = source.getItemList()
-                    .findFuzzy(request.stack, FuzzyMode.IGNORE_ALL);
-            for (final IAEItemStack candidate : fuzzyMatching) {
+        private void extractFuzzy(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList) {
+            Collection<StackType> fuzzyMatching = source.findFuzzy(request.stack, FuzzyMode.IGNORE_ALL);
+            for (final StackType candidate : fuzzyMatching) {
                 if (candidate == null) {
                     continue;
                 }
                 if (request.acceptableSubstituteFn.test(candidate)) {
                     final long requestSize = Math.min(request.remainingToProcess, candidate.getStackSize());
-                    final IAEItemStack extracted = source.extractItems(
-                            candidate.copy().setStackSize(requestSize),
-                            Actionable.MODULATE,
-                            context.actionSource);
+                    final StackType extracted = source
+                            .extractItems(candidate.copy().setStackSize(requestSize), Actionable.MODULATE);
                     if (extracted == null || extracted.getStackSize() <= 0) {
                         continue;
                     }
@@ -126,21 +121,18 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
             return originalAmount - amount;
         }
 
-        private long partialRefundFrom(CraftingContext context, long amount, List<IAEItemStack> source,
+        private long partialRefundFrom(CraftingContext context, long amount, List<IAEStack<?>> source,
                 MECraftingInventory target) {
-            final Iterator<IAEItemStack> removedIt = source.iterator();
+            final Iterator<IAEStack<?>> removedIt = source.iterator();
             while (removedIt.hasNext() && amount > 0) {
-                final IAEItemStack available = removedIt.next();
+                final IAEStack<?> available = removedIt.next();
                 final long availAmount = available.getStackSize();
                 if (availAmount > amount) {
-                    target.injectItems(
-                            available.copy().setStackSize(amount),
-                            Actionable.MODULATE,
-                            context.actionSource);
+                    target.injectItems(available.copy().setStackSize(amount), Actionable.MODULATE);
                     available.setStackSize(availAmount - amount);
                     amount = 0;
                 } else {
-                    target.injectItems(available, Actionable.MODULATE, context.actionSource);
+                    target.injectItems(available, Actionable.MODULATE);
                     amount -= availAmount;
                     removedIt.remove();
                 }
@@ -150,18 +142,18 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
 
         @Override
         public void fullRefund(CraftingContext context) {
-            for (IAEItemStack removed : removedFromByproducts) {
-                context.byproductsInventory.injectItems(removed, Actionable.MODULATE, context.actionSource);
+            for (IAEStack<?> removed : removedFromByproducts) {
+                context.byproductsInventory.injectItems(removed, Actionable.MODULATE);
             }
-            for (IAEItemStack removed : removedFromSystem) {
-                context.itemModel.injectItems(removed, Actionable.MODULATE, context.actionSource);
+            for (IAEStack<?> removed : removedFromSystem) {
+                context.itemModel.injectItems(removed, Actionable.MODULATE);
             }
             removedFromSystem.clear();
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
-            for (IAEItemStack removed : removedFromSystem) {
+        public void populatePlan(IItemList<IAEStack<?>> targetPlan) {
+            for (IAEStack<?> removed : removedFromSystem) {
                 targetPlan.add(removed.copy());
             }
         }
@@ -169,9 +161,9 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
         @Override
         public void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
                 MECraftingInventory craftingInv) {
-            for (IAEItemStack stack : removedFromSystem) {
+            for (IAEStack stack : removedFromSystem) {
                 if (stack.getStackSize() > 0) {
-                    IAEItemStack extracted = craftingInv.extractItems(stack, Actionable.MODULATE, context.actionSource);
+                    IAEStack<?> extracted = craftingInv.extractItems(stack, Actionable.MODULATE);
                     if (extracted == null || extracted.getStackSize() != stack.getStackSize()) {
                         if (cpuCluster.isMissingMode()) {
                             if (extracted == null) {
@@ -209,7 +201,7 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
         public String getTooltipText() {
             long removedCount = 0, removedTypes = 0;
             final StringBuilder itemList = new StringBuilder();
-            for (IAEItemStack stack : removedFromSystem) {
+            for (IAEStack<?> stack : removedFromSystem) {
                 if (stack != null) {
                     removedCount += stack.getStackSize();
                     removedTypes++;
@@ -220,7 +212,7 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
                     itemList.append(')');
                 }
             }
-            for (IAEItemStack stack : removedFromByproducts) {
+            for (IAEStack<?> stack : removedFromByproducts) {
                 if (stack != null) {
                     removedCount += stack.getStackSize();
                     removedTypes++;
@@ -244,7 +236,7 @@ public class ExtractItemResolver implements CraftingRequestResolver<IAEItemStack
 
     @Nonnull
     @Override
-    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<IAEItemStack> request,
+    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<StackType> request,
             @Nonnull CraftingContext context) {
         if (request.substitutionMode == CraftingRequest.SubstitutionMode.PRECISE_FRESH) {
             return Collections.emptyList();

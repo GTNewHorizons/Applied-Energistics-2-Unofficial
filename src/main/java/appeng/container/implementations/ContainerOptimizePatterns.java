@@ -1,5 +1,7 @@
 package appeng.container.implementations;
 
+import static appeng.util.Platform.stackConvert;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -88,8 +90,10 @@ public class ContainerOptimizePatterns extends AEBaseContainer {
 
             for (CraftingTask resolvedTask : context.getResolvedTasks()) {
                 if (resolvedTask instanceof CraftFromPatternTask cfpt) {
-                    if (!blacklistedPatterns.contains(cfpt.pattern.getPattern()))
-                        patterns.computeIfAbsent(cfpt.request.stack, i -> new Pattern()).addCraftingTask(cfpt);
+                    if (!blacklistedPatterns.contains(cfpt.pattern.getPattern())) {
+                        patterns.computeIfAbsent(stackConvert(cfpt.request.stack), i -> new Pattern())
+                                .addCraftingTask(cfpt);
+                    }
                 }
             }
             this.patterns.entrySet().removeIf(entry -> entry.getValue().patternDetails.size() != 1);

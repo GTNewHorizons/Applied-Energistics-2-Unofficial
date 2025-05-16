@@ -11,6 +11,7 @@
 package appeng.me.cache;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -82,6 +83,7 @@ import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.ItemSorters;
+import appeng.util.item.FluidList;
 import appeng.util.item.OreListMultiMap;
 
 public class CraftingGridCache
@@ -354,13 +356,7 @@ public class CraftingGridCache
 
     @Override
     public List<IMEInventoryHandler> getCellArray(final StorageChannel channel) {
-        final List<IMEInventoryHandler> list = new ArrayList<>(1);
-
-        if (channel == StorageChannel.ITEMS) {
-            list.add(this);
-        }
-
-        return list;
+        return Arrays.asList(this);
     }
 
     @Override
@@ -407,6 +403,7 @@ public class CraftingGridCache
     @Override
     public IAEStack injectItems(IAEStack input, final Actionable type, final BaseActionSource src) {
         for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
+            if (input == null) break;
             input = cpu.injectItems(input, type, src);
         }
 
@@ -420,6 +417,8 @@ public class CraftingGridCache
 
     @Override
     public IItemList<IAEStack> getAvailableItems(final IItemList<IAEStack> out, int iteration) {
+        if (out.getClass().equals(FluidList.class)) return out;
+
         // add craftable items!
         for (final IAEItemStack stack : this.craftableItems.keySet()) {
             out.addCrafting(stack);
@@ -439,7 +438,7 @@ public class CraftingGridCache
 
     @Override
     public StorageChannel getChannel() {
-        return StorageChannel.ITEMS;
+        return null;
     }
 
     @Override

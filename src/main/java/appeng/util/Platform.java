@@ -10,6 +10,11 @@
 
 package appeng.util;
 
+import static appeng.api.storage.data.IAEStack.ST_FLUID;
+import static appeng.api.storage.data.IAEStack.ST_ITEM;
+import static appeng.api.storage.data.IAEStack.ST_NULL;
+
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
@@ -67,6 +72,8 @@ import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
+import com.glodblock.github.common.item.ItemFluidDrop;
+import com.glodblock.github.common.item.ItemFluidPacket;
 import com.mojang.authlib.GameProfile;
 
 import appeng.api.AEApi;
@@ -120,8 +127,10 @@ import appeng.integration.IntegrationType;
 import appeng.me.GridAccessException;
 import appeng.me.GridNode;
 import appeng.me.helpers.AENetworkProxy;
+import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.AESharedNBT;
+import appeng.util.item.AEStack;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
@@ -133,6 +142,7 @@ import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import io.netty.buffer.ByteBuf;
 
 /**
  * @author AlgorithmX2
@@ -788,8 +798,8 @@ public class Platform {
         }
 
         ItemStack itemStack = null;
-        if (o instanceof AEItemStack) {
-            final String n = ((AEItemStack) o).getDisplayName();
+        if (o instanceof AEStack<?>aes) {
+            final String n = aes.getDisplayName();
             return n == null ? "** Null" : n;
         } else if (o instanceof ItemStack) {
             itemStack = (ItemStack) o;
@@ -1907,5 +1917,130 @@ public class Platform {
         assert slimResult.length() <= width;
 
         return slimResult + postFix;
+    }
+
+    public static void writeStackByte(IAEStack<?> stack, ByteBuf buffer) {
+        try {
+            if (stack == null) {
+                buffer.writeByte(ST_NULL);
+            } else if (stack instanceof AEItemStack) {
+                buffer.writeByte(ST_ITEM);
+            } else if (stack instanceof AEFluidStack) {
+                buffer.writeByte(ST_FLUID);
+            } else {
+                throw new UnsupportedOperationException("Can't serialize a stack of type " + stack.getClass());
+            }
+            stack.writeToPacket(buffer);
+        } catch (RuntimeException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static IAEStack<?> readStackByte(ByteBuf buffer) {
+        try {
+            final byte stackType = buffer.readByte();
+            return switch (stackType) {
+                case ST_NULL -> null;
+                case ST_ITEM -> AEItemStack.loadItemStackFromPacket(buffer);
+                case ST_FLUID -> AEFluidStack.loadFluidStackFromPacket(buffer);
+                default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
+            };
+        } catch (RuntimeException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag) {
+        if (stack != null) {
+            if (stack instanceof AEItemStack) {
+                tag.setByte("StackType", ST_ITEM);
+            } else if (stack instanceof AEFluidStack) {
+                tag.setByte("StackType", ST_FLUID);
+            } else {
+                throw new UnsupportedOperationException("Can't serialize a stack of type " + stack.getClass());
+            }
+            stack.writeToNBT(tag);
+        }
+        return tag;
+    }
+
+    public static NBTTagList writeAEStackListNBT(final IItemList<?> myList) {
+        return writeAEStackListNBT(myList, new NBTTagList());
+    }
+
+    public static NBTTagList writeAEStackListNBT(final IItemList<?> myList, NBTTagList out) {
+        for (final IAEStack<?> ais : myList) {
+            NBTTagCompound tag = new NBTTagCompound();
+            Platform.writeStackNBT(ais, tag);
+            out.appendTag(tag);
+        }
+
+        return out;
+    }
+
+    public static IAEStack<?> readStackNBT(NBTTagCompound tag) {
+        return readStackNBT(tag, false);
+    }
+
+    public static IAEStack<?> readStackNBT(NBTTagCompound tag, boolean convert) {
+        final byte stackType = tag.getByte("StackType");
+        return switch (stackType) {
+            case ST_NULL -> convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
+                    : AEItemStack.loadItemStackFromNBT(tag); // migration moment
+            case ST_ITEM -> AEItemStack.loadItemStackFromNBT(tag);
+            case ST_FLUID -> AEFluidStack.loadFluidStackFromNBT(tag);
+            default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
+        };
+    }
+
+    public static IItemList<IAEStack<?>> readAEStackListNBT(final NBTTagList tag) {
+        return readAEStackListNBT(tag, false);
+    }
+
+    public static IItemList<IAEStack<?>> readAEStackListNBT(final NBTTagList tag, boolean convert) {
+        final IItemList<IAEStack<?>> out = AEApi.instance().storage().createAEStackList();
+
+        if (tag != null) {
+            for (int x = 0; x < tag.tagCount(); x++) {
+                final IAEStack<?> ais = readStackNBT(tag.getCompoundTagAt(x), convert);
+                if (ais != null) out.add(ais);
+            }
+        }
+
+        return out;
+    }
+
+    public static IAEItemStack stackConvert(IAEStack stack) {
+        if (stack == null) return null;
+        if (stack instanceof IAEFluidStack ifs) {
+            return ItemFluidDrop.newAeStack(ifs);
+        }
+        return (IAEItemStack) stack;
+    }
+
+    public static IAEStack convertStack(IAEItemStack stack) {
+        if (stack != null && stack.getItem() instanceof ItemFluidDrop) {
+            return ItemFluidDrop.getAeFluidStack(stack);
+        }
+        return stack;
+    }
+
+    public static IAEItemStack stackConvertPacket(IAEStack<?> stack) {
+        if (stack == null) return null;
+        if (stack instanceof IAEItemStack ais && ais.getItem() instanceof ItemFluidDrop) {
+            stack = ItemFluidDrop.getAeFluidStack(ais);
+        }
+        if (stack instanceof IAEFluidStack ifs) {
+            return ItemFluidPacket.newAeStack(ifs.getFluidStack());
+        }
+        return (IAEItemStack) stack;
+    }
+
+    public static IAEStack<?> convertStackPacket(ItemStack stack) {
+        if (stack != null && stack.getItem() instanceof ItemFluidPacket) {
+            return AEFluidStack.create(ItemFluidPacket.getFluidStack(stack));
+        }
+        return AEItemStack.create(stack);
     }
 }
