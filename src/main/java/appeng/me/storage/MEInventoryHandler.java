@@ -129,7 +129,9 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     }
 
     public boolean isVisible() {
-        return this.internal instanceof MEMonitorIInventory inv && inv.getMode() == StorageFilter.NONE;
+        boolean bool = this.internal instanceof MEMonitorIInventory inv && inv.getMode() == StorageFilter.NONE;
+        if (this.internal instanceof MEMonitorPassThrough inv && inv.getMode() == StorageFilter.NONE) bool = true;
+        return bool;
     }
 
     protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {

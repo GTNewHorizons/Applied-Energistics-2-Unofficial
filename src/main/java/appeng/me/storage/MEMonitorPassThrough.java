@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
+import appeng.api.config.StorageFilter;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.IMEInventory;
@@ -32,6 +33,7 @@ public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T
     private final HashMap<IMEMonitorHandlerReceiver<T>, Object> listeners = new HashMap<>();
     private BaseActionSource changeSource;
     private IMEMonitor<T> monitor;
+    private StorageFilter mode = StorageFilter.EXTRACTABLE_ONLY;
 
     public MEMonitorPassThrough(final IMEInventory<T> i, final StorageChannel channel) {
         super(i, channel);
@@ -134,5 +136,13 @@ public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T
 
     public void setChangeSource(final BaseActionSource changeSource) {
         this.changeSource = changeSource;
+    }
+
+    public void setMode(final StorageFilter mode) {
+        this.mode = mode;
+    }
+
+    public StorageFilter getMode() {
+        return this.mode;
     }
 }
