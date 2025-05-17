@@ -38,4 +38,10 @@ public interface IDisplayRepo {
     boolean isPaused();
 
     void setPaused(boolean paused);
+
+    default IAEItemStack getPin(int idx) {
+        return null;
+    }
+
+    default void setPins(IAEItemStack[] pins) {}
 }
