@@ -54,10 +54,11 @@ public class PacketCraftingItemInterface extends AppEngPacket {
                 final ContainerOpenContext context = cpv.getOpenContext();
                 if (context != null) {
                     ICraftingCPU cpu = cpv.getCPUTable().getSelectedCPU().getServerCluster();
-                    if (cpu instanceof CraftingCPUCluster) {
+                    if (cpu instanceof CraftingCPUCluster cpuc) {
                         ItemStack itemStack = is.getItemStack();
                         NBTTagCompound data = Platform.openNbtData(itemStack);
-                        DimensionalCoord.writeListToNBT(data, ((CraftingCPUCluster) cpu).getProviders(is));
+                        DimensionalCoord.writeListToNBT(data, cpuc.getProviders(is));
+                        data.setInteger("ScheduledReason", cpuc.getScheduledReason(is).ordinal());
                         try {
                             NetworkHandler.instance.sendTo(
                                     new PacketCraftingItemInterface(
