@@ -20,6 +20,8 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -30,17 +32,22 @@ import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.util.DimensionalCoord;
 import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.widgets.GuiContextMenu;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.me.ItemRepo;
 import appeng.client.me.SlotME;
+import appeng.client.render.BlockPosHighlighter;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketClick;
 import appeng.core.sync.packets.PacketNetworkStatusSelected;
 import appeng.util.Platform;
 
@@ -60,6 +67,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private double totalBytes;
     private double usedBytes;
     private final int counterNumberGap = 20;
+    private GuiContextMenu menu;
 
     public GuiNetworkStatus(final InventoryPlayer inventoryPlayer, final INetworkTool te) {
         super(new ContainerNetworkStatus(inventoryPlayer, te));
@@ -76,6 +84,57 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.isConsume = true;
         this.Equal = "=";
         this.Minus = "-";
+        menu = new GuiContextMenu(5) {
+
+            @Override
+            public void action(int i) {
+                DimensionalCoord dc = (DimensionalCoord) this.list.get(i);
+                NetworkHandler.instance
+                        .sendToServer(new PacketClick(dc.x, dc.y, dc.z, ForgeDirection.UP.ordinal(), 0, 0, 0));
+            }
+
+            @Override
+            public String getDrawText(int i) {
+                DimensionalCoord dc = (DimensionalCoord) this.list.get(i);
+                return "x:" + dc.x + " y:" + dc.y + " z:" + dc.z;
+            }
+        };
+    }
+
+    @Override
+    protected boolean mouseWheelEvent(int x, int y, int wheel) {
+        if (menu.mouseWheelEvent(x, y, wheel)) {
+            return true;
+        }
+        return super.mouseWheelEvent(x, y, wheel);
+    }
+
+    @Override
+    protected void mouseClicked(int xCoord, int yCoord, int btn) {
+        if (menu.mouseClick(xCoord, yCoord, btn)) {
+
+        } else if (btn == 0 && isShiftKeyDown() && tooltip > -1) {
+            final ItemStack is = repo.getReferenceItem(tooltip).getItemStack();
+            if (is.hasTagCompound()) {
+                NBTTagCompound tag = is.getTagCompound();
+                List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(tag);
+                BlockPosHighlighter.highlightBlocks(
+                        mc.thePlayer,
+                        dcl,
+                        is.getDisplayName(),
+                        PlayerMessages.MachineHighlighted.getName(),
+                        PlayerMessages.MachineInInOtherDim.getName());
+                mc.thePlayer.closeScreen();
+            }
+        } else if (btn == 1 && tooltip > -1) {
+            final ItemStack is = repo.getReferenceItem(tooltip).getItemStack();
+            if (is.hasTagCompound()) {
+                NBTTagCompound tag = is.getTagCompound();
+                List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(tag);
+                menu.init(dcl, xCoord, yCoord);
+            }
+        }
+        super.mouseClicked(xCoord, yCoord, btn);
     }
 
     @Override
@@ -143,7 +202,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             final int minX = gx + 14 + x * 31;
             final int minY = gy + 41 + y * 18;
 
-            if (minX < mouseX && minX + 28 > mouseX) {
+            if (!menu.isActive() && minX < mouseX && minX + 28 > mouseX) {
                 if (minY < mouseY && minY + 20 > mouseY) {
                     this.tooltip = z;
                     break;
@@ -159,6 +218,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         }
 
         super.drawScreen(mouseX, mouseY, btn);
+        menu.draw(mouseX, mouseY);
     }
 
     @Override
