@@ -16,6 +16,9 @@ import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.world.World;
 
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
@@ -25,6 +28,7 @@ import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.features.AEFeature;
+import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.CellConfig;
@@ -54,8 +58,8 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
                 continue;
             }
 
-            if ((currentViewCell.getItem() instanceof ItemViewCell)) {
-                final ICellWorkbenchItem vc = (ICellWorkbenchItem) currentViewCell.getItem();
+            if ((currentViewCell.getItem() instanceof ItemViewCell vc)) {
+                if (!vc.getViewMode(currentViewCell)) continue;
                 final IInventory upgrades = vc.getUpgradesInventory(currentViewCell);
                 final IInventory config = vc.getConfigInventory(currentViewCell);
                 final FuzzyMode fzMode = vc.getFuzzyMode(currentViewCell);
@@ -107,6 +111,14 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
     }
 
     @Override
+    public ItemStack onItemRightClick(final ItemStack is, final World w, final EntityPlayer p) {
+        if (Platform.isServer()) {
+            toggleViewMode(is);
+        }
+        return is;
+    }
+
+    @Override
     public boolean isEditable(final ItemStack is) {
         return true;
     }
@@ -141,9 +153,28 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
         Platform.openNbtData(is).setString("OreFilter", filter);
     }
 
+    public void toggleViewMode(final ItemStack is) {
+        Platform.openNbtData(is).setBoolean("ViewMode", !getViewMode(is));
+    }
+
+    public boolean getViewMode(final ItemStack is) {
+        NBTTagCompound nbt = Platform.openNbtData(is);
+        // If key is not set, then view mode is "enabled," which is opposite of default missing NBT-key
+        if (!nbt.hasKey("ViewMode")) return true;
+        return nbt.getBoolean("ViewMode");
+    }
+
     @Override
     public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
             final boolean displayMoreInfo) {
+        boolean viewMode = getViewMode(stack);
+        if (viewMode) {
+            lines.add(EnumChatFormatting.GREEN + ButtonToolTips.Enable.getLocal());
+        } else {
+            lines.add(EnumChatFormatting.RED + ButtonToolTips.Disabled.getLocal());
+        }
+        lines.add(GuiText.ViewCellToggleKey.getLocal());
+
         String filter = getOreFilter(stack);
         if (!filter.isEmpty()) lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);
     }
