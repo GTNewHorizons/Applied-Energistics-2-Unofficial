@@ -71,6 +71,7 @@ public final class RF implements IIntegrationModule {
         this.registerRFAttunement("EnderIO", "itemPowerConduit", OreDictionary.WILDCARD_VALUE);
         this.registerRFAttunement("EnderIO", "blockCapBank", OreDictionary.WILDCARD_VALUE);
         this.registerRFAttunement("EnderIO", "blockPowerMonitor", 0);
+        this.registerRFAttunement("EnderIO", "itemPowerConduitEndergy", OreDictionary.WILDCARD_VALUE);
     }
 
     private void registerRFAttunement(final String mod, final String name, final int dmg) {
