@@ -17,6 +17,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import appeng.api.config.AdvancedBlockingMode;
+import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.config.LockCraftingMode;
 import appeng.api.config.Settings;
@@ -43,6 +44,7 @@ public class GuiInterface extends GuiUpgradeable {
     private GuiTabButton priority;
     private GuiImgButton BlockMode;
     private GuiImgButton SmartBlockMode;
+    private GuiImgButton fuzzyMode;
     private GuiToggleButton interfaceMode;
     private GuiImgButton insertionMode;
     private GuiSimpleImgButton doublePatterns;
@@ -129,6 +131,16 @@ public class GuiInterface extends GuiUpgradeable {
                 LockCraftingMode.NONE);
         this.lockCraftingMode.visible = this.bc.getInstalledUpgrades(Upgrades.LOCK_CRAFTING) > 0;
         this.buttonList.add(lockCraftingMode);
+
+        offset += 18;
+
+        this.fuzzyMode = new GuiImgButton(
+                this.guiLeft - 18,
+                this.guiTop + offset,
+                Settings.FUZZY_MODE,
+                FuzzyMode.IGNORE_ALL);
+        this.fuzzyMode.visible = this.bc.getInstalledUpgrades(Upgrades.FUZZY) > 0;
+        this.buttonList.add(fuzzyMode);
     }
 
     @Override
@@ -166,6 +178,10 @@ public class GuiInterface extends GuiUpgradeable {
 
         if (this.lockCraftingMode != null) {
             this.lockCraftingMode.set(((ContainerInterface) this.cvb).getLockCraftingMode());
+        }
+
+        if (this.fuzzyMode != null) {
+            this.fuzzyMode.set(((ContainerInterface) this.cvb).getFuzzyMode());
         }
 
         this.fontRendererObj.drawString(
@@ -234,6 +250,10 @@ public class GuiInterface extends GuiUpgradeable {
         if (btn == this.lockCraftingMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.lockCraftingMode.getSetting(), backwards));
         }
+
+        if (btn == this.fuzzyMode) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.fuzzyMode.getSetting(), backwards));
+        }
     }
 
     @Override
@@ -244,6 +264,9 @@ public class GuiInterface extends GuiUpgradeable {
         }
         if (this.lockCraftingMode != null) {
             this.lockCraftingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.LOCK_CRAFTING) > 0);
+        }
+        if (this.fuzzyMode != null) {
+            this.fuzzyMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.FUZZY) > 0);
         }
     }
 }
