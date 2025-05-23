@@ -331,6 +331,7 @@ gui.appliedenergistics2.Nothing=Nothing
 gui.appliedenergistics2.VoidCellTooltip=Deletes §4everything§7 stored on it
 gui.appliedenergistics2.CellView=Cell View
 gui.appliedenergistics2.Deprecated=Deprecated, will be removed soon!
+gui.appliedenergistics2.ViewCellToggleKey=Right-click to toggle
 
 gui.appliedenergistics2.NetworkBytesDetails=Network Bytes Details
 gui.appliedenergistics2.Items=Items

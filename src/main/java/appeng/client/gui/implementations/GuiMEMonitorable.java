@@ -49,6 +49,7 @@ import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
 import appeng.container.slot.SlotFakeCraftingMatrix;
+import appeng.container.slot.SlotRestrictedInput;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.CommonHelper;
@@ -63,6 +64,7 @@ import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
+import appeng.items.storage.ItemViewCell;
 import appeng.parts.reporting.AbstractPartTerminal;
 import appeng.tile.misc.TileSecurity;
 import appeng.util.IConfigManagerHost;
@@ -401,7 +403,32 @@ public class GuiMEMonitorable extends AEBaseMEGui implements ISortSource, IConfi
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         searchField.mouseClicked(xCoord, yCoord, btn);
+        if (handleViewCellClick(xCoord, yCoord, btn)) return;
         super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    private boolean handleViewCellClick(final int xCoord, final int yCoord, final int btn) {
+        if (this.viewCell && monitorableContainer.canAccessViewCells && btn == 1) {
+            Slot slot = getSlot(xCoord, yCoord);
+            if (slot instanceof SlotRestrictedInput cvs) {
+                // if it has an item
+                if (!cvs.getHasStack()) return false;
+                // if its a view cell
+                if (!(cvs.getStack().getItem() instanceof ItemViewCell)) return false;
+
+                // update the view cell
+                try {
+                    NetworkHandler.instance.sendToServer(
+                            new PacketValueConfig("Terminal.UpdateViewCell", Integer.toString(cvs.getSlotIndex())));
+                } catch (IOException e) {
+                    AELog.debug(e);
+                }
+
+                // eat the right-click input if a view cell was successfully toggled
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

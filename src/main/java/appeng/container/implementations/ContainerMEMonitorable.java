@@ -61,6 +61,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.WirelessTerminalGuiObject;
+import appeng.items.storage.ItemViewCell;
 import appeng.me.helpers.ChannelPowerSrc;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
@@ -366,6 +367,21 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     public SlotRestrictedInput getCellViewSlot(final int index) {
         return this.cellView[index];
+    }
+
+    public SlotRestrictedInput[] getCellViewSlots() {
+        return this.cellView;
+    }
+
+    public void toggleViewCell(int slotIdx) {
+        if (!this.canAccessViewCells) return;
+        Slot slot = getSlot(slotIdx);
+        if (!(slot instanceof SlotRestrictedInput)) return;
+        ItemStack cellStack = slot.getStack();
+        if (cellStack == null) return;
+        if (!(cellStack.getItem() instanceof ItemViewCell viewCell)) return;
+        viewCell.toggleViewMode(cellStack);
+        detectAndSendChanges();
     }
 
     public boolean isPowered() {
