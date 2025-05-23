@@ -234,6 +234,11 @@ public enum ButtonToolTips {
     CPUAllowAllDesc,
     CPUOnlyAllowPlayerDesc,
     CPUOnlyAllowNonPlayerDesc,
+
+    PinsSection,
+    PinsSectionActive,
+    PinsSectionDisabled,
+
     ToggleShowOnlySubstitute,
     ToggleShowOnlySubstituteOnDesc,
     ToggleShowOnlySubstituteOffDesc;

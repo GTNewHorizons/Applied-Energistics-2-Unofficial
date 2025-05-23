@@ -17,10 +17,10 @@ import appeng.api.storage.data.IDisplayRepo;
 
 public class InternalSlotME {
 
-    private final int offset;
+    protected final int offset;
     private final int xPos;
     private final int yPos;
-    private final IDisplayRepo repo;
+    protected final IDisplayRepo repo;
 
     public InternalSlotME(final IDisplayRepo def, final int offset, final int displayX, final int displayY) {
         this.repo = def;

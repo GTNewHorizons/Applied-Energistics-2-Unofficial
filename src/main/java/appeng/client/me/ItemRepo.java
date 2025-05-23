@@ -61,9 +61,57 @@ public class ItemRepo implements IDisplayRepo {
     private boolean hasPower;
     private boolean paused = false;
 
+    private IAEItemStack[] pins = new IAEItemStack[9];
+
     public ItemRepo(final IScrollSource src, final ISortSource sortSrc) {
         this.src = src;
         this.sortSrc = sortSrc;
+    }
+
+    @Override
+    public void setPins(IAEItemStack[] newPins) {
+        IItemList<IAEItemStack> oldPins = getPinsCache();
+
+        for (int i = 0; i < pins.length; i++) {
+            IAEItemStack checkList = list.findPrecise(newPins[i]);
+
+            if (checkList != null) {
+                pins[i] = checkList.copy();
+                checkList.reset();
+            } else {
+                IAEItemStack checkOldPins = oldPins.findPrecise(newPins[i]);
+
+                if (checkOldPins != null) {
+                    pins[i] = checkOldPins.copy();
+                    checkOldPins.setStackSize(-1);
+                } else {
+                    pins[i] = newPins[i];
+                }
+            }
+        }
+
+        for (IAEItemStack ais : oldPins) {
+            if (ais.getStackSize() != -1) list.add(ais);
+        }
+
+        updateView();
+    }
+
+    private IItemList<IAEItemStack> getPinsCache() {
+        IItemList<IAEItemStack> oldPins = AEApi.instance().storage().createItemList();
+
+        for (IAEItemStack pin : pins) {
+            if (pin != null) {
+                oldPins.add(pin);
+            }
+        }
+
+        return oldPins;
+    }
+
+    @Override
+    public IAEItemStack getPin(int idx) {
+        return pins[idx];
     }
 
     @Override
@@ -90,6 +138,14 @@ public class ItemRepo implements IDisplayRepo {
     public void postUpdate(final IAEItemStack is) {
         final IAEItemStack st = this.list.findPrecise(is);
 
+        for (IAEItemStack pin : pins) {
+            if (pin != null && pin.isSameType(is)) {
+                pin.reset();
+                pin.add(is);
+                return;
+            }
+        }
+
         if (st != null) {
             st.reset();
             st.add(is);
@@ -108,10 +164,14 @@ public class ItemRepo implements IDisplayRepo {
     public void updateView() {
         if (this.paused) {
             // Update existing view with new data
+            IItemList<IAEItemStack> pins = getPinsCache();
             for (int i = 0; i < this.view.size(); i++) {
                 IAEItemStack entry = this.view.get(i);
                 IAEItemStack serverEntry = this.list.findPrecise(entry);
+                IAEItemStack pinsEntry = pins.findPrecise(serverEntry);
                 if (serverEntry == null) {
+                    entry.setStackSize(0);
+                } else if (pinsEntry != null) {
                     entry.setStackSize(0);
                 } else {
                     this.view.set(i, serverEntry);
