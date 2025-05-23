@@ -19,6 +19,7 @@ import net.minecraft.world.World;
 
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
 /**
  * do not implement provided by {@link ICraftingPatternItem}
@@ -40,6 +41,8 @@ public interface ICraftingPatternDetails {
      */
     boolean isValidItemForSlot(int slotIndex, ItemStack itemStack, World world);
 
+    boolean isValidItemForSlot(int slotIndex, IAEStack<?> aes, World world);
+
     /**
      * @return if this pattern is a crafting pattern ( work bench )
      */
@@ -48,21 +51,33 @@ public interface ICraftingPatternDetails {
     /**
      * @return a list of the inputs, will include nulls.
      */
+    IAEStack<?>[] getAEInputs();
+
+    @Deprecated
     IAEItemStack[] getInputs();
 
     /**
      * @return a list of the inputs, will be clean
      */
+    IAEStack<?>[] getCondensedAEInputs();
+
+    @Deprecated
     IAEItemStack[] getCondensedInputs();
 
     /**
      * @return a list of the outputs, will be clean
      */
+    IAEStack<?>[] getCondensedAEOutputs();
+
+    @Deprecated
     IAEItemStack[] getCondensedOutputs();
 
     /**
      * @return a list of the outputs, will include nulls.
      */
+    IAEStack<?>[] getAEOutputs();
+
+    @Deprecated
     IAEItemStack[] getOutputs();
 
     /**

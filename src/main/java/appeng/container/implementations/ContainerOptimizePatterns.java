@@ -1,5 +1,7 @@
 package appeng.container.implementations;
 
+import static appeng.util.Platform.stackConvert;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,6 +26,7 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.IInterfaceViewable;
 import appeng.container.AEBaseContainer;
 import appeng.core.AELog;
@@ -88,8 +91,10 @@ public class ContainerOptimizePatterns extends AEBaseContainer {
 
             for (CraftingTask resolvedTask : context.getResolvedTasks()) {
                 if (resolvedTask instanceof CraftFromPatternTask cfpt) {
-                    if (!blacklistedPatterns.contains(cfpt.pattern.getPattern()))
-                        patterns.computeIfAbsent(cfpt.request.stack, i -> new Pattern()).addCraftingTask(cfpt);
+                    if (!blacklistedPatterns.contains(cfpt.pattern.getPattern())) {
+                        patterns.computeIfAbsent(stackConvert(cfpt.request.stack), i -> new Pattern())
+                                .addCraftingTask(cfpt);
+                    }
                 }
             }
             this.patterns.entrySet().removeIf(entry -> entry.getValue().patternDetails.size() != 1);
@@ -238,8 +243,8 @@ public class ContainerOptimizePatterns extends AEBaseContainer {
             requestedCrafts += task.getTotalCraftsDone();
         }
 
-        private long getCraftAmountForItem(IAEItemStack stack) {
-            IAEItemStack s = Arrays.stream(patternDetails.stream().findFirst().get().getCondensedOutputs())
+        private long getCraftAmountForItem(IAEStack<?> stack) {
+            IAEStack<?> s = Arrays.stream(patternDetails.stream().findFirst().get().getCondensedAEOutputs())
                     .filter(i -> i.isSameType(stack)).findFirst().orElse(null);
             if (s != null) return s.getStackSize();
             else return 0;

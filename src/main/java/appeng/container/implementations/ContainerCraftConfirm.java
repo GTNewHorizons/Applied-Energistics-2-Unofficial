@@ -40,7 +40,9 @@ import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
@@ -159,29 +161,37 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                             ? new PacketMEInventoryUpdate((byte) 2)
                             : null;
 
-                    final IItemList<IAEItemStack> plan = AEApi.instance().storage().createItemList();
+                    final IItemList<IAEStack<?>> plan = AEApi.instance().storage().createAEStackList();
                     this.result.populatePlan(plan);
 
                     this.setUsedBytes(this.result.getByteTotal());
 
-                    for (final IAEItemStack plannedItem : plan) {
+                    for (final IAEStack<?> plannedItem : plan) {
 
-                        IAEItemStack toExtract = plannedItem.copy();
+                        IAEStack<?> toExtract = plannedItem.copy();
                         toExtract.reset();
                         toExtract.setStackSize(plannedItem.getStackSize());
 
-                        final IAEItemStack toCraft = plannedItem.copy();
+                        final IAEStack<?> toCraft = plannedItem.copy();
                         toCraft.reset();
                         toCraft.setStackSize(plannedItem.getCountRequestable());
                         toCraft.setCountRequestableCrafts(plannedItem.getCountRequestableCrafts());
 
                         final IStorageGrid sg = this.getGrid().getCache(IStorageGrid.class);
                         final IMEInventory<IAEItemStack> items = sg.getItemInventory();
+                        final IMEInventory<IAEFluidStack> fluids = sg.getFluidInventory();
 
-                        IAEItemStack missing = null;
+                        IAEStack<?> missing = null;
                         if (missingUpdate != null && this.result.isSimulation()) {
                             missing = toExtract.copy();
-                            toExtract = items.extractItems(toExtract, Actionable.SIMULATE, this.getActionSource());
+                            if (toExtract instanceof IAEItemStack ais) {
+                                toExtract = items.extractItems(ais, Actionable.SIMULATE, this.getActionSource());
+                            } else {
+                                toExtract = fluids.extractItems(
+                                        (IAEFluidStack) toExtract,
+                                        Actionable.SIMULATE,
+                                        this.getActionSource());
+                            }
 
                             if (toExtract == null) {
                                 toExtract = missing.copy();
@@ -193,8 +203,13 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                         if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
                                 && (missing == null || missing.getStackSize() <= 0)) {
-                            IAEItemStack availableStack = items
-                                    .getAvailableItem(toExtract, IterationCounter.fetchNewId());
+                            IAEStack<?> availableStack;
+                            if (toExtract instanceof IAEItemStack ais) {
+                                availableStack = items.getAvailableItem(ais, IterationCounter.fetchNewId());
+                            } else {
+                                availableStack = fluids
+                                        .getAvailableItem((IAEFluidStack) toExtract, IterationCounter.fetchNewId());
+                            }
                             long available = (availableStack == null) ? 0 : availableStack.getStackSize();
                             if (available > 0) toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
                             else toExtract.setUsedPercent(0f);

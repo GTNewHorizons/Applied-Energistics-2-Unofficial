@@ -25,6 +25,7 @@ import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import io.netty.buffer.ByteBuf;
 
@@ -54,6 +55,11 @@ public interface IStorageHelper {
      * @return a new INSTANCE of {@link IItemList} for items
      */
     IItemList<IAEItemStack> createItemList();
+
+    /**
+     * @return a new INSTANCE of {@link IItemList} for items&fluids
+     */
+    IItemList<IAEStack<?>> createAEStackList();
 
     /**
      * @return a new INSTANCE of {@link IItemList} for items that does not support sorted output, fuzzy lookup

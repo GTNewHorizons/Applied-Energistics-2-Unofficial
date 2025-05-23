@@ -23,6 +23,7 @@ dependencies {
     compileOnly('curse.maven:better-storage-232919:2731636')
     compileOnly('api:immibis:1')
     compileOnly('curse.maven:computercraft-67504:2269339')
+    compileOnly('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.4.61-gtnh:dev') { transitive = false }
 
     //Uncomment to add thermal expansion + foundation for testing
     //runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')

@@ -19,6 +19,7 @@ import appeng.api.config.CraftingAllow;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.CraftCancelListener;
 import appeng.api.util.CraftCompleteListener;
 import appeng.api.util.CraftUpdateListener;
@@ -60,6 +61,12 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
     /**
      * @return final output of the current crafting operation, or null if not crafting
      */
+    @Nullable
+    default IAEStack<?> getFinalMultiOutput() {
+        return null;
+    }
+
+    @Deprecated
     @Nullable
     default IAEItemStack getFinalOutput() {
         return null;
