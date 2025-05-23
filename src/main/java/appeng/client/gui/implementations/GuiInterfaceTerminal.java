@@ -956,6 +956,25 @@ public class GuiInterfaceTerminal extends AEBaseGui
         return false;
     }
 
+    private static boolean interfaceSectionMatchesSearchTerm(final InterfaceSection section, final String searchTerm) {
+        if (searchTerm.isEmpty()) return true;
+
+        String sectionName = section.name.toLowerCase();
+
+        if (searchTerm.length() >= 2 && searchTerm.startsWith("\"") && searchTerm.endsWith("\"")) {
+            return sectionName.contains(searchTerm.substring(1, searchTerm.length() - 1).toLowerCase());
+        } else {
+            String[] terms = searchTerm.toLowerCase().split("\s*");
+
+            for (int i = 0; i < terms.length; i++) {
+                if (!sectionName.contains(terms[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
     private boolean recipeIsBroken(final ItemStack itemStack) {
         if (itemStack == null) {
             return false;
@@ -1058,7 +1077,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
             for (InterfaceSection section : sections.values()) {
                 String query = GuiInterfaceTerminal.this.searchFieldNames.getText();
-                if (!query.isEmpty() && !section.name.toLowerCase().contains(query.toLowerCase())) {
+                if (!interfaceSectionMatchesSearchTerm(section, query)) {
                     continue;
                 }
 
