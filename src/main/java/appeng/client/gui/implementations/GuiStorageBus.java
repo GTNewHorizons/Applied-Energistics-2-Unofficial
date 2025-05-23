@@ -113,6 +113,9 @@ public class GuiStorageBus extends GuiUpgradeable {
             if (this.rwMode != null) {
                 this.rwMode.set(csb.getReadWriteMode());
             }
+            if (this.partition != null) {
+                this.partition.set(csb.getPartitionMode());
+            }
         }
     }
 
@@ -129,7 +132,11 @@ public class GuiStorageBus extends GuiUpgradeable {
 
         try {
             if (btn == this.partition) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("StorageBus.Action", "Partition"));
+                if (backwards) {
+                    NetworkHandler.instance.sendToServer(new PacketValueConfig("StorageBus.Action", "Partition-Clear"));
+                } else {
+                    NetworkHandler.instance.sendToServer(new PacketValueConfig("StorageBus.Action", "Partition"));
+                }
             } else if (btn == this.clear) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("StorageBus.Action", "Clear"));
             } else if (btn == this.priority) {
