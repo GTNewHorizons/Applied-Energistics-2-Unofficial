@@ -73,6 +73,7 @@ import appeng.integration.IntegrationType;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
 import appeng.me.storage.MEMonitorIInventory;
+import appeng.me.storage.MEMonitorPassThrough;
 import appeng.me.storage.StorageBusInventoryHandler;
 import appeng.parts.automation.PartUpgradeable;
 import appeng.tile.inventory.AppEngInternalAEInventory;
@@ -476,6 +477,9 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                     h.setMode((StorageFilter) this.getConfigManager().getSetting(Settings.STORAGE_FILTER));
                     h.setActionSource(new MachineSource(this));
                     this.monitor = h;
+                }
+                if (inv instanceof MEMonitorPassThrough<?>h) {
+                    h.setMode((StorageFilter) this.getConfigManager().getSetting(Settings.STORAGE_FILTER));
                 }
 
                 if (inv != null) {
