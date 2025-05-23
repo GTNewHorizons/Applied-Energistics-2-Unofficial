@@ -129,9 +129,7 @@ public final class P2PTunnelRegistry implements IP2PTunnelRegistry {
             this.addNewAttunement(parts.cableDense().stack(c, 1), TunnelType.ME);
             this.addNewAttunement(parts.cableDenseCovered().stack(c, 1), TunnelType.ME);
         }
-        this.addNewAttunement(
-                this.getModItem("EnderIO", "itemMeConduit", OreDictionary.WILDCARD_VALUE),
-                TunnelType.ME);
+        this.addNewAttunement(this.getModItem("EnderIO", "itemMeConduit", OreDictionary.WILDCARD_VALUE), TunnelType.ME);
     }
 
     @Override
