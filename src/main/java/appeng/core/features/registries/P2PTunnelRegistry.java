@@ -47,7 +47,7 @@ public final class P2PTunnelRegistry implements IP2PTunnelRegistry {
         this.addNewAttunement(new ItemStack(Items.glowstone_dust), TunnelType.LIGHT);
         this.addNewAttunement(
                 this.getModItem("EnderIO", "blockElectricLight", OreDictionary.WILDCARD_VALUE),
-                TunnelType.ME);
+                TunnelType.LIGHT);
 
         // Sound
         this.addNewAttunement(new ItemStack(Blocks.noteblock), TunnelType.SOUND);
