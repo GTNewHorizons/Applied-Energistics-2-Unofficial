@@ -73,15 +73,14 @@ public class NEICellViewHandler implements IUsageHandler {
 
             stacks.clear();
             int count = 0;
-            for (IAEItemStack item : sortedStacks) {
-                ItemStack stack = item.getItemStack();
-                long stackSize = stack.stackSize;
+            for (IAEItemStack aeStack : sortedStacks) {
+                ItemStack stack = aeStack.getItemStack().copy();
                 stack.stackSize = 1;
                 PositionedStack positionedStack = new PositionedStack(
                         stack,
                         OFFSET_X + count % ROW_ITEM_NUM * 18 + 1,
                         ITEMS_OFFSET_Y + count / ROW_ITEM_NUM * 18 + 1);
-                stacks.add(new ViewItemStack(positionedStack, stackSize));
+                stacks.add(new ViewItemStack(positionedStack, aeStack.getStackSize()));
                 count++;
             }
             return this;
