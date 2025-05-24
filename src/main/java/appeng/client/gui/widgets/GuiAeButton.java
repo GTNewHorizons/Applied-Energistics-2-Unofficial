@@ -2,6 +2,7 @@ package appeng.client.gui.widgets;
 
 import java.util.regex.Pattern;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 
 public class GuiAeButton extends GuiButton implements ITooltip {
@@ -26,6 +27,26 @@ public class GuiAeButton extends GuiButton implements ITooltip {
             return PATTERN_NEW_LINE.matcher(this.tootipString).replaceAll("\n");
         } else {
             return "";
+        }
+    }
+
+    @Override
+    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
+        super.drawButton(mc, mouseX, mouseY);
+        if (height < 20) {
+            int hoverState = this.getHoverState(this.field_146123_n);
+            switch (hoverState) {
+                case 0:
+                    this.drawHorizontalLine(xPosition + 2, xPosition + width - 2, yPosition + height - 2, 0xFF2C2C2C);
+                    break;
+                case 1:
+                    this.drawHorizontalLine(xPosition + 2, xPosition + width - 2, yPosition + height - 2, 0xFF565656);
+                    break;
+                case 2:
+                    this.drawHorizontalLine(xPosition + 2, xPosition + width - 2, yPosition + height - 2, 0xFF5C669D);
+                    break;
+            }
+            this.drawHorizontalLine(xPosition, xPosition + width - 1, yPosition + height - 1, 0xFF000000);
         }
     }
 
