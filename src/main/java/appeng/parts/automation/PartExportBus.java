@@ -10,13 +10,15 @@
 
 package appeng.parts.automation;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.Vec3;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.config.Actionable;
@@ -48,7 +50,9 @@ import appeng.core.sync.GuiBridge;
 import appeng.helpers.MultiCraftingTracker;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
+import appeng.me.cache.NetworkMonitor;
 import appeng.util.InventoryAdaptor;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import appeng.util.prioitylist.OreFilteredList;
@@ -99,12 +103,13 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
 
         try {
             final InventoryAdaptor destination = this.getHandler();
-            final IMEMonitor<IAEItemStack> inv = this.getProxy().getStorage().getItemInventory();
+            final IMEMonitor<IAEItemStack> gridInv = this.getProxy().getStorage().getItemInventory();
             final IEnergyGrid energy = this.getProxy().getEnergy();
             final ICraftingGrid cg = this.getProxy().getCrafting();
             final FuzzyMode fzMode = (FuzzyMode) this.getConfigManager().getSetting(Settings.FUZZY_MODE);
             final SchedulingMode schedulingMode = (SchedulingMode) this.getConfigManager()
                     .getSetting(Settings.SCHEDULING_MODE);
+            final int iteration = IterationCounter.fetchNewId();
 
             if (destination != null) {
                 if (this.getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
@@ -133,15 +138,26 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
                         final long before = this.itemToSend;
 
                         if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
-                            for (final IAEItemStack o : ImmutableList
-                                    .copyOf(inv.getStorageList().findFuzzy(ais, fzMode))) {
-                                this.pushItemIntoTarget(destination, energy, inv, o);
+
+                            /*
+                             * This actually returns a NetworkInventoryHandler object. The method .getSortedFuzzyItems()
+                             * used is the overriden one found in the .java file.
+                             */
+
+                            if (gridInv instanceof NetworkMonitor<?>) {
+                                final Collection<IAEItemStack> fzlist = ((NetworkMonitor<IAEItemStack>) gridInv)
+                                        .getHandler().getSortedFuzzyItems(new ArrayList<>(), ais, fzMode, iteration);
+
+                                for (final IAEItemStack o : fzlist) {
+                                    this.pushItemIntoTarget(destination, energy, gridInv, o);
+                                }
                                 if (this.itemToSend <= 0) {
                                     break;
                                 }
                             }
+
                         } else {
-                            this.pushItemIntoTarget(destination, energy, inv, ais);
+                            this.pushItemIntoTarget(destination, energy, gridInv, ais);
                         }
 
                         if (this.itemToSend == before && this.isCraftingEnabled()) {
@@ -161,9 +177,9 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
                 } else if (!oreFilterString.isEmpty()) {
                     if (filterPredicate == null) filterPredicate = OreFilteredList.makeFilter(oreFilterString);
 
-                    for (IAEItemStack stack : inv.getStorageList()) {
+                    for (IAEItemStack stack : gridInv.getStorageList()) {
                         if (stack == null || filterPredicate == null || !this.filterPredicate.test(stack)) continue;
-                        this.pushItemIntoTarget(destination, energy, inv, stack);
+                        this.pushItemIntoTarget(destination, energy, gridInv, stack);
                         if (this.itemToSend <= 0) break;
                     }
                 }

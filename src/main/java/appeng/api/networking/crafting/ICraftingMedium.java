@@ -43,4 +43,17 @@ public interface ICraftingMedium {
     default ItemStack getCrafterIcon() {
         return null;
     }
+
+    /**
+     * @return The blocking mode of the crafting medium.
+     */
+    default BlockingMode getBlockingMode() {
+        return BlockingMode.NONE;
+    }
+
+    enum BlockingMode {
+        NONE,
+        BLOCKING,
+        SMART_BLOCKING
+    }
 }

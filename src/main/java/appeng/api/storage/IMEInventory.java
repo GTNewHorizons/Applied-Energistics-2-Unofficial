@@ -13,10 +13,14 @@
 
 package appeng.api.storage;
 
+import java.util.Collection;
+
 import javax.annotation.Nonnull;
 
 import appeng.api.config.Actionable;
+import appeng.api.config.FuzzyMode;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
@@ -70,7 +74,7 @@ public interface IMEInventory<StackType extends IAEStack> {
     /**
      * Request a full report of all available items, storage.
      *
-     * @param out       the IItemList the results will be written too
+     * @param out       the IItemList the results will be written to
      * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
      *                  conflicts
      * @return returns same list that was passed in, is passed out
@@ -113,6 +117,24 @@ public interface IMEInventory<StackType extends IAEStack> {
                                    // change
     default StackType getAvailableItem(@Nonnull StackType request, int iteration) {
         return getAvailableItems((IItemList<StackType>) getChannel().createList(), iteration).findPrecise(request);
+    }
+
+    /**
+     * Request a full report of all available items that match a fuzzy filter, in order of priority (descending order).
+     * Mostly relevant for extract-only inventories.
+     *
+     * @param out       the Collection the results will be written to
+     * @param fuzzyItem the AEItemStack that will be passed to
+     *                  {@link appeng.util.item.ItemList#findFuzzy(IAEItemStack filter, FuzzyMode fuzzy)} as the filter
+     * @param fuzzyMode the FuzzyMode instance that will be passed to
+     *                  {@link appeng.util.item.ItemList#findFuzzy(IAEItemStack filter, FuzzyMode fuzzy)}
+     * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
+     *                  conflicts
+     * @return returns a list of objects in the AE2 network sorted by storage priority
+     */
+    default Collection<StackType> getSortedFuzzyItems(Collection<StackType> out, StackType fuzzyItem,
+            FuzzyMode fuzzyMode, int iteration) {
+        return out;
     }
 
     /**

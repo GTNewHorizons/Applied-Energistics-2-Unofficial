@@ -101,4 +101,12 @@ public class GuiPatternItemRenamer extends AEBaseGui implements IDropToFillTextF
     public void setTextFieldValue(final String displayName, final int mousex, final int mousey, final ItemStack stack) {
         textField.setText(displayName);
     }
+
+    public int getValueIndex() {
+        return valueIndex;
+    }
+
+    public String getText() {
+        return textField.getText();
+    }
 }

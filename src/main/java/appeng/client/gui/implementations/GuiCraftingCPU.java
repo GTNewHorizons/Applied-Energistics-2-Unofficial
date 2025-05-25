@@ -239,6 +239,10 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     }
 
+    public IAEItemStack getHoveredAEStack() {
+        return hoveredAEStack;
+    }
+
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         if (isShiftKeyDown() && this.hoveredNbtStack != null) {
