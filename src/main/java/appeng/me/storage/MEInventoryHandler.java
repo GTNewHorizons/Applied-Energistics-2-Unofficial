@@ -24,6 +24,7 @@ import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.util.item.ItemFilterList;
 import appeng.util.prioitylist.DefaultPriorityList;
 import appeng.util.prioitylist.IPartitionList;
 
@@ -121,6 +122,8 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
             return out;
         }
 
+        if (out instanceof ItemFilterList) return getAvailableItemsFilter(out, iteration);
+
         if (this.isExtractFilterActive() && !this.myExtractPartitionList.isEmpty()) {
             return this.filterAvailableItems(out, iteration);
         } else {
@@ -144,6 +147,16 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
             }
         }
         return out;
+    }
+
+    protected IItemList<T> getAvailableItemsFilter(IItemList<T> out, int iteration) {
+        if (!getPartitionList().isEmpty() && getWhitelist() == IncludeExclude.WHITELIST) {
+            for (T is : myPartitionList.getItems()) {
+                out.add(is);
+            }
+            return out;
+        }
+        return this.getInternal().getAvailableItems(out, iteration);
     }
 
     @Override
