@@ -16,6 +16,8 @@ package appeng.api.networking.crafting;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 
+import appeng.util.ScheduledReason;
+
 /**
  * A place to send Items for crafting purposes, this is considered part of AE's External crafting system.
  */
@@ -49,6 +51,10 @@ public interface ICraftingMedium {
      */
     default BlockingMode getBlockingMode() {
         return BlockingMode.NONE;
+    }
+
+    default ScheduledReason getScheduledReason() {
+        return ScheduledReason.UNDEFINED;
     }
 
     enum BlockingMode {

@@ -584,6 +584,13 @@ gui.tooltips.appliedenergistics2.CPUAllowAllDesc=Allow all crafting requests
 gui.tooltips.appliedenergistics2.CPUOnlyAllowPlayerDesc=Only allow crafting requests from player
 gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=Only allow crafting requests from non-player
 
+gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
+gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode
+gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=Lock Mode
+gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=Cant find target to push
+gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=Not enough ingredients
+gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=Target interface in same network
+
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Toggles showing interfaces with patterns with substitutions enabled
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Showing all interfaces
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOffDesc=Showing only interfaces with patterns with substitutions enabled
