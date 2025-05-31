@@ -615,6 +615,9 @@ public final class Registration {
         Upgrades.LOCK_CRAFTING.registerItem(parts.iface(), 1);
         Upgrades.LOCK_CRAFTING.registerItem(blocks.iface(), 1);
         Upgrades.LOCK_CRAFTING.registerItem(parts.p2PTunnelMEInterface(), 1);
+        Upgrades.FUZZY.registerItem(parts.iface(), 3);
+        Upgrades.FUZZY.registerItem(blocks.iface(), 3);
+        Upgrades.FUZZY.registerItem(parts.p2PTunnelMEInterface(), 3);
 
         // IO Port!
         Upgrades.SPEED.registerItem(blocks.iOPort(), 3);
