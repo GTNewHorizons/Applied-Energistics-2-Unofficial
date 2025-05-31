@@ -62,6 +62,7 @@ public final class DisassembleRecipe implements IRecipe {
         this.cellMappings.put(items.cell16384k(), mats.cell16384kPart());
 
         this.nonCellMappings.put(items.encodedPattern(), mats.blankPattern());
+        this.nonCellMappings.put(items.encodedUltimatePattern(), mats.blankPattern());
         this.nonCellMappings.put(blocks.craftingStorage1k(), mats.cell1kPart());
         this.nonCellMappings.put(blocks.craftingStorage4k(), mats.cell4kPart());
         this.nonCellMappings.put(blocks.craftingStorage16k(), mats.cell16kPart());

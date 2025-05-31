@@ -28,6 +28,7 @@ import net.minecraft.world.World;
 import appeng.api.AEApi;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.container.ContainerNull;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
@@ -151,6 +152,12 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     }
 
     @Override
+    public synchronized boolean isValidItemForSlot(final int slotIndex, final IAEStack<?> i, final World w) {
+        if (!isCrafting) return isValidItemForSlot(slotIndex, ((IAEItemStack) i).getItemStack(), w);
+        else throw new IllegalStateException("Only crafting recipes supported.");
+    }
+
+    @Override
     public synchronized boolean isValidItemForSlot(final int slotIndex, final ItemStack i, final World w) {
         if (!this.isCrafting) {
             throw new IllegalStateException("Only crafting recipes supported.");
@@ -207,8 +214,18 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     }
 
     @Override
+    public IAEStack<?>[] getAEInputs() {
+        return inputs;
+    }
+
+    @Override
     public IAEItemStack[] getCondensedInputs() {
         return this.condensedInputs;
+    }
+
+    @Override
+    public IAEStack<?>[] getCondensedAEInputs() {
+        return condensedInputs;
     }
 
     @Override
@@ -217,8 +234,18 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     }
 
     @Override
+    public IAEStack<?>[] getCondensedAEOutputs() {
+        return condensedOutputs;
+    }
+
+    @Override
     public IAEItemStack[] getOutputs() {
         return this.outputs;
+    }
+
+    @Override
+    public IAEStack<?>[] getAEOutputs() {
+        return outputs;
     }
 
     @Override
@@ -400,5 +427,26 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
         }
 
         return tmp.values().toArray(new IAEItemStack[0]);
+    }
+
+    public static IAEStack<?>[] convertToCondensedAEList(final IAEStack<?>[] items) {
+        final LinkedHashMap<IAEStack<?>, IAEStack<?>> tmp = new LinkedHashMap<>();
+
+        for (final IAEStack<?> io : items) {
+
+            if (io == null) {
+                continue;
+            }
+
+            final IAEStack g = tmp.get(io);
+
+            if (g == null) {
+                tmp.put(io, io.copy());
+            } else {
+                g.add(io);
+            }
+        }
+
+        return tmp.values().toArray(new IAEStack<?>[0]);
     }
 }

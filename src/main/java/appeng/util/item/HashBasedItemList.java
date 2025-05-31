@@ -152,4 +152,9 @@ public final class HashBasedItemList implements IItemList<IAEItemStack> {
     private void putItemRecord(final IAEItemStack itemStack) {
         this.records.add(itemStack);
     }
+
+    @Override
+    public byte getStackType() {
+        return LIST_ITEM;
+    }
 }

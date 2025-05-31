@@ -84,4 +84,9 @@ public class ItemListIgnoreCrafting<T extends IAEStack> implements IItemList<T> 
     public void resetStatus() {
         this.target.resetStatus();
     }
+
+    @Override
+    public byte getStackType() {
+        return target.getStackType();
+    }
 }

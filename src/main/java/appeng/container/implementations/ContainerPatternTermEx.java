@@ -4,6 +4,7 @@ import static appeng.container.implementations.ContainerPatternTerm.MULTIPLE_OF_
 import static appeng.container.implementations.ContainerPatternTerm.MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT;
 import static appeng.container.implementations.ContainerPatternTerm.canMultiplyOrDivide;
 import static appeng.container.implementations.ContainerPatternTerm.multiplyOrDivideStacksInternal;
+import static appeng.util.Platform.writeStackNBT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ import appeng.container.slot.SlotRestrictedInput;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.util.Platform;
+import appeng.util.item.AEItemStack;
 
 public class ContainerPatternTermEx extends ContainerMEMonitorable
         implements IOptionalSlotHost, IContainerCraftingPacket {
@@ -188,7 +190,7 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
             }
 
             // add a new encoded pattern.
-            for (final ItemStack encodedPatternStack : AEApi.instance().definitions().items().encodedPattern()
+            for (final ItemStack encodedPatternStack : AEApi.instance().definitions().items().encodedUltimatePattern()
                     .maybeStack(1).asSet()) {
                 output = encodedPatternStack;
                 this.patternSlotOUT.putStack(output);
@@ -203,11 +205,11 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
         final NBTTagList tagOut = new NBTTagList();
 
         for (final ItemStack i : in) {
-            tagIn.appendTag(this.createItemTag(i));
+            tagIn.appendTag(writeStackNBT(AEItemStack.create(i), new NBTTagCompound(), true));
         }
 
         for (final ItemStack i : out) {
-            tagOut.appendTag(this.createItemTag(i));
+            tagOut.appendTag(writeStackNBT(AEItemStack.create(i), new NBTTagCompound(), true));
         }
 
         encodedValue.setTag("in", tagIn);
@@ -266,9 +268,10 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
         final IDefinitions definitions = AEApi.instance().definitions();
 
         boolean isPattern = definitions.items().encodedPattern().isSameAs(output);
+        boolean isUltimatePattern = definitions.items().encodedUltimatePattern().isSameAs(output);
         isPattern |= definitions.materials().blankPattern().isSameAs(output);
 
-        return !isPattern;
+        return !isPattern && !isUltimatePattern;
     }
 
     private NBTBase createItemTag(final ItemStack i) {
