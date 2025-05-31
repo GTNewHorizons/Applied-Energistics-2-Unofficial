@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableSet;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.AdvancedBlockingMode;
+import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.config.LockCraftingMode;
 import appeng.api.config.Settings;
@@ -80,6 +81,7 @@ import appeng.core.AELog;
 import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
 import appeng.core.settings.TickRates;
 import appeng.me.GridAccessException;
+import appeng.me.cache.NetworkMonitor;
 import appeng.me.helpers.AENetworkProxy;
 import appeng.me.storage.MEMonitorIInventory;
 import appeng.me.storage.MEMonitorPassThrough;
@@ -94,6 +96,7 @@ import appeng.tile.networking.TileCableBus;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.IInventoryDestination;
@@ -113,6 +116,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private static final Collection<Block> BAD_BLOCKS = new HashSet<>(100);
     private final int[] sides = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
     private final IAEItemStack[] requireWork = { null, null, null, null, null, null, null, null, null };
+    private final boolean[] hasFuzzyConfig = { false, false, false, false, false, false, false, false, false };
     private final MultiCraftingTracker craftingTracker;
     protected final AENetworkProxy gridProxy;
     private final IInterfaceHost iHost;
@@ -120,7 +124,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private final BaseActionSource interfaceRequestSource;
     private final ConfigManager cm = new ConfigManager(this);
     private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, NUMBER_OF_CONFIG_SLOTS);
-    private final AppEngInternalInventory storage = new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS);
+    private AppEngInternalInventory storage = new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS);
     private final AppEngInternalInventory patterns = new AppEngInternalInventory(this, NUMBER_OF_PATTERN_SLOTS * 4);
     private final WrapperInvSlot slotInv = new WrapperInvSlot(this.storage);
     private final MEMonitorPassThrough<IAEItemStack> items = new MEMonitorPassThrough<>(
@@ -130,6 +134,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             new NullInventory<IAEFluidStack>(),
             StorageChannel.FLUIDS);
     private final UpgradeInventory upgrades;
+    private ItemStack stored;
+    private IAEItemStack fuzzyItemStack;
     private boolean hasConfig = false;
     private int priority;
     public List<ICraftingPatternDetails> craftingList = null;
@@ -155,6 +161,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.cm.registerSetting(Settings.ADVANCED_BLOCKING_MODE, AdvancedBlockingMode.DEFAULT);
         this.cm.registerSetting(Settings.LOCK_CRAFTING_MODE, LockCraftingMode.NONE);
         this.cm.registerSetting(Settings.PATTERN_OPTIMIZATION, YesNo.YES);
+        this.cm.registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
 
         this.iHost = ih;
         this.craftingTracker = new MultiCraftingTracker(this.iHost, 9);
@@ -335,7 +342,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
     }
 
-    private void readConfig() {
+    public void readConfig() {
         this.hasConfig = false;
 
         for (final ItemStack p : this.config) {
@@ -430,6 +437,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
 
         final ItemStack Stored = this.storage.getStackInSlot(slot);
+        this.stored = Stored;
 
         if (req == null && Stored != null) {
             final IAEItemStack work = AEApi.instance().storage().createItemStack(Stored);
@@ -440,14 +448,80 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             {
                 this.requireWork[slot] = req.copy();
                 return;
-            } else if (req.isSameType(Stored)) // same type ( qty different? )!
-            {
-                if (req.getStackSize() != Stored.stackSize) {
-                    this.requireWork[slot] = req.copy();
-                    this.requireWork[slot].setStackSize(req.getStackSize() - Stored.stackSize);
-                    return;
-                }
-            } else
+
+                /*
+                 * Checks if a fuzzy-matched item exists, and sets the config slot stack to that item; and if it doesnt
+                 * exist, it sets the variable for it equal to an IAEItemStack version of the ItemStack in the storage
+                 * slot. This ensures fast and accurate adjustment of the stack size stocked in the storage slot.
+                 */
+            } else if ((this.fuzzyItemStack != null)
+                    || ((this.fuzzyItemStack == null) && (this.getInstalledUpgrades(Upgrades.FUZZY) > 0))) {
+                        switch (this.getInstalledUpgrades(Upgrades.FUZZY)) {
+                            case 1 -> {
+                                if (slot > 5) {
+                                    if (this.fuzzyItemStack == null) {
+                                        this.fuzzyItemStack = AEApi.instance().storage().createItemStack(Stored);
+                                    }
+                                    if ((req.getStackSize() != Stored.stackSize)) {
+                                        this.requireWork[slot] = this.fuzzyItemStack.copy();
+                                        this.requireWork[slot].setStackSize(req.getStackSize() - Stored.stackSize);
+                                        return;
+                                    }
+                                } else if (req.isSameType(Stored)) {
+                                    if (req.getStackSize() != Stored.stackSize) {
+                                        this.requireWork[slot] = req.copy();
+                                        this.requireWork[slot].setStackSize(req.getStackSize() - Stored.stackSize);
+                                        return;
+                                    }
+                                } else {
+                                    final IAEItemStack work = AEApi.instance().storage().createItemStack(Stored);
+                                    this.requireWork[slot] = work.setStackSize(-work.getStackSize());
+                                    return;
+                                }
+                            }
+
+                            case 2 -> {
+                                if (slot > 2) {
+                                    if (this.fuzzyItemStack == null) {
+                                        this.fuzzyItemStack = AEApi.instance().storage().createItemStack(Stored);
+                                    }
+                                    if ((req.getStackSize() != Stored.stackSize)) {
+                                        this.requireWork[slot] = this.fuzzyItemStack.copy();
+                                        this.requireWork[slot].setStackSize(req.getStackSize() - Stored.stackSize);
+                                        return;
+                                    }
+                                } else if (req.isSameType(Stored)) {
+                                    if (req.getStackSize() != Stored.stackSize) {
+                                        this.requireWork[slot] = req.copy();
+                                        this.requireWork[slot].setStackSize(req.getStackSize() - Stored.stackSize);
+                                        return;
+                                    }
+                                } else {
+                                    final IAEItemStack work = AEApi.instance().storage().createItemStack(Stored);
+                                    this.requireWork[slot] = work.setStackSize(-work.getStackSize());
+                                    return;
+                                }
+                            }
+
+                            case 3 -> {
+                                if (this.fuzzyItemStack == null) {
+                                    this.fuzzyItemStack = AEApi.instance().storage().createItemStack(Stored);
+                                }
+                                if ((req.getStackSize() != Stored.stackSize)) {
+                                    this.requireWork[slot] = this.fuzzyItemStack.copy();
+                                    this.requireWork[slot].setStackSize(req.getStackSize() - Stored.stackSize);
+                                    return;
+                                }
+                            }
+                        }
+                    } else
+                if (req.isSameType(Stored)) { // same type, possibly different quantity!
+                    if (req.getStackSize() != Stored.stackSize) {
+                        this.requireWork[slot] = req.copy();
+                        this.requireWork[slot].setStackSize(req.getStackSize() - Stored.stackSize);
+                        return;
+                    }
+                } else
             // Stored != null; dispose!
             {
                 final IAEItemStack work = AEApi.instance().storage().createItemStack(Stored);
@@ -516,12 +590,30 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         // return after.stackSize != stack.stackSize;
     }
 
-    public IInventory getConfig() {
+    public AppEngInternalAEInventory getConfig() {
         return this.config;
     }
 
-    public IInventory getPatterns() {
+    public AppEngInternalInventory getPatterns() {
         return this.patterns;
+    }
+
+    public AppEngInternalInventory getUpgrades() {
+        return this.upgrades;
+    }
+
+    public AppEngInternalInventory setStorage(final AppEngInternalInventory inv) {
+        this.storage = inv;
+        return this.storage;
+    }
+
+    public boolean setHasConfig(final boolean ifHasConfig) {
+        this.hasConfig = ifHasConfig;
+        return this.hasConfig;
+    }
+
+    public int getConfigSize() {
+        return this.config.getSizeInventory();
     }
 
     public void gridChanged() {
@@ -560,6 +652,48 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     public int[] getAccessibleSlotsFromSide(final int side) {
         return this.sides;
+    }
+
+    public IAEItemStack[] fuzzyPoweredExtraction(final IEnergySource energy, final IMEInventory<IAEItemStack> cell,
+            final IAEItemStack itemStack, final ItemStack is, final BaseActionSource src, int iteration) {
+        Collection<IAEItemStack> fzlist = null;
+        IAEItemStack fuzzyItemStack = null;
+        IAEItemStack pe = null;
+        /*
+         * This returns a NetworkInventoryHandler object. getSortedFuzzyItems has an Override definition in there.
+         */
+        if (destination instanceof NetworkMonitor<?>) {
+            fzlist = ((NetworkMonitor<IAEItemStack>) destination).getHandler().getSortedFuzzyItems(
+                    new ArrayList<>(),
+                    itemStack,
+                    ((FuzzyMode) cm.getSetting(Settings.FUZZY_MODE)),
+                    iteration);
+
+        } /*
+           * else if (!(destination instanceof NetworkMonitor<?>)) { throw new IllegalStateException(
+           * "Function definition protection (cannot call correct override for getSortedFuzzyItems)"); } <-- throw error
+           * here...?
+           */
+
+        if (fzlist.iterator().hasNext()) {
+            fuzzyItemStack = fzlist.iterator().next();
+
+            /*
+             * Checks if the fuzzy-matched item can be merged with the ItemStack currently in the storage slot.
+             */
+            if ((fuzzyItemStack.isSameType(is)) || (is == null)) {
+                fuzzyItemStack.setStackSize(itemStack.getStackSize());
+
+                // To prevent duping in case fuzzy-matched item cannot be merged with stack in storage
+                // slot...
+            } else fuzzyItemStack = null;
+
+            if (fuzzyItemStack != null) {
+                pe = Platform.poweredExtraction(energy, cell, fuzzyItemStack, src);
+            }
+        }
+        return new IAEItemStack[] { pe, fuzzyItemStack };
+
     }
 
     @Override
@@ -663,7 +797,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return sentSomething;
     }
 
-    private boolean updateStorage() {
+    public boolean updateStorage() {
         boolean didSomething = false;
 
         for (int x = 0; x < NUMBER_OF_STORAGE_SLOTS; x++) {
@@ -677,6 +811,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     private boolean usePlan(final int x, final IAEItemStack itemStack) {
         final InventoryAdaptor adaptor = this.getAdaptor(x);
+        final int iteration = IterationCounter.fetchNewId();
+        this.fuzzyItemStack = null;
+        IAEItemStack[] fpe = { null, null };
+        IAEItemStack acquired = null;
         this.isWorking = true;
 
         boolean changed = false;
@@ -723,16 +861,65 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     throw new GridAccessException();
                 }
 
-                final IAEItemStack acquired = Platform
-                        .poweredExtraction(src, this.destination, itemStack, this.interfaceRequestSource);
+                switch (this.getInstalledUpgrades(Upgrades.FUZZY)) {
+                    case 1 -> {
+                        if (x > 5) {
+                            fpe = fuzzyPoweredExtraction(
+                                    src,
+                                    this.destination,
+                                    itemStack,
+                                    this.stored,
+                                    this.interfaceRequestSource,
+                                    iteration);
+                            acquired = fpe[0];
+                            this.fuzzyItemStack = fpe[1];
+                            hasFuzzyConfig[x] = true;
+                        } else acquired = Platform
+                                .poweredExtraction(src, this.destination, itemStack, this.interfaceRequestSource);
+                    }
+                    case 2 -> {
+                        if (x > 2) {
+                            fpe = fuzzyPoweredExtraction(
+                                    src,
+                                    this.destination,
+                                    itemStack,
+                                    this.stored,
+                                    this.interfaceRequestSource,
+                                    iteration);
+                            acquired = fpe[0];
+                            this.fuzzyItemStack = fpe[1];
+                            hasFuzzyConfig[x] = true;
+                        } else acquired = Platform
+                                .poweredExtraction(src, this.destination, itemStack, this.interfaceRequestSource);
+                    }
+                    case 3 -> {
+                        fpe = fuzzyPoweredExtraction(
+                                src,
+                                this.destination,
+                                itemStack,
+                                this.stored,
+                                this.interfaceRequestSource,
+                                iteration);
+                        acquired = fpe[0];
+                        this.fuzzyItemStack = fpe[1];
+                        hasFuzzyConfig[x] = true;
+                    }
+                    default -> acquired = Platform
+                            .poweredExtraction(src, this.destination, itemStack, this.interfaceRequestSource);
+                }
                 if (acquired != null) {
                     changed = true;
                     final ItemStack issue = adaptor.addItems(acquired.getItemStack());
                     if (issue != null) {
                         throw new IllegalStateException("bad attempt at managing inventory. ( addItems )");
                     }
-                } else {
+                } else if (this.getInstalledUpgrades(Upgrades.FUZZY) == 1) {
+                    changed = true;
+                } else if (this.getInstalledUpgrades(Upgrades.CRAFTING) > 0) {
                     changed = this.handleCrafting(x, adaptor, itemStack);
+                    if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
+                        changed = true;
+                    }
                 }
             }
             // else wtf?
@@ -794,7 +981,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.items;
     }
 
-    private boolean hasConfig() {
+    public boolean hasConfig() {
         return this.hasConfig;
     }
 
@@ -819,7 +1006,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return null;
     }
 
-    public IInventory getStorage() {
+    public AppEngInternalInventory getStorage() {
         return this.storage;
     }
 

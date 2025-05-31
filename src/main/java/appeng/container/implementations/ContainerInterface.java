@@ -18,6 +18,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.config.AdvancedBlockingMode;
+import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.config.LockCraftingMode;
 import appeng.api.config.SecurityPermissions;
@@ -29,8 +30,8 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.util.IConfigManager;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.IOptionalSlotHost;
+import appeng.container.slot.OptionalSlotFake;
 import appeng.container.slot.OptionalSlotRestrictedInput;
-import appeng.container.slot.SlotFake;
 import appeng.container.slot.SlotNormal;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.helpers.DualityInterface;
@@ -64,20 +65,30 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     @GuiSync(12)
     public LockCraftingMode lockCraftingMode = LockCraftingMode.NONE;
 
+    @GuiSync(16)
+    public FuzzyMode fuzzyMode = FuzzyMode.IGNORE_ALL;
+
     @GuiSync(8)
     public InsertionMode insertionMode = InsertionMode.DEFAULT;
 
     @GuiSync(7)
     public int patternRows;
 
+    @GuiSync(17)
+    public int configSlots;
+
     @GuiSync(9)
     public boolean isEmpty;
+
+    @GuiSync(18)
+    public boolean isConfigEmpty;
 
     public ContainerInterface(final InventoryPlayer ip, final IInterfaceHost te) {
         super(ip, te.getInterfaceDuality().getHost());
 
         this.myDuality = te.getInterfaceDuality();
         patternRows = getPatternCapacityCardsInstalled();
+        configSlots = getConfigSlotsEnabled();
 
         for (int row = 0; row < 4; ++row) {
             for (int x = 0; x < DualityInterface.NUMBER_OF_PATTERN_SLOTS; x++) {
@@ -95,7 +106,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         }
 
         for (int x = 0; x < DualityInterface.NUMBER_OF_CONFIG_SLOTS; x++) {
-            this.addSlotToContainer(new SlotFake(this.myDuality.getConfig(), x, 8 + 18 * x, 15));
+            this.addSlotToContainer(new OptionalSlotFake(this.myDuality.getConfig(), this, x, 8 + 18 * x, 15, 0));
         }
 
         for (int x = 0; x < DualityInterface.NUMBER_OF_STORAGE_SLOTS; x++) {
@@ -122,6 +133,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
         super.onUpdate(field, oldValue, newValue);
         if (Platform.isClient() && field.equals("patternRows")) getRemovedPatterns();
+        if (Platform.isClient() && field.equals("configSlots")) getRemovedConfig();
     }
 
     @Override
@@ -132,6 +144,9 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 
         if (patternRows != getPatternCapacityCardsInstalled()) patternRows = getPatternCapacityCardsInstalled();
         isEmpty = patternRows == -1;
+
+        if (configSlots != getConfigSlotsEnabled()) configSlots = getConfigSlotsEnabled();
+        isConfigEmpty = configSlots == -1;
 
         final ArrayList<ItemStack> drops = getRemovedPatterns();
         if (!drops.isEmpty()) {
@@ -158,6 +173,17 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         return drops;
     }
 
+    private void getRemovedConfig() {
+        for (final Object o : this.inventorySlots) {
+            if (o instanceof OptionalSlotFake fs) {
+                if (!fs.isEnabled()) {
+                    fs.inventory.setInventorySlotContents(fs.getSlotIndex(), null);
+                    fs.clearStack();
+                }
+            }
+        }
+    }
+
     @Override
     protected void loadSettingsFromHost(final IConfigManager cm) {
         this.setBlockingMode((YesNo) cm.getSetting(Settings.BLOCK));
@@ -167,6 +193,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         this.setPatternOptimization((YesNo) cm.getSetting(Settings.PATTERN_OPTIMIZATION));
         this.setAdvancedBlockingMode((AdvancedBlockingMode) cm.getSetting(Settings.ADVANCED_BLOCKING_MODE));
         this.setLockCraftingMode((LockCraftingMode) cm.getSetting(Settings.LOCK_CRAFTING_MODE));
+        this.setFuzzyMode((FuzzyMode) cm.getSetting(Settings.FUZZY_MODE));
     }
 
     public void doublePatterns(int val) {
@@ -254,15 +281,28 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         this.lockCraftingMode = mode;
     }
 
+    public FuzzyMode getFuzzyMode() {
+        return this.fuzzyMode;
+    }
+
+    public void setFuzzyMode(FuzzyMode mode) {
+        this.fuzzyMode = mode;
+    }
+
     public int getPatternCapacityCardsInstalled() {
         if (Platform.isClient() && isEmpty) return -1;
         if (myDuality == null) return 0;
         return myDuality.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY);
     }
 
+    public int getConfigSlotsEnabled() {
+        if (Platform.isClient() && isConfigEmpty) return -1;
+        return myDuality.getConfigSize();
+    }
+
     @Override
     public boolean isSlotEnabled(final int idx) {
-        if (Platform.isClient() && isEmpty) return false;
+        if (Platform.isClient() && (isEmpty || isConfigEmpty)) return false;
         return myDuality.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY) >= idx;
     }
 }

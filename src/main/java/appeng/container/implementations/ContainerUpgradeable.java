@@ -275,7 +275,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
         return this.fzMode;
     }
 
-    void setFuzzyMode(final FuzzyMode fzMode) {
+    public void setFuzzyMode(final FuzzyMode fzMode) {
         this.fzMode = fzMode;
     }
 
