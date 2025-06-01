@@ -128,8 +128,7 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
             return;
         }
 
-        final CellInventory cellInventory = (CellInventory) handler.getCellInv();
-        if (cellInventory == null) {
+        if (!(handler.getCellInv() instanceof CellInventory cellInventory)) {
             return;
         }
 
