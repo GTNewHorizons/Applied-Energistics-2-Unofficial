@@ -964,7 +964,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (searchTerm.length() >= 2 && searchTerm.startsWith("\"") && searchTerm.endsWith("\"")) {
             return sectionName.contains(searchTerm.substring(1, searchTerm.length() - 1).toLowerCase());
         } else {
-            String[] terms = searchTerm.toLowerCase().split("\s*");
+            String[] terms = searchTerm.toLowerCase().split("\s+");
 
             for (int i = 0; i < terms.length; i++) {
                 if (!sectionName.contains(terms[i])) {
