@@ -67,6 +67,9 @@ tile.appliedenergistics2.BlockMolecularAssembler.name=Molecular Assembler
 tile.appliedenergistics2.BlockPatternOptimizationMatrix.name=Pattern Optimization Matrix
 tile.appliedenergistics2.BlockSingularityCraftingStorage.name=Singularity Crafting Storage
 tile.appliedenergistics2.BlockPaint.name=Paint
+tile.appliedenergistics2.BlockWirelessConnector.name=Wireless Connector
+tile.appliedenergistics2.BlockWirelessHub.name=Wireless Hub
+tile.appliedenergistics2.BlockCrystalGrowthChamber.name=Crystal Growth Chamber
 
 # Stairs
 tile.appliedenergistics2.ChiseledQuartzStairBlock.name=Chiseled Certus Quartz Stairs
@@ -633,6 +636,11 @@ waila.appliedenergistics2.CraftingLockedByLackOfRedstoneSignal=Locked by lack of
 waila.appliedenergistics2.CraftingLockedByRedstoneSignal=Locked by redstone signal
 waila.appliedenergistics2.CraftingLockedUntilPulse=Waiting for redstone pulse to unlock
 waila.appliedenergistics2.CraftingLockedUntilResult=Waiting for results to unlock
+waila.appliedenergistics2.wireless.connected=Connected to %s,%s,%s
+waila.appliedenergistics2.wireless.notconnected=Not Connected
+waila.appliedenergistics2.wireless.channels=Channels: %s
+waila.appliedenergistics2.wireless.power=Power Used: %s AE/t
+waila.appliedenergistics2.wireless.name=Name: %s
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=1k ME Storage Cell
@@ -817,6 +825,16 @@ item.appliedenergistics2.ToolBiometricCard.name=Biometric Card
 
 item.appliedenergistics2.ToolDebugCard.name=Dev.DebugCard
 item.appliedenergistics2.ToolReplicatorCard.name=Dev.ReplicatorCard
+
+item.appliedenergistics2.ToolNetworkVisualiser.name=Network Visualisation Tool
+item.appliedenergistics2.ToolNetworkVisualiser.bound=Visualising network at %s, %s, %s
+item.appliedenergistics2.ToolNetworkVisualiser.mode=Mode:
+item.appliedenergistics2.ToolNetworkVisualiser.set=Mode changed to %s
+item.appliedenergistics2.ToolNetworkVisualiser.mode.full=Show Everything
+item.appliedenergistics2.ToolNetworkVisualiser.mode.nodes=Show Nodes
+item.appliedenergistics2.ToolNetworkVisualiser.mode.channels=Show Channels
+item.appliedenergistics2.ToolNetworkVisualiser.mode.nonum=Show Channels and Nodes
+item.appliedenergistics2.ToolNetworkVisualiser.mode.p2p=Show P2P Links
 
 # Commands
 commands.ae2.usage=Commands provided by Applied Energistics 2 - use /ae2 list for a list, and /ae2 help _____ for help with a command.
