@@ -22,6 +22,15 @@ public class OptionalSlotFake extends SlotFake {
     private boolean renderDisabled = true;
 
     public OptionalSlotFake(final IInventory inv, final IOptionalSlotHost containerBus, final int idx, final int x,
+            final int y, final int groupNum) {
+        super(inv, idx, x, y);
+        this.srcX = x;
+        this.srcY = y;
+        this.groupNum = groupNum;
+        this.host = containerBus;
+    }
+
+    public OptionalSlotFake(final IInventory inv, final IOptionalSlotHost containerBus, final int idx, final int x,
             final int y, final int offX, final int offY, final int groupNum) {
         super(inv, idx, x + offX * 18, y + offY * 18);
         this.srcX = x;
