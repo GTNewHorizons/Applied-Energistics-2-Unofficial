@@ -98,6 +98,7 @@ import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
+import appeng.util.ScheduledReason;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
@@ -148,6 +149,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private UnlockCraftingEvent unlockEvent;
     private List<IAEItemStack> unlockStacks;
     private int lastInputHash = 0;
+    private ScheduledReason scheduledReason = ScheduledReason.UNDEFINED;
 
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
         this.gridProxy = networkProxy;
@@ -1025,9 +1027,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     @Override
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
         if (this.hasItemsToSend() || !this.gridProxy.isActive() || !this.craftingList.contains(patternDetails)) {
+            scheduledReason = ScheduledReason.SOMETHING_STUCK;
             return false;
         }
         if (getCraftingLockedReason() != LockCraftingMode.NONE) {
+            scheduledReason = ScheduledReason.LOCK_MODE;
             return false;
         }
 
@@ -1036,6 +1040,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
         EnumSet<ForgeDirection> out = EnumSet.noneOf(ForgeDirection.class);
+        boolean foundReason = false;
         for (final ForgeDirection s : possibleDirections) {
             final TileEntity te = w
                     .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
@@ -1057,6 +1062,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             if (te instanceof IInterfaceHost) {
                 try {
                     if (((IInterfaceHost) te).getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+                        if (!foundReason) {
+                            foundReason = true;
+                            scheduledReason = ScheduledReason.SAME_NETWORK;
+                        }
                         continue;
                     }
                 } catch (final GridAccessException e) {
@@ -1068,8 +1077,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             if (ad != null) {
                 if (this.isBlocking() && !(this.isSmartBlocking() && this.lastInputHash == patternDetails.hashCode())
                         && ad.containsItems()
-                        && !inventoryCountsAsEmpty(te, ad, s.getOpposite()))
+                        && !inventoryCountsAsEmpty(te, ad, s.getOpposite())) {
+                    foundReason = true;
+                    scheduledReason = ScheduledReason.BLOCKING_MODE;
                     continue;
+                }
 
                 if (acceptsItems(ad, table, getInsertionMode())) {
                     for (int x = 0; x < table.getSizeInventory(); x++) {
@@ -1106,12 +1118,20 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         }
 
+        if (!foundReason) scheduledReason = ScheduledReason.NO_TARGET;
+
         return false;
+    }
+
+    @Override
+    public ScheduledReason getScheduledReason() {
+        return scheduledReason;
     }
 
     @Override
     public boolean isBusy() {
         if (this.hasItemsToSend()) {
+            scheduledReason = ScheduledReason.SOMETHING_STUCK;
             return true;
         }
 
@@ -1141,9 +1161,14 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             busy = allAreBusy;
+
+            if (busy) {
+                scheduledReason = ScheduledReason.BLOCKING_MODE;
+            }
         }
 
         if (this.getCraftingLockedReason() != LockCraftingMode.NONE) {
+            scheduledReason = ScheduledReason.LOCK_MODE;
             busy = true;
         }
 
