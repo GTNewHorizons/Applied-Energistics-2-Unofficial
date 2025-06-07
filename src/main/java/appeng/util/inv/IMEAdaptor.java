@@ -49,6 +49,11 @@ public class IMEAdaptor extends InventoryAdaptor {
     }
 
     @Override
+    public IItemList getAvailableItems(IItemList out, int iteration) {
+        return this.target.getAvailableItems(out, iteration);
+    }
+
+    @Override
     public ItemStack removeItems(final int amount, final ItemStack filter, final IInventoryDestination destination) {
         return this.doRemoveItems(amount, filter, destination, Actionable.MODULATE);
     }

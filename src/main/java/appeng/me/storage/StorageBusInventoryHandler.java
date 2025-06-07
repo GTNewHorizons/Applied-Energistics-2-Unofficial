@@ -11,6 +11,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cache.NetworkMonitor;
+import appeng.util.item.ItemFilterList;
 
 public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
@@ -25,6 +26,8 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
         if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
+
+        if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
 
         if (this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()) {
             return this.filterAvailableItems(out, iteration);
