@@ -234,6 +234,22 @@ public enum ButtonToolTips {
     CPUAllowAllDesc,
     CPUOnlyAllowPlayerDesc,
     CPUOnlyAllowNonPlayerDesc,
+
+    PinsSection,
+    PinsSectionActive,
+    PinsSectionDisabled,
+
+    SuperWirelessToolGroupBySingleName,
+    SuperWirelessToolGroupBySingleDesc,
+    SuperWirelessToolGroupByNetworkName,
+    SuperWirelessToolGroupByNetworkDesc,
+    SuperWirelessToolGroupByColorName,
+    SuperWirelessToolGroupByColorDesc,
+    SuperWirelessToolHideBoundedYesName,
+    SuperWirelessToolHideBoundedYesDesc,
+    SuperWirelessToolHideBoundedNoName,
+    SuperWirelessToolHideBoundedNoDesc,
+
     ToggleShowOnlySubstitute,
     ToggleShowOnlySubstituteOnDesc,
     ToggleShowOnlySubstituteOffDesc;

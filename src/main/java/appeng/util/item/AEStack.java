@@ -166,8 +166,6 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         }
     }
 
-    abstract boolean hasTagCompound();
-
     abstract void writeIdentity(ByteBuf i) throws IOException;
 
     abstract void readNBT(ByteBuf i) throws IOException;
