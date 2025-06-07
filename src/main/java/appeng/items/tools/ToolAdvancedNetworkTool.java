@@ -28,6 +28,7 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.INetworkToolAgent;
 import appeng.client.ClientHelper;
 import appeng.container.AEBaseContainer;
+import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.features.AEFeature;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
@@ -151,6 +152,10 @@ public class ToolAdvancedNetworkTool extends AEBaseItem
             }
 
             if (!p.isSneaking()) {
+                if (p.openContainer instanceof ContainerNetworkStatus) {
+                    b.onBlockActivated(w, x, y, z, p, side, 0, 0, 0);
+                }
+
                 if (p.openContainer instanceof AEBaseContainer) {
                     return true;
                 }
