@@ -448,7 +448,7 @@ item.appliedenergistics2.ToolEntropyManipulator.name=Entropy Manipulator
 item.appliedenergistics2.ToolMassCannon.name=메터 캐논
 item.appliedenergistics2.ToolMemoryCard.name=메모리 카드
 item.appliedenergistics2.ToolColorApplicator.name=Color Applicator
-item.appliedenergistics2.ToolWirelessTerminal.name무선 터미널
+item.appliedenergistics2.ToolWirelessTerminal.name=무선 터미널
 item.appliedenergistics2.ToolBiometricCard.name=바이오메트릭 카드
 
 item.appliedenergistics2.ToolDebugCard.name=Dev.DebugCard
