@@ -156,10 +156,10 @@ public class PacketValueConfig extends AppEngPacket {
             }
         } else if (this.Name.startsWith("StorageBus.") && c instanceof final ContainerStorageBus ccw) {
             if (this.Name.equals("StorageBus.Action")) {
-                if (this.Value.equals("Partition")) {
-                    ccw.partition();
-                } else if (this.Value.equals("Clear")) {
-                    ccw.clear();
+                switch (this.Value) {
+                    case "Partition" -> ccw.partition(false);
+                    case "Partition-Clear" -> ccw.partition(true);
+                    case "Clear" -> ccw.clear();
                 }
             }
         } else if (this.Name.startsWith("CellWorkbench.") && c instanceof final ContainerCellWorkbench ccw) {

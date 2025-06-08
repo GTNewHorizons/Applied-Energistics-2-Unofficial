@@ -10,6 +10,10 @@
 
 package appeng.tile.crafting;
 
+import static appeng.util.Platform.readStackByte;
+import static appeng.util.Platform.stackConvert;
+import static appeng.util.Platform.writeStackByte;
+
 import java.io.IOException;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -18,10 +22,10 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AEColor;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
-import appeng.util.item.AEItemStack;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -34,7 +38,7 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
     @SideOnly(Side.CLIENT)
     private boolean updateList;
 
-    private IAEItemStack dspPlay;
+    private IAEStack<?> dspPlay;
     private AEColor paintedColor = AEColor.Transparent;
 
     @TileEvent(TileEventType.NETWORK_READ)
@@ -45,7 +49,7 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
         final boolean hasItem = data.readBoolean();
 
         if (hasItem) {
-            this.dspPlay = AEItemStack.loadItemStackFromPacket(data);
+            this.dspPlay = readStackByte(data);
         } else {
             this.dspPlay = null;
         }
@@ -62,7 +66,7 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
             data.writeBoolean(false);
         } else {
             data.writeBoolean(true);
-            this.dspPlay.writeToPacket(data);
+            writeStackByte(dspPlay, data);
         }
     }
 
@@ -88,7 +92,7 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
         return true;
     }
 
-    public void setJob(final IAEItemStack is) {
+    public void setJob(final IAEStack<?> is) {
         if ((is == null) != (this.dspPlay == null)) {
             this.dspPlay = is == null ? null : is.copy();
             this.markForUpdate();
@@ -100,7 +104,12 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
         }
     }
 
+    @Deprecated
     public IAEItemStack getJobProgress() {
+        return stackConvert(this.dspPlay); // AEItemStack.create( new ItemStack( Items.diamond, 64 ) );
+    }
+
+    public IAEStack<?> getMultiJobProgress() {
         return this.dspPlay; // AEItemStack.create( new ItemStack( Items.diamond, 64 ) );
     }
 

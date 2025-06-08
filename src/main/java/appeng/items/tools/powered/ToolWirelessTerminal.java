@@ -23,6 +23,7 @@ import net.minecraftforge.event.ForgeEventFactory;
 import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
+import appeng.api.config.PinsState;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -107,6 +108,7 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
         out.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         out.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
         out.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
+        out.registerSetting(Settings.PINS_STATE, PinsState.DISABLED);
 
         out.readFromNBT((NBTTagCompound) Platform.openNbtData(target).copy());
         return out;

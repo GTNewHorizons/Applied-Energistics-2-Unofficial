@@ -11,12 +11,15 @@
 package appeng.container.implementations;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map.Entry;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnewhorizon.gtnhlib.util.map.ItemStackMap;
@@ -33,6 +36,7 @@ import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.api.util.DimensionalCoord;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.AEConfig;
@@ -187,6 +191,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
             try {
                 final PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
                 final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
+                final HashMap<IAEItemStack, ArrayList<DimensionalCoord>> dcMap = new HashMap<>();
 
                 // Network machine
                 if (this.isConsume) {
@@ -200,6 +205,14 @@ public class ContainerNetworkStatus extends AEBaseContainer {
                                 ais.setCountRequestable(
                                         (long) PowerMultiplier.CONFIG.multiply(blk.getIdlePowerUsage() * 100.0));
                                 list.add(ais);
+                                if (dcMap.containsKey(ais)) {
+                                    ArrayList<DimensionalCoord> dcList = dcMap.get(ais);
+                                    dcList.add(blk.getLocation());
+                                } else {
+                                    ArrayList<DimensionalCoord> dcList = new ArrayList<>();
+                                    dcList.add(blk.getLocation());
+                                    dcMap.put(ais, dcList);
+                                }
                             }
                         }
                     }
@@ -222,7 +235,16 @@ public class ContainerNetworkStatus extends AEBaseContainer {
                 }
 
                 for (final IAEItemStack ais : list) {
-                    piu.appendItem(ais);
+                    ArrayList<DimensionalCoord> dcl = dcMap.get(ais);
+                    if (dcl != null) {
+                        ItemStack is = ais.getItemStack();
+                        NBTTagCompound tag = new NBTTagCompound();
+                        DimensionalCoord.writeListToNBT(tag, dcl);
+                        is.setTagCompound(tag);
+                        piu.appendItem(AEItemStack.create(is));
+                    } else {
+                        piu.appendItem(ais);
+                    }
                 }
 
                 // Send packet
