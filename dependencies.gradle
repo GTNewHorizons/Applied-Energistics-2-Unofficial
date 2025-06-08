@@ -23,6 +23,9 @@ dependencies {
     compileOnly('curse.maven:better-storage-232919:2731636')
     compileOnly('api:immibis:1')
     compileOnly('curse.maven:computercraft-67504:2269339')
+    compileOnly('com.github.GTNewHorizons:ae2stuff:0.9.5-GTNH:dev') {
+        exclude module: "Applied-Energistics-2-Unofficial"
+    }
 
     //Uncomment to add thermal expansion + foundation for testing
     //runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')
