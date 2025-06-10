@@ -217,6 +217,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     @Override
+    public void resetFinalOutput() {
+        finalOutput = null;
+    }
+
+    @Override
     public IAEItemStack getFinalOutput() {
         return finalOutput;
     }
