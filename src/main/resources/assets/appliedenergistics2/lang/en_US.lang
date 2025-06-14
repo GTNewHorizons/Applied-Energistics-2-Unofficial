@@ -439,6 +439,7 @@ gui.tooltips.appliedenergistics2.SearchMode_NEIStandard=NEI Synchronized Standar
 gui.tooltips.appliedenergistics2.SearchMode=Search Box Mode
 
 gui.tooltips.appliedenergistics2.PartitionStorageHint=Configures Partition based on currently stored items.
+gui.tooltips.appliedenergistics2.NextPartitionStorageHint=Click to get next item in the storage.
 gui.tooltips.appliedenergistics2.ClearSettings=Clear Config/Settings
 gui.tooltips.appliedenergistics2.Craftable=Craftable
 gui.tooltips.appliedenergistics2.MoveWhenEmpty=Move to output when cell is empty or network was emptied.

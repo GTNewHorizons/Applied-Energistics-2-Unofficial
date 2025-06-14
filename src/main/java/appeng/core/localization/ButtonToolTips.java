@@ -65,6 +65,7 @@ public enum ButtonToolTips {
     ItemName,
     NumberOfItems,
     PartitionStorageHint,
+    NextPartitionStorageHint,
 
     ClearSettings,
     StoredItems,

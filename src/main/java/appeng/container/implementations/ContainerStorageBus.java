@@ -10,30 +10,33 @@
 
 package appeng.container.implementations;
 
+import java.util.HashMap;
 import java.util.Iterator;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
+import appeng.api.config.ActionItems;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
-import appeng.api.storage.IMEInventory;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.OptionalSlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.me.storage.MEInventoryHandler;
 import appeng.parts.misc.PartStorageBus;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
-import appeng.util.iterators.NullIterator;
+import appeng.util.prioitylist.PrecisePriorityList;
 
 public class ContainerStorageBus extends ContainerUpgradeable {
 
@@ -48,9 +51,15 @@ public class ContainerStorageBus extends ContainerUpgradeable {
     @GuiSync(7)
     public YesNo stickyMode = YesNo.NO;
 
+    private static final HashMap<EntityPlayer, IteratorState> PartitionIteratorMap = new HashMap<>();
+
+    @GuiSync(8)
+    public ActionItems partitionMode; // use for icon and tooltip
+
     public ContainerStorageBus(final InventoryPlayer ip, final PartStorageBus te) {
         super(ip, te);
         this.storageBus = te;
+        partitionMode = PartitionIteratorMap.containsKey(ip.player) ? ActionItems.NEXT_PARTITION : ActionItems.WRENCH;
     }
 
     @Override
@@ -156,28 +165,62 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         this.detectAndSendChanges();
     }
 
-    public void partition() {
+    private void clearPartitionIterator(EntityPlayer player) {
+        PartitionIteratorMap.remove(player);
+        partitionMode = ActionItems.WRENCH;
+    }
+
+    public void partition(boolean clearIterator) {
+        EntityPlayer player = this.getInventoryPlayer().player;
+        if (clearIterator) {
+            clearPartitionIterator(player);
+            return;
+        }
         final IInventory inv = this.getUpgradeable().getInventoryByName("config");
 
-        final IMEInventory<IAEItemStack> cellInv = this.storageBus.getInternalHandler();
+        final MEInventoryHandler<IAEItemStack> cellInv = this.storageBus.getInternalHandler();
 
-        Iterator<IAEItemStack> i = new NullIterator<>();
-        if (cellInv != null) {
-            final IItemList<IAEItemStack> list = cellInv
-                    .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
-            i = list.iterator();
+        if (cellInv == null) {
+            clearPartitionIterator(player);
+            return;
         }
-
+        IteratorState it;
+        if (!PartitionIteratorMap.containsKey(player)) {
+            // clear filter for fetching items
+            cellInv.setPartitionList(new PrecisePriorityList<>(AEApi.instance().storage().createItemList()));
+            final IItemList<IAEItemStack> list = cellInv.getAvailableItems(
+                    AEApi.instance().storage().createItemFilterList(),
+                    IterationCounter.fetchNewId());
+            it = new IteratorState(list.iterator());
+            PartitionIteratorMap.put(player, it);
+            partitionMode = ActionItems.NEXT_PARTITION;
+        } else {
+            it = PartitionIteratorMap.get(player);
+        }
+        boolean skip = false;
         for (int x = 0; x < inv.getSizeInventory(); x++) {
-            if (i.hasNext() && this.isSlotEnabled((x / 9) - 2)) {
-                final ItemStack g = i.next().getItemStack();
-                g.stackSize = 1;
-                inv.setInventorySlotContents(x, g);
+            if (skip) {
+                inv.setInventorySlotContents(x, null);
+                continue;
+            }
+            if (this.isSlotEnabled(x / 9)) {
+                IAEItemStack AEis = it.next();
+                if (AEis != null) {
+                    final ItemStack is = AEis.getItemStack();
+                    is.stackSize = 1;
+                    inv.setInventorySlotContents(x, is);
+                } else {
+                    clearPartitionIterator(player);
+                    skip = true;
+                    inv.setInventorySlotContents(x, null);
+                }
             } else {
+                skip = true;
                 inv.setInventorySlotContents(x, null);
             }
-        }
 
+        }
+        if (!it.hasNext) clearPartitionIterator(player);
         this.detectAndSendChanges();
     }
 
@@ -187,6 +230,14 @@ public class ContainerStorageBus extends ContainerUpgradeable {
 
     public StorageFilter getStorageFilter() {
         return this.storageFilter;
+    }
+
+    public ActionItems getPartitionMode() {
+        return this.partitionMode;
+    }
+
+    public void setPartitionMode(final ActionItems action) {
+        partitionMode = action;
     }
 
     private void setStorageFilter(final StorageFilter storageFilter) {
@@ -205,4 +256,23 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         this.rwMode = rwMode;
     }
 
+    private static class IteratorState {
+
+        private final Iterator<IAEItemStack> it;
+        private boolean hasNext; // cache hasNext(), call next of internal iterator
+
+        public IteratorState(Iterator<IAEItemStack> it) {
+            this.it = it;
+            this.hasNext = it.hasNext();
+        }
+
+        public IAEItemStack next() {
+            if (this.hasNext) {
+                IAEItemStack is = it.next();
+                hasNext = it.hasNext();
+                return is;
+            }
+            return null;
+        }
+    }
 }
