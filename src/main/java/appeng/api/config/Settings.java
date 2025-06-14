@@ -17,6 +17,8 @@ import java.util.EnumSet;
 
 import javax.annotation.Nonnull;
 
+import appeng.items.tools.ToolNetworkVisualiser.VisualisationModes;
+
 public enum Settings {
 
     LEVEL_EMITTER_MODE(EnumSet.allOf(LevelEmitterMode.class)),
@@ -85,6 +87,8 @@ public enum Settings {
     TERMINAL_FONT_SIZE(EnumSet.allOf(TerminalFontSize.class)),
 
     INTERFACE_TERMINAL_SECTION_ORDER(EnumSet.allOf(StringOrder.class)),
+
+    NETWORK_VISUALISER(EnumSet.allOf(VisualisationModes.class)),
 
     CRAFTING_ALLOW(EnumSet.allOf(CraftingAllow.class));
 
