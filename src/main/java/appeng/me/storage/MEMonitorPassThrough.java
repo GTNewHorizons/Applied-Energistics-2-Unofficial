@@ -26,6 +26,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.ItemListIgnoreCrafting;
+import appeng.util.item.ItemFilterList;
 
 public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T>
         implements IMEMonitor<T>, IMEMonitorHandlerReceiver<T> {
@@ -73,6 +74,9 @@ public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList out, int iterator) {
+        if (out instanceof ItemFilterList) {
+            return super.getAvailableItems(out, iterator);
+        }
         super.getAvailableItems(new ItemListIgnoreCrafting(out), iterator);
         return out;
     }

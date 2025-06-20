@@ -17,7 +17,6 @@ import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.crafting.v2.resolvers.CraftingTask;
-import appeng.util.item.AEItemStack;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -164,32 +163,34 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
     /**
      * @param stack                  The item/fluid and stack to request
      * @param substitutionMode       Whether and how to allow substitutions when resolving this request
-     * @param stackTypeClass         Pass in {@code StackType.class}, needed for resolving types at runtime
      * @param acceptableSubstituteFn A predicate testing if a given item (in fuzzy mode) can fulfill the request
      */
-    public CraftingRequest(StackType stack, SubstitutionMode substitutionMode, Class<StackType> stackTypeClass,
-            boolean allowSimulation, CraftingMode craftingMode, Predicate<StackType> acceptableSubstituteFn) {
-        this.stackTypeClass = stackTypeClass;
+    public CraftingRequest(StackType stack, SubstitutionMode substitutionMode, boolean allowSimulation,
+            CraftingMode craftingMode, Predicate<StackType> acceptableSubstituteFn) {
         this.stack = stack;
+        if (stack == null) {
+            stackTypeClass = (Class<StackType>) IAEItemStack.class;
+        } else if (stack instanceof IAEItemStack) {
+            stackTypeClass = (Class<StackType>) IAEItemStack.class;
+        } else if (stack instanceof IAEFluidStack) {
+            stackTypeClass = (Class<StackType>) IAEFluidStack.class;
+        } else {
+            throw new UnsupportedOperationException("Unknown stack type " + stack.getClass());
+        }
         this.substitutionMode = substitutionMode;
         this.acceptableSubstituteFn = acceptableSubstituteFn;
         this.remainingToProcess = stack.getStackSize();
         this.allowSimulation = allowSimulation;
         this.craftingMode = craftingMode;
-        if (!(stackTypeClass == IAEItemStack.class || stackTypeClass == IAEFluidStack.class)) {
-            throw new IllegalArgumentException(
-                    "Invalid stack type for a crafting request: " + stackTypeClass.getName());
-        }
     }
 
     /**
      * @param request          The item/fluid and stack to request
      * @param substitutionMode Whether and how to allow substitutions when resolving this request
-     * @param stackTypeClass   Pass in {@code StackType.class}, needed for resolving types at runtime
      */
-    public CraftingRequest(StackType request, SubstitutionMode substitutionMode, Class<StackType> stackTypeClass,
-            boolean allowSimulation, CraftingMode craftingMode) {
-        this(request, substitutionMode, stackTypeClass, allowSimulation, craftingMode, x -> true);
+    public CraftingRequest(StackType request, SubstitutionMode substitutionMode, boolean allowSimulation,
+            CraftingMode craftingMode) {
+        this(request, substitutionMode, allowSimulation, craftingMode, x -> true);
         if (substitutionMode == SubstitutionMode.ACCEPT_FUZZY) {
             throw new IllegalArgumentException("Fuzzy requests must have a substitution-valid predicate");
         }
@@ -203,16 +204,12 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
     }
 
     private String getReadableStackName() {
-        String readableName = "?";
-        if (stack instanceof AEItemStack) {
-            try {
-                readableName = ((AEItemStack) stack).getDisplayName();
-            } catch (Exception e) {
-                AELog.warn(e, "Trying to obtain display name for " + stack);
-                readableName = "<EXCEPTION>";
-            }
+        try {
+            return stack.getDisplayName();
+        } catch (Exception e) {
+            AELog.warn(e, "Trying to obtain display name for " + stack);
+            return "<EXCEPTION>";
         }
-        return readableName;
     }
 
     @Override
@@ -269,7 +266,9 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
             throw new IllegalArgumentException(
                     "Can't fulfill crafting request with too many of " + input + " : " + this);
         }
-        this.untransformedByteCost += input.getStackSize();
+        this.untransformedByteCost += stackTypeClass == IAEFluidStack.class
+                ? (long) Math.ceil(input.getStackSize() / 1000D)
+                : input.getStackSize();
         this.byteCost = CraftingCalculations.adjustByteCost(this, untransformedByteCost);
         this.remainingToProcess -= input.getStackSize();
         this.usedResolvers.add(new UsedResolverEntry(this, origin, input.copy()));
@@ -310,7 +309,8 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
 
         this.stack.setStackSize(newlyRequested);
         this.remainingToProcess = newlyRemainingToProcess;
-        this.untransformedByteCost -= refundedAmount;
+        this.untransformedByteCost -= stackTypeClass == IAEFluidStack.class ? (long) Math.ceil(refundedAmount / 1000D)
+                : refundedAmount;
         this.byteCost = CraftingCalculations.adjustByteCost(this, untransformedByteCost);
         if (this.remainingToProcess < 0) {
             throw new IllegalArgumentException("Refunded more items than were resolved for request " + this);

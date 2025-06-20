@@ -10,6 +10,10 @@
 
 package appeng.core.sync.packets;
 
+import static appeng.util.Platform.readStackByte;
+import static appeng.util.Platform.stackConvert;
+import static appeng.util.Platform.writeStackByte;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,6 +30,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiMEMonitorable;
@@ -34,7 +39,6 @@ import appeng.client.gui.implementations.GuiOptimizePatterns;
 import appeng.core.AELog;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
-import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.network.internal.FMLProxyPacket;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -98,7 +102,7 @@ public class PacketMEInventoryUpdate extends AppEngPacket {
         // AELog.info( "Receiver: " + originalBytes + " -> " + uncompressedBytes );
 
         while (uncompressed.readableBytes() > 0) {
-            this.list.add(AEItemStack.loadItemStackFromPacket(uncompressed));
+            this.list.add(stackConvert(readStackByte(uncompressed)));
         }
 
         this.empty = this.list.isEmpty();
@@ -168,9 +172,9 @@ public class PacketMEInventoryUpdate extends AppEngPacket {
         return null;
     }
 
-    public void appendItem(final IAEItemStack is) throws IOException, BufferOverflowException {
+    public void appendItem(final IAEStack<?> is) throws IOException, BufferOverflowException {
         final ByteBuf tmp = Unpooled.buffer(OPERATION_BYTE_LIMIT);
-        is.writeToPacket(tmp);
+        writeStackByte(is, tmp);
 
         this.compressFrame.flush();
         if (this.writtenBytes + tmp.readableBytes() > UNCOMPRESSED_PACKET_BYTE_LIMIT) {

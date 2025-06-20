@@ -1,12 +1,14 @@
 package appeng.crafting.v2.resolvers;
 
+import static appeng.util.Platform.stackConvert;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.localization.GuiText;
 import appeng.crafting.MECraftingInventory;
@@ -16,13 +18,13 @@ import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 
-public class EmitableItemResolver implements CraftingRequestResolver<IAEItemStack> {
+public class EmitableItemResolver<StackType extends IAEStack<StackType>> implements CraftingRequestResolver<StackType> {
 
-    public static class EmitItemTask extends CraftingTask<IAEItemStack> {
+    public static class EmitItemTask<StackType extends IAEStack<StackType>> extends CraftingTask<StackType> {
 
         private long fulfilled = 0;
 
-        public EmitItemTask(CraftingRequest<IAEItemStack> request) {
+        public EmitItemTask(CraftingRequest<StackType> request) {
             super(request, CraftingTask.PRIORITY_CRAFTING_EMITTER); // conjure items for calculations out of thin air as
                                                                     // a last
         }
@@ -71,10 +73,8 @@ public class EmitableItemResolver implements CraftingRequestResolver<IAEItemStac
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
-            if (fulfilled > 0 && request.stack instanceof IAEItemStack) {
-                targetPlan.addRequestable(request.stack.copy().setCountRequestable(fulfilled));
-            }
+        public void populatePlan(IItemList<IAEStack<?>> targetPlan) {
+            if (fulfilled > 0) targetPlan.addRequestable(request.stack.copy().setCountRequestable(fulfilled));
         }
 
         @Override
@@ -104,9 +104,9 @@ public class EmitableItemResolver implements CraftingRequestResolver<IAEItemStac
 
     @Nonnull
     @Override
-    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<IAEItemStack> request,
+    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<StackType> request,
             @Nonnull CraftingContext context) {
-        if (context.craftingGrid.canEmitFor(request.stack)) {
+        if (context.craftingGrid.canEmitFor(stackConvert(request.stack))) {
             return Collections.singletonList(new EmitItemTask(request));
         } else {
             return Collections.emptyList();
