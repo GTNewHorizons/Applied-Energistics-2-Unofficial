@@ -122,19 +122,14 @@ public final class CompassService {
     }
 
     public void kill() {
-        this.executor.shutdown();
 
-        try {
-            this.executor.awaitTermination(6, TimeUnit.MINUTES);
+        this.executor.shutdownNow();
 
-            for (final AutoClosingCompassReader cr : this.worldSet.values()) {
-                cr.close();
-            }
-
-            this.worldSet.clear();
-        } catch (final InterruptedException e) {
-            // wrap this up..
+        for (final AutoClosingCompassReader cr : this.worldSet.values()) {
+            cr.close();
         }
+
+        this.worldSet.clear();
     }
 
     private CompassReader getReader(final World w) {
