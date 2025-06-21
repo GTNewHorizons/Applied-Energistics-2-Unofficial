@@ -272,7 +272,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
         this.elapsed = elapsed;
     }
 
-    CraftingCPUCluster getMonitor() {
+    public CraftingCPUCluster getMonitor() {
         return this.monitor;
     }
 

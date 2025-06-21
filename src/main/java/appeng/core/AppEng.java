@@ -36,6 +36,7 @@ import appeng.services.export.ExportProcess;
 import appeng.services.export.ForgeExportConfig;
 import appeng.util.InvTweakSortingModule;
 import appeng.util.Platform;
+import baubles.api.expanded.BaubleExpandedSlots;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
@@ -85,6 +86,7 @@ public final class AppEng {
 
     private File configDirectory;
     private CustomRecipeConfig customRecipeConfig;
+    public static final String BAUBLESLOT = "Terminal";
 
     /**
      * Folder for recipes
@@ -119,6 +121,11 @@ public final class AppEng {
     private void preInit(final FMLPreInitializationEvent event) {
         if (!Loader.isModLoaded("appliedenergistics2-core")) {
             CommonHelper.proxy.missingCoreMod();
+        }
+
+        if (Loader.isModLoaded("Baubles|Expanded")) {
+            BaubleExpandedSlots.tryRegisterType(BAUBLESLOT);
+            BaubleExpandedSlots.tryAssignSlotOfType(BAUBLESLOT);
         }
 
         final Stopwatch watch = Stopwatch.createStarted();
