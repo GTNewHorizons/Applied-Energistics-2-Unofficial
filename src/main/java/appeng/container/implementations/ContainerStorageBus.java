@@ -12,7 +12,9 @@ package appeng.container.implementations;
 
 import java.util.Iterator;
 
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
@@ -123,6 +125,8 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         return 5;
     }
 
+    private int iRow = 0;
+
     @Override
     public void detectAndSendChanges() {
         this.verifyPermissions(SecurityPermissions.BUILD, false);
@@ -135,7 +139,44 @@ public class ContainerStorageBus extends ContainerUpgradeable {
                     (StorageFilter) this.getUpgradeable().getConfigManager().getSetting(Settings.STORAGE_FILTER));
             this.setStickyMode((YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.STICKY_MODE));
         }
+        final int upgrades = this.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
 
+        if (upgrades > 0) { // sync filter slots
+            boolean needSync = this.storageBus.needSyncGUI;
+            this.storageBus.needSyncGUI = false;
+            if (iRow >= upgrades) {
+                iRow = 0;
+            } else if (needSync) {
+                iRow = upgrades; // to be sure that the last line is sent correctly (do during the next update)
+            } else iRow = iRow + 1;
+
+            IInventory inv = this.getUpgradeable().getInventoryByName("config");
+            int from = needSync ? 18 : 9 + (9 * upgrades); // start at first filter slot or at specific row
+            int to = needSync ? inv.getSizeInventory() : 18 + (9 * upgrades); // end at last filter slot or at end of
+                                                                              // specific row
+            for (; from < to; from++) {
+                if (upgrades <= (from / 9 - 2)) {
+                    break;
+                }
+                ItemStack stack = inv.getStackInSlot(from);
+                if (stack == null) {
+                    continue;
+                }
+                for (ICrafting crafter : this.crafters) {
+                    boolean isChangingQuantityOnly = false;
+                    if (crafter instanceof EntityPlayerMP playerMP && playerMP.isChangingQuantityOnly) {
+                        isChangingQuantityOnly = true;
+                        // necessary to ensure that the package is sent correctly
+                        playerMP.isChangingQuantityOnly = false;
+                    }
+                    crafter.sendSlotContents(this, from, stack);
+                    if (isChangingQuantityOnly && crafter instanceof EntityPlayerMP playerMP) {
+                        playerMP.isChangingQuantityOnly = true;
+                    }
+                }
+            }
+
+        }
         this.standardDetectAndSendChanges();
     }
 
