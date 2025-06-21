@@ -133,11 +133,14 @@ public final class AppEng {
         this.recipeDirectory = new File(this.configDirectory, "recipes");
 
         final File configFile = new File(this.configDirectory, "AppliedEnergistics2.cfg");
+        final File jsonConfigFile = new File(this.configDirectory, "MeteoriteLootTable.json");
         final File facadeFile = new File(this.configDirectory, "Facades.cfg");
         final File recipeFile = new File(this.configDirectory, "CustomRecipes.cfg");
         final Configuration recipeConfiguration = new Configuration(recipeFile);
 
         AEConfig.instance = new AEConfig(configFile);
+        AEJSONConfig.instance = new AEJSONConfig();
+        AEJSONConfig.instance.fromFile(jsonConfigFile);
         FacadeConfig.instance = new FacadeConfig(facadeFile);
         this.customRecipeConfig = new CustomRecipeForgeConfiguration(recipeConfiguration);
         this.exportConfig = new ForgeExportConfig(recipeConfiguration);
