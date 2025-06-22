@@ -16,6 +16,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.ContainerOpenContext;
+import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerCraftingStatus;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -48,16 +49,23 @@ public class PacketCraftingItemInterface extends AppEngPacket {
 
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
-        if (player.openContainer instanceof ContainerCraftingStatus cpv) {
-            final Object target = cpv.getTarget();
+        if (player.openContainer instanceof ContainerCraftingCPU ccpu) {
+            final Object target = ccpu.getTarget();
             if (target instanceof IGridHost) {
-                final ContainerOpenContext context = cpv.getOpenContext();
+                final ContainerOpenContext context = ccpu.getOpenContext();
                 if (context != null) {
-                    ICraftingCPU cpu = cpv.getCPUTable().getSelectedCPU().getServerCluster();
-                    if (cpu instanceof CraftingCPUCluster) {
+                    ICraftingCPU cpu;
+                    if (player.openContainer instanceof ContainerCraftingStatus ccs) {
+                        cpu = ccs.getCPUTable().getSelectedCPU().getServerCluster();
+                    } else {
+                        cpu = ccpu.getMonitor();
+                    }
+
+                    if (cpu instanceof CraftingCPUCluster cpuc) {
                         ItemStack itemStack = is.getItemStack();
                         NBTTagCompound data = Platform.openNbtData(itemStack);
-                        DimensionalCoord.writeListToNBT(data, ((CraftingCPUCluster) cpu).getProviders(is));
+                        DimensionalCoord.writeListToNBT(data, cpuc.getProviders(is));
+                        data.setInteger("ScheduledReason", cpuc.getScheduledReason(is).ordinal());
                         try {
                             NetworkHandler.instance.sendTo(
                                     new PacketCraftingItemInterface(

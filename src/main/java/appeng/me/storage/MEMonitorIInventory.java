@@ -35,6 +35,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.inv.ItemSlot;
+import appeng.util.item.ItemFilterList;
 
 public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
 
@@ -254,7 +255,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
         for (final CachedItemStack is : this.memory.values()) {
             out.addStorage(is.aeStack);
         }
-
+        if (out instanceof ItemFilterList) adaptor.getAvailableItems(out, iteration);
         return out;
     }
 
