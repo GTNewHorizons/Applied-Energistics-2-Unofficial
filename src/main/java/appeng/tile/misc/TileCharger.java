@@ -107,7 +107,7 @@ public class TileCharger extends AENetworkPowerTile implements ICrankable {
                         this.getProxy().getEnergy().extractAEPower(
                                 Math.min(150.0, getInternalMaxPower() - this.getInternalCurrentPower()),
                                 Actionable.MODULATE,
-                                PowerMultiplier.ONE));
+                                PowerMultiplier.CONFIG) * PowerMultiplier.CONFIG.multiplier);
                 this.tickTickTimer = 20; // keep ticking...
             } catch (final GridAccessException e) {
                 // continue!
