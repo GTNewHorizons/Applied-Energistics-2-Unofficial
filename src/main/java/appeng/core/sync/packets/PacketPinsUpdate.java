@@ -11,7 +11,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 import appeng.api.config.PinsState;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.IPinsHandler;
@@ -120,7 +119,7 @@ public class PacketPinsUpdate extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
-        if (sender.openContainer instanceof ContainerMEMonitorable container && state != null) {
+        if (sender.openContainer instanceof IPinsHandler container && state != null) {
             container.setPinsState(state);
         }
     }
