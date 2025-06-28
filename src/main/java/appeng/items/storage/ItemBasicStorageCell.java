@@ -56,6 +56,7 @@ import appeng.me.storage.CellInventoryHandler;
 import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
+import appeng.util.item.ItemList;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -147,6 +148,12 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
                         + NumberFormat.getInstance().format(cellInventory.getMaxItemTypes())
                         + ' '
                         + GuiText.Types.getLocal());
+
+        if (cellInventory.getTotalItemTypes() == 1 && cellInventory.getStoredItemTypes() != 0) {
+            ItemStack itemStack = handler.getAvailableItems(new ItemList(), IterationCounter.fetchNewId())
+                    .getFirstItem().getItemStack();
+            lines.add(GuiText.Contains.getLocal() + ": " + itemStack.getDisplayName());
+        }
 
         if (handler.isPreformatted()) {
             String filter = cellInventory.getOreFilter();
