@@ -48,6 +48,7 @@ import appeng.util.prioitylist.IPartitionList;
 public class ItemRepo implements IDisplayRepo {
 
     private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
+    private IAEItemStack[] pinsRepo = new IAEItemStack[0];
     private final ArrayList<IAEItemStack> view = new ArrayList<>();
     private final ArrayList<ItemStack> dsp = new ArrayList<>();
     private final IScrollSource src;
@@ -64,6 +65,52 @@ public class ItemRepo implements IDisplayRepo {
     public ItemRepo(final IScrollSource src, final ISortSource sortSrc) {
         this.src = src;
         this.sortSrc = sortSrc;
+    }
+
+    @Override
+    public void setAEPins(IAEItemStack[] newPins) {
+        IItemList<IAEItemStack> oldPins = getPinsCache();
+        pinsRepo = new IAEItemStack[newPins.length];
+        for (int i = 0; i < pinsRepo.length; i++) {
+            IAEItemStack isToPin = list.findPrecise(newPins[i]);
+
+            if (isToPin == null) {
+                // If the item is not found in the repo, try to find it in the previous pins.
+                isToPin = oldPins.findPrecise(newPins[i]);
+            }
+
+            if (isToPin != null) {
+                pinsRepo[i] = isToPin.copy();
+                isToPin.reset();
+            } else {
+                pinsRepo[i] = newPins[i];
+            }
+        }
+
+        for (IAEItemStack ais : oldPins) {
+            if (ais.getStackSize() != -1) list.add(ais);
+        }
+
+        updateView();
+    }
+
+    /** pin order is not keep */
+    private IItemList<IAEItemStack> getPinsCache() {
+        IItemList<IAEItemStack> oldPins = AEApi.instance().storage().createItemList();
+
+        for (IAEItemStack pin : pinsRepo) {
+            if (pin != null) {
+                oldPins.add(pin);
+            }
+        }
+
+        return oldPins;
+    }
+
+    @Override
+    public IAEItemStack getAEPin(int idx) {
+        if (idx < 0 || idx >= pinsRepo.length) return null;
+        return pinsRepo[idx];
     }
 
     @Override
@@ -90,6 +137,14 @@ public class ItemRepo implements IDisplayRepo {
     public void postUpdate(final IAEItemStack is) {
         final IAEItemStack st = this.list.findPrecise(is);
 
+        for (IAEItemStack pin : pinsRepo) {
+            if (pin != null && pin.isSameType(is)) {
+                pin.reset();
+                pin.add(is);
+                return;
+            }
+        }
+
         if (st != null) {
             st.reset();
             st.add(is);
@@ -108,10 +163,12 @@ public class ItemRepo implements IDisplayRepo {
     public void updateView() {
         if (this.paused) {
             // Update existing view with new data
+            IItemList<IAEItemStack> pins = getPinsCache();
             for (int i = 0; i < this.view.size(); i++) {
                 IAEItemStack entry = this.view.get(i);
                 IAEItemStack serverEntry = this.list.findPrecise(entry);
-                if (serverEntry == null) {
+                IAEItemStack pinsEntry = pins.findPrecise(serverEntry);
+                if (serverEntry == null || pinsEntry != null) {
                     entry.setStackSize(0);
                 } else {
                     this.view.set(i, serverEntry);

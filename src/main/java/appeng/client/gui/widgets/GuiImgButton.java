@@ -39,6 +39,7 @@ import appeng.api.config.LockCraftingMode;
 import appeng.api.config.OperationMode;
 import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.PatternSlotConfig;
+import appeng.api.config.PinsState;
 import appeng.api.config.PowerUnits;
 import appeng.api.config.PriorityCardMode;
 import appeng.api.config.RedstoneMode;
@@ -843,6 +844,41 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.CPUOnlyAllowNonPlayerDesc);
 
             this.registerApp(
+                    16 * 15 + 15,
+                    Settings.PINS_STATE,
+                    PinsState.DISABLED,
+                    ButtonToolTips.PinsSection,
+                    ButtonToolTips.PinsSectionDisabled);
+
+            this.registerApp(
+                    16 * 15 + 14,
+                    Settings.PINS_STATE,
+                    PinsState.ONE,
+                    ButtonToolTips.PinsSection,
+                    ButtonToolTips.PinsSectionActive);
+
+            this.registerApp(
+                    16 * 15 + 14,
+                    Settings.PINS_STATE,
+                    PinsState.TWO,
+                    ButtonToolTips.PinsSection,
+                    ButtonToolTips.PinsSectionActive);
+
+            this.registerApp(
+                    16 * 15 + 14,
+                    Settings.PINS_STATE,
+                    PinsState.THREE,
+                    ButtonToolTips.PinsSection,
+                    ButtonToolTips.PinsSectionActive);
+
+            this.registerApp(
+                    16 * 15 + 14,
+                    Settings.PINS_STATE,
+                    PinsState.FOUR,
+                    ButtonToolTips.PinsSection,
+                    ButtonToolTips.PinsSectionActive);
+
+            this.registerApp(
                     16 * 3 + 7,
                     Settings.ACTIONS,
                     ActionItems.TOGGLE_SHOW_ONLY_SUBSTITUTE_ON,
@@ -855,7 +891,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.TOGGLE_SHOW_ONLY_SUBSTITUTE_OFF,
                     ButtonToolTips.ToggleShowOnlySubstitute,
                     ButtonToolTips.ToggleShowOnlySubstituteOffDesc);
-
         }
     }
 

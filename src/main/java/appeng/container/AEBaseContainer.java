@@ -71,6 +71,7 @@ import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketPartialItem;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
+import appeng.helpers.IPinsHandler;
 import appeng.helpers.InventoryAction;
 import appeng.items.materials.ItemMultiMaterial;
 import appeng.parts.automation.UpgradeInventory;
@@ -707,6 +708,21 @@ public abstract class AEBaseContainer extends Container {
 
                 for (final Slot fr : from) {
                     this.transferStackInSlot(player, fr.slotNumber);
+                }
+            }
+
+            if (action == InventoryAction.SET_PIN && this instanceof IPinsHandler iph) {
+                if (id == -1) {
+                    iph.setPin(null, slot);
+                    return;
+                }
+                ItemStack hand = player.inventory.getItemStack();
+                if (hand == null) return;
+                if (iph.getPin(slot) != null && hand.isItemEqual(iph.getPin(slot))) {
+                    // put item in the terminal
+                    doAction(player, InventoryAction.PICKUP_OR_SET_DOWN, this.inventorySlots.size(), id);
+                } else {
+                    iph.setPin(player.inventory.getItemStack(), slot);
                 }
             }
 

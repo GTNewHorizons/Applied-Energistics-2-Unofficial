@@ -79,4 +79,20 @@ public class SlotME extends Slot {
     public boolean canTakeStack(final EntityPlayer par1EntityPlayer) {
         return false;
     }
+
+    public boolean isPin() {
+        return mySlot instanceof PinSlotME;
+    }
+
+    public int getPinIndex() {
+        return mySlot.offset;
+    }
+
+    public int getPinIcon() {
+        return 5 * 16 + 14;
+    }
+
+    public float getOpacityOfIcon() {
+        return 0.4f;
+    }
 }

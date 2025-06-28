@@ -25,12 +25,16 @@ import appeng.api.config.SortOrder;
 import appeng.api.config.TypeFilter;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.tiles.IViewCellStorage;
+import appeng.api.networking.IGrid;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
+import appeng.items.contents.PinsHandler;
+import appeng.items.contents.PinsHolder;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
@@ -51,10 +55,11 @@ import appeng.util.Platform;
  * @since rv3
  */
 public abstract class AbstractPartTerminal extends AbstractPartDisplay
-        implements ITerminalHost, IConfigManagerHost, IViewCellStorage, IAEAppEngInventory {
+        implements ITerminalHost, IConfigManagerHost, IViewCellStorage, IAEAppEngInventory, ITerminalPins {
 
     private final IConfigManager cm = new ConfigManager(this);
     private final AppEngInternalInventory viewCell = new AppEngInternalInventory(this, 5);
+    private final PinsHolder pinsInv = new PinsHolder(this);
     private final AppEngInternalInventory upgrades = new RefillerInventory(this);
 
     public AbstractPartTerminal(final ItemStack is) {
@@ -89,6 +94,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
         super.readFromNBT(data);
         this.cm.readFromNBT(data);
         this.viewCell.readFromNBT(data, "viewCell");
+        pinsInv.readFromNBT(data, "pins");
         upgrades.readFromNBT(data, "upgrades");
     }
 
@@ -97,6 +103,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
         super.writeToNBT(data);
         this.cm.writeToNBT(data);
         this.viewCell.writeToNBT(data, "viewCell");
+        pinsInv.writeToNBT(data, "pins");
         upgrades.writeToNBT(data, "upgrades");
     }
 
@@ -146,6 +153,16 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
     @Override
     public IInventory getViewCellStorage() {
         return this.viewCell;
+    }
+
+    @Override
+    public PinsHandler getPinsHandler(EntityPlayer player) {
+        return pinsInv.getHandler(player);
+    }
+
+    @Override
+    public IGrid getGrid() {
+        return getGridNode().getGrid();
     }
 
     @Override

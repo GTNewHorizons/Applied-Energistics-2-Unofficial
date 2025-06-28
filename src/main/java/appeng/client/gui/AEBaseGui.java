@@ -556,14 +556,23 @@ public abstract class AEBaseGui extends GuiContainer {
             return;
         }
 
-        if (slot instanceof SlotME) {
+        if (slot instanceof SlotME sme) {
             InventoryAction action = null;
             IAEItemStack stack = null;
 
             switch (mouseButton) {
                 case 0 -> { // pickup / set-down.
                     action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE : InventoryAction.PICKUP_OR_SET_DOWN;
-                    stack = ((SlotME) slot).getAEStack();
+                    if (sme.isPin() && player.inventory.getItemStack() != null) {
+                        final PacketInventoryAction p = new PacketInventoryAction(
+                                InventoryAction.SET_PIN,
+                                sme.getPinIndex(),
+                                0);
+                        NetworkHandler.instance.sendToServer(p);
+                        return;
+                    }
+
+                    stack = sme.getAEStack();
                     if (stack != null && action == InventoryAction.PICKUP_OR_SET_DOWN
                             && stack.getStackSize() == 0
                             && player.inventory.getItemStack() == null) {
@@ -571,6 +580,15 @@ public abstract class AEBaseGui extends GuiContainer {
                     }
                 }
                 case 1 -> {
+                    if (sme.isPin() && ctrlDown == 1) { // clear pin
+                        final PacketInventoryAction p = new PacketInventoryAction(
+                                InventoryAction.SET_PIN,
+                                sme.getPinIndex(),
+                                -1);
+                        NetworkHandler.instance.sendToServer(p);
+                        return;
+                    }
+
                     action = ctrlDown == 1 ? InventoryAction.PICKUP_SINGLE : InventoryAction.SHIFT_CLICK;
                     stack = ((SlotME) slot).getAEStack();
                 }
@@ -797,6 +815,9 @@ public abstract class AEBaseGui extends GuiContainer {
 
     private void drawSlot(final Slot s) {
         if (s instanceof SlotME || s instanceof SlotFake) {
+            if (s instanceof SlotME sme && sme.isPin()) {
+                drawTextureOnSlot(s, sme.getPinIcon(), sme.getOpacityOfIcon());
+            }
             IAEItemStack stack = Platform.getAEStackInSlot(s);
             if (s instanceof SlotFake && stack != null && stack.getStackSize() == 1) {
                 this.safeDrawSlot(s);
@@ -832,60 +853,8 @@ public abstract class AEBaseGui extends GuiContainer {
         } else {
             try {
                 final ItemStack is = s.getStack();
-                if (s instanceof AppEngSlot aes && (((AppEngSlot) s).renderIconWithItem() || is == null)
-                        && (((AppEngSlot) s).shouldDisplay())) {
-                    if (aes.getIcon() >= 0) {
-                        this.bindTexture("guis/states.png");
-
-                        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-                        final Tessellator tessellator = Tessellator.instance;
-                        try {
-                            final int uv_y = (int) Math.floor(aes.getIcon() / 16);
-                            final int uv_x = aes.getIcon() - uv_y * 16;
-
-                            GL11.glEnable(GL11.GL_BLEND);
-                            GL11.glDisable(GL11.GL_LIGHTING);
-                            GL11.glEnable(GL11.GL_TEXTURE_2D);
-                            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-                            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-                            final float par1 = aes.xDisplayPosition;
-                            final float par2 = aes.yDisplayPosition;
-                            final float par3 = uv_x * 16;
-                            final float par4 = uv_y * 16;
-
-                            tessellator.startDrawingQuads();
-                            tessellator.setColorRGBA_F(1.0f, 1.0f, 1.0f, aes.getOpacityOfIcon());
-                            final float f1 = 0.00390625F;
-                            final float f = 0.00390625F;
-                            final float par6 = 16;
-                            tessellator.addVertexWithUV(
-                                    par1 + 0,
-                                    par2 + par6,
-                                    this.zLevel,
-                                    (par3 + 0) * f,
-                                    (par4 + par6) * f1);
-                            final float par5 = 16;
-                            tessellator.addVertexWithUV(
-                                    par1 + par5,
-                                    par2 + par6,
-                                    this.zLevel,
-                                    (par3 + par5) * f,
-                                    (par4 + par6) * f1);
-                            tessellator.addVertexWithUV(
-                                    par1 + par5,
-                                    par2 + 0,
-                                    this.zLevel,
-                                    (par3 + par5) * f,
-                                    (par4 + 0) * f1);
-                            tessellator
-                                    .addVertexWithUV(par1 + 0, par2 + 0, this.zLevel, (par3 + 0) * f, (par4 + 0) * f1);
-                            tessellator.setColorRGBA_F(1.0f, 1.0f, 1.0f, 1.0f);
-                            tessellator.draw();
-
-                        } catch (final Exception err) {}
-                        GL11.glPopAttrib();
-                    }
-                }
+                if (s instanceof AppEngSlot aes && (aes.renderIconWithItem() || is == null) && (aes.shouldDisplay()))
+                    drawTextureOnSlot(s, aes.getIcon(), aes.getOpacityOfIcon());
 
                 if (is != null && s instanceof AppEngSlot) {
                     if (((AppEngSlot) s).getIsValid() == hasCalculatedValidness.NotAvailable) {
@@ -893,7 +862,6 @@ public abstract class AEBaseGui extends GuiContainer {
                                 || s instanceof AppEngCraftingSlot
                                 || s instanceof SlotDisabled
                                 || s instanceof SlotInaccessible
-                                || s instanceof SlotFake
                                 || s instanceof SlotRestrictedInput
                                 || s instanceof SlotDisconnected;
                         if (isValid && s instanceof SlotRestrictedInput) {
@@ -939,6 +907,44 @@ public abstract class AEBaseGui extends GuiContainer {
         }
         // do the usual for non-ME Slots.
         this.safeDrawSlot(s);
+    }
+
+    public void drawTextureOnSlot(Slot s, int icon, float opacity) {
+        if (icon < 0) return; // no icon to draw.
+
+        this.bindTexture("guis/states.png");
+
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        final Tessellator tessellator = Tessellator.instance;
+        try {
+            final int uv_y = (int) Math.floor((double) icon / 16);
+            final int uv_x = icon - uv_y * 16;
+
+            GL11.glEnable(GL11.GL_BLEND);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glEnable(GL11.GL_TEXTURE_2D);
+            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+            final float par1 = s.xDisplayPosition;
+            final float par2 = s.yDisplayPosition;
+            final float par3 = uv_x * 16;
+            final float par4 = uv_y * 16;
+
+            tessellator.startDrawingQuads();
+            tessellator.setColorRGBA_F(1.0f, 1.0f, 1.0f, opacity);
+            final float f1 = 0.00390625F;
+            final float f = 0.00390625F;
+            final float par6 = 16;
+            tessellator.addVertexWithUV(par1 + 0, par2 + par6, this.zLevel, (par3 + 0) * f, (par4 + par6) * f1);
+            final float par5 = 16;
+            tessellator.addVertexWithUV(par1 + par5, par2 + par6, this.zLevel, (par3 + par5) * f, (par4 + par6) * f1);
+            tessellator.addVertexWithUV(par1 + par5, par2 + 0, this.zLevel, (par3 + par5) * f, (par4 + 0) * f1);
+            tessellator.addVertexWithUV(par1 + 0, par2 + 0, this.zLevel, (par3 + 0) * f, (par4 + 0) * f1);
+            tessellator.setColorRGBA_F(1.0f, 1.0f, 1.0f, 1.0f);
+            tessellator.draw();
+
+        } catch (final Exception ignored) {}
+        GL11.glPopAttrib();
     }
 
     public void drawMCSlot(Slot slotIn) {

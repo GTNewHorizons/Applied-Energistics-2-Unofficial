@@ -36,6 +36,7 @@ import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
+import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
@@ -44,10 +45,13 @@ import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.container.interfaces.IInventorySlotAware;
+import appeng.items.contents.PinsHandler;
+import appeng.items.contents.PinsHolder;
 import appeng.items.contents.WirelessTerminalViewCells;
 import appeng.tile.networking.TileWireless;
 
-public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, IInventorySlotAware, IViewCellStorage {
+public class WirelessTerminalGuiObject
+        implements IPortableCell, IActionHost, IInventorySlotAware, IViewCellStorage, ITerminalPins {
 
     private final ItemStack effectiveItem;
     private final IWirelessTermHandler wth;
@@ -61,6 +65,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     private double myRange = Double.MAX_VALUE;
     private final int inventorySlot;
     private final WirelessTerminalViewCells viewCells;
+    private final PinsHolder pinsInv;
 
     public WirelessTerminalGuiObject(final IWirelessTermHandler wh, final ItemStack is, final EntityPlayer ep,
             final World w, final int x, final int y, final int z) {
@@ -70,6 +75,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
         this.wth = wh;
         this.inventorySlot = x;
         this.viewCells = new WirelessTerminalViewCells(is);
+        pinsInv = new PinsHolder(is);
 
         ILocatable obj = null;
 
@@ -324,5 +330,15 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     @Override
     public IInventory getViewCellStorage() {
         return this.viewCells;
+    }
+
+    @Override
+    public PinsHandler getPinsHandler(EntityPlayer player) {
+        return pinsInv.getHandler(myPlayer);
+    }
+
+    @Override
+    public IGrid getGrid() {
+        return targetGrid;
     }
 }
