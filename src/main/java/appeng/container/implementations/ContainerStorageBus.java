@@ -14,7 +14,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
@@ -132,6 +134,35 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         return 5;
     }
 
+    private int updateFilterTimer = 0;
+
+    /**
+     * @param row      the specific row to send, -1 indicates sending all.
+     * @param upgrades number of installed capacity cards
+     */
+    private void sendRow(int row, int upgrades) {
+        IInventory inv = this.getUpgradeable().getInventoryByName("config");
+        // start at first filter slot or at specific row
+        int from = row <= -1 ? 18 : 9 + (9 * row);
+        // end at last filter slot or at end of specific row
+        int to = row <= -1 ? inv.getSizeInventory() : 18 + (9 * row);
+
+        for (; from < to; from++) {
+            if (upgrades <= (from / 9 - 2)) break;
+
+            ItemStack stack = inv.getStackInSlot(from);
+            if (stack == null) continue;
+
+            for (ICrafting crafter : this.crafters) {
+                if (crafter instanceof EntityPlayerMP playerMP) {
+                    // necessary to ensure that the package is sent correctly
+                    playerMP.isChangingQuantityOnly = false;
+                }
+                crafter.sendSlotContents(this, from, stack);
+            }
+        }
+    }
+
     @Override
     public void detectAndSendChanges() {
         this.verifyPermissions(SecurityPermissions.BUILD, false);
@@ -143,6 +174,19 @@ public class ContainerStorageBus extends ContainerUpgradeable {
             this.setStorageFilter(
                     (StorageFilter) this.getUpgradeable().getConfigManager().getSetting(Settings.STORAGE_FILTER));
             this.setStickyMode((YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.STICKY_MODE));
+        }
+        final int upgrades = this.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
+
+        if (upgrades > 0) { // sync filter slots
+            updateFilterTimer++;
+            int updateStep = 4;
+            if (updateFilterTimer % updateStep == 0) {
+                boolean needSync = this.storageBus.needSyncGUI;
+                int row = needSync ? -1 : updateFilterTimer / updateStep;
+                this.storageBus.needSyncGUI = false;
+                if (row >= upgrades) updateFilterTimer = 0;
+                sendRow(row, upgrades);
+            }
         }
 
         this.standardDetectAndSendChanges();
