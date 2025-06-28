@@ -25,26 +25,40 @@ public class BlockPosHighlighter {
     private static final int MIN_TIME = 3000;
     private static final int MAX_TIME = MIN_TIME * 10;
 
-    public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String foundMsg,
-            String wrongDimMsg) {
+    public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String deviceName,
+            String foundMsg, String wrongDimMsg) {
         clear();
         int highlightDuration = MIN_TIME;
         for (DimensionalCoord coord : interfaces) {
-            if (player.worldObj.provider.dimensionId == coord.getDimension()) {
-                if (foundMsg != null) {
-                    player.addChatMessage(new ChatComponentTranslation(foundMsg, coord.x, coord.y, coord.z));
-                }
-            } else {
-                if (wrongDimMsg != null) {
-                    player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, coord.getDimension()));
-                }
-            }
+
             highlightedBlocks.add(coord);
             highlightDuration = Math.max(
                     highlightDuration,
                     MathHelper.clamp_int(500 * WorldCoord.getTaxicabDistance(coord, player), MIN_TIME, MAX_TIME));
+
+            if (player.worldObj.provider.dimensionId == coord.getDimension()) {
+                if (foundMsg == null) continue;
+
+                if (deviceName.isEmpty()) {
+                    player.addChatMessage(new ChatComponentTranslation(foundMsg, coord.x, coord.y, coord.z));
+                } else {
+                    player.addChatMessage(
+                            new ChatComponentTranslation(foundMsg, deviceName, coord.x, coord.y, coord.z));
+                }
+            } else if (wrongDimMsg != null) {
+                if (deviceName.isEmpty()) {
+                    player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, coord.getDimension()));
+                } else {
+                    player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, deviceName, coord.getDimension()));
+                }
+            }
         }
         expireHighlightTime = System.currentTimeMillis() + highlightDuration;
+    }
+
+    public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String foundMsg,
+            String wrongDimMsg) {
+        highlightBlocks(player, interfaces, "", foundMsg, wrongDimMsg);
     }
 
     private static void clear() {

@@ -131,6 +131,8 @@ chat.appliedenergistics2.DriveLockingToggled=Cells in drive were partitioned/unp
 chat.appliedenergistics2.ChestLockingToggled=Cell in chest was partitioned/unpartitioned
 chat.appliedenergistics2.FinishCraftingRemind=Crafting of %s * %s finished in %s.
 chat.appliedenergistics2.CraftingCantExtract=Can't extract required amount of ingredient from storage: %d / %d | %s
+chat.appliedenergistics2.MachineInOtherDim=%d located in dimension: %d and cant be highlighted
+chat.appliedenergistics2.MachineHighlighted=The %d is now highlighted at %d, %d, %d
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -439,6 +441,7 @@ gui.tooltips.appliedenergistics2.SearchMode_NEIStandard=NEI Synchronized Standar
 gui.tooltips.appliedenergistics2.SearchMode=Search Box Mode
 
 gui.tooltips.appliedenergistics2.PartitionStorageHint=Configures Partition based on currently stored items.
+gui.tooltips.appliedenergistics2.NextPartitionStorageHint=Click to get next item in the storage.
 gui.tooltips.appliedenergistics2.ClearSettings=Clear Config/Settings
 gui.tooltips.appliedenergistics2.Craftable=Craftable
 gui.tooltips.appliedenergistics2.MoveWhenEmpty=Move to output when cell is empty or network was emptied.

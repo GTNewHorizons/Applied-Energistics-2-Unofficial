@@ -364,6 +364,14 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.WRENCH,
                     ButtonToolTips.PartitionStorage,
                     ButtonToolTips.PartitionStorageHint);
+
+            this.registerApp(
+                    16 * 6 + 8,
+                    Settings.ACTIONS,
+                    ActionItems.NEXT_PARTITION,
+                    ButtonToolTips.PartitionStorage,
+                    ButtonToolTips.NextPartitionStorageHint);
+
             this.registerApp(
                     6,
                     Settings.ACTIONS,

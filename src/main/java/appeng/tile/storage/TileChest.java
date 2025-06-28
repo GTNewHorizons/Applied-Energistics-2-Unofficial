@@ -113,6 +113,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     private ICellHandler cellHandler;
     private MEMonitorHandler itemCell;
     private MEMonitorHandler fluidCell;
+    private boolean displayNeedsUpdate;
 
     public TileChest() {
         this.setInternalMaxPower(PowerMultiplier.CONFIG.multiply(40));
@@ -138,11 +139,13 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
                 // :(
             }
         } else {
-            this.recalculateDisplay();
+            displayNeedsUpdate = true;
         }
     }
 
     private void recalculateDisplay() {
+        this.displayNeedsUpdate = false;
+
         int newState = 0;
         int newType = 0;
 
@@ -372,15 +375,19 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             if (!this.getProxy().getEnergy().isNetworkPowered()) {
                 final double powerUsed = this.extractAEPower(idleUsage, Actionable.MODULATE, PowerMultiplier.CONFIG); // drain
                 if (powerUsed + 0.1 >= idleUsage != (this.state & 0b1000) > 0) {
-                    this.recalculateDisplay();
+                    displayNeedsUpdate = true;
                 }
             }
         } catch (final GridAccessException e) {
             final double powerUsed = this
                     .extractAEPower(this.getProxy().getIdlePowerUsage(), Actionable.MODULATE, PowerMultiplier.CONFIG); // drain
             if (powerUsed + 0.1 >= idleUsage != (this.state & 0b1000) > 0) {
-                this.recalculateDisplay();
+                displayNeedsUpdate = true;
             }
+        }
+
+        if (displayNeedsUpdate) {
+            recalculateDisplay();
         }
 
         if (this.inv.getStackInSlot(0) != null) {
@@ -447,12 +454,12 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
     @MENetworkEventSubscribe
     public void powerRender(final MENetworkPowerStatusChange c) {
-        this.recalculateDisplay();
+        displayNeedsUpdate = true;
     }
 
     @MENetworkEventSubscribe
     public void channelRender(final MENetworkChannelsChanged c) {
-        this.recalculateDisplay();
+        displayNeedsUpdate = true;
     }
 
     @Override
@@ -805,7 +812,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
                 // :(
             }
 
-            TileChest.this.recalculateDisplay();
+            TileChest.this.displayNeedsUpdate = true;
         }
 
         @Override

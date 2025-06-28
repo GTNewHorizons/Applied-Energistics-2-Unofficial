@@ -102,10 +102,7 @@ public abstract class AEBaseInvTile extends AEBaseTile implements ISidedInventor
 
     @Override
     public boolean isUseableByPlayer(final EntityPlayer p) {
-        final double squaredMCReach = 64.0D;
-
-        return this.worldObj.getTileEntity(this.xCoord, this.yCoord, this.zCoord) == this
-                && p.getDistanceSq(this.xCoord + 0.5D, this.yCoord + 0.5D, this.zCoord + 0.5D) <= squaredMCReach;
+        return this.worldObj.getTileEntity(this.xCoord, this.yCoord, this.zCoord) == this;
     }
 
     @Override
