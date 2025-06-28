@@ -47,7 +47,9 @@ public enum PlayerMessages {
     PriorityReadout,
     PriorityConfigured,
     FinishCraftingRemind,
-    CraftingCantExtract;
+    CraftingCantExtract,
+    MachineInOtherDim,
+    MachineHighlighted;
 
     public IChatComponent get() {
         return new ChatComponentTranslation(this.getName());

@@ -28,7 +28,7 @@ public class DimensionalCoord extends WorldCoord {
 
     private static final WeakReference<World> NULL_WORLD = new WeakReference<>(null);
     private final WeakReference<World> w;
-    private final int dimId;
+    protected final int dimId;
 
     public DimensionalCoord(final DimensionalCoord s) {
         super(s.x, s.y, s.z);

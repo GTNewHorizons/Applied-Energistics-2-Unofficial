@@ -13,6 +13,7 @@ package appeng.items.tools.powered;
 import java.util.EnumSet;
 import java.util.List;
 
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -31,15 +32,20 @@ import appeng.api.config.ViewItems;
 import appeng.api.features.IWirelessTermHandler;
 import appeng.api.util.IConfigManager;
 import appeng.core.AEConfig;
+import appeng.core.AppEng;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
+import baubles.api.BaubleType;
+import baubles.api.IBauble;
+import baubles.api.expanded.IBaubleExpanded;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class ToolWirelessTerminal extends AEBasePoweredItem implements IWirelessTermHandler {
+@cpw.mods.fml.common.Optional.Interface(iface = "baubles.api.expanded.IBaubleExpanded", modid = "Baubles|Expanded")
+public class ToolWirelessTerminal extends AEBasePoweredItem implements IWirelessTermHandler, IBauble, IBaubleExpanded {
 
     public ToolWirelessTerminal() {
         super(AEConfig.instance.wirelessTerminalBattery, Optional.absent());
@@ -123,5 +129,40 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
         final NBTTagCompound tag = Platform.openNbtData(item);
         tag.setString("encryptionKey", encKey);
         tag.setString("name", name);
+    }
+
+    @Override
+    public String[] getBaubleTypes(ItemStack itemstack) {
+        return new String[] { AppEng.BAUBLESLOT };
+    }
+
+    @Override
+    @cpw.mods.fml.common.Optional.Method(modid = "Baubles")
+    public BaubleType getBaubleType(ItemStack itemStack) {
+        return BaubleType.RING;
+    }
+
+    @Override
+    @cpw.mods.fml.common.Optional.Method(modid = "Baubles")
+    public void onWornTick(ItemStack itemstack, EntityLivingBase player) { /**/ }
+
+    @Override
+    @cpw.mods.fml.common.Optional.Method(modid = "Baubles")
+    public void onEquipped(ItemStack itemstack, EntityLivingBase player) { /**/ }
+
+    @Override
+    @cpw.mods.fml.common.Optional.Method(modid = "Baubles")
+    public void onUnequipped(ItemStack itemstack, EntityLivingBase player) { /**/ }
+
+    @Override
+    @cpw.mods.fml.common.Optional.Method(modid = "Baubles")
+    public boolean canEquip(ItemStack itemstack, EntityLivingBase player) {
+        return true;
+    }
+
+    @Override
+    @cpw.mods.fml.common.Optional.Method(modid = "Baubles")
+    public boolean canUnequip(ItemStack itemstack, EntityLivingBase player) {
+        return true;
     }
 }

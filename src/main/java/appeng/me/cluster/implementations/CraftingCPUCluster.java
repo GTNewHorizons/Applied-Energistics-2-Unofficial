@@ -505,6 +505,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void completeJob() {
+        if (isBusy()) return; // dont complete if still working
         if (this.myLastLink != null) {
             ((CraftingLink) this.myLastLink).markDone();
             this.myLastLink = null;
@@ -1130,6 +1131,18 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         final IMEInventory<IAEItemStack> storage = sg.getItemInventory();
         final MECraftingInventory ci = new MECraftingInventory(storage, true, false, false);
 
+        final MECraftingInventory backupInventory = new MECraftingInventory(inventory);
+        final IItemList<IAEItemStack> backupWaitingForMissing = AEApi.instance().storage().createItemList();
+        for (IAEItemStack ais : waitingForMissing) {
+            backupWaitingForMissing.add(ais);
+        }
+        final Map<ICraftingPatternDetails, TaskProgress> tasksBackup = new TreeMap<>(priorityComparator);
+        for (Entry<ICraftingPatternDetails, TaskProgress> entry : tasks.entrySet()) {
+            TaskProgress newTaskProgress = new TaskProgress();
+            newTaskProgress.value = entry.getValue().value;
+            tasksBackup.put(entry.getKey(), newTaskProgress);
+        }
+
         try {
             job.startCrafting(ci, this, src);
             if (ci.commit(src)) {
@@ -1142,8 +1155,17 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 this.markDirty();
                 this.updateCPU();
                 return this.myLastLink;
+            } else {
+                inventory = backupInventory;
+                waitingForMissing = backupWaitingForMissing;
+                tasks.clear();
+                tasks.putAll(tasksBackup);
             }
         } catch (final CraftBranchFailure e) {
+            inventory = backupInventory;
+            waitingForMissing = backupWaitingForMissing;
+            tasks.clear();
+            tasks.putAll(tasksBackup);
             handleCraftBranchFailure(e, src);
         }
 
