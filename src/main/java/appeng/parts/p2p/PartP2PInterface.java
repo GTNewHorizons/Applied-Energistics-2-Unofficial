@@ -298,7 +298,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     @Override
     public boolean onPartActivate(final EntityPlayer p, final Vec3 pos) {
         AppEngInternalInventory patterns = (AppEngInternalInventory) this.duality.getPatterns();
-        AppEngInternalInventory storageAppEng = this.duality.getStorage();
+        final boolean wasActive = getProxy().isActive();
 
         if (!isOutput()) {
             final ItemStack is = p.inventory.getCurrentItem();
@@ -321,7 +321,8 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
                 drops.add(patterns.getStackInSlot(i));
             }
 
-            if (!duality.sharedInventory) {
+            if (!duality.sharedInventory && !wasActive) {
+                AppEngInternalInventory storageAppEng = this.duality.getStorage();
                 for (int i = 0; i < NUMBER_OF_STORAGE_SLOTS; i++) {
                     if (storageAppEng.getStackInSlot(i) == null) continue;
                     drops.add(storageAppEng.getStackInSlot(i));
