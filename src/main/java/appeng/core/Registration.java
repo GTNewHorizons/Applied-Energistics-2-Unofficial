@@ -10,6 +10,8 @@
 
 package appeng.core;
 
+import static net.minecraft.init.Blocks.air;
+
 import java.io.File;
 
 import javax.annotation.Nonnull;
@@ -107,6 +109,7 @@ import appeng.tile.AEBaseTile;
 import appeng.util.Platform;
 import appeng.worldgen.MeteoriteWorldGen;
 import appeng.worldgen.QuartzWorldGen;
+import appeng.worldgen.meteorite.Fallout;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
@@ -118,6 +121,8 @@ public final class Registration {
 
     private final RecipeHandler recipeHandler;
     private final DefinitionConverter converter;
+    private static final int DEFAULTDIM = -32727;// -1*Short.MAX_VALUE-50, this value represents failure to find the
+                                                 // dimension in the config
     private BiomeGenBase storageBiome;
 
     Registration() {
@@ -850,8 +855,47 @@ public final class Registration {
         }
 
         // whitelist from config
-        for (final int dimension : AEConfig.instance.meteoriteDimensionWhitelist) {
-            registries.worldgen().enableWorldGenForDimension(WorldGenType.Meteorites, dimension);
+        for (String dimension : AEConfig.instance.meteoriteDimensionWhitelist) {
+            String[] entry = dimension.replaceAll(" ", "").split(",");
+            if (entry.length != 6) {
+                AELog.error(
+                        "AE2: Error while whitelisting dimension from string: " + dimension
+                                + " | Error: Too Many or Few Parameters!");
+                continue;
+            }
+            int dimID = DEFAULTDIM; // -1*Short.MAX_VALUE-50, this value represents failure to find the dimension in
+            // config
+            try {
+                dimID = Integer.parseInt(entry[0]);
+            } catch (Exception e) {
+                AELog.error(
+                        "AE2: Error while whitelisting dimension from string: " + dimension
+                                + " | Error: First Parameter Needs To Be An Integer!");
+            }
+            if (dimID == DEFAULTDIM) continue;
+
+            registries.worldgen().enableWorldGenForDimension(WorldGenType.Meteorites, dimID);
+            Block[] blockList = new Block[5];
+            int[] metaList = new int[5];
+            for (int i = 1; i < entry.length; i++) {
+                if (!entry[i].equals("DEFAULT")) {
+                    blockList[i - 1] = Registration.getBlockFromString(entry[i]);
+                    try {
+                        String[] split = entry[i].split(":");
+                        metaList[i - 1] = (split.length == 2 ? 0 : Integer.parseInt(split[2]));
+                    } catch (NumberFormatException e) {
+                        AELog.error(
+                                "AE2: Error getting block from string: " + entry
+                                        + " | Error: Metadata invalid, must be an integer!");
+                        metaList[i - 1] = 0;
+                    }
+                } else {
+                    blockList[i - 1] = null;
+                    metaList[i - 1] = 0;
+                }
+
+            }
+            Fallout.addDebrisToDimension(dimID, blockList, metaList);
         }
 
         /**
@@ -863,5 +907,34 @@ public final class Registration {
          * Populate list of items that blocking mode should ignore
          */
         BlockingModeIgnoreItemRegistry.instance().registerDefault();
+    }
+
+    /**
+     * gets a block from the registry based on the string
+     * 
+     * @param entry Format: modID:blockID or modID:blockID:metadata
+     * @return Returns the block with metadata
+     */
+    @Nonnull
+    public static Block getBlockFromString(String entry) {
+        if (entry == null) {
+            AELog.error("AE2: Error getting block from string | Error: String is null!");
+            return air; // Air represents failure to find block
+        }
+        String[] parts = entry.replaceAll(" ", "").split(":");
+        if (parts.length < 2 || parts.length > 3) {
+            AELog.error(
+                    "AE2: Error getting block from string: " + entry
+                            + " | Error: Invalid format! Expected modId:blockID or modID:blockID:meta");
+            return air;
+        }
+        String modID = parts[0];
+        String blockID = parts[1];
+        Block block = GameRegistry.findBlock(modID, blockID);
+        if (block == null) {
+            AELog.error("AE2: Error getting block from string: " + entry + " | Error: Block not found in Registry!");
+            return air;
+        }
+        return block;
     }
 }

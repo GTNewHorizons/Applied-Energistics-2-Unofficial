@@ -68,8 +68,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public final int chargedChange = 4;
     @Deprecated
     public int quartzKnifeInputLength = 32;
-    public int minMeteoriteDistance = 707;
-    public int minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
+    public String[] minMeteoriteDistance = { "0=707" };
     public double spatialPowerExponent = 1.35;
     public double spatialPowerMultiplier = 1250.0;
     public String[] grinderOres = {
@@ -100,9 +99,10 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int chargedStaffBattery = 8000;
     public boolean disableColoredCableRecipesInNEI = true;
     public boolean updatable = false;
-    public double meteoriteClusterChance = 0.1;
-    public double meteoriteSpawnChance = 0.3;
-    public int[] meteoriteDimensionWhitelist = { 0 };
+    public String[] meteoriteSpawnChance = { "0=0.3" };
+    public String[] meteoriteDimensionWhitelist = { "0, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT" };
+    public String[] meteoriteValidBlocks = { "examplemod:example_block" };
+    public String[] meteoriteInvalidBlocks = { "examplemod:example_block" };
     public int craftingCalculationTimePerTick = 5;
     PowerUnits selectedPowerUnit = PowerUnits.AE;
     CellType selectedCellType = CellType.ITEM;
@@ -167,20 +167,28 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 - this.get("worldGen", "spawnChargedChance", 1.0 - this.spawnChargedChance)
                         .getDouble(1.0 - this.spawnChargedChance));
         this.minMeteoriteDistance = this.get("worldGen", "minMeteoriteDistance", this.minMeteoriteDistance)
-                .getInt(this.minMeteoriteDistance);
-        this.meteoriteClusterChance = this.get("worldGen", "meteoriteClusterChance", this.meteoriteClusterChance)
-                .getDouble(this.meteoriteClusterChance);
+                .getStringList();
         this.meteoriteSpawnChance = this.get("worldGen", "meteoriteSpawnChance", this.meteoriteSpawnChance)
-                .getDouble(this.meteoriteSpawnChance);
+                .getStringList();
         this.meteoriteDimensionWhitelist = this
-                .get("worldGen", "meteoriteDimensionWhitelist", this.meteoriteDimensionWhitelist).getIntList();
-
+                .get("worldGen", "meteoriteDimensionWhitelist", this.meteoriteDimensionWhitelist).getStringList();
+        this.addCustomCategoryComment(
+                "worldGen",
+                "The meteorite dimension whitelist list can be used alone or in unison with the meteorite (in)valid blocks whitelist. \n"
+                        + "Default debris is the following (in this order) Stone, Cobblestone, biomeFillerBlock (what's under the top block, usually dirt), Gravel, biomeTopBlock (usually grass) \n"
+                        + "Format: dimensionID, modID:blockID:metadata, modID:blockID:metadata, modID:blockID:metadata, modID:blockID:metadata, modID:blockID:metadata \n"
+                        + "--------------------------------------------------------------------------------------------------------# \n"
+                        + "The meteorite (in)valid spawn blocks list can be used alone or in unison with the meteorite dimension whitelist. Format: modId:blockID, modId:blockID, etc. ");
+        this.meteoriteValidBlocks = this.get("worldGen", "meteoriteValidSpawnBlocks", this.meteoriteValidBlocks)
+                .getStringList();
+        this.meteoriteInvalidBlocks = this.get("worldGen", "meteoriteInvalidSpawnBlocks", this.meteoriteInvalidBlocks)
+                .getStringList();
         this.quartzOresPerCluster = this.get("worldGen", "quartzOresPerCluster", this.quartzOresPerCluster)
                 .getInt(this.quartzOresPerCluster);
         this.quartzOresClusterAmount = this.get("worldGen", "quartzOresClusterAmount", this.quartzOresClusterAmount)
                 .getInt(this.quartzOresClusterAmount);
 
-        this.minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
+        // this.minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
 
         this.addCustomCategoryComment(
                 "wireless",
