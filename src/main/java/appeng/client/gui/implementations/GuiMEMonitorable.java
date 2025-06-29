@@ -298,6 +298,8 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
         int offset = this.guiTop + 8;
 
+        buttonList.clear();
+
         if (this.customSortOrder) {
             this.buttonList.add(
                     this.SortByBox = new GuiImgButton(
