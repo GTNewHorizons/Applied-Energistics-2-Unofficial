@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
@@ -187,7 +188,11 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .getInt(this.quartzOresPerCluster);
         this.quartzOresClusterAmount = this.get("worldGen", "quartzOresClusterAmount", this.quartzOresClusterAmount)
                 .getInt(this.quartzOresClusterAmount);
-        // this.minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
+
+        ConfigCategory categoryWorldGen = this.getCategory("worldgen");
+        categoryWorldGen.remove("meteoriteDimensionWhitelist");
+        categoryWorldGen.remove("minMeteoriteDistance");
+        categoryWorldGen.remove("meteoriteSpawnChance");
 
         this.addCustomCategoryComment(
                 "wireless",
