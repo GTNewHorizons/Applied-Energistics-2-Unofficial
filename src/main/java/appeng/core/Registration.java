@@ -855,7 +855,7 @@ public final class Registration {
         }
 
         // whitelist from config
-        for (String dimension : AEConfig.instance.meteoriteDimensionList) {
+        for (String dimension : AEConfig.instance.meteoriteDimensionWhitelist) {
             String[] entry = dimension.replaceAll(" ", "").split(",");
             if (entry.length != 6) {
                 AELog.error(
