@@ -6,7 +6,6 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.localization.GuiText;
@@ -75,10 +74,8 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
-            if (fulfilled > 0 && request.stack instanceof IAEItemStack) {
-                targetPlan.add((IAEItemStack) request.stack.copy().setStackSize(fulfilled));
-            }
+        public void populatePlan(IItemList<IAEStack<?>> targetPlan) {
+            if (fulfilled > 0) targetPlan.add(request.stack.copy().setStackSize(fulfilled));
         }
 
         @Override
