@@ -171,8 +171,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .getStringList();
         this.meteoriteSpawnChance = this.get("worldGen", "meteoriteSpawnChanceList", this.meteoriteSpawnChance)
                 .getStringList();
-        this.meteoriteDimensionList = this.get("worldGen", "meteoriteDimensionList", this.meteoriteDimensionList)
-                .getStringList();
+        this.meteoriteDimensionList = this
+                .get("worldGen", "meteoriteDimensionList", this.meteoriteDimensionList).getStringList();
         this.addCustomCategoryComment(
                 "worldGen",
                 "The meteorite dimension whitelist list can be used alone or in unison with the meteorite (in)valid blocks whitelist. \n"
