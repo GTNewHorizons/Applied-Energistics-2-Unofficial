@@ -102,7 +102,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean disableColoredCableRecipesInNEI = true;
     public boolean updatable = false;
     public String[] meteoriteSpawnChance = { "0=0.3" };
-    public String[] meteoriteDimensionWhitelist = { "0, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT" };
+    public String[] meteoriteDimensionList = { "0, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT" };
     public String[] meteoriteValidBlocks = { "examplemod:example_block" };
     public String[] meteoriteInvalidBlocks = { "examplemod:example_block" };
     public int craftingCalculationTimePerTick = 5;
@@ -168,12 +168,12 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.spawnChargedChance = (float) (1.0
                 - this.get("worldGen", "spawnChargedChance", 1.0 - this.spawnChargedChance)
                         .getDouble(1.0 - this.spawnChargedChance));
-        this.minMeteoriteDistance = this.get("worldGen", "minMeteoriteDistance", this.minMeteoriteDistance)
+        this.minMeteoriteDistance = this.get("worldGen", "minMeteoriteDistanceList", this.minMeteoriteDistance)
                 .getStringList();
-        this.meteoriteSpawnChance = this.get("worldGen", "meteoriteSpawnChance", this.meteoriteSpawnChance)
+        this.meteoriteSpawnChance = this.get("worldGen", "meteoriteSpawnChanceList", this.meteoriteSpawnChance)
                 .getStringList();
-        this.meteoriteDimensionWhitelist = this
-                .get("worldGen", "meteoriteDimensionWhitelist", this.meteoriteDimensionWhitelist).getStringList();
+        this.meteoriteDimensionList = this.get("worldGen", "meteoriteDimensionList", this.meteoriteDimensionList)
+                .getStringList();
         this.addCustomCategoryComment(
                 "worldGen",
                 "The meteorite dimension whitelist list can be used alone or in unison with the meteorite (in)valid blocks whitelist. \n"
@@ -190,7 +190,10 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.quartzOresClusterAmount = this.get("worldGen", "quartzOresClusterAmount", this.quartzOresClusterAmount)
                 .getInt(this.quartzOresClusterAmount);
 
-        // this.minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
+        ConfigCategory categoryWorldGen = this.getCategory("worldgen");
+        categoryWorldGen.remove("meteoriteDimensionWhitelist");
+        categoryWorldGen.remove("minMeteoriteDistance");
+        categoryWorldGen.remove("meteoriteSpawnChance");
 
         this.addCustomCategoryComment(
                 "wireless",
