@@ -15,8 +15,10 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import net.minecraftforge.common.config.Property.Type;
 
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
@@ -408,6 +410,18 @@ public final class AEConfig extends Configuration implements IConfigurableObject
             }
         }
 
+        return prop;
+    }
+
+    @Override
+    public Property get(String category, String key, String[] defaultValues) { // compatibility for old configs
+        Property prop = super.get(category, key, defaultValues, null, false, -1, null);
+        if (prop.getType() != Type.STRING) {
+            ConfigCategory cat = getCategory(category.toLowerCase());
+            cat.remove(key);
+            prop = super.get(category, key, defaultValues, null, false, -1, null);
+            save();
+        }
         return prop;
     }
 
