@@ -233,12 +233,12 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     protected void printConnectionInfo(EntityPlayer player) {
         if (isOutput()) {
             PartP2PTunnel input = getInput();
-            if (input == null) player.addChatMessage(PlayerMessages.TunnelNotConnected.get());
+            if (input == null) player.addChatMessage(PlayerMessages.TunnelNotConnected.toChat());
             else {
                 TileEntity t = input.getTile();
                 player.addChatMessage(
                         new ChatComponentTranslation(
-                                PlayerMessages.TunnelInputIsAt.getName(),
+                                PlayerMessages.TunnelInputIsAt.getUnlocalized(),
                                 t.xCoord,
                                 t.yCoord,
                                 t.zCoord));
@@ -246,9 +246,9 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         } else {
             try {
                 TunnelCollection<T> oo = getOutputs();
-                if (oo.isEmpty()) player.addChatMessage(PlayerMessages.TunnelHasNoOutputs.get());
+                if (oo.isEmpty()) player.addChatMessage(PlayerMessages.TunnelHasNoOutputs.toChat());
                 else {
-                    player.addChatMessage(PlayerMessages.TunnelOutputsAreAt.get());
+                    player.addChatMessage(PlayerMessages.TunnelOutputsAreAt.toChat());
                     for (PartP2PTunnel t : oo) {
                         TileEntity te = t.getTile();
                         if (te != null) player.addChatMessage(
@@ -256,7 +256,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
                     }
                 }
             } catch (GridAccessException ignored) {
-                player.addChatMessage(PlayerMessages.TunnelNotConnected.get());
+                player.addChatMessage(PlayerMessages.TunnelNotConnected.toChat());
             }
         }
     }

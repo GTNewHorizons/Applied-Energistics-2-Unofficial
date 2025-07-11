@@ -10,9 +10,9 @@
 
 package appeng.core.localization;
 
-import net.minecraft.util.StatCollector;
+import net.minecraft.util.EnumChatFormatting;
 
-public enum WailaText {
+public enum WailaText implements Localization {
 
     Crafting,
 
@@ -36,24 +36,29 @@ public enum WailaText {
 
     Contains,
     Channels,
-    Booting;
+    Booting,
 
-    private final String root;
+    wireless_connected,
+    wireless_connected_multiple,
+    wireless_connected_detailsTitle,
+    wireless_connected_details,
+    wireless_notconnected,
+    wireless_channels,
+    wireless_power,
+    wireless_name;
+
+    private final String formatedName;
 
     WailaText() {
-        this.root = "waila.appliedenergistics2";
+        this.formatedName = this.name().replace("_", ".");
     }
 
-    WailaText(final String r) {
-        this.root = r;
-    }
-
-    public String getLocal() {
-        return StatCollector.translateToLocal(this.getUnlocalized());
+    WailaText(final String name) {
+        this.formatedName = name;
     }
 
     public String getUnlocalized() {
-        return this.root + '.' + this.toString();
+        return "waila.appliedenergistics2" + '.' + this.formatedName;
     }
 
     /**
@@ -66,13 +71,13 @@ public enum WailaText {
      */
     public static String getPowerState(final boolean isActive, final boolean isPowered, final boolean isBooting) {
         if (isBooting) {
-            return WailaText.Booting.getLocal();
+            return WailaText.Booting.getLocal(EnumChatFormatting.GREEN);
         } else if (isActive && isPowered) {
-            return WailaText.DeviceOnline.getLocal();
+            return WailaText.DeviceOnline.getLocal(EnumChatFormatting.GREEN);
         } else if (isPowered) {
-            return WailaText.DeviceMissingChannel.getLocal();
+            return WailaText.DeviceMissingChannel.getLocal(EnumChatFormatting.RED);
         } else {
-            return WailaText.DeviceOffline.getLocal();
+            return WailaText.DeviceOffline.getLocal(EnumChatFormatting.RED);
         }
     }
 }

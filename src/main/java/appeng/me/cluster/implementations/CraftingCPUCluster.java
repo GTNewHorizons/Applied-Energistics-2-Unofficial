@@ -1125,7 +1125,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 }
                 player.addChatMessage(
                         new ChatComponentTranslation(
-                                PlayerMessages.CraftingItemsWentMissing.getName(),
+                                PlayerMessages.CraftingItemsWentMissing.getUnlocalized(),
                                 missingCount,
                                 missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));
             }
@@ -1792,7 +1792,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             final String elapsedTimeText = DurationFormatUtils.formatDuration(
                     TimeUnit.MILLISECONDS.convert(this.elapsedTime, TimeUnit.NANOSECONDS),
                     GuiText.ETAFormat.getLocal());
-            return PlayerMessages.FinishCraftingRemind.get(
+            return PlayerMessages.FinishCraftingRemind.toChat(
                     new ChatComponentText(EnumChatFormatting.GREEN + String.valueOf(this.outputsCount)),
                     this.finalOutput.func_151000_E(),
                     new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText));

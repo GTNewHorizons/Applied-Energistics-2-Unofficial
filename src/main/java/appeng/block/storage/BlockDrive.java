@@ -59,7 +59,7 @@ public class BlockDrive extends AEBaseTileBlock {
                 if (Loader.isModLoaded("dreamcraft") && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)
                         && GTUtility.isStackInList(p.getHeldItem(), GregTechAPI.sWireCutterList)) {
                     if (tg.toggleItemStorageCellLocking()) {
-                        p.addChatMessage(PlayerMessages.DriveLockingToggled.get());
+                        p.addChatMessage(PlayerMessages.DriveLockingToggled.toChat());
                     }
                     return true;
                 }

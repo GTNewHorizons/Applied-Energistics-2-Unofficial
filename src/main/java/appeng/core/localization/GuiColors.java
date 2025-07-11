@@ -14,7 +14,7 @@ import net.minecraft.util.StatCollector;
 
 import appeng.core.AELog;
 
-public enum GuiColors {
+public enum GuiColors implements Localization {
 
     // ARGB Colors: Name and default value
     SearchboxFocused(0x6E000000),
@@ -158,16 +158,13 @@ public enum GuiColors {
     ProcessBarMiddleColor(0XFFE6E600),
     ProcessBarEndColor(0XFF0AE600);
 
-    private final String root;
     private final int color;
 
     GuiColors() {
-        this.root = "gui.color.appliedenergistics2";
         this.color = 0x000000;
     }
 
     GuiColors(final int hex) {
-        this.root = "gui.color.appliedenergistics2";
         this.color = hex;
     }
 
@@ -179,13 +176,13 @@ public enum GuiColors {
             try {
                 color = Integer.parseUnsignedInt(hex, 16);
             } catch (final NumberFormatException e) {
-                AELog.warn("Couldn't format color correctly for: " + this.root + " -> " + hex);
+                AELog.warn("Couldn't format color correctly for: " + "gui.color.appliedenergistics2" + " -> " + hex);
             }
         }
         return color;
     }
 
     public String getUnlocalized() {
-        return this.root + '.' + this.toString();
+        return "gui.color.appliedenergistics2." + this;
     }
 }

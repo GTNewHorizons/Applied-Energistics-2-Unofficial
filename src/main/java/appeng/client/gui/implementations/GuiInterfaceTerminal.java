@@ -1487,8 +1487,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 BlockPosHighlighter.highlightBlocks(
                         mc.thePlayer,
                         Collections.singletonList(new DimensionalCoord(x, y, z, dim)),
-                        PlayerMessages.InterfaceHighlighted.getName(),
-                        PlayerMessages.InterfaceInOtherDim.getName());
+                        PlayerMessages.InterfaceHighlighted.getUnlocalized(),
+                        PlayerMessages.InterfaceInOtherDim.getUnlocalized());
                 mc.thePlayer.closeScreen();
                 return true;
             }

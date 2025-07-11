@@ -96,8 +96,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                             mc.thePlayer,
                             Collections.singletonList(dc),
                             dc.getCustomName(),
-                            PlayerMessages.MachineHighlighted.getName(),
-                            PlayerMessages.MachineInOtherDim.getName());
+                            PlayerMessages.MachineHighlighted.getUnlocalized(),
+                            PlayerMessages.MachineInOtherDim.getUnlocalized());
                     mc.thePlayer.closeScreen();
                 } else NetworkHandler.instance
                         .sendToServer(new PacketClick(dc.x, dc.y, dc.z, ForgeDirection.UP.ordinal(), 0, 0, 0));
@@ -148,8 +148,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                         mc.thePlayer,
                         dcl,
                         is.getDisplayName(),
-                        PlayerMessages.MachineHighlighted.getName(),
-                        PlayerMessages.MachineInOtherDim.getName());
+                        PlayerMessages.MachineHighlighted.getUnlocalized(),
+                        PlayerMessages.MachineInOtherDim.getUnlocalized());
                 mc.thePlayer.closeScreen();
             }
 

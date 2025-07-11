@@ -254,8 +254,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             BlockPosHighlighter.highlightBlocks(
                     mc.thePlayer,
                     DimensionalCoord.readAsListFromNBT(data),
-                    PlayerMessages.InterfaceHighlighted.getName(),
-                    PlayerMessages.InterfaceInOtherDim.getName());
+                    PlayerMessages.InterfaceHighlighted.getUnlocalized(),
+                    PlayerMessages.InterfaceInOtherDim.getUnlocalized());
             mc.thePlayer.closeScreen();
         } else if (hoveredAEStack != null && btn == 2) {
             ((AEBaseContainer) inventorySlots).setTargetStack(hoveredAEStack);

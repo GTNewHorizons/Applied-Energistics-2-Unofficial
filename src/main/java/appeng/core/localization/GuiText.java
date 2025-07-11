@@ -10,9 +10,7 @@
 
 package appeng.core.localization;
 
-import net.minecraft.util.StatCollector;
-
-public enum GuiText {
+public enum GuiText implements Localization {
 
     inventory("container"), // mc's default Inventory localization.
 
@@ -284,14 +282,6 @@ public enum GuiText {
 
     GuiText(final String r) {
         this.root = r;
-    }
-
-    public String getLocal() {
-        return StatCollector.translateToLocal(this.getUnlocalized());
-    }
-
-    public String getLocal(Object... formatArgs) {
-        return StatCollector.translateToLocalFormatted(this.getUnlocalized(), formatArgs);
     }
 
     public String getUnlocalized() {
