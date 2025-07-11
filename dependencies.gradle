@@ -14,7 +14,7 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.8:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:OpenComputers:1.11.16-GTNH:api') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:waila:1.8.10:dev') {transitive = false}
+    implementation('com.github.GTNewHorizons:waila:1.8.10:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Railcraft:9.16.30:api') {transitive = false}
     compileOnly('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev')  {transitive = false }
     compileOnly('net.industrial-craft:industrialcraft-2:2.2.828-experimental:api')
@@ -24,6 +24,9 @@ dependencies {
     compileOnly('api:immibis:1')
     compileOnly('curse.maven:computercraft-67504:2269339')
     compileOnly('com.github.GTNewHorizons:Baubles-Expanded:2.1.9-GTNH:dev')
+    compileOnly('com.github.GTNewHorizons:ae2stuff:0.9.5-GTNH:dev') {
+        exclude module: "Applied-Energistics-2-Unofficial"
+    }
 
     //Uncomment to add thermal expansion + foundation for testing
     //runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')

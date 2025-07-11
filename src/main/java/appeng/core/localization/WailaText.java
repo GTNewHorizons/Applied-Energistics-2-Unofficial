@@ -36,24 +36,37 @@ public enum WailaText {
 
     Contains,
     Channels,
-    Booting;
+    Booting,
 
-    private final String root;
+    wireless_connected,
+    wireless_connected_multiple,
+    wireless_connected_detailsTitle,
+    wireless_connected_details,
+    wireless_notconnected,
+    wireless_channels,
+    wireless_power,
+    wireless_name;
+
+    private final String formatedName;
 
     WailaText() {
-        this.root = "waila.appliedenergistics2";
+        this.formatedName = this.name().replace("_", ".");
     }
 
     WailaText(final String r) {
-        this.root = r;
+        this.formatedName = r;
     }
 
     public String getLocal() {
         return StatCollector.translateToLocal(this.getUnlocalized());
     }
 
+    public String getLocal(Object... args) {
+        return StatCollector.translateToLocalFormatted(this.getUnlocalized(), args);
+    }
+
     public String getUnlocalized() {
-        return this.root + '.' + this.toString();
+        return "waila.appliedenergistics2" + '.' + this.formatedName;
     }
 
     /**
