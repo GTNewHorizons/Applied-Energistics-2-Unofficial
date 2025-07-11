@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -135,7 +136,7 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
         }
 
         lines.add(
-                EnumChatFormatting.WHITE + NumberFormat.getInstance().format(cellInventory.getUsedBytes())
+                EnumChatFormatting.WHITE + NumberFormat.getInstance(Locale.ENGLISH).format(cellInventory.getUsedBytes())
                         + EnumChatFormatting.GRAY
                         + " "
                         + GuiText.Of.getLocal()
@@ -147,7 +148,8 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
                         + GuiText.BytesUsed.getLocal());
 
         lines.add(
-                EnumChatFormatting.WHITE + NumberFormat.getInstance().format(cellInventory.getStoredItemTypes())
+                EnumChatFormatting.WHITE
+                        + NumberFormat.getInstance(Locale.ENGLISH).format(cellInventory.getStoredItemTypes())
                         + EnumChatFormatting.GRAY
                         + " "
                         + GuiText.Of.getLocal()
