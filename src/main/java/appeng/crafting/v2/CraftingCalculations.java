@@ -123,12 +123,16 @@ public class CraftingCalculations {
     }
 
     static {
-        registerProvider(new ExtractItemResolver(), IAEItemStack.class);
+        registerProvider(new ExtractItemResolver<>(), IAEItemStack.class);
+        registerProvider(new ExtractItemResolver<>(), IAEFluidStack.class);
         registerProvider(new SimulateMissingItemResolver<>(), IAEItemStack.class);
         registerProvider(new SimulateMissingItemResolver<>(), IAEFluidStack.class);
-        registerProvider(new EmitableItemResolver(), IAEItemStack.class);
-        registerProvider(new CraftableItemResolver(), IAEItemStack.class);
-        registerProvider(new IgnoreMissingItemResolver(), IAEItemStack.class);
+        registerProvider(new EmitableItemResolver<>(), IAEItemStack.class);
+        registerProvider(new EmitableItemResolver<>(), IAEFluidStack.class);
+        registerProvider(new CraftableItemResolver<>(), IAEItemStack.class);
+        registerProvider(new CraftableItemResolver<>(), IAEFluidStack.class);
+        registerProvider(new IgnoreMissingItemResolver<>(), IAEItemStack.class);
+        registerProvider(new IgnoreMissingItemResolver<>(), IAEFluidStack.class);
     }
 
     private static final class InternalMultiMap<K, V> extends Object2ObjectArrayMap<K, V[]> {

@@ -10,6 +10,8 @@
 
 package appeng.container.implementations;
 
+import static appeng.util.Platform.writeStackNBT;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -241,10 +243,18 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
             }
 
             // add a new encoded pattern.
-            for (final ItemStack encodedPatternStack : AEApi.instance().definitions().items().encodedPattern()
-                    .maybeStack(1).asSet()) {
-                output = encodedPatternStack;
-                this.patternSlotOUT.putStack(output);
+            if (isCraftingMode()) {
+                for (final ItemStack encodedPatternStack : AEApi.instance().definitions().items().encodedPattern()
+                        .maybeStack(1).asSet()) {
+                    output = encodedPatternStack;
+                    this.patternSlotOUT.putStack(output);
+                }
+            } else {
+                for (final ItemStack encodedPatternStack : AEApi.instance().definitions().items()
+                        .encodedUltimatePattern().maybeStack(1).asSet()) {
+                    output = encodedPatternStack;
+                    this.patternSlotOUT.putStack(output);
+                }
             }
             if (getPatternTerminal().hasRefillerUpgrade()) refillBlankPatterns(patternSlotIN);
         }
@@ -256,16 +266,18 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         final NBTTagList tagOut = new NBTTagList();
 
         for (final ItemStack i : in) {
-            tagIn.appendTag(this.createItemTag(i));
+            if (isCraftingMode()) tagIn.appendTag(this.createItemTag(i));
+            else tagIn.appendTag(writeStackNBT(AEItemStack.create(i), new NBTTagCompound(), true));
         }
 
         for (final ItemStack i : out) {
-            tagOut.appendTag(this.createItemTag(i));
+            if (isCraftingMode()) tagOut.appendTag(this.createItemTag(i));
+            else tagOut.appendTag(writeStackNBT(AEItemStack.create(i), new NBTTagCompound(), true));
         }
 
         encodedValue.setTag("in", tagIn);
         encodedValue.setTag("out", tagOut);
-        encodedValue.setBoolean("crafting", this.isCraftingMode());
+        if (isCraftingMode()) encodedValue.setBoolean("crafting", this.isCraftingMode());
         encodedValue.setBoolean("substitute", this.isSubstitute());
         encodedValue.setBoolean("beSubstitute", this.canBeSubstitute());
         encodedValue.setString("author", this.getPlayerInv().player.getCommandSenderName());
@@ -327,9 +339,10 @@ public class ContainerPatternTerm extends ContainerMEMonitorable
         final IDefinitions definitions = AEApi.instance().definitions();
 
         boolean isPattern = definitions.items().encodedPattern().isSameAs(output);
+        boolean isUltimatePattern = definitions.items().encodedUltimatePattern().isSameAs(output);
         isPattern |= definitions.materials().blankPattern().isSameAs(output);
 
-        return isPattern;
+        return isPattern || isUltimatePattern;
     }
 
     private NBTBase createItemTag(final ItemStack i) {

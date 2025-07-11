@@ -1,5 +1,8 @@
 package appeng.crafting.v2;
 
+import static appeng.util.Platform.readStackByte;
+import static appeng.util.Platform.writeStackByte;
+
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -25,7 +28,6 @@ import appeng.crafting.v2.resolvers.EmitableItemResolver;
 import appeng.crafting.v2.resolvers.ExtractItemResolver;
 import appeng.crafting.v2.resolvers.IgnoreMissingItemResolver.IgnoreMissingItemTask;
 import appeng.crafting.v2.resolvers.SimulateMissingItemResolver;
-import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
@@ -181,43 +183,20 @@ public final class CraftingTreeSerializer {
         return type.getEnumConstants()[ordinal];
     }
 
-    private final byte ST_NULL = 0;
-    private final byte ST_ITEM = 1;
-    private final byte ST_FLUID = 2;
-
-    public void writeStack(IAEStack<?> stack) throws IOException {
-        if (stack == null) {
-            buffer.writeByte(ST_NULL);
-        } else if (stack instanceof AEItemStack) {
-            buffer.writeByte(ST_ITEM);
-        } else if (stack instanceof AEFluidStack) {
-            buffer.writeByte(ST_FLUID);
-        } else {
-            throw new UnsupportedOperationException("Can't serialize a stack of type " + stack.getClass());
-        }
-        stack.writeToPacket(buffer);
+    public void writeStack(IAEStack<?> stack) {
+        writeStackByte(stack, buffer);
     }
 
-    public IAEStack<?> readStack() throws IOException {
-        final byte stackType = buffer.readByte();
-        return switch (stackType) {
-            case ST_NULL -> null;
-            case ST_ITEM -> AEItemStack.loadItemStackFromPacket(buffer);
-            case ST_FLUID -> AEFluidStack.loadFluidStackFromPacket(buffer);
-            default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
-        };
+    public IAEStack<?> readStack() {
+        return readStackByte(buffer);
     }
 
-    public void writeItemStack(IAEItemStack stack) throws IOException {
-        stack.writeToPacket(buffer);
+    public IAEItemStack readItemStack() {
+        return (IAEItemStack) readStackByte(buffer);
     }
 
-    public IAEItemStack readItemStack() throws IOException {
-        return AEItemStack.loadItemStackFromPacket(buffer);
-    }
-
-    public void writePattern(ICraftingPatternDetails pattern) throws IOException {
-        writeItemStack(AEItemStack.create(pattern.getPattern()));
+    public void writePattern(ICraftingPatternDetails pattern) {
+        writeStack(AEItemStack.create(pattern.getPattern()));
     }
 
     @SuppressWarnings("unchecked")
