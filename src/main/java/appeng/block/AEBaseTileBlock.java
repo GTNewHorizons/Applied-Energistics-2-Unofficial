@@ -73,6 +73,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
         super(mat, subName);
     }
 
+    /** setup all instance field before call this */
     @Override
     protected void setFeature(final EnumSet<AEFeature> f) {
         final AETileBlockFeatureHandler featureHandler = new AETileBlockFeatureHandler(f, this, this.featureSubName);

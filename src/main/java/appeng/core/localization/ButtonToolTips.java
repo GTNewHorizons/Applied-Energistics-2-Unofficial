@@ -12,7 +12,7 @@ package appeng.core.localization;
 
 import net.minecraft.util.StatCollector;
 
-public enum ButtonToolTips {
+public enum ButtonToolTips implements Localization {
 
     PowerUnits,
     IOMode,
@@ -244,21 +244,9 @@ public enum ButtonToolTips {
     ToggleShowOnlySubstituteOnDesc,
     ToggleShowOnlySubstituteOffDesc;
 
-    private final String root;
-
-    ButtonToolTips() {
-        this.root = "gui.tooltips.appliedenergistics2";
-    }
-
-    ButtonToolTips(final String r) {
-        this.root = r;
-    }
-
-    public String getLocal() {
-        return StatCollector.translateToLocal(this.getUnlocalized());
-    }
+    ButtonToolTips() {}
 
     public String getUnlocalized() {
-        return this.root + '.' + this.toString();
+        return "gui.tooltips.appliedenergistics2." + this;
     }
 }

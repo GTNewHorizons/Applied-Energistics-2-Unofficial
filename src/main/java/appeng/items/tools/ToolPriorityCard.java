@@ -78,7 +78,7 @@ public class ToolPriorityCard extends AEBaseItem implements IGuiItem {
         if (tile instanceof IPriorityHost iph && tile instanceof IActionHost iah) {
             handleUse(player, tile, iph, iah, stack, side);
         } else {
-            player.addChatMessage(PlayerMessages.PriorityInvalidTarget.get());
+            player.addChatMessage(PlayerMessages.PriorityInvalidTarget.toChat());
         }
     }
 
@@ -89,7 +89,7 @@ public class ToolPriorityCard extends AEBaseItem implements IGuiItem {
         if (part instanceof IPriorityHost iph) {
             handleUse(player, part.getTile(), iph, part, stack, side);
         } else {
-            player.addChatMessage(PlayerMessages.PriorityInvalidTarget.get());
+            player.addChatMessage(PlayerMessages.PriorityInvalidTarget.toChat());
         }
     }
 
@@ -101,22 +101,22 @@ public class ToolPriorityCard extends AEBaseItem implements IGuiItem {
 
         switch (getMode(stack)) {
             case EDIT -> Platform.openGUI(player, tile, side, GuiBridge.GUI_PRIORITY);
-            case VIEW -> player.addChatMessage(PlayerMessages.PriorityReadout.get(priorityHost.getPriority()));
+            case VIEW -> player.addChatMessage(PlayerMessages.PriorityReadout.toChat(priorityHost.getPriority()));
             case SET -> {
                 priorityHost.setPriority(getPriority(stack));
-                player.addChatMessage(PlayerMessages.PriorityConfigured.get(priorityHost.getPriority()));
+                player.addChatMessage(PlayerMessages.PriorityConfigured.toChat(priorityHost.getPriority()));
             }
             case INC -> {
                 int priority = getPriority(stack);
                 priorityHost.setPriority(priority);
                 setPriority(stack, priority + 1);
-                player.addChatMessage(PlayerMessages.PriorityConfigured.get(priorityHost.getPriority()));
+                player.addChatMessage(PlayerMessages.PriorityConfigured.toChat(priorityHost.getPriority()));
             }
             case DEC -> {
                 int priority = getPriority(stack);
                 priorityHost.setPriority(priority);
                 setPriority(stack, priority - 1);
-                player.addChatMessage(PlayerMessages.PriorityConfigured.get(priorityHost.getPriority()));
+                player.addChatMessage(PlayerMessages.PriorityConfigured.toChat(priorityHost.getPriority()));
             }
         }
     }

@@ -356,7 +356,7 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
 
                     player.addChatMessage(
                             new ChatComponentTranslation(
-                                    PlayerMessages.CraftingCantExtract.getName(),
+                                    PlayerMessages.CraftingCantExtract.getUnlocalized(),
                                     extracted.getStackSize(),
                                     expected.getStackSize(),
                                     missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));

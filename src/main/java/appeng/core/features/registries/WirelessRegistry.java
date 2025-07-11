@@ -67,28 +67,28 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
         }
 
         if (!this.isWirelessTerminal(item)) {
-            player.addChatMessage(PlayerMessages.DeviceNotWirelessTerminal.get());
+            player.addChatMessage(PlayerMessages.DeviceNotWirelessTerminal.toChat());
             return;
         }
 
         final IWirelessTermHandler handler = this.getWirelessTerminalHandler(item);
         final String unparsedKey = handler.getEncryptionKey(item);
         if (unparsedKey.isEmpty()) {
-            player.addChatMessage(PlayerMessages.DeviceNotLinked.get());
+            player.addChatMessage(PlayerMessages.DeviceNotLinked.toChat());
             return;
         }
 
         final long parsedKey = Long.parseLong(unparsedKey);
         final ILocatable securityStation = AEApi.instance().registries().locatable().getLocatableBy(parsedKey);
         if (securityStation == null) {
-            player.addChatMessage(PlayerMessages.StationCanNotBeLocated.get());
+            player.addChatMessage(PlayerMessages.StationCanNotBeLocated.toChat());
             return;
         }
 
         if (handler.hasPower(player, 0.5, item)) {
             Platform.openGUI(player, null, null, GuiBridge.GUI_WIRELESS_TERM);
         } else {
-            player.addChatMessage(PlayerMessages.DeviceNotPowered.get());
+            player.addChatMessage(PlayerMessages.DeviceNotPowered.toChat());
         }
     }
 }
