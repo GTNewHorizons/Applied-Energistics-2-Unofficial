@@ -17,6 +17,7 @@ import net.minecraft.tileentity.TileEntity;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingJob;
@@ -45,7 +46,6 @@ import appeng.parts.reporting.PartTerminal;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
 import appeng.util.PatternMultiplierHelper;
 import appeng.util.Platform;
-import codechicken.nei.ItemStackMap;
 import codechicken.nei.ItemStackSet;
 
 public class ContainerOptimizePatterns extends AEBaseContainer {
@@ -132,10 +132,10 @@ public class ContainerOptimizePatterns extends AEBaseContainer {
                 .filter(i -> hashCodeToMultipliers.containsKey(i.hashCode()))
                 .collect(Collectors.toMap(i -> i, i -> hashCodeToMultipliers.get(i.hashCode())));
 
-        ItemStackMap<Pair<Pattern, Integer>> lookupMap = new ItemStackMap<>();
+        HashMap<Integer, Pair<Pattern, Integer>> lookupMap = new HashMap<>();
         for (Entry<IAEItemStack, Integer> entry : multipliersMap.entrySet()) {
             Pattern pattern = patterns.get(entry.getKey());
-            lookupMap.put(pattern.getPattern().getPattern(), Pair.of(pattern, entry.getValue()));
+            lookupMap.put(Arrays.hashCode(pattern.getPattern().getOutputs()), Pair.of(pattern, entry.getValue()));
         }
 
         // Detect P2P interfaces
@@ -156,8 +156,10 @@ public class ContainerOptimizePatterns extends AEBaseContainer {
                     for (int i = 0; i < patternInv.getSizeInventory(); i++) {
                         ItemStack stack = patternInv.getStackInSlot(i);
 
-                        if (stack != null && !alreadyDone.containsKey(stack)) {
-                            var pair = lookupMap.get(stack);
+                        if (stack != null && stack.getItem() instanceof ICraftingPatternItem icp
+                                && !alreadyDone.containsKey(stack)) {
+                            var pair = lookupMap
+                                    .get(Arrays.hashCode(icp.getPatternForItem(stack, node.getWorld()).getOutputs()));
                             if (pair == null) continue;
                             ItemStack sCopy = stack.copy();
                             pair.getKey().applyModification(sCopy, pair.getValue());
