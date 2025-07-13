@@ -205,7 +205,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
             final int itemDamage = is.getItemDamage();
             final PartTypeWithVariant registeredPartType = this.registered.get(itemDamage);
             if (registeredPartType != null) {
-                return super.getItemStackDisplayName(is) + " - " + variants[registeredPartType.variant].toString();
+                return super.getItemStackDisplayName(is) + " - " + variants[registeredPartType.variant].getLocal();
             }
         }
 
