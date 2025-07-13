@@ -60,7 +60,7 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
         lines.add(
                 GuiText.StoredEnergy.getLocal() + ": "
                         + NumberFormat.getNumberInstance(Locale.US).format(internalCurrentPower)
-                        + Platform.gui_localize(PowerUnits.AE.unlocalizedName)
+                        + PowerUnits.AE.getLocal()
                         + " - "
                         + MessageFormat.format(" {0,number,#.##%} ", percent));
     }

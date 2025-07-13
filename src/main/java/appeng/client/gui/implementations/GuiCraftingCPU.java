@@ -22,7 +22,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.StatCollector;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
@@ -638,11 +637,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 List<DimensionalCoord> blocks = DimensionalCoord.readAsListFromNBT(data);
 
                 ScheduledReason sr = ScheduledReason.values()[data.getInteger("ScheduledReason")];
-                if (sr != ScheduledReason.UNDEFINED) {
-                    lineList.add(
-                            StatCollector.translateToLocal(
-                                    "gui.tooltips.appliedenergistics2.scheduledreason." + sr.toString()));
-                }
+                if (sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
 
                 if (blocks.isEmpty()) return;
                 for (DimensionalCoord blockPos : blocks) {

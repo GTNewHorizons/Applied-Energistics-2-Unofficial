@@ -10,8 +10,6 @@
 
 package appeng.core.localization;
 
-import net.minecraft.util.StatCollector;
-
 public enum ButtonToolTips implements Localization {
 
     PowerUnits,

@@ -51,9 +51,7 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
 
         final NBTTagCompound data = this.getData(stack);
         if (data.hasKey("tooltip")) {
-            lines.add(
-                    StatCollector.translateToLocal(
-                            this.getLocalizedName(data.getString("tooltip") + ".name", data.getString("tooltip"))));
+            lines.add(this.getLocalizedName(data.getString("tooltip") + ".name", data.getString("tooltip")));
         }
 
         if (data.hasKey("freq")) {

@@ -345,24 +345,21 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
 
         try {
             EntityPlayer player = ((PlayerSource) src).player;
-            if (player != null) {
-                if (expected != null && expected.getItem() != null) {
-                    IChatComponent missingDisplayName;
-                    String missingName = expected.getItemStack().getUnlocalizedName();
-                    if (StatCollector.canTranslate(missingName + ".name") && StatCollector
-                            .translateToLocal(missingName + ".name").equals(expected.getItemStack().getDisplayName()))
-                        missingDisplayName = new ChatComponentTranslation(missingName + ".name");
-                    else missingDisplayName = new ChatComponentText(expected.getItemStack().getDisplayName());
+            if (player == null || expected == null || expected.getItem() == null) return;
 
-                    player.addChatMessage(
-                            new ChatComponentTranslation(
-                                    PlayerMessages.CraftingCantExtract.getUnlocalized(),
-                                    extracted.getStackSize(),
-                                    expected.getStackSize(),
-                                    missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));
-                }
+            IChatComponent missingDisplayName;
+            String missingName = expected.getItemStack().getUnlocalizedName();
+            if (StatCollector.canTranslate(missingName + ".name"))
+                missingDisplayName = new ChatComponentTranslation(missingName + ".name");
+            else missingDisplayName = new ChatComponentText(expected.getItemStack().getDisplayName());
 
-            }
+            player.addChatMessage(
+                    new ChatComponentTranslation(
+                            PlayerMessages.CraftingCantExtract.getUnlocalized(),
+                            extracted.getStackSize(),
+                            expected.getStackSize(),
+                            missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));
+
         } catch (Exception ex) {
             AELog.error(ex, "Could not notify player of crafting failure");
         }
