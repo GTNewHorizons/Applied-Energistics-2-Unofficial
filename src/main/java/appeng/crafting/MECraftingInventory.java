@@ -349,7 +349,8 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
 
             IChatComponent missingDisplayName;
             String missingName = expected.getItemStack().getUnlocalizedName();
-            if (StatCollector.canTranslate(missingName + ".name"))
+            if (StatCollector.canTranslate(missingName + ".name") && StatCollector
+                    .translateToLocal(missingName + ".name").equals(expected.getItemStack().getDisplayName()))
                 missingDisplayName = new ChatComponentTranslation(missingName + ".name");
             else missingDisplayName = new ChatComponentText(expected.getItemStack().getDisplayName());
 
