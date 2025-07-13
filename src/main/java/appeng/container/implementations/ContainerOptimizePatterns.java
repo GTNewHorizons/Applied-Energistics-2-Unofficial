@@ -14,6 +14,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -150,6 +151,7 @@ public class ContainerOptimizePatterns extends AEBaseContainer {
                 for (IGridNode node : grid.getMachines(c)) {
                     IInterfaceViewable machine = (IInterfaceViewable) node.getMachine();
                     if (!machine.allowsPatternOptimization()) continue;
+                    World w = node.getWorld();
 
                     IInventory patternInv = machine.getPatterns();
 
@@ -158,8 +160,9 @@ public class ContainerOptimizePatterns extends AEBaseContainer {
 
                         if (stack != null && stack.getItem() instanceof ICraftingPatternItem icp
                                 && !alreadyDone.containsKey(stack)) {
-                            var pair = lookupMap
-                                    .get(Arrays.hashCode(icp.getPatternForItem(stack, node.getWorld()).getOutputs()));
+                            ICraftingPatternDetails pd = icp.getPatternForItem(stack, w);
+                            if (pd == null) continue;
+                            var pair = lookupMap.get(Arrays.hashCode(pd.getOutputs()));
                             if (pair == null) continue;
                             ItemStack sCopy = stack.copy();
                             pair.getKey().applyModification(sCopy, pair.getValue());
