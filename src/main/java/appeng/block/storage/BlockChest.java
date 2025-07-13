@@ -62,7 +62,7 @@ public class BlockChest extends AEBaseTileBlock {
                 if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT)
                         && GTUtility.isStackInList(p.getHeldItem(), GregTechAPI.sWireCutterList)) {
                     if (tg.toggleItemStorageCellLocking()) {
-                        p.addChatMessage(PlayerMessages.ChestLockingToggled.get());
+                        p.addChatMessage(PlayerMessages.ChestLockingToggled.toChat());
                     }
                     return true;
                 }
@@ -77,7 +77,7 @@ public class BlockChest extends AEBaseTileBlock {
 
                     tg.openGui(p, ch, cell, side);
                 } else {
-                    p.addChatMessage(PlayerMessages.ChestCannotReadStorageCell.get());
+                    p.addChatMessage(PlayerMessages.ChestCannotReadStorageCell.toChat());
                 }
             }
 

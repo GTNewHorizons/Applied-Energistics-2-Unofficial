@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -23,6 +24,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -134,19 +136,28 @@ public class ItemBasicStorageCell extends AEBaseItem implements IStorageCell, II
         }
 
         lines.add(
-                NumberFormat.getInstance().format(cellInventory.getUsedBytes()) + " "
+                EnumChatFormatting.WHITE + NumberFormat.getInstance(Locale.ENGLISH).format(cellInventory.getUsedBytes())
+                        + EnumChatFormatting.GRAY
+                        + " "
                         + GuiText.Of.getLocal()
-                        + ' '
+                        + " "
+                        + EnumChatFormatting.DARK_GREEN
                         + NumberFormat.getInstance().format(cellInventory.getTotalBytes())
-                        + ' '
+                        + " "
+                        + EnumChatFormatting.GRAY
                         + GuiText.BytesUsed.getLocal());
 
         lines.add(
-                NumberFormat.getInstance().format(cellInventory.getStoredItemTypes()) + " "
+                EnumChatFormatting.WHITE
+                        + NumberFormat.getInstance(Locale.ENGLISH).format(cellInventory.getStoredItemTypes())
+                        + EnumChatFormatting.GRAY
+                        + " "
                         + GuiText.Of.getLocal()
-                        + ' '
+                        + " "
+                        + EnumChatFormatting.DARK_GREEN
                         + NumberFormat.getInstance().format(cellInventory.getMaxItemTypes())
-                        + ' '
+                        + " "
+                        + EnumChatFormatting.GRAY
                         + GuiText.Types.getLocal());
 
         if (cellInventory.getTotalItemTypes() == 1 && cellInventory.getStoredItemTypes() != 0) {

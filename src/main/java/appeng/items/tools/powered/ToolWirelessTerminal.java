@@ -17,7 +17,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
@@ -83,7 +82,7 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
                 }
             }
         } else {
-            lines.add(StatCollector.translateToLocal("AppEng.GuiITooltip.Unlinked"));
+            lines.add(GuiText.Unlinked.getLocal());
         }
     }
 
