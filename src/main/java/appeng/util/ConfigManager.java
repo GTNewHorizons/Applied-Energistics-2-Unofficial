@@ -52,6 +52,10 @@ public final class ConfigManager implements IConfigManager {
         throw new IllegalStateException("Invalid Config setting. Expected a non-null value for " + settingName);
     }
 
+    public <T extends Enum<T>> T getSetting(Class<T> clazz) {
+        return (T) getSetting(Settings.getFromClass(clazz));
+    }
+
     @Override
     public Enum<?> putSetting(final Settings settingName, final Enum newValue) {
         final Enum<?> oldValue = this.getSetting(settingName);

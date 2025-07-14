@@ -14,8 +14,12 @@
 package appeng.api.config;
 
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
+
+import appeng.items.tools.ToolNetworkVisualiser.VisualisationModes;
 
 public enum Settings {
 
@@ -86,11 +90,23 @@ public enum Settings {
 
     INTERFACE_TERMINAL_SECTION_ORDER(EnumSet.allOf(StringOrder.class)),
 
+    NETWORK_VISUALISER(EnumSet.allOf(VisualisationModes.class)),
+
     CRAFTING_ALLOW(EnumSet.allOf(CraftingAllow.class)),
+
+    WIRELESS_TOOL_TYPE(EnumSet.allOf(WirelessToolType.class)),
+
+    ADVANCED_WIRELESS_TOOL_MODE(EnumSet.allOf(AdvancedWirelessToolMode.class)),
+
+    SUPER_WIRELESS_TOOL_GROUP_BY(EnumSet.allOf(SuperWirelessToolGroupBy.class)),
+
+    SUPER_WIRELESS_TOOL_HIDE_BOUNDED(EnumSet.of(YesNo.YES, YesNo.NO)),
 
     PINS_STATE(EnumSet.allOf(PinsState.class));
 
     private final EnumSet<? extends Enum<?>> values;
+
+    static final Map<Class<? extends Enum<?>>, Settings> enumMap = new HashMap<>();
 
     Settings(@Nonnull final EnumSet<? extends Enum<?>> possibleOptions) {
         if (possibleOptions.isEmpty()) {
@@ -98,6 +114,23 @@ public enum Settings {
         }
 
         this.values = possibleOptions;
+    }
+
+    public static Settings getFromClass(Class<? extends Enum<?>> clazz) {
+        Settings s = enumMap.get(clazz);
+        if (s == null) {
+            for (Settings setting : Settings.values()) {
+                for (Enum<?> value : setting.values) {
+                    if (value.getClass() == clazz) {
+                        enumMap.put(clazz, setting);
+                        return setting;
+                    }
+                    break;
+                }
+            }
+            throw new IllegalArgumentException("No Setting for " + clazz);
+        }
+        return s;
     }
 
     public EnumSet<? extends Enum<?>> getPossibleValues() {

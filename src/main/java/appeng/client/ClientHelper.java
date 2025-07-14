@@ -46,6 +46,7 @@ import appeng.api.util.AEColor;
 import appeng.block.AEBaseBlock;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.render.BlockPosHighlighter;
+import appeng.client.render.NetworkVisualiserRender;
 import appeng.client.render.TESRWrapper;
 import appeng.client.render.WorldRender;
 import appeng.client.render.effects.AssemblerFX;
@@ -57,6 +58,7 @@ import appeng.client.render.effects.VibrantFX;
 import appeng.client.texture.CableBusTextures;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.client.texture.ExtraItemTextures;
+import appeng.client.texture.WirelessTextures;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.CommonHelper;
@@ -103,6 +105,7 @@ public class ClientHelper extends ServerHelper {
     public void init() {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new BlockPosHighlighter());
+        MinecraftForge.EVENT_BUS.register(new NetworkVisualiserRender());
 
         for (ActionKey key : ActionKey.values()) {
             final KeyBinding binding = new KeyBinding(key.getTranslationKey(), key.getDefaultKey(), KEY_CATEGORY);
@@ -424,6 +427,10 @@ public class ClientHelper extends ServerHelper {
 
             for (final CableBusTextures cb : CableBusTextures.values()) {
                 cb.registerIcon(ev.map);
+            }
+
+            for (final WirelessTextures tw : WirelessTextures.values()) {
+                tw.registerIcon(ev.map);
             }
         }
     }

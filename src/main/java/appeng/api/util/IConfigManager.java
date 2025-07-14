@@ -44,10 +44,12 @@ public interface IConfigManager {
     /**
      * Get Value of a particular setting
      *
-     * @param settingName name of setting
+     * @param clazz class name of setting
      * @return value of setting
      */
-    Enum<?> getSetting(Settings settingName);
+    <T extends Enum<T>> T getSetting(Class<T> clazz);
+
+    Enum<?> getSetting(final Settings settingName);
 
     /**
      * Change setting

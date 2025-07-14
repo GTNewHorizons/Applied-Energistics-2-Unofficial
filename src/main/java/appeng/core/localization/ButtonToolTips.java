@@ -234,6 +234,17 @@ public enum ButtonToolTips implements Localization {
     CPUOnlyAllowPlayerDesc,
     CPUOnlyAllowNonPlayerDesc,
 
+    SuperWirelessToolGroupBySingleName,
+    SuperWirelessToolGroupBySingleDesc,
+    SuperWirelessToolGroupByNetworkName,
+    SuperWirelessToolGroupByNetworkDesc,
+    SuperWirelessToolGroupByColorName,
+    SuperWirelessToolGroupByColorDesc,
+    SuperWirelessToolHideBoundedYesName,
+    SuperWirelessToolHideBoundedYesDesc,
+    SuperWirelessToolHideBoundedNoName,
+    SuperWirelessToolHideBoundedNoDesc,
+
     PinsSection,
     PinsSectionActive,
     PinsSectionDisabled,

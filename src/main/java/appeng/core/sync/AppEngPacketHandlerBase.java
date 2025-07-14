@@ -37,6 +37,7 @@ import appeng.core.sync.packets.PacketNEIBookmark;
 import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketNEIRecipe;
 import appeng.core.sync.packets.PacketNetworkStatusSelected;
+import appeng.core.sync.packets.PacketNetworkVisualiserData;
 import appeng.core.sync.packets.PacketNewStorageDimension;
 import appeng.core.sync.packets.PacketOptimizePatterns;
 import appeng.core.sync.packets.PacketPaintedEntity;
@@ -48,6 +49,8 @@ import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.core.sync.packets.PacketPatternValueSet;
 import appeng.core.sync.packets.PacketPinsUpdate;
 import appeng.core.sync.packets.PacketProgressBar;
+import appeng.core.sync.packets.PacketSuperWirelessToolCommand;
+import appeng.core.sync.packets.PacketSuperWirelessToolData;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketTransitionEffect;
@@ -122,6 +125,9 @@ public class AppEngPacketHandlerBase {
         PACKET_OPTIMIZE_PATTERNS(PacketOptimizePatterns.class),
         PACKET_NETWORK_STATUS_SELECTED(PacketNetworkStatusSelected.class),
         PACKET_PATTERN_ITEM_RENAMER(PacketPatternItemRenamer.class),
+        PACKET_NETWORK_VISUALISER_DATA(PacketNetworkVisualiserData.class),
+        PACKET_SUPER_WIRELESS_TOOL_DATA(PacketSuperWirelessToolData.class),
+        PACKET_SUPER_WIRELESS_TOOL_COMMAND(PacketSuperWirelessToolCommand.class),
         PACKET_PINS_UPDATE(PacketPinsUpdate.class);
 
         private final Class<? extends AppEngPacket> packetClass;
