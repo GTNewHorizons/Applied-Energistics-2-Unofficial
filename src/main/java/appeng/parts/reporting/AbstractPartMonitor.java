@@ -159,7 +159,7 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
 
         if (Platform.isWrench(player, eq, te.xCoord, te.yCoord, te.zCoord)) {
             this.isLocked = !this.isLocked;
-            player.addChatMessage((this.isLocked ? PlayerMessages.isNowLocked : PlayerMessages.isNowUnlocked).get());
+            player.addChatMessage((this.isLocked ? PlayerMessages.isNowLocked : PlayerMessages.isNowUnlocked).toChat());
             this.getHost().markForUpdate();
         } else if (!this.isLocked) {
             this.configuredItem = AEItemStack.create(eq);

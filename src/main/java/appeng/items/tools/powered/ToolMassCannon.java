@@ -185,7 +185,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
                     }
                 } else {
                     if (Platform.isServer() && !(p instanceof FakePlayer)) {
-                        p.addChatMessage(PlayerMessages.AmmoDepleted.get());
+                        p.addChatMessage(PlayerMessages.AmmoDepleted.toChat());
                     }
                     return item;
                 }
