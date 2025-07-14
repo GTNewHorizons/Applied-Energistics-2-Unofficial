@@ -10,6 +10,8 @@
 
 package appeng.core.localization;
 
+import net.minecraft.util.IChatComponent;
+
 public enum PlayerMessages implements Localization {
 
     ChestCannotReadStorageCell,
@@ -47,6 +49,21 @@ public enum PlayerMessages implements Localization {
     CraftingCantExtract,
     MachineInOtherDim,
     MachineHighlighted;
+
+    @Deprecated // kept for backward compat
+    public IChatComponent get() {
+        return toChat();
+    }
+
+    @Deprecated // kept for backward compat
+    public IChatComponent get(Object... args) {
+        return toChat(args);
+    }
+
+    @Deprecated // kept for backward compat
+    public String getName() {
+        return getUnlocalized();
+    }
 
     public String getUnlocalized() {
         return "chat.appliedenergistics2." + this.name();

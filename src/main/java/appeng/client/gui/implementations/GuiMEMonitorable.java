@@ -207,6 +207,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
                     try {
                         if (next.ordinal() >= rows) return; // ignore to avoid hiding terminal inventory
 
+                        memoryText = this.searchField.getText();
                         final PacketPinsUpdate p = new PacketPinsUpdate((PinsState) next);
                         NetworkHandler.instance.sendToServer(p);
                     } catch (final IOException e) {
