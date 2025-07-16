@@ -1142,11 +1142,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                     missingCount,
                                     missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));
                 }
-                player.addChatMessage(
-                        new ChatComponentTranslation(
-                                PlayerMessages.CraftingItemsWentMissing.getUnlocalized(),
-                                missingCount,
-                                missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));
             }
         } catch (Exception ex) {
             AELog.error(ex, "Could not notify player of crafting failure");
