@@ -10,6 +10,8 @@
 
 package appeng.helpers;
 
+import static appeng.util.Platform.convertStack;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -19,6 +21,7 @@ import net.minecraft.world.World;
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.AEApi;
+import appeng.api.config.InsertionMode;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingJob;
@@ -71,7 +74,7 @@ public class MultiCraftingTracker {
 
     public boolean handleCrafting(final int x, final long itemToCraft, final IAEItemStack ais, final InventoryAdaptor d,
             final World w, final IGrid g, final ICraftingGrid cg, final BaseActionSource mySrc) {
-        if (ais != null && d.simulateAdd(ais.getItemStack()) == null) {
+        if (ais != null && d.simulateAddStack(convertStack(ais), InsertionMode.DEFAULT) == null) {
             final Future<ICraftingJob> craftingJob = this.getJob(x);
 
             if (this.getLink(x) != null) {
