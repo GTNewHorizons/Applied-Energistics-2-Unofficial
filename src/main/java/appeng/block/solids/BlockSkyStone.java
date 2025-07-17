@@ -62,21 +62,24 @@ public class BlockSkyStone extends AEBaseBlock implements IOrientableBlock {
         this.setHarvestLevel("pickaxe", 3, 0);
         this.setFeature(EnumSet.of(AEFeature.Core));
 
-        MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new EventHandler());
     }
 
-    @SubscribeEvent
-    public void breakFaster(final PlayerEvent.BreakSpeed event) {
-        if (event.block == this && event.entityPlayer != null) {
-            final ItemStack is = event.entityPlayer.inventory.getCurrentItem();
-            int level = -1;
+    public class EventHandler {
 
-            if (is != null && is.getItem() != null) {
-                level = is.getItem().getHarvestLevel(is, "pickaxe");
-            }
+        @SubscribeEvent
+        public void breakFaster(final PlayerEvent.BreakSpeed event) {
+            if (event.block == BlockSkyStone.this && event.entityPlayer != null) {
+                final ItemStack is = event.entityPlayer.inventory.getCurrentItem();
+                int level = -1;
 
-            if (event.metadata > 0 || level >= 3 || event.originalSpeed > BREAK_SPEAK_THRESHOLD) {
-                event.newSpeed /= BREAK_SPEAK_SCALAR;
+                if (is != null && is.getItem() != null) {
+                    level = is.getItem().getHarvestLevel(is, "pickaxe");
+                }
+
+                if (event.metadata > 0 || level >= 3 || event.originalSpeed > BREAK_SPEAK_THRESHOLD) {
+                    event.newSpeed /= BREAK_SPEAK_SCALAR;
+                }
             }
         }
     }

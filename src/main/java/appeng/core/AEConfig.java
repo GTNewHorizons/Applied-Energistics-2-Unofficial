@@ -124,7 +124,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         super(configFile);
         this.configFile = configFile;
 
-        FMLCommonHandler.instance().bus().register(this);
+        FMLCommonHandler.instance().bus().register(new EventHandler());
 
         final double DEFAULT_MEKANISM_EXCHANGE = 0.2;
         PowerUnits.MK.conversionRatio = this.get("PowerRatios", "Mekanism", DEFAULT_MEKANISM_EXCHANGE)
@@ -440,10 +440,13 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         }
     }
 
-    @SubscribeEvent
-    public void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
-        if (eventArgs.modID.equals(AppEng.MOD_ID)) {
-            this.clientSync();
+    public class EventHandler {
+
+        @SubscribeEvent
+        public void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
+            if (eventArgs.modID.equals(AppEng.MOD_ID)) {
+                AEConfig.this.clientSync();
+            }
         }
     }
 
