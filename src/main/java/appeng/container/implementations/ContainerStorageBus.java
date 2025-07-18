@@ -178,18 +178,17 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         final int upgrades = this.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
 
         if (upgrades > 0) { // sync filter slots
-                boolean needSync = this.storageBus.needSyncGUI;
-                int row;
-                if (needSync) {
-                    row = -1; // send all rows
-                    rowToUpdate = upgrades; // force update of last row at next call
-                    this.storageBus.needSyncGUI = false;
-                } else row = rowToUpdate++;
+            boolean needSync = this.storageBus.needSyncGUI;
+            int row;
+            if (needSync) {
+                row = -1; // send all rows
+                rowToUpdate = upgrades; // force update of last row at next call
+                this.storageBus.needSyncGUI = false;
+            } else row = rowToUpdate++;
 
-                if (row >= upgrades) rowToUpdate = 0;
-                sendRow(row, upgrades);
+            if (row >= upgrades) rowToUpdate = 0;
+            sendRow(row, upgrades);
         }
-
 
         this.standardDetectAndSendChanges();
     }
