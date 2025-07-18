@@ -104,12 +104,13 @@ public abstract class AbstractPartPanel extends AbstractPartReporting {
         rh.setBounds(2, 2, 14, 14, 14, 16);
         rh.renderBlock(x, y, z, renderer);
 
+        final Tessellator tess = Tessellator.instance;
         if (this.getLightLevel() > 0) {
             final int l = 13;
-            Tessellator.instance.setBrightness(l << 20 | l << 4);
+            tess.setBrightness(l << 20 | l << 4);
         }
 
-        Tessellator.instance.setColorOpaque_I(this.getBrightnessColor());
+        tess.setColorOpaque_I(this.getBrightnessColor());
         rh.renderFace(x, y, z, this.getFrontBright().getIcon(), ForgeDirection.SOUTH, renderer);
 
         rh.setBounds(4, 4, 13, 12, 12, 14);

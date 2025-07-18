@@ -590,6 +590,7 @@ public class PartCable extends AEBasePart implements IPartCable {
         rh.setFacesToRender(EnumSet.complementOf(EnumSet.of(of)));
 
         boolean isGlass = false;
+        final Tessellator tess = Tessellator.instance;
         if (ghh != null && partHost != null
                 && ghh.getCableConnectionType(of.getOpposite()) == AECableType.GLASS
                 && partHost.getPart(of.getOpposite()) == null
@@ -622,12 +623,12 @@ public class PartCable extends AEBasePart implements IPartCable {
                     ico.setFlip(false, true);
                 }
 
-                Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-                Tessellator.instance.setColorOpaque_I(myColor.blackVariant);
+                tess.setBrightness(15 << 20 | 15 << 4);
+                tess.setColorOpaque_I(myColor.blackVariant);
                 rh.setTexture(firstIcon, firstIcon, firstIcon, firstIcon, firstIcon, firstIcon);
                 this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
-                Tessellator.instance.setColorOpaque_I(myColor.whiteVariant);
+                tess.setColorOpaque_I(myColor.whiteVariant);
                 rh.setTexture(secondIcon, secondIcon, secondIcon, secondIcon, secondIcon, secondIcon);
                 this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
@@ -664,12 +665,12 @@ public class PartCable extends AEBasePart implements IPartCable {
             final IIcon firstIcon = new TaughtIcon(this.getChannelTex(channels, false).getIcon(), -0.2f);
             final IIcon secondIcon = new TaughtIcon(this.getChannelTex(channels, true).getIcon(), -0.2f);
 
-            Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-            Tessellator.instance.setColorOpaque_I(myColor.blackVariant);
+            tess.setBrightness(15 << 20 | 15 << 4);
+            tess.setColorOpaque_I(myColor.blackVariant);
             rh.setTexture(firstIcon, firstIcon, firstIcon, firstIcon, firstIcon, firstIcon);
             this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
-            Tessellator.instance.setColorOpaque_I(myColor.whiteVariant);
+            tess.setColorOpaque_I(myColor.whiteVariant);
             rh.setTexture(secondIcon, secondIcon, secondIcon, secondIcon, secondIcon, secondIcon);
             this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
