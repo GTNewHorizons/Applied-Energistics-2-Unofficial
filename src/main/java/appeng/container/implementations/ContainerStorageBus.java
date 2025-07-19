@@ -147,6 +147,7 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         // end at last filter slot or at end of specific row
         int to = row <= -1 ? inv.getSizeInventory() : 18 + (9 * row);
 
+        int offset = getToolboxSizeInventory();
         for (; from < to; from++) {
             if (upgrades <= (from / 9 - 2)) break;
 
@@ -158,7 +159,7 @@ public class ContainerStorageBus extends ContainerUpgradeable {
                     // necessary to ensure that the package is sent correctly
                     playerMP.isChangingQuantityOnly = false;
                 }
-                crafter.sendSlotContents(this, from + getToolboxSizeInventory(), stack);
+                crafter.sendSlotContents(this, from + offset, stack);
             }
         }
     }
