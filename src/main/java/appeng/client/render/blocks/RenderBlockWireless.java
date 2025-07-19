@@ -250,17 +250,18 @@ public class RenderBlockWireless extends BaseBlockRender<BlockWireless, TileWire
             // ExtraTextures.BlockChargerInside.getIcon(), r, r );
             this.renderBlockBounds(renderer, 5, 5, 0, 11, 11, 1, fdx, fdy, fdz);
 
+            final Tessellator tess = Tessellator.instance;
             if (this.hasChan) {
                 final int l = 14;
-                Tessellator.instance.setBrightness(l << 20 | l << 4);
-                Tessellator.instance.setColorOpaque_I(AEColor.Transparent.blackVariant);
+                tess.setBrightness(l << 20 | l << 4);
+                tess.setColorOpaque_I(AEColor.Transparent.blackVariant);
             } else if (this.hasPower) {
                 final int l = 9;
-                Tessellator.instance.setBrightness(l << 20 | l << 4);
-                Tessellator.instance.setColorOpaque_I(AEColor.Transparent.whiteVariant);
+                tess.setBrightness(l << 20 | l << 4);
+                tess.setColorOpaque_I(AEColor.Transparent.whiteVariant);
             } else {
-                Tessellator.instance.setBrightness(0);
-                Tessellator.instance.setColorOpaque_I(0x000000);
+                tess.setBrightness(0);
+                tess.setColorOpaque_I(0x000000);
             }
 
             if (ForgeDirection.UP != fdz.getOpposite()) {

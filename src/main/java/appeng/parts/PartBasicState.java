@@ -67,17 +67,18 @@ public abstract class PartBasicState extends AEBasePart implements IPowerChannel
     }
 
     public void setColors(final boolean hasChan, final boolean hasPower) {
+        final Tessellator tess = Tessellator.instance;
         if (hasChan) {
             final int l = 14;
-            Tessellator.instance.setBrightness(l << 20 | l << 4);
-            Tessellator.instance.setColorOpaque_I(this.getColor().blackVariant);
+            tess.setBrightness(l << 20 | l << 4);
+            tess.setColorOpaque_I(this.getColor().blackVariant);
         } else if (hasPower) {
             final int l = 9;
-            Tessellator.instance.setBrightness(l << 20 | l << 4);
-            Tessellator.instance.setColorOpaque_I(this.getColor().whiteVariant);
+            tess.setBrightness(l << 20 | l << 4);
+            tess.setColorOpaque_I(this.getColor().whiteVariant);
         } else {
-            Tessellator.instance.setBrightness(0);
-            Tessellator.instance.setColorOpaque_I(0x000000);
+            tess.setBrightness(0);
+            tess.setColorOpaque_I(0x000000);
         }
     }
 
