@@ -468,8 +468,9 @@ public class FacadePart implements IFacadePart, IBoxProvider {
                                 instance.setInvColor(0xffffff);
                             }
 
-                            Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-                            Tessellator.instance.setColorOpaque_F(1, 1, 1);
+                            final Tessellator tess = Tessellator.instance;
+                            tess.setBrightness(15 << 20 | 15 << 4);
+                            tess.setColorOpaque_F(1, 1, 1);
                             instance.setTexture(
                                     blk.getIcon(this.side.ordinal(), ib.getMetadata(randomItem.getItemDamage())));
 

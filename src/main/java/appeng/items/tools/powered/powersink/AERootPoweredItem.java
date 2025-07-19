@@ -20,6 +20,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 
 import com.google.common.base.Optional;
 
@@ -59,10 +60,13 @@ public abstract class AERootPoweredItem extends AEBaseItem implements IAEItemPow
 
         lines.add(
                 GuiText.StoredEnergy.getLocal() + ": "
+                        + EnumChatFormatting.GREEN
                         + NumberFormat.getNumberInstance(Locale.US).format(internalCurrentPower)
+                        + " "
                         + PowerUnits.AE.getLocal()
                         + " - "
-                        + MessageFormat.format(" {0,number,#.##%} ", percent));
+                        + MessageFormat.format("{0,number,#.##%} ", percent)
+                        + EnumChatFormatting.RESET);
     }
 
     @Override

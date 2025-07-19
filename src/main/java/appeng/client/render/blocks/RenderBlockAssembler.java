@@ -50,43 +50,44 @@ public class RenderBlockAssembler extends BaseBlockRender<BlockMolecularAssemble
         renderer.setOverrideBlockTexture(blk.getIcon(0, 0));
 
         this.setInvRenderBounds(renderer, 2, 14, 0, 14, 16, 2);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        final Tessellator tess = Tessellator.instance;
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 0, 14, 2, 2, 16, 14);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 2, 0, 14, 14, 2, 16);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 14, 0, 2, 16, 2, 14);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 0, 0, 0, 16, 2, 2);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 0, 2, 0, 2, 16, 2);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 0, 0, 2, 2, 2, 16);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 0, 14, 14, 16, 16, 16);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 14, 0, 14, 16, 14, 16);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 14, 14, 0, 16, 16, 14);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 14, 2, 0, 16, 14, 2);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 0, 2, 14, 2, 14, 16);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         this.setInvRenderBounds(renderer, 1, 1, 1, 15, 15, 15);
-        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, Tessellator.instance, 0xffffff, renderer);
+        this.renderInvBlock(EnumSet.allOf(ForgeDirection.class), blk, is, tess, 0xffffff, renderer);
 
         renderer.setOverrideBlockTexture(null);
     }
