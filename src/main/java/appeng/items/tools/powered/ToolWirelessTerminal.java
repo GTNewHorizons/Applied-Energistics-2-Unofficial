@@ -19,6 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraft.util.EnumChatFormatting;
 
 import com.google.common.base.Optional;
 
@@ -76,9 +77,9 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
                 final String encKey = tag.getString("encryptionKey");
 
                 if (encKey == null || encKey.isEmpty()) {
-                    lines.add(GuiText.Unlinked.getLocal());
+                    lines.add(EnumChatFormatting.RED + GuiText.Unlinked.getLocal() + EnumChatFormatting.RESET);
                 } else {
-                    lines.add(GuiText.Linked.getLocal());
+                    lines.add(EnumChatFormatting.GREEN + GuiText.Linked.getLocal() + EnumChatFormatting.RESET);
                 }
             }
         } else {
