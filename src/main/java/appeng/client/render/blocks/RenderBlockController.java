@@ -115,8 +115,9 @@ public class RenderBlockController extends BaseBlockRender<BlockController, Tile
         final boolean out = renderer.renderStandardBlock(blk, x, y, z);
 
         if (lights != null) {
-            Tessellator.instance.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-            Tessellator.instance.setBrightness(14 << 20 | 14 << 4);
+            final Tessellator tess = Tessellator.instance;
+            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.setBrightness(14 << 20 | 14 << 4);
             renderer.renderFaceXNeg(blk, x, y, z, lights.getIcon());
             renderer.renderFaceXPos(blk, x, y, z, lights.getIcon());
             renderer.renderFaceYNeg(blk, x, y, z, lights.getIcon());

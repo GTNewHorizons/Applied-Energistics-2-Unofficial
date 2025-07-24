@@ -107,8 +107,9 @@ public class RenderSpatialPylon extends BaseBlockRender<BlockSpatialPylon, TileS
 
             if ((displayBits & TileSpatialPylon.DISPLAY_POWERED_ENABLED) == TileSpatialPylon.DISPLAY_POWERED_ENABLED) {
                 final int bn = 15;
-                Tessellator.instance.setBrightness(bn << 20 | bn << 4);
-                Tessellator.instance.setColorOpaque_I(0xffffff);
+                final Tessellator tess = Tessellator.instance;
+                tess.setBrightness(bn << 20 | bn << 4);
+                tess.setColorOpaque_I(0xffffff);
 
                 for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
                     this.renderFace(

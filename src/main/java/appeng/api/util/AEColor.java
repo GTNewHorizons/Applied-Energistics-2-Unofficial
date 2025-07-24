@@ -16,6 +16,8 @@ package appeng.api.util;
 import java.util.Arrays;
 import java.util.List;
 
+import net.minecraft.util.StatCollector;
+
 import appeng.core.localization.Localization;
 
 /**
@@ -113,5 +115,10 @@ public enum AEColor implements Localization {
 
     public String getUnlocalized() {
         return unlocalizedName;
+    }
+
+    @Override
+    public String toString() {
+        return StatCollector.translateToLocal(this.unlocalizedName);
     }
 }
