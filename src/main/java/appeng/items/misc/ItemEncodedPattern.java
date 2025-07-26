@@ -12,14 +12,11 @@ package appeng.items.misc;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.stream.Collectors;
 
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
@@ -218,14 +215,12 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final ItemStack unknownItem = new ItemStack(Blocks.fire);
         boolean recipeIsBroken = false;
         boolean first = true;
-        List<IAEItemStack> itemsList = Arrays.asList(items);
-        List<IAEItemStack> sortedItems = itemsList.stream()
-                .sorted(Comparator.comparingLong(IAEItemStack::getStackSize).reversed()).collect(Collectors.toList());
-        boolean isFluid = false;
+
+        boolean isFluid;
         EnumChatFormatting oldColor = color;
         final Item fluidDropItem = getFluidDropItem();
 
-        for (final IAEItemStack item : sortedItems) {
+        for (final IAEItemStack item : items) {
             Long itemCount = item.getStackSize();
 
             if (!recipeIsBroken && item.equals(unknownItem)) {
@@ -233,11 +228,11 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             }
 
             if (fluidDropItem != null && item.getItemStack().getItem() == fluidDropItem) {
-                label = EnumChatFormatting.GOLD + label;
+                // label = EnumChatFormatting.GOLD + label; does nothing
                 color = EnumChatFormatting.GOLD;
                 isFluid = true;
             } else {
-                label = EnumChatFormatting.RESET + label;
+                // label = EnumChatFormatting.RESET + label; does nothing
                 color = oldColor;
                 isFluid = false;
             }
@@ -263,12 +258,9 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
 
             if (first) {
                 lines.add(label);
-                lines.add(fullText);
-            }
-            if (!first) {
-                lines.add(fullText);
             }
 
+            lines.add(fullText);
             first = false;
         }
 
