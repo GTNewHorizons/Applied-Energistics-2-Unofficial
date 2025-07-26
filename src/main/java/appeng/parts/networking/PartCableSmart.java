@@ -150,6 +150,7 @@ public class PartCableSmart extends PartCable {
 
         boolean hasBuses = false;
         final IPartHost ph = this.getHost();
+        final Tessellator tess = Tessellator.instance;
         for (final ForgeDirection of : EnumSet.complementOf(this.getConnections())) {
             final IPart bp = ph.getPart(of);
             if (bp instanceof IGridHost) {
@@ -187,12 +188,12 @@ public class PartCableSmart extends PartCable {
                         if (ico != null) ico.setFlip(false, true);
                     }
 
-                    Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().blackVariant);
+                    tess.setBrightness(15 << 20 | 15 << 4);
+                    tess.setColorOpaque_I(this.getCableColor().blackVariant);
                     rh.setTexture(firstIcon, firstIcon, firstIcon, firstIcon, firstIcon, firstIcon);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().whiteVariant);
+                    tess.setColorOpaque_I(this.getCableColor().whiteVariant);
                     rh.setTexture(secondIcon, secondIcon, secondIcon, secondIcon, secondIcon, secondIcon);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
@@ -238,8 +239,8 @@ public class PartCableSmart extends PartCable {
                     renderer.uvRotateBottom = 0;
                     renderer.uvRotateSouth = 3;
                     renderer.uvRotateEast = 3;
-                    Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().blackVariant);
+                    tess.setBrightness(15 << 20 | 15 << 4);
+                    tess.setColorOpaque_I(this.getCableColor().blackVariant);
                     rh.setTexture(
                             firstTaughtIcon,
                             firstTaughtIcon,
@@ -248,7 +249,7 @@ public class PartCableSmart extends PartCable {
                             firstOffsetIcon,
                             firstOffsetIcon);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().whiteVariant);
+                    tess.setColorOpaque_I(this.getCableColor().whiteVariant);
                     rh.setTexture(
                             secondTaughtIcon,
                             secondTaughtIcon,
@@ -271,14 +272,14 @@ public class PartCableSmart extends PartCable {
                     ico.setFlip(false, true);
                     renderer.setRenderBounds(0, 5 / 16.0, 5 / 16.0, 16 / 16.0, 11 / 16.0, 11 / 16.0);
                     rh.renderBlockCurrentBounds(x, y, z, renderer);
-                    Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
+                    tess.setBrightness(15 << 20 | 15 << 4);
                     FlippableIcon fpA = new FlippableIcon(firstTaughtIcon);
                     FlippableIcon fpB = new FlippableIcon(secondTaughtIcon);
                     fpA = new FlippableIcon(firstTaughtIcon);
                     fpB = new FlippableIcon(secondTaughtIcon);
                     fpA.setFlip(true, false);
                     fpB.setFlip(true, false);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().blackVariant);
+                    tess.setColorOpaque_I(this.getCableColor().blackVariant);
                     rh.setTexture(
                             firstOffsetIcon,
                             firstOffsetIcon,
@@ -287,7 +288,7 @@ public class PartCableSmart extends PartCable {
                             firstTaughtIcon,
                             fpA);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().whiteVariant);
+                    tess.setColorOpaque_I(this.getCableColor().whiteVariant);
                     rh.setTexture(
                             secondOffsetIcon,
                             secondOffsetIcon,
@@ -306,8 +307,8 @@ public class PartCableSmart extends PartCable {
                     renderer.uvRotateWest = 1;
                     renderer.setRenderBounds(5 / 16.0, 5 / 16.0, 0, 11 / 16.0, 11 / 16.0, 16 / 16.0);
                     rh.renderBlockCurrentBounds(x, y, z, renderer);
-                    Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().blackVariant);
+                    tess.setBrightness(15 << 20 | 15 << 4);
+                    tess.setColorOpaque_I(this.getCableColor().blackVariant);
                     rh.setTexture(
                             firstOffsetIcon,
                             firstOffsetIcon,
@@ -316,7 +317,7 @@ public class PartCableSmart extends PartCable {
                             firstOffsetIcon,
                             firstOffsetIcon);
                     this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
-                    Tessellator.instance.setColorOpaque_I(this.getCableColor().whiteVariant);
+                    tess.setColorOpaque_I(this.getCableColor().whiteVariant);
                     rh.setTexture(
                             secondOffsetIcon,
                             secondOffsetIcon,

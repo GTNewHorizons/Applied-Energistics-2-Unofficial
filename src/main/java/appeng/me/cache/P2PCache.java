@@ -26,6 +26,7 @@ import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.ticking.ITickManager;
 import appeng.me.cache.helpers.TunnelCollection;
+import appeng.parts.p2p.PartP2PInterface;
 import appeng.parts.p2p.PartP2PTunnel;
 import appeng.parts.p2p.PartP2PTunnelME;
 
@@ -117,6 +118,12 @@ public class P2PCache implements IGridCache {
     public void populateGridStorage(final IGridStorage storage) {}
 
     private void updateTunnel(final long freq, final boolean updateOutputs, final boolean configChange) {
+        boolean pausedRebuild = false;
+        if (inputs.get(freq) instanceof PartP2PInterface) {
+            CraftingGridCache.pauseRebuilds();
+            pausedRebuild = true;
+        }
+
         for (final PartP2PTunnel p : this.outputs.get(freq)) {
             if (configChange) {
                 p.onTunnelConfigChange();
@@ -131,6 +138,8 @@ public class P2PCache implements IGridCache {
             }
             in.onTunnelNetworkChange();
         }
+
+        if (pausedRebuild) CraftingGridCache.unpauseRebuilds();
     }
 
     public void updateFreq(final PartP2PTunnel t, final long newFrequency) {

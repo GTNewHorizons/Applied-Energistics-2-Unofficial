@@ -191,44 +191,39 @@ public class GuiMEMonitorable extends AEBaseMEGui
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_CRAFTING_STATUS));
         }
 
-        if (btn instanceof GuiImgButton iBtn) {
-            if (iBtn.getSetting() != Settings.ACTIONS) {
-                final Enum cv = iBtn.getCurrentValue();
-                final boolean backwards = Mouse.isButtonDown(1);
-                final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
+        if (!(btn instanceof GuiImgButton iBtn) || iBtn.getSetting() == Settings.ACTIONS) return;
 
-                if (btn == this.terminalStyleBox) {
-                    AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
-                } else if (btn == this.searchBoxSettings) {
-                    AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
-                } else if (btn == this.searchStringSave) {
-                    AEConfig.instance.preserveSearchBar = next == YesNo.YES;
-                } else if (btn == this.pinsStateButton) {
-                    try {
-                        if (next.ordinal() >= rows) return; // ignore to avoid hiding terminal inventory
+        final Enum cv = iBtn.getCurrentValue();
+        final boolean backwards = Mouse.isButtonDown(1);
+        final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
 
-                        memoryText = this.searchField.getText();
-                        final PacketPinsUpdate p = new PacketPinsUpdate((PinsState) next);
-                        NetworkHandler.instance.sendToServer(p);
-                    } catch (final IOException e) {
-                        AELog.debug(e);
-                    }
-                } else {
-                    try {
-                        NetworkHandler.instance
-                                .sendToServer(new PacketValueConfig(iBtn.getSetting().name(), next.name()));
-                    } catch (final IOException e) {
-                        AELog.debug(e);
-                    }
-                }
+        if (btn == this.terminalStyleBox) {
+            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
+        } else if (btn == this.searchBoxSettings) {
+            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
+        } else if (btn == this.searchStringSave) {
+            AEConfig.instance.preserveSearchBar = next == YesNo.YES;
+        } else if (btn == this.pinsStateButton) {
+            try {
+                if (next.ordinal() >= rows) return; // ignore to avoid hiding terminal inventory
 
-                iBtn.set(next);
-
-                if (next.getClass() == SearchBoxMode.class || next.getClass() == TerminalStyle.class) {
-                    memoryText = this.searchField.getText();
-                    this.reinitalize();
-                }
+                final PacketPinsUpdate p = new PacketPinsUpdate((PinsState) next);
+                NetworkHandler.instance.sendToServer(p);
+            } catch (final IOException e) {
+                AELog.debug(e);
             }
+        } else {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig(iBtn.getSetting().name(), next.name()));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
+        }
+
+        iBtn.set(next);
+
+        if (next.getClass() == SearchBoxMode.class || next.getClass() == TerminalStyle.class) {
+            this.reinitalize();
         }
     }
 
@@ -246,6 +241,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
     }
 
     private void reinitalize() {
+        memoryText = this.searchField.getText();
         this.buttonList.clear();
         this.initGui();
     }
@@ -658,7 +654,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
             pinsState = (PinsState) this.configSrc.getSetting(Settings.PINS_STATE);
             this.pinsStateButton.set(pinsState);
 
-            initGui();
+            reinitalize();
         }
 
         this.repo.updateView();

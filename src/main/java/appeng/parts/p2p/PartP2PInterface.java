@@ -49,6 +49,7 @@ import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
+import appeng.me.cache.CraftingGridCache;
 import appeng.parts.automation.UpgradeInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
@@ -76,12 +77,19 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         @Override
         public void updateCraftingList() {
             if (!isOutput()) {
+                CraftingGridCache.pauseRebuilds();
+
                 super.updateCraftingList();
+
                 try {
-                    for (PartP2PInterface p2p : getOutputs()) p2p.duality.updateCraftingList();
+                    for (PartP2PInterface p2p : getOutputs()) {
+                        p2p.duality.updateCraftingList();
+                    }
                 } catch (GridAccessException e) {
                     // ?
                 }
+
+                CraftingGridCache.unpauseRebuilds();
             } else {
                 PartP2PInterface p2p = getInput();
                 if (p2p != null) {

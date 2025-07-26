@@ -134,7 +134,7 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         return 5;
     }
 
-    private int updateFilterTimer = 0;
+    private int rowToUpdate = 0;
 
     /**
      * @param row      the specific row to send, -1 indicates sending all.
@@ -147,6 +147,7 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         // end at last filter slot or at end of specific row
         int to = row <= -1 ? inv.getSizeInventory() : 18 + (9 * row);
 
+        int offset = getToolboxSizeInventory();
         for (; from < to; from++) {
             if (upgrades <= (from / 9 - 2)) break;
 
@@ -158,7 +159,7 @@ public class ContainerStorageBus extends ContainerUpgradeable {
                     // necessary to ensure that the package is sent correctly
                     playerMP.isChangingQuantityOnly = false;
                 }
-                crafter.sendSlotContents(this, from, stack);
+                crafter.sendSlotContents(this, from + offset, stack);
             }
         }
     }
@@ -178,15 +179,16 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         final int upgrades = this.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
 
         if (upgrades > 0) { // sync filter slots
-            updateFilterTimer++;
-            int updateStep = 4;
-            if (updateFilterTimer % updateStep == 0) {
-                boolean needSync = this.storageBus.needSyncGUI;
-                int row = needSync ? -1 : updateFilterTimer / updateStep;
+            boolean needSync = this.storageBus.needSyncGUI;
+            int row;
+            if (needSync) {
+                row = -1; // send all rows
+                rowToUpdate = upgrades; // force update of last row at next call
                 this.storageBus.needSyncGUI = false;
-                if (row >= upgrades) updateFilterTimer = 0;
-                sendRow(row, upgrades);
-            }
+            } else row = rowToUpdate++;
+
+            if (row >= upgrades) rowToUpdate = 0;
+            sendRow(row, upgrades);
         }
 
         this.standardDetectAndSendChanges();
