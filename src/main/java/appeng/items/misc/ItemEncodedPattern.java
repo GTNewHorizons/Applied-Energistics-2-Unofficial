@@ -228,11 +228,9 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             }
 
             if (fluidDropItem != null && item.getItemStack().getItem() == fluidDropItem) {
-                // label = EnumChatFormatting.GOLD + label; does nothing
                 color = EnumChatFormatting.GOLD;
                 isFluid = true;
             } else {
-                // label = EnumChatFormatting.RESET + label; does nothing
                 color = oldColor;
                 isFluid = false;
             }
