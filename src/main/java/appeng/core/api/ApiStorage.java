@@ -12,7 +12,6 @@ package appeng.core.api;
 
 import java.io.IOException;
 
-import appeng.util.item.ItemImmutableList;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fluids.FluidStack;
@@ -33,6 +32,7 @@ import appeng.util.item.AEItemStack;
 import appeng.util.item.FluidList;
 import appeng.util.item.HashBasedItemList;
 import appeng.util.item.ItemFilterList;
+import appeng.util.item.ItemImmutableList;
 import appeng.util.item.ItemList;
 import io.netty.buffer.ByteBuf;
 
