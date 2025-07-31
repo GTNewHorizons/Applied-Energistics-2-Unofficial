@@ -427,7 +427,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         return leftover; // ignore it.
                     }
 
-                        this.completeJob();
+                    this.completeJob();
 
                     // 2000
                     return this.inventory.injectItems(what, type, src);
@@ -461,7 +461,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 }
 
                 this.inventory.injectItems(insert, type, src);
-                    this.completeJob();
+                this.completeJob();
 
                 this.markDirty();
 
