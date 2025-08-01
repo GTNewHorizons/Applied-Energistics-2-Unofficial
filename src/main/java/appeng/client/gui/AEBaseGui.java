@@ -133,7 +133,7 @@ public abstract class AEBaseGui extends GuiContainer {
     private static boolean switchingGuis;
     private final List<InternalSlotME> meSlots = new LinkedList<>();
     // drag y
-    private final Set<Slot> drag_click = new HashSet<>();
+    protected final Set<Slot> drag_click = new HashSet<>();
     public static final AppEngRenderItem aeRenderItem = new AppEngRenderItem();
     public static final TranslatedRenderItem translatedRenderItem = new TranslatedRenderItem();
     private final AEGuiTooltip currentToolTip = new AEGuiTooltip();
