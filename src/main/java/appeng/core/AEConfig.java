@@ -120,6 +120,9 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int maxCraftingTreeVisualizationSize = 32 * 1024 * 1024; // 32 MiB
     public boolean limitCraftingCPUSpill = true;
 
+    public int maxRecursiveDepth = 100;
+    public int maxMachineChecks = 10000;
+
     public AEConfig(final File configFile) {
         super(configFile);
         this.configFile = configFile;
@@ -257,6 +260,12 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .max(4096, Math.min(this.maxCraftingTreeVisualizationSize, 1024 * 1024 * 1024));
         this.limitCraftingCPUSpill = this.get("misc", "LimitCraftingCPUSpill", this.limitCraftingCPUSpill)
                 .getBoolean(this.limitCraftingCPUSpill);
+
+        this.maxRecursiveDepth = this.get("networksearch", "maxRecursiveDepth", this.maxRecursiveDepth)
+                .getInt(this.maxRecursiveDepth);
+        this.maxMachineChecks = this.get("networksearch", "maxMachineChecks", this.maxMachineChecks)
+                .getInt(this.maxMachineChecks);
+
         this.clientSync();
 
         for (final AEFeature feature : AEFeature.values()) {

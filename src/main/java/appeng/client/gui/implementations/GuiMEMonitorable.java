@@ -48,6 +48,7 @@ import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.me.InternalSlotME;
 import appeng.client.me.ItemRepo;
 import appeng.client.me.PinSlotME;
+import appeng.client.me.SlotME;
 import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
@@ -61,10 +62,12 @@ import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketPinsUpdate;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IPinsHandler;
+import appeng.helpers.InventoryAction;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
@@ -576,6 +579,25 @@ public class GuiMEMonitorable extends AEBaseMEGui
                 searchField.setFocused(!focused);
                 NEI.searchField.setFocus(focused);
                 return;
+            }
+
+            if (CommonHelper.proxy.isActionKey(ActionKey.SEARCH_CONNECTED_INVENTORIES, key)
+                    && !(NEI.searchField.focused() || searchField.isFocused())) {
+                final boolean mouseInGui = this
+                        .isPointInRegion(0, 0, this.xSize, this.ySize, this.currentMouseX, this.currentMouseY);
+                if (mouseInGui && getSlot(this.currentMouseX, this.currentMouseY) instanceof SlotME sme) {
+                    IAEItemStack stack = sme.getAEStack();
+                    this.monitorableContainer.setTargetStack(stack);
+                    if (stack != null) {
+                        final PacketInventoryAction p = new PacketInventoryAction(
+                                InventoryAction.FIND_ITEMS,
+                                this.getInventorySlots().size(),
+                                0);
+                        NetworkHandler.instance.sendToServer(p);
+                        this.mc.thePlayer.closeScreen();
+                        return;
+                    }
+                }
             }
 
             if (NEI.searchField.focused()) {

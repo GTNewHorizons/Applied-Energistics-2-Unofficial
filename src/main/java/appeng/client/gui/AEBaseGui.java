@@ -183,7 +183,7 @@ public abstract class AEBaseGui extends GuiContainer {
     }
 
     @SuppressWarnings("unchecked")
-    private List<Slot> getInventorySlots() {
+    protected List<Slot> getInventorySlots() {
         return this.inventorySlots.inventorySlots;
     }
 

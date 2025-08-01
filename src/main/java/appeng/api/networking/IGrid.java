@@ -13,8 +13,11 @@
 
 package appeng.api.networking;
 
+import java.util.UUID;
+
 import appeng.api.networking.events.MENetworkEvent;
 import appeng.api.util.IReadOnlyCollection;
+import appeng.me.NetworkList;
 
 /**
  * Gives you access to Grid based information.
@@ -74,7 +77,28 @@ public interface IGrid {
     boolean isEmpty();
 
     /**
+     * @return unique id generated on initialization of the grid
+     */
+    UUID getId();
+
+    /**
      * @return the node considered the pivot point of the grid.
      */
     IGridNode getPivot();
+
+    /**
+     * List of every adjacent grids
+     * 
+     * @param accessType Type of access extending the grid, ie. PartStorageBus/PartFluidStorageBus
+     * @return List of connected Grids
+     */
+    public NetworkList getGridConnections(Class<? extends IGridHost> accessType);
+
+    /**
+     * Complete list of every grid on a network, flattened.
+     * 
+     * @param accessType Type of access extending the grid, ie. PartStorageBus/PartFluidStorageBus
+     * @return List of connected Grids, recursively found on the entire network
+     */
+    public NetworkList getAllRecursiveGridConnections(Class<? extends IGridHost> accessType);
 }

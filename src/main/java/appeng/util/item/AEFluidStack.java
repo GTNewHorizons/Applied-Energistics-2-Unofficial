@@ -353,4 +353,9 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     public Fluid getFluid() {
         return this.fluid;
     }
+
+    @Override
+    public String getName() {
+        return this.fluid.getName();
+    }
 }
