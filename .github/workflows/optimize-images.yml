@@ -1,0 +1,13 @@
+
+name: Optimize PNG files
+
+on:
+  pull_request:
+    branches: [ master, main ]
+  push:
+    branches: [ master, main ]
+
+jobs:
+  build-and-test:
+    uses: GTNewHorizons/GTNH-Actions-Workflows/.github/workflows/optimize-images.yml@image_compression
+    secrets: inherit
