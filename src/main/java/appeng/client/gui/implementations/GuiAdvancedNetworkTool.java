@@ -9,6 +9,7 @@ import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerAdvancedNetworkTool;
+import appeng.container.implementations.ContainerNetworkTool;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
@@ -30,7 +31,7 @@ public class GuiAdvancedNetworkTool extends AEBaseGui {
 
         try {
             if (btn == this.tFacades) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("AdvancedNetworkTool", "Toggle"));
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkTool", "Toggle"));
             }
         } catch (final IOException e) {
             AELog.debug(e);
@@ -55,7 +56,7 @@ public class GuiAdvancedNetworkTool extends AEBaseGui {
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         if (this.tFacades != null) {
-            this.tFacades.setState(((ContainerAdvancedNetworkTool) this.inventorySlots).isFacadeMode());
+            this.tFacades.setState(((ContainerNetworkTool) this.inventorySlots).isFacadeMode());
         }
 
         this.fontRendererObj.drawString(
