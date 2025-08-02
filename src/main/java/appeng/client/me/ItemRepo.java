@@ -41,6 +41,7 @@ import appeng.integration.modules.NEI;
 import appeng.items.storage.ItemViewCell;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
+import appeng.util.item.ItemImmutableList;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
@@ -131,6 +132,17 @@ public class ItemRepo implements IDisplayRepo {
             return null;
         }
         return this.dsp.get(idx);
+    }
+
+    @Override
+    public IItemList<IAEItemStack> getAvailableItems() {
+        IItemList<IAEItemStack> pins = AEApi.instance().storage().createItemList();
+        for (IAEItemStack is : this.pinsRepo) {
+            if (is != null && is.getStackSize() > 0) {
+                pins.add(is);
+            }
+        }
+        return new ItemImmutableList(list, pins);
     }
 
     @Override

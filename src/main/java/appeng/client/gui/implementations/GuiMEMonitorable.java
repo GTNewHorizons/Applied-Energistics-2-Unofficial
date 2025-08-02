@@ -35,6 +35,7 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IDisplayRepo;
+import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.ActionKey;
@@ -765,5 +766,11 @@ public class GuiMEMonitorable extends AEBaseMEGui
     @Override
     public void setPinsState(PinsState state) {
         configSrc.putSetting(Settings.PINS_STATE, state);
+    }
+
+    /// returns all items visible from the terminal
+    /// @return the returned list is **read-only**
+    public IItemList<IAEItemStack> getAvaibleItems() {
+        return repo.getAvailableItems();
     }
 }

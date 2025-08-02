@@ -26,6 +26,9 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
+import appeng.util.item.ItemFilterList;
+import appeng.util.item.ItemImmutableList;
+import appeng.util.item.ItemList;
 import io.netty.buffer.ByteBuf;
 
 public interface IStorageHelper {
@@ -51,14 +54,19 @@ public interface IStorageHelper {
     IAEFluidStack createFluidStack(FluidStack is);
 
     /**
-     * @return a new INSTANCE of {@link IItemList} for items
+     * @return a new INSTANCE of {@link ItemList} for items
      */
     IItemList<IAEItemStack> createItemList();
 
     /**
-     * @return a new INSTANCE of {@link IItemList}, that can be used to represent a filter
+     * @return a new INSTANCE of {@link ItemFilterList}, that can be used to represent a filter
      */
     IItemList<IAEItemStack> createItemFilterList();
+
+    /**
+     * @return a new INSTANCE of {@link ItemImmutableList}, a read-only wrapper for {@link IItemList}s
+     */
+    IItemList<IAEItemStack> createItemImmutableList(IItemList<IAEItemStack>... itemLists);
 
     /**
      * @return a new INSTANCE of {@link IItemList} for items that does not support sorted output, fuzzy lookup
