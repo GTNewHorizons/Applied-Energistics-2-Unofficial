@@ -459,6 +459,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 }
 
                 this.inventory.injectItems(insert, type, src);
+
                 this.markDirty();
 
                 return what;
@@ -512,7 +513,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void completeJob() {
-        if (isBusy()) return; // dont complete if still working
+        if (this.hasRemainingTasks()) return; // dont complete if still working
         if (this.myLastLink != null) {
             ((CraftingLink) this.myLastLink).markDone();
             this.myLastLink = null;
@@ -1181,14 +1182,16 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return null;
     }
 
-    @Override
-    public boolean isBusy() {
-
+    private boolean hasRemainingTasks() {
         this.tasks.entrySet().removeIf(
                 iCraftingPatternDetailsTaskProgressEntry -> iCraftingPatternDetailsTaskProgressEntry.getValue().value
                         <= 0);
+        return !this.tasks.isEmpty();
+    }
 
-        return !this.tasks.isEmpty() || !this.waitingFor.isEmpty();
+    @Override
+    public boolean isBusy() {
+        return this.hasRemainingTasks() || !this.waitingFor.isEmpty();
     }
 
     @Override
