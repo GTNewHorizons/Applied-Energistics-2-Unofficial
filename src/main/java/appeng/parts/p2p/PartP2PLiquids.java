@@ -182,7 +182,7 @@ public class PartP2PLiquids extends PartP2PTunnelNormal<PartP2PLiquids> implemen
         return outs;
     }
 
-    private IFluidHandler getTarget() {
+    public IFluidHandler getTarget() {
         if (!this.getProxy().isActive()) {
             return null;
         }
