@@ -49,7 +49,7 @@ public class ItemSlot {
         return this.isExtractable;
     }
 
-    void setExtractable(final boolean isExtractable) {
+    public void setExtractable(final boolean isExtractable) {
         this.isExtractable = isExtractable;
     }
 
