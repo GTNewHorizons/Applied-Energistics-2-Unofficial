@@ -28,7 +28,6 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.AEBaseContainer;
-import appeng.container.implementations.ContainerAdvancedNetworkTool;
 import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
@@ -177,10 +176,6 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (c instanceof ContainerNetworkTool) {
             if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
                 ((ContainerNetworkTool) c).toggleFacadeMode();
-            }
-        } else if (c instanceof ContainerAdvancedNetworkTool) {
-            if (this.Name.equals("AdvancedNetworkTool") && this.Value.equals("Toggle")) {
-                ((ContainerAdvancedNetworkTool) c).toggleFacadeMode();
             }
         } else if (c instanceof IConfigurableObject) {
             final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
