@@ -11,7 +11,6 @@
 package appeng.me.helpers;
 
 import java.util.Iterator;
-import java.util.WeakHashMap;
 
 import net.minecraft.item.ItemStack;
 
@@ -19,7 +18,6 @@ import com.google.common.collect.Iterators;
 
 import appeng.api.networking.IGridMultiblock;
 import appeng.api.networking.IGridNode;
-import appeng.core.AELog;
 import appeng.me.cluster.IAECluster;
 import appeng.me.cluster.IAEMultiBlock;
 import appeng.util.iterators.ProxyNodeIterator;
