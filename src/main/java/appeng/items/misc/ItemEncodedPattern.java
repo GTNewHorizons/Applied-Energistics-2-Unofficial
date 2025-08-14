@@ -31,11 +31,12 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.common.util.Constants;
+
 import appeng.api.AEApi;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
@@ -248,8 +249,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                                 ? Platform.getItemDisplayName(item) + " " + item.getItemStack().getItemDamage()
                                 : Platform.getItemDisplayName(item);
             } else {
-                itemText = isFluid ? getFluidNameFromStack(item.getItemStack())
-                        : Platform.getItemDisplayName(item);
+                itemText = isFluid ? getFluidNameFromStack(item.getItemStack()) : Platform.getItemDisplayName(item);
             }
             String fullText = "   " + EnumChatFormatting.WHITE
                     + itemCountText
