@@ -18,6 +18,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -29,7 +31,11 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
 
 import appeng.api.AEApi;
 import appeng.api.implementations.ICraftingPatternItem;
@@ -238,18 +244,17 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             String itemCountText = NumberFormat.getNumberInstance(locale).format(itemCount);
             String itemText;
             if (isGTLoaded) {
-                itemText = isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
+                itemText = isFluid ? getFluidNameFromStack(item.getItemStack())
                         : item.getItem() instanceof ItemIntegratedCircuit
                                 ? Platform.getItemDisplayName(item) + " " + item.getItemStack().getItemDamage()
                                 : Platform.getItemDisplayName(item);
             } else {
-                itemText = isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
-                        : Platform.getItemDisplayName(item);
+                itemText = isFluid ? getFluidNameFromStack(item.getItemStack()) : Platform.getItemDisplayName(item);
             }
             String fullText = "   " + EnumChatFormatting.WHITE
                     + itemCountText
                     + EnumChatFormatting.RESET
-                    + (isFluid ? EnumChatFormatting.WHITE + "L" : " ")
+                    + (isFluid ? EnumChatFormatting.WHITE + "L " : " ")
                     + EnumChatFormatting.RESET
                     + color
                     + itemText;
@@ -263,6 +268,28 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         }
 
         return recipeIsBroken;
+    }
+
+    @Nullable
+    private static FluidStack getFluidStack(ItemStack stack) {
+        if (stack == null || stack.getItem() == null || !stack.hasTagCompound()) return null;
+
+        NBTTagCompound tag = stack.getTagCompound();
+        if (!tag.hasKey("Fluid", Constants.NBT.TAG_STRING)) return null;
+
+        Fluid fluid = FluidRegistry.getFluid(tag.getString("Fluid").toLowerCase());
+        if (fluid == null) return null;
+
+        FluidStack fluidStack = new FluidStack(fluid, stack.stackSize);
+        if (tag.hasKey("FluidTag", Constants.NBT.TAG_COMPOUND)) {
+            fluidStack.tag = tag.getCompoundTag("FluidTag");
+        }
+        return fluidStack;
+    }
+
+    private static String getFluidNameFromStack(ItemStack stack) {
+        FluidStack fluidStack = getFluidStack(stack);
+        return fluidStack != null ? fluidStack.getLocalizedName() : "???";
     }
 
     private static Item getFluidDropItem() {
