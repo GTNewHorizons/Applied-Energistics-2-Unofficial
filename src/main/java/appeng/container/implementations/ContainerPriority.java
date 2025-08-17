@@ -10,12 +10,12 @@
 
 package appeng.container.implementations;
 
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import appeng.api.config.SecurityPermissions;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.helpers.IPriorityHost;
@@ -28,7 +28,7 @@ public class ContainerPriority extends AEBaseContainer {
     private final IPriorityHost priHost;
 
     @SideOnly(Side.CLIENT)
-    private GuiTextField textField;
+    private MEGuiTextField textField;
 
     @GuiSync(2)
     public long PriorityValue = -1;
@@ -39,7 +39,7 @@ public class ContainerPriority extends AEBaseContainer {
     }
 
     @SideOnly(Side.CLIENT)
-    public void setTextField(final GuiTextField level) {
+    public void setTextField(final MEGuiTextField level) {
         this.textField = level;
         this.textField.setText(String.valueOf(this.PriorityValue));
     }
