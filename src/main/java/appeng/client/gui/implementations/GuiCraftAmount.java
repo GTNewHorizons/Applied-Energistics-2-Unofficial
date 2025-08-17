@@ -58,9 +58,7 @@ public class GuiCraftAmount extends GuiAmount {
                         Settings.CRAFTING_MODE,
                         CraftingMode.STANDARD));
 
-        this.amountTextField.setText("1");
-        this.amountTextField.setCursorPositionEnd();
-        this.amountTextField.setSelectionPos(0);
+        ((ContainerCraftAmount) this.inventorySlots).setAmountField(this.amountTextField);
     }
 
     @Override
