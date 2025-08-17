@@ -797,9 +797,12 @@ public class GuiMEMonitorable extends AEBaseMEGui
     }
 
     // Moving items via hotbar keys in terminals isn't working anyway.
-    // Let's disable hotbar keys processing to allow proper input of numbers in the search field
+    // Let's disable hotbar keys processing for terminal slots to allow proper input of numbers in the search field
     @Override
     protected boolean checkHotbarKeys(int keyCode) {
-        return false;
+        if (theSlot instanceof SlotME) {
+            return false;
+        }
+        return super.checkHotbarKeys(keyCode);
     }
 }
