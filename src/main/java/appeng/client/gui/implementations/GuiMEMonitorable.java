@@ -795,4 +795,11 @@ public class GuiMEMonitorable extends AEBaseMEGui
     public IItemList<IAEItemStack> getAvaibleItems() {
         return repo.getAvailableItems();
     }
+
+    // Moving items via hotbar keys in terminals isn't working anyway.
+    // Let's disable hotbar keys processing to allow proper input of numbers in the search field
+    @Override
+    protected boolean checkHotbarKeys(int keyCode) {
+        return false;
+    }
 }
