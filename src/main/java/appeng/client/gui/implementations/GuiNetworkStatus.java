@@ -128,10 +128,15 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             return;
         }
 
-        final ItemStack is;
+        ItemStack is = null;
         if (tooltip > -1) {
-            is = repo.getReferenceItem(tooltip).getItemStack();
-        } else is = null;
+            final IAEItemStack aeStack = repo.getReferenceItem(tooltip);
+
+            if (aeStack != null) {
+                is = aeStack.getItemStack();
+            }
+
+        }
 
         if (is == null || !is.hasTagCompound()) {
             super.mouseClicked(xCoord, yCoord, btn);
@@ -223,7 +228,9 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
 
         int y = 0;
         int x = 0;
-        for (int z = 0; z <= 4 * 5; z++) {
+        final int viewEnd = Math.min(5 * 4, this.repo.size());
+
+        for (int z = 0; z < viewEnd; z++) {
             final int minX = gx + 14 + x * 31;
             final int minY = gy + 41 + y * 18;
 
