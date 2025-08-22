@@ -285,9 +285,7 @@ public class GuiUpgradeable extends AEBaseGui implements INEIGuiHandler {
                 return true;
             }
         }
-        if (draggedStack != null) {
-            draggedStack.stackSize = 0;
-        }
+
         return false;
     }
 
