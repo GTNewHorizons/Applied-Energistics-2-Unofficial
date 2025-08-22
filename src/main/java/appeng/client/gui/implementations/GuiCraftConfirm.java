@@ -362,7 +362,12 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 this.start.enabled = false;
             }
         }
-        this.startWithFollow.enabled = this.start.enabled;
+
+        this.startWithFollow.enabled = this.start.enabled && !this.ccc.isManualStartAndFollow();
+
+        if (this.ccc.isManualStartAndFollow()) {
+            this.startWithFollow.displayString = GuiText.AutoFollowEnabled.getLocal();
+        }
 
         this.selectCPU.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation();
         this.optimizeButton.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation()
@@ -1021,14 +1026,17 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             }
         } else if (btn == this.start) {
             try {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.Start", "Start"));
+                if (this.ccc.isManualStartAndFollow()) {
+                    NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.StartWithFollow", "Start"));
+                } else {
+                    NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.Start", "Start"));
+                }
             } catch (final Throwable e) {
                 AELog.debug(e);
             }
         } else if (btn == this.startWithFollow) {
-            final String playerName = this.mc.thePlayer.getCommandSenderName();
             try {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.StartWithFollow", playerName));
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.StartWithFollow", "Start"));
             } catch (final Throwable e) {
                 AELog.debug(e);
             }

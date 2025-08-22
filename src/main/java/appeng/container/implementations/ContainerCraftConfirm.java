@@ -83,6 +83,9 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
     @GuiSync(4)
     public boolean simulation = true;
 
+    @GuiSync(5)
+    public boolean autoStartAndFollow = false;
+
     @GuiSync(6)
     public boolean noCPU = true;
 
@@ -97,6 +100,9 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
     @GuiSync(10)
     public String serializedItemToCraft = "";
+
+    @GuiSync(11)
+    public boolean manualStartAndFollow = false;
 
     public ContainerCraftConfirm(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
@@ -144,7 +150,12 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                 if (!this.result.isSimulation()) {
                     this.setSimulation(false);
-                    if (this.isAutoStart()) {
+                    if (this.isAutoStartAndFollow()) {
+                        // Call start job with follow enabled
+                        this.startJob(true);
+                        return;
+                    } else if (this.isAutoStart()) {
+                        // If only Shift is held and not Ctrl then we end up here and start the job with no follow
                         this.startJob();
                         return;
                     }
@@ -282,23 +293,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
     }
 
     public void startJob() {
-        if (this.result != null && !this.isSimulation() && getGrid() != null) {
-            final ICraftingGrid cc = this.getGrid().getCache(ICraftingGrid.class);
-            CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
-            final ICraftingLink g = cc.submitJob(
-                    this.result,
-                    null,
-                    (selected == null) ? null : selected.getServerCluster(),
-                    true,
-                    this.getActionSrc());
-            this.setAutoStart(false);
-            if (g != null) {
-                this.switchToOriginalGUI();
-            }
-        }
+        startJob(false);
     }
 
-    public void startJob(String playerName) {
+    public void startJob(final boolean followCraft) {
         if (this.result != null && !this.isSimulation() && getGrid() != null) {
             final ICraftingGrid cc = this.getGrid().getCache(ICraftingGrid.class);
             CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
@@ -307,9 +305,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                     null,
                     (selected == null) ? null : selected.getServerCluster(),
                     true,
-                    this.getActionSrc());
-            selected.getServerCluster().togglePlayerFollowStatus(playerName);
+                    this.getActionSrc(),
+                    followCraft);
             this.setAutoStart(false);
+            this.setAutoStartAndFollow(false);
             if (g != null) {
                 this.switchToOriginalGUI();
             }
@@ -395,8 +394,24 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         return this.autoStart;
     }
 
+    public boolean isAutoStartAndFollow() {
+        return this.autoStartAndFollow;
+    }
+
+    public boolean isManualStartAndFollow() {
+        return this.manualStartAndFollow;
+    }
+
     public void setAutoStart(final boolean autoStart) {
         this.autoStart = autoStart;
+    }
+
+    public void setAutoStartAndFollow(final boolean autoStartAndFollow) {
+        this.autoStartAndFollow = autoStartAndFollow;
+    }
+
+    public void setManualStartAndFollow(final boolean manualStartAndFollow) {
+        this.manualStartAndFollow = manualStartAndFollow;
     }
 
     public long getUsedBytes() {

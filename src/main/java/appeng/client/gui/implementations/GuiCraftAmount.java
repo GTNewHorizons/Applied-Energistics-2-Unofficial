@@ -150,6 +150,7 @@ public class GuiCraftAmount extends GuiAmount {
                         new PacketCraftRequest(
                                 addOrderAmount(0),
                                 isShiftKeyDown(),
+                                isCtrlKeyDown(),
                                 (CraftingMode) this.craftingMode.getCurrentValue()));
             }
         } catch (final NumberFormatException e) {
