@@ -28,7 +28,7 @@ public class ContainerPriority extends AEBaseContainer {
     private final IPriorityHost priHost;
 
     @SideOnly(Side.CLIENT)
-    private MEGuiTextField textField;
+    private MEGuiTextField priorityTextField;
 
     @GuiSync(2)
     public long PriorityValue = -1;
@@ -40,8 +40,8 @@ public class ContainerPriority extends AEBaseContainer {
 
     @SideOnly(Side.CLIENT)
     public void setTextField(final MEGuiTextField level) {
-        this.textField = level;
-        this.textField.setText(String.valueOf(this.PriorityValue));
+        this.priorityTextField = level;
+        updatePriorityTextFieldValue();
     }
 
     public void setPriority(final int newValue, final EntityPlayer player) {
@@ -64,11 +64,17 @@ public class ContainerPriority extends AEBaseContainer {
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
         if (field.equals("PriorityValue")) {
-            if (this.textField != null) {
-                this.textField.setText(String.valueOf(this.PriorityValue));
+            if (this.priorityTextField != null) {
+                updatePriorityTextFieldValue();
             }
         }
 
         super.onUpdate(field, oldValue, newValue);
+    }
+
+    private void updatePriorityTextFieldValue() {
+        this.priorityTextField.setText(String.valueOf(this.PriorityValue));
+        this.priorityTextField.setCursorPositionEnd();
+        this.priorityTextField.setSelectionPos(0);
     }
 }
