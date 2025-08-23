@@ -75,8 +75,10 @@ public interface ICraftingGrid extends IGridCache {
      *         {@link ICraftingRequester} methods. if you send null, this object should be discarded after verifying the
      *         return state.
      */
-    ICraftingLink submitJob(ICraftingJob job, ICraftingRequester requestingMachine, ICraftingCPU target,
-            boolean prioritizePower, BaseActionSource src, boolean followCraft);
+    default ICraftingLink submitJob(ICraftingJob job, ICraftingRequester requestingMachine, ICraftingCPU target,
+                                    boolean prioritizePower, BaseActionSource src, boolean followCraft) {
+        return this.submitJob(job, requestingMachine, target, prioritizePower, src);
+    }
 
     /**
      * Submit the job to the Crafting system for processing.
