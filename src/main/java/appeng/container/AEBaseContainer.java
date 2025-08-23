@@ -34,7 +34,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.logging.log4j.Level;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
