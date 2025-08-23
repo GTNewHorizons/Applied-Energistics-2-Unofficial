@@ -114,7 +114,7 @@ public class PacketCraftRequest extends AppEngPacket {
 
                         if (player.openContainer instanceof ContainerCraftConfirm ccc) {
                             ccc.setAutoStart(this.heldShift && !this.heldCtrl);
-                            ccc.setAutoStartAndFollow(this.heldShift && this.heldCtrl);
+                            ccc.setAutoStartAndFollow(!this.heldShift && this.heldCtrl);
                             ccc.setJob(futureJob);
                             cca.detectAndSendChanges();
                         }
