@@ -101,9 +101,6 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
     @GuiSync(10)
     public String serializedItemToCraft = "";
 
-    @GuiSync(11)
-    public boolean manualStartAndFollow = false;
-
     public ContainerCraftConfirm(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
         this.cpuTable = new ContainerCPUTable(this, this::onCPUUpdate, false, this::cpuMatches);
@@ -398,20 +395,12 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         return this.autoStartAndFollow;
     }
 
-    public boolean isManualStartAndFollow() {
-        return this.manualStartAndFollow;
-    }
-
     public void setAutoStart(final boolean autoStart) {
         this.autoStart = autoStart;
     }
 
     public void setAutoStartAndFollow(final boolean autoStartAndFollow) {
         this.autoStartAndFollow = autoStartAndFollow;
-    }
-
-    public void setManualStartAndFollow(final boolean manualStartAndFollow) {
-        this.manualStartAndFollow = manualStartAndFollow;
     }
 
     public long getUsedBytes() {

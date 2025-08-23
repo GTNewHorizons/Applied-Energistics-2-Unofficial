@@ -363,11 +363,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             }
         }
 
-        this.startWithFollow.enabled = this.start.enabled && !this.ccc.isManualStartAndFollow();
-
-        if (this.ccc.isManualStartAndFollow()) {
-            this.startWithFollow.displayString = GuiText.AutoFollowEnabled.getLocal();
-        }
+        this.startWithFollow.enabled = this.start.enabled;
 
         this.selectCPU.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation();
         this.optimizeButton.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation()
@@ -1026,11 +1022,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             }
         } else if (btn == this.start) {
             try {
-                if (this.ccc.isManualStartAndFollow()) {
-                    NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.StartWithFollow", "Start"));
-                } else {
-                    NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.Start", "Start"));
-                }
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.Start", "Start"));
             } catch (final Throwable e) {
                 AELog.debug(e);
             }

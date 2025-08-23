@@ -164,7 +164,6 @@ public enum GuiText implements Localization {
     CalculatingWait,
     Start,
     StartWithFollow,
-    AutoFollowEnabled,
     Merge,
     Bytes,
     Set,
