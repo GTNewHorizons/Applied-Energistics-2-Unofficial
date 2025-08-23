@@ -76,7 +76,7 @@ public interface ICraftingGrid extends IGridCache {
      *         return state.
      */
     default ICraftingLink submitJob(ICraftingJob job, ICraftingRequester requestingMachine, ICraftingCPU target,
-                                    boolean prioritizePower, BaseActionSource src, boolean followCraft) {
+            boolean prioritizePower, BaseActionSource src, boolean followCraft) {
         return this.submitJob(job, requestingMachine, target, prioritizePower, src);
     }
 
