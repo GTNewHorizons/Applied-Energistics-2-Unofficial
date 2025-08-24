@@ -30,6 +30,9 @@ public class ContainerPriority extends AEBaseContainer {
     @SideOnly(Side.CLIENT)
     private MEGuiTextField priorityTextField;
 
+    @SideOnly(Side.CLIENT)
+    private boolean priorityTextInitialized = false;
+
     @GuiSync(2)
     public long PriorityValue = -1;
 
@@ -51,7 +54,6 @@ public class ContainerPriority extends AEBaseContainer {
 
     @Override
     public void detectAndSendChanges() {
-        super.detectAndSendChanges();
         if (!(priHost instanceof IGuiItemObject)) {
             this.verifyPermissions(SecurityPermissions.BUILD, false);
         }
@@ -59,13 +61,16 @@ public class ContainerPriority extends AEBaseContainer {
         if (Platform.isServer()) {
             this.PriorityValue = this.priHost.getPriority();
         }
+
+        super.detectAndSendChanges();
     }
 
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
         if (field.equals("PriorityValue")) {
-            if (this.priorityTextField != null) {
+            if (this.priorityTextField != null && !this.priorityTextInitialized) {
                 updatePriorityTextFieldValue();
+                priorityTextInitialized = true;
             }
         }
 
