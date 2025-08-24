@@ -113,10 +113,6 @@ public class GridNode implements IGridNode, IPathItem {
         if (gridConnection.hasDirection()) {
             this.gridProxy.onGridNotification(GridNotification.ConnectionsChanged);
         }
-
-        final IGridNode gn = this;
-
-        this.connections.sort(new ConnectionComparator(gn));
     }
 
     void removeConnection(final IGridConnection gridConnection) {
