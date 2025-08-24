@@ -58,7 +58,6 @@ public abstract class MBCalculator {
 
             if (this.checkMultiblockScale(min, max)) {
                 if (this.verifyUnownedRegion(world, min, max)) {
-                    IAECluster c = this.createCluster(world, min, max);
 
                     try {
                         if (!this.verifyInternalStructure(world, min, max)) {
@@ -71,17 +70,16 @@ public abstract class MBCalculator {
                     }
 
                     boolean updateGrid = false;
-                    final IAECluster cluster = this.target.getCluster();
+                    IAECluster cluster = this.target.getCluster();
                     if (cluster == null) {
-                        FMLCommonHandler.instance().bus().register(c);
-                        this.updateTiles(c, world, min, max);
+                        cluster = this.createCluster(world, min, max);
+                        FMLCommonHandler.instance().bus().register(cluster);
+                        this.updateTiles(cluster, world, min, max);
 
                         updateGrid = true;
-                    } else {
-                        c = cluster;
                     }
 
-                    c.updateStatus(updateGrid);
+                    cluster.updateStatus(updateGrid);
                     return;
                 }
             }
