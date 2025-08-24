@@ -331,21 +331,23 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
 
                     if (sp.isPowered()) {
                         tess.setBrightness(15 << 20 | 15 << 4);
-                    } else {
-                        tess.setBrightness(0);
-                    }
 
-                    if (stat == 1) {
-                        tess.setColorOpaque_I(0x00ff00);
-                    }
-                    if (stat == 2) {
-                        tess.setColorOpaque_I(0x00aaff);
-                    }
-                    if (stat == 3) {
-                        tess.setColorOpaque_I(0xffaa00);
-                    }
-                    if (stat == 4) {
-                        tess.setColorOpaque_I(0xff0000);
+                        switch (stat) {
+                            case 1:
+                                tess.setColorOpaque_I(0x00ff00);
+                                break;
+                            case 2:
+                                tess.setColorOpaque_I(0x00aaff);
+                                break;
+                            case 3:
+                                tess.setColorOpaque_I(0xffaa00);
+                                break;
+                            case 4:
+                                tess.setColorOpaque_I(0xff0000);
+                        }
+                    } else {
+                        tess.setColorOpaque_I(0x000000);
+                        tess.setBrightness(0);
                     }
 
                     switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
