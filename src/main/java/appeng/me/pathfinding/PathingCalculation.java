@@ -25,6 +25,7 @@ import appeng.core.AELog;
 import appeng.me.GridConnection;
 import appeng.me.GridNode;
 import appeng.tile.networking.TileController;
+import appeng.tile.networking.TileCreativeEnergyController;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 
 /**
@@ -82,6 +83,16 @@ public class PathingCalculation {
 
         // Add every outgoing connection of the controllers (that doesn't point to another controller) to the list.
         for (IGridNode node : grid.getMachines(TileController.class)) {
+            visited.add((IPathItem) node);
+            for (var gcc : node.getConnections()) {
+                var gc = (GridConnection) gcc;
+                if (!(gc.getOtherSide(node).getMachine() instanceof TileController)) {
+                    enqueue(gc, 0);
+                    gc.setControllerRoute((GridNode) node);
+                }
+            }
+        }
+        for (IGridNode node : grid.getMachines(TileCreativeEnergyController.class)) {
             visited.add((IPathItem) node);
             for (var gcc : node.getConnections()) {
                 var gc = (GridConnection) gcc;
@@ -207,6 +218,15 @@ public class PathingCalculation {
         Set<IPathItem> controllerNodes = new HashSet<>();
 
         for (IGridNode node : grid.getMachines(TileController.class)) {
+            controllerNodes.add((IPathItem) node);
+            for (var gcc : node.getConnections()) {
+                var gc = (GridConnection) gcc;
+                if (!(gc.getOtherSide(node).getMachine() instanceof TileController)) {
+                    stack.add(gc);
+                }
+            }
+        }
+        for (IGridNode node : grid.getMachines(TileCreativeEnergyController.class)) {
             controllerNodes.add((IPathItem) node);
             for (var gcc : node.getConnections()) {
                 var gc = (GridConnection) gcc;
