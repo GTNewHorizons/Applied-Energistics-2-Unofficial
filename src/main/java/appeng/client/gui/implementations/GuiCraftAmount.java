@@ -117,7 +117,14 @@ public class GuiCraftAmount extends GuiAmount {
 
         super.drawBG(offsetX, offsetY, mouseX, mouseY);
 
-        this.nextBtn.displayString = isShiftKeyDown() ? GuiText.Start.getLocal() : GuiText.Next.getLocal();
+        // Only display the word "Start" if either Ctrl OR Shift is held not both
+        if (isShiftKeyDown() && !isCtrlKeyDown()) {
+            this.nextBtn.displayString = GuiText.Start.getLocal();
+        } else if (!isShiftKeyDown() && isCtrlKeyDown()) {
+            this.nextBtn.displayString = GuiText.Start.getLocal();
+        } else {
+            this.nextBtn.displayString = GuiText.Next.getLocal();
+        }
 
         try {
 
@@ -150,6 +157,7 @@ public class GuiCraftAmount extends GuiAmount {
                         new PacketCraftRequest(
                                 addOrderAmount(0),
                                 isShiftKeyDown(),
+                                isCtrlKeyDown(),
                                 (CraftingMode) this.craftingMode.getCurrentValue()));
             }
         } catch (final NumberFormatException e) {

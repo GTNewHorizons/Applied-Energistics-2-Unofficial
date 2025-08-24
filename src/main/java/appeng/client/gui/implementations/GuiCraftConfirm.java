@@ -362,6 +362,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 this.start.enabled = false;
             }
         }
+
         this.startWithFollow.enabled = this.start.enabled;
 
         this.selectCPU.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation();
@@ -1026,9 +1027,8 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 AELog.debug(e);
             }
         } else if (btn == this.startWithFollow) {
-            final String playerName = this.mc.thePlayer.getCommandSenderName();
             try {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.StartWithFollow", playerName));
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.StartWithFollow", "Start"));
             } catch (final Throwable e) {
                 AELog.debug(e);
             }
