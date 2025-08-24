@@ -118,9 +118,9 @@ public class GuiCraftAmount extends GuiAmount {
         super.drawBG(offsetX, offsetY, mouseX, mouseY);
 
         // Only display the word "Start" if either Ctrl OR Shift is held not both
-        if (isShiftKeyDown()) {
+        if (isShiftKeyDown() && !isCtrlKeyDown()) {
             this.nextBtn.displayString = GuiText.Start.getLocal();
-        } else if (isCtrlKeyDown()) {
+        } else if (!isShiftKeyDown() && isCtrlKeyDown()) {
             this.nextBtn.displayString = GuiText.Start.getLocal();
         } else {
             this.nextBtn.displayString = GuiText.Next.getLocal();
