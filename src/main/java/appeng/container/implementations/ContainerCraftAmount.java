@@ -41,7 +41,7 @@ public class ContainerCraftAmount extends AEBaseContainer {
     private MEGuiTextField amountField;
 
     @GuiSync(1)
-    public long InitialCraftAmount = -1;
+    public long initialCraftAmount = -1;
 
     private final Slot craftingItem;
     private IAEItemStack itemToCreate;
@@ -84,31 +84,23 @@ public class ContainerCraftAmount extends AEBaseContainer {
         this.itemToCreate = itemToCreate;
     }
 
-    public long getInitialCraftAmount() {
-        return InitialCraftAmount;
-    }
-
     public void setInitialCraftAmount(long initialCraftAmount) {
-        this.InitialCraftAmount = initialCraftAmount;
+        this.initialCraftAmount = initialCraftAmount;
     }
 
     @SideOnly(Side.CLIENT)
     public void setAmountField(MEGuiTextField amountField) {
         this.amountField = amountField;
-        if (this.InitialCraftAmount > 0) {
-            this.amountField.setText(String.valueOf(this.InitialCraftAmount));
-        } else {
-            this.amountField.setText("1");
-        }
+        this.amountField.setText(String.valueOf(Math.max(1, this.initialCraftAmount)));
         this.amountField.setCursorPositionEnd();
         this.amountField.setSelectionPos(0);
     }
 
     @Override
     public void onUpdate(String field, Object oldValue, Object newValue) {
-        if (field.equals("InitialCraftAmount")) {
+        if (field.equals("initialCraftAmount")) {
             if (this.amountField != null) {
-                this.amountField.setText(String.valueOf(this.InitialCraftAmount));
+                this.amountField.setText(String.valueOf(Math.max(1, this.initialCraftAmount)));
                 this.amountField.setCursorPositionEnd();
                 this.amountField.setSelectionPos(0);
             }

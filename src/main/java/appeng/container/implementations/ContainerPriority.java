@@ -34,7 +34,7 @@ public class ContainerPriority extends AEBaseContainer {
     private boolean priorityTextInitialized = false;
 
     @GuiSync(2)
-    public long PriorityValue = -1;
+    public long priorityValue = -1;
 
     public ContainerPriority(final InventoryPlayer ip, final IPriorityHost host) {
         super(ip, host);
@@ -49,7 +49,7 @@ public class ContainerPriority extends AEBaseContainer {
 
     public void setPriority(final int newValue, final EntityPlayer player) {
         this.priHost.setPriority(newValue);
-        this.PriorityValue = newValue;
+        this.priorityValue = newValue;
     }
 
     @Override
@@ -59,7 +59,7 @@ public class ContainerPriority extends AEBaseContainer {
         }
 
         if (Platform.isServer()) {
-            this.PriorityValue = this.priHost.getPriority();
+            this.priorityValue = this.priHost.getPriority();
         }
 
         super.detectAndSendChanges();
@@ -67,7 +67,7 @@ public class ContainerPriority extends AEBaseContainer {
 
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
-        if (field.equals("PriorityValue")) {
+        if (field.equals("priorityValue")) {
             if (this.priorityTextField != null && !this.priorityTextInitialized) {
                 updatePriorityTextFieldValue();
                 priorityTextInitialized = true;
@@ -78,7 +78,7 @@ public class ContainerPriority extends AEBaseContainer {
     }
 
     private void updatePriorityTextFieldValue() {
-        this.priorityTextField.setText(String.valueOf(this.PriorityValue));
+        this.priorityTextField.setText(String.valueOf(this.priorityValue));
         this.priorityTextField.setCursorPositionEnd();
         this.priorityTextField.setSelectionPos(0);
     }
