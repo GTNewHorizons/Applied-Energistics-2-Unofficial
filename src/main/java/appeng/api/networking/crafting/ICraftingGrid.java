@@ -68,6 +68,28 @@ public interface ICraftingGrid extends IGridCache {
      *                          find the lower end cpus, automatic processes generally should pick lower end cpus.
      * @param src               - the action source to use when starting the job, this will be used for extracting
      *                          items, should usually be the same as the one provided to beginCraftingJob.
+     * @param followCraft       - Whether to follow the craft and send a notification to the requesting player when it
+     *                          completes
+     * @return null ( if failed ) or an {@link ICraftingLink} other wise, if you send requestingMachine you need to
+     *         properly keep track of this and handle the nbt saving and loading of the object as well as the
+     *         {@link ICraftingRequester} methods. if you send null, this object should be discarded after verifying the
+     *         return state.
+     */
+    default ICraftingLink submitJob(ICraftingJob job, ICraftingRequester requestingMachine, ICraftingCPU target,
+            boolean prioritizePower, BaseActionSource src, boolean followCraft) {
+        return this.submitJob(job, requestingMachine, target, prioritizePower, src);
+    }
+
+    /**
+     * Submit the job to the Crafting system for processing.
+     *
+     * @param job               - the crafting job from beginCraftingJob
+     * @param requestingMachine - a machine if its being requested via automation, may be null.
+     * @param target            - can be null
+     * @param prioritizePower   - if cpu is null, this determine if the system should prioritize power, or if it should
+     *                          find the lower end cpus, automatic processes generally should pick lower end cpus.
+     * @param src               - the action source to use when starting the job, this will be used for extracting
+     *                          items, should usually be the same as the one provided to beginCraftingJob.
      * @return null ( if failed ) or an {@link ICraftingLink} other wise, if you send requestingMachine you need to
      *         properly keep track of this and handle the nbt saving and loading of the object as well as the
      *         {@link ICraftingRequester} methods. if you send null, this object should be discarded after verifying the

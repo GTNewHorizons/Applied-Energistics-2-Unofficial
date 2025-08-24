@@ -64,6 +64,7 @@ import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPostCacheConstruction;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
@@ -499,8 +500,15 @@ public class CraftingGridCache
     }
 
     @Override
+    public ICraftingLink submitJob(ICraftingJob job, ICraftingRequester requestingMachine, ICraftingCPU target,
+            boolean prioritizePower, BaseActionSource src) {
+        return submitJob(job, requestingMachine, target, prioritizePower, src, false);
+    }
+
+    @Override
     public ICraftingLink submitJob(final ICraftingJob job, final ICraftingRequester requestingMachine,
-            final ICraftingCPU target, final boolean prioritizePower, final BaseActionSource src) {
+            final ICraftingCPU target, final boolean prioritizePower, final BaseActionSource src,
+            final boolean followCraft) {
         if (job.isSimulation()) {
             return null;
         }
@@ -561,7 +569,13 @@ public class CraftingGridCache
         }
 
         if (cpuCluster != null) {
-            return cpuCluster.submitJob(this.grid, job, src, requestingMachine);
+            ICraftingLink submittedJob = cpuCluster.submitJob(this.grid, job, src, requestingMachine);
+
+            if (src instanceof PlayerSource playerSource && followCraft) {
+                cpuCluster.togglePlayerFollowStatus(playerSource.player.getCommandSenderName());
+            }
+
+            return submittedJob;
         }
 
         return null;

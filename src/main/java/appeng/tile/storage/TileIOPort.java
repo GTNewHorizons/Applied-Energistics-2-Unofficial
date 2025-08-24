@@ -99,6 +99,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
     private final BaseActionSource mySrc;
 
     private YesNo lastRedstoneState;
+    private boolean pendingRedstonePulse;
     private ItemStack currentCell;
     private IMEInventory<IAEFluidStack> cachedFluid;
     private IMEInventory<IAEItemStack> cachedItem;
@@ -113,6 +114,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         this.manager.registerSetting(Settings.OPERATION_MODE, OperationMode.EMPTY);
         this.cells = new AppEngInternalInventory(this, 12);
         this.mySrc = new MachineSource(this);
+        this.pendingRedstonePulse = false;
         this.lastRedstoneState = YesNo.UNDECIDED;
 
         final Block ioPortBlock = AEApi.instance().definitions().blocks().iOPort().maybeBlock().get();
@@ -174,6 +176,9 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                 ? YesNo.YES
                 : YesNo.NO;
         if (this.lastRedstoneState != currentState) {
+            // When setting this directly instead of using the OR operation, it was found that a one-tick redstone pulse
+            // would turn off this flag before items were transferred.
+            this.pendingRedstonePulse |= currentState == YesNo.YES;
             this.lastRedstoneState = currentState;
             this.updateTask();
         }
@@ -193,6 +198,9 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         }
 
         final RedstoneMode rs = (RedstoneMode) this.manager.getSetting(Settings.REDSTONE_CONTROLLED);
+        if (rs == RedstoneMode.IGNORE || rs == RedstoneMode.SIGNAL_PULSE) {
+            return true;
+        }
         if (rs == RedstoneMode.HIGH_SIGNAL) {
             return this.getRedstoneState();
         }
@@ -299,6 +307,13 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         if (!this.getProxy().isActive()) {
             return TickRateModulation.IDLE;
         }
+        final RedstoneMode rs = (RedstoneMode) this.manager.getSetting(Settings.REDSTONE_CONTROLLED);
+        if (rs == RedstoneMode.SIGNAL_PULSE && !this.pendingRedstonePulse) {
+            return TickRateModulation.IDLE;
+        }
+        // Turns off pulsed output after this tick, to account for redstone pulses longer than one tick.
+        // This is because updateRedstoneState does not get changed if the signal stays on.
+        this.pendingRedstonePulse = false;
 
         long ItemsToMove = 256;
 
