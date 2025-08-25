@@ -27,6 +27,7 @@ import appeng.api.config.CraftingStatus;
 import appeng.api.config.PinsState;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnits;
+import appeng.api.config.SearchBoxFocusPriority;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
@@ -119,6 +120,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int maxCraftingSteps = 2_000_000;
     public int maxCraftingTreeVisualizationSize = 32 * 1024 * 1024; // 32 MiB
     public boolean limitCraftingCPUSpill = true;
+    public SearchBoxFocusPriority searchBoxFocusPriority = SearchBoxFocusPriority.NEVER;
 
     public int maxRecursiveDepth = 100;
     public int maxMachineChecks = 10000;
@@ -285,6 +287,17 @@ public final class AEConfig extends Configuration implements IConfigurableObject
             if (version.contains(imb.getVersion())) {
                 this.featureFlags.remove(AEFeature.AlphaPass);
             }
+        }
+
+        try {
+            this.searchBoxFocusPriority = SearchBoxFocusPriority.valueOf(
+                    this.get(
+                            "Client",
+                            "SearchBoxFocusPriority",
+                            this.searchBoxFocusPriority.name(),
+                            this.getListComment(this.searchBoxFocusPriority)).getString());
+        } catch (final Throwable t) {
+            this.searchBoxFocusPriority = SearchBoxFocusPriority.NEVER;
         }
 
         try {

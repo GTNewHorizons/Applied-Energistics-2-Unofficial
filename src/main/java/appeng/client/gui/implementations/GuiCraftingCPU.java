@@ -261,7 +261,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             final PacketInventoryAction p = new PacketInventoryAction(
                     InventoryAction.AUTO_CRAFT,
                     inventorySlots.inventorySlots.size(),
-                    0);
+                    hoveredAEStack.getStackSize());
             NetworkHandler.instance.sendToServer(p);
         }
         super.mouseClicked(xCoord, yCoord, btn);

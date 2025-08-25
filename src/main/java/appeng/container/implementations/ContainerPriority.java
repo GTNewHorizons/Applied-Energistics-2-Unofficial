@@ -10,12 +10,12 @@
 
 package appeng.container.implementations;
 
-import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import appeng.api.config.SecurityPermissions;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.helpers.IPriorityHost;
@@ -28,10 +28,13 @@ public class ContainerPriority extends AEBaseContainer {
     private final IPriorityHost priHost;
 
     @SideOnly(Side.CLIENT)
-    private GuiTextField textField;
+    private MEGuiTextField priorityTextField;
+
+    @SideOnly(Side.CLIENT)
+    private boolean priorityTextInitialized = false;
 
     @GuiSync(2)
-    public long PriorityValue = -1;
+    public long priorityValue = -1;
 
     public ContainerPriority(final InventoryPlayer ip, final IPriorityHost host) {
         super(ip, host);
@@ -39,36 +42,44 @@ public class ContainerPriority extends AEBaseContainer {
     }
 
     @SideOnly(Side.CLIENT)
-    public void setTextField(final GuiTextField level) {
-        this.textField = level;
-        this.textField.setText(String.valueOf(this.PriorityValue));
+    public void setTextField(final MEGuiTextField level) {
+        this.priorityTextField = level;
+        updatePriorityTextFieldValue();
     }
 
     public void setPriority(final int newValue, final EntityPlayer player) {
         this.priHost.setPriority(newValue);
-        this.PriorityValue = newValue;
+        this.priorityValue = newValue;
     }
 
     @Override
     public void detectAndSendChanges() {
-        super.detectAndSendChanges();
         if (!(priHost instanceof IGuiItemObject)) {
             this.verifyPermissions(SecurityPermissions.BUILD, false);
         }
 
         if (Platform.isServer()) {
-            this.PriorityValue = this.priHost.getPriority();
+            this.priorityValue = this.priHost.getPriority();
         }
+
+        super.detectAndSendChanges();
     }
 
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
-        if (field.equals("PriorityValue")) {
-            if (this.textField != null) {
-                this.textField.setText(String.valueOf(this.PriorityValue));
+        if (field.equals("priorityValue")) {
+            if (this.priorityTextField != null && !this.priorityTextInitialized) {
+                updatePriorityTextFieldValue();
+                priorityTextInitialized = true;
             }
         }
 
         super.onUpdate(field, oldValue, newValue);
+    }
+
+    private void updatePriorityTextFieldValue() {
+        this.priorityTextField.setText(String.valueOf(this.priorityValue));
+        this.priorityTextField.setCursorPositionEnd();
+        this.priorityTextField.setSelectionPos(0);
     }
 }
