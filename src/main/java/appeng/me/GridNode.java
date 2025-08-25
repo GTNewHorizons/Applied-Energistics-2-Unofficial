@@ -281,9 +281,8 @@ public class GridNode implements IGridNode, IPathItem {
     }
 
     @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public IReadOnlyCollection<IGridConnection> getConnections() {
-        return (ReadOnlyCollection) (new ReadOnlyCollection<>(this.connections));
+        return new ReadOnlyCollection<>(this.connections);
     }
 
     public boolean hasNoConnections() {
@@ -338,13 +337,7 @@ public class GridNode implements IGridNode, IPathItem {
 
     @Override
     public boolean meetsChannelRequirements() {
-        if (hasFlag(GridFlags.REQUIRE_CHANNEL)) {
-            // TODO: Check if needed?
-            if (AEConfig.instance.isFeatureEnabled(AEFeature.Channels)) {
-                return this.getUsedChannels() > 0;
-            }
-        }
-        return true;
+        return !hasFlag(GridFlags.REQUIRE_CHANNEL) || this.getUsedChannels() > 0;
     }
 
     @Override
@@ -579,9 +572,8 @@ public class GridNode implements IGridNode, IPathItem {
     }
 
     @Override
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     public IReadOnlyCollection<IPathItem> getPossibleOptions() {
-        return (IReadOnlyCollection) this.getConnections();
+        return new ReadOnlyCollection<>(this.connections);
     }
 
     public int propagateChannelsUpwards(boolean consumesChannel) {

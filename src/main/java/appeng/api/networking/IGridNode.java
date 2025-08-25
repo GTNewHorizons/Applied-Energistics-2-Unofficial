@@ -147,8 +147,4 @@ public interface IGridNode {
      * @param playerID new player id
      */
     void setPlayerID(int playerID);
-
-    int getMaxChannels();
-
-    int getUsedChannels();
 }

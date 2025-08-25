@@ -10,7 +10,6 @@
 
 package appeng.me;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Objects;
 
@@ -106,12 +105,12 @@ public class GridConnection implements IGridConnection, IPathItem {
     }
 
     @Override
-    public IGridNode a() {
+    public GridNode a() {
         return this.sideA;
     }
 
     @Override
-    public IGridNode b() {
+    public GridNode b() {
         return this.sideB;
     }
 
@@ -122,7 +121,7 @@ public class GridConnection implements IGridConnection, IPathItem {
 
     @Override
     public int getUsedChannels() {
-        return usedChannels;
+        return lastUsedChannels;
     }
 
     @Override
@@ -149,7 +148,7 @@ public class GridConnection implements IGridConnection, IPathItem {
 
     @Override
     public IReadOnlyCollection<IPathItem> getPossibleOptions() {
-        return new ReadOnlyCollection<>(Arrays.asList((IPathItem) this.a(), (IPathItem) this.b()));
+        return new ReadOnlyCollection<>(this.a(), this.b());
     }
 
     @Override
