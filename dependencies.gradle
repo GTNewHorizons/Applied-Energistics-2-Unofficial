@@ -29,6 +29,8 @@ dependencies {
     //runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')
     //runtimeOnlyNonPublishable('curse.maven:thermal-expansion-69163:2388759')
 
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.8.12:dev') {transitive = false}
+
     testImplementation('junit:junit:4.12')
     functionalTestImplementation(platform('org.junit:junit-bom:5.9.2'))
     functionalTestImplementation('org.junit.jupiter:junit-jupiter')

@@ -46,6 +46,16 @@ public interface IGridBlock {
     EnumSet<GridFlags> getFlags();
 
     /**
+     * see if this block has a certain flag
+     *
+     * @param flag flags
+     * @return true if has flag
+     */
+    default boolean hasFlag(GridFlags flag) {
+        return getFlags().contains(flag);
+    }
+
+    /**
      * generally speaking you will return true for this, the one exception is buses, or worm holes where the node
      * represents something that isn't a real connection in the world, but rather one represented internally to the
      * block.

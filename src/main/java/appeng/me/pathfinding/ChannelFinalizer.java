@@ -16,7 +16,7 @@ import appeng.api.networking.IGridNode;
 import appeng.me.GridConnection;
 import appeng.me.GridNode;
 
-public class ControllerChannelUpdater implements IGridConnectionVisitor {
+public class ChannelFinalizer implements IGridConnectionVisitor {
 
     @Override
     public boolean visitNode(final IGridNode n) {
