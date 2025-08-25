@@ -57,7 +57,6 @@ public class GridConnection implements IGridConnection, IPathItem {
      * controller.
      */
     private GridNode sideA;
-    @Nullable
     private ForgeDirection fromAtoB;
     private GridNode sideB;
 
@@ -149,11 +148,6 @@ public class GridConnection implements IGridConnection, IPathItem {
     }
 
     @Override
-    public boolean canSupportMoreChannels() {
-        return this.getLastUsedChannels() < 32; // max, PERIOD.
-    }
-
-    @Override
     public IReadOnlyCollection<IPathItem> getPossibleOptions() {
         return new ReadOnlyCollection<>(Arrays.asList((IPathItem) this.a(), (IPathItem) this.b()));
     }
@@ -195,10 +189,6 @@ public class GridConnection implements IGridConnection, IPathItem {
                 this.sideB.getInternalGrid().postEventTo(this.sideB, EVENT);
             }
         }
-    }
-
-    private int getLastUsedChannels() {
-        return this.usedChannels;
     }
 
     Object getVisitorIterationNumber() {
@@ -256,7 +246,7 @@ public class GridConnection implements IGridConnection, IPathItem {
 
         // Create the actual connection
         this.sideA = a;
-        this.fromAtoB = fromAtoB;
+        this.fromAtoB = fromAtoB == null ? ForgeDirection.UNKNOWN : fromAtoB;
         this.sideB = b;
 
         mergeGrids(a, b);

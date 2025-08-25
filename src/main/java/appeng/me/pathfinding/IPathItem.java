@@ -25,12 +25,10 @@ public interface IPathItem {
 
     IPathItem getControllerRoute();
 
-    void setControllerRoute(IPathItem fast);
-
     /**
-     * used to determine if the finder can continue.
+     * Sets route to controller.
      */
-    boolean canSupportMoreChannels();
+    void setControllerRoute(IPathItem fast);
 
     /**
      * find possible choices for other pathing.
