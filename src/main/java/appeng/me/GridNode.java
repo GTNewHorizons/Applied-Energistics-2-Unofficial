@@ -10,7 +10,6 @@
 
 package appeng.me;
 
-import java.util.Comparator;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.LinkedList;
@@ -654,23 +653,6 @@ public class GridNode implements IGridNode, IPathItem {
             this.node.getMachine().securityBreak();
 
             return null;
-        }
-    }
-
-    private static class ConnectionComparator implements Comparator<IGridConnection> {
-
-        private final IGridNode gn;
-
-        public ConnectionComparator(final IGridNode gn) {
-            this.gn = gn;
-        }
-
-        @Override
-        public int compare(final IGridConnection o1, final IGridConnection o2) {
-            final boolean preferredA = o1.getOtherSide(this.gn).hasFlag(GridFlags.PREFERRED);
-            final boolean preferredB = o2.getOtherSide(this.gn).hasFlag(GridFlags.PREFERRED);
-
-            return preferredA == preferredB ? 0 : (preferredA ? -1 : 1);
         }
     }
 }
