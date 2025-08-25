@@ -53,7 +53,7 @@ import appeng.util.ReadOnlyCollection;
 public class GridNode implements IGridNode, IPathItem {
 
     private static final MENetworkChannelsChanged EVENT = new MENetworkChannelsChanged();
-    private static final int[] CHANNEL_COUNT = { 0, 8, 32, 128, Integer.MAX_VALUE };
+    private static final int[] CHANNEL_COUNT = { 0, 8, 32, Integer.MAX_VALUE };
 
     private final List<GridConnection> connections = new LinkedList<>();
     private final IGridBlock gridProxy;
@@ -208,7 +208,7 @@ public class GridNode implements IGridNode, IPathItem {
     }
 
     private int getCompressedChannelsIndex() {
-        if (!AEConfig.instance.isFeatureEnabled(AEFeature.Channels)) return 4;
+        if (!AEConfig.instance.isFeatureEnabled(AEFeature.Channels)) return 3;
         else if (hasFlag(GridFlags.CANNOT_CARRY)) return 0;
         else if (hasFlag(GridFlags.DENSE_CAPACITY)) return 2;
         return 1;
