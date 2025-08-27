@@ -30,7 +30,6 @@ public class ContainerPriority extends AEBaseContainer {
     @SideOnly(Side.CLIENT)
     private MEGuiTextField priorityTextField;
 
-    @SideOnly(Side.CLIENT)
     private boolean priorityTextInitialized = false;
 
     @GuiSync(2)
