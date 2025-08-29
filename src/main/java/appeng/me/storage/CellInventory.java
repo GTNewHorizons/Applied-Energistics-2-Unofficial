@@ -39,7 +39,6 @@ import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
-import appeng.core.AELog;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
@@ -212,9 +211,6 @@ public class CellInventory implements ICellInventory {
         }
 
         if (input.isCraftable()) {
-            AELog.error(
-                    new Throwable(),
-                    "FATAL: DETECTED ILLEGAL ITEM TO BE INSERTED ON STORAGE CELL, PLEASE REPORT ON GITHUB! STACKTRACE:");
             input.setCraftable(false);
         }
 
