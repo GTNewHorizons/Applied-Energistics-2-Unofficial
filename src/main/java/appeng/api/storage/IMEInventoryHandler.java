@@ -94,4 +94,9 @@ public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInve
         return false;
     }
 
+    /** returns internal IMEInventory if it has one */
+    default IMEInventory<StackType> getInternal() {
+        return null;
+    }
+
 }
