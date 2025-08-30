@@ -210,7 +210,7 @@ public class CellInventory implements ICellInventory {
             }
         }
 
-        if (input.isCraftable()) {
+        if (mode == Actionable.MODULATE && input.isCraftable()) {
             input.setCraftable(false);
         }
 
