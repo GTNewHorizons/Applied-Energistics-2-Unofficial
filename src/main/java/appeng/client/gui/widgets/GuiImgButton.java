@@ -844,35 +844,35 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.CPUOnlyAllowNonPlayerDesc);
 
             this.registerApp(
-                    16 * 15 + 15,
+                    16 * 15 + 14,
                     Settings.PINS_STATE,
                     PinsState.DISABLED,
                     ButtonToolTips.PinsSection,
                     ButtonToolTips.PinsSectionDisabled);
 
             this.registerApp(
-                    16 * 15 + 14,
+                    16 * 15 + 13,
                     Settings.PINS_STATE,
                     PinsState.ONE,
                     ButtonToolTips.PinsSection,
                     ButtonToolTips.PinsSectionActive);
 
             this.registerApp(
-                    16 * 15 + 14,
+                    16 * 15 + 13,
                     Settings.PINS_STATE,
                     PinsState.TWO,
                     ButtonToolTips.PinsSection,
                     ButtonToolTips.PinsSectionActive);
 
             this.registerApp(
-                    16 * 15 + 14,
+                    16 * 15 + 13,
                     Settings.PINS_STATE,
                     PinsState.THREE,
                     ButtonToolTips.PinsSection,
                     ButtonToolTips.PinsSectionActive);
 
             this.registerApp(
-                    16 * 15 + 14,
+                    16 * 15 + 13,
                     Settings.PINS_STATE,
                     PinsState.FOUR,
                     ButtonToolTips.PinsSection,
