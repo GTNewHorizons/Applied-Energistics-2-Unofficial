@@ -24,6 +24,7 @@ import org.lwjgl.input.Mouse;
 import appeng.api.AEApi;
 import appeng.api.config.CraftingStatus;
 import appeng.api.config.PinsState;
+import appeng.api.config.SearchBoxFocusPriority;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
 import appeng.api.config.TerminalStyle;
@@ -111,7 +112,8 @@ public class GuiMEMonitorable extends AEBaseMEGui
     private GuiImgButton searchStringSave;
     private GuiImgButton typeFilter;
     private GuiImgButton pinsStateButton;
-    private boolean isAutoFocus = false;
+    private boolean canBeAutoFocused = false;
+    private boolean isAutoFocused = false;
     private int currentMouseX = 0;
     private int currentMouseY = 0;
     private PinsState pinsState;
@@ -396,11 +398,12 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
         // Enum setting = AEConfig.INSTANCE.getSetting( "Terminal", SearchBoxMode.class, SearchBoxMode.AUTOSEARCH );
         final Enum searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
-        this.isAutoFocus = SearchBoxMode.AUTOSEARCH == searchMode || SearchBoxMode.NEI_AUTOSEARCH == searchMode;
+        this.canBeAutoFocused = SearchBoxMode.AUTOSEARCH == searchMode || SearchBoxMode.NEI_AUTOSEARCH == searchMode;
 
         this.searchField.x = this.guiLeft + Math.max(80, this.offsetX);
         this.searchField.y = this.guiTop + 4;
-        this.searchField.setFocused(this.isAutoFocus);
+        this.searchField.setFocused(this.canBeAutoFocused);
+        this.isAutoFocused = this.canBeAutoFocused;
 
         if (this.isSubGui()) {
             this.searchField.setText(memoryText);
@@ -467,6 +470,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         searchField.mouseClicked(xCoord, yCoord, btn);
+        isAutoFocused = false;
         if (handleViewCellClick(xCoord, yCoord, btn)) return;
         super.mouseClicked(xCoord, yCoord, btn);
     }
@@ -564,21 +568,13 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
     @Override
     protected void keyTyped(final char character, final int key) {
-        if (!isAutoFocus) {
-            keyTypedResolver(character, key, false);
-        } else if (!this.checkHotbarKeys(key)) {
-            keyTypedResolver(character, key, true);
-        }
-    }
-
-    private void keyTypedResolver(final char character, final int key, boolean hotBarCheckPassed) {
         if (NEI.searchField.existsSearchField()) {
-
             if ((NEI.searchField.focused() || searchField.isFocused())
                     && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
                 final boolean focused = searchField.isFocused();
                 searchField.setFocused(!focused);
                 NEI.searchField.setFocus(focused);
+                isAutoFocused = false;
                 return;
             }
 
@@ -608,6 +604,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
         if (searchField.isFocused() && key == Keyboard.KEY_RETURN) {
             searchField.setFocused(false);
+            isAutoFocused = false;
             return;
         }
 
@@ -615,17 +612,25 @@ public class GuiMEMonitorable extends AEBaseMEGui
             return;
         }
 
+        boolean skipHotbarCheck = searchField.isFocused()
+                && (AEConfig.instance.searchBoxFocusPriority == SearchBoxFocusPriority.ALWAYS
+                        || (AEConfig.instance.searchBoxFocusPriority == SearchBoxFocusPriority.NO_AUTOSEARCH
+                                && !isAutoFocused));
+
+        if (!skipHotbarCheck && checkHotbarKeys(key)) {
+            return;
+        }
+
         final boolean mouseInGui = this
                 .isPointInRegion(0, 0, this.xSize, this.ySize, this.currentMouseX, this.currentMouseY);
 
-        if (this.isAutoFocus && !searchField.isFocused() && mouseInGui) {
+        if (this.canBeAutoFocused && !searchField.isFocused() && mouseInGui) {
             searchField.setFocused(true);
+            isAutoFocused = true;
         }
 
         if (!searchField.textboxKeyTyped(character, key)) {
-            if (hotBarCheckPassed || !this.checkHotbarKeys(key)) {
-                super.keyTyped(character, key);
-            }
+            super.keyTyped(character, key);
         }
     }
 
@@ -794,5 +799,15 @@ public class GuiMEMonitorable extends AEBaseMEGui
     /// @return the returned list is **read-only**
     public IItemList<IAEItemStack> getAvaibleItems() {
         return repo.getAvailableItems();
+    }
+
+    // Moving items via hotbar keys in terminals isn't working anyway.
+    // Let's disable hotbar keys processing for terminal slots to allow proper input of numbers in the search field
+    @Override
+    protected boolean checkHotbarKeys(int keyCode) {
+        if (theSlot instanceof SlotME) {
+            return false;
+        }
+        return super.checkHotbarKeys(keyCode);
     }
 }

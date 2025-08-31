@@ -34,7 +34,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.logging.log4j.Level;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -992,12 +991,10 @@ public abstract class AEBaseContainer extends Container {
 
                 // Retrieve list of all grids
                 NetworkList grids = g.getAllRecursiveGridConnections(classType);
-                AELog.log(Level.ERROR, "Found " + grids.size() + " grids");
 
                 for (Grid subnet : grids) {
                     for (Class<? extends IGridHost> type : checkedMachineClasses) {
                         MachineSet subMachines = (MachineSet) subnet.getMachines(type);
-                        AELog.log(Level.ERROR, "Grid: " + subnet.getId() + " - " + subMachines.size() + " machines");
                         if (!subMachines.isEmpty()) {
                             machineList.addAll(subMachines);
                         }
@@ -1011,7 +1008,6 @@ public abstract class AEBaseContainer extends Container {
                     }
                     machineCount++;
                     IGridHost machine = gridNode.getMachine();
-                    AELog.log(Level.ERROR, "Machine: " + machine.getClass().getName());
 
                     if (machine instanceof TileDrive innerMachine) {
                         for (int i = 0; i < innerMachine.getSizeInventory(); i++) {
