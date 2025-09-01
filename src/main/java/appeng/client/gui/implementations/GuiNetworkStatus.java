@@ -148,7 +148,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             case 0 -> {
                 if (!isShiftKeyDown()) break;
                 // show all blocks in the world
-                List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(tag);
+                List<NamedDimensionalCoord> dcl = NamedDimensionalCoord.readAsListFromNBTNamed(tag);
                 BlockPosHighlighter.highlightBlocks(
                         mc.thePlayer,
                         dcl,

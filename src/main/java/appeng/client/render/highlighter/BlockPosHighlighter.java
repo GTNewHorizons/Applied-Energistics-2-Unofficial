@@ -3,6 +3,7 @@ package appeng.client.render.highlighter;
 import java.util.ArrayList;
 import java.util.List;
 
+import appeng.api.util.NamedDimensionalCoord;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.Tessellator;
@@ -33,11 +34,11 @@ public class BlockPosHighlighter implements IHighlighter {
 
     BlockPosHighlighter() {}
 
-    public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String deviceName,
-            String foundMsg, String wrongDimMsg) {
+    public static void highlightBlocks(EntityPlayer player, List<NamedDimensionalCoord> interfaces, String deviceName,
+                                       String foundMsg, String wrongDimMsg) {
         INSTANCE.clear();
         int highlightDuration = INSTANCE.MIN_TIME;
-        for (DimensionalCoord coord : interfaces) {
+        for (NamedDimensionalCoord coord : interfaces) {
 
             INSTANCE.highlightedBlocks.add(coord);
             highlightDuration = Math.max(
@@ -53,8 +54,14 @@ public class BlockPosHighlighter implements IHighlighter {
                 if (deviceName.isEmpty()) {
                     player.addChatMessage(new ChatComponentTranslation(foundMsg, coord.x, coord.y, coord.z));
                 } else {
+                    final String namedDevice;
+                    if (coord.getCustomName().isEmpty()) {
+                        namedDevice = deviceName;
+                    } else {
+                        namedDevice = deviceName + " \"" + coord.getCustomName() + "\"";
+                    }
                     player.addChatMessage(
-                            new ChatComponentTranslation(foundMsg, deviceName, coord.x, coord.y, coord.z));
+                            new ChatComponentTranslation(foundMsg, namedDevice, coord.x, coord.y, coord.z));
                 }
             } else if (wrongDimMsg != null) {
                 if (deviceName.isEmpty()) {
@@ -69,7 +76,11 @@ public class BlockPosHighlighter implements IHighlighter {
 
     public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String foundMsg,
             String wrongDimMsg) {
-        highlightBlocks(player, interfaces, "", foundMsg, wrongDimMsg);
+        List<NamedDimensionalCoord> ndc = new ArrayList<>();
+        for (DimensionalCoord coord : interfaces) {
+            ndc.add(new NamedDimensionalCoord(coord, ""));
+        }
+        highlightBlocks(player, ndc, "", foundMsg, wrongDimMsg);
     }
 
     public void clear() {
