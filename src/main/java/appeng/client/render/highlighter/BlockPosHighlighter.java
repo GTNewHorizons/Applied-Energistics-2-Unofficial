@@ -1,7 +1,9 @@
 package appeng.client.render.highlighter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import appeng.api.util.NamedDimensionalCoord;
 import net.minecraft.client.Minecraft;
@@ -34,12 +36,14 @@ public class BlockPosHighlighter implements IHighlighter {
 
     BlockPosHighlighter() {}
 
-    public static void highlightBlocks(EntityPlayer player, List<NamedDimensionalCoord> interfaces, String deviceName,
-                                       String foundMsg, String wrongDimMsg) {
+    public static void highlightNamedBlocks(EntityPlayer player, Map<NamedDimensionalCoord, String[]> ndcm,
+                                            String deviceName) {
         INSTANCE.clear();
         int highlightDuration = INSTANCE.MIN_TIME;
-        for (NamedDimensionalCoord coord : interfaces) {
-
+        for (NamedDimensionalCoord coord : ndcm.keySet()) {
+            final String[] msgs = ndcm.get(coord);
+            final String foundMsg = msgs[0];
+            final String wrongDimMsg = msgs[1];
             INSTANCE.highlightedBlocks.add(coord);
             highlightDuration = Math.max(
                     highlightDuration,
@@ -53,34 +57,45 @@ public class BlockPosHighlighter implements IHighlighter {
 
                 if (deviceName.isEmpty()) {
                     player.addChatMessage(new ChatComponentTranslation(foundMsg, coord.x, coord.y, coord.z));
-                } else {
-                    final String namedDevice;
-                    if (coord.getCustomName().isEmpty()) {
-                        namedDevice = deviceName;
-                    } else {
-                        namedDevice = deviceName + " \"" + coord.getCustomName() + "\"";
-                    }
+                } else if (coord.getCustomName().isEmpty()) {
                     player.addChatMessage(
-                            new ChatComponentTranslation(foundMsg, namedDevice, coord.x, coord.y, coord.z));
+                            new ChatComponentTranslation(foundMsg, deviceName, coord.x, coord.y, coord.z));
+                } else {
+                    player.addChatMessage(
+                            new ChatComponentTranslation(foundMsg,
+                                    deviceName,
+                                    coord.getCustomName(),
+                                    coord.x, coord.y, coord.z));
                 }
             } else if (wrongDimMsg != null) {
                 if (deviceName.isEmpty()) {
                     player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, coord.getDimension()));
-                } else {
+                } else if (coord.getCustomName().isEmpty()) {
                     player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, deviceName, coord.getDimension()));
+                } else {
+                    player.addChatMessage(new ChatComponentTranslation(wrongDimMsg, deviceName,
+                            coord.getCustomName(), coord.getDimension()));
                 }
             }
         }
         INSTANCE.expireHighlightTime = System.currentTimeMillis() + highlightDuration;
     }
+    public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String deviceName,
+                                       String foundMsg, String wrongDimMsg) {
+        List<NamedDimensionalCoord> noNamedCoords = new ArrayList<>();
+        for (DimensionalCoord coord : interfaces) {
+            noNamedCoords.add(new NamedDimensionalCoord(coord, ""));
+        }
+        Map<NamedDimensionalCoord, String[]> ndcm = new HashMap<>();
+        for (NamedDimensionalCoord noNamedCoord : noNamedCoords) {
+            ndcm.put(noNamedCoord, new String[]{foundMsg, wrongDimMsg});
+        }
+        highlightNamedBlocks(player, ndcm, deviceName);
+    }
 
     public static void highlightBlocks(EntityPlayer player, List<DimensionalCoord> interfaces, String foundMsg,
-            String wrongDimMsg) {
-        List<NamedDimensionalCoord> ndc = new ArrayList<>();
-        for (DimensionalCoord coord : interfaces) {
-            ndc.add(new NamedDimensionalCoord(coord, ""));
-        }
-        highlightBlocks(player, ndc, "", foundMsg, wrongDimMsg);
+                                       String wrongDimMsg) {
+        highlightBlocks(player, interfaces, "", foundMsg, wrongDimMsg);
     }
 
     public void clear() {
