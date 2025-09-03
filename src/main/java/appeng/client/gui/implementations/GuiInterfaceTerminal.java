@@ -24,6 +24,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
+import appeng.api.util.NamedDimensionalCoord;
+import appeng.core.localization.Localization;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
@@ -1484,11 +1486,16 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 optionsButton.func_146113_a(mc.getSoundHandler());
                 // When using the highlight from the interface terminal, we want it to only
                 // highlight the interface containing the patterns and not any output p2p interfaces
-                BlockPosHighlighter.highlightBlocks(
+                BlockPosHighlighter.highlightNamedBlocks(
                         mc.thePlayer,
-                        Collections.singletonList(new DimensionalCoord(x, y, z, dim)),
-                        PlayerMessages.InterfaceHighlighted.getUnlocalized(),
-                        PlayerMessages.InterfaceInOtherDim.getUnlocalized());
+                        Collections.singletonMap(new NamedDimensionalCoord(
+                                new DimensionalCoord(x, y, z, dim), dispName), dispName.isEmpty()
+                                        ? new String[]{PlayerMessages.MachineHighlighted.getUnlocalized(),
+                                                        PlayerMessages.MachineInOtherDim.getUnlocalized()}
+                                        : new String[]{PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                                        PlayerMessages.MachineInOtherDimNamed.getUnlocalized()}),
+                        selfRep.getDisplayName());
+
                 mc.thePlayer.closeScreen();
                 return true;
             }
