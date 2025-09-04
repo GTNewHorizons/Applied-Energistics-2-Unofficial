@@ -13,11 +13,15 @@ package appeng.client.gui.implementations;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import appeng.api.util.NamedDimensionalCoord;
+import appeng.core.localization.Localization;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -250,11 +254,16 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
             // when using the highlight feature in the crafting GUI we want to show all the interfaces
             // that currently received items so the player can see if the items are processed properly
-            BlockPosHighlighter.highlightBlocks(
+            List<NamedDimensionalCoord> ndcl = NamedDimensionalCoord.readAsListFromNBTNamed(data);
+            Map<NamedDimensionalCoord, String[]> ndcm = new HashMap<>();
+            for (NamedDimensionalCoord ndc : ndcl) {
+                ndcm.put(ndc, new String[]{PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                            PlayerMessages.MachineInOtherDimNamed.getUnlocalized()});
+            }
+            BlockPosHighlighter.highlightNamedBlocks(
                     mc.thePlayer,
-                    DimensionalCoord.readAsListFromNBT(data),
-                    PlayerMessages.InterfaceHighlighted.getUnlocalized(),
-                    PlayerMessages.InterfaceInOtherDim.getUnlocalized());
+                    ndcm,
+                    ((Localization) () -> "tile.appliedenergistics2.BlockInterface.name").getLocal());
             mc.thePlayer.closeScreen();
         } else if (hoveredAEStack != null && btn == 2) {
             ((AEBaseContainer) inventorySlots).setTargetStack(hoveredAEStack);
