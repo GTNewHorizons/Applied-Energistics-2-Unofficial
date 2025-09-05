@@ -35,6 +35,7 @@ import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
 
 import appeng.api.util.NamedDimensionalCoord;
+import appeng.client.gui.implementations.GuiInterfaceTerminal;
 import appeng.tile.misc.TileInterface;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -1346,8 +1347,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 for (ICraftingMedium craftingProvider : craftingProviders) {
                                     final TileEntity tile = this.getTile(craftingProvider);
                                     if (tile instanceof TileInterface tileInterface) {
+                                        final String dispName = GuiInterfaceTerminal.translateFromNetwork(
+                                                tileInterface.getInterfaceDuality().getTermName());
                                         dimensionalCoords.add(new NamedDimensionalCoord(
-                                                new DimensionalCoord(tile), tileInterface.getCustomName()));
+                                                new DimensionalCoord(tile), dispName));
                                     }
                                 }
                                 this.providers.put(is, dimensionalCoords);
