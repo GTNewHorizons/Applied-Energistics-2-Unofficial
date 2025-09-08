@@ -48,7 +48,9 @@ public enum PlayerMessages implements Localization {
     FinishCraftingRemind,
     CraftingCantExtract,
     MachineInOtherDim,
+    MachineInOtherDimNamed,
     MachineHighlighted,
+    MachineHighlightedNamed,
     StorageInOtherDim,
     StorageHighlighted;
 
