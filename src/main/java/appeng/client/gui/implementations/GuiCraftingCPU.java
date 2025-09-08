@@ -643,20 +643,21 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 } catch (Exception ignored) {}
             } else {
                 NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
-                List<DimensionalCoord> blocks = DimensionalCoord.readAsListFromNBT(data);
+                List<NamedDimensionalCoord> blocks = NamedDimensionalCoord.readAsListFromNBTNamed(data);
 
                 ScheduledReason sr = ScheduledReason.values()[data.getInteger("ScheduledReason")];
                 if (sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
 
                 if (blocks.isEmpty()) return;
-                for (DimensionalCoord blockPos : blocks) {
+                for (NamedDimensionalCoord blockPos : blocks) {
                     lineList.add(
                             String.format(
-                                    "Dim:%s X:%s Y:%s Z:%s",
+                                    "Dim:%s X:%s Y:%s Z:%s Interface:\"%s\"",
                                     blockPos.getDimension(),
                                     blockPos.x,
                                     blockPos.y,
-                                    blockPos.z));
+                                    blockPos.z,
+                                    blockPos.getCustomName()));
                 }
                 lineList.add(GuiText.HoldShiftClick_HIGHLIGHT_INTERFACE.getLocal());
             }
