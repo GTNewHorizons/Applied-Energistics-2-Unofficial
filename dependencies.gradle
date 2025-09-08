@@ -1,7 +1,7 @@
 // Add your dependencies here
 
 dependencies {
-    implementation('com.github.GTNewHorizons:NotEnoughItems:2.7.78-GTNH:dev')
+    implementation('com.github.GTNewHorizons:NotEnoughItems:2.7.80-GTNH:dev')
     implementation("com.github.GTNewHorizons:GTNHLib:0.6.39:dev")
     implementation('curse.maven:cofh-core-69162:2388751')
 
@@ -10,7 +10,7 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.44:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.10.17:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.6.8:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.437:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.446:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.10:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:OpenComputers:1.11.18-GTNH:api') {transitive = false}
@@ -37,7 +37,7 @@ dependencies {
     functionalTestImplementation('org.junit.platform:junit-platform-engine')
     functionalTestImplementation('org.junit.platform:junit-platform-launcher')
     functionalTestImplementation('org.junit.platform:junit-platform-reporting')
-    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.437:dev') {
+    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.51.446:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "Hodgepodge"
     }
@@ -48,8 +48,8 @@ dependencies {
         exclude module: "Baubles"
     }
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:ThaumicEnergistics:1.7.11-GTNH:dev') { transitive = false }
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.4.111-gtnh:dev') { transitive = false }
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:NotEnoughEnergistics:1.7.11:dev') {
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.4.112-gtnh:dev') { transitive = false }
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:NotEnoughEnergistics:1.7.12:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "waila"
     }
