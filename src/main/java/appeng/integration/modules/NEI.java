@@ -46,6 +46,7 @@ import appeng.integration.modules.NEIHelpers.NEIAEShapelessRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIAETerminalBookmarkContainerHandler;
 import appeng.integration.modules.NEIHelpers.NEICellViewHandler;
 import appeng.integration.modules.NEIHelpers.NEICraftingHandler;
+import appeng.integration.modules.NEIHelpers.NEIEncodedPatternStringifyHandler;
 import appeng.integration.modules.NEIHelpers.NEIFacadeRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIGrinderRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIGuiHandler;
@@ -66,6 +67,7 @@ import codechicken.nei.guihook.IContainerObjectHandler;
 import codechicken.nei.guihook.IContainerTooltipHandler;
 import codechicken.nei.recipe.Recipe;
 import codechicken.nei.recipe.Recipe.RecipeId;
+import codechicken.nei.recipe.StackInfo;
 
 public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, IContainerObjectHandler {
 
@@ -110,6 +112,8 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         this.registerRecipeHandler(new NEIAEShapelessRecipeHandler());
         this.registerRecipeHandler(new NEIInscriberRecipeHandler());
         this.registerRecipeHandler(new NEIWorldCraftingHandler());
+
+        StackInfo.stackStringifyHandlers.add(new NEIEncodedPatternStringifyHandler());
 
         this.registerUsageHandler.invoke(this.apiClass, new NEICellViewHandler());
 
