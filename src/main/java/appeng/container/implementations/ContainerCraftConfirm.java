@@ -58,7 +58,6 @@ import appeng.parts.reporting.PartPatternTerminal;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
-import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -201,8 +200,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                         if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
                                 && (missing == null || missing.getStackSize() <= 0)) {
-                            IAEItemStack availableStack = items
-                                    .getAvailableItem(toExtract, IterationCounter.fetchNewId());
+                            IAEItemStack availableStack = items.extractItems(
+                                    toExtract.copy().setStackSize(Long.MAX_VALUE),
+                                    Actionable.SIMULATE,
+                                    this.getActionSource());
                             long available = (availableStack == null) ? 0 : availableStack.getStackSize();
                             if (available > 0) toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
                             else toExtract.setUsedPercent(0f);
