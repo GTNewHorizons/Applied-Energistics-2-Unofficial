@@ -183,7 +183,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                         toCraft.setCountRequestableCrafts(plannedItem.getCountRequestableCrafts());
 
                         final IStorageGrid sg = this.getGrid().getCache(IStorageGrid.class);
-                        final IMEInventory<IAEItemStack> items = sg.getItemInventory();
+                        final IMEInventory<IAEItemStack> items = this.result.getStorageAtBeginning();
 
                         IAEItemStack missing = null;
                         if (missingUpdate != null && this.result.isSimulation()) {

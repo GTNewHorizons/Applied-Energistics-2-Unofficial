@@ -299,4 +299,8 @@ public class CraftingJobV2 implements ICraftingJob, Future<ICraftingJob>, ITreeS
             default -> throw new IllegalStateException();
         };
     }
+
+    public MECraftingInventory getStorageAtBeginning() {
+        return getContext().availableCache;
+    }
 }
