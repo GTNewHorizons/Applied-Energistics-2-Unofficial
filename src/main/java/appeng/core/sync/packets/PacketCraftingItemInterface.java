@@ -2,6 +2,7 @@ package appeng.core.sync.packets;
 
 import java.io.IOException;
 
+import appeng.api.util.NamedDimensionalCoord;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
@@ -64,7 +65,7 @@ public class PacketCraftingItemInterface extends AppEngPacket {
                     if (cpu instanceof CraftingCPUCluster cpuc) {
                         ItemStack itemStack = is.getItemStack();
                         NBTTagCompound data = Platform.openNbtData(itemStack);
-                        DimensionalCoord.writeListToNBT(data, cpuc.getProviders(is));
+                        NamedDimensionalCoord.writeListToNBTNamed(data, cpuc.getProviders(is));
                         data.setInteger("ScheduledReason", cpuc.getScheduledReason(is).ordinal());
                         try {
                             NetworkHandler.instance.sendTo(
