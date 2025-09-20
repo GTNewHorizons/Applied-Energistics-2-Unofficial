@@ -186,12 +186,12 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                 ActionItems.DOUBLE);
         this.doubleBtn.setHalfSize(true);
         this.buttonList.add(this.doubleBtn);
-        updateButtonVisibility();
+        this.updateButtonVisibility();
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        updateButtonVisibility();
+        this.updateButtonVisibility();
 
         super.drawFG(offsetX, offsetY, mouseX, mouseY);
         this.fontRendererObj.drawString(
