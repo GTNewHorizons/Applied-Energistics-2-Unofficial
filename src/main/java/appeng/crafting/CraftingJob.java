@@ -341,4 +341,8 @@ public class CraftingJob implements ICraftingJob, Runnable {
         private final long perOp = 0;
         private final long times = 0;
     }
+
+    public MECraftingInventory getStorageAtBeginning() {
+        return original;
+    }
 }
