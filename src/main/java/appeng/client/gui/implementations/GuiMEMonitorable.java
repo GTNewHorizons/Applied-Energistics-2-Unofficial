@@ -17,6 +17,8 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -248,8 +250,11 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
     private void reinitalize() {
         memoryText = this.searchField.getText();
-        this.buttonList.clear();
-        this.initGui();
+        if (!MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Pre(this, this.buttonList))) {
+            this.buttonList.clear();
+            this.initGui();
+        }
+        MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Post(this, this.buttonList));
     }
 
     @Override

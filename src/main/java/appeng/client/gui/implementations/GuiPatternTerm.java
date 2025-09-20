@@ -186,10 +186,22 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                 ActionItems.DOUBLE);
         this.doubleBtn.setHalfSize(true);
         this.buttonList.add(this.doubleBtn);
+        this.updateButtonVisibility();
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        this.updateButtonVisibility();
+
+        super.drawFG(offsetX, offsetY, mouseX, mouseY);
+        this.fontRendererObj.drawString(
+                GuiText.PatternTerminal.getLocal(),
+                8,
+                this.ySize - 96 + 2 - this.getReservedSpace(),
+                GuiColors.PatternTerminalTitle.getColor());
+    }
+
+    private void updateButtonVisibility() {
         if (!this.container.isCraftingMode()) {
             this.tabCraftButton.visible = false;
             this.tabProcessButton.visible = true;
@@ -210,13 +222,6 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
         this.beSubstitutionsEnabledBtn.visible = this.container.beSubstitute;
         this.beSubstitutionsDisabledBtn.visible = !this.container.beSubstitute;
-
-        super.drawFG(offsetX, offsetY, mouseX, mouseY);
-        this.fontRendererObj.drawString(
-                GuiText.PatternTerminal.getLocal(),
-                8,
-                this.ySize - 96 + 2 - this.getReservedSpace(),
-                GuiColors.PatternTerminalTitle.getColor());
     }
 
     @Override

@@ -67,7 +67,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
     private static final Pattern PATTERN_NEW_LINE = Pattern.compile("\\n", Pattern.LITERAL);
     private static Map<EnumPair, ButtonAppearance> appearances;
     private final Enum buttonSetting;
-    private boolean halfSize = false;
     private String fillVar;
     private Enum currentValue;
 
@@ -911,13 +910,9 @@ public class GuiImgButton extends GuiButton implements ITooltip {
     @Override
     public void drawButton(final Minecraft mc, final int mouseX, final int mouseY) {
         if (this.visible) {
-            if (this.halfSize) {
-                this.width = 8;
-                this.height = 8;
-            }
             this.field_146123_n = mouseX >= this.xPosition && mouseY >= this.yPosition
-                    && mouseX < this.xPosition + this.width
-                    && mouseY < this.yPosition + this.height;
+                    && mouseX < this.xPosition + this.getWidth()
+                    && mouseY < this.yPosition + this.getHeight();
             if (this.enabled) {
                 GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             } else {
@@ -931,10 +926,10 @@ public class GuiImgButton extends GuiButton implements ITooltip {
             OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
             GL11.glTranslatef(this.xPosition, this.yPosition, 0.0F);
-            if (this.halfSize) GL11.glScalef(0.5f, 0.5f, 0.5f);
+            if (this.isHalfSize()) GL11.glScalef(0.5f, 0.5f, 0.5f);
             this.drawTexturedModalRect(0, 0, 256 - 16, 256 - 16, 16, 16);
             this.drawTexturedModalRect(0, 0, uv_x * 16, uv_y * 16, 16, 16);
-            if (this.halfSize) GL11.glScalef(2f, 2f, 2f);
+            if (this.isHalfSize()) GL11.glScalef(2f, 2f, 2f);
             GL11.glTranslatef(-this.xPosition, -this.yPosition, 0.0F);
             this.mouseDragged(mc, mouseX, mouseY);
         }
@@ -1014,12 +1009,12 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
     @Override
     public int getWidth() {
-        return this.halfSize ? 8 : 16;
+        return this.width;
     }
 
     @Override
     public int getHeight() {
-        return this.halfSize ? 8 : 16;
+        return this.height;
     }
 
     @Override
@@ -1038,11 +1033,12 @@ public class GuiImgButton extends GuiButton implements ITooltip {
     }
 
     public boolean isHalfSize() {
-        return this.halfSize;
+        return this.width == 8;
     }
 
     public void setHalfSize(final boolean halfSize) {
-        this.halfSize = halfSize;
+        this.width = halfSize ? 8 : 16;
+        this.height = halfSize ? 8 : 16;
     }
 
     public String getFillVar() {
