@@ -20,8 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import appeng.api.util.NamedDimensionalCoord;
-import appeng.core.localization.Localization;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
@@ -41,7 +39,7 @@ import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
-import appeng.api.util.DimensionalCoord;
+import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.widgets.GuiAeButton;
@@ -58,6 +56,7 @@ import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.Localization;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
@@ -257,8 +256,10 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             List<NamedDimensionalCoord> ndcl = NamedDimensionalCoord.readAsListFromNBTNamed(data);
             Map<NamedDimensionalCoord, String[]> ndcm = new HashMap<>();
             for (NamedDimensionalCoord ndc : ndcl) {
-                ndcm.put(ndc, new String[]{PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
-                                            PlayerMessages.MachineInOtherDimNamed.getUnlocalized()});
+                ndcm.put(
+                        ndc,
+                        new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                PlayerMessages.MachineInOtherDimNamed.getUnlocalized() });
             }
             BlockPosHighlighter.highlightNamedBlocks(
                     mc.thePlayer,

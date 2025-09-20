@@ -24,8 +24,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
-import appeng.api.util.NamedDimensionalCoord;
-import appeng.core.localization.Localization;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
@@ -52,6 +50,7 @@ import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
 import appeng.api.util.DimensionalCoord;
+import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.IInterfaceTerminalPostUpdate;
@@ -1479,12 +1478,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 // highlight the interface containing the patterns and not any output p2p interfaces
                 BlockPosHighlighter.highlightNamedBlocks(
                         mc.thePlayer,
-                        Collections.singletonMap(new NamedDimensionalCoord(
-                                new DimensionalCoord(x, y, z, dim), dispName), dispName.isEmpty()
-                                        ? new String[]{PlayerMessages.MachineHighlighted.getUnlocalized(),
-                                                        PlayerMessages.MachineInOtherDim.getUnlocalized()}
-                                        : new String[]{PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
-                                                        PlayerMessages.MachineInOtherDimNamed.getUnlocalized()}),
+                        Collections.singletonMap(
+                                new NamedDimensionalCoord(new DimensionalCoord(x, y, z, dim), dispName),
+                                dispName.isEmpty()
+                                        ? new String[] { PlayerMessages.MachineHighlighted.getUnlocalized(),
+                                                PlayerMessages.MachineInOtherDim.getUnlocalized() }
+                                        : new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                                PlayerMessages.MachineInOtherDimNamed.getUnlocalized() }),
                         selfRep.getDisplayName());
 
                 mc.thePlayer.closeScreen();

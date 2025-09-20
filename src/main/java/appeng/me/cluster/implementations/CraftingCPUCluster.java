@@ -34,9 +34,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
 
-import appeng.api.util.NamedDimensionalCoord;
-import appeng.client.gui.implementations.GuiInterfaceTerminal;
-import appeng.tile.misc.TileInterface;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.InventoryCrafting;
@@ -98,7 +95,9 @@ import appeng.api.util.CraftCompleteListener;
 import appeng.api.util.CraftUpdateListener;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IInterfaceViewable;
+import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
+import appeng.client.gui.implementations.GuiInterfaceTerminal;
 import appeng.container.ContainerNull;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AELog;
@@ -114,6 +113,7 @@ import appeng.me.cluster.IAECluster;
 import appeng.tile.AEBaseTile;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.tile.crafting.TileCraftingTile;
+import appeng.tile.misc.TileInterface;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
@@ -885,7 +885,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 if (tile == null) continue;
                                 NamedDimensionalCoord tileDimensionalCoord;
                                 if (tile instanceof TileInterface tileInterface) {
-                                    tileDimensionalCoord = new NamedDimensionalCoord(new DimensionalCoord(tile), tileInterface.getCustomName());
+                                    tileDimensionalCoord = new NamedDimensionalCoord(
+                                            new DimensionalCoord(tile),
+                                            tileInterface.getCustomName());
                                 } else {
                                     tileDimensionalCoord = new NamedDimensionalCoord(new DimensionalCoord(tile), "");
                                 }
@@ -1349,8 +1351,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                     if (tile instanceof TileInterface tileInterface) {
                                         final String dispName = GuiInterfaceTerminal.translateFromNetwork(
                                                 tileInterface.getInterfaceDuality().getTermName());
-                                        dimensionalCoords.add(new NamedDimensionalCoord(
-                                                new DimensionalCoord(tile), dispName));
+                                        dimensionalCoords
+                                                .add(new NamedDimensionalCoord(new DimensionalCoord(tile), dispName));
                                     }
                                 }
                                 this.providers.put(is, dimensionalCoords);

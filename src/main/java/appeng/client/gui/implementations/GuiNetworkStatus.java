@@ -35,7 +35,6 @@ import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.util.DimensionalCoord;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiContextMenu;
@@ -153,16 +152,15 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 List<NamedDimensionalCoord> dcl = NamedDimensionalCoord.readAsListFromNBTNamed(tag);
                 Map<NamedDimensionalCoord, String[]> namedCoordsMessage = new HashMap<>(dcl.size());
                 for (NamedDimensionalCoord dc : dcl) {
-                    namedCoordsMessage.put(dc, dc.getCustomName().isEmpty()
-                            ? new String[]{PlayerMessages.MachineHighlighted.getUnlocalized(),
-                                            PlayerMessages.MachineInOtherDim.getUnlocalized()}
-                            : new String[]{PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
-                                            PlayerMessages.MachineInOtherDimNamed.getUnlocalized()});
+                    namedCoordsMessage.put(
+                            dc,
+                            dc.getCustomName().isEmpty()
+                                    ? new String[] { PlayerMessages.MachineHighlighted.getUnlocalized(),
+                                            PlayerMessages.MachineInOtherDim.getUnlocalized() }
+                                    : new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                            PlayerMessages.MachineInOtherDimNamed.getUnlocalized() });
                 }
-                BlockPosHighlighter.highlightNamedBlocks(
-                        mc.thePlayer,
-                        namedCoordsMessage,
-                        is.getDisplayName());
+                BlockPosHighlighter.highlightNamedBlocks(mc.thePlayer, namedCoordsMessage, is.getDisplayName());
                 mc.thePlayer.closeScreen();
             }
 
