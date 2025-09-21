@@ -23,6 +23,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.me.storage.NetworkInventoryHandler;
 import appeng.util.IterationCounter;
 
 /**
@@ -141,4 +142,10 @@ public interface IMEInventory<StackType extends IAEStack> {
      * @return the type of channel your handler should be part of
      */
     StorageChannel getChannel();
+
+    /**
+     *
+     * @return the network inventory (if any) this handler is accessing
+     */
+    default IMEInventory<StackType> getNetworkInventoryHandler() {return null;}
 }

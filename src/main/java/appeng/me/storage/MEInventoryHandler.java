@@ -250,6 +250,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     }
 
     @Override
+    public IMEInventory<T> getNetworkInventoryHandler() {
+        return this.internal.getNetworkInventoryHandler();
+    }
+
+    @Override
     public IMEInventory<T> getInternal() {
         return this.internal;
     }

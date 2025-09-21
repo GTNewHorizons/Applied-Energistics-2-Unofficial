@@ -27,6 +27,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.ISecurityGrid;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.security.PlayerSource;
+import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
@@ -406,5 +407,10 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     @Override
     public boolean validForPass(final int i) {
         return true;
+    }
+
+    @Override
+    public IMEInventory<T> getNetworkInventoryHandler() {
+        return this;
     }
 }
