@@ -26,6 +26,7 @@ import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.INetworkTool;
+import appeng.api.implementations.items.INetworkToolItem;
 import appeng.api.parts.IPart;
 import appeng.api.util.IConfigManager;
 import appeng.container.AEBaseContainer;
@@ -34,8 +35,6 @@ import appeng.container.slot.IOptionalSlotHost;
 import appeng.container.slot.OptionalSlotFake;
 import appeng.container.slot.OptionalSlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.items.tools.ToolAdvancedNetworkTool;
-import appeng.items.tools.ToolNetworkTool;
 import appeng.parts.automation.PartExportBus;
 import appeng.util.Platform;
 
@@ -87,8 +86,8 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
         for (int x = 0; x < pi.getSizeInventory(); x++) {
             final ItemStack pii = pi.getStackInSlot(x);
             // Add ToolAdvancedNetworkTool recognition
-            if (pii != null
-                    && (pii.getItem() instanceof ToolNetworkTool || pii.getItem() instanceof ToolAdvancedNetworkTool)) {
+            if (pii == null) continue;
+            if (pii.getItem() instanceof INetworkToolItem) {
                 this.lockPlayerInventorySlot(x);
                 this.tbSlot = x;
                 this.tbInventory = (INetworkTool) ((IGuiItem) pii.getItem())
@@ -125,7 +124,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
     }
 
     public int getToolboxSize() {
-        return this.tbInventory.getSize();
+        return this.hasToolbox() ? this.tbInventory.getSize() : 0;
     }
 
     public int getToolboxSizeInventory() {
@@ -240,21 +239,22 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
     }
 
     private void checkToolbox() {
-        if (this.hasToolbox()) {
-            final ItemStack currentItem = this.getPlayerInv().getStackInSlot(this.tbSlot);
+        if (!this.hasToolbox()) return;
 
-            if (currentItem != this.tbInventory.getItemStack()) {
-                if (currentItem != null) {
-                    if (Platform.isSameItem(this.tbInventory.getItemStack(), currentItem)) {
-                        this.getPlayerInv().setInventorySlotContents(this.tbSlot, this.tbInventory.getItemStack());
-                    } else {
-                        this.setValidContainer(false);
-                    }
-                } else {
-                    this.setValidContainer(false);
-                }
-            }
+        final ItemStack currentItem = this.getPlayerInv().getStackInSlot(this.tbSlot);
+
+        if (currentItem == null) {
+            this.setValidContainer(false);
+            return;
         }
+
+        if (currentItem == this.tbInventory.getItemStack()) return;
+
+        if (Platform.isSameItem(this.tbInventory.getItemStack(), currentItem)) {
+            this.getPlayerInv().setInventorySlotContents(this.tbSlot, this.tbInventory.getItemStack());
+            return;
+        }
+        this.setValidContainer(false);
     }
 
     protected void standardDetectAndSendChanges() {
