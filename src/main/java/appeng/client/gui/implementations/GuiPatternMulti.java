@@ -130,8 +130,9 @@ public class GuiPatternMulti extends GuiAmount {
     }
 
     @Override
-    protected long addOrderAmount(final int i) {
-        return i + getAmount();
+    protected void addAmount(int i) {
+        this.amountTextField.setText(Long.toString(i + getAmount()));
+        this.amountTextField.setCursorPositionEnd();
     }
 
     @Override

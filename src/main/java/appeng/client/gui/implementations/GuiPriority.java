@@ -12,7 +12,6 @@ package appeng.client.gui.implementations;
 
 import java.io.IOException;
 
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -122,25 +121,6 @@ public class GuiPriority extends GuiAmount {
     }
 
     @Override
-    protected void actionPerformed(final GuiButton btn) {
-        super.actionPerformed(btn);
-
-        final boolean isPlus = btn == this.plus1 || btn == this.plus10 || btn == this.plus100 || btn == this.plus1000;
-        final boolean isMinus = btn == this.minus1 || btn == this.minus10
-                || btn == this.minus100
-                || btn == this.minus1000;
-
-        if (isPlus || isMinus) {
-            try {
-                NetworkHandler.instance
-                        .sendToServer(new PacketValueConfig("PriorityHost.Priority", String.valueOf(getAmount())));
-            } catch (final IOException e) {
-                AELog.debug(e);
-            }
-        }
-    }
-
-    @Override
     protected void keyTyped(final char character, final int key) {
         super.keyTyped(character, key);
         try {
@@ -155,6 +135,19 @@ public class GuiPriority extends GuiAmount {
     @Override
     protected int getButtonQtyByIndex(int index) {
         return AEConfig.instance.priorityByStacksAmounts(index);
+    }
+
+    @Override
+    protected void addAmount(int i) {
+        String result = Long.toString(this.getAmount() + i);
+
+        this.amountTextField.setText(result);
+        this.amountTextField.setCursorPositionEnd();
+        try {
+            NetworkHandler.instance.sendToServer(new PacketValueConfig("PriorityHost.Priority", result));
+        } catch (final IOException e) {
+            AELog.debug(e);
+        }
     }
 
     // Allow negative priorities and no clamping
