@@ -173,6 +173,11 @@ public class GuiPriority extends GuiAmount {
         }
     }
 
+    @Override
+    protected long addOrderAmount(final int i) {
+        return getAmount() + i;
+    }
+
     protected String getBackground() {
         return "guis/priority.png";
     }
