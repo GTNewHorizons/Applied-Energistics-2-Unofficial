@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,6 +27,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -48,7 +50,6 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
-import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
@@ -1112,23 +1113,21 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             EntityPlayer player = ((PlayerSource) src).player;
             if (player != null) {
                 final IAEItemStack missingStack = e.getMissing();
-                String missingName = "?";
-                IChatComponent missingDisplayName = new ChatComponentText("?");
                 long missingCount = -1;
+                IChatComponent missingItem = new ChatComponentText("?");;
                 if (missingStack != null && missingStack.getItem() != null) {
-                    missingName = missingStack.getItemStack().getUnlocalizedName();
-                    if (StatCollector.canTranslate(missingName + ".name")
-                            && StatCollector.translateToLocal(missingName + ".name")
-                                    .equals(missingStack.getItemStack().getDisplayName()))
-                        missingDisplayName = new ChatComponentTranslation(missingName + ".name");
-                    else missingDisplayName = new ChatComponentText(missingStack.getItemStack().getDisplayName());
+                    missingItem = missingStack.getItemStack().func_151000_E();
+                    missingItem.getChatStyle().setColor(EnumChatFormatting.GOLD);
                     missingCount = missingStack.getStackSize();
                 }
+                String missingCountText = EnumChatFormatting.RED
+                        + NumberFormat.getNumberInstance(Locale.getDefault()).format(missingCount)
+                        + EnumChatFormatting.RESET;
                 player.addChatMessage(
                         new ChatComponentTranslation(
                                 PlayerMessages.CraftingItemsWentMissing.getUnlocalized(),
-                                missingCount,
-                                missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));
+                                missingCountText,
+                                missingItem));
             }
         } catch (Exception ex) {
             AELog.error(ex, "Could not notify player of crafting failure");
