@@ -4,7 +4,9 @@ import org.lwjgl.input.Keyboard;
 
 public enum ActionKey {
 
-    TOGGLE_FOCUS(Keyboard.KEY_NONE);
+    TOGGLE_FOCUS(Keyboard.KEY_NONE),
+
+    SEARCH_CONNECTED_INVENTORIES(Keyboard.KEY_NONE);
 
     private final int defaultKey;
 

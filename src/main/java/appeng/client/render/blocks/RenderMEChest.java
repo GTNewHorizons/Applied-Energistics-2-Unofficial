@@ -40,17 +40,18 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
     @Override
     public void renderInventory(final BlockChest block, final ItemStack is, final RenderBlocks renderer,
             final ItemRenderType type, final Object[] obj) {
-        Tessellator.instance.setBrightness(0);
+        final Tessellator tess = Tessellator.instance;
+        tess.setBrightness(0);
 
         renderer.overrideBlockTexture = ExtraBlockTextures.getMissing();
-        this.renderInvBlock(EnumSet.of(ForgeDirection.SOUTH), block, is, Tessellator.instance, 0x000000, renderer);
+        this.renderInvBlock(EnumSet.of(ForgeDirection.SOUTH), block, is, tess, 0x000000, renderer);
 
         renderer.overrideBlockTexture = ExtraBlockTextures.MEChest.getIcon();
         this.renderInvBlock(
                 EnumSet.of(ForgeDirection.UP),
                 block,
                 is,
-                Tessellator.instance,
+                tess,
                 this.adjustBrightness(AEColor.Transparent.whiteVariant, 0.7),
                 renderer);
 
@@ -89,8 +90,9 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
         }
 
         int b = world.getLightBrightnessForSkyBlocks(x + forward.offsetX, y + forward.offsetY, z + forward.offsetZ, 0);
-        Tessellator.instance.setBrightness(b);
-        Tessellator.instance.setColorOpaque_I(0xffffff);
+        final Tessellator tess = Tessellator.instance;
+        tess.setBrightness(b);
+        tess.setColorOpaque_I(0xffffff);
 
         final FlippableIcon flippableIcon = new FlippableIcon(
                 new OffsetIcon(ExtraBlockTextures.MEStorageCellTextures.getIcon(), offsetU, offsetV));
@@ -115,18 +117,18 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
                 b = 15 << 20 | 15 << 4;
             }
 
-            Tessellator.instance.setBrightness(b);
+            tess.setBrightness(b);
             if (stat == 1) {
-                Tessellator.instance.setColorOpaque_I(0x00ff00);
+                tess.setColorOpaque_I(0x00ff00);
             }
             if (stat == 2) {
-                Tessellator.instance.setColorOpaque_I(0x00aaff);
+                tess.setColorOpaque_I(0x00aaff);
             }
             if (stat == 3) {
-                Tessellator.instance.setColorOpaque_I(0xffaa00);
+                tess.setColorOpaque_I(0xffaa00);
             }
             if (stat == 4) {
-                Tessellator.instance.setColorOpaque_I(0xff0000);
+                tess.setColorOpaque_I(0xff0000);
             }
             this.selectFace(renderer, west, up, forward, 9, 10, 11, 12);
             this.renderFace(x, y, z, imb, ExtraBlockTextures.White.getIcon(), renderer, forward);
@@ -137,22 +139,22 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
             b = 15 << 20 | 15 << 4;
         }
 
-        Tessellator.instance.setBrightness(b);
-        Tessellator.instance.setColorOpaque_I(0xffffff);
+        tess.setBrightness(b);
+        tess.setColorOpaque_I(0xffffff);
         renderer.setRenderBounds(0, 0, 0, 1, 1, 1);
 
         final ICellHandler ch = AEApi.instance().registries().cell().getHandler(sp.getStorageType());
 
-        Tessellator.instance.setColorOpaque_I(sp.getColor().whiteVariant);
+        tess.setColorOpaque_I(sp.getColor().whiteVariant);
         IIcon ico = ch == null ? null : ch.getTopTexture_Light();
         this.renderFace(x, y, z, imb, ico == null ? ExtraBlockTextures.MEChest.getIcon() : ico, renderer, up);
 
         if (ico != null) {
-            Tessellator.instance.setColorOpaque_I(sp.getColor().mediumVariant);
+            tess.setColorOpaque_I(sp.getColor().mediumVariant);
             ico = ch == null ? null : ch.getTopTexture_Medium();
             this.renderFace(x, y, z, imb, ico == null ? ExtraBlockTextures.MEChest.getIcon() : ico, renderer, up);
 
-            Tessellator.instance.setColorOpaque_I(sp.getColor().blackVariant);
+            tess.setColorOpaque_I(sp.getColor().blackVariant);
             ico = ch == null ? null : ch.getTopTexture_Dark();
             this.renderFace(x, y, z, imb, ico == null ? ExtraBlockTextures.MEChest.getIcon() : ico, renderer, up);
         }

@@ -17,7 +17,6 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -325,24 +324,6 @@ public class PartCable extends AEBasePart implements IPartCable {
     }
 
     @Override
-    public void writeToNBT(final NBTTagCompound data) {
-        super.writeToNBT(data);
-
-        if (Platform.isServer()) {
-            final IGridNode node = this.getGridNode();
-
-            if (node != null) {
-                int howMany = 0;
-                for (final IGridConnection gc : node.getConnections()) {
-                    howMany = Math.max(gc.getUsedChannels(), howMany);
-                }
-
-                data.setShort("usedChannels", (short) howMany);
-            }
-        }
-    }
-
-    @Override
     public void writeToStream(final ByteBuf data) throws IOException {
         int cs = 0;
         int sideOut = 0;
@@ -355,11 +336,12 @@ public class PartCable extends AEBasePart implements IPartCable {
                     if (part.getGridNode() != null) {
                         final IReadOnlyCollection<IGridConnection> set = part.getGridNode().getConnections();
                         for (final IGridConnection gc : set) {
+                            final int usedChannels = gc.getUsedChannels();
                             if (this.getProxy().getNode().hasFlag(GridFlags.DENSE_CAPACITY)
                                     && gc.getOtherSide(this.getProxy().getNode()).hasFlag(GridFlags.DENSE_CAPACITY)) {
-                                sideOut |= (gc.getUsedChannels() / 4) << (4 * thisSide.ordinal());
+                                sideOut |= (Math.min(usedChannels, 32) / 4) << (4 * thisSide.ordinal());
                             } else {
-                                sideOut |= (gc.getUsedChannels()) << (4 * thisSide.ordinal());
+                                sideOut |= Math.min(usedChannels, 8) << (4 * thisSide.ordinal());
                             }
                         }
                     }
@@ -373,10 +355,11 @@ public class PartCable extends AEBasePart implements IPartCable {
                     final boolean isTier2b = gc.getOtherSide(this.getProxy().getNode())
                             .hasFlag(GridFlags.DENSE_CAPACITY);
 
+                    final int usedChannels = gc.getUsedChannels();
                     if (isTier2a && isTier2b) {
-                        sideOut |= (gc.getUsedChannels() / 4) << (4 * side.ordinal());
+                        sideOut |= (Math.min(usedChannels, 32) / 4) << (4 * side.ordinal());
                     } else {
-                        sideOut |= gc.getUsedChannels() << (4 * side.ordinal());
+                        sideOut |= Math.min(usedChannels, 8) << (4 * side.ordinal());
                     }
                     cs |= (1 << side.ordinal());
                 }
@@ -590,6 +573,7 @@ public class PartCable extends AEBasePart implements IPartCable {
         rh.setFacesToRender(EnumSet.complementOf(EnumSet.of(of)));
 
         boolean isGlass = false;
+        final Tessellator tess = Tessellator.instance;
         if (ghh != null && partHost != null
                 && ghh.getCableConnectionType(of.getOpposite()) == AECableType.GLASS
                 && partHost.getPart(of.getOpposite()) == null
@@ -622,12 +606,12 @@ public class PartCable extends AEBasePart implements IPartCable {
                     ico.setFlip(false, true);
                 }
 
-                Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-                Tessellator.instance.setColorOpaque_I(myColor.blackVariant);
+                tess.setBrightness(15 << 20 | 15 << 4);
+                tess.setColorOpaque_I(myColor.blackVariant);
                 rh.setTexture(firstIcon, firstIcon, firstIcon, firstIcon, firstIcon, firstIcon);
                 this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
-                Tessellator.instance.setColorOpaque_I(myColor.whiteVariant);
+                tess.setColorOpaque_I(myColor.whiteVariant);
                 rh.setTexture(secondIcon, secondIcon, secondIcon, secondIcon, secondIcon, secondIcon);
                 this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
@@ -664,12 +648,12 @@ public class PartCable extends AEBasePart implements IPartCable {
             final IIcon firstIcon = new TaughtIcon(this.getChannelTex(channels, false).getIcon(), -0.2f);
             final IIcon secondIcon = new TaughtIcon(this.getChannelTex(channels, true).getIcon(), -0.2f);
 
-            Tessellator.instance.setBrightness(15 << 20 | 15 << 4);
-            Tessellator.instance.setColorOpaque_I(myColor.blackVariant);
+            tess.setBrightness(15 << 20 | 15 << 4);
+            tess.setColorOpaque_I(myColor.blackVariant);
             rh.setTexture(firstIcon, firstIcon, firstIcon, firstIcon, firstIcon, firstIcon);
             this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
-            Tessellator.instance.setColorOpaque_I(myColor.whiteVariant);
+            tess.setColorOpaque_I(myColor.whiteVariant);
             rh.setTexture(secondIcon, secondIcon, secondIcon, secondIcon, secondIcon, secondIcon);
             this.renderAllFaces((AEBaseBlock) rh.getBlock(), x, y, z, rh, renderer);
 
@@ -737,11 +721,11 @@ public class PartCable extends AEBasePart implements IPartCable {
 
         if (b) {
             return switch (i) {
-                default -> CableBusTextures.Channels10;
+                case 0, 1, 2, 3, 4 -> CableBusTextures.Channels10;
                 case 5 -> CableBusTextures.Channels11;
                 case 6 -> CableBusTextures.Channels12;
                 case 7 -> CableBusTextures.Channels13;
-                case 8 -> CableBusTextures.Channels14;
+                default -> CableBusTextures.Channels14;
             };
         } else {
             return switch (i) {

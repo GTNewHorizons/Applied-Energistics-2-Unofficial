@@ -27,6 +27,7 @@ import appeng.api.config.CraftingStatus;
 import appeng.api.config.PinsState;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnits;
+import appeng.api.config.SearchBoxFocusPriority;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
@@ -119,12 +120,16 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int maxCraftingSteps = 2_000_000;
     public int maxCraftingTreeVisualizationSize = 32 * 1024 * 1024; // 32 MiB
     public boolean limitCraftingCPUSpill = true;
+    public SearchBoxFocusPriority searchBoxFocusPriority = SearchBoxFocusPriority.NEVER;
+
+    public int maxRecursiveDepth = 100;
+    public int maxMachineChecks = 10000;
 
     public AEConfig(final File configFile) {
         super(configFile);
         this.configFile = configFile;
 
-        FMLCommonHandler.instance().bus().register(this);
+        FMLCommonHandler.instance().bus().register(new EventHandler());
 
         final double DEFAULT_MEKANISM_EXCHANGE = 0.2;
         PowerUnits.MK.conversionRatio = this.get("PowerRatios", "Mekanism", DEFAULT_MEKANISM_EXCHANGE)
@@ -257,6 +262,12 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .max(4096, Math.min(this.maxCraftingTreeVisualizationSize, 1024 * 1024 * 1024));
         this.limitCraftingCPUSpill = this.get("misc", "LimitCraftingCPUSpill", this.limitCraftingCPUSpill)
                 .getBoolean(this.limitCraftingCPUSpill);
+
+        this.maxRecursiveDepth = this.get("networksearch", "maxRecursiveDepth", this.maxRecursiveDepth)
+                .getInt(this.maxRecursiveDepth);
+        this.maxMachineChecks = this.get("networksearch", "maxMachineChecks", this.maxMachineChecks)
+                .getInt(this.maxMachineChecks);
+
         this.clientSync();
 
         for (final AEFeature feature : AEFeature.values()) {
@@ -276,6 +287,17 @@ public final class AEConfig extends Configuration implements IConfigurableObject
             if (version.contains(imb.getVersion())) {
                 this.featureFlags.remove(AEFeature.AlphaPass);
             }
+        }
+
+        try {
+            this.searchBoxFocusPriority = SearchBoxFocusPriority.valueOf(
+                    this.get(
+                            "Client",
+                            "SearchBoxFocusPriority",
+                            this.searchBoxFocusPriority.name(),
+                            this.getListComment(this.searchBoxFocusPriority)).getString());
+        } catch (final Throwable t) {
+            this.searchBoxFocusPriority = SearchBoxFocusPriority.NEVER;
         }
 
         try {
@@ -440,10 +462,13 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         }
     }
 
-    @SubscribeEvent
-    public void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
-        if (eventArgs.modID.equals(AppEng.MOD_ID)) {
-            this.clientSync();
+    public class EventHandler {
+
+        @SubscribeEvent
+        public void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
+            if (eventArgs.modID.equals(AppEng.MOD_ID)) {
+                AEConfig.this.clientSync();
+            }
         }
     }
 

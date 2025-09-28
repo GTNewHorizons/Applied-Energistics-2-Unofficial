@@ -78,6 +78,11 @@ public interface IItemList<StackType extends IAEStack> extends IItemContainer<St
      */
     void resetStatus();
 
+    /** indicates whether elements can be added to the list */
+    default boolean hasWriteAccess() {
+        return true;
+    }
+
     default StackType[] toArray(StackType[] zeroSizedArray) {
         int prevSize = size();
 

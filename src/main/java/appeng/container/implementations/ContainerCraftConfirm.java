@@ -60,7 +60,6 @@ import appeng.parts.reporting.PartPatternTerminal;
 import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.parts.reporting.PartTerminal;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
-import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -84,6 +83,9 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
     @GuiSync(4)
     public boolean simulation = true;
+
+    @GuiSync(5)
+    public boolean autoStartAndFollow = false;
 
     @GuiSync(6)
     public boolean noCPU = true;
@@ -146,7 +148,12 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                 if (!this.result.isSimulation()) {
                     this.setSimulation(false);
-                    if (this.isAutoStart()) {
+                    if (this.isAutoStartAndFollow()) {
+                        // Call start job with follow enabled
+                        this.startJob(true);
+                        return;
+                    } else if (this.isAutoStart()) {
+                        // If only Shift is held and not Ctrl then we end up here and start the job with no follow
                         this.startJob();
                         return;
                     }
@@ -178,20 +185,15 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                         toCraft.setCountRequestableCrafts(plannedItem.getCountRequestableCrafts());
 
                         final IStorageGrid sg = this.getGrid().getCache(IStorageGrid.class);
+                        final var storageAtBeginning = this.result.getStorageAtBeginning();
                         final IMEInventory<IAEItemStack> items = sg.getItemInventory();
                         final IMEInventory<IAEFluidStack> fluids = sg.getFluidInventory();
 
                         IAEStack<?> missing = null;
                         if (missingUpdate != null && this.result.isSimulation()) {
                             missing = toExtract.copy();
-                            if (toExtract instanceof IAEItemStack ais) {
-                                toExtract = items.extractItems(ais, Actionable.SIMULATE, this.getActionSource());
-                            } else {
-                                toExtract = fluids.extractItems(
-                                        (IAEFluidStack) toExtract,
-                                        Actionable.SIMULATE,
-                                        this.getActionSource());
-                            }
+                            toExtract = storageAtBeginning
+                                    .extractItems(toExtract, Actionable.SIMULATE, this.getActionSource());
 
                             if (toExtract == null) {
                                 toExtract = missing.copy();
@@ -204,12 +206,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                         if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
                                 && (missing == null || missing.getStackSize() <= 0)) {
                             IAEStack<?> availableStack;
-                            if (toExtract instanceof IAEItemStack ais) {
-                                availableStack = items.getAvailableItem(ais, IterationCounter.fetchNewId());
-                            } else {
-                                availableStack = fluids
-                                        .getAvailableItem((IAEFluidStack) toExtract, IterationCounter.fetchNewId());
-                            }
+                            availableStack = storageAtBeginning.extractItems(
+                                    toExtract.copy().setStackSize(Long.MAX_VALUE),
+                                    Actionable.SIMULATE,
+                                    this.getActionSource());
                             long available = (availableStack == null) ? 0 : availableStack.getStackSize();
                             if (available > 0) toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
                             else toExtract.setUsedPercent(0f);
@@ -297,23 +297,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
     }
 
     public void startJob() {
-        if (this.result != null && !this.isSimulation() && getGrid() != null) {
-            final ICraftingGrid cc = this.getGrid().getCache(ICraftingGrid.class);
-            CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
-            final ICraftingLink g = cc.submitJob(
-                    this.result,
-                    null,
-                    (selected == null) ? null : selected.getServerCluster(),
-                    true,
-                    this.getActionSrc());
-            this.setAutoStart(false);
-            if (g != null) {
-                this.switchToOriginalGUI();
-            }
-        }
+        startJob(false);
     }
 
-    public void startJob(String playerName) {
+    public void startJob(final boolean followCraft) {
         if (this.result != null && !this.isSimulation() && getGrid() != null) {
             final ICraftingGrid cc = this.getGrid().getCache(ICraftingGrid.class);
             CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
@@ -322,9 +309,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                     null,
                     (selected == null) ? null : selected.getServerCluster(),
                     true,
-                    this.getActionSrc());
-            selected.getServerCluster().togglePlayerFollowStatus(playerName);
+                    this.getActionSrc(),
+                    followCraft);
             this.setAutoStart(false);
+            this.setAutoStartAndFollow(false);
             if (g != null) {
                 this.switchToOriginalGUI();
             }
@@ -410,8 +398,16 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         return this.autoStart;
     }
 
+    public boolean isAutoStartAndFollow() {
+        return this.autoStartAndFollow;
+    }
+
     public void setAutoStart(final boolean autoStart) {
         this.autoStart = autoStart;
+    }
+
+    public void setAutoStartAndFollow(final boolean autoStartAndFollow) {
+        this.autoStartAndFollow = autoStartAndFollow;
     }
 
     public long getUsedBytes() {

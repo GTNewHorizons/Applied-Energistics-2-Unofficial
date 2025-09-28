@@ -27,6 +27,11 @@ public class MockGridBlock implements IGridBlock {
     }
 
     @Override
+    public boolean hasFlag(GridFlags flag) {
+        return false;
+    }
+
+    @Override
     public boolean isWorldAccessible() {
         return false;
     }

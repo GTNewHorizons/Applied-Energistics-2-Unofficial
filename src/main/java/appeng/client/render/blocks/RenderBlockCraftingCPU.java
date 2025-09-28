@@ -209,6 +209,7 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
             if (color != null) {
                 i.setTexture(color);
 
+                final Tessellator tess = Tessellator.instance;
                 if (!emitsLight) {
                     if (color == ExtraBlockTextures.BlockCraftingMonitorFit_Light.getIcon()) {
                         final int b = w.getLightBrightnessForSkyBlocks(
@@ -220,11 +221,11 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
                         final TileCraftingMonitorTile sr = blk.getTileEntity(w, x, y, z);
                         final AEColor col = sr.getColor();
 
-                        Tessellator.instance.setBrightness(b);
-                        Tessellator.instance.setColorOpaque_I(col.whiteVariant);
+                        tess.setBrightness(b);
+                        tess.setColorOpaque_I(col.whiteVariant);
                         i.renderFace(x, y, z, color, side, renderer);
 
-                        Tessellator.instance.setColorOpaque_I(col.mediumVariant);
+                        tess.setColorOpaque_I(col.mediumVariant);
                         i.renderFace(
                                 x,
                                 y,
@@ -233,7 +234,7 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
                                 side,
                                 renderer);
 
-                        Tessellator.instance.setColorOpaque_I(col.blackVariant);
+                        tess.setColorOpaque_I(col.blackVariant);
                         i.renderFace(
                                 x,
                                 y,
@@ -249,12 +250,12 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
                         final TileCraftingMonitorTile sr = blk.getTileEntity(w, x, y, z);
                         final AEColor col = sr.getColor();
 
-                        Tessellator.instance.setColorOpaque_I(col.whiteVariant);
-                        Tessellator.instance.setBrightness(13 << 20 | 13 << 4);
+                        tess.setColorOpaque_I(col.whiteVariant);
+                        tess.setBrightness(13 << 20 | 13 << 4);
                         i.renderFace(x, y, z, color, side, renderer);
 
-                        Tessellator.instance.setColorOpaque_I(col.mediumVariant);
-                        Tessellator.instance.setBrightness(13 << 20 | 13 << 4);
+                        tess.setColorOpaque_I(col.mediumVariant);
+                        tess.setBrightness(13 << 20 | 13 << 4);
                         i.renderFace(
                                 x,
                                 y,
@@ -263,8 +264,8 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
                                 side,
                                 renderer);
 
-                        Tessellator.instance.setColorOpaque_I(col.blackVariant);
-                        Tessellator.instance.setBrightness(13 << 20 | 13 << 4);
+                        tess.setColorOpaque_I(col.blackVariant);
+                        tess.setBrightness(13 << 20 | 13 << 4);
                         i.renderFace(
                                 x,
                                 y,
@@ -273,8 +274,8 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
                                 side,
                                 renderer);
                     } else {
-                        Tessellator.instance.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-                        Tessellator.instance.setBrightness(13 << 20 | 13 << 4);
+                        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+                        tess.setBrightness(13 << 20 | 13 << 4);
                         i.renderFace(x, y, z, color, side, renderer);
                     }
                 }

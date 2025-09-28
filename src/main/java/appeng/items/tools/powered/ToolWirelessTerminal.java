@@ -17,6 +17,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
@@ -43,7 +44,11 @@ import baubles.api.expanded.IBaubleExpanded;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-@cpw.mods.fml.common.Optional.Interface(iface = "baubles.api.expanded.IBaubleExpanded", modid = "Baubles|Expanded")
+@cpw.mods.fml.common.Optional.InterfaceList(
+        value = { @cpw.mods.fml.common.Optional.Interface(iface = "baubles.api.IBauble", modid = "Baubles"),
+                @cpw.mods.fml.common.Optional.Interface(
+                        iface = "baubles.api.expanded.IBaubleExpanded",
+                        modid = "Baubles|Expanded") })
 public class ToolWirelessTerminal extends AEBasePoweredItem implements IWirelessTermHandler, IBauble, IBaubleExpanded {
 
     public ToolWirelessTerminal() {
@@ -76,9 +81,9 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
                 final String encKey = tag.getString("encryptionKey");
 
                 if (encKey == null || encKey.isEmpty()) {
-                    lines.add(GuiText.Unlinked.getLocal());
+                    lines.add(EnumChatFormatting.RED + GuiText.Unlinked.getLocal() + EnumChatFormatting.RESET);
                 } else {
-                    lines.add(GuiText.Linked.getLocal());
+                    lines.add(EnumChatFormatting.GREEN + GuiText.Linked.getLocal() + EnumChatFormatting.RESET);
                 }
             }
         } else {

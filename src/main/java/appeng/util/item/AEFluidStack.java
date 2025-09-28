@@ -357,6 +357,11 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     }
 
     @Override
+    public String getLocalizedName() {
+        return this.fluid.getName();
+    }
+
+    @Override
     public boolean isSameType(IAEFluidStack stack) {
         return stack != null && getFluid() == stack.getFluid();
     }

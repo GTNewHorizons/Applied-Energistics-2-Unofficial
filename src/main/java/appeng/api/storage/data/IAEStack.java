@@ -227,6 +227,11 @@ public interface IAEStack<StackType extends IAEStack> {
      */
     StorageChannel getChannel();
 
+    /**
+     * @return Display name of item
+     */
+    String getLocalizedName();
+
     boolean isSameType(StackType stack);
 
     boolean isSameType(Object stack);

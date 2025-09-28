@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Method;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -518,7 +520,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void completeJob() {
-        if (isBusy()) return; // dont complete if still working
+        if (this.hasRemainingTasks()) return; // dont complete if still working
         if (this.myLastLink != null) {
             ((CraftingLink) this.myLastLink).markDone();
             this.myLastLink = null;
@@ -1120,29 +1122,36 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void handleCraftBranchFailure(final CraftBranchFailure e, final BaseActionSource src) {
-        if (!(src instanceof PlayerSource)) {
+        final IAEStack<?> missingStack = e.getMissing();
+
+        if (!(src instanceof PlayerSource playerSource) || playerSource.player == null || missingStack == null) {
             return;
         }
 
         try {
-            EntityPlayer player = ((PlayerSource) src).player;
-            if (player != null) {
-                final IAEStack<?> missingStack = e.getMissing();
-                if (missingStack != null) {
-                    IChatComponent missingDisplayName;
-                    String missingName = missingStack.getUnlocalizedName();
-                    if (StatCollector.canTranslate(missingName + ".name") && StatCollector
-                            .translateToLocal(missingName + ".name").equals(missingStack.getDisplayName()))
-                        missingDisplayName = new ChatComponentTranslation(missingName + ".name");
-                    else missingDisplayName = new ChatComponentText(missingStack.getDisplayName());
-                    long missingCount = missingStack.getStackSize();
-                    player.addChatMessage(
-                            new ChatComponentTranslation(
-                                    PlayerMessages.CraftingItemsWentMissing.getName(),
-                                    missingCount,
-                                    missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));
+            long missingCount = missingStack.getStackSize();
+            IChatComponent missingItem;
+            if (missingStack instanceof IAEItemStack ais) {
+                missingItem = ais.getItemStack().func_151000_E();
+                missingItem.getChatStyle().setColor(EnumChatFormatting.GOLD);
+            } else {
+                String missingName = missingStack.getUnlocalizedName();
+                if (StatCollector.canTranslate(missingName + ".name") && StatCollector
+                        .translateToLocal(missingName + ".name").equals(missingStack.getDisplayName())) {
+                    missingItem = new ChatComponentTranslation(missingName + ".name");
+                } else {
+                    missingItem = new ChatComponentText(missingStack.getDisplayName());
                 }
             }
+
+            String missingCountText = EnumChatFormatting.RED
+                    + NumberFormat.getNumberInstance(Locale.getDefault()).format(missingCount)
+                    + EnumChatFormatting.RESET;
+            playerSource.player.addChatMessage(
+                    new ChatComponentTranslation(
+                            PlayerMessages.CraftingItemsWentMissing.getUnlocalized(),
+                            missingCountText,
+                            missingItem));
         } catch (Exception ex) {
             AELog.error(ex, "Could not notify player of crafting failure");
         }
@@ -1194,14 +1203,16 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return null;
     }
 
-    @Override
-    public boolean isBusy() {
-
+    private boolean hasRemainingTasks() {
         this.tasks.entrySet().removeIf(
                 iCraftingPatternDetailsTaskProgressEntry -> iCraftingPatternDetailsTaskProgressEntry.getValue().value
                         <= 0);
+        return !this.tasks.isEmpty();
+    }
 
-        return !this.tasks.isEmpty() || !this.waitingFor.isEmpty();
+    @Override
+    public boolean isBusy() {
+        return this.hasRemainingTasks() || !this.waitingFor.isEmpty();
     }
 
     @Override

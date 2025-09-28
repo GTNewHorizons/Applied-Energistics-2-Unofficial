@@ -58,7 +58,7 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.client.render.BlockPosHighlighter;
+import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.container.implementations.ContainerInterfaceTerminal;
 import appeng.container.slot.AppEngSlot;
 import appeng.core.AEConfig;

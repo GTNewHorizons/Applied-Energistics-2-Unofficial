@@ -295,4 +295,8 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
             default -> throw new IllegalStateException();
         };
     }
+
+    public MECraftingInventory getStorageAtBeginning() {
+        return getContext().availableCache;
+    }
 }

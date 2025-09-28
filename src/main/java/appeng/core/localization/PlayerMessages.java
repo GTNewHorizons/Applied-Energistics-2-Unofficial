@@ -48,7 +48,9 @@ public enum PlayerMessages implements Localization {
     FinishCraftingRemind,
     CraftingCantExtract,
     MachineInOtherDim,
-    MachineHighlighted;
+    MachineHighlighted,
+    StorageInOtherDim,
+    StorageHighlighted;
 
     @Deprecated // kept for backward compat
     public IChatComponent get() {

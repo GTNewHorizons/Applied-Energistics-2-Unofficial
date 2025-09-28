@@ -79,21 +79,21 @@ tile.appliedenergistics2.SkyStoneSmallBrickStairBlock.name=Sky Stone Small Brick
 tile.appliedenergistics2.SkyStoneStairBlock.name=Sky Stone Stairs
 
 # Slabs
-tile.appliedenergistics2.ChiseledQuartzSlabBlock.name=Chiseled Certus Quartz Slabs
+tile.appliedenergistics2.ChiseledQuartzSlabBlock.name=Chiseled Certus Quartz Slab
 tile.appliedenergistics2.ChiseledQuartzSlabBlock.double.name=Chiseled Certus Quartz Slabs
-tile.appliedenergistics2.FluixSlabBlock.name=Fluix Slabs
+tile.appliedenergistics2.FluixSlabBlock.name=Fluix Slab
 tile.appliedenergistics2.FluixSlabBlock.double.name=Fluix Slabs
-tile.appliedenergistics2.QuartzPillarSlabBlock.name=Certus Quartz Pillar Slabs
+tile.appliedenergistics2.QuartzPillarSlabBlock.name=Certus Quartz Pillar Slab
 tile.appliedenergistics2.QuartzPillarSlabBlock.double.name=Certus Quartz Pillar Slabs
-tile.appliedenergistics2.QuartzSlabBlock.name=Certus Quartz Slabs
+tile.appliedenergistics2.QuartzSlabBlock.name=Certus Quartz Slab
 tile.appliedenergistics2.QuartzSlabBlock.double.name=Certus Quartz Slabs
-tile.appliedenergistics2.SkyStoneBlockSlabBlock.name=Sky Stone Block Slabs
+tile.appliedenergistics2.SkyStoneBlockSlabBlock.name=Sky Stone Block Slab
 tile.appliedenergistics2.SkyStoneBlockSlabBlock.double.name=Sky Stone Block Slabs
-tile.appliedenergistics2.SkyStoneBrickSlabBlock.name=Sky Stone Brick Slabs
+tile.appliedenergistics2.SkyStoneBrickSlabBlock.name=Sky Stone Brick Slab
 tile.appliedenergistics2.SkyStoneBrickSlabBlock.double.name=Sky Stone Brick Slabs
-tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.name=Sky Stone Small Brick Slabs
+tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.name=Sky Stone Small Brick Slab
 tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.double.name=Sky Stone Small Brick Slabs
-tile.appliedenergistics2.SkyStoneSlabBlock.name=Sky Stone Slabs
+tile.appliedenergistics2.SkyStoneSlabBlock.name=Sky Stone Slab
 tile.appliedenergistics2.SkyStoneSlabBlock.double.name=Sky Stone Slabs
 
 # Chat Messages
@@ -122,7 +122,7 @@ chat.appliedenergistics2.LevelEmitterInAnotherDim=Level emitter located in dimen
 chat.appliedenergistics2.LevelEmitterHighlighted=The level emitter is now highlighted at %d, %d, %d
 chat.appliedenergistics2.P2PInAnotherDim=P2P located in dimension: %d and cant be highlighted
 chat.appliedenergistics2.P2PHighlighted=The P2P is now highlighted at %d, %d, %d
-chat.appliedenergistics2.CraftingItemsWentMissing=Could not start craft, ingredient went missing: %d * %s
+chat.appliedenergistics2.CraftingItemsWentMissing=Missing ingredient: %d * %s
 chat.appliedenergistics2.FBOUnsupported=OpenGL FBOs not supported, cannot export image
 chat.appliedenergistics2.PriorityInvalidTarget=Target has no priority
 chat.appliedenergistics2.PriorityReadout=Current priority is %d
@@ -130,9 +130,11 @@ chat.appliedenergistics2.PriorityConfigured=Updated priority to %d
 chat.appliedenergistics2.DriveLockingToggled=Cells in drive were partitioned/unpartitioned
 chat.appliedenergistics2.ChestLockingToggled=Cell in chest was partitioned/unpartitioned
 chat.appliedenergistics2.FinishCraftingRemind=Crafting of %s * %s finished in %s.
-chat.appliedenergistics2.CraftingCantExtract=Can't extract required amount of ingredient from storage: %d / %d | %s
+chat.appliedenergistics2.CraftingCantExtract=Can't extract ingredient: %d / %d | %s
 chat.appliedenergistics2.MachineInOtherDim=%d located in dimension: %d and cant be highlighted
 chat.appliedenergistics2.MachineHighlighted=The %d is now highlighted at %d, %d, %d
+chat.appliedenergistics2.StorageHighlighted=The %d containing %d %d is now highlighted at %d, %d, %d
+chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dimension: %d and cant be highlighted
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -537,7 +539,7 @@ gui.tooltips.appliedenergistics2.SidelessModeSideless=Sideless Mode
 gui.tooltips.appliedenergistics2.SidelessModeSidelessDesc=All fluids are accessible from all sides
 
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefault=Default Blocking Mode
-gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefaultDesc=Blocking interfaces follow follow normal blocking rules (ignore circuits, etc.)
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefaultDesc=Blocking interfaces follow normal blocking rules (ignore circuits, etc.)
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeAll=Loose Mode
 gui.tooltips.appliedenergistics2.AdvancedBlockingModeAllDesc=Blocking interfaces will block on any item in this ME system.
 
@@ -638,6 +640,7 @@ waila.appliedenergistics2.Unlocked=Unlocked
 waila.appliedenergistics2.Showing=Showing
 waila.appliedenergistics2.Contains=Contains
 waila.appliedenergistics2.Channels=%1$d of %2$d Channels
+waila.appliedenergistics2.ChannelsUnbound=%1$d Channels
 waila.appliedenergistics2.P2PUnlinked=Unlinked
 waila.appliedenergistics2.P2PInputOneOutput=Linked (Input Side)
 waila.appliedenergistics2.P2PInputManyOutputs=Linked (Input Side) - %d Outputs
@@ -910,3 +913,4 @@ stat.ae2.TurnedCranks=Turned Cranks
 # Keys
 key.appliedenergistics2.category=Applied Energistics 2
 key.toggle_focus.desc=Toggle search box focus
+key.search_connected_inventories.desc=Search network inventories for item

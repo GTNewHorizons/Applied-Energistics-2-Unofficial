@@ -10,11 +10,12 @@
 
 package appeng.me;
 
-import java.util.Comparator;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -39,20 +40,22 @@ import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IReadOnlyCollection;
 import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.core.features.AEFeature;
 import appeng.core.worlddata.WorldData;
 import appeng.hooks.TickHandler;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.pathfinding.IPathItem;
+import appeng.tile.networking.TileController;
 import appeng.util.IWorldCallable;
 import appeng.util.ReadOnlyCollection;
 
 public class GridNode implements IGridNode, IPathItem {
 
     private static final MENetworkChannelsChanged EVENT = new MENetworkChannelsChanged();
-    private static final int[] CHANNEL_COUNT = { 0, 8, 32, 128 };
+    private static final int[] CHANNEL_COUNT = { 0, 8, 32, Integer.MAX_VALUE };
 
-    private final List<IGridConnection> connections = new LinkedList<>();
+    private final List<GridConnection> connections = new LinkedList<>();
     private final IGridBlock gridProxy;
     // old power draw, used to diff
     private double previousDraw = 0.0;
@@ -63,8 +66,32 @@ public class GridNode implements IGridNode, IPathItem {
     private Object visitorIterationNumber = null;
     // connection criteria
     private int compressedData = 0;
-    private int usedChannels = 0;
+    /**
+     * Will be modified during pathing and should not be exposed outside of that purpose.
+     */
+    int usedChannels = 0;
+    /**
+     * Finalized version of {@link #usedChannels} once pathing is done.
+     */
     private int lastUsedChannels = 0;
+    /**
+     * The nearest ancestor of this node which restricts the number of maximum available channels for its subtree. It is
+     * {@code null} if the next node is a controller.
+     * <p>
+     * Used to quickly walk the path to the controller when checking channel assignability, based on the observation
+     * that the max channel count increases as we get to the controller, and that we only need to check the highest node
+     * of each max channel count.
+     * <p>
+     * For example, on the following path:
+     * {@code controller - dense cable 1 - dense cable 2 - dense cable 3 - cable 1 - cable 2 - cable 3 - device}, we
+     * need to check that {@code dense cable 1} can accept the additional channel. If this is true then dense cables
+     * {@code 2} and {@code 3} can always accept it. Same for regular cables, so it is enough to check that
+     * {@code dense cable 1} and {@code cable 1} can accept it, massively speeding up the assignment for large trees.
+     */
+    @Nullable
+    private GridNode highestSimilarAncestor = null;
+    private int subtreeMaxChannels;
+    private boolean subtreeAllowsCompressedChannels;
 
     public GridNode(final IGridBlock what) {
         this.gridProxy = what;
@@ -87,14 +114,10 @@ public class GridNode implements IGridNode, IPathItem {
     }
 
     void addConnection(final IGridConnection gridConnection) {
-        this.connections.add(gridConnection);
+        this.connections.add((GridConnection) gridConnection);
         if (gridConnection.hasDirection()) {
             this.gridProxy.onGridNotification(GridNotification.ConnectionsChanged);
         }
-
-        final IGridNode gn = this;
-
-        this.connections.sort(new ConnectionComparator(gn));
     }
 
     void removeConnection(final IGridConnection gridConnection) {
@@ -172,7 +195,7 @@ public class GridNode implements IGridNode, IPathItem {
 
     @Override
     public void updateState() {
-        this.compressedData = getCompressedChannelsIndex(this.gridProxy.getFlags());
+        this.compressedData = getCompressedChannelsIndex();
 
         this.compressedData |= (this.gridProxy.getGridColor().ordinal() << 3);
 
@@ -184,9 +207,10 @@ public class GridNode implements IGridNode, IPathItem {
         this.getInternalGrid();
     }
 
-    private int getCompressedChannelsIndex(final EnumSet<GridFlags> set) {
-        if (set.contains(GridFlags.CANNOT_CARRY)) return 0;
-        else if (set.contains(GridFlags.DENSE_CAPACITY)) return 2;
+    private int getCompressedChannelsIndex() {
+        if (!AEConfig.instance.isFeatureEnabled(AEFeature.Channels)) return 3;
+        else if (hasFlag(GridFlags.CANNOT_CARRY)) return 0;
+        else if (hasFlag(GridFlags.DENSE_CAPACITY)) return 2;
         return 1;
     }
 
@@ -260,6 +284,10 @@ public class GridNode implements IGridNode, IPathItem {
         return new ReadOnlyCollection<>(this.connections);
     }
 
+    public boolean hasNoConnections() {
+        return this.connections.isEmpty();
+    }
+
     @Override
     public IGridBlock getGridBlock() {
         return this.gridProxy;
@@ -308,17 +336,12 @@ public class GridNode implements IGridNode, IPathItem {
 
     @Override
     public boolean meetsChannelRequirements() {
-        if (this.gridProxy.getFlags().contains(GridFlags.REQUIRE_CHANNEL)) {
-            if (AEConfig.instance.isFeatureEnabled(AEFeature.Channels)) {
-                return this.getUsedChannels() > 0;
-            }
-        }
-        return true;
+        return !hasFlag(GridFlags.REQUIRE_CHANNEL) || this.getUsedChannels() > 0;
     }
 
     @Override
     public boolean hasFlag(final GridFlags flag) {
-        return this.gridProxy.getFlags().contains(flag);
+        return this.gridProxy.hasFlag(flag);
     }
 
     @Override
@@ -333,8 +356,8 @@ public class GridNode implements IGridNode, IPathItem {
         }
     }
 
-    private int getUsedChannels() {
-        return this.usedChannels;
+    public int getUsedChannels() {
+        return this.lastUsedChannels;
     }
 
     private void FindConnections() {
@@ -487,39 +510,91 @@ public class GridNode implements IGridNode, IPathItem {
     }
 
     @Override
+    public void setAdHocChannels(int channels) {
+        this.usedChannels = channels;
+    }
+
+    @Override
     public IPathItem getControllerRoute() {
-        if (this.connections.isEmpty() || this.getFlags().contains(GridFlags.CANNOT_CARRY)) {
-            return null;
+        if (this.connections.isEmpty()) {
+            throw new IllegalStateException(
+                    String.format("Node %s has no connections, cannot have a controller route!", this));
         }
 
-        return (IPathItem) this.connections.get(0);
+        return this.connections.get(0);
+    }
+
+    public @Nullable GridNode getHighestSimilarAncestor() {
+        return highestSimilarAncestor;
+    }
+
+    public boolean getSubtreeAllowsCompressedChannels() {
+        return subtreeAllowsCompressedChannels;
     }
 
     @Override
-    public void setControllerRoute(final IPathItem fast, final boolean zeroOut) {
-        if (zeroOut) {
-            this.usedChannels = 0;
+    public void setControllerRoute(final IPathItem fast) {
+        this.usedChannels = 0;
+
+        var nodeParent = (GridNode) fast.getControllerRoute();
+        if (nodeParent.getMachine() instanceof TileController) {
+            this.highestSimilarAncestor = null;
+            this.subtreeMaxChannels = getMaxChannels();
+            this.subtreeAllowsCompressedChannels = !hasFlag(GridFlags.CANNOT_CARRY_COMPRESSED);
+        } else {
+            if (nodeParent.highestSimilarAncestor == null) {
+                // Parent is connected to a controller, it is the bottleneck.
+                this.highestSimilarAncestor = nodeParent;
+            } else if (nodeParent.subtreeMaxChannels == nodeParent.highestSimilarAncestor.subtreeMaxChannels) {
+                // Parent is not restricting the number of channels, go as high as possible.
+                this.highestSimilarAncestor = nodeParent.highestSimilarAncestor;
+            } else {
+                // Parent is restricting the number of channels, link to it directly.
+                this.highestSimilarAncestor = nodeParent;
+            }
+            this.subtreeMaxChannels = Math.min(nodeParent.subtreeMaxChannels, getMaxChannels());
+            this.subtreeAllowsCompressedChannels = nodeParent.subtreeAllowsCompressedChannels
+                    && !hasFlag(GridFlags.CANNOT_CARRY_COMPRESSED);
         }
 
-        final int idx = this.connections.indexOf(fast);
+        GridConnection connection = (GridConnection) fast;
+
+        final int idx = this.connections.indexOf(connection);
         if (idx > 0) {
-            this.connections.remove(fast);
-            this.connections.add(0, (IGridConnection) fast);
+            this.connections.remove(connection);
+            this.connections.add(0, connection);
         }
     }
 
-    @Override
-    public boolean canSupportMoreChannels() {
-        return this.getUsedChannels() < this.getMaxChannels();
-    }
-
-    private int getMaxChannels() {
+    public int getMaxChannels() {
         return CHANNEL_COUNT[this.compressedData & 0x3];
     }
 
     @Override
     public IReadOnlyCollection<IPathItem> getPossibleOptions() {
-        return (IReadOnlyCollection) this.getConnections();
+        return new ReadOnlyCollection<>(this.connections);
+    }
+
+    public int propagateChannelsUpwards(boolean consumesChannel) {
+        this.usedChannels = 0;
+        for (var connection : connections) {
+            if (connection.getControllerRoute() == this) {
+                this.usedChannels += connection.usedChannels;
+            }
+        }
+        if (consumesChannel) {
+            this.usedChannels++;
+        }
+
+        if (this.usedChannels > getMaxChannels()) {
+            AELog.error(
+                    "Internal channel assignment error. Grid node {} has {} channels passing through it but it only supports up to {}. Please open an issue on the AE2 repository.",
+                    this,
+                    this.usedChannels,
+                    getMaxChannels());
+        }
+
+        return this.usedChannels;
     }
 
     @Override
@@ -534,21 +609,19 @@ public class GridNode implements IGridNode, IPathItem {
 
     @Override
     public void finalizeChannels() {
-        if (this.getFlags().contains(GridFlags.CANNOT_CARRY)) {
+        this.highestSimilarAncestor = null;
+
+        if (hasFlag(GridFlags.CANNOT_CARRY)) {
             return;
         }
 
-        if (this.getLastUsedChannels() != this.getUsedChannels()) {
+        if (this.lastUsedChannels != this.usedChannels) {
             this.lastUsedChannels = this.usedChannels;
 
             if (this.getInternalGrid() != null) {
                 this.getInternalGrid().postEventTo(this, EVENT);
             }
         }
-    }
-
-    private int getLastUsedChannels() {
-        return this.lastUsedChannels;
     }
 
     public long getLastSecurityKey() {
@@ -580,23 +653,6 @@ public class GridNode implements IGridNode, IPathItem {
             this.node.getMachine().securityBreak();
 
             return null;
-        }
-    }
-
-    private static class ConnectionComparator implements Comparator<IGridConnection> {
-
-        private final IGridNode gn;
-
-        public ConnectionComparator(final IGridNode gn) {
-            this.gn = gn;
-        }
-
-        @Override
-        public int compare(final IGridConnection o1, final IGridConnection o2) {
-            final boolean preferredA = o1.getOtherSide(this.gn).hasFlag(GridFlags.PREFERRED);
-            final boolean preferredB = o2.getOtherSide(this.gn).hasFlag(GridFlags.PREFERRED);
-
-            return preferredA == preferredB ? 0 : (preferredA ? -1 : 1);
         }
     }
 }

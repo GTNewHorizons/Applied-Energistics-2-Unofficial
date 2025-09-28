@@ -167,7 +167,9 @@ public class EnergyGridCache implements IEnergyGrid {
         // power information.
         boolean currentlyHasPower = false;
 
-        if (this.drainPerTick > 0.0001) {
+        if (infinite) {
+            currentlyHasPower = true;
+        } else if (this.drainPerTick > 0.0001) {
             final double drained = this
                     .extractAEPower(this.getIdlePowerUsage(), Actionable.MODULATE, PowerMultiplier.CONFIG);
             currentlyHasPower = drained >= this.drainPerTick - 0.001;

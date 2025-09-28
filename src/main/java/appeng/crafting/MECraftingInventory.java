@@ -18,8 +18,10 @@ import static appeng.util.Platform.isAE2FCLoaded;
 import static appeng.util.Platform.stackConvert;
 import static appeng.util.Platform.writeAEStackListNBT;
 
+import java.text.NumberFormat;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
@@ -27,6 +29,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StatCollector;
 
@@ -496,7 +499,7 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         }
     }
 
-    private void handleCraftExtractFailure(final IAEStack<?> notExpected, final IAEStack<?> extracted,
+    private void handleCraftExtractFailure(final IAEStack<?> expected, final IAEStack<?> extracted,
             final BaseActionSource src) {
         if (!(src instanceof PlayerSource)) {
             return;
@@ -504,23 +507,36 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
         try {
             EntityPlayer player = ((PlayerSource) src).player;
-            if (player != null) {
-                if (notExpected != null) {
-                    IChatComponent missingDisplayName;
-                    String missingName = notExpected.getUnlocalizedName();
-                    if (StatCollector.canTranslate(missingName + ".name") && StatCollector
-                            .translateToLocal(missingName + ".name").equals(notExpected.getDisplayName()))
-                        missingDisplayName = new ChatComponentTranslation(missingName + ".name");
-                    else missingDisplayName = new ChatComponentText(notExpected.getDisplayName());
+            if (player == null || expected == null) return;
 
-                    player.addChatMessage(
-                            new ChatComponentTranslation(
-                                    PlayerMessages.CraftingCantExtract.getName(),
-                                    extracted.getStackSize(),
-                                    notExpected.getStackSize(),
-                                    missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));
+            IChatComponent missingItem;
+            if (expected instanceof IAEItemStack ais) {
+                missingItem = ais.getItemStack().func_151000_E();
+            } else {
+                String missingName = expected.getUnlocalizedName();
+                if (StatCollector.canTranslate(missingName + ".name")
+                        && StatCollector.translateToLocal(missingName + ".name").equals(expected.getDisplayName())) {
+                    missingItem = new ChatComponentTranslation(missingName + ".name");
+                } else {
+                    missingItem = new ChatComponentText(expected.getDisplayName());
                 }
             }
+
+            missingItem.getChatStyle().setColor(EnumChatFormatting.GOLD);
+            String expectedCount = EnumChatFormatting.RED
+                    + NumberFormat.getNumberInstance(Locale.getDefault()).format(expected.getStackSize())
+                    + EnumChatFormatting.RESET;
+            String extractedCount = EnumChatFormatting.RED
+                    + NumberFormat.getNumberInstance(Locale.getDefault()).format(extracted.getStackSize())
+                    + EnumChatFormatting.RESET;
+
+            player.addChatMessage(
+                    new ChatComponentTranslation(
+                            PlayerMessages.CraftingCantExtract.getUnlocalized(),
+                            extractedCount,
+                            expectedCount,
+                            missingItem));
+
         } catch (Exception ex) {
             AELog.error(ex, "Could not notify player of crafting failure");
         }
