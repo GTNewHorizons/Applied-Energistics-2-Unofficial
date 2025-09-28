@@ -75,7 +75,6 @@ public class PacketPatternItemRenamer extends AppEngPacket {
                         Slot slot = player.openContainer.getSlot(valueIndex);
                         if (slot != null && slot.getHasStack()) {
                             ItemStack nextStack = slot.getStack().copy();
-                            nextStack.setRepairCost(2);
                             nextStack.setStackDisplayName(name);
                             slot.putStack(nextStack);
                         }
