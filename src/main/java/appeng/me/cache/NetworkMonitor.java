@@ -21,7 +21,7 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import appeng.api.storage.IMEInventory;
+import appeng.api.storage.IMENetworkInventory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -167,8 +167,8 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
-    public IMEInventory<T> getNetworkInventoryHandler() {
-        return this.getHandler().getNetworkInventoryHandler();
+    public IMENetworkInventory<T> getNetworkInventory() {
+        return this.getHandler().getNetworkInventory();
     }
 
     @Nullable

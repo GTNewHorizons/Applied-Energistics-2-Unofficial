@@ -23,7 +23,6 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
-import appeng.me.storage.NetworkInventoryHandler;
 import appeng.util.IterationCounter;
 
 /**
@@ -144,8 +143,8 @@ public interface IMEInventory<StackType extends IAEStack> {
     StorageChannel getChannel();
 
     /**
-     *
-     * @return the network inventory (if any) this handler is accessing
+     * Find the network inventory (if any) that is being accessed. This should only return a value for inventories that connect two ME networks (= storage bus on interface).
+     * @return the accessed network inventory
      */
-    default IMEInventory<StackType> getNetworkInventoryHandler() {return null;}
+    default IMENetworkInventory<StackType> getNetworkInventory() {return null;}
 }

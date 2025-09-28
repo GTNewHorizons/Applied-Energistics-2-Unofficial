@@ -27,15 +27,15 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.ISecurityGrid;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.security.PlayerSource;
-import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cache.SecurityCache;
 import appeng.util.SortedArrayList;
 
-public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
+public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHandler<T>, IMENetworkInventory<T> {
 
     private static final ThreadLocal<LinkedList> DEPTH_MOD = new ThreadLocal<>();
     private static final ThreadLocal<LinkedList> DEPTH_SIM = new ThreadLocal<>();
@@ -78,6 +78,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     private final SecurityCache security;
     private final List<IMEInventoryHandler<T>> priorityInventory;
     private int myPass = 0;
+    private IItemList<T> unreadItemList = null;
 
     public NetworkInventoryHandler(final StorageChannel chan, final SecurityCache security) {
         this.myChannel = chan;
@@ -295,16 +296,37 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
             return out;
         }
 
+        this.unreadItemList = null;
+        IItemList<T> networkItemList = (IItemList<T>) getChannel().createList();
         final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
         final int size = priorityInventory.size();
         for (int i = 0; i < size; i++) {
-            out = priorityInventory.get(i).getAvailableItems(out, iteration);
+            IItemList<T> otherNetworkItemList = (IItemList<T>) getChannel().createList();
+            otherNetworkItemList = priorityInventory.get(i).getAvailableItems(otherNetworkItemList, iteration);
+            for (T item : otherNetworkItemList) {
+                out.add(item);
+                networkItemList.add(item);
+            }
         }
+        this.unreadItemList = networkItemList;
 
         this.surface(this, Actionable.SIMULATE);
 
         return out;
 
+    }
+
+    @Override
+    public IItemList<T> getUnreadAvailableItems(int iteration) {
+        if (!networkWasRead(iteration)) {
+            getAvailableItems(getChannel().createList(), iteration); // TODO check how this works with ignore crafting item list
+        }
+        return this.unreadItemList;
+    }
+
+    @Override
+    public boolean networkWasRead(int iteration) {
+        return this.myPass == iteration && this.unreadItemList != null;
     }
 
     @Override
@@ -410,7 +432,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     }
 
     @Override
-    public IMEInventory<T> getNetworkInventoryHandler() {
+    public IMENetworkInventory<T> getNetworkInventory() {
         return this;
     }
 }

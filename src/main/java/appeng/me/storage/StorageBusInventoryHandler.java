@@ -6,15 +6,10 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.ItemFilterList;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.function.Predicate;
 
 public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
-
-    private static final ThreadLocal<Map<Integer, Map<IMEInventory<?>, IItemList<?>>>> networkItemsForIteration = new ThreadLocal<>();
 
     public StorageBusInventoryHandler(IMEInventory<T> i, StorageChannel channel) {
         super(i, channel);
@@ -43,41 +38,20 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
     }
 
     private IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
-        final IItemList<T> allAvailableItems = this.getAllAvailableItems(iteration);
-        Iterator<T> it = allAvailableItems.iterator();
+        final IItemList<T> unreadAvailableItems = this.getUnreadAvailableItems(iteration);
+        Iterator<T> it = unreadAvailableItems.iterator();
         while (it.hasNext()) {
             T items = it.next();
             if (filterCondition.test(items)) {
                 out.add(items);
-                // have to remove the item otherwise it could be counted double
+                // remove the item since it was read
                 it.remove();
             }
         }
         return out;
     }
 
-    private IItemList<T> getAllAvailableItems(int iteration) {
-        IMEInventory<T> networkInventoryHandler = getNetworkInventoryHandler();
-        if (networkInventoryHandler == null) {
-            return this.getInternal()
-                    .getAvailableItems((IItemList<T>) this.getInternal().getChannel().createList(), iteration);
-        }
-
-        Map<Integer, Map<IMEInventory<?>, IItemList<?>>> s = networkItemsForIteration.get();
-        if (s != null && !s.containsKey(iteration)) {
-            s = null;
-        }
-        if (s == null) {
-            s = Collections.singletonMap(iteration, new IdentityHashMap<>());
-            networkItemsForIteration.set(s);
-        }
-        Map<IMEInventory<?>, IItemList<?>> networkInventoryItems = s.get(iteration);
-        if (!networkInventoryItems.containsKey(networkInventoryHandler)) {
-            IItemList<T> allAvailableItems = this.getInternal()
-                    .getAvailableItems((IItemList<T>) this.getInternal().getChannel().createList(), iteration);
-            networkInventoryItems.put(networkInventoryHandler, allAvailableItems);
-        }
-
-        return (IItemList<T>) networkInventoryItems.get(networkInventoryHandler);
+    private IItemList<T> getUnreadAvailableItems(int iteration) {
+        return getNetworkInventory().getUnreadAvailableItems(iteration);
     }
 }
