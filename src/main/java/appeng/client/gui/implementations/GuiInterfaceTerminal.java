@@ -49,7 +49,6 @@ import appeng.api.config.Settings;
 import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
-import appeng.api.util.DimensionalCoord;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
@@ -1479,7 +1478,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 BlockPosHighlighter.highlightNamedBlocks(
                         mc.thePlayer,
                         Collections.singletonMap(
-                                new NamedDimensionalCoord(new DimensionalCoord(x, y, z, dim), dispName),
+                                new NamedDimensionalCoord(x, y, z, dim, dispName),
                                 dispName.isEmpty()
                                         ? new String[] { PlayerMessages.MachineHighlighted.getUnlocalized(),
                                                 PlayerMessages.MachineInOtherDim.getUnlocalized() }

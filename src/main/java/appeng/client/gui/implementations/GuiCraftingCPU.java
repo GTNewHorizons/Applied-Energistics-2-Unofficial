@@ -653,7 +653,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 for (NamedDimensionalCoord blockPos : blocks) {
                     lineList.add(
                             String.format(
-                                    "Dim:%s X:%s Y:%s Z:%s Interface:\"%s\"",
+                                    "Dim:%s X:%s Y:%s Z:%s \"%s\"",
                                     blockPos.getDimension(),
                                     blockPos.x,
                                     blockPos.y,

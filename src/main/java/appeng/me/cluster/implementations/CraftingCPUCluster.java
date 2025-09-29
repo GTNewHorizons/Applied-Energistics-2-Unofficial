@@ -887,10 +887,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 NamedDimensionalCoord tileDimensionalCoord;
                                 if (tile instanceof TileInterface tileInterface) {
                                     tileDimensionalCoord = new NamedDimensionalCoord(
-                                            new DimensionalCoord(tile),
+                                            tile,
                                             tileInterface.getCustomName());
                                 } else {
-                                    tileDimensionalCoord = new NamedDimensionalCoord(new DimensionalCoord(tile), "");
+                                    tileDimensionalCoord = new NamedDimensionalCoord(tile, "");
                                 }
 
                                 boolean isAdded = false;
@@ -1350,8 +1350,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                     if (tile instanceof TileInterface tileInterface) {
                                         final String dispName = GuiInterfaceTerminal.translateFromNetwork(
                                                 tileInterface.getInterfaceDuality().getTermName());
-                                        dimensionalCoords
-                                                .add(new NamedDimensionalCoord(new DimensionalCoord(tile), dispName));
+                                        dimensionalCoords.add(new NamedDimensionalCoord(tile, dispName));
                                     }
                                 }
                                 this.providers.put(is, dimensionalCoords);
