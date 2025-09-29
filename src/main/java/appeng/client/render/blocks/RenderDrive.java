@@ -20,7 +20,6 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.util.AEColor;
 import appeng.block.storage.BlockDrive;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
@@ -151,9 +150,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                 double v4 = ico.getInterpolatedV(((spin) % 4 < 2) ? m : mx);
 
                 tess.setBrightness(b);
-                // uses base color for base ae2 drive color, otherwise uses the drives color
-                AEColor color = sp.getColor();
-                tess.setColorOpaque_I(color != AEColor.Transparent ? color.mediumVariant : 0xffffff);
+                // uses special color when rendering drive face.
+                tess.setColorOpaque_I(sp.getColor().driveVariant);
                 switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
                     case 1 -> {
                         tess.addVertexWithUV(
