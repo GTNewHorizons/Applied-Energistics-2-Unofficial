@@ -92,7 +92,8 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
         int b = world.getLightBrightnessForSkyBlocks(x + forward.offsetX, y + forward.offsetY, z + forward.offsetZ, 0);
         final Tessellator tess = Tessellator.instance;
         tess.setBrightness(b);
-        tess.setColorOpaque_I(0xffffff);
+        AEColor color = sp.getColor();
+        tess.setColorOpaque_I(color != AEColor.Transparent ? color.mediumVariant : 0xffffff);
 
         final FlippableIcon flippableIcon = new FlippableIcon(
                 new OffsetIcon(ExtraBlockTextures.MEStorageCellTextures.getIcon(), offsetU, offsetV));
