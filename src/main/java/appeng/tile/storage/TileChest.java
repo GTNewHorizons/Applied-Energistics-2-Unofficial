@@ -222,6 +222,8 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
                     this.itemCell = this.wrap(itemCell);
                     this.fluidCell = this.wrap(fluidCell);
+
+                    markDirty();
                 }
             }
         }
