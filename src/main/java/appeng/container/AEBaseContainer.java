@@ -40,6 +40,7 @@ import appeng.api.config.Actionable;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.networking.IGrid;
+import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;
@@ -49,13 +50,17 @@ import appeng.api.networking.security.ISecurityGrid;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.parts.IPart;
 import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.util.ItemSearchDTO;
 import appeng.client.me.InternalSlotME;
 import appeng.client.me.SlotME;
 import appeng.container.guisync.GuiSync;
 import appeng.container.guisync.SyncData;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerUpgradeable;
+import appeng.container.implementations.ContainerWirelessTerm;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
 import appeng.container.slot.SlotCraftingTerm;
@@ -65,8 +70,10 @@ import appeng.container.slot.SlotInaccessible;
 import appeng.container.slot.SlotPatternTerm;
 import appeng.container.slot.SlotPlayerHotBar;
 import appeng.container.slot.SlotPlayerInv;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketHighlightBlockStorage;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketPartialItem;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -74,8 +81,17 @@ import appeng.helpers.ICustomNameObject;
 import appeng.helpers.IPinsHandler;
 import appeng.helpers.InventoryAction;
 import appeng.items.materials.ItemMultiMaterial;
+import appeng.me.Grid;
+import appeng.me.MachineSet;
+import appeng.me.NetworkList;
+import appeng.me.cache.NetworkMonitor;
+import appeng.me.storage.MEInventoryHandler;
 import appeng.parts.automation.UpgradeInventory;
+import appeng.parts.misc.PartStorageBus;
+import appeng.tile.storage.TileChest;
+import appeng.tile.storage.TileDrive;
 import appeng.util.InventoryAdaptor;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.item.AEItemStack;
@@ -941,6 +957,108 @@ public abstract class AEBaseContainer extends Container {
                     }
                 }
             }
+            case FIND_ITEMS -> {
+                final Class<? extends IGridHost>[] checkedMachineClasses = new Class[] { TileDrive.class,
+                        TileChest.class, PartStorageBus.class, };
+                if (slotItem == null) return;
+
+                IGrid g = null;
+                // Pull grid
+                if (this instanceof ContainerWirelessTerm wirelessTerm
+                        && wirelessTerm.getMonitor() instanceof NetworkMonitor<?>networkMonitor) {
+                    g = networkMonitor.getGrid();
+                } else {
+                    final IActionHost host = this.getActionHost();
+                    if (host == null) return;
+
+                    final IGridNode gn = host.getActionableNode();
+                    if (gn != null) {
+                        g = gn.getGrid();
+                    }
+                }
+
+                if (g == null) return;
+
+                List<ItemSearchDTO> coords = new ArrayList<>();
+
+                List<IGridNode> machineList = new ArrayList<>();
+                Class<? extends IGridHost> classType = null;
+                if (slotItem.getChannel() == StorageChannel.ITEMS) {
+                    classType = PartStorageBus.class;
+                } else if (slotItem.getChannel() == StorageChannel.FLUIDS) {
+                    // TODO Support Fluids for item searching
+                }
+
+                // Retrieve list of all grids
+                NetworkList grids = g.getAllRecursiveGridConnections(classType);
+
+                for (Grid subnet : grids) {
+                    for (Class<? extends IGridHost> type : checkedMachineClasses) {
+                        MachineSet subMachines = (MachineSet) subnet.getMachines(type);
+                        if (!subMachines.isEmpty()) {
+                            machineList.addAll(subMachines);
+                        }
+                    }
+                }
+
+                int machineCount = 0;
+                for (IGridNode gridNode : machineList) {
+                    if (machineCount > AEConfig.instance.maxMachineChecks) {
+                        break;
+                    }
+                    machineCount++;
+                    IGridHost machine = gridNode.getMachine();
+
+                    if (machine instanceof TileDrive innerMachine) {
+                        for (int i = 0; i < innerMachine.getSizeInventory(); i++) {
+                            IMEInventoryHandler<IAEItemStack> cell = innerMachine.getCellInvBySlot(i);
+                            if (cell == null || cell.getChannel() != slotItem.getChannel()) continue;
+
+                            IAEStack<IAEItemStack> result = cell
+                                    .getAvailableItem(slotItem, IterationCounter.fetchNewId());
+                            if (result == null) continue;
+
+                            String blockName = innerMachine.getCustomName();
+
+                            coords.add(
+                                    new ItemSearchDTO(
+                                            innerMachine.getLocation(),
+                                            result,
+                                            blockName,
+                                            i,
+                                            innerMachine.getForward(),
+                                            innerMachine.getUp()));
+                        }
+                    }
+                    if (machine instanceof PartStorageBus innerMachine) {
+                        if (innerMachine.getConnectedGrid() != null) { // Check if storageBus is subnet
+                            continue;
+                        }
+                        MEInventoryHandler<IAEItemStack> handler = innerMachine.getInternalHandler();
+                        if (handler == null) continue;
+                        IAEStack<IAEItemStack> result = handler
+                                .getAvailableItem(slotItem, IterationCounter.fetchNewId());
+                        if (result == null) continue;
+                        coords.add(new ItemSearchDTO(innerMachine.getLocation(), result, innerMachine.getCustomName()));
+                    }
+                    if (machine instanceof TileChest innerMachine) {
+                        try {
+                            IMEInventoryHandler handler = innerMachine.getHandler(slotItem.getChannel());
+                            IAEStack result = handler.getAvailableItem(slotItem, IterationCounter.fetchNewId());
+                            if (result == null) continue;
+                            coords.add(
+                                    new ItemSearchDTO(
+                                            innerMachine.getLocation(),
+                                            result,
+                                            innerMachine.getCustomName()));
+                        } catch (Exception e) {
+                            // :/
+                        }
+                    }
+                }
+
+                this.highlightBlocks(player, coords);
+            }
             default -> {}
         }
     }
@@ -954,6 +1072,16 @@ public abstract class AEBaseContainer extends Container {
                                 0,
                                 AEItemStack.create(p.inventory.getItemStack())),
                         p);
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
+        }
+    }
+
+    protected void highlightBlocks(final EntityPlayerMP p, List<ItemSearchDTO> coords) {
+        if (Platform.isServer()) {
+            try {
+                NetworkHandler.instance.sendTo(new PacketHighlightBlockStorage(coords), p);
             } catch (final IOException e) {
                 AELog.debug(e);
             }

@@ -35,6 +35,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkCellArrayUpdate;
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -74,6 +75,7 @@ import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
 import appeng.me.storage.MEMonitorIInventory;
 import appeng.me.storage.MEMonitorPassThrough;
+import appeng.me.storage.MEPassThrough;
 import appeng.me.storage.StorageBusInventoryHandler;
 import appeng.parts.automation.PartUpgradeable;
 import appeng.tile.inventory.AppEngInternalAEInventory;
@@ -521,6 +523,41 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
         }
 
         Platform.postListChanges(before, after, this, this.mySrc);
+    }
+
+    /**
+     *
+     * @return Subnet grid if found, null if not connected to a grid different from self
+     */
+    public IGrid getConnectedGrid() {
+        try {
+            IGrid currentGrid = this.getProxy().getGrid();
+            if (this.getConnectedInventory() instanceof MEPassThrough passThrough) {
+                IGrid passThroughGrid = passThrough.getGrid();
+                if (!currentGrid.equals(passThroughGrid)) return passThroughGrid;
+            }
+        } catch (GridAccessException e) {
+            return null;
+        }
+        return null;
+    }
+
+    // Looks for interfaces for subnet
+    private IMEInventory getConnectedInventory() {
+        final TileEntity self = this.getHost().getTile();
+        final TileEntity target = self.getWorldObj().getTileEntity(
+                self.xCoord + this.getSide().offsetX,
+                self.yCoord + this.getSide().offsetY,
+                self.zCoord + this.getSide().offsetZ);
+
+        if (target != null) {
+            final IExternalStorageHandler esh = AEApi.instance().registries().externalStorage()
+                    .getHandler(target, this.getSide().getOpposite(), StorageChannel.ITEMS, this.mySrc);
+            if (esh != null) {
+                return esh.getInventory(target, this.getSide().getOpposite(), StorageChannel.ITEMS, this.mySrc);
+            }
+        }
+        return null;
     }
 
     public MEInventoryHandler<IAEItemStack> getInternalHandler() {

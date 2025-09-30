@@ -86,4 +86,13 @@ public class NetworkList implements Collection<Grid> {
     public void clear() {
         this.networks.clear();
     }
+
+    public void mergeDistinct(NetworkList other) {
+        for (Grid grid : other) {
+            if (!this.contains(grid)) {
+                this.add(grid);
+            }
+        }
+    }
+
 }

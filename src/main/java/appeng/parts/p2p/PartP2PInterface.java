@@ -16,14 +16,12 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.event.ForgeEventFactory;
 
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
-import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.tiles.ITileStorageMonitorable;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingLink;
@@ -55,6 +53,7 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
+import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.WrapperInvSlot;
 import cpw.mods.fml.relauncher.Side;
@@ -197,24 +196,45 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     };
 
     private void updateSharingInventory() {
+        duality.readConfig();
         if (isOutput()) {
             PartP2PInterface p2p = getInput();
             if (proxy.isActive() && p2p != null) {
+                if (!duality.sharedInventory && !duality.getStorage().isEmpty()) {
+                    ArrayList<ItemStack> drops = new ArrayList<>();
+                    AppEngInternalInventory storageAppEng = this.duality.getStorage();
+                    AdaptorIInventory p2pInv = new AdaptorIInventory(p2p.duality.getStorage());
+                    for (ItemStack itemStack : storageAppEng) {
+                        if (itemStack == null) continue;
+                        ItemStack drop = p2pInv.addItems(itemStack);
+                        if (drop != null && drop.stackSize > 0) {
+                            drops.add(drop);
+                        }
+                    }
+                    TileEntity te = getTileEntity();
+                    Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
+                }
                 duality.setStorage(p2p.duality.getStorage());
                 duality.sharedInventory = true;
             } else {
+                if (duality.sharedInventory) {
+                    duality.setStorage(new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS));
+                    duality.setSlotInv(new WrapperInvSlot(duality.getStorage()));
+                    duality.sharedInventory = false;
+                }
+            }
+        } else {
+            if (duality.sharedInventory) {
                 duality.setStorage(new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS));
                 duality.setSlotInv(new WrapperInvSlot(duality.getStorage()));
                 duality.sharedInventory = false;
             }
-        } else {
             try {
                 for (PartP2PInterface p2p : getOutputs()) {
                     p2p.duality.readConfig();
                 }
             } catch (GridAccessException ignored) {}
         }
-        duality.readConfig();
     }
 
     @MENetworkEventSubscribe
@@ -305,36 +325,13 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
 
     @Override
     public boolean onPartActivate(final EntityPlayer p, final Vec3 pos) {
-        AppEngInternalInventory patterns = (AppEngInternalInventory) this.duality.getPatterns();
-        final boolean wasActive = getProxy().isActive();
-
-        if (!isOutput()) {
-            final ItemStack is = p.inventory.getCurrentItem();
-            if (is != null && is.getItem() instanceof IMemoryCard mc) {
-                if (ForgeEventFactory.onItemUseStart(p, is, 1) <= 0) return false;
-                try {
-                    for (PartP2PInterface p2p : getOutputs()) {
-                        p2p.duality.setStorage(new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS));
-                        p2p.duality.setSlotInv(new WrapperInvSlot(duality.getStorage()));
-                        p2p.duality.sharedInventory = false;
-                    }
-                } catch (GridAccessException ignored) {}
-            }
-        }
+        AppEngInternalInventory patterns = this.duality.getPatterns();
 
         if (super.onPartActivate(p, pos)) {
             ArrayList<ItemStack> drops = new ArrayList<>();
             for (int i = 0; i < patterns.getSizeInventory(); i++) {
                 if (patterns.getStackInSlot(i) == null) continue;
                 drops.add(patterns.getStackInSlot(i));
-            }
-
-            if (!duality.sharedInventory && !wasActive) {
-                AppEngInternalInventory storageAppEng = this.duality.getStorage();
-                for (int i = 0; i < NUMBER_OF_STORAGE_SLOTS; i++) {
-                    if (storageAppEng.getStackInSlot(i) == null) continue;
-                    drops.add(storageAppEng.getStackInSlot(i));
-                }
             }
 
             final IPart tile = this.getHost().getPart(this.getSide());
@@ -349,8 +346,8 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
                 }
 
                 if (!duality.sharedInventory) {
-                    IInventory storage = (IInventory) duality.getStorage();
-                    IInventory newStorage = (IInventory) newDuality.getStorage();
+                    IInventory storage = duality.getStorage();
+                    IInventory newStorage = newDuality.getStorage();
                     for (int i = 0; i < storage.getSizeInventory(); ++i) {
                         newStorage.setInventorySlotContents(i, storage.getStackInSlot(i));
                     }
@@ -556,6 +553,12 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     @Override
     public void onTunnelNetworkChange() {
         this.duality.updateCraftingList();
+        updateSharingInventory();
+    }
+
+    @Override
+    public void onTunnelConfigChange() {
+        updateSharingInventory();
     }
 
     @Override

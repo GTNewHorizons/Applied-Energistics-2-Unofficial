@@ -128,13 +128,11 @@ public abstract class GuiAmount extends AEBaseGui {
                 || btn == this.minus1000;
 
         if (isPlus || isMinus) {
-            long resultI = addOrderAmount(this.getQty(btn));
-            this.amountTextField.setText(Long.toString(resultI));
-            amountTextField.setCursorPositionEnd();
+            this.addAmount(this.getQty(btn));
         }
     }
 
-    protected long addOrderAmount(final int i) {
+    protected void addAmount(final int i) {
         long resultL = getAmountLong();
 
         if (resultL == 1 && i > 1) {
@@ -145,7 +143,9 @@ public abstract class GuiAmount extends AEBaseGui {
         if (resultL < 1) {
             resultL = 1;
         }
-        return resultL;
+
+        this.amountTextField.setText(Long.toString(resultL));
+        this.amountTextField.setCursorPositionEnd();
     }
 
     protected int getAmount() {

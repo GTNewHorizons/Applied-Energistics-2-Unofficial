@@ -25,13 +25,23 @@ import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
+import appeng.container.guisync.GuiSync;
 import appeng.container.slot.SlotInaccessible;
 import appeng.core.sync.GuiBridge;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class ContainerCraftAmount extends AEBaseContainer {
+
+    @SideOnly(Side.CLIENT)
+    private MEGuiTextField amountField;
+
+    @GuiSync(1)
+    public long initialCraftAmount = -1;
 
     private final Slot craftingItem;
     private IAEItemStack itemToCreate;
@@ -72,6 +82,31 @@ public class ContainerCraftAmount extends AEBaseContainer {
 
     public void setItemToCraft(@Nonnull final IAEItemStack itemToCreate) {
         this.itemToCreate = itemToCreate;
+    }
+
+    public void setInitialCraftAmount(long initialCraftAmount) {
+        this.initialCraftAmount = initialCraftAmount;
+    }
+
+    @SideOnly(Side.CLIENT)
+    public void setAmountField(MEGuiTextField amountField) {
+        this.amountField = amountField;
+        this.amountField.setText(String.valueOf(Math.max(1, this.initialCraftAmount)));
+        this.amountField.setCursorPositionEnd();
+        this.amountField.setSelectionPos(0);
+    }
+
+    @Override
+    public void onUpdate(String field, Object oldValue, Object newValue) {
+        if (field.equals("initialCraftAmount")) {
+            if (this.amountField != null) {
+                this.amountField.setText(String.valueOf(Math.max(1, this.initialCraftAmount)));
+                this.amountField.setCursorPositionEnd();
+                this.amountField.setSelectionPos(0);
+            }
+        }
+
+        super.onUpdate(field, oldValue, newValue);
     }
 
     public void openConfirmationGUI(EntityPlayer player, TileEntity te) {

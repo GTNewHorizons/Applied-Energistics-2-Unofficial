@@ -25,6 +25,12 @@ import net.minecraftforge.common.util.ForgeDirection;
  */
 public interface IGridConnection {
 
+    /* USED BY AD HOC PATHING */
+
+    void setAdHocChannels(int channels);
+
+    /* USED BY CONTROLLER PATHING */
+
     /**
      * lets you get the opposing node of the connection by passing your own node.
      *

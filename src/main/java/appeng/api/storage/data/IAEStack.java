@@ -222,4 +222,9 @@ public interface IAEStack<StackType extends IAEStack> {
      * @return ITEM or FLUID
      */
     StorageChannel getChannel();
+
+    /**
+     * @return Display name of item
+     */
+    String getLocalizedName();
 }

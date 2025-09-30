@@ -41,6 +41,8 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
     private int lockCraftingUpgrades = 0;
     private int fakeCraftingUpgrades = 0;
     private int stickyUpgrades = 0;
+    private int voidUpgrades = 0;
+    private int distributionUpgrades = 0;
 
     public UpgradeInventory(final IAEAppEngInventory parent, final int s) {
         super(null, s);
@@ -93,6 +95,8 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
             case STICKY -> this.stickyUpgrades;
             case FAKE_CRAFTING -> this.fakeCraftingUpgrades;
             case SUPERLUMINALSPEED -> this.SuperluminalSpeedUpgrades;
+            case VOID_OVERFLOW -> this.voidUpgrades;
+            case DISTRIBUTION -> this.distributionUpgrades;
             default -> 0;
         };
     }
@@ -101,7 +105,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
 
     private void updateUpgradeInfo() {
         this.cached = true;
-        this.patternCapacityUpgrades = this.SuperluminalSpeedUpgrades = this.stickyUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = this.advancedBlockingUpgrades = this.lockCraftingUpgrades = this.fakeCraftingUpgrades = 0;
+        this.patternCapacityUpgrades = this.SuperluminalSpeedUpgrades = this.stickyUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = this.advancedBlockingUpgrades = this.lockCraftingUpgrades = this.fakeCraftingUpgrades = this.voidUpgrades = this.distributionUpgrades = 0;
 
         for (final ItemStack is : this) {
             if (is == null || is.getItem() == null || !(is.getItem() instanceof IUpgradeModule)) {
@@ -124,6 +128,8 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
                 case STICKY -> this.stickyUpgrades++;
                 case FAKE_CRAFTING -> this.fakeCraftingUpgrades++;
                 case SUPERLUMINALSPEED -> this.SuperluminalSpeedUpgrades++;
+                case VOID_OVERFLOW -> this.voidUpgrades++;
+                case DISTRIBUTION -> this.distributionUpgrades++;
                 default -> {}
             }
         }
@@ -145,6 +151,8 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
         this.stickyUpgrades = Math.min(this.stickyUpgrades, this.getMaxInstalled(Upgrades.STICKY));
         this.SuperluminalSpeedUpgrades = Math
                 .min(this.SuperluminalSpeedUpgrades, this.getMaxInstalled(Upgrades.SUPERLUMINALSPEED));
+        this.voidUpgrades = Math.min(this.voidUpgrades, this.getMaxInstalled(Upgrades.VOID_OVERFLOW));
+        this.distributionUpgrades = Math.min(this.distributionUpgrades, this.getMaxInstalled(Upgrades.DISTRIBUTION));
     }
 
     @Override

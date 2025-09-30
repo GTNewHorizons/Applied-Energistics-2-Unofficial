@@ -24,6 +24,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.StatCollector;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
@@ -364,6 +365,15 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     @Override
     public StorageChannel getChannel() {
         return StorageChannel.ITEMS;
+    }
+
+    @Override
+    public String getLocalizedName() {
+        String name = this.getDefinition().getDisplayName();
+        if (name == null) {
+            name = StatCollector.translateToLocal(this.getItem().getUnlocalizedName() + ".name");
+        }
+        return name;
     }
 
     @Override

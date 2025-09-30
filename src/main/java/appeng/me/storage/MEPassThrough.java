@@ -14,12 +14,14 @@ import javax.annotation.Nonnull;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.me.cache.NetworkMonitor;
 
 public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
 
@@ -33,6 +35,18 @@ public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler
 
     protected IMEInventory<T> getInternal() {
         return this.internal;
+    }
+
+    /**
+     * Get Connected grid if applicable
+     * 
+     * @return Connected grid
+     */
+    public IGrid getGrid() {
+        if (this.internal instanceof NetworkMonitor networkMonitor) {
+            return networkMonitor.getGrid();
+        }
+        return null;
     }
 
     public void setInternal(final IMEInventory<T> i) {

@@ -40,4 +40,8 @@ public interface IDisplayRepo extends IPinsHandler {
     boolean isPaused();
 
     void setPaused(boolean paused);
+
+    default IItemList<IAEItemStack> getAvailableItems() {
+        throw new UnsupportedOperationException("This method is not implemented  for this IDisplayRepo.");
+    }
 }
