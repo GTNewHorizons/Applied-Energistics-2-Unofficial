@@ -27,7 +27,7 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:EnderIO:2.9.16:dev') { transitive = false }
     compileOnly(rfg.deobf('curse.maven:mekanism-268560:2475797')) // https://www.curseforge.com/minecraft/mc-mods/mekanism/files/2475797
     compileOnly(rfg.deobf('maven.modrinth:immibis-microblocks:59.1.2')) // https://modrinth.com/mod/immibis-microblocks/version/59.1.2
-	  compileOnly('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.4.76-gtnh:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.4.76-gtnh:dev') { transitive = false }
     compileOnly('com.github.GTNewHorizons:ae2stuff:0.9.5-GTNH:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
     }

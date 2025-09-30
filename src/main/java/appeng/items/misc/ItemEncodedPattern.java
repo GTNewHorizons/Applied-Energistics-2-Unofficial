@@ -16,11 +16,14 @@ import static appeng.util.Platform.stackConvertPacket;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.stream.Collectors;
 
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
@@ -251,7 +254,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                                         + ((IAEItemStack) item).getItemStack().getItemDamage()
                                 : Platform.getItemDisplayName(item);
             } else {
-                itemText = isFluid ? getFluidNameFromStack(item.getItemStack()) : Platform.getItemDisplayName(item);
+                itemText = Platform.getItemDisplayName(item);
             }
             String fullText = "   " + EnumChatFormatting.WHITE
                     + itemCountText
