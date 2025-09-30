@@ -132,7 +132,9 @@ chat.appliedenergistics2.ChestLockingToggled=Cell in chest was partitioned/unpar
 chat.appliedenergistics2.FinishCraftingRemind=Crafting of %s * %s finished in %s.
 chat.appliedenergistics2.CraftingCantExtract=Can't extract ingredient: %d / %d | %s
 chat.appliedenergistics2.MachineInOtherDim=%d located in dimension: %d and cant be highlighted
+chat.appliedenergistics2.MachineInOtherDimNamed=%d "%s" located in dimension: %d and cant be highlighted
 chat.appliedenergistics2.MachineHighlighted=The %d is now highlighted at %d, %d, %d
+chat.appliedenergistics2.MachineHighlightedNamed=The %d "%d" is now highlighted at %d, %d, %d
 chat.appliedenergistics2.StorageHighlighted=The %d containing %d %d is now highlighted at %d, %d, %d
 chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dimension: %d and cant be highlighted
 

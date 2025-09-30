@@ -96,7 +96,9 @@ import appeng.api.util.CraftCompleteListener;
 import appeng.api.util.CraftUpdateListener;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IInterfaceViewable;
+import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
+import appeng.client.gui.implementations.GuiInterfaceTerminal;
 import appeng.container.ContainerNull;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AELog;
@@ -112,6 +114,7 @@ import appeng.me.cluster.IAECluster;
 import appeng.tile.AEBaseTile;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.tile.crafting.TileCraftingTile;
+import appeng.tile.misc.TileInterface;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
@@ -137,7 +140,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private final LinkedList<TileCraftingTile> storage = new LinkedList<>();
     private final LinkedList<TileCraftingMonitorTile> status = new LinkedList<>();
     private final HashMap<IMEMonitorHandlerReceiver<IAEItemStack>, Object> listeners = new HashMap<>();
-    private final HashMap<IAEItemStack, List<DimensionalCoord>> providers = new HashMap<>();
+    private final HashMap<IAEItemStack, List<NamedDimensionalCoord>> providers = new HashMap<>();
     private ICraftingLink myLastLink;
     private String myName = "";
     private boolean isDestroyed = false;
@@ -877,11 +880,19 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                             // Add this medium to the list of providers for the outputItemStack if not yet in there.
                             providers.computeIfAbsent(outputItemStack, k -> new ArrayList<>());
-                            List<DimensionalCoord> list = providers.get(outputItemStack);
+                            List<NamedDimensionalCoord> list = providers.get(outputItemStack);
                             if (medium instanceof ICraftingProvider) {
                                 TileEntity tile = this.getTile(medium);
                                 if (tile == null) continue;
-                                DimensionalCoord tileDimensionalCoord = new DimensionalCoord(tile);
+                                NamedDimensionalCoord tileDimensionalCoord;
+                                if (tile instanceof TileInterface tileInterface) {
+                                    tileDimensionalCoord = new NamedDimensionalCoord(
+                                            tile,
+                                            tileInterface.getCustomName());
+                                } else {
+                                    tileDimensionalCoord = new NamedDimensionalCoord(tile, "");
+                                }
+
                                 boolean isAdded = false;
                                 for (DimensionalCoord dimensionalCoord : list) {
                                     if (dimensionalCoord.isEqual(tileDimensionalCoord)) {
@@ -1333,10 +1344,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             is.setStackSize(is.getStackSize() + ais.getStackSize() * t.getValue().value);
                             if (cache != null) {
                                 List<ICraftingMedium> craftingProviders = cache.getMediums(t.getKey());
-                                List<DimensionalCoord> dimensionalCoords = new ArrayList<>();
+                                List<NamedDimensionalCoord> dimensionalCoords = new ArrayList<>();
                                 for (ICraftingMedium craftingProvider : craftingProviders) {
                                     final TileEntity tile = this.getTile(craftingProvider);
-                                    if (tile != null) dimensionalCoords.add(new DimensionalCoord(tile));
+                                    if (tile instanceof TileInterface tileInterface) {
+                                        final String dispName = GuiInterfaceTerminal.translateFromNetwork(
+                                                tileInterface.getInterfaceDuality().getTermName());
+                                        dimensionalCoords.add(new NamedDimensionalCoord(tile, dispName));
+                                    }
                                 }
                                 this.providers.put(is, dimensionalCoords);
                             }
@@ -1432,10 +1447,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         data.setLong("remainingItemCount", this.getRemainingItemCount());
 
         list = new NBTTagList();
-        for (final Entry<IAEItemStack, List<DimensionalCoord>> e : this.providers.entrySet()) {
+        for (final Entry<IAEItemStack, List<NamedDimensionalCoord>> e : this.providers.entrySet()) {
             NBTTagCompound tmp = new NBTTagCompound();
             tmp.setTag("item", this.writeItem(e.getKey()));
-            DimensionalCoord.writeListToNBT(tmp, e.getValue());
+            NamedDimensionalCoord.writeListToNBTNamed(tmp, e.getValue());
             list.appendTag(tmp);
         }
         data.setTag("providers", list);
@@ -1549,7 +1564,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             final NBTTagCompound pro = list.getCompoundTagAt(x);
             this.providers.put(
                     AEItemStack.loadItemStackFromNBT(pro.getCompoundTag("item")),
-                    DimensionalCoord.readAsListFromNBT(pro));
+                    NamedDimensionalCoord.readAsListFromNBTNamed(pro));
         }
         try {
             unpersistListeners(1, craftCompleteListeners, data.getCompoundTag("craftCompleteListeners"));
@@ -1695,7 +1710,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     @SuppressWarnings("unchecked")
-    public List<DimensionalCoord> getProviders(IAEItemStack is) {
+    public List<NamedDimensionalCoord> getProviders(IAEItemStack is) {
         return this.providers.getOrDefault(is, Collections.EMPTY_LIST);
     }
 
