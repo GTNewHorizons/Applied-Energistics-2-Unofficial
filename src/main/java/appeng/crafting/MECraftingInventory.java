@@ -10,13 +10,15 @@
 
 package appeng.crafting;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
 import javax.annotation.Nonnull;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
-import net.minecraft.util.StatCollector;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -346,20 +348,21 @@ public class MECraftingInventory implements IMEInventory<IAEItemStack> {
         try {
             EntityPlayer player = ((PlayerSource) src).player;
             if (player == null || expected == null || expected.getItem() == null) return;
-
-            IChatComponent missingDisplayName;
-            String missingName = expected.getItemStack().getUnlocalizedName();
-            if (StatCollector.canTranslate(missingName + ".name") && StatCollector
-                    .translateToLocal(missingName + ".name").equals(expected.getItemStack().getDisplayName()))
-                missingDisplayName = new ChatComponentTranslation(missingName + ".name");
-            else missingDisplayName = new ChatComponentText(expected.getItemStack().getDisplayName());
+            IChatComponent missingItem = expected.getItemStack().func_151000_E();
+            missingItem.getChatStyle().setColor(EnumChatFormatting.GOLD);
+            String expectedCount = EnumChatFormatting.RED
+                    + NumberFormat.getNumberInstance(Locale.getDefault()).format(expected.getStackSize())
+                    + EnumChatFormatting.RESET;
+            String extractedCount = EnumChatFormatting.RED
+                    + NumberFormat.getNumberInstance(Locale.getDefault()).format(extracted.getStackSize())
+                    + EnumChatFormatting.RESET;
 
             player.addChatMessage(
                     new ChatComponentTranslation(
                             PlayerMessages.CraftingCantExtract.getUnlocalized(),
-                            extracted.getStackSize(),
-                            expected.getStackSize(),
-                            missingName).appendText(" (").appendSibling(missingDisplayName).appendText(")"));
+                            extractedCount,
+                            expectedCount,
+                            missingItem));
 
         } catch (Exception ex) {
             AELog.error(ex, "Could not notify player of crafting failure");

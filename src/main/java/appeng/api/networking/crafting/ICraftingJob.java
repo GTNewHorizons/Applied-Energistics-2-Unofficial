@@ -73,4 +73,12 @@ public interface ICraftingJob {
      */
     default void startCrafting(final MECraftingInventory storage, final ICraftingCPU craftingCPUCluster,
             final BaseActionSource src) {}
+
+    /**
+     * Return the snapshot of the storage when crafting calculation begins, should be read-only, do not modify. Note
+     * that this might be different from the current storage.
+     */
+    default public MECraftingInventory getStorageAtBeginning() {
+        return new MECraftingInventory();
+    }
 }

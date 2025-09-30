@@ -26,6 +26,7 @@ import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketCraftingTreeData;
+import appeng.core.sync.packets.PacketHighlightBlockStorage;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketLightning;
@@ -122,7 +123,8 @@ public class AppEngPacketHandlerBase {
         PACKET_OPTIMIZE_PATTERNS(PacketOptimizePatterns.class),
         PACKET_NETWORK_STATUS_SELECTED(PacketNetworkStatusSelected.class),
         PACKET_PATTERN_ITEM_RENAMER(PacketPatternItemRenamer.class),
-        PACKET_PINS_UPDATE(PacketPinsUpdate.class);
+        PACKET_PINS_UPDATE(PacketPinsUpdate.class),
+        PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;

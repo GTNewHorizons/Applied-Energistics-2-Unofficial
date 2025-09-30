@@ -254,6 +254,11 @@ public class AENetworkProxy implements IGridBlock {
     }
 
     @Override
+    public boolean hasFlag(GridFlags flag) {
+        return this.flags.contains(flag);
+    }
+
+    @Override
     public boolean isWorldAccessible() {
         return this.worldNode;
     }
