@@ -307,7 +307,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
         this.schedulingMode = schedulingMode;
     }
 
-    IUpgradeableHost getUpgradeable() {
+    public IUpgradeableHost getUpgradeable() {
         return this.upgradeable;
     }
 }
