@@ -11,11 +11,9 @@
 package appeng.core.sync.packets;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-import appeng.api.AEApi;
-import appeng.api.definitions.IComparableDefinition;
-import appeng.api.definitions.IItems;
 import appeng.api.implementations.HasServerSideToolLogic;
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
@@ -67,31 +65,27 @@ public class PacketClick extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final ItemStack is = player.inventory.getCurrentItem();
-        final IItems items = AEApi.instance().definitions().items();
-        final IComparableDefinition maybeMemoryCard = items.memoryCard();
-        final IComparableDefinition maybeColorApplicator = items.colorApplicator();
+        if (is == null) return;
 
-        if (is != null) {
-            if (is.getItem() instanceof HasServerSideToolLogic hsstl) {
-                hsstl.serverSideToolLogic(
-                        is,
-                        player,
-                        player.worldObj,
-                        this.x,
-                        this.y,
-                        this.z,
-                        this.side,
-                        this.hitX,
-                        this.hitY,
-                        this.hitZ);
-            } else if (maybeMemoryCard.isSameAs(is)) {
-                final IMemoryCard mem = (IMemoryCard) is.getItem();
-                mem.notifyUser(player, MemoryCardMessages.SETTINGS_CLEARED);
-                is.setTagCompound(null);
-            } else if (maybeColorApplicator.isSameAs(is)) {
-                final ToolColorApplicator mem = (ToolColorApplicator) is.getItem();
-                mem.cycleColors(is, mem.getColor(is), 1);
-            }
+        final Item item = is.getItem();
+
+        if (item instanceof HasServerSideToolLogic hsstl) {
+            hsstl.serverSideToolLogic(
+                    is,
+                    player,
+                    player.worldObj,
+                    this.x,
+                    this.y,
+                    this.z,
+                    this.side,
+                    this.hitX,
+                    this.hitY,
+                    this.hitZ);
+        } else if (item instanceof IMemoryCard mem) {
+            mem.notifyUser(player, MemoryCardMessages.SETTINGS_CLEARED);
+            is.setTagCompound(null);
+        } else if (item instanceof ToolColorApplicator mem) {
+            mem.cycleColors(is, mem.getColor(is), 1);
         }
     }
 }

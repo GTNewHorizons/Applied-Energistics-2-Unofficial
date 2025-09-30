@@ -59,9 +59,9 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
     private GuiAeButton follow;
     private final GuiCraftingCPUTable cpuTable;
 
-    private GuiTabButton originalGuiBtn;
+    protected GuiTabButton originalGuiBtn;
     private GuiBridge originalGui;
-    private ItemStack myIcon = null;
+    protected ItemStack myIcon = null;
     private boolean tallMode;
     private GuiImgButton switchTallMode;
     private List<String> playersFollowingCurrentCraft = new ArrayList<>();

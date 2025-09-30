@@ -13,9 +13,11 @@ package appeng.client.gui.implementations;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import net.minecraft.client.gui.GuiButton;
@@ -37,7 +39,7 @@ import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
-import appeng.api.util.DimensionalCoord;
+import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.widgets.GuiAeButton;
@@ -54,6 +56,7 @@ import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
+import appeng.core.localization.Localization;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
@@ -250,11 +253,18 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
             // when using the highlight feature in the crafting GUI we want to show all the interfaces
             // that currently received items so the player can see if the items are processed properly
-            BlockPosHighlighter.highlightBlocks(
+            List<NamedDimensionalCoord> ndcl = NamedDimensionalCoord.readAsListFromNBTNamed(data);
+            Map<NamedDimensionalCoord, String[]> ndcm = new HashMap<>();
+            for (NamedDimensionalCoord ndc : ndcl) {
+                ndcm.put(
+                        ndc,
+                        new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                PlayerMessages.MachineInOtherDimNamed.getUnlocalized() });
+            }
+            BlockPosHighlighter.highlightNamedBlocks(
                     mc.thePlayer,
-                    DimensionalCoord.readAsListFromNBT(data),
-                    PlayerMessages.InterfaceHighlighted.getUnlocalized(),
-                    PlayerMessages.InterfaceInOtherDim.getUnlocalized());
+                    ndcm,
+                    ((Localization) () -> "tile.appliedenergistics2.BlockInterface.name").getLocal());
             mc.thePlayer.closeScreen();
         } else if (hoveredAEStack != null && btn == 2) {
             ((AEBaseContainer) inventorySlots).setTargetStack(hoveredAEStack);
@@ -634,20 +644,21 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 } catch (Exception ignored) {}
             } else {
                 NBTTagCompound data = Platform.openNbtData(this.hoveredNbtStack);
-                List<DimensionalCoord> blocks = DimensionalCoord.readAsListFromNBT(data);
+                List<NamedDimensionalCoord> blocks = NamedDimensionalCoord.readAsListFromNBTNamed(data);
 
                 ScheduledReason sr = ScheduledReason.values()[data.getInteger("ScheduledReason")];
                 if (sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
 
                 if (blocks.isEmpty()) return;
-                for (DimensionalCoord blockPos : blocks) {
+                for (NamedDimensionalCoord blockPos : blocks) {
                     lineList.add(
                             String.format(
-                                    "Dim:%s X:%s Y:%s Z:%s",
+                                    "Dim:%s X:%s Y:%s Z:%s \"%s\"",
                                     blockPos.getDimension(),
                                     blockPos.x,
                                     blockPos.y,
-                                    blockPos.z));
+                                    blockPos.z,
+                                    blockPos.getCustomName()));
                 }
                 lineList.add(GuiText.HoldShiftClick_HIGHLIGHT_INTERFACE.getLocal());
             }
