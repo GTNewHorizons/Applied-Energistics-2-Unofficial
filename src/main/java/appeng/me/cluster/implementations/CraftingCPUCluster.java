@@ -493,7 +493,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    private void markDirty() {
+    public void markDirty() {
         this.getCore().markDirty();
     }
 
@@ -569,15 +569,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return (TileCraftingTile) this.machineSrc.via;
     }
 
-    private IGrid getGrid() {
+    public IGrid getGrid() {
+        IGrid node;
         for (final TileCraftingTile r : this.tiles) {
             final IGridNode gn = r.getActionableNode();
-            if (gn != null) {
-                final IGrid g = gn.getGrid();
-                if (g != null) {
-                    return r.getActionableNode().getGrid();
-                }
-            }
+            if (gn == null || (node = gn.getGrid()) == null) continue;
+
+            return node;
         }
 
         return null;

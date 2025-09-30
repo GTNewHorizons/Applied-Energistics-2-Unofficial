@@ -83,6 +83,7 @@ import appeng.core.settings.TickRates;
 import appeng.me.GridAccessException;
 import appeng.me.cache.NetworkMonitor;
 import appeng.me.helpers.AENetworkProxy;
+import appeng.me.helpers.IGridProxyable;
 import appeng.me.storage.MEMonitorIInventory;
 import appeng.me.storage.MEMonitorPassThrough;
 import appeng.me.storage.NullInventory;
@@ -108,7 +109,7 @@ import cofh.api.transport.IItemDuct;
 import cpw.mods.fml.common.Loader;
 
 public class DualityInterface implements IGridTickable, IStorageMonitorable, IInventoryDestination, IAEAppEngInventory,
-        IConfigManagerHost, ICraftingProvider, IUpgradeableHost, IPriorityHost {
+        IConfigManagerHost, ICraftingProvider, IUpgradeableHost, IPriorityHost, IGridProxyable {
 
     public static final int NUMBER_OF_STORAGE_SLOTS = 9;
     public static final int NUMBER_OF_CONFIG_SLOTS = 9;
@@ -585,8 +586,21 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.notifyNeighbors();
     }
 
+    @Override
+    public IGridNode getGridNode(ForgeDirection dir) {
+        return gridProxy.getNode();
+    }
+
     public AECableType getCableConnectionType(final ForgeDirection dir) {
         return AECableType.SMART;
+    }
+
+    @Override
+    public void securityBreak() {}
+
+    @Override
+    public AENetworkProxy getProxy() {
+        return gridProxy;
     }
 
     public DimensionalCoord getLocation() {

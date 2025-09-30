@@ -65,7 +65,7 @@ import io.netty.buffer.Unpooled;
 public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingCPUSelectorContainer {
 
     private Future<ICraftingJob> job;
-    private ICraftingJob result;
+    protected ICraftingJob result;
 
     @GuiSync(0)
     public long bytesUsed;
@@ -257,7 +257,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         this.verifyPermissions(SecurityPermissions.CRAFT, false);
     }
 
-    private IGrid getGrid() {
+    public IGrid getGrid() {
         final IActionHost h = ((IActionHost) this.getTarget());
         if (h == null || h.getActionableNode() == null) return null;
         return h.getActionableNode().getGrid();

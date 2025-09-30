@@ -206,6 +206,10 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         return false;
     }
 
+    public boolean isPreformatted() {
+        return !getPartitionList().isEmpty();
+    }
+
     @Override
     public boolean canAccept(final T input) {
         if (!this.hasWriteAccess) {
@@ -245,6 +249,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         return isSticky || this.internal.getSticky();
     }
 
+    @Override
     public IMEInventory<T> getInternal() {
         return this.internal;
     }
