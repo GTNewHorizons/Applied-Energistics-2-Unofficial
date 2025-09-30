@@ -592,7 +592,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public AECableType getCableConnectionType(final ForgeDirection dir) {
-        return AECableType.NONE;
+        return AECableType.SMART;
     }
 
     @Override
