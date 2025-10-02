@@ -350,6 +350,7 @@ public class ClientHelper extends ServerHelper {
 
     @Override
     public void postInit() {
+        super.postInit();
         RenderingRegistry.registerBlockHandler(WorldRender.INSTANCE);
         RenderManager.instance.entityRenderMap.put(EntityTinyTNTPrimed.class, new RenderTinyTNTPrimed());
         RenderManager.instance.entityRenderMap.put(EntityFloatingItem.class, new RenderFloatingItem());
