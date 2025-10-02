@@ -10,6 +10,9 @@
 
 package appeng.me.cache;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -61,8 +64,8 @@ public class GridStorageCache implements IStorageGrid {
     private final HashSet<ICellProvider> inactiveCellProviders = new HashSet<>();
     private final SetMultimap<IAEStack, ItemWatcher> interests = HashMultimap.create();
     private final GenericInterestManager<ItemWatcher> interestManager = new GenericInterestManager<>(this.interests);
-    private final NetworkMonitor<IAEItemStack> itemMonitor = new NetworkMonitor<>(this, StorageChannel.ITEMS);
-    private final NetworkMonitor<IAEFluidStack> fluidMonitor = new NetworkMonitor<>(this, StorageChannel.FLUIDS);
+    private final NetworkMonitor<IAEItemStack> itemMonitor = new NetworkMonitor<>(this, ITEM_STACK_TYPE);
+    private final NetworkMonitor<IAEFluidStack> fluidMonitor = new NetworkMonitor<>(this, FLUID_STACK_TYPE);
     private final HashMap<IGridNode, IStackWatcher> watchers = new HashMap<>();
     private NetworkInventoryHandler<IAEItemStack> myItemNetwork;
     private NetworkInventoryHandler<IAEFluidStack> myFluidNetwork;
