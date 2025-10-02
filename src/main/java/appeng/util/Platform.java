@@ -139,6 +139,7 @@ import cofh.api.item.IToolHammer;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
+import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -1923,11 +1924,11 @@ public class Platform {
     public static void writeStackByte(IAEStack<?> stack, ByteBuf buffer) {
         try {
             if (stack == null) {
-                buffer.writeByte(ST_NULL);
+                ByteBufUtils.writeUTF8String(buffer, ST_NULL);
             } else if (stack instanceof AEItemStack) {
-                buffer.writeByte(ST_ITEM);
+                ByteBufUtils.writeUTF8String(buffer, ST_ITEM);
             } else if (stack instanceof AEFluidStack) {
-                buffer.writeByte(ST_FLUID);
+                ByteBufUtils.writeUTF8String(buffer, ST_FLUID);
             } else {
                 throw new UnsupportedOperationException("Can't serialize a stack of type " + stack.getClass());
             }
@@ -1940,7 +1941,7 @@ public class Platform {
 
     public static IAEStack<?> readStackByte(ByteBuf buffer) {
         try {
-            final byte stackType = buffer.readByte();
+            final String stackType = ByteBufUtils.readUTF8String(buffer);
             return switch (stackType) {
                 case ST_NULL -> null;
                 case ST_ITEM -> AEItemStack.loadItemStackFromPacket(buffer);
@@ -1959,9 +1960,9 @@ public class Platform {
     public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag, boolean isModern) {
         if (stack != null) {
             if (stack instanceof AEItemStack) {
-                if (isModern) tag.setByte("StackType", ST_ITEM);
+                if (isModern) tag.setString("StackType", ST_ITEM);
             } else if (stack instanceof AEFluidStack) {
-                if (isModern) tag.setByte("StackType", ST_FLUID);
+                if (isModern) tag.setString("StackType", ST_FLUID);
                 else {
                     stackConvert(stack).writeToNBT(tag);
                     return tag;
@@ -1993,14 +1994,26 @@ public class Platform {
     }
 
     public static IAEStack<?> readStackNBT(NBTTagCompound tag, boolean convert) {
-        final byte stackType = tag.getByte("StackType");
-        return switch (stackType) {
-            case ST_NULL -> convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
-                    : AEItemStack.loadItemStackFromNBT(tag); // migration moment
-            case ST_ITEM -> AEItemStack.loadItemStackFromNBT(tag);
-            case ST_FLUID -> AEFluidStack.loadFluidStackFromNBT(tag);
-            default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
-        };
+        if (tag.hasKey("StackType", 1)) {
+            // For old experimental compatibility
+            final byte stackType = tag.getByte("StackType");
+            return switch (stackType) {
+                case 0 -> convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
+                        : AEItemStack.loadItemStackFromNBT(tag); // migration moment
+                case 1 -> AEItemStack.loadItemStackFromNBT(tag);
+                case 2 -> AEFluidStack.loadFluidStackFromNBT(tag);
+                default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
+            };
+        } else {
+            final String stackType = tag.getString("StackType");
+            return switch (stackType) {
+                case ST_NULL -> convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
+                        : AEItemStack.loadItemStackFromNBT(tag); // migration moment
+                case ST_ITEM -> AEItemStack.loadItemStackFromNBT(tag);
+                case ST_FLUID -> AEFluidStack.loadFluidStackFromNBT(tag);
+                default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
+            };
+        }
     }
 
     public static IItemList<IAEStack<?>> readAEStackListNBT(final NBTTagList tag) {

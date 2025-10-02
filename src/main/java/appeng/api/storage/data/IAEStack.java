@@ -23,9 +23,9 @@ import io.netty.buffer.ByteBuf;
 
 public interface IAEStack<StackType extends IAEStack> {
 
-    byte ST_NULL = 0;
-    byte ST_ITEM = 1;
-    byte ST_FLUID = 2;
+    String ST_NULL = "";
+    String ST_ITEM = "item";
+    String ST_FLUID = "fluid";
 
     /**
      * add two stacks together
