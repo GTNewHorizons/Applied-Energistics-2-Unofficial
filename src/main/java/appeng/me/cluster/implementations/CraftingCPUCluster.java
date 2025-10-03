@@ -50,6 +50,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
@@ -1336,7 +1337,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 List<DimensionalCoord> dimensionalCoords = new ArrayList<>();
                                 for (ICraftingMedium craftingProvider : craftingProviders) {
                                     final TileEntity tile = this.getTile(craftingProvider);
-                                    if (tile != null) dimensionalCoords.add(new DimensionalCoord(tile));
+                                    if (tile instanceof TileInterface tileInterface) {
+                                        final String dispName = translateFromNetwork(
+                                                tileInterface.getInterfaceDuality().getTermName());
+                                        dimensionalCoords.add(new NamedDimensionalCoord(tile, dispName));
+                                    }
                                 }
                                 this.providers.put(is, dimensionalCoords);
                             }
@@ -1761,6 +1766,21 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         } else {
             countToTryExtractItems++;
         }
+    }
+
+    public static String translateFromNetwork(String name) {
+        final String dispName;
+        if (StatCollector.canTranslate(name)) {
+            dispName = StatCollector.translateToLocal(name);
+        } else {
+            String fallback = name + ".name"; // its whatever. save some bytes on network but looks ugly
+            if (StatCollector.canTranslate(fallback)) {
+                dispName = StatCollector.translateToLocal(fallback);
+            } else {
+                dispName = StatCollector.translateToFallback(name);
+            }
+        }
+        return dispName;
     }
 
     public BaseActionSource getCurrentJobSource() {
