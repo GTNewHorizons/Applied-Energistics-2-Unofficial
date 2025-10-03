@@ -37,10 +37,7 @@ import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.PlayerSource;
-import appeng.api.networking.storage.IStorageGrid;
-import appeng.api.storage.IMEInventory;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -53,6 +50,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingTreeData;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketSwitchGuis;
+import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.parts.reporting.PartCraftingTerminal;
@@ -184,10 +182,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                         toCraft.setStackSize(plannedItem.getCountRequestable());
                         toCraft.setCountRequestableCrafts(plannedItem.getCountRequestableCrafts());
 
-                        final IStorageGrid sg = this.getGrid().getCache(IStorageGrid.class);
-                        final var storageAtBeginning = this.result.getStorageAtBeginning();
-                        final IMEInventory<IAEItemStack> items = sg.getItemInventory();
-                        final IMEInventory<IAEFluidStack> fluids = sg.getFluidInventory();
+                        final MECraftingInventory storageAtBeginning = this.result.getStorageAtBeginning();
 
                         IAEStack<?> missing = null;
                         if (missingUpdate != null && this.result.isSimulation()) {
