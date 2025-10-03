@@ -1982,7 +1982,7 @@ public class Platform {
     public static NBTTagList writeAEStackListNBT(final IItemList<?> myList, NBTTagList out) {
         for (final IAEStack<?> ais : myList) {
             NBTTagCompound tag = new NBTTagCompound();
-            writeStackNBT(ais, tag);
+            writeStackNBT(ais, tag, true);
             out.appendTag(tag);
         }
 

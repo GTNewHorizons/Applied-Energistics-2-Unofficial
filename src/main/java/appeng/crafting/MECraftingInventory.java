@@ -366,8 +366,8 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     }
 
     public void readInventory(NBTTagList tag) {
-        IItemList<IAEStack<?>> list = Platform.readAEStackListNBT(tag);
-        for (IAEStack i : list) {
+        IItemList<IAEStack<?>> list = Platform.readAEStackListNBT(tag, true);
+        for (IAEStack<?> i : list) {
             injectItems(i, Actionable.MODULATE);
         }
     }

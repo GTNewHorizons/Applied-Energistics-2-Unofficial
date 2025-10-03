@@ -1406,7 +1406,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void writeToNBT(final NBTTagCompound data) {
-        data.setTag("finalOutput", writeStackNBT(this.finalOutput, new NBTTagCompound()));
+        data.setTag("finalOutput", writeStackNBT(this.finalOutput, new NBTTagCompound(), true));
         data.setTag("inventory", inventory.writeInventory());
         data.setBoolean("waiting", this.waiting);
         data.setBoolean("isComplete", this.isComplete);
@@ -1456,9 +1456,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         NBTTagList list = new NBTTagList();
         for (final Entry<ICraftingPatternDetails, TaskProgress> e : this.tasks.entrySet()) {
-            final NBTTagCompound item = writeStackNBT(
-                    AEItemStack.create(e.getKey().getPattern()),
-                    new NBTTagCompound());
+            final NBTTagCompound item = new NBTTagCompound();
+            AEItemStack.create(e.getKey().getPattern()).writeToNBT(item);
             item.setLong("craftingProgress", e.getValue().value);
             list.appendTag(item);
         }
@@ -1474,7 +1473,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         list = new NBTTagList();
         for (final Entry<IAEStack<?>, List<NamedDimensionalCoord>> e : this.providers.entrySet()) {
             NBTTagCompound tmp = new NBTTagCompound();
-            tmp.setTag("item", writeStackNBT(e.getKey(), new NBTTagCompound()));
+            tmp.setTag("item", writeStackNBT(e.getKey(), new NBTTagCompound(), true));
             NamedDimensionalCoord.writeListToNBTNamed(tmp, e.getValue());
             list.appendTag(tmp);
         }
