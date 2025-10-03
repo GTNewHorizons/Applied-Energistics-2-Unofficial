@@ -27,39 +27,39 @@ import appeng.core.localization.Localization;
  */
 public enum AEColor implements Localization {
 
-    White("gui.appliedenergistics2.White", 0xBEBEBE, 0xDBDBDB, 0xFAFAFA),
+    White("gui.appliedenergistics2.White", 0xBEBEBE, 0xDBDBDB, 0xFAFAFA, 0xBEBEBE),
 
-    Orange("gui.appliedenergistics2.Orange", 0xF99739, 0xFAAE44, 0xF4DEC3),
+    Orange("gui.appliedenergistics2.Orange", 0xF99739, 0xFAAE44, 0xF4DEC3, 0xDC9856),
 
-    Magenta("gui.appliedenergistics2.Magenta", 0x821E82, 0xB82AB8, 0xC598C8),
+    Magenta("gui.appliedenergistics2.Magenta", 0x821E82, 0xB82AB8, 0xC598C8, 0x732D73),
 
-    LightBlue("gui.appliedenergistics2.LightBlue", 0x628DCB, 0x82ACE7, 0xD8F6FF),
+    LightBlue("gui.appliedenergistics2.LightBlue", 0x628DCB, 0x82ACE7, 0xD8F6FF, 0x7290BB),
 
-    Yellow("gui.appliedenergistics2.Yellow", 0xFFF7AA, 0xF8FF4A, 0xFFFFE8),
+    Yellow("gui.appliedenergistics2.Yellow", 0xFFF7AA, 0xF8FF4A, 0xFFFFE8, 0xF2EDB7),
 
-    Lime("gui.appliedenergistics2.Lime", 0x7CFF4A, 0xBBFF51, 0xE7F7D7),
+    Lime("gui.appliedenergistics2.Lime", 0x7CFF4A, 0xBBFF51, 0xE7F7D7, 0x88e465),
 
-    Pink("gui.appliedenergistics2.Pink", 0xDC8DB5, 0xF8B5D7, 0xF7DEEB),
+    Pink("gui.appliedenergistics2.Pink", 0xDC8DB5, 0xF8B5D7, 0xF7DEEB, 0xD099B5),
 
-    Gray("gui.appliedenergistics2.Gray", 0x7C7C7C, 0xA0A0A0, 0xC9C9C9),
+    Gray("gui.appliedenergistics2.Gray", 0x7C7C7C, 0xA0A0A0, 0xC9C9C9, 0x7C7C7C),
 
-    LightGray("gui.appliedenergistics2.LightGray", 0x9D9D9D, 0xCDCDCD, 0xEFEFEF),
+    LightGray("gui.appliedenergistics2.LightGray", 0x9D9D9D, 0xCDCDCD, 0xEFEFEF, 0x9D9D9D),
 
-    Cyan("gui.appliedenergistics2.Cyan", 0x2F9BA5, 0x51AAC6, 0xAEDDF4),
+    Cyan("gui.appliedenergistics2.Cyan", 0x2F9BA5, 0x51AAC6, 0xAEDDF4, 0x418c93),
 
-    Purple("gui.appliedenergistics2.Purple", 0x8230B2, 0xA453CE, 0xC7A3CC),
+    Purple("gui.appliedenergistics2.Purple", 0x8230B2, 0xA453CE, 0xC7A3CC, 0x7D449E),
 
-    Blue("gui.appliedenergistics2.Blue", 0x2D29A0, 0x514AFF, 0xDDE6FF),
+    Blue("gui.appliedenergistics2.Blue", 0x2D29A0, 0x514AFF, 0xDDE6FF, 0x3E3B8E),
 
-    Brown("gui.appliedenergistics2.Brown", 0x724E35, 0xB7967F, 0xE0D2C8),
+    Brown("gui.appliedenergistics2.Brown", 0x724E35, 0xB7967F, 0xE0D2C8, 0x69503),
 
-    Green("gui.appliedenergistics2.Green", 0x45A021, 0x60E32E, 0xE3F2E3),
+    Green("gui.appliedenergistics2.Green", 0x45A021, 0x60E32E, 0xE3F2E3, 0x4D8D34),
 
-    Red("gui.appliedenergistics2.Red", 0xA50029, 0xFF003C, 0xFFE6ED),
+    Red("gui.appliedenergistics2.Red", 0xA50029, 0xFF003C, 0xFFE6ED, 0x8C1935),
 
-    Black("gui.appliedenergistics2.Black", 0x2B2B2B, 0x565656, 0x848484),
+    Black("gui.appliedenergistics2.Black", 0x2B2B2B, 0x565656, 0x848484, 0x2B2B2B),
 
-    Transparent("gui.appliedenergistics2.Fluix", 0x1B2344, 0x895CA8, 0xD7BBEC);
+    Transparent("gui.appliedenergistics2.Fluix", 0x1B2344, 0x895CA8, 0xD7BBEC, 0xffffff);
 
     public static final List<AEColor> VALID_COLORS = Arrays.asList(
             White,
@@ -99,11 +99,18 @@ public enum AEColor implements Localization {
      */
     public final int whiteVariant;
 
-    AEColor(final String unlocalizedName, final int blackHex, final int medHex, final int whiteHex) {
+    /**
+     * Variant of the color used when rendering drives.
+     */
+    public final int driveVariant;
+
+    AEColor(final String unlocalizedName, final int blackHex, final int medHex, final int whiteHex,
+            final int driveHex) {
         this.unlocalizedName = unlocalizedName;
         this.blackVariant = blackHex;
         this.mediumVariant = medHex;
         this.whiteVariant = whiteHex;
+        this.driveVariant = driveHex;
     }
 
     /**

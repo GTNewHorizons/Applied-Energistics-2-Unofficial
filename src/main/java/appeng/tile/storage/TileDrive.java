@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -24,6 +25,7 @@ import com.google.common.base.Optional;
 import appeng.api.AEApi;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.tiles.IChestOrDrive;
+import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkCellArrayUpdate;
@@ -47,6 +49,7 @@ import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.AECableType;
+import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.helpers.IPriorityHost;
 import appeng.items.materials.ItemMultiMaterial;
@@ -63,7 +66,7 @@ import appeng.util.Platform;
 import appeng.util.item.ItemList;
 import io.netty.buffer.ByteBuf;
 
-public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPriorityHost, IGridTickable {
+public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPriorityHost, IGridTickable, IColorableTile {
 
     private static final int INV_SIZE = 10;
     /**
@@ -80,6 +83,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     private boolean isCached = false;
     private List<MEInventoryHandler<?>> items = new ArrayList<>(INV_SIZE);
     private List<MEInventoryHandler<?>> fluids = new ArrayList<>(INV_SIZE);
+    private AEColor paintedColor = AEColor.Transparent;
     /**
      * Bit mask representing the state of all cells and the active status of the drive. The lower 20 bits represent the
      * state of the cells, with each cell state taking up 2 bits. The 21st bit represents the active status of the
@@ -99,6 +103,7 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     public void writeToStream_TileDrive(final ByteBuf data) {
         data.writeInt(this.state);
         data.writeInt(this.type);
+        data.writeByte(this.paintedColor.ordinal());
     }
 
     @Override
@@ -188,18 +193,26 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         final int oldType = this.type;
         this.state = data.readInt() & STATE_MASK;
         this.type = data.readInt();
-        return this.state != oldState || this.type != oldType;
+        final AEColor oldPaintedColor = this.paintedColor;
+        this.paintedColor = AEColor.values()[data.readByte()];
+        this.getProxy().setColor(this.paintedColor);
+        return oldPaintedColor != this.paintedColor || this.state != oldState || this.type != oldType;
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileDrive(final NBTTagCompound data) {
         this.isCached = false;
         this.priority = data.getInteger("priority");
+        if (data.hasKey("paintedColor")) {
+            this.paintedColor = AEColor.values()[data.getByte("paintedColor")];
+            this.getProxy().setColor(this.paintedColor);
+        }
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
     public void writeToNBT_TileDrive(final NBTTagCompound data) {
         data.setInteger("priority", this.priority);
+        data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
     }
 
     @MENetworkEventSubscribe
@@ -486,5 +499,25 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
             this.getProxy().getGrid().postEvent(new MENetworkCellArrayUpdate());
         } catch (final GridAccessException ignored) {}
         return res;
+    }
+
+    @Override
+    public AEColor getColor() {
+        return this.paintedColor;
+    }
+
+    @Override
+    public boolean recolourBlock(ForgeDirection side, AEColor newPaintedColor, EntityPlayer who) {
+        if (this.paintedColor == newPaintedColor) {
+            return false;
+        }
+        this.paintedColor = newPaintedColor;
+        this.getProxy().setColor(this.paintedColor);
+        if (getGridNode(side) != null) {
+            getGridNode(side).updateState();
+        }
+        this.markDirty();
+        this.markForUpdate();
+        return true;
     }
 }
