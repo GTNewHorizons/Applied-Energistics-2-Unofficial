@@ -24,7 +24,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
-import appeng.me.cluster.implementations.CraftingCPUCluster;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
@@ -78,6 +77,7 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
 import appeng.items.misc.ItemEncodedPattern;
+import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
