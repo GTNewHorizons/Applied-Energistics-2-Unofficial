@@ -1560,7 +1560,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         list = data.getTagList("providers", 10);
         for (int x = 0; x < list.tagCount(); x++) {
             final NBTTagCompound pro = list.getCompoundTagAt(x);
-            this.providers.put(readStackNBT(pro.getCompoundTag("item"), true), NamedDimensionalCoord.readAsListFromNBTNamed(pro));
+            this.providers.put(
+                    readStackNBT(pro.getCompoundTag("item"), true),
+                    NamedDimensionalCoord.readAsListFromNBTNamed(pro));
         }
         try {
             unpersistListeners(1, craftCompleteListeners, data.getCompoundTag("craftCompleteListeners"));
