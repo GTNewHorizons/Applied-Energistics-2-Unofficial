@@ -79,7 +79,7 @@ public class CreativeCellInventory implements IMEInventoryHandler<IAEItemStack> 
             return null;
         }
 
-        return request.copy();
+        return local.copy();
     }
 
     @Override
