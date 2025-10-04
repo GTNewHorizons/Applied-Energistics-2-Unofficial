@@ -152,6 +152,8 @@ public enum GuiText implements Localization {
     RemainingOperations,
     AddToBookmark,
     Cancel,
+    Suspend,
+    Resume,
     ETA,
     ETAFormat,
     SwitchCraftingSimulationDisplayMode,

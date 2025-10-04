@@ -62,6 +62,9 @@ public class ContainerCraftingCPU extends AEBaseContainer
     @GuiSync(1)
     public int allow = 0;
 
+    @GuiSync(2)
+    public boolean cachedSuspend;
+
     public ContainerCraftingCPU(final InventoryPlayer ip, final Object te) {
         super(ip, te);
         final IGridHost host = (IGridHost) (te instanceof IGridHost ? te : null);
@@ -176,6 +179,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
     public void detectAndSendChanges() {
         if (Platform.isServer() && this.getMonitor() != null && !this.list.isEmpty()) {
             try {
+                this.cachedSuspend = this.monitor.isSuspended();
                 this.setElapsedTime(this.getMonitor().getElapsedTime());
 
                 NBTTagCompound nbttc = new NBTTagCompound();
@@ -314,5 +318,12 @@ public class ContainerCraftingCPU extends AEBaseContainer
             return this.getMonitor().getCraftingAllowMode();
         }
         return null;
+    }
+
+    public void suspendCrafting() {
+        if (this.getMonitor() != null) {
+            this.cachedSuspend = !this.cachedSuspend;
+            this.monitor.setSuspended(this.cachedSuspend);
+        }
     }
 }

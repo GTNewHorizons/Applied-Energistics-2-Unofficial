@@ -275,6 +275,8 @@ gui.appliedenergistics2.Empty=Empty
 gui.appliedenergistics2.Stored=Stored
 gui.appliedenergistics2.AddToBookmark=Bookmark
 gui.appliedenergistics2.Cancel=Cancel
+gui.appliedenergistics2.Suspend=Suspend
+gui.appliedenergistics2.Resume=Resume
 gui.appliedenergistics2.ETAFormat=HH:mm:ss
 gui.appliedenergistics2.SwitchCraftingSimulationDisplayMode=Switch display mode (List/Tree)
 gui.appliedenergistics2.Crafting=Crafting
@@ -590,6 +592,9 @@ gui.tooltips.appliedenergistics2.CPUAllowMode=Crafting requests limitation
 gui.tooltips.appliedenergistics2.CPUAllowAllDesc=Allow all crafting requests
 gui.tooltips.appliedenergistics2.CPUOnlyAllowPlayerDesc=Only allow crafting requests from player
 gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=Only allow crafting requests from non-player
+
+gui.tooltips.appliedenergistics2.Suspend=Click to stop this CPU from sending out crafts
+gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts again
 
 gui.tooltips.appliedenergistics2.PinsSection=Pins Section
 gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled
