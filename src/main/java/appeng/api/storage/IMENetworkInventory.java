@@ -15,8 +15,7 @@ package appeng.api.storage;
 
 import appeng.api.storage.data.IAEStack;
 
-public interface IMENetworkInventory<StackType extends IAEStack>
-        extends IMEInventoryHandler<StackType>, IMENetworkAwareInventory<StackType> {
+public interface IMENetworkInventory<StackType extends IAEStack> extends IMEInventoryHandler<StackType> {
 
     /**
      * Return a list of items that are available in this network but were not read because of any filter. The intention

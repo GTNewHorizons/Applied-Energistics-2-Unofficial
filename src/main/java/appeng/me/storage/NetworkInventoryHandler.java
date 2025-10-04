@@ -485,9 +485,4 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         return true;
     }
 
-    @Nonnull
-    @Override
-    public IMENetworkInventory<T> getNetworkInventory() {
-        return this;
-    }
 }

@@ -21,7 +21,6 @@ import appeng.api.config.StorageFilter;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
-import appeng.api.storage.IMENetworkAwareInventory;
 import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
@@ -254,8 +253,8 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     @Override
     @SuppressWarnings("unchecked")
     public IMENetworkInventory<T> getExternalNetworkInventory() {
-        if (internal instanceof IMENetworkAwareInventory<?>networkAwareInventory) {
-            return (IMENetworkInventory<T>) networkAwareInventory.getNetworkInventory();
+        if (internal instanceof IMENetworkInventory<?>networkInventory) {
+            return (IMENetworkInventory<T>) networkInventory;
         }
         return this.internal.getExternalNetworkInventory();
     }
