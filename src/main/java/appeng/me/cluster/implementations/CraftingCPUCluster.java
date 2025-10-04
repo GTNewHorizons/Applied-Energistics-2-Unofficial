@@ -144,6 +144,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private ICraftingLink myLastLink;
     private String myName = "";
     private boolean isDestroyed = false;
+    private boolean suspended = false;
     /**
      * crafting job info
      */
@@ -741,6 +742,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void executeCrafting(final IEnergyGrid eg, final CraftingGridCache cc) {
+        if (this.suspended) return;
+
         final Iterator<Entry<ICraftingPatternDetails, TaskProgress>> craftingTaskIterator = this.workableTasks
                 .entrySet().iterator();
 
@@ -1055,6 +1058,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     this.isFakeCrafting = false;
                     this.waiting = false;
                     this.isComplete = false;
+                    this.suspended = false;
                     this.usedStorage = job.getByteTotal();
                     this.numsOfOutput = job.getOutput().getStackSize();
                     this.currentJobSource = src;
@@ -1385,6 +1389,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         data.setTag("inventory", this.writeList(this.inventory.getItemList()));
         data.setBoolean("waiting", this.waiting);
         data.setBoolean("isComplete", this.isComplete);
+        data.setBoolean("suspended", this.suspended);
         data.setLong("usedStorage", this.usedStorage);
         data.setLong("numsOfOutput", this.numsOfOutput);
         data.setBoolean("isMissingMode", this.isMissingMode);
@@ -1513,6 +1518,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         this.waiting = data.getBoolean("waiting");
         this.isComplete = data.getBoolean("isComplete");
+        this.suspended = data.getBoolean("suspended");
         this.usedStorage = data.getLong("usedStorage");
         this.craftingAllowMode = CraftingAllow.values()[(data.getInteger("craftingAllowMode"))];
 
@@ -1854,5 +1860,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     public void changeCraftingAllowMode(CraftingAllow mode) {
         this.craftingAllowMode = mode;
         this.markDirty();
+    }
+
+    @Override
+    public boolean isSuspended() {
+        return this.suspended;
+    }
+
+    public void setSuspended(boolean suspended) {
+        this.suspended = suspended;
     }
 }

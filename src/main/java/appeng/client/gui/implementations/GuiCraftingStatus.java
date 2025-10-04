@@ -160,7 +160,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
                 0,
                 this.guiLeft + 8,
                 this.guiTop + this.ySize - 25,
-                100,
+                50,
                 20,
                 GuiText.CraftingCPU.getLocal() + ": " + GuiText.NoCraftingCPUs);
         this.buttonList.add(this.selectCPU);

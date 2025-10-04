@@ -234,6 +234,9 @@ public enum ButtonToolTips implements Localization {
     CPUOnlyAllowPlayerDesc,
     CPUOnlyAllowNonPlayerDesc,
 
+    Suspend,
+    Resume,
+
     PinsSection,
     PinsSectionActive,
     PinsSectionDisabled,

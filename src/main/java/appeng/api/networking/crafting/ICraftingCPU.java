@@ -129,4 +129,8 @@ public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
     public default long getElapsedTime() {
         return 0l;
     }
+
+    default boolean isSuspended() {
+        return false;
+    }
 }
