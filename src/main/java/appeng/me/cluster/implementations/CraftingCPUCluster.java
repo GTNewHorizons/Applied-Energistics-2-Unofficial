@@ -106,7 +106,6 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IInterfaceViewable;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
-import appeng.client.gui.implementations.GuiInterfaceTerminal;
 import appeng.container.ContainerNull;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AELog;
@@ -1373,7 +1372,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 for (ICraftingMedium craftingProvider : craftingProviders) {
                                     final TileEntity tile = this.getTile(craftingProvider);
                                     if (tile instanceof TileInterface tileInterface) {
-                                        final String dispName = GuiInterfaceTerminal.translateFromNetwork(
+                                        final String dispName = translateFromNetwork(
                                                 tileInterface.getInterfaceDuality().getTermName());
                                         dimensionalCoords.add(new NamedDimensionalCoord(tile, dispName));
                                     }
@@ -1770,6 +1769,21 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         } else {
             countToTryExtractItems++;
         }
+    }
+
+    public static String translateFromNetwork(String name) {
+        final String dispName;
+        if (StatCollector.canTranslate(name)) {
+            dispName = StatCollector.translateToLocal(name);
+        } else {
+            String fallback = name + ".name"; // its whatever. save some bytes on network but looks ugly
+            if (StatCollector.canTranslate(fallback)) {
+                dispName = StatCollector.translateToLocal(fallback);
+            } else {
+                dispName = StatCollector.translateToFallback(name);
+            }
+        }
+        return dispName;
     }
 
     public BaseActionSource getCurrentJobSource() {
