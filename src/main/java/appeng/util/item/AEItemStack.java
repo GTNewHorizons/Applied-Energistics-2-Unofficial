@@ -414,6 +414,14 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     }
 
     @Override
+    public boolean isSameType(final Object otherStack) {
+        if (otherStack instanceof AEItemStack ais) return isSameType(ais);
+        else if (otherStack instanceof ItemStack is) return isSameType(is);
+
+        return false;
+    }
+
+    @Override
     public boolean isSameType(final ItemStack otherStack) {
         if (otherStack == null) {
             return false;
@@ -514,12 +522,18 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return this.getDefinition().setTooltip(Platform.getTooltip(this.getItemStack()));
     }
 
+    @Override
     public String getDisplayName() {
         if (this.getDefinition().getDisplayName() == null) {
             this.getDefinition().setDisplayName(Platform.getItemDisplayName(this.getItemStack()));
         }
 
         return this.getDefinition().getDisplayName();
+    }
+
+    @Override
+    public String getUnlocalizedName() {
+        return getItem().getUnlocalizedName();
     }
 
     public String getModID() {
@@ -643,5 +657,13 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     private AEItemDef setDefinition(final AEItemDef def) {
         this.def = def;
         return def;
+    }
+
+    @Override
+    public void setTagCompound(NBTTagCompound tagCompound) {
+        if (tagCompound != null) {
+            this.getDefinition()
+                    .setTagCompound((AESharedNBT) AESharedNBT.getSharedTagCompound(tagCompound, getItemStack()));
+        }
     }
 }

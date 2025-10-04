@@ -49,7 +49,8 @@ import appeng.api.config.Settings;
 import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
-import appeng.api.util.DimensionalCoord;
+import appeng.api.implementations.ICraftingPatternItem;
+import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.IInterfaceTerminalPostUpdate;
@@ -72,11 +73,11 @@ import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate.PacketEntry;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.helpers.InventoryAction;
-import appeng.helpers.PatternHelper;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
 import appeng.items.misc.ItemEncodedPattern;
+import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
@@ -989,13 +990,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (w == null) {
             return false;
         }
-
-        try {
-            new PatternHelper(itemStack, w);
-            return false;
-        } catch (final Throwable t) {
-            return true;
-        }
+        return !(itemStack.getItem() instanceof ICraftingPatternItem icpi
+                && icpi.getPatternForItem(itemStack, w) != null);
     }
 
     private boolean isUseSubstitute(final ItemStack is) {
@@ -1331,16 +1327,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         InterfaceTerminalEntry(long id, String name, int rows, int rowSize, boolean online, boolean p2pOutput) {
             this.id = id;
-            if (StatCollector.canTranslate(name)) {
-                this.dispName = StatCollector.translateToLocal(name);
-            } else {
-                String fallback = name + ".name"; // its whatever. save some bytes on network but looks ugly
-                if (StatCollector.canTranslate(fallback)) {
-                    this.dispName = StatCollector.translateToLocal(fallback);
-                } else {
-                    this.dispName = StatCollector.translateToFallback(name);
-                }
-            }
+            this.dispName = CraftingCPUCluster.translateFromNetwork(name);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
             this.rows = rows;
             this.rowSize = rowSize;
@@ -1484,11 +1471,17 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 optionsButton.func_146113_a(mc.getSoundHandler());
                 // When using the highlight from the interface terminal, we want it to only
                 // highlight the interface containing the patterns and not any output p2p interfaces
-                BlockPosHighlighter.highlightBlocks(
+                BlockPosHighlighter.highlightNamedBlocks(
                         mc.thePlayer,
-                        Collections.singletonList(new DimensionalCoord(x, y, z, dim)),
-                        PlayerMessages.InterfaceHighlighted.getUnlocalized(),
-                        PlayerMessages.InterfaceInOtherDim.getUnlocalized());
+                        Collections.singletonMap(
+                                new NamedDimensionalCoord(x, y, z, dim, dispName),
+                                dispName.isEmpty()
+                                        ? new String[] { PlayerMessages.MachineHighlighted.getUnlocalized(),
+                                                PlayerMessages.MachineInOtherDim.getUnlocalized() }
+                                        : new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                                PlayerMessages.MachineInOtherDimNamed.getUnlocalized() }),
+                        selfRep.getDisplayName());
+
                 mc.thePlayer.closeScreen();
                 return true;
             }
@@ -1522,4 +1515,5 @@ public class GuiInterfaceTerminal extends AEBaseGui
             return false;
         }
     }
+
 }

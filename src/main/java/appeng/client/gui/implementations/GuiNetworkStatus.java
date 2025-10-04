@@ -14,8 +14,10 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -33,7 +35,6 @@ import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.util.DimensionalCoord;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiContextMenu;
@@ -148,13 +149,18 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             case 0 -> {
                 if (!isShiftKeyDown()) break;
                 // show all blocks in the world
-                List<DimensionalCoord> dcl = DimensionalCoord.readAsListFromNBT(tag);
-                BlockPosHighlighter.highlightBlocks(
-                        mc.thePlayer,
-                        dcl,
-                        is.getDisplayName(),
-                        PlayerMessages.MachineHighlighted.getUnlocalized(),
-                        PlayerMessages.MachineInOtherDim.getUnlocalized());
+                List<NamedDimensionalCoord> dcl = NamedDimensionalCoord.readAsListFromNBTNamed(tag);
+                Map<NamedDimensionalCoord, String[]> namedCoordsMessage = new HashMap<>(dcl.size());
+                for (NamedDimensionalCoord dc : dcl) {
+                    namedCoordsMessage.put(
+                            dc,
+                            dc.getCustomName().isEmpty()
+                                    ? new String[] { PlayerMessages.MachineHighlighted.getUnlocalized(),
+                                            PlayerMessages.MachineInOtherDim.getUnlocalized() }
+                                    : new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                            PlayerMessages.MachineInOtherDimNamed.getUnlocalized() });
+                }
+                BlockPosHighlighter.highlightNamedBlocks(mc.thePlayer, namedCoordsMessage, is.getDisplayName());
                 mc.thePlayer.closeScreen();
             }
 

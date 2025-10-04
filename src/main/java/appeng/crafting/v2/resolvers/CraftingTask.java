@@ -7,7 +7,6 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.crafting.MECraftingInventory;
@@ -81,7 +80,7 @@ public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStac
 
     public abstract void fullRefund(CraftingContext context);
 
-    public abstract void populatePlan(IItemList<IAEItemStack> targetPlan);
+    public abstract void populatePlan(IItemList<IAEStack<?>> targetPlan);
 
     public abstract void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
             MECraftingInventory craftingInv);

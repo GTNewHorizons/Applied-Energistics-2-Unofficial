@@ -121,7 +121,6 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                 }
             }
         }
-
         for (int yy = 0; yy < 5; yy++) {
             for (int xx = 0; xx < 2; xx++) {
                 final int stat = sp.getCellStatus(yy * 2 + (1 - xx));
@@ -151,7 +150,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                 double v4 = ico.getInterpolatedV(((spin) % 4 < 2) ? m : mx);
 
                 tess.setBrightness(b);
-                tess.setColorOpaque_I(0xffffff);
+                // uses special color when rendering drive face.
+                tess.setColorOpaque_I(sp.getColor().driveVariant);
                 switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
                     case 1 -> {
                         tess.addVertexWithUV(

@@ -27,6 +27,14 @@ import java.util.Iterator;
 public interface IItemList<StackType extends IAEStack> extends IItemContainer<StackType>, Iterable<StackType> {
 
     /**
+     * 0 - NULL 1 - IAEItemStack 2 - IAEFluidStack 3 - IAEStack
+     */
+    byte LIST_NUll = 0;
+    byte LIST_ITEM = 1;
+    byte LIST_FLUID = 2;
+    byte LIST_MIXED = 3;
+
+    /**
      * add a stack to the list stackSize is used to add to stackSize, this will merge the stack with an item already in
      * the list if found.
      *
@@ -77,6 +85,7 @@ public interface IItemList<StackType extends IAEStack> extends IItemContainer<St
 
     default StackType[] toArray(StackType[] zeroSizedArray) {
         int prevSize = size();
+
         StackType[] output = (StackType[]) Array.newInstance(zeroSizedArray.getClass().getComponentType(), prevSize);
 
         int i = 0;
@@ -86,4 +95,6 @@ public interface IItemList<StackType extends IAEStack> extends IItemContainer<St
 
         return i != prevSize ? Arrays.copyOf(output, i) : output;
     }
+
+    byte getStackType();
 }

@@ -153,7 +153,7 @@ public class GuiCraftAmount extends GuiAmount {
             if (btn == this.nextBtn && btn.enabled) {
                 NetworkHandler.instance.sendToServer(
                         new PacketCraftRequest(
-                                addOrderAmount(0),
+                                getAmountLong(),
                                 isShiftKeyDown(),
                                 isCtrlKeyDown(),
                                 (CraftingMode) this.craftingMode.getCurrentValue()));

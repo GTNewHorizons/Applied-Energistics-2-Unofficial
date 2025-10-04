@@ -18,6 +18,7 @@ import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.helpers.PatternHelper;
@@ -45,7 +46,7 @@ public class MockAESystem implements ICellProvider {
 
     public MockAESystem addStoredItem(ItemStack stack) {
         final IAEItemStack aeStack = AEItemStack.create(stack);
-        this.itemStorage.injectItems(aeStack, Actionable.MODULATE, dummyActionSource);
+        this.itemStorage.injectItems(aeStack, Actionable.MODULATE);
         this.sgCache.postAlterationOfStoredItems(
                 StorageChannel.ITEMS,
                 Collections.singletonList(aeStack),
@@ -147,9 +148,7 @@ public class MockAESystem implements ICellProvider {
 
     // Simulated inventories
     private final MECraftingInventory itemStorage = new MECraftingInventory();
-    private final IMEInventoryHandler<IAEItemStack> storageHandler = new MEPassThrough<>(
-            itemStorage,
-            StorageChannel.ITEMS);
+    private final IMEInventoryHandler<IAEStack> storageHandler = new MEPassThrough<>(itemStorage, StorageChannel.ITEMS);
 
     @Override
     public List<IMEInventoryHandler> getCellArray(StorageChannel channel) {
