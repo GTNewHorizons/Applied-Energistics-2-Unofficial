@@ -200,8 +200,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                         if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
                                 && (missing == null || missing.getStackSize() <= 0)) {
-                            IAEStack<?> availableStack;
-                            availableStack = storageAtBeginning.extractItems(
+                            final IAEStack<?> availableStack = storageAtBeginning.extractItems(
                                     toExtract.copy().setStackSize(Long.MAX_VALUE),
                                     Actionable.SIMULATE,
                                     this.getActionSource());

@@ -402,7 +402,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
                     }
                 }
                 if (totalCraftsDone > 0) {
-                    for (RequestAndPerCraftAmount inputChildPair : childRequests) {
+                    for (RequestAndPerCraftAmount<?> inputChildPair : childRequests) {
                         if (inputChildPair.request.wasSimulated) {
                             this.request.wasSimulated = true;
                             break;
@@ -476,7 +476,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
                                 request.craftingMode,
                                 stack -> this.isValidSubstitute(input, stack, context.world));
                         newChildren.add(req);
-                        childRequests.add(new RequestAndPerCraftAmount(req, input.getStackSize()));
+                        childRequests.add(new RequestAndPerCraftAmount<>(req, input.getStackSize()));
                     }
                 }
                 childRequests.trimToSize();
@@ -523,7 +523,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
                 }
                 this.totalCraftsDone = newTotalCrafts;
                 final long craftsRefunded = oldTotalCrafts - newTotalCrafts;
-                for (RequestAndPerCraftAmount subrequest : childRequests) {
+                for (RequestAndPerCraftAmount<?> subrequest : childRequests) {
                     subrequest.request.partialRefund(context, subrequest.perCraftAmount * craftsRefunded);
                 }
                 for (Entry<IAEStack<?>, Long> entry : byproducts.entrySet()) {
@@ -659,7 +659,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
             if (context.isPatternComplex(pattern)) {
                 logComplexPattrn(pattern, request.remainingToProcess);
                 for (int i = 0; i < request.remainingToProcess; i++) {
-                    CraftFromPatternTask task = new CraftFromPatternTask(
+                    CraftFromPatternTask<?> task = new CraftFromPatternTask<>(
                             request,
                             pattern,
                             priority,
@@ -670,7 +670,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
                     }
                 }
             } else {
-                CraftFromPatternTask task = new CraftFromPatternTask(
+                CraftFromPatternTask<?> task = new CraftFromPatternTask<>(
                         request,
                         pattern,
                         priority,
@@ -687,13 +687,13 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
             ICraftingPatternDetails pattern = patterns.get(0);
             if (context.isPatternComplex(pattern)) {
                 for (int i = 0; i < request.remainingToProcess; i++) {
-                    CraftFromPatternTask task = new CraftFromPatternTask(request, pattern, priority, true, true);
+                    CraftFromPatternTask<?> task = new CraftFromPatternTask<>(request, pattern, priority, true, true);
                     if (task.getState() != State.FAILURE) {
                         tasks.add(task);
                     }
                 }
             } else {
-                CraftFromPatternTask task = new CraftFromPatternTask(
+                CraftFromPatternTask<?> task = new CraftFromPatternTask<>(
                         request,
                         pattern,
                         CraftingTask.PRIORITY_SIMULATE_CRAFT,
