@@ -43,6 +43,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
     private final IAEItemStack crafting;
     private final CraftingAllow allowMode;
     private final long craftingElapsedTime;
+    private final boolean isSuspended;
 
     public CraftingCPUStatus() {
         this.serverCluster = null;
@@ -57,6 +58,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.crafting = null;
         this.allowMode = CraftingAllow.ALLOW_ALL;
         this.craftingElapsedTime = 0;
+        this.isSuspended = false;
     }
 
     public CraftingCPUStatus(ICraftingCPU cluster, int serial) {
@@ -80,6 +82,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.storage = cluster.getAvailableStorage();
         this.coprocessors = cluster.getCoProcessors();
         this.allowMode = cluster.getCraftingAllowMode();
+        this.isSuspended = cluster.isSuspended();
     }
 
     public CraftingCPUStatus(NBTTagCompound i) {
@@ -96,6 +99,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.allowMode = i.hasKey("allowMode") ? CraftingAllow.values()[i.getInteger("allowMode")]
                 : CraftingAllow.ALLOW_ALL;
         this.craftingElapsedTime = i.hasKey("craftingElapsedTime") ? i.getLong("craftingElapsedTime") : 0;
+        this.isSuspended = i.getBoolean("isSuspended");
     }
 
     public CraftingCPUStatus(ByteBuf packet) throws IOException {
@@ -128,6 +132,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
             i.setTag("crafting", stack);
         }
         i.setInteger("allowMode", this.allowMode.ordinal());
+        i.setBoolean("isSuspended", this.isSuspended);
     }
 
     public void writeToPacket(ByteBuf i) throws IOException {
@@ -192,6 +197,10 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
 
     public long getCraftingElapsedTime() {
         return craftingElapsedTime;
+    }
+
+    public boolean isSuspended() {
+        return isSuspended;
     }
 
     @Override
