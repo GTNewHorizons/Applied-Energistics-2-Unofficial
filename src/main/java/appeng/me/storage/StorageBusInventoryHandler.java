@@ -23,7 +23,7 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
 
         if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
 
-        if (this.isExtractFilterActive && !this.getExtractPartitionList().isEmpty()) {
+        if (this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()) {
             return this.filterAvailableItems(out, iteration);
         } else {
             return this.getAvailableItems(out, iteration, e -> true);
