@@ -322,13 +322,8 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
             final IItemList<T> passedInList = getChannel().createList();
             final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
 
-            if (externalNetworkInventory != null) {
-                if (passedOutList instanceof NetworkItemList) {
-                    networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
-                } else {
-                    throw new RuntimeException(
-                            "Getting available items from Network-to-Network failed, since the returned list was not a NetworkItemList!");
-                }
+            if (externalNetworkInventory != null && passedOutList instanceof NetworkItemList) {
+                networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
             } else {
                 for (T item : passedOutList) {
                     currentNetworkItemList.add(item);
