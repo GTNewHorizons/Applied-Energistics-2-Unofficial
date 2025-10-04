@@ -5,7 +5,9 @@ import net.minecraft.item.ItemStack;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.InsertionMode;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.me.storage.CellInventory;
 import appeng.tile.storage.TileChest;
 import appeng.util.item.AEItemStack;
@@ -57,6 +59,45 @@ public class AdaptorMEChest extends AdaptorIInventory {
         IAEItemStack result = (IAEItemStack) meChest.getItemInventory()
                 .injectItems(AEItemStack.create(toBeSimulated), Actionable.SIMULATE, meChest.getActionSource());
         return result == null ? null : result.getItemStack();
+    }
+
+    @Override
+    public IAEStack<?> addStack(IAEStack<?> toBeAdded, InsertionMode insertionMode) {
+        IMEMonitor monitor;
+        if (toBeAdded.isItem()) {
+            monitor = meChest.getItemInventory();
+        } else {
+            monitor = meChest.getFluidInventory();
+        }
+
+        return monitor != null
+                ? (IAEStack<?>) monitor.injectItems(toBeAdded, Actionable.MODULATE, meChest.getActionSource())
+                : toBeAdded;
+    }
+
+    @Override
+    public IAEStack<?> simulateAddStack(IAEStack<?> toBeSimulated, InsertionMode insertionMode) {
+        IMEMonitor monitor;
+        if (toBeSimulated.isItem()) {
+            monitor = meChest.getItemInventory();
+        } else {
+            monitor = meChest.getFluidInventory();
+        }
+
+        return monitor != null
+                ? (IAEStack<?>) monitor.injectItems(toBeSimulated, Actionable.SIMULATE, meChest.getActionSource())
+                : toBeSimulated;
+    }
+
+    @Override
+    public boolean containsItems() {
+        if (meChest.getItemInventory() != null) {
+            if (!meChest.getItemInventory().getStorageList().isEmpty()) return true;
+        }
+        if (meChest.getFluidInventory() != null) {
+            return !meChest.getFluidInventory().getStorageList().isEmpty();
+        }
+        return false;
     }
 
     private ItemStack addCell(final ItemStack cell, final boolean modulate) {

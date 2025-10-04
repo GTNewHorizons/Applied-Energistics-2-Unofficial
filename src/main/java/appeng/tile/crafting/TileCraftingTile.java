@@ -10,6 +10,8 @@
 
 package appeng.tile.crafting;
 
+import static appeng.util.Platform.stackConvertPacket;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -31,11 +33,13 @@ import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.parts.ISimplifiedBundle;
-import appeng.api.storage.IMEInventory;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IItemList;
 import appeng.api.util.WorldCoord;
 import appeng.block.crafting.BlockAdvancedCraftingUnit;
 import appeng.core.AEConfig;
+import appeng.crafting.MECraftingInventory;
 import appeng.me.cluster.IAECluster;
 import appeng.me.cluster.IAEMultiBlock;
 import appeng.me.cluster.implementations.CraftingCPUCalculator;
@@ -45,7 +49,6 @@ import appeng.me.helpers.AENetworkProxyMultiblock;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
-import appeng.util.IterationCounter;
 import appeng.util.Platform;
 
 public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IPowerChannelState {
@@ -242,7 +245,7 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
     public void breakCluster() {
         if (this.cluster != null) {
             this.cluster.cancel();
-            final IMEInventory<IAEItemStack> inv = this.cluster.getInventory();
+            final MECraftingInventory inv = this.cluster.getInventory();
 
             final LinkedList<WorldCoord> places = new LinkedList<>();
 
@@ -271,13 +274,32 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
                         this.cluster + " does not contain any kind of blocks, which were destroyed.");
             }
 
-            for (IAEItemStack ais : inv
-                    .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId())) {
+            for (IAEItemStack ais : (IItemList<IAEItemStack>) inv
+                    .getAvailableItems(AEApi.instance().storage().createItemList())) {
                 ais = ais.copy();
                 ais.setStackSize(ais.getItemStack().getMaxStackSize());
                 while (!places.isEmpty()) {
-                    final IAEItemStack g = inv
-                            .extractItems(ais.copy(), Actionable.MODULATE, this.cluster.getActionSource());
+                    final IAEItemStack g = inv.extractItems(ais.copy(), Actionable.MODULATE);
+                    if (g == null) {
+                        break;
+                    }
+
+                    final WorldCoord wc = places.removeFirst();
+                    if (!AEConfig.instance.limitCraftingCPUSpill) {
+                        places.add(wc);
+                    }
+
+                    Platform.spawnDrops(this.worldObj, wc.x, wc.y, wc.z, Collections.singletonList(g.getItemStack()));
+                }
+                if (places.isEmpty()) {
+                    break;
+                }
+            }
+
+            for (IAEFluidStack ifs : (IItemList<IAEFluidStack>) inv
+                    .getAvailableItems(AEApi.instance().storage().createFluidList())) {
+                while (!places.isEmpty()) {
+                    final IAEItemStack g = stackConvertPacket(inv.extractItems(ifs, Actionable.MODULATE));
                     if (g == null) {
                         break;
                     }

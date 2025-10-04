@@ -50,6 +50,8 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         this.setCountRequestableCrafts(is.getCountRequestableCrafts());
         this.setUsedPercent(is.getUsedPercent());
 
+        this.tagCompound = is.tagCompound;
+
         this.myHash = is.myHash;
     }
 
@@ -66,7 +68,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
         this.setCountRequestableCrafts(0);
         this.setUsedPercent(0);
 
-        this.myHash = this.fluid.hashCode()
+        this.myHash = this.fluid.getName().hashCode()
                 ^ (this.tagCompound == null ? 0 : System.identityHashCode(this.tagCompound));
     }
 
@@ -358,4 +360,29 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     public String getLocalizedName() {
         return this.fluid.getName();
     }
+
+    @Override
+    public boolean isSameType(IAEFluidStack stack) {
+        return stack != null && getFluid() == stack.getFluid();
+    }
+
+    @Override
+    public boolean isSameType(final Object otherStack) {
+        if (otherStack instanceof AEFluidStack ifs) return isSameType(ifs);
+
+        return false;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return fluid.getLocalizedName();
+    }
+
+    @Override
+    public String getUnlocalizedName() {
+        return fluid.getUnlocalizedName();
+    }
+
+    @Override
+    public void setTagCompound(NBTTagCompound tagCompound) {}
 }

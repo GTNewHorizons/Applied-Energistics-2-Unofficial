@@ -49,6 +49,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
+import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
@@ -72,7 +73,6 @@ import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate.PacketEntry;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.helpers.InventoryAction;
-import appeng.helpers.PatternHelper;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
@@ -990,13 +990,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
         if (w == null) {
             return false;
         }
-
-        try {
-            new PatternHelper(itemStack, w);
-            return false;
-        } catch (final Throwable t) {
-            return true;
-        }
+        return !(itemStack.getItem() instanceof ICraftingPatternItem icpi
+                && icpi.getPatternForItem(itemStack, w) != null);
     }
 
     private boolean isUseSubstitute(final ItemStack is) {

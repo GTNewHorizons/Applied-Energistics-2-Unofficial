@@ -32,7 +32,7 @@ import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
@@ -49,9 +49,9 @@ import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.Platform;
 
 public class ContainerCraftingCPU extends AEBaseContainer
-        implements IMEMonitorHandlerReceiver<IAEItemStack>, ICustomNameObject {
+        implements IMEMonitorHandlerReceiver<IAEStack<?>>, ICustomNameObject {
 
-    private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
+    private final IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
     private IGrid network;
     private CraftingCPUCluster monitor = null;
     private String cpuName = null;
@@ -195,7 +195,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
                 final PacketCompressedNBT d = new PacketCompressedNBT(nbttc);
 
-                for (final IAEItemStack out : this.list) {
+                for (final IAEStack<?> out : this.list) {
                     a.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.STORAGE));
                     b.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.ACTIVE));
                     c.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.PENDING));
@@ -237,9 +237,9 @@ public class ContainerCraftingCPU extends AEBaseContainer
     }
 
     @Override
-    public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
+    public void postChange(final IBaseMonitor<IAEStack<?>> monitor, final Iterable<IAEStack<?>> change,
             final BaseActionSource actionSource) {
-        for (IAEItemStack is : change) {
+        for (IAEStack<?> is : change) {
             is = is.copy();
             is.setStackSize(1);
             this.list.add(is);

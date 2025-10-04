@@ -10,6 +10,8 @@
 
 package appeng.util;
 
+import static com.glodblock.github.util.ModAndClassUtil.EIO;
+
 import java.util.ArrayList;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -18,11 +20,13 @@ import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.fluids.IFluidHandler;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.parts.IPart;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.helpers.IInterfaceHost;
 import appeng.integration.IntegrationRegistry;
@@ -30,18 +34,24 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.IBetterStorage;
 import appeng.integration.abstraction.IThaumicTinkerer;
 import appeng.parts.p2p.PartP2PItems;
+import appeng.parts.p2p.PartP2PLiquids;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.storage.TileChest;
+import appeng.util.inv.AdaptorConduitBandle;
 import appeng.util.inv.AdaptorDualityInterface;
+import appeng.util.inv.AdaptorFluidHandler;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.AdaptorList;
 import appeng.util.inv.AdaptorMEChest;
+import appeng.util.inv.AdaptorP2PFluid;
 import appeng.util.inv.AdaptorP2PItem;
 import appeng.util.inv.AdaptorPlayerInventory;
 import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
 import appeng.util.inv.WrapperMCISidedInventory;
+import appeng.util.item.AEItemStack;
+import crazypants.enderio.conduit.TileConduitBundle;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
@@ -63,7 +73,9 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             te = tt.getTile(te);
         }
 
-        if (te instanceof EntityPlayer) {
+        if (EIO && te instanceof TileConduitBundle tcb) {
+            return new AdaptorConduitBandle(tcb, d);
+        } else if (te instanceof EntityPlayer) {
             return new AdaptorIInventory(new AdaptorPlayerInventory(((EntityPlayer) te).inventory, false));
         } else if (te instanceof ArrayList) {
             @SuppressWarnings("unchecked")
@@ -83,20 +95,29 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
                     return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), host);
                 } else if (part instanceof PartP2PItems p2p) {
                     return new AdaptorP2PItem(p2p);
+                } else if (part instanceof PartP2PLiquids p2p) {
+                    return new AdaptorP2PFluid(p2p, d);
                 }
             } else if (te instanceof TileChest) {
                 return new AdaptorMEChest(new WrapperMCISidedInventory(si, d), (TileChest) te);
-            }
+            } else if (te instanceof IFluidHandler tank
+                    && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
+                        return new AdaptorFluidHandler(tank, d);
+                    }
 
             final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
             if (si.getSizeInventory() > 0 && slots != null && slots.length > 0) {
                 return new AdaptorIInventory(new WrapperMCISidedInventory(si, d));
             }
-        } else if (te instanceof IInventory i) {
-            if (i.getSizeInventory() > 0) {
-                return new AdaptorIInventory(i);
+        } else if (te instanceof IFluidHandler tank
+                && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
+                    return new AdaptorFluidHandler(tank, d);
+                } else
+            if (te instanceof IInventory i) {
+                if (i.getSizeInventory() > 0) {
+                    return new AdaptorIInventory(i);
+                }
             }
-        }
 
         return null;
     }
@@ -137,6 +158,24 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
      */
     public ItemStack simulateAdd(ItemStack toBeSimulated, InsertionMode insertionMode) {
         return simulateAdd(toBeSimulated);
+    }
+
+    public IAEStack<?> addStack(IAEStack<?> toBeAdded, InsertionMode insertionMode) {
+        if (toBeAdded.getStackSize() < Integer.MAX_VALUE) {
+            if (toBeAdded instanceof IAEItemStack ais) {
+                return AEItemStack.create(addItems(ais.getItemStack(), insertionMode));
+            }
+        }
+        return toBeAdded;
+    }
+
+    public IAEStack<?> simulateAddStack(IAEStack<?> toBeSimulated, InsertionMode insertionMode) {
+        if (toBeSimulated.getStackSize() < Integer.MAX_VALUE) {
+            if (toBeSimulated instanceof IAEItemStack ais) {
+                return AEItemStack.create(simulateAdd(ais.getItemStack(), insertionMode));
+            }
+        }
+        return toBeSimulated;
     }
 
     public abstract boolean containsItems();
