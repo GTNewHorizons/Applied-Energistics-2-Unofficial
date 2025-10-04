@@ -25,9 +25,6 @@ import appeng.api.storage.data.IItemList;
  * A NetworkItemList contains one or more IItemLists from different networks.
  * These IItemLists can themselves be NetworkItemLists.
  * This allows us to filter items from multiple, or same networks with different filters while also including all their subnetworks and filters.
- * <p>
- * TODO how do we remove duplicate items?
- * Since we know which items came from which network we can make sure that those are only added once to the final item list.
  *
  * @param <T>
  */
@@ -58,7 +55,7 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
 
         if (l instanceof NetworkItemList) {
             if (itemList instanceof NetworkItemList) {
-                // since the network is the same just combine the predicates lists
+                // since the network is the same we combine the predicates
                 for (Predicate<T> filter : ((NetworkItemList<T>) itemList).predicates) {
                     ((NetworkItemList<T>) l).addFilter(filter);
                 }
@@ -72,29 +69,34 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         networkItemLists.put(network, itemList);
     }
 
-    private Stream<IItemList<T>> getItemListStream() {
-        return networkItemLists.values().stream();
+    private Stream<NetworkItemStack<T>> getNetworkItemStackStream() {
+        return networkItemLists.entrySet().stream()
+                // equivalent to a worse performing mapMulti
+                .flatMap(entry -> {
+                    if (entry.getValue() instanceof NetworkItemList) {
+                        return ((NetworkItemList<T>) entry.getValue()).getFilteredNetworkItemStackStream();
+                    } else {
+                        List<NetworkItemStack<T>> buffer = new ArrayList<>();
+                        StreamSupport.stream(entry.getValue().spliterator(), false).forEach(item -> buffer.add(new NetworkItemStack<>(entry.getKey(), item)));
+                        return buffer.stream();
+                    }
+                });
     }
 
-    private Stream<T> getItemStream() {
-        return getItemListStream().flatMap(e -> StreamSupport.stream(e.spliterator(), false));
-    }
-
-    private Stream<T> getFilteredItemStream() {
-        Stream<T> itemStream = getItemStream();
+    private Stream<NetworkItemStack<T>> filter(Stream<NetworkItemStack<T>> stream) {
         Predicate<T> predicate = buildFilter();
-        if (predicate == null) return itemStream;
-        else return itemStream.filter(predicate);
+        if (predicate == null) return stream;
+        else return stream.filter(e -> predicate.test(e.getItemStack()));
     }
 
-    // TODO if 2 nets A and B  read from C then the predicate will be applied on read from A -> C, later when B -> C gets the network inventory the predicate will already be added.
-    // as such we need a way to make predicates be per network (but still applied for all nested NetworkItemLists)
-    // Gotta overthink how predicates work, we got multiple cases:
-    // - if multiple storage buses between same networks we want OR predicates
-    // - if two separate networks use same network with different filters we want individual predicates
+    public Stream<T> getItems() {
+        return getFilteredNetworkItemStackStream().distinct().map(NetworkItemStack::getItemStack);
+    }
 
-    // predicates are applied when the network item list is outbound, so to say after the network inventory is done with it
-    // as such these predicates describe how the network of the storage bus is reading the external network. since the external network does not need to know this information the predicates should instead be stored somewhere in the storage buses network, which should solve the correct attribution
+    private Stream<NetworkItemStack<T>> getFilteredNetworkItemStackStream() {
+        return filter(getNetworkItemStackStream());
+    }
+
     public void addFilter(Predicate<T> filter) {
         predicates.add(filter);
     }
@@ -128,8 +130,7 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
      * @return returns same list that was passed in, is passed out
      */
     public IItemList<T> buildFinalItemList(IItemList<T> out) {
-        // TODO do not add items from same network multiple times
-        getFilteredItemStream().forEach(out::add);
+        getItems().forEach(out::add);
         return out;
     }
 
@@ -150,17 +151,17 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
 
     @Override
     public T getFirstItem() {
-        return getFilteredItemStream().findFirst().orElse(null);
+        return getItems().findFirst().orElse(null);
     }
 
     @Override
     public int size() {
-        return (int) getFilteredItemStream().count();
+        return (int) getItems().count();
     }
 
     @Override
     public Iterator<T> iterator() {
-        return getFilteredItemStream().iterator();
+        return getItems().iterator();
     }
 
     @Override
@@ -187,11 +188,43 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
 
     @Override
     public boolean isEmpty() {
-        return !getFilteredItemStream().findAny().isPresent();
+        return !getItems().findAny().isPresent();
     }
 
-    private class NetworkItemStack<T extends IAEStack> {
-        private IMENetworkInventory<T> networkInventory;
-        private T itemStack;
+    private class NetworkItemStack<U extends IAEStack> {
+        private final IMENetworkInventory<U> networkInventory;
+        private final U itemStack;
+
+        public NetworkItemStack(IMENetworkInventory<U> networkInventory, U itemStack) {
+            this.networkInventory = networkInventory;
+            this.itemStack = itemStack;
+        }
+
+        public IMENetworkInventory<U> getNetworkInventory() {
+            return networkInventory;
+        }
+
+        public U getItemStack() {
+            return itemStack;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof NetworkItemStack)) return false;
+            NetworkItemStack<?> that = (NetworkItemStack<?>) o;
+            //only use reference equality
+            return networkInventory == that.networkInventory && itemStack == that.itemStack;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int hash = 1;
+            // only use identity for hash
+            hash = hash * prime + System.identityHashCode(networkInventory);
+            hash = hash * prime + System.identityHashCode(itemStack);
+            return hash;
+        }
     }
 }
