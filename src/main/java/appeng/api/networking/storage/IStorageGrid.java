@@ -13,14 +13,11 @@
 
 package appeng.api.networking.storage;
 
-import javax.annotation.Nonnull;
-
 import appeng.api.networking.IGridCache;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.ICellContainer;
 import appeng.api.storage.ICellProvider;
-import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
@@ -56,10 +53,5 @@ public interface IStorageGrid extends IGridCache, IStorageMonitorable {
      * remove a provider added with addCellContainer
      */
     void unregisterCellProvider(ICellProvider cc);
-
-    /**
-     * Find the current network inventory in this grid for the provided storage channel.
-     */
-    IMENetworkInventory<?> getNetworkInventory(@Nonnull StorageChannel storageChannel);
 
 }
