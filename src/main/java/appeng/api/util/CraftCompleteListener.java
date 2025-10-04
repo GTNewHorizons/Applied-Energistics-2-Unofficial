@@ -2,7 +2,7 @@ package appeng.api.util;
 
 import java.io.Serializable;
 
-import net.minecraft.item.ItemStack;
+import appeng.api.storage.data.IAEStack;
 
 @FunctionalInterface
 public interface CraftCompleteListener extends Serializable {
@@ -16,5 +16,5 @@ public interface CraftCompleteListener extends Serializable {
      * @param numsOfOutput the size of output stack
      * @param elapsedTime  the time that job used
      */
-    void apply(ItemStack finalOutput, long numsOfOutput, long elapsedTime);
+    void apply(IAEStack<?> finalOutput, long numsOfOutput, long elapsedTime);
 }

@@ -355,6 +355,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     @Override
     public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
             final BaseActionSource actionSource) {
+        // todo use change
         if (canDoWork()) {
             if (delayedUpdatesQueued) {
                 delayedUpdatesQueued = false;

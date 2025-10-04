@@ -37,10 +37,9 @@ import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.PlayerSource;
-import appeng.api.networking.storage.IStorageGrid;
-import appeng.api.storage.IMEInventory;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
@@ -51,6 +50,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingTreeData;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketSwitchGuis;
+import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.parts.reporting.PartCraftingTerminal;
@@ -166,29 +166,29 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
                             ? new PacketMEInventoryUpdate((byte) 2)
                             : null;
 
-                    final IItemList<IAEItemStack> plan = AEApi.instance().storage().createItemList();
+                    final IItemList<IAEStack<?>> plan = AEApi.instance().storage().createAEStackList();
                     this.result.populatePlan(plan);
 
                     this.setUsedBytes(this.result.getByteTotal());
 
-                    for (final IAEItemStack plannedItem : plan) {
+                    for (final IAEStack<?> plannedItem : plan) {
 
-                        IAEItemStack toExtract = plannedItem.copy();
+                        IAEStack<?> toExtract = plannedItem.copy();
                         toExtract.reset();
                         toExtract.setStackSize(plannedItem.getStackSize());
 
-                        final IAEItemStack toCraft = plannedItem.copy();
+                        final IAEStack<?> toCraft = plannedItem.copy();
                         toCraft.reset();
                         toCraft.setStackSize(plannedItem.getCountRequestable());
                         toCraft.setCountRequestableCrafts(plannedItem.getCountRequestableCrafts());
 
-                        final IStorageGrid sg = this.getGrid().getCache(IStorageGrid.class);
-                        final IMEInventory<IAEItemStack> items = this.result.getStorageAtBeginning();
+                        final MECraftingInventory storageAtBeginning = this.result.getStorageAtBeginning();
 
-                        IAEItemStack missing = null;
+                        IAEStack<?> missing = null;
                         if (missingUpdate != null && this.result.isSimulation()) {
                             missing = toExtract.copy();
-                            toExtract = items.extractItems(toExtract, Actionable.SIMULATE, this.getActionSource());
+                            toExtract = storageAtBeginning
+                                    .extractItems(toExtract, Actionable.SIMULATE, this.getActionSource());
 
                             if (toExtract == null) {
                                 toExtract = missing.copy();
@@ -200,7 +200,7 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
 
                         if (toExtract.getStackSize() > 0 && toCraft.getStackSize() <= 0
                                 && (missing == null || missing.getStackSize() <= 0)) {
-                            IAEItemStack availableStack = items.extractItems(
+                            final IAEStack<?> availableStack = storageAtBeginning.extractItems(
                                     toExtract.copy().setStackSize(Long.MAX_VALUE),
                                     Actionable.SIMULATE,
                                     this.getActionSource());

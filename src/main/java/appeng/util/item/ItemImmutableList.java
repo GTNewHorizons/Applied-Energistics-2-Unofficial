@@ -144,4 +144,9 @@ public final class ItemImmutableList implements IItemList<IAEItemStack> {
     public boolean hasWriteAccess() {
         return false;
     }
+
+    @Override
+    public byte getStackType() {
+        return LIST_ITEM;
+    }
 }

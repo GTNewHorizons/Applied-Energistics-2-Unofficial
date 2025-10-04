@@ -21,6 +21,7 @@ import appeng.debug.ToolReplicatorCard;
 import appeng.items.materials.MaterialType;
 import appeng.items.misc.ItemCrystalSeed;
 import appeng.items.misc.ItemEncodedPattern;
+import appeng.items.misc.ItemEncodedUltimatePattern;
 import appeng.items.misc.ItemPaintBall;
 import appeng.items.parts.ItemFacade;
 import appeng.items.storage.ItemAdvancedStorageCell;
@@ -107,6 +108,7 @@ public final class ApiItems implements IItems {
 
     // rv1
     private final IItemDefinition encodedPattern;
+    private final IItemDefinition encodedUltimatePattern;
     private final IItemDefinition colorApplicator;
 
     private final IItemDefinition paintBall;
@@ -183,6 +185,7 @@ public final class ApiItems implements IItems {
 
         // rv1
         this.encodedPattern = constructor.registerItemDefinition(new ItemEncodedPattern());
+        encodedUltimatePattern = constructor.registerItemDefinition(new ItemEncodedUltimatePattern());
         this.colorApplicator = constructor.registerItemDefinition(new ToolColorApplicator());
 
         this.paintBall = constructor.registerItemDefinition(new ItemPaintBall());
@@ -418,6 +421,11 @@ public final class ApiItems implements IItems {
     @Override
     public IItemDefinition encodedPattern() {
         return this.encodedPattern;
+    }
+
+    @Override
+    public IItemDefinition encodedUltimatePattern() {
+        return this.encodedUltimatePattern;
     }
 
     @Override

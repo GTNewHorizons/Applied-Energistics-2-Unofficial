@@ -5,7 +5,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
 public class PatternMultiplierHelper {
 
@@ -14,7 +14,7 @@ public class PatternMultiplierHelper {
     public static int getMaxBitMultiplier(ICraftingPatternDetails details) {
         // limit to 2B per item in pattern
         int maxMulti = 30;
-        for (IAEItemStack input : details.getInputs()) {
+        for (IAEStack<?> input : details.getAEInputs()) {
             if (input == null) continue;
             long size = input.getStackSize();
             int max = 0;
@@ -24,7 +24,7 @@ public class PatternMultiplierHelper {
             }
             if (max < maxMulti) maxMulti = max;
         }
-        for (IAEItemStack out : details.getOutputs()) {
+        for (IAEStack<?> out : details.getAEOutputs()) {
             if (out == null) continue;
             long size = out.getStackSize();
             int max = 0;
@@ -41,7 +41,7 @@ public class PatternMultiplierHelper {
     public static int getMaxBitDivider(ICraftingPatternDetails details) {
         // limit to 2B per item in pattern
         int maxDiv = 30;
-        for (IAEItemStack input : details.getInputs()) {
+        for (IAEStack<?> input : details.getAEInputs()) {
             if (input == null) continue;
             long size = input.getStackSize();
             int max = 0;
@@ -51,7 +51,7 @@ public class PatternMultiplierHelper {
             }
             if (max < maxDiv) maxDiv = max;
         }
-        for (IAEItemStack out : details.getOutputs()) {
+        for (IAEStack<?> out : details.getAEOutputs()) {
             if (out == null) continue;
             long size = out.getStackSize();
             int max = 0;

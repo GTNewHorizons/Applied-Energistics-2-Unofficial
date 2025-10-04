@@ -26,6 +26,7 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridCache;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
 public interface ICraftingGrid extends IGridCache {
 
@@ -36,12 +37,19 @@ public interface ICraftingGrid extends IGridCache {
      * @param details     pattern details
      * @return a collection of crafting patterns for the item in question.
      */
+    ImmutableCollection<ICraftingPatternDetails> getCraftingFor(IAEStack<?> whatToCraft,
+            ICraftingPatternDetails details, int slot, World world);
+
+    @Deprecated
     ImmutableCollection<ICraftingPatternDetails> getCraftingFor(IAEItemStack whatToCraft,
             ICraftingPatternDetails details, int slot, World world);
 
     /**
      * @return a collection of all the crafting patterns in the system
      */
+    ImmutableMap<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> getCraftingMultiPatterns();
+
+    @Deprecated
     ImmutableMap<IAEItemStack, ImmutableList<ICraftingPatternDetails>> getCraftingPatterns();
 
     /**
@@ -107,6 +115,9 @@ public interface ICraftingGrid extends IGridCache {
      * @param what to be requested item
      * @return true if the item can be requested via a crafting emitter.
      */
+    boolean canEmitFor(IAEStack<?> what);
+
+    @Deprecated
     boolean canEmitFor(IAEItemStack what);
 
     /**
@@ -115,5 +126,8 @@ public interface ICraftingGrid extends IGridCache {
      * @param aeStackInSlot item being crafted
      * @return true if it is being crafting
      */
+    boolean isRequesting(IAEStack<?> aeStackInSlot);
+
+    @Deprecated
     boolean isRequesting(IAEItemStack aeStackInSlot);
 }

@@ -11,6 +11,7 @@ import appeng.api.config.Upgrades;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
 import appeng.helpers.DualityInterface;
@@ -46,6 +47,32 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
                 Actionable.SIMULATE,
                 interfaceHost.getInterfaceDuality().getActionSource());
         return result == null ? null : result.getItemStack();
+    }
+
+    @Override
+    public IAEStack<?> addStack(IAEStack<?> toBeAdded, InsertionMode insertionMode) {
+        DualityInterface dual = interfaceHost.getInterfaceDuality();
+        IMEMonitor monitor;
+        if (toBeAdded.isItem()) {
+            monitor = dual.getItemInventory();
+        } else {
+            monitor = dual.getFluidInventory();
+        }
+
+        return (IAEStack<?>) monitor.injectItems(toBeAdded, Actionable.MODULATE, dual.getActionSource());
+    }
+
+    @Override
+    public IAEStack<?> simulateAddStack(IAEStack<?> toBeSimulated, InsertionMode insertionMode) {
+        DualityInterface dual = interfaceHost.getInterfaceDuality();
+        IMEMonitor monitor;
+        if (toBeSimulated.isItem()) {
+            monitor = dual.getItemInventory();
+        } else {
+            monitor = dual.getFluidInventory();
+        }
+
+        return (IAEStack<?>) monitor.injectItems(toBeSimulated, Actionable.SIMULATE, dual.getActionSource());
     }
 
     @Override

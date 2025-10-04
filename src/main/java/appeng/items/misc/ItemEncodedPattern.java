@@ -10,15 +10,20 @@
 
 package appeng.items.misc;
 
+import static appeng.helpers.PatternHelper.convertToCondensedAEList;
+import static appeng.helpers.UltimatePatternHelper.loadIAEStackFromNBT;
+import static appeng.util.Platform.stackConvertPacket;
+
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
-
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
@@ -31,16 +36,14 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.event.ForgeEventFactory;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.FluidStack;
 
 import appeng.api.AEApi;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.client.render.items.ItemEncodedPatternRenderer;
 import appeng.core.CommonHelper;
 import appeng.core.features.AEFeature;
@@ -50,7 +53,6 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
-import cpw.mods.fml.common.registry.GameRegistry;
 import gregtech.common.items.ItemIntegratedCircuit;
 
 public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternItem {
@@ -122,20 +124,20 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final boolean substitute = encodedValue.getBoolean("substitute");
         final boolean beSubstitute = encodedValue.getBoolean("beSubstitute");
         final String author = encodedValue.getString("author");
-        IAEItemStack[] inItems;
-        IAEItemStack[] outItems;
+        IAEStack<?>[] inItems;
+        IAEStack<?>[] outItems;
 
         if (details == null) {
             final ItemStack unknownItem = new ItemStack(Blocks.fire);
             unknownItem.setStackDisplayName(GuiText.UnknownItem.getLocal());
 
-            inItems = PatternHelper.convertToCondensedList(
-                    PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10), false, unknownItem));
-            outItems = PatternHelper.convertToCondensedList(
-                    PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10), false, unknownItem));
+            inItems = convertToCondensedAEList(
+                    loadIAEStackFromNBT(encodedValue.getTagList("in", 10), false, unknownItem));
+            outItems = convertToCondensedAEList(
+                    loadIAEStackFromNBT(encodedValue.getTagList("out", 10), false, unknownItem));
         } else {
-            inItems = details.getCondensedInputs();
-            outItems = details.getCondensedOutputs();
+            inItems = details.getCondensedAEInputs();
+            outItems = details.getCondensedAEOutputs();
         }
 
         boolean recipeIsBroken = details == null;
@@ -212,28 +214,30 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             return null;
         }
 
-        SIMPLE_CACHE.put(item, out = details.getCondensedOutputs()[0].getItemStack());
+        SIMPLE_CACHE.put(item, out = stackConvertPacket(details.getCondensedAEOutputs()[0]).getItemStack());
         return out;
     }
 
-    private boolean addInformation(final EntityPlayer player, final IAEItemStack[] items, final List<String> lines,
+    private boolean addInformation(final EntityPlayer player, final IAEStack<?>[] items, final List<String> lines,
             String label, final boolean displayMoreInfo, EnumChatFormatting color) {
         final ItemStack unknownItem = new ItemStack(Blocks.fire);
         boolean recipeIsBroken = false;
         boolean first = true;
-
+        List<IAEStack<?>> itemsList = Arrays.asList(items);
+        List<IAEStack<?>> sortedItems = itemsList.stream().sorted(Comparator.comparingLong(IAEStack::getStackSize))
+                .collect(Collectors.toList());
         boolean isFluid;
         EnumChatFormatting oldColor = color;
-        final Item fluidDropItem = getFluidDropItem();
 
-        for (final IAEItemStack item : items) {
-            Long itemCount = item.getStackSize();
+        for (int i = sortedItems.size() - 1; i >= 0; i--) {
+            IAEStack<?> item = sortedItems.get(i);
 
             if (!recipeIsBroken && item.equals(unknownItem)) {
                 recipeIsBroken = true;
             }
 
-            if (fluidDropItem != null && item.getItemStack().getItem() == fluidDropItem) {
+            if (item instanceof IAEFluidStack) {
+                label = EnumChatFormatting.GOLD + label;
                 color = EnumChatFormatting.GOLD;
                 isFluid = true;
             } else {
@@ -241,15 +245,16 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 isFluid = false;
             }
 
-            String itemCountText = NumberFormat.getNumberInstance(locale).format(itemCount);
+            String itemCountText = NumberFormat.getNumberInstance(locale).format(item.getStackSize());
             String itemText;
             if (isGTLoaded) {
-                itemText = isFluid ? getFluidNameFromStack(item.getItemStack())
-                        : item.getItem() instanceof ItemIntegratedCircuit
-                                ? Platform.getItemDisplayName(item) + " " + item.getItemStack().getItemDamage()
+                itemText = isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
+                        : ((IAEItemStack) item).getItem() instanceof ItemIntegratedCircuit
+                                ? Platform.getItemDisplayName(item) + " "
+                                        + ((IAEItemStack) item).getItemStack().getItemDamage()
                                 : Platform.getItemDisplayName(item);
             } else {
-                itemText = isFluid ? getFluidNameFromStack(item.getItemStack()) : Platform.getItemDisplayName(item);
+                itemText = Platform.getItemDisplayName(item);
             }
             String fullText = "   " + EnumChatFormatting.WHITE
                     + itemCountText
@@ -268,37 +273,5 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         }
 
         return recipeIsBroken;
-    }
-
-    @Nullable
-    private static FluidStack getFluidStack(ItemStack stack) {
-        if (stack == null || stack.getItem() == null || !stack.hasTagCompound()) return null;
-
-        NBTTagCompound tag = stack.getTagCompound();
-        if (!tag.hasKey("Fluid", Constants.NBT.TAG_STRING)) return null;
-
-        Fluid fluid = FluidRegistry.getFluid(tag.getString("Fluid").toLowerCase());
-        if (fluid == null) return null;
-
-        FluidStack fluidStack = new FluidStack(fluid, stack.stackSize);
-        if (tag.hasKey("FluidTag", Constants.NBT.TAG_COMPOUND)) {
-            fluidStack.tag = tag.getCompoundTag("FluidTag");
-        }
-        return fluidStack;
-    }
-
-    private static String getFluidNameFromStack(ItemStack stack) {
-        FluidStack fluidStack = getFluidStack(stack);
-        return fluidStack != null ? fluidStack.getLocalizedName() : "???";
-    }
-
-    private static Item getFluidDropItem() {
-        // Use a checked cache variable instead of relying on the item lookup for cache since
-        // we don't want to recheck every time if AE2FC is not installed
-        if (!checkedCache) {
-            FLUID_DROP_ITEM = GameRegistry.findItem("ae2fc", "fluid_drop");
-            checkedCache = true;
-        }
-        return FLUID_DROP_ITEM;
     }
 }

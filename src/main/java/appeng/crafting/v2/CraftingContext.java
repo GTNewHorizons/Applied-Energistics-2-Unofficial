@@ -104,8 +104,8 @@ public final class CraftingContext {
     private boolean doingWork = false;
     // State at the point when the last task executed.
     private CraftingTask.State finishedState = CraftingTask.State.FAILURE;
-    private final ImmutableMap<IAEItemStack, ImmutableList<ICraftingPatternDetails>> availablePatterns;
-    private final Map<IAEItemStack, List<ICraftingPatternDetails>> precisePatternCache = new HashMap<>();
+    private final ImmutableMap<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> availablePatterns;
+    private final Map<IAEStack<?>, List<ICraftingPatternDetails>> precisePatternCache = new HashMap<>();
     private final Map<ICraftingPatternDetails, IAEItemStack> crafterIconCache = new HashMap<>();
     private final OreListMultiMap<ICraftingPatternDetails> fuzzyPatternCache = new OreListMultiMap<>();
     private final IdentityHashMap<ICraftingPatternDetails, Boolean> isPatternComplexCache = new IdentityHashMap<>();
@@ -117,10 +117,10 @@ public final class CraftingContext {
         this.craftingGrid = meGrid.getCache(ICraftingGrid.class);
         this.actionSource = actionSource;
         final IStorageGrid sg = meGrid.getCache(IStorageGrid.class);
-        this.itemModel = new MECraftingInventory(sg.getItemInventory(), this.actionSource, true, false, true);
+        this.itemModel = new MECraftingInventory(sg, this.actionSource, true, false, true);
         this.byproductsInventory = new MECraftingInventory();
-        this.availableCache = new MECraftingInventory(sg.getItemInventory(), this.actionSource, false, false, false);
-        this.availablePatterns = craftingGrid.getCraftingPatterns();
+        this.availableCache = new MECraftingInventory(sg, this.actionSource, false, false, false);
+        this.availablePatterns = craftingGrid.getCraftingMultiPatterns();
     }
 
     /**
@@ -166,7 +166,7 @@ public final class CraftingContext {
         });
     }
 
-    public List<ICraftingPatternDetails> getPrecisePatternsFor(@Nonnull IAEItemStack stack) {
+    public List<ICraftingPatternDetails> getPrecisePatternsFor(@Nonnull IAEStack<?> stack) {
         return precisePatternCache.compute(stack, (key, value) -> {
             if (value == null) {
                 return availablePatterns.getOrDefault(stack, ImmutableList.of());
@@ -176,20 +176,22 @@ public final class CraftingContext {
         });
     }
 
-    public List<ICraftingPatternDetails> getFuzzyPatternsFor(@Nonnull IAEItemStack stack) {
-        if (!fuzzyPatternCache.isPopulated()) {
-            for (final ImmutableList<ICraftingPatternDetails> patternSet : availablePatterns.values()) {
-                for (final ICraftingPatternDetails pattern : patternSet) {
-                    if (pattern.canBeSubstitute()) {
-                        for (final IAEItemStack output : pattern.getOutputs()) {
-                            fuzzyPatternCache.put(output.copy(), pattern);
+    public List<ICraftingPatternDetails> getFuzzyPatternsFor(@Nonnull IAEStack<?> stack) {
+        if (stack instanceof IAEItemStack aiStack) {
+            if (!fuzzyPatternCache.isPopulated()) {
+                for (final ImmutableList<ICraftingPatternDetails> patternSet : availablePatterns.values()) {
+                    for (final ICraftingPatternDetails pattern : patternSet) {
+                        if (pattern.canBeSubstitute()) {
+                            for (final IAEStack<?> output : pattern.getOutputs()) {
+                                if (output instanceof IAEItemStack ais) fuzzyPatternCache.put(ais.copy(), pattern);
+                            }
                         }
                     }
                 }
+                fuzzyPatternCache.freeze();
             }
-            fuzzyPatternCache.freeze();
-        }
-        return fuzzyPatternCache.get(stack);
+            return fuzzyPatternCache.get(aiStack);
+        } else return getPrecisePatternsFor(stack);
     }
 
     /**
@@ -205,8 +207,8 @@ public final class CraftingContext {
             return cached;
         }
 
-        final IAEItemStack[] inputs = pattern.getInputs();
-        final IAEItemStack[] mcOutputs = simulateComplexCrafting(inputs, pattern);
+        final IAEStack<?>[] inputs = pattern.getAEInputs();
+        final IAEItemStack[] mcOutputs = simulateComplexCrafting((IAEItemStack[]) inputs, pattern);
 
         final boolean isComplex = Arrays.stream(mcOutputs).anyMatch(Objects::nonNull);
         isPatternComplexCache.put(pattern, isComplex);
@@ -398,7 +400,7 @@ public final class CraftingContext {
         }
 
         @Override
-        public void populatePlan(IItemList<IAEItemStack> targetPlan) {
+        public void populatePlan(IItemList<IAEStack<?>> targetPlan) {
             // no-op
         }
 

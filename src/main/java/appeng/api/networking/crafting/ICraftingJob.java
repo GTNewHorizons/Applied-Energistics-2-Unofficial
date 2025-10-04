@@ -17,11 +17,11 @@ import java.util.concurrent.Future;
 
 import appeng.api.config.CraftingMode;
 import appeng.api.networking.security.BaseActionSource;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.crafting.MECraftingInventory;
 
-public interface ICraftingJob {
+public interface ICraftingJob<StackType extends IAEStack<StackType>> {
 
     /**
      * @return if this job is a simulation, simulations cannot be submitted and only represent 1 possible future
@@ -40,12 +40,12 @@ public interface ICraftingJob {
      *
      * @param plan plan
      */
-    void populatePlan(IItemList<IAEItemStack> plan);
+    void populatePlan(IItemList<IAEStack<?>> plan);
 
     /**
      * @return the final output of the job.
      */
-    IAEItemStack getOutput();
+    StackType getOutput();
 
     /**
      * returns true if this needs more simulation.
@@ -55,7 +55,7 @@ public interface ICraftingJob {
      */
     boolean simulateFor(final int milli);
 
-    Future<ICraftingJob> schedule();
+    Future<ICraftingJob<StackType>> schedule();
 
     /**
      * @return whether this job can run on the given cluster
@@ -78,7 +78,7 @@ public interface ICraftingJob {
      * Return the snapshot of the storage when crafting calculation begins, should be read-only, do not modify. Note
      * that this might be different from the current storage.
      */
-    default public MECraftingInventory getStorageAtBeginning() {
+    default MECraftingInventory getStorageAtBeginning() {
         return new MECraftingInventory();
     }
 }
