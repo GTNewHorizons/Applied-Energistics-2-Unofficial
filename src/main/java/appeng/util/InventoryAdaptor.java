@@ -160,25 +160,6 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         return simulateAdd(toBeSimulated);
     }
 
-    // AE
-    public IAEStack<?> removeStack(int amount, IAEStack<?> filter, IInventoryDestination destination) {
-        return null;
-    }
-
-    public IAEStack<?> simulateStackRemove(int amount, IAEStack<?> filter, IInventoryDestination destination) {
-        return null;
-    }
-
-    public IAEStack<?> removeSimilarItems(int amount, IAEStack<?> filter, FuzzyMode fuzzyMode,
-            IInventoryDestination destination) {
-        return null;
-    }
-
-    public IAEStack<?> simulateSimilarRemove(int amount, IAEStack<?> filter, FuzzyMode fuzzyMode,
-            IInventoryDestination destination) {
-        return null;
-    }
-
     public IAEStack<?> addStack(IAEStack<?> toBeAdded, InsertionMode insertionMode) {
         if (toBeAdded.getStackSize() < Integer.MAX_VALUE) {
             if (toBeAdded instanceof IAEItemStack ais) {

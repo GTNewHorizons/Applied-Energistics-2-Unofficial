@@ -12,7 +12,6 @@ import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
 
 import com.glodblock.github.common.item.ItemFluidPacket;
-import com.glodblock.github.util.Ae2Reflect;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
@@ -169,7 +168,7 @@ public class AdaptorFluidHandler extends InventoryAdaptor {
                 ItemSlot slot = new ItemSlot();
                 slot.setSlot(nextSlotIndex++);
                 slot.setItemStack(fluid != null ? ItemFluidPacket.newStack(fluid) : null);
-                Ae2Reflect.setItemSlotExtractable(slot, false);
+                slot.setExtractable(false);
                 return slot;
             } else {
                 ItemSlot slot = itemSlots.next();

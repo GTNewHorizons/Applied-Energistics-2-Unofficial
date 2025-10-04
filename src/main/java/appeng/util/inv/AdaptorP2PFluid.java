@@ -7,8 +7,6 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
 
-import com.glodblock.github.util.Ae2Reflect;
-
 import appeng.me.GridAccessException;
 import appeng.parts.p2p.PartP2PLiquids;
 
@@ -32,7 +30,7 @@ public class AdaptorP2PFluid extends AdaptorFluidHandler {
                     checkedInput = true;
                 }
                 if (p2p == fluidHandler || p2p == null) continue;
-                IFluidHandler target = Ae2Reflect.getP2PLiquidTarget(p2p);
+                IFluidHandler target = p2p.getTarget();
                 if (target == null) continue;
                 FluidTankInfo[] info = target.getTankInfo(p2p.getSide().getOpposite());
                 if (info != null) {
