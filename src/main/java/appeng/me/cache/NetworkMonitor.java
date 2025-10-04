@@ -21,7 +21,6 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import appeng.api.storage.IMENetworkInventory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -33,6 +32,8 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
+import appeng.api.storage.IMENetworkAwareInventory;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -167,8 +168,13 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
-    public IMENetworkInventory<T> getNetworkInventory() {
-        return this.getHandler().getNetworkInventory();
+    @SuppressWarnings("unchecked")
+    public IMENetworkInventory<T> getExternalNetworkInventory() {
+        IMEInventoryHandler<T> handler = this.getHandler();
+        if (handler instanceof IMENetworkAwareInventory<?>networkAwareInventory) {
+            return (IMENetworkInventory<T>) networkAwareInventory.getNetworkInventory();
+        }
+        return handler.getExternalNetworkInventory();
     }
 
     @Nullable

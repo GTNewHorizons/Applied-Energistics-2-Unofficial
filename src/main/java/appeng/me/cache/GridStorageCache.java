@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import net.minecraft.item.ItemStack;
 
 import com.google.common.collect.HashMultimap;
@@ -40,6 +42,7 @@ import appeng.api.storage.ICellContainer;
 import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
@@ -333,6 +336,14 @@ public class GridStorageCache implements IStorageGrid {
     @Override
     public IMEMonitor<IAEFluidStack> getFluidInventory() {
         return this.fluidMonitor;
+    }
+
+    @Override
+    public IMENetworkInventory<?> getNetworkInventory(@Nonnull StorageChannel storageChannel) {
+        return switch (storageChannel) {
+            case ITEMS -> myItemNetwork;
+            case FLUIDS -> myFluidNetwork;
+        };
     }
 
     public GenericInterestManager<ItemWatcher> getInterestManager() {

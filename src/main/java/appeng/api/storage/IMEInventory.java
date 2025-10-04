@@ -142,9 +142,4 @@ public interface IMEInventory<StackType extends IAEStack> {
      */
     StorageChannel getChannel();
 
-    /**
-     * Find the network inventory (if any) that is being accessed. This should only return a value for inventories that connect two ME networks (= storage bus on interface).
-     * @return the accessed network inventory
-     */
-    default IMENetworkInventory<StackType> getNetworkInventory() {return null;}
 }

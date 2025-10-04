@@ -99,4 +99,23 @@ public interface IMEInventoryHandler<StackType extends IAEStack> extends IMEInve
         return null;
     }
 
+    /**
+     * Gets whether an inventory filters the available items. For example an extract-only storage bus.
+     *
+     * @return true if this inventory filters the available items
+     */
+    default boolean isFilteredRead() {
+        return false;
+    }
+
+    /**
+     * Find the network inventory (if any) that is being accessed. This should only return a value for inventories that
+     * connect two ME networks (= storage bus on interface).
+     *
+     * @return the accessed network inventory
+     */
+    default IMENetworkInventory<StackType> getExternalNetworkInventory() {
+        return null;
+    }
+
 }
