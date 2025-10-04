@@ -13,17 +13,18 @@
 
 package appeng.api.storage;
 
-import appeng.api.storage.data.IAEStack;
-
 import javax.annotation.Nonnull;
+
+import appeng.api.storage.data.IAEStack;
 
 public interface IMENetworkAwareInventory<StackType extends IAEStack> {
 
     /**
-     * Find the network inventory of this inventory.
-     * For normal inventories this can be determined with {@link appeng.api.networking.storage.IStorageGrid#getNetworkInventory(StorageChannel)}
+     * Find the network inventory of this inventory. For normal inventories this can be determined with
+     * {@link appeng.api.networking.storage.IStorageGrid#getNetworkInventory(StorageChannel)}
      * 
      * @return the current network inventory
      */
-    @Nonnull IMENetworkInventory<StackType> getNetworkInventory();
+    @Nonnull
+    IMENetworkInventory<StackType> getNetworkInventory();
 }

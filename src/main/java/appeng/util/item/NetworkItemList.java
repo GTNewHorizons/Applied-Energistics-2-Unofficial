@@ -22,13 +22,14 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 
 /**
- * A NetworkItemList contains one or more IItemLists from different networks.
- * These IItemLists can themselves be NetworkItemLists.
- * This allows us to filter items from multiple, or same networks with different filters while also including all their subnetworks and filters.
+ * A NetworkItemList contains one or more IItemLists from different networks. These IItemLists can themselves be
+ * NetworkItemLists. This allows us to filter items from multiple, or same networks with different filters while also
+ * including all their subnetworks and filters.
  *
  * @param <T>
  */
 public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
+
     private final Map<IMENetworkInventory<T>, IItemList<T>> networkItemLists;
     private final Supplier<IItemList<T>> newItemListSupplier;
     private final List<Predicate<T>> predicates;
@@ -61,10 +62,12 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
                 }
                 return;
             } else {
-                throw new RuntimeException("This NetworkItemList already contains a NetworkItemList for the provided network and cannot replace it with a non-NetworkItemList");
+                throw new RuntimeException(
+                        "This NetworkItemList already contains a NetworkItemList for the provided network and cannot replace it with a non-NetworkItemList");
             }
         } else if (l != null) {
-            throw new RuntimeException("This NetworkItemList already contains a non-NetworkItemList for the provided network and cannot replace it");
+            throw new RuntimeException(
+                    "This NetworkItemList already contains a non-NetworkItemList for the provided network and cannot replace it");
         }
         networkItemLists.put(network, itemList);
     }
@@ -77,7 +80,8 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
                         return ((NetworkItemList<T>) entry.getValue()).getFilteredNetworkItemStackStream();
                     } else {
                         List<NetworkItemStack<T>> buffer = new ArrayList<>();
-                        StreamSupport.stream(entry.getValue().spliterator(), false).forEach(item -> buffer.add(new NetworkItemStack<>(entry.getKey(), item)));
+                        StreamSupport.stream(entry.getValue().spliterator(), false)
+                                .forEach(item -> buffer.add(new NetworkItemStack<>(entry.getKey(), item)));
                         return buffer.stream();
                     }
                 });
@@ -192,6 +196,7 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
     }
 
     private class NetworkItemStack<U extends IAEStack> {
+
         private final IMENetworkInventory<U> networkInventory;
         private final U itemStack;
 
@@ -213,7 +218,7 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
             if (this == o) return true;
             if (!(o instanceof NetworkItemStack)) return false;
             NetworkItemStack<?> that = (NetworkItemStack<?>) o;
-            //only use reference equality
+            // only use reference equality
             return networkInventory == that.networkInventory && itemStack == that.itemStack;
         }
 

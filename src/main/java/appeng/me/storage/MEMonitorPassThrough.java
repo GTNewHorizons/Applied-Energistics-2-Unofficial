@@ -78,7 +78,7 @@ public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T
             return super.getAvailableItems(out, iterator);
         }
         IItemList<T> ret = super.getAvailableItems(new ItemListIgnoreCrafting(out), iterator);
-        if(ret instanceof ItemListIgnoreCrafting) {
+        if (ret instanceof ItemListIgnoreCrafting) {
             return out;
         } else {
             return ret;
