@@ -1145,9 +1145,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         }
 
                         IAEStack<?> leftover = ad.addStack(aes, getInsertionMode());
-                        if (!hadAcceptedSomeOnFace && leftover != null
-                                && leftover.getStackSize() == aes.getStackSize()) {
-                            break;
+                        if (leftover != null && leftover.getStackSize() == aes.getStackSize()) {
+                            continue;
                         }
 
                         hadAcceptedSome = true;
