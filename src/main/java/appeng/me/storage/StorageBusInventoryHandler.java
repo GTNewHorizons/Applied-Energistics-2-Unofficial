@@ -3,29 +3,16 @@ package appeng.me.storage;
 import java.util.function.Predicate;
 
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.IMENetworkAwareInventory;
-import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
-import appeng.me.GridAccessException;
-import appeng.me.helpers.AENetworkProxy;
 import appeng.util.item.ItemFilterList;
 import appeng.util.item.NetworkItemList;
 
-public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T>
-        implements IMENetworkAwareInventory<T> {
+public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
-    private final AENetworkProxy proxy;
-
-    @Deprecated
     public StorageBusInventoryHandler(IMEInventory<T> i, StorageChannel channel) {
-        this(i, channel, null);
-    }
-
-    public StorageBusInventoryHandler(IMEInventory<T> i, StorageChannel channel, AENetworkProxy proxy) {
         super(i, channel);
-        this.proxy = proxy;
     }
 
     @Override
@@ -36,16 +23,11 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
 
         if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
 
-        if (isFilteredRead()) {
+        if (this.isExtractFilterActive && !this.getExtractPartitionList().isEmpty()) {
             return this.filterAvailableItems(out, iteration);
         } else {
             return this.getAvailableItems(out, iteration, e -> true);
         }
-    }
-
-    @Override
-    public boolean isFilteredRead() {
-        return this.isExtractFilterActive && !this.getExtractPartitionList().isEmpty();
     }
 
     @Override
@@ -68,27 +50,6 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
                 }
             }
             return out;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Iterable<T> getUnreadAvailableItems(int iteration) {
-        IMENetworkInventory<T> externalNetworkInventory = getExternalNetworkInventory();
-        if (externalNetworkInventory != null) {
-            return externalNetworkInventory.getUnreadAvailableItems(getNetworkInventory(), iteration);
-        } else {
-            return this.getInternal().getAvailableItems((IItemList<T>) this.getChannel().createList(), iteration);
-        }
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public IMENetworkInventory<T> getNetworkInventory() {
-        if (proxy == null) throw new IllegalStateException("StorageBusInventoryHandler has no network proxy!");
-        try {
-            return (IMENetworkInventory<T>) proxy.getStorage().getNetworkInventory(getChannel());
-        } catch (GridAccessException e) {
-            return null;
         }
     }
 }

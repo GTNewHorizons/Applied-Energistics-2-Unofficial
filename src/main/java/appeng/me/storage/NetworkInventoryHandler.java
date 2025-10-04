@@ -335,7 +335,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
 
         this.surface(this, Actionable.SIMULATE);
 
-        // we're actually violating the api by making the returned list a different one from the provided one - cant think of a way to change that tho
+        // we're partially violating the api by making the returned list a different one from the provided one, however when we're done with the network inventory scan we fulfill our api contract again
         return isSource ? networkItemList.buildFinalItemList(out) : networkItemList;
     }
 
@@ -492,6 +492,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         return true;
     }
 
+    @Nonnull
     @Override
     public IMENetworkInventory<T> getNetworkInventory() {
         return this;

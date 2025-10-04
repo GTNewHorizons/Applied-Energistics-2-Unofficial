@@ -25,10 +25,6 @@ public class ItemListIgnoreCrafting<T extends IAEStack> implements IItemList<T> 
         this.target = cla;
     }
 
-    public IItemList<T> getTarget() {
-        return target;
-    }
-
     @Override
     public void add(T option) {
         if (option != null && option.isCraftable()) {

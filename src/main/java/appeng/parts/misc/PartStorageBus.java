@@ -603,7 +603,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                 if (inv != null) {
                     this.checkInterfaceVsStorageBus(target, this.getSide().getOpposite());
 
-                    this.handler = new StorageBusInventoryHandler<>(inv, StorageChannel.ITEMS, this.proxy);
+                    this.handler = new StorageBusInventoryHandler<>(inv, StorageChannel.ITEMS);
 
                     AccessRestriction currentAccess = (AccessRestriction) this.getConfigManager()
                             .getSetting(Settings.ACCESS);
