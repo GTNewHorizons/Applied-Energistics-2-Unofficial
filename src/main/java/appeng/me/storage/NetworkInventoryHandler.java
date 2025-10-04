@@ -323,9 +323,8 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
             final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
 
             if (externalNetworkInventory != null) {
-                if (passedOutList instanceof NetworkItemList otherNetworkItemList) {
-                    networkItemList
-                            .addNetworkItems(externalNetworkInventory, (NetworkItemList<T>) otherNetworkItemList);
+                if (passedOutList instanceof NetworkItemList) {
+                    networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
                 } else {
                     throw new RuntimeException(
                             "Getting available items from Network-to-Network failed, since the returned list was not a NetworkItemList!");
@@ -343,44 +342,6 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         // we're partially violating the api by making the returned list a different one from the provided one, however
         // when we're done with the network inventory scan we fulfill our api contract again
         return isSource ? networkItemList.buildFinalItemList(out) : networkItemList;
-    }
-
-    @Override
-    public Iterable<T> getUnreadAvailableItems(IMENetworkInventory<T> source, int iteration) {
-        return null;
-    }
-
-    /*
-     * We have 2 problems to solve: a) when reading the same network via filtered and unfiltered storage buses the order
-     * of the read shouldn't matter. Currently it does, since items are only read once, causing inconsistent behavior
-     * depending on the storage order. b) when reading the same network via filtered and unfiltered storage buses the
-     * items should not be reported twice. If we attempt to fix a) by simply scanning all inventories twice we will get
-     * double items. As such we need to know two things over the process of reading items: 1. we need to know which
-     * items belong to which network 2. we need to know which items from which origin-network (the one where the items
-     * actually are) were already read source-network (= the network where the read started) origin-network (= the
-     * network where items are actually stored) desc network A reads from network B network B reads from network C we
-     * get all available items from A (=A is the source-network) B contains a list of all items contained in B which are
-     * tagged as belonging to B B's list also contains the items it can read from C, however they are still tagged as
-     * belonging to C rundown read A A -> B B -> C C creates a list of all its items and tags them, this list is NOT
-     * returned (since that would change the API) and is instead stored in C as a instance var which is reset with each
-     * iteration B receives the list of (filtered or unfiltered) from C, however it ignores it and instead calls a new
-     * method to get the stored & tagged list in C B then stores this list and its own items the same way C did the
-     * storage bus will filter the list from B by getting the combined list and filtering each individual list in it the
-     * storage bus uses its own network to determine if items should be removed from this cache? (source-network should
-     * remove, all others not) A receives the list of (filtered or unfiltered) from B, ignores it and instead calls a
-     * new method to get the stored & tagged list in B TO DO THIS we need to change the storage bus to not copy items
-     * over and instead just prepare a stream that filters the items and is applied at the very end (potential problem:
-     * when is the iterator determined, could we get items which were already remove by another stream?) how can we
-     * check if an item was already retrieved from a network? - by just passing along individual network lists (these do
-     * NOT need to be the original list) - the individual list can be filtered by storage bus filters but must not lose
-     * the network designation - once all networks are read we are back in the source-network. either a) we get an
-     * iitemlist back with all the individual network lists from directly connected networks (this is more in line with
-     * the current api) b) we call the directly connected network to get the network lists
-     */
-
-    @Override
-    public boolean networkIsRead(int iteration) {
-        return this.myPass == iteration;
     }
 
     @Override

@@ -141,5 +141,4 @@ public interface IMEInventory<StackType extends IAEStack> {
      * @return the type of channel your handler should be part of
      */
     StorageChannel getChannel();
-
 }

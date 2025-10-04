@@ -16,25 +16,4 @@ package appeng.api.storage;
 import appeng.api.storage.data.IAEStack;
 
 public interface IMENetworkInventory<StackType extends IAEStack> extends IMEInventoryHandler<StackType> {
-
-    /**
-     * Return a list of items that are available in this network but were not read because of any filter. The intention
-     * is to use this in any network-to-network read operations which can filter items. This list SHOULD be modified if
-     * a filter did read any of its items, failing to do so will cause items to be shown double.
-     *
-     * @param source    the network inventory where the read request comes from
-     * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
-     *                  conflicts
-     * @return the list of available items from this network that were not yet read
-     */
-    Iterable<StackType> getUnreadAvailableItems(IMENetworkInventory<StackType> source, int iteration);
-
-    /**
-     * Determine if this network was already read once or is currently being read.
-     * 
-     * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
-     *                  conflicts
-     * @return true if this network was already read once or is currently being read
-     */
-    boolean networkIsRead(int iteration);
 }
