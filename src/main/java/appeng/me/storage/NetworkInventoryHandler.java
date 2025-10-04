@@ -348,28 +348,46 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
     public T getAvailableItem(@Nonnull T request, int iteration) {
         long count = 0;
 
-        if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
-            return null;
-        }
-
         final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
         final int size = priorityInventory.size();
+        boolean readsFromOtherNetwork = false;
         for (int i = 0; i < size; i++) {
-            IMEInventoryHandler<T> j = priorityInventory.get(i);
-            final T stack = j.getAvailableItem(request, iteration);
-            if (stack != null && stack.getStackSize() > 0) {
-                count += stack.getStackSize();
-                if (count < 0) {
-                    // overflow
-                    count = Long.MAX_VALUE;
+            if (priorityInventory.get(i).getExternalNetworkInventory() != null) {
+                readsFromOtherNetwork = true;
+                break;
+            }
+        }
+        if (readsFromOtherNetwork) {
+            final T stack = this.getAvailableItems(getChannel().createList(), iteration).findPrecise(request);
+            count = addStackCount(stack, count);
+        } else {
+            if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
+                return null;
+            }
+            for (int i = 0; i < size; i++) {
+                IMEInventoryHandler<T> j = priorityInventory.get(i);
+                final T stack = j.getAvailableItem(request, iteration);
+                count = addStackCount(stack, count);
+                if (count == Long.MAX_VALUE) {
                     break;
                 }
             }
+
+            this.surface(this, Actionable.SIMULATE);
         }
 
-        this.surface(this, Actionable.SIMULATE);
-
         return count == 0 ? null : request.copy().setStackSize(count);
+    }
+
+    private long addStackCount(T stack, long count) {
+        if (stack != null && stack.getStackSize() > 0) {
+            count += stack.getStackSize();
+            if (count < 0) {
+                // overflow
+                count = Long.MAX_VALUE;
+            }
+        }
+        return count;
     }
 
     private boolean diveIteration(final NetworkInventoryHandler<T> networkInventoryHandler, final Actionable type,
