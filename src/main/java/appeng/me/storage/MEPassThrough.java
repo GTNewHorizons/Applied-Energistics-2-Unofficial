@@ -18,6 +18,7 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -107,6 +108,18 @@ public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler
     @Override
     public boolean validForPass(final int i) {
         return true;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public IMENetworkInventory<T> getExternalNetworkInventory() {
+        if (internal instanceof IMENetworkInventory<?>networkInventory) {
+            return (IMENetworkInventory<T>) networkInventory;
+        }
+        if (internal instanceof IMEInventoryHandler<?>inventoryHandler) {
+            return (IMENetworkInventory<T>) inventoryHandler.getExternalNetworkInventory();
+        }
+        return null;
     }
 
     StorageChannel getWrappedChannel() {

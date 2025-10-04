@@ -11,9 +11,11 @@
 package appeng.me.storage;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
@@ -28,13 +30,16 @@ import appeng.api.networking.security.ISecurityGrid;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.IMEInventoryHandler;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cache.SecurityCache;
 import appeng.util.SortedArrayList;
+import appeng.util.inv.ItemListIgnoreCrafting;
+import appeng.util.item.NetworkItemList;
 
-public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHandler<T> {
+public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetworkInventory<T> {
 
     private static final ThreadLocal<LinkedList> DEPTH_MOD = new ThreadLocal<>();
     private static final ThreadLocal<LinkedList> DEPTH_SIM = new ThreadLocal<>();
@@ -77,6 +82,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     private final SecurityCache security;
     private final List<IMEInventoryHandler<T>> priorityInventory;
     private int myPass = 0;
+    private Map<Integer, NetworkItemList<T>> iterationItems = null;
 
     public NetworkInventoryHandler(final StorageChannel chan, final SecurityCache security) {
         this.myChannel = chan;
@@ -289,49 +295,99 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public IItemList<T> getAvailableItems(IItemList out, int iteration) {
         if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
-            return out;
+            return this.iterationItems.get(iteration);
         }
 
+        final boolean isIgnoreCrafting = out instanceof ItemListIgnoreCrafting;
+        final boolean isSource = this.getDepth(Actionable.SIMULATE).size() == 1;
+
+        final NetworkItemList<T> networkItemList = new NetworkItemList<>(
+                () -> (IItemList<T>) getChannel().createList());
+        this.iterationItems = Collections.singletonMap(iteration, networkItemList);
+
+        final IItemList<T> currentNetworkItemList = isIgnoreCrafting
+                ? new ItemListIgnoreCrafting<>((IItemList<T>) getChannel().createList())
+                : (IItemList<T>) getChannel().createList();
         final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
         final int size = priorityInventory.size();
         for (int i = 0; i < size; i++) {
-            out = priorityInventory.get(i).getAvailableItems(out, iteration);
+            final IMEInventoryHandler<T> inv = priorityInventory.get(i);
+            final IMENetworkInventory<T> externalNetworkInventory = inv.getExternalNetworkInventory();
+            if (externalNetworkInventory == this) {
+                continue; // ignore any attempts to read self
+            }
+            final IItemList<T> passedInList = getChannel().createList();
+            final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
+
+            if (externalNetworkInventory != null) {
+                if (passedOutList instanceof NetworkItemList) {
+                    networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
+                } else {
+                    throw new RuntimeException(
+                            "Getting available items from Network-to-Network failed, since the returned list was not a NetworkItemList!");
+                }
+            } else {
+                for (T item : passedOutList) {
+                    currentNetworkItemList.add(item);
+                }
+            }
         }
+        networkItemList.addNetworkItems(this, currentNetworkItemList);
 
         this.surface(this, Actionable.SIMULATE);
 
-        return out;
-
+        // we're partially violating the api by making the returned list a different one from the provided one, however
+        // when we're done with the network inventory scan we fulfill our api contract again
+        return isSource ? networkItemList.buildFinalItemList(out) : networkItemList;
     }
 
     @Override
     public T getAvailableItem(@Nonnull T request, int iteration) {
         long count = 0;
 
-        if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
-            return null;
-        }
-
         final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
         final int size = priorityInventory.size();
+        boolean readsFromOtherNetwork = false;
         for (int i = 0; i < size; i++) {
-            IMEInventoryHandler<T> j = priorityInventory.get(i);
-            final T stack = j.getAvailableItem(request, iteration);
-            if (stack != null && stack.getStackSize() > 0) {
-                count += stack.getStackSize();
-                if (count < 0) {
-                    // overflow
-                    count = Long.MAX_VALUE;
+            if (priorityInventory.get(i).getExternalNetworkInventory() != null) {
+                readsFromOtherNetwork = true;
+                break;
+            }
+        }
+        if (readsFromOtherNetwork) {
+            final T stack = this.getAvailableItems(getChannel().createList(), iteration).findPrecise(request);
+            count = addStackCount(stack, count);
+        } else {
+            if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
+                return null;
+            }
+            for (int i = 0; i < size; i++) {
+                IMEInventoryHandler<T> j = priorityInventory.get(i);
+                final T stack = j.getAvailableItem(request, iteration);
+                count = addStackCount(stack, count);
+                if (count == Long.MAX_VALUE) {
                     break;
                 }
             }
+
+            this.surface(this, Actionable.SIMULATE);
         }
 
-        this.surface(this, Actionable.SIMULATE);
-
         return count == 0 ? null : request.copy().setStackSize(count);
+    }
+
+    private long addStackCount(T stack, long count) {
+        if (stack != null && stack.getStackSize() > 0) {
+            count += stack.getStackSize();
+            if (count < 0) {
+                // overflow
+                count = Long.MAX_VALUE;
+            }
+        }
+        return count;
     }
 
     private boolean diveIteration(final NetworkInventoryHandler<T> networkInventoryHandler, final Actionable type,
@@ -407,4 +463,5 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMEInvent
     public boolean validForPass(final int i) {
         return true;
     }
+
 }
