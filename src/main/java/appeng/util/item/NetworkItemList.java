@@ -195,6 +195,12 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         return !getItems().findAny().isPresent();
     }
 
+    @Override
+    public byte getStackType() {
+        IItemList<T> list = networkItemLists.values().stream().findAny().orElse(null);
+        return list == null ? LIST_NUll : list.getStackType();
+    }
+
     private class NetworkItemStack<U extends IAEStack> {
 
         private final IMENetworkInventory<U> networkInventory;
