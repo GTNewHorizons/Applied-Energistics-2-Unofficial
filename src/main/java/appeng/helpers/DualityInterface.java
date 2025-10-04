@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
@@ -1083,6 +1084,14 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
         boolean foundReason = false;
+        boolean foundTarget = false;
+        boolean hadAcceptedSome = false;
+
+        final List<IAEStack<?>> stacksToPush = new ArrayList<>(table.getSizeInventory());
+        for (int x = 0; x < table.getSizeInventory(); x++) {
+            stacksToPush.add(((MEInventoryCrafting) table).getAEStackInSlot(x));
+        }
+
         for (final ForgeDirection s : possibleDirections) {
             final TileEntity te = w
                     .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
@@ -1117,6 +1126,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
+                foundTarget = true;
                 if (this.isBlocking() && !(this.isSmartBlocking() && this.lastInputHash == patternDetails.hashCode())
                         && ad.containsItems()
                         && !inventoryCountsAsEmpty(te, ad, s.getOpposite())) {
@@ -1125,31 +1135,48 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     continue;
                 }
 
-                boolean hadAcceptedSome = false;
-                for (int x = 0; x < table.getSizeInventory(); x++) {
-                    IAEStack<?> aes = ((MEInventoryCrafting) table).getAEStackInSlot(x);
+                boolean hadAcceptedSomeOnFace = false;
+                ListIterator<IAEStack<?>> iter = stacksToPush.listIterator();
+                while (iter.hasNext()) {
+                    IAEStack<?> aes = iter.next();
                     if (aes != null) {
                         if (!isFluidInterface) {
                             aes = stackConvertPacket(aes);
                         }
 
                         IAEStack<?> leftover = ad.addStack(aes, getInsertionMode());
-                        if (!hadAcceptedSome && leftover != null && leftover.getStackSize() == aes.getStackSize()) {
+                        if (!hadAcceptedSomeOnFace && leftover != null
+                                && leftover.getStackSize() == aes.getStackSize()) {
                             break;
                         }
 
                         hadAcceptedSome = true;
-                        this.addToSendList(leftover);
+                        hadAcceptedSomeOnFace = true;
+                        if (leftover != null && leftover.getStackSize() > 0) {
+                            aes.setStackSize(leftover.getStackSize());
+                            iter.set(aes);
+                        } else {
+                            iter.remove();
+                        }
                     }
                 }
-                if (hadAcceptedSome) {
+                if (hadAcceptedSomeOnFace) {
                     onPushPatternSuccess(te, s.getOpposite(), patternDetails);
-                    return true;
-                } else {
-                    foundReason = true;
-                    scheduledReason = ScheduledReason.SOMETHING_STUCK;
+                    if (stacksToPush.isEmpty()) {
+                        return true;
+                    }
                 }
             }
+        }
+
+        if (hadAcceptedSome) {
+            for (IAEStack<?> aes : stacksToPush) {
+                this.addToSendList(aes);
+            }
+            return true;
+        } else if (foundTarget) {
+            foundReason = true;
+            scheduledReason = ScheduledReason.SOMETHING_STUCK;
         }
 
         if (!foundReason) scheduledReason = ScheduledReason.NO_TARGET;
