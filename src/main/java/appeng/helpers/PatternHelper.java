@@ -28,6 +28,7 @@ import net.minecraft.world.World;
 import appeng.api.AEApi;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.container.ContainerNull;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
@@ -148,6 +149,12 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     @Override
     public ItemStack getPattern() {
         return this.patternItem;
+    }
+
+    @Override
+    public synchronized boolean isValidItemForSlot(final int slotIndex, final IAEStack<?> i, final World w) {
+        if (isCrafting) return isValidItemForSlot(slotIndex, ((IAEItemStack) i).getItemStack(), w);
+        else throw new IllegalStateException("Only crafting recipes supported.");
     }
 
     @Override
@@ -400,5 +407,26 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
         }
 
         return tmp.values().toArray(new IAEItemStack[0]);
+    }
+
+    public static IAEStack<?>[] convertToCondensedAEList(final IAEStack<?>[] items) {
+        final LinkedHashMap<IAEStack<?>, IAEStack<?>> tmp = new LinkedHashMap<>();
+
+        for (final IAEStack<?> io : items) {
+
+            if (io == null) {
+                continue;
+            }
+
+            final IAEStack g = tmp.get(io);
+
+            if (g == null) {
+                tmp.put(io, io.copy());
+            } else {
+                g.add(io);
+            }
+        }
+
+        return tmp.values().toArray(new IAEStack<?>[0]);
     }
 }

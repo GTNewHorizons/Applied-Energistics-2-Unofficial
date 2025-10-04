@@ -69,7 +69,7 @@ public class PinsHolder implements IAEAppEngInventory {
         if (!data.hasKey(name)) {
             return;
         }
-        final NBTTagList list = (NBTTagList) data.getTag(name);
+        final NBTTagList list = data.getTagList(name, 10);
         for (int i = 0; i < list.tagCount(); i++) {
             final NBTTagCompound itemList = list.getCompoundTagAt(i);
             final String playerIdStr = itemList.getString("playerId");

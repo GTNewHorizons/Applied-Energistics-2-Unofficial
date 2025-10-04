@@ -23,6 +23,10 @@ import io.netty.buffer.ByteBuf;
 
 public interface IAEStack<StackType extends IAEStack> {
 
+    String ST_NULL = "";
+    String ST_ITEM = "item";
+    String ST_FLUID = "fluid";
+
     /**
      * add two stacks together
      *
@@ -222,4 +226,21 @@ public interface IAEStack<StackType extends IAEStack> {
      * @return ITEM or FLUID
      */
     StorageChannel getChannel();
+
+    /**
+     * @return Display name of item
+     */
+    String getLocalizedName();
+
+    boolean isSameType(StackType stack);
+
+    boolean isSameType(Object stack);
+
+    String getUnlocalizedName();
+
+    String getDisplayName();
+
+    void setTagCompound(NBTTagCompound tag);
+
+    boolean hasTagCompound();
 }

@@ -24,6 +24,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.StatCollector;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
@@ -367,6 +368,15 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     }
 
     @Override
+    public String getLocalizedName() {
+        String name = this.getDefinition().getDisplayName();
+        if (name == null) {
+            name = StatCollector.translateToLocal(this.getItem().getUnlocalizedName() + ".name");
+        }
+        return name;
+    }
+
+    @Override
     public ItemStack getItemStack() {
         final ItemStack is = new ItemStack(
                 this.getDefinition().getItem(),
@@ -401,6 +411,14 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         }
 
         return this.getDefinition().equals(((AEItemStack) otherStack).getDefinition());
+    }
+
+    @Override
+    public boolean isSameType(final Object otherStack) {
+        if (otherStack instanceof AEItemStack ais) return isSameType(ais);
+        else if (otherStack instanceof ItemStack is) return isSameType(is);
+
+        return false;
     }
 
     @Override
@@ -504,12 +522,18 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return this.getDefinition().setTooltip(Platform.getTooltip(this.getItemStack()));
     }
 
+    @Override
     public String getDisplayName() {
         if (this.getDefinition().getDisplayName() == null) {
             this.getDefinition().setDisplayName(Platform.getItemDisplayName(this.getItemStack()));
         }
 
         return this.getDefinition().getDisplayName();
+    }
+
+    @Override
+    public String getUnlocalizedName() {
+        return getItem().getUnlocalizedName();
     }
 
     public String getModID() {
@@ -633,5 +657,13 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     private AEItemDef setDefinition(final AEItemDef def) {
         this.def = def;
         return def;
+    }
+
+    @Override
+    public void setTagCompound(NBTTagCompound tagCompound) {
+        if (tagCompound != null) {
+            this.getDefinition()
+                    .setTagCompound((AESharedNBT) AESharedNBT.getSharedTagCompound(tagCompound, getItemStack()));
+        }
     }
 }

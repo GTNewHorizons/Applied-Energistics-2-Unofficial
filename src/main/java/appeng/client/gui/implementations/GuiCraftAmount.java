@@ -58,9 +58,7 @@ public class GuiCraftAmount extends GuiAmount {
                         Settings.CRAFTING_MODE,
                         CraftingMode.STANDARD));
 
-        this.amountTextField.setText("1");
-        this.amountTextField.setCursorPositionEnd();
-        this.amountTextField.setSelectionPos(0);
+        ((ContainerCraftAmount) this.inventorySlots).setAmountField(this.amountTextField);
     }
 
     @Override
@@ -117,7 +115,14 @@ public class GuiCraftAmount extends GuiAmount {
 
         super.drawBG(offsetX, offsetY, mouseX, mouseY);
 
-        this.nextBtn.displayString = isShiftKeyDown() ? GuiText.Start.getLocal() : GuiText.Next.getLocal();
+        // Only display the word "Start" if either Ctrl OR Shift is held not both
+        if (isShiftKeyDown() && !isCtrlKeyDown()) {
+            this.nextBtn.displayString = GuiText.Start.getLocal();
+        } else if (!isShiftKeyDown() && isCtrlKeyDown()) {
+            this.nextBtn.displayString = GuiText.Start.getLocal();
+        } else {
+            this.nextBtn.displayString = GuiText.Next.getLocal();
+        }
 
         try {
 
@@ -148,8 +153,9 @@ public class GuiCraftAmount extends GuiAmount {
             if (btn == this.nextBtn && btn.enabled) {
                 NetworkHandler.instance.sendToServer(
                         new PacketCraftRequest(
-                                addOrderAmount(0),
+                                getAmountLong(),
                                 isShiftKeyDown(),
+                                isCtrlKeyDown(),
                                 (CraftingMode) this.craftingMode.getCurrentValue()));
             }
         } catch (final NumberFormatException e) {

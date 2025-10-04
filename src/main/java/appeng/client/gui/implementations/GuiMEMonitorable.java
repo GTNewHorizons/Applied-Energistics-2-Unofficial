@@ -17,6 +17,8 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -24,6 +26,7 @@ import org.lwjgl.input.Mouse;
 import appeng.api.AEApi;
 import appeng.api.config.CraftingStatus;
 import appeng.api.config.PinsState;
+import appeng.api.config.SearchBoxFocusPriority;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
 import appeng.api.config.TerminalStyle;
@@ -35,6 +38,7 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IDisplayRepo;
+import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.ActionKey;
@@ -48,6 +52,7 @@ import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.me.InternalSlotME;
 import appeng.client.me.ItemRepo;
 import appeng.client.me.PinSlotME;
+import appeng.client.me.SlotME;
 import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
@@ -61,10 +66,12 @@ import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketPinsUpdate;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IPinsHandler;
+import appeng.helpers.InventoryAction;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
@@ -107,7 +114,8 @@ public class GuiMEMonitorable extends AEBaseMEGui
     private GuiImgButton searchStringSave;
     private GuiImgButton typeFilter;
     private GuiImgButton pinsStateButton;
-    private boolean isAutoFocus = false;
+    private boolean canBeAutoFocused = false;
+    private boolean isAutoFocused = false;
     private int currentMouseX = 0;
     private int currentMouseY = 0;
     private PinsState pinsState;
@@ -191,43 +199,39 @@ public class GuiMEMonitorable extends AEBaseMEGui
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_CRAFTING_STATUS));
         }
 
-        if (btn instanceof GuiImgButton iBtn) {
-            if (iBtn.getSetting() != Settings.ACTIONS) {
-                final Enum cv = iBtn.getCurrentValue();
-                final boolean backwards = Mouse.isButtonDown(1);
-                final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
+        if (!(btn instanceof GuiImgButton iBtn) || iBtn.getSetting() == Settings.ACTIONS) return;
 
-                if (btn == this.terminalStyleBox) {
-                    AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
-                } else if (btn == this.searchBoxSettings) {
-                    AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
-                } else if (btn == this.searchStringSave) {
-                    AEConfig.instance.preserveSearchBar = next == YesNo.YES;
-                } else if (btn == this.pinsStateButton) {
-                    try {
-                        if (next.ordinal() >= rows) return; // ignore to avoid hiding terminal inventory
+        final Enum cv = iBtn.getCurrentValue();
+        final boolean backwards = Mouse.isButtonDown(1);
+        final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
 
-                        final PacketPinsUpdate p = new PacketPinsUpdate((PinsState) next);
-                        NetworkHandler.instance.sendToServer(p);
-                    } catch (final IOException e) {
-                        AELog.debug(e);
-                    }
-                } else {
-                    try {
-                        NetworkHandler.instance
-                                .sendToServer(new PacketValueConfig(iBtn.getSetting().name(), next.name()));
-                    } catch (final IOException e) {
-                        AELog.debug(e);
-                    }
-                }
+        if (btn == this.terminalStyleBox) {
+            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
+        } else if (btn == this.searchBoxSettings) {
+            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
+        } else if (btn == this.searchStringSave) {
+            AEConfig.instance.preserveSearchBar = next == YesNo.YES;
+        } else if (btn == this.pinsStateButton) {
+            try {
+                if (next.ordinal() >= rows) return; // ignore to avoid hiding terminal inventory
 
-                iBtn.set(next);
-
-                if (next.getClass() == SearchBoxMode.class || next.getClass() == TerminalStyle.class) {
-                    memoryText = this.searchField.getText();
-                    this.reinitalize();
-                }
+                final PacketPinsUpdate p = new PacketPinsUpdate((PinsState) next);
+                NetworkHandler.instance.sendToServer(p);
+            } catch (final IOException e) {
+                AELog.debug(e);
             }
+        } else {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig(iBtn.getSetting().name(), next.name()));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
+        }
+
+        iBtn.set(next);
+
+        if (next.getClass() == SearchBoxMode.class || next.getClass() == TerminalStyle.class) {
+            this.reinitalize();
         }
     }
 
@@ -245,8 +249,12 @@ public class GuiMEMonitorable extends AEBaseMEGui
     }
 
     private void reinitalize() {
-        this.buttonList.clear();
-        this.initGui();
+        memoryText = this.searchField.getText();
+        if (!MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Pre(this, this.buttonList))) {
+            this.buttonList.clear();
+            this.initGui();
+        }
+        MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Post(this, this.buttonList));
     }
 
     @Override
@@ -297,6 +305,8 @@ public class GuiMEMonitorable extends AEBaseMEGui
         this.guiTop = (int) Math.floor(unusedSpace / (unusedSpace < 0 ? 3.8f : 2.0f));
 
         int offset = this.guiTop + 8;
+
+        buttonList.clear();
 
         if (this.customSortOrder) {
             this.buttonList.add(
@@ -393,11 +403,12 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
         // Enum setting = AEConfig.INSTANCE.getSetting( "Terminal", SearchBoxMode.class, SearchBoxMode.AUTOSEARCH );
         final Enum searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
-        this.isAutoFocus = SearchBoxMode.AUTOSEARCH == searchMode || SearchBoxMode.NEI_AUTOSEARCH == searchMode;
+        this.canBeAutoFocused = SearchBoxMode.AUTOSEARCH == searchMode || SearchBoxMode.NEI_AUTOSEARCH == searchMode;
 
         this.searchField.x = this.guiLeft + Math.max(80, this.offsetX);
         this.searchField.y = this.guiTop + 4;
-        this.searchField.setFocused(this.isAutoFocus);
+        this.searchField.setFocused(this.canBeAutoFocused);
+        this.isAutoFocused = this.canBeAutoFocused;
 
         if (this.isSubGui()) {
             this.searchField.setText(memoryText);
@@ -464,6 +475,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         searchField.mouseClicked(xCoord, yCoord, btn);
+        isAutoFocused = false;
         if (handleViewCellClick(xCoord, yCoord, btn)) return;
         super.mouseClicked(xCoord, yCoord, btn);
     }
@@ -561,22 +573,33 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
     @Override
     protected void keyTyped(final char character, final int key) {
-        if (!isAutoFocus) {
-            keyTypedResolver(character, key, false);
-        } else if (!this.checkHotbarKeys(key)) {
-            keyTypedResolver(character, key, true);
-        }
-    }
-
-    private void keyTypedResolver(final char character, final int key, boolean hotBarCheckPassed) {
         if (NEI.searchField.existsSearchField()) {
-
             if ((NEI.searchField.focused() || searchField.isFocused())
                     && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
                 final boolean focused = searchField.isFocused();
                 searchField.setFocused(!focused);
                 NEI.searchField.setFocus(focused);
+                isAutoFocused = false;
                 return;
+            }
+
+            if (CommonHelper.proxy.isActionKey(ActionKey.SEARCH_CONNECTED_INVENTORIES, key)
+                    && !(NEI.searchField.focused() || searchField.isFocused())) {
+                final boolean mouseInGui = this
+                        .isPointInRegion(0, 0, this.xSize, this.ySize, this.currentMouseX, this.currentMouseY);
+                if (mouseInGui && getSlot(this.currentMouseX, this.currentMouseY) instanceof SlotME sme) {
+                    IAEItemStack stack = sme.getAEStack();
+                    this.monitorableContainer.setTargetStack(stack);
+                    if (stack != null) {
+                        final PacketInventoryAction p = new PacketInventoryAction(
+                                InventoryAction.FIND_ITEMS,
+                                this.getInventorySlots().size(),
+                                0);
+                        NetworkHandler.instance.sendToServer(p);
+                        this.mc.thePlayer.closeScreen();
+                        return;
+                    }
+                }
             }
 
             if (NEI.searchField.focused()) {
@@ -586,6 +609,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
 
         if (searchField.isFocused() && key == Keyboard.KEY_RETURN) {
             searchField.setFocused(false);
+            isAutoFocused = false;
             return;
         }
 
@@ -593,17 +617,25 @@ public class GuiMEMonitorable extends AEBaseMEGui
             return;
         }
 
+        boolean skipHotbarCheck = searchField.isFocused()
+                && (AEConfig.instance.searchBoxFocusPriority == SearchBoxFocusPriority.ALWAYS
+                        || (AEConfig.instance.searchBoxFocusPriority == SearchBoxFocusPriority.NO_AUTOSEARCH
+                                && !isAutoFocused));
+
+        if (!skipHotbarCheck && checkHotbarKeys(key)) {
+            return;
+        }
+
         final boolean mouseInGui = this
                 .isPointInRegion(0, 0, this.xSize, this.ySize, this.currentMouseX, this.currentMouseY);
 
-        if (this.isAutoFocus && !searchField.isFocused() && mouseInGui) {
+        if (this.canBeAutoFocused && !searchField.isFocused() && mouseInGui) {
             searchField.setFocused(true);
+            isAutoFocused = true;
         }
 
         if (!searchField.textboxKeyTyped(character, key)) {
-            if (hotBarCheckPassed || !this.checkHotbarKeys(key)) {
-                super.keyTyped(character, key);
-            }
+            super.keyTyped(character, key);
         }
     }
 
@@ -655,7 +687,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
             pinsState = (PinsState) this.configSrc.getSetting(Settings.PINS_STATE);
             this.pinsStateButton.set(pinsState);
 
-            initGui();
+            reinitalize();
         }
 
         this.repo.updateView();
@@ -766,5 +798,21 @@ public class GuiMEMonitorable extends AEBaseMEGui
     @Override
     public void setPinsState(PinsState state) {
         configSrc.putSetting(Settings.PINS_STATE, state);
+    }
+
+    /// returns all items visible from the terminal
+    /// @return the returned list is **read-only**
+    public IItemList<IAEItemStack> getAvaibleItems() {
+        return repo.getAvailableItems();
+    }
+
+    // Moving items via hotbar keys in terminals isn't working anyway.
+    // Let's disable hotbar keys processing for terminal slots to allow proper input of numbers in the search field
+    @Override
+    protected boolean checkHotbarKeys(int keyCode) {
+        if (theSlot instanceof SlotME) {
+            return false;
+        }
+        return super.checkHotbarKeys(keyCode);
     }
 }

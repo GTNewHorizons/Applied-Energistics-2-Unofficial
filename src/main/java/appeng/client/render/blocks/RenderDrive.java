@@ -121,7 +121,6 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                 }
             }
         }
-
         for (int yy = 0; yy < 5; yy++) {
             for (int xx = 0; xx < 2; xx++) {
                 final int stat = sp.getCellStatus(yy * 2 + (1 - xx));
@@ -151,7 +150,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                 double v4 = ico.getInterpolatedV(((spin) % 4 < 2) ? m : mx);
 
                 tess.setBrightness(b);
-                tess.setColorOpaque_I(0xffffff);
+                // uses special color when rendering drive face.
+                tess.setColorOpaque_I(sp.getColor().driveVariant);
                 switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
                     case 1 -> {
                         tess.addVertexWithUV(
@@ -331,21 +331,23 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
 
                     if (sp.isPowered()) {
                         tess.setBrightness(15 << 20 | 15 << 4);
-                    } else {
-                        tess.setBrightness(0);
-                    }
 
-                    if (stat == 1) {
-                        Tessellator.instance.setColorOpaque_I(0x00ff00);
-                    }
-                    if (stat == 2) {
-                        Tessellator.instance.setColorOpaque_I(0x00aaff);
-                    }
-                    if (stat == 3) {
-                        Tessellator.instance.setColorOpaque_I(0xffaa00);
-                    }
-                    if (stat == 4) {
-                        Tessellator.instance.setColorOpaque_I(0xff0000);
+                        switch (stat) {
+                            case 1:
+                                tess.setColorOpaque_I(0x00ff00);
+                                break;
+                            case 2:
+                                tess.setColorOpaque_I(0x00aaff);
+                                break;
+                            case 3:
+                                tess.setColorOpaque_I(0xffaa00);
+                                break;
+                            case 4:
+                                tess.setColorOpaque_I(0xff0000);
+                        }
+                    } else {
+                        tess.setColorOpaque_I(0x000000);
+                        tess.setBrightness(0);
                     }
 
                     switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {

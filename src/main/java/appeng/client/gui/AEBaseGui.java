@@ -133,7 +133,7 @@ public abstract class AEBaseGui extends GuiContainer {
     private static boolean switchingGuis;
     private final List<InternalSlotME> meSlots = new LinkedList<>();
     // drag y
-    private final Set<Slot> drag_click = new HashSet<>();
+    protected final Set<Slot> drag_click = new HashSet<>();
     public static final AppEngRenderItem aeRenderItem = new AppEngRenderItem();
     public static final TranslatedRenderItem translatedRenderItem = new TranslatedRenderItem();
     private final AEGuiTooltip currentToolTip = new AEGuiTooltip();
@@ -183,7 +183,7 @@ public abstract class AEBaseGui extends GuiContainer {
     }
 
     @SuppressWarnings("unchecked")
-    private List<Slot> getInventorySlots() {
+    protected List<Slot> getInventorySlots() {
         return this.inventorySlots.inventorySlots;
     }
 
@@ -815,7 +815,7 @@ public abstract class AEBaseGui extends GuiContainer {
 
     private void drawSlot(final Slot s) {
         if (s instanceof SlotME || s instanceof SlotFake) {
-            if (s instanceof SlotME sme && sme.isPin()) {
+            if (s instanceof SlotME sme && sme.isPin() && !sme.getHasStack()) {
                 drawTextureOnSlot(s, sme.getPinIcon(), sme.getOpacityOfIcon());
             }
             IAEItemStack stack = Platform.getAEStackInSlot(s);

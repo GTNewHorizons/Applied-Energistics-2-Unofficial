@@ -24,6 +24,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IStorageHelper;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.crafting.CraftingLink;
 import appeng.util.Platform;
@@ -31,7 +32,9 @@ import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.FluidList;
 import appeng.util.item.HashBasedItemList;
+import appeng.util.item.IAEStackList;
 import appeng.util.item.ItemFilterList;
+import appeng.util.item.ItemImmutableList;
 import appeng.util.item.ItemList;
 import io.netty.buffer.ByteBuf;
 
@@ -62,6 +65,12 @@ public class ApiStorage implements IStorageHelper {
         return new ItemFilterList();
     }
 
+    @SafeVarargs
+    @Override
+    public final IItemList<IAEItemStack> createItemImmutableList(IItemList<IAEItemStack>... itemLists) {
+        return new ItemImmutableList(itemLists);
+    }
+
     @Override
     public IItemList<IAEItemStack> createPrimitiveItemList() {
         return new HashBasedItemList();
@@ -70,6 +79,11 @@ public class ApiStorage implements IStorageHelper {
     @Override
     public IItemList<IAEFluidStack> createFluidList() {
         return new FluidList();
+    }
+
+    @Override
+    public IItemList<IAEStack<?>> createAEStackList() {
+        return new IAEStackList();
     }
 
     @Override

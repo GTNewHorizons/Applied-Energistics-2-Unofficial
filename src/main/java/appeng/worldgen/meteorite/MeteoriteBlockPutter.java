@@ -16,11 +16,13 @@ public class MeteoriteBlockPutter {
         return true;
     }
 
-    void put(final IMeteoriteWorld w, final int i, final int j, final int k, final Block blk, final int meta) {
+    public boolean put(final IMeteoriteWorld w, final int i, final int j, final int k, final Block blk,
+            final int meta) {
         if (w.getBlock(i, j, k) == Blocks.bedrock) {
-            return;
+            return false;
         }
 
         w.setBlock(i, j, k, blk, meta, 3);
+        return true;
     }
 }

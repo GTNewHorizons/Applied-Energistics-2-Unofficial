@@ -13,7 +13,7 @@ import appeng.api.AEApi;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.util.DimensionalCoord;
+import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerCraftingCPU;
@@ -64,7 +64,7 @@ public class PacketCraftingItemInterface extends AppEngPacket {
                     if (cpu instanceof CraftingCPUCluster cpuc) {
                         ItemStack itemStack = is.getItemStack();
                         NBTTagCompound data = Platform.openNbtData(itemStack);
-                        DimensionalCoord.writeListToNBT(data, cpuc.getProviders(is));
+                        NamedDimensionalCoord.writeListToNBTNamed(data, cpuc.getProviders(is));
                         data.setInteger("ScheduledReason", cpuc.getScheduledReason(is).ordinal());
                         try {
                             NetworkHandler.instance.sendTo(

@@ -224,4 +224,9 @@ public final class ItemList implements IItemList<IAEItemStack> {
 
         return this.records.subMap(low, true, high, true).descendingMap().values();
     }
+
+    @Override
+    public byte getStackType() {
+        return LIST_ITEM;
+    }
 }

@@ -355,6 +355,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     @Override
     public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
             final BaseActionSource actionSource) {
+        // todo use change
         if (canDoWork()) {
             if (delayedUpdatesQueued) {
                 delayedUpdatesQueued = false;
@@ -399,9 +400,10 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     @SideOnly(Side.CLIENT)
     public void renderInventory(final IPartRenderHelper rh, final RenderBlocks renderer) {
         rh.setTexture(this.getItemStack().getIconIndex());
-        Tessellator.instance.startDrawingQuads();
+        final Tessellator tess = Tessellator.instance;
+        tess.startDrawingQuads();
         this.renderTorchAtAngle(0, -0.5, 0);
-        Tessellator.instance.draw();
+        tess.draw();
         // rh.setBounds( 7, 7, 10, 9, 9, 15 );
         // rh.renderInventoryBox( renderer );
     }

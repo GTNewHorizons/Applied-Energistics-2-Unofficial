@@ -11,9 +11,11 @@
 package appeng.worldgen;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import net.minecraft.block.Block;
@@ -26,13 +28,14 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.oredict.OreDictionary;
 
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlockDefinition;
 import appeng.api.definitions.IBlocks;
-import appeng.api.definitions.IMaterials;
 import appeng.core.AEConfig;
+import appeng.core.AEJSONConfig;
+import appeng.core.AEJSONEntry;
+import appeng.core.AELog;
 import appeng.core.features.AEFeature;
 import appeng.core.worlddata.WorldData;
 import appeng.util.InventoryAdaptor;
@@ -43,10 +46,9 @@ import appeng.worldgen.meteorite.FalloutSand;
 import appeng.worldgen.meteorite.FalloutSnow;
 import appeng.worldgen.meteorite.IMeteoriteWorld;
 import appeng.worldgen.meteorite.MeteoriteBlockPutter;
+import cpw.mods.fml.common.registry.GameRegistry;
 
 public final class MeteoritePlacer {
-
-    private static final int SKYSTONE_SPAWN_LIMIT = 12;
 
     private static final long SEED_OFFSET_CHEST_LOOT = 1;
     private static final long SEED_OFFSET_DECAY = 2;
@@ -91,6 +93,31 @@ public final class MeteoritePlacer {
             validSpawn.add(Blocks.snow);
             validSpawn.add(Blocks.stained_hardened_clay);
 
+            for (String block : AEConfig.instance.meteoriteValidBlocks) {
+                try {
+                    String[] parts = block.split(":");
+                    if (parts.length != 2) {
+                        AELog.error(
+                                "AE2: Invalid Block ID Format for validSpawnBlockWhiteList: " + block
+                                        + " | Error: Too Many Semicolons");
+                    }
+                    Block blk = GameRegistry.findBlock(parts[0], parts[1]);
+                    if (blk != null) {
+                        validSpawn.add(blk);
+                    } else {
+                        AELog.error(
+                                "AE2: Could not find block in registry for validSpawnBlockWhiteList: " + block
+                                        + " | Error: Block not found");
+                    }
+                } catch (Exception e) {
+                    AELog.error(
+                            e,
+                            "AE2: errored while whitelisting meteorite block spawns: " + e.getLocalizedMessage()
+                                    + " | Error: Unknown | Stacktrace: "
+                                    + Arrays.toString(e.getStackTrace()));
+                }
+            }
+
             invalidSpawn.clear();
             invalidSpawn.addAll(skyStoneDefinition.maybeBlock().asSet());
             invalidSpawn.add(Blocks.planks);
@@ -102,6 +129,31 @@ public final class MeteoritePlacer {
             invalidSpawn.add(Blocks.water);
             invalidSpawn.add(Blocks.log);
             invalidSpawn.add(Blocks.log2);
+
+            for (String block : AEConfig.instance.meteoriteInvalidBlocks) {
+                try {
+                    String[] parts = block.split(":");
+                    if (parts.length != 2) {
+                        AELog.error(
+                                "AE2: Invalid Block ID Format for invalidSpawnBlockWhiteList: " + block
+                                        + " | Error: Too Many Semicolons");
+                    }
+                    Block blk = GameRegistry.findBlock(parts[0], parts[1]);
+                    if (blk != null) {
+                        invalidSpawn.add(blk);
+                    } else {
+                        AELog.error(
+                                "AE2: Could not find block in registry for invalidSpawnBlockWhiteList: " + block
+                                        + " | Error: Block not found");
+                    }
+                } catch (Exception e) {
+                    AELog.error(
+                            e,
+                            "AE2: errored while blacklisting meteorite block spawns: " + e.getLocalizedMessage()
+                                    + " | Error: Unknown | Stacktrace: "
+                                    + Arrays.toString(e.getStackTrace()));
+                }
+            }
         }
     }
 
@@ -296,59 +348,81 @@ public final class MeteoritePlacer {
 
             final TileEntity te = w.getTileEntity(x, y, z);
             if (te instanceof IInventory) {
-                final Random lootRng = new Random(this.seed + SEED_OFFSET_CHEST_LOOT);
-                final InventoryAdaptor ap = InventoryAdaptor.getAdaptor(te, ForgeDirection.UP);
+                try {
+                    Random lootRng = new Random(this.seed + SEED_OFFSET_CHEST_LOOT);
+                    InventoryAdaptor ap = InventoryAdaptor.getAdaptor(te, ForgeDirection.UP);
 
-                final ArrayList<ItemStack> pressTypes = new ArrayList<>(4);
-                final IMaterials materials = AEApi.instance().definitions().materials();
-                pressTypes.addAll(materials.calcProcessorPress().maybeStack(1).asSet());
-                pressTypes.addAll(materials.engProcessorPress().maybeStack(1).asSet());
-                pressTypes.addAll(materials.logicProcessorPress().maybeStack(1).asSet());
-                pressTypes.addAll(materials.siliconPress().maybeStack(1).asSet());
+                    int dimID = w.getWorld().provider.dimensionId;
+                    ArrayList<AEJSONEntry> lootTable = new ArrayList<>(
+                            AEJSONConfig.instance.getWeightedLootTable(dimID, lootRng));
+                    Map<Integer, ArrayList<AEJSONEntry>> exclusionTableMap = new HashMap<>();
 
-                final int pressCount = 1 + lootRng.nextInt(3);
-                final int removeCount = Math.max(0, pressTypes.size() - pressCount);
-
-                // Make pressTypes contain pressCount random presses
-                for (int zz = 0; zz < removeCount; zz++) {
-                    pressTypes.remove(lootRng.nextInt(pressTypes.size()));
-                }
-
-                for (ItemStack toAdd : pressTypes) {
-                    ap.addItems(toAdd);
-                }
-
-                final List<ItemStack> nuggetLoot = new ArrayList<>();
-                nuggetLoot.addAll(OreDictionary.getOres("nuggetIron"));
-                nuggetLoot.addAll(OreDictionary.getOres("nuggetCopper"));
-                nuggetLoot.addAll(OreDictionary.getOres("nuggetTin"));
-                nuggetLoot.addAll(OreDictionary.getOres("nuggetSilver"));
-                nuggetLoot.addAll(OreDictionary.getOres("nuggetLead"));
-                nuggetLoot.addAll(OreDictionary.getOres("nuggetPlatinum"));
-                nuggetLoot.addAll(OreDictionary.getOres("nuggetNickel"));
-                nuggetLoot.addAll(OreDictionary.getOres("nuggetAluminium"));
-                nuggetLoot.addAll(OreDictionary.getOres("nuggetElectrum"));
-                nuggetLoot.add(new ItemStack(net.minecraft.init.Items.gold_nugget));
-                final int secondaryCount = 1 + lootRng.nextInt(3);
-                for (int zz = 0; zz < secondaryCount; zz++) {
-                    switch (lootRng.nextInt(3)) {
-                        case 0 -> {
-                            final int amount = 1 + lootRng.nextInt(SKYSTONE_SPAWN_LIMIT);
-                            for (final ItemStack skyStoneStack : skyStoneDefinition.maybeStack(amount).asSet()) {
-                                ap.addItems(skyStoneStack);
-                            }
+                    int totalNormalWeight = 0; // Non-exclusive entries
+                    for (AEJSONEntry entry : lootTable) {
+                        if (entry.exclusiveGroupID == -1) {
+                            totalNormalWeight += entry.weight;
                         }
-                        case 1 -> {
-                            ItemStack nugget = nuggetLoot.get(lootRng.nextInt(nuggetLoot.size()));
-                            if (nugget != null) {
-                                nugget = nugget.copy();
-                                nugget.stackSize = 1 + lootRng.nextInt(12);
-                                ap.addItems(nugget);
-                            }
-                        }
-                        default -> {}
-                        // Add nothing
                     }
+                    ArrayList<ItemStack> loot = new ArrayList<>();
+
+                    int curWeight = 0;
+                    int randWeight = (totalNormalWeight != 0 ? lootRng.nextInt(totalNormalWeight) : 0);
+                    for (AEJSONEntry entry : lootTable) {
+                        if (entry.exclusiveGroupID == -1) {
+                            curWeight += entry.weight;
+                            if (randWeight <= curWeight) {
+                                loot.add(entry.getItemStack(lootRng));
+                            }
+                        } else {
+                            if (exclusionTableMap.containsKey(entry.exclusiveGroupID)) {
+                                ArrayList<AEJSONEntry> temp = exclusionTableMap.get(entry.exclusiveGroupID);
+                                temp.add(entry);
+                                exclusionTableMap.put(entry.exclusiveGroupID, temp);
+                            } else exclusionTableMap.put(entry.exclusiveGroupID, new ArrayList<>(Arrays.asList(entry)));
+                        }
+                    }
+                    for (Integer key : exclusionTableMap.keySet()) {
+                        if (exclusionTableMap.get(key).size() > 1) {
+                            int totalExclusiveWeight = 0;
+                            for (AEJSONEntry entry : exclusionTableMap.get(key)) {
+                                totalExclusiveWeight += entry.weight;
+                            }
+                            randWeight = (totalExclusiveWeight != 0 ? lootRng.nextInt(totalExclusiveWeight) : 0);
+                            curWeight = 0;
+                            for (AEJSONEntry entry : exclusionTableMap.get(key)) {
+                                curWeight += entry.weight;
+                                if (randWeight <= curWeight) {
+                                    loot.add(entry.getItemStack(lootRng));
+                                    break;
+                                }
+                            }
+                        } else {
+                            AEJSONEntry entry = exclusionTableMap.get(key).get(0);
+                            if (entry.weight > 0) {
+                                loot.add(entry.getItemStack(lootRng));
+                            }
+                        }
+                    }
+
+                    for (ItemStack items : loot) {
+                        if (items != null) {
+                            ap.addItems(items.copy());
+                        } else AELog.error(
+                                "AE2: Item is null! | Error: Failed while adding item to loot chest in meteoritePlacer");
+                    }
+                } catch (Exception e) {
+                    AELog.error(
+                            e,
+                            "AE2: An unexpected error occurred! Check your JSON or report if issue is persistent! | Error: Runtime error while loading loot for meteorite. Printing info: \n"
+                                    + "Stack Trace: "
+                                    + Arrays.toString(e.getStackTrace())
+                                    + "\n"
+                                    + "Stack Message: "
+                                    + e.getMessage()
+                                    + "\n"
+                                    + "Class: "
+                                    + e.getClass()
+                                    + "\n");
                 }
             }
         }

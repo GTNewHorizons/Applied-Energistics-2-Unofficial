@@ -15,8 +15,10 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import net.minecraftforge.common.config.Property.Type;
 
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
@@ -25,6 +27,7 @@ import appeng.api.config.CraftingStatus;
 import appeng.api.config.PinsState;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnits;
+import appeng.api.config.SearchBoxFocusPriority;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
@@ -68,8 +71,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public final int chargedChange = 4;
     @Deprecated
     public int quartzKnifeInputLength = 32;
-    public int minMeteoriteDistance = 707;
-    public int minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
+    public String[] minMeteoriteDistance = { "0=707" };
     public double spatialPowerExponent = 1.35;
     public double spatialPowerMultiplier = 1250.0;
     public String[] grinderOres = {
@@ -100,9 +102,10 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int chargedStaffBattery = 8000;
     public boolean disableColoredCableRecipesInNEI = true;
     public boolean updatable = false;
-    public double meteoriteClusterChance = 0.1;
-    public double meteoriteSpawnChance = 0.3;
-    public int[] meteoriteDimensionWhitelist = { 0 };
+    public String[] meteoriteSpawnChance = { "0=0.3" };
+    public String[] meteoriteDimensionWhitelist = { "0, DEFAULT, DEFAULT, DEFAULT, DEFAULT, DEFAULT" };
+    public String[] meteoriteValidBlocks = { "examplemod:example_block" };
+    public String[] meteoriteInvalidBlocks = { "examplemod:example_block" };
     public int craftingCalculationTimePerTick = 5;
     PowerUnits selectedPowerUnit = PowerUnits.AE;
     CellType selectedCellType = CellType.ITEM;
@@ -119,12 +122,16 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int maxCraftingSteps = 2_000_000;
     public int maxCraftingTreeVisualizationSize = 32 * 1024 * 1024; // 32 MiB
     public boolean limitCraftingCPUSpill = true;
+    public SearchBoxFocusPriority searchBoxFocusPriority = SearchBoxFocusPriority.NEVER;
+
+    public int maxRecursiveDepth = 100;
+    public int maxMachineChecks = 10000;
 
     public AEConfig(final File configFile) {
         super(configFile);
         this.configFile = configFile;
 
-        FMLCommonHandler.instance().bus().register(this);
+        FMLCommonHandler.instance().bus().register(new EventHandler());
 
         final double DEFAULT_MEKANISM_EXCHANGE = 0.2;
         PowerUnits.MK.conversionRatio = this.get("PowerRatios", "Mekanism", DEFAULT_MEKANISM_EXCHANGE)
@@ -169,20 +176,28 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 - this.get("worldGen", "spawnChargedChance", 1.0 - this.spawnChargedChance)
                         .getDouble(1.0 - this.spawnChargedChance));
         this.minMeteoriteDistance = this.get("worldGen", "minMeteoriteDistance", this.minMeteoriteDistance)
-                .getInt(this.minMeteoriteDistance);
-        this.meteoriteClusterChance = this.get("worldGen", "meteoriteClusterChance", this.meteoriteClusterChance)
-                .getDouble(this.meteoriteClusterChance);
+                .getStringList();
         this.meteoriteSpawnChance = this.get("worldGen", "meteoriteSpawnChance", this.meteoriteSpawnChance)
-                .getDouble(this.meteoriteSpawnChance);
+                .getStringList();
         this.meteoriteDimensionWhitelist = this
-                .get("worldGen", "meteoriteDimensionWhitelist", this.meteoriteDimensionWhitelist).getIntList();
-
+                .get("worldGen", "meteoriteDimensionWhitelist", this.meteoriteDimensionWhitelist).getStringList();
+        this.addCustomCategoryComment(
+                "worldGen",
+                "The meteorite dimension whitelist list can be used alone or in unison with the meteorite (in)valid blocks whitelist. \n"
+                        + "Default debris is the following (in this order) Stone, Cobblestone, biomeFillerBlock (what's under the top block, usually dirt), Gravel, biomeTopBlock (usually grass) \n"
+                        + "Format: dimensionID, modID:blockID:metadata, modID:blockID:metadata, modID:blockID:metadata, modID:blockID:metadata, modID:blockID:metadata \n"
+                        + "--------------------------------------------------------------------------------------------------------# \n"
+                        + "The meteorite (in)valid spawn blocks list can be used alone or in unison with the meteorite dimension whitelist. Format: modId:blockID, modId:blockID, etc. ");
+        this.meteoriteValidBlocks = this.get("worldGen", "meteoriteValidSpawnBlocks", this.meteoriteValidBlocks)
+                .getStringList();
+        this.meteoriteInvalidBlocks = this.get("worldGen", "meteoriteInvalidSpawnBlocks", this.meteoriteInvalidBlocks)
+                .getStringList();
         this.quartzOresPerCluster = this.get("worldGen", "quartzOresPerCluster", this.quartzOresPerCluster)
                 .getInt(this.quartzOresPerCluster);
         this.quartzOresClusterAmount = this.get("worldGen", "quartzOresClusterAmount", this.quartzOresClusterAmount)
                 .getInt(this.quartzOresClusterAmount);
 
-        this.minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
+        // this.minMeteoriteDistanceSq = this.minMeteoriteDistance * this.minMeteoriteDistance;
 
         this.addCustomCategoryComment(
                 "wireless",
@@ -258,6 +273,12 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .max(4096, Math.min(this.maxCraftingTreeVisualizationSize, 1024 * 1024 * 1024));
         this.limitCraftingCPUSpill = this.get("misc", "LimitCraftingCPUSpill", this.limitCraftingCPUSpill)
                 .getBoolean(this.limitCraftingCPUSpill);
+
+        this.maxRecursiveDepth = this.get("networksearch", "maxRecursiveDepth", this.maxRecursiveDepth)
+                .getInt(this.maxRecursiveDepth);
+        this.maxMachineChecks = this.get("networksearch", "maxMachineChecks", this.maxMachineChecks)
+                .getInt(this.maxMachineChecks);
+
         this.clientSync();
 
         for (final AEFeature feature : AEFeature.values()) {
@@ -277,6 +298,17 @@ public final class AEConfig extends Configuration implements IConfigurableObject
             if (version.contains(imb.getVersion())) {
                 this.featureFlags.remove(AEFeature.AlphaPass);
             }
+        }
+
+        try {
+            this.searchBoxFocusPriority = SearchBoxFocusPriority.valueOf(
+                    this.get(
+                            "Client",
+                            "SearchBoxFocusPriority",
+                            this.searchBoxFocusPriority.name(),
+                            this.getListComment(this.searchBoxFocusPriority)).getString());
+        } catch (final Throwable t) {
+            this.searchBoxFocusPriority = SearchBoxFocusPriority.NEVER;
         }
 
         try {
@@ -423,6 +455,18 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     }
 
     @Override
+    public Property get(String category, String key, String[] defaultValues) { // compatibility for old configs
+        Property prop = super.get(category, key, defaultValues, null, false, -1, null);
+        if (prop.getType() != Type.STRING) {
+            ConfigCategory cat = getCategory(category.toLowerCase());
+            cat.remove(key);
+            prop = super.get(category, key, defaultValues, null, false, -1, null);
+            save();
+        }
+        return prop;
+    }
+
+    @Override
     public void save() {
         if (this.isFeatureEnabled(AEFeature.SpatialIO)) {
             this.get("spatialio", "storageBiomeID", this.storageBiomeID).set(this.storageBiomeID);
@@ -437,10 +481,13 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         }
     }
 
-    @SubscribeEvent
-    public void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
-        if (eventArgs.modID.equals(AppEng.MOD_ID)) {
-            this.clientSync();
+    public class EventHandler {
+
+        @SubscribeEvent
+        public void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
+            if (eventArgs.modID.equals(AppEng.MOD_ID)) {
+                AEConfig.this.clientSync();
+            }
         }
     }
 

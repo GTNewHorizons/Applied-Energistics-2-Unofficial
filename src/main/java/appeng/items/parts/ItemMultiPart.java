@@ -28,11 +28,11 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
 
 import com.google.common.base.Preconditions;
-import com.mojang.realmsclient.gui.ChatFormatting;
 
 import appeng.api.AEApi;
 import appeng.api.implementations.items.IItemGroup;
@@ -205,7 +205,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
             final int itemDamage = is.getItemDamage();
             final PartTypeWithVariant registeredPartType = this.registered.get(itemDamage);
             if (registeredPartType != null) {
-                return super.getItemStackDisplayName(is) + " - " + variants[registeredPartType.variant].toString();
+                return super.getItemStackDisplayName(is) + " - " + variants[registeredPartType.variant].getLocal();
             }
         }
 
@@ -243,7 +243,7 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
         int damage = stack.getItemDamage();
         PartTypeWithVariant part = this.registered.get(damage);
         if (part != null && part.deprecated) {
-            lines.add(ChatFormatting.RED + GuiText.Deprecated.getLocal());
+            lines.add(EnumChatFormatting.RED + GuiText.Deprecated.getLocal());
         }
     }
 

@@ -22,7 +22,7 @@ public class MachineSet extends HashSet<IGridNode> implements IMachineSet {
 
     private final Class<? extends IGridHost> machine;
 
-    MachineSet(final Class<? extends IGridHost> m) {
+    public MachineSet(final Class<? extends IGridHost> m) {
         this.machine = m;
     }
 

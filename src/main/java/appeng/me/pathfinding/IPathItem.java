@@ -17,14 +17,18 @@ import appeng.api.util.IReadOnlyCollection;
 
 public interface IPathItem {
 
+    /* USED BY AD HOC PATHING */
+
+    void setAdHocChannels(int channels);
+
+    /* USED BY CONTROLLER PATHING */
+
     IPathItem getControllerRoute();
 
-    void setControllerRoute(IPathItem fast, boolean zeroOut);
-
     /**
-     * used to determine if the finder can continue.
+     * Sets route to controller.
      */
-    boolean canSupportMoreChannels();
+    void setControllerRoute(IPathItem fast);
 
     /**
      * find possible choices for other pathing.
@@ -42,6 +46,13 @@ public interface IPathItem {
      * @return the flag set.
      */
     EnumSet<GridFlags> getFlags();
+
+    /**
+     * Tests if this path item has the specific grid flag set.
+     */
+    boolean hasFlag(GridFlags flag);
+
+    /* USED BY BOTH */
 
     /**
      * channels are done, wrap it up.

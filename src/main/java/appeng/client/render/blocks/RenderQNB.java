@@ -71,6 +71,7 @@ public class RenderQNB extends BaseBlockRender<BlockQuantumBase, TileQuantumBrid
         final IDefinitions definitions = AEApi.instance().definitions();
         final IBlocks blocks = definitions.blocks();
         final IParts parts = definitions.parts();
+        final Tessellator tess = Tessellator.instance;
 
         for (final Block linkBlock : blocks.quantumLink().maybeBlock().asSet()) {
             if (tqb.getBlockType() == linkBlock) {
@@ -155,9 +156,9 @@ public class RenderQNB extends BaseBlockRender<BlockQuantumBase, TileQuantumBrid
                                 CORNER_POWERED_RENDER_MAX,
                                 CORNER_POWERED_RENDER_MAX);
 
-                        Tessellator.instance.setColorOpaque_F(1.0F, 1.0F, 1.0F);
+                        tess.setColorOpaque_F(1.0F, 1.0F, 1.0F);
                         final int bn = 15;
-                        Tessellator.instance.setBrightness(bn << 20 | bn << 4);
+                        tess.setBrightness(bn << 20 | bn << 4);
                         for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
                             this.renderFace(
                                     x,
@@ -206,9 +207,9 @@ public class RenderQNB extends BaseBlockRender<BlockQuantumBase, TileQuantumBrid
                                 CENTER_POWERED_RENDER_MAX,
                                 CENTER_POWERED_RENDER_MAX);
 
-                        Tessellator.instance.setColorOpaque_F(1.0F, 1.0F, 1.0F);
+                        tess.setColorOpaque_F(1.0F, 1.0F, 1.0F);
                         final int bn = 15;
-                        Tessellator.instance.setBrightness(bn << 20 | bn << 4);
+                        tess.setBrightness(bn << 20 | bn << 4);
                         for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
                             this.renderFace(
                                     x,

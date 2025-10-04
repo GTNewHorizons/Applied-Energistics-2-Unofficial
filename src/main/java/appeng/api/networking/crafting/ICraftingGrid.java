@@ -26,6 +26,7 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridCache;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
 public interface ICraftingGrid extends IGridCache {
 
@@ -36,12 +37,19 @@ public interface ICraftingGrid extends IGridCache {
      * @param details     pattern details
      * @return a collection of crafting patterns for the item in question.
      */
+    ImmutableCollection<ICraftingPatternDetails> getCraftingFor(IAEStack<?> whatToCraft,
+            ICraftingPatternDetails details, int slot, World world);
+
+    @Deprecated
     ImmutableCollection<ICraftingPatternDetails> getCraftingFor(IAEItemStack whatToCraft,
             ICraftingPatternDetails details, int slot, World world);
 
     /**
      * @return a collection of all the crafting patterns in the system
      */
+    ImmutableMap<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> getCraftingMultiPatterns();
+
+    @Deprecated
     ImmutableMap<IAEItemStack, ImmutableList<ICraftingPatternDetails>> getCraftingPatterns();
 
     /**
@@ -57,6 +65,28 @@ public interface ICraftingGrid extends IGridCache {
      */
     Future<ICraftingJob> beginCraftingJob(World world, IGrid grid, BaseActionSource actionSrc, IAEItemStack craftWhat,
             ICraftingCallback callback);
+
+    /**
+     * Submit the job to the Crafting system for processing.
+     *
+     * @param job               - the crafting job from beginCraftingJob
+     * @param requestingMachine - a machine if its being requested via automation, may be null.
+     * @param target            - can be null
+     * @param prioritizePower   - if cpu is null, this determine if the system should prioritize power, or if it should
+     *                          find the lower end cpus, automatic processes generally should pick lower end cpus.
+     * @param src               - the action source to use when starting the job, this will be used for extracting
+     *                          items, should usually be the same as the one provided to beginCraftingJob.
+     * @param followCraft       - Whether to follow the craft and send a notification to the requesting player when it
+     *                          completes
+     * @return null ( if failed ) or an {@link ICraftingLink} other wise, if you send requestingMachine you need to
+     *         properly keep track of this and handle the nbt saving and loading of the object as well as the
+     *         {@link ICraftingRequester} methods. if you send null, this object should be discarded after verifying the
+     *         return state.
+     */
+    default ICraftingLink submitJob(ICraftingJob job, ICraftingRequester requestingMachine, ICraftingCPU target,
+            boolean prioritizePower, BaseActionSource src, boolean followCraft) {
+        return this.submitJob(job, requestingMachine, target, prioritizePower, src);
+    }
 
     /**
      * Submit the job to the Crafting system for processing.
@@ -85,6 +115,9 @@ public interface ICraftingGrid extends IGridCache {
      * @param what to be requested item
      * @return true if the item can be requested via a crafting emitter.
      */
+    boolean canEmitFor(IAEStack<?> what);
+
+    @Deprecated
     boolean canEmitFor(IAEItemStack what);
 
     /**
@@ -93,5 +126,8 @@ public interface ICraftingGrid extends IGridCache {
      * @param aeStackInSlot item being crafted
      * @return true if it is being crafting
      */
+    boolean isRequesting(IAEStack<?> aeStackInSlot);
+
+    @Deprecated
     boolean isRequesting(IAEItemStack aeStackInSlot);
 }

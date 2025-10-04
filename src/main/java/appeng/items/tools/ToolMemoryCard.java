@@ -51,9 +51,7 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
 
         final NBTTagCompound data = this.getData(stack);
         if (data.hasKey("tooltip")) {
-            lines.add(
-                    StatCollector.translateToLocal(
-                            this.getLocalizedName(data.getString("tooltip") + ".name", data.getString("tooltip"))));
+            lines.add(this.getLocalizedName(data.getString("tooltip") + ".name", data.getString("tooltip")));
         }
 
         if (data.hasKey("freq")) {
@@ -124,10 +122,10 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
         }
 
         switch (msg) {
-            case SETTINGS_CLEARED -> player.addChatMessage(PlayerMessages.SettingCleared.get());
-            case INVALID_MACHINE -> player.addChatMessage(PlayerMessages.InvalidMachine.get());
-            case SETTINGS_LOADED -> player.addChatMessage(PlayerMessages.LoadedSettings.get());
-            case SETTINGS_SAVED -> player.addChatMessage(PlayerMessages.SavedSettings.get());
+            case SETTINGS_CLEARED -> player.addChatMessage(PlayerMessages.SettingCleared.toChat());
+            case INVALID_MACHINE -> player.addChatMessage(PlayerMessages.InvalidMachine.toChat());
+            case SETTINGS_LOADED -> player.addChatMessage(PlayerMessages.LoadedSettings.toChat());
+            case SETTINGS_SAVED -> player.addChatMessage(PlayerMessages.SavedSettings.toChat());
             default -> {}
         }
     }

@@ -28,7 +28,6 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.AEBaseContainer;
-import appeng.container.implementations.ContainerAdvancedNetworkTool;
 import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
@@ -98,7 +97,7 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.equals("CPUTable.Cpu.Set") && c instanceof final ICraftingCPUSelectorContainer qk) {
             qk.selectCPU(Integer.parseInt(this.Value));
         } else if (this.Name.equals("Terminal.StartWithFollow") && c instanceof final ContainerCraftConfirm qk) {
-        	qk.startJob(this.Value);
+        	qk.startJob(true);
         } else if (this.Name.equals("Terminal.Start") && c instanceof final ContainerCraftConfirm qk) {
         	qk.startJob();
         } else if(this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk) {
@@ -178,10 +177,6 @@ public class PacketValueConfig extends AppEngPacket {
             if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
                 ((ContainerNetworkTool) c).toggleFacadeMode();
             }
-        } else if (c instanceof ContainerAdvancedNetworkTool) {
-            if (this.Name.equals("AdvancedNetworkTool") && this.Value.equals("Toggle")) {
-                ((ContainerAdvancedNetworkTool) c).toggleFacadeMode();
-            }
         } else if (c instanceof IConfigurableObject) {
             final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 
@@ -207,7 +202,7 @@ public class PacketValueConfig extends AppEngPacket {
 
         if (this.Name.equals("CustomName") && c instanceof AEBaseContainer) {
             ((AEBaseContainer) c).setCustomName(this.Value);
-        } else if (this.Name.startsWith("SyncDat.")) {
+        } else if (this.Name.startsWith("SyncDat.") && c instanceof AEBaseContainer) {
             ((AEBaseContainer) c).stringSync(Integer.parseInt(this.Name.substring(8)), this.Value);
         } else if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
             final GuiScreen gs = Minecraft.getMinecraft().currentScreen;

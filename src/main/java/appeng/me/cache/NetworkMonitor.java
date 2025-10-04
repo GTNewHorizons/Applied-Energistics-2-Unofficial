@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
+import appeng.api.networking.IGrid;
 import appeng.api.networking.events.MENetworkStorageEvent;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventoryHandler;
@@ -177,6 +178,10 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
             default -> {}
         }
         return null;
+    }
+
+    public IGrid getGrid() {
+        return this.myGridCache.getGrid();
     }
 
     private Iterator<Entry<IMEMonitorHandlerReceiver<T>, Object>> getListeners() {
