@@ -44,7 +44,6 @@ import appeng.util.inv.AdaptorFluidHandler;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.AdaptorList;
 import appeng.util.inv.AdaptorMEChest;
-import appeng.util.inv.AdaptorNull;
 import appeng.util.inv.AdaptorP2PFluid;
 import appeng.util.inv.AdaptorP2PItem;
 import appeng.util.inv.AdaptorPlayerInventory;
@@ -121,10 +120,6 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             }
 
         return null;
-    }
-
-    public static InventoryAdaptor getNullAdaptor() {
-        return new AdaptorNull();
     }
 
     public IItemList<IAEItemStack> getAvailableItems(IItemList<IAEItemStack> out, int iteration) {

@@ -10,7 +10,6 @@
 
 package appeng.helpers;
 
-import static appeng.util.InventoryAdaptor.getNullAdaptor;
 import static appeng.util.Platform.isAE2FCLoaded;
 import static appeng.util.Platform.readStackNBT;
 import static appeng.util.Platform.stackConvertPacket;
@@ -108,7 +107,6 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
-import appeng.util.inv.AdaptorConduitBandle;
 import appeng.util.inv.AdaptorIInventory;
 import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
@@ -1083,137 +1081,80 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         final TileEntity tile = this.iHost.getTileEntity();
         final World w = tile.getWorldObj();
 
-        final EnumSet<ForgeDirection> possibleDirectionsDefault = this.iHost.getTargets();
-        final EnumSet<ForgeDirection> out = EnumSet.noneOf(ForgeDirection.class);
-        final ArrayList<pushData> push = new ArrayList<>();
-        // Item conduit dont have simulation of inject, so we cant step back when check was success
-        boolean conduitFactor = false;
+        final EnumSet<ForgeDirection> possibleDirections = this.iHost.getTargets();
         boolean foundReason = false;
+        for (final ForgeDirection s : possibleDirections) {
+            final TileEntity te = w
+                    .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
 
-        for (int i = 0; i < table.getSizeInventory(); i++) {
-            IAEStack<?> aes = ((MEInventoryCrafting) table).getAEStackInSlot(i);
+            if (te == null) continue;
 
-            if (aes != null) {
-                IAEStack<?> testStack = aes.copy();
-                if (!isFluidInterface) testStack = stackConvertPacket(testStack);
+            if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
 
-                EnumSet<ForgeDirection> possibleDirections = possibleDirectionsDefault.clone();
-                for (ForgeDirection s : possibleDirections) {
-                    final TileEntity te = w
-                            .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
-
-                    if (te == null) {
-                        possibleDirectionsDefault.remove(s);
-                        continue;
+            if (te instanceof ICraftingMachine cm) {
+                if (cm.acceptsPlans()) {
+                    if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
+                        onPushPatternSuccess(te, s.getOpposite(), patternDetails);
+                        return true;
                     }
+                    continue;
+                }
+            }
 
-                    if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) {
-                        possibleDirectionsDefault.remove(s);
-                        continue;
-                    }
-
-                    if (te instanceof ICraftingMachine cm) {
-                        if (cm.acceptsPlans()) {
-                            if (cm.pushPattern(patternDetails, table, s.getOpposite())) {
-                                onPushPatternSuccess(te, s.getOpposite(), patternDetails);
-                                return true;
-                            }
-                            possibleDirectionsDefault.remove(s);
-                            continue;
-                        }
-                    }
-
-                    if (te instanceof IInterfaceHost) {
-                        try {
-                            if (((IInterfaceHost) te).getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
-                                if (!foundReason) {
-                                    foundReason = true;
-                                    scheduledReason = ScheduledReason.SAME_NETWORK;
-                                }
-
-                                possibleDirectionsDefault.remove(s);;
-                                continue;
-                            }
-                        } catch (final GridAccessException e) {
-                            possibleDirectionsDefault.remove(s);
-                            continue;
-                        }
-                    }
-
-                    final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
-                    if (ad != null) {
-                        if (this.isBlocking()
-                                && !(this.isSmartBlocking() && this.lastInputHash == patternDetails.hashCode())
-                                && ad.containsItems()
-                                && !inventoryCountsAsEmpty(te, ad, s.getOpposite())) {
+            if (te instanceof IInterfaceHost) {
+                try {
+                    if (((IInterfaceHost) te).getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+                        if (!foundReason) {
                             foundReason = true;
-                            scheduledReason = ScheduledReason.BLOCKING_MODE;
-                            possibleDirectionsDefault.remove(s);
-                        } else {
-                            IAEStack<?> simulate = testStack.copy();
-                            if (ad instanceof AdaptorConduitBandle && testStack.isItem()) {
-                                IAEStack<?> leftOver = ad.addStack(simulate, getInsertionMode());
-                                if (leftOver == null) {
-                                    testStack.reset();
-                                    conduitFactor = true;
-                                    out.add(s);
-                                } else if (leftOver.getStackSize() < testStack.getStackSize()) {
-                                    push.add(new pushData(ad, leftOver, te, s));
-                                    conduitFactor = true;
-                                    out.add(s);
-                                }
-                            } else {
-                                IAEStack<?> leftOver = ad.simulateAddStack(simulate, getInsertionMode());
-                                if (leftOver == null) {
-                                    push.add(new pushData(ad, testStack.copy(), te, s));
-                                    testStack.reset();
-                                    out.add(s);
-                                } else if (leftOver.getStackSize() < testStack.getStackSize()) {
-                                    push.add(
-                                            new pushData(
-                                                    ad,
-                                                    simulate.setStackSize(
-                                                            testStack.getStackSize() - leftOver.getStackSize()),
-                                                    te,
-                                                    s));
-                                    testStack.setStackSize(leftOver.getStackSize());
-                                    out.add(s);
-                                }
-                            }
+                            scheduledReason = ScheduledReason.SAME_NETWORK;
                         }
+                        continue;
                     }
+                } catch (final GridAccessException e) {
+                    continue;
+                }
+            }
+
+            final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
+            if (ad != null) {
+                if (this.isBlocking() && !(this.isSmartBlocking() && this.lastInputHash == patternDetails.hashCode())
+                        && ad.containsItems()
+                        && !inventoryCountsAsEmpty(te, ad, s.getOpposite())) {
+                    foundReason = true;
+                    scheduledReason = ScheduledReason.BLOCKING_MODE;
+                    continue;
                 }
 
-                if (conduitFactor && testStack != null && testStack.getStackSize() > 0) {
-                    push.add(new pushData(getNullAdaptor(), testStack.copy(), null, ForgeDirection.UNKNOWN));
-                } else if (testStack == null || testStack.getStackSize() > 0) {
-                    if (!foundReason) scheduledReason = ScheduledReason.NO_TARGET;
-                    return false;
+                boolean hadAcceptedSome = false;
+                for (int x = 0; x < table.getSizeInventory(); x++) {
+                    IAEStack<?> aes = ((MEInventoryCrafting) table).getAEStackInSlot(x);
+                    if (aes != null) {
+                        if (!isFluidInterface) {
+                            aes = stackConvertPacket(aes);
+                        }
+
+                        IAEStack<?> leftover = ad.addStack(aes, getInsertionMode());
+                        if (!hadAcceptedSome && leftover != null && leftover.getStackSize() == aes.getStackSize()) {
+                            break;
+                        }
+
+                        hadAcceptedSome = true;
+                        this.addToSendList(leftover);
+                    }
+                }
+                if (hadAcceptedSome) {
+                    onPushPatternSuccess(te, s.getOpposite(), patternDetails);
+                    return true;
+                } else {
+                    foundReason = true;
+                    scheduledReason = ScheduledReason.SOMETHING_STUCK;
                 }
             }
         }
 
-        for (pushData data : push) {
-            addToSendList(data.ad.addStack(data.st, getInsertionMode()));
-            onPushPatternSuccess(data.te, data.d.getOpposite(), patternDetails);
-        }
-        pushItemsOut(out);
-        return true;
-    }
+        if (!foundReason) scheduledReason = ScheduledReason.NO_TARGET;
 
-    private static class pushData {
-
-        InventoryAdaptor ad;
-        IAEStack<?> st;
-        TileEntity te;
-        ForgeDirection d;
-
-        pushData(InventoryAdaptor adaptor, IAEStack<?> stack, TileEntity tileEntity, ForgeDirection direction) {
-            ad = adaptor;
-            st = stack;
-            te = tileEntity;
-            d = direction;
-        }
+        return false;
     }
 
     @Override
