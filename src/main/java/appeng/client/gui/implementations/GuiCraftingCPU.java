@@ -89,6 +89,11 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     private static final int CANCEL_HEIGHT = 20;
     private static final int CANCEL_WIDTH = 50;
 
+    private static final int SUSPEND_LEFT_OFFSET = 60;
+    private static final int SUSPEND_TOP_OFFSET = 25;
+    private static final int SUSPEND_HEIGHT = 20;
+    private static final int SUSPEND_WIDTH = 50;
+
     private static final int TITLE_TOP_OFFSET = 7;
     private static final int TITLE_LEFT_OFFSET = 8;
 
@@ -174,6 +179,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     protected List<IAEItemStack> visual = new ArrayList<>();
     private GuiButton cancel;
+    private GuiAeButton suspend;
     protected List<IAEItemStack> visualHiddenStored = new ArrayList<>();
     protected GuiImgButton toggleHideStored;
     protected boolean hideStored;
@@ -218,6 +224,12 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         if (this.cancel == btn) {
             try {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("TileCrafting.Cancel", "Cancel"));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
+        } else if (this.suspend == btn) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("TileCrafting.Suspend", "Suspend"));
             } catch (final IOException e) {
                 AELog.debug(e);
             }
@@ -289,6 +301,14 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 CANCEL_WIDTH,
                 CANCEL_HEIGHT,
                 GuiText.Cancel.getLocal());
+        this.suspend = new GuiAeButton(
+                1,
+                this.guiLeft + SUSPEND_LEFT_OFFSET,
+                this.guiTop + this.ySize - SUSPEND_TOP_OFFSET,
+                SUSPEND_WIDTH,
+                SUSPEND_HEIGHT,
+                GuiText.Suspend.getLocal(),
+                ButtonToolTips.Suspend.getLocal());
         this.toggleHideStored = new GuiImgButton(
                 this.guiLeft + 221,
                 this.guiTop + this.ySize - 19,
@@ -296,6 +316,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 AEConfig.instance.getConfigManager().getSetting(Settings.HIDE_STORED));
         this.buttonList.add(this.toggleHideStored);
         this.buttonList.add(this.cancel);
+        this.buttonList.add(this.suspend);
 
         this.searchField = new MEGuiTextField(52, 12, "Search") {
 
@@ -350,6 +371,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
         this.cancel.enabled = !this.visual.isEmpty();
+        this.suspend.visible = !this.visual.isEmpty();
+        this.updateSuspendButtonText();
         this.changeAllow.set(CraftingAllow.values()[this.craftingCpu.allow]);
 
         final int gx = (this.width - this.xSize) / 2;
@@ -829,5 +852,11 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 }
             }
         }
+    }
+
+    private void updateSuspendButtonText() {
+        var suspended = this.craftingCpu.cachedSuspend;
+        this.suspend.displayString = suspended ? GuiText.Resume.getLocal() : GuiText.Suspend.getLocal();
+        this.suspend.setTootipString(suspended ? ButtonToolTips.Resume.getLocal() : ButtonToolTips.Suspend.getLocal());
     }
 }
