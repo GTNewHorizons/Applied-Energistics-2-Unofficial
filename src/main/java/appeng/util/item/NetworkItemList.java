@@ -12,10 +12,13 @@ package appeng.util.item;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -35,11 +38,20 @@ import appeng.api.storage.data.IItemList;
  */
 public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
 
+    /**
+     * The network this list was created for.
+     */
+    private final IMENetworkInventory<T> network;
+    /**
+     * The networks and their items that were read from this {@code network}. For non-network inventories the
+     * network-key is equal to {@code network}.
+     */
     private final Map<IMENetworkInventory<T>, IItemList<T>> networkItemLists;
     private final Supplier<IItemList<T>> newItemListSupplier;
     private final List<Predicate<T>> predicates;
 
-    public NetworkItemList(Supplier<IItemList<T>> newItemListSupplier) {
+    public NetworkItemList(IMENetworkInventory<T> network, Supplier<IItemList<T>> newItemListSupplier) {
+        this.network = network;
         this.networkItemLists = new HashMap<>();
         this.predicates = new ArrayList<>();
         this.newItemListSupplier = newItemListSupplier;
@@ -51,6 +63,7 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
      * @param networkItemList the list to copy from
      */
     public NetworkItemList(NetworkItemList<T> networkItemList) {
+        this.network = networkItemList.network;
         this.predicates = new ArrayList<>();
         this.networkItemLists = networkItemList.networkItemLists;
         this.newItemListSupplier = networkItemList.newItemListSupplier;
@@ -77,12 +90,18 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         networkItemLists.put(network, itemList);
     }
 
-    private Stream<NetworkItemStack<T>> getNetworkItemStackStream() {
+    private Stream<NetworkItemStack<T>> getNetworkItemStackStream(final Set<IMENetworkInventory<T>> visitedNetworks) {
         return networkItemLists.entrySet().stream()
                 // equivalent to a worse performing mapMulti
                 .flatMap(entry -> {
                     if (entry.getValue() instanceof NetworkItemList) {
-                        return ((NetworkItemList<T>) entry.getValue()).getFilteredNetworkItemStackStream();
+                        if (visitedNetworks.contains(entry.getKey())) {
+                            return Stream.empty();
+                        }
+                        final Set<IMENetworkInventory<T>> localVisitedNetworks = new HashSet<>(visitedNetworks);
+                        localVisitedNetworks.add(entry.getKey());
+                        return ((NetworkItemList<T>) entry.getValue())
+                                .getFilteredNetworkItemStackStream(Collections.unmodifiableSet(localVisitedNetworks));
                     } else {
                         List<NetworkItemStack<T>> buffer = new ArrayList<>();
                         StreamSupport.stream(entry.getValue().spliterator(), false)
@@ -103,7 +122,14 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
     }
 
     private Stream<NetworkItemStack<T>> getFilteredNetworkItemStackStream() {
-        return filter(getNetworkItemStackStream());
+        Set<IMENetworkInventory<T>> visitedNetworks = new HashSet<>();
+        visitedNetworks.add(this.network);
+        return filter(getNetworkItemStackStream(Collections.unmodifiableSet(visitedNetworks)));
+    }
+
+    private Stream<NetworkItemStack<T>> getFilteredNetworkItemStackStream(
+            final Set<IMENetworkInventory<T>> visitedNetworks) {
+        return filter(getNetworkItemStackStream(visitedNetworks));
     }
 
     public void addFilter(Predicate<T> filter) {

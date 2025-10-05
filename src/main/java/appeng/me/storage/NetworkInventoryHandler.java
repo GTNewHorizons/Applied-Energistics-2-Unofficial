@@ -303,6 +303,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         final boolean isSource = this.getDepth(Actionable.SIMULATE).size() == 1;
 
         final NetworkItemList<T> networkItemList = new NetworkItemList<>(
+                this,
                 () -> (IItemList<T>) getChannel().createList());
         this.iterationItems = networkItemList;
 
