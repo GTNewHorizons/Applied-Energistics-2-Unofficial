@@ -11,11 +11,9 @@
 package appeng.me.storage;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nonnull;
 
@@ -82,7 +80,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
     private final SecurityCache security;
     private final List<IMEInventoryHandler<T>> priorityInventory;
     private int myPass = 0;
-    private Map<Integer, NetworkItemList<T>> iterationItems = null;
+    private NetworkItemList<T> iterationItems = null;
 
     public NetworkInventoryHandler(final StorageChannel chan, final SecurityCache security) {
         this.myChannel = chan;
@@ -298,7 +296,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
     @SuppressWarnings("unchecked")
     public IItemList<T> getAvailableItems(IItemList out, int iteration) {
         if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
-            return this.iterationItems.get(iteration);
+            return this.iterationItems;
         }
 
         final boolean isIgnoreCrafting = out instanceof ItemListIgnoreCrafting;
@@ -306,7 +304,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
 
         final NetworkItemList<T> networkItemList = new NetworkItemList<>(
                 () -> (IItemList<T>) getChannel().createList());
-        this.iterationItems = Collections.singletonMap(iteration, networkItemList);
+        this.iterationItems = networkItemList;
 
         final IItemList<T> currentNetworkItemList = isIgnoreCrafting
                 ? new ItemListIgnoreCrafting<>((IItemList<T>) getChannel().createList())
