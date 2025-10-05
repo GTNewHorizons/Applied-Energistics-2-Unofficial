@@ -296,7 +296,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
     @SuppressWarnings("unchecked")
     public IItemList<T> getAvailableItems(IItemList out, int iteration) {
         if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
-            return this.iterationItems;
+            return this.iterationItems == null ? out : this.iterationItems;
         }
 
         final boolean isIgnoreCrafting = out instanceof ItemListIgnoreCrafting;
