@@ -32,6 +32,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -163,6 +164,16 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Override
     public boolean validForPass(final int i) {
         return this.getHandler().validForPass(i);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public IMENetworkInventory<T> getExternalNetworkInventory() {
+        IMEInventoryHandler<T> handler = this.getHandler();
+        if (handler instanceof IMENetworkInventory<?>networkInventory) {
+            return (IMENetworkInventory<T>) networkInventory;
+        }
+        return handler.getExternalNetworkInventory();
     }
 
     @Nullable
