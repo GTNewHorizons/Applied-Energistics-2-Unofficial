@@ -371,8 +371,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
         this.cancel.enabled = !this.visual.isEmpty();
-        this.suspend.enabled = !this.visual.isEmpty();
-        // this.cachedSuspend = !this.craftingCpu.cachedSuspend;
+        this.suspend.visible = !this.visual.isEmpty();
         this.updateSuspendButtonText();
         this.changeAllow.set(CraftingAllow.values()[this.craftingCpu.allow]);
 
