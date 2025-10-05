@@ -145,7 +145,11 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
 
                             if (gridInv instanceof NetworkMonitor<?>) {
                                 final Collection<IAEItemStack> fzlist = ((NetworkMonitor<IAEItemStack>) gridInv)
-                                        .getHandler().getSortedFuzzyItems(new ArrayList<>(), ais, fzMode, IterationCounter.fetchNewId());
+                                        .getHandler().getSortedFuzzyItems(
+                                                new ArrayList<>(),
+                                                ais,
+                                                fzMode,
+                                                IterationCounter.fetchNewId());
 
                                 for (final IAEItemStack o : fzlist) {
                                     this.pushItemIntoTarget(destination, energy, gridInv, o);
