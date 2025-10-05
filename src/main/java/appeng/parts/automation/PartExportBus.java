@@ -109,7 +109,6 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
             final FuzzyMode fzMode = (FuzzyMode) this.getConfigManager().getSetting(Settings.FUZZY_MODE);
             final SchedulingMode schedulingMode = (SchedulingMode) this.getConfigManager()
                     .getSetting(Settings.SCHEDULING_MODE);
-            final int iteration = IterationCounter.fetchNewId();
 
             if (destination != null) {
                 if (this.getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
@@ -146,7 +145,11 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
 
                             if (gridInv instanceof NetworkMonitor<?>) {
                                 final Collection<IAEItemStack> fzlist = ((NetworkMonitor<IAEItemStack>) gridInv)
-                                        .getHandler().getSortedFuzzyItems(new ArrayList<>(), ais, fzMode, iteration);
+                                        .getHandler().getSortedFuzzyItems(
+                                                new ArrayList<>(),
+                                                ais,
+                                                fzMode,
+                                                IterationCounter.fetchNewId());
 
                                 for (final IAEItemStack o : fzlist) {
                                     this.pushItemIntoTarget(destination, energy, gridInv, o);

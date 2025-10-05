@@ -109,6 +109,7 @@ public class PacketValueConfig extends AppEngPacket {
         } else if(this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPU qk) {
         	switch(this.Name) {
         	case "TileCrafting.Cancel" -> qk.cancelCrafting();
+            case "TileCrafting.Suspend" -> qk.suspendCrafting();
         	case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
         	case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
         	}
