@@ -56,17 +56,8 @@ public class GuiCraftingList {
             IItemList<IAEItemStack> pending, IItemList<IAEItemStack> missing) {
         // Make a better size for reading
         int visualSize = visual.size();
-        int width = 3;
-        int height = 0;
-        while (true) {
-
-            height = (int) Math.ceil((visualSize * 1.0) / width);
-            // Make sure aspect ratio is under 0.9, like a square
-            if ((width * (FIELD_WIDTH - 1) + 1) * 1.0 / (height * (FIELD_HEIGHT - 1) + 1) >= 0.9) {
-                break;
-            }
-            width++;
-        }
+        int width = (int) Math.ceil(Math.max(Math.sqrt((double) visualSize * FIELD_HEIGHT / FIELD_WIDTH), 3));
+        int height = (int) Math.ceil((float) visualSize / width);
 
         final Minecraft mc = Minecraft.getMinecraft();
         if (!OpenGlHelper.isFramebufferEnabled()) {
@@ -213,6 +204,12 @@ public class GuiCraftingList {
         final int yo = 22;
         if (refStack != null) {
             GL11.glPushMatrix();
+            GL11.glScaled(4.0d, 4.0d, 1.0d);
+            final ItemStack is = refStack.copy().getItemStack();
+            drawItem((int) (FIELD_SECTIONLENGTH / 4 - 18), (int) ((FIELD_HEIGHT / 8) - 8), is, true);
+            GL11.glPopMatrix();
+
+            GL11.glPushMatrix();
             GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
             GL11.glScaled(2.0d, 2.0d, 0.5d);
 
@@ -292,12 +289,6 @@ public class GuiCraftingList {
                         ColorPickHelper.selectColorFromThreshold(stored.getUsedPercent()).getColor());
             }
             GL11.glPopAttrib();
-            GL11.glPopMatrix();
-
-            GL11.glPushMatrix();
-            GL11.glScaled(4.0d, 4.0d, 1.0d);
-            final ItemStack is = refStack.copy().getItemStack();
-            drawItem((int) (FIELD_SECTIONLENGTH / 4 - 18), (int) ((FIELD_HEIGHT / 8) - 8), is, true);
             GL11.glPopMatrix();
         }
     }
