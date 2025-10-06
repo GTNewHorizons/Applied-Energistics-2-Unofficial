@@ -712,54 +712,51 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         final TileEntity tile = this.iHost.getTileEntity();
         final World w = tile.getWorldObj();
 
-        final Iterator<IAEStack<?>> i = this.waitingToSend.iterator();
         boolean sentSomething = false;
-        while (i.hasNext()) {
-            IAEStack<?> whatToSend = i.next();
+        for (final ForgeDirection s : possibleDirections) {
+            final TileEntity te = w
+                    .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
 
-            for (final ForgeDirection s : possibleDirections) {
-                final TileEntity te = w
-                        .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
+            if (te == null) continue;
 
-                if (te == null) {
-                    continue;
-                }
+            if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
 
-                if (te.getClass().getName().equals("li.cil.oc.common.tileentity.Adapter")) continue;
-
-                if (te instanceof IInterfaceHost host) {
-                    try {
-                        if (host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
-                            continue;
-                        }
-                    } catch (GridAccessException e) {
+            if (te instanceof IInterfaceHost host) {
+                try {
+                    if (host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
                         continue;
                     }
+                } catch (GridAccessException e) {
+                    continue;
                 }
+            }
 
-                final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
-                IAEStack<?> result = whatToSend;
-                if (ad != null) {
-                    result = ad.addStack(whatToSend, getInsertionMode());
-                }
-                if (result == null) {
-                    whatToSend = null;
+            final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
+            if (ad != null) {
+                final Iterator<IAEStack<?>> iter = this.waitingToSend.iterator();
+                while (iter.hasNext()) {
+                    IAEStack<?> aes = iter.next();
+                    if (aes == null) {
+                        iter.remove();
+                        continue;
+                    }
+
+                    IAEStack<?> leftover = ad
+                            .addStack(isFluidInterface ? aes : stackConvertPacket(aes), getInsertionMode());
+                    if (leftover != null && leftover.getStackSize() == aes.getStackSize()) {
+                        continue;
+                    }
+
                     sentSomething = true;
-                } else {
-                    sentSomething |= result.getStackSize() < whatToSend.getStackSize();
-                    whatToSend.setStackSize(result.getStackSize());
-                    if (result.hasTagCompound())
-                        whatToSend.setTagCompound(result.getTagCompound().getNBTTagCompoundCopy());
-                }
-
-                if (whatToSend == null) {
-                    break;
+                    if (leftover != null && leftover.getStackSize() > 0) {
+                        aes.setStackSize(leftover.getStackSize());
+                    } else {
+                        aes.setStackSize(0);
+                        iter.remove();
+                    }
                 }
             }
 
-            if (whatToSend == null) {
-                i.remove();
-            }
         }
 
         if (this.waitingToSend.isEmpty()) {
@@ -1139,26 +1136,27 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 ListIterator<IAEStack<?>> iter = stacksToPush.listIterator();
                 while (iter.hasNext()) {
                     IAEStack<?> aes = iter.next();
-                    if (aes != null) {
-                        if (!isFluidInterface) {
-                            aes = stackConvertPacket(aes);
-                        }
+                    if (aes == null) {
+                        iter.remove();
+                        continue;
+                    }
 
-                        IAEStack<?> leftover = ad.addStack(aes, getInsertionMode());
-                        if (leftover != null && leftover.getStackSize() == aes.getStackSize()) {
-                            continue;
-                        }
+                    IAEStack<?> leftover = ad
+                            .addStack(isFluidInterface ? aes : stackConvertPacket(aes), getInsertionMode());
+                    if (leftover != null && leftover.getStackSize() == aes.getStackSize()) {
+                        continue;
+                    }
 
-                        hadAcceptedSome = true;
-                        hadAcceptedSomeOnFace = true;
-                        if (leftover != null && leftover.getStackSize() > 0) {
-                            aes.setStackSize(leftover.getStackSize());
-                            iter.set(aes);
-                        } else {
-                            iter.remove();
-                        }
+                    hadAcceptedSome = true;
+                    hadAcceptedSomeOnFace = true;
+                    if (leftover != null && leftover.getStackSize() > 0) {
+                        aes.setStackSize(leftover.getStackSize());
+                    } else {
+                        aes.setStackSize(0);
+                        iter.remove();
                     }
                 }
+
                 if (hadAcceptedSomeOnFace) {
                     onPushPatternSuccess(te, s.getOpposite(), patternDetails);
                     if (stacksToPush.isEmpty()) {
@@ -1172,6 +1170,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             for (IAEStack<?> aes : stacksToPush) {
                 this.addToSendList(aes);
             }
+
             return true;
         } else if (foundTarget) {
             foundReason = true;
