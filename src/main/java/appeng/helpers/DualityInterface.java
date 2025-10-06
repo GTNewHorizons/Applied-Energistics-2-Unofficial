@@ -741,9 +741,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         continue;
                     }
 
+                    long amountToPush = aes.getStackSize();
                     IAEStack<?> leftover = ad
                             .addStack(isFluidInterface ? aes : stackConvertPacket(aes), getInsertionMode());
-                    if (leftover != null && leftover.getStackSize() == aes.getStackSize()) {
+                    if (leftover != null && leftover.getStackSize() == amountToPush) {
                         continue;
                     }
 
@@ -1141,9 +1142,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         continue;
                     }
 
+                    long amountToPush = aes.getStackSize();
                     IAEStack<?> leftover = ad
                             .addStack(isFluidInterface ? aes : stackConvertPacket(aes), getInsertionMode());
-                    if (leftover != null && leftover.getStackSize() == aes.getStackSize()) {
+                    if (leftover != null && leftover.getStackSize() == amountToPush) {
                         continue;
                     }
 
