@@ -1,5 +1,7 @@
 package appeng.util.inv;
 
+import static appeng.util.Platform.isAE2FCLoaded;
+
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -163,7 +165,7 @@ public class AdaptorFluidHandler extends InventoryAdaptor {
 
         @Override
         public ItemSlot next() {
-            if (nextSlotIndex < tanks.length) {
+            if (isAE2FCLoaded && nextSlotIndex < tanks.length) {
                 FluidStack fluid = tanks[nextSlotIndex].fluid;
                 ItemSlot slot = new ItemSlot();
                 slot.setSlot(nextSlotIndex++);

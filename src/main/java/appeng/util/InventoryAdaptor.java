@@ -10,7 +10,7 @@
 
 package appeng.util;
 
-import static com.glodblock.github.util.ModAndClassUtil.EIO;
+import static appeng.util.Platform.isEIOLoaded;
 
 import java.util.ArrayList;
 
@@ -73,7 +73,7 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             te = tt.getTile(te);
         }
 
-        if (EIO && te instanceof TileConduitBundle tcb) {
+        if (isEIOLoaded && te instanceof TileConduitBundle tcb) {
             return new AdaptorConduitBandle(tcb, d);
         } else if (te instanceof EntityPlayer) {
             return new AdaptorIInventory(new AdaptorPlayerInventory(((EntityPlayer) te).inventory, false));
