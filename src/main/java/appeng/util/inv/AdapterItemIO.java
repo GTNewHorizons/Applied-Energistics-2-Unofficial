@@ -31,6 +31,8 @@ public class AdapterItemIO extends InventoryAdaptor {
         while (iter.hasNext() && amount > 0) {
             ImmutableItemStack immutableStack = iter.next();
 
+            if (immutableStack == null) continue;
+
             ItemStack stack = immutableStack.toStack();
 
             if (filter != null && !Platform.isSameItemPrecise(stack, filter)) continue;
@@ -60,6 +62,8 @@ public class AdapterItemIO extends InventoryAdaptor {
         while (iter.hasNext() && amount > 0) {
             ImmutableItemStack immutableStack = iter.next();
 
+            if (immutableStack == null) continue;
+
             ItemStack stack = immutableStack.toStack();
 
             if (filter != null && !Platform.isSameItemPrecise(stack, filter)) continue;
@@ -87,6 +91,8 @@ public class AdapterItemIO extends InventoryAdaptor {
 
         while (iter.hasNext() && amount > 0) {
             ImmutableItemStack immutableStack = iter.next();
+
+            if (immutableStack == null) continue;
 
             ItemStack stack = immutableStack.toStack();
 
@@ -122,6 +128,8 @@ public class AdapterItemIO extends InventoryAdaptor {
 
         while (iter.hasNext() && amount > 0) {
             ImmutableItemStack immutableStack = iter.next();
+
+            if (immutableStack == null) continue;
 
             ItemStack stack = immutableStack.toStack();
 
@@ -179,7 +187,7 @@ public class AdapterItemIO extends InventoryAdaptor {
             public ItemSlot next() {
                 ImmutableItemStack stack = iter.next();
 
-                slot.setItemStack(stack.toStack());
+                slot.setItemStack(stack == null ? null : stack.toStack());
                 slot.setAEItemStack(null);
                 slot.setExtractable(true);
                 slot.setSlot(i++);
