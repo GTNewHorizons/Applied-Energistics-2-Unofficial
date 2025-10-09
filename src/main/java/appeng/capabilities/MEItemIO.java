@@ -1,19 +1,18 @@
 package appeng.capabilities;
 
-import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 
 import com.gtnewhorizon.gtnhlib.capability.item.AbstractInventorySourceIterator;
 import com.gtnewhorizon.gtnhlib.capability.item.IItemIO;
 import com.gtnewhorizon.gtnhlib.capability.item.InventoryItemSource;
 import com.gtnewhorizon.gtnhlib.capability.item.InventorySourceIterator;
+import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.energy.IEnergyGrid;
@@ -66,7 +65,7 @@ public class MEItemIO implements IItemIO {
 
     @Override
     public ItemStack store(ItemStack stack) {
-        if (storage == null) return stack;
+        if (!duality.getProxy().isActive()) return stack;
 
         boolean matches = false, isFiltered = false;
 
@@ -87,7 +86,7 @@ public class MEItemIO implements IItemIO {
 
             if (config == null) continue;
 
-            if (areStacksEqual(stack, config)) {
+            if (ItemUtil.areStacksEqual(stack, config)) {
                 matches = true;
                 break;
             }
@@ -104,6 +103,8 @@ public class MEItemIO implements IItemIO {
 
     @Override
     public OptionalInt getStoredAmount(ItemStack stack) {
+        if (!duality.getProxy().isActive()) return OptionalInt.empty();
+
         if (stack == null) {
             long sum = 0;
 
@@ -121,6 +122,8 @@ public class MEItemIO implements IItemIO {
 
     @Override
     public @Nonnull InventorySourceIterator iterator() {
+        if (!duality.getProxy().isActive()) return InventorySourceIterator.EMPTY;
+
         int[] effectiveSlots = allowedSourceSlots != null ? InventoryItemSource.intersect(SLOTS, allowedSourceSlots)
                 : SLOTS;
 
@@ -201,20 +204,6 @@ public class MEItemIO implements IItemIO {
                 storage.injectItems(AEItemStack.create(stack), Actionable.MODULATE, duality.getActionSource());
             }
         };
-    }
-
-    private static boolean isStackValid(ItemStack stack) {
-        return stack != null && stack.getItem() != null && stack.stackSize > 0;
-    }
-
-    private static boolean areStacksEqual(ItemStack a, ItemStack b) {
-        if (a == null || b == null) return false;
-
-        if (a.getItem() != b.getItem()) return false;
-        if (Items.feather.getDamage(a) != Items.feather.getDamage(b)) return false;
-        if (!Objects.equals(a.getTagCompound(), b.getTagCompound())) return false;
-
-        return true;
     }
 
     public static int longToInt(long number) {
