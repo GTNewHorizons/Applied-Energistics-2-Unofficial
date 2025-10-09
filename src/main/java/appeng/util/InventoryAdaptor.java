@@ -22,6 +22,9 @@ import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
 
+import com.gtnewhorizon.gtnhlib.capability.item.IItemIO;
+import com.gtnewhorizon.gtnhlib.util.ItemUtil;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.parts.IPart;
@@ -38,6 +41,7 @@ import appeng.parts.p2p.PartP2PLiquids;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.storage.TileChest;
+import appeng.util.inv.AdapterItemIO;
 import appeng.util.inv.AdaptorConduitBandle;
 import appeng.util.inv.AdaptorDualityInterface;
 import appeng.util.inv.AdaptorFluidHandler;
@@ -61,16 +65,18 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             return null;
         }
 
-        final IBetterStorage bs = (IBetterStorage) (IntegrationRegistry.INSTANCE.isEnabled(
-                IntegrationType.BetterStorage) ? IntegrationRegistry.INSTANCE.getInstance(IntegrationType.BetterStorage)
-                        : null);
-        final IThaumicTinkerer tt = (IThaumicTinkerer) (IntegrationRegistry.INSTANCE
-                .isEnabled(IntegrationType.ThaumicTinkerer)
-                        ? IntegrationRegistry.INSTANCE.getInstance(IntegrationType.ThaumicTinkerer)
-                        : null);
+        final IBetterStorage bs = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.BetterStorage);
+        final IThaumicTinkerer tt = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.ThaumicTinkerer);
 
         if (tt != null && tt.isTransvectorInterface(te)) {
             te = tt.getTile(te);
+        }
+
+        // spotless:off
+        IItemIO itemIO = ItemUtil.getItemIO(te, d, false);
+
+        if (itemIO != null) {
+            return new AdapterItemIO(itemIO);
         }
 
         if (EIO && te instanceof TileConduitBundle tcb) {
@@ -100,24 +106,20 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
                 }
             } else if (te instanceof TileChest) {
                 return new AdaptorMEChest(new WrapperMCISidedInventory(si, d), (TileChest) te);
-            } else if (te instanceof IFluidHandler tank
-                    && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
-                        return new AdaptorFluidHandler(tank, d);
-                    }
+            } else if (te instanceof IFluidHandler tank && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
+                return new AdaptorFluidHandler(tank, d);
+            }
 
             final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
             if (si.getSizeInventory() > 0 && slots != null && slots.length > 0) {
                 return new AdaptorIInventory(new WrapperMCISidedInventory(si, d));
             }
-        } else if (te instanceof IFluidHandler tank
-                && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
-                    return new AdaptorFluidHandler(tank, d);
-                } else
-            if (te instanceof IInventory i) {
-                if (i.getSizeInventory() > 0) {
-                    return new AdaptorIInventory(i);
-                }
-            }
+        } else if (te instanceof IFluidHandler tank && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
+            return new AdaptorFluidHandler(tank, d);
+        } else if (te instanceof IInventory i && i.getSizeInventory() > 0) {
+            return new AdaptorIInventory(i);
+        }
+        // spotless:on
 
         return null;
     }
