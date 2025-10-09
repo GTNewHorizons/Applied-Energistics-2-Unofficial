@@ -272,7 +272,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         if (this.waitingToSend != null) {
 
             for (final IAEStack<?> is : this.waitingToSend) {
-                waitingToSend.appendTag(writeStackNBT(is, new NBTTagCompound()));
+                waitingToSend.appendTag(writeStackNBT(is, new NBTTagCompound(), true));
             }
         }
         data.setTag("waitingToSend", waitingToSend);
@@ -285,7 +285,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             for (int x = 0; x < waitingList.tagCount(); x++) {
                 final NBTTagCompound c = waitingList.getCompoundTagAt(x);
                 if (c != null) {
-                    final IAEStack<?> is = readStackNBT(c);
+                    final IAEStack<?> is = readStackNBT(c, true);
                     if (is == null) {
                         continue;
                     }
