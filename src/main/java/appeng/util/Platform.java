@@ -2000,7 +2000,8 @@ public class Platform {
             final byte stackType = tag.getByte("StackType");
             return switch (stackType) {
                 case 0 -> convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
-                        : AEItemStack.loadItemStackFromNBT(tag); // migration moment TODO remove this kind of things on 3.0 / 3.1
+                        : AEItemStack.loadItemStackFromNBT(tag); // migration moment TODO remove this kind of things on
+                                                                 // 3.0 / 3.1
                 case 1 -> AEItemStack.loadItemStackFromNBT(tag);
                 case 2 -> AEFluidStack.loadFluidStackFromNBT(tag);
                 default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
