@@ -2,8 +2,6 @@ package appeng.container.implementations;
 
 import static appeng.container.implementations.ContainerPatternTerm.MULTIPLE_OF_BUTTON_CLICK;
 import static appeng.container.implementations.ContainerPatternTerm.MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT;
-import static appeng.container.implementations.ContainerPatternTerm.canMultiplyOrDivide;
-import static appeng.container.implementations.ContainerPatternTerm.multiplyOrDivideStacksInternal;
 import static appeng.util.Platform.writeStackNBT;
 
 import java.util.ArrayList;
@@ -420,10 +418,11 @@ public class ContainerPatternTermEx extends ContainerMEMonitorable
     }
 
     public void multiplyOrDivideStacks(int multi) {
-        if (canMultiplyOrDivide(this.craftingSlots, multi) && canMultiplyOrDivide(this.outputSlots, multi)) {
-            multiplyOrDivideStacksInternal(this.craftingSlots, multi);
-            multiplyOrDivideStacksInternal(this.outputSlots, multi);
-        }
+        /*
+         * if (canMultiplyOrDivide(this.craftingSlots, multi) && canMultiplyOrDivide(this.outputSlots, multi)) {
+         * multiplyOrDivideStacksInternal(this.craftingSlots, multi); multiplyOrDivideStacksInternal(this.outputSlots,
+         * multi); }
+         */
         this.detectAndSendChanges();
     }
 

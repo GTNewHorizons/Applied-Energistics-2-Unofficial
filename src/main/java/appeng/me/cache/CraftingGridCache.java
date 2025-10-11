@@ -10,6 +10,9 @@
 
 package appeng.me.cache;
 
+import static appeng.api.storage.data.IItemList.LIST_FLUID;
+import static appeng.api.storage.data.IItemList.LIST_ITEM;
+import static appeng.api.storage.data.IItemList.LIST_MIXED;
 import static appeng.util.Platform.convertStack;
 import static appeng.util.Platform.stackConvert;
 
@@ -74,6 +77,7 @@ import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -86,8 +90,6 @@ import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.ItemSorters;
-import appeng.util.Platform;
-import appeng.util.item.FluidList;
 import appeng.util.item.OreListMultiMap;
 
 public class CraftingGridCache
@@ -428,15 +430,30 @@ public class CraftingGridCache
 
     @Override
     public IItemList<IAEStack> getAvailableItems(final IItemList<IAEStack> out, int iteration) {
-        if (out.getClass().equals(FluidList.class)) return out;
 
         // add craftable items!
         for (final IAEStack<?> stack : this.craftableItems.keySet()) {
-            out.addCrafting(Platform.stackConvert(stack));
+            if (stack instanceof IAEFluidStack afs) {
+                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_FLUID) {
+                    out.addCrafting(afs);
+                }
+            } else {
+                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_ITEM) {
+                    out.addCrafting(stack);
+                }
+            }
         }
 
-        for (final IAEStack<?> st : this.emitableItems) {
-            out.addCrafting(Platform.stackConvert(st));
+        for (final IAEStack<?> stack : emitableItems) {
+            if (stack instanceof IAEFluidStack afs) {
+                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_FLUID) {
+                    out.addCrafting(afs);
+                }
+            } else {
+                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_ITEM) {
+                    out.addCrafting(stack);
+                }
+            }
         }
 
         return out;

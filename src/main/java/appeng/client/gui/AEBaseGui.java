@@ -46,6 +46,8 @@ import com.google.common.base.Stopwatch;
 
 import appeng.api.events.GuiScrollEvent;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.client.ActionKey;
+import appeng.client.ClientHelper;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ITooltip;
 import appeng.client.me.InternalSlotME;
@@ -143,12 +145,14 @@ public abstract class AEBaseGui extends GuiContainer {
     private ItemStack dbl_whichItem;
     private Slot bl_clicked;
     private boolean subGui;
+    private static int controlKey;
 
     public AEBaseGui(final Container container) {
         super(container);
         this.subGui = switchingGuis;
         switchingGuis = false;
         aeRenderItem.parent = this;
+        controlKey = ClientHelper.proxy.getKeybind(ActionKey.CONTROL_OPERATION);
     }
 
     protected static String join(final Collection<String> toolTip, final String delimiter) {
@@ -1113,5 +1117,9 @@ public abstract class AEBaseGui extends GuiContainer {
 
     public int getYSize() {
         return ySize;
+    }
+
+    public static boolean isCtrlKeyDown() {
+        return Keyboard.isKeyDown(controlKey);
     }
 }

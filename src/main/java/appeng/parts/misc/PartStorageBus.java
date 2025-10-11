@@ -60,6 +60,7 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.client.texture.CableBusTextures;
@@ -93,8 +94,8 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @Interface(iname = IntegrationType.BuildCraftTransport, iface = "buildcraft.api.transport.IPipeConnection")
-public class PartStorageBus extends PartUpgradeable implements IGridTickable, ICellContainer,
-        IMEMonitorHandlerReceiver<IAEItemStack>, IPipeConnection, IPriorityHost, IOreFilterable {
+public class PartStorageBus extends PartUpgradeable implements IGridTickable, ICellContainer, IMEMonitorHandlerReceiver,
+        IPipeConnection, IPriorityHost, IOreFilterable {
 
     private final BaseActionSource mySrc;
     private final AppEngInternalAEInventory Config = new AppEngInternalAEInventory(this, 63);
@@ -326,7 +327,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
     }
 
     @Override
-    public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
+    public void postChange(final IBaseMonitor monitor, final Iterable<IAEStack<?>> change,
             final BaseActionSource source) {
         try {
             if (this.getProxy().isActive()) {
@@ -338,7 +339,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                         return;
                     }
                 }
-                Iterable<IAEItemStack> filteredChanges = this.filterChanges(change, this.readOncePass);
+                Iterable<IAEStack<?>> filteredChanges = this.filterChanges(change, this.readOncePass);
                 this.readOncePass = false;
                 if (filteredChanges == null) return;
                 this.getProxy().getStorage()
@@ -354,17 +355,17 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
      * changes match the filter.
      */
     @Nullable
-    private Iterable<IAEItemStack> filterChanges(final Iterable<IAEItemStack> change, final boolean readOncePass) {
+    private Iterable<IAEStack<?>> filterChanges(final Iterable<IAEStack<?>> change, final boolean readOncePass) {
         if (readOncePass) {
             return change;
         }
 
         if (this.handler != null && this.handler.isExtractFilterActive()
                 && !this.handler.getExtractPartitionList().isEmpty()) {
-            List<IAEItemStack> filteredChanges = new ArrayList<>();
+            List<IAEStack<?>> filteredChanges = new ArrayList<>();
             Predicate<IAEItemStack> extractFilterCondition = this.handler.getExtractFilterCondition();
-            for (final IAEItemStack changedItem : change) {
-                if (extractFilterCondition.test(changedItem)) {
+            for (final IAEStack<?> changedItem : change) {
+                if (extractFilterCondition.test((IAEItemStack) changedItem)) {
                     filteredChanges.add(changedItem);
                 }
             }

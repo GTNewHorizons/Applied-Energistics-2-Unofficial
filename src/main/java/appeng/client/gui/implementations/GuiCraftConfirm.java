@@ -12,6 +12,7 @@ package appeng.client.gui.implementations;
 
 import static appeng.api.config.Settings.CRAFTING_SORT_BY;
 import static appeng.api.config.Settings.SORT_DIRECTION;
+import static appeng.util.Platform.stackConvert;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import appeng.api.config.SortDir;
 import appeng.api.config.TerminalStyle;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
@@ -812,32 +814,30 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         }
     }
 
-    public void postUpdate(final List<IAEItemStack> list, final byte ref) {
-        switch (ref) {
-            case 0 -> {
-                for (final IAEItemStack l : list) {
-                    this.handleInput(this.storage, l);
+    public void postUpdate(final List<IAEStack<?>> list, final byte ref) {
+        for (final IAEStack<?> l : list) {
+            IAEItemStack stack = stackConvert(l);
+            switch (ref) {
+                case 0 -> {
+                    this.handleInput(this.storage, stack);
                 }
-            }
-            case 1 -> {
-                for (final IAEItemStack l : list) {
-                    this.handleInput(this.pending, l);
+                case 1 -> {
+                    this.handleInput(this.pending, stack);
                 }
-            }
-            case 2 -> {
-                for (final IAEItemStack l : list) {
-                    this.handleInput(this.missing, l);
+                case 2 -> {
+                    this.handleInput(this.missing, stack);
                 }
             }
         }
 
-        for (final IAEItemStack l : list) {
-            final long amt = this.getTotal(l);
+        for (final IAEStack<?> l : list) {
+            IAEItemStack stack = stackConvert(l);
+            final long amt = this.getTotal(stack);
 
             if (amt <= 0) {
-                this.deleteVisualStack(l);
+                this.deleteVisualStack(stack);
             } else {
-                final IAEItemStack is = this.findVisualStack(l);
+                final IAEItemStack is = this.findVisualStack(stack);
                 is.setStackSize(amt);
             }
         }
@@ -880,7 +880,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             return ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
                     * sortDir.sortHint;
         if (sortMode == CraftingSortOrder.MOD) {
-            int v = ((AEItemStack) i1).getModID().compareToIgnoreCase(((AEItemStack) i2).getModID());
+            int v = ((AEItemStack) i1).getModId().compareToIgnoreCase(((AEItemStack) i2).getModId());
             return (v == 0
                     ? ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
                     : v) * sortDir.sortHint;

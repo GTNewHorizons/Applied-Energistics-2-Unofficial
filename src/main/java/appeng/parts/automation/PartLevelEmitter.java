@@ -77,7 +77,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherHost, IStackWatcherHost,
-        ICraftingWatcherHost, IMEMonitorHandlerReceiver<IAEItemStack>, ICraftingProvider, IGridTickable {
+        ICraftingWatcherHost, IMEMonitorHandlerReceiver, ICraftingProvider, IGridTickable {
 
     private static final int FLAG_ON = 8;
 
@@ -353,7 +353,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     }
 
     @Override
-    public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
+    public void postChange(final IBaseMonitor monitor, final Iterable<IAEStack<?>> change,
             final BaseActionSource actionSource) {
         // todo use change
         if (canDoWork()) {

@@ -13,11 +13,11 @@ public class PinSlotME extends InternalSlotME {
 
     @Override
     ItemStack getStack() {
-        return this.repo.getAEPin(offset) != null ? this.repo.getAEPin(offset).getItemStack() : null;
+        return this.repo.getAEPin(offset) instanceof IAEItemStack ais ? ais.getItemStack() : null;
     }
 
     @Override
     IAEItemStack getAEStack() {
-        return this.repo.getAEPin(offset);
+        return this.repo.getAEPin(offset) instanceof IAEItemStack ais ? ais : null;
     }
 }

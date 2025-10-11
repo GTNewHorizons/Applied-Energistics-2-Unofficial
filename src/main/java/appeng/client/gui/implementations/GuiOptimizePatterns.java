@@ -24,6 +24,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.TerminalStyle;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.widgets.GuiScrollbar;
@@ -425,10 +426,12 @@ public class GuiOptimizePatterns extends AEBaseGui implements IGuiTooltipHandler
         super.mouseClicked(xCoord, yCoord, btn);
     }
 
-    public void postUpdate(final List<IAEItemStack> list, final byte ref) {
+    public void postUpdate(final List<IAEStack<?>> list, final byte ref) {
         visual.clear();
-        for (IAEItemStack stack : list) {
-            visual.add(stack.copy());
+        for (IAEStack<?> stack : list) {
+            if (stack instanceof IAEItemStack ais) {
+                visual.add(ais.copy());
+            }
         }
 
         this.sortItems();

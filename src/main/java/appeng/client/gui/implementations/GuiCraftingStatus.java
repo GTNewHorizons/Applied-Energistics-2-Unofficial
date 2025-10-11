@@ -31,7 +31,7 @@ import appeng.api.config.TerminalStyle;
 import appeng.api.definitions.IDefinitions;
 import appeng.api.definitions.IParts;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.GuiCraftingCPUTable;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -324,7 +324,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
     }
 
     @Override
-    public void postUpdate(List<IAEItemStack> list, byte ref) {
+    public void postUpdate(List<IAEStack<?>> list, byte ref) {
         super.postUpdate(list, ref);
         setScrollBar();
     }

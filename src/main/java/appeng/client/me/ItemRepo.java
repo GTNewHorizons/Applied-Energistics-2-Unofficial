@@ -32,6 +32,7 @@ import appeng.api.config.TypeFilter;
 import appeng.api.config.ViewItems;
 import appeng.api.storage.IItemDisplayRegistry;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IDisplayRepo;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.widgets.IScrollSource;
@@ -41,17 +42,15 @@ import appeng.integration.modules.NEI;
 import appeng.items.storage.ItemViewCell;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
-import appeng.util.item.ItemImmutableList;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
 
 public class ItemRepo implements IDisplayRepo {
 
-    private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
-    private IAEItemStack[] pinsRepo = new IAEItemStack[0];
-    private final ArrayList<IAEItemStack> view = new ArrayList<>();
-    private final ArrayList<ItemStack> dsp = new ArrayList<>();
+    private final IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
+    private IAEStack<?>[] pinsRepo = new IAEStack<?>[0];
+    private final ArrayList<IAEStack<?>> view = new ArrayList<>();
     private final IScrollSource src;
     private final ISortSource sortSrc;
 
@@ -69,11 +68,11 @@ public class ItemRepo implements IDisplayRepo {
     }
 
     @Override
-    public void setAEPins(IAEItemStack[] newPins) {
-        IItemList<IAEItemStack> oldPins = getPinsCache();
-        pinsRepo = new IAEItemStack[newPins.length];
+    public void setAEPins(IAEStack<?>[] newPins) {
+        IItemList<IAEStack<?>> oldPins = getPinsCache();
+        pinsRepo = new IAEStack<?>[newPins.length];
         for (int i = 0; i < pinsRepo.length; i++) {
-            IAEItemStack isToPin = list.findPrecise(newPins[i]);
+            IAEStack<?> isToPin = list.findPrecise(newPins[i]);
 
             if (isToPin == null) {
                 // If the item is not found in the repo, try to find it in the previous pins.
@@ -88,7 +87,7 @@ public class ItemRepo implements IDisplayRepo {
             }
         }
 
-        for (IAEItemStack ais : oldPins) {
+        for (IAEStack<?> ais : oldPins) {
             if (ais.getStackSize() != -1) list.add(ais);
         }
 
@@ -96,10 +95,10 @@ public class ItemRepo implements IDisplayRepo {
     }
 
     /** pin order is not keep */
-    private IItemList<IAEItemStack> getPinsCache() {
-        IItemList<IAEItemStack> oldPins = AEApi.instance().storage().createItemList();
+    private IItemList<IAEStack<?>> getPinsCache() {
+        IItemList<IAEStack<?>> oldPins = AEApi.instance().storage().createAEStackList();
 
-        for (IAEItemStack pin : pinsRepo) {
+        for (IAEStack<?> pin : pinsRepo) {
             if (pin != null) {
                 oldPins.add(pin);
             }
@@ -109,7 +108,7 @@ public class ItemRepo implements IDisplayRepo {
     }
 
     @Override
-    public IAEItemStack getAEPin(int idx) {
+    public IAEStack<?> getAEPin(int idx) {
         if (idx < 0 || idx >= pinsRepo.length) return null;
         return pinsRepo[idx];
     }
@@ -121,36 +120,36 @@ public class ItemRepo implements IDisplayRepo {
         if (idx >= this.view.size()) {
             return null;
         }
+        return this.view.get(idx) instanceof IAEItemStack ais ? ais : null;
+    }
+
+    @Override
+    public IAEStack<?> getReferenceStack(int idx) {
+        idx += this.src.getCurrentScroll() * this.rowSize;
+
+        if (idx >= this.view.size()) {
+            return null;
+        }
         return this.view.get(idx);
     }
 
     @Override
     public ItemStack getItem(int idx) {
-        idx += this.src.getCurrentScroll() * this.rowSize;
-
-        if (idx >= this.dsp.size()) {
-            return null;
-        }
-        return this.dsp.get(idx);
+        IAEStack<?> stack = getReferenceStack(idx);
+        return stack instanceof IAEItemStack ais ? ais.getItemStack() : null;
     }
 
     @Override
-    public IItemList<IAEItemStack> getAvailableItems() {
-        IItemList<IAEItemStack> pins = AEApi.instance().storage().createItemList();
-        for (IAEItemStack is : this.pinsRepo) {
-            if (is != null && is.getStackSize() > 0) {
-                pins.add(is);
-            }
-        }
-        return new ItemImmutableList(list, pins);
+    public void postUpdate(IAEItemStack stack) {
+        this.postUpdate((IAEStack<?>) stack);
     }
 
     @Override
-    public void postUpdate(final IAEItemStack is) {
-        final IAEItemStack st = this.list.findPrecise(is);
+    public void postUpdate(final IAEStack<?> is) {
+        final IAEStack st = this.list.findPrecise(is);
 
-        for (IAEItemStack pin : pinsRepo) {
-            if (pin != null && pin.isSameType(is)) {
+        for (IAEStack pin : pinsRepo) {
+            if (pin != null && pin.isSameType((Object) is)) {
                 pin.reset();
                 pin.add(is);
                 return;
@@ -175,11 +174,11 @@ public class ItemRepo implements IDisplayRepo {
     public void updateView() {
         if (this.paused) {
             // Update existing view with new data
-            IItemList<IAEItemStack> pins = getPinsCache();
+            IItemList<IAEStack<?>> pins = getPinsCache();
             for (int i = 0; i < this.view.size(); i++) {
-                IAEItemStack entry = this.view.get(i);
-                IAEItemStack serverEntry = this.list.findPrecise(entry);
-                IAEItemStack pinsEntry = pins.findPrecise(serverEntry);
+                IAEStack<?> entry = this.view.get(i);
+                IAEStack<?> serverEntry = this.list.findPrecise(entry);
+                IAEStack<?> pinsEntry = pins.findPrecise(serverEntry);
                 if (serverEntry == null || pinsEntry != null) {
                     entry.setStackSize(0);
                 } else {
@@ -188,9 +187,9 @@ public class ItemRepo implements IDisplayRepo {
             }
 
             // Append newly added item stacks to the end of the view
-            Set<IAEItemStack> viewSet = new HashSet<>(this.view);
-            ArrayList<IAEItemStack> entriesToAdd = new ArrayList<>();
-            for (IAEItemStack serverEntry : this.list) {
+            Set<IAEStack<?>> viewSet = new HashSet<>(this.view);
+            ArrayList<IAEStack<?>> entriesToAdd = new ArrayList<>();
+            for (IAEStack<?> serverEntry : this.list) {
                 if (!viewSet.contains(serverEntry)) {
                     entriesToAdd.add(serverEntry);
                 }
@@ -213,21 +212,15 @@ public class ItemRepo implements IDisplayRepo {
                 this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_MOD);
             } else if (SortBy == SortOrder.AMOUNT) {
                 this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_SIZE);
-            } else if (SortBy == SortOrder.INVTWEAKS) {
-                this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS);
+                // } else if (SortBy == SortOrder.INVTWEAKS) {
+                // this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_INV_TWEAKS);
             } else {
                 this.view.sort(ItemSorters.CONFIG_BASED_SORT_BY_NAME);
             }
         }
-
-        this.dsp.clear();
-        this.dsp.ensureCapacity(this.list.size());
-        for (final IAEItemStack is : this.view) {
-            this.dsp.add(is.getItemStack());
-        }
     }
 
-    private void addEntriesToView(Iterable<IAEItemStack> entries) {
+    private void addEntriesToView(Iterable<IAEStack<?>> entries) {
         final Enum viewMode = this.sortSrc.getSortDisplay();
         final Enum typeFilter = this.sortSrc.getTypeFilter();
         Predicate<IAEItemStack> itemFilter = null;
@@ -243,7 +236,7 @@ public class ItemRepo implements IDisplayRepo {
 
         IItemDisplayRegistry registry = AEApi.instance().registries().itemDisplay();
 
-        out: for (IAEItemStack is : entries) {
+        out: for (IAEStack<?> is : entries) {
             if (viewMode == ViewItems.CRAFTABLE && !is.isCraftable()) {
                 continue;
             }
@@ -252,19 +245,23 @@ public class ItemRepo implements IDisplayRepo {
                 continue;
             }
 
-            if (this.myPartitionList != null && !this.myPartitionList.isListed(is)) {
-                continue;
+            if (is instanceof IAEItemStack ais) {
+                if (this.myPartitionList != null && !this.myPartitionList.isListed(ais)) {
+                    continue;
+                }
+
+                if (registry.isBlacklisted(ais.getItemStack().getItem())
+                        || registry.isBlacklisted(ais.getItemStack().getItem().getClass())) {
+                    continue;
+                }
+
+                for (final BiPredicate<TypeFilter, IAEItemStack> filter : registry.getItemFilters()) {
+                    if (!filter.test((TypeFilter) typeFilter, ais)) continue out;
+                }
             }
 
-            if (registry.isBlacklisted(is.getItem()) || registry.isBlacklisted(is.getItem().getClass())) {
-                continue;
-            }
-
-            for (final BiPredicate<TypeFilter, IAEItemStack> filter : registry.getItemFilters()) {
-                if (!filter.test((TypeFilter) typeFilter, is)) continue out;
-            }
-
-            if (itemFilter == null || Boolean.TRUE.equals(this.searchCache.computeIfAbsent(is, itemFilter::test))) {
+            if (itemFilter == null
+                    || (!(is instanceof IAEItemStack ais) || this.searchCache.computeIfAbsent(ais, itemFilter::test))) {
 
                 if (viewMode == ViewItems.CRAFTABLE) {
                     is = is.copy();

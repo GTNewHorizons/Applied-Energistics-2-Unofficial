@@ -791,7 +791,7 @@ public class Platform {
             return "** Null";
         }
 
-        final String n = ((AEItemStack) is).getModID();
+        final String n = ((AEItemStack) is).getModId();
         return n == null ? "** Null" : n;
     }
 
@@ -1372,8 +1372,8 @@ public class Platform {
     }
 
     public static <T extends IAEStack<T>> void postListChanges(final IItemList<T> before, final IItemList<T> after,
-            final IMEMonitorHandlerReceiver<T> meMonitorPassthrough, final BaseActionSource source) {
-        final LinkedList<T> changes = new LinkedList<>();
+            final IMEMonitorHandlerReceiver meMonitorPassthrough, final BaseActionSource source) {
+        final LinkedList<IAEStack<?>> changes = new LinkedList<>();
 
         for (final T is : before) {
             is.setStackSize(-is.getStackSize());

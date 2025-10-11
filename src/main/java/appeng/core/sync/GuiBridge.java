@@ -128,6 +128,26 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_Handler(),
 
+    // Terminal
+
+    GUI_ME(ContainerMEMonitorable.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
+
+    GUI_WIRELESS_TERM(ContainerWirelessTerm.class, WirelessTerminalGuiObject.class, GuiHostType.ITEM, null),
+
+    GUI_CRAFTING_TERMINAL(ContainerCraftingTerm.class, PartCraftingTerminal.class, GuiHostType.ITEM_OR_WORLD,
+            SecurityPermissions.CRAFT),
+
+    GUI_PATTERN_TERMINAL(ContainerPatternTerm.class, PartPatternTerminal.class, GuiHostType.ITEM_OR_WORLD,
+            SecurityPermissions.CRAFT),
+
+    GUI_PATTERN_TERMINAL_EX(ContainerPatternTermEx.class, PartPatternTerminalEx.class, GuiHostType.ITEM_OR_WORLD,
+            SecurityPermissions.CRAFT),
+
+    GUI_INTERFACE_TERMINAL(ContainerInterfaceTerminal.class, PartInterfaceTerminal.class, GuiHostType.ITEM_OR_WORLD,
+            SecurityPermissions.BUILD),
+
+    GUI_PORTABLE_CELL(ContainerMEPortableCell.class, IPortableCell.class, GuiHostType.ITEM, null),
+
     GUI_GRINDER(ContainerGrinder.class, TileGrinder.class, GuiHostType.WORLD, null),
 
     GUI_QNB(ContainerQNB.class, TileQuantumBridge.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
@@ -137,12 +157,6 @@ public enum GuiBridge implements IGuiHandler {
     GUI_CHEST(ContainerChest.class, TileChest.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
 
     GUI_WIRELESS(ContainerWireless.class, TileWireless.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
-
-    GUI_ME(ContainerMEMonitorable.class, ITerminalHost.class, GuiHostType.WORLD, null),
-
-    GUI_PORTABLE_CELL(ContainerMEPortableCell.class, IPortableCell.class, GuiHostType.ITEM, null),
-
-    GUI_WIRELESS_TERM(ContainerWirelessTerm.class, WirelessTerminalGuiObject.class, GuiHostType.ITEM, null),
 
     GUI_NETWORK_STATUS(ContainerNetworkStatus.class, INetworkTool.class, GuiHostType.ITEM, null),
 
@@ -177,15 +191,6 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_SECURITY(ContainerSecurity.class, TileSecurity.class, GuiHostType.WORLD, SecurityPermissions.SECURITY),
 
-    GUI_CRAFTING_TERMINAL(ContainerCraftingTerm.class, PartCraftingTerminal.class, GuiHostType.WORLD,
-            SecurityPermissions.CRAFT),
-
-    GUI_PATTERN_TERMINAL(ContainerPatternTerm.class, PartPatternTerminal.class, GuiHostType.WORLD,
-            SecurityPermissions.CRAFT),
-
-    GUI_PATTERN_TERMINAL_EX(ContainerPatternTermEx.class, PartPatternTerminalEx.class, GuiHostType.WORLD,
-            SecurityPermissions.CRAFT),
-
     // extends (Container/Gui) + Bus
     GUI_LEVEL_EMITTER(ContainerLevelEmitter.class, PartLevelEmitter.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),
@@ -210,9 +215,6 @@ public enum GuiBridge implements IGuiHandler {
             SecurityPermissions.CRAFT),
 
     GUI_OPTIMIZE_PATTERNS(ContainerOptimizePatterns.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
-            SecurityPermissions.BUILD),
-
-    GUI_INTERFACE_TERMINAL(ContainerInterfaceTerminal.class, PartInterfaceTerminal.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),
 
     GUI_CRAFTING_STATUS(ContainerCraftingStatus.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,

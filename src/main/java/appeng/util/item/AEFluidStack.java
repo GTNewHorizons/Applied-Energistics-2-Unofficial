@@ -19,11 +19,18 @@ import java.nio.charset.StandardCharsets;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.IIcon;
 import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
+
+import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
@@ -31,6 +38,8 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAETagCompound;
 import appeng.util.Platform;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
 public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFluidStack, Comparable<AEFluidStack> {
@@ -384,5 +393,39 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     }
 
     @Override
+    public String getModId() {
+        String name = FluidRegistry.getDefaultFluidName(this.fluid);
+        try {
+            return name.split(":")[0];
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    @Override
     public void setTagCompound(NBTTagCompound tagCompound) {}
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void drawInGui(Minecraft mc, int x, int y) {
+        final IIcon icon = this.fluid.getIcon();
+        final int color = this.fluid.getColor();
+        final Tessellator tessellator = Tessellator.instance;
+
+        mc.renderEngine.bindTexture(TextureMap.locationBlocksTexture);
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        tessellator.startDrawingQuads();
+
+        tessellator.setColorRGBA(color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, 0xFF);
+        tessellator.addVertexWithUV(x + 16, y, 0, icon.getMaxU(), icon.getMinV());
+        tessellator.addVertexWithUV(x, y, 0, icon.getMinU(), icon.getMinV());
+        tessellator.addVertexWithUV(x, y + 16, 0, icon.getMinU(), icon.getMaxV());
+        tessellator.addVertexWithUV(x + 16, y + 16, 0, icon.getMaxU(), icon.getMaxV());
+
+        tessellator.draw();
+        GL11.glPopAttrib();
+    }
 }

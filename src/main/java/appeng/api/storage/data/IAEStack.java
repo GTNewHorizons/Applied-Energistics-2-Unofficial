@@ -15,10 +15,13 @@ package appeng.api.storage.data;
 
 import java.io.IOException;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
 public interface IAEStack<StackType extends IAEStack> {
@@ -240,7 +243,16 @@ public interface IAEStack<StackType extends IAEStack> {
 
     String getDisplayName();
 
+    String getModId();
+
     void setTagCompound(NBTTagCompound tag);
 
     boolean hasTagCompound();
+
+    @SideOnly(Side.CLIENT)
+    void drawInGui(Minecraft mc, int x, int y);
+
+    @SideOnly(Side.CLIENT)
+    void drawOverlayInGui(Minecraft mc, int x, int y, boolean showAmount, boolean showCraftableText,
+            boolean showCraftableIcon);
 }
