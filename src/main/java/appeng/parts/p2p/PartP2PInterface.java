@@ -327,41 +327,8 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
 
     @Override
     public boolean onPartActivate(final EntityPlayer p, final Vec3 pos) {
-        AppEngInternalInventory patterns = this.duality.getPatterns();
 
         if (super.onPartActivate(p, pos)) {
-            ArrayList<ItemStack> drops = new ArrayList<>();
-            for (int i = 0; i < patterns.getSizeInventory(); i++) {
-                if (patterns.getStackInSlot(i) == null) continue;
-                drops.add(patterns.getStackInSlot(i));
-            }
-
-            final IPart tile = this.getHost().getPart(this.getSide());
-            if (tile instanceof PartP2PInterface) {
-                DualityInterface newDuality = ((PartP2PInterface) tile).duality;
-                // Copy interface storage, upgrades, and settings over
-                UpgradeInventory upgrades = (UpgradeInventory) duality.getInventoryByName("upgrades");
-                ((PartP2PInterface) tile).duality.getStorage();
-                UpgradeInventory newUpgrade = (UpgradeInventory) newDuality.getInventoryByName("upgrades");
-                for (int i = 0; i < upgrades.getSizeInventory(); ++i) {
-                    newUpgrade.setInventorySlotContents(i, upgrades.getStackInSlot(i));
-                }
-
-                if (!duality.sharedInventory) {
-                    IInventory storage = duality.getStorage();
-                    IInventory newStorage = newDuality.getStorage();
-                    for (int i = 0; i < storage.getSizeInventory(); ++i) {
-                        newStorage.setInventorySlotContents(i, storage.getStackInSlot(i));
-                    }
-                }
-
-                IConfigManager config = duality.getConfigManager();
-                config.getSettings().forEach(
-                        setting -> newDuality.getConfigManager().putSetting(setting, config.getSetting(setting)));
-            }
-            TileEntity te = getTileEntity();
-            Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
-
             return true;
         }
 
@@ -374,6 +341,42 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         }
 
         return true;
+    }
+
+    @Override
+    protected void handlePartReplace() {
+        AppEngInternalInventory patterns = this.duality.getPatterns();
+        ArrayList<ItemStack> drops = new ArrayList<>();
+        for (int i = 0; i < patterns.getSizeInventory(); i++) {
+            if (patterns.getStackInSlot(i) == null) continue;
+            drops.add(patterns.getStackInSlot(i));
+        }
+
+        final IPart tile = this.getHost().getPart(this.getSide());
+        if (tile instanceof PartP2PInterface) {
+            DualityInterface newDuality = ((PartP2PInterface) tile).duality;
+            // Copy interface storage, upgrades, and settings over
+            UpgradeInventory upgrades = (UpgradeInventory) duality.getInventoryByName("upgrades");
+            ((PartP2PInterface) tile).duality.getStorage();
+            UpgradeInventory newUpgrade = (UpgradeInventory) newDuality.getInventoryByName("upgrades");
+            for (int i = 0; i < upgrades.getSizeInventory(); ++i) {
+                newUpgrade.setInventorySlotContents(i, upgrades.getStackInSlot(i));
+            }
+
+            if (!duality.sharedInventory) {
+                IInventory storage = duality.getStorage();
+                IInventory newStorage = newDuality.getStorage();
+                for (int i = 0; i < storage.getSizeInventory(); ++i) {
+                    newStorage.setInventorySlotContents(i, storage.getStackInSlot(i));
+                }
+            }
+
+            IConfigManager config = duality.getConfigManager();
+            config.getSettings()
+                    .forEach(setting -> newDuality.getConfigManager().putSetting(setting, config.getSetting(setting)));
+        }
+        TileEntity te = getTileEntity();
+        Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
     }
 
     @Override

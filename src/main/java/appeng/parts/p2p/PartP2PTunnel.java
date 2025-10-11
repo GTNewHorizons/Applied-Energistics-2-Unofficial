@@ -24,6 +24,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
+import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import com.google.common.base.Optional;
@@ -34,7 +35,9 @@ import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnits;
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.MemoryCardMessages;
+import appeng.api.parts.IPart;
 import appeng.api.parts.IPartCollisionHelper;
+import appeng.api.parts.IPartItem;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.parts.PartItemStack;
 import appeng.client.texture.CableBusTextures;
@@ -346,4 +349,51 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     void setCustomNameInternal(String name) {
         super.setCustomName(name);
     }
+
+    public boolean applyMemoryCard(EntityPlayer player, IMemoryCard mc, ItemStack is) {
+        if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
+
+        final NBTTagCompound data = mc.getData(is);
+
+        final ItemStack newType = ItemStack.loadItemStackFromNBT(data);
+
+        if (newType != null) {
+            if (newType.getItem() instanceof IPartItem partItem) {
+                final IPart testPart = partItem.createPartFromItemStack(newType);
+                if (checkIfCompatibleType(testPart)) {
+                    replacePartWithMemoryCardDataInWorld(player, mc, newType, data);
+                    return true;
+                }
+            }
+        }
+        mc.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
+        return false;
+    }
+
+    protected abstract boolean checkIfCompatibleType(final IPart testPart);
+
+    private void replacePartWithMemoryCardDataInWorld(EntityPlayer player, IMemoryCard mc, ItemStack newType,
+            NBTTagCompound data) {
+        this.getHost().removePart(this.getSide(), true);
+        final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
+        final IPart newBus = this.getHost().getPart(dir);
+
+        if (newBus instanceof PartP2PTunnel<?>newTunnel) {
+            newTunnel.setOutput(true);
+
+            try {
+                pasteMemoryCardData(newTunnel, data);
+            } catch (final GridAccessException e) {
+                // :P
+            }
+
+            newTunnel.onTunnelNetworkChange();
+        }
+
+        handlePartReplace();
+
+        mc.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
+    }
+
+    protected abstract void handlePartReplace();
 }
