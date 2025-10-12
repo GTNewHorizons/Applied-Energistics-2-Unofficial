@@ -385,7 +385,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         final IPart newBus = this.getHost().getPart(dir);
 
         if (newBus instanceof PartP2PTunnel<?>newTunnel) {
-            newTunnel.setOutput(true);
+            newTunnel.setOutput(mc.isOutputData());
 
             try {
                 pasteMemoryCardData(newTunnel, data);

@@ -131,6 +131,11 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
     }
 
     @Override
+    public boolean isOutputData() {
+        return true;
+    }
+
+    @Override
     public boolean onItemUse(final ItemStack is, final EntityPlayer player, final World w, final int x, final int y,
             final int z, final int side, final float hx, final float hy, final float hz) {
         if (player.isSneaking() && !w.isRemote) {
