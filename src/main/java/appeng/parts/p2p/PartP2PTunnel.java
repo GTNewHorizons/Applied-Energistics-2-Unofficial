@@ -50,6 +50,8 @@ import appeng.parts.PartBasicState;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
+
 public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicState {
 
     private final TunnelCollection type = new TunnelCollection<T>(null, this.getClass());
@@ -350,10 +352,15 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         super.setCustomName(name);
     }
 
-    public boolean applyMemoryCard(EntityPlayer player, IMemoryCard mc, ItemStack is) {
-        if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
+    /**
+     * @param is itemstack containing the memory card NBT
+     * @return the newly created bus with memory card settings applied
+     */
+    @Nullable
+    public IPart applyMemoryCard(EntityPlayer player, IMemoryCard memoryCard, ItemStack is) {
+        if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return null;
 
-        final NBTTagCompound data = mc.getData(is);
+        final NBTTagCompound data = memoryCard.getData(is);
 
         final ItemStack newType = ItemStack.loadItemStackFromNBT(data);
 
@@ -361,18 +368,17 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             if (newType.getItem() instanceof IPartItem partItem) {
                 final IPart testPart = partItem.createPartFromItemStack(newType);
                 if (checkIfCompatibleType(testPart)) {
-                    replacePartWithMemoryCardDataInWorld(player, mc, newType, data);
-                    return true;
+                    return replacePartWithMemoryCardDataInWorld(player, memoryCard, newType, data);
                 }
             }
         }
-        mc.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
-        return false;
+        memoryCard.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
+        return null;
     }
 
     protected abstract boolean checkIfCompatibleType(final IPart testPart);
 
-    private void replacePartWithMemoryCardDataInWorld(EntityPlayer player, IMemoryCard mc, ItemStack newType,
+    private IPart replacePartWithMemoryCardDataInWorld(EntityPlayer player, IMemoryCard mc, ItemStack newType,
             NBTTagCompound data) {
         this.getHost().removePart(this.getSide(), true);
         final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
@@ -390,10 +396,11 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             newTunnel.onTunnelNetworkChange();
         }
 
-        handlePartReplace();
+        handlePartReplace(newBus);
 
         mc.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
+        return newBus;
     }
 
-    protected abstract void handlePartReplace();
+    protected abstract void handlePartReplace(final IPart newBus);
 }

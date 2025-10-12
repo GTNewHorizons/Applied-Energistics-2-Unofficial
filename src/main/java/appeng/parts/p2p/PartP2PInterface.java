@@ -344,7 +344,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     }
 
     @Override
-    protected void handlePartReplace() {
+    protected void handlePartReplace(final IPart newBus) {
         AppEngInternalInventory patterns = this.duality.getPatterns();
         ArrayList<ItemStack> drops = new ArrayList<>();
         for (int i = 0; i < patterns.getSizeInventory(); i++) {
@@ -352,12 +352,10 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
             drops.add(patterns.getStackInSlot(i));
         }
 
-        final IPart tile = this.getHost().getPart(this.getSide());
-        if (tile instanceof PartP2PInterface) {
-            DualityInterface newDuality = ((PartP2PInterface) tile).duality;
+        if (newBus instanceof PartP2PInterface p2PInterface) {
+            DualityInterface newDuality = p2PInterface.duality;
             // Copy interface storage, upgrades, and settings over
             UpgradeInventory upgrades = (UpgradeInventory) duality.getInventoryByName("upgrades");
-            ((PartP2PInterface) tile).duality.getStorage();
             UpgradeInventory newUpgrade = (UpgradeInventory) newDuality.getInventoryByName("upgrades");
             for (int i = 0; i < upgrades.getSizeInventory(); ++i) {
                 newUpgrade.setInventorySlotContents(i, upgrades.getStackInSlot(i));

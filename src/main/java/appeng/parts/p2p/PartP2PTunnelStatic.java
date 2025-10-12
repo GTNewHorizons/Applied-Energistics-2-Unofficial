@@ -23,7 +23,7 @@ public abstract class PartP2PTunnelStatic<T extends PartP2PTunnelStatic> extends
         final ItemStack is = player.inventory.getCurrentItem();
 
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
-            return applyMemoryCard(player, mc, is);
+            return applyMemoryCard(player, mc, is) != null;
         } else if (!player.isSneaking() && Platform.isServer()
                 && Platform.isWrench(player, is, (int) pos.xCoord, (int) pos.yCoord, (int) pos.zCoord)) {
                     printConnectionInfo(player);

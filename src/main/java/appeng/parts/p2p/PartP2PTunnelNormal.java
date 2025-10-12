@@ -32,7 +32,7 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
 
         final TunnelType tt = AEApi.instance().registries().p2pTunnel().getTunnelTypeByItem(is);
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
-            return applyMemoryCard(player, mc, is);
+            return applyMemoryCard(player, mc, is) != null;
         } else if (!player.isSneaking()
                 && Platform.isWrench(player, is, (int) pos.xCoord, (int) pos.yCoord, (int) pos.zCoord)
                 && !Platform.isClient()) {
@@ -142,5 +142,5 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
     }
 
     @Override
-    protected void handlePartReplace() {}
+    protected void handlePartReplace(final IPart newBus) {}
 }
