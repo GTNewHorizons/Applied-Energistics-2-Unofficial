@@ -13,6 +13,8 @@ package appeng.parts.p2p;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
@@ -49,8 +51,6 @@ import appeng.me.cache.helpers.TunnelCollection;
 import appeng.parts.PartBasicState;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
-import javax.annotation.Nullable;
 
 public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicState {
 
