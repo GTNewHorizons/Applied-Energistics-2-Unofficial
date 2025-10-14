@@ -3,6 +3,7 @@ package appeng.parts.p2p;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Vec3;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.parts.IPart;
@@ -23,6 +24,7 @@ public abstract class PartP2PTunnelStatic<T extends PartP2PTunnelStatic> extends
         final ItemStack is = player.inventory.getCurrentItem();
 
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
+            if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
             return applyMemoryCard(player, mc, is) != null;
         } else if (!player.isSneaking() && Platform.isServer()
                 && Platform.isWrench(player, is, (int) pos.xCoord, (int) pos.yCoord, (int) pos.zCoord)) {

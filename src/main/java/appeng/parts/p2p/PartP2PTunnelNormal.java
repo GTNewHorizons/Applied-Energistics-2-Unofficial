@@ -4,6 +4,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import appeng.api.AEApi;
 import appeng.api.config.TunnelType;
@@ -32,6 +33,7 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
 
         final TunnelType tt = AEApi.instance().registries().p2pTunnel().getTunnelTypeByItem(is);
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
+            if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
             return applyMemoryCard(player, mc, is) != null;
         } else if (!player.isSneaking()
                 && Platform.isWrench(player, is, (int) pos.xCoord, (int) pos.yCoord, (int) pos.zCoord)
@@ -140,7 +142,4 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
     protected boolean checkIfCompatibleType(final IPart testPart) {
         return testPart instanceof PartP2PTunnelNormal<?>;
     }
-
-    @Override
-    protected void handlePartReplace(final IPart newBus) {}
 }
