@@ -13,7 +13,6 @@ package appeng.parts.p2p;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import appeng.util.Platform;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
@@ -401,7 +400,8 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
 
     protected void copyContents(final PartP2PTunnel<?> from, final PartP2PTunnel<?> to) {}
 
-    public PartP2PTunnel<?> applyMemoryCard(final EntityPlayer player, final IMemoryCard memoryCard, final ItemStack is) {
+    public PartP2PTunnel<?> applyMemoryCard(final EntityPlayer player, final IMemoryCard memoryCard,
+            final ItemStack is) {
         final NBTTagCompound data = memoryCard.getData(is);
         final ItemStack newType = ItemStack.loadItemStackFromNBT(data);
 
