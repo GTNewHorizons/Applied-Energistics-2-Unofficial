@@ -359,7 +359,6 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         for (int i = 0; i < patterns.getSizeInventory(); i++) {
             if (patterns.getStackInSlot(i) == null) continue;
             drops.add(patterns.getStackInSlot(i));
-//            patterns.setInventorySlotContents(i, null);
         }
         TileEntity te = p2p.getTileEntity();
         Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
@@ -393,12 +392,10 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
             AppEngInternalInventory patterns = fromI.duality.getPatterns();
             boolean drop = true;
             if (!fromI.isOutput() && !to.isOutput()) { // input to input
-                if (fromI.getFrequency() == 0 || to.getFrequency() == 0 || fromI.getFrequency() == to.getFrequency()) {
-                    for (int i = 0; i < patterns.getSizeInventory(); i++) {
-                        newDuality.getPatterns().setInventorySlotContents(i, patterns.getStackInSlot(i));
-                    }
-                    drop = false;
+                for (int i = 0; i < patterns.getSizeInventory(); i++) {
+                    newDuality.getPatterns().setInventorySlotContents(i, patterns.getStackInSlot(i));
                 }
+                drop = false;
             }
 
             if (drop) {

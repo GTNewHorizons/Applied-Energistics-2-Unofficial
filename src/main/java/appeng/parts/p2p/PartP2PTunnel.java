@@ -395,7 +395,6 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         final IPart newBus = this.getHost().getPart(dir);
 
         if (newBus instanceof PartP2PTunnel<?>newTunnel) {
-            this.copyContents(this, newTunnel);
             return newTunnel;
         } else throw new RuntimeException();
     }
@@ -417,6 +416,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         } else {
             newTunnel.convertToInput();
         }
+        this.copyContents(this, newTunnel);
         return newTunnel;
     }
 
