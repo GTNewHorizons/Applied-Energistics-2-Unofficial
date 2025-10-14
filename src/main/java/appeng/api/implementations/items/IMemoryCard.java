@@ -56,9 +56,4 @@ public interface IMemoryCard {
      * @param msg    which message to send.
      */
     void notifyUser(EntityPlayer player, MemoryCardMessages msg);
-
-    /**
-     * Determine if the saved data is for an output(true) or an input(false)
-     */
-    boolean isOutputData();
 }

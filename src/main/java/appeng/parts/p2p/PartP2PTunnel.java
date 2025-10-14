@@ -282,16 +282,20 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             return;
         }
         if (freq == 0) {
-            try {
-                this.getProxy().getP2P().unbind(this);
-                this.setOutput(false);
-            } catch (final GridAccessException ignored) {}
+            unbind();
+            this.setOutput(false);
             return;
         }
         this.setOutput(true);
         this.copyMeta(this.getInput(), this);
         this.handleRemovedTunnelContents();
         this.updateFreq(freq);
+    }
+
+    public void unbind() {
+        try {
+            this.getProxy().getP2P().unbind(this);
+        } catch (final GridAccessException ignored) {}
     }
 
     protected void handleRemovedTunnelContents() {}
@@ -313,7 +317,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         }
     }
 
-    private void saveInputToMemoryCard(final EntityPlayer player, final IMemoryCard mc, final ItemStack is) {
+    public void saveInputToMemoryCard(final EntityPlayer player, final IMemoryCard mc, final ItemStack is) {
         final NBTTagCompound data = this.getMemoryCardData();
         final ItemStack p2pItem = this.getItemStack(PartItemStack.Wrench);
         final String type = p2pItem.getUnlocalizedName();
@@ -411,11 +415,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             return null;
         }
 
-        if (memoryCard.isOutputData()) {
-            newTunnel.convertToOutput(data.getLong("freq"));
-        } else {
-            newTunnel.convertToInput();
-        }
+        newTunnel.convertToOutput(data.getLong("freq"));
         this.copyContents(this, newTunnel);
         return newTunnel;
     }
