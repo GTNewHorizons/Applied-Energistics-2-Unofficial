@@ -292,7 +292,9 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     public PartP2PTunnel<?> applyMemoryCard(EntityPlayer player, IMemoryCard memoryCard, ItemStack is) {
         PartP2PTunnel<?> newTunnel = super.applyMemoryCard(player, memoryCard, is);
         NBTTagCompound data = memoryCard.getData(is);
-        this.duality.getConfigManager().readFromNBT(data);
+        if(newTunnel instanceof PartP2PInterface p2PInterface) {
+            p2PInterface.duality.getConfigManager().readFromNBT(data);
+        }
         return newTunnel;
     }
 
@@ -357,7 +359,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         for (int i = 0; i < patterns.getSizeInventory(); i++) {
             if (patterns.getStackInSlot(i) == null) continue;
             drops.add(patterns.getStackInSlot(i));
-            patterns.setInventorySlotContents(i, null);
+//            patterns.setInventorySlotContents(i, null);
         }
         TileEntity te = p2p.getTileEntity();
         Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
