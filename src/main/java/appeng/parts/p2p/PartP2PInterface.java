@@ -348,14 +348,16 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     }
 
     private void dropPatterns(final PartP2PInterface p2p) {
-        AppEngInternalInventory patterns = p2p.duality.getPatterns();
-        List<ItemStack> drops = new ArrayList<>();
+        final AppEngInternalInventory patterns = p2p.duality.getPatterns();
+        final List<ItemStack> drops = new ArrayList<>();
         for (int i = 0; i < patterns.getSizeInventory(); i++) {
             if (patterns.getStackInSlot(i) == null) continue;
             drops.add(patterns.getStackInSlot(i));
         }
-        TileEntity te = p2p.getTileEntity();
-        Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
+        if (!drops.isEmpty()) {
+            final TileEntity te = p2p.getTileEntity();
+            Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
+        }
     }
 
     @Override
@@ -377,10 +379,6 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
                 }
             }
 
-            IConfigManager config = fromInterface.duality.getConfigManager();
-            config.getSettings()
-                    .forEach(setting -> newDuality.getConfigManager().putSetting(setting, config.getSetting(setting)));
-
             AppEngInternalInventory patterns = fromInterface.duality.getPatterns();
             boolean drop = true;
             if (!from.isOutput() && !this.isOutput()) { // input to input
@@ -393,6 +391,17 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
             if (drop) {
                 this.dropPatterns(fromInterface);
             }
+        }
+    }
+
+    @Override
+    protected void copySettings(final PartP2PTunnel<?> from) {
+        if (from instanceof PartP2PInterface fromInterface) {
+            DualityInterface newDuality = this.duality;
+
+            IConfigManager config = fromInterface.duality.getConfigManager();
+            config.getSettings()
+                    .forEach(setting -> newDuality.getConfigManager().putSetting(setting, config.getSetting(setting)));
         }
     }
 

@@ -269,7 +269,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     }
 
     public PartP2PTunnel<?> convertToInput(final EntityPlayer player, final ItemStack newType) {
-        if(newType != null && !this.canChangeType(newType)){
+        if (newType != null && !this.canChangeType(newType)) {
             return null;
         }
         if (this.isOutput() || this.getFrequency() == 0) {
@@ -280,6 +280,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             final long freq = System.currentTimeMillis();
             newTunnel.updateFreq(freq);
 
+            newTunnel.copySettings(this);
             configureNewTunnel(newTunnel);
             return newTunnel;
         }
@@ -295,13 +296,15 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         newTunnel.setOutput(true);
         newTunnel.updateFreq(freq);
 
-        newTunnel.copyMeta(newTunnel.getInput());
+        final PartP2PTunnel<?> input = newTunnel.getInput();
+        newTunnel.copyMeta(input);
+        newTunnel.copySettings(input);
         configureNewTunnel(newTunnel);
         return newTunnel;
     }
 
     public PartP2PTunnel<?> unbind(final EntityPlayer player) {
-        if(this.getFrequency() == 0) {
+        if (this.getFrequency() == 0) {
             return this;
         }
         final ItemStack itemStack = this.getItemStack(PartItemStack.Wrench);
@@ -425,6 +428,8 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     }
 
     protected void copyContents(final PartP2PTunnel<?> from) {}
+
+    protected void copySettings(final PartP2PTunnel<?> from) {}
 
     protected PartP2PTunnel<?> applyMemoryCard(final EntityPlayer player, final IMemoryCard memoryCard,
             final ItemStack is) {
