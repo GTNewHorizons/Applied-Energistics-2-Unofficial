@@ -441,6 +441,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             memoryCard.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
             return null;
         }
+        memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
         return newTunnel;
     }
 
