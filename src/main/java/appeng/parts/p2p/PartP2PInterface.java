@@ -347,12 +347,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         return true;
     }
 
-    @Override
-    protected void handleItemsInOutput() {
-        dropContents(this);
-    }
-
-    private void dropContents(final PartP2PInterface p2p) {
+    private void dropPatterns(final PartP2PInterface p2p) {
         AppEngInternalInventory patterns = p2p.duality.getPatterns();
         List<ItemStack> drops = new ArrayList<>();
         for (int i = 0; i < patterns.getSizeInventory(); i++) {
@@ -364,31 +359,31 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     }
 
     @Override
-    protected void copyContents(final PartP2PTunnel<?> from, final PartP2PTunnel<?> to) {
-        if (from instanceof PartP2PInterface fromI && to instanceof PartP2PInterface toI) {
-            DualityInterface newDuality = toI.duality;
+    protected void copyContents(final PartP2PTunnel<?> from) {
+        if (from instanceof PartP2PInterface fromInterface) {
+            DualityInterface newDuality = this.duality;
             // Copy interface storage, upgrades, and settings over
-            UpgradeInventory upgrades = (UpgradeInventory) fromI.duality.getInventoryByName("upgrades");
+            UpgradeInventory upgrades = (UpgradeInventory) fromInterface.duality.getInventoryByName("upgrades");
             UpgradeInventory newUpgrade = (UpgradeInventory) newDuality.getInventoryByName("upgrades");
             for (int i = 0; i < upgrades.getSizeInventory(); ++i) {
                 newUpgrade.setInventorySlotContents(i, upgrades.getStackInSlot(i));
             }
 
-            if (!fromI.duality.sharedInventory) {
-                IInventory storage = fromI.duality.getStorage();
+            if (!fromInterface.duality.sharedInventory) {
+                IInventory storage = fromInterface.duality.getStorage();
                 IInventory newStorage = newDuality.getStorage();
                 for (int i = 0; i < storage.getSizeInventory(); ++i) {
                     newStorage.setInventorySlotContents(i, storage.getStackInSlot(i));
                 }
             }
 
-            IConfigManager config = fromI.duality.getConfigManager();
+            IConfigManager config = fromInterface.duality.getConfigManager();
             config.getSettings()
                     .forEach(setting -> newDuality.getConfigManager().putSetting(setting, config.getSetting(setting)));
 
-            AppEngInternalInventory patterns = fromI.duality.getPatterns();
+            AppEngInternalInventory patterns = fromInterface.duality.getPatterns();
             boolean drop = true;
-            if (!fromI.isOutput() && !to.isOutput()) { // input to input
+            if (!from.isOutput() && !this.isOutput()) { // input to input
                 for (int i = 0; i < patterns.getSizeInventory(); i++) {
                     newDuality.getPatterns().setInventorySlotContents(i, patterns.getStackInSlot(i));
                 }
@@ -396,7 +391,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
             }
 
             if (drop) {
-                dropContents(fromI);
+                this.dropPatterns(fromInterface);
             }
         }
     }
