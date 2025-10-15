@@ -283,12 +283,11 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         }
         if (freq == 0) {
             unbind();
-            this.setOutput(false);
             return;
         }
         this.setOutput(true);
         this.copyMeta(this.getInput(), this);
-        this.handleRemovedTunnelContents();
+        this.handleItemsInOutput();
         this.updateFreq(freq);
     }
 
@@ -296,9 +295,10 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         try {
             this.getProxy().getP2P().unbind(this);
         } catch (final GridAccessException ignored) {}
+        this.setOutput(false);
     }
 
-    protected void handleRemovedTunnelContents() {}
+    protected void handleItemsInOutput() {}
 
     protected void copyMeta(final PartP2PTunnel<?> from, final PartP2PTunnel<?> to) {
         if (from == null || to == null) {
@@ -380,7 +380,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         super.setCustomName(name);
     }
 
-    public PartP2PTunnel<?> changeType(final EntityPlayer player, final ItemStack newType) {
+    private PartP2PTunnel<?> changeType(final EntityPlayer player, final ItemStack newType) {
         if (newType == null) return null;
 
         if (newType.getItem() instanceof IPartItem partItem) {

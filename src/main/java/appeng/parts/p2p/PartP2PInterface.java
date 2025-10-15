@@ -348,8 +348,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     }
 
     @Override
-    protected void handleRemovedTunnelContents() {
-        super.handleRemovedTunnelContents();
+    protected void handleItemsInOutput() {
         dropContents(this);
     }
 
@@ -366,8 +365,6 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
 
     @Override
     protected void copyContents(final PartP2PTunnel<?> from, final PartP2PTunnel<?> to) {
-        super.copyContents(from, to);
-
         if (from instanceof PartP2PInterface fromI && to instanceof PartP2PInterface toI) {
             DualityInterface newDuality = toI.duality;
             // Copy interface storage, upgrades, and settings over
