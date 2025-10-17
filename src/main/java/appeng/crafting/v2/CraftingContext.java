@@ -117,9 +117,9 @@ public final class CraftingContext {
         this.craftingGrid = meGrid.getCache(ICraftingGrid.class);
         this.actionSource = actionSource;
         final IStorageGrid sg = meGrid.getCache(IStorageGrid.class);
-        this.itemModel = new MECraftingInventory(sg, this.actionSource, true, false, true);
+        this.itemModel = new MECraftingInventory(sg, true, false, true);
         this.byproductsInventory = new MECraftingInventory();
-        this.availableCache = new MECraftingInventory(sg, this.actionSource, false, false, false);
+        this.availableCache = new MECraftingInventory(sg, false, false, false);
         this.availablePatterns = craftingGrid.getCraftingMultiPatterns();
     }
 
