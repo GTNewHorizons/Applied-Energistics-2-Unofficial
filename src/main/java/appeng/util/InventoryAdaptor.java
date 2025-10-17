@@ -73,50 +73,77 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
         }
 
         // spotless:off
+        if (isEIOLoaded && te instanceof TileConduitBundle tcb) {
+            return new AdaptorConduitBandle(tcb, d);
+        }
+
+        if (te instanceof EntityPlayer) {
+            return new AdaptorIInventory(new AdaptorPlayerInventory(((EntityPlayer) te).inventory, false));
+        }
+
+        if (te instanceof ArrayList) {
+            @SuppressWarnings("unchecked")
+            final ArrayList<ItemStack> list = (ArrayList<ItemStack>) te;
+
+            return new AdaptorList(list);
+        }
+
+        if (bs != null && bs.isStorageCrate(te)) {
+            return bs.getAdaptor(te, d);
+        }
+
+        if (te instanceof TileEntityChest) {
+            return new AdaptorIInventory(Platform.GetChestInv(te));
+        }
+
+        if (te instanceof ISidedInventory sided) {
+            if (te instanceof TileInterface iface) {
+                return new AdaptorDualityInterface(new WrapperMCISidedInventory(sided, d), (IInterfaceHost) te);
+            }
+
+            if (te instanceof TileCableBus cableBus) {
+                IPart part = cableBus.getPart(d);
+                if (part instanceof IInterfaceHost host) {
+                    return new AdaptorDualityInterface(new WrapperMCISidedInventory(sided, d), host);
+                }
+
+                if (part instanceof PartP2PItems p2p) {
+                    return new AdaptorP2PItem(p2p);
+                }
+
+                if (part instanceof PartP2PLiquids p2p) {
+                    return new AdaptorP2PFluid(p2p, d);
+                }
+            }
+
+            if (te instanceof TileChest) {
+                return new AdaptorMEChest(new WrapperMCISidedInventory(sided, d), (TileChest) te);
+            }
+            
+            if (te instanceof IFluidHandler tank && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
+                return new AdaptorFluidHandler(tank, d);
+            }
+        }
+
         IItemIO itemIO = ItemUtil.getItemIO(te, d, false);
 
         if (itemIO != null) {
             return new AdapterItemIO(itemIO);
         }
 
-        if (isEIOLoaded && te instanceof TileConduitBundle tcb) {
-            return new AdaptorConduitBandle(tcb, d);
-        } else if (te instanceof EntityPlayer) {
-            return new AdaptorIInventory(new AdaptorPlayerInventory(((EntityPlayer) te).inventory, false));
-        } else if (te instanceof ArrayList) {
-            @SuppressWarnings("unchecked")
-            final ArrayList<ItemStack> list = (ArrayList<ItemStack>) te;
-
-            return new AdaptorList(list);
-        } else if (bs != null && bs.isStorageCrate(te)) {
-            return bs.getAdaptor(te, d);
-        } else if (te instanceof TileEntityChest) {
-            return new AdaptorIInventory(Platform.GetChestInv(te));
-        } else if (te instanceof ISidedInventory si) {
-            if (te instanceof TileInterface) {
-                return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), (IInterfaceHost) te);
-            } else if (te instanceof TileCableBus) {
-                IPart part = ((TileCableBus) te).getPart(d);
-                if (part instanceof IInterfaceHost host) {
-                    return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), host);
-                } else if (part instanceof PartP2PItems p2p) {
-                    return new AdaptorP2PItem(p2p);
-                } else if (part instanceof PartP2PLiquids p2p) {
-                    return new AdaptorP2PFluid(p2p, d);
-                }
-            } else if (te instanceof TileChest) {
-                return new AdaptorMEChest(new WrapperMCISidedInventory(si, d), (TileChest) te);
-            } else if (te instanceof IFluidHandler tank && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
-                return new AdaptorFluidHandler(tank, d);
+        if (te instanceof ISidedInventory sided) {
+            final int[] slots = sided.getAccessibleSlotsFromSide(d.ordinal());
+            
+            if (sided.getSizeInventory() > 0 && slots != null && slots.length > 0) {
+                return new AdaptorIInventory(new WrapperMCISidedInventory(sided, d));
             }
+        }
 
-            final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
-            if (si.getSizeInventory() > 0 && slots != null && slots.length > 0) {
-                return new AdaptorIInventory(new WrapperMCISidedInventory(si, d));
-            }
-        } else if (te instanceof IFluidHandler tank && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
+        if (te instanceof IFluidHandler tank && !(tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0))) {
             return new AdaptorFluidHandler(tank, d);
-        } else if (te instanceof IInventory i && i.getSizeInventory() > 0) {
+        }
+
+        if (te instanceof IInventory i && i.getSizeInventory() > 0) {
             return new AdaptorIInventory(i);
         }
         // spotless:on
