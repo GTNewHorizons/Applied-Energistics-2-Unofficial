@@ -223,7 +223,7 @@ public final class ItemList implements IItemList<IAEItemStack> {
             final boolean ignoreMeta) {
         final IAEItemStack low = filter.getLow(fuzzy, ignoreMeta);
         final IAEItemStack high = filter.getHigh(fuzzy, ignoreMeta);
-        if (this.records != null) {
+        if (this.records == null) {
             initFuzzyNavigableSet();
         }
         return this.records.subSet(low, true, high, true).descendingSet();
