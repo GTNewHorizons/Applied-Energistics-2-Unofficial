@@ -175,6 +175,7 @@ public class Platform {
     private static final int DIVISION_BASE = 1000;
     private static final DecimalFormat df = new DecimalFormat("#.##");
     public static final boolean isAE2FCLoaded = Loader.isModLoaded("ae2fc");
+    public static final boolean isEIOLoaded = Loader.isModLoaded("EnderIO");
 
     static {
         BYTE_LIMIT = new double[10];
@@ -2004,7 +2005,8 @@ public class Platform {
             final byte stackType = tag.getByte("StackType");
             return switch (stackType) {
                 case 0 -> convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
-                        : AEItemStack.loadItemStackFromNBT(tag); // migration moment
+                        : AEItemStack.loadItemStackFromNBT(tag); // migration moment TODO remove this kind of things on
+                                                                 // 3.0 / 3.1
                 case 1 -> AEItemStack.loadItemStackFromNBT(tag);
                 case 2 -> AEFluidStack.loadFluidStackFromNBT(tag);
                 default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);

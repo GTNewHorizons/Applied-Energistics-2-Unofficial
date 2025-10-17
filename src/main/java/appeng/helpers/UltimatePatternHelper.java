@@ -65,7 +65,7 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
 
             for (int x = 0; x < inTag.tagCount(); x++) {
                 final NBTTagCompound tag = inTag.getCompoundTagAt(x);
-                final IAEStack<?> aeStack = readStackNBT(tag);
+                final IAEStack<?> aeStack = readStackNBT(tag, true);
 
                 if (aeStack == null && !tag.hasNoTags()) {
                     throw new IllegalStateException("No pattern here!");
@@ -77,7 +77,7 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
 
             for (int x = 0; x < outTag.tagCount(); x++) {
                 final NBTTagCompound tag = outTag.getCompoundTagAt(x);
-                final IAEStack<?> aeStack = readStackNBT(tag);
+                final IAEStack<?> aeStack = readStackNBT(tag, true);
 
                 if (aeStack == null && !tag.hasNoTags()) {
                     throw new IllegalStateException("No pattern here!");
