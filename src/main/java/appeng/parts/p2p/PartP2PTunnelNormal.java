@@ -2,7 +2,6 @@ package appeng.parts.p2p;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
@@ -11,9 +10,7 @@ import appeng.api.AEApi;
 import appeng.api.config.TunnelType;
 import appeng.api.definitions.IParts;
 import appeng.api.implementations.items.IMemoryCard;
-import appeng.api.implementations.items.MemoryCardMessages;
 import appeng.api.parts.IPart;
-import appeng.api.parts.IPartItem;
 import appeng.me.GridAccessException;
 import appeng.me.cache.P2PCache;
 import appeng.util.Platform;
@@ -37,38 +34,7 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
         final TunnelType tt = AEApi.instance().registries().p2pTunnel().getTunnelTypeByItem(is);
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
             if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
-
-            final NBTTagCompound data = mc.getData(is);
-
-            final ItemStack newType = ItemStack.loadItemStackFromNBT(data);
-            final long freq = data.getLong("freq");
-
-            if (newType != null) {
-                if (newType.getItem() instanceof IPartItem) {
-                    final IPart testPart = ((IPartItem) newType.getItem()).createPartFromItemStack(newType);
-                    if (testPart instanceof PartP2PTunnelNormal<?>) {
-                        this.getHost().removePart(this.getSide(), true);
-                        final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
-                        final IPart newBus = this.getHost().getPart(dir);
-
-                        if (newBus instanceof PartP2PTunnel<?>newTunnel) {
-                            newTunnel.setOutput(true);
-
-                            try {
-                                pasteMemoryCardData(newTunnel, data);
-                            } catch (final GridAccessException e) {
-                                // :P
-                            }
-
-                            newTunnel.onTunnelNetworkChange();
-                        }
-
-                        mc.notifyUser(player, MemoryCardMessages.SETTINGS_LOADED);
-                        return true;
-                    }
-                }
-            }
-            mc.notifyUser(player, MemoryCardMessages.INVALID_MACHINE);
+            return applyMemoryCard(player, mc, is) != null;
         } else if (!player.isSneaking()
                 && Platform.isWrench(player, is, (int) pos.xCoord, (int) pos.yCoord, (int) pos.zCoord)
                 && !Platform.isClient()) {
@@ -172,4 +138,8 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
         return false;
     }
 
+    @Override
+    protected boolean checkIfCompatibleType(final IPart testPart) {
+        return testPart instanceof PartP2PTunnelNormal<?>;
+    }
 }
