@@ -197,7 +197,7 @@ public final class ItemList implements IItemList<IAEItemStack> {
             @Override
             public void remove() {
                 i.remove();
-                ItemList.this.setRecords.remove(next);
+                if (ItemList.this.records != null) ItemList.this.records.remove(next);
             }
         });
     }
