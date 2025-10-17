@@ -14,8 +14,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.NavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.TreeSet;
+
+import javax.annotation.Nullable;
 
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -26,7 +27,8 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public final class ItemList implements IItemList<IAEItemStack> {
 
-    private final NavigableMap<IAEItemStack, IAEItemStack> records = new ConcurrentSkipListMap<>();
+    @Nullable
+    private TreeSet<IAEItemStack> records = null;
     private final ObjectOpenHashSet<IAEItemStack> setRecords = new ObjectOpenHashSet<>();
 
     @Override
@@ -179,7 +181,7 @@ public final class ItemList implements IItemList<IAEItemStack> {
     public Iterator<IAEItemStack> iterator() {
         return new MeaningfulItemIterator<>(new Iterator<>() {
 
-            private final Iterator<IAEItemStack> i = ItemList.this.records.values().iterator();
+            private final Iterator<IAEItemStack> i = ItemList.this.setRecords.iterator();
             private IAEItemStack next = null;
 
             @Override
@@ -209,20 +211,27 @@ public final class ItemList implements IItemList<IAEItemStack> {
 
     public void clear() {
         this.setRecords.clear();
-        this.records.clear();
+        if (this.records != null) this.records.clear();
     }
 
     private void putItemRecord(final IAEItemStack itemStack) {
         this.setRecords.add(itemStack);
-        this.records.put(itemStack, itemStack);
+        if (this.records != null) this.records.add(itemStack);
     }
 
     private Collection<IAEItemStack> findFuzzyDamage(final AEItemStack filter, final FuzzyMode fuzzy,
             final boolean ignoreMeta) {
         final IAEItemStack low = filter.getLow(fuzzy, ignoreMeta);
         final IAEItemStack high = filter.getHigh(fuzzy, ignoreMeta);
+        if (this.records != null) {
+            initFuzzyNavigableSet();
+        }
+        return this.records.subSet(low, true, high, true).descendingSet();
+    }
 
-        return this.records.subMap(low, true, high, true).descendingMap().values();
+    private void initFuzzyNavigableSet() {
+        records = new TreeSet();
+        records.addAll(setRecords);
     }
 
     @Override
