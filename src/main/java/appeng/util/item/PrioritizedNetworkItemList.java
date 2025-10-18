@@ -10,37 +10,35 @@
 
 package appeng.util.item;
 
-import appeng.api.storage.IMENetworkInventory;
-import appeng.api.storage.data.IAEStack;
-import appeng.api.storage.data.IItemList;
-import appeng.util.PriorityPredicate;
-
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
-/**
- * A NetworkItemList contains one or more IItemLists from different networks. These IItemLists can themselves be
- * NetworkItemLists. This allows us to filter items from multiple, or same networks with different filters while also
- * including all their subnetworks and filters.
- *
- * @param <T>
- */
+import javax.annotation.Nonnull;
+
+import appeng.api.config.FuzzyMode;
+import appeng.api.storage.IMENetworkInventory;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IItemList;
+
 public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemList<T> {
 
-    private final List<PriorityPredicate<T>> priorityPredicates;
+    private final Map<IMENetworkInventory<T>, Map<Integer, IItemList<T>>> prioritizedNetworkItemLists;
 
-    public PrioritizedNetworkItemList(IMENetworkInventory<T> network, Supplier<IItemList<T>> newItemListSupplier) {
-        super(network, newItemListSupplier);
-        this.priorityPredicates = new ArrayList<>();
+    public PrioritizedNetworkItemList(IMENetworkInventory<T> network) {
+        super(network, null);
+        this.prioritizedNetworkItemLists = new HashMap<>();
     }
 
     /**
@@ -48,84 +46,86 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
      *
      * @param networkItemList the list to copy from
      */
-    public PrioritizedNetworkItemList(NetworkItemList<T> networkItemList) {
+    public PrioritizedNetworkItemList(PrioritizedNetworkItemList<T> networkItemList) {
         super(networkItemList);
-        this.priorityPredicates = new ArrayList<>();
+        this.prioritizedNetworkItemLists = networkItemList.prioritizedNetworkItemLists;
     }
 
-    public List<PriorityPredicate<T>> getPriorityPredicates() {
-        return priorityPredicates;
-    }
-
+    @Override
     public void addNetworkItems(IMENetworkInventory<T> network, IItemList<T> itemList) {
-        IItemList<T> l = this.getNetworkItemLists().get(network);
+        throw new UnsupportedOperationException();
+    }
+
+    public void addNetworkItems(IMENetworkInventory<T> network, int priority, IItemList<T> itemList) {
+        Map<Integer, IItemList<T>> priorityItemList = this.prioritizedNetworkItemLists.get(network);
+        final IItemList<T> l = priorityItemList == null ? null : priorityItemList.get(priority);
 
         if (l instanceof PrioritizedNetworkItemList) {
             if (itemList instanceof PrioritizedNetworkItemList) {
-                // since the network is the same we combine the predicates
-                for (PriorityPredicate<T> priorityFilter : ((PrioritizedNetworkItemList<T>) itemList).priorityPredicates) {
-                    ((PrioritizedNetworkItemList<T>) l).addFilter(priorityFilter);
+                // since the network and priority is the same we combine the predicates
+                for (Predicate<T> filter : ((PrioritizedNetworkItemList<T>) itemList).getPredicates()) {
+                    ((PrioritizedNetworkItemList<T>) l).addFilter(filter);
                 }
                 return;
             } else {
                 throw new RuntimeException(
-                        "This NetworkItemList already contains a NetworkItemList for the provided network and cannot replace it with a non-NetworkItemList");
+                        "This PrioritizedNetworkItemList already contains a PrioritizedNetworkItemList for the provided network and priority and cannot replace it with a non-PrioritizedNetworkItemList");
             }
         } else if (l != null) {
             throw new RuntimeException(
-                    "This NetworkItemList already contains a non-NetworkItemList for the provided network and cannot replace it");
+                    "This PrioritizedNetworkItemList already contains a non-PrioritizedNetworkItemList for the provided network and priority and cannot replace it");
         }
-        this.getNetworkItemLists().put(network, itemList);
+        if (priorityItemList == null) {
+            priorityItemList = new HashMap<>();
+            this.prioritizedNetworkItemLists.put(network, priorityItemList);
+        }
+        priorityItemList.put(priority, itemList);
     }
 
-    private Stream<PrioritizedNetworkItemStack<T>> getFilteredPrioritizedNetworkItemStackStream(final Set<IMENetworkInventory<T>> visitedNetworks, final boolean ascendingPriority) {
-        return this.getNetworkItemLists().entrySet().stream()
+    private Stream<PrioritizedNetworkItemStack<T>> getFilteredPrioritizedNetworkItemStackStream(
+            final Set<IMENetworkInventory<T>> visitedNetworks, final boolean ascendingPriority) {
+        return this.prioritizedNetworkItemLists.entrySet().stream()
                 // equivalent to a worse performing mapMulti
                 .flatMap(entry -> {
-                    if (entry.getValue() instanceof PrioritizedNetworkItemList) {
-                        if (visitedNetworks.contains(entry.getKey())) {
-                            return Stream.empty();
-                        }
-                        final Set<IMENetworkInventory<T>> localVisitedNetworks = new HashSet<>(visitedNetworks);
-                        localVisitedNetworks.add(entry.getKey());
+                    // do filter by filter instead and combine the streams afterwards
+                    List<Stream<PrioritizedNetworkItemStack<T>>> priorityStreams = new ArrayList<>();
 
-                        int localPriority = 0;
-                        Integer previousPriority = null;
-                        // do filter by filter instead and combine the streams afterwards
-                        List<Stream<PrioritizedNetworkItemStack<T>>> priorityStreams = new ArrayList<>();
-                        for(PriorityPredicate<T> priorityPredicate : priorityPredicates.stream().sorted(getPriorityOrder(ascendingPriority)).toList()) {
-                            if(previousPriority == null) previousPriority = priorityPredicate.getPriority();
-                            if(previousPriority != priorityPredicate.getPriority()) {
-                                localPriority++;
-                                previousPriority = priorityPredicate.getPriority();
-                            } // if same priority use same local priority
-                            final int finalLocalPriority = localPriority;
-                            // TODO could combine the predicates with same priority into one test
-                            // just gotta make sure the for-loop skips those too then
-                            final Predicate<T> predicate = priorityPredicate.getPredicate();
-                            Stream<PrioritizedNetworkItemStack<T>> stream = ((PrioritizedNetworkItemList<T>) entry.getValue()).getFilteredPrioritizedNetworkItemStackStream(Collections.unmodifiableSet(localVisitedNetworks), ascendingPriority)
-                                    .filter(e -> e.getPriority() == null)
+                    for (Iterator<Entry<Integer, IItemList<T>>> it = entry.getValue().entrySet().stream()
+                            .sorted(getPriorityOrder(ascendingPriority)).iterator(); it.hasNext();) {
+                        final Entry<Integer, IItemList<T>> priorityItemList = it.next();
+                        final int priorty = priorityItemList.getKey();
+                        final IItemList<T> itemList = priorityItemList.getValue();
+
+                        if (itemList instanceof PrioritizedNetworkItemList) {
+                            if (visitedNetworks.contains(entry.getKey())) {
+                                return Stream.empty();
+                            }
+                            final Set<IMENetworkInventory<T>> localVisitedNetworks = new HashSet<>(visitedNetworks);
+                            localVisitedNetworks.add(entry.getKey());
+
+                            PrioritizedNetworkItemList<T> l = (PrioritizedNetworkItemList<T>) itemList;
+                            final Predicate<T> predicate = l.buildFilter();
+                            Stream<PrioritizedNetworkItemStack<T>> stream = l
+                                    .getFilteredPrioritizedNetworkItemStackStream(
+                                            Collections.unmodifiableSet(localVisitedNetworks),
+                                            ascendingPriority)
                                     .filter(e -> predicate.test(e.getItemStack()))
-                                    .peek(e -> e.setPriority(finalLocalPriority));
+                                    .peek(e -> e.setNetworkPriority(this.getNetwork(), priorty));
                             priorityStreams.add(stream);
+                        } else {
+                            List<PrioritizedNetworkItemStack<T>> buffer = new ArrayList<>();
+                            itemList.forEach(item -> buffer.add(new PrioritizedNetworkItemStack<>(entry.getKey(), item, priorty)));
+                            priorityStreams.add(buffer.stream());
                         }
-                        return priorityStreams.stream().flatMap(Function.identity());
-                    } else {
-                        // FIXME the list that contains the networks own items is usually a combined one without priorities
-                        // to be correct even in a single network with no reads from other networks we need to know the priority of things like storage bus <-> chest or ME drives items
-                        // since that is on the itemstack level and handled by the networkinventory i'll need to add itemstacks there with a priority
-                        // so either make it (itemstack, priority) or make it (priority, itemlist)
-                        List<PrioritizedNetworkItemStack<T>> buffer = new ArrayList<>();
-                        StreamSupport.stream(entry.getValue().spliterator(), false)
-                                .forEach(item -> buffer.add(new PrioritizedNetworkItemStack<>(entry.getKey(), item)));
-                        return buffer.stream();
+
                     }
+                    return priorityStreams.stream().flatMap(Function.identity());
                 });
     }
 
-    private Comparator<PriorityPredicate<T>> getPriorityOrder(boolean asc) {
-        Comparator<PriorityPredicate<T>> comparator = Comparator.comparing(PriorityPredicate::getPriority);
-        if(asc) return comparator;
+    private Comparator<Entry<Integer, IItemList<T>>> getPriorityOrder(boolean asc) {
+        Comparator<Entry<Integer, IItemList<T>>> comparator = Entry.comparingByKey();
+        if (asc) return comparator;
         else return comparator.reversed();
     }
 
@@ -135,32 +135,89 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
     }
 
     public Stream<T> getItems(boolean ascendingPriority) {
-        return getFilteredNetworkItemStackStream(ascendingPriority).distinct().map(NetworkItemStack::getItemStack);
-    }
-
-    private Stream<PrioritizedNetworkItemStack<T>> getFilteredNetworkItemStackStream(boolean ascendingPriority) {
         Set<IMENetworkInventory<T>> visitedNetworks = new HashSet<>();
         visitedNetworks.add(this.getNetwork());
-        return getFilteredPrioritizedNetworkItemStackStream(Collections.unmodifiableSet(visitedNetworks), ascendingPriority);
+        Comparator<PrioritizedNetworkItemStack<T>> comparator = new Comparator<>() {
+            @Override
+            public int compare(PrioritizedNetworkItemStack<T> o1, PrioritizedNetworkItemStack<T> o2) {
+                int result = 0;
+                for (Entry<IMENetworkInventory<T>, Integer> entry : o1.networkPriority.entrySet()) {
+                    int o1Prio = entry.getValue();
+                    Integer o2Prio = o2.getNetworkPriority(entry.getKey());
+                    if (o2Prio == null) {
+                        // item isnt from this network
+                        // before or after?
+                        result = -1;
+                    } else {
+                        result = Integer.compare(o1Prio, o2Prio);
+                    }
+                    if (result != 0) break;
+                }
+                return result;
+            }
+        };
+        return getFilteredPrioritizedNetworkItemStackStream(
+                Collections.unmodifiableSet(visitedNetworks),
+                ascendingPriority).distinct()
+                .sorted(ascendingPriority ? comparator : comparator.reversed())
+                .map(NetworkItemStack::getItemStack);
     }
 
-    public void addFilter(PriorityPredicate<T> filter) {
-        priorityPredicates.add(filter);
+    @Override
+    public IItemList<T> buildFinalItemList() {
+        throw new UnsupportedOperationException(); // use a normal network item list if you just want all items
     }
 
-    private static class PrioritizedNetworkItemStack<U extends IAEStack> extends NetworkItemStack<U>{
-        private Integer priority;
+    @Override
+    public IItemList<T> buildFinalItemList(IItemList<T> out) {
+        throw new UnsupportedOperationException(); // use a normal network item list if you just want all items
+    }
 
-        public PrioritizedNetworkItemStack(IMENetworkInventory<U> networkInventory, U itemStack) {
+    @Override
+    public T findPrecise(T i) {
+        throw new UnsupportedOperationException(); // use a normal network item list instead
+    }
+
+    @Override
+    public Collection<T> findFuzzy(T input, FuzzyMode fuzzy) {
+        throw new UnsupportedOperationException(); // use a normal network item list instead
+    }
+
+    @Override
+    public byte getStackType() {
+        Map<Integer, IItemList<T>> m = prioritizedNetworkItemLists.values().stream().findAny().orElse(null);
+        if (m == null) return LIST_NUll;
+        IItemList<T> list = m.values().stream().findAny().orElse(null);
+        return list == null ? LIST_NUll : list.getStackType();
+    }
+
+    @Override
+    public void resetStatus() {
+        for (Map<Integer, IItemList<T>> m : prioritizedNetworkItemLists.values()) {
+            for (IItemList<T> l : m.values()) {
+                l.resetStatus();
+            }
+        }
+    }
+
+    private static class PrioritizedNetworkItemStack<U extends IAEStack> extends NetworkItemStack<U> {
+
+        private final Map<IMENetworkInventory<U>, Integer> networkPriority;
+
+        public PrioritizedNetworkItemStack(@Nonnull final IMENetworkInventory<U> networkInventory,
+                @Nonnull final U itemStack, final int priority) {
             super(networkInventory, itemStack);
+            this.networkPriority = new HashMap<>();
+            setNetworkPriority(networkInventory, priority);
         }
 
-        public Integer getPriority() {
-            return priority;
+        public Integer getNetworkPriority(@Nonnull final IMENetworkInventory<U> networkInventory) {
+            return this.networkPriority.get(networkInventory);
         }
 
-        public void setPriority(Integer priority) {
-            this.priority = priority;
+        public void setNetworkPriority(@Nonnull final IMENetworkInventory<U> networkInventory, int priority) {
+            if (this.networkPriority.containsKey(networkInventory)) return;
+            this.networkPriority.put(networkInventory, priority);
         }
     }
 }

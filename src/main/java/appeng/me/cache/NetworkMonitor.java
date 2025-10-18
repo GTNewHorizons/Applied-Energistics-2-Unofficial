@@ -21,6 +21,7 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import appeng.util.item.PrioritizedNetworkItemList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -105,6 +106,11 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Override
     public IItemList<T> getAvailableItems(final IItemList out, int iteration) {
         return this.getHandler().getAvailableItems(out, iteration);
+    }
+
+    @Override
+    public PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(int iteration) {
+        return this.getHandler().getAvailableItemsWithPriority(iteration);
     }
 
     @Override

@@ -73,14 +73,6 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         return network;
     }
 
-    public Map<IMENetworkInventory<T>, IItemList<T>> getNetworkItemLists() {
-        return networkItemLists;
-    }
-
-    public Supplier<IItemList<T>> getNewItemListSupplier() {
-        return newItemListSupplier;
-    }
-
     public List<Predicate<T>> getPredicates() {
         return predicates;
     }
@@ -152,7 +144,7 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         predicates.add(filter);
     }
 
-    private Predicate<T> buildFilter() {
+    Predicate<T> buildFilter() {
         Predicate<T> predicate = null;
         for (Predicate<T> filter : predicates) {
             if (predicate == null) {

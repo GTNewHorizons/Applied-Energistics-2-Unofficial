@@ -36,6 +36,7 @@ import appeng.me.cache.SecurityCache;
 import appeng.util.SortedArrayList;
 import appeng.util.inv.ItemListIgnoreCrafting;
 import appeng.util.item.NetworkItemList;
+import appeng.util.item.PrioritizedNetworkItemList;
 
 public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetworkInventory<T> {
 
@@ -81,6 +82,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
     private final List<IMEInventoryHandler<T>> priorityInventory;
     private int myPass = 0;
     private NetworkItemList<T> iterationItems = null;
+    private PrioritizedNetworkItemList<T> prioritizedIterationItems = null;
 
     public NetworkInventoryHandler(final StorageChannel chan, final SecurityCache security) {
         this.myChannel = chan;
@@ -338,48 +340,52 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         return isSource ? networkItemList.buildFinalItemList(out) : networkItemList;
     }
 
-    public IItemList<T> getAvailableItemsWithPriority(IItemList out, int iteration) {
+    @Override
+    @SuppressWarnings({ "unchecked" })
+    public PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(final int iteration) {
         if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
-            return this.iterationItems == null ? out : this.iterationItems;
+            return this.prioritizedIterationItems;
         }
 
-        final boolean isIgnoreCrafting = out instanceof ItemListIgnoreCrafting;
+        final PrioritizedNetworkItemList<T> networkItemList = new PrioritizedNetworkItemList<>(this);
+        this.prioritizedIterationItems = networkItemList;
         final boolean isSource = this.getDepth(Actionable.SIMULATE).size() == 1;
 
-        final NetworkItemList<T> networkItemList = new NetworkItemList<>(
-                this,
-                () -> (IItemList<T>) getChannel().createList());
-        this.iterationItems = networkItemList;
-
-        final IItemList<T> currentNetworkItemList = isIgnoreCrafting
-                ? new ItemListIgnoreCrafting<>((IItemList<T>) getChannel().createList())
-                : (IItemList<T>) getChannel().createList();
+        IItemList<T> currentPriorityItemList = null;
         final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
         final int size = priorityInventory.size();
+        Integer lastPriority = null;
         for (int i = 0; i < size; i++) {
             final IMEInventoryHandler<T> inv = priorityInventory.get(i);
             final IMENetworkInventory<T> externalNetworkInventory = inv.getExternalNetworkInventory();
             if (externalNetworkInventory == this) {
                 continue; // ignore any attempts to read self
             }
-            final IItemList<T> passedInList = getChannel().createList();
-            final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
+            if (lastPriority == null || lastPriority != inv.getPriority()) {
+                if (lastPriority != null && !currentPriorityItemList.isEmpty()) networkItemList.addNetworkItems(this, lastPriority, currentPriorityItemList);
+                lastPriority = inv.getPriority();
+                currentPriorityItemList = isSource
+                        ? new ItemListIgnoreCrafting<>((IItemList<T>) getChannel().createList())
+                        : (IItemList<T>) getChannel().createList();
+            }
 
-            if (externalNetworkInventory != null && passedOutList instanceof NetworkItemList) {
-                networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
+            if (externalNetworkInventory != null) {
+                final IItemList<T> passedOutList = inv.getAvailableItemsWithPriority(iteration);
+                networkItemList.addNetworkItems(externalNetworkInventory, inv.getPriority(), passedOutList);
             } else {
+                final IItemList<T> passedInList = getChannel().createList();
+                final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
                 for (T item : passedOutList) {
-                    currentNetworkItemList.add(item);
+                    currentPriorityItemList.add(item);
                 }
             }
         }
-        networkItemList.addNetworkItems(this, currentNetworkItemList);
+        if (currentPriorityItemList != null && !currentPriorityItemList.isEmpty()) {
+            networkItemList.addNetworkItems(this, lastPriority, currentPriorityItemList);
+        }
 
         this.surface(this, Actionable.SIMULATE);
-
-        // we're partially violating the api by making the returned list a different one from the provided one, however
-        // when we're done with the network inventory scan we fulfill our api contract again
-        return isSource ? networkItemList.buildFinalItemList(out) : networkItemList;
+        return networkItemList;
     }
 
     @Override
