@@ -51,6 +51,7 @@ import appeng.api.networking.security.PlayerSource;
 import appeng.api.parts.IPart;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.ItemSearchDTO;
@@ -61,6 +62,7 @@ import appeng.container.guisync.SyncData;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerUpgradeable;
 import appeng.container.implementations.ContainerWirelessTerm;
+import appeng.container.interfaces.IInventorySlotAware;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
 import appeng.container.slot.SlotCraftingTerm;
@@ -72,6 +74,7 @@ import appeng.container.slot.SlotPlayerHotBar;
 import appeng.container.slot.SlotPlayerInv;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
+import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketHighlightBlockStorage;
 import appeng.core.sync.packets.PacketInventoryAction;
@@ -79,6 +82,7 @@ import appeng.core.sync.packets.PacketPartialItem;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
 import appeng.helpers.IPinsHandler;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.InventoryAction;
 import appeng.items.materials.ItemMultiMaterial;
 import appeng.me.Grid;
@@ -109,16 +113,20 @@ public abstract class AEBaseContainer extends Container {
     private boolean isContainerValid = true;
     private String customName;
     private ContainerOpenContext openContext;
-    private IMEInventoryHandler<IAEItemStack> cellInv;
+    private IMEInventoryHandler<IAEItemStack> cellItemInv;
+    private IMEInventoryHandler<IAEFluidStack> cellFluidInv;
     private IEnergySource powerSrc;
     private boolean sentCustomName;
     private int ticksSinceCheck = 900;
-    private IAEItemStack clientRequestedTargetItem = null;
+    private IAEStack<?> clientRequestedTargetItem = null;
+    private PrimaryGui primaryGui;
 
+    @Deprecated
     public AEBaseContainer(final InventoryPlayer ip, final TileEntity myTile, final IPart myPart) {
         this(ip, myTile, myPart, null);
     }
 
+    @Deprecated
     public AEBaseContainer(final InventoryPlayer ip, final TileEntity myTile, final IPart myPart,
             final IGuiItemObject gio) {
         this.invPlayer = ip;
@@ -180,6 +188,11 @@ public abstract class AEBaseContainer extends Container {
             throw new IllegalArgumentException("Must have a valid anchor, instead " + anchor + " in " + ip);
         }
 
+        if (obj instanceof IInventorySlotAware isa) {
+            final int slotIndex = isa.getInventorySlot();
+            this.lockPlayerInventorySlot(slotIndex);
+        }
+
         this.mySrc = new PlayerSource(ip.player, this.getActionHost());
 
         this.prepareSync();
@@ -208,7 +221,7 @@ public abstract class AEBaseContainer extends Container {
         try {
             final NBTTagCompound data = CompressedStreamTools.readCompressed(new ByteArrayInputStream(buffer));
             if (data != null) {
-                this.setTargetStack(AEApi.instance().storage().createItemStack(ItemStack.loadItemStackFromNBT(data)));
+                this.setTargetStack(Platform.readStackNBT(data));
             }
         } catch (final IOException e) {
             AELog.debug(e);
@@ -217,30 +230,32 @@ public abstract class AEBaseContainer extends Container {
         this.dataChunks.clear();
     }
 
-    public IAEItemStack getTargetStack() {
+    public IAEStack<?> getTargetStack() {
         return this.clientRequestedTargetItem;
     }
 
-    public void setTargetStack(final IAEItemStack stack) {
+    public void setTargetStack(final IAEStack<?> stack) {
         // client doesn't need to re-send, makes for lower overhead rapid packets.
         if (Platform.isClient()) {
-            final ItemStack a = stack == null ? null : stack.getItemStack();
-            final ItemStack b = this.clientRequestedTargetItem == null ? null
-                    : this.clientRequestedTargetItem.getItemStack();
-
-            if (Platform.isSameItemPrecise(a, b)) {
-                return;
+            if (stack == null) {
+                if (this.clientRequestedTargetItem == null) {
+                    return;
+                }
+            } else {
+                if (stack.equals(this.clientRequestedTargetItem)) {
+                    return;
+                }
             }
 
             final ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            final NBTTagCompound item = new NBTTagCompound();
+            final NBTTagCompound nbt = new NBTTagCompound();
 
             if (stack != null) {
-                stack.writeToNBT(item);
+                Platform.writeStackNBT(stack, nbt, true);
             }
 
             try {
-                CompressedStreamTools.writeCompressed(item, stream);
+                CompressedStreamTools.writeCompressed(nbt, stream);
 
                 final int maxChunkSize = 30000;
                 final List<byte[]> miniPackets = new LinkedList<>();
@@ -395,11 +410,9 @@ public abstract class AEBaseContainer extends Container {
         this.sendCustomName();
 
         if (Platform.isServer()) {
-            for (final Object crafter : this.crafters) {
-                final ICrafting icrafting = (ICrafting) crafter;
-
+            for (final ICrafting crafter : this.crafters) {
                 for (final SyncData sd : this.syncData.values()) {
-                    sd.tick(icrafting);
+                    sd.tick(crafter);
                 }
             }
         }
@@ -734,11 +747,12 @@ public abstract class AEBaseContainer extends Container {
                 }
                 ItemStack hand = player.inventory.getItemStack();
                 if (hand == null) return;
-                if (iph.getPin(slot) != null && hand.isItemEqual(iph.getPin(slot))) {
+                if (iph.getPin(slot) != null && iph.getPin(slot) instanceof IAEItemStack slotStack
+                        && hand.isItemEqual(slotStack.getItemStack())) {
                     // put item in the terminal
                     doAction(player, InventoryAction.PICKUP_OR_SET_DOWN, this.inventorySlots.size(), id);
                 } else {
-                    iph.setPin(player.inventory.getItemStack(), slot);
+                    iph.setPin(AEItemStack.create(hand), slot);
                 }
             }
 
@@ -746,7 +760,7 @@ public abstract class AEBaseContainer extends Container {
         }
 
         // get target item.
-        final IAEItemStack slotItem = this.clientRequestedTargetItem;
+        final IAEItemStack slotItem = this.clientRequestedTargetItem instanceof IAEItemStack ais ? ais : null;
 
         switch (action) {
             case SHIFT_CLICK -> {
@@ -1231,11 +1245,19 @@ public abstract class AEBaseContainer extends Container {
     }
 
     public IMEInventoryHandler<IAEItemStack> getCellInventory() {
-        return this.cellInv;
+        return this.cellItemInv;
     }
 
     public void setCellInventory(final IMEInventoryHandler<IAEItemStack> cellInv) {
-        this.cellInv = cellInv;
+        this.cellItemInv = cellInv;
+    }
+
+    public IMEInventoryHandler<IAEFluidStack> getCellFluidInventory() {
+        return this.cellFluidInv;
+    }
+
+    public void setCellFluidInventory(final IMEInventoryHandler<IAEFluidStack> cellInv) {
+        this.cellFluidInv = cellInv;
     }
 
     public String getCustomName() {
@@ -1272,5 +1294,26 @@ public abstract class AEBaseContainer extends Container {
 
     public void setPowerSource(final IEnergySource powerSrc) {
         this.powerSrc = powerSrc;
+    }
+
+    // used for secondary gui for able handle tertiary, quaternary etc. gui
+    public void setPrimaryGui(PrimaryGui primaryGui) {
+        this.primaryGui = primaryGui;
+    }
+
+    private void createPrimaryGui() {
+        ContainerOpenContext context = getOpenContext();
+
+        this.primaryGui = new PrimaryGui(
+                GuiBridge.getGuiByContainerClass(this.getClass()),
+                getTarget() instanceof IPrimaryGuiIconProvider ip ? ip.getPrimaryGuiIcon()
+                        : AEApi.instance().definitions().parts().terminal().maybeStack(1).orNull(),
+                context.getTile(),
+                context.getSide());
+    }
+
+    public PrimaryGui getPrimaryGui() {
+        if (primaryGui == null) createPrimaryGui();
+        return primaryGui;
     }
 }

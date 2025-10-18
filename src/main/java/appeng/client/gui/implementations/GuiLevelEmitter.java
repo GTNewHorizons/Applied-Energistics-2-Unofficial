@@ -33,7 +33,7 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.parts.automation.PartLevelEmitter;
+import appeng.helpers.ILevelEmitter;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
@@ -56,7 +56,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     private GuiImgButton levelMode;
     private GuiImgButton craftingMode;
 
-    public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final PartLevelEmitter te) {
+    public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final ILevelEmitter te) {
         super(new ContainerLevelEmitter(inventoryPlayer, te));
     }
 

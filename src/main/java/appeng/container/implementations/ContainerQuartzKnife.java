@@ -38,7 +38,7 @@ public class ContainerQuartzKnife extends AEBaseContainer implements IAEAppEngIn
     private String myName = "";
 
     public ContainerQuartzKnife(final InventoryPlayer ip, final QuartzKnifeObj te) {
-        super(ip, null, null);
+        super(ip, te);
         this.toolInv = te;
 
         this.metals = new SlotRestrictedInput(

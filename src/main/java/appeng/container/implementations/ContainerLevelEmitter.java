@@ -24,14 +24,14 @@ import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.SlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.parts.automation.PartLevelEmitter;
+import appeng.helpers.ILevelEmitter;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class ContainerLevelEmitter extends ContainerUpgradeable {
 
-    private final PartLevelEmitter lvlEmitter;
+    private final ILevelEmitter lvlEmitter;
 
     @SideOnly(Side.CLIENT)
     private MEGuiTextField textField;
@@ -45,7 +45,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable {
     @GuiSync(4)
     public YesNo cmType;
 
-    public ContainerLevelEmitter(final InventoryPlayer ip, final PartLevelEmitter te) {
+    public ContainerLevelEmitter(final InventoryPlayer ip, final ILevelEmitter te) {
         super(ip, te);
         this.lvlEmitter = te;
     }

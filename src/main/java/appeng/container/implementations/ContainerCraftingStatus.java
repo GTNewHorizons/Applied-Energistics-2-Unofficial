@@ -13,18 +13,35 @@ package appeng.container.implementations;
 import java.util.List;
 
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.ITerminalHost;
+import appeng.client.gui.implementations.GuiSub;
+import appeng.container.IContainerSubGui;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.ICraftingCPUSelectorContainer;
+import appeng.container.slot.SlotInaccessible;
+import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.util.Platform;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
-public class ContainerCraftingStatus extends ContainerCraftingCPU implements ICraftingCPUSelectorContainer {
+public class ContainerCraftingStatus extends ContainerCraftingCPU
+        implements ICraftingCPUSelectorContainer, IContainerSubGui {
 
     @GuiSync.Recurse(5)
     public ContainerCPUTable cpuTable;
 
+    private final Slot primaryGuiButtonIcon;
+
+    @SideOnly(Side.CLIENT)
+    private GuiSub guiLink;
+
     public ContainerCraftingStatus(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
+        this.primaryGuiButtonIcon = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 0, -9000);
+        this.addSlotToContainer(this.primaryGuiButtonIcon);
         cpuTable = new ContainerCPUTable(this, this::setCPU, true, c -> true);
     }
 
@@ -45,5 +62,26 @@ public class ContainerCraftingStatus extends ContainerCraftingCPU implements ICr
 
     public List<CraftingCPUStatus> getCPUs() {
         return cpuTable.getCPUs();
+    }
+
+    public void setPrimaryGuiIcon(ItemStack pgi) {
+        this.primaryGuiButtonIcon.putStack(pgi);
+    }
+
+    @SideOnly(Side.CLIENT)
+    public ItemStack getPrimaryGuiIcon() {
+        return this.primaryGuiButtonIcon.getStack();
+    }
+
+    @Override
+    public void onSlotChange(Slot s) {
+        if (Platform.isClient() && this.primaryGuiButtonIcon == s && this.primaryGuiButtonIcon.getHasStack()) {
+            this.guiLink.initPrimaryGuiButton();
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    public void setGuiLink(GuiSub gs) {
+        this.guiLink = gs;
     }
 }

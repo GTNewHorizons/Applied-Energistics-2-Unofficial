@@ -36,13 +36,10 @@ import appeng.api.config.YesNo;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.crafting.ICraftingWatcher;
-import appeng.api.networking.crafting.ICraftingWatcherHost;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergyWatcher;
-import appeng.api.networking.energy.IEnergyWatcherHost;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -50,14 +47,11 @@ import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.networking.storage.IStackWatcher;
-import appeng.api.networking.storage.IStackWatcherHost;
-import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
@@ -68,6 +62,7 @@ import appeng.client.texture.CableBusTextures;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.ILevelEmitter;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.AppEngInternalAEInventory;
@@ -76,8 +71,7 @@ import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherHost, IStackWatcherHost,
-        ICraftingWatcherHost, IMEMonitorHandlerReceiver<IAEItemStack>, ICraftingProvider, IGridTickable {
+public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
     private static final int FLAG_ON = 8;
 
@@ -353,7 +347,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     }
 
     @Override
-    public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
+    public void postChange(final IBaseMonitor monitor, final Iterable<IAEStack<?>> change,
             final BaseActionSource actionSource) {
         // todo use change
         if (canDoWork()) {

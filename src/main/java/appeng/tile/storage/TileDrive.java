@@ -51,6 +51,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
 import appeng.items.materials.ItemMultiMaterial;
 import appeng.items.storage.ItemBasicStorageCell;
@@ -66,7 +67,8 @@ import appeng.util.Platform;
 import appeng.util.item.ItemList;
 import io.netty.buffer.ByteBuf;
 
-public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPriorityHost, IGridTickable, IColorableTile {
+public class TileDrive extends AENetworkInvTile
+        implements IChestOrDrive, IPriorityHost, IGridTickable, IColorableTile, IPrimaryGuiIconProvider {
 
     private static final int INV_SIZE = 10;
     /**
@@ -519,5 +521,10 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         this.markDirty();
         this.markForUpdate();
         return true;
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().blocks().drive().maybeStack(1).orNull();
     }
 }

@@ -59,7 +59,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
     private INetworkTool tbInventory;
 
     public ContainerUpgradeable(final InventoryPlayer ip, final IUpgradeableHost te) {
-        super(ip, (TileEntity) (te instanceof TileEntity ? te : null), (IPart) (te instanceof IPart ? te : null));
+        super(ip, te);
         this.upgradeable = te;
 
         World w = null;
@@ -91,7 +91,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
                 this.lockPlayerInventorySlot(x);
                 this.tbSlot = x;
                 this.tbInventory = (INetworkTool) ((IGuiItem) pii.getItem())
-                        .getGuiObject(pii, w, xCoord, yCoord, zCoord);
+                        .getGuiObject(pii, w, getInventoryPlayer().player, xCoord, yCoord, zCoord);
                 break;
             }
         }

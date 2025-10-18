@@ -27,6 +27,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.collect.ImmutableSet;
 
+import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.tiles.ITileStorageMonitorable;
@@ -53,6 +54,7 @@ import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
 import appeng.parts.PartBasicState;
@@ -63,8 +65,9 @@ import appeng.util.inv.IInventoryDestination;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class PartInterface extends PartBasicState implements IGridTickable, IStorageMonitorable, IInventoryDestination,
-        IInterfaceHost, ISidedInventory, IAEAppEngInventory, ITileStorageMonitorable, IPriorityHost {
+public class PartInterface extends PartBasicState
+        implements IGridTickable, IStorageMonitorable, IInventoryDestination, IInterfaceHost, ISidedInventory,
+        IAEAppEngInventory, ITileStorageMonitorable, IPriorityHost, IPrimaryGuiIconProvider {
 
     private final DualityInterface duality = new DualityInterface(this.getProxy(), this);
 
@@ -401,5 +404,10 @@ public class PartInterface extends PartBasicState implements IGridTickable, ISto
     @Override
     public ItemStack getSelfRep() {
         return this.getItemStack();
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().parts().iface().maybeStack(1).orNull();
     }
 }

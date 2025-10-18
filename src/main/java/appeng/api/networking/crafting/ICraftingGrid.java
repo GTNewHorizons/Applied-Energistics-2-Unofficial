@@ -52,6 +52,10 @@ public interface ICraftingGrid extends IGridCache {
     @Deprecated
     ImmutableMap<IAEItemStack, ImmutableList<ICraftingPatternDetails>> getCraftingPatterns();
 
+    @Deprecated
+    Future<ICraftingJob> beginCraftingJob(World world, IGrid grid, BaseActionSource actionSrc, IAEItemStack craftWhat,
+            ICraftingCallback callback);
+
     /**
      * Begin calculating a crafting job.
      *
@@ -63,7 +67,7 @@ public interface ICraftingGrid extends IGridCache {
      * @return a future which will at an undetermined point in the future get you the {@link ICraftingJob} do not wait
      *         on this, your be waiting forever.
      */
-    Future<ICraftingJob> beginCraftingJob(World world, IGrid grid, BaseActionSource actionSrc, IAEItemStack craftWhat,
+    Future<ICraftingJob> beginCraftingJob(World world, IGrid grid, BaseActionSource actionSrc, IAEStack<?> craftWhat,
             ICraftingCallback callback);
 
     /**

@@ -17,27 +17,25 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
+import appeng.api.AEApi;
 import appeng.api.config.CopyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
-import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.util.IConfigManager;
 import appeng.helpers.ICellRestriction;
-import appeng.helpers.IOreFilterable;
+import appeng.helpers.ICellWorkbench;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.tile.AEBaseTile;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
-import appeng.util.IConfigManagerHost;
 
-public class TileCellWorkbench extends AEBaseTile
-        implements IUpgradeableHost, IAEAppEngInventory, IConfigManagerHost, IOreFilterable, ICellRestriction {
+public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPrimaryGuiIconProvider {
 
     private final AppEngInternalInventory cell = new AppEngInternalInventory(this, 1);
     private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, 63);
@@ -261,5 +259,15 @@ public class TileCellWorkbench extends AEBaseTile
 
         ItemStack is = this.cell.getStackInSlot(0);
         if (is != null && is.getItem() instanceof ICellRestriction icr) icr.setCellRestriction(is, newData);
+    }
+
+    @Override
+    public boolean isSame(ICellWorkbench cellWorkbench) {
+        return this == getWorldObj().getTileEntity(xCoord, yCoord, zCoord);
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().blocks().cellWorkbench().maybeStack(1).orNull();
     }
 }

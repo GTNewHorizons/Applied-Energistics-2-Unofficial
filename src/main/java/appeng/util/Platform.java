@@ -354,7 +354,7 @@ public class Platform {
         }
 
         if ((type.getType().isItem() && tile == null) || type.hasPermissions(tile, x, y, z, side, p)) {
-            if (tile == null && type.getType() == GuiHostType.ITEM) {
+            if (tile == null && type.getType() != GuiHostType.WORLD) {
                 p.openGui(
                         AppEng.instance(),
                         type.ordinal() << 5 | (1 << 4),
@@ -791,7 +791,7 @@ public class Platform {
             return "** Null";
         }
 
-        final String n = ((AEItemStack) is).getModID();
+        final String n = ((AEItemStack) is).getModId();
         return n == null ? "** Null" : n;
     }
 
@@ -1372,8 +1372,8 @@ public class Platform {
     }
 
     public static <T extends IAEStack<T>> void postListChanges(final IItemList<T> before, final IItemList<T> after,
-            final IMEMonitorHandlerReceiver<T> meMonitorPassthrough, final BaseActionSource source) {
-        final LinkedList<T> changes = new LinkedList<>();
+            final IMEMonitorHandlerReceiver meMonitorPassthrough, final BaseActionSource source) {
+        final LinkedList<IAEStack<?>> changes = new LinkedList<>();
 
         for (final T is : before) {
             is.setStackSize(-is.getStackSize());
@@ -2083,5 +2083,12 @@ public class Platform {
             return AEFluidStack.create(ItemFluidPacket.getFluidStack(stack));
         }
         return AEItemStack.create(stack);
+    }
+
+    public static boolean isStacksIdentical(IAEStack<?> a, IAEStack<?> b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        if (a.equals(b)) return a.getStackSize() == b.getStackSize();
+        return false;
     }
 }

@@ -45,13 +45,14 @@ import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.container.interfaces.IInventorySlotAware;
+import appeng.core.localization.GuiText;
 import appeng.items.contents.PinsHandler;
 import appeng.items.contents.PinsHolder;
 import appeng.items.contents.WirelessTerminalViewCells;
 import appeng.tile.networking.TileWireless;
 
-public class WirelessTerminalGuiObject
-        implements IPortableCell, IActionHost, IInventorySlotAware, IViewCellStorage, ITerminalPins {
+public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, IInventorySlotAware, IViewCellStorage,
+        ITerminalPins, IPrimaryGuiIconProvider {
 
     private final ItemStack effectiveItem;
     private final IWirelessTermHandler wth;
@@ -121,14 +122,14 @@ public class WirelessTerminalGuiObject
     }
 
     @Override
-    public void addListener(final IMEMonitorHandlerReceiver<IAEItemStack> l, final Object verificationToken) {
+    public void addListener(final IMEMonitorHandlerReceiver l, final Object verificationToken) {
         if (this.itemStorage != null) {
             this.itemStorage.addListener(l, verificationToken);
         }
     }
 
     @Override
-    public void removeListener(final IMEMonitorHandlerReceiver<IAEItemStack> l) {
+    public void removeListener(final IMEMonitorHandlerReceiver l) {
         if (this.itemStorage != null) {
             this.itemStorage.removeListener(l);
         }
@@ -340,5 +341,23 @@ public class WirelessTerminalGuiObject
     @Override
     public IGrid getGrid() {
         return targetGrid;
+    }
+
+    @Override
+    public GuiText getName() {
+        return GuiText.WirelessTerminal;
+    }
+
+    public TerminalMode getMode() {
+        return TerminalMode.values()[this.getItemStack().getTagCompound().getInteger("terminal_mode")];
+    }
+
+    public void writeInventory() {}
+
+    public void readInventory() {}
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return this.effectiveItem.copy();
     }
 }

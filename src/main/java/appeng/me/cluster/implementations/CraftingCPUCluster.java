@@ -146,7 +146,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private final LinkedList<TileCraftingTile> tiles = new LinkedList<>();
     private final LinkedList<TileCraftingTile> storage = new LinkedList<>();
     private final LinkedList<TileCraftingMonitorTile> status = new LinkedList<>();
-    private final HashMap<IMEMonitorHandlerReceiver<IAEStack<?>>, Object> listeners = new HashMap<>();
+    private final HashMap<IMEMonitorHandlerReceiver, Object> listeners = new HashMap<>();
     private final HashMap<IAEStack<?>, List<NamedDimensionalCoord>> providers = new HashMap<>();
     private ICraftingLink myLastLink;
     private String myName = "";
@@ -479,15 +479,15 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void postChange(final IAEStack<?> diff, final BaseActionSource src) {
-        final Iterator<Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object>> i = this.getListeners();
+        final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
 
         // protect integrity
         if (i.hasNext()) {
             final ImmutableList<IAEStack<?>> single = ImmutableList.of(diff.copy());
 
             while (i.hasNext()) {
-                final Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object> o = i.next();
-                final IMEMonitorHandlerReceiver<IAEStack<?>> receiver = o.getKey();
+                final Entry<IMEMonitorHandlerReceiver, Object> o = i.next();
+                final IMEMonitorHandlerReceiver receiver = o.getKey();
 
                 if (receiver.isValid(o.getValue())) {
                     receiver.postChange(null, single, src);
@@ -567,7 +567,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    private Iterator<Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object>> getListeners() {
+    private Iterator<Entry<IMEMonitorHandlerReceiver, Object>> getListeners() {
         return this.listeners.entrySet().iterator();
     }
 
@@ -1690,7 +1690,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.playersFollowingCurrentCraft.add(name);
         }
 
-        final Iterator<Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object>> i = this.getListeners();
+        final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
         while (i.hasNext()) {
             if (i.next().getKey() instanceof ContainerCraftingCPU cccpu) {
                 cccpu.sendUpdateFollowPacket(playersFollowingCurrentCraft);
