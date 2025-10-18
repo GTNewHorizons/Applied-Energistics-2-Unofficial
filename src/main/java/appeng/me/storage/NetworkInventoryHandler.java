@@ -362,7 +362,8 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 continue; // ignore any attempts to read self
             }
             if (lastPriority == null || lastPriority != inv.getPriority()) {
-                if (lastPriority != null && !currentPriorityItemList.isEmpty()) networkItemList.addNetworkItems(this, lastPriority, currentPriorityItemList);
+                if (lastPriority != null && !currentPriorityItemList.isEmpty())
+                    networkItemList.addNetworkItems(this, lastPriority, currentPriorityItemList);
                 lastPriority = inv.getPriority();
                 currentPriorityItemList = isSource
                         ? new ItemListIgnoreCrafting<>((IItemList<T>) getChannel().createList())

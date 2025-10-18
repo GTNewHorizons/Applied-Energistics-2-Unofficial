@@ -21,7 +21,6 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import appeng.util.item.PrioritizedNetworkItemList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -40,6 +39,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.me.storage.ItemWatcher;
 import appeng.util.IterationCounter;
 import appeng.util.item.LazyItemList;
+import appeng.util.item.PrioritizedNetworkItemList;
 
 public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 

@@ -114,7 +114,9 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
                             priorityStreams.add(stream);
                         } else {
                             List<PrioritizedNetworkItemStack<T>> buffer = new ArrayList<>();
-                            itemList.forEach(item -> buffer.add(new PrioritizedNetworkItemStack<>(entry.getKey(), item, priorty)));
+                            itemList.forEach(
+                                    item -> buffer
+                                            .add(new PrioritizedNetworkItemStack<>(entry.getKey(), item, priorty)));
                             priorityStreams.add(buffer.stream());
                         }
 
@@ -138,6 +140,7 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
         Set<IMENetworkInventory<T>> visitedNetworks = new HashSet<>();
         visitedNetworks.add(this.getNetwork());
         Comparator<PrioritizedNetworkItemStack<T>> comparator = new Comparator<>() {
+
             @Override
             public int compare(PrioritizedNetworkItemStack<T> o1, PrioritizedNetworkItemStack<T> o2) {
                 int result = 0;
@@ -158,9 +161,8 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
         };
         return getFilteredPrioritizedNetworkItemStackStream(
                 Collections.unmodifiableSet(visitedNetworks),
-                ascendingPriority).distinct()
-                .sorted(ascendingPriority ? comparator : comparator.reversed())
-                .map(NetworkItemStack::getItemStack);
+                ascendingPriority).distinct().sorted(ascendingPriority ? comparator : comparator.reversed())
+                        .map(NetworkItemStack::getItemStack);
     }
 
     @Override
