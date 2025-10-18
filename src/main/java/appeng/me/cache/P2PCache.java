@@ -82,7 +82,7 @@ public class P2PCache implements IGridCache {
                 this.inputs.remove(t.getFrequency());
             }
 
-            this.updateTunnel(t.getFrequency(), !t.isOutput(), false);
+            this.updateTunnel(t.getFrequency(), false);
         }
     }
 
@@ -104,7 +104,7 @@ public class P2PCache implements IGridCache {
                 this.inputs.put(t.getFrequency(), t);
             }
 
-            this.updateTunnel(t.getFrequency(), !t.isOutput(), false);
+            this.updateTunnel(t.getFrequency(), false);
         }
     }
 
@@ -117,7 +117,7 @@ public class P2PCache implements IGridCache {
     @Override
     public void populateGridStorage(final IGridStorage storage) {}
 
-    private void updateTunnel(final long freq, final boolean updateOutputs, final boolean configChange) {
+    private void updateTunnel(final long freq, final boolean configChange) {
         boolean pausedRebuild = false;
         if (inputs.get(freq) instanceof PartP2PInterface) {
             CraftingGridCache.pauseRebuilds();
@@ -143,13 +143,7 @@ public class P2PCache implements IGridCache {
     }
 
     public void updateFreq(final PartP2PTunnel t, final long newFrequency) {
-        if (this.outputs.containsValue(t)) {
-            this.outputs.remove(t.getFrequency(), t);
-        }
-
-        if (this.inputs.containsValue(t)) {
-            this.inputs.remove(t.getFrequency());
-        }
+        unbind(t);
 
         t.setFrequency(newFrequency);
 
@@ -159,10 +153,17 @@ public class P2PCache implements IGridCache {
             this.inputs.put(t.getFrequency(), t);
         }
 
-        // AELog.info( "update-" + (t.output ? "output: " : "input: ") + t.freq
-        // );
-        this.updateTunnel(t.getFrequency(), t.isOutput(), true);
-        this.updateTunnel(t.getFrequency(), !t.isOutput(), true);
+        this.updateTunnel(t.getFrequency(), true);
+    }
+
+    public void unbind(final PartP2PTunnel t) {
+        if (this.outputs.containsValue(t)) {
+            this.outputs.remove(t.getFrequency(), t);
+        }
+        if (this.inputs.containsValue(t)) {
+            this.inputs.remove(t.getFrequency());
+        }
+        t.setFrequency(0);
     }
 
     public TunnelCollection<PartP2PTunnel> getOutputs(final long freq, final Class<? extends PartP2PTunnel> c) {
