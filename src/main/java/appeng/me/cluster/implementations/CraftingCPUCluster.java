@@ -645,7 +645,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         final IItemList<IAEStack<?>> list;
-        this.getModernistOfItem(list = AEApi.instance().storage().createAEStackList(), CraftingItemList.ALL);
+        this.getModernListOfItem(list = AEApi.instance().storage().createAEStackList(), CraftingItemList.ALL);
         for (final IAEStack<?> is : list) {
             this.postChange(is, this.machineSrc);
         }
@@ -1108,7 +1108,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     this.submitLink(whatLink);
 
                     final IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
-                    this.getModernistOfItem(list, CraftingItemList.ALL);
+                    this.getModernListOfItem(list, CraftingItemList.ALL);
                     for (final IAEStack<?> ge : list) {
                         this.postChange(ge, this.machineSrc);
                     }
@@ -1336,7 +1336,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    public void getModernistOfItem(final IItemList<IAEStack<?>> list, final CraftingItemList whichList) {
+    public void getModernListOfItem(final IItemList<IAEStack<?>> list, final CraftingItemList whichList) {
         switch (whichList) {
             case ACTIVE -> {
                 for (final IAEStack<?> ais : this.waitingFor) {
@@ -1678,8 +1678,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private void prepareStepCount() {
         final IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
 
-        this.getModernistOfItem(list, CraftingItemList.ACTIVE);
-        this.getModernistOfItem(list, CraftingItemList.PENDING);
+        this.getModernListOfItem(list, CraftingItemList.ACTIVE);
+        this.getModernListOfItem(list, CraftingItemList.PENDING);
 
         long itemCount = 0;
         for (final IAEStack<?> ge : list) {
