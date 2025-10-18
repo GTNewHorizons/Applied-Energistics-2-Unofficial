@@ -6,8 +6,10 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.util.PriorityPredicate;
 import appeng.util.item.ItemFilterList;
 import appeng.util.item.NetworkItemList;
+import appeng.util.item.PrioritizedNetworkItemList;
 
 public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
@@ -41,9 +43,16 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
         final IItemList<T> availableItems = this.getInternal()
                 .getAvailableItems((IItemList<T>) getChannel().createList(), iteration);
         if (availableItems instanceof NetworkItemList) {
-            NetworkItemList<T> networkItemList = new NetworkItemList<>((NetworkItemList<T>) availableItems);
-            networkItemList.addFilter(filterCondition);
-            return networkItemList;
+            if(availableItems instanceof PrioritizedNetworkItemList<T>) {
+                PrioritizedNetworkItemList<T> prioNetworkItemList = new PrioritizedNetworkItemList<>((NetworkItemList<T>)availableItems);
+                PriorityPredicate<T> prioFilter = new PriorityPredicate<>(this.getPriority(), filterCondition);
+                prioNetworkItemList.addFilter(prioFilter);
+                return prioNetworkItemList;
+            } else {
+                NetworkItemList<T> networkItemList = new NetworkItemList<>((NetworkItemList<T>) availableItems);
+                networkItemList.addFilter(filterCondition);
+                return networkItemList;
+            }
         } else {
             for (T items : availableItems) {
                 if (filterCondition.test(items)) {

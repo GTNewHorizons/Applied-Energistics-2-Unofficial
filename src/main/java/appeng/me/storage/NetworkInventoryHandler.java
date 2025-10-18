@@ -338,6 +338,50 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         return isSource ? networkItemList.buildFinalItemList(out) : networkItemList;
     }
 
+    public IItemList<T> getAvailableItemsWithPriority(IItemList out, int iteration) {
+        if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
+            return this.iterationItems == null ? out : this.iterationItems;
+        }
+
+        final boolean isIgnoreCrafting = out instanceof ItemListIgnoreCrafting;
+        final boolean isSource = this.getDepth(Actionable.SIMULATE).size() == 1;
+
+        final NetworkItemList<T> networkItemList = new NetworkItemList<>(
+                this,
+                () -> (IItemList<T>) getChannel().createList());
+        this.iterationItems = networkItemList;
+
+        final IItemList<T> currentNetworkItemList = isIgnoreCrafting
+                ? new ItemListIgnoreCrafting<>((IItemList<T>) getChannel().createList())
+                : (IItemList<T>) getChannel().createList();
+        final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
+        final int size = priorityInventory.size();
+        for (int i = 0; i < size; i++) {
+            final IMEInventoryHandler<T> inv = priorityInventory.get(i);
+            final IMENetworkInventory<T> externalNetworkInventory = inv.getExternalNetworkInventory();
+            if (externalNetworkInventory == this) {
+                continue; // ignore any attempts to read self
+            }
+            final IItemList<T> passedInList = getChannel().createList();
+            final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
+
+            if (externalNetworkInventory != null && passedOutList instanceof NetworkItemList) {
+                networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
+            } else {
+                for (T item : passedOutList) {
+                    currentNetworkItemList.add(item);
+                }
+            }
+        }
+        networkItemList.addNetworkItems(this, currentNetworkItemList);
+
+        this.surface(this, Actionable.SIMULATE);
+
+        // we're partially violating the api by making the returned list a different one from the provided one, however
+        // when we're done with the network inventory scan we fulfill our api contract again
+        return isSource ? networkItemList.buildFinalItemList(out) : networkItemList;
+    }
+
     @Override
     public T getAvailableItem(@Nonnull T request, int iteration) {
         long count = 0;

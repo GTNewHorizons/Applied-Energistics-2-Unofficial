@@ -69,6 +69,22 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         this.newItemListSupplier = networkItemList.newItemListSupplier;
     }
 
+    public IMENetworkInventory<T> getNetwork() {
+        return network;
+    }
+
+    public Map<IMENetworkInventory<T>, IItemList<T>> getNetworkItemLists() {
+        return networkItemLists;
+    }
+
+    public Supplier<IItemList<T>> getNewItemListSupplier() {
+        return newItemListSupplier;
+    }
+
+    public List<Predicate<T>> getPredicates() {
+        return predicates;
+    }
+
     public void addNetworkItems(IMENetworkInventory<T> network, IItemList<T> itemList) {
         IItemList<T> l = networkItemLists.get(network);
 
@@ -232,7 +248,7 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         return list == null ? LIST_NUll : list.getStackType();
     }
 
-    private class NetworkItemStack<U extends IAEStack> {
+    static class NetworkItemStack<U extends IAEStack> {
 
         private final IMENetworkInventory<U> networkInventory;
         private final U itemStack;
