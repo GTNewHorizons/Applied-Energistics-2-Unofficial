@@ -645,7 +645,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         final IItemList<IAEStack<?>> list;
-        this.getListOfItem(list = AEApi.instance().storage().createAEStackList(), CraftingItemList.ALL);
+        this.getModernListOfItem(list = AEApi.instance().storage().createAEStackList(), CraftingItemList.ALL);
         for (final IAEStack<?> is : list) {
             this.postChange(is, this.machineSrc);
         }
@@ -1108,7 +1108,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     this.submitLink(whatLink);
 
                     final IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
-                    this.getListOfItem(list, CraftingItemList.ALL);
+                    this.getModernListOfItem(list, CraftingItemList.ALL);
                     for (final IAEStack<?> ge : list) {
                         this.postChange(ge, this.machineSrc);
                     }
@@ -1297,7 +1297,46 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    public void getListOfItem(final IItemList<IAEStack<?>> list, final CraftingItemList whichList) {
+    @Deprecated
+    public void getListOfItem(final IItemList<IAEItemStack> list, final CraftingItemList whichList) {
+        switch (whichList) {
+            case ACTIVE -> {
+                for (final IAEStack<?> ais : this.waitingFor) {
+                    list.add(stackConvert(ais));
+                }
+            }
+            case PENDING -> {
+                for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
+                    for (IAEItemStack ais : t.getKey().getCondensedOutputs()) {
+                        ais = ais.copy();
+                        ais.setStackSize(ais.getStackSize() * t.getValue().value);
+                        list.add(ais);
+                    }
+                }
+            }
+            case STORAGE -> {
+                inventory.getAvailableItems(list);
+            }
+
+            default -> {
+                inventory.getAvailableItems(list);
+
+                for (final IAEStack<?> ais : this.waitingFor) {
+                    list.add(stackConvert(ais));
+                }
+
+                for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
+                    for (IAEItemStack ais : t.getKey().getCondensedOutputs()) {
+                        ais = ais.copy();
+                        ais.setStackSize(ais.getStackSize() * t.getValue().value);
+                        list.add(ais);
+                    }
+                }
+            }
+        }
+    }
+
+    public void getModernListOfItem(final IItemList<IAEStack<?>> list, final CraftingItemList whichList) {
         switch (whichList) {
             case ACTIVE -> {
                 for (final IAEStack<?> ais : this.waitingFor) {
@@ -1639,8 +1678,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private void prepareStepCount() {
         final IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
 
-        this.getListOfItem(list, CraftingItemList.ACTIVE);
-        this.getListOfItem(list, CraftingItemList.PENDING);
+        this.getModernListOfItem(list, CraftingItemList.ACTIVE);
+        this.getModernListOfItem(list, CraftingItemList.PENDING);
 
         long itemCount = 0;
         for (final IAEStack<?> ge : list) {
