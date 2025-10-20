@@ -118,7 +118,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
             this.cpuName = c.getName();
             this.setMonitor((CraftingCPUCluster) c);
             this.list.resetStatus();
-            this.getMonitor().getListOfItem(this.list, CraftingItemList.ALL);
+            this.getMonitor().getModernListOfItem(this.list, CraftingItemList.ALL);
             this.getMonitor().addListener(this, null);
             this.setElapsedTime(0);
             this.allow = this.getMonitor().getCraftingAllowMode().ordinal();
