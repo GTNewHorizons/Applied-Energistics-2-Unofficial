@@ -12,8 +12,11 @@ package appeng.client.gui.implementations;
 
 import java.io.IOException;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -24,6 +27,10 @@ import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
+import appeng.api.storage.data.IAEStack;
+import appeng.client.StorageName;
+import appeng.client.gui.slots.VirtualMEPatternSlot;
+import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerLevelEmitter;
@@ -33,9 +40,13 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.parts.automation.PartLevelEmitter;
+import appeng.core.sync.packets.PacketVirtualSlot;
+import appeng.helpers.ILevelEmitter;
+import appeng.util.FluidUtils;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
+import appeng.util.item.AEFluidStack;
+import appeng.util.item.AEItemStack;
 
 public class GuiLevelEmitter extends GuiUpgradeable {
 
@@ -56,7 +67,9 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     private GuiImgButton levelMode;
     private GuiImgButton craftingMode;
 
-    public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final PartLevelEmitter te) {
+    private VirtualMEPatternSlot config;
+
+    public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final ILevelEmitter te) {
         super(new ContainerLevelEmitter(inventoryPlayer, te));
     }
 
@@ -70,6 +83,13 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.amountTextField.setFocused(true);
         ((ContainerLevelEmitter) this.inventorySlots).setTextField(this.amountTextField);
         this.validateText();
+
+        this.config = new VirtualMEPatternSlot(
+                17,
+                42,
+                ((ContainerLevelEmitter) inventorySlots).getLvlEmitter().getAEInventoryByName(StorageName.NONE),
+                0);
+        this.registerVirtualSlots(this.config);
     }
 
     @Override
@@ -247,7 +267,29 @@ public class GuiLevelEmitter extends GuiUpgradeable {
             this.amountTextField.mouseClicked(xCoord, yCoord, btn);
         }
 
-        super.mouseClicked(xCoord, yCoord, btn);
+        final VirtualMESlot slot = getVirtualMESlotUnderMouse();
+
+        if (slot == null) super.mouseClicked(xCoord, yCoord, btn);
+        else if (slot instanceof VirtualMEPatternSlot slotConfig) {
+            final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+            final IAEStack<?> aes;
+            final ItemStack playerHand = player.inventory.getItemStack();
+            final ItemStack is = playerHand != null ? playerHand.copy() : null;
+
+            if (playerHand != null) {
+                is.stackSize = 1;
+                if (isCtrlKeyDown()) {
+                    aes = AEFluidStack.create(FluidUtils.getFluidFromContainer(is));
+                } else {
+                    aes = AEItemStack.create(is);
+                }
+            } else {
+                aes = null;
+            }
+
+            NetworkHandler.instance
+                    .sendToServer(new PacketVirtualSlot(slotConfig.getStorageName(), slot.getSlotIndex(), aes));
+        }
     }
 
     @Override

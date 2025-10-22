@@ -21,7 +21,7 @@ import appeng.container.ContainerNull;
 import appeng.container.slot.SlotCraftingMatrix;
 import appeng.container.slot.SlotCraftingTerm;
 import appeng.helpers.IContainerCraftingPacket;
-import appeng.parts.reporting.PartCraftingTerminal;
+import appeng.helpers.ICraftingTerminal;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
@@ -29,14 +29,14 @@ import appeng.tile.inventory.InvOperation;
 public class ContainerCraftingTerm extends ContainerMEMonitorable
         implements IAEAppEngInventory, IContainerCraftingPacket {
 
-    private final PartCraftingTerminal ct;
+    private final ICraftingTerminal ct;
     private final AppEngInternalInventory output = new AppEngInternalInventory(this, 1);
     private final SlotCraftingMatrix[] craftingSlots = new SlotCraftingMatrix[9];
     private final SlotCraftingTerm outputSlot;
 
     public ContainerCraftingTerm(final InventoryPlayer ip, final ITerminalHost monitorable) {
-        super(ip, monitorable, false);
-        this.ct = (PartCraftingTerminal) monitorable;
+        super(ip, monitorable);
+        this.ct = (ICraftingTerminal) monitorable;
 
         final IInventory crafting = this.ct.getInventoryByName("crafting");
 
@@ -64,8 +64,6 @@ public class ContainerCraftingTerm extends ContainerMEMonitorable
                         131,
                         -72 + 18,
                         this));
-
-        this.bindPlayerInventory(ip, 0, 0);
 
         this.onCraftMatrixChanged(crafting);
     }

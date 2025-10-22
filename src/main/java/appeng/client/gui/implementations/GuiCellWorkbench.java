@@ -33,7 +33,7 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.tile.misc.TileCellWorkbench;
+import appeng.helpers.ICellWorkbench;
 import appeng.util.Platform;
 
 public class GuiCellWorkbench extends GuiUpgradeable {
@@ -45,7 +45,7 @@ public class GuiCellWorkbench extends GuiUpgradeable {
     private GuiToggleButton copyMode;
     protected GuiImgButton cellRestriction;
 
-    public GuiCellWorkbench(final InventoryPlayer inventoryPlayer, final TileCellWorkbench te) {
+    public GuiCellWorkbench(final InventoryPlayer inventoryPlayer, final ICellWorkbench te) {
         super(new ContainerCellWorkbench(inventoryPlayer, te));
         this.workbench = (ContainerCellWorkbench) this.inventorySlots;
         this.ySize = 251;

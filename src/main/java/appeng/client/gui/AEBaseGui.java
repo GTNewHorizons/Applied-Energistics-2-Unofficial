@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
@@ -46,6 +49,9 @@ import com.google.common.base.Stopwatch;
 
 import appeng.api.events.GuiScrollEvent;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.client.ActionKey;
+import appeng.client.ClientHelper;
+import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ITooltip;
 import appeng.client.me.InternalSlotME;
@@ -62,7 +68,6 @@ import appeng.container.slot.OptionalSlotRestrictedInput;
 import appeng.container.slot.SlotCraftingTerm;
 import appeng.container.slot.SlotDisabled;
 import appeng.container.slot.SlotFake;
-import appeng.container.slot.SlotFakeCraftingMatrix;
 import appeng.container.slot.SlotInaccessible;
 import appeng.container.slot.SlotOutput;
 import appeng.container.slot.SlotPatternTerm;
@@ -75,12 +80,12 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketSwapSlots;
+import appeng.helpers.ICustomButtonProvider;
 import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
 import appeng.util.Platform;
-import appeng.util.item.AEItemStack;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.guihook.GuiContainerManager;
 import cpw.mods.fml.common.Loader;
@@ -143,12 +148,18 @@ public abstract class AEBaseGui extends GuiContainer {
     private ItemStack dbl_whichItem;
     private Slot bl_clicked;
     private boolean subGui;
+    private static int controlKey;
+
+    private final List<VirtualMESlot> virtualSlots = new ArrayList<>();
+    private final List<VirtualMESlot> draggedSlots = new ArrayList<>();
+    private VirtualMESlot hoveredVirtualSlot = null;
 
     public AEBaseGui(final Container container) {
         super(container);
         this.subGui = switchingGuis;
         switchingGuis = false;
         aeRenderItem.parent = this;
+        controlKey = ClientHelper.proxy.getKeybind(ActionKey.CONTROL_OPERATION);
     }
 
     protected static String join(final Collection<String> toolTip, final String delimiter) {
@@ -174,12 +185,17 @@ public abstract class AEBaseGui extends GuiContainer {
     public void initGui() {
         super.initGui();
 
+        this.virtualSlots.clear();
         final List<Slot> slots = this.getInventorySlots();
         slots.removeIf(SlotME.class::isInstance);
 
         for (final InternalSlotME me : this.meSlots) {
             slots.add(new SlotME(me));
         }
+    }
+
+    protected void registerVirtualSlots(VirtualMESlot slot) {
+        virtualSlots.add(slot);
     }
 
     @SuppressWarnings("unchecked")
@@ -315,6 +331,9 @@ public abstract class AEBaseGui extends GuiContainer {
         this.currentToolTip.shift(ox, oy);
         this.drawFG(ox, oy, x, y);
         this.currentToolTip.shift(0, 0);
+
+        this.hoveredVirtualSlot = null;
+        this.drawVirtualSlots(this.virtualSlots, x, y);
     }
 
     public abstract void drawFG(int offsetX, int offsetY, int mouseX, int mouseY);
@@ -360,6 +379,7 @@ public abstract class AEBaseGui extends GuiContainer {
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         this.drag_click.clear();
+        this.draggedSlots.clear();
 
         if (btn == 1) {
             for (final Object o : this.buttonList) {
@@ -378,8 +398,24 @@ public abstract class AEBaseGui extends GuiContainer {
         super.mouseClicked(xCoord, yCoord, btn);
     }
 
+    protected void handleDragVirtualSlot(VirtualMESlot slot, int mouseButton) {}
+
     @Override
     protected void mouseClickMove(final int x, final int y, final int c, final long d) {
+        if (c == 0 || c == 1) {
+            for (VirtualMESlot slot : virtualSlots) {
+                if (slot.isHovered(x - this.guiLeft + 1, y - this.guiTop + 1)) {
+                    this.hoveredVirtualSlot = slot;
+                    break;
+                }
+            }
+            if (this.mc.thePlayer.inventory.getItemStack() != null && this.hoveredVirtualSlot != null
+                    && !this.draggedSlots.contains(this.hoveredVirtualSlot)) {
+                this.draggedSlots.add(this.hoveredVirtualSlot);
+                this.handleDragVirtualSlot(this.hoveredVirtualSlot, c);
+            }
+        }
+
         final Slot slot = this.getSlot(x, y);
         final ItemStack itemstack = this.mc.thePlayer.inventory.getItemStack();
 
@@ -437,39 +473,18 @@ public abstract class AEBaseGui extends GuiContainer {
     protected void handleMouseClick(final Slot slot, final int slotIdx, final int ctrlDown, final int mouseButton) {
         final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 
-        if (mouseButton == 3) {
-            if (slot instanceof OptionalSlotFake || slot instanceof SlotFakeCraftingMatrix) {
-                if (slot.getHasStack()) {
-                    InventoryAction action = InventoryAction.SET_PATTERN_VALUE;
-                    if (isCtrlKeyDown()) {
-                        action = InventoryAction.RENAME_PATTERN_ITEM;
-                    }
+        if (slot instanceof SlotFake) {
+            final InventoryAction action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE
+                    : InventoryAction.PICKUP_OR_SET_DOWN;
 
-                    IAEItemStack stack = AEItemStack.create(slot.getStack());
-
-                    ((AEBaseContainer) this.inventorySlots).setTargetStack(stack);
-                    final PacketInventoryAction p = new PacketInventoryAction(action, slotIdx, 0);
-                    NetworkHandler.instance.sendToServer(p);
-
-                    return;
-                }
-            }
-
-        } else {
-
-            if (slot instanceof SlotFake) {
-                final InventoryAction action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE
-                        : InventoryAction.PICKUP_OR_SET_DOWN;
-
-                if (this.drag_click.size() > 1) {
-                    return;
-                }
-
-                final PacketInventoryAction p = new PacketInventoryAction(action, slotIdx, 0);
-                NetworkHandler.instance.sendToServer(p);
-
+            if (this.drag_click.size() > 1) {
                 return;
             }
+
+            final PacketInventoryAction p = new PacketInventoryAction(action, slotIdx, 0);
+            NetworkHandler.instance.sendToServer(p);
+
+            return;
         }
 
         if (slot instanceof SlotPatternTerm) {
@@ -1113,5 +1128,47 @@ public abstract class AEBaseGui extends GuiContainer {
 
     public int getYSize() {
         return ySize;
+    }
+
+    public static boolean isCtrlKeyDown() {
+        return Keyboard.isKeyDown(controlKey);
+    }
+
+    private void drawVirtualSlots(@Nonnull List<VirtualMESlot> slots, int mouseX, int mouseY) {
+        final int x = mouseX - this.guiLeft + 1;
+        final int y = mouseY - this.guiTop + 1;
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+        RenderHelper.enableGUIStandardItemLighting();
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+
+        for (VirtualMESlot slot : slots) {
+            boolean isHovered = slot.drawStackAndOverlay(this.mc, x, y);
+            if (isHovered) {
+                this.hoveredVirtualSlot = slot;
+            }
+        }
+        GL11.glPopAttrib();
+    }
+
+    public @Nullable VirtualMESlot getVirtualMESlotUnderMouse() {
+        return this.hoveredVirtualSlot;
+    }
+
+    public void initCustomButtons(int xOffset, int yOffset) {
+        if (inventorySlots instanceof AEBaseContainer abc && abc.getTarget() instanceof ICustomButtonProvider icbp)
+            icbp.initCustomButtons(
+                    this.guiLeft,
+                    this.guiTop,
+                    this.xSize,
+                    this.ySize,
+                    xOffset,
+                    yOffset,
+                    this.buttonList);
+    }
+
+    public boolean actionPerformedCustomButtons(final GuiButton btn) {
+        if (inventorySlots instanceof AEBaseContainer abc && abc.getTarget() instanceof ICustomButtonProvider icbp)
+            return icbp.actionPerformedCustomButtons(btn);
+        return false;
     }
 }

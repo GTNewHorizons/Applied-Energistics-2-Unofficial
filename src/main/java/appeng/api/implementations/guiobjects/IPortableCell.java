@@ -17,9 +17,15 @@ import appeng.api.networking.energy.IEnergySource;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.core.localization.GuiText;
 
 /**
  * Obtained via {@link IGuiItem} getGuiObject
  */
 public interface IPortableCell extends ITerminalHost, IMEMonitor<IAEItemStack>, IEnergySource, IGuiItemObject {
+
+    @Override
+    default GuiText getName() {
+        return GuiText.PortableCell;
+    }
 }

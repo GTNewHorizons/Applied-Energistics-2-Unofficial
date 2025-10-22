@@ -34,15 +34,15 @@ import appeng.api.storage.data.IItemList;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.OptionalSlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.helpers.IStorageBus;
 import appeng.me.storage.MEInventoryHandler;
-import appeng.parts.misc.PartStorageBus;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.prioitylist.PrecisePriorityList;
 
 public class ContainerStorageBus extends ContainerUpgradeable {
 
-    private final PartStorageBus storageBus;
+    private final IStorageBus storageBus;
 
     @GuiSync(3)
     public AccessRestriction rwMode = AccessRestriction.READ_WRITE;
@@ -58,7 +58,7 @@ public class ContainerStorageBus extends ContainerUpgradeable {
     @GuiSync(8)
     public ActionItems partitionMode; // use for icon and tooltip
 
-    public ContainerStorageBus(final InventoryPlayer ip, final PartStorageBus te) {
+    public ContainerStorageBus(final InventoryPlayer ip, final IStorageBus te) {
         super(ip, te);
         this.storageBus = te;
         partitionMode = PartitionIteratorMap.containsKey(ip.player) ? ActionItems.NEXT_PARTITION : ActionItems.WRENCH;
@@ -179,12 +179,12 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         final int upgrades = this.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
 
         if (upgrades > 0) { // sync filter slots
-            boolean needSync = this.storageBus.needSyncGUI;
+            boolean needSync = this.storageBus.needSyncGUI();
             int row;
             if (needSync) {
                 row = -1; // send all rows
                 rowToUpdate = upgrades; // force update of last row at next call
-                this.storageBus.needSyncGUI = false;
+                this.storageBus.setNeedSyncGUI(false);
             } else row = rowToUpdate++;
 
             if (row >= upgrades) rowToUpdate = 0;
@@ -224,7 +224,8 @@ public class ContainerStorageBus extends ContainerUpgradeable {
         }
         final IInventory inv = this.getUpgradeable().getInventoryByName("config");
 
-        final MEInventoryHandler<IAEItemStack> cellInv = this.storageBus.getInternalHandler();
+        final MEInventoryHandler<IAEItemStack> cellInv = (MEInventoryHandler<IAEItemStack>) this.storageBus
+                .getInternalHandler();
 
         if (cellInv == null) {
             clearPartitionIterator(player);

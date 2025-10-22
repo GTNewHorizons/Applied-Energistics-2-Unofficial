@@ -33,15 +33,15 @@ import appeng.container.slot.OptionalSlotRestrictedInput;
 import appeng.container.slot.SlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.helpers.ICellRestriction;
+import appeng.helpers.ICellWorkbench;
 import appeng.tile.inventory.AppEngNullInventory;
-import appeng.tile.misc.TileCellWorkbench;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.iterators.NullIterator;
 
 public class ContainerCellWorkbench extends ContainerUpgradeable {
 
-    private final TileCellWorkbench workBench;
+    private final ICellWorkbench workBench;
     private final AppEngNullInventory nullInventory = new AppEngNullInventory();
 
     @GuiSync(2)
@@ -50,7 +50,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
     private ItemStack prevStack = null;
     private int lastUpgrades = 0;
 
-    public ContainerCellWorkbench(final InventoryPlayer ip, final TileCellWorkbench te) {
+    public ContainerCellWorkbench(final InventoryPlayer ip, final ICellWorkbench te) {
         super(ip, te);
         this.workBench = te;
     }
@@ -140,9 +140,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
     public void detectAndSendChanges() {
         final ItemStack is = this.workBench.getInventoryByName("cell").getStackInSlot(0);
         if (Platform.isServer()) {
-            if (this.workBench.getWorldObj()
-                    .getTileEntity(this.workBench.xCoord, this.workBench.yCoord, this.workBench.zCoord)
-                    != this.workBench) {
+            if (this.workBench.isSame(this.workBench)) {
                 this.setValidContainer(false);
             }
 

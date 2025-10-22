@@ -33,7 +33,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.parts.misc.PartStorageBus;
+import appeng.helpers.IStorageBus;
 
 public class GuiStorageBus extends GuiUpgradeable {
 
@@ -43,7 +43,7 @@ public class GuiStorageBus extends GuiUpgradeable {
     private GuiImgButton partition;
     private GuiImgButton clear;
 
-    public GuiStorageBus(final InventoryPlayer inventoryPlayer, final PartStorageBus te) {
+    public GuiStorageBus(final InventoryPlayer inventoryPlayer, final IStorageBus te) {
         super(new ContainerStorageBus(inventoryPlayer, te));
         this.ySize = 251;
     }

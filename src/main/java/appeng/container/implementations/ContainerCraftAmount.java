@@ -13,8 +13,8 @@ package appeng.container.implementations;
 import javax.annotation.Nonnull;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Slot;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -24,18 +24,19 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.client.StorageName;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.container.AEBaseContainer;
+import appeng.container.ContainerSubGui;
 import appeng.container.guisync.GuiSync;
-import appeng.container.slot.SlotInaccessible;
 import appeng.core.sync.GuiBridge;
-import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketVirtualSlot;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class ContainerCraftAmount extends AEBaseContainer {
+public class ContainerCraftAmount extends ContainerSubGui {
 
     @SideOnly(Side.CLIENT)
     private MEGuiTextField amountField;
@@ -43,14 +44,10 @@ public class ContainerCraftAmount extends AEBaseContainer {
     @GuiSync(1)
     public long initialCraftAmount = -1;
 
-    private final Slot craftingItem;
-    private IAEItemStack itemToCreate;
+    private IAEStack<?> itemToCreate;
 
     public ContainerCraftAmount(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
-
-        this.craftingItem = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 34, 53);
-        this.addSlotToContainer(this.getCraftingItem());
     }
 
     @Override
@@ -72,16 +69,15 @@ public class ContainerCraftAmount extends AEBaseContainer {
         return new PlayerSource(this.getPlayerInv().player, (IActionHost) this.getTarget());
     }
 
-    public Slot getCraftingItem() {
-        return this.craftingItem;
-    }
-
-    public IAEItemStack getItemToCraft() {
+    public IAEStack<?> getItemToCraft() {
         return this.itemToCreate;
     }
 
-    public void setItemToCraft(@Nonnull final IAEItemStack itemToCreate) {
+    public void setItemToCraft(@Nonnull final IAEStack<?> itemToCreate) {
         this.itemToCreate = itemToCreate;
+
+        final PacketVirtualSlot p = new PacketVirtualSlot(StorageName.NONE, 0, itemToCreate);
+        NetworkHandler.instance.sendTo(p, (EntityPlayerMP) this.getInventoryPlayer().player);
     }
 
     public void setInitialCraftAmount(long initialCraftAmount) {

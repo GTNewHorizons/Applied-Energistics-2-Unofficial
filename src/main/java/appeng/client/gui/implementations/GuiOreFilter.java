@@ -9,7 +9,6 @@ import net.minecraftforge.oredict.OreDictionary;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.AEBaseContainer;
@@ -28,7 +27,7 @@ import appeng.parts.misc.PartStorageBus;
 import appeng.tile.misc.TileCellWorkbench;
 import appeng.util.prioitylist.OreFilteredList.OreFilterTextFormatter;
 
-public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField {
+public class GuiOreFilter extends GuiSub implements IDropToFillTextField {
 
     private MEGuiTextField textField;
 

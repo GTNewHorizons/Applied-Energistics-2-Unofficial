@@ -1,9 +1,7 @@
 package appeng.helpers;
 
-import net.minecraft.item.ItemStack;
-
 import appeng.api.config.PinsState;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
 public interface IPinsHandler {
 
@@ -11,19 +9,19 @@ public interface IPinsHandler {
         return PinsState.getPinsCount();
     }
 
-    default void setPin(ItemStack is, int idx) {
+    default void setPin(IAEStack<?> is, int idx) {
         throw new UnsupportedOperationException("setPin is not supported by this handler");
     }
 
-    default void setAEPins(IAEItemStack[] pins) {
+    default void setAEPins(IAEStack<?>[] pins) {
         throw new UnsupportedOperationException("setAEPins is not supported by this handler");
     }
 
-    default ItemStack getPin(int idx) {
+    default IAEStack<?> getPin(int idx) {
         throw new UnsupportedOperationException("getPin is not supported by this handler");
     }
 
-    default IAEItemStack getAEPin(int idx) {
+    default IAEStack<?> getAEPin(int idx) {
         throw new UnsupportedOperationException("getAEPin is not supported by this handler");
     }
 

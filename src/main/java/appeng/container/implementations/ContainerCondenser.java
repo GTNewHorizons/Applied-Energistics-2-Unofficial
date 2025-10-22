@@ -36,7 +36,7 @@ public class ContainerCondenser extends AEBaseContainer implements IProgressProv
     public CondenserOutput output = CondenserOutput.TRASH;
 
     public ContainerCondenser(final InventoryPlayer ip, final TileCondenser condenser) {
-        super(ip, condenser, null);
+        super(ip, condenser);
         this.condenser = condenser;
 
         this.addSlotToContainer(

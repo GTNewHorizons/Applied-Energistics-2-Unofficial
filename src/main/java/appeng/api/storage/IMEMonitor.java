@@ -17,7 +17,7 @@ import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 
-public interface IMEMonitor<T extends IAEStack> extends IMEInventoryHandler<T>, IBaseMonitor<T> {
+public interface IMEMonitor<T extends IAEStack> extends IMEInventoryHandler<T>, IBaseMonitor {
 
     /**
      * This method is discouraged when accessing data via a IMEMonitor

@@ -35,6 +35,7 @@ import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiContextMenu;
@@ -131,10 +132,10 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
 
         ItemStack is = null;
         if (tooltip > -1) {
-            final IAEItemStack aeStack = repo.getReferenceItem(tooltip);
+            final IAEStack<?> aeStack = repo.getReferenceStack(tooltip);
 
-            if (aeStack != null) {
-                is = aeStack.getItemStack();
+            if (aeStack instanceof IAEItemStack ais) {
+                is = ais.getItemStack();
             }
 
         }
@@ -278,10 +279,10 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
     }
 
-    public void postUpdate(final List<IAEItemStack> list) {
+    public void postUpdate(final List<IAEStack<?>> list) {
         this.repo.clear();
 
-        for (final IAEItemStack is : list) {
+        for (final IAEStack<?> is : list) {
             this.repo.postUpdate(is);
         }
 
@@ -466,8 +467,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         int toolPosY = 0;
 
         for (int z = viewStart; z < Math.min(viewEnd, this.repo.size()); z++) {
-            final IAEItemStack refStack = this.repo.getReferenceItem(z);
-            if (refStack != null) {
+            final IAEStack<?> aes = this.repo.getReferenceStack(z);
+            if (aes instanceof IAEItemStack refStack) {
                 GL11.glPushMatrix();
                 GL11.glScaled(0.5, 0.5, 0.5);
 

@@ -44,7 +44,6 @@ import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IBaseMonitor;
-import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.ITickManager;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -52,14 +51,13 @@ import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.parts.PartItemStack;
-import appeng.api.storage.ICellContainer;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.client.texture.CableBusTextures;
@@ -67,8 +65,8 @@ import appeng.core.settings.TickRates;
 import appeng.core.stats.Achievements;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IInterfaceHost;
-import appeng.helpers.IOreFilterable;
-import appeng.helpers.IPriorityHost;
+import appeng.helpers.IPrimaryGuiIconProvider;
+import appeng.helpers.IStorageBus;
 import appeng.helpers.Reflected;
 import appeng.integration.IntegrationType;
 import appeng.me.GridAccessException;
@@ -80,25 +78,21 @@ import appeng.me.storage.StorageBusInventoryHandler;
 import appeng.parts.automation.PartUpgradeable;
 import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.InvOperation;
-import appeng.transformer.annotations.Integration.Interface;
 import appeng.transformer.annotations.Integration.Method;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.prioitylist.FuzzyPriorityList;
 import appeng.util.prioitylist.OreFilteredList;
 import appeng.util.prioitylist.PrecisePriorityList;
-import buildcraft.api.transport.IPipeConnection;
 import buildcraft.api.transport.IPipeTile.PipeType;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-@Interface(iname = IntegrationType.BuildCraftTransport, iface = "buildcraft.api.transport.IPipeConnection")
-public class PartStorageBus extends PartUpgradeable implements IGridTickable, ICellContainer,
-        IMEMonitorHandlerReceiver<IAEItemStack>, IPipeConnection, IPriorityHost, IOreFilterable {
+public class PartStorageBus extends PartUpgradeable implements IStorageBus, IPrimaryGuiIconProvider {
 
     private final BaseActionSource mySrc;
     private final AppEngInternalAEInventory Config = new AppEngInternalAEInventory(this, 63);
-    public boolean needSyncGUI = false;
+    private boolean needSyncGUI = false;
     // represents the 45 optional slots unlockable with a Storage Card
     private final ItemStack[] filterCache = new ItemStack[63 - 18];
     private int priority = 0;
@@ -247,6 +241,16 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
         this.resetCache(true);
     }
 
+    @Override
+    public boolean needSyncGUI() {
+        return this.needSyncGUI;
+    }
+
+    @Override
+    public void setNeedSyncGUI(boolean needSyncGUI) {
+        this.needSyncGUI = needSyncGUI;
+    }
+
     private void readFilterCache(NBTTagCompound tagCompound) {
         for (int x = 0; x < filterCache.length; x++) {
             if (tagCompound.hasKey("#" + x)) {
@@ -326,7 +330,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
     }
 
     @Override
-    public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
+    public void postChange(final IBaseMonitor monitor, final Iterable<IAEStack<?>> change,
             final BaseActionSource source) {
         try {
             if (this.getProxy().isActive()) {
@@ -338,7 +342,7 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
                         return;
                     }
                 }
-                Iterable<IAEItemStack> filteredChanges = this.filterChanges(change, this.readOncePass);
+                Iterable<IAEStack<?>> filteredChanges = this.filterChanges(change, this.readOncePass);
                 this.readOncePass = false;
                 if (filteredChanges == null) return;
                 this.getProxy().getStorage()
@@ -354,17 +358,17 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
      * changes match the filter.
      */
     @Nullable
-    private Iterable<IAEItemStack> filterChanges(final Iterable<IAEItemStack> change, final boolean readOncePass) {
+    private Iterable<IAEStack<?>> filterChanges(final Iterable<IAEStack<?>> change, final boolean readOncePass) {
         if (readOncePass) {
             return change;
         }
 
         if (this.handler != null && this.handler.isExtractFilterActive()
                 && !this.handler.getExtractPartitionList().isEmpty()) {
-            List<IAEItemStack> filteredChanges = new ArrayList<>();
+            List<IAEStack<?>> filteredChanges = new ArrayList<>();
             Predicate<IAEItemStack> extractFilterCondition = this.handler.getExtractFilterCondition();
-            for (final IAEItemStack changedItem : change) {
-                if (extractFilterCondition.test(changedItem)) {
+            for (final IAEStack<?> changedItem : change) {
+                if (extractFilterCondition.test((IAEItemStack) changedItem)) {
                     filteredChanges.add(changedItem);
                 }
             }
@@ -742,5 +746,10 @@ public class PartStorageBus extends PartUpgradeable implements IGridTickable, IC
         oreFilterString = filter;
         previousOreFilterString = filter;
         resetCache(true);
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().parts().storageBus().maybeStack(1).orNull();
     }
 }
