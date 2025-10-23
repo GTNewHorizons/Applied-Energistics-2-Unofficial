@@ -45,6 +45,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
     private final NavigableMap<Integer, CachedItemStack> memory;
     private BaseActionSource mySource;
     private StorageFilter mode = StorageFilter.EXTRACTABLE_ONLY;
+    private boolean init = false;
 
     public MEMonitorIInventory(final InventoryAdaptor adaptor) {
         this.adaptor = adaptor;
@@ -252,6 +253,10 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
 
     @Override
     public IItemList<IAEItemStack> getAvailableItems(final IItemList out, int iteration) {
+        if (!init) {
+            this.onTick();
+            init = true;
+        }
         for (final CachedItemStack is : this.memory.values()) {
             out.addStorage(is.aeStack);
         }
@@ -262,6 +267,10 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
     @Override
     public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
         long count = 0;
+        if (!init) {
+            this.onTick();
+            init = true;
+        }
         for (final CachedItemStack is : this.memory.values()) {
             if (is != null && is.aeStack != null && is.aeStack.getStackSize() > 0 && is.aeStack.isSameType(request)) {
                 count += is.aeStack.getStackSize();
