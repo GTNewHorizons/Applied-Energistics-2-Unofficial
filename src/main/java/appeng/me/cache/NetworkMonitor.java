@@ -39,6 +39,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.me.storage.ItemWatcher;
 import appeng.util.IterationCounter;
 import appeng.util.item.LazyItemList;
+import appeng.util.item.NetworkItemList;
 
 public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 
@@ -128,7 +129,13 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         if (this.hasChanged) {
             this.hasChanged = false;
             this.cachedList.resetStatus();
-            return this.getAvailableItems(this.cachedList, IterationCounter.fetchNewId());
+            final IItemList<T> ret = this.getAvailableItems(this.cachedList, IterationCounter.fetchNewId());
+            if (ret instanceof NetworkItemList) {
+                for (T item : ret) {
+                    this.cachedList.add(item);
+                }
+            }
+            return this.cachedList;
         }
 
         return this.cachedList;
