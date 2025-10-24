@@ -10,6 +10,7 @@
 
 package appeng.util.item;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -177,29 +178,77 @@ public final class ItemList implements IItemList<IAEItemStack> {
         return this.setRecords.size();
     }
 
+    private byte iteratorUsage = 0;
+    private static final byte NAVIGABLESET_WARMUP = 16;
+
     @Override
     public Iterator<IAEItemStack> iterator() {
-        return new MeaningfulItemIterator<>(new Iterator<>() {
+        if (this.records == null && iteratorUsage++ >= NAVIGABLESET_WARMUP) {
+            initNavigableSet();// if an ItemList's iterator() is called too many times, initialize the navigable set for
+                               // better iteration performance
+        }
+        Iterator<IAEItemStack> iterator;
+        if (ItemList.this.records == null) {
 
-            private final Iterator<IAEItemStack> i = ItemList.this.setRecords.iterator();
-            private IAEItemStack next = null;
+            iterator = new Iterator<>() {
 
-            @Override
-            public boolean hasNext() {
-                return i.hasNext();
-            }
+                private final Iterator<IAEItemStack> i;
 
-            @Override
-            public IAEItemStack next() {
-                return (next = i.next());
-            }
+                {
+                    ArrayList<IAEItemStack> sortedList = new ArrayList<>(ItemList.this.setRecords);
+                    sortedList.sort(null);// sort by natural ordering
+                    i = sortedList.iterator();
+                }
 
-            @Override
-            public void remove() {
-                i.remove();
-                if (ItemList.this.records != null) ItemList.this.records.remove(next);
-            }
-        });
+                private IAEItemStack next = null;
+
+                @Override
+                public boolean hasNext() {
+                    return i.hasNext();
+                }
+
+                @Override
+                public IAEItemStack next() {
+                    return (next = i.next());
+                }
+
+                @Override
+                public void remove() {
+                    ItemList.this.setRecords.remove(next);
+                    if (ItemList.this.records != null) {
+                        ItemList.this.records.remove(next);
+                        // should be null here, just in case navigable set is initialized during iteration
+                    }
+                }
+            };
+
+        } else {
+
+            iterator = new Iterator<>() {
+
+                private final Iterator<IAEItemStack> i = ItemList.this.records.iterator();
+                private IAEItemStack next = null;
+
+                @Override
+                public boolean hasNext() {
+                    return i.hasNext();
+                }
+
+                @Override
+                public IAEItemStack next() {
+                    return (next = i.next());
+                }
+
+                @Override
+                public void remove() {
+                    i.remove();
+                    ItemList.this.setRecords.remove(next);
+                }
+            };
+
+        }
+
+        return new MeaningfulItemIterator<>(iterator);
     }
 
     @Override
@@ -224,12 +273,12 @@ public final class ItemList implements IItemList<IAEItemStack> {
         final IAEItemStack low = filter.getLow(fuzzy, ignoreMeta);
         final IAEItemStack high = filter.getHigh(fuzzy, ignoreMeta);
         if (this.records == null) {
-            initFuzzyNavigableSet();
+            initNavigableSet();
         }
         return this.records.subSet(low, true, high, true).descendingSet();
     }
 
-    private void initFuzzyNavigableSet() {
+    private void initNavigableSet() {
         records = new TreeSet();
         records.addAll(setRecords);
     }
