@@ -1,7 +1,7 @@
 // Add your dependencies here
 
 dependencies {
-    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.20-GTNH:dev')
+    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.21-GTNH:dev')
     implementation("com.github.GTNewHorizons:GTNHLib:0.7.1:dev")
     implementation('curse.maven:cofh-core-69162:2388751')
 
@@ -10,12 +10,12 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.2:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.45:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.10.17:dev') {transitive = false} // required to compile CraftingV2Tests.java now
-    compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.6.8:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.66:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.7.0:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.69:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.10:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:OpenComputers:1.12.2-GTNH:api') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:waila:1.9.5:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:waila:1.9.7:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Railcraft:9.17.0:api') {transitive = false}
     compileOnly('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev')  {transitive = false }
     compileOnly('net.industrial-craft:industrialcraft-2:2.2.828-experimental:api')
@@ -37,7 +37,7 @@ dependencies {
     //runtimeOnlyNonPublishable('curse.maven:thermal-foundation-222880:2388753')
     //runtimeOnlyNonPublishable('curse.maven:thermal-expansion-69163:2388759')
 
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.9.5:dev') {transitive = false}
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.9.7:dev') {transitive = false}
 
     testImplementation('junit:junit:4.12')
     functionalTestImplementation(platform('org.junit:junit-bom:5.9.2'))
@@ -45,7 +45,7 @@ dependencies {
     functionalTestImplementation('org.junit.platform:junit-platform-engine')
     functionalTestImplementation('org.junit.platform:junit-platform-launcher')
     functionalTestImplementation('org.junit.platform:junit-platform-reporting')
-    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.66:dev') {
+    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.69:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "Hodgepodge"
     }
