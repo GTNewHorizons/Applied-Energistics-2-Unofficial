@@ -1,5 +1,7 @@
 package appeng.integration.modules;
 
+import net.minecraft.tileentity.TileEntity;
+
 import appeng.api.AEApi;
 import appeng.api.exceptions.ModNotInstalled;
 import appeng.helpers.Reflected;
@@ -7,9 +9,11 @@ import appeng.integration.IIntegrationModule;
 import appeng.integration.IntegrationHelper;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
+import appeng.integration.abstraction.IGT;
 import cpw.mods.fml.common.Loader;
+import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
-public class GT implements IIntegrationModule {
+public class GT implements IIntegrationModule, IGT {
 
     @Reflected
     public static GT instance;
@@ -32,4 +36,16 @@ public class GT implements IIntegrationModule {
 
     @Override
     public void postInit() {}
+
+    @Override
+    public boolean isGTMachine(TileEntity te) {
+        return te instanceof IGregTechTileEntity;
+    }
+
+    @Override
+    public int getGTMachineHash(TileEntity te) {
+        IGregTechTileEntity igte = (IGregTechTileEntity) te;
+
+        return igte.canAccessData() ? 1 : 0;
+    }
 }
