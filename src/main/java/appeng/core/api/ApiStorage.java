@@ -61,6 +61,11 @@ public class ApiStorage implements IStorageHelper {
     }
 
     @Override
+    public IItemList<IAEItemStack> createSortedItemList() {
+        return new ItemList(true);
+    }
+
+    @Override
     public IItemList<IAEItemStack> createItemFilterList() {
         return new ItemFilterList();
     }

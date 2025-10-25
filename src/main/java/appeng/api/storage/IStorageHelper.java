@@ -60,6 +60,11 @@ public interface IStorageHelper {
     IItemList<IAEItemStack> createItemList();
 
     /**
+     * @return a new INSTANCE of {@link ItemList} for items, whose iterator is sorted
+     */
+    IItemList<IAEItemStack> createSortedItemList();
+
+    /**
      * @return a new INSTANCE of {@link IItemList} for items&fluids
      */
     IItemList<IAEStack<?>> createAEStackList();
