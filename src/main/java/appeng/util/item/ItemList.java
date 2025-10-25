@@ -284,10 +284,12 @@ public final class ItemList implements IItemList<IAEItemStack> {
         return LIST_ITEM;
     }
 
+    @Override
     public boolean isSorted() {
         return this.records != null;
     }
 
+    @Override
     public ItemList toSorted() {
         if (this.records == null) {
             initNavigableSet();

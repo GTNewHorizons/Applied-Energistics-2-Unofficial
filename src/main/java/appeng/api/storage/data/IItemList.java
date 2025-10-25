@@ -97,4 +97,18 @@ public interface IItemList<StackType extends IAEStack> extends IItemContainer<St
     }
 
     byte getStackType();
+
+    default public boolean isSorted() {
+        return false;
+    }
+
+    /**
+     * sort this list in nature ordering nothing happens if sorting is not supported
+     * 
+     * @return this
+     */
+    default public IItemList<StackType> toSorted() {
+        return this;
+    }
+
 }
