@@ -39,6 +39,8 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.antlr.v4.runtime.misc.Triple;
+
 import com.glodblock.github.common.parts.PartFluidInterface;
 import com.glodblock.github.common.parts.PartFluidP2PInterface;
 import com.glodblock.github.common.tile.TileFluidInterface;
@@ -1091,6 +1093,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             stacksToPush.add(isFluidInterface ? aes : stackConvertPacket(aes));
         }
 
+        final ArrayList<Triple<TileEntity, ForgeDirection, InventoryAdaptor>> verifiedSides = new ArrayList<>();
+
         for (final ForgeDirection s : possibleDirections) {
             final TileEntity te = w
                     .getTileEntity(tile.xCoord + s.offsetX, tile.yCoord + s.offsetY, tile.zCoord + s.offsetZ);
@@ -1131,39 +1135,50 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         && !inventoryCountsAsEmpty(te, ad, s.getOpposite())) {
                     foundReason = true;
                     scheduledReason = ScheduledReason.BLOCKING_MODE;
+
+                    if (isFluidInterface) return false;
+
                     continue;
                 }
 
-                boolean hadAcceptedSomeOnFace = false;
-                ListIterator<IAEStack<?>> iter = stacksToPush.listIterator();
-                while (iter.hasNext()) {
-                    IAEStack<?> aes = iter.next();
-                    if (aes == null) {
-                        iter.remove();
-                        continue;
-                    }
+                verifiedSides.add(new Triple<>(tile, s, ad));
+            }
+        }
 
-                    long amountToPush = aes.getStackSize();
-                    IAEStack<?> leftover = ad.addStack(aes, getInsertionMode());
-                    if (leftover != null && leftover.getStackSize() == amountToPush) {
-                        continue;
-                    }
+        for (Triple<TileEntity, ForgeDirection, InventoryAdaptor> t : verifiedSides) {
+            final TileEntity te = t.a;
+            final ForgeDirection s = t.b;
+            final InventoryAdaptor ad = t.c;
 
-                    hadAcceptedSome = true;
-                    hadAcceptedSomeOnFace = true;
-                    if (leftover != null && leftover.getStackSize() > 0) {
-                        aes.setStackSize(leftover.getStackSize());
-                    } else {
-                        aes.setStackSize(0);
-                        iter.remove();
-                    }
+            boolean hadAcceptedSomeOnFace = false;
+            ListIterator<IAEStack<?>> iter = stacksToPush.listIterator();
+            while (iter.hasNext()) {
+                IAEStack<?> aes = iter.next();
+                if (aes == null) {
+                    iter.remove();
+                    continue;
                 }
 
-                if (hadAcceptedSomeOnFace) {
-                    onPushPatternSuccess(te, s.getOpposite(), patternDetails);
-                    if (stacksToPush.isEmpty()) {
-                        return true;
-                    }
+                long amountToPush = aes.getStackSize();
+                IAEStack<?> leftover = ad.addStack(aes, getInsertionMode());
+                if (leftover != null && leftover.getStackSize() == amountToPush) {
+                    continue;
+                }
+
+                hadAcceptedSome = true;
+                hadAcceptedSomeOnFace = true;
+                if (leftover != null && leftover.getStackSize() > 0) {
+                    aes.setStackSize(leftover.getStackSize());
+                } else {
+                    aes.setStackSize(0);
+                    iter.remove();
+                }
+            }
+
+            if (hadAcceptedSomeOnFace) {
+                onPushPatternSuccess(te, s.getOpposite(), patternDetails);
+                if (stacksToPush.isEmpty()) {
+                    return true;
                 }
             }
         }
