@@ -10,12 +10,12 @@
 
 package appeng.util.item;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.TreeSet;
+import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import javax.annotation.Nullable;
 
@@ -28,8 +28,16 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public final class ItemList implements IItemList<IAEItemStack> {
 
+    public ItemList() {
+        this(false);
+    }
+
+    public ItemList(boolean sorted) {
+        if (sorted) initNavigableSet();
+    }
+
     @Nullable
-    private TreeSet<IAEItemStack> records = null;
+    private NavigableSet<IAEItemStack> records = null;
     private final ObjectOpenHashSet<IAEItemStack> setRecords = new ObjectOpenHashSet<>();
 
     @Override
@@ -178,50 +186,38 @@ public final class ItemList implements IItemList<IAEItemStack> {
         return this.setRecords.size();
     }
 
-    private byte iteratorUsage = 0;
-    private static final byte NAVIGABLESET_WARMUP = 16;
-
     @Override
     public Iterator<IAEItemStack> iterator() {
-        if (this.records == null && iteratorUsage++ >= NAVIGABLESET_WARMUP) {
-            initNavigableSet();// if an ItemList's iterator() is called too many times, initialize the navigable set for
-                               // better iteration performance
-        }
         Iterator<IAEItemStack> iterator;
-        if (ItemList.this.records == null) {
 
+        if (ItemList.this.records == null) {
             iterator = new Iterator<>() {
 
-                private final Iterator<IAEItemStack> i;
-
-                {
-                    ArrayList<IAEItemStack> sortedList = new ArrayList<>(ItemList.this.setRecords);
-                    sortedList.sort(null);// sort by natural ordering
-                    i = sortedList.iterator();
-                }
-
-                private IAEItemStack next = null;
+                private final IAEItemStack[] array = ItemList.this.setRecords
+                        .toArray(new IAEItemStack[ItemList.this.setRecords.size()]);
+                // fastutil Hash Set throws NPE when nested iterator removes an entry
+				// make a copy to prevent it 
+                private int index = 0;
 
                 @Override
                 public boolean hasNext() {
-                    return i.hasNext();
+                    return index < array.length;
                 }
 
                 @Override
                 public IAEItemStack next() {
-                    return (next = i.next());
+                    return array[index++];
                 }
 
                 @Override
                 public void remove() {
-                    ItemList.this.setRecords.remove(next);
+                    ItemList.this.setRecords.remove(array[index - 1]);
                     if (ItemList.this.records != null) {
-                        ItemList.this.records.remove(next);
-                        // should be null here, just in case navigable set is initialized during iteration
+                        // records should be null here, remove just in case it's initialized during the iteration
+                        ItemList.this.records.remove(array[index - 1]);
                     }
                 }
             };
-
         } else {
 
             iterator = new Iterator<>() {
@@ -279,7 +275,7 @@ public final class ItemList implements IItemList<IAEItemStack> {
     }
 
     private void initNavigableSet() {
-        records = new TreeSet();
+        records = new ConcurrentSkipListSet();
         records.addAll(setRecords);
     }
 
@@ -287,4 +283,16 @@ public final class ItemList implements IItemList<IAEItemStack> {
     public byte getStackType() {
         return LIST_ITEM;
     }
+
+    public boolean isSorted() {
+        return this.records != null;
+    }
+
+    public ItemList toSorted() {
+        if (this.records == null) {
+            initNavigableSet();
+        }
+        return this;
+    }
+
 }
