@@ -69,6 +69,14 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         this.newItemListSupplier = networkItemList.newItemListSupplier;
     }
 
+    public IMENetworkInventory<T> getNetwork() {
+        return network;
+    }
+
+    public List<Predicate<T>> getPredicates() {
+        return predicates;
+    }
+
     public void addNetworkItems(IMENetworkInventory<T> network, IItemList<T> itemList) {
         IItemList<T> l = networkItemLists.get(network);
 
@@ -136,7 +144,7 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         predicates.add(filter);
     }
 
-    private Predicate<T> buildFilter() {
+    Predicate<T> buildFilter() {
         Predicate<T> predicate = null;
         for (Predicate<T> filter : predicates) {
             if (predicate == null) {
@@ -232,7 +240,7 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         return list == null ? LIST_NUll : list.getStackType();
     }
 
-    private class NetworkItemStack<U extends IAEStack> {
+    static class NetworkItemStack<U extends IAEStack> {
 
         private final IMENetworkInventory<U> networkInventory;
         private final U itemStack;
