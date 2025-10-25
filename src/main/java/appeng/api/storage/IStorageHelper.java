@@ -58,8 +58,8 @@ public interface IStorageHelper {
      * @return a new INSTANCE of {@link ItemList} for items
      */
     IItemList<IAEItemStack> createItemList();
-    
-	/**
+
+    /**
      * @return a new INSTANCE of {@link ItemList} for items, whose iterator is sorted
      */
     IItemList<IAEItemStack> createSortedItemList();

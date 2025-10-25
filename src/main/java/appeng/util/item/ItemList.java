@@ -196,7 +196,7 @@ public final class ItemList implements IItemList<IAEItemStack> {
                 private final IAEItemStack[] array = ItemList.this.setRecords
                         .toArray(new IAEItemStack[ItemList.this.setRecords.size()]);
                 // fastutil Hash Set throws NPE when nested iterator removes an entry
-				// make a copy to prevent it 
+                // make a copy to prevent it
                 private int index = 0;
 
                 @Override
