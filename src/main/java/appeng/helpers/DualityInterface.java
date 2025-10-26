@@ -1066,6 +1066,19 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.lastInputHash = 0;
     }
 
+    private static class VerifiedAcceptors {
+
+        public TileEntity te;
+        public ForgeDirection side;
+        public InventoryAdaptor ad;
+
+        VerifiedAcceptors(final TileEntity te, final ForgeDirection side, final InventoryAdaptor ad) {
+            this.te = te;
+            this.side = side;
+            this.ad = ad;
+        }
+    }
+
     @Override
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
         if (this.hasItemsToSend() || !this.gridProxy.isActive() || !this.craftingList.contains(patternDetails)) {
@@ -1090,6 +1103,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             IAEStack<?> aes = ((MEInventoryCrafting) table).getAEStackInSlot(x);
             stacksToPush.add(isFluidInterface ? aes : stackConvertPacket(aes));
         }
+
+        final ArrayList<VerifiedAcceptors> verifiedSides = new ArrayList<>();
 
         for (final ForgeDirection s : possibleDirections) {
             final TileEntity te = w
@@ -1131,39 +1146,50 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         && !inventoryCountsAsEmpty(te, ad, s.getOpposite())) {
                     foundReason = true;
                     scheduledReason = ScheduledReason.BLOCKING_MODE;
+
+                    if (isFluidInterface) return false;
+
                     continue;
                 }
 
-                boolean hadAcceptedSomeOnFace = false;
-                ListIterator<IAEStack<?>> iter = stacksToPush.listIterator();
-                while (iter.hasNext()) {
-                    IAEStack<?> aes = iter.next();
-                    if (aes == null) {
-                        iter.remove();
-                        continue;
-                    }
+                verifiedSides.add(new VerifiedAcceptors(tile, s, ad));
+            }
+        }
 
-                    long amountToPush = aes.getStackSize();
-                    IAEStack<?> leftover = ad.addStack(aes, getInsertionMode());
-                    if (leftover != null && leftover.getStackSize() == amountToPush) {
-                        continue;
-                    }
+        for (VerifiedAcceptors va : verifiedSides) {
+            final TileEntity te = va.te;
+            final ForgeDirection s = va.side;
+            final InventoryAdaptor ad = va.ad;
 
-                    hadAcceptedSome = true;
-                    hadAcceptedSomeOnFace = true;
-                    if (leftover != null && leftover.getStackSize() > 0) {
-                        aes.setStackSize(leftover.getStackSize());
-                    } else {
-                        aes.setStackSize(0);
-                        iter.remove();
-                    }
+            boolean hadAcceptedSomeOnFace = false;
+            ListIterator<IAEStack<?>> iter = stacksToPush.listIterator();
+            while (iter.hasNext()) {
+                IAEStack<?> aes = iter.next();
+                if (aes == null) {
+                    iter.remove();
+                    continue;
                 }
 
-                if (hadAcceptedSomeOnFace) {
-                    onPushPatternSuccess(te, s.getOpposite(), patternDetails);
-                    if (stacksToPush.isEmpty()) {
-                        return true;
-                    }
+                long amountToPush = aes.getStackSize();
+                IAEStack<?> leftover = ad.addStack(aes, getInsertionMode());
+                if (leftover != null && leftover.getStackSize() == amountToPush) {
+                    continue;
+                }
+
+                hadAcceptedSome = true;
+                hadAcceptedSomeOnFace = true;
+                if (leftover != null && leftover.getStackSize() > 0) {
+                    aes.setStackSize(leftover.getStackSize());
+                } else {
+                    aes.setStackSize(0);
+                    iter.remove();
+                }
+            }
+
+            if (hadAcceptedSomeOnFace) {
+                onPushPatternSuccess(te, s.getOpposite(), patternDetails);
+                if (stacksToPush.isEmpty()) {
+                    return true;
                 }
             }
         }

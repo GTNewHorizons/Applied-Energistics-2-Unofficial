@@ -17,6 +17,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
@@ -310,8 +311,8 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         this.iterationItems = networkItemList;
 
         final IItemList<T> currentNetworkItemList = isIgnoreCrafting
-                ? new ItemListIgnoreCrafting<>((IItemList<T>) getChannel().createList())
-                : (IItemList<T>) getChannel().createList();
+                ? new ItemListIgnoreCrafting<>(getPrimitiveItemList())
+                : getPrimitiveItemList();
         final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
         final int size = priorityInventory.size();
         for (int i = 0; i < size; i++) {
@@ -320,7 +321,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
             if (externalNetworkInventory == this) {
                 continue; // ignore any attempts to read self
             }
-            final IItemList<T> passedInList = getChannel().createList();
+            final IItemList<T> passedInList = getPrimitiveItemList();
             final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
 
             if (externalNetworkInventory != null && passedOutList instanceof NetworkItemList) {
@@ -338,6 +339,13 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         // we're partially violating the api by making the returned list a different one from the provided one, however
         // when we're done with the network inventory scan we fulfill our api contract again
         return isSource ? networkItemList.buildFinalItemList(out) : networkItemList;
+    }
+
+    @SuppressWarnings("unchecked")
+    private IItemList<T> getPrimitiveItemList() {
+        return (IItemList<T>) (getChannel() == StorageChannel.ITEMS
+                ? AEApi.instance().storage().createPrimitiveItemList()
+                : AEApi.instance().storage().createFluidList());
     }
 
     @Override
@@ -403,7 +411,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
             }
         }
         if (readsFromOtherNetwork) {
-            final T stack = this.getAvailableItems(getChannel().createList(), iteration).findPrecise(request);
+            final T stack = this.getAvailableItems(getPrimitiveItemList(), iteration).findPrecise(request);
             count = addStackCount(stack, count);
         } else {
             if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
