@@ -39,8 +39,6 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import org.antlr.v4.runtime.misc.Triple;
-
 import com.glodblock.github.common.parts.PartFluidInterface;
 import com.glodblock.github.common.parts.PartFluidP2PInterface;
 import com.glodblock.github.common.tile.TileFluidInterface;
@@ -1068,6 +1066,19 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.lastInputHash = 0;
     }
 
+    private static class VerifiedAcceptors {
+
+        public TileEntity te;
+        public ForgeDirection side;
+        public InventoryAdaptor ad;
+
+        VerifiedAcceptors(final TileEntity te, final ForgeDirection side, final InventoryAdaptor ad) {
+            this.te = te;
+            this.side = side;
+            this.ad = ad;
+        }
+    }
+
     @Override
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
         if (this.hasItemsToSend() || !this.gridProxy.isActive() || !this.craftingList.contains(patternDetails)) {
@@ -1093,7 +1104,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             stacksToPush.add(isFluidInterface ? aes : stackConvertPacket(aes));
         }
 
-        final ArrayList<Triple<TileEntity, ForgeDirection, InventoryAdaptor>> verifiedSides = new ArrayList<>();
+        final ArrayList<VerifiedAcceptors> verifiedSides = new ArrayList<>();
 
         for (final ForgeDirection s : possibleDirections) {
             final TileEntity te = w
@@ -1141,14 +1152,14 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     continue;
                 }
 
-                verifiedSides.add(new Triple<>(tile, s, ad));
+                verifiedSides.add(new VerifiedAcceptors(tile, s, ad));
             }
         }
 
-        for (Triple<TileEntity, ForgeDirection, InventoryAdaptor> t : verifiedSides) {
-            final TileEntity te = t.a;
-            final ForgeDirection s = t.b;
-            final InventoryAdaptor ad = t.c;
+        for (VerifiedAcceptors va : verifiedSides) {
+            final TileEntity te = va.te;
+            final ForgeDirection s = va.side;
+            final InventoryAdaptor ad = va.ad;
 
             boolean hadAcceptedSomeOnFace = false;
             ListIterator<IAEStack<?>> iter = stacksToPush.listIterator();
