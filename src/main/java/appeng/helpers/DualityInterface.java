@@ -1066,7 +1066,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         this.lastInputHash = 0;
     }
 
-    private class VerifiedAcceptors {
+    private static class VerifiedAcceptors {
 
         public TileEntity te;
         public ForgeDirection side;
