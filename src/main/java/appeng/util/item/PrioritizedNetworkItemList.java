@@ -148,8 +148,6 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
                     int o1Prio = entry.getValue();
                     Integer o2Prio = o2.getNetworkPriority(entry.getKey());
                     if (o2Prio == null) {
-                        // item isnt from this network
-                        // before or after?
                         result = -1;
                     } else {
                         result = Integer.compare(o1Prio, o2Prio);

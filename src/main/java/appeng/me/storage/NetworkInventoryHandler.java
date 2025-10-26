@@ -349,7 +349,6 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
     }
 
     @Override
-    @SuppressWarnings({ "unchecked" })
     public PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(final int iteration) {
         if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
             return this.prioritizedIterationItems;
@@ -373,16 +372,15 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 if (lastPriority != null && !currentPriorityItemList.isEmpty())
                     networkItemList.addNetworkItems(this, lastPriority, currentPriorityItemList);
                 lastPriority = inv.getPriority();
-                currentPriorityItemList = isSource
-                        ? new ItemListIgnoreCrafting<>((IItemList<T>) getChannel().createList())
-                        : (IItemList<T>) getChannel().createList();
+                currentPriorityItemList = isSource ? new ItemListIgnoreCrafting<>(getPrimitiveItemList())
+                        : getPrimitiveItemList();
             }
 
             if (externalNetworkInventory != null) {
                 final IItemList<T> passedOutList = inv.getAvailableItemsWithPriority(iteration);
                 networkItemList.addNetworkItems(externalNetworkInventory, inv.getPriority(), passedOutList);
             } else {
-                final IItemList<T> passedInList = getChannel().createList();
+                final IItemList<T> passedInList = getPrimitiveItemList();
                 final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
                 for (T item : passedOutList) {
                     currentPriorityItemList.add(item);
