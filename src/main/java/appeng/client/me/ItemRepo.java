@@ -48,7 +48,7 @@ import appeng.util.prioitylist.IPartitionList;
 
 public class ItemRepo implements IDisplayRepo {
 
-    private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
+    private final IItemList<IAEItemStack> list = AEApi.instance().storage().createSortedItemList();
     private IAEItemStack[] pinsRepo = new IAEItemStack[0];
     private final ArrayList<IAEItemStack> view = new ArrayList<>();
     private final ArrayList<ItemStack> dsp = new ArrayList<>();
