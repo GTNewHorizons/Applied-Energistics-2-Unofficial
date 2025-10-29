@@ -1,7 +1,5 @@
 package appeng.crafting.v2.resolvers;
 
-import static appeng.util.Platform.stackConvert;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -106,7 +104,7 @@ public class EmitableItemResolver<StackType extends IAEStack<StackType>> impleme
     @Override
     public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<StackType> request,
             @Nonnull CraftingContext context) {
-        if (context.craftingGrid.canEmitFor(stackConvert(request.stack))) {
+        if (context.craftingGrid.canEmitFor(request.stack)) {
             return Collections.singletonList(new EmitItemTask(request));
         } else {
             return Collections.emptyList();
