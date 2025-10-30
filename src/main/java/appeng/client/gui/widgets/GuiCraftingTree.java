@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -32,6 +33,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
+
+import com.mojang.realmsclient.util.Pair;
 
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
@@ -78,6 +81,7 @@ public class GuiCraftingTree {
         public final int width = 16, height = 16;
         public final Node parentNode;
         public final List<Node> childNodes = new ArrayList<>(1);
+        public boolean childrenCollapsed = false;
 
         public final void drawParentLine() {
             if (visible) {
@@ -132,6 +136,14 @@ public class GuiCraftingTree {
             }
             drawSlotOutline(x, y, color, false);
             drawStack(x, y, getDisplayItemForRequest(request), true);
+
+            if (hasMultipleRequestNodesInChildren()) {
+                parent.bindTexture("guis/states.png");
+                GL11.glScalef(0.25f, 0.25f, 1.0f);
+                drawIcon(4 * (x + 3), 4 * (y + 19), 14 * 16 + (childrenCollapsed ? 14 : 13));
+                GL11.glScalef(4.0f, 4.0f, 1.0f);
+            }
+
             if (request.wasSimulated) {
                 parent.bindTexture("guis/states.png");
                 GL11.glScalef(0.5f, 0.5f, 1.0f);
@@ -146,6 +158,11 @@ public class GuiCraftingTree {
                 tooltip = request.getTooltipText();
             }
             parent.drawTooltip(mouseX, mouseY, tooltip);
+        }
+
+        private boolean hasMultipleRequestNodesInChildren() {
+            return !childNodes.isEmpty() && childNodes.get(0) instanceof TaskNode taskNode
+                    && taskNode.childNodes.size() > 1;
         }
     }
 
@@ -711,5 +728,88 @@ public class GuiCraftingTree {
 
     public boolean isPointInWidget(int x, int y) {
         return x >= widgetX && y >= widgetY && x < (widgetX + widgetW) && y < (widgetY + widgetH);
+    }
+
+    public void mouseClicked(int guiMouseX, int guiMouseY) {
+        final float zoomLevel = this.zoomLevel;
+
+        final float zScrollX = scrollX * zoomLevel;
+        final float zScrollY = scrollY * zoomLevel;
+        final int cropYMin = (int) ((zScrollY - 32) / zoomLevel) - 16;
+        final int cropYMax = (int) ((zScrollY + 32) / zoomLevel) + (int) (widgetH / zoomLevel) + 16;
+
+        RequestNode clickedNode = null;
+        final Map<Integer, ArrayList<Node>> nodeMap = treeNodes.subMap(cropYMin, cropYMax);
+        for (Entry<Integer, ArrayList<Node>> row : nodeMap.entrySet()) {
+            for (Node node : row.getValue()) {
+                if (!node.visible) {
+                    continue;
+                }
+                if (!(node instanceof RequestNode)) {
+                    continue;
+                }
+
+                final int widgetLeft = widgetX;
+                final int buttonX = widgetLeft + (int) ((node.x + 3) * zoomLevel) - (int) zScrollX;
+                final int widgetTop = widgetY;
+                final int buttonY = widgetTop + (int) ((node.y + 19) * zoomLevel) - (int) zScrollY;
+
+                if (guiMouseX >= buttonX && guiMouseY >= buttonY
+                        && guiMouseX <= (buttonX + (int) (4 * zoomLevel))
+                        && guiMouseY <= (buttonY + (int) (4 * zoomLevel))) {
+                    clickedNode = (RequestNode) node;
+                    break;
+                }
+            }
+        }
+
+        if (clickedNode == null) {
+            return;
+        }
+
+        clickedNode.childrenCollapsed = !clickedNode.childrenCollapsed;
+        for (Node child : clickedNode.childNodes) {
+            changeNodeVisibilityWithChildren(child, !clickedNode.childrenCollapsed);
+        }
+
+        Pair<Integer, Integer> maxXYCoordinate = recalculateCoordinate(treeNodes.firstEntry().getValue().get(0), 0, 0);
+        treeWidth = maxXYCoordinate.first();
+        treeHeight = maxXYCoordinate.second();
+    }
+
+    /**
+     * return max x and y
+     */
+    private Pair<Integer, Integer> recalculateCoordinate(Node node, int x, int y) {
+        node.x = x;
+        node.y = y;
+
+        if (node instanceof RequestNode requestNode && requestNode.childrenCollapsed) {
+            return Pair.of(x, y);
+        }
+
+        int childY = y + 16 + REQUEST_RESOLVER_Y_SPACING;
+        for (Node child : node.childNodes) {
+            Pair<Integer, Integer> re = recalculateCoordinate(child, x, childY);
+            x = re.first() + X_SPACING;
+            y = Math.max(y, re.second());
+        }
+        if (!node.childNodes.isEmpty()) {
+            x -= X_SPACING;
+        }
+
+        return Pair.of(x, y);
+    }
+
+    private void changeNodeVisibilityWithChildren(Node node, boolean visible) {
+        node.visible = visible;
+
+        if (visible && node instanceof RequestNode rNode && rNode.childrenCollapsed) {
+            return;
+        }
+
+        for (Node child : node.childNodes) {
+            changeNodeVisibilityWithChildren(child, visible);
+        }
     }
 }

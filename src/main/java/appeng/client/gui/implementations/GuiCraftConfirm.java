@@ -1082,6 +1082,9 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         super.mouseClicked(xCoord, yCoord, btn);
         cpuTable.mouseClicked(xCoord - guiLeft, yCoord - guiTop, btn);
         this.searchField.mouseClicked(xCoord, yCoord, btn);
+        if (displayMode == DisplayMode.TREE && craftingTree != null) {
+            craftingTree.mouseClicked(xCoord - guiLeft, yCoord - guiTop);
+        }
     }
 
     @Override
