@@ -103,6 +103,8 @@ public enum GuiColors implements Localization {
     AdvancedNetworkToolInventory(0x404040),
 
     OreFilterLabel(0x404040),
+    OreFilterTextLength(0x404040),
+    OreFilterTextLengthFull(0xff0000),
 
     PatternTerminalTitle(0x404040),
     PatternTerminalEx(0x404040),
