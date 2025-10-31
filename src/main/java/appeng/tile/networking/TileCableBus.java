@@ -14,6 +14,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -320,5 +323,18 @@ public class TileCableBus extends AEBaseTile implements AEMultiTile, ICustomColl
 
     private void setCableBus(final CableBusContainer cb) {
         this.cb = cb;
+    }
+
+    @Override
+    public <T> @Nullable T getCapability(@Nonnull Class<T> capability, @Nonnull ForgeDirection side) {
+        IPart part = getPart(side);
+
+        if (part != null) {
+            T cap = part.getCapability(capability, side);
+
+            if (cap != null) return cap;
+        }
+
+        return super.getCapability(capability, side);
     }
 }

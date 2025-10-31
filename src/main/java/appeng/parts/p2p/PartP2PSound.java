@@ -10,8 +10,6 @@
 
 package appeng.parts.p2p;
 
-import static com.gtnewhorizon.gtnhlib.capability.Capabilities.getCapability;
-
 import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
@@ -21,6 +19,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
+
+import com.gtnewhorizon.gtnhlib.capability.Capabilities;
 
 import appeng.api.implementations.tiles.ISoundP2PHandler;
 import appeng.api.networking.IGridNode;
@@ -68,7 +68,7 @@ public class PartP2PSound extends PartP2PTunnelNormal<PartP2PSound> implements I
         if (alive && !isOutput()) {
             SoundEventHandler.INSTANCE.activateP2P(this);
         }
-        ISoundP2PHandler handler = getCapability(neighbor, ISoundP2PHandler.class);
+        ISoundP2PHandler handler = Capabilities.getCapability(neighbor, ISoundP2PHandler.class);
         if (handler != null) {
             this.customHandler = handler;
             handler.onSoundP2PAttach(this);

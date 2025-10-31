@@ -21,6 +21,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -32,6 +33,8 @@ import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import com.gtnewhorizon.gtnhlib.capability.CapabilityProvider;
 
 import appeng.api.implementations.tiles.ISegmentedInventory;
 import appeng.api.util.ICommonTile;
@@ -50,7 +53,7 @@ import appeng.util.SettingsFrom;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class AEBaseTile extends TileEntity implements IOrientable, ICommonTile, ICustomNameObject {
+public class AEBaseTile extends TileEntity implements IOrientable, ICommonTile, ICustomNameObject, CapabilityProvider {
 
     private static final ThreadLocal<WeakReference<AEBaseTile>> DROP_NO_ITEMS = new ThreadLocal<>();
     private static final Map<Class<? extends AEBaseTile>, Map<TileEventType, List<AETileEventHandler>>> HANDLERS = new HashMap<>();
@@ -472,5 +475,11 @@ public class AEBaseTile extends TileEntity implements IOrientable, ICommonTile, 
 
     public void setName(final String name) {
         this.customName = name;
+    }
+
+    @Override
+    @OverridingMethodsMustInvokeSuper
+    public <T> @Nullable T getCapability(@Nonnull Class<T> capability, @Nonnull ForgeDirection side) {
+        return null;
     }
 }
