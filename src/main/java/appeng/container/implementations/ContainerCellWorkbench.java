@@ -222,8 +222,9 @@ public class ContainerCellWorkbench extends ContainerUpgradeable {
 
         Iterator<IAEItemStack> i = new NullIterator<>();
         if (cellInv != null) {
-            final IItemList<IAEItemStack> list = cellInv
-                    .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
+            final IItemList<IAEItemStack> list = cellInv.getAvailableItems(
+                    AEApi.instance().storage().createSortedItemList(),
+                    IterationCounter.fetchNewId());
             i = list.iterator();
         }
 
