@@ -88,7 +88,9 @@ public enum Settings {
 
     CRAFTING_ALLOW(EnumSet.allOf(CraftingAllow.class)),
 
-    PINS_STATE(EnumSet.allOf(PinsState.class));
+    PINS_STATE(EnumSet.allOf(PinsState.class)),
+
+    PAUSE_WHEN_HOLDING_SHIFT(EnumSet.of(YesNo.YES, YesNo.NO));
 
     private final EnumSet<? extends Enum<?>> values;
 
