@@ -1,20 +1,20 @@
 // Add your dependencies here
 
 dependencies {
-    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.21-GTNH:dev')
+    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.25-GTNH:dev')
     implementation("com.github.GTNewHorizons:GTNHLib:0.7.3:dev")
     implementation('curse.maven:cofh-core-69162:2388751')
 
-    compileOnlyApi('com.github.GTNewHorizons:Angelica:1.0.0-beta62:api')
+    compileOnlyApi('com.github.GTNewHorizons:Angelica:1.0.0-beta63:api')
     compileOnlyApi('com.github.GTNewHorizons:EnderCore:0.5.0:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.2:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.45:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.11.0:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.7.0:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.79:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.83:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.10:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:OpenComputers:1.12.2-GTNH:api') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:OpenComputers:1.12.4-GTNH:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:waila:1.9.7:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Railcraft:9.17.0:api') {transitive = false}
     compileOnly('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev')  {transitive = false }
@@ -45,7 +45,7 @@ dependencies {
     functionalTestImplementation('org.junit.platform:junit-platform-engine')
     functionalTestImplementation('org.junit.platform:junit-platform-launcher')
     functionalTestImplementation('org.junit.platform:junit-platform-reporting')
-    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.79:dev') {
+    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.83:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "Hodgepodge"
     }

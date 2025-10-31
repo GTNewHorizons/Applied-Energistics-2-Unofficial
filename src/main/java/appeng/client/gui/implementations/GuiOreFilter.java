@@ -91,6 +91,14 @@ public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField {
     @Override
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY) {
         this.fontRendererObj.drawString(GuiText.OreFilterLabel.getLocal(), 12, 8, GuiColors.OreFilterLabel.getColor());
+
+        String counterText = String.valueOf(textField.getText().length()) + "/"
+                + String.valueOf(textField.getMaxStringLength());
+        int counterColor = textField.getText().length() == textField.getMaxStringLength()
+                ? GuiColors.OreFilterTextLengthFull.getColor()
+                : GuiColors.OreFilterTextLength.getColor();
+        this.fontRendererObj
+                .drawString(counterText, xSize - fontRendererObj.getStringWidth(counterText) - 13, 25, counterColor);
     }
 
     @Override
