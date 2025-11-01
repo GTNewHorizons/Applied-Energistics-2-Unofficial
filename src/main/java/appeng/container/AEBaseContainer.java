@@ -57,7 +57,6 @@ import appeng.api.parts.IPart;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.ItemSearchDTO;
@@ -117,8 +116,6 @@ public abstract class AEBaseContainer extends Container {
     private boolean isContainerValid = true;
     private String customName;
     private ContainerOpenContext openContext;
-    private IMEInventoryHandler<IAEItemStack> cellItemInv;
-    private IMEInventoryHandler<IAEFluidStack> cellFluidInv;
     private IEnergySource powerSrc;
     private boolean sentCustomName;
     private int ticksSinceCheck = 900;
@@ -1000,22 +997,6 @@ public abstract class AEBaseContainer extends Container {
 
     public boolean isValidForSlot(final Slot s, final ItemStack i) {
         return true;
-    }
-
-    public IMEInventoryHandler<IAEItemStack> getCellInventory() {
-        return this.cellItemInv;
-    }
-
-    public void setCellInventory(final IMEInventoryHandler<IAEItemStack> cellInv) {
-        this.cellItemInv = cellInv;
-    }
-
-    public IMEInventoryHandler<IAEFluidStack> getCellFluidInventory() {
-        return this.cellFluidInv;
-    }
-
-    public void setCellFluidInventory(final IMEInventoryHandler<IAEFluidStack> cellInv) {
-        this.cellFluidInv = cellInv;
     }
 
     public String getCustomName() {

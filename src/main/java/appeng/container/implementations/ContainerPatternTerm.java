@@ -381,7 +381,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
     }
 
     public void craftOrGetItem(final PacketPatternSlot packetPatternSlot) {
-        if (packetPatternSlot.slotItem != null && this.getCellInventory() != null) {
+        if (packetPatternSlot.slotItem != null) {
             final IAEItemStack out = packetPatternSlot.slotItem.copy();
             InventoryAdaptor inv = new AdaptorPlayerHand(this.getPlayerInv().player);
             final InventoryAdaptor playerInv = InventoryAdaptor
@@ -396,7 +396,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             }
 
             final IAEItemStack extracted = Platform
-                    .poweredExtraction(this.getPowerSource(), this.getCellInventory(), out, this.getActionSource());
+                    .poweredExtraction(this.getPowerSource(), this.getItemMonitor(), out, this.getActionSource());
             final EntityPlayer p = this.getPlayerInv().player;
 
             if (extracted != null) {
@@ -470,7 +470,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                 for (int x = 0; x < real.getSizeInventory(); x++) {
                     final ItemStack failed = real.getStackInSlot(x);
                     if (failed != null) {
-                        this.getCellInventory().injectItems(
+                        this.getItemMonitor().injectItems(
                                 AEItemStack.create(failed),
                                 Actionable.MODULATE,
                                 new MachineSource(this.getPatternTerminal()));
@@ -552,7 +552,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             final AEItemStack request = AEItemStack
                     .create(AEApi.instance().definitions().materials().blankPattern().maybeStack(blanksToRefill).get());
             final IAEItemStack extracted = Platform
-                    .poweredExtraction(this.getPowerSource(), this.getCellInventory(), request, this.getActionSource());
+                    .poweredExtraction(this.getPowerSource(), this.getItemMonitor(), request, this.getActionSource());
             if (extracted != null) {
                 if (blanks != null) blanks.stackSize += (int) extracted.getStackSize();
                 else {
