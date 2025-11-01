@@ -14,7 +14,6 @@ import java.util.EnumSet;
 
 import net.minecraft.item.ItemStack;
 
-import appeng.api.storage.StorageChannel;
 import appeng.core.features.AEFeature;
 import appeng.items.AEBaseInfiniteCell;
 
@@ -33,10 +32,5 @@ public class ItemCreativeStorageCell extends AEBaseInfiniteCell {
     @Override
     public int getTotalTypes(ItemStack cellItem) {
         return 63;
-    }
-
-    @Override
-    public StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
     }
 }

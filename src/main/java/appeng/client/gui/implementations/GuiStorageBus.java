@@ -10,6 +10,9 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.io.IOException;
 
 import net.minecraft.client.gui.GuiButton;
@@ -25,7 +28,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.parts.IStorageBus;
-import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
@@ -214,7 +217,7 @@ public class GuiStorageBus extends GuiUpgradeable {
 
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        StorageChannel channel = containerStorageBus.getStorageChannel();
-        slot.handleMouseClicked(channel == StorageChannel.ITEMS, channel == StorageChannel.FLUIDS, false);
+        IAEStackType<?> type = containerStorageBus.getStackType();
+        slot.handleMouseClicked(type == ITEM_STACK_TYPE, type == FLUID_STACK_TYPE, false);
     }
 }

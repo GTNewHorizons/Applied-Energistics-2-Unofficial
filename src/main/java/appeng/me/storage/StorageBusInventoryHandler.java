@@ -4,8 +4,8 @@ import java.util.function.Predicate;
 
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMENetworkInventory;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.ItemFilterList;
 import appeng.util.item.NetworkItemList;
@@ -13,8 +13,8 @@ import appeng.util.item.PrioritizedNetworkItemList;
 
 public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
-    public StorageBusInventoryHandler(IMEInventory<T> i, StorageChannel channel) {
-        super(i, channel);
+    public StorageBusInventoryHandler(IMEInventory<T> i, IAEStackType<T> type) {
+        super(i, type);
     }
 
     @Override

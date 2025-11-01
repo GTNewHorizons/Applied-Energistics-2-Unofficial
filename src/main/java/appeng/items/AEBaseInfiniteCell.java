@@ -26,7 +26,7 @@ public abstract class AEBaseInfiniteCell extends AEBaseItem implements IStorageC
     protected void addCheckedInformation(ItemStack stack, EntityPlayer player, List<String> lines,
             boolean displayMoreInfo) {
         final IMEInventoryHandler<?> inventory = AEApi.instance().registries().cell()
-                .getCellInventory(stack, null, getStorageChannel());
+                .getCellInventory(stack, null, this.getStackType());
         if (!(inventory instanceof CellInventoryHandler<?>handler)) {
             return;
         }

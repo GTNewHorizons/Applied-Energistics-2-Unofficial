@@ -13,6 +13,7 @@ package appeng.container;
 import static appeng.util.Platform.getItemFromPlayerInventoryBySlotIndex;
 import static appeng.util.Platform.isStacksIdentical;
 import static appeng.util.Platform.setPlayerInventorySlotByIndex;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -813,9 +814,11 @@ public abstract class AEBaseContainer extends Container {
                         }
                     }
                     if (machine instanceof PartStorageBus innerMachine) {
-                        if (innerMachine.getConnectedGrid() != null
-                                || innerMachine.getStorageChannel() != StorageChannel.ITEMS) { // Check if storageBus is
-                                                                                               // subnet
+                        if (innerMachine.getConnectedGrid() != null || innerMachine.getStackType() != ITEM_STACK_TYPE) { // Check
+                                                                                                                         // if
+                                                                                                                         // storageBus
+                                                                                                                         // is
+                                                                                                                         // subnet
                             continue;
                         }
                         MEInventoryHandler<IAEItemStack> handler = innerMachine.getInternalHandler();
@@ -827,7 +830,7 @@ public abstract class AEBaseContainer extends Container {
                     }
                     if (machine instanceof TileChest innerMachine) {
                         try {
-                            IMEInventoryHandler handler = innerMachine.getHandler(slotItem.getChannel());
+                            IMEInventoryHandler handler = innerMachine.getHandler(slotItem.getStackType());
                             IAEStack result = handler.getAvailableItem(slotItem, IterationCounter.fetchNewId());
                             if (result == null) continue;
                             coords.add(

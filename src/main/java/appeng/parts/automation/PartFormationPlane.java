@@ -10,6 +10,8 @@
 
 package appeng.parts.automation;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,7 +84,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class PartFormationPlane extends PartUpgradeable
         implements ICellContainer, IPriorityHost, IMEInventory<IAEItemStack>, IPrimaryGuiIconProvider {
 
-    private final MEInventoryHandler myHandler = new MEInventoryHandler(this, StorageChannel.ITEMS);
+    private final MEInventoryHandler myHandler = new MEInventoryHandler(this, ITEM_STACK_TYPE);
     private final AppEngInternalAEInventory Config = new AppEngInternalAEInventory(this, 63);
     private EntityPlayer owner = null;
     private int priority = 0;

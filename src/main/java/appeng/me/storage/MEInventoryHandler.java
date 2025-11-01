@@ -24,6 +24,7 @@ import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.ItemFilterList;
 import appeng.util.prioitylist.DefaultPriorityList;
@@ -44,11 +45,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     protected boolean isSticky;
     protected boolean isExtractFilterActive;
 
-    public MEInventoryHandler(final IMEInventory<T> i, final StorageChannel channel) {
+    public MEInventoryHandler(final IMEInventory<T> i, final IAEStackType<T> type) {
         if (i instanceof IMEInventoryHandler) {
             this.internal = (IMEInventoryHandler<T>) i;
         } else {
-            this.internal = new MEPassThrough<>(i, channel);
+            this.internal = new MEPassThrough<>(i, type);
         }
 
         this.myPriority = 0;

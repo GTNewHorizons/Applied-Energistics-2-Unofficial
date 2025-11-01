@@ -10,6 +10,8 @@
 
 package appeng.items.tools.powered;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.text.NumberFormat;
 import java.util.EnumSet;
 import java.util.List;
@@ -444,7 +446,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
 
     @Override
     public IInventory getConfigInventory(final ItemStack is) {
-        return new CellConfigLegacy(new CellConfig(is), StorageChannel.ITEMS);
+        return new CellConfigLegacy(new CellConfig(is), ITEM_STACK_TYPE);
     }
 
     @Override
@@ -517,10 +519,5 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
     @Override
     public void setOreFilter(ItemStack is, String filter) {
         Platform.openNbtData(is).setString("OreFilter", filter);
-    }
-
-    @Override
-    public StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
     }
 }

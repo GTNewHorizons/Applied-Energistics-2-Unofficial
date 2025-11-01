@@ -10,6 +10,9 @@
 
 package appeng.me.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,6 +38,7 @@ import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.IterationCounter;
@@ -163,18 +167,18 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
         return false;
     }
 
-    public static IMEInventoryHandler<?> getCell(final ItemStack o, final ISaveProvider container2, StorageChannel sc) {
+    public static IMEInventoryHandler<?> getCell(final ItemStack o, final ISaveProvider container2,
+            IAEStackType<?> type) {
         try {
-            if (sc == StorageChannel.ITEMS) return new ItemCellInventoryHandler(new ItemCellInventory(o, container2));
-            if (sc == StorageChannel.FLUIDS)
-                return new FluidCellInventoryHandler(new FluidCellInventory(o, container2));
+            if (type == ITEM_STACK_TYPE) return new ItemCellInventoryHandler(new ItemCellInventory(o, container2));
+            if (type == FLUID_STACK_TYPE) return new FluidCellInventoryHandler(new FluidCellInventory(o, container2));
         } catch (final AppEngException ignored) {}
         return null;
     }
 
     private boolean isEmpty(final IMEInventory<?> meInventory) {
-        return ((IMEInventory<StackType>) meInventory)
-                .getAvailableItems(this.getChannel().createPrimitiveList(), IterationCounter.fetchNewId()).isEmpty();
+        return meInventory.getAvailableItems(this.getChannel().createPrimitiveList(), IterationCounter.fetchNewId())
+                .isEmpty();
     }
 
     @Override
@@ -196,7 +200,7 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
             final CellInventoryHandler<?> cellInventory = (CellInventoryHandler<?>) getCell(
                     cellStack,
                     null,
-                    ((IStorageCell) cellStack.getItem()).getStorageChannel());
+                    ((IStorageCell) cellStack.getItem()).getStackType());
 
             // same as isEmpty but less effort
             if (cellInventory != null && cellInventory.getUsedBytes() > 0) {
@@ -633,7 +637,20 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
 
     @Override
     public StorageChannel getChannel() {
-        return this.cellType.getStorageChannel();
+        IAEStackType<?> type = this.getStackType();
+        if (type == ITEM_STACK_TYPE) {
+            return StorageChannel.ITEMS;
+        }
+        if (type == FLUID_STACK_TYPE) {
+            return StorageChannel.FLUIDS;
+        }
+        return null;
+    }
+
+    @Override
+    @Nonnull
+    public IAEStackType<?> getStackType() {
+        return this.cellType.getStackType();
     }
 
     protected abstract String getStackTypeTag();

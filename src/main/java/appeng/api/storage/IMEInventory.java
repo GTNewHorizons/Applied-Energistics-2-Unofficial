@@ -13,6 +13,9 @@
 
 package appeng.api.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.Collection;
 
 import javax.annotation.Nonnull;
@@ -22,6 +25,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
 
@@ -139,6 +143,19 @@ public interface IMEInventory<StackType extends IAEStack> {
 
     /**
      * @return the type of channel your handler should be part of
+     * @deprecated Use {@link IMEInventory#getStackType()} instead
      */
+    @Deprecated
     StorageChannel getChannel();
+
+    /**
+     * @return stack type your handler should be part of
+     */
+    @Nonnull
+    default IAEStackType<?> getStackType() {
+        return switch (this.getChannel()) {
+            case ITEMS -> ITEM_STACK_TYPE;
+            case FLUIDS -> FLUID_STACK_TYPE;
+        };
+    }
 }

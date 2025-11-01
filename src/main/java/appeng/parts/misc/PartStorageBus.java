@@ -13,6 +13,8 @@ package appeng.parts.misc;
 import static appeng.util.Platform.isAE2FCLoaded;
 import static appeng.util.Platform.readStackNBT;
 import static appeng.util.Platform.writeStackNBT;
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +33,6 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.glodblock.github.common.item.ItemFluidPacket;
-import com.glodblock.github.inventory.MEMonitorIFluidHandler;
 
 import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
@@ -62,10 +63,10 @@ import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.client.texture.CableBusTextures;
@@ -77,6 +78,7 @@ import appeng.helpers.Reflected;
 import appeng.integration.IntegrationType;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
+import appeng.me.storage.MEMonitorIFluidHandler;
 import appeng.me.storage.MEMonitorIInventory;
 import appeng.me.storage.MEMonitorPassThrough;
 import appeng.me.storage.MEPassThrough;
@@ -347,7 +349,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                 this.readOncePass = false;
                 if (filteredChanges == null) return;
                 this.getProxy().getStorage()
-                        .postAlterationOfStoredItems(getStorageChannel(), filteredChanges, this.mySrc);
+                        .postAlterationOfStoredItems(this.getStackType(), filteredChanges, this.mySrc);
             }
         } catch (final GridAccessException e) {
             // :(
@@ -495,7 +497,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         }
 
         if (this.monitor != null) {
-            if (getStorageChannel() == StorageChannel.ITEMS) return ((MEMonitorIInventory) this.monitor).onTick();
+            if (this.getStackType() == ITEM_STACK_TYPE) return ((MEMonitorIInventory) this.monitor).onTick();
             else return ((MEMonitorIFluidHandler) this.monitor).onTick();
         }
 
@@ -522,7 +524,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         final IMEInventory out = this.getInternalHandler();
 
         if (this.monitor != null) {
-            if (getStorageChannel() == StorageChannel.ITEMS) ((MEMonitorIInventory) this.monitor).onTick();
+            if (this.getStackType() == ITEM_STACK_TYPE) ((MEMonitorIInventory) this.monitor).onTick();
             else((MEMonitorIFluidHandler) this.monitor).onTick();
         }
 
@@ -562,9 +564,9 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
         if (target != null) {
             final IExternalStorageHandler esh = AEApi.instance().registries().externalStorage()
-                    .getHandler(target, this.getSide().getOpposite(), getStorageChannel(), this.mySrc);
+                    .getHandler(target, this.getSide().getOpposite(), this.getStackType(), this.mySrc);
             if (esh != null) {
-                return esh.getInventory(target, this.getSide().getOpposite(), getStorageChannel(), this.mySrc);
+                return esh.getInventory(target, this.getSide().getOpposite(), this.getStackType(), this.mySrc);
             }
         }
         return null;
@@ -595,10 +597,10 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         this.readOncePass = true;
         if (target != null) {
             final IExternalStorageHandler esh = AEApi.instance().registries().externalStorage()
-                    .getHandler(target, this.getSide().getOpposite(), getStorageChannel(), this.mySrc);
+                    .getHandler(target, this.getSide().getOpposite(), this.getStackType(), this.mySrc);
             if (esh != null) {
                 final IMEInventory inv = esh
-                        .getInventory(target, this.getSide().getOpposite(), getStorageChannel(), this.mySrc);
+                        .getInventory(target, this.getSide().getOpposite(), this.getStackType(), this.mySrc);
 
                 if (inv instanceof MEMonitorIInventory h) {
                     h.setMode((StorageFilter) this.getConfigManager().getSetting(Settings.STORAGE_FILTER));
@@ -617,7 +619,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                 if (inv != null) {
                     this.checkInterfaceVsStorageBus(target, this.getSide().getOpposite());
 
-                    this.handler = new StorageBusInventoryHandler<>(inv, getStorageChannel());
+                    this.handler = new StorageBusInventoryHandler<>(inv, this.getStackType());
 
                     AccessRestriction currentAccess = (AccessRestriction) this.getConfigManager()
                             .getSetting(Settings.ACCESS);
@@ -641,7 +643,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                         for (int x = 0; x < this.Config.getSizeInventory() && x < slotsToUse; x++) {
                             IAEStack<?> is = this.Config.getAEStackInSlot(x);
 
-                            if (getStorageChannel() == StorageChannel.FLUIDS && isAE2FCLoaded && is instanceof IAEItemStack ais && ais.getItem() instanceof ItemFluidPacket) {
+                            if (this.getStackType() == FLUID_STACK_TYPE && isAE2FCLoaded && is instanceof IAEItemStack ais && ais.getItem() instanceof ItemFluidPacket) {
                                 is = ItemFluidPacket.getFluidAEStack(ais);
                             }
                             if (is != null) {
@@ -649,7 +651,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                             }
                         }
 
-                        if (getStorageChannel() == StorageChannel.ITEMS
+                        if (this.getStackType() == ITEM_STACK_TYPE
                                 && this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
                             FuzzyPriorityList<IAEItemStack> partitionList = new FuzzyPriorityList<>(
                                     priorityList,
@@ -720,8 +722,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     }
 
     @Override
-    public List<IMEInventoryHandler> getCellArray(final StorageChannel channel) {
-        if (channel == getStorageChannel()) {
+    public List<IMEInventoryHandler> getCellArray(final IAEStackType<?> type) {
+        if (type == this.getStackType()) {
             final IMEInventoryHandler out = this.getProxy().isActive() ? this.getInternalHandler() : null;
             if (out != null) {
                 return Collections.singletonList(out);
@@ -772,8 +774,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     }
 
     @Override
-    public StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
+    public IAEStackType<?> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 
     @Override

@@ -10,6 +10,9 @@
 
 package appeng.me.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import javax.annotation.Nonnull;
 
 import net.minecraft.inventory.IInventory;
@@ -27,6 +30,7 @@ import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.items.contents.CellConfig;
 import appeng.tile.inventory.IAEStackInventory;
@@ -58,9 +62,9 @@ public class CreativeCellInventory<StackType extends IAEStack<StackType>>
         }
     }
 
-    public static IMEInventoryHandler getCell(final ItemStack o, StorageChannel sc) {
-        if (sc == StorageChannel.ITEMS) return new ItemCellInventoryHandler(new CreativeCellInventory<>(o));
-        if (sc == StorageChannel.FLUIDS) return new FluidCellInventoryHandler(new CreativeCellInventory<>(o));
+    public static IMEInventoryHandler getCell(final ItemStack o, IAEStackType<?> type) {
+        if (type == ITEM_STACK_TYPE) return new ItemCellInventoryHandler(new CreativeCellInventory<>(o));
+        if (type == FLUID_STACK_TYPE) return new FluidCellInventoryHandler(new CreativeCellInventory<>(o));
         return null;
     }
 
@@ -104,7 +108,20 @@ public class CreativeCellInventory<StackType extends IAEStack<StackType>>
 
     @Override
     public StorageChannel getChannel() {
-        return this.cellType.getStorageChannel();
+        IAEStackType<?> type = this.getStackType();
+        if (type == ITEM_STACK_TYPE) {
+            return StorageChannel.ITEMS;
+        }
+        if (type == FLUID_STACK_TYPE) {
+            return StorageChannel.FLUIDS;
+        }
+        return null;
+    }
+
+    @Nonnull
+    @Override
+    public IAEStackType<?> getStackType() {
+        return this.cellType.getStackType();
     }
 
     @Override

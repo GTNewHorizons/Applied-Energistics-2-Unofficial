@@ -35,6 +35,7 @@ import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
@@ -119,7 +120,7 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
     public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
             final boolean displayMoreInfo) {
         final IMEInventoryHandler<?> inventory = AEApi.instance().registries().cell()
-                .getCellInventory(stack, null, getStorageChannel());
+                .getCellInventory(stack, null, this.getStackType());
 
         if (!(inventory instanceof CellInventoryHandler handler)) {
             return;
@@ -271,8 +272,9 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
     }
 
     @Override
+    @Deprecated
     public IInventory getConfigInventory(final ItemStack is) {
-        return new CellConfigLegacy(new CellConfig(is), this.getStorageChannel());
+        return new CellConfigLegacy(new CellConfig(is), this.getStackType());
     }
 
     @Override
@@ -407,5 +409,6 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
         Platform.openNbtData(is).setLong("cellRestrictionAmount", Long.parseLong(data.get(1)));
     }
 
-    public abstract StorageChannel getStorageChannel();
+    @Override
+    public abstract IAEStackType<?> getStackType();
 }

@@ -10,9 +10,17 @@
 
 package appeng.tile.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -69,9 +77,10 @@ import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.MEMonitorHandler;
 import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.AEColor;
 import appeng.api.util.IConfigManager;
 import appeng.core.localization.GuiText;
@@ -113,8 +122,8 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     private AEColor paintedColor = AEColor.Transparent;
     private boolean isCached = false;
     private ICellHandler cellHandler;
-    private MEMonitorHandler itemCell;
-    private MEMonitorHandler fluidCell;
+    @SuppressWarnings("rawtypes")
+    private final Map<IAEStackType<?>, MEMonitorHandler> cellMap = new HashMap<>();
     private boolean displayNeedsUpdate;
 
     public TileChest() {
@@ -126,10 +135,6 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         this.config.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
         this.setInternalPublicPowerStorage(true);
         this.setInternalPowerFlow(AccessRestriction.WRITE);
-    }
-
-    public IMEInventory<IAEItemStack> getInternal(final StorageChannel channel) throws ChestNoHandler {
-        return (IMEInventory<IAEItemStack>) this.getHandler(channel);
     }
 
     @Override
@@ -197,10 +202,9 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         return this.cellHandler.getCellInventory(this.inv.getStackInSlot(1), this, channel);
     }
 
-    public IMEInventoryHandler getHandler(final StorageChannel channel) throws ChestNoHandler {
+    public IMEInventoryHandler getHandler(final IAEStackType<?> type) throws ChestNoHandler {
         if (!this.isCached) {
-            this.itemCell = null;
-            this.fluidCell = null;
+            this.cellMap.clear();
 
             final ItemStack is = this.inv.getStackInSlot(1);
             if (is != null) {
@@ -209,44 +213,27 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
                 if (this.cellHandler != null) {
                     double power = 1.0;
 
-                    final IMEInventoryHandler<IAEItemStack> itemCell = this.cellHandler
-                            .getCellInventory(is, this, StorageChannel.ITEMS);
-                    final IMEInventoryHandler<IAEFluidStack> fluidCell = this.cellHandler
-                            .getCellInventory(is, this, StorageChannel.FLUIDS);
-
-                    if (itemCell != null) {
-                        power += this.cellHandler.cellIdleDrain(is, itemCell);
-                    } else if (fluidCell != null) {
-                        power += this.cellHandler.cellIdleDrain(is, fluidCell);
+                    for (IAEStackType<?> internalType : AEStackTypeRegistry.getAllTypes()) {
+                        final IMEInventoryHandler cell = this.cellHandler.getCellInventory(is, this, internalType);
+                        if (cell != null) {
+                            this.cellMap.put(internalType, this.wrap(cell));
+                            power += this.cellHandler.cellIdleDrain(is, cell);
+                            break;
+                        }
                     }
 
                     this.getProxy().setIdlePowerUsage(power);
-
-                    this.itemCell = this.wrap(itemCell);
-                    this.fluidCell = this.wrap(fluidCell);
 
                     markDirty();
                 }
             }
         }
 
-        switch (channel) {
-            case FLUIDS -> {
-                if (this.fluidCell == null) {
-                    throw NO_HANDLER;
-                }
-                return this.fluidCell;
-            }
-            case ITEMS -> {
-                if (this.itemCell == null) {
-                    throw NO_HANDLER;
-                }
-                return this.itemCell;
-            }
-            default -> {}
+        IMEInventoryHandler cell = this.cellMap.get(type);
+        if (cell == null) {
+            throw NO_HANDLER;
         }
-
-        return null;
+        return cell;
     }
 
     private <StackType extends IAEStack<?>> MEMonitorHandler<StackType> wrap(final IMEInventoryHandler h) {
@@ -254,11 +241,11 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             return null;
         }
 
-        final MEInventoryHandler ih = new MEInventoryHandler(h, h.getChannel());
+        final MEInventoryHandler ih = new MEInventoryHandler(h, h.getStackType());
         ih.setPriority(this.priority);
 
         final MEMonitorHandler<StackType> g = new ChestMonitorHandler<StackType>(ih);
-        g.addListener(new ChestNetNotifier(h.getChannel()), g);
+        g.addListener(new ChestNetNotifier(h.getStackType()), g);
 
         return g;
     }
@@ -278,14 +265,14 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
         if (ch != null) {
             try {
-                final IMEInventoryHandler handler = this.getHandler(StorageChannel.ITEMS);
+                final IMEInventoryHandler handler = this.getHandler(ITEM_STACK_TYPE);
                 if (handler instanceof ChestMonitorHandler) {
                     return ch.getStatusForCell(cell, ((ChestMonitorHandler) handler).getInternalHandler());
                 }
             } catch (final ChestNoHandler ignored) {}
 
             try {
-                final IMEInventoryHandler handler = this.getHandler(StorageChannel.FLUIDS);
+                final IMEInventoryHandler handler = this.getHandler(FLUID_STACK_TYPE);
                 if (handler instanceof ChestMonitorHandler) {
                     return ch.getStatusForCell(cell, ((ChestMonitorHandler) handler).getInternalHandler());
                 }
@@ -306,13 +293,13 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         ChestMonitorHandler tempCMH = null;
         if (ch != null) {
             try {
-                final IMEInventoryHandler handler = this.getHandler(StorageChannel.ITEMS);
+                final IMEInventoryHandler handler = this.getHandler(ITEM_STACK_TYPE);
                 if (handler instanceof ChestMonitorHandler CMH) {
                     tempCMH = CMH;
                 }
             } catch (final ChestNoHandler ignored) {}
             try {
-                final IMEInventoryHandler handler = this.getHandler(StorageChannel.FLUIDS);
+                final IMEInventoryHandler handler = this.getHandler(FLUID_STACK_TYPE);
                 if (handler instanceof ChestMonitorHandler CMH) {
                     tempCMH = CMH;
                 }
@@ -468,12 +455,18 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
     @Override
     public IMEMonitor getItemInventory() {
-        return this.itemCell;
+        return this.cellMap.get(ITEM_STACK_TYPE);
     }
 
     @Override
     public IMEMonitor getFluidInventory() {
-        return this.fluidCell;
+        return this.cellMap.get(FLUID_STACK_TYPE);
+    }
+
+    @Nullable
+    @Override
+    public IMEMonitor<?> getMEMonitor(@Nonnull IAEStackType<?> type) {
+        return this.cellMap.get(type);
     }
 
     @Override
@@ -491,8 +484,9 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc, final ItemStack removed,
             final ItemStack added) {
         if (slot == 1) {
-            this.itemCell = null;
-            this.fluidCell = null;
+            // this.itemCell = null;
+            // this.fluidCell = null;
+            this.cellMap.clear();
             this.isCached = false; // recalculate the storage cell.
 
             try {
@@ -525,7 +519,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             }
         } else {
             try {
-                final IMEInventory<IAEItemStack> cell = this.getHandler(StorageChannel.ITEMS);
+                final IMEInventory<IAEItemStack> cell = this.getHandler(ITEM_STACK_TYPE);
                 final IAEItemStack returns = cell.injectItems(
                         AEApi.instance().storage().createItemStack(this.inv.getStackInSlot(0)),
                         Actionable.SIMULATE,
@@ -549,7 +543,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
         if (this.isPowered()) {
             try {
-                if (this.getHandler(StorageChannel.ITEMS) != null) {
+                if (this.getHandler(ITEM_STACK_TYPE) != null) {
                     return SIDES;
                 }
             } catch (final ChestNoHandler e) {
@@ -562,7 +556,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     private void tryToStoreContents() {
         try {
             if (this.getStackInSlot(0) != null) {
-                final IMEInventory<IAEItemStack> cell = this.getHandler(StorageChannel.ITEMS);
+                final IMEInventory<IAEItemStack> cell = this.getHandler(ITEM_STACK_TYPE);
 
                 final IAEItemStack returns = Platform.poweredInsert(
                         this,
@@ -580,10 +574,11 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     }
 
     @Override
-    public List<IMEInventoryHandler> getCellArray(final StorageChannel channel) {
+    @Nonnull
+    public List<IMEInventoryHandler> getCellArray(final IAEStackType<?> type) {
         if (this.getProxy().isActive()) {
             try {
-                return Collections.singletonList(this.getHandler(channel));
+                return Collections.singletonList(this.getHandler(type));
             } catch (final ChestNoHandler e) {
                 // :P
             }
@@ -600,8 +595,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     public void setPriority(final int newValue) {
         this.priority = newValue;
 
-        this.itemCell = null;
-        this.fluidCell = null;
+        this.cellMap.clear();
         this.isCached = false; // recalculate the storage cell.
 
         try {
@@ -617,7 +611,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         final double available = this.extractAEPower(req, Actionable.SIMULATE, PowerMultiplier.CONFIG);
         if (available >= req - 0.01) {
             try {
-                final IMEInventoryHandler h = this.getHandler(StorageChannel.FLUIDS);
+                final IMEInventoryHandler h = this.getHandler(FLUID_STACK_TYPE);
 
                 this.extractAEPower(req, Actionable.MODULATE, PowerMultiplier.CONFIG);
                 final IAEStack results = h.injectItems(
@@ -648,7 +642,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @Override
     public boolean canFill(final ForgeDirection from, final Fluid fluid) {
         try {
-            final IMEInventoryHandler h = this.getHandler(StorageChannel.FLUIDS);
+            final IMEInventoryHandler h = this.getHandler(FLUID_STACK_TYPE);
             return h.canAccept(AEFluidStack.create(new FluidStack(fluid, 1)));
         } catch (final ChestNoHandler ignored) {}
         return false;
@@ -662,8 +656,8 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @Override
     public FluidTankInfo[] getTankInfo(final ForgeDirection from) {
         try {
-            final IMEInventoryHandler h = this.getHandler(StorageChannel.FLUIDS);
-            if (h.getChannel() == StorageChannel.FLUIDS) {
+            final IMEInventoryHandler h = this.getHandler(FLUID_STACK_TYPE);
+            if (h.getStackType() == FLUID_STACK_TYPE) {
                 return new FluidTankInfo[] { new FluidTankInfo(null, 1) }; // eh?
             }
         } catch (final ChestNoHandler ignored) {}
@@ -696,7 +690,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
     public boolean openGui(final EntityPlayer p, final ICellHandler ch, final ItemStack cell, final int side) {
         try {
-            final IMEInventoryHandler invHandler = this.getHandler(StorageChannel.ITEMS);
+            final IMEInventoryHandler invHandler = this.getHandler(ITEM_STACK_TYPE);
             if (ch != null && invHandler != null) {
                 ch.openChestGui(p, this, ch, invHandler, cell, StorageChannel.ITEMS);
                 return true;
@@ -706,7 +700,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         }
 
         try {
-            final IMEInventoryHandler invHandler = this.getHandler(StorageChannel.FLUIDS);
+            final IMEInventoryHandler invHandler = this.getHandler(FLUID_STACK_TYPE);
             if (ch != null && invHandler != null) {
                 ch.openChestGui(p, this, ch, invHandler, cell, StorageChannel.FLUIDS);
                 return true;
@@ -788,21 +782,15 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
     private class ChestNetNotifier implements IMEMonitorHandlerReceiver<IAEStack<?>> {
 
-        private final StorageChannel chan;
+        private final IAEStackType<?> type;
 
-        public ChestNetNotifier(final StorageChannel chan) {
-            this.chan = chan;
+        public ChestNetNotifier(final IAEStackType<?> type) {
+            this.type = type;
         }
 
         @Override
         public boolean isValid(final Object verificationToken) {
-            if (this.chan == StorageChannel.ITEMS) {
-                return verificationToken == TileChest.this.itemCell;
-            }
-            if (this.chan == StorageChannel.FLUIDS) {
-                return verificationToken == TileChest.this.fluidCell;
-            }
-            return false;
+            return cellMap.get(type) == verificationToken;
         }
 
         @Override
@@ -811,7 +799,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             try {
                 if (TileChest.this.getProxy().isActive()) {
                     TileChest.this.getProxy().getStorage()
-                            .postAlterationOfStoredItems(this.chan, change, TileChest.this.mySrc);
+                            .postAlterationOfStoredItems(this.type, change, TileChest.this.mySrc);
                 }
             } catch (final GridAccessException e) {
                 // :(
