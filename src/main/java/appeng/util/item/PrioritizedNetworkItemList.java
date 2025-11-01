@@ -147,9 +147,7 @@ public class PrioritizedNetworkItemList<T extends IAEStack> extends NetworkItemL
                 for (Entry<IMENetworkInventory<T>, Integer> entry : o1.networkPriority.entrySet()) {
                     int o1Prio = entry.getValue();
                     Integer o2Prio = o2.getNetworkPriority(entry.getKey());
-                    if (o2Prio == null) {
-                        result = -1;
-                    } else {
+                    if (o2Prio != null) {
                         result = Integer.compare(o1Prio, o2Prio);
                     }
                     if (result != 0) break;
