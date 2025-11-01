@@ -18,7 +18,9 @@ import javax.annotation.Nullable;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.ICellWorkbenchItem;
+import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
 /**
  * Any item which implements this can be treated as an IMEInventory via Util.getCell / Util.isCell It automatically
@@ -69,15 +71,21 @@ public interface IStorageCell extends ICellWorkbenchItem {
      */
     int getTotalTypes(ItemStack cellItem);
 
+    @Deprecated
+    default boolean isBlackListed(ItemStack cellItem, IAEItemStack requestedAddition) {
+        return this.isBlackListed(requestedAddition);
+    }
+
     /**
      * Allows you to fine tune which items are allowed on a given cell, if you don't care, just return false; As the
      * handler for this type of cell is still the default cells, the normal AE black list is also applied.
      *
-     * @param cellItem          item
      * @param requestedAddition requested addition
      * @return true to preventAdditionOfItem
      */
-    boolean isBlackListed(ItemStack cellItem, IAEItemStack requestedAddition);
+    default boolean isBlackListed(IAEStack<?> requestedAddition) {
+        return false;
+    }
 
     /**
      * Allows you to specify if this storage cell can be stored inside other storage cells, only set this for special
@@ -111,4 +119,8 @@ public interface IStorageCell extends ICellWorkbenchItem {
      * @return drain in ae/t this storage cell will use.
      */
     double getIdleDrain();
+
+    default StorageChannel getStorageChannel() {
+        return StorageChannel.ITEMS;
+    }
 }

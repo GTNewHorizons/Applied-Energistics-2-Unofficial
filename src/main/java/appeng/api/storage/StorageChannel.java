@@ -13,6 +13,9 @@
 
 package appeng.api.storage;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
@@ -43,5 +46,24 @@ public enum StorageChannel {
         } else {
             return AEApi.instance().storage().createFluidList();
         }
+    }
+
+    public IItemList createPrimitiveList() {
+        if (this == ITEMS) {
+            return AEApi.instance().storage().createPrimitiveItemList();
+        } else {
+            return AEApi.instance().storage().createFluidList();
+        }
+    }
+
+    public static StorageChannel getStorageChannelByParametrizedClass(Class<?> theClass) {
+        if (theClass.getGenericSuperclass() instanceof ParameterizedType parameterizedType) {
+            final Type type = parameterizedType.getActualTypeArguments()[0];
+
+            if (type == IAEItemStack.class) return StorageChannel.ITEMS;
+            else if (type == IAEFluidStack.class) return StorageChannel.FLUIDS;
+        }
+
+        return null;
     }
 }

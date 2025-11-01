@@ -31,7 +31,7 @@ public class ContainerWireless extends AEBaseContainer {
     public long drain = 0;
 
     public ContainerWireless(final InventoryPlayer ip, final TileWireless te) {
-        super(ip, te, null);
+        super(ip, te);
         this.wirelessTerminal = te;
 
         this.addSlotToContainer(

@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 
+import appeng.api.implementations.items.IStorageCell;
 import appeng.api.implementations.tiles.IChestOrDrive;
 import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventory;
@@ -39,8 +40,8 @@ public class BasicCellHandler implements ICellHandler {
     @Override
     public IMEInventoryHandler getCellInventory(final ItemStack is, final ISaveProvider container,
             final StorageChannel channel) {
-        if (channel == StorageChannel.ITEMS) {
-            return CellInventory.getCell(is, container);
+        if (is != null && is.getItem() instanceof IStorageCell cell && cell.getStorageChannel() == channel) {
+            return CellInventory.getCell(is, container, channel);
         }
         return null;
     }

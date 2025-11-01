@@ -112,7 +112,7 @@ import appeng.api.storage.data.IAETagCompound;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
-import appeng.client.me.SlotME;
+import appeng.container.AEBaseContainer;
 import appeng.container.slot.SlotFake;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
@@ -354,13 +354,13 @@ public class Platform {
         }
 
         if ((type.getType().isItem() && tile == null) || type.hasPermissions(tile, x, y, z, side, p)) {
-            if (tile == null && type.getType() == GuiHostType.ITEM) {
+            if (tile == null && type.getType() != GuiHostType.WORLD) {
                 p.openGui(
                         AppEng.instance(),
                         type.ordinal() << 5 | (1 << 4),
                         p.getEntityWorld(),
                         p.inventory.currentItem,
-                        0,
+                        p.openContainer instanceof AEBaseContainer abc ? abc.getSwitchAbleGuiNext() : -1,
                         0);
             } else if (tile == null || type.getType() == GuiHostType.ITEM) {
                 p.openGui(AppEng.instance(), type.ordinal() << 5 | (1 << 3), p.getEntityWorld(), x, y, z);
@@ -791,7 +791,7 @@ public class Platform {
             return "** Null";
         }
 
-        final String n = ((AEItemStack) is).getModID();
+        final String n = ((AEItemStack) is).getModId();
         return n == null ? "** Null" : n;
     }
 
@@ -1256,13 +1256,20 @@ public class Platform {
         if (possible != null) {
             retrieved = possible.getStackSize();
         }
+        final int typeMultiplier = request.getPowerMultiplier();
 
-        final double availablePower = energy.extractAEPower(retrieved, Actionable.SIMULATE, PowerMultiplier.CONFIG);
+        final double availablePower = energy.extractAEPower(
+                Platform.ceilDiv(retrieved, typeMultiplier),
+                Actionable.SIMULATE,
+                PowerMultiplier.CONFIG);
 
-        final long itemToExtract = Math.min((long) (availablePower + 0.9), retrieved);
+        final long itemToExtract = Math.min((long) (availablePower * typeMultiplier + 0.9), retrieved);
 
         if (itemToExtract > 0) {
-            energy.extractAEPower(retrieved, Actionable.MODULATE, PowerMultiplier.CONFIG);
+            energy.extractAEPower(
+                    Platform.ceilDiv(retrieved, typeMultiplier),
+                    Actionable.MODULATE,
+                    PowerMultiplier.CONFIG);
 
             possible.setStackSize(itemToExtract);
             final StackType ret = cell.extractItems(possible, Actionable.MODULATE, src);
@@ -1285,7 +1292,7 @@ public class Platform {
         if (possible != null) {
             stored -= possible.getStackSize();
         }
-        long typeMultiplier = input instanceof IAEFluidStack ? 1000 : 1;
+        final int typeMultiplier = input.getPowerMultiplier();
 
         final double availablePower = energy
                 .extractAEPower(Platform.ceilDiv(stored, typeMultiplier), Actionable.SIMULATE, PowerMultiplier.CONFIG);
@@ -1372,8 +1379,8 @@ public class Platform {
     }
 
     public static <T extends IAEStack<T>> void postListChanges(final IItemList<T> before, final IItemList<T> after,
-            final IMEMonitorHandlerReceiver<T> meMonitorPassthrough, final BaseActionSource source) {
-        final LinkedList<T> changes = new LinkedList<>();
+            final IMEMonitorHandlerReceiver meMonitorPassthrough, final BaseActionSource source) {
+        final LinkedList<IAEStack<?>> changes = new LinkedList<>();
 
         for (final T is : before) {
             is.setStackSize(-is.getStackSize());
@@ -1841,10 +1848,6 @@ public class Platform {
             return null;
         }
 
-        if (slot instanceof SlotME) {
-            return ((SlotME) slot).getAEStack();
-        }
-
         if (slot instanceof SlotFake) {
             return ((SlotFake) slot).getAEStack();
         }
@@ -1995,6 +1998,7 @@ public class Platform {
     }
 
     public static IAEStack<?> readStackNBT(NBTTagCompound tag, boolean convert) {
+        if (tag == null) return null;
         if (tag.hasKey("StackType", 1)) {
             // For old experimental compatibility
             final byte stackType = tag.getByte("StackType");
@@ -2083,5 +2087,12 @@ public class Platform {
             return AEFluidStack.create(ItemFluidPacket.getFluidStack(stack));
         }
         return AEItemStack.create(stack);
+    }
+
+    public static boolean isStacksIdentical(IAEStack<?> a, IAEStack<?> b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        if (a.equals(b)) return a.getStackSize() == b.getStackSize();
+        return false;
     }
 }

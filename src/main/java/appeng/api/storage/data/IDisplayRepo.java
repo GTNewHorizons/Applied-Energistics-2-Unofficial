@@ -11,11 +11,17 @@ import appeng.helpers.IPinsHandler;
  */
 public interface IDisplayRepo extends IPinsHandler {
 
+    @Deprecated
     void postUpdate(final IAEItemStack stack);
+
+    void postUpdate(final IAEStack<?> stack);
 
     void setViewCell(final ItemStack[] filters);
 
+    @Deprecated
     IAEItemStack getReferenceItem(int idx);
+
+    IAEStack<?> getReferenceStack(int idx);
 
     ItemStack getItem(int idx);
 
@@ -40,8 +46,4 @@ public interface IDisplayRepo extends IPinsHandler {
     boolean isPaused();
 
     void setPaused(boolean paused);
-
-    default IItemList<IAEItemStack> getAvailableItems() {
-        throw new UnsupportedOperationException("This method is not implemented  for this IDisplayRepo.");
-    }
 }

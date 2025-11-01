@@ -33,7 +33,7 @@ import com.google.common.primitives.Ints;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
-import appeng.api.networking.security.IActionHost;
+import appeng.api.parts.IInterfaceTerminal;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IInterfaceViewable;
 import appeng.container.AEBaseContainer;
@@ -44,7 +44,6 @@ import appeng.helpers.InventoryAction;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.parts.AEBasePart;
 import appeng.parts.p2p.PartP2PTunnel;
-import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
@@ -59,10 +58,10 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
     private PacketInterfaceTerminalUpdate dirty;
     private boolean isDirty;
     private IGrid grid;
-    private IActionHost anchor;
+    private final IInterfaceTerminal anchor;
     private boolean wasOff;
 
-    public ContainerInterfaceTerminal(final InventoryPlayer ip, final IActionHost anchor) {
+    public ContainerInterfaceTerminal(final InventoryPlayer ip, final IInterfaceTerminal anchor) {
         super(ip, anchor);
         assert anchor != null;
         this.anchor = anchor;
@@ -110,7 +109,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         }
         this.wasOff = false;
 
-        if (anchor instanceof PartInterfaceTerminal terminal && terminal.needsUpdate()) {
+        if (anchor.needsUpdate()) {
             PacketInterfaceTerminalUpdate update = this.updateList();
             if (update != null) {
                 update.encode();

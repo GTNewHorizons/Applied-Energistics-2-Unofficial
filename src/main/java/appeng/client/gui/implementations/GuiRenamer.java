@@ -7,7 +7,7 @@ import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 
-import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.GuiSub;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerRenamer;
@@ -18,7 +18,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
 
-public class GuiRenamer extends AEBaseGui implements IDropToFillTextField {
+public class GuiRenamer extends GuiSub implements IDropToFillTextField {
 
     private MEGuiTextField textField;
 

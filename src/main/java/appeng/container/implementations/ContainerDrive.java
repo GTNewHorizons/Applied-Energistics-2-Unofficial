@@ -19,7 +19,7 @@ import appeng.tile.storage.TileDrive;
 public class ContainerDrive extends AEBaseContainer {
 
     public ContainerDrive(final InventoryPlayer ip, final TileDrive drive) {
-        super(ip, drive, null);
+        super(ip, drive);
 
         for (int y = 0; y < 5; y++) {
             for (int x = 0; x < 2; x++) {

@@ -2,24 +2,17 @@ package appeng.client.gui.implementations;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemStack;
 
-import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
-import appeng.api.definitions.IDefinitions;
-import appeng.api.definitions.IParts;
 import appeng.api.storage.ITerminalHost;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerPatternMulti;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketPatternMultiSet;
 import appeng.helpers.Reflected;
-import appeng.parts.reporting.PartPatternTerminal;
-import appeng.parts.reporting.PartPatternTerminalEx;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
@@ -48,26 +41,6 @@ public class GuiPatternMulti extends GuiAmount {
         this.amountTextField.setText(String.valueOf(DEFAULT_VALUE));
         this.amountTextField.setCursorPositionEnd();
         this.amountTextField.setSelectionPos(0);
-    }
-
-    @Override
-    protected void setOriginGUI(Object target) {
-        final IDefinitions definitions = AEApi.instance().definitions();
-        final IParts parts = definitions.parts();
-
-        if (target instanceof PartPatternTerminal) {
-            for (final ItemStack stack : parts.patternTerminal().maybeStack(1).asSet()) {
-                myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-
-        else if (target instanceof PartPatternTerminalEx) {
-            for (final ItemStack stack : parts.patternTerminalEx().maybeStack(1).asSet()) {
-                myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-        }
     }
 
     @Override
@@ -101,8 +74,8 @@ public class GuiPatternMulti extends GuiAmount {
 
             if (btn == this.nextBtn && btn.enabled) {
                 int resultI = getAmount();
-                if (resultI > 1 || resultI < -1) NetworkHandler.instance
-                        .sendToServer(new PacketPatternMultiSet(this.originalGui.ordinal(), resultI));
+                if (resultI > 1 || resultI < -1)
+                    NetworkHandler.instance.sendToServer(new PacketPatternMultiSet(resultI));
             }
         } catch (final NumberFormatException e) {
             // nope..

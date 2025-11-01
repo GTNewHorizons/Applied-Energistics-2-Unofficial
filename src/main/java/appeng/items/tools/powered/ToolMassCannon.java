@@ -63,10 +63,12 @@ import appeng.hooks.DispenserMatterCannon;
 import appeng.hooks.TickHandler;
 import appeng.hooks.TickHandler.PlayerColor;
 import appeng.items.contents.CellConfig;
+import appeng.items.contents.CellConfigLegacy;
 import appeng.items.contents.CellUpgrades;
 import appeng.items.misc.ItemPaintBall;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.me.storage.CellInventoryHandler;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.misc.TilePaint;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
@@ -441,6 +443,11 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
 
     @Override
     public IInventory getConfigInventory(final ItemStack is) {
+        return new CellConfigLegacy(new CellConfig(is), StorageChannel.ITEMS);
+    }
+
+    @Override
+    public IAEStackInventory getConfigAEInventory(ItemStack is) {
         return new CellConfig(is);
     }
 
@@ -475,13 +482,15 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
     }
 
     @Override
-    public boolean isBlackListed(final ItemStack cellItem, final IAEItemStack requestedAddition) {
-        final float pen = AEApi.instance().registries().matterCannon().getPenetration(requestedAddition.getItemStack());
-        if (pen > 0) {
-            return false;
+    public boolean isBlackListed(final IAEStack<?> requestedAddition) {
+        if (requestedAddition instanceof IAEItemStack ais) {
+            final float pen = AEApi.instance().registries().matterCannon().getPenetration(ais.getItemStack());
+            if (pen > 0) {
+                return false;
+            }
+            return !(ais.getItem() instanceof ItemPaintBall);
         }
-
-        return !(requestedAddition.getItem() instanceof ItemPaintBall);
+        return false;
     }
 
     @Override
@@ -507,5 +516,10 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
     @Override
     public void setOreFilter(ItemStack is, String filter) {
         Platform.openNbtData(is).setString("OreFilter", filter);
+    }
+
+    @Override
+    public StorageChannel getStorageChannel() {
+        return StorageChannel.ITEMS;
     }
 }

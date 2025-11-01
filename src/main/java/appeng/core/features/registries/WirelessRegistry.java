@@ -22,7 +22,7 @@ import appeng.api.features.ILocatable;
 import appeng.api.features.IWirelessTermHandler;
 import appeng.api.features.IWirelessTermRegistry;
 import appeng.core.localization.PlayerMessages;
-import appeng.core.sync.GuiBridge;
+import appeng.items.tools.powered.ToolWirelessTerminal;
 import appeng.util.Platform;
 
 public final class WirelessRegistry implements IWirelessTermRegistry {
@@ -85,8 +85,9 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
             return;
         }
 
-        if (handler.hasPower(player, 0.5, item)) {
-            Platform.openGUI(player, null, null, GuiBridge.GUI_WIRELESS_TERM);
+        if (item.getItem() instanceof ToolWirelessTerminal twt
+                && (handler.hasInfinityPower(item) || handler.hasPower(player, 0.5, item))) {
+            twt.openGui(item, w, player, null);
         } else {
             player.addChatMessage(PlayerMessages.DeviceNotPowered.toChat());
         }
