@@ -1,5 +1,6 @@
 package appeng.api.storage.data;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,5 +14,9 @@ public class AEStackTypeRegistry {
 
     public static IAEStackType<?> getType(String id) {
         return registry.get(id);
+    }
+
+    public static Collection<IAEStackType<?>> getAllTypes() {
+        return registry.values();
     }
 }

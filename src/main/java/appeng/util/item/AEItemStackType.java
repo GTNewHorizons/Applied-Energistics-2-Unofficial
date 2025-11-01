@@ -1,5 +1,7 @@
 package appeng.util.item;
 
+import net.minecraft.nbt.NBTTagCompound;
+
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStackType;
@@ -16,7 +18,17 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
     }
 
     @Override
+    public IAEItemStack loadStackFromNBT(NBTTagCompound tag) {
+        return AEItemStack.loadItemStackFromNBT(tag);
+    }
+
+    @Override
     public IItemList<IAEItemStack> createList() {
         return AEApi.instance().storage().createItemList();
+    }
+
+    @Override
+    public IItemList<IAEItemStack> createPrimitiveList() {
+        return AEApi.instance().storage().createPrimitiveItemList();
     }
 }

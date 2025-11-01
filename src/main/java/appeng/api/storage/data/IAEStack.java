@@ -23,6 +23,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
+import appeng.core.AELog;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -163,6 +164,29 @@ public interface IAEStack<StackType extends IAEStack> {
      */
     void writeToNBT(NBTTagCompound i);
 
+    default NBTTagCompound toNBTGeneric() {
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setString("StackType", this.getStackType().getId());
+        this.writeToNBT(tag);
+        return tag;
+    }
+
+    @Nullable
+    static IAEStack<?> fromNBTGeneric(NBTTagCompound tag) {
+        String id = tag.getString("StackType");
+        if (id.isEmpty()) {
+            AELog.warn("Cannot deserialize generic stack from nbt %s because key 'StackType' is missing.", tag);
+            return null;
+        }
+
+        IAEStackType<?> type = AEStackTypeRegistry.getType(id);
+        if (type == null) {
+            AELog.warn("Cannot deserialize generic stack from nbt %s because stack type is missing.", tag);
+            return null;
+        }
+        return type.loadStackFromNBT(tag);
+    }
+
     /**
      * Compare stacks using precise logic.
      * <p>
@@ -263,4 +287,6 @@ public interface IAEStack<StackType extends IAEStack> {
             boolean showCraftableText, boolean showCraftableIcon);
 
     int getPowerMultiplier();
+
+    IAEStackType<StackType> getStackType();
 }

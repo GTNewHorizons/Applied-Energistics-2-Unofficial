@@ -11,6 +11,7 @@
 package appeng.util.item;
 
 import static appeng.util.Platform.stackConvertPacket;
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,6 +41,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IAETagCompound;
 import appeng.util.Platform;
 import codechicken.nei.recipe.StackInfo;
@@ -446,5 +448,10 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     @Override
     public int getPowerMultiplier() {
         return 1000;
+    }
+
+    @Override
+    public IAEStackType<IAEFluidStack> getStackType() {
+        return FLUID_STACK_TYPE;
     }
 }

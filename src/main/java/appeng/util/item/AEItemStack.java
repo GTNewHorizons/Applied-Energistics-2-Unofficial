@@ -10,6 +10,8 @@
 
 package appeng.util.item;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -33,6 +35,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IAETagCompound;
 import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -702,5 +705,10 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     @Override
     public int getPowerMultiplier() {
         return 1;
+    }
+
+    @Override
+    public IAEStackType<IAEItemStack> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 }

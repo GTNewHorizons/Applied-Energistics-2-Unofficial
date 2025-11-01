@@ -1,5 +1,7 @@
 package appeng.util.item;
 
+import net.minecraft.nbt.NBTTagCompound;
+
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStackType;
@@ -13,6 +15,11 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     @Override
     public String getId() {
         return FLUID_STACK_ID;
+    }
+
+    @Override
+    public IAEFluidStack loadStackFromNBT(NBTTagCompound tag) {
+        return AEFluidStack.loadFluidStackFromNBT(tag);
     }
 
     @Override
