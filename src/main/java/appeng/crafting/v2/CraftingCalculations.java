@@ -6,7 +6,6 @@ import java.util.List;
 
 import org.apache.logging.log4j.Level;
 
-import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.crafting.v2.resolvers.CraftableItemResolver;
 import appeng.crafting.v2.resolvers.CraftingRequestResolver;
@@ -22,26 +21,23 @@ import appeng.util.Platform;
  */
 public class CraftingCalculations {
 
-    private static final List<CraftingRequestResolver<?>> providers = new ArrayList<>();
+    private static final List<CraftingRequestResolver> providers = new ArrayList<>();
 
     /**
      * @param provider A custom resolver that can provide potential solutions ({@link CraftingTask}) to crafting
      *                 requests ({@link CraftingRequest})
      */
-    public static void registerProvider(CraftingRequestResolver<?> provider) {
+    public static void registerProvider(CraftingRequestResolver provider) {
         providers.add(provider);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <StackType extends IAEStack<StackType>> List<CraftingTask> tryResolveCraftingRequest(
-            CraftingRequest<StackType> request, CraftingContext context) {
+    public static List<CraftingTask> tryResolveCraftingRequest(CraftingRequest request, CraftingContext context) {
         final ArrayList<CraftingTask> allTasks = new ArrayList<>(4);
 
-        for (CraftingRequestResolver<?> resolver : providers) {
+        for (CraftingRequestResolver resolver : providers) {
             try {
                 // Safety: Filtered by type using isAssignableFrom on the keys
-                final CraftingRequestResolver<StackType> provider = (CraftingRequestResolver<StackType>) resolver;
-                final List<CraftingTask> tasks = provider.provideCraftingRequestResolvers(request, context);
+                final List<CraftingTask> tasks = resolver.provideCraftingRequestResolvers(request, context);
                 allTasks.addAll(tasks);
             } catch (Exception t) {
                 AELog.log(
@@ -56,16 +52,15 @@ public class CraftingCalculations {
         return Collections.unmodifiableList(allTasks);
     }
 
-    public static <StackType extends IAEStack<StackType>> long adjustByteCost(CraftingRequest<StackType> request,
-            long byteCost) {
+    public static long adjustByteCost(CraftingRequest request, long byteCost) {
         return Platform.ceilDiv(byteCost, request.stack.getPowerMultiplier());
     }
 
     static {
-        registerProvider(new ExtractItemResolver<>());
-        registerProvider(new SimulateMissingItemResolver<>());
-        registerProvider(new EmitableItemResolver<>());
-        registerProvider(new CraftableItemResolver<>());
-        registerProvider(new IgnoreMissingItemResolver<>());
+        registerProvider(new ExtractItemResolver());
+        registerProvider(new SimulateMissingItemResolver());
+        registerProvider(new EmitableItemResolver());
+        registerProvider(new CraftableItemResolver());
+        registerProvider(new IgnoreMissingItemResolver());
     }
 }

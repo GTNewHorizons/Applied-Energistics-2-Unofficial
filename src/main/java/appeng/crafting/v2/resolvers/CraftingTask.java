@@ -21,7 +21,7 @@ import appeng.me.cluster.implementations.CraftingCPUCluster;
  * A single action that can be performed to solve a {@link CraftingRequest}. Can have multiple inputs and outputs,
  * resolved at runtime during crafting resolution (e.g. for handling substitutions).
  */
-public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStackType>> implements ITreeSerializable {
+public abstract class CraftingTask implements ITreeSerializable {
 
     public enum State {
 
@@ -42,13 +42,13 @@ public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStac
     public static final class StepOutput {
 
         @Nonnull
-        public final List<CraftingRequest<?>> extraInputsRequired;
+        public final List<CraftingRequest> extraInputsRequired;
 
         public StepOutput() {
             this(Collections.emptyList());
         }
 
-        public StepOutput(@Nonnull List<CraftingRequest<?>> extraInputsRequired) {
+        public StepOutput(@Nonnull List<CraftingRequest> extraInputsRequired) {
             this.extraInputsRequired = extraInputsRequired;
         }
     }
@@ -61,7 +61,7 @@ public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStac
     public static final int PRIORITY_SIMULATE_CRAFT = Integer.MIN_VALUE + 200;
     public static final int PRIORITY_SIMULATE = Integer.MIN_VALUE + 100;
 
-    public final CraftingRequest<RequestStackType> request;
+    public final CraftingRequest request;
     public final int priority;
     protected State state;
 
@@ -85,15 +85,15 @@ public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStac
     public abstract void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
             MECraftingInventory craftingInv);
 
-    protected CraftingTask(CraftingRequest<RequestStackType> request, int priority) {
+    protected CraftingTask(CraftingRequest request, int priority) {
         this.request = request;
         this.priority = priority;
         this.state = State.NEEDS_MORE_WORK;
     }
 
-    @SuppressWarnings({ "unchecked", "unused" })
+    @SuppressWarnings({ "unused" })
     protected CraftingTask(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
-        this.request = ((UsedResolverEntry<RequestStackType>) parent).parent;
+        this.request = ((UsedResolverEntry) parent).parent;
         this.priority = serializer.getBuffer().readInt();
         this.state = serializer.readEnum(State.class);
     }

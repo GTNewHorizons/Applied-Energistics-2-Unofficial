@@ -58,7 +58,7 @@ public class GuiCraftingTree {
     public int widgetX, widgetY, widgetW, widgetH;
 
     public float scrollX = -8, scrollY = -8;
-    private CraftingRequest<?> request;
+    private CraftingRequest request;
 
     // Y -> list of nodes sorted by X
     private final TreeMap<Integer, ArrayList<Node>> treeNodes = new TreeMap<>();
@@ -116,10 +116,10 @@ public class GuiCraftingTree {
 
     private class RequestNode extends Node {
 
-        public CraftingRequest<?> request;
+        public CraftingRequest request;
         private String tooltip = null;
 
-        public RequestNode(int x, int y, Node parentNode, CraftingRequest<?> request) {
+        public RequestNode(int x, int y, Node parentNode, CraftingRequest request) {
             super(x, y, parentNode);
             this.request = request;
         }
@@ -168,10 +168,10 @@ public class GuiCraftingTree {
 
     private class TaskNode extends Node {
 
-        public UsedResolverEntry<?> resolver;
+        public UsedResolverEntry resolver;
         private String tooltip;
 
-        public TaskNode(int x, int y, Node parentNode, UsedResolverEntry<?> resolver) {
+        public TaskNode(int x, int y, Node parentNode, UsedResolverEntry resolver) {
             super(x, y, parentNode);
             this.resolver = resolver;
         }
@@ -188,7 +188,7 @@ public class GuiCraftingTree {
                 }
             }
             drawSlotOutline(x, y, color, true);
-            List<CraftingRequest<IAEItemStack>> children = null;
+            List<CraftingRequest> children = null;
             long displayCount = resolver.resolvedStack.getStackSize();
             if (resolver.task instanceof ExtractItemTask) {
                 final ExtractItemTask task = (ExtractItemTask) resolver.task;
@@ -233,7 +233,7 @@ public class GuiCraftingTree {
         this.widgetH = widgetH;
     }
 
-    private <T extends IAEStack<T>> IAEStack<T> getDisplayItemForRequest(CraftingRequest<T> request) {
+    private IAEStack<?> getDisplayItemForRequest(CraftingRequest request) {
         if (request.usedResolvers.isEmpty()) {
             return request.stack;
         } else {
@@ -250,12 +250,12 @@ public class GuiCraftingTree {
     private class NodeBuilderRequestWalker extends NodeBuilderTask {
 
         public final int x, y;
-        public final CraftingRequest<?> request;
+        public final CraftingRequest request;
         private int currentChild = 0;
         private RequestNode myNode;
         private Node parentNode;
 
-        private NodeBuilderRequestWalker(int x, int y, Node parentNode, CraftingRequest<?> request) {
+        private NodeBuilderRequestWalker(int x, int y, Node parentNode, CraftingRequest request) {
             this.x = x;
             this.y = y;
             this.parentNode = parentNode;
@@ -274,7 +274,7 @@ public class GuiCraftingTree {
                 if (currentChild > 0) {
                     treeWidth += X_SPACING;
                 }
-                UsedResolverEntry<?> resolver = request.usedResolvers.get(currentChild);
+                UsedResolverEntry resolver = request.usedResolvers.get(currentChild);
                 if (resolver != null && resolver.resolvedStack != null) {
                     stack.add(
                             new NodeBuilderTaskWalker(
@@ -291,13 +291,13 @@ public class GuiCraftingTree {
     private class NodeBuilderTaskWalker extends NodeBuilderTask {
 
         public final int x, y;
-        public final UsedResolverEntry<?> resolver;
+        public final UsedResolverEntry resolver;
         private int currentChild = 0;
-        private List<CraftingRequest<IAEItemStack>> children = null;
+        private List<CraftingRequest> children = null;
         private TaskNode myNode;
         private Node parentNode;
 
-        private NodeBuilderTaskWalker(int x, int y, Node parentNode, UsedResolverEntry<?> resolver) {
+        private NodeBuilderTaskWalker(int x, int y, Node parentNode, UsedResolverEntry resolver) {
             this.x = x;
             this.y = y;
             this.resolver = resolver;
@@ -381,7 +381,7 @@ public class GuiCraftingTree {
         scrollY = nd.y - nd.width;
     }
 
-    public void setRequest(final CraftingRequest<?> request) {
+    public void setRequest(final CraftingRequest request) {
         final boolean isDifferent = (request != this.request);
         this.request = request;
         if (isDifferent) {

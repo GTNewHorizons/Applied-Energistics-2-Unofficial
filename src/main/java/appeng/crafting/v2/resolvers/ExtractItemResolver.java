@@ -23,14 +23,14 @@ import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
 
-public class ExtractItemResolver<StackType extends IAEStack<StackType>> implements CraftingRequestResolver<StackType> {
+public class ExtractItemResolver implements CraftingRequestResolver {
 
-    public static class ExtractItemTask<StackType extends IAEStack<StackType>> extends CraftingTask<StackType> {
+    public static class ExtractItemTask<StackType extends IAEStack<StackType>> extends CraftingTask {
 
         public final ArrayList<IAEStack<?>> removedFromSystem = new ArrayList<>();
         public final ArrayList<IAEStack<?>> removedFromByproducts = new ArrayList<>();
 
-        public ExtractItemTask(CraftingRequest<StackType> request) {
+        public ExtractItemTask(CraftingRequest request) {
             super(request, CraftingTask.PRIORITY_EXTRACT); // always try to extract items first
         }
 
@@ -75,7 +75,7 @@ public class ExtractItemResolver<StackType extends IAEStack<StackType>> implemen
         }
 
         private void extractExact(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList) {
-            StackType exactMatching = source.extractItems(request.stack, Actionable.SIMULATE);
+            StackType exactMatching = source.extractItems((StackType) request.stack, Actionable.SIMULATE);
             if (exactMatching != null) {
                 final long requestSize = Math.min(request.remainingToProcess, exactMatching.getStackSize());
                 final StackType extracted = source
@@ -89,7 +89,7 @@ public class ExtractItemResolver<StackType extends IAEStack<StackType>> implemen
         }
 
         private void extractFuzzy(CraftingContext context, MECraftingInventory source, List<IAEStack<?>> removedList) {
-            Collection<StackType> fuzzyMatching = source.findFuzzy(request.stack, FuzzyMode.IGNORE_ALL);
+            Collection<StackType> fuzzyMatching = source.findFuzzy((StackType) request.stack, FuzzyMode.IGNORE_ALL);
             for (final StackType candidate : fuzzyMatching) {
                 if (candidate == null) {
                     continue;
@@ -236,7 +236,7 @@ public class ExtractItemResolver<StackType extends IAEStack<StackType>> implemen
 
     @Nonnull
     @Override
-    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<StackType> request,
+    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest request,
             @Nonnull CraftingContext context) {
         if (request.substitutionMode == CraftingRequest.SubstitutionMode.PRECISE_FRESH) {
             return Collections.emptyList();
