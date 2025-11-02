@@ -703,7 +703,7 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     }
 
     @Override
-    public int getPowerMultiplier() {
+    public int getAmountPerUnit() {
         return 1;
     }
 

@@ -796,7 +796,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                         for (final IAEStack<?> anInput : input) {
                             if (anInput != null) {
-                                sum += (double) anInput.getStackSize() / anInput.getPowerMultiplier();
+                                sum += (double) anInput.getStackSize() / anInput.getAmountPerUnit();
                             }
                         }
                         // upgraded interface uses more power

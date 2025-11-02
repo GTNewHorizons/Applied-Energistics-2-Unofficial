@@ -230,7 +230,7 @@ public abstract class PartBaseExportBus<StackType extends IAEStack<StackType>> e
         try {
             if (d != null && this.getProxy().isActive()) {
                 final IEnergyGrid energy = this.getProxy().getEnergy();
-                final double power = (double) items.getStackSize() / items.getPowerMultiplier();
+                final double power = (double) items.getStackSize() / items.getAmountPerUnit();
 
                 if (energy.extractAEPower(power, mode, PowerMultiplier.CONFIG) > power - 0.01) {
                     if (mode == Actionable.MODULATE) {

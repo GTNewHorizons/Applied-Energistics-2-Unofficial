@@ -53,7 +53,7 @@ public class CraftingCalculations {
     }
 
     public static long adjustByteCost(CraftingRequest request, long byteCost) {
-        return Platform.ceilDiv(byteCost, request.stack.getPowerMultiplier());
+        return Platform.ceilDiv(byteCost, request.stack.getAmountPerUnit());
     }
 
     static {

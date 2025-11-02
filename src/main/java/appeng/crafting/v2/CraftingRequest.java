@@ -13,12 +13,11 @@ import javax.annotation.Nonnull;
 
 import appeng.api.config.CraftingMode;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.storage.data.IAEFluidStack;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.crafting.v2.resolvers.CraftingTask;
+import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -72,7 +71,6 @@ public class CraftingRequest implements ITreeSerializable {
         }
     }
 
-    public final Class<? extends IAEStack> stackTypeClass;
     /**
      * An item/fluid + count representing how many need to be crafted
      */
@@ -134,15 +132,6 @@ public class CraftingRequest implements ITreeSerializable {
     public CraftingRequest(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
         final ByteBuf buffer = serializer.getBuffer();
         stack = serializer.readStack();
-        if (stack == null) {
-            stackTypeClass = IAEItemStack.class;
-        } else if (stack instanceof IAEItemStack) {
-            stackTypeClass = IAEItemStack.class;
-        } else if (stack instanceof IAEFluidStack) {
-            stackTypeClass = IAEFluidStack.class;
-        } else {
-            throw new UnsupportedOperationException("Unknown stack type " + stack.getClass());
-        }
         substitutionMode = serializer.readEnum(SubstitutionMode.class);
         allowSimulation = buffer.readBoolean();
         remainingToProcess = buffer.readLong();
@@ -165,13 +154,6 @@ public class CraftingRequest implements ITreeSerializable {
     public CraftingRequest(@Nonnull IAEStack<?> stack, SubstitutionMode substitutionMode, boolean allowSimulation,
             CraftingMode craftingMode, Predicate<IAEStack<?>> acceptableSubstituteFn) {
         this.stack = stack;
-        if (stack instanceof IAEItemStack) {
-            stackTypeClass = IAEItemStack.class;
-        } else if (stack instanceof IAEFluidStack) {
-            stackTypeClass = IAEFluidStack.class;
-        } else {
-            throw new UnsupportedOperationException("Unknown stack type " + stack.getClass());
-        }
         this.substitutionMode = substitutionMode;
         this.acceptableSubstituteFn = acceptableSubstituteFn;
         this.remainingToProcess = stack.getStackSize();
@@ -261,9 +243,7 @@ public class CraftingRequest implements ITreeSerializable {
             throw new IllegalArgumentException(
                     "Can't fulfill crafting request with too many of " + input + " : " + this);
         }
-        this.untransformedByteCost += stackTypeClass == IAEFluidStack.class
-                ? (long) Math.ceil(input.getStackSize() / 1000D)
-                : input.getStackSize();
+        this.untransformedByteCost += Platform.ceilDiv(input.getStackSize(), input.getAmountPerUnit());
         this.byteCost = CraftingCalculations.adjustByteCost(this, untransformedByteCost);
         this.remainingToProcess -= input.getStackSize();
         this.usedResolvers.add(new UsedResolverEntry(this, origin, input.copy()));
@@ -304,8 +284,7 @@ public class CraftingRequest implements ITreeSerializable {
 
         this.stack.setStackSize(newlyRequested);
         this.remainingToProcess = newlyRemainingToProcess;
-        this.untransformedByteCost -= stackTypeClass == IAEFluidStack.class ? (long) Math.ceil(refundedAmount / 1000D)
-                : refundedAmount;
+        this.untransformedByteCost -= Platform.ceilDiv(refundedAmount, this.stack.getAmountPerUnit());
         this.byteCost = CraftingCalculations.adjustByteCost(this, untransformedByteCost);
         if (this.remainingToProcess < 0) {
             throw new IllegalArgumentException("Refunded more items than were resolved for request " + this);

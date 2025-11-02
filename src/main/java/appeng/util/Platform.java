@@ -1267,7 +1267,7 @@ public class Platform {
         if (possible != null) {
             retrieved = possible.getStackSize();
         }
-        final int typeMultiplier = request.getPowerMultiplier();
+        final int typeMultiplier = request.getAmountPerUnit();
 
         final double availablePower = energy.extractAEPower(
                 Platform.ceilDiv(retrieved, typeMultiplier),
@@ -1303,7 +1303,7 @@ public class Platform {
         if (possible != null) {
             stored -= possible.getStackSize();
         }
-        final int typeMultiplier = input.getPowerMultiplier();
+        final int typeMultiplier = input.getAmountPerUnit();
 
         final double availablePower = energy
                 .extractAEPower(Platform.ceilDiv(stored, typeMultiplier), Actionable.SIMULATE, PowerMultiplier.CONFIG);

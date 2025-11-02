@@ -286,7 +286,7 @@ public interface IAEStack<StackType extends IAEStack> {
     void drawOverlayInGui(Minecraft mc, int x, int y, boolean showAmount, boolean showAmountAlways,
             boolean showCraftableText, boolean showCraftableIcon);
 
-    int getPowerMultiplier();
+    int getAmountPerUnit();
 
     IAEStackType<StackType> getStackType();
 }

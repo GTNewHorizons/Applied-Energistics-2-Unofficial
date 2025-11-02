@@ -446,7 +446,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     }
 
     @Override
-    public int getPowerMultiplier() {
+    public int getAmountPerUnit() {
         return 1000;
     }
 
