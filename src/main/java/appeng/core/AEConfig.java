@@ -169,6 +169,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.settings.registerSetting(Settings.TERMINAL_FONT_SIZE, TerminalFontSize.SMALL);
         this.settings.registerSetting(Settings.INTERFACE_TERMINAL_SECTION_ORDER, StringOrder.NATURAL);
         this.settings.registerSetting(Settings.PINS_STATE, PinsState.DISABLED);
+        this.settings.registerSetting(Settings.PAUSE_WHEN_HOLDING_SHIFT, YesNo.YES);
 
         this.spawnChargedChance = (float) (1.0
                 - this.get("worldGen", "spawnChargedChance", 1.0 - this.spawnChargedChance)
