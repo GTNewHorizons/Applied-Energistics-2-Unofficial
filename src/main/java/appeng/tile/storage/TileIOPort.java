@@ -456,7 +456,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         final Iterator<? extends IAEStack> it;
         if (src instanceof IMEMonitor) {
             it = ((IMEMonitor) src).getAvailableItemsWithPriority(IterationCounter.fetchNewId()).getItems(true)
-                    .iterator();
+                    .distinct().iterator();
         } else {
             it = src.getAvailableItems(src.getChannel().createList(), IterationCounter.fetchNewId()).iterator();
         }
