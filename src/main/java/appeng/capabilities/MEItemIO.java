@@ -1,17 +1,20 @@
 package appeng.capabilities;
 
+import java.util.Collection;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import net.minecraft.item.ItemStack;
 
-import com.gtnewhorizon.gtnhlib.capability.item.AbstractInventorySourceIterator;
-import com.gtnewhorizon.gtnhlib.capability.item.IItemIO;
-import com.gtnewhorizon.gtnhlib.capability.item.InventoryItemSource;
-import com.gtnewhorizon.gtnhlib.capability.item.InventorySourceIterator;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
+import com.gtnewhorizon.gtnhlib.item.AbstractInventoryIterator;
+import com.gtnewhorizon.gtnhlib.item.ImmutableItemStack;
+import com.gtnewhorizon.gtnhlib.item.InventoryIterator;
+import com.gtnewhorizon.gtnhlib.item.ItemStack2IntFunction;
+import com.gtnewhorizon.gtnhlib.item.ItemStackPredicate;
 import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
 import appeng.api.config.Actionable;
@@ -27,9 +30,9 @@ import appeng.tile.misc.TileInterface;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
-import gregtech.api.util.GTUtility;
+import appeng.util.item.ImmutableAEItemStackWrapper;
 
-public class MEItemIO implements IItemIO {
+public class MEItemIO implements ItemIO {
 
     private final DualityInterface duality;
     private final IEnergyGrid energyGrid;
@@ -54,25 +57,64 @@ public class MEItemIO implements IItemIO {
     }
 
     @Override
+    public @NotNull InventoryIterator sourceIterator() {
+        return getInventoryIterator(allowedSourceSlots);
+    }
+
+    @Override
+    public @NotNull InventoryIterator sinkIterator() {
+        return getInventoryIterator(allowedSinkSlots);
+    }
+
+    @Override
     public void setAllowedSourceSlots(int[] allowedSourceSlots) {
         this.allowedSourceSlots = allowedSourceSlots;
     }
 
     @Override
-    public void setAllowedSinkSlots(@Nullable int[] slots) {
-        allowedSinkSlots = slots;
+    public void setAllowedSinkSlots(int @Nullable [] slots) {
+        this.allowedSinkSlots = slots;
     }
 
     @Override
-    public ItemStack store(ItemStack stack) {
-        if (!duality.getProxy().isActive()) return stack;
+    public @Nullable ItemStack pull(@Nullable ItemStackPredicate filter, @Nullable ItemStack2IntFunction amount) {
+        InventoryIterator iter = sourceIterator();
 
-        boolean matches = false, isFiltered = false;
+        while (iter.hasNext()) {
+            ImmutableItemStack stack = iter.next();
 
-        int[] effectiveSlots = allowedSinkSlots != null ? InventoryItemSource.intersect(SLOTS, allowedSinkSlots)
-                : SLOTS;
+            if (stack == null || stack.isEmpty()) continue;
 
+            if (filter == null || filter.test(stack)) {
+                int toExtract = amount == null ? stack.getStackSize() : amount.apply(stack);
+
+                return iter.extract(toExtract, false);
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public int store(ImmutableItemStack stack) {
+        if (stack == null || stack.isEmpty()) return 0;
+
+        if (!duality.getProxy().isActive()) return stack.getStackSize();
+
+        int[] slots = allowedSinkSlots == null ? SLOTS : AbstractInventoryIterator.intersect(SLOTS, allowedSinkSlots);
+
+        if (isFiltered() && !matchesFilter(stack, slots)) return stack.getStackSize();
+
+        IAEItemStack rejected = storage
+                .injectItems(AEItemStack.create(stack.toStack()), Actionable.MODULATE, duality.getActionSource());
+
+        return rejected == null ? 0 : Platform.longToInt(rejected.getStackSize());
+    }
+
+    private boolean isFiltered() {
         AppEngInternalAEInventory configInv = duality.getConfig();
+
+        boolean isFiltered = false;
 
         for (ItemStack config : configInv) {
             if (config != null) {
@@ -80,133 +122,210 @@ public class MEItemIO implements IItemIO {
                 break;
             }
         }
+        return isFiltered;
+    }
 
-        for (int slot : effectiveSlots) {
+    private boolean matchesFilter(ImmutableItemStack stack, int[] slots) {
+        AppEngInternalAEInventory configInv = duality.getConfig();
+
+        for (int slot : slots) {
             ItemStack config = configInv.getStackInSlot(slot);
 
             if (config == null) continue;
 
-            if (ItemUtil.areStacksEqual(stack, config)) {
-                matches = true;
-                break;
+            if (stack.matches(config)) {
+                return true;
             }
         }
 
-        if (isFiltered && !matches) return stack;
-
-        IAEItemStack aeStack = AEItemStack.create(stack);
-
-        IAEItemStack rejected = Platform.poweredInsert(energyGrid, storage, aeStack, duality.getActionSource());
-
-        return rejected == null ? null : rejected.getItemStack();
+        return false;
     }
 
     @Override
-    public OptionalInt getStoredAmount(ItemStack stack) {
+    public OptionalInt getStoredItemsInSink(@Nullable ItemStackPredicate filter) {
         if (!duality.getProxy().isActive()) return OptionalInt.empty();
 
-        if (stack == null) {
+        if (filter == null) {
             long sum = 0;
 
             for (var s : storage.getStorageList()) {
                 sum += s.getStackSize();
             }
 
-            return OptionalInt.of(longToInt(sum));
-        } else {
-            IAEItemStack available = storage.getAvailableItem(AEItemStack.create(stack), IterationCounter.fetchNewId());
+            return sum == 0 ? ZERO : OptionalInt.of(Platform.longToInt(sum));
+        }
 
-            return available == null ? ZERO : OptionalInt.of(longToInt(available.getStackSize()));
+        Collection<ItemStack> stacks = filter.getStacks();
+
+        long sum = 0;
+
+        ImmutableAEItemStackWrapper wrapper = new ImmutableAEItemStackWrapper();
+
+        if (stacks != null) {
+            for (ItemStack stack : stacks) {
+                IAEItemStack available = storage
+                        .getAvailableItem(AEItemStack.create(stack), IterationCounter.fetchNewId());
+
+                if (filter.test(wrapper.set(available))) {
+                    sum += available.getStackSize();
+                }
+            }
+        } else {
+            for (IAEItemStack stack : storage.getStorageList()) {
+                if (filter.test(wrapper.set(stack))) {
+                    sum += stack.getStackSize();
+                }
+            }
+        }
+
+        return sum == 0 ? ZERO : OptionalInt.of(Platform.longToInt(sum));
+    }
+
+    private @NotNull InventoryIterator getInventoryIterator(int[] allowedSlots) {
+        if (!duality.getProxy().isActive()) return InventoryIterator.EMPTY;
+
+        if (isFiltered()) {
+            return new FilteredInventoryIterator(allowedSlots);
+        } else {
+            IAEItemStack[] contents = storage.getStorageList().toArray(new IAEItemStack[0]);
+
+            // Add 64 so that there are empty fake 'slots' to insert into. Otherwise [InventoryIterator.hasNext()] will
+            // always return false. This could be higher, but 64 is a reasonable default for anything that will try to
+            // insert via the iterator.
+            int[] slots = new int[contents.length + 64];
+
+            for (int i = 0; i < slots.length; i++) slots[i] = i;
+
+            return new UnfilteredInventoryIterator(slots, contents);
         }
     }
 
-    @Override
-    public @Nonnull InventorySourceIterator iterator() {
-        if (!duality.getProxy().isActive()) return InventorySourceIterator.EMPTY;
+    private class FilteredInventoryIterator extends AbstractInventoryIterator {
 
-        int[] effectiveSlots = allowedSourceSlots != null ? InventoryItemSource.intersect(SLOTS, allowedSourceSlots)
-                : SLOTS;
+        public FilteredInventoryIterator(int[] allowedSlots) {
+            super(MEItemIO.SLOTS, allowedSlots);
+        }
 
-        return new AbstractInventorySourceIterator(effectiveSlots) {
+        @Override
+        protected ItemStack getStackInSlot(int slot) {
+            IAEItemStack config = duality.getConfig().getAEStackInSlot(slot);
 
-            @Override
-            protected ItemStack getStackInSlot(int slot) {
-                IAEItemStack config = duality.getConfig().getAEStackInSlot(slot);
+            if (config == null) return null;
 
-                if (config == null) return null;
+            ItemStack stored = duality.getStorage().getStackInSlot(slot);
 
-                ItemStack stored = duality.getStorage().getStackInSlot(slot);
+            IAEItemStack inMESystem = storage.getAvailableItem(config, IterationCounter.fetchNewId());
 
-                IAEItemStack inMESystem = storage.getAvailableItem(config, IterationCounter.fetchNewId());
+            long total = 0;
 
-                long total = 0;
+            ItemStack out = null;
 
-                ItemStack out = null;
-
-                if (stored != null) {
-                    out = stored.splitStack(0);
-                    total += stored.stackSize;
-                }
-
-                if (inMESystem != null) {
-                    if (out == null) out = inMESystem.getItemStack();
-                    total += inMESystem.getStackSize();
-                }
-
-                if (out != null) {
-                    out.stackSize = longToInt(total);
-                }
-
-                return out;
+            if (stored != null) {
+                out = stored.splitStack(0);
+                total += stored.stackSize;
             }
 
-            @Override
-            protected void setInventorySlotContents(int slot, ItemStack stack) {
-                throw new UnsupportedOperationException("this should never be called since extract() was overridden");
+            if (inMESystem != null) {
+                if (out == null) out = inMESystem.getItemStack();
+                total += inMESystem.getStackSize();
             }
 
-            @Override
-            public ItemStack extract(int amount) {
-                IAEItemStack config = duality.getConfig().getAEStackInSlot(getCurrentSlot());
-
-                if (config == null) return null;
-
-                ItemStack result = config.getItemStack();
-                result.stackSize = 0;
-
-                IAEItemStack extracted = Platform.poweredExtraction(
-                        energyGrid,
-                        storage,
-                        config.copy().setStackSize(amount),
-                        duality.getActionSource());
-
-                if (extracted != null) {
-                    result.stackSize += (int) extracted.getStackSize();
-                    amount -= (int) extracted.getStackSize();
-                }
-
-                ItemStack stored = duality.getStorage().getStackInSlot(getCurrentSlot());
-
-                // Only extract from the slot if there wasn't enough in the network because interface ticks are
-                // comparatively expensive
-                if (amount > 0 && GTUtility.isStackValid(stored)) {
-                    int toExtract = Math.min(amount, stored.stackSize);
-
-                    result.stackSize += toExtract;
-                    stored.stackSize -= toExtract;
-                }
-
-                return result;
+            if (out != null) {
+                out.stackSize = Platform.longToInt(total);
             }
 
-            @Override
-            public void insert(ItemStack stack) {
-                storage.injectItems(AEItemStack.create(stack), Actionable.MODULATE, duality.getActionSource());
+            return out;
+        }
+
+        @Override
+        public ItemStack extract(int amount, boolean force) {
+            IAEItemStack config = duality.getConfig().getAEStackInSlot(getCurrentSlot());
+
+            if (config == null) return null;
+
+            ItemStack result = config.getItemStack();
+            result.stackSize = 0;
+
+            IAEItemStack extracted = Platform.poweredExtraction(
+                    energyGrid,
+                    storage,
+                    config.empty().setStackSize(amount),
+                    duality.getActionSource());
+
+            if (extracted != null) {
+                result.stackSize += (int) extracted.getStackSize();
+                amount -= (int) extracted.getStackSize();
             }
-        };
+
+            ItemStack stored = duality.getStorage().getStackInSlot(getCurrentSlot());
+
+            // Only extract from the slot if there wasn't enough in the network because interface ticks are
+            // comparatively expensive
+            if (amount > 0 && !ItemUtil.isStackEmpty(stored)) {
+                ItemStack fromSlot = duality.getStorage()
+                        .decrStackSize(getCurrentSlot(), Math.min(amount, stored.stackSize));
+
+                result.stackSize += fromSlot.stackSize;
+            }
+
+            return result;
+        }
+
+        @Override
+        public int insert(ImmutableItemStack stack, boolean force) {
+            if (!matchesFilter(stack, new int[] { getCurrentSlot() })) return stack.getStackSize();
+
+            IAEItemStack rejected = storage
+                    .injectItems(AEItemStack.create(stack.toStack()), Actionable.MODULATE, duality.getActionSource());
+
+            return rejected == null ? 0 : Platform.longToInt(rejected.getStackSize());
+        }
     }
 
-    public static int longToInt(long number) {
-        return (int) Math.min(Integer.MAX_VALUE, number);
+    private class UnfilteredInventoryIterator extends AbstractInventoryIterator {
+
+        private final IAEItemStack[] contents;
+
+        public UnfilteredInventoryIterator(int[] slots, IAEItemStack[] contents) {
+            super(slots);
+
+            this.contents = contents;
+        }
+
+        @Override
+        protected ItemStack getStackInSlot(int slot) {
+            if (slot < 0 || slot >= contents.length) return null;
+
+            IAEItemStack stack = contents[slot];
+
+            return stack == null ? null : stack.getItemStack();
+        }
+
+        @Override
+        public ItemStack extract(int amount, boolean force) {
+            int slot = getCurrentSlot();
+
+            if (slot < 0 || slot >= contents.length) return null;
+
+            IAEItemStack current = contents[slot];
+
+            if (current == null) return null;
+
+            IAEItemStack extracted = Platform.poweredExtraction(
+                    energyGrid,
+                    storage,
+                    current.empty().setStackSize(amount),
+                    duality.getActionSource());
+
+            return extracted == null ? null : extracted.getItemStack();
+        }
+
+        @Override
+        public int insert(ImmutableItemStack stack, boolean force) {
+            IAEItemStack rejected = storage
+                    .injectItems(AEItemStack.create(stack.toStack()), Actionable.MODULATE, duality.getActionSource());
+
+            return rejected == null ? 0 : Platform.longToInt(rejected.getStackSize());
+        }
     }
 }

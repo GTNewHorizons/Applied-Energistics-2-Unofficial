@@ -29,9 +29,9 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.collect.ImmutableSet;
-import com.gtnewhorizon.gtnhlib.capability.item.IItemIO;
-import com.gtnewhorizon.gtnhlib.capability.item.IItemSink;
-import com.gtnewhorizon.gtnhlib.capability.item.IItemSource;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSource;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
@@ -421,7 +421,7 @@ public class PartInterface extends PartBasicState implements IGridTickable, ISto
 
     @Override
     public <T> @Nullable T getCapability(@Nonnull Class<T> capability, @Nonnull ForgeDirection side) {
-        if (capability == IItemSource.class || capability == IItemSink.class || capability == IItemIO.class) {
+        if (capability == ItemSource.class || capability == ItemSink.class || capability == ItemIO.class) {
             return capability.cast(getItemIO());
         }
 

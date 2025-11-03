@@ -2089,4 +2089,8 @@ public class Platform {
         }
         return AEItemStack.create(stack);
     }
+
+    public static int longToInt(long number) {
+        return (int) Math.min(Integer.MAX_VALUE, number);
+    }
 }
