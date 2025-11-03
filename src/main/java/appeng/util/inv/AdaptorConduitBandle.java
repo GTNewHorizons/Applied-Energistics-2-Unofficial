@@ -24,15 +24,14 @@ public class AdaptorConduitBandle extends InventoryAdaptor {
 
     public AdaptorConduitBandle(TileConduitBundle tileEntity, ForgeDirection direction) {
         toAdaptor = direction;
-        ForgeDirection fromAdaptor = direction.getOpposite();
         IItemConduit ic = tileEntity.getConduit(IItemConduit.class);
-        if (ic != null && ic.isConnectedTo(fromAdaptor)) {
+        if (ic != null && ic.isConnectedTo(direction)) {
             itemConduit = ic;
         } else {
             itemConduit = null;
         }
         ILiquidConduit ilc = tileEntity.getConduit(ILiquidConduit.class);
-        if (ilc != null && ilc.isConnectedTo(fromAdaptor)) {
+        if (ilc != null && ilc.isConnectedTo(direction)) {
             fluidConduit = ilc;
         } else {
             fluidConduit = null;

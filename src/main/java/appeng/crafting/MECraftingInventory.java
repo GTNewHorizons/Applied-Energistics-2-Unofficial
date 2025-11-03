@@ -120,44 +120,6 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         this(target.target, logExtracted, logInjections, logMissing);
     }
 
-    public MECraftingInventory(final IStorageMonitorable target, final BaseActionSource src, final boolean logExtracted,
-            final boolean logInjections, final boolean logMissing) {
-        this.target = target;
-        this.logExtracted = logExtracted;
-        this.logInjections = logInjections;
-        this.logMissing = logMissing;
-
-        if (logMissing) {
-            this.missingCache = AEApi.instance().storage().createAEStackList();
-        } else {
-            this.missingCache = null;
-        }
-
-        if (logExtracted) {
-            this.extractedCache = AEApi.instance().storage().createAEStackList();
-        } else {
-            this.extractedCache = null;
-        }
-
-        if (logInjections) {
-            this.injectedCache = AEApi.instance().storage().createAEStackList();
-        } else {
-            this.injectedCache = null;
-        }
-
-        this.localItemCache = AEApi.instance().storage().createItemList();
-        this.localFluidCache = AEApi.instance().storage().createFluidList();
-
-        for (final IAEItemStack is : target.getItemInventory().getStorageList()) {
-            this.localItemCache.add(target.getItemInventory().extractItems(is, Actionable.SIMULATE, src));
-        }
-        for (final IAEFluidStack is : target.getFluidInventory().getStorageList()) {
-            this.localFluidCache.add(target.getFluidInventory().extractItems(is, Actionable.SIMULATE, src));
-        }
-
-        this.par = null;
-    }
-
     public MECraftingInventory(final IStorageMonitorable target, final boolean logExtracted,
             final boolean logInjections, final boolean logMissing) {
         this.target = target;
