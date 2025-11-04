@@ -74,6 +74,8 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AEColor;
 import appeng.api.util.IConfigManager;
+import appeng.core.localization.GuiText;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
 import appeng.items.storage.ItemBasicStorageCell;
 import appeng.me.GridAccessException;
@@ -90,7 +92,7 @@ import appeng.util.item.AEFluidStack;
 import io.netty.buffer.ByteBuf;
 
 public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHandler, ITerminalHost, IPriorityHost,
-        IConfigManagerHost, IColorableTile, IGridTickable {
+        IConfigManagerHost, IColorableTile, IGridTickable, IPrimaryGuiIconProvider {
 
     private static final ChestNoHandler NO_HANDLER = new ChestNoHandler();
     private static final int[] SIDES = { 0 };
@@ -247,7 +249,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         return null;
     }
 
-    private <StackType extends IAEStack> MEMonitorHandler<StackType> wrap(final IMEInventoryHandler h) {
+    private <StackType extends IAEStack<?>> MEMonitorHandler<StackType> wrap(final IMEInventoryHandler h) {
         if (h == null) {
             return null;
         }
@@ -784,7 +786,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         private static final long serialVersionUID = 7995805326136526631L;
     }
 
-    private class ChestNetNotifier<T extends IAEStack<T>> implements IMEMonitorHandlerReceiver<T> {
+    private class ChestNetNotifier implements IMEMonitorHandlerReceiver<IAEStack<?>> {
 
         private final StorageChannel chan;
 
@@ -804,7 +806,8 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         }
 
         @Override
-        public void postChange(final IBaseMonitor<T> monitor, final Iterable<T> change, final BaseActionSource source) {
+        public void postChange(final IBaseMonitor<IAEStack<?>> monitor, final Iterable<IAEStack<?>> change,
+                final BaseActionSource source) {
             try {
                 if (TileChest.this.getProxy().isActive()) {
                     TileChest.this.getProxy().getStorage()
@@ -823,7 +826,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         }
     }
 
-    private class ChestMonitorHandler<T extends IAEStack> extends MEMonitorHandler<T> {
+    private class ChestMonitorHandler<T extends IAEStack<?>> extends MEMonitorHandler<T> {
 
         public ChestMonitorHandler(final IMEInventoryHandler<T> t) {
             super(t);
@@ -878,5 +881,15 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             }
             return super.extractItems(request, mode, src);
         }
+    }
+
+    @Override
+    public GuiText getName() {
+        return GuiText.Chest;
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().blocks().chest().maybeStack(1).orNull();
     }
 }

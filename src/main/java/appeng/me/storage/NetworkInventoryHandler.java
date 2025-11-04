@@ -37,6 +37,7 @@ import appeng.me.cache.SecurityCache;
 import appeng.util.SortedArrayList;
 import appeng.util.inv.ItemListIgnoreCrafting;
 import appeng.util.item.NetworkItemList;
+import appeng.util.item.PrioritizedNetworkItemList;
 
 public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetworkInventory<T> {
 
@@ -82,6 +83,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
     private final List<IMEInventoryHandler<T>> priorityInventory;
     private int myPass = 0;
     private NetworkItemList<T> iterationItems = null;
+    private PrioritizedNetworkItemList<T> prioritizedIterationItems = null;
 
     public NetworkInventoryHandler(final StorageChannel chan, final SecurityCache security) {
         this.myChannel = chan;
@@ -344,6 +346,53 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         return (IItemList<T>) (getChannel() == StorageChannel.ITEMS
                 ? AEApi.instance().storage().createPrimitiveItemList()
                 : AEApi.instance().storage().createFluidList());
+    }
+
+    @Override
+    public PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(final int iteration) {
+        if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
+            return this.prioritizedIterationItems;
+        }
+
+        final PrioritizedNetworkItemList<T> networkItemList = new PrioritizedNetworkItemList<>(this);
+        this.prioritizedIterationItems = networkItemList;
+        final boolean isSource = this.getDepth(Actionable.SIMULATE).size() == 1;
+
+        IItemList<T> currentPriorityItemList = null;
+        final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
+        final int size = priorityInventory.size();
+        Integer lastPriority = null;
+        for (int i = 0; i < size; i++) {
+            final IMEInventoryHandler<T> inv = priorityInventory.get(i);
+            final IMENetworkInventory<T> externalNetworkInventory = inv.getExternalNetworkInventory();
+            if (externalNetworkInventory == this) {
+                continue; // ignore any attempts to read self
+            }
+            if (lastPriority == null || lastPriority != inv.getPriority()) {
+                if (lastPriority != null && !currentPriorityItemList.isEmpty())
+                    networkItemList.addNetworkItems(this, lastPriority, currentPriorityItemList);
+                lastPriority = inv.getPriority();
+                currentPriorityItemList = isSource ? new ItemListIgnoreCrafting<>(getPrimitiveItemList())
+                        : getPrimitiveItemList();
+            }
+
+            if (externalNetworkInventory != null) {
+                final IItemList<T> passedOutList = inv.getAvailableItemsWithPriority(iteration);
+                networkItemList.addNetworkItems(externalNetworkInventory, inv.getPriority(), passedOutList);
+            } else {
+                final IItemList<T> passedInList = getPrimitiveItemList();
+                final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
+                for (T item : passedOutList) {
+                    currentPriorityItemList.add(item);
+                }
+            }
+        }
+        if (currentPriorityItemList != null && !currentPriorityItemList.isEmpty()) {
+            networkItemList.addNetworkItems(this, lastPriority, currentPriorityItemList);
+        }
+
+        this.surface(this, Actionable.SIMULATE);
+        return networkItemList;
     }
 
     @Override

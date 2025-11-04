@@ -52,6 +52,7 @@ import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
+import appeng.core.localization.GuiText;
 import appeng.helpers.PlayerSecurityWrapper;
 import appeng.me.GridAccessException;
 import appeng.me.storage.SecurityInventory;
@@ -305,5 +306,10 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
 
     public AppEngInternalInventory getConfigSlot() {
         return this.configSlot;
+    }
+
+    @Override
+    public GuiText getName() {
+        return GuiText.Security;
     }
 }
