@@ -6,9 +6,13 @@ import net.minecraft.item.ItemStack;
 
 import org.jetbrains.annotations.NotNull;
 
-import com.gtnewhorizon.gtnhlib.capability.item.IItemIO;
-import com.gtnewhorizon.gtnhlib.capability.item.ImmutableItemStack;
-import com.gtnewhorizon.gtnhlib.capability.item.InventorySourceIterator;
+import com.google.common.collect.Iterators;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
+import com.gtnewhorizon.gtnhlib.item.FastImmutableItemStack;
+import com.gtnewhorizon.gtnhlib.item.ImmutableItemStack;
+import com.gtnewhorizon.gtnhlib.item.InventoryIterator;
+import com.gtnewhorizon.gtnhlib.item.ItemStackPredicate;
+import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
 import appeng.api.config.FuzzyMode;
 import appeng.util.InventoryAdaptor;
@@ -16,64 +20,40 @@ import appeng.util.Platform;
 
 public class AdapterItemIO extends InventoryAdaptor {
 
-    private final IItemIO itemIO;
+    private final ItemIO itemIO;
 
-    public AdapterItemIO(IItemIO itemIO) {
+    public AdapterItemIO(ItemIO itemIO) {
         this.itemIO = itemIO;
     }
 
     @Override
     public ItemStack removeItems(int amount, ItemStack filter, IInventoryDestination destination) {
-        InventorySourceIterator iter = itemIO.iterator();
-
-        ItemStack out = null;
-
-        while (iter.hasNext() && amount > 0) {
-            ImmutableItemStack immutableStack = iter.next();
-
-            if (immutableStack == null) continue;
-
-            ItemStack stack = immutableStack.toStack();
-
-            if (filter != null && !Platform.isSameItemPrecise(stack, filter)) continue;
-            if (destination != null && !destination.canInsert(stack)) continue;
-
-            if (out == null) {
-                out = immutableStack.toStack(0);
-            }
-
-            ItemStack extracted = iter.extract(amount);
-
-            if (extracted != null) {
-                out.stackSize += extracted.stackSize;
-                amount -= extracted.stackSize;
-            }
-        }
-
-        return out;
+        return itemIO.pull(
+                ItemStackPredicate.matches(filter).and(stack -> destination.canInsert(stack.toStackFast())),
+                stack -> Math.min(stack.getStackSize(), amount));
     }
 
     @Override
     public ItemStack simulateRemove(int amount, ItemStack filter, IInventoryDestination destination) {
-        InventorySourceIterator iter = itemIO.iterator();
+        InventoryIterator iter = itemIO.sourceIterator();
+
+        if (iter == null) return null;
 
         ItemStack out = null;
 
         while (iter.hasNext() && amount > 0) {
-            ImmutableItemStack immutableStack = iter.next();
+            ImmutableItemStack stack = iter.next();
 
-            if (immutableStack == null) continue;
+            if (stack == null) continue;
 
-            ItemStack stack = immutableStack.toStack();
-
-            if (filter != null && !Platform.isSameItemPrecise(stack, filter)) continue;
-            if (destination != null && !destination.canInsert(stack)) continue;
+            if (filter != null && !stack.matches(filter)) continue;
+            if (destination != null && !destination.canInsert(stack.toStackFast())) continue;
 
             if (out == null) {
-                out = immutableStack.toStack(0);
+                out = stack.toStack(0);
             }
 
-            int simulatedTransfer = Math.min(amount, immutableStack.getStackSize());
+            int simulatedTransfer = Math.min(amount, stack.getStackSize());
 
             out.stackSize += simulatedTransfer;
             amount -= simulatedTransfer;
@@ -85,7 +65,9 @@ public class AdapterItemIO extends InventoryAdaptor {
     @Override
     public ItemStack removeSimilarItems(int amount, ItemStack fuzzyFilter, FuzzyMode fuzzyMode,
             IInventoryDestination destination) {
-        InventorySourceIterator iter = itemIO.iterator();
+        InventoryIterator iter = itemIO.sourceIterator();
+
+        if (iter == null) return null;
 
         ItemStack out = null;
 
@@ -108,7 +90,7 @@ public class AdapterItemIO extends InventoryAdaptor {
                 out = immutableStack.toStack(0);
             }
 
-            ItemStack extracted = iter.extract(amount);
+            ItemStack extracted = iter.extract(amount, false);
 
             if (extracted != null) {
                 out.stackSize += extracted.stackSize;
@@ -122,7 +104,9 @@ public class AdapterItemIO extends InventoryAdaptor {
     @Override
     public ItemStack simulateSimilarRemove(int amount, ItemStack fuzzyFilter, FuzzyMode fuzzyMode,
             IInventoryDestination destination) {
-        InventorySourceIterator iter = itemIO.iterator();
+        InventoryIterator iter = itemIO.sourceIterator();
+
+        if (iter == null) return null;
 
         ItemStack out = null;
 
@@ -156,7 +140,9 @@ public class AdapterItemIO extends InventoryAdaptor {
 
     @Override
     public ItemStack addItems(ItemStack toBeAdded) {
-        return itemIO.store(toBeAdded);
+        int rejected = itemIO.store(new FastImmutableItemStack(toBeAdded));
+
+        return rejected == 0 ? null : ItemUtil.copyAmount(rejected, toBeAdded);
     }
 
     @Override
@@ -166,12 +152,16 @@ public class AdapterItemIO extends InventoryAdaptor {
 
     @Override
     public boolean containsItems() {
-        return itemIO.iterator().hasNext();
+        InventoryIterator iter = itemIO.sourceIterator();
+
+        return iter != null && iter.hasNext();
     }
 
     @Override
     public @NotNull Iterator<ItemSlot> iterator() {
-        InventorySourceIterator iter = itemIO.iterator();
+        InventoryIterator iter = itemIO.sourceIterator();
+
+        if (iter == null) return Iterators.emptyIterator();
 
         return new Iterator<>() {
 
