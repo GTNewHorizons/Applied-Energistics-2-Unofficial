@@ -141,6 +141,8 @@ public class GuiInterface extends GuiUpgradeable {
                 FuzzyMode.IGNORE_ALL);
         this.fuzzyMode.visible = this.bc.getInstalledUpgrades(Upgrades.FUZZY) > 0;
         this.buttonList.add(fuzzyMode);
+
+        initCustomButtons(this.guiLeft - 18, offset);
     }
 
     @Override
@@ -205,6 +207,8 @@ public class GuiInterface extends GuiUpgradeable {
     @Override
     protected void actionPerformed(final GuiButton btn) {
         super.actionPerformed(btn);
+
+        if (actionPerformedCustomButtons(btn)) return;
 
         final boolean backwards = Mouse.isButtonDown(1);
 
