@@ -639,6 +639,8 @@ public final class Registration {
         Upgrades.REDSTONE.registerItem(parts.importBus(), 1);
         Upgrades.CAPACITY.registerItem(parts.importBus(), 2);
         Upgrades.SPEED.registerItem(parts.importBus(), 4);
+        Upgrades.SUPERSPEED.registerItem(parts.importBus(), 4);
+        Upgrades.SUPERLUMINALSPEED.registerItem(parts.importBus(), 4);
         Upgrades.ORE_FILTER.registerItem(parts.importBus(), 1);
 
         // Export Bus
@@ -646,6 +648,8 @@ public final class Registration {
         Upgrades.REDSTONE.registerItem(parts.exportBus(), 1);
         Upgrades.CAPACITY.registerItem(parts.exportBus(), 2);
         Upgrades.SPEED.registerItem(parts.exportBus(), 4);
+        Upgrades.SUPERSPEED.registerItem(parts.exportBus(), 4);
+        Upgrades.SUPERLUMINALSPEED.registerItem(parts.exportBus(), 4);
         Upgrades.CRAFTING.registerItem(parts.exportBus(), 1);
         Upgrades.ORE_FILTER.registerItem(parts.exportBus(), 1);
 

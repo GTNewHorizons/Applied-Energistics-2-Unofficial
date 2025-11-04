@@ -84,13 +84,29 @@ public class PartImportBus extends PartBaseImportBus<IAEItemStack> implements II
 
     @Override
     public int calculateAmountToSend() {
-        return switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
+        int toSend = switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
+            default -> 1;
             case 1 -> 8;
             case 2 -> 32;
             case 3 -> 64;
             case 4 -> 96;
-            default -> 1;
         };
+
+        switch (this.getInstalledUpgrades(Upgrades.SUPERSPEED)) {
+            case 1 -> toSend += 16;
+            case 2 -> toSend += 16 * 8;
+            case 3 -> toSend += 16 * 8 * 8;
+            case 4 -> toSend += 16 * 8 * 8 * 8;
+        }
+
+        switch (this.getInstalledUpgrades(Upgrades.SUPERLUMINALSPEED)) {
+            case 1 -> toSend += 131_072;
+            case 2 -> toSend += 131_072 * 8;
+            case 3 -> toSend += 131_072 * 8 * 8;
+            case 4 -> toSend += 131_072 * 8 * 8 * 8;
+        }
+
+        return toSend;
     }
 
     @Override
@@ -191,5 +207,10 @@ public class PartImportBus extends PartBaseImportBus<IAEItemStack> implements II
             return true;
         }
         return false;
+    }
+
+    @Override
+    protected int getAdaptorFlags() {
+        return InventoryAdaptor.ALLOW_ITEMS | InventoryAdaptor.FOR_EXTRACTS;
     }
 }

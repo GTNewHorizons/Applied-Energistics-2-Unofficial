@@ -100,6 +100,10 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         }
     }
 
+    protected int getAdaptorFlags() {
+        return InventoryAdaptor.DEFAULT & ~InventoryAdaptor.ALLOW_FLUIDS;
+    }
+
     protected InventoryAdaptor getHandler() {
         final TileEntity self = this.getHost().getTile();
         final TileEntity target = this.getTileEntity(
@@ -115,7 +119,8 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         }
 
         this.adaptorHash = newAdaptorHash;
-        this.adaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite());
+        // noinspection MagicConstant
+        this.adaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite(), getAdaptorFlags());
 
         return this.adaptor;
     }
