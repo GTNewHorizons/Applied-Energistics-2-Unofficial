@@ -40,6 +40,7 @@ import appeng.me.storage.ItemWatcher;
 import appeng.util.IterationCounter;
 import appeng.util.item.LazyItemList;
 import appeng.util.item.NetworkItemList;
+import appeng.util.item.PrioritizedNetworkItemList;
 
 public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 
@@ -106,6 +107,11 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Override
     public IItemList<T> getAvailableItems(final IItemList out, int iteration) {
         return this.getHandler().getAvailableItems(out, iteration);
+    }
+
+    @Override
+    public PrioritizedNetworkItemList<T> getAvailableItemsWithPriority(int iteration) {
+        return this.getHandler().getAvailableItemsWithPriority(iteration);
     }
 
     @Override
