@@ -14,8 +14,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.NavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.NavigableSet;
+import java.util.concurrent.ConcurrentSkipListSet;
+
+import javax.annotation.Nullable;
 
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -26,7 +28,16 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public final class ItemList implements IItemList<IAEItemStack> {
 
-    private final NavigableMap<IAEItemStack, IAEItemStack> records = new ConcurrentSkipListMap<>();
+    public ItemList() {
+        this(false);
+    }
+
+    public ItemList(boolean sorted) {
+        if (sorted) initNavigableSet();
+    }
+
+    @Nullable
+    private NavigableSet<IAEItemStack> records = null;
     private final ObjectOpenHashSet<IAEItemStack> setRecords = new ObjectOpenHashSet<>();
 
     @Override
@@ -177,27 +188,63 @@ public final class ItemList implements IItemList<IAEItemStack> {
 
     @Override
     public Iterator<IAEItemStack> iterator() {
-        return new MeaningfulItemIterator<>(new Iterator<>() {
+        Iterator<IAEItemStack> iterator;
 
-            private final Iterator<IAEItemStack> i = ItemList.this.records.values().iterator();
-            private IAEItemStack next = null;
+        if (ItemList.this.records == null) {
+            iterator = new Iterator<>() {
 
-            @Override
-            public boolean hasNext() {
-                return i.hasNext();
-            }
+                private final IAEItemStack[] array = ItemList.this.setRecords
+                        .toArray(new IAEItemStack[ItemList.this.setRecords.size()]);
+                // fastutil Hash Set throws NPE when nested iterator removes an entry
+                // make a copy to prevent it
+                private int index = 0;
 
-            @Override
-            public IAEItemStack next() {
-                return (next = i.next());
-            }
+                @Override
+                public boolean hasNext() {
+                    return index < array.length;
+                }
 
-            @Override
-            public void remove() {
-                i.remove();
-                ItemList.this.setRecords.remove(next);
-            }
-        });
+                @Override
+                public IAEItemStack next() {
+                    return array[index++];
+                }
+
+                @Override
+                public void remove() {
+                    ItemList.this.setRecords.remove(array[index - 1]);
+                    if (ItemList.this.records != null) {
+                        // records should be null here, remove just in case it's initialized during the iteration
+                        ItemList.this.records.remove(array[index - 1]);
+                    }
+                }
+            };
+        } else {
+
+            iterator = new Iterator<>() {
+
+                private final Iterator<IAEItemStack> i = ItemList.this.records.iterator();
+                private IAEItemStack next = null;
+
+                @Override
+                public boolean hasNext() {
+                    return i.hasNext();
+                }
+
+                @Override
+                public IAEItemStack next() {
+                    return (next = i.next());
+                }
+
+                @Override
+                public void remove() {
+                    i.remove();
+                    ItemList.this.setRecords.remove(next);
+                }
+            };
+
+        }
+
+        return new MeaningfulItemIterator<>(iterator);
     }
 
     @Override
@@ -209,24 +256,45 @@ public final class ItemList implements IItemList<IAEItemStack> {
 
     public void clear() {
         this.setRecords.clear();
-        this.records.clear();
+        if (this.records != null) this.records.clear();
     }
 
     private void putItemRecord(final IAEItemStack itemStack) {
         this.setRecords.add(itemStack);
-        this.records.put(itemStack, itemStack);
+        if (this.records != null) this.records.add(itemStack);
     }
 
     private Collection<IAEItemStack> findFuzzyDamage(final AEItemStack filter, final FuzzyMode fuzzy,
             final boolean ignoreMeta) {
         final IAEItemStack low = filter.getLow(fuzzy, ignoreMeta);
         final IAEItemStack high = filter.getHigh(fuzzy, ignoreMeta);
+        if (this.records == null) {
+            initNavigableSet();
+        }
+        return this.records.subSet(low, true, high, true).descendingSet();
+    }
 
-        return this.records.subMap(low, true, high, true).descendingMap().values();
+    private void initNavigableSet() {
+        records = new ConcurrentSkipListSet();
+        records.addAll(setRecords);
     }
 
     @Override
     public byte getStackType() {
         return LIST_ITEM;
     }
+
+    @Override
+    public boolean isSorted() {
+        return this.records != null;
+    }
+
+    @Override
+    public ItemList toSorted() {
+        if (this.records == null) {
+            initNavigableSet();
+        }
+        return this;
+    }
+
 }
