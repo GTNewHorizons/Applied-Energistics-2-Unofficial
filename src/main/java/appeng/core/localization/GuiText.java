@@ -274,7 +274,11 @@ public enum GuiText implements Localization {
     FluidsPerByte,
     BytesPerType,
 
-    CellView;
+    CellView,
+    EncodedPattern,
+
+    Inputs,
+    Outputs;
 
     private final String root;
 
