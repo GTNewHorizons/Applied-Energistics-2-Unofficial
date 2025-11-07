@@ -291,6 +291,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     @Override
     public PartP2PTunnel<?> applyMemoryCard(EntityPlayer player, IMemoryCard memoryCard, ItemStack is) {
         PartP2PTunnel<?> newTunnel = super.applyMemoryCard(player, memoryCard, is);
+        if (Platform.isClient()) return newTunnel;
         NBTTagCompound data = memoryCard.getData(is);
         if (newTunnel instanceof PartP2PInterface p2PInterface) {
             p2PInterface.duality.getConfigManager().readFromNBT(data);
@@ -376,6 +377,12 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
                 IInventory newStorage = newDuality.getStorage();
                 for (int i = 0; i < storage.getSizeInventory(); ++i) {
                     newStorage.setInventorySlotContents(i, storage.getStackInSlot(i));
+                }
+
+                IInventory config = fromInterface.duality.getInventoryByName("config");
+                IInventory newConfig = newDuality.getInventoryByName("config");
+                for(int i = 0; i < config.getSizeInventory(); ++i) {
+                    newConfig.setInventorySlotContents(i, config.getStackInSlot(i));
                 }
             }
 
