@@ -10,6 +10,8 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.Platform.stackConvert;
+
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -38,6 +40,7 @@ import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
@@ -719,32 +722,30 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         this.remainingOperations.setRemainingOperations(remainingOperations);
     }
 
-    public void postUpdate(final List<IAEItemStack> list, final byte ref) {
-        switch (ref) {
-            case 0 -> {
-                for (final IAEItemStack l : list) {
-                    this.handleInput(this.storage, l);
+    public void postUpdate(final List<IAEStack<?>> list, final byte ref) {
+        for (final IAEStack<?> l : list) {
+            IAEItemStack stack = stackConvert(l);
+            switch (ref) {
+                case 0 -> {
+                    this.handleInput(this.storage, stack);
                 }
-            }
-            case 1 -> {
-                for (final IAEItemStack l : list) {
-                    this.handleInput(this.active, l);
+                case 1 -> {
+                    this.handleInput(this.active, stack);
                 }
-            }
-            case 2 -> {
-                for (final IAEItemStack l : list) {
-                    this.handleInput(this.pending, l);
+                case 2 -> {
+                    this.handleInput(this.pending, stack);
                 }
             }
         }
 
-        for (final IAEItemStack l : list) {
-            final long amt = this.getTotal(l);
+        for (final IAEStack<?> l : list) {
+            IAEItemStack stack = stackConvert(l);
+            final long amt = this.getTotal(stack);
 
             if (amt <= 0) {
-                this.deleteVisualStack(l);
+                this.deleteVisualStack(stack);
             } else {
-                final IAEItemStack is = this.findVisualStack(l);
+                final IAEItemStack is = this.findVisualStack(stack);
                 is.setStackSize(amt);
             }
         }

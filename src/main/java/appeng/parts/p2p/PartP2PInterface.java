@@ -46,6 +46,7 @@ import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
@@ -63,7 +64,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 
 public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         implements IGridTickable, IStorageMonitorable, IInventoryDestination, IInterfaceHost, ISidedInventory,
-        IAEAppEngInventory, ITileStorageMonitorable, IPriorityHost {
+        IAEAppEngInventory, ITileStorageMonitorable, IPriorityHost, IPrimaryGuiIconProvider {
 
     boolean needUpdateOnNetworkBooted = false;
     boolean lastPowerStart = false;
@@ -73,7 +74,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         super(is);
     }
 
-    private final DualityInterface duality = new DualityInterface(this.getProxy(), this) {
+    protected final DualityInterface duality = new DualityInterface(this.getProxy(), this) {
 
         @Override
         public void updateCraftingList() {
@@ -644,5 +645,10 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     @Override
     public ItemStack getSelfRep() {
         return this.getItemStack();
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().parts().p2PTunnelMEInterface().maybeStack(1).orNull();
     }
 }

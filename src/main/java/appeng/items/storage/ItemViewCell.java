@@ -25,16 +25,19 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellWorkbenchItem;
+import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.CellConfig;
+import appeng.items.contents.CellConfigLegacy;
 import appeng.items.contents.CellUpgrades;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.Platform;
-import appeng.util.item.AEItemStack;
 import appeng.util.prioitylist.FuzzyPriorityList;
 import appeng.util.prioitylist.IPartitionList;
 import appeng.util.prioitylist.MergedPriorityList;
@@ -43,6 +46,7 @@ import appeng.util.prioitylist.PrecisePriorityList;
 
 public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
 
+    // TODO idk how deal with this
     public ItemViewCell() {
         this.setFeature(EnumSet.of(AEFeature.Core));
         this.setMaxStackSize(1);
@@ -61,7 +65,7 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
             if ((currentViewCell.getItem() instanceof ItemViewCell vc)) {
                 if (!vc.getViewMode(currentViewCell)) continue;
                 final IInventory upgrades = vc.getUpgradesInventory(currentViewCell);
-                final IInventory config = vc.getConfigInventory(currentViewCell);
+                final IAEStackInventory config = vc.getConfigAEInventory(currentViewCell);
                 final FuzzyMode fzMode = vc.getFuzzyMode(currentViewCell);
                 final String filter = vc.getOreFilter(currentViewCell);
 
@@ -86,20 +90,20 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
                 if (hasOreFilter && !filter.isEmpty()) {
                     myMergedList.addNewList(new OreFilteredList(filter), !hasInverter);
                 } else {
-                    final IItemList<IAEItemStack> priorityList = AEApi.instance().storage().createItemList();
+                    final IItemList priorityList = AEApi.instance().storage().createAEStackList();
 
                     for (int x = 0; x < config.getSizeInventory(); x++) {
-                        final ItemStack is = config.getStackInSlot(x);
-                        if (is != null) {
-                            priorityList.add(AEItemStack.create(is));
+                        final IAEStack<?> aes = config.getAEStackInSlot(x);
+                        if (aes != null) {
+                            priorityList.add(aes);
                         }
                     }
 
                     if (!priorityList.isEmpty()) {
                         if (hasFuzzy) {
-                            myMergedList.addNewList(new FuzzyPriorityList<>(priorityList, fzMode), !hasInverter);
+                            myMergedList.addNewList(new FuzzyPriorityList(priorityList, fzMode), !hasInverter);
                         } else {
-                            myMergedList.addNewList(new PrecisePriorityList<>(priorityList), !hasInverter);
+                            myMergedList.addNewList(new PrecisePriorityList(priorityList), !hasInverter);
                         }
                     }
                 }
@@ -130,6 +134,11 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
 
     @Override
     public IInventory getConfigInventory(final ItemStack is) {
+        return new CellConfigLegacy(new CellConfig(is), StorageChannel.ITEMS);
+    }
+
+    @Override
+    public IAEStackInventory getConfigAEInventory(ItemStack is) {
         return new CellConfig(is);
     }
 
@@ -177,5 +186,10 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
 
         String filter = getOreFilter(stack);
         if (!filter.isEmpty()) lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);
+    }
+
+    @Override
+    public StorageChannel getStorageChannel() {
+        return StorageChannel.ITEMS;
     }
 }
