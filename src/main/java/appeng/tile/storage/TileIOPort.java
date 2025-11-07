@@ -10,6 +10,7 @@
 
 package appeng.tile.storage;
 
+import java.util.Iterator;
 import java.util.List;
 
 import net.minecraft.block.Block;
@@ -452,11 +453,12 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
 
     private long transferContents(final IEnergySource energy, final IMEInventory src, final IMEInventory destination,
             long itemsToMove, final StorageChannel chan) {
-        final IItemList<? extends IAEStack> myList;
+        final Iterator<? extends IAEStack> it;
         if (src instanceof IMEMonitor) {
-            myList = ((IMEMonitor) src).getStorageList();
+            it = ((IMEMonitor) src).getAvailableItemsWithPriority(IterationCounter.fetchNewId()).getItems(true)
+                    .distinct().iterator();
         } else {
-            myList = src.getAvailableItems(src.getChannel().createList(), IterationCounter.fetchNewId());
+            it = src.getAvailableItems(src.getChannel().createList(), IterationCounter.fetchNewId()).iterator();
         }
 
         boolean didStuff;
@@ -464,23 +466,24 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         do {
             didStuff = false;
 
-            for (final IAEStack s : myList) {
-                final long totalStackSize = s.getStackSize();
-                if (totalStackSize > 0) {
-                    final IAEStack stack = destination.injectItems(s, Actionable.SIMULATE, this.mySrc);
+            while (it.hasNext()) {
+                final IAEStack s = it.next();
+                if (s.getStackSize() > 0) {
+                    final IAEStack extractStack = s.copy();
+                    extractStack.setStackSize(itemsToMove);
+                    final IAEStack stack = destination.injectItems(extractStack, Actionable.SIMULATE, this.mySrc);
 
                     long possible = 0;
                     if (stack == null) {
-                        possible = totalStackSize;
+                        possible = itemsToMove;
                     } else {
-                        possible = totalStackSize - stack.getStackSize();
+                        possible = itemsToMove - stack.getStackSize();
                     }
 
                     if (possible > 0) {
-                        possible = Math.min(possible, itemsToMove);
-                        s.setStackSize(possible);
+                        extractStack.setStackSize(possible);
 
-                        final IAEStack extracted = src.extractItems(s, Actionable.MODULATE, this.mySrc);
+                        final IAEStack extracted = src.extractItems(extractStack, Actionable.MODULATE, this.mySrc);
                         if (extracted != null) {
                             possible = extracted.getStackSize();
                             final IAEStack failed = Platform
