@@ -131,8 +131,9 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
             final IMEInventory inv = AEApi.instance().registries().cell()
                     .getCellInventory(item, null, StorageChannel.ITEMS);
             if (inv != null) {
-                final IItemList itemList = inv
-                        .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
+                final IItemList itemList = inv.getAvailableItems(
+                        AEApi.instance().storage().createSortedItemList(),
+                        IterationCounter.fetchNewId());
                 IAEStack aeAmmo = itemList.getFirstItem();
                 if (aeAmmo instanceof IAEItemStack) {
                     shots = Math.min(shots, (int) aeAmmo.getStackSize());

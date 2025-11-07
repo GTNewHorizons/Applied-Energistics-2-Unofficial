@@ -22,6 +22,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.implementations.GuiCraftConfirm;
@@ -34,6 +35,7 @@ import appeng.client.gui.implementations.GuiPatternTerm;
 import appeng.client.gui.implementations.GuiPatternTermEx;
 import appeng.client.gui.implementations.GuiSkyChest;
 import appeng.core.AEConfig;
+import appeng.core.AppEng;
 import appeng.core.features.AEFeature;
 import appeng.helpers.Reflected;
 import appeng.integration.IIntegrationModule;
@@ -50,6 +52,7 @@ import appeng.integration.modules.NEIHelpers.NEIGrinderRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIGuiHandler;
 import appeng.integration.modules.NEIHelpers.NEIInscriberRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIOreDictionaryFilter;
+import appeng.integration.modules.NEIHelpers.NEIPatternViewHandler;
 import appeng.integration.modules.NEIHelpers.NEISearchField;
 import appeng.integration.modules.NEIHelpers.NEIWorldCraftingHandler;
 import appeng.integration.modules.NEIHelpers.TerminalCraftingSlotFinder;
@@ -65,6 +68,7 @@ import codechicken.nei.guihook.IContainerObjectHandler;
 import codechicken.nei.guihook.IContainerTooltipHandler;
 import codechicken.nei.recipe.Recipe;
 import codechicken.nei.recipe.Recipe.RecipeId;
+import cpw.mods.fml.common.event.FMLInterModComms;
 
 public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, IContainerObjectHandler {
 
@@ -111,6 +115,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         this.registerRecipeHandler(new NEIWorldCraftingHandler());
 
         this.registerUsageHandler.invoke(this.apiClass, new NEICellViewHandler());
+        this.registerUsageHandler.invoke(this.apiClass, new NEIPatternViewHandler());
 
         if (AEConfig.instance.isFeatureEnabled(AEFeature.GrindStone)) {
             this.registerRecipeHandler(new NEIGrinderRecipeHandler());
@@ -155,6 +160,10 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         final Constructor<NEICraftingHandler> defaultConstructor = defaultHandler.getConstructor(int.class, int.class);
         registrar.invoke(this.apiClass, GuiCraftingTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
         registrar.invoke(this.apiClass, GuiPatternTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
+
+        sendHandler(
+                "appeng.integration.modules.NEIHelpers.NEIPatternViewHandler",
+                "appliedenergistics2:item.ItemEncodedUltimatePattern");
     }
 
     public void registerRecipeHandler(final Object o)
@@ -268,5 +277,18 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         } else {
             LayoutManager.bookmarkPanel.addGroup(missing, BookmarkViewMode.DEFAULT, false);
         }
+    }
+
+    private static void sendHandler(String name, String itemStack) {
+        NBTTagCompound aNBT = new NBTTagCompound();
+        aNBT.setString("handler", name);
+        aNBT.setString("modName", AppEng.MOD_NAME);
+        aNBT.setString("modId", AppEng.MOD_ID);
+        aNBT.setBoolean("modRequired", true);
+        aNBT.setString("itemName", itemStack);
+        aNBT.setInteger("yShift", 0);
+        aNBT.setBoolean("showFavoritesButton", false);
+        aNBT.setBoolean("showOverlayButton", false);
+        FMLInterModComms.sendMessage("NotEnoughItems", "registerHandlerInfo", aNBT);
     }
 }

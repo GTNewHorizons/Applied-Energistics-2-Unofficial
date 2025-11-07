@@ -13,6 +13,9 @@ package appeng.tile.misc;
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
@@ -22,6 +25,9 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSource;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -46,6 +52,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
+import appeng.capabilities.MEItemIO;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPrimaryGuiIconProvider;
@@ -337,5 +344,22 @@ public class TileInterface extends AENetworkInvTile
     @Override
     public ItemStack getPrimaryGuiIcon() {
         return AEApi.instance().definitions().blocks().iface().maybeStack(1).orNull();
+    }
+
+    private MEItemIO getItemIO() {
+        try {
+            return new MEItemIO(this);
+        } catch (GridAccessException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public <T> @Nullable T getCapability(@Nonnull Class<T> capability, @Nonnull ForgeDirection side) {
+        if (capability == ItemSource.class || capability == ItemSink.class || capability == ItemIO.class) {
+            return capability.cast(getItemIO());
+        }
+
+        return super.getCapability(capability, side);
     }
 }

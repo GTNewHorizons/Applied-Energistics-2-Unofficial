@@ -192,4 +192,9 @@ public class PartImportBus extends PartBaseImportBus<IAEItemStack> implements II
         }
         return false;
     }
+
+    @Override
+    protected int getAdaptorFlags() {
+        return InventoryAdaptor.ALLOW_ITEMS | InventoryAdaptor.FOR_EXTRACTS;
+    }
 }

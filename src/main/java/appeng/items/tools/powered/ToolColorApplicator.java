@@ -251,8 +251,9 @@ public class ToolColorApplicator extends AEBasePoweredItem
         final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
                 .getCellInventory(is, null, StorageChannel.ITEMS);
         if (inv != null) {
-            final IItemList<IAEItemStack> itemList = inv
-                    .getAvailableItems(AEApi.instance().storage().createItemList(), IterationCounter.fetchNewId());
+            final IItemList<IAEItemStack> itemList = inv.getAvailableItems(
+                    AEApi.instance().storage().createSortedItemList(),
+                    IterationCounter.fetchNewId());
             if (anchor == null) {
                 final IAEItemStack firstItem = itemList.getFirstItem();
                 if (firstItem != null) {

@@ -97,4 +97,9 @@ public class PartExportBus extends PartBaseExportBus<IAEItemStack> implements IC
             }
         }
     }
+
+    @Override
+    protected int getAdaptorFlags() {
+        return InventoryAdaptor.ALLOW_ITEMS | InventoryAdaptor.FOR_INSERTS;
+    }
 }
