@@ -381,7 +381,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
 
                 IInventory config = fromInterface.duality.getInventoryByName("config");
                 IInventory newConfig = newDuality.getInventoryByName("config");
-                for(int i = 0; i < config.getSizeInventory(); ++i) {
+                for (int i = 0; i < config.getSizeInventory(); ++i) {
                     newConfig.setInventorySlotContents(i, config.getStackInSlot(i));
                 }
             }
