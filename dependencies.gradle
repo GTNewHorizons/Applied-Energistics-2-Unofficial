@@ -27,7 +27,7 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:EnderIO:2.10.3:dev') { transitive = false }
     compileOnly(rfg.deobf('curse.maven:mekanism-268560:2475797')) // https://www.curseforge.com/minecraft/mc-mods/mekanism/files/2475797
     compileOnly(rfg.deobf('maven.modrinth:immibis-microblocks:59.1.2')) // https://modrinth.com/mod/immibis-microblocks/version/59.1.2
-    compileOnly('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.5.15-gtnh:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.5.17-gtnh:dev') { transitive = false }
     compileOnly('com.github.GTNewHorizons:ae2stuff:0.10.2-GTNH:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
     }
@@ -59,7 +59,7 @@ dependencies {
         exclude module: "Baubles"
     }
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:ThaumicEnergistics:1.7.14-GTNH:dev') { transitive = false }
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.5.15-gtnh:dev') { transitive = false }
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.5.17-gtnh:dev') { transitive = false }
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:NotEnoughEnergistics:1.7.14:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "waila"
