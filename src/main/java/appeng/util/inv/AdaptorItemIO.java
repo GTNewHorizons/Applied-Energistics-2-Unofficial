@@ -18,11 +18,11 @@ import appeng.api.config.FuzzyMode;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 
-public class AdapterItemIO extends InventoryAdaptor {
+public class AdaptorItemIO extends InventoryAdaptor {
 
     private final ItemIO itemIO;
 
-    public AdapterItemIO(ItemIO itemIO) {
+    public AdaptorItemIO(ItemIO itemIO) {
         this.itemIO = itemIO;
     }
 

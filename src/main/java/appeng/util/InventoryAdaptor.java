@@ -44,7 +44,7 @@ import appeng.parts.p2p.PartP2PLiquids;
 import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
 import appeng.tile.storage.TileChest;
-import appeng.util.inv.AdapterItemIO;
+import appeng.util.inv.AdaptorItemIO;
 import appeng.util.inv.AdaptorConduitBandle;
 import appeng.util.inv.AdaptorDualityInterface;
 import appeng.util.inv.AdaptorFluidHandler;
@@ -163,7 +163,7 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
             ItemIO itemIO = ItemUtil.getItemIO(te, d, ioFlags);
 
             if (itemIO != null) {
-                return new AdapterItemIO(itemIO);
+                return new AdaptorItemIO(itemIO);
             }
         }
 
