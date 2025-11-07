@@ -178,7 +178,6 @@ public class AdapterItemIO extends InventoryAdaptor {
                 ImmutableItemStack stack = iter.next();
 
                 slot.setItemStack(stack == null ? null : stack.toStack());
-                slot.setAEItemStack(null);
                 slot.setExtractable(true);
                 slot.setSlot(i++);
 
