@@ -24,6 +24,7 @@ import net.minecraftforge.fluids.IFluidHandler;
 
 import org.intellij.lang.annotations.MagicConstant;
 
+import com.gtnewhorizon.gtnhlib.capability.CapabilityProvider;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
 import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
@@ -92,6 +93,12 @@ public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
         if (tt != null && tt.isTransvectorInterface(te)) {
             te = tt.getTile(te);
+        }
+
+        if (te instanceof CapabilityProvider provider) {
+            InventoryAdaptor adaptor = provider.getCapability(InventoryAdaptor.class, d);
+
+            if (adaptor != null) return adaptor;
         }
 
         // spotless:off
