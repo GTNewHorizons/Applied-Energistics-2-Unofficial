@@ -13,6 +13,9 @@ package appeng.parts.misc;
 import java.util.EnumSet;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -26,6 +29,9 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSource;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
@@ -49,12 +55,14 @@ import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.IConfigManager;
+import appeng.capabilities.MEItemIO;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
+import appeng.me.GridAccessException;
 import appeng.parts.PartBasicState;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
@@ -401,5 +409,22 @@ public class PartInterface extends PartBasicState implements IGridTickable, ISto
     @Override
     public ItemStack getSelfRep() {
         return this.getItemStack();
+    }
+
+    private MEItemIO getItemIO() {
+        try {
+            return new MEItemIO(this);
+        } catch (GridAccessException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public <T> @Nullable T getCapability(@Nonnull Class<T> capability, @Nonnull ForgeDirection side) {
+        if (capability == ItemSource.class || capability == ItemSink.class || capability == ItemIO.class) {
+            return capability.cast(getItemIO());
+        }
+
+        return super.getCapability(capability, side);
     }
 }

@@ -385,4 +385,9 @@ public class PartExportBus extends PartSharedItemBus implements ICraftingRequest
             this.nextSlot = (this.nextSlot + x) % this.availableSlots();
         }
     }
+
+    @Override
+    protected int getAdaptorFlags() {
+        return InventoryAdaptor.ALLOW_ITEMS | InventoryAdaptor.FOR_INSERTS;
+    }
 }

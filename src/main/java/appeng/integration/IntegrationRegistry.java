@@ -89,4 +89,15 @@ public enum IntegrationRegistry {
 
         throw new IllegalStateException("integration with " + name.name() + " is disabled.");
     }
+
+    public <T> T getInstanceIfEnabled(final IntegrationType name) {
+        for (final IntegrationNode node : this.modules) {
+            if (node.getShortName() == name) {
+                // noinspection unchecked
+                return node.isActive() ? (T) node.getInstance() : null;
+            }
+        }
+
+        return null;
+    }
 }

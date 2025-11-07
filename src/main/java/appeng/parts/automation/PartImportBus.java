@@ -331,4 +331,9 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
     public RedstoneMode getRSMode() {
         return (RedstoneMode) this.getConfigManager().getSetting(Settings.REDSTONE_CONTROLLED);
     }
+
+    @Override
+    protected int getAdaptorFlags() {
+        return InventoryAdaptor.ALLOW_ITEMS | InventoryAdaptor.FOR_EXTRACTS;
+    }
 }
