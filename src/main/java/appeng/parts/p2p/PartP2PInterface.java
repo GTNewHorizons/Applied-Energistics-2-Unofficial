@@ -215,6 +215,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
                     Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
                 }
                 duality.setStorage(p2p.duality.getStorage());
+                duality.setSlotInv(p2p.duality.getSlotInv());
                 duality.sharedInventory = true;
             } else {
                 if (duality.sharedInventory) {

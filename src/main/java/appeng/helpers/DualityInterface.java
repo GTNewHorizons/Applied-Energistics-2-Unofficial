@@ -568,6 +568,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.config.getSizeInventory();
     }
 
+    public WrapperInvSlot getSlotInv() {
+        return slotInv;
+    }
+
     public WrapperInvSlot setSlotInv(final WrapperInvSlot slotInventory) {
         this.slotInv = slotInventory;
         return this.slotInv;
