@@ -436,6 +436,11 @@ public class ClientHelper extends ServerHelper {
     }
 
     @Override
+    public int getKeybind(ActionKey key) {
+        return this.bindings.get(key).getKeyCode();
+    }
+
+    @Override
     public boolean isActionKey(ActionKey key, int pressedKeyCode) {
         return isActiveAndMatches(this.bindings.get(key), pressedKeyCode);
     }

@@ -20,10 +20,14 @@ import appeng.api.storage.ICellRegistry;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
+import appeng.core.features.registries.entries.BasicCellHandler;
 
 public class CellRegistry implements ICellRegistry {
 
     private final List<ICellHandler> handlers;
+
+    // BasicCellHandler is valid for all cells that implement IStorageCell, so it should be checked last.
+    private final ICellHandler basicCellHandler = new BasicCellHandler();
 
     public CellRegistry() {
         this.handlers = new ArrayList<>();
@@ -46,7 +50,7 @@ public class CellRegistry implements ICellRegistry {
                 return true;
             }
         }
-        return false;
+        return basicCellHandler.isCell(is);
     }
 
     @Override
@@ -59,7 +63,7 @@ public class CellRegistry implements ICellRegistry {
                 return ch;
             }
         }
-        return null;
+        return basicCellHandler.isCell(is) ? basicCellHandler : null;
     }
 
     @Override
@@ -73,6 +77,6 @@ public class CellRegistry implements ICellRegistry {
                 return ch.getCellInventory(is, container, chan);
             }
         }
-        return null;
+        return basicCellHandler.isCell(is) ? basicCellHandler.getCellInventory(is, container, chan) : null;
     }
 }

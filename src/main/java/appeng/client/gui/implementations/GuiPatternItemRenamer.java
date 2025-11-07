@@ -1,47 +1,32 @@
 package appeng.client.gui.implementations;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 
 import appeng.api.storage.ITerminalHost;
-import appeng.client.gui.AEBaseGui;
+import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.client.gui.GuiSub;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.container.AEBaseContainer;
-import appeng.container.implementations.ContainerPatternItemRenamer;
+import appeng.container.implementations.ContainerPatternValueAmount;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketPatternItemRenamer;
-import appeng.parts.reporting.PartPatternTerminal;
-import appeng.parts.reporting.PartPatternTerminalEx;
+import appeng.core.sync.packets.PacketPatternValueSet;
+import appeng.util.item.AEItemStack;
 
-public class GuiPatternItemRenamer extends AEBaseGui implements IDropToFillTextField {
+public class GuiPatternItemRenamer extends GuiSub implements IDropToFillTextField {
 
+    private final ContainerPatternValueAmount container;
     private final MEGuiTextField textField;
-    private final String oldName;
-    private final int valueIndex;
-    private GuiBridge originalGui;
 
     public GuiPatternItemRenamer(InventoryPlayer ip, ITerminalHost p) {
-        super(new ContainerPatternItemRenamer(ip, p));
-        GuiContainer gui = (GuiContainer) Minecraft.getMinecraft().currentScreen;
-        if (gui != null && gui.theSlot != null && gui.theSlot.getHasStack()) {
-            Slot slot = gui.theSlot;
-            oldName = slot.getStack().getDisplayName();
-            valueIndex = slot.slotNumber;
-        } else {
-            valueIndex = -1;
-            oldName = "";
-        }
+        super(new ContainerPatternValueAmount(ip, p));
+        this.container = (ContainerPatternValueAmount) this.inventorySlots;
         xSize = 256;
-
         textField = new MEGuiTextField(231, 12);
     }
 
@@ -52,10 +37,12 @@ public class GuiPatternItemRenamer extends AEBaseGui implements IDropToFillTextF
         textField.x = guiLeft + 12;
         textField.y = guiTop + 35;
         textField.setFocused(true);
-        textField.setText(oldName);
+    }
+
+    public void update() {
+        textField.setText(container.getAEStack().getDisplayName());
         textField.setCursorPositionEnd();
         textField.setSelectionPos(0);
-        setOriginGUI(((AEBaseContainer) inventorySlots).getTarget());
     }
 
     @Override
@@ -76,22 +63,22 @@ public class GuiPatternItemRenamer extends AEBaseGui implements IDropToFillTextF
         super.mouseClicked(xCoord, yCoord, btn);
     }
 
-    protected void setOriginGUI(Object target) {
-        if (target instanceof PartPatternTerminal) {
-            originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        } else if (target instanceof PartPatternTerminalEx) {
-            originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-        }
-    }
-
     @Override
     protected void keyTyped(final char character, final int key) {
         if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
-            NetworkHandler.instance
-                    .sendToServer(new PacketPatternItemRenamer(originalGui.ordinal(), textField.getText(), valueIndex));
+            NetworkHandler.instance.sendToServer(
+                    new PacketPatternValueSet(
+                            getNewNameStack(),
+                            this.container.getInvName(),
+                            this.container.getSlotIndex()));
         } else if (!textField.textboxKeyTyped(character, key)) {
             super.keyTyped(character, key);
         }
+    }
+
+    private IAEStack<?> getNewNameStack() {
+        return AEItemStack.create(
+                ((IAEItemStack) this.container.getAEStack()).getItemStack().setStackDisplayName(textField.getText()));
     }
 
     public boolean isOverTextField(final int mousex, final int mousey) {
@@ -100,13 +87,5 @@ public class GuiPatternItemRenamer extends AEBaseGui implements IDropToFillTextF
 
     public void setTextFieldValue(final String displayName, final int mousex, final int mousey, final ItemStack stack) {
         textField.setText(displayName);
-    }
-
-    public int getValueIndex() {
-        return valueIndex;
-    }
-
-    public String getText() {
-        return textField.getText();
     }
 }
