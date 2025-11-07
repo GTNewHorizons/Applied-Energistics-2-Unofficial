@@ -84,6 +84,10 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
         }
     }
 
+    protected int getAdaptorFlags() {
+        return InventoryAdaptor.DEFAULT & ~InventoryAdaptor.ALLOW_FLUIDS;
+    }
+
     protected InventoryAdaptor getHandler() {
         final TileEntity self = this.getHost().getTile();
         final TileEntity target = this.getTileEntity(
@@ -99,7 +103,8 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
         }
 
         this.adaptorHash = newAdaptorHash;
-        this.adaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite());
+        // noinspection MagicConstant
+        this.adaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite(), getAdaptorFlags());
 
         return this.adaptor;
     }
@@ -109,13 +114,29 @@ public abstract class PartSharedItemBus extends PartUpgradeable implements IGrid
     }
 
     protected int calculateItemsToSend() {
-        return switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
+        int toSend = switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
             default -> 1;
             case 1 -> 8;
             case 2 -> 32;
             case 3 -> 64;
             case 4 -> 96;
         };
+
+        switch (this.getInstalledUpgrades(Upgrades.SUPERSPEED)) {
+            case 1 -> toSend += 16;
+            case 2 -> toSend += 16 * 8;
+            case 3 -> toSend += 16 * 8 * 8;
+            case 4 -> toSend += 16 * 8 * 8 * 8;
+        }
+
+        switch (this.getInstalledUpgrades(Upgrades.SUPERLUMINALSPEED)) {
+            case 1 -> toSend += 131_072;
+            case 2 -> toSend += 131_072 * 8;
+            case 3 -> toSend += 131_072 * 8 * 8;
+            case 4 -> toSend += 131_072 * 8 * 8 * 8;
+        }
+
+        return toSend;
     }
 
     /**

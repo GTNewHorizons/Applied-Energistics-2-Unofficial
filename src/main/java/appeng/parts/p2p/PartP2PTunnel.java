@@ -46,6 +46,7 @@ import appeng.core.localization.PlayerMessages;
 import appeng.me.GridAccessException;
 import appeng.me.cache.helpers.TunnelCollection;
 import appeng.parts.PartBasicState;
+import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -261,6 +262,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         final ItemStack is = player.inventory.getCurrentItem();
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
             if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
+            if (Platform.isClient()) return true;
             PartP2PTunnel<?> tunnel = this.convertToInput(player, null);
             tunnel.saveInputToMemoryCard(player, mc, is);
             return true;
@@ -272,6 +274,8 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         if (newType != null && !this.canChangeType(newType)) {
             return null;
         }
+        if (Platform.isClient()) return this;
+
         if (this.isOutput() || this.getFrequency() == 0) {
             final ItemStack itemStack = newType == null ? this.getItemStack(PartItemStack.Wrench) : newType;
             final PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, itemStack);
@@ -291,6 +295,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         if (!this.canChangeType(newType) || freq == 0) {
             return null;
         }
+        if (Platform.isClient()) return this;
 
         final PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, newType);
         newTunnel.setOutput(true);
@@ -307,6 +312,8 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         if (this.getFrequency() == 0) {
             return this;
         }
+        if (Platform.isClient()) return this;
+
         final ItemStack itemStack = this.getItemStack(PartItemStack.Wrench);
         PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, itemStack);
         newTunnel.setOutput(false);

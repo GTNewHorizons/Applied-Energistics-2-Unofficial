@@ -22,6 +22,12 @@ import net.minecraft.tileentity.TileEntityChest;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.IFluidHandler;
 
+import org.intellij.lang.annotations.MagicConstant;
+
+import com.gtnewhorizon.gtnhlib.capability.CapabilityProvider;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
+import com.gtnewhorizon.gtnhlib.util.ItemUtil;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
 import appeng.api.parts.IPart;
@@ -42,6 +48,7 @@ import appeng.util.inv.AdaptorConduitBandle;
 import appeng.util.inv.AdaptorDualityInterface;
 import appeng.util.inv.AdaptorFluidHandler;
 import appeng.util.inv.AdaptorIInventory;
+import appeng.util.inv.AdaptorItemIO;
 import appeng.util.inv.AdaptorList;
 import appeng.util.inv.AdaptorMEChest;
 import appeng.util.inv.AdaptorP2PFluid;
@@ -55,69 +62,127 @@ import crazypants.enderio.conduit.TileConduitBundle;
 
 public abstract class InventoryAdaptor implements Iterable<ItemSlot> {
 
-    // returns an appropriate adaptor, or null
+    private static int counter = 0;
+    /// Item adaptors may be returned. Absence means item adaptors will not be returned, if possible.
+    public static final int ALLOW_ITEMS = 0b1 << counter++;
+    /// Fluid adaptors may be returned. Absence means fluid adaptors will not be returned, if possible.
+    public static final int ALLOW_FLUIDS = 0b1 << counter++;
+    /// Adaptors must be insertable, if possible. Absence means they must not be insertable, if possible.
+    public static final int FOR_INSERTS = 0b1 << counter++;
+    /// Adaptors must be extractable, if possible. Absence means they must not be extractable, if possible.
+    public static final int FOR_EXTRACTS = 0b1 << counter++;
+
+    public static final int DEFAULT = ALLOW_ITEMS | ALLOW_FLUIDS | FOR_INSERTS | FOR_EXTRACTS;
+
     public static InventoryAdaptor getAdaptor(Object te, final ForgeDirection d) {
+        return getAdaptor(te, d, DEFAULT);
+    }
+
+    // returns an appropriate adaptor, or null
+    public static InventoryAdaptor getAdaptor(Object te, final ForgeDirection d,
+            @MagicConstant(flagsFromClass = InventoryAdaptor.class) int flags) {
         if (te == null) {
             return null;
         }
 
-        final IBetterStorage bs = (IBetterStorage) (IntegrationRegistry.INSTANCE.isEnabled(
-                IntegrationType.BetterStorage) ? IntegrationRegistry.INSTANCE.getInstance(IntegrationType.BetterStorage)
-                        : null);
-        final IThaumicTinkerer tt = (IThaumicTinkerer) (IntegrationRegistry.INSTANCE
-                .isEnabled(IntegrationType.ThaumicTinkerer)
-                        ? IntegrationRegistry.INSTANCE.getInstance(IntegrationType.ThaumicTinkerer)
-                        : null);
+        boolean invs = (flags & ALLOW_ITEMS) != 0;
+        boolean tanks = (flags & ALLOW_FLUIDS) != 0;
+
+        final IBetterStorage bs = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.BetterStorage);
+        final IThaumicTinkerer tt = IntegrationRegistry.INSTANCE.getInstanceIfEnabled(IntegrationType.ThaumicTinkerer);
 
         if (tt != null && tt.isTransvectorInterface(te)) {
             te = tt.getTile(te);
         }
 
-        if (isEIOLoaded && te instanceof TileConduitBundle tcb) {
+        if (te instanceof CapabilityProvider provider) {
+            InventoryAdaptor adaptor = provider.getCapability(InventoryAdaptor.class, d);
+
+            if (adaptor != null) return adaptor;
+        }
+
+        // spotless:off
+        if (invs && isEIOLoaded && te instanceof TileConduitBundle tcb) {
             return new AdaptorConduitBandle(tcb, d);
-        } else if (te instanceof EntityPlayer) {
+        }
+
+        if (invs && te instanceof EntityPlayer) {
             return new AdaptorIInventory(new AdaptorPlayerInventory(((EntityPlayer) te).inventory, false));
-        } else if (te instanceof ArrayList) {
+        }
+
+        if (invs && te instanceof ArrayList) {
             @SuppressWarnings("unchecked")
             final ArrayList<ItemStack> list = (ArrayList<ItemStack>) te;
 
             return new AdaptorList(list);
-        } else if (bs != null && bs.isStorageCrate(te)) {
+        }
+
+        if (invs && bs != null && bs.isStorageCrate(te)) {
             return bs.getAdaptor(te, d);
-        } else if (te instanceof TileEntityChest) {
+        }
+
+        if (invs && te instanceof TileEntityChest) {
             return new AdaptorIInventory(Platform.GetChestInv(te));
-        } else if (te instanceof ISidedInventory si) {
-            if (te instanceof TileInterface) {
-                return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), (IInterfaceHost) te);
-            } else if (te instanceof TileCableBus) {
-                IPart part = ((TileCableBus) te).getPart(d);
-                if (part instanceof IInterfaceHost host) {
-                    return new AdaptorDualityInterface(new WrapperMCISidedInventory(si, d), host);
-                } else if (part instanceof PartP2PItems p2p) {
+        }
+
+        if (te instanceof ISidedInventory sided) {
+            if (invs && te instanceof TileInterface) {
+                return new AdaptorDualityInterface(new WrapperMCISidedInventory(sided, d), (IInterfaceHost) te);
+            }
+
+            if (te instanceof TileCableBus cableBus) {
+                IPart part = cableBus.getPart(d);
+                if (invs && part instanceof IInterfaceHost host) {
+                    return new AdaptorDualityInterface(new WrapperMCISidedInventory(sided, d), host);
+                }
+
+                if (invs && part instanceof PartP2PItems p2p) {
                     return new AdaptorP2PItem(p2p);
-                } else if (part instanceof PartP2PLiquids p2p) {
+                }
+
+                if (tanks && part instanceof PartP2PLiquids p2p) {
                     return new AdaptorP2PFluid(p2p, d);
                 }
-            } else if (te instanceof TileChest) {
-                return new AdaptorMEChest(new WrapperMCISidedInventory(si, d), (TileChest) te);
-            } else if (te instanceof IFluidHandler tank
-                    && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
-                        return new AdaptorFluidHandler(tank, d);
-                    }
+            }
 
-            final int[] slots = si.getAccessibleSlotsFromSide(d.ordinal());
-            if (si.getSizeInventory() > 0 && slots != null && slots.length > 0) {
-                return new AdaptorIInventory(new WrapperMCISidedInventory(si, d));
+            if (invs && te instanceof TileChest) {
+                return new AdaptorMEChest(new WrapperMCISidedInventory(sided, d), (TileChest) te);
             }
-        } else if (te instanceof IFluidHandler tank
-                && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
-                    return new AdaptorFluidHandler(tank, d);
-                } else
-            if (te instanceof IInventory i) {
-                if (i.getSizeInventory() > 0) {
-                    return new AdaptorIInventory(i);
-                }
+        }
+
+        if (tanks && te instanceof IFluidHandler tank && !((tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0)))) {
+            return new AdaptorFluidHandler(tank, d);
+        }
+
+        if (invs) {
+            int ioFlags = 0;
+
+            if ((flags & FOR_INSERTS) != 0) ioFlags |= ItemUtil.FOR_INSERTS;
+            if ((flags & FOR_EXTRACTS) != 0) ioFlags |= ItemUtil.FOR_EXTRACTS;
+
+            ItemIO itemIO = ItemUtil.getItemIO(te, d, ioFlags);
+
+            if (itemIO != null) {
+                return new AdaptorItemIO(itemIO);
             }
+        }
+
+        if (te instanceof ISidedInventory sided) {
+            final int[] slots = sided.getAccessibleSlotsFromSide(d.ordinal());
+            
+            if (invs && sided.getSizeInventory() > 0 && slots != null && slots.length > 0) {
+                return new AdaptorIInventory(new WrapperMCISidedInventory(sided, d));
+            }
+        }
+
+        if (tanks && te instanceof IFluidHandler tank && !(tank.getTankInfo(d) == null || !(tank.getTankInfo(d).length > 0))) {
+            return new AdaptorFluidHandler(tank, d);
+        }
+
+        if (invs && te instanceof IInventory i && i.getSizeInventory() > 0) {
+            return new AdaptorIInventory(i);
+        }
+        // spotless:on
 
         return null;
     }
