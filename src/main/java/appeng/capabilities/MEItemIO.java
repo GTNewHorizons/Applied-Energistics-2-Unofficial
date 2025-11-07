@@ -253,8 +253,8 @@ public class MEItemIO implements ItemIO {
                     duality.getActionSource());
 
             if (extracted != null) {
-                result.stackSize += (int) extracted.getStackSize();
-                amount -= (int) extracted.getStackSize();
+                result.stackSize += Platform.longToInt(extracted.getStackSize());
+                amount -= Platform.longToInt(extracted.getStackSize());
             }
 
             ItemStack stored = duality.getStorage().getStackInSlot(getCurrentSlot());
