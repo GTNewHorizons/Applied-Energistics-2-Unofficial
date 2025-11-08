@@ -1,10 +1,11 @@
 package appeng.parts.p2p;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class DebugState {
+
     public static int indent = 0;
 
     public static <R> R doAndLog(Supplier<R> supplier, String name) {

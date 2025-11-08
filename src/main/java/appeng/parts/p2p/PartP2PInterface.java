@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import appeng.me.cache.CraftingGridCache;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -49,8 +50,6 @@ import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPriorityHost;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
-import appeng.me.cache.CraftingGridCache;
-import appeng.parts.automation.UpgradeInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
@@ -75,56 +74,39 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         @Override
         public void updateCraftingList() {
             DebugState.doAndLog(() -> {
-            if (!isOutput()) {
-                super.updateCraftingList();
-            } else {
-                PartP2PInterface p2p = getInput();
-                if (p2p != null) {
-                    this.craftingList = p2p.duality.craftingList;
-                    // TODO do we need to post this event?
+                if (!isOutput()) {
+                    CraftingGridCache.pauseRebuilds();
+
+                    super.updateCraftingList();
+
                     try {
-                        this.gridProxy.getGrid()
-                                .postEvent(new MENetworkCraftingPatternChange(this, this.gridProxy.getNode()));
-                    } catch (final GridAccessException e) {
-                        // :P
+                        for (PartP2PInterface p2p : getOutputs()) {
+                            p2p.duality.updateCraftingList();
+                        }
+                    } catch (GridAccessException e) {
+                        // ?
                     }
+
+                    CraftingGridCache.unpauseRebuilds();
                 } else {
-                    this.craftingList = null;
+                    PartP2PInterface p2p = getInput();
+                    if (p2p != null) {
+                        this.craftingList = p2p.duality.craftingList;
+                        try {
+                            this.gridProxy.getGrid()
+                                    .postEvent(new MENetworkCraftingPatternChange(this, this.gridProxy.getNode()));
+                        } catch (final GridAccessException ignored) {}
+                    } else {
+                        if (this.craftingList != null) {
+                            this.craftingList = null;
+                            try {
+                                this.gridProxy.getGrid()
+                                        .postEvent(new MENetworkCraftingPatternChange(this, this.gridProxy.getNode()));
+                            } catch (final GridAccessException ignored) {}
+                        }
+                    }
                 }
-            }
             }, "updateCraftingList");
-        }
-
-        @Override
-        public void readConfig() {
-            System.out.println("readConfig for " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + PartP2PInterface.this.getTileEntity().xCoord + ", z=" + PartP2PInterface.this.getTileEntity().zCoord + ", freq=" + PartP2PInterface.this.getFrequency() + ", active=" + PartP2PInterface.this.proxy.isActive());
-            if (isOutput()) {
-                PartP2PInterface p2p = getInput();
-                boolean alertDevice = false;
-
-                if (p2p != null) {
-                    this.setHasConfig(p2p.duality.hasConfig());
-
-                    alertDevice = hasWorkToDo();
-
-                } else {
-                    this.setHasConfig(false);
-                }
-
-                if (alertDevice) {
-                    try {
-                        this.gridProxy.getTick().alertDevice(this.gridProxy.getNode());
-                    } catch (final GridAccessException ignored) {}
-                } else {
-                    try {
-                        this.gridProxy.getTick().sleepDevice(this.gridProxy.getNode());
-                    } catch (final GridAccessException ignored) {}
-                }
-
-                this.notifyNeighbors();
-            } else {
-                super.readConfig();
-            }
         }
 
         @Override
@@ -172,16 +154,17 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
 
     private void updateSharingInventory() {
         DebugState.doAndLog(() -> {
-        if (isOutput()) {
-            PartP2PInterface p2p = getInput();
-            if (proxy.isActive() && p2p != null) {
-                shareInventory(p2p);
+            if (isOutput()) {
+                PartP2PInterface p2p = getInput();
+                if (proxy.isActive() && p2p != null) {
+                    shareInventory(p2p);
+                } else {
+                    unshareInventory();
+                }
             } else {
                 unshareInventory();
             }
-        } else {
-            unshareInventory();
-        }}, "updateSharingInventory");
+        }, "updateSharingInventory");
     }
 
     private void unshareInventory() {
@@ -194,9 +177,19 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     }
 
     private void shareInventory(final PartP2PInterface p2p) {
-        if(!duality.sharedInventory) {
-            System.out.println("shareInventory, x="+ this.getTile().xCoord + ", z=" + this.getTile().zCoord);
+        if (!duality.sharedInventory) {
+            System.out.println("shareInventory, x=" + this.getTile().xCoord + ", z=" + this.getTile().zCoord);
 
+            System.out.println(
+                    "readConfig for " + (isOutput() ? "OUTPUT" : "INPUT")
+                            + ", x="
+                            + PartP2PInterface.this.getTileEntity().xCoord
+                            + ", z="
+                            + PartP2PInterface.this.getTileEntity().zCoord
+                            + ", freq="
+                            + PartP2PInterface.this.getFrequency()
+                            + ", active="
+                            + PartP2PInterface.this.proxy.isActive());
             duality.readConfig();
 
             if (!duality.getStorage().isEmpty()) {
@@ -221,14 +214,32 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkChannelsChanged c) {
-        System.out.println("channelsChanged " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + this.getTileEntity().xCoord + ", z=" + this.getTileEntity().zCoord + ", freq=" + this.getFrequency() + ", active=" + this.proxy.isActive());
+        System.out.println(
+                "channelsChanged " + (isOutput() ? "OUTPUT" : "INPUT")
+                        + ", x="
+                        + this.getTileEntity().xCoord
+                        + ", z="
+                        + this.getTileEntity().zCoord
+                        + ", freq="
+                        + this.getFrequency()
+                        + ", active="
+                        + this.proxy.isActive());
         this.duality.notifyNeighbors();
         updateSharingInventory();
     }
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkPowerStatusChange c) {
-        System.out.println("powerChanged " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + this.getTileEntity().xCoord + ", z=" + this.getTileEntity().zCoord + ", freq=" + this.getFrequency() + ", active=" + this.proxy.isActive());
+        System.out.println(
+                "powerChanged " + (isOutput() ? "OUTPUT" : "INPUT")
+                        + ", x="
+                        + this.getTileEntity().xCoord
+                        + ", z="
+                        + this.getTileEntity().zCoord
+                        + ", freq="
+                        + this.getFrequency()
+                        + ", active="
+                        + this.proxy.isActive());
         this.duality.notifyNeighbors();
         updateSharingInventory();
     }
@@ -571,7 +582,16 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
 
     @Override
     public void onTunnelNetworkChange() {
-        System.out.println("tunnelNetworkChange " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + this.getTileEntity().xCoord + ", z=" + this.getTileEntity().zCoord + ", freq=" + this.getFrequency() + ", active=" + this.proxy.isActive());
+        System.out.println(
+                "tunnelNetworkChange " + (isOutput() ? "OUTPUT" : "INPUT")
+                        + ", x="
+                        + this.getTileEntity().xCoord
+                        + ", z="
+                        + this.getTileEntity().zCoord
+                        + ", freq="
+                        + this.getFrequency()
+                        + ", active="
+                        + this.proxy.isActive());
         this.duality.updateCraftingList();
         updateSharingInventory();
     }

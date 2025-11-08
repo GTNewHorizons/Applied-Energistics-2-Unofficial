@@ -380,8 +380,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 // :P
             }
         }
-
-        this.notifyNeighbors();
     }
 
     public void updateCraftingList() {

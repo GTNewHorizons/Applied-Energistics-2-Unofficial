@@ -283,7 +283,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             newTunnel.setOutput(false);
             newTunnel.copySettings(this);
             newTunnel.copyContents(this);
-//            configureNewTunnel(newTunnel);
+            // configureNewTunnel(newTunnel);
 
             final long freq = System.currentTimeMillis();
             newTunnel.updateFreq(freq);
@@ -307,7 +307,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         final PartP2PTunnel<?> input = newTunnel.getInput();
         newTunnel.copyMeta(input);
         newTunnel.copySettings(input);
-//        configureNewTunnel(newTunnel);
+        // configureNewTunnel(newTunnel);
         return newTunnel;
     }
 
@@ -321,7 +321,7 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, itemStack);
         newTunnel.setOutput(false);
         newTunnel.copyContents(this);
-//        configureNewTunnel(newTunnel);
+        // configureNewTunnel(newTunnel);
         newTunnel.updateFreq(0);
         return newTunnel;
     }
