@@ -76,30 +76,20 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         public void updateCraftingList() {
             DebugState.doAndLog(() -> {
             if (!isOutput()) {
-                CraftingGridCache.pauseRebuilds();
-
                 super.updateCraftingList();
-
-                try {
-                    for (PartP2PInterface p2p : getOutputs()) {
-                        p2p.duality.updateCraftingList();
-                    }
-                } catch (GridAccessException e) {
-                    // ?
-                }
-
-                CraftingGridCache.unpauseRebuilds();
             } else {
                 PartP2PInterface p2p = getInput();
                 if (p2p != null) {
                     this.craftingList = p2p.duality.craftingList;
+                    // TODO do we need to post this event?
                     try {
                         this.gridProxy.getGrid()
                                 .postEvent(new MENetworkCraftingPatternChange(this, this.gridProxy.getNode()));
                     } catch (final GridAccessException e) {
-                        System.out.println("could not update crafting list");
                         // :P
                     }
+                } else {
+                    this.craftingList = null;
                 }
             }
             }, "updateCraftingList");
@@ -191,20 +181,12 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
             }
         } else {
             unshareInventory();
-            // Q: why do we need to update the outputs config manually? can't updateTunnel or another one handle that?
-            System.out.println("doing readConfig for ALL outputs of " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + this.getTileEntity().xCoord + ", z=" + this.getTileEntity().zCoord + ", freq=" + this.getFrequency());
-            try {
-                for (PartP2PInterface p2p : getOutputs()) {
-                    p2p.duality.readConfig();
-                }
-            } catch (GridAccessException ignored) {}
         }}, "updateSharingInventory");
     }
 
     private void unshareInventory() {
         if (duality.sharedInventory) {
             System.out.println("unshareInventory for " + (isOutput() ? "OUTPUT" : "INPUT"));
-//            duality.readConfig();
             duality.setStorage(new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS));
             duality.setSlotInv(new WrapperInvSlot(duality.getStorage()));
             duality.sharedInventory = false;

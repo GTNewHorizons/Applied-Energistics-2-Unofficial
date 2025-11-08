@@ -130,19 +130,19 @@ public class P2PCache implements IGridCache {
             pausedRebuild = true;
         }
 
-        for (final PartP2PTunnel p : this.outputs.get(freq)) {
-            if (configChange) {
-                p.onTunnelConfigChange();
-            }
-            p.onTunnelNetworkChange();
-        }
-
         final PartP2PTunnel in = this.inputs.get(freq);
         if (in != null) {
             if (configChange) {
                 in.onTunnelConfigChange();
             }
             in.onTunnelNetworkChange();
+        }
+
+        for (final PartP2PTunnel p : this.outputs.get(freq)) {
+            if (configChange) {
+                p.onTunnelConfigChange();
+            }
+            p.onTunnelNetworkChange();
         }
 
         if (pausedRebuild) CraftingGridCache.unpauseRebuilds();
