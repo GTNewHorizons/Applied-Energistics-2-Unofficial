@@ -151,10 +151,7 @@ public class P2PCache implements IGridCache {
 
     public void updateFreq(final PartP2PTunnel t, final long newFrequency) {
         DebugState.doAndLog(() -> {
-        Boolean wasOutput = unbind(t);
-        if(wasOutput != null) {
-            // TODO
-        }
+        unbind(t);
 
         t.setFrequency(newFrequency);
 
@@ -169,18 +166,14 @@ public class P2PCache implements IGridCache {
         }, "updateFreq");
     }
 
-    public Boolean unbind(final PartP2PTunnel t) {
-        Boolean wasOutput = null;
+    public void unbind(final PartP2PTunnel t) {
         if (this.outputs.containsValue(t)) {
             this.outputs.remove(t.getFrequency(), t);
-            wasOutput = true;
         }
         if (this.inputs.containsValue(t)) {
             this.inputs.remove(t.getFrequency());
-            wasOutput = false;
         }
         t.setFrequency(0);
-        return wasOutput;
     }
 
     public TunnelCollection<PartP2PTunnel> getOutputs(final long freq, final Class<? extends PartP2PTunnel> c) {

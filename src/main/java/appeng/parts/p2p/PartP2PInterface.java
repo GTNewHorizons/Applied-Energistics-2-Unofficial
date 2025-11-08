@@ -106,16 +106,6 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         }
 
         @Override
-        protected boolean hasWorkToDo() {
-            if (isOutput()) {
-                // TODO hasConfig shouldnt trigger work? since the input p2p should handle that
-                // if it hasConfig the storage will never be empty, so it always has work to do?
-                // TODO we don't want outputs to check requireWork??
-                return hasItemsToSend() || hasConfig() || !getStorage().isEmpty();
-            } else return super.hasWorkToDo();
-        }
-
-        @Override
         public void readConfig() {
             System.out.println("readConfig for " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + PartP2PInterface.this.getTileEntity().xCoord + ", z=" + PartP2PInterface.this.getTileEntity().zCoord + ", freq=" + PartP2PInterface.this.getFrequency() + ", active=" + PartP2PInterface.this.proxy.isActive());
             if (isOutput()) {
