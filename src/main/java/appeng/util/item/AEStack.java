@@ -179,9 +179,9 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         }
     }
 
-    abstract void writeIdentity(ByteBuf i) throws IOException;
+    protected abstract void writeIdentity(ByteBuf i) throws IOException;
 
-    abstract void readNBT(ByteBuf i) throws IOException;
+    protected abstract void readNBT(ByteBuf i) throws IOException;
 
     private void putPacketValue(final ByteBuf tag, final long num) {
         if (num <= 255) {

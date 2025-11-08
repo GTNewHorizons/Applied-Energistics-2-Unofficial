@@ -335,14 +335,14 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     }
 
     @Override
-    void writeIdentity(final ByteBuf i) throws IOException {
+    protected void writeIdentity(final ByteBuf i) throws IOException {
         final byte[] name = this.fluid.getName().getBytes(StandardCharsets.UTF_8);
         i.writeByte((byte) name.length);
         i.writeBytes(name);
     }
 
     @Override
-    void readNBT(final ByteBuf i) throws IOException {
+    protected void readNBT(final ByteBuf i) throws IOException {
         if (this.hasTagCompound()) {
             final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             final DataOutputStream data = new DataOutputStream(bytes);

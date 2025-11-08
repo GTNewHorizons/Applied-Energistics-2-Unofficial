@@ -637,13 +637,13 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     }
 
     @Override
-    void writeIdentity(final ByteBuf i) throws IOException {
+    protected void writeIdentity(final ByteBuf i) throws IOException {
         i.writeShort(Item.itemRegistry.getIDForObject(this.getDefinition().getItem()));
         i.writeShort(this.getItemDamage());
     }
 
     @Override
-    void readNBT(final ByteBuf i) throws IOException {
+    protected void readNBT(final ByteBuf i) throws IOException {
         if (this.hasTagCompound()) {
             final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             final DataOutputStream data = new DataOutputStream(bytes);
