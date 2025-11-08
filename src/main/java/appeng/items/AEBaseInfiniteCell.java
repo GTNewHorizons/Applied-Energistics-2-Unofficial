@@ -115,4 +115,6 @@ public abstract class AEBaseInfiniteCell extends AEBaseItem implements IStorageC
     public void setFuzzyMode(ItemStack is, FuzzyMode fzMode) {
 
     }
+
+    public abstract IMEInventoryHandler getCellInventory(ItemStack stack);
 }

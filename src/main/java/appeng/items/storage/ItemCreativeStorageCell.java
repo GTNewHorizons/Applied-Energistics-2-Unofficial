@@ -14,8 +14,11 @@ import java.util.EnumSet;
 
 import net.minecraft.item.ItemStack;
 
+import appeng.api.storage.IMEInventoryHandler;
 import appeng.core.features.AEFeature;
 import appeng.items.AEBaseInfiniteCell;
+import appeng.me.storage.CreativeCellInventory;
+import appeng.me.storage.ItemCellInventoryHandler;
 
 public class ItemCreativeStorageCell extends AEBaseInfiniteCell {
 
@@ -32,5 +35,10 @@ public class ItemCreativeStorageCell extends AEBaseInfiniteCell {
     @Override
     public int getTotalTypes(ItemStack cellItem) {
         return 63;
+    }
+
+    @Override
+    public IMEInventoryHandler getCellInventory(ItemStack stack) {
+        return new ItemCellInventoryHandler(new CreativeCellInventory<>(stack));
     }
 }

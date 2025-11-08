@@ -32,7 +32,7 @@ import appeng.util.prioitylist.FuzzyPriorityList;
 public abstract class CellInventoryHandler<StackType extends IAEStack<StackType>> extends MEInventoryHandler<StackType>
         implements ICellInventoryHandler<StackType>, ICellCacheRegistry {
 
-    CellInventoryHandler(final IMEInventory<StackType> c, final IAEStackType<StackType> type) {
+    protected CellInventoryHandler(final IMEInventory<StackType> c, final IAEStackType<StackType> type) {
         super(c, type);
 
         final ICellInventory<StackType> ci = this.getCellInv();

@@ -25,7 +25,6 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.items.AEBaseInfiniteCell;
-import appeng.me.storage.CreativeCellInventory;
 import appeng.util.Platform;
 
 public class CreativeCellHandler implements ICellHandler {
@@ -39,7 +38,7 @@ public class CreativeCellHandler implements ICellHandler {
     public IMEInventoryHandler getCellInventory(final ItemStack is, final ISaveProvider container,
             final IAEStackType<?> type) {
         if (is != null && is.getItem() instanceof AEBaseInfiniteCell cell && type == cell.getStackType()) {
-            return CreativeCellInventory.getCell(is, type);
+            return cell.getCellInventory(is);
         }
 
         return null;

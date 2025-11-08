@@ -42,17 +42,17 @@ public class CreativeCellInventory<StackType extends IAEStack<StackType>>
     private final ItemStack cellItem;
     private final IStorageCell cellType;
 
-    protected CreativeCellInventory(final ItemStack o) {
+    public CreativeCellInventory(final ItemStack o) {
         this.cellItem = o;
         this.cellType = (IStorageCell) o.getItem();
-        this.listCache = getChannel().createPrimitiveList();
+        this.listCache = (IItemList<StackType>) this.getStackType().createPrimitiveList();
 
         final IAEStackInventory cc = o.getItem() instanceof IStorageCell sc ? sc.getConfigAEInventory(o)
                 : new IAEStackInventory(null, 0);
         for (int i = 0; i < cc.getSizeInventory(); i++) {
             IAEStack<?> aes = cc.getAEStackInSlot(i);
             if (aes != null) {
-                if (getChannel() == StorageChannel.FLUIDS && aes instanceof IAEItemStack ais) {
+                if (this.getStackType() == FLUID_STACK_TYPE && aes instanceof IAEItemStack ais) {
                     aes = Util.getAEFluidFromItem(ais.getItemStack());
                 }
 
@@ -60,12 +60,6 @@ public class CreativeCellInventory<StackType extends IAEStack<StackType>>
                 this.listCache.add((StackType) aes);
             }
         }
-    }
-
-    public static IMEInventoryHandler getCell(final ItemStack o, IAEStackType<?> type) {
-        if (type == ITEM_STACK_TYPE) return new ItemCellInventoryHandler(new CreativeCellInventory<>(o));
-        if (type == FLUID_STACK_TYPE) return new FluidCellInventoryHandler(new CreativeCellInventory<>(o));
-        return null;
     }
 
     @Override

@@ -48,14 +48,12 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
 
     private static final String STACK_SLOT = "#";
     private static final String STACK_SLOT_COUNT = "@";
-    private final String[] slots;
-    private final String[] slotCount;
-    private final NBTTagCompound tagCompound;
-    private final ISaveProvider container;
+    protected final NBTTagCompound tagCompound;
+    protected final ISaveProvider container;
     private int maxTypes = 63;
-    private short storedTypes = 0;
-    private long storedCount = 0;
-    private IItemList<StackType> cellStacks;
+    protected short storedTypes = 0;
+    protected long storedCount = 0;
+    protected final IItemList<StackType> cellStacks;
     private final ItemStack cellItem;
     private final IStorageCell cellType;
     private boolean cardVoidOverflow = false;
@@ -66,14 +64,6 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
     private final int distTypesCount;
 
     protected CellInventory(final ItemStack o, final ISaveProvider container) throws AppEngException {
-        slots = new String[this.maxTypes];
-        slotCount = new String[this.maxTypes];
-
-        for (int x = 0; x < this.maxTypes; x++) {
-            slots[x] = STACK_SLOT + x;
-            slotCount[x] = STACK_SLOT_COUNT + x;
-        }
-
         if (o == null) {
             throw new AppEngException("ItemStack was used as a cell, but was not a cell!");
         }
@@ -100,6 +90,12 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
             this.maxTypes = 1;
         }
 
+        this.container = container;
+        this.tagCompound = Platform.openNbtData(o);
+
+        this.cellStacks = (IItemList<StackType>) this.getStackType().createPrimitiveList();
+        this.loadCellStacks();
+
         final IInventory upgrades = this.getUpgradesInventory();
         for (int x = 0; x < upgrades.getSizeInventory(); x++) {
             final ItemStack is = upgrades.getStackInSlot(x);
@@ -115,13 +111,10 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
             }
         }
 
-        this.container = container;
-        this.tagCompound = Platform.openNbtData(o);
         this.storedTypes = this.tagCompound.getShort(getStackTypeTag());
         this.storedCount = this.tagCompound.getLong(getStackCountTag());
         this.restrictionTypes = this.tagCompound.getByte("cellRestrictionTypes");
         this.restrictionLong = this.tagCompound.getLong("cellRestrictionAmount");
-        this.cellStacks = null;
 
         if (this.restrictionTypes > 0) this.distTypesCount = this.restrictionTypes;
         else {
@@ -331,10 +324,6 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
     }
 
     private IItemList<StackType> getCellStacks() {
-        if (this.cellStacks == null) {
-            this.loadCellItems();
-        }
-
         return this.cellStacks;
     }
 
@@ -343,7 +332,7 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
         this.tagCompound.setLong(getStackCountTag(), this.storedCount);
     }
 
-    private void saveChanges() {
+    protected void saveChanges() {
         // cellItems.clean();
         long itemCount = 0;
 
@@ -353,33 +342,23 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
         for (final StackType v : this.cellStacks) {
             itemCount += v.getStackSize();
 
-            final NBTBase c = this.tagCompound.getTag(slots[x]);
+            final NBTBase c = this.tagCompound.getTag(STACK_SLOT + x);
 
             if (c instanceof NBTTagCompound nbt) {
                 v.writeToNBT(nbt);
             } else {
                 final NBTTagCompound g = new NBTTagCompound();
                 v.writeToNBT(g);
-                this.tagCompound.setTag(slots[x], g);
+                this.tagCompound.setTag(STACK_SLOT + x, g);
             }
 
-            /*
-             * NBTBase tagSlotCount = tagCompound.getTag( itemSlotCount[x] ); if ( tagSlotCount instanceof NBTTagInt )
-             * ((NBTTagInt) tagSlotCount).data = (int) v.getStackSize(); else
-             */
-            this.tagCompound.setLong(slotCount[x], v.getStackSize());
+            this.tagCompound.setLong(STACK_SLOT_COUNT + x, v.getStackSize());
 
             x++;
         }
 
-        // NBTBase tagType = tagCompound.getTag( ITEM_TYPE_TAG );
-        // NBTBase tagCount = tagCompound.getTag( ITEM_COUNT_TAG );
         final short oldStoredItems = this.storedTypes;
 
-        /*
-         * if ( tagType instanceof NBTTagShort ) ((NBTTagShort) tagType).data = storedItems = (short) cellItems.size();
-         * else
-         */
         this.storedTypes = (short) this.cellStacks.size();
 
         if (this.cellStacks.isEmpty()) {
@@ -388,9 +367,6 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
             this.tagCompound.setShort(getStackTypeTag(), this.storedTypes);
         }
 
-        /*
-         * if ( tagCount instanceof NBTTagInt ) ((NBTTagInt) tagCount).data = storedItemCount = itemCount; else
-         */
         this.storedCount = itemCount;
 
         if (itemCount == 0) {
@@ -401,8 +377,8 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
 
         // clean any old crusty stuff...
         for (; x < oldStoredItems && x < this.maxTypes; x++) {
-            this.tagCompound.removeTag(slots[x]);
-            this.tagCompound.removeTag(slotCount[x]);
+            this.tagCompound.removeTag(STACK_SLOT + x);
+            this.tagCompound.removeTag(STACK_SLOT_COUNT + x);
         }
 
         if (this.container != null) {
@@ -410,24 +386,18 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
         }
     }
 
-    private void loadCellItems() {
-        if (this.cellStacks == null) {
-            this.cellStacks = this.getChannel().createPrimitiveList();
-        }
-
-        this.cellStacks.resetStatus(); // clears totals and stuff.
-
+    protected void loadCellStacks() {
         final int types = (int) this.getStoredItemTypes();
 
         for (int x = 0; x < types; x++) {
-            final StackType ias = readStack(this.tagCompound.getCompoundTag(slots[x]));
+            final StackType ias = readStack(this.tagCompound.getCompoundTag(STACK_SLOT + x));
             if (ias != null) {
-                ias.setStackSize(this.tagCompound.getLong(slotCount[x]));
+                ias.setStackSize(this.tagCompound.getLong(STACK_SLOT_COUNT + x));
                 if (ias.getStackSize() > 0) {
                     this.cellStacks.add(ias);
                 } else {
                     // Dirty Compact for EC2
-                    ias.setStackSize(this.tagCompound.getCompoundTag(slots[x]).getLong("Cnt"));
+                    ias.setStackSize(this.tagCompound.getCompoundTag(STACK_SLOT + x).getLong("Cnt"));
                     if (ias.getStackSize() > 0) {
                         this.cellStacks.add(ias);
                     }
