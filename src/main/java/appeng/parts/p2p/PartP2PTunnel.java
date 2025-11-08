@@ -281,11 +281,13 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             final PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, itemStack);
 
             newTunnel.setOutput(false);
+            newTunnel.copySettings(this);
+            newTunnel.copyContents(this);
+//            configureNewTunnel(newTunnel);
+
             final long freq = System.currentTimeMillis();
             newTunnel.updateFreq(freq);
 
-            newTunnel.copySettings(this);
-            configureNewTunnel(newTunnel);
             return newTunnel;
         }
         return this;
@@ -299,12 +301,13 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
 
         final PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, newType);
         newTunnel.setOutput(true);
-        newTunnel.updateFreq(freq);
+        newTunnel.copyContents(this);
 
+        newTunnel.updateFreq(freq);
         final PartP2PTunnel<?> input = newTunnel.getInput();
         newTunnel.copyMeta(input);
         newTunnel.copySettings(input);
-        configureNewTunnel(newTunnel);
+//        configureNewTunnel(newTunnel);
         return newTunnel;
     }
 
@@ -317,8 +320,9 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         final ItemStack itemStack = this.getItemStack(PartItemStack.Wrench);
         PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, itemStack);
         newTunnel.setOutput(false);
+        newTunnel.copyContents(this);
+//        configureNewTunnel(newTunnel);
         newTunnel.updateFreq(0);
-        configureNewTunnel(newTunnel);
         return newTunnel;
     }
 
@@ -329,7 +333,6 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     }
 
     private void configureNewTunnel(final PartP2PTunnel<?> newTunnel) {
-        newTunnel.copyContents(this);
         newTunnel.onTunnelConfigChange();
         newTunnel.onTunnelNetworkChange();
     }
@@ -423,15 +426,16 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     }
 
     private PartP2PTunnel<?> replacePartInWorld(final EntityPlayer player, final ItemStack newType) {
-        this.getHost().removePart(this.getSide(), true);
-        this.unbindTunnel();
+        return DebugState.doAndLog(() -> {
+            this.getHost().removePart(this.getSide(), true);
+            this.unbindTunnel();
 
-        final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
-        final IPart newBus = this.getHost().getPart(dir);
-
-        if (newBus instanceof PartP2PTunnel<?>newTunnel) {
-            return newTunnel;
-        } else throw new RuntimeException();
+            final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
+            final IPart newBus = this.getHost().getPart(dir);
+            if (newBus instanceof PartP2PTunnel<?>newTunnel) {
+                return newTunnel;
+            } else throw new RuntimeException();
+        }, "replacePartInWorld");
     }
 
     protected void copyContents(final PartP2PTunnel<?> from) {}

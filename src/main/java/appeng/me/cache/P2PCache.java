@@ -12,6 +12,7 @@ package appeng.me.cache;
 
 import java.util.HashMap;
 
+import appeng.parts.p2p.DebugState;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
@@ -73,16 +74,18 @@ public class P2PCache implements IGridCache {
                 }
             }
 
+            DebugState.doAndLog(() -> {
             // AELog.info( "rmv-" + (t.output ? "output: " : "input: ") + t.freq
             // );
 
             if (t.isOutput()) {
                 this.outputs.remove(t.getFrequency(), t);
+                t.onTunnelNetworkChange();
             } else {
                 this.inputs.remove(t.getFrequency());
+                this.updateTunnel(t.getFrequency(), false);
             }
-
-            this.updateTunnel(t.getFrequency(), false);
+            }, "removeNode");
         }
     }
 
@@ -95,16 +98,18 @@ public class P2PCache implements IGridCache {
                 }
             }
 
+            DebugState.doAndLog(() -> {
             // AELog.info( "add-" + (t.output ? "output: " : "input: ") + t.freq
             // );
 
             if (t.isOutput()) {
                 this.outputs.put(t.getFrequency(), t);
+                t.onTunnelNetworkChange();
             } else {
                 this.inputs.put(t.getFrequency(), t);
+                this.updateTunnel(t.getFrequency(), false);
             }
-
-            this.updateTunnel(t.getFrequency(), false);
+            }, "addNode");
         }
     }
 
@@ -118,6 +123,7 @@ public class P2PCache implements IGridCache {
     public void populateGridStorage(final IGridStorage storage) {}
 
     private void updateTunnel(final long freq, final boolean configChange) {
+        DebugState.doAndLog(() -> {
         boolean pausedRebuild = false;
         if (inputs.get(freq) instanceof PartP2PInterface) {
             CraftingGridCache.pauseRebuilds();
@@ -140,30 +146,41 @@ public class P2PCache implements IGridCache {
         }
 
         if (pausedRebuild) CraftingGridCache.unpauseRebuilds();
+        }, "updateTunnel");
     }
 
     public void updateFreq(final PartP2PTunnel t, final long newFrequency) {
-        unbind(t);
+        DebugState.doAndLog(() -> {
+        Boolean wasOutput = unbind(t);
+        if(wasOutput != null) {
+            // TODO
+        }
 
         t.setFrequency(newFrequency);
 
         if (t.isOutput()) {
             this.outputs.put(t.getFrequency(), t);
+            t.onTunnelConfigChange();
+            t.onTunnelNetworkChange();
         } else {
             this.inputs.put(t.getFrequency(), t);
+            this.updateTunnel(t.getFrequency(), true);
         }
-
-        this.updateTunnel(t.getFrequency(), true);
+        }, "updateFreq");
     }
 
-    public void unbind(final PartP2PTunnel t) {
+    public Boolean unbind(final PartP2PTunnel t) {
+        Boolean wasOutput = null;
         if (this.outputs.containsValue(t)) {
             this.outputs.remove(t.getFrequency(), t);
+            wasOutput = true;
         }
         if (this.inputs.containsValue(t)) {
             this.inputs.remove(t.getFrequency());
+            wasOutput = false;
         }
         t.setFrequency(0);
+        return wasOutput;
     }
 
     public TunnelCollection<PartP2PTunnel> getOutputs(final long freq, final Class<? extends PartP2PTunnel> c) {

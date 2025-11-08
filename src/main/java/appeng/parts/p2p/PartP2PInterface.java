@@ -65,9 +65,6 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         implements IGridTickable, IStorageMonitorable, IInventoryDestination, IInterfaceHost, ISidedInventory,
         IAEAppEngInventory, ITileStorageMonitorable, IPriorityHost {
 
-    boolean needUpdateOnNetworkBooted = false;
-    boolean lastPowerStart = false;
-
     @Reflected
     public PartP2PInterface(ItemStack is) {
         super(is);
@@ -77,6 +74,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
 
         @Override
         public void updateCraftingList() {
+            DebugState.doAndLog(() -> {
             if (!isOutput()) {
                 CraftingGridCache.pauseRebuilds();
 
@@ -99,32 +97,27 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
                         this.gridProxy.getGrid()
                                 .postEvent(new MENetworkCraftingPatternChange(this, this.gridProxy.getNode()));
                     } catch (final GridAccessException e) {
+                        System.out.println("could not update crafting list");
                         // :P
                     }
                 }
             }
-        }
-
-        @Override
-        public TickRateModulation tickingRequest(IGridNode node, int ticksSinceLastCall) {
-            final boolean powerState = proxy.isActive();
-            if (needUpdateOnNetworkBooted || lastPowerStart != powerState) {
-                needUpdateOnNetworkBooted = false;
-                lastPowerStart = powerState;
-                updateSharingInventory();
-            }
-            return super.tickingRequest(node, ticksSinceLastCall);
+            }, "updateCraftingList");
         }
 
         @Override
         protected boolean hasWorkToDo() {
             if (isOutput()) {
+                // TODO hasConfig shouldnt trigger work? since the input p2p should handle that
+                // if it hasConfig the storage will never be empty, so it always has work to do?
+                // TODO we don't want outputs to check requireWork??
                 return hasItemsToSend() || hasConfig() || !getStorage().isEmpty();
             } else return super.hasWorkToDo();
         }
 
         @Override
         public void readConfig() {
+            System.out.println("readConfig for " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + PartP2PInterface.this.getTileEntity().xCoord + ", z=" + PartP2PInterface.this.getTileEntity().zCoord + ", freq=" + PartP2PInterface.this.getFrequency() + ", active=" + PartP2PInterface.this.proxy.isActive());
             if (isOutput()) {
                 PartP2PInterface p2p = getInput();
                 boolean alertDevice = false;
@@ -198,60 +191,74 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     };
 
     private void updateSharingInventory() {
-        duality.readConfig();
+        DebugState.doAndLog(() -> {
         if (isOutput()) {
             PartP2PInterface p2p = getInput();
             if (proxy.isActive() && p2p != null) {
-                if (!duality.sharedInventory && !duality.getStorage().isEmpty()) {
-                    ArrayList<ItemStack> drops = new ArrayList<>();
-                    AppEngInternalInventory storageAppEng = this.duality.getStorage();
-                    AdaptorIInventory p2pInv = new AdaptorIInventory(p2p.duality.getStorage());
-                    for (ItemStack itemStack : storageAppEng) {
-                        if (itemStack == null) continue;
-                        ItemStack drop = p2pInv.addItems(itemStack);
-                        if (drop != null && drop.stackSize > 0) {
-                            drops.add(drop);
-                        }
-                    }
-                    TileEntity te = getTileEntity();
-                    Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
-                }
-                duality.setStorage(p2p.duality.getStorage());
-                duality.setSlotInv(p2p.duality.getSlotInv());
-                duality.sharedInventory = true;
+                shareInventory(p2p);
             } else {
-                if (duality.sharedInventory) {
-                    duality.setStorage(new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS));
-                    duality.setSlotInv(new WrapperInvSlot(duality.getStorage()));
-                    duality.sharedInventory = false;
-                }
+                unshareInventory();
             }
         } else {
-            if (duality.sharedInventory) {
-                duality.setStorage(new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS));
-                duality.setSlotInv(new WrapperInvSlot(duality.getStorage()));
-                duality.sharedInventory = false;
-            }
+            unshareInventory();
+            // Q: why do we need to update the outputs config manually? can't updateTunnel or another one handle that?
+            System.out.println("doing readConfig for ALL outputs of " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + this.getTileEntity().xCoord + ", z=" + this.getTileEntity().zCoord + ", freq=" + this.getFrequency());
             try {
                 for (PartP2PInterface p2p : getOutputs()) {
                     p2p.duality.readConfig();
                 }
             } catch (GridAccessException ignored) {}
+        }}, "updateSharingInventory");
+    }
+
+    private void unshareInventory() {
+        if (duality.sharedInventory) {
+            System.out.println("unshareInventory for " + (isOutput() ? "OUTPUT" : "INPUT"));
+//            duality.readConfig();
+            duality.setStorage(new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS));
+            duality.setSlotInv(new WrapperInvSlot(duality.getStorage()));
+            duality.sharedInventory = false;
+        }
+    }
+
+    private void shareInventory(final PartP2PInterface p2p) {
+        if(!duality.sharedInventory) {
+            System.out.println("shareInventory, x="+ this.getTile().xCoord + ", z=" + this.getTile().zCoord);
+
+            duality.readConfig();
+
+            if (!duality.getStorage().isEmpty()) {
+                ArrayList<ItemStack> drops = new ArrayList<>();
+                AppEngInternalInventory storageAppEng = this.duality.getStorage();
+                AdaptorIInventory p2pInv = new AdaptorIInventory(p2p.duality.getStorage());
+                for (ItemStack itemStack : storageAppEng) {
+                    if (itemStack == null) continue;
+                    ItemStack drop = p2pInv.addItems(itemStack);
+                    if (drop != null && drop.stackSize > 0) {
+                        drops.add(drop);
+                    }
+                }
+                TileEntity te = getTileEntity();
+                Platform.spawnDrops(te.getWorldObj(), te.xCoord, te.yCoord, te.zCoord, drops);
+            }
+            duality.setStorage(p2p.duality.getStorage());
+            duality.setSlotInv(p2p.duality.getSlotInv());
+            duality.sharedInventory = true;
         }
     }
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkChannelsChanged c) {
+        System.out.println("channelsChanged " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + this.getTileEntity().xCoord + ", z=" + this.getTileEntity().zCoord + ", freq=" + this.getFrequency() + ", active=" + this.proxy.isActive());
         this.duality.notifyNeighbors();
         updateSharingInventory();
-        needUpdateOnNetworkBooted = true;
     }
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkPowerStatusChange c) {
+        System.out.println("powerChanged " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + this.getTileEntity().xCoord + ", z=" + this.getTileEntity().zCoord + ", freq=" + this.getFrequency() + ", active=" + this.proxy.isActive());
         this.duality.notifyNeighbors();
         updateSharingInventory();
-        needUpdateOnNetworkBooted = true;
     }
 
     @Override
@@ -350,7 +357,7 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     }
 
     private void dropPatterns(final PartP2PInterface p2p) {
-        final AppEngInternalInventory patterns = p2p.duality.getPatterns();
+        final IInventory patterns = p2p.duality.getPatterns();
         final List<ItemStack> drops = new ArrayList<>();
         for (int i = 0; i < patterns.getSizeInventory(); i++) {
             if (patterns.getStackInSlot(i) == null) continue;
@@ -367,8 +374,8 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
         if (from instanceof PartP2PInterface fromInterface) {
             DualityInterface newDuality = this.duality;
             // Copy interface storage, upgrades, and settings over
-            UpgradeInventory upgrades = (UpgradeInventory) fromInterface.duality.getInventoryByName("upgrades");
-            UpgradeInventory newUpgrade = (UpgradeInventory) newDuality.getInventoryByName("upgrades");
+            IInventory upgrades = fromInterface.duality.getInventoryByName("upgrades");
+            IInventory newUpgrade = newDuality.getInventoryByName("upgrades");
             for (int i = 0; i < upgrades.getSizeInventory(); ++i) {
                 newUpgrade.setInventorySlotContents(i, upgrades.getStackInSlot(i));
             }
@@ -379,21 +386,22 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
                 for (int i = 0; i < storage.getSizeInventory(); ++i) {
                     newStorage.setInventorySlotContents(i, storage.getStackInSlot(i));
                 }
+            }
+
+            boolean drop = true;
+            if (!from.isOutput() && !this.isOutput()) { // input to input
+                drop = false;
+                IInventory patterns = fromInterface.duality.getPatterns();
+                IInventory newPatterns = newDuality.getPatterns();
+                for (int i = 0; i < patterns.getSizeInventory(); i++) {
+                    newPatterns.setInventorySlotContents(i, patterns.getStackInSlot(i));
+                }
 
                 IInventory config = fromInterface.duality.getInventoryByName("config");
                 IInventory newConfig = newDuality.getInventoryByName("config");
                 for (int i = 0; i < config.getSizeInventory(); ++i) {
                     newConfig.setInventorySlotContents(i, config.getStackInSlot(i));
                 }
-            }
-
-            AppEngInternalInventory patterns = fromInterface.duality.getPatterns();
-            boolean drop = true;
-            if (!from.isOutput() && !this.isOutput()) { // input to input
-                for (int i = 0; i < patterns.getSizeInventory(); i++) {
-                    newDuality.getPatterns().setInventorySlotContents(i, patterns.getStackInSlot(i));
-                }
-                drop = false;
             }
 
             if (drop) {
@@ -591,12 +599,8 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
 
     @Override
     public void onTunnelNetworkChange() {
+        System.out.println("tunnelNetworkChange " + (isOutput() ? "OUTPUT" : "INPUT") + ", x=" + this.getTileEntity().xCoord + ", z=" + this.getTileEntity().zCoord + ", freq=" + this.getFrequency() + ", active=" + this.proxy.isActive());
         this.duality.updateCraftingList();
-        updateSharingInventory();
-    }
-
-    @Override
-    public void onTunnelConfigChange() {
         updateSharingInventory();
     }
 
