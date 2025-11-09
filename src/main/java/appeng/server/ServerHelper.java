@@ -10,9 +10,6 @@
 
 package appeng.server;
 
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -27,7 +24,6 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 
 import appeng.api.parts.CableRenderMode;
-import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.block.AEBaseBlock;
 import appeng.client.ActionKey;
 import appeng.client.EffectType;
@@ -114,10 +110,7 @@ public class ServerHelper extends CommonHelper {
     public void doRenderItem(final ItemStack sis, final World tile) {}
 
     @Override
-    public void postInit() {
-        AEStackTypeRegistry.register(ITEM_STACK_TYPE);
-        AEStackTypeRegistry.register(FLUID_STACK_TYPE);
-    }
+    public void postInit() {}
 
     @Override
     public CableRenderMode getRenderMode() {

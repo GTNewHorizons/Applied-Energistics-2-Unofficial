@@ -15,6 +15,7 @@ package appeng.api.storage.data;
 
 import java.io.IOException;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
@@ -24,6 +25,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.core.AELog;
+import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -164,6 +166,20 @@ public interface IAEStack<StackType extends IAEStack> {
      */
     void writeToNBT(NBTTagCompound i);
 
+    /**
+     * write to a NBTTagCompound with StackType.
+     * 
+     * @param tag to be written data
+     */
+    default void writeToNBTGeneric(@Nonnull NBTTagCompound tag) {
+        tag.setString("StackType", this.getStackType().getId());
+        this.writeToNBT(tag);
+    }
+
+    /**
+     * @return NBTTagCompound with StackType
+     */
+    @Nonnull
     default NBTTagCompound toNBTGeneric() {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setString("StackType", this.getStackType().getId());
@@ -171,8 +187,15 @@ public interface IAEStack<StackType extends IAEStack> {
         return tag;
     }
 
+    /**
+     *
+     * @param tag empty or include StackType
+     * @return stack for StackType. null if {@code tag} has no tags.
+     */
     @Nullable
-    static IAEStack<?> fromNBTGeneric(NBTTagCompound tag) {
+    static IAEStack<?> fromNBTGeneric(@Nonnull NBTTagCompound tag) {
+        if (tag.hasNoTags()) return null;
+
         String id = tag.getString("StackType");
         if (id.isEmpty()) {
             AELog.warn("Cannot deserialize generic stack from nbt %s because key 'StackType' is missing.", tag);
@@ -185,6 +208,26 @@ public interface IAEStack<StackType extends IAEStack> {
             return null;
         }
         return type.loadStackFromNBT(tag);
+    }
+
+    /**
+     * Slower for disk saving, but smaller/more efficient for packets.
+     *
+     * @param data to be written data
+     * @throws IOException
+     */
+    void writeToPacket(ByteBuf data) throws IOException;
+
+    static IAEStack<?> fromPacketGeneric(ByteBuf buffer) throws IOException {
+        final String id = ByteBufUtils.readUTF8String(buffer);
+        if (id.isEmpty()) return null;
+
+        IAEStackType<?> type = AEStackTypeRegistry.getType(id);
+        if (type == null) {
+            AELog.warn("Cannot deserialize generic stack from ByteBuf because stack type %s is missing.", id);
+            return null;
+        }
+        return type.loadStackFromByte(buffer);
     }
 
     /**
@@ -212,14 +255,6 @@ public interface IAEStack<StackType extends IAEStack> {
      * @return true if two stacks are equal based on AE Fuzzy Comparison.
      */
     boolean fuzzyComparison(Object st, FuzzyMode mode);
-
-    /**
-     * Slower for disk saving, but smaller/more efficient for packets.
-     *
-     * @param data to be written data
-     * @throws IOException
-     */
-    void writeToPacket(ByteBuf data) throws IOException;
 
     /**
      * Clone the Item / Fluid Stack

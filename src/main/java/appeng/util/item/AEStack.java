@@ -36,7 +36,7 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
     private long countRequestableCrafts;
     private float usedPercent;
 
-    static long getPacketValue(final byte type, final ByteBuf tag) {
+    protected static long getPacketValue(final byte type, final ByteBuf tag) {
         if (type == 0) {
             long l = tag.readByte();
             l -= Byte.MIN_VALUE;

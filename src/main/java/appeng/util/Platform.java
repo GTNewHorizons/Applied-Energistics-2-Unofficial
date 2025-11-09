@@ -1942,16 +1942,10 @@ public class Platform {
 
     public static void writeStackByte(IAEStack<?> stack, ByteBuf buffer) {
         try {
-            if (stack == null) {
-                ByteBufUtils.writeUTF8String(buffer, ST_NULL);
-            } else if (stack instanceof AEItemStack) {
-                ByteBufUtils.writeUTF8String(buffer, ST_ITEM);
-            } else if (stack instanceof AEFluidStack) {
-                ByteBufUtils.writeUTF8String(buffer, ST_FLUID);
-            } else {
-                throw new UnsupportedOperationException("Can't serialize a stack of type " + stack.getClass());
-            }
+            ByteBufUtils.writeUTF8String(buffer, stack == null ? "" : stack.getStackType().getId());
+            if (stack != null) {
             stack.writeToPacket(buffer);
+            }
         } catch (RuntimeException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -1960,13 +1954,7 @@ public class Platform {
 
     public static IAEStack<?> readStackByte(ByteBuf buffer) {
         try {
-            final String stackType = ByteBufUtils.readUTF8String(buffer);
-            return switch (stackType) {
-                case ST_NULL -> null;
-                case ST_ITEM -> AEItemStack.loadItemStackFromPacket(buffer);
-                case ST_FLUID -> AEFluidStack.loadFluidStackFromPacket(buffer);
-                default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
-            };
+            return IAEStack.fromPacketGeneric(buffer);
         } catch (RuntimeException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -1978,18 +1966,15 @@ public class Platform {
 
     public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag, boolean isModern) {
         if (stack != null) {
-            if (stack instanceof AEItemStack) {
-                if (isModern) tag.setString("StackType", ST_ITEM);
+            if (isModern) {
+                stack.writeToNBTGeneric(tag);
+            } else if (stack instanceof AEItemStack) {
+                stack.writeToNBT(tag);
             } else if (stack instanceof AEFluidStack) {
-                if (isModern) tag.setString("StackType", ST_FLUID);
-                else {
                     stackConvert(stack).writeToNBT(tag);
-                    return tag;
-                }
             } else {
                 throw new UnsupportedOperationException("Can't serialize a stack of type " + stack.getClass());
             }
-            stack.writeToNBT(tag);
         }
         return tag;
     }
@@ -2026,14 +2011,12 @@ public class Platform {
                 default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
             };
         } else {
-            final String stackType = tag.getString("StackType");
-            return switch (stackType) {
-                case ST_NULL -> convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
+            String stackType = tag.getString("StackType");
+            if (stackType.isEmpty()) {
+                return convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
                         : AEItemStack.loadItemStackFromNBT(tag); // migration moment
-                case ST_ITEM -> AEItemStack.loadItemStackFromNBT(tag);
-                case ST_FLUID -> AEFluidStack.loadFluidStackFromNBT(tag);
-                default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
-            };
+            }
+            return IAEStack.fromNBTGeneric(tag);
         }
     }
 

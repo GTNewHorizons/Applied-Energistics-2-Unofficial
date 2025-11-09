@@ -1,11 +1,14 @@
 package appeng.util.item;
 
+import java.io.IOException;
+
 import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
+import io.netty.buffer.ByteBuf;
 
 public class AEItemStackType implements IAEStackType<IAEItemStack> {
 
@@ -20,6 +23,11 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
     @Override
     public IAEItemStack loadStackFromNBT(NBTTagCompound tag) {
         return AEItemStack.loadItemStackFromNBT(tag);
+    }
+
+    @Override
+    public IAEItemStack loadStackFromByte(ByteBuf buffer) throws IOException {
+        return AEItemStack.loadItemStackFromPacket(buffer);
     }
 
     @Override
