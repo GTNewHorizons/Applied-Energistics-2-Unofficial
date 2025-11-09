@@ -10,10 +10,8 @@
 
 package appeng.client.gui.implementations;
 
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
-
 import java.io.IOException;
+import java.util.Collections;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -218,6 +216,6 @@ public class GuiStorageBus extends GuiUpgradeable {
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
         IAEStackType<?> type = containerStorageBus.getStackType();
-        slot.handleMouseClicked(type == ITEM_STACK_TYPE, type == FLUID_STACK_TYPE, false);
+        slot.handleMouseClicked(Collections.singletonList(type), false);
     }
 }

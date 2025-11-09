@@ -10,6 +10,8 @@
 
 package appeng.parts.automation;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
@@ -21,6 +23,7 @@ import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.util.InventoryAdaptor;
@@ -212,5 +215,10 @@ public class PartImportBus extends PartBaseImportBus<IAEItemStack> implements II
     @Override
     protected int getAdaptorFlags() {
         return InventoryAdaptor.ALLOW_ITEMS | InventoryAdaptor.FOR_EXTRACTS;
+    }
+
+    @Override
+    public IAEStackType<IAEItemStack> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 }

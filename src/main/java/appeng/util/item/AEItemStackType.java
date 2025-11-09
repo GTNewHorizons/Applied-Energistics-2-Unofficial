@@ -2,7 +2,11 @@ package appeng.util.item;
 
 import java.io.IOException;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEItemStack;
@@ -38,5 +42,20 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
     @Override
     public IItemList<IAEItemStack> createPrimitiveList() {
         return AEApi.instance().storage().createPrimitiveItemList();
+    }
+
+    @Override
+    public boolean isContainerItemForType(@NotNull ItemStack container) {
+        return false;
+    }
+
+    @Override
+    public @Nullable IAEItemStack getStackFromContainerItem(@NotNull ItemStack container) {
+        return null;
+    }
+
+    @Override
+    public @Nullable IAEItemStack convertStackFromItem(@NotNull ItemStack itemStack) {
+        return null;
     }
 }

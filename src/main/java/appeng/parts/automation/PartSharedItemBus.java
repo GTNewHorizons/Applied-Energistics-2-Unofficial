@@ -29,10 +29,10 @@ import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IOreFilterable;
 import appeng.me.GridAccessException;
@@ -51,7 +51,6 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     protected String oreFilterString = "";
     protected Predicate<IAEItemStack> filterPredicate = null;
     protected final BaseActionSource mySrc;
-    private final StorageChannel channel;
 
     // XD
     protected final int[] slotSequence = new int[] { 4, 1, 3, 5, 7, 0, 2, 6, 8 };
@@ -63,7 +62,6 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
 
         this.mySrc = new MachineSource(this);
-        this.channel = StorageChannel.getStorageChannelByParametrizedClass(this.getClass());
     }
 
     @Override
@@ -228,9 +226,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         return this.config;
     }
 
-    public StorageChannel getStorageChannel() {
-        return this.channel;
-    }
+    public abstract IAEStackType<StackType> getStackType();
 
     protected abstract IMEMonitor<StackType> getMonitor();
 

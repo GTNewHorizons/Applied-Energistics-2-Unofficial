@@ -2,12 +2,19 @@ package appeng.util.item;
 
 import java.io.IOException;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.FluidStack;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
+import appeng.util.FluidUtils;
+import codechicken.nei.recipe.StackInfo;
 import io.netty.buffer.ByteBuf;
 
 public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
@@ -33,5 +40,29 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     @Override
     public IItemList<IAEFluidStack> createList() {
         return AEApi.instance().storage().createFluidList();
+    }
+
+    @Override
+    public boolean isContainerItemForType(@NotNull ItemStack container) {
+        return FluidUtils.isFluidContainer(container);
+    }
+
+    @Override
+    public @Nullable IAEFluidStack getStackFromContainerItem(@NotNull ItemStack container) {
+        FluidStack fluidStack = FluidUtils.getFluidFromContainer(container);
+        if (fluidStack == null) return null;
+        return AEFluidStack.create(fluidStack);
+    }
+
+    @Override
+    public @Nullable IAEFluidStack convertStackFromItem(@NotNull ItemStack itemStack) {
+        if (FluidUtils.isFluidContainer(itemStack)) return null;
+
+        itemStack = itemStack.copy();
+        itemStack.stackSize = 1;
+
+        FluidStack fluidStack = StackInfo.getFluid(itemStack);
+        if (fluidStack == null) return null;
+        return AEFluidStack.create(fluidStack);
     }
 }

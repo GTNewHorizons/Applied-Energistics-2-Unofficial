@@ -10,6 +10,8 @@
 
 package appeng.parts.automation;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -22,6 +24,7 @@ import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.me.cache.NetworkMonitor;
@@ -117,5 +120,10 @@ public class PartExportBus extends PartBaseExportBus<IAEItemStack> implements IC
     @Override
     protected int getAdaptorFlags() {
         return InventoryAdaptor.ALLOW_ITEMS | InventoryAdaptor.FOR_INSERTS;
+    }
+
+    @Override
+    public IAEStackType<IAEItemStack> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 }

@@ -47,6 +47,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 
 import appeng.api.events.GuiScrollEvent;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
@@ -414,7 +415,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(true, true, isCtrlKeyDown(), mouseButton);
+        slot.handleMouseClicked(AEStackTypeRegistry.getAllTypes(), isCtrlKeyDown(), mouseButton);
     }
 
     @Override

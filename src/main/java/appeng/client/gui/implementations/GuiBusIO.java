@@ -1,11 +1,12 @@
 package appeng.client.gui.implementations;
 
+import java.util.Collections;
+
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.Upgrades;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.container.implementations.ContainerBusIO;
@@ -110,7 +111,6 @@ public class GuiBusIO extends GuiUpgradeable {
 
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        StorageChannel channel = StorageChannel.getStorageChannelByParametrizedClass(this.bus.getClass());
-        slot.handleMouseClicked(channel == StorageChannel.ITEMS, channel == StorageChannel.FLUIDS, false);
+        slot.handleMouseClicked(Collections.singletonList(this.bus.getStackType()), false);
     }
 }

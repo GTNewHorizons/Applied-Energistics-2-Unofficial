@@ -1,5 +1,9 @@
 package appeng.client.gui.slots;
 
+import java.util.Collection;
+
+import appeng.api.storage.data.AEStackTypeRegistry;
+import appeng.api.storage.data.IAEStackType;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -13,7 +17,7 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
     }
 
     @Override
-    public void handleMouseClicked(boolean acceptItem, boolean acceptFluid, boolean isExtraAction, int mouseButton) {
+    public void handleMouseClicked(Collection<IAEStackType<?>> acceptTypes, boolean isExtraAction, int mouseButton) {
         if (mouseButton == 2) { // middle click
             if (this.getAEStack() != null) {
                 if (isExtraAction) {
@@ -24,6 +28,6 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
             }
         }
 
-        super.handleMouseClicked(acceptItem, acceptFluid, isExtraAction, mouseButton);
+        super.handleMouseClicked(AEStackTypeRegistry.getAllTypes(), isExtraAction, mouseButton);
     }
 }
