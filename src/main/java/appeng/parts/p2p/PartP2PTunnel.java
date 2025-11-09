@@ -329,11 +329,6 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         } catch (final GridAccessException ignored) {}
     }
 
-    private void configureNewTunnel(final PartP2PTunnel<?> newTunnel) {
-        newTunnel.onTunnelConfigChange();
-        newTunnel.onTunnelNetworkChange();
-    }
-
     protected void copyMeta(final PartP2PTunnel<?> from) {
         if (from == null) {
             return;
