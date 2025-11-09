@@ -26,7 +26,6 @@ import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.ticking.ITickManager;
 import appeng.me.cache.helpers.TunnelCollection;
-import appeng.parts.p2p.DebugState;
 import appeng.parts.p2p.PartP2PInterface;
 import appeng.parts.p2p.PartP2PTunnel;
 import appeng.parts.p2p.PartP2PTunnelME;
@@ -74,18 +73,16 @@ public class P2PCache implements IGridCache {
                 }
             }
 
-            DebugState.doAndLog(() -> {
-                // AELog.info( "rmv-" + (t.output ? "output: " : "input: ") + t.freq
-                // );
+            // AELog.info( "rmv-" + (t.output ? "output: " : "input: ") + t.freq
+            // );
 
-                if (t.isOutput()) {
-                    this.outputs.remove(t.getFrequency(), t);
-                    t.onTunnelNetworkChange();
-                } else {
-                    this.inputs.remove(t.getFrequency());
-                    this.updateTunnel(t.getFrequency(), false);
-                }
-            }, "removeNode");
+            if (t.isOutput()) {
+                this.outputs.remove(t.getFrequency(), t);
+                t.onTunnelNetworkChange();
+            } else {
+                this.inputs.remove(t.getFrequency());
+                this.updateTunnel(t.getFrequency(), false);
+            }
         }
     }
 
@@ -98,18 +95,16 @@ public class P2PCache implements IGridCache {
                 }
             }
 
-            DebugState.doAndLog(() -> {
-                // AELog.info( "add-" + (t.output ? "output: " : "input: ") + t.freq
-                // );
+            // AELog.info( "add-" + (t.output ? "output: " : "input: ") + t.freq
+            // );
 
-                if (t.isOutput()) {
-                    this.outputs.put(t.getFrequency(), t);
-                    t.onTunnelNetworkChange();
-                } else {
-                    this.inputs.put(t.getFrequency(), t);
-                    this.updateTunnel(t.getFrequency(), false);
-                }
-            }, "addNode");
+            if (t.isOutput()) {
+                this.outputs.put(t.getFrequency(), t);
+                t.onTunnelNetworkChange();
+            } else {
+                this.inputs.put(t.getFrequency(), t);
+                this.updateTunnel(t.getFrequency(), false);
+            }
         }
     }
 
@@ -123,47 +118,43 @@ public class P2PCache implements IGridCache {
     public void populateGridStorage(final IGridStorage storage) {}
 
     private void updateTunnel(final long freq, final boolean configChange) {
-        DebugState.doAndLog(() -> {
-            boolean pausedRebuild = false;
-            if (inputs.get(freq) instanceof PartP2PInterface) {
-                CraftingGridCache.pauseRebuilds();
-                pausedRebuild = true;
-            }
+        boolean pausedRebuild = false;
+        if (inputs.get(freq) instanceof PartP2PInterface) {
+            CraftingGridCache.pauseRebuilds();
+            pausedRebuild = true;
+        }
 
-            final PartP2PTunnel in = this.inputs.get(freq);
-            if (in != null) {
-                if (configChange) {
-                    in.onTunnelConfigChange();
-                }
-                in.onTunnelNetworkChange();
+        final PartP2PTunnel in = this.inputs.get(freq);
+        if (in != null) {
+            if (configChange) {
+                in.onTunnelConfigChange();
             }
+            in.onTunnelNetworkChange();
+        }
 
-            for (final PartP2PTunnel p : this.outputs.get(freq)) {
-                if (configChange) {
-                    p.onTunnelConfigChange();
-                }
-                p.onTunnelNetworkChange();
+        for (final PartP2PTunnel p : this.outputs.get(freq)) {
+            if (configChange) {
+                p.onTunnelConfigChange();
             }
+            p.onTunnelNetworkChange();
+        }
 
-            if (pausedRebuild) CraftingGridCache.unpauseRebuilds();
-        }, "updateTunnel");
+        if (pausedRebuild) CraftingGridCache.unpauseRebuilds();
     }
 
     public void updateFreq(final PartP2PTunnel t, final long newFrequency) {
-        DebugState.doAndLog(() -> {
-            unbind(t);
+        unbind(t);
 
-            t.setFrequency(newFrequency);
+        t.setFrequency(newFrequency);
 
-            if (t.isOutput()) {
-                this.outputs.put(t.getFrequency(), t);
-                t.onTunnelConfigChange();
-                t.onTunnelNetworkChange();
-            } else {
-                this.inputs.put(t.getFrequency(), t);
-                this.updateTunnel(t.getFrequency(), true);
-            }
-        }, "updateFreq");
+        if (t.isOutput()) {
+            this.outputs.put(t.getFrequency(), t);
+            t.onTunnelConfigChange();
+            t.onTunnelNetworkChange();
+        } else {
+            this.inputs.put(t.getFrequency(), t);
+            this.updateTunnel(t.getFrequency(), true);
+        }
     }
 
     public void unbind(final PartP2PTunnel t) {

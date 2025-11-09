@@ -283,7 +283,6 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
             newTunnel.setOutput(false);
             newTunnel.copySettings(this);
             newTunnel.copyContents(this);
-            // configureNewTunnel(newTunnel);
 
             final long freq = System.currentTimeMillis();
             newTunnel.updateFreq(freq);
@@ -307,7 +306,6 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         final PartP2PTunnel<?> input = newTunnel.getInput();
         newTunnel.copyMeta(input);
         newTunnel.copySettings(input);
-        // configureNewTunnel(newTunnel);
         return newTunnel;
     }
 
@@ -321,7 +319,6 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
         PartP2PTunnel<?> newTunnel = this.replacePartInWorld(player, itemStack);
         newTunnel.setOutput(false);
         newTunnel.copyContents(this);
-        // configureNewTunnel(newTunnel);
         newTunnel.updateFreq(0);
         return newTunnel;
     }
@@ -426,16 +423,14 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     }
 
     private PartP2PTunnel<?> replacePartInWorld(final EntityPlayer player, final ItemStack newType) {
-        return DebugState.doAndLog(() -> {
-            this.getHost().removePart(this.getSide(), true);
-            this.unbindTunnel();
+        this.getHost().removePart(this.getSide(), true);
+        this.unbindTunnel();
 
-            final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
-            final IPart newBus = this.getHost().getPart(dir);
-            if (newBus instanceof PartP2PTunnel<?>newTunnel) {
-                return newTunnel;
-            } else throw new RuntimeException();
-        }, "replacePartInWorld");
+        final ForgeDirection dir = this.getHost().addPart(newType, this.getSide(), player);
+        final IPart newBus = this.getHost().getPart(dir);
+        if (newBus instanceof PartP2PTunnel<?>newTunnel) {
+            return newTunnel;
+        } else throw new RuntimeException();
     }
 
     protected void copyContents(final PartP2PTunnel<?> from) {}
