@@ -1341,7 +1341,7 @@ public class Platform {
         return input;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void postChanges(final IStorageGrid gs, final ItemStack removed, final ItemStack added,
             final BaseActionSource src) {
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
@@ -1361,7 +1361,6 @@ public class Platform {
             if (added != null) {
                 IMEInventory<?> inventory = AEApi.instance().registries().cell().getCellInventory(added, null, type);
                 if (inventory != null) {
-                    AELog.info("cell add %s", type.getId());
                     if (changeList == null) {
                         changeList = type.createPrimitiveList();
                     }
@@ -1370,51 +1369,9 @@ public class Platform {
             }
 
             if (changeList != null) {
-                AELog.info("postAlterationOfStoredItems %d %s", changeList.size(), type.getId());
                 gs.postAlterationOfStoredItems(type, changeList, src);
             }
         }
-
-        // final IItemList<IAEItemStack> itemChanges = AEApi.instance().storage().createItemList();
-        // final IItemList<IAEFluidStack> fluidChanges = AEApi.instance().storage().createFluidList();
-        // IMEInventory<IAEItemStack> myItems = null;
-        // IMEInventory<IAEFluidStack> myFluids = null;
-        // if (removed != null) {
-        // myItems = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.ITEMS);
-        //
-        // if (myItems != null) {
-        // for (final IAEItemStack is : myItems.getAvailableItems(itemChanges, IterationCounter.fetchNewId())) {
-        // is.setStackSize(-is.getStackSize());
-        // }
-        // }
-        //
-        // myFluids = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.FLUIDS);
-        //
-        // if (myFluids != null) {
-        // for (final IAEFluidStack is : myFluids.getAvailableItems(fluidChanges, IterationCounter.fetchNewId())) {
-        // is.setStackSize(-is.getStackSize());
-        // }
-        // }
-        // }
-        //
-        // if (added != null) {
-        // myItems = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.ITEMS);
-        //
-        // if (myItems != null) {
-        // myItems.getAvailableItems(itemChanges, IterationCounter.fetchNewId());
-        // }
-        //
-        // myFluids = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.FLUIDS);
-        //
-        // if (myFluids != null) {
-        // myFluids.getAvailableItems(fluidChanges, IterationCounter.fetchNewId());
-        // }
-        // }
-        // if (myItems == null) {
-        // gs.postAlterationOfStoredItems(StorageChannel.FLUIDS, fluidChanges, src);
-        // } else {
-        // gs.postAlterationOfStoredItems(StorageChannel.ITEMS, itemChanges, src);
-        // }
     }
 
     public static <T extends IAEStack<T>> void postListChanges(final IItemList<T> before, final IItemList<T> after,
