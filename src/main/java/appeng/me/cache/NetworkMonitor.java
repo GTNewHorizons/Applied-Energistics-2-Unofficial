@@ -195,12 +195,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Nullable
     @SuppressWarnings("unchecked")
     public IMEInventoryHandler<T> getHandler() {
-        if (this.stackType == ITEM_STACK_TYPE) {
-            return (IMEInventoryHandler<T>) this.myGridCache.getItemInventoryHandler();
-        } else if (this.stackType == FLUID_STACK_TYPE) {
-            return (IMEInventoryHandler<T>) this.myGridCache.getFluidInventoryHandler();
-        }
-        return null;
+        return (IMEInventoryHandler<T>) this.myGridCache.getInventoryHandler(this.stackType);
     }
 
     public IGrid getGrid() {

@@ -93,6 +93,11 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
         this.container = container;
         this.tagCompound = Platform.openNbtData(o);
 
+        this.storedTypes = this.tagCompound.getShort(getStackTypeTag());
+        this.storedCount = this.tagCompound.getLong(getStackCountTag());
+        this.restrictionTypes = this.tagCompound.getByte("cellRestrictionTypes");
+        this.restrictionLong = this.tagCompound.getLong("cellRestrictionAmount");
+
         this.cellStacks = (IItemList<StackType>) this.getStackType().createPrimitiveList();
         this.loadCellStacks();
 
@@ -110,11 +115,6 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
                 }
             }
         }
-
-        this.storedTypes = this.tagCompound.getShort(getStackTypeTag());
-        this.storedCount = this.tagCompound.getLong(getStackCountTag());
-        this.restrictionTypes = this.tagCompound.getByte("cellRestrictionTypes");
-        this.restrictionLong = this.tagCompound.getLong("cellRestrictionAmount");
 
         if (this.restrictionTypes > 0) this.distTypesCount = this.restrictionTypes;
         else {

@@ -16,6 +16,9 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.Settings;
@@ -82,6 +85,14 @@ public class PortableCellViewer<StackType extends IAEStack<?>> extends MEMonitor
     @Override
     public IMEMonitor<IAEFluidStack> getFluidInventory() {
         if (type == FLUID_STACK_TYPE) return (IMEMonitor<IAEFluidStack>) this;
+        return null;
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        if (this.type == type) {
+            return this;
+        }
         return null;
     }
 

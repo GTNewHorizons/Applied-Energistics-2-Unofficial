@@ -223,7 +223,7 @@ public abstract class AEBaseContainer extends Container {
         try {
             final NBTTagCompound data = CompressedStreamTools.readCompressed(new ByteArrayInputStream(buffer));
             if (data != null) {
-                this.setTargetStack(Platform.readStackNBT(data));
+                this.setTargetStack(IAEStack.fromNBTGeneric(data));
             }
         } catch (final IOException e) {
             AELog.debug(e);
@@ -253,7 +253,7 @@ public abstract class AEBaseContainer extends Container {
             final NBTTagCompound nbt = new NBTTagCompound();
 
             if (stack != null) {
-                Platform.writeStackNBT(stack, nbt, true);
+                stack.writeToNBTGeneric(nbt);
             }
 
             try {

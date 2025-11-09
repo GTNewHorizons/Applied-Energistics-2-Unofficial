@@ -14,6 +14,8 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.IncludeExclude;
@@ -141,7 +143,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
         final IItemList<T> allAvailableItems = this.internal
-                .getAvailableItems((IItemList<T>) this.internal.getChannel().createList(), iteration);
+                .getAvailableItems((IItemList<T>) this.internal.getStackType().createList(), iteration);
         Predicate<T> filterCondition = this.getExtractFilterCondition();
         for (T item : allAvailableItems) {
             if (filterCondition.test(item)) {
@@ -193,6 +195,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     @Override
     public StorageChannel getChannel() {
         return this.internal.getChannel();
+    }
+
+    @Override
+    public @NotNull IAEStackType<?> getStackType() {
+        return this.internal.getStackType();
     }
 
     @Override

@@ -12,6 +12,8 @@ package appeng.me.storage;
 
 import javax.annotation.Nonnull;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.IGrid;
@@ -79,6 +81,11 @@ public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler
     @Override
     public StorageChannel getChannel() {
         return this.internal.getChannel();
+    }
+
+    @Override
+    public @NotNull IAEStackType<?> getStackType() {
+        return this.internal.getStackType();
     }
 
     @Override
