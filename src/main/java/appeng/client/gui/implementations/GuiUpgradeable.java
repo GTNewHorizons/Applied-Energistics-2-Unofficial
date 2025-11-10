@@ -32,7 +32,6 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.parts.automation.PartExportBus;
-import appeng.parts.automation.PartImportBus;
 
 public abstract class GuiUpgradeable extends AEBaseGui {
 
@@ -109,11 +108,8 @@ public abstract class GuiUpgradeable extends AEBaseGui {
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        this.fontRendererObj.drawString(
-                this.getGuiDisplayName(this.getName().getLocal()),
-                8,
-                6,
-                GuiColors.UpgradableTitle.getColor());
+        this.fontRendererObj
+                .drawString(this.getGuiDisplayName(this.getName()), 8, 6, GuiColors.UpgradableTitle.getColor());
         this.fontRendererObj.drawString(
                 GuiText.inventory.getLocal(),
                 8,
@@ -194,8 +190,8 @@ public abstract class GuiUpgradeable extends AEBaseGui {
         return true;
     }
 
-    protected GuiText getName() {
-        return this.bc instanceof PartImportBus ? GuiText.ImportBus : GuiText.ExportBus;
+    protected String getName() {
+        return "";
     }
 
     @Override

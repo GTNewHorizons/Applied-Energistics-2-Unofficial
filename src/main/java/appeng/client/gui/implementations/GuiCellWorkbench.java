@@ -223,8 +223,8 @@ public class GuiCellWorkbench extends GuiUpgradeable {
     }
 
     @Override
-    protected GuiText getName() {
-        return GuiText.CellWorkbench;
+    protected String getName() {
+        return GuiText.CellWorkbench.getLocal();
     }
 
     @Override

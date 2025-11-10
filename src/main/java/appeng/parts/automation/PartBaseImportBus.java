@@ -104,7 +104,7 @@ public abstract class PartBaseImportBus<StackType extends IAEStack<StackType>> e
         return new TickingRequest(
                 TickRates.ImportBus.getMin(),
                 TickRates.ImportBus.getMax(),
-                this.getHandler() == null,
+                this.getTarget() == null,
                 false);
     }
 
@@ -165,8 +165,6 @@ public abstract class PartBaseImportBus<StackType extends IAEStack<StackType>> e
 
         return this.worked ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
     }
-
-    protected abstract Object getTarget();
 
     protected abstract boolean importStuff(final Object myTarget, final StackType whatToImport,
             final IMEMonitor<StackType> inv, final IEnergySource energy, final FuzzyMode fzMode);

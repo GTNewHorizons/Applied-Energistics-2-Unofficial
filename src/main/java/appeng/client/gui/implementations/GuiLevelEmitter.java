@@ -184,8 +184,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     }
 
     @Override
-    protected GuiText getName() {
-        return GuiText.LevelEmitter;
+    protected String getName() {
+        return GuiText.LevelEmitter.getLocal();
     }
 
     @Override

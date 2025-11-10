@@ -78,7 +78,13 @@ public class MultiCraftingTracker {
 
     public boolean handleCrafting(final int x, final long itemToCraft, final IAEStack<?> aes, final InventoryAdaptor d,
             final World w, final IGrid g, final ICraftingGrid cg, final BaseActionSource mySrc) {
-        if (aes != null && d.simulateAddStack(aes, InsertionMode.DEFAULT) == null) {
+        return d.simulateAddStack(aes, InsertionMode.DEFAULT) == null
+                && this.handleCrafting(x, itemToCraft, aes, w, g, cg, mySrc);
+    }
+
+    public boolean handleCrafting(final int x, final long itemToCraft, final IAEStack<?> aes, final World w,
+            final IGrid g, final ICraftingGrid cg, final BaseActionSource mySrc) {
+        if (aes != null) {
             final Future<ICraftingJob> craftingJob = this.getJob(x);
 
             if (this.getLink(x) != null) {

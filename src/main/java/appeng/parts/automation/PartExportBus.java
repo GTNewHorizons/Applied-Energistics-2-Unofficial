@@ -88,8 +88,7 @@ public class PartExportBus extends PartBaseExportBus<IAEItemStack> implements IC
     }
 
     @Override
-    protected void doFuzzy(IAEItemStack aes, FuzzyMode fzMode, InventoryAdaptor destination, IEnergyGrid energy,
-            IMEMonitor<IAEItemStack> gridInv) {
+    protected void doFuzzy(IAEItemStack aes, FuzzyMode fzMode, IEnergyGrid energy, IMEMonitor<IAEItemStack> gridInv) {
         /*
          * This actually returns a NetworkInventoryHandler object. The method .getSortedFuzzyItems() used is the
          * overriden one found in the .java file.
@@ -99,19 +98,19 @@ public class PartExportBus extends PartBaseExportBus<IAEItemStack> implements IC
                     .getSortedFuzzyItems(new ArrayList<>(), aes, fzMode, IterationCounter.fetchNewId());
 
             for (final IAEItemStack o : fzlist) {
-                this.pushItemIntoTarget(destination, energy, gridInv, o);
+                this.pushItemIntoTarget(energy, gridInv, o);
             }
         }
     }
 
     @Override
-    protected void doOreDict(InventoryAdaptor destination, IEnergyGrid energy, IMEMonitor<IAEItemStack> gridInv) {
+    protected void doOreDict(IEnergyGrid energy, IMEMonitor<IAEItemStack> gridInv) {
         if (!oreFilterString.isEmpty()) {
             if (filterPredicate == null) filterPredicate = OreFilteredList.makeFilter(oreFilterString);
 
             for (IAEItemStack stack : gridInv.getStorageList()) {
                 if (stack == null || filterPredicate == null || !this.filterPredicate.test(stack)) continue;
-                this.pushItemIntoTarget(destination, energy, gridInv, stack);
+                this.pushItemIntoTarget(energy, gridInv, stack);
                 if (this.itemToSend <= 0) break;
             }
         }

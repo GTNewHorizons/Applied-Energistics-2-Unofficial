@@ -110,6 +110,11 @@ public class GuiBusIO extends GuiUpgradeable {
     }
 
     @Override
+    protected String getName() {
+        return this.bus.getBusName();
+    }
+
+    @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
         slot.handleMouseClicked(Collections.singletonList(this.bus.getStackType()), false);
     }
