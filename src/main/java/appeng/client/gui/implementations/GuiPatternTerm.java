@@ -10,7 +10,12 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -26,6 +31,7 @@ import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPatternSlot;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -339,7 +345,12 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(true, !cragtingMode, isCtrlKeyDown(), mouseButton);
+        List<IAEStackType<?>> list = new ArrayList<>();
+        list.add(ITEM_STACK_TYPE);
+        if (!cragtingMode) {
+            list.add(FLUID_STACK_TYPE);
+        }
+        slot.handleMouseClicked(list, isCtrlKeyDown(), mouseButton);
     }
 
     public VirtualMEPatternSlot[] getCraftingSlots() {
