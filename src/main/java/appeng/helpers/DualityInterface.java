@@ -985,7 +985,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     public IStorageMonitorable getMonitorable(final ForgeDirection side, final BaseActionSource src,
             final IStorageMonitorable myInterface) {
-        if (Platform.canAccess(this.gridProxy, src)) {
+        if (this.gridProxy.isActive() && Platform.canAccess(this.gridProxy, src)) {
             return myInterface;
         }
 
