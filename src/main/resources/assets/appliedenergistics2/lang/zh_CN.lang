@@ -307,6 +307,10 @@ gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=shift点击,高亮ME�
 gui.appliedenergistics2.Nothing=无
 gui.appliedenergistics2.VoidCellTooltip=删除§任何§7存储在里面的物品
 gui.appliedenergistics2.Deprecated=已弃用,会在后续版本移除!
+gui.appliedenergistics2.CPUAllowMode=接受的合成来源
+gui.appliedenergistics2.CPUAllowAll=所有来源
+gui.appliedenergistics2.CPUOnlyAllowNonPlayer=仅非玩家请求
+gui.appliedenergistics2.CPUOnlyAllowPlayer=仅玩家请求
 
 gui.appliedenergistics2.NetworkBytesDetails=网络存储信息
 gui.appliedenergistics2.Items=物品
