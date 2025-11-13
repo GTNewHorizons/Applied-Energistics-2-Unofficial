@@ -245,15 +245,16 @@ public class GuiCraftingCPUTable {
                         .convert(hoveredCpu.getCraftingElapsedTime(), TimeUnit.NANOSECONDS);
                 final String elapsedTimeText = DurationFormatUtils
                         .formatDuration(elapsedInMilliseconds, GuiText.ETAFormat.getLocal());
-
-                double craftingPercentage = 100
+                final double craftingPercentage = 100
                         - (double) (hoveredCpu.getRemainingItems()) / (double) hoveredCpu.getTotalItems() * 100;
+
                 tooltip.append(GuiText.Crafting.getLocal());
                 tooltip.append(": ");
                 tooltip.append(NumberFormat.getInstance().format(crafting.getStackSize()));
                 tooltip.append(' ');
                 tooltip.append(crafting.getItemStack().getDisplayName());
                 tooltip.append('\n');
+
                 tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getRemainingItems()));
                 tooltip.append(" / ");
                 tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getTotalItems()));
@@ -285,6 +286,17 @@ public class GuiCraftingCPUTable {
                 tooltip.append(hoveredCpu.formatCoprocessors());
                 tooltip.append('\n');
             }
+
+            // Crafting Allow Mode part
+            tooltip.append(GuiText.CPUAllowMode.getLocal());
+            tooltip.append(": ");
+            switch (hoveredCpu.allowMode()) {
+                case ALLOW_ALL -> tooltip.append(GuiText.CPUAllowAll.getLocal());
+                case ONLY_NONPLAYER -> tooltip.append(GuiText.CPUOnlyAllowNonPlayer.getLocal());
+                case ONLY_PLAYER -> tooltip.append(GuiText.CPUOnlyAllowPlayer.getLocal());
+            }
+            tooltip.append('\n');
+
             if (tooltip.length() > 0) {
                 parent.drawTooltip(mouseX - offsetX, mouseY - offsetY, tooltip.toString());
             }

@@ -159,8 +159,9 @@ public class PathingCalculation {
                                             // Only a log for now until addons are fixed too. See
                                             // https://github.com/AppliedEnergistics/Applied-Energistics-2/issues/8295
                                             AELog.error(
-                                                    "Skipping null node returned by grid multiblock node {}",
-                                                    multiblock);
+                                                    "Skipping null node returned by grid multiblock node %s %s",
+                                                    multiblock.getMachine().getClass().getName(),
+                                                    multiblock.getLocation().toString());
                                         } else if (otherNodes != pi) {
                                             this.multiblocksWithChannel.add((GridNode) otherNodes);
                                         }
