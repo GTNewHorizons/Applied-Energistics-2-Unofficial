@@ -359,7 +359,12 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         final boolean isSource = this.getDepth(Actionable.SIMULATE).size() == 1;
 
         IItemList<T> currentPriorityItemList = null;
-        final List<IMEInventoryHandler<T>> priorityInventory = this.priorityInventory;
+
+        // sort by priority only
+        final List<IMEInventoryHandler<T>> priorityInventory = new SortedArrayList<>(
+                Comparator.comparing((IMEInventoryHandler<T> e) -> e.getPriority()).reversed());
+        priorityInventory.addAll(this.priorityInventory);
+
         final int size = priorityInventory.size();
         Integer lastPriority = null;
         for (int i = 0; i < size; i++) {
