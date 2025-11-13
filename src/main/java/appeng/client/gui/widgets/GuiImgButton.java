@@ -439,6 +439,18 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.Craftable);
 
             this.registerApp(
+                    16 * 6 + 10,
+                    Settings.FUZZY_MODE,
+                    FuzzyMode.PERCENT_1,
+                    ButtonToolTips.FuzzyMode,
+                    ButtonToolTips.FZPercent_1);
+            this.registerApp(
+                    16 * 6 + 9,
+                    Settings.FUZZY_MODE,
+                    FuzzyMode.PERCENT_10,
+                    ButtonToolTips.FuzzyMode,
+                    ButtonToolTips.FZPercent_10);
+            this.registerApp(
                     16 * 6,
                     Settings.FUZZY_MODE,
                     FuzzyMode.PERCENT_25,
