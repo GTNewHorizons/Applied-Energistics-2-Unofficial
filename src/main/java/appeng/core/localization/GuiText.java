@@ -278,7 +278,11 @@ public enum GuiText implements Localization {
     EncodedPattern,
 
     Inputs,
-    Outputs;
+    Outputs,
+    CPUAllowMode,
+    CPUAllowAll,
+    CPUOnlyAllowNonPlayer,
+    CPUOnlyAllowPlayer;
 
     private final String root;
 
