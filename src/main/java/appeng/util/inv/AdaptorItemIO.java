@@ -1,11 +1,8 @@
 package appeng.util.inv;
 
-import java.util.Iterator;
-
-import net.minecraft.item.ItemStack;
-
-import org.jetbrains.annotations.NotNull;
-
+import appeng.api.config.FuzzyMode;
+import appeng.util.InventoryAdaptor;
+import appeng.util.Platform;
 import com.google.common.collect.Iterators;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
 import com.gtnewhorizon.gtnhlib.item.FastImmutableItemStack;
@@ -13,10 +10,10 @@ import com.gtnewhorizon.gtnhlib.item.ImmutableItemStack;
 import com.gtnewhorizon.gtnhlib.item.InventoryIterator;
 import com.gtnewhorizon.gtnhlib.item.ItemStackPredicate;
 import com.gtnewhorizon.gtnhlib.util.ItemUtil;
+import net.minecraft.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
-import appeng.api.config.FuzzyMode;
-import appeng.util.InventoryAdaptor;
-import appeng.util.Platform;
+import java.util.Iterator;
 
 public class AdaptorItemIO extends InventoryAdaptor {
 
@@ -28,9 +25,13 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
     @Override
     public ItemStack removeItems(int amount, ItemStack filter, IInventoryDestination destination) {
-        return itemIO.pull(
-                ItemStackPredicate.matches(filter).and(stack -> destination.canInsert(stack.toStackFast())),
-                stack -> Math.min(stack.getStackSize(), amount));
+        ItemStackPredicate predicate = ItemStackPredicate.matches(filter);
+
+        if (destination != null) {
+            predicate = predicate.and(stack -> destination.canInsert(stack.toStackFast()));
+        }
+
+        return itemIO.pull(predicate, stack -> Math.min(stack.getStackSize(), amount));
     }
 
     @Override
