@@ -260,7 +260,7 @@ public class CellInventory implements ICellInventory {
                 remainingItemCount = this.getRemainingItemsCountDist(null);
             } else {
                 if (restrictionLong > 0) {
-                    remainingItemCount = restrictionLong;
+                    remainingItemCount = this.getRemainingItemCount();
                 } else {
                     remainingItemCount = this.getRemainingItemCount() - this.getBytesPerType() * 8L;
                 }
@@ -515,6 +515,7 @@ public class CellInventory implements ICellInventory {
 
         return (bytesFree > this.getBytesPerType()
                 || (bytesFree == this.getBytesPerType() && this.getUnusedItemCount() > 0))
+                && (restrictionLong <= 0 || restrictionLong > getStoredItemCount())
                 && this.getRemainingItemTypes() > 0;
     }
 
