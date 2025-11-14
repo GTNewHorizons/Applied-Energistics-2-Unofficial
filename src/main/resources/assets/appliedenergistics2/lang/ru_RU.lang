@@ -390,6 +390,8 @@ gui.tooltips.appliedenergistics2.Encode=Закодировать шаблон
 gui.tooltips.appliedenergistics2.EncodeDescription=Запиши введённый шаблон в текущий закодированный шаблон или в доступный пустой шаблон. Удерживай Shift, чтобы сразу перенести его в инвентарь. Удерживай Shift+Ctrl, чтобы закодировать весь стак.
 
 gui.tooltips.appliedenergistics2.FuzzyMode=Нечёткое сравнение
+gui.tooltips.appliedenergistics2.FZPercent_1=Разделять урон с 1%
+gui.tooltips.appliedenergistics2.FZPercent_10=Разделять урон с 10%
 gui.tooltips.appliedenergistics2.FZPercent_25=Разделять урон с 25%
 gui.tooltips.appliedenergistics2.FZPercent_50=Разделять урон с 50%
 gui.tooltips.appliedenergistics2.FZPercent_75=Разделять урон с 75%
