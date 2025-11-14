@@ -1,8 +1,11 @@
 package appeng.util.inv;
 
-import appeng.api.config.FuzzyMode;
-import appeng.util.InventoryAdaptor;
-import appeng.util.Platform;
+import java.util.Iterator;
+
+import net.minecraft.item.ItemStack;
+
+import org.jetbrains.annotations.NotNull;
+
 import com.google.common.collect.Iterators;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
 import com.gtnewhorizon.gtnhlib.item.FastImmutableItemStack;
@@ -10,10 +13,10 @@ import com.gtnewhorizon.gtnhlib.item.ImmutableItemStack;
 import com.gtnewhorizon.gtnhlib.item.InventoryIterator;
 import com.gtnewhorizon.gtnhlib.item.ItemStackPredicate;
 import com.gtnewhorizon.gtnhlib.util.ItemUtil;
-import net.minecraft.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.Iterator;
+import appeng.api.config.FuzzyMode;
+import appeng.util.InventoryAdaptor;
+import appeng.util.Platform;
 
 public class AdaptorItemIO extends InventoryAdaptor {
 
