@@ -357,6 +357,8 @@ gui.tooltips.appliedenergistics2.Encode=编码样板
 gui.tooltips.appliedenergistics2.EncodeDescription=将输入的样板写入当前编码样板或可用的空样板;按住Shift使样板直接进入物品栏;按住Ctrl+Shift以编码整组样板.
 
 gui.tooltips.appliedenergistics2.FuzzyMode=模糊对比
+gui.tooltips.appliedenergistics2.FZPercent_1=1%时分离损耗
+gui.tooltips.appliedenergistics2.FZPercent_10=10%时分离损耗
 gui.tooltips.appliedenergistics2.FZPercent_25=25%时分离损耗
 gui.tooltips.appliedenergistics2.FZPercent_50=50%时分离损耗
 gui.tooltips.appliedenergistics2.FZPercent_75=75%时分离损耗
