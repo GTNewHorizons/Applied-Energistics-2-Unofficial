@@ -528,7 +528,9 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
 
     @Override
     public long getRemainingItemTypes() {
-        final long basedOnStorage = this.getFreeBytes() / this.getBytesPerType();
+        final long bytesPerType = this.getBytesPerType();
+
+        final long basedOnStorage = bytesPerType > 0 ? this.getFreeBytes() / bytesPerType : this.getMaxTypes();
         final long baseOnTotal = this.getTotalItemTypes() - this.getStoredItemTypes();
 
         return Math.min(basedOnStorage, baseOnTotal);
