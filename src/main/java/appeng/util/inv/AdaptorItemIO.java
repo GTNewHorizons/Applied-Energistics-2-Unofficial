@@ -28,9 +28,13 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
     @Override
     public ItemStack removeItems(int amount, ItemStack filter, IInventoryDestination destination) {
-        return itemIO.pull(
-                ItemStackPredicate.matches(filter).and(stack -> destination.canInsert(stack.toStackFast())),
-                stack -> Math.min(stack.getStackSize(), amount));
+        ItemStackPredicate predicate = ItemStackPredicate.matches(filter);
+
+        if (destination != null) {
+            predicate = predicate.and(stack -> destination.canInsert(stack.toStackFast()));
+        }
+
+        return itemIO.pull(predicate, stack -> Math.min(stack.getStackSize(), amount));
     }
 
     @Override
