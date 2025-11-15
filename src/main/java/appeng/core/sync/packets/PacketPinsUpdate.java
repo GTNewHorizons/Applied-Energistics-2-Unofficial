@@ -11,10 +11,11 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 import appeng.api.config.PinsState;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.helpers.IPinsHandler;
-import appeng.util.item.AEItemStack;
+import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
@@ -22,7 +23,7 @@ public class PacketPinsUpdate extends AppEngPacket {
 
     // input.
     @Nullable
-    private final IAEItemStack[] list;
+    private final IAEStack<?>[] list;
     @Nullable
     private final PinsState state;
 
@@ -38,15 +39,15 @@ public class PacketPinsUpdate extends AppEngPacket {
             return;
         }
 
-        list = new IAEItemStack[arrLength];
+        list = new IAEStack<?>[arrLength];
         for (int i = 0; i < list.length; i++) {
             if (stream.readBoolean()) {
-                list[i] = AEItemStack.loadItemStackFromPacket(stream);
+                list[i] = Platform.readStackByte(stream);
             }
         }
     }
 
-    public PacketPinsUpdate(IAEItemStack[] arr, PinsState state) throws IOException {
+    public PacketPinsUpdate(IAEStack<?>[] arr, PinsState state) throws IOException {
         list = arr;
         this.state = state;
 
@@ -57,10 +58,10 @@ public class PacketPinsUpdate extends AppEngPacket {
         data.writeInt(arr.length);
         data.writeInt(state.ordinal());
 
-        for (IAEItemStack aeItemStack : arr) {
+        for (IAEStack<?> aeItemStack : arr) {
             if (aeItemStack != null) {
                 data.writeBoolean(true);
-                aeItemStack.writeToPacket(data);
+                Platform.writeStackByte(aeItemStack, data);
             } else {
                 data.writeBoolean(false);
             }

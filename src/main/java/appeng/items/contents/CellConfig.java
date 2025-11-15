@@ -12,10 +12,10 @@ package appeng.items.contents;
 
 import net.minecraft.item.ItemStack;
 
-import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.Platform;
 
-public class CellConfig extends AppEngInternalInventory {
+public class CellConfig extends IAEStackInventory {
 
     private final ItemStack is;
 

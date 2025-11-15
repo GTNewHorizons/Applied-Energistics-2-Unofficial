@@ -24,7 +24,7 @@ import appeng.api.util.CraftCancelListener;
 import appeng.api.util.CraftCompleteListener;
 import appeng.api.util.CraftUpdateListener;
 
-public interface ICraftingCPU extends IBaseMonitor<IAEItemStack> {
+public interface ICraftingCPU extends IBaseMonitor {
 
     /**
      * @return true if the CPU currently has a job.
