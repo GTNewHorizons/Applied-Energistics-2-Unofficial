@@ -25,7 +25,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import appeng.api.storage.data.IItemList;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -82,6 +81,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
@@ -1672,6 +1672,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     private class InterfaceInventory extends MEMonitorIInventory {
+
         private boolean listDirty = true;
 
         public InterfaceInventory() {
