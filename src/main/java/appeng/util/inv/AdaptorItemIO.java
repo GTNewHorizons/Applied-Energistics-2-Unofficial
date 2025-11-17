@@ -38,7 +38,7 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
             if (immutableStack == null) continue;
 
-            if (filter != null && immutableStack.matches(filter)) continue;
+            if (filter != null && !immutableStack.matches(filter)) continue;
 
             ItemStack stack = immutableStack.toStack();
 
