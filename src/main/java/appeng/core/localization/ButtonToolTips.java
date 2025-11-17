@@ -70,6 +70,8 @@ public enum ButtonToolTips implements Localization {
     StoredCraftable,
     Craftable,
 
+    FZPercent_1,
+    FZPercent_10,
     FZPercent_25,
     FZPercent_50,
     FZPercent_75,
