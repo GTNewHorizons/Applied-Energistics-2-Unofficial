@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.OptionalInt;
 
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
@@ -43,6 +44,8 @@ import com.glodblock.github.common.parts.PartFluidInterface;
 import com.glodblock.github.common.parts.PartFluidP2PInterface;
 import com.glodblock.github.common.tile.TileFluidInterface;
 import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
+import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -1019,11 +1022,25 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     private boolean inventoryCountsAsEmpty(TileEntity te, InventoryAdaptor ad, ForgeDirection side) {
         String name = te.getBlockType().getUnlocalizedName();
-        boolean isEmpty = (name.equals("gt.blockmachines") || name.equals("tile.interface")
-                || name.equals("tile.blockWritingTable")) && tileHasOnlyIgnoredItems(ad);
+
+        if (name.equals("gt.blockmachines")) {
+            ItemSink sink = ItemUtil.getItemSink(te, side);
+
+            if (sink != null) {
+                OptionalInt present = sink.getStoredItemsInSink(
+                        stack -> !BlockingModeIgnoreItemRegistry.instance().isIgnored(stack.toStackFast()));
+
+                return present.orElse(0) == 0;
+            }
+        }
+
+        boolean isEmpty = (name.equals("tile.interface") || name.equals("tile.blockWritingTable"))
+                && tileHasOnlyIgnoredItems(ad);
+
         if (shouldCheckFluid()) {
             isEmpty = name.equals("tile.interface");
         }
+
         return isEmpty;
     }
 

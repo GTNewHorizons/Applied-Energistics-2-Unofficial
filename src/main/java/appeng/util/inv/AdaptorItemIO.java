@@ -156,9 +156,25 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
     @Override
     public boolean containsItems() {
-        InventoryIterator iter = itemIO.sourceIterator();
+        if (itemIO.getStoredItemsInSink(null).orElse(0) > 0) return true;
 
-        return iter != null && iter.hasNext();
+        InventoryIterator iter = itemIO.sinkIterator();
+
+        if (iter != null) {
+            while (iter.hasNext()) {
+                if (iter.next() != null) return true;
+            }
+        }
+
+        iter = itemIO.sourceIterator();
+
+        if (iter != null) {
+            while (iter.hasNext()) {
+                if (iter.next() != null) return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
