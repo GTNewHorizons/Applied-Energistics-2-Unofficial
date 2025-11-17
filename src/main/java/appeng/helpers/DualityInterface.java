@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import appeng.api.storage.data.IItemList;
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -913,7 +914,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     @Override
     public IMEMonitor<IAEItemStack> getItemInventory() {
         if (this.hasConfig()) {
-            return new InterfaceInventory(this);
+            return new InterfaceInventory();
         }
 
         return this.items;
@@ -987,13 +988,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             return myInterface;
         }
 
-        final DualityInterface di = this;
-
         return new IStorageMonitorable() {
 
             @Override
             public IMEMonitor<IAEItemStack> getItemInventory() {
-                return new InterfaceInventory(di);
+                return new InterfaceInventory();
             }
 
             @Override
@@ -1673,10 +1672,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     private class InterfaceInventory extends MEMonitorIInventory {
-
-        public InterfaceInventory(final DualityInterface tileInterface) {
-            super(new AdaptorIInventory(tileInterface.storage));
-            this.setActionSource(new MachineSource(DualityInterface.this.iHost));
+        public InterfaceInventory() {
+            super(new AdaptorIInventory(storage));
+            this.setActionSource(new MachineSource(iHost));
         }
 
         @Override
@@ -1696,6 +1694,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             return super.extractItems(request, type, src);
+        }
+
+        @Override
+        public IItemList<IAEItemStack> getStorageList() {
+            IItemList<IAEItemStack> list = AEApi.instance().storage().createPrimitiveItemList();
+            for (ItemStack stack : getStorage()) {
+                if (stack == null) continue;
+                list.add(AEApi.instance().storage().createItemStack(stack));
+            }
+            return list;
         }
     }
 }
