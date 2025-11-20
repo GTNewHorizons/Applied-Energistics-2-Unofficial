@@ -27,6 +27,8 @@ import appeng.integration.modules.waila.tile.CraftingMonitorWailaDataProvider;
 import appeng.integration.modules.waila.tile.InterfaceDataProvider;
 import appeng.integration.modules.waila.tile.PowerStateWailaDataProvider;
 import appeng.integration.modules.waila.tile.PowerStorageWailaDataProvider;
+import appeng.integration.modules.waila.tile.QuantumBridgeWailaDataProvider;
+import appeng.tile.qnb.TileQuantumBridge;
 import mcp.mobius.waila.api.IWailaConfigHandler;
 import mcp.mobius.waila.api.IWailaDataAccessor;
 import mcp.mobius.waila.api.IWailaDataProvider;
@@ -56,8 +58,10 @@ public final class TileWailaDataProvider implements IWailaDataProvider {
         final IWailaDataProvider craftingBlock = new PowerStateWailaDataProvider();
         final IWailaDataProvider craftingMonitor = new CraftingMonitorWailaDataProvider();
         final IWailaDataProvider interfaceBlock = new InterfaceDataProvider();
+        final IWailaDataProvider quantumBridge = new QuantumBridgeWailaDataProvider();
 
-        this.providers = Lists.newArrayList(charger, energyCell, craftingBlock, craftingMonitor, interfaceBlock);
+        this.providers = Lists
+                .newArrayList(charger, energyCell, craftingBlock, craftingMonitor, interfaceBlock, quantumBridge);
     }
 
     @Override
@@ -107,7 +111,8 @@ public final class TileWailaDataProvider implements IWailaDataProvider {
             provider.getNBTData(player, te, tag, world, x, y, z);
         }
         if (te instanceof ICustomNameObject customNameObject && customNameObject.hasCustomName()
-                && !customNameObject.getCustomName().isEmpty()) {
+                && !customNameObject.getCustomName().isEmpty()
+                && !(te instanceof TileQuantumBridge)) {
             tag.setString(NBT_TILE_CUSTOM_NAME, customNameObject.getCustomName());
         }
 
