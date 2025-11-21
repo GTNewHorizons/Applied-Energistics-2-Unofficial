@@ -18,6 +18,7 @@ import com.google.common.collect.ImmutableSet;
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
 public interface ICraftingRequester extends IActionHost {
 
@@ -37,7 +38,15 @@ public interface ICraftingRequester extends IActionHost {
      * @param mode  action mode
      * @return unwanted item
      */
-    IAEItemStack injectCraftedItems(ICraftingLink link, IAEItemStack items, Actionable mode);
+
+    default IAEStack<?> injectCraftedItems(ICraftingLink link, IAEStack<?> items, Actionable mode) {
+        return null;
+    }
+
+    @Deprecated
+    default IAEItemStack injectCraftedItems(ICraftingLink link, IAEItemStack items, Actionable mode) {
+        return (IAEItemStack) injectCraftedItems(link, (IAEStack<?>) items, mode);
+    }
 
     /**
      * called when the job changes from in progress, to either complete, or canceled.

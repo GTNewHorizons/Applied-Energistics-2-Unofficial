@@ -146,7 +146,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private final LinkedList<TileCraftingTile> tiles = new LinkedList<>();
     private final LinkedList<TileCraftingTile> storage = new LinkedList<>();
     private final LinkedList<TileCraftingMonitorTile> status = new LinkedList<>();
-    private final HashMap<IMEMonitorHandlerReceiver<IAEStack<?>>, Object> listeners = new HashMap<>();
+    private final HashMap<IMEMonitorHandlerReceiver, Object> listeners = new HashMap<>();
     private final HashMap<IAEStack<?>, List<NamedDimensionalCoord>> providers = new HashMap<>();
     private ICraftingLink myLastLink;
     private String myName = "";
@@ -479,15 +479,15 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void postChange(final IAEStack<?> diff, final BaseActionSource src) {
-        final Iterator<Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object>> i = this.getListeners();
+        final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
 
         // protect integrity
         if (i.hasNext()) {
             final ImmutableList<IAEStack<?>> single = ImmutableList.of(diff.copy());
 
             while (i.hasNext()) {
-                final Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object> o = i.next();
-                final IMEMonitorHandlerReceiver<IAEStack<?>> receiver = o.getKey();
+                final Entry<IMEMonitorHandlerReceiver, Object> o = i.next();
+                final IMEMonitorHandlerReceiver receiver = o.getKey();
 
                 if (receiver.isValid(o.getValue())) {
                     receiver.postChange(null, single, src);
@@ -567,7 +567,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    private Iterator<Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object>> getListeners() {
+    private Iterator<Entry<IMEMonitorHandlerReceiver, Object>> getListeners() {
         return this.listeners.entrySet().iterator();
     }
 
@@ -812,8 +812,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                         for (final IAEStack<?> anInput : input) {
                             if (anInput != null) {
-                                if (anInput.isItem()) sum += anInput.getStackSize();
-                                else sum += anInput.getStackSize() / 1000D;
+                                sum += (double) anInput.getStackSize() / anInput.getPowerMultiplier();
                             }
                         }
                         // upgraded interface uses more power
@@ -1736,7 +1735,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.playersFollowingCurrentCraft.add(name);
         }
 
-        final Iterator<Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object>> i = this.getListeners();
+        final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
         while (i.hasNext()) {
             if (i.next().getKey() instanceof ContainerCraftingCPU cccpu) {
                 cccpu.sendUpdateFollowPacket(playersFollowingCurrentCraft);
@@ -1745,13 +1744,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     @SuppressWarnings("unchecked")
-    public List<NamedDimensionalCoord> getProviders(IAEItemStack is) {
-        return this.providers.getOrDefault(convertStack(is), Collections.EMPTY_LIST);
+    public List<NamedDimensionalCoord> getProviders(IAEStack<?> is) {
+        return this.providers.getOrDefault(is, Collections.EMPTY_LIST);
     }
 
-    public ScheduledReason getScheduledReason(IAEItemStack is) {
+    public ScheduledReason getScheduledReason(IAEStack<?> is) {
         for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
-            for (final IAEItemStack ais : t.getKey().getCondensedOutputs()) {
+            for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
                 if (Objects.equals(ais, is)) {
                     return reasonProvider.getOrDefault(t.getKey(), ScheduledReason.UNDEFINED);
                 }

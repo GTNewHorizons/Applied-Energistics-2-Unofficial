@@ -1,7 +1,6 @@
 package appeng.util.item;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 
 import javax.annotation.Nonnull;
@@ -42,12 +41,13 @@ public final class IAEStackList implements IItemList<IAEStack<?>> {
     }
 
     @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Collection<IAEStack<?>> findFuzzy(final IAEStack<?> filter, final FuzzyMode fuzzy) {
         if (filter != null) {
             if (filter.isItem()) {
-                return Collections.singleton((IAEStack<?>) itemList.findFuzzy((IAEItemStack) filter, fuzzy));
+                return (Collection) itemList.findFuzzy((IAEItemStack) filter, fuzzy);
             } else {
-                return Collections.singleton((IAEStack<?>) fluidList.findFuzzy((IAEFluidStack) filter, fuzzy));
+                return (Collection) fluidList.findFuzzy((IAEFluidStack) filter, fuzzy);
             }
         }
         return null;

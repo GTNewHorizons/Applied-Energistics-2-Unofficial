@@ -50,6 +50,8 @@ import appeng.api.config.StringOrder;
 import appeng.api.config.TerminalStyle;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.ICraftingPatternItem;
+import appeng.api.parts.IInterfaceTerminal;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
@@ -78,7 +80,6 @@ import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
-import appeng.parts.reporting.PartInterfaceTerminal;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
@@ -148,7 +149,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private static final float STEP_Z = 10.0f;
     private static final float MAGIC_RENDER_ITEM_Z = 50.0f;
 
-    public GuiInterfaceTerminal(final InventoryPlayer inventoryPlayer, final PartInterfaceTerminal te) {
+    public GuiInterfaceTerminal(final InventoryPlayer inventoryPlayer, final IInterfaceTerminal te) {
         this(new ContainerInterfaceTerminal(inventoryPlayer, te));
     }
 
@@ -234,28 +235,34 @@ public class GuiInterfaceTerminal extends AEBaseGui
         searchFieldNames.x = guiLeft + Math.max(32, VIEW_LEFT) + 99;
         searchFieldNames.y = guiTop + 38;
 
+        int offset = guiTop + 8;
         terminalStyleBox.xPosition = guiLeft - 18;
-        terminalStyleBox.yPosition = guiTop + 8;
+        terminalStyleBox.yPosition = offset;
+        offset += 18;
 
         searchStringSave.xPosition = guiLeft - 18;
-        searchStringSave.yPosition = terminalStyleBox.yPosition + 18;
+        searchStringSave.yPosition = offset;
+        offset += 18;
 
         guiButtonSectionOrder.xPosition = guiLeft - 18;
-        guiButtonSectionOrder.yPosition = searchStringSave.yPosition + 18;
+        guiButtonSectionOrder.yPosition = offset;
+        offset += 18;
 
         guiButtonBrokenRecipes.xPosition = guiLeft - 18;
-        guiButtonBrokenRecipes.yPosition = guiButtonSectionOrder.yPosition + 18;
+        guiButtonBrokenRecipes.yPosition = offset;
+        offset += 18;
 
         guiButtonHideFull.xPosition = guiLeft - 18;
-        guiButtonHideFull.yPosition = guiButtonBrokenRecipes.yPosition + 18;
+        guiButtonHideFull.yPosition = offset;
+        offset += 18;
 
         guiButtonAssemblersOnly.xPosition = guiLeft - 18;
-        guiButtonAssemblersOnly.yPosition = guiButtonHideFull.yPosition + 18;
+        guiButtonAssemblersOnly.yPosition = offset;
+        offset += 18;
 
         guiButtonUseSubstitute.xPosition = guiLeft - 18;
-        guiButtonUseSubstitute.yPosition = guiButtonAssemblersOnly.yPosition + 18;
-
-        offsetY = guiButtonUseSubstitute.yPosition; // last button pos for ae2fc
+        guiButtonUseSubstitute.yPosition = offset;
+        offset += 18;
 
         setSearchString();
 
@@ -269,6 +276,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
         buttonList.add(searchStringSave);
         buttonList.add(terminalStyleBox);
         buttonList.add(guiButtonUseSubstitute);
+
+        initCustomButtons(this.guiLeft - 18, offset);
     }
 
     protected void repositionSlots() {
@@ -345,6 +354,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     @Override
     protected void actionPerformed(final GuiButton btn) {
+        if (actionPerformedCustomButtons(btn)) return;
         if (btn == guiButtonAssemblersOnly) {
             onlyMolecularAssemblers = !onlyMolecularAssemblers;
             masterList.markDirty();
@@ -943,10 +953,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         for (int i = 0; i < tags.tagCount(); i++) {
             final NBTTagCompound tag = tags.getCompoundTagAt(i);
-            final ItemStack parsedItemStack = ItemStack.loadItemStackFromNBT(tag);
+            final IAEStack<?> aes = Platform.readStackNBT(tag, true);
 
-            if (parsedItemStack != null) {
-                if (itemFilter.test(parsedItemStack)) {
+            if (aes != null) {
+                if (itemFilter.test(aes.getItemStackForNEI())) {
                     return true;
                 }
             } else if (containsInvalidDisplayName && !tag.hasNoTags()) {

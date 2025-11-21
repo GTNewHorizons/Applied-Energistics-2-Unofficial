@@ -56,7 +56,12 @@ public final class FluidList implements IItemList<IAEFluidStack> {
             return Collections.emptyList();
         }
 
-        return Collections.singletonList(this.findPrecise(filter));
+        IAEFluidStack found = this.findPrecise(filter);
+        if (found == null) {
+            return Collections.emptyList();
+        }
+
+        return Collections.singletonList(found);
     }
 
     @Override

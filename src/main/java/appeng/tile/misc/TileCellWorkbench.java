@@ -17,37 +17,38 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
+import appeng.api.AEApi;
 import appeng.api.config.CopyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
-import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.items.IUpgradeModule;
+import appeng.api.implementations.tiles.ICellWorkbench;
 import appeng.api.storage.ICellWorkbenchItem;
+import appeng.api.storage.StorageChannel;
+import appeng.api.storage.StorageName;
 import appeng.api.util.IConfigManager;
 import appeng.helpers.ICellRestriction;
-import appeng.helpers.IOreFilterable;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.tile.AEBaseTile;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
-import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.tile.inventory.IAEAppEngInventory;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
-import appeng.util.IConfigManagerHost;
 
-public class TileCellWorkbench extends AEBaseTile
-        implements IUpgradeableHost, IAEAppEngInventory, IConfigManagerHost, IOreFilterable, ICellRestriction {
+public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPrimaryGuiIconProvider {
 
     private final AppEngInternalInventory cell = new AppEngInternalInventory(this, 1);
-    private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, 63);
+    private final IAEStackInventory config = new IAEStackInventory(this, 63);
     private final ConfigManager manager = new ConfigManager(this);
 
     private IInventory cacheUpgrades = null;
-    private IInventory cacheConfig = null;
+    private IAEStackInventory cacheConfig = null;
     private boolean locked = false;
     private long cellRestrictAmount;
     private byte cellRestrictTypes;
+    private StorageChannel storageChannel;
 
     public TileCellWorkbench() {
         this.manager.registerSetting(Settings.COPY_MODE, CopyMode.CLEAR_ON_REMOVE);
@@ -104,10 +105,6 @@ public class TileCellWorkbench extends AEBaseTile
 
     @Override
     public IInventory getInventoryByName(final String name) {
-        if (name.equals("config")) {
-            return this.config;
-        }
-
         if (name.equals("cell")) {
             return this.cell;
         }
@@ -138,17 +135,27 @@ public class TileCellWorkbench extends AEBaseTile
             this.cacheUpgrades = null;
             this.cacheConfig = null;
 
+            ItemStack is = this.cell.getStackInSlot(0);
             if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.KEEP_ON_REMOVE) {
-                ItemStack is = this.cell.getStackInSlot(0);
                 if (is != null && is.getItem() instanceof ICellRestriction icr)
                     icr.setCellRestriction(is, cellRestrictTypes + "," + cellRestrictAmount);
             }
 
-            final IInventory configInventory = this.getCellConfigInventory();
+            if (is != null && is.getItem() instanceof ICellWorkbenchItem wi) {
+                if (wi.getStorageChannel() != this.storageChannel) {
+                    this.storageChannel = wi.getStorageChannel();
+
+                    for (int x = 0; x < this.config.getSizeInventory(); x++) {
+                        this.config.putAEStackInSlot(x, null);
+                    }
+                }
+            }
+
+            final IAEStackInventory configInventory = this.getCellConfigInventory();
             if (configInventory != null) {
                 boolean cellHasConfig = false;
                 for (int x = 0; x < configInventory.getSizeInventory(); x++) {
-                    if (configInventory.getStackInSlot(x) != null) {
+                    if (configInventory.getAEStackInSlot(x) != null) {
                         cellHasConfig = true;
                         break;
                     }
@@ -156,39 +163,30 @@ public class TileCellWorkbench extends AEBaseTile
 
                 if (cellHasConfig) {
                     for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                        this.config.setInventorySlotContents(x, configInventory.getStackInSlot(x));
+                        this.config.putAEStackInSlot(x, configInventory.getAEStackInSlot(x));
                     }
                 } else {
                     for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                        configInventory.setInventorySlotContents(x, this.config.getStackInSlot(x));
+                        configInventory.putAEStackInSlot(x, this.config.getAEStackInSlot(x));
                     }
 
                     configInventory.markDirty();
                 }
             } else if (this.manager.getSetting(Settings.COPY_MODE) == CopyMode.CLEAR_ON_REMOVE) {
                 for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                    this.config.setInventorySlotContents(x, null);
+                    this.config.putAEStackInSlot(x, null);
                 }
 
                 this.markDirty();
             }
 
             this.locked = false;
-        } else if (inv == this.config && !this.locked) {
-            final IInventory c = this.getCellConfigInventory();
-            if (c != null) {
-                for (int x = 0; x < this.config.getSizeInventory(); x++) {
-                    c.setInventorySlotContents(x, this.config.getStackInSlot(x));
-                }
-
-                c.markDirty();
-            }
         } else if (inv == cacheUpgrades) {
             if (getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) setFilter("");
         }
     }
 
-    private IInventory getCellConfigInventory() {
+    private IAEStackInventory getCellConfigInventory() {
         if (this.cacheConfig == null) {
             final ICellWorkbenchItem cell = this.getCell();
             if (cell == null) {
@@ -200,7 +198,7 @@ public class TileCellWorkbench extends AEBaseTile
                 return null;
             }
 
-            final IInventory inv = cell.getConfigInventory(is);
+            final IAEStackInventory inv = cell.getConfigAEInventory(is);
             if (inv == null) {
                 return null;
             }
@@ -261,5 +259,38 @@ public class TileCellWorkbench extends AEBaseTile
 
         ItemStack is = this.cell.getStackInSlot(0);
         if (is != null && is.getItem() instanceof ICellRestriction icr) icr.setCellRestriction(is, newData);
+    }
+
+    @Override
+    public boolean isSame(ICellWorkbench cellWorkbench) {
+        return this == getWorldObj().getTileEntity(xCoord, yCoord, zCoord);
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().blocks().cellWorkbench().maybeStack(1).orNull();
+    }
+
+    @Override
+    public void saveAEStackInv() {
+        if (!this.locked) {
+            final IAEStackInventory c = this.getCellConfigInventory();
+            if (c != null) {
+                for (int x = 0; x < this.config.getSizeInventory(); x++) {
+                    c.putAEStackInSlot(x, this.config.getAEStackInSlot(x));
+                }
+
+                c.markDirty();
+            }
+        }
+    }
+
+    @Override
+    public IAEStackInventory getAEInventoryByName(StorageName name) {
+        return this.config;
+    }
+
+    public StorageChannel getStorageChannel() {
+        return this.storageChannel;
     }
 }

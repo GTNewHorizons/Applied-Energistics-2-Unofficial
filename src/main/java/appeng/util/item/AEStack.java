@@ -12,7 +12,20 @@ package appeng.util.item;
 
 import java.io.IOException;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.item.ItemStack;
+
+import org.lwjgl.opengl.GL11;
+
+import appeng.api.AEApi;
+import appeng.api.config.TerminalFontSize;
 import appeng.api.storage.data.IAEStack;
+import appeng.client.render.StackSizeRenderer;
+import appeng.core.AEConfig;
+import appeng.core.localization.GuiText;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
 public abstract class AEStack<StackType extends IAEStack<StackType>> implements IAEStack<StackType> {
@@ -180,5 +193,54 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
         } else {
             tag.writeLong(num);
         }
+    }
+
+    private static final ItemStack PATTERN = AEApi.instance().definitions().items().encodedPattern().maybeStack(1)
+            .orNull();
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void drawOverlayInGui(Minecraft mc, int x, int y, boolean showAmount, boolean showAmountAlways,
+            boolean showCraftableText, boolean showCraftableIcon) {
+        final TerminalFontSize fontSize = AEConfig.instance.getTerminalFontSize();
+
+        GL11.glTranslatef(0.0f, 0.0f, 200.0f);
+        GL11.glDisable(GL11.GL_LIGHTING);
+
+        if (showCraftableText && this.isCraftable()) {
+            if (this.stackSize == 0) {
+                final String craftLabelText = fontSize == TerminalFontSize.SMALL ? GuiText.SmallFontCraft.getLocal()
+                        : GuiText.LargeFontCraft.getLocal();
+
+                GL11.glPushMatrix();
+                StackSizeRenderer.drawStackSize(x, y, craftLabelText, mc.fontRenderer, fontSize);
+                GL11.glPopMatrix();
+            } else {
+                if (showCraftableIcon) {
+                    GL11.glPushMatrix();
+                    GL11.glScalef(0.4f, 0.4f, 0.4f);
+                    RenderItem itemRender = new RenderItem();
+                    itemRender.renderItemIntoGUI(
+                            mc.fontRenderer,
+                            mc.renderEngine,
+                            PATTERN,
+                            (int) ((x + 10) * 2.5),
+                            (int) (y * 2.5));
+                    GL11.glScalef(2.5f, 2.5f, 2.5f);
+                    GL11.glPopMatrix();
+
+                }
+            }
+        }
+
+        if (showAmount && (this.stackSize > 1
+                || (showAmountAlways && (this.stackSize > 0 || !showCraftableText || !this.isCraftable)))) {
+            GL11.glPushMatrix();
+            StackSizeRenderer.drawStackSize(x, y, this.stackSize, mc.fontRenderer, fontSize);
+            GL11.glPopMatrix();
+        }
+
+        GL11.glEnable(GL11.GL_LIGHTING);
+        GL11.glTranslatef(0.0f, 0.0f, -200.0f);
     }
 }

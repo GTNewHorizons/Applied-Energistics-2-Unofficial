@@ -214,7 +214,12 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             return null;
         }
 
-        SIMPLE_CACHE.put(item, out = stackConvertPacket(details.getCondensedAEOutputs()[0]).getItemStack());
+        final IAEStack<?> output = details.getCondensedAEOutputs()[0];
+        out = stackConvertPacket(output).getItemStackForNEI();
+        long count = output.getStackSize();
+        if (out != null) out.stackSize = count > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) count;
+
+        SIMPLE_CACHE.put(item, out);
         return out;
     }
 

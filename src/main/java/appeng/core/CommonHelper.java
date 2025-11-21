@@ -64,6 +64,10 @@ public abstract class CommonHelper {
         return false;
     }
 
+    public int getKeybind(ActionKey key) {
+        return 0;
+    }
+
     public boolean isActionKey(ActionKey key, int pressedKeyCode) {
         return false;
     }

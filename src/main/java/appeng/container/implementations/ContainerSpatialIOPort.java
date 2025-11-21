@@ -43,7 +43,7 @@ public class ContainerSpatialIOPort extends AEBaseContainer {
     private int delay = 40;
 
     public ContainerSpatialIOPort(final InventoryPlayer ip, final TileSpatialIOPort spatialIOPort) {
-        super(ip, spatialIOPort, null);
+        super(ip, spatialIOPort);
 
         if (Platform.isServer()) {
             this.network = spatialIOPort.getGridNode(ForgeDirection.UNKNOWN).getGrid();

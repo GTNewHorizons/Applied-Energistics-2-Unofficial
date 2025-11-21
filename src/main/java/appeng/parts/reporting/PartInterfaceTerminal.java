@@ -16,11 +16,12 @@ import net.minecraft.util.Vec3;
 
 import appeng.api.networking.events.MENetworkBootingStatusChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
+import appeng.api.parts.IInterfaceTerminal;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.util.Platform;
 
-public class PartInterfaceTerminal extends AbstractPartDisplay {
+public class PartInterfaceTerminal extends AbstractPartDisplay implements IInterfaceTerminal {
 
     private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartInterfaceTerm_Bright;
     private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartInterfaceTerm_Dark;

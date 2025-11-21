@@ -29,7 +29,7 @@ public class ContainerNetworkTool extends AEBaseContainer {
     public boolean facadeMode;
 
     public ContainerNetworkTool(final InventoryPlayer ip, final INetworkTool te) {
-        super(ip, null, null);
+        super(ip, te);
         this.toolInv = te;
 
         this.lockPlayerInventorySlot(ip.currentItem);

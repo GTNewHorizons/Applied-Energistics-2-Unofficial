@@ -12,6 +12,7 @@ package appeng.client.gui.implementations;
 
 import static appeng.api.config.Settings.CRAFTING_SORT_BY;
 import static appeng.api.config.Settings.SORT_DIRECTION;
+import static appeng.util.Platform.stackConvert;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -38,8 +39,9 @@ import appeng.api.config.SortDir;
 import appeng.api.config.TerminalStyle;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
-import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.GuiSub;
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.GuiCraftingCPUTable;
@@ -58,24 +60,18 @@ import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.crafting.v2.CraftingJobV2;
-import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.integration.modules.NEI;
-import appeng.parts.reporting.PartCraftingTerminal;
-import appeng.parts.reporting.PartPatternTerminal;
-import appeng.parts.reporting.PartPatternTerminalEx;
-import appeng.parts.reporting.PartTerminal;
 import appeng.util.ColorPickHelper;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import appeng.util.RoundHelper;
 import appeng.util.item.AEItemStack;
 
-public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolder, IGuiTooltipHandler {
+public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, IGuiTooltipHandler {
 
     public static final int TREE_VIEW_TEXTURE_WIDTH = 238;
     public static final int TREE_VIEW_TEXTURE_HEIGHT = 238;
@@ -151,7 +147,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     private CraftingSortOrder sortMode = CraftingSortOrder.NAME;
     private SortDir sortDir = SortDir.ASCENDING;
 
-    private GuiBridge OriginalGui;
     private GuiButton cancel;
     private GuiButton start;
     private GuiButton startWithFollow;
@@ -167,7 +162,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     private MEGuiTextField searchField;
     private int tooltip = -1;
     private ItemStack hoveredStack;
-    private ArrayList<Integer> goToData = new ArrayList<>();
+    private final ArrayList<Integer> goToData = new ArrayList<>();
     private int searchGotoIndex = -1;
     private IAEItemStack needHighlight;
 
@@ -186,26 +181,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 this,
                 ((ContainerCraftConfirm) inventorySlots).cpuTable,
                 c -> this.ccc.cpuCraftingSameItem(c) && this.ccc.cpuMatches(c));
-
-        if (te instanceof WirelessTerminalGuiObject) {
-            this.OriginalGui = GuiBridge.GUI_WIRELESS_TERM;
-        }
-
-        if (te instanceof PartTerminal) {
-            this.OriginalGui = GuiBridge.GUI_ME;
-        }
-
-        if (te instanceof PartCraftingTerminal) {
-            this.OriginalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
-        }
-
-        if (te instanceof PartPatternTerminal) {
-            this.OriginalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-
-        if (te instanceof PartPatternTerminalEx) {
-            this.OriginalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-        }
     }
 
     @Override
@@ -812,32 +787,30 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         }
     }
 
-    public void postUpdate(final List<IAEItemStack> list, final byte ref) {
-        switch (ref) {
-            case 0 -> {
-                for (final IAEItemStack l : list) {
-                    this.handleInput(this.storage, l);
+    public void postUpdate(final List<IAEStack<?>> list, final byte ref) {
+        for (final IAEStack<?> l : list) {
+            IAEItemStack stack = stackConvert(l);
+            switch (ref) {
+                case 0 -> {
+                    this.handleInput(this.storage, stack);
                 }
-            }
-            case 1 -> {
-                for (final IAEItemStack l : list) {
-                    this.handleInput(this.pending, l);
+                case 1 -> {
+                    this.handleInput(this.pending, stack);
                 }
-            }
-            case 2 -> {
-                for (final IAEItemStack l : list) {
-                    this.handleInput(this.missing, l);
+                case 2 -> {
+                    this.handleInput(this.missing, stack);
                 }
             }
         }
 
-        for (final IAEItemStack l : list) {
-            final long amt = this.getTotal(l);
+        for (final IAEStack<?> l : list) {
+            IAEItemStack stack = stackConvert(l);
+            final long amt = this.getTotal(stack);
 
             if (amt <= 0) {
-                this.deleteVisualStack(l);
+                this.deleteVisualStack(stack);
             } else {
-                final IAEItemStack is = this.findVisualStack(l);
+                final IAEItemStack is = this.findVisualStack(stack);
                 is.setStackSize(amt);
             }
         }
@@ -880,7 +853,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             return ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
                     * sortDir.sortHint;
         if (sortMode == CraftingSortOrder.MOD) {
-            int v = ((AEItemStack) i1).getModID().compareToIgnoreCase(((AEItemStack) i2).getModID());
+            int v = ((AEItemStack) i1).getModId().compareToIgnoreCase(((AEItemStack) i2).getModId());
             return (v == 0
                     ? ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
                     : v) * sortDir.sortHint;
@@ -995,7 +968,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
             cpuTable.cycleCPU(backwards);
         } else if (btn == this.cancel) {
             this.addMissingItemsToBookMark();
-            switchToOriginalGUI();
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis());
         } else if (btn == this.switchDisplayMode) {
             this.displayMode = this.displayMode.next();
             recalculateScreenSize();
@@ -1060,13 +1033,6 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
         }
     }
 
-    public void switchToOriginalGUI() {
-        // null if terminal is not a native AE2 terminal
-        if (this.OriginalGui != null) {
-            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(this.OriginalGui));
-        }
-    }
-
     public ItemStack getHoveredStack() {
         return hoveredStack;
     }
@@ -1121,14 +1087,15 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
                 missing.add(iaeItemStack.getItemStack());
             }
 
-            final IAEItemStack outputStack = ((ContainerCraftConfirm) this.inventorySlots).getItemToCraft();
+            final ItemStack outputStack = this.getItemStackForBookMark();
 
-            if (outputStack != null) {
-                NEI.instance.addToBookmark(outputStack.getItemStack(), missing);
-            } else {
-                NEI.instance.addToBookmark(null, missing);
-            }
+            NEI.instance.addToBookmark(outputStack, missing);
         }
+    }
+
+    private ItemStack getItemStackForBookMark() {
+        final IAEStack<?> outputStack = ((ContainerCraftConfirm) this.inventorySlots).getItemToCraft();
+        return outputStack.getItemStackForNEI();
     }
 
     public IItemList<IAEItemStack> getStorage() {
@@ -1142,4 +1109,7 @@ public class GuiCraftConfirm extends AEBaseGui implements ICraftingCPUTableHolde
     public IItemList<IAEItemStack> getMissing() {
         return this.missing;
     }
+
+    @Override
+    public void initPrimaryGuiButton() {}
 }

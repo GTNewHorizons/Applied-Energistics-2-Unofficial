@@ -12,51 +12,49 @@ import net.minecraft.nbt.NBTTagList;
 
 import appeng.api.config.PinsState;
 import appeng.api.storage.ITerminalPins;
-import appeng.tile.inventory.AppEngInternalAEInventory;
+import appeng.api.storage.data.IAEStack;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
+import appeng.util.item.AEItemStack;
 
 public class PinsHolder implements IAEAppEngInventory {
 
-    private final IAEAppEngInventory te;
-    private final ItemStack is;
+    private final ItemStack holder;
 
-    private final HashMap<UUID, AppEngInternalAEInventory> pinsMap = new HashMap<>();
+    private final HashMap<UUID, PinList> pinsMap = new HashMap<>();
     private final HashMap<UUID, PinsState> pinsStateMap = new HashMap<>();
 
     private boolean initialized = false;
 
-    public PinsHolder(final ItemStack is) {
-        this.is = is;
-        this.te = null;
-        this.readFromNBT(Platform.openNbtData(is), "pins");
+    public PinsHolder(final ItemStack holder) {
+        this.holder = holder;
+        this.readFromNBT(Platform.openNbtData(holder), "pins");
         this.initialized = true;
     }
 
     public PinsHolder(final ITerminalPins terminalPart) {
-        if (terminalPart instanceof IAEAppEngInventory _te) {
-            this.te = _te;
-        } else te = null;
-        is = null;
+        holder = null;
         this.initialized = true;
     }
 
     public void writeToNBT(final NBTTagCompound data, final String name) {
         final NBTTagList c = new NBTTagList();
 
-        for (Entry<UUID, AppEngInternalAEInventory> entry : this.pinsMap.entrySet()) {
+        for (Entry<UUID, PinList> entry : this.pinsMap.entrySet()) {
             final UUID playerId = entry.getKey();
-            final AppEngInternalAEInventory pins = entry.getValue();
+            final PinList pins = entry.getValue();
 
             final NBTTagCompound itemList = new NBTTagCompound();
             itemList.setString("playerId", playerId.toString());
             int state = pinsStateMap.get(playerId) != null ? pinsStateMap.get(playerId).ordinal() : 0;
             itemList.setInteger("pinsState", state);
-            for (int x = 0; x < pins.getSizeInventory(); x++) {
-                final ItemStack pinStack = pins.getStackInSlot(x);
+            for (int x = 0; x < pins.size(); x++) {
+                // final ItemStack pinStack = pins.getStackInSlot(x);
+                final IAEStack<?> pinStack = pins.getPin(x);
                 if (pinStack != null) {
-                    itemList.setTag("#" + x, pinStack.writeToNBT(new NBTTagCompound()));
+                    // itemList.setTag("#" + x, pinStack.writeToNBT(new NBTTagCompound()));
+                    itemList.setTag("#" + x, Platform.writeStackNBT(pinStack, new NBTTagCompound(), true));
                 }
             }
             c.appendTag(itemList);
@@ -75,12 +73,20 @@ public class PinsHolder implements IAEAppEngInventory {
             final String playerIdStr = itemList.getString("playerId");
             final UUID playerId = UUID.fromString(playerIdStr);
 
-            final AppEngInternalAEInventory pins = new AppEngInternalAEInventory(this, PinsState.getPinsCount());
+            final PinList pins = new PinList();
 
-            for (int x = 0; x < PinsState.getPinsCount(); x++) {
+            for (int x = 0; x < pins.size(); x++) {
                 if (itemList.hasKey("#" + x)) {
-                    ItemStack pinStack = ItemStack.loadItemStackFromNBT(itemList.getCompoundTag("#" + x));
-                    pins.setInventorySlotContents(x, pinStack);
+                    NBTTagCompound tag = itemList.getCompoundTag("#" + x);
+                    if (tag.hasKey("StackType")) {
+                        IAEStack<?> stack = Platform.readStackNBT(tag);
+                        // pins.setInventorySlotContents();
+                        pins.setPin(x, stack);
+                    } else {
+                        ItemStack pinStack = ItemStack.loadItemStackFromNBT(itemList.getCompoundTag("#" + x));
+                        // pins.setInventorySlotContents(x, pinStack);
+                        pins.setPin(x, AEItemStack.create(pinStack));
+                    }
                 }
             }
 
@@ -89,10 +95,10 @@ public class PinsHolder implements IAEAppEngInventory {
         }
     }
 
-    public AppEngInternalAEInventory getPinsInv(EntityPlayer player) {
-        AppEngInternalAEInventory pinsInv = this.pinsMap.get(player.getPersistentID());
+    public PinList getPinsInv(EntityPlayer player) {
+        PinList pinsInv = this.pinsMap.get(player.getPersistentID());
         if (pinsInv == null) {
-            pinsInv = new AppEngInternalAEInventory(this, PinsState.getPinsCount());
+            pinsInv = new PinList();
             this.pinsMap.put(player.getPersistentID(), pinsInv);
         }
         return pinsInv;
@@ -108,8 +114,8 @@ public class PinsHolder implements IAEAppEngInventory {
     }
 
     public void markDirty() {
-        if (is == null || !initialized) return;
-        this.writeToNBT(Platform.openNbtData(is), "pins");
+        if (holder == null || !initialized) return;
+        this.writeToNBT(Platform.openNbtData(holder), "pins");
     }
 
     @Override
