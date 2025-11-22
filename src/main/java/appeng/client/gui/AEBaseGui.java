@@ -30,11 +30,13 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -740,8 +742,24 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         } else {
             try {
                 final ItemStack is = s.getStack();
-                if (s instanceof AppEngSlot aes && (aes.renderIconWithItem() || is == null) && (aes.shouldDisplay()))
-                    drawTextureOnSlot(s, aes.getIcon(), aes.getOpacityOfIcon());
+                if (s instanceof AppEngSlot appEngSlot) {
+                    if (appEngSlot.getBackgroundIconIndex() != null && is == null) {
+                        IIcon iicon = appEngSlot.getBackgroundIconIndex();
+                        GL11.glDisable(GL11.GL_LIGHTING);
+                        GL11.glEnable(GL11.GL_BLEND);
+                        this.mc.getTextureManager().bindTexture(TextureMap.locationItemsTexture);
+                        this.drawTexturedModelRectFromIcon(
+                                appEngSlot.xDisplayPosition,
+                                appEngSlot.yDisplayPosition,
+                                iicon,
+                                16,
+                                16);
+                        GL11.glDisable(GL11.GL_BLEND);
+                        GL11.glEnable(GL11.GL_LIGHTING);
+                    } else if ((appEngSlot.renderIconWithItem() || is == null) && appEngSlot.shouldDisplay()) {
+                        this.drawTextureOnSlot(s, appEngSlot.getIcon(), appEngSlot.getOpacityOfIcon());
+                    }
+                }
 
                 if (is != null && s instanceof AppEngSlot) {
                     if (((AppEngSlot) s).getIsValid() == hasCalculatedValidness.NotAvailable) {

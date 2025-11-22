@@ -2,6 +2,7 @@ package appeng.client.gui.implementations;
 
 import java.util.Collections;
 
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.opengl.GL11;
@@ -29,6 +30,12 @@ public class GuiBusIO extends GuiUpgradeable {
         this.initVirtualSlots();
     }
 
+    @Override
+    protected void addButtons() {
+        super.addButtons();
+        initCustomButtons(this.guiLeft - 18, 88);
+    }
+
     private void initVirtualSlots() {
         this.virtualSlots = new VirtualMEPhantomSlot[9];
         final IAEStackInventory inputInv = this.bus.getAEInventoryByName(StorageName.NONE);
@@ -43,6 +50,13 @@ public class GuiBusIO extends GuiUpgradeable {
                 this.registerVirtualSlots(slot);
             }
         }
+    }
+
+    @Override
+    protected void actionPerformed(GuiButton btn) {
+        super.actionPerformed(btn);
+
+        actionPerformedCustomButtons(btn);
     }
 
     @Override
