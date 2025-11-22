@@ -156,12 +156,11 @@ public class ContainerMEMonitorable extends AEBaseContainer
             this.serverCM = monitorable.getConfigManager();
 
             for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-                this.updateQueue.put(type, new HashSet<>());
-
                 IMEMonitor<?> monitor = monitorable.getMEMonitor(type);
                 if (monitor != null) {
                     monitor.addListener(this, null);
                     this.monitors.put(type, monitor);
+                    this.updateQueue.put(type, new HashSet<>());
                 }
             }
             this.itemMonitor = this.getMonitor(ITEM_STACK_TYPE);
