@@ -24,6 +24,8 @@ import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -120,6 +122,12 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Override
     public StorageChannel getChannel() {
         return this.getHandler().getChannel();
+    }
+
+    @Override
+    @SuppressWarnings({ "unchecked" })
+    public @NotNull IAEStackType<T> getStackType() {
+        return (IAEStackType<T>) this.getHandler().getStackType();
     }
 
     @Override
