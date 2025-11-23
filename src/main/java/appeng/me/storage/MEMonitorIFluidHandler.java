@@ -1,5 +1,7 @@
 package appeng.me.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,22 +20,25 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.StorageFilter;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.ticking.TickRateModulation;
-import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
+import appeng.api.storage.IStorageBusMonitor;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.core.AELog;
 import appeng.util.item.AEFluidStack;
 
-public class MEMonitorIFluidHandler implements IMEMonitor<IAEFluidStack> {
+public class MEMonitorIFluidHandler implements IStorageBusMonitor<IAEFluidStack> {
 
     private static boolean WrongFluidRemovedWarnIssued = false;
 
@@ -141,8 +146,14 @@ public class MEMonitorIFluidHandler implements IMEMonitor<IAEFluidStack> {
         return StorageChannel.FLUIDS;
     }
 
+    @Override
+    public @NotNull IAEStackType<?> getStackType() {
+        return FLUID_STACK_TYPE;
+    }
+
     // *Decompiled Stuff*//
 
+    @Override
     public TickRateModulation onTick() {
         FluidTankInfo[] tankProperties = this.handler.getTankInfo(this.side);
         IItemList<IAEFluidStack> currentlyOnStorage = AEApi.instance().storage().createFluidList();
@@ -248,6 +259,7 @@ public class MEMonitorIFluidHandler implements IMEMonitor<IAEFluidStack> {
         return this.cache;
     }
 
+    @Override
     public void setMode(StorageFilter mode) {
         this.mode = mode;
     }
@@ -256,6 +268,7 @@ public class MEMonitorIFluidHandler implements IMEMonitor<IAEFluidStack> {
         return this.mySource;
     }
 
+    @Override
     public void setActionSource(BaseActionSource mySource) {
         this.mySource = mySource;
     }

@@ -41,7 +41,7 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
     @SuppressWarnings("unchecked")
     private IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
         final IItemList<T> availableItems = this.getInternal()
-                .getAvailableItems((IItemList<T>) getChannel().createList(), iteration);
+                .getAvailableItems((IItemList<T>) this.getStackType().createList(), iteration);
         if (availableItems instanceof NetworkItemList) {
             NetworkItemList<T> networkItemList = new NetworkItemList<>((NetworkItemList<T>) availableItems);
             networkItemList.addFilter(filterCondition);

@@ -28,7 +28,15 @@ import appeng.api.storage.data.IAEStackType;
 public interface IExternalStorageHandler {
 
     @Deprecated
-    boolean canHandle(TileEntity te, ForgeDirection d, StorageChannel channel, BaseActionSource mySrc);
+    default boolean canHandle(TileEntity te, ForgeDirection d, StorageChannel channel, BaseActionSource mySrc) {
+        if (channel == StorageChannel.ITEMS) {
+            return this.canHandle(te, d, ITEM_STACK_TYPE, mySrc);
+        }
+        if (channel == StorageChannel.FLUIDS) {
+            return this.canHandle(te, d, FLUID_STACK_TYPE, mySrc);
+        }
+        return false;
+    }
 
     /**
      * if this can handle the provided inventory, return true. ( Generally skipped by AE, and it just calls getInventory
@@ -49,7 +57,15 @@ public interface IExternalStorageHandler {
     }
 
     @Deprecated
-    IMEInventory getInventory(TileEntity te, ForgeDirection d, StorageChannel channel, BaseActionSource src);
+    default IMEInventory getInventory(TileEntity te, ForgeDirection d, StorageChannel channel, BaseActionSource src) {
+        if (channel == StorageChannel.ITEMS) {
+            return this.getInventory(te, d, ITEM_STACK_TYPE, src);
+        }
+        if (channel == StorageChannel.FLUIDS) {
+            return this.getInventory(te, d, FLUID_STACK_TYPE, src);
+        }
+        return null;
+    }
 
     /**
      * if this can handle the given inventory, return the a IMEInventory implementing class for it, if not return null
