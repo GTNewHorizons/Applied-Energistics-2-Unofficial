@@ -10,6 +10,8 @@
 
 package appeng.client.gui;
 
+import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -53,8 +55,6 @@ import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
-import appeng.client.ActionKey;
-import appeng.client.ClientHelper;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.GuiScrollbar;
@@ -149,7 +149,6 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     private ItemStack dbl_whichItem;
     private Slot bl_clicked;
     private boolean subGui;
-    private static int controlKey;
 
     private final List<VirtualMESlot> virtualSlots = new ArrayList<>();
     private final List<VirtualMESlot> draggedSlots = new ArrayList<>();
@@ -160,7 +159,6 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.subGui = switchingGuis;
         switchingGuis = false;
         aeRenderItem.parent = this;
-        controlKey = ClientHelper.proxy.getKeybind(ActionKey.CONTROL_OPERATION);
     }
 
     protected static String join(final Collection<String> toolTip, final String delimiter) {
@@ -1016,7 +1014,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     public static boolean isCtrlKeyDown() {
-        return Keyboard.isKeyDown(controlKey);
+        return Keyboard.isKeyDown(EXTRA_ACTION_KEY.getKeyCode());
     }
 
     private void drawVirtualSlots(@Nonnull List<VirtualMESlot> slots, int mouseX, int mouseY) {

@@ -24,6 +24,7 @@ import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.client.texture.CableBusTextures;
+import appeng.core.AELog;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.util.InventoryAdaptor;
@@ -56,25 +57,40 @@ public class PartConversionMonitor extends AbstractPartMonitor {
             return false;
         }
 
-        boolean ModeB = false;
+        this.injectToMonitor(player);
+
+        return true;
+    }
+
+    @Override
+    protected void onLockedInteraction(EntityPlayer player, boolean isShiftDown) {
+        if (isShiftDown) {
+            this.injectToMonitor(player);
+        } else {
+            this.extractFromMonitor(player);
+        }
+    }
+
+    protected void injectToMonitor(final EntityPlayer player) {
+        boolean injectFromInventory = false;
 
         ItemStack item = player.getCurrentEquippedItem();
         if (item == null && this.getDisplayed() != null) {
-            ModeB = true;
+            injectFromInventory = true;
             item = ((IAEItemStack) this.getDisplayed()).getItemStack();
         }
 
         if (item != null) {
             try {
                 if (!this.getProxy().isActive()) {
-                    return false;
+                    return;
                 }
 
                 final IEnergySource energy = this.getProxy().getEnergy();
                 final IMEMonitor<IAEItemStack> cell = this.getProxy().getStorage().getItemInventory();
                 final IAEItemStack input = AEItemStack.create(item);
 
-                if (ModeB) {
+                if (injectFromInventory) { // From player inventory
                     for (int x = 0; x < player.inventory.getSizeInventory(); x++) {
                         final ItemStack targetStack = player.inventory.getStackInSlot(x);
                         if (input.equals(targetStack)) {
@@ -87,7 +103,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                                     failedToInsert == null ? null : failedToInsert.getItemStack());
                         }
                     }
-                } else {
+                } else { // From player hand
                     final IAEItemStack failedToInsert = Platform
                             .poweredInsert(energy, cell, input, new PlayerSource(player, this));
                     player.inventory.setInventorySlotContents(
@@ -95,16 +111,13 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                             failedToInsert == null ? null : failedToInsert.getItemStack());
                 }
             } catch (final GridAccessException e) {
-                // :P
+                AELog.debug(e);
             }
         }
-        return true;
     }
 
-    @Override
-    protected void extractItem(final EntityPlayer player) {
-        final IAEItemStack input = (IAEItemStack) this.getDisplayed();
-        if (input != null) {
+    protected void extractFromMonitor(final EntityPlayer player) {
+        if (this.getDisplayed() instanceof IAEItemStack input) {
             try {
                 if (!this.getProxy().isActive()) {
                     return;
@@ -138,7 +151,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                     }
                 }
             } catch (final GridAccessException e) {
-                // :P
+                AELog.debug(e);
             }
         }
     }

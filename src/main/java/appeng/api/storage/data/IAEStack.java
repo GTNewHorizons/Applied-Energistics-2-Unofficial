@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
@@ -320,6 +321,9 @@ public interface IAEStack<StackType extends IAEStack> {
     @SideOnly(Side.CLIENT)
     void drawOverlayInGui(Minecraft mc, int x, int y, boolean showAmount, boolean showAmountAlways,
             boolean showCraftableText, boolean showCraftableIcon);
+
+    @SideOnly(Side.CLIENT)
+    void drawOnBlockFace(World world);
 
     int getAmountPerUnit();
 

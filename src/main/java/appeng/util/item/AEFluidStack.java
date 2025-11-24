@@ -24,6 +24,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
@@ -31,6 +32,7 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
@@ -443,6 +445,44 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
 
         tessellator.draw();
         GL11.glPopAttrib();
+    }
+
+    @Override
+    public void drawOnBlockFace(World world) {
+        GL11.glPushMatrix();
+
+        GL11.glTranslatef(0, -0.04F, 0);
+        GL11.glScalef(1.0f / 42.0f, 1.0f / 42.0f, 1.0f / 42.0f);
+        GL11.glTranslated(-8.0, -10.2, -10.4);
+        GL11.glScalef(1.0f, 1.0f, 0.005f);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GL11.glEnable(GL11.GL_BLEND);
+        OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+
+        Minecraft.getMinecraft().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
+
+        final int color = this.fluid.getColor();
+        final IIcon icon = this.fluid.getIcon();
+
+        final Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
+        tessellator.setColorRGBA(color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, 0xFF);
+        tessellator.addVertexWithUV(16, 0, 0, icon.getMaxU(), icon.getMinV());
+        tessellator.addVertexWithUV(0, 0, 0, icon.getMinU(), icon.getMinV());
+        tessellator.addVertexWithUV(0, 16, 0, icon.getMinU(), icon.getMaxV());
+        tessellator.addVertexWithUV(16, 16, 0, icon.getMaxU(), icon.getMaxV());
+        tessellator.draw();
+
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        GL11.glEnable(GL11.GL_LIGHTING);
+        GL11.glDisable(GL11.GL_ALPHA_TEST);
+        GL11.glDisable(GL11.GL_BLEND);
+
+        GL11.glPopMatrix();
     }
 
     @Override

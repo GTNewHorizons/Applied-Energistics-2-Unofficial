@@ -80,8 +80,6 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class ClientHelper extends ServerHelper {
 
-    private static final String KEY_CATEGORY = "key.appliedenergistics2.category";
-
     private final EnumMap<ActionKey, KeyBinding> bindings = new EnumMap<>(ActionKey.class);
 
     private static final RenderItem ITEM_RENDERER = new RenderItem();
