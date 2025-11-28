@@ -1,18 +1,16 @@
 package appeng.container.implementations;
 
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.tileentity.TileEntity;
 
-import appeng.api.parts.IPart;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.container.AEBaseContainer;
+import appeng.container.ContainerSubGui;
 import appeng.container.guisync.GuiSync;
 import appeng.helpers.ICellRestriction;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class ContainerCellRestriction extends AEBaseContainer {
+public class ContainerCellRestriction extends ContainerSubGui {
 
     public static class CellData {
 
@@ -78,7 +76,7 @@ public class ContainerCellRestriction extends AEBaseContainer {
     public String cellRestriction;
 
     public ContainerCellRestriction(final InventoryPlayer ip, final ICellRestriction te) {
-        super(ip, (TileEntity) (te instanceof TileEntity ? te : null), (IPart) (te instanceof IPart ? te : null));
+        super(ip, te);
         this.Host = te;
     }
 

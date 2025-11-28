@@ -62,7 +62,6 @@ import appeng.core.features.IAEFeature;
 import appeng.core.features.IFeatureHandler;
 import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
 import appeng.core.features.registries.P2PTunnelRegistry;
-import appeng.core.features.registries.entries.BasicCellHandler;
 import appeng.core.features.registries.entries.CreativeCellHandler;
 import appeng.core.features.registries.entries.VoidCellHandler;
 import appeng.core.localization.GuiText;
@@ -548,7 +547,7 @@ public final class Registration {
 
         registries.externalStorage().addExternalStorageInterface(new AEExternalHandler());
 
-        registries.cell().addCellHandler(new BasicCellHandler());
+        // BasicCellHandler is built into the Registry, so there is no need to register it here.
         registries.cell().addCellHandler(new CreativeCellHandler());
         registries.cell().addCellHandler(new VoidCellHandler());
 

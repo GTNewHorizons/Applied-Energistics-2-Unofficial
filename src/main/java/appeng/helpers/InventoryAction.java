@@ -24,15 +24,8 @@ public enum InventoryAction {
 
     // extra...
     MOVE_REGION,
-    PICKUP_SINGLE,
     UPDATE_HAND,
-    ROLL_UP,
-    ROLL_DOWN,
     AUTO_CRAFT,
     PLACE_SINGLE,
-    SET_PATTERN_VALUE,
-    SET_PATTERN_MULTI,
-    RENAME_PATTERN_ITEM,
-    SET_PIN,
     FIND_ITEMS
 }

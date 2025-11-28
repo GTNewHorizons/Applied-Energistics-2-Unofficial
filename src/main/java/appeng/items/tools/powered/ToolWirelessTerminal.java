@@ -21,6 +21,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
+import com.glodblock.github.common.item.ItemBaseWirelessTerminal;
 import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
@@ -35,6 +36,7 @@ import appeng.core.AEConfig;
 import appeng.core.AppEng;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
+import appeng.core.sync.GuiBridge;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
@@ -50,6 +52,9 @@ import cpw.mods.fml.relauncher.SideOnly;
                         iface = "baubles.api.expanded.IBaubleExpanded",
                         modid = "Baubles|Expanded") })
 public class ToolWirelessTerminal extends AEBasePoweredItem implements IWirelessTermHandler, IBauble, IBaubleExpanded {
+
+    public static String infinityBoosterCard = "infinityBoosterCard";
+    public static String infinityEnergyCard = "InfinityEnergyCard";
 
     public ToolWirelessTerminal() {
         super(AEConfig.instance.wirelessTerminalBattery, Optional.absent());
@@ -107,6 +112,25 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
     }
 
     @Override
+    public boolean hasInfinityPower(ItemStack is) {
+        if (is.getItem() instanceof ItemBaseWirelessTerminal) {
+            NBTTagCompound data = Platform.openNbtData(is);
+            return (data.hasKey(infinityEnergyCard) && data.getBoolean(infinityEnergyCard));
+        }
+        return false;
+    }
+
+    @Override
+    public boolean hasInfinityRange(ItemStack is) {
+        if (is.getItem() instanceof ItemBaseWirelessTerminal) {
+            NBTTagCompound data = Platform.openNbtData(is);
+            return data.hasKey(infinityBoosterCard) && data.getBoolean(infinityBoosterCard);
+        }
+
+        return false;
+    }
+
+    @Override
     public IConfigManager getConfigManager(final ItemStack target) {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
             final NBTTagCompound data = Platform.openNbtData(target);
@@ -138,6 +162,10 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
     @Override
     public String[] getBaubleTypes(ItemStack itemstack) {
         return new String[] { AppEng.BAUBLESLOT };
+    }
+
+    public void openGui(final ItemStack is, final World w, final EntityPlayer player, final Object mode) {
+        Platform.openGUI(player, null, null, GuiBridge.GUI_ME);
     }
 
     @Override

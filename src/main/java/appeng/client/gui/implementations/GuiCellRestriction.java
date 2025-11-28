@@ -6,14 +6,13 @@ import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Keyboard;
 
-import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.GuiSub;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellRestriction.CellData;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -21,7 +20,7 @@ import appeng.helpers.ICellRestriction;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
-public class GuiCellRestriction extends AEBaseGui {
+public class GuiCellRestriction extends GuiSub {
 
     private MEGuiTextField amountField;
     private MEGuiTextField typesField;
@@ -29,7 +28,7 @@ public class GuiCellRestriction extends AEBaseGui {
 
     public GuiCellRestriction(InventoryPlayer ip, ICellRestriction obj) {
         super(new ContainerCellRestriction(ip, obj));
-        this.xSize = 256;
+        this.xSize = 204;
 
         this.amountField = new MEGuiTextField(85, 12);
         this.typesField = new MEGuiTextField(30, 12);
@@ -144,7 +143,7 @@ public class GuiCellRestriction extends AEBaseGui {
             } catch (IOException e) {
                 AELog.debug(e);
             }
-            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_CELL_WORKBENCH));
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis());
         } else if (!(this.amountField.textboxKeyTyped(character, key)
                 || this.typesField.textboxKeyTyped(character, key))) {
                     super.keyTyped(character, key);

@@ -13,32 +13,32 @@ package appeng.util;
 import java.util.Comparator;
 
 import appeng.api.config.SortDir;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 
 public class ItemSorters {
 
     private static SortDir direction = SortDir.ASCENDING;
 
-    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_NAME = Comparator
-            .comparing(Platform::getItemDisplayName, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint);
+    public static final Comparator<IAEStack<?>> CONFIG_BASED_SORT_BY_NAME = Comparator
+            .comparing(IAEStack::getDisplayName, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint);
 
-    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_MOD = Comparator
-            .comparing(Platform::getModId, (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint)
-            .thenComparing(Platform::getItemDisplayName);
+    public static final Comparator<IAEStack<?>> CONFIG_BASED_SORT_BY_MOD = Comparator
+            .comparing((IAEStack<?> stack) -> stack.getModId(), (a, b) -> a.compareToIgnoreCase(b) * direction.sortHint)
+            .thenComparing(IAEStack::getDisplayName);
 
-    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_SIZE = Comparator
+    public static final Comparator<IAEStack<?>> CONFIG_BASED_SORT_BY_SIZE = Comparator
             .comparing(IAEStack::getStackSize, (a, b) -> Long.compare(b, a) * direction.sortHint);
 
-    public static final Comparator<IAEItemStack> CONFIG_BASED_SORT_BY_INV_TWEAKS = new Comparator<>() {
+    public static final Comparator<IAEStack<?>> CONFIG_BASED_SORT_BY_INV_TWEAKS = new Comparator<>() {
 
         @Override
-        public int compare(final IAEItemStack o1, final IAEItemStack o2) {
+        public int compare(final IAEStack<?> o1, final IAEStack<?> o2) {
             if (!InvTweakSortingModule.isLoaded()) {
                 return CONFIG_BASED_SORT_BY_NAME.compare(o1, o2);
             }
 
-            return InvTweakSortingModule.compareItems(o1.getItemStack(), o2.getItemStack()) * direction.sortHint;
+            return InvTweakSortingModule.compareItems(o1.getItemStackForNEI(), o2.getItemStackForNEI())
+                    * direction.sortHint;
         }
     };
 

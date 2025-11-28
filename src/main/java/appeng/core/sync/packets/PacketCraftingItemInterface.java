@@ -6,13 +6,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import appeng.api.AEApi;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.ContainerOpenContext;
@@ -23,6 +21,7 @@ import appeng.core.sync.network.INetworkInfo;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
+import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -30,19 +29,42 @@ import io.netty.buffer.Unpooled;
 
 public class PacketCraftingItemInterface extends AppEngPacket {
 
-    private IAEItemStack is;
+    private IAEStack<?> is;
+    NBTTagCompound nbt;
 
     public PacketCraftingItemInterface(final ByteBuf stream) throws IOException {
-        this.is = AEApi.instance().storage().readItemFromPacket(stream);
+        if (stream.readBoolean()) {
+            this.is = Platform.readStackByte(stream);
+        }
+        if (stream.readBoolean()) {
+            this.nbt = ByteBufUtils.readTag(stream);
+        }
     }
 
-    public PacketCraftingItemInterface(IAEItemStack is) throws IOException {
+    // Client -> Server
+    public PacketCraftingItemInterface(IAEStack<?> is) throws IOException {
         this.is = is;
 
         final ByteBuf data = Unpooled.buffer();
 
         data.writeInt(this.getPacketID());
-        is.writeToPacket(data);
+        data.writeBoolean(true);
+        Platform.writeStackByte(is, data);
+        data.writeBoolean(false);
+
+        this.configureWrite(data);
+    }
+
+    // Server -> Client
+    public PacketCraftingItemInterface(NBTTagCompound nbt) throws IOException {
+        this.nbt = nbt;
+
+        final ByteBuf data = Unpooled.buffer();
+
+        data.writeInt(this.getPacketID());
+        data.writeBoolean(false);
+        data.writeBoolean(true);
+        ByteBufUtils.writeTag(data, this.nbt);
 
         this.configureWrite(data);
     }
@@ -62,15 +84,12 @@ public class PacketCraftingItemInterface extends AppEngPacket {
                     }
 
                     if (cpu instanceof CraftingCPUCluster cpuc) {
-                        ItemStack itemStack = is.getItemStack();
-                        NBTTagCompound data = Platform.openNbtData(itemStack);
-                        NamedDimensionalCoord.writeListToNBTNamed(data, cpuc.getProviders(is));
+                        NBTTagCompound data = new NBTTagCompound();
+                        NamedDimensionalCoord.writeListToNBTNamed(data, cpuc.getProviders(this.is));
                         data.setInteger("ScheduledReason", cpuc.getScheduledReason(is).ordinal());
                         try {
-                            NetworkHandler.instance.sendTo(
-                                    new PacketCraftingItemInterface(
-                                            AEApi.instance().storage().createItemStack(itemStack)),
-                                    (EntityPlayerMP) player);
+                            NetworkHandler.instance
+                                    .sendTo(new PacketCraftingItemInterface(data), (EntityPlayerMP) player);
                         } catch (Exception ignored) {}
                     }
                 }
@@ -83,8 +102,8 @@ public class PacketCraftingItemInterface extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
-        if (gs instanceof GuiCraftingCPU) {
-            ((GuiCraftingCPU) gs).postUpdate(this.is);
+        if (gs instanceof GuiCraftingCPU guiCraftingCPU) {
+            guiCraftingCPU.postUpdateTooltip(this.nbt);
         }
     }
 }

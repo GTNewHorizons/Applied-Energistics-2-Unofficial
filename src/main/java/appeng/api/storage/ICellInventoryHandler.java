@@ -14,14 +14,14 @@
 package appeng.api.storage;
 
 import appeng.api.config.IncludeExclude;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
-public interface ICellInventoryHandler extends IMEInventoryHandler<IAEItemStack> {
+public interface ICellInventoryHandler<StackType extends IAEStack<StackType>> extends IMEInventoryHandler<StackType> {
 
     /**
      * @return get access to the Cell Inventory.
      */
-    ICellInventory getCellInv();
+    ICellInventory<StackType> getCellInv();
 
     boolean isPreformatted();
 

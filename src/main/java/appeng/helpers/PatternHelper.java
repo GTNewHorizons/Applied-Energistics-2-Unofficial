@@ -86,6 +86,8 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
                 throw new IllegalStateException("No pattern here!");
             }
 
+            if (gs != null && gs.stackSize == 0) gs.stackSize = (int) tag.getLong("Cnt");
+
             if (this.isCrafting) // processing recipes are not looked up
             {
                 this.crafting.setInventorySlotContents(x, gs);
@@ -120,6 +122,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
                 final ItemStack gs = Platform.loadItemStackFromNBT(tag);
 
                 if (gs != null) {
+                    if (gs.stackSize == 0) gs.stackSize = (int) tag.getLong("Cnt");
                     out.add(AEApi.instance().storage().createItemStack(gs));
                 } else if (!tag.hasNoTags()) {
                     throw new IllegalStateException("No pattern here!");

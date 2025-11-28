@@ -10,33 +10,17 @@
 
 package appeng.parts.automation;
 
-import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.Vec3;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.PowerMultiplier;
-import appeng.api.config.RedstoneMode;
-import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
-import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.MachineSource;
-import appeng.api.networking.ticking.TickRateModulation;
-import appeng.api.networking.ticking.TickingRequest;
-import appeng.api.parts.IPartCollisionHelper;
-import appeng.api.parts.IPartRenderHelper;
-import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.client.texture.CableBusTextures;
-import appeng.core.settings.TickRates;
-import appeng.core.sync.GuiBridge;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.util.InventoryAdaptor;
@@ -45,24 +29,12 @@ import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
 import appeng.util.item.AEItemStack;
 import appeng.util.prioitylist.OreFilteredList;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
-public class PartImportBus extends PartSharedItemBus implements IInventoryDestination {
-
-    private final BaseActionSource source;
-    private IMEInventory<IAEItemStack> destination = null;
-    private IAEItemStack lastItemChecked = null;
-    private int itemToSend; // used in tickingRequest
-    private boolean worked; // used in tickingRequest
+public class PartImportBus extends PartBaseImportBus<IAEItemStack> implements IInventoryDestination {
 
     @Reflected
     public PartImportBus(final ItemStack is) {
         super(is);
-
-        this.getConfigManager().registerSetting(Settings.REDSTONE_CONTROLLED, RedstoneMode.IGNORE);
-        this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
-        this.source = new MachineSource(this);
     }
 
     @Override
@@ -74,7 +46,7 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
         final IAEItemStack out = this.destination.injectItems(
                 this.lastItemChecked = AEApi.instance().storage().createItemStack(stack),
                 Actionable.SIMULATE,
-                this.source);
+                this.mySrc);
         if (out == null) {
             return true;
         }
@@ -82,169 +54,65 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
     }
 
     @Override
-    public void getBoxes(final IPartCollisionHelper bch) {
-        bch.addBox(6, 6, 11, 10, 10, 13);
-        bch.addBox(5, 5, 13, 11, 11, 14);
-        bch.addBox(4, 4, 14, 12, 12, 16);
+    protected Object getTarget() {
+        return this.getHandler();
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
-    public void renderInventory(final IPartRenderHelper rh, final RenderBlocks renderer) {
-        rh.setTexture(
-                CableBusTextures.PartImportSides.getIcon(),
-                CableBusTextures.PartImportSides.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartImportSides.getIcon(),
-                CableBusTextures.PartImportSides.getIcon());
-
-        rh.setBounds(3, 3, 15, 13, 13, 16);
-        rh.renderInventoryBox(renderer);
-
-        rh.setBounds(4, 4, 14, 12, 12, 15);
-        rh.renderInventoryBox(renderer);
-
-        rh.setBounds(5, 5, 13, 11, 11, 14);
-        rh.renderInventoryBox(renderer);
+    protected int getPowerMultiplier() {
+        return 1;
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
-    public void renderStatic(final int x, final int y, final int z, final IPartRenderHelper rh,
-            final RenderBlocks renderer) {
-        this.setRenderCache(rh.useSimplifiedRendering(x, y, z, this, this.getRenderCache()));
-        rh.setTexture(
-                CableBusTextures.PartImportSides.getIcon(),
-                CableBusTextures.PartImportSides.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartImportSides.getIcon(),
-                CableBusTextures.PartImportSides.getIcon());
-
-        rh.setBounds(4, 4, 14, 12, 12, 16);
-        rh.renderBlock(x, y, z, renderer);
-
-        rh.setBounds(5, 5, 13, 11, 11, 14);
-        rh.renderBlock(x, y, z, renderer);
-
-        rh.setBounds(6, 6, 12, 10, 10, 13);
-        rh.renderBlock(x, y, z, renderer);
-        rh.setTexture(
-                CableBusTextures.PartMonitorSidesStatus.getIcon(),
-                CableBusTextures.PartMonitorSidesStatus.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartMonitorSidesStatus.getIcon(),
-                CableBusTextures.PartMonitorSidesStatus.getIcon());
-
-        rh.setBounds(6, 6, 11, 10, 10, 12);
-        rh.renderBlock(x, y, z, renderer);
-
-        this.renderLights(x, y, z, rh, renderer);
+    protected boolean supportFuzzy() {
+        return true;
     }
 
     @Override
-    public int cableConnectionRenderTo() {
-        return 5;
+    protected boolean supportOreDict() {
+        return true;
     }
 
     @Override
-    public boolean onPartActivate(final EntityPlayer player, final Vec3 pos) {
-        if (!player.isSneaking()) {
-            if (Platform.isClient()) {
-                return true;
-            }
+    protected IMEMonitor<IAEItemStack> getMonitor() {
+        try {
+            return this.getProxy().getStorage().getItemInventory();
+        } catch (final GridAccessException e) {
+            return null;
+        }
+    }
 
-            Platform.openGUI(player, this.getHost().getTile(), this.getSide(), GuiBridge.GUI_BUS);
-            return true;
+    @Override
+    public int calculateAmountToSend() {
+        int toSend = switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
+            case 1 -> 8;
+            case 2 -> 32;
+            case 3 -> 64;
+            case 4 -> 96;
+            default -> 1;
+        };
+
+        switch (this.getInstalledUpgrades(Upgrades.SUPERSPEED)) {
+            case 1 -> toSend += 16;
+            case 2 -> toSend += 16 * 8;
+            case 3 -> toSend += 16 * 8 * 8;
+            case 4 -> toSend += 16 * 8 * 8 * 8;
         }
 
-        return false;
-    }
-
-    @Override
-    public TickingRequest getTickingRequest(final IGridNode node) {
-        return new TickingRequest(
-                TickRates.ImportBus.getMin(),
-                TickRates.ImportBus.getMax(),
-                this.getHandler() == null,
-                false);
-    }
-
-    @Override
-    public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
-        return this.doBusWork();
-    }
-
-    @Override
-    protected TickRateModulation doBusWork() {
-        if (!this.getProxy().isActive() || !this.canDoBusWork()) {
-            return TickRateModulation.IDLE;
+        switch (this.getInstalledUpgrades(Upgrades.SUPERLUMINALSPEED)) {
+            case 1 -> toSend += 131_072;
+            case 2 -> toSend += 131_072 * 8;
+            case 3 -> toSend += 131_072 * 8 * 8;
+            case 4 -> toSend += 131_072 * 8 * 8 * 8;
         }
 
-        this.worked = false;
-
-        final InventoryAdaptor myAdaptor = this.getHandler();
-        final FuzzyMode fzMode = (FuzzyMode) this.getConfigManager().getSetting(Settings.FUZZY_MODE);
-
-        if (myAdaptor != null) {
-            try {
-                this.itemToSend = this.calculateItemsToSend();
-                this.itemToSend = Math.min(
-                        this.itemToSend,
-                        (int) (0.01 + this.getProxy().getEnergy()
-                                .extractAEPower(this.itemToSend, Actionable.SIMULATE, PowerMultiplier.CONFIG)));
-
-                final IMEMonitor<IAEItemStack> inv = this.getProxy().getStorage().getItemInventory();
-                final IEnergyGrid energy = this.getProxy().getEnergy();
-
-                boolean configured = false;
-                if (this.getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
-                    for (int x = 0; x < this.availableSlots(); x++) {
-                        final IAEItemStack ais = this.getConfig().getAEStackInSlot(x);
-                        if (ais != null && this.itemToSend > 0) {
-                            configured = true;
-                            while (this.itemToSend > 0) {
-                                if (this.importStuff(myAdaptor, ais, inv, energy, fzMode)) {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                } else if (!oreFilterString.isEmpty()) {
-                    configured = true;
-                    if (filterPredicate == null) filterPredicate = OreFilteredList.makeFilter(oreFilterString);
-                    for (ItemSlot slot : myAdaptor) {
-                        if (this.itemToSend <= 0) break;
-                        if (slot.isExtractable() && filterPredicate != null
-                                && filterPredicate.test(slot.getAEItemStack())) {
-                            while (this.itemToSend > 0) {
-                                if (this.importStuff(myAdaptor, slot.getAEItemStack(), inv, energy, fzMode)) break;
-                            }
-                        }
-                    }
-                }
-
-                if (!configured) {
-                    while (this.itemToSend > 0) {
-                        if (this.importStuff(myAdaptor, null, inv, energy, fzMode)) {
-                            break;
-                        }
-                    }
-                }
-            } catch (final GridAccessException e) {
-                // :3
-            }
-        } else {
-            return TickRateModulation.SLEEP;
-        }
-
-        return this.worked ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
+        return toSend;
     }
 
-    private boolean importStuff(final InventoryAdaptor myAdaptor, final IAEItemStack whatToImport,
+    @Override
+    protected boolean importStuff(final Object myTarget, final IAEItemStack whatToImport,
             final IMEMonitor<IAEItemStack> inv, final IEnergySource energy, final FuzzyMode fzMode) {
+        if (!(myTarget instanceof InventoryAdaptor myAdaptor)) return true;
         final int toSend = this.calculateMaximumAmountToImport(myAdaptor, whatToImport, inv, fzMode);
         final ItemStack newItems;
 
@@ -274,7 +142,7 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
             }
 
             final IAEItemStack failed = Platform
-                    .poweredInsert(energy, this.destination, this.lastItemChecked, this.source);
+                    .poweredInsert(energy, this.destination, this.lastItemChecked, this.mySrc);
 
             if (failed != null) {
                 myAdaptor.addItems(failed.getItemStack());
@@ -308,7 +176,7 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
             simResult = myAdaptor.simulateRemove(toSend, itemStackToImport, this.configDestination(inv));
         }
         itemAmountNotStorable = this.destination
-                .injectItems(AEItemStack.create(simResult), Actionable.SIMULATE, this.source);
+                .injectItems(AEItemStack.create(simResult), Actionable.SIMULATE, this.mySrc);
 
         if (itemAmountNotStorable != null) {
             return (int) Math.min(simResult.stackSize - itemAmountNotStorable.getStackSize(), toSend);
@@ -323,13 +191,22 @@ public class PartImportBus extends PartSharedItemBus implements IInventoryDestin
     }
 
     @Override
-    protected boolean isSleeping() {
-        return this.getHandler() == null || super.isSleeping();
-    }
-
-    @Override
-    public RedstoneMode getRSMode() {
-        return (RedstoneMode) this.getConfigManager().getSetting(Settings.REDSTONE_CONTROLLED);
+    protected boolean doOreDict(final Object myTarget, IMEMonitor<IAEItemStack> inv, final IEnergyGrid energy,
+            final FuzzyMode fzMode) {
+        if (!(myTarget instanceof InventoryAdaptor myAdaptor)) return false;
+        if (!oreFilterString.isEmpty()) {
+            if (filterPredicate == null) filterPredicate = OreFilteredList.makeFilter(oreFilterString);
+            for (ItemSlot slot : myAdaptor) {
+                if (this.itemToSend <= 0) break;
+                if (slot.isExtractable() && filterPredicate != null && filterPredicate.test(slot.getAEItemStack())) {
+                    while (this.itemToSend > 0) {
+                        if (this.importStuff(myAdaptor, slot.getAEItemStack(), inv, energy, fzMode)) break;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     @Override

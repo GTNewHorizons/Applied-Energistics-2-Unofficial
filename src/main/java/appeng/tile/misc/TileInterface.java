@@ -29,6 +29,7 @@ import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemSource;
 
+import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IPowerChannelState;
@@ -54,6 +55,7 @@ import appeng.api.util.IConfigManager;
 import appeng.capabilities.MEItemIO;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
 import appeng.me.GridAccessException;
 import appeng.tile.TileEvent;
@@ -64,8 +66,9 @@ import appeng.util.Platform;
 import appeng.util.inv.IInventoryDestination;
 import io.netty.buffer.ByteBuf;
 
-public class TileInterface extends AENetworkInvTile implements IGridTickable, ITileStorageMonitorable,
-        IStorageMonitorable, IInventoryDestination, IInterfaceHost, IPriorityHost, IPowerChannelState {
+public class TileInterface extends AENetworkInvTile
+        implements IGridTickable, ITileStorageMonitorable, IStorageMonitorable, IInventoryDestination, IInterfaceHost,
+        IPriorityHost, IPowerChannelState, IPrimaryGuiIconProvider {
 
     private final DualityInterface duality = new DualityInterface(this.getProxy(), this);
     private ForgeDirection pointAt = ForgeDirection.UNKNOWN;
@@ -336,6 +339,11 @@ public class TileInterface extends AENetworkInvTile implements IGridTickable, IT
     @Override
     public ItemStack getSelfRep() {
         return this.getItemFromTile(this);
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().blocks().iface().maybeStack(1).orNull();
     }
 
     private MEItemIO getItemIO() {

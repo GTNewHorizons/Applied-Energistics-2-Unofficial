@@ -2,27 +2,20 @@ package appeng.client.gui.implementations;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.inventory.Container;
-import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Keyboard;
 
-import appeng.client.gui.AEBaseGui;
-import appeng.client.gui.widgets.GuiTabButton;
+import appeng.client.gui.GuiSub;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.container.AEBaseContainer;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
-import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.helpers.Reflected;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
-public abstract class GuiAmount extends AEBaseGui {
+public abstract class GuiAmount extends GuiSub {
 
     protected MEGuiTextField amountTextField;
-    protected GuiTabButton originalGuiBtn;
 
     protected GuiButton nextBtn;
 
@@ -34,9 +27,6 @@ public abstract class GuiAmount extends AEBaseGui {
     protected GuiButton minus10;
     protected GuiButton minus100;
     protected GuiButton minus1000;
-
-    protected GuiBridge originalGui;
-    protected ItemStack myIcon;
 
     @Reflected
     public GuiAmount(final Container container) {
@@ -66,27 +56,12 @@ public abstract class GuiAmount extends AEBaseGui {
         this.buttonList.add(
                 this.nextBtn = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.Next.getLocal()));
 
-        final Object target = ((AEBaseContainer) this.inventorySlots).getTarget();
-
-        this.setOriginGUI(target);
-        if (this.originalGui != null && myIcon != null) {
-            this.buttonList.add(
-                    this.originalGuiBtn = new GuiTabButton(
-                            this.guiLeft + 154,
-                            this.guiTop,
-                            this.myIcon,
-                            this.myIcon.getDisplayName(),
-                            itemRender));
-        }
-
         this.amountTextField = new MEGuiTextField(61, 12);
         this.amountTextField.x = this.guiLeft + 60;
         this.amountTextField.y = this.guiTop + 55;
         this.amountTextField.setMaxStringLength(16);
         this.amountTextField.setFocused(true);
     }
-
-    protected abstract void setOriginGUI(Object target);
 
     protected int getButtonQtyByIndex(int index) {
         return AEConfig.instance.craftItemsByStackAmounts(index);
@@ -118,9 +93,6 @@ public abstract class GuiAmount extends AEBaseGui {
     @Override
     protected void actionPerformed(final GuiButton btn) {
         super.actionPerformed(btn);
-        if (btn == this.originalGuiBtn) {
-            NetworkHandler.instance.sendToServer(new PacketSwitchGuis(this.originalGui));
-        }
 
         final boolean isPlus = btn == this.plus1 || btn == this.plus10 || btn == this.plus100 || btn == this.plus1000;
         final boolean isMinus = btn == this.minus1 || btn == this.minus10
