@@ -18,6 +18,7 @@ import java.util.Set;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -40,6 +41,9 @@ public class RenderBlocksWorkaround extends RenderBlocks {
     private Field fBrightness = null;
     private Field fColor = null;
     private LightingCache lightState = new LightingCache();
+
+    public static final boolean fixedBottomFaceUV = (boolean) Launch.blackboard
+            .getOrDefault("hodgepodge.FixesConfig.fixBottomFaceUV", Boolean.FALSE);
 
     private int getCurrentColor() {
         try {
@@ -186,7 +190,7 @@ public class RenderBlocksWorkaround extends RenderBlocks {
                 return;
             }
 
-            if (this.isFacade()) {
+            if (!RenderBlocksWorkaround.fixedBottomFaceUV && this.isFacade()) {
                 final Tessellator tessellator = Tessellator.instance;
 
                 final double d3 = par8Icon.getInterpolatedU(this.renderMinX * 16.0D);
