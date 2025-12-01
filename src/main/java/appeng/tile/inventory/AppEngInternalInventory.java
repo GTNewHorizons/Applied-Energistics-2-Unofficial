@@ -204,6 +204,7 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
     }
 
     public void readFromNBT(final NBTTagCompound data, final String name) {
+        if (!data.hasKey(name)) return;
         final NBTTagCompound c = data.getCompoundTag(name);
         if (c != null) {
             this.readFromNBT(c);
@@ -213,8 +214,9 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
     public void readFromNBT(final NBTTagCompound target) {
         for (int x = 0; x < this.size; x++) {
             try {
-                final NBTTagCompound c = target.getCompoundTag("#" + x);
-
+                final String key = "#" + x;
+                if (!target.hasKey(key)) continue;
+                final NBTTagCompound c = target.getCompoundTag(key);
                 if (c != null) {
                     this.inv[x] = ItemStack.loadItemStackFromNBT(c);
                 }
