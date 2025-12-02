@@ -79,7 +79,7 @@ public class CraftingV2Tests {
     }
 
     private void simulateJobAndCheck(CraftingJobV2 job, int timeoutMs) {
-        job.simulateFor(SIMPLE_SIMULATION_TIMEOUT_MS);
+        job.simulateFor(timeoutMs);
 
         assertTrue(job.isDone());
         assertFalse(job.isCancelled());
@@ -416,5 +416,86 @@ public class CraftingV2Tests {
                 AEItemStack.create(withSize(ironPlate, 0)).setCountRequestable(1000),
                 AEItemStack.create(withSize(goldIngot, 0)).setCountRequestable(900),
                 AEItemStack.create(withSize(goldBlock, 0)).setCountRequestable(100));
+    }
+
+    @Test
+    void competingRecipe() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(withSize(ironDust, 4));
+        aeSystem.addStoredItem(withSize(goldDust, 1));
+        aeSystem.newProcessingPattern().addInput(withSize(ironDust, 2)) //
+                .addOutput(withSize(ironIngot, 1)) //
+                .buildAndAdd();
+        aeSystem.newProcessingPattern().addInput(withSize(ironIngot, 1)) //
+                .addOutput(withSize(ironPlate, 1)) //
+                .buildAndAdd();
+        aeSystem.newProcessingPattern().addInput(withSize(goldDust, 1)) //
+                .addOutput(withSize(ironPlate, 1)) //
+                .setPriority(1) //
+                .buildAndAdd();
+
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(withSize(ironPlate, 3));
+        simulateJobAndCheck(job, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertFalse(job.isSimulation());
+        assertEquals(job.getOutput(), AEItemStack.create(withSize(ironPlate, 3)));
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(withSize(ironDust, 4)),
+                AEItemStack.create(withSize(goldDust, 1)),
+                AEItemStack.create(withSize(ironIngot, 0)).setCountRequestable(2),
+                AEItemStack.create(withSize(ironPlate, 0)).setCountRequestable(3));
+
+        final CraftingJobV2 jobFailed = aeSystem.makeCraftingJob(withSize(ironPlate, 4));
+        simulateJobAndCheck(jobFailed, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertTrue(jobFailed.isSimulation());
+        assertJobPlanEquals(
+                jobFailed,
+                AEItemStack.create(withSize(ironDust, 6)),
+                AEItemStack.create(withSize(goldDust, 1)),
+                AEItemStack.create(withSize(ironIngot, 0)).setCountRequestable(3),
+                AEItemStack.create(withSize(ironPlate, 0)).setCountRequestable(4));
+    }
+
+    @Test
+    void competingRecipeChain() {
+        MockAESystem aeSystem = new MockAESystem(dummyWorld);
+        aeSystem.addStoredItem(withSize(ironDust, 4));
+        aeSystem.addStoredItem(withSize(goldDust, 1));
+        aeSystem.newProcessingPattern().addInput(withSize(ironDust, 2)) //
+                .addOutput(withSize(ironIngot, 1)) //
+                .buildAndAdd();
+        aeSystem.newProcessingPattern().addInput(withSize(ironIngot, 1)) //
+                .addOutput(withSize(ironPlate, 1)) //
+                .buildAndAdd();
+        aeSystem.newProcessingPattern().addInput(withSize(goldDust, 1)) //
+                .addOutput(withSize(goldIngot, 1)) //
+                .buildAndAdd();
+        aeSystem.newProcessingPattern().addInput(withSize(goldIngot, 1)) //
+                .addOutput(withSize(ironPlate, 1)) //
+                .setPriority(1) //
+                .buildAndAdd();
+
+        final CraftingJobV2 job = aeSystem.makeCraftingJob(withSize(ironPlate, 3));
+        simulateJobAndCheck(job, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertFalse(job.isSimulation());
+        assertEquals(job.getOutput(), AEItemStack.create(withSize(ironPlate, 3)));
+        assertJobPlanEquals(
+                job,
+                AEItemStack.create(withSize(ironDust, 4)),
+                AEItemStack.create(withSize(goldDust, 1)),
+                AEItemStack.create(withSize(ironIngot, 0)).setCountRequestable(2),
+                AEItemStack.create(withSize(goldIngot, 0)).setCountRequestable(1),
+                AEItemStack.create(withSize(ironPlate, 0)).setCountRequestable(3));
+
+        final CraftingJobV2 jobFailed = aeSystem.makeCraftingJob(withSize(ironPlate, 4));
+        simulateJobAndCheck(jobFailed, SIMPLE_SIMULATION_TIMEOUT_MS);
+        assertTrue(jobFailed.isSimulation());
+        assertJobPlanEquals(
+                jobFailed,
+                AEItemStack.create(withSize(ironDust, 6)),
+                AEItemStack.create(withSize(goldDust, 1)),
+                AEItemStack.create(withSize(ironIngot, 0)).setCountRequestable(3),
+                AEItemStack.create(withSize(goldIngot, 0)).setCountRequestable(1),
+                AEItemStack.create(withSize(ironPlate, 0)).setCountRequestable(4));
     }
 }

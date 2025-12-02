@@ -9,6 +9,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
+
 import appeng.api.config.CraftingMode;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEFluidStack;
@@ -74,6 +77,8 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
         }
     }
 
+    public final CraftingRequest<?> parentRequest;
+    public final Set<CraftingRequest<?>> parentRequests;
     public final Class<StackType> stackTypeClass;
     /**
      * An item/fluid + count representing how many need to be crafted
@@ -146,6 +151,8 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
         } else {
             throw new UnsupportedOperationException("Unknown stack type " + stack.getClass());
         }
+        parentRequest = null; // this state is not needed on client side
+        parentRequests = Collections.emptySet();
         substitutionMode = serializer.readEnum(SubstitutionMode.class);
         allowSimulation = buffer.readBoolean();
         remainingToProcess = buffer.readLong();
@@ -161,12 +168,22 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
     }
 
     /**
+     * @param parentRequest          From which this crafting request is initiated. null if it's the root
      * @param stack                  The item/fluid and stack to request
      * @param substitutionMode       Whether and how to allow substitutions when resolving this request
      * @param acceptableSubstituteFn A predicate testing if a given item (in fuzzy mode) can fulfill the request
      */
-    public CraftingRequest(StackType stack, SubstitutionMode substitutionMode, boolean allowSimulation,
-            CraftingMode craftingMode, Predicate<StackType> acceptableSubstituteFn) {
+    public CraftingRequest(CraftingRequest<?> parentRequest, StackType stack, SubstitutionMode substitutionMode,
+            boolean allowSimulation, CraftingMode craftingMode, Predicate<StackType> acceptableSubstituteFn) {
+        this.parentRequest = parentRequest;
+        if (parentRequest == null) {
+            this.parentRequests = Collections.emptySet();
+        } else {
+            Builder<CraftingRequest<?>> builder = ImmutableSet.builder();
+            builder.addAll(parentRequest.parentRequests);
+            builder.add(parentRequest);
+            this.parentRequests = builder.build();
+        }
         this.stack = stack;
         if (stack == null) {
             stackTypeClass = (Class<StackType>) IAEItemStack.class;
@@ -190,7 +207,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
      */
     public CraftingRequest(StackType request, SubstitutionMode substitutionMode, boolean allowSimulation,
             CraftingMode craftingMode) {
-        this(request, substitutionMode, allowSimulation, craftingMode, x -> true);
+        this(null, request, substitutionMode, allowSimulation, craftingMode, x -> true);
         if (substitutionMode == SubstitutionMode.ACCEPT_FUZZY) {
             throw new IllegalArgumentException("Fuzzy requests must have a substitution-valid predicate");
         }
