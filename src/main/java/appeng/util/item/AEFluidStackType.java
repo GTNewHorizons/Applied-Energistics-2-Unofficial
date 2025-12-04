@@ -19,6 +19,8 @@ import appeng.util.FluidUtils;
 import codechicken.nei.recipe.StackInfo;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
+import it.unimi.dsi.fastutil.objects.ObjectLongImmutablePair;
+import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
 
@@ -70,25 +72,26 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     }
 
     @Override
-    public long drainStackFromContainer(@NotNull ItemStack itemStack, @NotNull IAEFluidStack stack) {
+    public @NotNull ObjectLongPair<ItemStack> drainStackFromContainer(@NotNull ItemStack itemStack,
+            @NotNull IAEFluidStack stack) {
         if (itemStack.getItem() instanceof IFluidContainerItem container) {
             FluidStack fluid = container.getFluid(itemStack);
-            if (fluid == null || !stack.getFluidStack().isFluidEqual(fluid)) return 0;
+            if (fluid == null || !stack.getFluidStack().isFluidEqual(fluid)) return null;
             FluidStack drained = container
                     .drain(itemStack, (int) Math.min(stack.getStackSize(), Integer.MAX_VALUE), true);
-            return drained.amount;
+            return new ObjectLongImmutablePair<>(itemStack, drained.amount);
         } else if (FluidContainerRegistry.isContainer(itemStack)) {
             FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(itemStack);
             if (fluid == null || !stack.getFluidStack().isFluidEqual(fluid) || fluid.amount > stack.getStackSize())
-                return 0;
+                return new ObjectLongImmutablePair<>(itemStack, 0);
 
             ItemStack empty = FluidContainerRegistry.drainFluidContainer(itemStack);
-            if (empty == null) return 0;
+            if (empty == null) return new ObjectLongImmutablePair<>(itemStack, 0);;
 
-            return fluid.amount;
+            return new ObjectLongImmutablePair<>(empty, fluid.amount);
         }
 
-        return 0;
+        return new ObjectLongImmutablePair<>(itemStack, 0);
     }
 
     @Override

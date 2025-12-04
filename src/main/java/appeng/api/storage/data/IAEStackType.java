@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
+import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public interface IAEStackType<T extends IAEStack> {
 
@@ -45,9 +46,10 @@ public interface IAEStackType<T extends IAEStack> {
 
     /**
      * @param stack to drain with amount
-     * @return drained amount
+     * @return drained container and drained amount, or null if not drained
      */
-    long drainStackFromContainer(@NotNull ItemStack container, @NotNull T stack);
+    @NotNull
+    ObjectLongPair<ItemStack> drainStackFromContainer(@NotNull ItemStack container, @NotNull T stack);
 
     /**
      * @param container filled container
