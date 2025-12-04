@@ -14,6 +14,12 @@
 package appeng.api.storage;
 
 import appeng.api.util.IConfigurableObject;
+import appeng.core.localization.GuiText;
 
 public interface ITerminalHost extends IStorageMonitorable, IConfigurableObject {
+
+    default GuiText getName() {
+        return GuiText.Terminal;
+    }
+
 }

@@ -10,8 +10,6 @@
 
 package appeng.helpers;
 
-import static appeng.util.Platform.convertStack;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -29,6 +27,7 @@ import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.util.InventoryAdaptor;
 
@@ -74,7 +73,12 @@ public class MultiCraftingTracker {
 
     public boolean handleCrafting(final int x, final long itemToCraft, final IAEItemStack ais, final InventoryAdaptor d,
             final World w, final IGrid g, final ICraftingGrid cg, final BaseActionSource mySrc) {
-        if (ais != null && d.simulateAddStack(convertStack(ais), InsertionMode.DEFAULT) == null) {
+        return handleCrafting(x, itemToCraft, (IAEStack<?>) ais, d, w, g, cg, mySrc);
+    }
+
+    public boolean handleCrafting(final int x, final long itemToCraft, final IAEStack<?> aes, final InventoryAdaptor d,
+            final World w, final IGrid g, final ICraftingGrid cg, final BaseActionSource mySrc) {
+        if (aes != null && d.simulateAddStack(aes, InsertionMode.DEFAULT) == null) {
             final Future<ICraftingJob> craftingJob = this.getJob(x);
 
             if (this.getLink(x) != null) {
@@ -102,7 +106,7 @@ public class MultiCraftingTracker {
                 }
             } else {
                 if (this.getLink(x) == null) {
-                    final IAEItemStack aisC = ais.copy();
+                    final IAEStack<?> aisC = aes.copy();
                     aisC.setStackSize(itemToCraft);
 
                     this.setJob(x, cg.beginCraftingJob(w, g, mySrc, aisC, null));

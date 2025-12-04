@@ -12,38 +12,36 @@ package appeng.client.gui.implementations;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Mouse;
 
-import appeng.api.AEApi;
 import appeng.api.config.CraftingMode;
 import appeng.api.config.Settings;
-import appeng.api.definitions.IDefinitions;
-import appeng.api.definitions.IParts;
 import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStack;
+import appeng.client.gui.slots.VirtualMESlotSingle;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerCraftAmount;
+import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftRequest;
 import appeng.helpers.Reflected;
-import appeng.helpers.WirelessTerminalGuiObject;
-import appeng.parts.reporting.PartCraftingTerminal;
-import appeng.parts.reporting.PartPatternTerminal;
-import appeng.parts.reporting.PartPatternTerminalEx;
-import appeng.parts.reporting.PartTerminal;
 import appeng.util.Platform;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class GuiCraftAmount extends GuiAmount {
+public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
 
     private GuiImgButton craftingMode;
+    private final VirtualMESlotSingle slot;
 
     @Reflected
     public GuiCraftAmount(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         super(new ContainerCraftAmount(inventoryPlayer, te));
+
+        this.slot = new VirtualMESlotSingle(34, 53, 0, null);
     }
 
     @Override
@@ -59,49 +57,7 @@ public class GuiCraftAmount extends GuiAmount {
                         CraftingMode.STANDARD));
 
         ((ContainerCraftAmount) this.inventorySlots).setAmountField(this.amountTextField);
-    }
-
-    @Override
-    protected void setOriginGUI(Object target) {
-
-        final IDefinitions definitions = AEApi.instance().definitions();
-        final IParts parts = definitions.parts();
-
-        if (target instanceof WirelessTerminalGuiObject) {
-            for (final ItemStack wirelessTerminalStack : definitions.items().wirelessTerminal().maybeStack(1).asSet()) {
-                myIcon = wirelessTerminalStack;
-            }
-
-            this.originalGui = GuiBridge.GUI_WIRELESS_TERM;
-        }
-
-        if (target instanceof PartTerminal) {
-            for (final ItemStack stack : parts.terminal().maybeStack(1).asSet()) {
-                myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_ME;
-        }
-
-        if (target instanceof PartCraftingTerminal) {
-            for (final ItemStack stack : parts.craftingTerminal().maybeStack(1).asSet()) {
-                myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
-        }
-
-        if (target instanceof PartPatternTerminal) {
-            for (final ItemStack stack : parts.patternTerminal().maybeStack(1).asSet()) {
-                myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-
-        if (target instanceof PartPatternTerminalEx) {
-            for (final ItemStack stack : parts.patternTerminalEx().maybeStack(1).asSet()) {
-                myIcon = stack;
-            }
-            this.originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-        }
+        this.registerVirtualSlots(this.slot);
     }
 
     @Override
@@ -167,5 +123,10 @@ public class GuiCraftAmount extends GuiAmount {
     @Override
     protected String getBackground() {
         return "guis/craftAmt.png";
+    }
+
+    @Override
+    public void receiveSlotStacks(StorageName _invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
+        this.slot.setAEStack(slotStacks.get(0));
     }
 }

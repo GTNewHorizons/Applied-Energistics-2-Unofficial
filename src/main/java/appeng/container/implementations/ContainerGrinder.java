@@ -21,7 +21,7 @@ import appeng.tile.grindstone.TileGrinder;
 public class ContainerGrinder extends AEBaseContainer {
 
     public ContainerGrinder(final InventoryPlayer ip, final TileGrinder grinder) {
-        super(ip, grinder, null);
+        super(ip, grinder);
 
         this.addSlotToContainer(
                 new SlotRestrictedInput(

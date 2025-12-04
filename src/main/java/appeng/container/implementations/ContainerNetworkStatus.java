@@ -150,7 +150,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
     private boolean isConsume = true;
 
     public ContainerNetworkStatus(final InventoryPlayer ip, final INetworkTool te) {
-        super(ip, null, null);
+        super(ip, te);
         final IGridHost host = te.getGridHost();
 
         if (host != null) {

@@ -12,8 +12,6 @@ import appeng.core.features.AEFeature;
 
 public class ItemExtremeStorageCell extends ItemBasicStorageCell {
 
-    protected final int totalTypes;
-
     @SuppressWarnings("Guava")
     public ItemExtremeStorageCell(String name, long bytes, int types, int perType, double drain) {
         super(Optional.of(name));
@@ -23,11 +21,6 @@ public class ItemExtremeStorageCell extends ItemBasicStorageCell {
         this.perType = perType;
         this.totalTypes = types;
         this.idleDrain = drain;
-    }
-
-    @Override
-    public int getTotalTypes(final ItemStack cellItem) {
-        return totalTypes;
     }
 
     @Override

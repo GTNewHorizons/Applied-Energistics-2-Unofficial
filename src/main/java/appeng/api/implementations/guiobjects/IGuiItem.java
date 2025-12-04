@@ -13,6 +13,7 @@
 
 package appeng.api.implementations.guiobjects;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
@@ -21,5 +22,12 @@ import net.minecraft.world.World;
  */
 public interface IGuiItem {
 
-    IGuiItemObject getGuiObject(ItemStack is, World world, int x, int y, int z);
+    @Deprecated
+    default IGuiItemObject getGuiObject(ItemStack is, World world, int x, int y, int z) {
+        return getGuiObject(is, world, null, x, y, z);
+    }
+
+    default IGuiItemObject getGuiObject(ItemStack is, World world, EntityPlayer player, int x, int y, int z) {
+        return null;
+    }
 }

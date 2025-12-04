@@ -17,6 +17,9 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.FuzzyMode;
+import appeng.items.contents.CellConfigLegacy;
+import appeng.items.contents.CellConfigLegacyWrapper;
+import appeng.tile.inventory.IAEStackInventory;
 
 public interface ICellWorkbenchItem {
 
@@ -36,6 +39,11 @@ public interface ICellWorkbenchItem {
      */
     IInventory getUpgradesInventory(ItemStack is);
 
+    @Deprecated
+    default IInventory getConfigInventory(ItemStack is) {
+        return new CellConfigLegacy(this.getConfigAEInventory(is), this.getStorageChannel());
+    }
+
     /**
      * Used to extract, or mirror the contents of the work bench onto the cell.
      * <p>
@@ -43,7 +51,9 @@ public interface ICellWorkbenchItem {
      * <p>
      * onInventoryChange will be called when saving is needed.
      */
-    IInventory getConfigInventory(ItemStack is);
+    default IAEStackInventory getConfigAEInventory(ItemStack is) {
+        return new CellConfigLegacyWrapper(this.getConfigInventory(is));
+    }
 
     /**
      * @return the current fuzzy status.
@@ -68,4 +78,8 @@ public interface ICellWorkbenchItem {
      * @param filter new ore dictionary filter
      */
     default void setOreFilter(ItemStack is, String filter) {}
+
+    default StorageChannel getStorageChannel() {
+        return StorageChannel.ITEMS;
+    }
 }

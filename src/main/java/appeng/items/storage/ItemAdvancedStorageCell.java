@@ -22,6 +22,7 @@ public class ItemAdvancedStorageCell extends ItemBasicStorageCell {
         this.setMaxStackSize(1);
         this.totalBytes = kilobytes * 1024;
         this.component = whichCell;
+        this.totalTypes = 63;
 
         switch (this.component) {
             case Cell256kPart -> {

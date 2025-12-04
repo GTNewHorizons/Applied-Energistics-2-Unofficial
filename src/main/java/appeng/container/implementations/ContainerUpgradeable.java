@@ -33,12 +33,11 @@ import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.IOptionalSlotHost;
 import appeng.container.slot.OptionalSlotFake;
-import appeng.container.slot.OptionalSlotFakeTypeOnly;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.parts.automation.PartExportBus;
+import appeng.parts.automation.PartBaseExportBus;
 import appeng.util.Platform;
 
-public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSlotHost {
+public abstract class ContainerUpgradeable extends AEBaseContainer implements IOptionalSlotHost {
 
     private final IUpgradeableHost upgradeable;
 
@@ -59,7 +58,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
     private INetworkTool tbInventory;
 
     public ContainerUpgradeable(final InventoryPlayer ip, final IUpgradeableHost te) {
-        super(ip, (TileEntity) (te instanceof TileEntity ? te : null), (IPart) (te instanceof IPart ? te : null));
+        super(ip, te);
         this.upgradeable = te;
 
         World w = null;
@@ -91,7 +90,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
                 this.lockPlayerInventorySlot(x);
                 this.tbSlot = x;
                 this.tbInventory = (INetworkTool) ((IGuiItem) pii.getItem())
-                        .getGuiObject(pii, w, xCoord, yCoord, zCoord);
+                        .getGuiObject(pii, w, getInventoryPlayer().player, xCoord, yCoord, zCoord);
                 break;
             }
         }
@@ -137,22 +136,6 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
 
     protected void setupConfig() {
         this.setupUpgrades();
-
-        final IInventory inv = this.getUpgradeable().getInventoryByName("config");
-        final int y = 40;
-        final int x = 80;
-        this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 0, x, y, 0, 0, 0));
-        if (this.supportCapacity()) {
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 1, x, y, -1, 0, 1));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 2, x, y, 1, 0, 1));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 3, x, y, 0, -1, 1));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 4, x, y, 0, 1, 1));
-
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 5, x, y, -1, -1, 2));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 6, x, y, 1, -1, 2));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 7, x, y, -1, 1, 2));
-            this.addSlotToContainer(new OptionalSlotFakeTypeOnly(inv, this, 8, x, y, 1, 1, 2));
-        }
     }
 
     protected void setupUpgrades() {
@@ -232,7 +215,7 @@ public class ContainerUpgradeable extends AEBaseContainer implements IOptionalSl
     protected void loadSettingsFromHost(final IConfigManager cm) {
         this.setFuzzyMode((FuzzyMode) cm.getSetting(Settings.FUZZY_MODE));
         this.setRedStoneMode((RedstoneMode) cm.getSetting(Settings.REDSTONE_CONTROLLED));
-        if (this.getUpgradeable() instanceof PartExportBus) {
+        if (this.getUpgradeable() instanceof PartBaseExportBus<?>) {
             this.setCraftingMode((YesNo) cm.getSetting(Settings.CRAFT_ONLY));
             this.setSchedulingMode((SchedulingMode) cm.getSetting(Settings.SCHEDULING_MODE));
         }

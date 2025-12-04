@@ -20,11 +20,15 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.StatCollector;
+
+import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
@@ -536,7 +540,13 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
         return getItem().getUnlocalizedName();
     }
 
+    // addon...
     public String getModID() {
+        return this.getModId();
+    }
+
+    @Override
+    public String getModId() {
         if (this.getDefinition().getUniqueID() != null) {
             return this.getModName(this.getDefinition().getUniqueID());
         }
@@ -665,5 +675,32 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
             this.getDefinition()
                     .setTagCompound((AESharedNBT) AESharedNBT.getSharedTagCompound(tagCompound, getItemStack()));
         }
+    }
+
+    @Override
+    public ItemStack getItemStackForNEI() {
+        return this.getItemStack();
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void drawInGui(Minecraft mc, int x, int y) {
+        ItemStack itemStack = this.getItemStack();
+        RenderItem itemRender = RenderItem.getInstance();
+        itemRender.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), itemStack, x, y);
+
+        GL11.glTranslatef(0.0f, 0.0f, 200.0f);
+
+        int stackSize = itemStack.stackSize;
+        itemStack.stackSize = 1;
+        itemRender.renderItemOverlayIntoGUI(mc.fontRenderer, mc.getTextureManager(), itemStack, x, y);
+        itemStack.stackSize = stackSize;
+
+        GL11.glTranslatef(0.0f, 0.0f, -200.0f);
+    }
+
+    @Override
+    public int getPowerMultiplier() {
+        return 1;
     }
 }

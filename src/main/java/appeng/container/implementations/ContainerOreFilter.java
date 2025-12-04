@@ -1,18 +1,16 @@
 package appeng.container.implementations;
 
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.tileentity.TileEntity;
 
-import appeng.api.parts.IPart;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.container.AEBaseContainer;
+import appeng.container.ContainerSubGui;
 import appeng.container.guisync.GuiSync;
 import appeng.helpers.IOreFilterable;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class ContainerOreFilter extends AEBaseContainer {
+public class ContainerOreFilter extends ContainerSubGui {
 
     private final IOreFilterable filterHost;
 
@@ -23,7 +21,7 @@ public class ContainerOreFilter extends AEBaseContainer {
     public String filter = "";
 
     public ContainerOreFilter(final InventoryPlayer ip, final IOreFilterable te) {
-        super(ip, (TileEntity) (te instanceof TileEntity ? te : null), (IPart) (te instanceof IPart ? te : null));
+        super(ip, te);
         this.filterHost = te;
     }
 

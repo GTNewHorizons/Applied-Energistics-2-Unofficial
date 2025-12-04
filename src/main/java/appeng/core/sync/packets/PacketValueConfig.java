@@ -117,6 +117,7 @@ public class PacketValueConfig extends AppEngPacket {
             qk.setName(this.Value);
         } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof final ContainerRenamer qk) {
             qk.setNewName(this.Value);
+            qk.getPrimaryGui().open(player);
         } else if (this.Name.equals("TileSecurity.ToggleOption") && c instanceof ContainerSecurity sc) {
             sc.toggleSetting(this.Value, player);
         } else if (this.Name.equals("PriorityHost.Priority") && c instanceof ContainerPriority pc) {
@@ -141,18 +142,8 @@ public class PacketValueConfig extends AppEngPacket {
             }
         } else if (this.Name.startsWith("PatternTerminalEx.") && c instanceof final ContainerPatternTermEx cpt) {
             switch (this.Name) {
-                case "PatternTerminalEx.Encode" -> {
-                    if (this.Value.equals("2")) cpt.encodeAndMoveToInventory(false);
-                    else if (this.Value.equals("6")) cpt.encodeAndMoveToInventory(true);
-                    else cpt.encode();
-                }
-                case "PatternTerminalEx.Clear" -> cpt.clear();
-                case "PatternTerminalEx.Substitute" -> cpt.getPatternTerminal().setSubstitution(this.Value.equals("1"));
-                case "PatternTerminalEx.BeSubstitute" -> cpt.getPatternTerminal()
-                        .setCanBeSubstitution(this.Value.equals("1"));
-                case "PatternTerminalEx.Invert" -> cpt.getPatternTerminal().setInverted(Value.equals("1"));
-                case "PatternTerminalEx.Double" -> cpt.doubleStacks(Integer.parseInt(this.Value));
-                case "PatternTerminalEx.ActivePage" -> cpt.getPatternTerminal().setActivePage(Integer.parseInt(Value));
+                case "PatternTerminalEx.Invert" -> cpt.getExPatternTerminal().setInverted(Value.equals("1"));
+                case "PatternTerminalEx.ActivePage" -> cpt.getExPatternTerminal().setActivePage(Integer.parseInt(Value));
             }
         } else if (this.Name.startsWith("StorageBus.") && c instanceof final ContainerStorageBus ccw) {
             if (this.Name.equals("StorageBus.Action")) {
