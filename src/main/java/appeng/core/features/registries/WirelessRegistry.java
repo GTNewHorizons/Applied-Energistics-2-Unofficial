@@ -84,8 +84,7 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
             return false;
         }
 
-        if (item.getItem() instanceof ToolWirelessTerminal
-                && (handler.hasInfinityPower(item) || handler.hasPower(player, 0.5, item))) {
+        if (handler.hasInfinityPower(item) || handler.hasPower(player, 0.5, item)) {
             return true;
         } else {
             player.addChatMessage(PlayerMessages.DeviceNotPowered.toChat());
