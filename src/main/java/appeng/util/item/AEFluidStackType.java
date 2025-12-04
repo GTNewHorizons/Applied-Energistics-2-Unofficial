@@ -4,7 +4,9 @@ import java.io.IOException;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.IFluidContainerItem;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,6 +18,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.util.FluidUtils;
 import codechicken.nei.recipe.StackInfo;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
 public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
 
@@ -43,7 +46,7 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     }
 
     @Override
-    public boolean isContainerItemForType(@NotNull ItemStack container) {
+    public boolean isContainerItemForType(@Nullable ItemStack container) {
         return FluidUtils.isFluidContainer(container);
     }
 
@@ -64,5 +67,37 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
         FluidStack fluidStack = StackInfo.getFluid(itemStack);
         if (fluidStack == null) return null;
         return AEFluidStack.create(fluidStack);
+    }
+
+    @Override
+    public long drainStackFromContainer(@NotNull ItemStack itemStack, @NotNull IAEFluidStack stack) {
+        if (itemStack.getItem() instanceof IFluidContainerItem container) {
+            FluidStack fluid = container.getFluid(itemStack);
+            if (fluid == null || !stack.getFluidStack().isFluidEqual(fluid)) return 0;
+            FluidStack drained = container
+                    .drain(itemStack, (int) Math.min(stack.getStackSize(), Integer.MAX_VALUE), true);
+            return drained.amount;
+        } else if (FluidContainerRegistry.isContainer(itemStack)) {
+            FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(itemStack);
+            if (fluid == null || !stack.getFluidStack().isFluidEqual(fluid) || fluid.amount > stack.getStackSize())
+                return 0;
+
+            ItemStack empty = FluidContainerRegistry.drainFluidContainer(itemStack);
+            if (empty == null) return 0;
+
+            return fluid.amount;
+        }
+
+        return 0;
+    }
+
+    @Override
+    public @Nullable ItemStack clearFilledContainer(@NotNull ItemStack container) {
+        return FluidUtils.clearFluidContainer(container);
+    }
+
+    @Override
+    public @NotNull ObjectIntPair<ItemStack> fillContainer(@NotNull ItemStack container, @NotNull IAEFluidStack stack) {
+        return FluidUtils.fillFluidContainer(container, stack.getFluidStack());
     }
 }

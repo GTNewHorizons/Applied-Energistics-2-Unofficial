@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
 public interface IAEStackType<T extends IAEStack> {
 
@@ -24,7 +25,7 @@ public interface IAEStackType<T extends IAEStack> {
         return this.createList();
     }
 
-    boolean isContainerItemForType(@NotNull ItemStack container);
+    boolean isContainerItemForType(@Nullable ItemStack container);
 
     /**
      * @param container container item for this type
@@ -41,4 +42,23 @@ public interface IAEStackType<T extends IAEStack> {
      */
     @Nullable
     T convertStackFromItem(@NotNull ItemStack itemStack);
+
+    /**
+     * @param stack to drain with amount
+     * @return drained amount
+     */
+    long drainStackFromContainer(@NotNull ItemStack container, @NotNull T stack);
+
+    /**
+     * @param container filled container
+     * @return empty container
+     */
+    @Nullable
+    ItemStack clearFilledContainer(@NotNull ItemStack container);
+
+    /**
+     * @return filled container and amount
+     */
+    @NotNull
+    ObjectIntPair<ItemStack> fillContainer(@NotNull ItemStack container, @NotNull T stack);
 }

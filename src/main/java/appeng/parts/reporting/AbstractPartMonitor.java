@@ -96,6 +96,8 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
 
         if (data.hasKey("configuredItem")) {
             this.configuredItem = Platform.readStackNBT(data.getCompoundTag("configuredItem"));
+        } else {
+            this.configuredItem = null;
         }
     }
 
@@ -153,7 +155,7 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
     }
 
     private boolean onActivate(EntityPlayer player, boolean isShiftDown) {
-        if (Platform.isClient()) {
+        if (player.worldObj.isRemote) {
             return true;
         }
 
@@ -166,25 +168,25 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         }
 
         final TileEntity te = this.getTile();
-        final ItemStack eq = player.getCurrentEquippedItem();
+        final ItemStack hand = player.getCurrentEquippedItem();
 
-        if (Platform.isWrench(player, eq, te.xCoord, te.yCoord, te.zCoord)) {
+        if (Platform.isWrench(player, hand, te.xCoord, te.yCoord, te.zCoord)) {
             this.isLocked = !this.isLocked;
             player.addChatMessage((this.isLocked ? PlayerMessages.isNowLocked : PlayerMessages.isNowUnlocked).toChat());
             this.getHost().markForUpdate();
         } else if (!this.isLocked) {
-            if (eq == null) {
+            if (hand == null) {
                 this.configuredItem = null;
             } else if (!EXTRA_ACTION_KEY.isKeyDown(player)) {
-                this.configuredItem = AEItemStack.create(eq);
+                this.configuredItem = AEItemStack.create(hand);
             } else {
                 this.configuredItem = null;
                 for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
                     if (type == ITEM_STACK_TYPE) continue;
-                    if (type.isContainerItemForType(eq)) {
-                        this.configuredItem = type.getStackFromContainerItem(eq);
+                    if (type.isContainerItemForType(hand)) {
+                        this.configuredItem = type.getStackFromContainerItem(hand);
                     } else {
-                        this.configuredItem = type.convertStackFromItem(eq);
+                        this.configuredItem = type.convertStackFromItem(hand);
                     }
 
                     if (this.configuredItem != null) break;
