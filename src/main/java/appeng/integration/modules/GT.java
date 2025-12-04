@@ -46,6 +46,8 @@ public class GT implements IIntegrationModule, IGT {
     public int getGTMachineHash(TileEntity te) {
         IGregTechTileEntity igte = (IGregTechTileEntity) te;
 
-        return igte.canAccessData() ? 1 : 0;
+        // PartStorageBus uses 0 to represent 'no hash' so we offset the numbers up one here. They just need to be
+        // distinct. This controls when the item IO is reset.
+        return igte.canAccessData() ? 2 : 1;
     }
 }

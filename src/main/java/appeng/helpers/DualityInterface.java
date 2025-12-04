@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.OptionalInt;
 
 import net.minecraft.block.Block;
 import net.minecraft.inventory.IInventory;
@@ -43,6 +44,8 @@ import com.glodblock.github.common.parts.PartFluidInterface;
 import com.glodblock.github.common.parts.PartFluidP2PInterface;
 import com.glodblock.github.common.tile.TileFluidInterface;
 import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
+import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -81,6 +84,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
@@ -913,7 +917,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     @Override
     public IMEMonitor<IAEItemStack> getItemInventory() {
         if (this.hasConfig()) {
-            return new InterfaceInventory(this);
+            return new InterfaceInventory();
         }
 
         return this.items;
@@ -987,13 +991,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             return myInterface;
         }
 
-        final DualityInterface di = this;
-
         return new IStorageMonitorable() {
 
             @Override
             public IMEMonitor<IAEItemStack> getItemInventory() {
-                return new InterfaceInventory(di);
+                return new InterfaceInventory();
             }
 
             @Override
@@ -1019,11 +1021,25 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     private boolean inventoryCountsAsEmpty(TileEntity te, InventoryAdaptor ad, ForgeDirection side) {
         String name = te.getBlockType().getUnlocalizedName();
-        boolean isEmpty = (name.equals("gt.blockmachines") || name.equals("tile.interface")
-                || name.equals("tile.blockWritingTable")) && tileHasOnlyIgnoredItems(ad);
+
+        if (name.equals("gt.blockmachines")) {
+            ItemSink sink = ItemUtil.getItemSink(te, side);
+
+            if (sink != null) {
+                OptionalInt present = sink.getStoredItemsInSink(
+                        stack -> !BlockingModeIgnoreItemRegistry.instance().isIgnored(stack.toStackFast()));
+
+                return present.orElse(0) == 0;
+            }
+        }
+
+        boolean isEmpty = (name.equals("tile.interface") || name.equals("tile.blockWritingTable"))
+                && tileHasOnlyIgnoredItems(ad);
+
         if (shouldCheckFluid()) {
             isEmpty = name.equals("tile.interface");
         }
+
         return isEmpty;
     }
 
@@ -1674,9 +1690,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     private class InterfaceInventory extends MEMonitorIInventory {
 
-        public InterfaceInventory(final DualityInterface tileInterface) {
-            super(new AdaptorIInventory(tileInterface.storage));
-            this.setActionSource(new MachineSource(DualityInterface.this.iHost));
+        public InterfaceInventory() {
+            super(new AdaptorIInventory(storage));
+            this.setActionSource(new MachineSource(iHost));
         }
 
         @Override
@@ -1696,6 +1712,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             return super.extractItems(request, type, src);
+        }
+
+        @Override
+        public IItemList<IAEItemStack> getStorageList() {
+            IItemList<IAEItemStack> list = AEApi.instance().storage().createPrimitiveItemList();
+            for (ItemStack stack : getStorage()) {
+                if (stack == null) continue;
+                list.add(AEApi.instance().storage().createItemStack(stack));
+            }
+            return list;
         }
     }
 }

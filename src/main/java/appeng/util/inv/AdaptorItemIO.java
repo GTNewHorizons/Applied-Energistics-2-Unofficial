@@ -11,7 +11,6 @@ import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
 import com.gtnewhorizon.gtnhlib.item.FastImmutableItemStack;
 import com.gtnewhorizon.gtnhlib.item.ImmutableItemStack;
 import com.gtnewhorizon.gtnhlib.item.InventoryIterator;
-import com.gtnewhorizon.gtnhlib.item.ItemStackPredicate;
 import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
 import appeng.api.config.FuzzyMode;
@@ -28,13 +27,36 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
     @Override
     public ItemStack removeItems(int amount, ItemStack filter, IInventoryDestination destination) {
-        ItemStackPredicate predicate = ItemStackPredicate.matches(filter);
+        InventoryIterator iter = itemIO.sourceIterator();
 
-        if (destination != null) {
-            predicate = predicate.and(stack -> destination.canInsert(stack.toStackFast()));
+        if (iter == null) return null;
+
+        ItemStack out = null;
+
+        while (iter.hasNext() && amount > 0) {
+            ImmutableItemStack immutableStack = iter.next();
+
+            if (immutableStack == null) continue;
+
+            if (filter != null && !immutableStack.matches(filter)) continue;
+
+            ItemStack stack = immutableStack.toStack();
+
+            if (destination != null && !destination.canInsert(stack)) continue;
+
+            if (out == null) {
+                out = immutableStack.toStack(0);
+            }
+
+            ItemStack extracted = iter.extract(amount, false);
+
+            if (extracted != null) {
+                out.stackSize += extracted.stackSize;
+                amount -= extracted.stackSize;
+            }
         }
 
-        return itemIO.pull(predicate, stack -> Math.min(stack.getStackSize(), amount));
+        return out;
     }
 
     @Override
@@ -156,9 +178,25 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
     @Override
     public boolean containsItems() {
-        InventoryIterator iter = itemIO.sourceIterator();
+        if (itemIO.getStoredItemsInSink(null).orElse(0) > 0) return true;
 
-        return iter != null && iter.hasNext();
+        InventoryIterator iter = itemIO.sinkIterator();
+
+        if (iter != null) {
+            while (iter.hasNext()) {
+                if (iter.next() != null) return true;
+            }
+        }
+
+        iter = itemIO.sourceIterator();
+
+        if (iter != null) {
+            while (iter.hasNext()) {
+                if (iter.next() != null) return true;
+            }
+        }
+
+        return false;
     }
 
     @Override

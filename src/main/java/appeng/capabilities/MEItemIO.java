@@ -31,6 +31,8 @@ import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import appeng.util.item.ImmutableAEItemStackWrapper;
+import it.unimi.dsi.fastutil.objects.ObjectIterators;
+import it.unimi.dsi.fastutil.objects.ObjectList;
 
 public class MEItemIO implements ItemIO {
 
@@ -187,12 +189,13 @@ public class MEItemIO implements ItemIO {
         if (isFiltered()) {
             return new FilteredInventoryIterator(allowedSlots);
         } else {
-            IAEItemStack[] contents = storage.getStorageList().toArray(new IAEItemStack[0]);
+            // Limit the polled stacks to 64 temporarily to avoid performance issues. This should be fine for now.
+            ObjectList<IAEItemStack> contents = ObjectIterators.pour(storage.getStorageList().iterator(), 64);
 
             // Add 64 so that there are empty fake 'slots' to insert into. Otherwise [InventoryIterator.hasNext()] will
             // always return false. This could be higher, but 64 is a reasonable default for anything that will try to
             // insert via the iterator.
-            int[] slots = new int[contents.length + 64];
+            int[] slots = new int[contents.size() + 64];
 
             for (int i = 0; i < slots.length; i++) slots[i] = i;
 
@@ -284,9 +287,9 @@ public class MEItemIO implements ItemIO {
 
     private class UnfilteredInventoryIterator extends AbstractInventoryIterator {
 
-        private final IAEItemStack[] contents;
+        private final ObjectList<IAEItemStack> contents;
 
-        public UnfilteredInventoryIterator(int[] slots, IAEItemStack[] contents) {
+        public UnfilteredInventoryIterator(int[] slots, ObjectList<IAEItemStack> contents) {
             super(slots);
 
             this.contents = contents;
@@ -294,9 +297,9 @@ public class MEItemIO implements ItemIO {
 
         @Override
         protected ItemStack getStackInSlot(int slot) {
-            if (slot < 0 || slot >= contents.length) return null;
+            if (slot < 0 || slot >= contents.size()) return null;
 
-            IAEItemStack stack = contents[slot];
+            IAEItemStack stack = contents.get(slot);
 
             return stack == null ? null : stack.getItemStack();
         }
@@ -305,9 +308,9 @@ public class MEItemIO implements ItemIO {
         public ItemStack extract(int amount, boolean force) {
             int slot = getCurrentSlot();
 
-            if (slot < 0 || slot >= contents.length) return null;
+            if (slot < 0 || slot >= contents.size()) return null;
 
-            IAEItemStack current = contents[slot];
+            IAEItemStack current = contents.get(slot);
 
             if (current == null) return null;
 

@@ -1035,7 +1035,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (this.myLastLink != null && this.isBusy()
                 && this.finalOutput.isSameType((Object) job.getOutput())
                 && this.availableStorage >= this.usedStorage + job.getByteTotal()) {
-            return mergeJob(g, job, src);
+            return mergeJob(g, job, src, requestingMachine);
         }
 
         if (!this.tasks.isEmpty() || !this.waitingFor.isEmpty()) {
@@ -1169,7 +1169,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    public ICraftingLink mergeJob(final IGrid g, final ICraftingJob job, final BaseActionSource src) {
+    public ICraftingLink mergeJob(final IGrid g, final ICraftingJob job, final BaseActionSource src,
+            final ICraftingRequester requestingMachine) {
         final IStorageGrid sg = g.getCache(IStorageGrid.class);
         final MECraftingInventory ci = new MECraftingInventory(sg, true, false, false);
 
@@ -1197,7 +1198,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 this.prepareStepCount();
                 this.markDirty();
                 this.updateCPU();
-                return this.myLastLink;
+
+                final ICraftingLink whatLink = new CraftingLink(
+                        this.generateLinkData(this.myLastLink.getCraftingID(), false, true),
+                        requestingMachine);
+
+                this.submitLink(whatLink);
+                return whatLink;
             } else {
                 inventory = backupInventory;
                 waitingForMissing = backupWaitingForMissing;
