@@ -5,8 +5,6 @@ import static appeng.util.Platform.isAE2FCLoaded;
 import java.util.Collections;
 import java.util.Iterator;
 
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidStack;
@@ -26,22 +24,16 @@ import appeng.util.item.AEItemStack;
 public class AdaptorFluidHandler extends InventoryAdaptor {
 
     IFluidHandler fluidHandler;
-    AdaptorIInventory itemHandler;
+    InventoryAdaptor itemHandler;
     ForgeDirection toAdaptor;
 
     public AdaptorFluidHandler(IFluidHandler tank, ForgeDirection direction) {
         fluidHandler = tank;
         toAdaptor = direction;
-        if (tank instanceof ISidedInventory si) {
-            final int[] slots = si.getAccessibleSlotsFromSide(direction.ordinal());
-            if (si.getSizeInventory() > 0 && slots != null && slots.length > 0) {
-                itemHandler = new AdaptorIInventory(new WrapperMCISidedInventory(si, direction));
-            }
-        } else if (tank instanceof IInventory i) {
-            if (i.getSizeInventory() > 0) {
-                itemHandler = new AdaptorIInventory(i);
-            }
-        }
+    }
+
+    public void setItemAdaptor(InventoryAdaptor itemAdaptor) {
+        this.itemHandler = itemAdaptor;
     }
 
     @Override
