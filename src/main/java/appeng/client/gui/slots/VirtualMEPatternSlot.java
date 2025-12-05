@@ -2,7 +2,6 @@ package appeng.client.gui.slots;
 
 import java.util.Collection;
 
-import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
@@ -28,6 +27,6 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
             }
         }
 
-        super.handleMouseClicked(AEStackTypeRegistry.getAllTypes(), isExtraAction, mouseButton);
+        super.handleMouseClicked(acceptTypes, isExtraAction, mouseButton);
     }
 }

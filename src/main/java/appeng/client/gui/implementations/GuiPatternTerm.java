@@ -31,6 +31,7 @@ import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPatternSlot;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
@@ -345,12 +346,16 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        List<IAEStackType<?>> list = new ArrayList<>();
-        list.add(ITEM_STACK_TYPE);
-        if (!cragtingMode) {
-            list.add(FLUID_STACK_TYPE);
+        if (slot.getStorageName() == StorageName.CRAFTING_INPUT) {
+            List<IAEStackType<?>> list = new ArrayList<>();
+            list.add(ITEM_STACK_TYPE);
+            if (!cragtingMode) {
+                list.add(FLUID_STACK_TYPE);
+            }
+            slot.handleMouseClicked(list, isCtrlKeyDown(), mouseButton);
+        } else {
+            slot.handleMouseClicked(AEStackTypeRegistry.getAllTypes(), isCtrlKeyDown(), mouseButton);
         }
-        slot.handleMouseClicked(list, isCtrlKeyDown(), mouseButton);
     }
 
     public VirtualMEPatternSlot[] getCraftingSlots() {

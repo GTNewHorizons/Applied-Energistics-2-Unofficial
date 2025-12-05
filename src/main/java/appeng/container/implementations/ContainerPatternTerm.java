@@ -12,7 +12,6 @@ package appeng.container.implementations;
 
 import static appeng.parts.reporting.PartPatternTerminal.*;
 import static appeng.util.Platform.isServer;
-import static appeng.util.Platform.writeStackNBT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -294,11 +293,11 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         final NBTTagList tagOut = new NBTTagList();
 
         for (final IAEStack<?> i : in) {
-            tagIn.appendTag(writeStackNBT(i, new NBTTagCompound(), true));
+            tagIn.appendTag(i != null ? i.toNBTGeneric() : new NBTTagCompound());
         }
 
         for (final IAEStack<?> i : out) {
-            tagOut.appendTag(writeStackNBT(i, new NBTTagCompound(), true));
+            tagOut.appendTag(i != null ? i.toNBTGeneric() : new NBTTagCompound());
         }
 
         encodedValue.setTag("in", tagIn);

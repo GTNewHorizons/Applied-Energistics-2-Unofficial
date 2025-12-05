@@ -2041,7 +2041,7 @@ public class Platform {
             ais.setUsedPercent(stack.getUsedPercent());
             return ais;
         }
-        return (IAEItemStack) stack;
+        return stack instanceof IAEItemStack ais ? ais : null;
     }
 
     public static IAEStack convertStack(IAEItemStack stack) {
@@ -2062,7 +2062,7 @@ public class Platform {
             }
         }
 
-        return (IAEItemStack) stack;
+        return stack instanceof IAEItemStack ais ? ais : null;
     }
 
     public static IAEStack<?> convertStackPacket(ItemStack stack) {

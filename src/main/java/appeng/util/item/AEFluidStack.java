@@ -42,6 +42,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IAETagCompound;
@@ -419,7 +420,10 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     public ItemStack getItemStackForNEI() {
         IAEFluidStack ifs = this.copy();
         if (ifs.getStackSize() <= 0) ifs.setStackSize(1);
-        ItemStack stack = stackConvertPacket(ifs).getItemStack();
+
+        IAEItemStack ais = stackConvertPacket(ifs);
+        if (ais == null) return null;
+        ItemStack stack = ais.getItemStack();
         return StackInfo.loadFromNBT(StackInfo.itemStackToNBT(stack), 0);
     }
 
