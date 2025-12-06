@@ -10,12 +10,11 @@
 
 package appeng.crafting;
 
-import static appeng.api.storage.data.IItemList.LIST_FLUID;
-import static appeng.api.storage.data.IItemList.LIST_ITEM;
-import static appeng.api.storage.data.IItemList.LIST_MIXED;
 import static appeng.util.Platform.convertStack;
 import static appeng.util.Platform.isAE2FCLoaded;
 import static appeng.util.Platform.writeAEStackListNBT;
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.text.NumberFormat;
 import java.util.Collection;
@@ -45,6 +44,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.core.AELog;
 import appeng.core.localization.PlayerMessages;
@@ -217,14 +217,13 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     }
 
     public IItemList getAvailableItems(final IItemList out) {
-        byte listType = out.getStackType();
-        if (listType == LIST_ITEM || listType == LIST_MIXED) {
+        IAEStackType<?> listType = out.getStackType();
+        if (listType == null || listType == ITEM_STACK_TYPE) {
             for (final IAEItemStack is : this.localItemCache) {
                 out.add(is);
             }
         }
-
-        if (listType == LIST_FLUID || listType == LIST_MIXED) {
+        if (listType == null || listType == FLUID_STACK_TYPE) {
             for (final IAEFluidStack is : this.localFluidCache) {
                 out.add(is);
             }

@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
@@ -138,7 +140,7 @@ public final class IAEStackList implements IItemList<IAEStack<?>> {
     }
 
     @Override
-    public byte getStackType() {
-        return LIST_MIXED;
+    public @Nullable IAEStackType<IAEStack<?>> getStackType() {
+        return null;
     }
 }

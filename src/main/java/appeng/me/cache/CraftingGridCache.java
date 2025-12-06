@@ -10,9 +10,6 @@
 
 package appeng.me.cache;
 
-import static appeng.api.storage.data.IItemList.LIST_FLUID;
-import static appeng.api.storage.data.IItemList.LIST_ITEM;
-import static appeng.api.storage.data.IItemList.LIST_MIXED;
 import static appeng.util.Platform.convertStack;
 import static appeng.util.Platform.stackConvert;
 
@@ -77,9 +74,9 @@ import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingLinkNexus;
@@ -438,26 +435,16 @@ public class CraftingGridCache
 
         // add craftable items!
         for (final IAEStack<?> stack : this.craftableItems.keySet()) {
-            if (stack instanceof IAEFluidStack afs) {
-                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_FLUID) {
-                    out.addCrafting(afs);
-                }
-            } else {
-                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_ITEM) {
-                    out.addCrafting(stack);
-                }
+            IAEStackType<?> type = out.getStackType();
+            if (type == null || type == stack.getStackType()) {
+                out.addCrafting(stack);
             }
         }
 
         for (final IAEStack<?> stack : emitableItems) {
-            if (stack instanceof IAEFluidStack afs) {
-                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_FLUID) {
-                    out.addCrafting(afs);
-                }
-            } else {
-                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_ITEM) {
-                    out.addCrafting(stack);
-                }
+            IAEStackType<?> type = out.getStackType();
+            if (type == null || type == stack.getStackType()) {
+                out.addCrafting(stack);
             }
         }
 
