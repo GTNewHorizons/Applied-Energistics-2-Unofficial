@@ -653,6 +653,9 @@ waila.appliedenergistics2.CraftingLockedByRedstoneSignal=Locked by redstone sign
 waila.appliedenergistics2.CraftingLockedUntilPulse=Waiting for redstone pulse to unlock
 waila.appliedenergistics2.CraftingLockedUntilResult=Waiting for results to unlock
 
+# Baubles Extended
+slot.Terminal=§aTerminal§7
+
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=§61k§r ME Storage Cell
 item.appliedenergistics2.ItemBasicStorageCell.4k.name=§e4k§r ME Storage Cell
