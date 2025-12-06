@@ -76,6 +76,7 @@ import appeng.transformer.MissingCoreMod;
 import appeng.util.Platform;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class ClientHelper extends ServerHelper {
@@ -105,6 +106,7 @@ public class ClientHelper extends ServerHelper {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new BlockPosHighlighter());
         MinecraftForge.EVENT_BUS.register(new HighlighterManager());
+        FMLCommonHandler.instance().bus().register(new KeyBindHandler());
 
         for (ActionKey key : ActionKey.values()) {
             final KeyBinding binding = new KeyBinding(key.getTranslationKey(), key.getDefaultKey(), KEY_CATEGORY);
