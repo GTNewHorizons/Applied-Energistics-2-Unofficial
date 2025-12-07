@@ -610,7 +610,7 @@ public class GuiMEMonitorable extends AEBaseMEGui
             }
         }
 
-        if (searchField.isFocused() && key == Keyboard.KEY_RETURN) {
+        if (searchField.isFocused() && (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER)) {
             searchField.setFocused(false);
             isAutoFocused = false;
             return;

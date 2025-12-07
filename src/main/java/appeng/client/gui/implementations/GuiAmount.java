@@ -84,6 +84,7 @@ public abstract class GuiAmount extends AEBaseGui {
         this.amountTextField.y = this.guiTop + 55;
         this.amountTextField.setMaxStringLength(16);
         this.amountTextField.setFocused(true);
+        this.amountTextField.setUnfocusWithEnter(false);
     }
 
     protected abstract void setOriginGUI(Object target);
