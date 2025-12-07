@@ -2,9 +2,11 @@ package appeng.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.MovingObjectPosition;
 
 import appeng.core.CommonHelper;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketPickBlock;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.relauncher.Side;
@@ -36,7 +38,14 @@ public class KeyBindHandler {
         EntityClientPlayerMP player = minecraft.thePlayer;
         if (player == null) return;
 
-        player.addChatMessage(new ChatComponentText("Pick Block KeyBind pressed."));
+        // Get the block the player is currently looking at
+        MovingObjectPosition movingObject = minecraft.objectMouseOver;
+        if (movingObject == null || movingObject.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+            return;
+        }
+
+        final var packet = new PacketPickBlock(movingObject.blockX, movingObject.blockY, movingObject.blockZ);
+        NetworkHandler.instance.sendToServer(packet);
     }
 
 }
