@@ -23,6 +23,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
+import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.util.PlayerInventoryUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -67,14 +68,14 @@ public class PacketPickBlock extends AppEngPacket {
             return;
         }
 
-        var wirelessInventory = getWirelessItemInventory(wirelessTerminal);
+        var wirelessInventory = getWirelessItemInventory(sender, wirelessTerminal);
         if (wirelessInventory == null) {
             sender.addChatMessage(new ChatComponentText("Could not access AE2 Network."));
             return;
         }
 
         // Get the target block
-        World world = player.worldObj;
+        World world = sender.worldObj;
         Block targetBlock = world.getBlock(this.blockX, this.blockY, this.blockZ);
         if (targetBlock == Blocks.air) {
             return; // Don't try to withdraw air
@@ -183,13 +184,26 @@ public class PacketPickBlock extends AppEngPacket {
         PlayerInventoryUtil.setSlotAsActiveSlot(sender, slotToSwap);
     }
 
-    private IMEInventoryHandler<IAEItemStack> getWirelessItemInventory(ItemStack wirelessTerminal) {
+    private IMEInventoryHandler<IAEItemStack> getWirelessItemInventory(EntityPlayer player,
+            ItemStack wirelessTerminal) {
         if (wirelessTerminal == null) {
             return null;
         }
 
         var wirelessHandler = AEApi.instance().registries().wireless().getWirelessTerminalHandler(wirelessTerminal);
         if (wirelessHandler == null) {
+            return null;
+        }
+
+        WirelessTerminalGuiObject terminalGuiObject = new WirelessTerminalGuiObject(
+                wirelessHandler,
+                wirelessTerminal,
+                player,
+                player.worldObj,
+                player.inventory.currentItem,
+                0,
+                0);
+        if (!terminalGuiObject.rangeCheck()) {
             return null;
         }
 
