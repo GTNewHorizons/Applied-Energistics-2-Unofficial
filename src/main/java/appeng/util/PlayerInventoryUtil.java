@@ -9,14 +9,11 @@ import net.minecraft.network.play.server.S09PacketHeldItemChange;
 
 import appeng.api.AEApi;
 import baubles.api.BaublesApi;
-import cpw.mods.fml.common.Loader;
 
 /**
  * A collection of utility functions for manipulating player inventories.
  */
 public class PlayerInventoryUtil {
-
-    public static boolean isBaublesLoaded = Loader.isModLoaded("Baubles");
 
     /**
      * Finds the first empty slot in the player's inventory, searching in reverse order (from the last slot to the
@@ -122,7 +119,7 @@ public class PlayerInventoryUtil {
      */
     public static ItemStack getFirstWirelessTerminal(EntityPlayer player) {
         // Check bauble slots
-        if (isBaublesLoaded) {
+        if (Platform.isBaublesLoaded) {
             ItemStack terminal = getWirelessTerminalFromBaubles(player);
             if (terminal != null) {
                 return terminal;
@@ -146,7 +143,7 @@ public class PlayerInventoryUtil {
      * @param player the player to check
      * @return the wireless terminal ItemStack, or null if not found
      */
-    @cpw.mods.fml.common.Optional.Method(modid = "Baubles")
+    @cpw.mods.fml.common.Optional.Method(modid = "Baubles|Expanded")
     public static ItemStack getWirelessTerminalFromBaubles(EntityPlayer player) {
         IInventory baubles = BaublesApi.getBaubles(player);
         if (baubles != null) {

@@ -176,6 +176,7 @@ public class Platform {
     private static final DecimalFormat df = new DecimalFormat("#.##");
     public static final boolean isAE2FCLoaded = Loader.isModLoaded("ae2fc");
     public static final boolean isEIOLoaded = Loader.isModLoaded("EnderIO");
+    public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
 
     static {
         BYTE_LIMIT = new double[10];
