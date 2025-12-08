@@ -636,7 +636,9 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                         for (int x = 0; x < this.Config.getSizeInventory() && x < slotsToUse; x++) {
                             IAEStack<?> is = this.Config.getAEStackInSlot(x);
 
-                            if (this.getStackType() == FLUID_STACK_TYPE && isAE2FCLoaded && is instanceof IAEItemStack ais && ais.getItem() instanceof ItemFluidPacket) {
+                            if (this.getStackType() == FLUID_STACK_TYPE && isAE2FCLoaded
+                                    && is instanceof IAEItemStack ais
+                                    && ais.getItem() instanceof ItemFluidPacket) {
                                 is = ItemFluidPacket.getFluidAEStack(ais);
                             }
                             if (is != null) {
