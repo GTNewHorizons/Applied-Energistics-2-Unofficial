@@ -11,8 +11,6 @@
 package appeng.crafting;
 
 import static appeng.util.Platform.writeAEStackListNBT;
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.text.NumberFormat;
 import java.util.Collection;
@@ -36,10 +34,10 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.IMEInventory;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
@@ -214,11 +212,13 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         return out;
     }
 
+    @SuppressWarnings({ "rawtypes" })
     public IAEStack getAvailableItem(@Nonnull IAEStack request) {
         IAEStack<?> stack = this.inventoryMap.get(request.getStackType()).findPrecise(request);
         return stack != null ? stack.copy() : null;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <StackType extends IAEStack<StackType>> Collection<StackType> findFuzzy(final StackType filter,
             final FuzzyMode fuzzy) {
         if (filter == null) return null;
@@ -226,6 +226,7 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         return (Collection) this.inventoryMap.get(filter.getStackType()).findFuzzy(filter, fuzzy);
     }
 
+    @SuppressWarnings({ "unchecked" })
     public <StackType extends IAEStack<StackType>> StackType findPrecise(final StackType is) {
         if (is == null) return null;
 
@@ -244,14 +245,11 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         this.cpuinv = cp;
     }
 
-    public IItemList<IAEItemStack> getItemList() {
-        return (IItemList) this.inventoryMap.get(ITEM_STACK_TYPE);
+    public Map<IAEStackType<?>, IItemList<IAEStack>> getInventoryMap() {
+        return this.inventoryMap;
     }
 
-    public IItemList<IAEFluidStack> getFluidList() {
-        return (IItemList) this.inventoryMap.get(FLUID_STACK_TYPE);
-    }
-
+    @SuppressWarnings({ "rawtypes" })
     public boolean isEmpty() {
         for (IItemList list : this.inventoryMap.values()) {
             if (!list.isEmpty()) return false;
@@ -259,12 +257,14 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         return true;
     }
 
+    @SuppressWarnings({ "rawtypes" })
     public void resetStatus() {
         for (IItemList list : this.inventoryMap.values()) {
             list.resetStatus();
         }
     }
 
+    @SuppressWarnings({ "rawtypes" })
     public NBTTagList writeInventory() {
         NBTTagList tag = new NBTTagList();
         for (IItemList list : this.inventoryMap.values()) {
@@ -280,6 +280,7 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public boolean commit(final BaseActionSource src) {
         final IItemList<IAEStack<?>> added = AEApi.instance().storage().createAEStackList();
         final IItemList<IAEStack<?>> pulled = AEApi.instance().storage().createAEStackList();
@@ -288,14 +289,10 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
         if (this.logInjections) {
             for (final IAEStack<?> inject : this.injectedCache) {
-                IAEStack<?> result;
-                if (inject.isItem()) {
-                    result = this.target.getItemInventory()
-                            .injectItems((IAEItemStack) inject, Actionable.MODULATE, src);
-                } else {
-                    result = this.target.getFluidInventory()
-                            .injectItems((IAEFluidStack) inject, Actionable.MODULATE, src);
-                }
+
+                IMEMonitor monitor = this.target.getMEMonitor(inject.getStackType());
+                IAEStack<?> result = monitor.injectItems(inject, Actionable.MODULATE, src);
+
                 added.add(result);
 
                 if (result != null) {
@@ -307,11 +304,8 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
         if (failed) {
             for (final IAEStack<?> is : added) {
-                if (is.isItem()) {
-                    this.target.getItemInventory().extractItems((IAEItemStack) is, Actionable.MODULATE, src);
-                } else {
-                    this.target.getFluidInventory().extractItems((IAEFluidStack) is, Actionable.MODULATE, src);
-                }
+                IMEMonitor monitor = this.target.getMEMonitor(is.getStackType());
+                monitor.extractItems(is, Actionable.MODULATE, src);
             }
 
             return false;
@@ -319,14 +313,9 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
         if (this.logExtracted) {
             for (final IAEStack<?> extra : this.extractedCache) {
-                IAEStack<?> result;
-                if (extra.isItem()) {
-                    result = this.target.getItemInventory()
-                            .extractItems((IAEItemStack) extra, Actionable.MODULATE, src);
-                } else {
-                    result = this.target.getFluidInventory()
-                            .extractItems((IAEFluidStack) extra, Actionable.MODULATE, src);
-                }
+                IMEMonitor monitor = this.target.getMEMonitor(extra.getStackType());
+                IAEStack<?> result = monitor.extractItems(extra, Actionable.MODULATE, src);
+
                 pulled.add(result);
 
                 if (result == null || result.getStackSize() != extra.getStackSize()) {
@@ -334,15 +323,14 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
                         if (result == null) {
                             failedToExtract.add(extra.copy());
 
-                            this.inventoryMap.get(extra.getStackType()).findPrecise(extra).setStackSize(0);
+                            this.cpuinv.inventoryMap.get(extra.getStackType()).findPrecise(extra).setStackSize(0);
 
                             extra.setStackSize(0);
                         } else if (result.getStackSize() != extra.getStackSize()) {
                             failedToExtract
                                     .add(extra.copy().setStackSize(extra.getStackSize() - result.getStackSize()));
 
-                            this.inventoryMap.get(extra.getStackType()).findPrecise(extra)
-                                    .setStackSize(result.getStackSize());
+                            this.cpuinv.inventoryMap.get(extra.getStackType()).findPrecise(extra);
 
                             extra.setStackSize(result.getStackSize());
                         }
@@ -357,19 +345,13 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
         if (failed) {
             for (final IAEStack<?> is : added) {
-                if (is.isItem()) {
-                    this.target.getItemInventory().extractItems((IAEItemStack) is, Actionable.MODULATE, src);
-                } else {
-                    this.target.getFluidInventory().extractItems((IAEFluidStack) is, Actionable.MODULATE, src);
-                }
+                IMEMonitor monitor = this.target.getMEMonitor(is.getStackType());
+                monitor.extractItems(is, Actionable.MODULATE, src);
             }
 
             for (final IAEStack<?> is : pulled) {
-                if (is.isItem()) {
-                    this.target.getItemInventory().injectItems((IAEItemStack) is, Actionable.MODULATE, src);
-                } else {
-                    this.target.getFluidInventory().injectItems((IAEFluidStack) is, Actionable.MODULATE, src);
-                }
+                IMEMonitor monitor = this.target.getMEMonitor(is.getStackType());
+                monitor.injectItems(is, Actionable.MODULATE, src);
             }
 
             return false;
@@ -439,14 +421,16 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     }
 
     @Override
+    @SuppressWarnings({ "rawtypes" })
     public IAEStack injectItems(IAEStack input, Actionable type, BaseActionSource src) {
-        injectItems(input, type);
+        this.injectItems(input, type);
         return null;
     }
 
     @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public IAEStack extractItems(IAEStack request, Actionable mode, BaseActionSource src) {
-        return extractItems(request, mode);
+        return this.extractItems(request, mode);
     }
 
     @Override

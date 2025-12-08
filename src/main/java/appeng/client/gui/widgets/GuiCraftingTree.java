@@ -1,7 +1,5 @@
 package appeng.client.gui.widgets;
 
-import static appeng.util.Platform.stackConvert;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.IntBuffer;
@@ -22,6 +20,7 @@ import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.util.ChatComponentText;
@@ -693,7 +692,9 @@ public class GuiCraftingTree {
         final int uv_x = iconIndex - uv_y * 16;
 
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glTranslatef(0, 0, 100f);
         parent.drawTexturedModalRect(x, y, uv_x * 16, uv_y * 16, 16, 16);
+        GL11.glTranslatef(0, 0, -100f);
     }
 
     private void drawSlotOutline(final int x, final int y, final int rgb, final boolean isOperation) {
@@ -704,9 +705,17 @@ public class GuiCraftingTree {
 
     private void drawStack(final int x, final int y, final IAEStack<?> stack, boolean drawCount) {
         final int textColor = GuiColors.SearchboxText.getColor();
-        parent.drawItem(x, y, stackConvert(stack).getItemStack());
+        // parent.drawItem(x, y, stackConvert(stack).getItemStack());
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+        RenderHelper.enableGUIStandardItemLighting();
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        stack.drawInGui(Minecraft.getMinecraft(), x, y);
+        GL11.glPopAttrib();
+
         if (drawCount) {
-            drawSmallStackCount(x, y, (stack == null) ? 0L : stack.getStackSize(), textColor);
+            drawSmallStackCount(x, y, stack.getStackSize(), textColor);
         }
     }
 
@@ -722,7 +731,9 @@ public class GuiCraftingTree {
     private void drawSmallStackCount(final int x, final int y, final String countText, final int textColor) {
         final int countWidth = parent.getFontRenderer().getStringWidth(countText);
         GL11.glScalef(0.5f, 0.5f, 1.0f);
+        GL11.glTranslatef(0, 0, 100f);
         parent.getFontRenderer().drawString(countText, x * 2 + 32 - countWidth, y * 2 + 22, textColor, true);
+        GL11.glTranslatef(0, 0, -100f);
         GL11.glScalef(2.0f, 2.0f, 1.0f);
     }
 

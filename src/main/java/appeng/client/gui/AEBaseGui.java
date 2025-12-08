@@ -1022,6 +1022,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         final int y = mouseY - this.guiTop + 1;
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
         RenderHelper.enableGUIStandardItemLighting();
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
 
         for (VirtualMESlot slot : slots) {
