@@ -13,6 +13,7 @@ package appeng.parts.networking;
 import java.io.IOException;
 import java.util.EnumSet;
 
+import appeng.parts.CableBusContainer;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
@@ -114,8 +115,13 @@ public class PartCable extends AEBasePart implements IPartCable {
                     return true;
                 }
 
-                this.getHost().removePart(ForgeDirection.UNKNOWN, true);
-                this.getHost().addPart(newPart, ForgeDirection.UNKNOWN, who);
+                setItemStack(newPart);
+
+                getProxy().setColor(newColor);
+                ((CableBusContainer) getHost()).updateConnections();
+                getHost().markForUpdate();
+                getHost().markForSave();
+                getHost().partChanged();
                 return true;
             }
         }
