@@ -8,7 +8,7 @@ public enum ActionKey {
 
     SEARCH_CONNECTED_INVENTORIES(Keyboard.KEY_NONE),
 
-    CONTROL_OPERATION(Keyboard.KEY_LCONTROL);
+    CONTROL_OPERATION(Keyboard.KEY_LCONTROL),
 
     PICK_BLOCK(Keyboard.KEY_NONE);
 
