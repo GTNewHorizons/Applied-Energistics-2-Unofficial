@@ -3,6 +3,8 @@ package appeng.integration.modules.NEIHelpers;
 import java.lang.reflect.Field;
 import java.util.function.Predicate;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.item.ItemStack;
 
 import appeng.client.gui.widgets.MEGuiTextField;
@@ -82,9 +84,17 @@ public class NEISearchField {
         return null;
     }
 
+    @Nullable
+    public ItemFilter getItemFilter() {
+        final SearchField searchField = getSearchField();
+        if (searchField != null) {
+            return searchField.getFilter();
+        }
+        return null;
+    }
+
     public boolean focused() {
         final SearchField searchField = getSearchField();
-
         return searchField != null && searchField.focused();
     }
 
@@ -94,6 +104,10 @@ public class NEISearchField {
         if (searchField != null) {
             searchField.setFocus(focused);
         }
+    }
+
+    public boolean isSearchingInventory() {
+        return this.existsSearchField() && SearchField.searchInventories();
     }
 
 }

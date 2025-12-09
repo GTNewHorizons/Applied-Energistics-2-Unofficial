@@ -67,7 +67,8 @@ public class ToolPriorityCard extends AEBaseItem implements IGuiItem {
     }
 
     @Override
-    public IGuiItemObject getGuiObject(final ItemStack is, final World world, final int x, final int y, final int z) {
+    public IGuiItemObject getGuiObject(final ItemStack is, final World world, EntityPlayer p, final int x, final int y,
+            final int z) {
         return new PriorityCardObject(is, x);
     }
 

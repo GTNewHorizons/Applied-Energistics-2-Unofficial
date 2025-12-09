@@ -23,6 +23,7 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingJob;
 import appeng.container.ContainerOpenContext;
+import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.core.AELog;
@@ -73,6 +74,7 @@ public class PacketCraftRequest extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         if (player.openContainer instanceof ContainerCraftAmount cca) {
+            final PrimaryGui pg = cca.getPrimaryGui();
             final Object target = cca.getTarget();
             if (target instanceof IGridHost gh) {
                 final IGridNode gn = gh.getGridNode(ForgeDirection.UNKNOWN);
@@ -116,6 +118,7 @@ public class PacketCraftRequest extends AppEngPacket {
                             ccc.setAutoStart(this.heldShift && !this.heldCtrl);
                             ccc.setAutoStartAndFollow(!this.heldShift && this.heldCtrl);
                             ccc.setJob(futureJob);
+                            ccc.setPrimaryGui(pg);
                             cca.detectAndSendChanges();
                         }
                     }
