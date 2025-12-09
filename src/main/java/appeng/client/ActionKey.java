@@ -10,6 +10,8 @@ public enum ActionKey {
 
     CONTROL_OPERATION(Keyboard.KEY_LCONTROL);
 
+    PICK_BLOCK(Keyboard.KEY_NONE);
+
     private final int defaultKey;
 
     ActionKey(int defaultKey) {

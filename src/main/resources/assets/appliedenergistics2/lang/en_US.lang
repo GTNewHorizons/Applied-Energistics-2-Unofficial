@@ -942,6 +942,7 @@ stat.ae2.TurnedCranks=Turned Cranks
 
 # Keys
 key.appliedenergistics2.category=Applied Energistics 2
+key.pick_block.desc=AE2 Pick Block
 key.toggle_focus.desc=Toggle search box focus
 key.search_connected_inventories.desc=Search network inventories for item
 key.control_operation.desc=Control operation
