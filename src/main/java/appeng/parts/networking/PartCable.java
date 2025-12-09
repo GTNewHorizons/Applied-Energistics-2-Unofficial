@@ -13,7 +13,6 @@ package appeng.parts.networking;
 import java.io.IOException;
 import java.util.EnumSet;
 
-import appeng.parts.CableBusContainer;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
@@ -49,6 +48,7 @@ import appeng.client.texture.TextureUtils;
 import appeng.items.parts.ItemMultiPart;
 import appeng.me.GridAccessException;
 import appeng.parts.AEBasePart;
+import appeng.parts.CableBusContainer;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
