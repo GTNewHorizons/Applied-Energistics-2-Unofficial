@@ -141,6 +141,10 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
 
             if (matchingOutput == null) {
                 state = State.FAILURE;
+            } else if (!request.acceptableSubstituteFn.test(this.matchingOutput)) {
+                // A pattern that accepts substitutes might not accepts all fuzzy items found.
+                // Set to State.FAILURE if test fails, to prevent it from being added to tasks.
+                state = State.FAILURE;
             }
         }
 
@@ -308,6 +312,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
                 state = State.SUCCESS;
                 return new StepOutput(Collections.emptyList());
             }
+
             final boolean canUseSubstitutes = pattern.canSubstitute();
             final SubstitutionMode childMode = canUseSubstitutes ? SubstitutionMode.ACCEPT_FUZZY
                     : SubstitutionMode.PRECISE;
