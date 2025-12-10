@@ -238,4 +238,21 @@ public class MultiCraftingTracker {
             this.jobs = null;
         }
     }
+
+    /**
+     * @return first empty slot. -1 if no empty slot
+     */
+    public int getFirstEmptySlot() {
+        if (this.links == null) {
+            this.links = new ICraftingLink[this.size];
+        }
+
+        for (int index = 0; index < this.size; index++) {
+            ICraftingLink link = this.links[index];
+            if (link == null || link.isDone() || link.isCanceled()) {
+                return index;
+            }
+        }
+        return -1;
+    }
 }
