@@ -35,6 +35,7 @@ import appeng.core.AEConfig;
 import appeng.core.AppEng;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
+import appeng.core.sync.GuiBridge;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.util.ConfigManager;
 import appeng.util.Platform;
@@ -50,6 +51,9 @@ import cpw.mods.fml.relauncher.SideOnly;
                         iface = "baubles.api.expanded.IBaubleExpanded",
                         modid = "Baubles|Expanded") })
 public class ToolWirelessTerminal extends AEBasePoweredItem implements IWirelessTermHandler, IBauble, IBaubleExpanded {
+
+    public static String infinityBoosterCard = "infinityBoosterCard";
+    public static String infinityEnergyCard = "InfinityEnergyCard";
 
     public ToolWirelessTerminal() {
         super(AEConfig.instance.wirelessTerminalBattery, Optional.absent());
@@ -138,6 +142,10 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
     @Override
     public String[] getBaubleTypes(ItemStack itemstack) {
         return new String[] { AppEng.BAUBLESLOT };
+    }
+
+    public void openGui(final ItemStack is, final World w, final EntityPlayer player, final Object mode) {
+        Platform.openGUI(player, null, null, GuiBridge.GUI_ME);
     }
 
     @Override

@@ -91,7 +91,8 @@ public class ToolQuartzCuttingKnife extends AEBaseItem implements IGuiItem {
     }
 
     @Override
-    public IGuiItemObject getGuiObject(final ItemStack is, final World world, final int x, final int y, final int z) {
+    public IGuiItemObject getGuiObject(final ItemStack is, final World world, final EntityPlayer p, final int x,
+            final int y, final int z) {
         return new QuartzKnifeObj(is);
     }
 }

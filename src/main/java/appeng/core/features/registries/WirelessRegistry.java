@@ -22,7 +22,7 @@ import appeng.api.features.ILocatable;
 import appeng.api.features.IWirelessTermHandler;
 import appeng.api.features.IWirelessTermRegistry;
 import appeng.core.localization.PlayerMessages;
-import appeng.core.sync.GuiBridge;
+import appeng.items.tools.powered.ToolWirelessTerminal;
 import appeng.util.Platform;
 
 public final class WirelessRegistry implements IWirelessTermRegistry {
@@ -60,35 +60,42 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
         return null;
     }
 
-    @Override
-    public void openWirelessTerminalGui(final ItemStack item, final World w, final EntityPlayer player) {
+    public boolean performCheck(final ItemStack item, final EntityPlayer player) {
         if (Platform.isClient()) {
-            return;
+            return false;
         }
 
         if (!this.isWirelessTerminal(item)) {
             player.addChatMessage(PlayerMessages.DeviceNotWirelessTerminal.toChat());
-            return;
+            return false;
         }
 
         final IWirelessTermHandler handler = this.getWirelessTerminalHandler(item);
         final String unparsedKey = handler.getEncryptionKey(item);
         if (unparsedKey.isEmpty()) {
             player.addChatMessage(PlayerMessages.DeviceNotLinked.toChat());
-            return;
+            return false;
         }
 
         final long parsedKey = Long.parseLong(unparsedKey);
         final ILocatable securityStation = AEApi.instance().registries().locatable().getLocatableBy(parsedKey);
         if (securityStation == null) {
             player.addChatMessage(PlayerMessages.StationCanNotBeLocated.toChat());
-            return;
+            return false;
         }
 
-        if (handler.hasPower(player, 0.5, item)) {
-            Platform.openGUI(player, null, null, GuiBridge.GUI_WIRELESS_TERM);
+        if (item.getItem() instanceof ToolWirelessTerminal
+                && (handler.hasInfinityPower(item) || handler.hasPower(player, 0.5, item))) {
+            return true;
         } else {
             player.addChatMessage(PlayerMessages.DeviceNotPowered.toChat());
         }
+
+        return false;
+    }
+
+    @Override
+    public void openWirelessTerminalGui(final ItemStack item, final World w, final EntityPlayer player) {
+        if (performCheck(item, player)) ((ToolWirelessTerminal) item.getItem()).openGui(item, w, player, null);
     }
 }

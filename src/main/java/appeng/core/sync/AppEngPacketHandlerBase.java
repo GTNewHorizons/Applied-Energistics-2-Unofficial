@@ -33,6 +33,7 @@ import appeng.core.sync.packets.PacketLightning;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketMatterCannon;
 import appeng.core.sync.packets.PacketMockExplosion;
+import appeng.core.sync.packets.PacketMonitorableAction;
 import appeng.core.sync.packets.PacketMultiPart;
 import appeng.core.sync.packets.PacketNEIBookmark;
 import appeng.core.sync.packets.PacketNEIDragClick;
@@ -43,7 +44,6 @@ import appeng.core.sync.packets.PacketOptimizePatterns;
 import appeng.core.sync.packets.PacketPaintedEntity;
 import appeng.core.sync.packets.PacketPartPlacement;
 import appeng.core.sync.packets.PacketPartialItem;
-import appeng.core.sync.packets.PacketPatternItemRenamer;
 import appeng.core.sync.packets.PacketPatternMultiSet;
 import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.core.sync.packets.PacketPatternValueSet;
@@ -53,6 +53,7 @@ import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketTransitionEffect;
 import appeng.core.sync.packets.PacketValueConfig;
+import appeng.core.sync.packets.PacketVirtualSlot;
 import io.netty.buffer.ByteBuf;
 
 public class AppEngPacketHandlerBase {
@@ -122,9 +123,10 @@ public class AppEngPacketHandlerBase {
         PACKET_INTERFACE_TERMINAL_UPDATE(PacketInterfaceTerminalUpdate.class),
         PACKET_OPTIMIZE_PATTERNS(PacketOptimizePatterns.class),
         PACKET_NETWORK_STATUS_SELECTED(PacketNetworkStatusSelected.class),
-        PACKET_PATTERN_ITEM_RENAMER(PacketPatternItemRenamer.class),
         PACKET_PINS_UPDATE(PacketPinsUpdate.class),
-        PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class);
+        PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
+        PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
+        PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;
