@@ -12,16 +12,13 @@ package appeng.items.storage;
 
 import java.util.EnumSet;
 
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-import appeng.api.config.FuzzyMode;
-import appeng.api.storage.ICellWorkbenchItem;
+import appeng.api.storage.StorageChannel;
 import appeng.core.features.AEFeature;
-import appeng.items.AEBaseItem;
-import appeng.items.contents.CellConfig;
+import appeng.items.AEBaseInfiniteCell;
 
-public class ItemCreativeStorageCell extends AEBaseItem implements ICellWorkbenchItem {
+public class ItemCreativeStorageCell extends AEBaseInfiniteCell {
 
     public ItemCreativeStorageCell() {
         this.setFeature(EnumSet.of(AEFeature.StorageCells, AEFeature.Creative));
@@ -34,28 +31,12 @@ public class ItemCreativeStorageCell extends AEBaseItem implements ICellWorkbenc
     }
 
     @Override
-    public IInventory getUpgradesInventory(final ItemStack is) {
-        return null;
+    public int getTotalTypes(ItemStack cellItem) {
+        return 63;
     }
 
     @Override
-    public IInventory getConfigInventory(final ItemStack is) {
-        return new CellConfig(is);
+    public StorageChannel getStorageChannel() {
+        return StorageChannel.ITEMS;
     }
-
-    @Override
-    public FuzzyMode getFuzzyMode(final ItemStack is) {
-        return FuzzyMode.IGNORE_ALL;
-    }
-
-    @Override
-    public void setFuzzyMode(final ItemStack is, final FuzzyMode fzMode) {}
-
-    @Override
-    public String getOreFilter(ItemStack is) {
-        return "";
-    }
-
-    @Override
-    public void setOreFilter(ItemStack is, String filter) {}
 }

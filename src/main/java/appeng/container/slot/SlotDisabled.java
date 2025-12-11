@@ -18,6 +18,7 @@ public class SlotDisabled extends AppEngSlot {
 
     public SlotDisabled(final IInventory par1iInventory, final int slotIndex, final int x, final int y) {
         super(par1iInventory, slotIndex, x, y);
+        this.setPlayerSide(true);
     }
 
     @Override
