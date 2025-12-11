@@ -96,6 +96,18 @@ public final class CraftingContext {
         public RequestInProcessing(CraftingRequest<StackType> request) {
             this.request = request;
         }
+
+        public boolean isRemainingResolversAllSimulated() {
+            for (CraftingTask<?> resolver : resolvers) {
+                if (!resolver.isSimulated()) return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "RequestInProcessing{" + "request=" + request + ", resolvers=" + resolvers + '}';
+        }
     }
 
     private final List<RequestInProcessing<?>> liveRequests = new ArrayList<>(32);
@@ -296,6 +308,7 @@ public final class CraftingContext {
         if (!out.extraInputsRequired.isEmpty()) {
             final Set<ICraftingPatternDetails> parentPatterns = frontTask.request.patternParents;
             // Last pushed gets resolved first, so iterate in reverse order to maintain array ordering
+            // this block propagates parent's patterns used to child
             for (int ri = out.extraInputsRequired.size() - 1; ri >= 0; ri--) {
                 final CraftingRequest<?> request = out.extraInputsRequired.get(ri);
                 request.patternParents.addAll(parentPatterns);
@@ -383,9 +396,26 @@ public final class CraftingContext {
             } else if (myRequest.request.remainingToProcess <= 0) {
                 this.state = State.SUCCESS;
             } else {
-                this.state = State.FAILURE;
+                // if any of the parent request still have alternative paths, return success to explore it
+                // even if we didn't actually queue anything
+                if (hasConcreteResolversLeft()) {
+                    this.state = State.SUCCESS;
+                } else {
+                    this.state = State.FAILURE;
+                }
             }
             return new StepOutput();
+        }
+
+        private boolean hasConcreteResolversLeft() {
+            for (RequestInProcessing<?> maybeParentRequest : liveRequests) {
+                if (request.parentRequests.contains(maybeParentRequest.request)) {
+                    if (!maybeParentRequest.isRemainingResolversAllSimulated()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         @Override
@@ -408,6 +438,11 @@ public final class CraftingContext {
         public void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
                 MECraftingInventory craftingInv) {
             // no-op
+        }
+
+        @Override
+        public boolean isSimulated() {
+            return myRequest.resolvers.stream().allMatch(CraftingTask::isSimulated);
         }
 
         @Override
