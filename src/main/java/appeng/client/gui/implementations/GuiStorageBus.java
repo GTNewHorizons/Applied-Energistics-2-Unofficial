@@ -16,12 +16,17 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Mouse;
+import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
+import appeng.api.config.Upgrades;
+import appeng.api.parts.IStorageBus;
+import appeng.api.storage.StorageChannel;
+import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerStorageBus;
@@ -33,7 +38,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.parts.misc.PartStorageBus;
+import appeng.tile.inventory.IAEStackInventory;
 
 public class GuiStorageBus extends GuiUpgradeable {
 
@@ -42,9 +47,12 @@ public class GuiStorageBus extends GuiUpgradeable {
     private GuiTabButton priority;
     private GuiImgButton partition;
     private GuiImgButton clear;
+    private VirtualMEPhantomSlot[] configSlots;
+    private final ContainerStorageBus containerStorageBus;
 
-    public GuiStorageBus(final InventoryPlayer inventoryPlayer, final PartStorageBus te) {
+    public GuiStorageBus(final InventoryPlayer inventoryPlayer, final IStorageBus te) {
         super(new ContainerStorageBus(inventoryPlayer, te));
+        this.containerStorageBus = (ContainerStorageBus) inventorySlots;
         this.ySize = 251;
     }
 
@@ -91,6 +99,12 @@ public class GuiStorageBus extends GuiUpgradeable {
     }
 
     @Override
+    public void initGui() {
+        super.initGui();
+        initVirtualSlots();
+    }
+
+    @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.fontRendererObj.drawString(
                 this.getGuiDisplayName(GuiText.StorageBus.getLocal()),
@@ -115,6 +129,28 @@ public class GuiStorageBus extends GuiUpgradeable {
             }
             if (this.partition != null) {
                 this.partition.set(csb.getPartitionMode());
+            }
+        }
+
+        updateSlotVisibility();
+    }
+
+    @Override
+    public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {
+        super.drawBG(offsetX, offsetY, mouseX, mouseY);
+
+        for (int i = 0; i < 5; i++) {
+            if (i >= this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY)) {
+                GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+                GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.4F);
+                GL11.glEnable(GL11.GL_BLEND);
+            }
+
+            this.drawTexturedModalRect(offsetX + 7, offsetY + 64 + (18 * i), 7, 28, 162, 18);
+
+            if (i >= this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY)) {
+                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+                GL11.glPopAttrib();
             }
         }
     }
@@ -147,5 +183,38 @@ public class GuiStorageBus extends GuiUpgradeable {
         } catch (final IOException e) {
             AELog.debug(e);
         }
+    }
+
+    private void initVirtualSlots() {
+        this.configSlots = new VirtualMEPhantomSlot[63];
+        final IAEStackInventory inputInv = this.containerStorageBus.getConfig();
+        final int xo = 8;
+        final int yo = -133;
+
+        for (int y = 0; y < 7; y++) {
+            for (int x = 0; x < 9; x++) {
+                VirtualMEPhantomSlot slot = new VirtualMEPhantomSlot(
+                        xo + x * 18,
+                        yo + y * 18 + 9 * 18,
+                        inputInv,
+                        x + y * 9);
+                this.configSlots[x + y * 9] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+    }
+
+    protected void updateSlotVisibility() {
+        for (VirtualMEPhantomSlot slot : this.configSlots) {
+            slot.setHidden(
+                    slot.getSlotIndex() > (18
+                            + (9 * this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY))));
+        }
+    }
+
+    @Override
+    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
+        StorageChannel channel = containerStorageBus.getStorageChannel();
+        slot.handleMouseClicked(channel == StorageChannel.ITEMS, channel == StorageChannel.FLUIDS, false);
     }
 }

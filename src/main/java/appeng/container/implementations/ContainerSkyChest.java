@@ -24,7 +24,7 @@ public class ContainerSkyChest extends AEBaseContainer {
     private final TileSkyChest chest;
 
     public ContainerSkyChest(final InventoryPlayer ip, final TileSkyChest chest) {
-        super(ip, chest, null);
+        super(ip, chest);
         this.chest = chest;
 
         for (int y = 0; y < 4; y++) {

@@ -13,27 +13,15 @@ package appeng.client.gui.implementations;
 import java.io.IOException;
 
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemStack;
 
-import appeng.api.AEApi;
-import appeng.api.definitions.IBlocks;
-import appeng.api.definitions.IDefinitions;
-import appeng.api.definitions.IParts;
 import appeng.container.implementations.ContainerPriority;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IPriorityHost;
-import appeng.parts.automation.PartFormationPlane;
-import appeng.parts.misc.PartInterface;
-import appeng.parts.misc.PartStorageBus;
-import appeng.tile.misc.TileInterface;
-import appeng.tile.storage.TileChest;
-import appeng.tile.storage.TileDrive;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
@@ -58,55 +46,6 @@ public class GuiPriority extends GuiAmount {
 
         // Hook the container up with our amount field for client sync updates.
         ((ContainerPriority) this.inventorySlots).setTextField(this.amountTextField);
-    }
-
-    @Override
-    protected void setOriginGUI(Object target) {
-        final IDefinitions definitions = AEApi.instance().definitions();
-        final IParts parts = definitions.parts();
-        final IBlocks blocks = definitions.blocks();
-
-        if (target instanceof PartStorageBus) {
-            for (final ItemStack storageBusStack : parts.storageBus().maybeStack(1).asSet()) {
-                myIcon = storageBusStack;
-            }
-            this.originalGui = GuiBridge.GUI_STORAGEBUS;
-        }
-
-        if (target instanceof PartFormationPlane) {
-            for (final ItemStack formationPlaneStack : parts.formationPlane().maybeStack(1).asSet()) {
-                myIcon = formationPlaneStack;
-            }
-            this.originalGui = GuiBridge.GUI_FORMATION_PLANE;
-        }
-
-        if (target instanceof TileDrive) {
-            for (final ItemStack driveStack : blocks.drive().maybeStack(1).asSet()) {
-                myIcon = driveStack;
-            }
-            this.originalGui = GuiBridge.GUI_DRIVE;
-        }
-
-        if (target instanceof TileChest) {
-            for (final ItemStack chestStack : blocks.chest().maybeStack(1).asSet()) {
-                myIcon = chestStack;
-            }
-            this.originalGui = GuiBridge.GUI_CHEST;
-        }
-
-        if (target instanceof TileInterface) {
-            for (final ItemStack interfaceStack : blocks.iface().maybeStack(1).asSet()) {
-                myIcon = interfaceStack;
-            }
-            this.originalGui = GuiBridge.GUI_INTERFACE;
-        }
-
-        if (target instanceof PartInterface) {
-            for (final ItemStack interfaceStack : parts.iface().maybeStack(1).asSet()) {
-                myIcon = interfaceStack;
-            }
-            this.originalGui = GuiBridge.GUI_INTERFACE;
-        }
     }
 
     @Override

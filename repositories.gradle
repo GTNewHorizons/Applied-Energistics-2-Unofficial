@@ -1,6 +1,7 @@
 // Add any additional repositories for your dependencies here
 
 repositories {
+    mavenLocal()
     maven {
         name 'MM repo'
         url 'https://maven.k-4u.nl/'
