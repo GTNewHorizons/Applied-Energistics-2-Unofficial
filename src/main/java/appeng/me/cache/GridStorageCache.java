@@ -304,12 +304,12 @@ public class GridStorageCache implements IStorageGrid {
     }
 
     @Override
-    public void postAlterationOfStoredItems(final StorageChannel chan, final Iterable<? extends IAEStack> input,
+    public void postAlterationOfStoredItems(final StorageChannel chan, final Iterable<? extends IAEStack<?>> input,
             final BaseActionSource src) {
         if (chan == StorageChannel.ITEMS) {
-            this.itemMonitor.postChange(true, (Iterable<IAEItemStack>) input, src);
+            this.itemMonitor.postChange(true, (Iterable<IAEStack<?>>) input, src);
         } else if (chan == StorageChannel.FLUIDS) {
-            this.fluidMonitor.postChange(true, (Iterable<IAEFluidStack>) input, src);
+            this.fluidMonitor.postChange(true, (Iterable<IAEStack<?>>) input, src);
         }
     }
 

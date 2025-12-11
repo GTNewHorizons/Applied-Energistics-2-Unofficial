@@ -46,6 +46,9 @@ public enum GuiText implements Localization {
     Types,
     QuantumLinkChamber,
     PortableCell,
+    CraftName,
+    Remains,
+    Progress,
 
     NetworkTool,
     AdvancedNetworkTool,

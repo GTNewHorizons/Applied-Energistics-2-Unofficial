@@ -14,6 +14,7 @@
 package appeng.api.networking.crafting;
 
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 
 /**
  * Passed to a ICraftingProvider as a interface to manipulate the available crafting jobs.
@@ -25,8 +26,11 @@ public interface ICraftingProviderHelper {
      */
     void addCraftingOption(ICraftingMedium medium, ICraftingPatternDetails api);
 
+    @Deprecated
+    void setEmitable(IAEItemStack what);
+
     /**
      * Set an item can Emitable
      */
-    void setEmitable(IAEItemStack what);
+    void setEmitable(IAEStack<?> what);
 }

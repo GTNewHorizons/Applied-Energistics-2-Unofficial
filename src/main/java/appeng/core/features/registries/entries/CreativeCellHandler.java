@@ -23,7 +23,7 @@ import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.sync.GuiBridge;
-import appeng.items.storage.ItemCreativeStorageCell;
+import appeng.items.AEBaseInfiniteCell;
 import appeng.me.storage.CreativeCellInventory;
 import appeng.util.Platform;
 
@@ -31,15 +31,16 @@ public class CreativeCellHandler implements ICellHandler {
 
     @Override
     public boolean isCell(final ItemStack is) {
-        return is != null && is.getItem() instanceof ItemCreativeStorageCell;
+        return is != null && is.getItem() instanceof AEBaseInfiniteCell;
     }
 
     @Override
     public IMEInventoryHandler getCellInventory(final ItemStack is, final ISaveProvider container,
             final StorageChannel channel) {
-        if (channel == StorageChannel.ITEMS && is != null && is.getItem() instanceof ItemCreativeStorageCell) {
-            return CreativeCellInventory.getCell(is);
+        if (is != null && is.getItem() instanceof AEBaseInfiniteCell cell && channel == cell.getStorageChannel()) {
+            return CreativeCellInventory.getCell(is, channel);
         }
+
         return null;
     }
 

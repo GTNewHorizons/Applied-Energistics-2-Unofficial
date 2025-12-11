@@ -24,6 +24,9 @@ import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
+import appeng.api.parts.ILevelEmitter;
+import appeng.api.storage.StorageName;
+import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerLevelEmitter;
@@ -33,7 +36,6 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.parts.automation.PartLevelEmitter;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
@@ -56,7 +58,9 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     private GuiImgButton levelMode;
     private GuiImgButton craftingMode;
 
-    public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final PartLevelEmitter te) {
+    private VirtualMEPhantomSlot config;
+
+    public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final ILevelEmitter te) {
         super(new ContainerLevelEmitter(inventoryPlayer, te));
     }
 
@@ -70,6 +74,13 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.amountTextField.setFocused(true);
         ((ContainerLevelEmitter) this.inventorySlots).setTextField(this.amountTextField);
         this.validateText();
+
+        this.config = new VirtualMEPhantomSlot(
+                17,
+                42,
+                ((ContainerLevelEmitter) inventorySlots).getLvlEmitter().getAEInventoryByName(StorageName.NONE),
+                0);
+        this.registerVirtualSlots(this.config);
     }
 
     @Override
@@ -248,6 +259,11 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         }
 
         super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    @Override
+    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
+        slot.handleMouseClicked(true, true, isCtrlKeyDown());
     }
 
     @Override

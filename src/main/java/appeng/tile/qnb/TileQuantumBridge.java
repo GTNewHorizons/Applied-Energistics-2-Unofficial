@@ -23,6 +23,7 @@ import com.google.common.base.Optional;
 
 import appeng.api.AEApi;
 import appeng.api.definitions.IBlockDefinition;
+import appeng.api.features.ILocatable;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
@@ -300,5 +301,39 @@ public class TileQuantumBridge extends AENetworkInvTile implements IAEMultiBlock
 
     public byte getCorner() {
         return this.corner;
+    }
+
+    @Override
+    public String getCustomName() {
+        ItemStack sideAStack = getStackInSlot(0);
+        if (sideAStack != null) {
+            return sideAStack.getDisplayName();
+        }
+        return "Quantum Entangled Singularity";
+    }
+
+    @Override
+    public boolean hasCustomName() {
+        return getStackInSlot(0) != null;
+    }
+
+    @Override
+    public void setCustomName(String name) {
+        if (name.isEmpty()) name = "Quantum Entangled Singularity";
+        ItemStack sideAStack = getStackInSlot(0);
+        if (sideAStack != null) {
+            sideAStack.setStackDisplayName(name);
+            if (cluster.getCenter() != null) {
+                final ILocatable myOtherSide = cluster.getOtherSide() == 0 ? null
+                        : AEApi.instance().registries().locatable().getLocatableBy(cluster.getOtherSide());
+                if (myOtherSide instanceof QuantumCluster sideBCluster) {
+                    ItemStack sideBStack = sideBCluster.getCenter().getStackInSlot(0);
+                    if (sideBStack != null) {
+                        sideBStack.setStackDisplayName(name);
+                    }
+                }
+
+            }
+        }
     }
 }

@@ -48,10 +48,13 @@ import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
+import appeng.items.AEBaseCell;
 import appeng.items.materials.ItemMultiMaterial;
 import appeng.items.storage.ItemBasicStorageCell;
 import appeng.me.GridAccessException;
@@ -63,10 +66,10 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
-import appeng.util.item.ItemList;
 import io.netty.buffer.ByteBuf;
 
-public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPriorityHost, IGridTickable, IColorableTile {
+public class TileDrive extends AENetworkInvTile
+        implements IChestOrDrive, IPriorityHost, IGridTickable, IColorableTile, IPrimaryGuiIconProvider {
 
     private static final int INV_SIZE = 10;
     /**
@@ -394,13 +397,14 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         if (cellInventory != null) {
             if (cellInventory.getStoredItemTypes() != 0) {
                 int idx = 0;
-                for (IAEItemStack partitionAEItemStack : handler
-                        .getAvailableItems(new ItemList(), IterationCounter.fetchNewId())) {
-                    ItemStack partition = partitionAEItemStack.getItemStack().copy();
-                    partition.stackSize = 1;
-                    cellInventory.getConfigInventory().setInventorySlotContents(idx++, partition);
+                for (Object partitionStack : (handler.getAvailableItems(
+                        cellInventory.getChannel().createPrimitiveList(),
+                        IterationCounter.fetchNewId()))) {
+                    final IAEStack<?> aes = ((IAEStack<?>) partitionStack).copy();
+                    aes.setStackSize(1);
+                    cellInventory.getConfigAEInventory().putAEStackInSlot(idx++, aes);
                 }
-                cellInventory.getConfigInventory().markDirty();
+                cellInventory.getConfigAEInventory().markDirty();
             }
         }
     }
@@ -408,16 +412,19 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
     public static void unpartitionStorageCell(ICellInventoryHandler handler) {
         ICellInventory cellInventory = handler.getCellInv();
         if (cellInventory != null) {
-            for (int i = 0; i < cellInventory.getConfigInventory().getSizeInventory(); i++) {
-                cellInventory.getConfigInventory().setInventorySlotContents(i, null);
+            for (int i = 0; i < cellInventory.getConfigAEInventory().getSizeInventory(); i++) {
+                cellInventory.getConfigAEInventory().putAEStackInSlot(i, null);
             }
-            cellInventory.getConfigInventory().markDirty();
+            cellInventory.getConfigAEInventory().markDirty();
         }
     }
 
     public static boolean applyStickyCardToItemStorageCell(ICellHandler cellHandler, ItemStack cell, ISaveProvider host,
             ICellWorkbenchItem cellItem) {
-        final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, host, StorageChannel.ITEMS);
+        final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(
+                cell,
+                host,
+                cell.getItem() instanceof AEBaseCell abc ? abc.getStorageChannel() : StorageChannel.ITEMS);
         if (inv instanceof ICellInventoryHandler handler) {
             final ICellInventory cellInventory = handler.getCellInv();
             if (cellInventory != null && cellInventory.getStoredItemTypes() > 0) {
@@ -457,7 +464,10 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
             if (ItemBasicStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
                 continue;
             }
-            final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, StorageChannel.ITEMS);
+            final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(
+                    cell,
+                    this,
+                    cell.getItem() instanceof AEBaseCell abc ? abc.getStorageChannel() : StorageChannel.ITEMS);
             if (inv instanceof ICellInventoryHandler handler) {
                 if (ItemBasicStorageCell.cellIsPartitioned(handler)) {
                     unpartitionStorageCell(handler);
@@ -519,5 +529,10 @@ public class TileDrive extends AENetworkInvTile implements IChestOrDrive, IPrior
         this.markDirty();
         this.markForUpdate();
         return true;
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().blocks().drive().maybeStack(1).orNull();
     }
 }
