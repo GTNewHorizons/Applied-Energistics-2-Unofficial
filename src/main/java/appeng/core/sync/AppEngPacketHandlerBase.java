@@ -126,9 +126,8 @@ public class AppEngPacketHandlerBase {
         PACKET_NETWORK_STATUS_SELECTED(PacketNetworkStatusSelected.class),
         PACKET_PINS_UPDATE(PacketPinsUpdate.class),
         PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
-        PACKET_PICK_BLOCK(PacketPickBlock.class);
+        PACKET_PICK_BLOCK(PacketPickBlock.class),
         PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
-        PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
         PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class);
 
         private final Class<? extends AppEngPacket> packetClass;
