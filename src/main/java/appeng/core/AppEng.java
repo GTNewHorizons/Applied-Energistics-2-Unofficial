@@ -26,6 +26,7 @@ import appeng.core.features.AEFeature;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.worlddata.WorldData;
+import appeng.hooks.CraftingNotificationManager;
 import appeng.hooks.TickHandler;
 import appeng.integration.IntegrationRegistry;
 import appeng.recipes.CustomRecipeConfig;
@@ -186,6 +187,8 @@ public final class AppEng {
         this.registration.initialize(event, this.recipeDirectory, this.customRecipeConfig);
         IntegrationRegistry.INSTANCE.init();
 
+        FMLCommonHandler.instance().bus().register(new CraftingNotificationManager());
+
         AELog.info("Initialization ( ended after " + start.elapsed(TimeUnit.MILLISECONDS) + "ms )");
     }
 
@@ -228,6 +231,7 @@ public final class AppEng {
     private void serverStopped(final FMLServerStoppedEvent event) {
         if (WorldData.instance() != null) WorldData.instance().onServerStoppped();
         TickHandler.INSTANCE.shutdown();
+        CraftingNotificationManager.clear();
     }
 
     @EventHandler

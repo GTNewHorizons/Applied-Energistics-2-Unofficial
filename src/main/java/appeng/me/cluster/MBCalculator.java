@@ -17,7 +17,6 @@ import net.minecraftforge.common.util.ForgeDirection;
 import appeng.api.util.WorldCoord;
 import appeng.core.AELog;
 import appeng.util.Platform;
-import cpw.mods.fml.common.FMLCommonHandler;
 
 public abstract class MBCalculator {
 
@@ -73,9 +72,7 @@ public abstract class MBCalculator {
                     IAECluster cluster = this.target.getCluster();
                     if (cluster == null) {
                         cluster = this.createCluster(world, min, max);
-                        FMLCommonHandler.instance().bus().register(cluster);
                         this.updateTiles(cluster, world, min, max);
-
                         updateGrid = true;
                     }
 

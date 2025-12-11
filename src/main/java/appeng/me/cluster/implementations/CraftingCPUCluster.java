@@ -116,6 +116,7 @@ import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingWatcher;
 import appeng.crafting.MECraftingInventory;
 import appeng.helpers.DualityInterface;
+import appeng.hooks.CraftingNotificationManager;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.IAECluster;
 import appeng.tile.AEBaseTile;
@@ -127,8 +128,6 @@ import appeng.util.ScheduledReason;
 import appeng.util.inv.MEInventoryCrafting;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 
 public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
@@ -188,14 +187,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             finalOutput,
                             numsOfOutput,
                             elapsedTime);
-                    final IChatComponent messageToSend = notification.createMessage();
-
                     for (String playerName : this.playersFollowingCurrentCraft) {
                         // Get each EntityPlayer
                         EntityPlayer player = getPlayerByName(playerName);
                         if (player != null) {
                             // Send message to player
-                            player.addChatMessage(messageToSend);
+                            player.addChatMessage(notification.createMessage());
                             player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
                         } else {
                             this.unreadNotifications.computeIfAbsent(playerName, name -> new ArrayList<>())
@@ -216,20 +213,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     public CraftingCPUCluster(final WorldCoord min, final WorldCoord max) {
         this.min = min;
         this.max = max;
-    }
-
-    @SubscribeEvent
-    public void onPlayerLogIn(PlayerLoggedInEvent event) {
-        final EntityPlayer player = event.player;
-        final String playerName = player.getCommandSenderName();
-        if (this.unreadNotifications.containsKey(playerName)) {
-            List<CraftNotification> notifications = this.unreadNotifications.get(playerName);
-            for (CraftNotification notification : notifications) {
-                player.addChatMessage(notification.createMessage());
-            }
-            player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
-            this.unreadNotifications.remove(playerName);
-        }
+        CraftingNotificationManager.register(this.unreadNotifications);
     }
 
     @Override
@@ -309,7 +293,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
         this.isDestroyed = true;
 
-        FMLCommonHandler.instance().bus().unregister(this);
+        CraftingNotificationManager.unregister(this.unreadNotifications);
 
         boolean posted = false;
 
@@ -1646,7 +1630,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         for (final TileCraftingTile te : this.tiles) {
 
             if (te.hasCustomName()) {
-                if (this.myName.length() > 0) {
+                if (!this.myName.isEmpty()) {
                     this.myName += ' ' + te.getCustomName();
                 } else {
                     this.myName = te.getCustomName();
@@ -1846,7 +1830,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         private long value;
     }
 
-    private static class CraftNotification {
+    public static class CraftNotification {
 
         private IAEStack<?> finalOutput;
         private long outputsCount;
