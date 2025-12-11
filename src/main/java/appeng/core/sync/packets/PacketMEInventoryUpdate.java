@@ -11,7 +11,6 @@
 package appeng.core.sync.packets;
 
 import static appeng.util.Platform.readStackByte;
-import static appeng.util.Platform.stackConvert;
 import static appeng.util.Platform.writeStackByte;
 
 import java.io.IOException;
@@ -29,7 +28,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingCPU;
@@ -54,7 +52,7 @@ public class PacketMEInventoryUpdate extends AppEngPacket {
 
     // input.
     @Nullable
-    private final List<IAEItemStack> list;
+    private final List<IAEStack<?>> list;
     // output...
     private final byte ref;
 
@@ -98,11 +96,8 @@ public class PacketMEInventoryUpdate extends AppEngPacket {
         }
         gzReader.close();
 
-        // int uncompressedBytes = uncompressed.readableBytes();
-        // AELog.info( "Receiver: " + originalBytes + " -> " + uncompressedBytes );
-
         while (uncompressed.readableBytes() > 0) {
-            this.list.add(stackConvert(readStackByte(uncompressed)));
+            this.list.add(readStackByte(uncompressed));
         }
 
         this.empty = this.list.isEmpty();
@@ -188,6 +183,10 @@ public class PacketMEInventoryUpdate extends AppEngPacket {
 
     public int getLength() {
         return this.data.readableBytes();
+    }
+
+    public int getSize() {
+        return this.list.size();
     }
 
     public boolean isEmpty() {

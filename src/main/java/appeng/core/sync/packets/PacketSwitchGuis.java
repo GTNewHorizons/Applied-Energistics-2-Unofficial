@@ -17,6 +17,9 @@ import net.minecraft.tileentity.TileEntity;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.AEBaseContainer;
 import appeng.container.ContainerOpenContext;
+import appeng.container.PrimaryGui;
+import appeng.container.interfaces.IContainerSubGui;
+import appeng.container.interfaces.IInventorySlotAware;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
@@ -30,7 +33,8 @@ public class PacketSwitchGuis extends AppEngPacket {
 
     // automatic.
     public PacketSwitchGuis(final ByteBuf stream) {
-        this.newGui = GuiBridge.values()[stream.readInt()];
+        if (stream.readBoolean()) this.newGui = GuiBridge.values()[stream.readInt()];
+        else this.newGui = null;
     }
 
     // api
@@ -44,7 +48,27 @@ public class PacketSwitchGuis extends AppEngPacket {
         final ByteBuf data = Unpooled.buffer();
 
         data.writeInt(this.getPacketID());
-        data.writeInt(newGui.ordinal());
+        if (newGui != null) {
+            data.writeBoolean(true);
+            data.writeInt(newGui.ordinal());
+        } else data.writeBoolean(false);
+
+        this.configureWrite(data);
+    }
+
+    // api
+    public PacketSwitchGuis() {
+        this.newGui = null;
+
+        if (Platform.isClient()) {
+            AEBaseGui.setSwitchingGuis(true);
+        }
+
+        final ByteBuf data = Unpooled.buffer();
+
+        data.writeInt(this.getPacketID());
+
+        data.writeBoolean(false);
 
         this.configureWrite(data);
     }
@@ -53,10 +77,24 @@ public class PacketSwitchGuis extends AppEngPacket {
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final Container c = player.openContainer;
         if (c instanceof AEBaseContainer bc) {
+            final PrimaryGui pGui = bc.getPrimaryGui();
             final ContainerOpenContext context = bc.getOpenContext();
+
             if (context != null) {
                 final TileEntity te = context.getTile();
-                Platform.openGUI(player, te, context.getSide(), this.newGui);
+                int slotIndex = te == null && bc.getTarget() instanceof IInventorySlotAware isa ? isa.getInventorySlot()
+                        : Integer.MIN_VALUE;
+
+                if (this.newGui == null) {
+                    pGui.setSlotIndex(slotIndex);
+                    pGui.open(player);
+                } else {
+                    Platform.openGUI(player, te, context.getSide(), this.newGui, slotIndex);
+                }
+            }
+
+            if (player.openContainer instanceof IContainerSubGui sg) {
+                sg.setPrimaryGui(pGui);
             }
         }
     }
