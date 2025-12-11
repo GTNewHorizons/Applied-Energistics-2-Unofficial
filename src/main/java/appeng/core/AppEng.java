@@ -19,6 +19,7 @@ import net.minecraftforge.common.config.Configuration;
 
 import com.google.common.base.Stopwatch;
 
+import appeng.client.gui.AEBaseGui;
 import appeng.core.crash.CrashInfo;
 import appeng.core.crash.IntegrationCrashEnhancement;
 import appeng.core.crash.ModCrashEnhancement;
@@ -232,6 +233,9 @@ public final class AppEng {
         if (WorldData.instance() != null) WorldData.instance().onServerStoppped();
         TickHandler.INSTANCE.shutdown();
         CraftingNotificationManager.clear();
+        if (event.getSide().isClient()) {
+            AEBaseGui.aeRenderItem.parent = null;
+        }
     }
 
     @EventHandler
