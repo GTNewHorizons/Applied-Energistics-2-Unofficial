@@ -230,6 +230,9 @@ gui.appliedenergistics2.IOBuses=ME Import/Export Bus
 gui.appliedenergistics2.Stores=Stores
 gui.appliedenergistics2.BytesUsed=Bytes Used
 gui.appliedenergistics2.TimeUsed=Time Used
+gui.appliedenergistics2.CraftName=Craft Name
+gui.appliedenergistics2.Remains=Remains
+gui.appliedenergistics2.Progress=Progress
 gui.appliedenergistics2.Types=Types
 gui.appliedenergistics2.Blank=Blank
 gui.appliedenergistics2.Unlinked=Unlinked
@@ -496,7 +499,7 @@ gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=No: Only extractable 
 gui.tooltips.appliedenergistics2.TypeFilter=Filter Types
 gui.tooltips.appliedenergistics2.TypeFilterShowAll=Show All
 gui.tooltips.appliedenergistics2.TypeFilterShowItemsOnly=Show Items only
-gui.tooltips.appliedenergistics2.TypeFilterShowFluidsOnly=Show Fluid Drops only
+gui.tooltips.appliedenergistics2.TypeFilterShowFluidsOnly=Show Fluids only
 
 gui.tooltips.appliedenergistics2.BlockPlacement=Block Placement
 gui.tooltips.appliedenergistics2.BlockPlacementYes=Blocks will be placed as block.
@@ -507,8 +510,8 @@ gui.tooltips.appliedenergistics2.SchedulingModeDefault=Export the first item unt
 gui.tooltips.appliedenergistics2.SchedulingModeRoundRobin=Export using round robin mode.
 gui.tooltips.appliedenergistics2.SchedulingModeRandom=Export items in random mode.
 
-gui.tooltips.appliedenergistics2.ItemsStored=Items Stored: %s
-gui.tooltips.appliedenergistics2.ItemCount=Items Count: %s
+gui.tooltips.appliedenergistics2.ItemsStored=Stored: %s
+gui.tooltips.appliedenergistics2.ItemCount=Count: %s
 gui.tooltips.appliedenergistics2.ItemsRequestable=Items Requestable: %s
 gui.tooltips.appliedenergistics2.P2PFrequency=Frequency: %s
 gui.tooltips.appliedenergistics2.OreFilterHint=Filter items using ore dictionary names
@@ -666,6 +669,17 @@ waila.appliedenergistics2.CraftingLockedByLackOfRedstoneSignal=Locked by lack of
 waila.appliedenergistics2.CraftingLockedByRedstoneSignal=Locked by redstone signal
 waila.appliedenergistics2.CraftingLockedUntilPulse=Waiting for redstone pulse to unlock
 waila.appliedenergistics2.CraftingLockedUntilResult=Waiting for results to unlock
+waila.appliedenergistics2.CoordinateX=X
+waila.appliedenergistics2.CoordinateY=Y
+waila.appliedenergistics2.CoordinateZ=Z
+waila.appliedenergistics2.Dimension=Dimension
+waila.appliedenergistics2.Id=id
+waila.appliedenergistics2.ConnectedTo=Connected to
+waila.appliedenergistics2.Disconnected=Disconnected
+waila.appliedenergistics2.Singularity=Singularity
+
+# Baubles Extended
+slot.Terminal=§aTerminal§7
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=§61k§r ME Storage Cell
@@ -930,3 +944,4 @@ stat.ae2.TurnedCranks=Turned Cranks
 key.appliedenergistics2.category=Applied Energistics 2
 key.toggle_focus.desc=Toggle search box focus
 key.search_connected_inventories.desc=Search network inventories for item
+key.control_operation.desc=Control operation

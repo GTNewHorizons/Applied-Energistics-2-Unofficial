@@ -34,7 +34,6 @@ import appeng.client.gui.implementations.GuiOptimizePatterns;
 import appeng.client.gui.implementations.GuiPatternTerm;
 import appeng.client.gui.implementations.GuiPatternTermEx;
 import appeng.client.gui.implementations.GuiSkyChest;
-import appeng.client.gui.implementations.GuiWirelessTerm;
 import appeng.core.AEConfig;
 import appeng.core.AppEng;
 import appeng.core.features.AEFeature;
@@ -134,9 +133,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
                                                                                                        // Terminal
         this.registerBookmarkContainerHandler
                 .invoke(apiClass, GuiMEMonitorable.class, new NEIAETerminalBookmarkContainerHandler()); // Terminal
-        this.registerBookmarkContainerHandler
-                .invoke(apiClass, GuiWirelessTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Wireless
-                                                                                                       // Terminal
+
         this.registerBookmarkContainerHandler
                 .invoke(apiClass, GuiPatternTerm.class, new NEIAETerminalBookmarkContainerHandler()); // Pattern
                                                                                                       // terminal

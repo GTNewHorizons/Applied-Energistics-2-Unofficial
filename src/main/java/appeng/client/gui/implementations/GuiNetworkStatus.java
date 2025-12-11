@@ -21,7 +21,6 @@ import java.util.Map;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -35,6 +34,7 @@ import appeng.api.config.SortOrder;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiContextMenu;
@@ -42,7 +42,6 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.me.ItemRepo;
-import appeng.client.me.SlotME;
 import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.AEConfig;
@@ -131,10 +130,10 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
 
         ItemStack is = null;
         if (tooltip > -1) {
-            final IAEItemStack aeStack = repo.getReferenceItem(tooltip);
+            final IAEStack<?> aeStack = repo.getReferenceStack(tooltip);
 
-            if (aeStack != null) {
-                is = aeStack.getItemStack();
+            if (aeStack instanceof IAEItemStack ais) {
+                is = ais.getItemStack();
             }
 
         }
@@ -278,10 +277,10 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
     }
 
-    public void postUpdate(final List<IAEItemStack> list) {
+    public void postUpdate(final List<IAEStack<?>> list) {
         this.repo.clear();
 
-        for (final IAEItemStack is : list) {
+        for (final IAEStack<?> is : list) {
             this.repo.postUpdate(is);
         }
 
@@ -293,61 +292,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         final int size = this.repo.size();
         this.getScrollBar().setTop(39).setLeft(175).setHeight(78);
         this.getScrollBar().setRange(0, (size + 4) / 5 - this.rows, 1);
-    }
-
-    // @Override - NEI
-    public List<String> handleItemTooltip(final ItemStack stack, final int mouseX, final int mouseY,
-            final List<String> currentToolTip) {
-        if (stack != null) {
-            final Slot s = this.getSlot(mouseX, mouseY);
-            if (s instanceof SlotME) {
-                IAEItemStack myStack = null;
-
-                try {
-                    final SlotME theSlotField = (SlotME) s;
-                    myStack = theSlotField.getAEStack();
-                } catch (final Throwable ignore) {}
-
-                if (myStack != null) {
-                    while (currentToolTip.size() > 1) {
-                        currentToolTip.remove(1);
-                    }
-                }
-            }
-        }
-        return currentToolTip;
-    }
-
-    // Vanilla version...
-    protected void drawItemStackTooltip(final ItemStack stack, final int x, final int y) {
-        final Slot s = this.getSlot(x, y);
-        if (s instanceof SlotME && stack != null) {
-            IAEItemStack myStack = null;
-
-            try {
-                final SlotME theSlotField = (SlotME) s;
-                myStack = theSlotField.getAEStack();
-            } catch (final Throwable ignore) {}
-
-            if (myStack != null) {
-                final List<String> currentToolTip = stack
-                        .getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips);
-
-                while (currentToolTip.size() > 1) {
-                    currentToolTip.remove(1);
-                }
-
-                currentToolTip.add(
-                        GuiText.Installed.getLocal() + ": "
-                                + NumberFormat.getNumberInstance(Locale.US).format(myStack.getStackSize()));
-                currentToolTip.add(
-                        GuiText.EnergyDrain.getLocal() + ": "
-                                + Platform.formatPowerLong(myStack.getCountRequestable(), true));
-
-                this.drawTooltip(x, y, currentToolTip.toArray(new String[0]));
-            }
-        }
-        // super.drawItemStackTooltip( stack, x, y );
     }
 
     @Override
@@ -466,8 +410,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         int toolPosY = 0;
 
         for (int z = viewStart; z < Math.min(viewEnd, this.repo.size()); z++) {
-            final IAEItemStack refStack = this.repo.getReferenceItem(z);
-            if (refStack != null) {
+            final IAEStack<?> aes = this.repo.getReferenceStack(z);
+            if (aes instanceof IAEItemStack refStack) {
                 GL11.glPushMatrix();
                 GL11.glScaled(0.5, 0.5, 0.5);
 

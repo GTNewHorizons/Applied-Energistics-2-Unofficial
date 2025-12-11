@@ -45,7 +45,7 @@ public class ContainerSecurity extends ContainerMEMonitorable implements IAEAppE
     public int permissionMode = 0;
 
     public ContainerSecurity(final InventoryPlayer ip, final ITerminalHost monitorable) {
-        super(ip, monitorable, false);
+        super(ip, monitorable);
 
         this.securityBox = (TileSecurity) monitorable;
 
@@ -67,8 +67,6 @@ public class ContainerSecurity extends ContainerMEMonitorable implements IAEAppE
                         10,
                         ip));
         this.addSlotToContainer(this.wirelessOut = new SlotOutput(this.wirelessEncoder, 1, 212, 68, -1));
-
-        this.bindPlayerInventory(ip, 0, 0);
     }
 
     public void toggleSetting(final String value, final EntityPlayer player) {

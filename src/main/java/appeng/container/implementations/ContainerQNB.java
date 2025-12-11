@@ -19,7 +19,7 @@ import appeng.tile.qnb.TileQuantumBridge;
 public class ContainerQNB extends AEBaseContainer {
 
     public ContainerQNB(final InventoryPlayer ip, final TileQuantumBridge quantumBridge) {
-        super(ip, quantumBridge, null);
+        super(ip, quantumBridge);
 
         this.addSlotToContainer(
                 (new SlotRestrictedInput(
