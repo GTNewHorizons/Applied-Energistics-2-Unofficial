@@ -33,6 +33,7 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.items.contents.PinsHandler;
 import appeng.items.contents.PinsHolder;
 import appeng.me.GridAccessException;
@@ -54,8 +55,8 @@ import appeng.util.Platform;
  * @version rv3
  * @since rv3
  */
-public abstract class AbstractPartTerminal extends AbstractPartDisplay
-        implements ITerminalHost, IConfigManagerHost, IViewCellStorage, IAEAppEngInventory, ITerminalPins {
+public abstract class AbstractPartTerminal extends AbstractPartDisplay implements ITerminalHost, IConfigManagerHost,
+        IViewCellStorage, IAEAppEngInventory, ITerminalPins, IPrimaryGuiIconProvider {
 
     private final IConfigManager cm = new ConfigManager(this);
     private final AppEngInternalInventory viewCell = new AppEngInternalInventory(this, 5);
@@ -195,4 +196,6 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay
                     && AEApi.instance().definitions().materials().cardPatternRefiller().isSameAs(itemstack);
         }
     }
+
+    public abstract ItemStack getPrimaryGuiIcon();
 }
