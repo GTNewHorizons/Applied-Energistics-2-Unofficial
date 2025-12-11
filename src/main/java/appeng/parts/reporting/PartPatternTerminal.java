@@ -17,27 +17,40 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
-import appeng.api.implementations.ICraftingPatternItem;
-import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.AEApi;
+import appeng.api.parts.IPatternTerminal;
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStack;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.sync.GuiBridge;
-import appeng.helpers.PatternHelper;
 import appeng.helpers.Reflected;
 import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.tile.inventory.BiggerAppEngInventory;
+import appeng.tile.inventory.IAEStackInventory;
+import appeng.tile.inventory.IIAEStackInventory;
 import appeng.tile.inventory.InvOperation;
 
-public class PartPatternTerminal extends AbstractPartTerminal {
+public class PartPatternTerminal extends AbstractPartTerminal implements IIAEStackInventory, IPatternTerminal {
 
     private static final CableBusTextures FRONT_BRIGHT_ICON = CableBusTextures.PartPatternTerm_Bright;
     private static final CableBusTextures FRONT_DARK_ICON = CableBusTextures.PartPatternTerm_Dark;
     private static final CableBusTextures FRONT_COLORED_ICON = CableBusTextures.PartPatternTerm_Colored;
 
-    private final AppEngInternalInventory crafting = new BiggerAppEngInventory(this, 9) {};
+    public static final int patternInputsWidth = 3;
+    public static final int patternInputsHeigh = 3;
+    public static final int patternInputsPages = 1;
 
-    private final AppEngInternalInventory output = new BiggerAppEngInventory(this, 3) {};
+    public static final int patternOutputsWidth = 1;
+    public static final int patternOutputsHeigh = 3;
+    public static final int patternOutputPages = 1;
 
+    private final IAEStackInventory crafting = new IAEStackInventory(
+            this,
+            getPatternInputsWidth() * getPatternInputsHeigh() * getPatternInputPages(),
+            StorageName.CRAFTING_INPUT);
+    private final IAEStackInventory output = new IAEStackInventory(
+            this,
+            getPatternOutputsWidth() * getPatternOutputsHeigh() * getPatternOutputPages(),
+            StorageName.CRAFTING_OUTPUT);
     private final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
 
     private boolean craftingMode = true;
@@ -93,90 +106,41 @@ public class PartPatternTerminal extends AbstractPartTerminal {
             z = this.getTile().zCoord;
         }
 
-        if (GuiBridge.GUI_PATTERN_TERMINAL.hasPermissions(this.getHost().getTile(), x, y, z, this.getSide(), p)) {
-            return GuiBridge.GUI_PATTERN_TERMINAL;
+        if (getPatternGui().hasPermissions(this.getHost().getTile(), x, y, z, this.getSide(), p)) {
+            return getPatternGui();
         }
         return GuiBridge.GUI_ME;
+    }
+
+    protected GuiBridge getPatternGui() {
+        return GuiBridge.GUI_PATTERN_TERMINAL;
     }
 
     @Override
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc,
             final ItemStack removedStack, final ItemStack newStack) {
         if (inv == this.pattern && slot == 1) {
-
             final ItemStack stack = this.pattern.getStackInSlot(1);
-
-            if (stack != null && stack.getItem() instanceof ICraftingPatternItem pattern) {
-                final NBTTagCompound encodedValue = stack.getTagCompound();
-
-                if (encodedValue != null) {
-                    final ICraftingPatternDetails details = pattern
-                            .getPatternForItem(stack, this.getHost().getTile().getWorldObj());
-                    final boolean substitute = encodedValue.getBoolean("substitute");
-                    final boolean beSubstitute = encodedValue.getBoolean("beSubstitute");
-                    final boolean isCrafting = encodedValue.getBoolean("crafting");
-                    final IAEItemStack[] inItems;
-                    final IAEItemStack[] outItems;
-
-                    if (details == null) {
-                        inItems = PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10), true, null);
-                        outItems = PatternHelper
-                                .loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10), true, null);
-                    } else {
-                        inItems = details.getInputs();
-                        outItems = details.getOutputs();
-                    }
-
-                    this.setCraftingRecipe(isCrafting);
-                    this.setSubstitution(substitute);
-                    this.setCanBeSubstitution(beSubstitute);
-
-                    for (int x = 0; x < this.crafting.getSizeInventory(); x++) {
-                        this.crafting.setInventorySlotContents(x, null);
-                    }
-
-                    for (int x = 0; x < this.output.getSizeInventory(); x++) {
-                        this.output.setInventorySlotContents(x, null);
-                    }
-
-                    for (int x = 0; x < this.crafting.getSizeInventory() && x < inItems.length; x++) {
-                        if (inItems[x] != null) {
-                            this.crafting.setInventorySlotContents(x, inItems[x].getItemStack());
-                        }
-                    }
-
-                    for (int x = 0; x < this.output.getSizeInventory() && x < outItems.length; x++) {
-                        if (outItems[x] != null) {
-                            this.output.setInventorySlotContents(x, outItems[x].getItemStack());
-                        }
-                    }
-                }
-            }
-        } else if (inv == this.crafting) {
-            this.fixCraftingRecipes();
+            loadPatternFromItem(stack, this.host.getTile().getWorldObj(), this.crafting, this.output);
         }
 
         this.getHost().markForSave();
     }
 
-    private void fixCraftingRecipes() {
-        if (this.craftingMode) {
-            for (int x = 0; x < this.crafting.getSizeInventory(); x++) {
-                final ItemStack is = this.crafting.getStackInSlot(x);
-                if (is != null) {
-                    is.stackSize = 1;
-                }
-            }
-        }
+    @Override
+    public void saveAEStackInv() {
+        this.getHost().markForSave();
     }
 
+    public void exPatternTerminalCall(IAEStack<?>[] in, IAEStack<?>[] out) {}
+
+    @Override
     public boolean isCraftingRecipe() {
         return this.craftingMode;
     }
 
     public void setCraftingRecipe(final boolean craftingMode) {
         this.craftingMode = craftingMode;
-        this.fixCraftingRecipes();
     }
 
     public boolean isSubstitution() {
@@ -197,19 +161,24 @@ public class PartPatternTerminal extends AbstractPartTerminal {
 
     @Override
     public IInventory getInventoryByName(final String name) {
-        if (name.equals("crafting")) {
-            return this.crafting;
-        }
-
-        if (name.equals("output")) {
-            return this.output;
-        }
-
         if (name.equals("pattern")) {
             return this.pattern;
         }
 
         return super.getInventoryByName(name);
+    }
+
+    @Override
+    public IAEStackInventory getAEInventoryByName(StorageName name) {
+        switch (name) {
+            case CRAFTING_INPUT -> {
+                return this.crafting;
+            }
+            case CRAFTING_OUTPUT -> {
+                return this.output;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -225,5 +194,34 @@ public class PartPatternTerminal extends AbstractPartTerminal {
     @Override
     public CableBusTextures getFrontDark() {
         return FRONT_DARK_ICON;
+    }
+
+    protected int getPatternInputsWidth() {
+        return patternInputsWidth;
+    }
+
+    protected int getPatternInputsHeigh() {
+        return patternInputsHeigh;
+    }
+
+    protected int getPatternInputPages() {
+        return patternInputsPages;
+    }
+
+    protected int getPatternOutputsWidth() {
+        return patternOutputsWidth;
+    }
+
+    protected int getPatternOutputsHeigh() {
+        return patternOutputsHeigh;
+    }
+
+    protected int getPatternOutputPages() {
+        return patternOutputPages;
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().parts().patternTerminal().maybeStack(1).orNull();
     }
 }

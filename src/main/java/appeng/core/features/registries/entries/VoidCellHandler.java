@@ -24,8 +24,8 @@ public class VoidCellHandler implements ICellHandler {
     @Override
     @SuppressWarnings("rawtypes")
     public IMEInventoryHandler getCellInventory(ItemStack is, ISaveProvider host, StorageChannel channel) {
-        if (channel == StorageChannel.ITEMS && is != null && is.getItem() instanceof ItemVoidStorageCell) {
-            return VoidCellInventory.getCell(is);
+        if (is.getItem() instanceof ItemVoidStorageCell isc && isc.getStorageChannel() == channel) {
+            return VoidCellInventory.getCell(is, channel);
         }
         return null;
     }

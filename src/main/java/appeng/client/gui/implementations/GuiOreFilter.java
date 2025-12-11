@@ -9,26 +9,21 @@ import net.minecraftforge.oredict.OreDictionary;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import appeng.client.gui.AEBaseGui;
+import appeng.client.gui.GuiSub;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.MEGuiTextField;
-import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
-import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IOreFilterable;
 import appeng.integration.modules.NEI;
-import appeng.parts.automation.PartSharedItemBus;
-import appeng.parts.misc.PartStorageBus;
-import appeng.tile.misc.TileCellWorkbench;
 import appeng.util.prioitylist.OreFilteredList.OreFilterTextFormatter;
 
-public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField {
+public class GuiOreFilter extends GuiSub implements IDropToFillTextField {
 
     private MEGuiTextField textField;
 
@@ -151,14 +146,8 @@ public class GuiOreFilter extends AEBaseGui implements IDropToFillTextField {
             } catch (IOException e) {
                 AELog.debug(e);
             }
-            final Object target = ((AEBaseContainer) this.inventorySlots).getTarget();
-            GuiBridge OriginalGui = null;
-            if (target instanceof PartStorageBus) OriginalGui = GuiBridge.GUI_STORAGEBUS;
-            else if (target instanceof PartSharedItemBus) OriginalGui = GuiBridge.GUI_BUS;
-            else if (target instanceof TileCellWorkbench) OriginalGui = GuiBridge.GUI_CELL_WORKBENCH;
 
-            if (OriginalGui != null) NetworkHandler.instance.sendToServer(new PacketSwitchGuis(OriginalGui));
-            else this.mc.thePlayer.closeScreen();
+            NetworkHandler.instance.sendToServer(new PacketSwitchGuis());
 
         } else if (!this.textField.textboxKeyTyped(character, key)) {
             super.keyTyped(character, key);
