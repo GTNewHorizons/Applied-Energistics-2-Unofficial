@@ -13,376 +13,104 @@ package appeng.parts.automation;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.Vec3;
 
-import com.google.common.collect.ImmutableSet;
-
-import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
-import appeng.api.config.PowerMultiplier;
-import appeng.api.config.RedstoneMode;
-import appeng.api.config.SchedulingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
-import appeng.api.config.YesNo;
-import appeng.api.networking.IGridNode;
-import appeng.api.networking.crafting.ICraftingGrid;
-import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.networking.energy.IEnergyGrid;
-import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.MachineSource;
-import appeng.api.networking.ticking.TickRateModulation;
-import appeng.api.networking.ticking.TickingRequest;
-import appeng.api.parts.IPartCollisionHelper;
-import appeng.api.parts.IPartRenderHelper;
-import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.client.texture.CableBusTextures;
-import appeng.core.AELog;
-import appeng.core.settings.TickRates;
-import appeng.core.sync.GuiBridge;
-import appeng.helpers.MultiCraftingTracker;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.me.cache.NetworkMonitor;
 import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
-import appeng.util.Platform;
-import appeng.util.item.AEItemStack;
 import appeng.util.prioitylist.OreFilteredList;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
-public class PartExportBus extends PartSharedItemBus implements ICraftingRequester {
-
-    private final MultiCraftingTracker craftingTracker = new MultiCraftingTracker(this, 9);
-    private final BaseActionSource mySrc;
-    private long itemToSend = 1;
-    private boolean didSomething = false;
-    private int nextSlot = 0;
+public class PartExportBus extends PartBaseExportBus<IAEItemStack> implements ICraftingRequester {
 
     @Reflected
     public PartExportBus(final ItemStack is) {
         super(is);
 
-        this.getConfigManager().registerSetting(Settings.REDSTONE_CONTROLLED, RedstoneMode.IGNORE);
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
-        this.getConfigManager().registerSetting(Settings.CRAFT_ONLY, YesNo.NO);
-        this.getConfigManager().registerSetting(Settings.SCHEDULING_MODE, SchedulingMode.DEFAULT);
-        this.mySrc = new MachineSource(this);
     }
 
     @Override
-    public void readFromNBT(final NBTTagCompound extra) {
-        super.readFromNBT(extra);
-        this.craftingTracker.readFromNBT(extra);
-        this.nextSlot = extra.getInteger("nextSlot");
-    }
+    public int calculateAmountToSend() {
+        int toSend = switch (this.getInstalledUpgrades(Upgrades.SPEED)) {
+            case 1 -> 8;
+            case 2 -> 32;
+            case 3 -> 64;
+            case 4 -> 96;
+            default -> 1;
+        };
 
-    @Override
-    public void writeToNBT(final NBTTagCompound extra) {
-        super.writeToNBT(extra);
-        this.craftingTracker.writeToNBT(extra);
-        extra.setInteger("nextSlot", this.nextSlot);
-    }
-
-    @Override
-    protected TickRateModulation doBusWork() {
-        if (!this.getProxy().isActive() || !this.canDoBusWork()) {
-            return TickRateModulation.IDLE;
+        switch (this.getInstalledUpgrades(Upgrades.SUPERSPEED)) {
+            case 1 -> toSend += 16;
+            case 2 -> toSend += 16 * 8;
+            case 3 -> toSend += 16 * 8 * 8;
+            case 4 -> toSend += 16 * 8 * 8 * 8;
         }
 
-        this.itemToSend = this.calculateItemsToSend();
-        this.didSomething = false;
+        switch (this.getInstalledUpgrades(Upgrades.SUPERLUMINALSPEED)) {
+            case 1 -> toSend += 131_072;
+            case 2 -> toSend += 131_072 * 8;
+            case 3 -> toSend += 131_072 * 8 * 8;
+            case 4 -> toSend += 131_072 * 8 * 8 * 8;
+        }
 
+        return toSend;
+    }
+
+    @Override
+    protected boolean supportFuzzy() {
+        return true;
+    }
+
+    @Override
+    protected boolean supportOreDict() {
+        return true;
+    }
+
+    @Override
+    protected IMEMonitor<IAEItemStack> getMonitor() {
         try {
-            final InventoryAdaptor destination = this.getHandler();
-            final IMEMonitor<IAEItemStack> gridInv = this.getProxy().getStorage().getItemInventory();
-            final IEnergyGrid energy = this.getProxy().getEnergy();
-            final ICraftingGrid cg = this.getProxy().getCrafting();
-            final FuzzyMode fzMode = (FuzzyMode) this.getConfigManager().getSetting(Settings.FUZZY_MODE);
-            final SchedulingMode schedulingMode = (SchedulingMode) this.getConfigManager()
-                    .getSetting(Settings.SCHEDULING_MODE);
-
-            if (destination != null) {
-                if (this.getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
-                    int x = 0;
-
-                    for (x = 0; x < this.availableSlots() && this.itemToSend > 0; x++) {
-                        final int slotToExport = this.getStartingSlot(schedulingMode, x);
-
-                        final IAEItemStack ais = this.getConfig().getAEStackInSlot(slotToExport);
-
-                        if (ais == null || this.itemToSend <= 0 || this.craftOnly()) {
-                            if (this.isCraftingEnabled()) {
-                                this.didSomething = this.craftingTracker.handleCrafting(
-                                        slotToExport,
-                                        this.itemToSend,
-                                        ais,
-                                        destination,
-                                        this.getTile().getWorldObj(),
-                                        this.getProxy().getGrid(),
-                                        cg,
-                                        this.mySrc) || this.didSomething;
-                            }
-                            continue;
-                        }
-
-                        final long before = this.itemToSend;
-
-                        if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
-
-                            /*
-                             * This actually returns a NetworkInventoryHandler object. The method .getSortedFuzzyItems()
-                             * used is the overriden one found in the .java file.
-                             */
-
-                            if (gridInv instanceof NetworkMonitor<?>) {
-                                final Collection<IAEItemStack> fzlist = ((NetworkMonitor<IAEItemStack>) gridInv)
-                                        .getHandler().getSortedFuzzyItems(
-                                                new ArrayList<>(),
-                                                ais,
-                                                fzMode,
-                                                IterationCounter.fetchNewId());
-
-                                for (final IAEItemStack o : fzlist) {
-                                    this.pushItemIntoTarget(destination, energy, gridInv, o);
-                                }
-                                if (this.itemToSend <= 0) {
-                                    break;
-                                }
-                            }
-
-                        } else {
-                            this.pushItemIntoTarget(destination, energy, gridInv, ais);
-                        }
-
-                        if (this.itemToSend == before && this.isCraftingEnabled()) {
-                            this.didSomething = this.craftingTracker.handleCrafting(
-                                    slotToExport,
-                                    this.itemToSend,
-                                    ais,
-                                    destination,
-                                    this.getTile().getWorldObj(),
-                                    this.getProxy().getGrid(),
-                                    cg,
-                                    this.mySrc) || this.didSomething;
-                        }
-                    }
-
-                    this.updateSchedulingMode(schedulingMode, x);
-                } else if (!oreFilterString.isEmpty()) {
-                    if (filterPredicate == null) filterPredicate = OreFilteredList.makeFilter(oreFilterString);
-
-                    for (IAEItemStack stack : gridInv.getStorageList()) {
-                        if (stack == null || filterPredicate == null || !this.filterPredicate.test(stack)) continue;
-                        this.pushItemIntoTarget(destination, energy, gridInv, stack);
-                        if (this.itemToSend <= 0) break;
-                    }
-                }
-            } else {
-                return TickRateModulation.SLEEP;
-            }
+            return this.getProxy().getStorage().getItemInventory();
         } catch (final GridAccessException e) {
-            // :P
+            return null;
         }
-
-        return this.didSomething ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
     }
 
     @Override
-    public void getBoxes(final IPartCollisionHelper bch) {
-        bch.addBox(4, 4, 12, 12, 12, 14);
-        bch.addBox(5, 5, 14, 11, 11, 15);
-        bch.addBox(6, 6, 15, 10, 10, 16);
-        bch.addBox(6, 6, 11, 10, 10, 12);
-    }
+    protected void doFuzzy(IAEItemStack aes, FuzzyMode fzMode, InventoryAdaptor destination, IEnergyGrid energy,
+            IMEMonitor<IAEItemStack> gridInv) {
+        /*
+         * This actually returns a NetworkInventoryHandler object. The method .getSortedFuzzyItems() used is the
+         * overriden one found in the .java file.
+         */
+        if (gridInv instanceof NetworkMonitor<?>) {
+            final Collection<IAEItemStack> fzlist = ((NetworkMonitor<IAEItemStack>) gridInv).getHandler()
+                    .getSortedFuzzyItems(new ArrayList<>(), aes, fzMode, IterationCounter.fetchNewId());
 
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void renderInventory(final IPartRenderHelper rh, final RenderBlocks renderer) {
-        rh.setTexture(
-                CableBusTextures.PartExportSides.getIcon(),
-                CableBusTextures.PartExportSides.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartExportSides.getIcon(),
-                CableBusTextures.PartExportSides.getIcon());
-
-        rh.setBounds(4, 4, 12, 12, 12, 14);
-        rh.renderInventoryBox(renderer);
-
-        rh.setBounds(5, 5, 14, 11, 11, 15);
-        rh.renderInventoryBox(renderer);
-
-        rh.setBounds(6, 6, 15, 10, 10, 16);
-        rh.renderInventoryBox(renderer);
-    }
-
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void renderStatic(final int x, final int y, final int z, final IPartRenderHelper rh,
-            final RenderBlocks renderer) {
-        this.setRenderCache(rh.useSimplifiedRendering(x, y, z, this, this.getRenderCache()));
-        rh.setTexture(
-                CableBusTextures.PartExportSides.getIcon(),
-                CableBusTextures.PartExportSides.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartExportSides.getIcon(),
-                CableBusTextures.PartExportSides.getIcon());
-
-        rh.setBounds(4, 4, 12, 12, 12, 14);
-        rh.renderBlock(x, y, z, renderer);
-
-        rh.setBounds(5, 5, 14, 11, 11, 15);
-        rh.renderBlock(x, y, z, renderer);
-
-        rh.setBounds(6, 6, 15, 10, 10, 16);
-        rh.renderBlock(x, y, z, renderer);
-
-        rh.setTexture(
-                CableBusTextures.PartMonitorSidesStatus.getIcon(),
-                CableBusTextures.PartMonitorSidesStatus.getIcon(),
-                CableBusTextures.PartMonitorBack.getIcon(),
-                this.getItemStack().getIconIndex(),
-                CableBusTextures.PartMonitorSidesStatus.getIcon(),
-                CableBusTextures.PartMonitorSidesStatus.getIcon());
-
-        rh.setBounds(6, 6, 11, 10, 10, 12);
-        rh.renderBlock(x, y, z, renderer);
-
-        this.renderLights(x, y, z, rh, renderer);
-    }
-
-    @Override
-    public int cableConnectionRenderTo() {
-        return 5;
-    }
-
-    @Override
-    public boolean onPartActivate(final EntityPlayer player, final Vec3 pos) {
-        if (!player.isSneaking()) {
-            if (Platform.isClient()) {
-                return true;
-            }
-
-            Platform.openGUI(player, this.getHost().getTile(), this.getSide(), GuiBridge.GUI_BUS);
-            return true;
-        }
-
-        return false;
-    }
-
-    @Override
-    public TickingRequest getTickingRequest(final IGridNode node) {
-        return new TickingRequest(TickRates.ExportBus.getMin(), TickRates.ExportBus.getMax(), this.isSleeping(), false);
-    }
-
-    @Override
-    public RedstoneMode getRSMode() {
-        return (RedstoneMode) this.getConfigManager().getSetting(Settings.REDSTONE_CONTROLLED);
-    }
-
-    @Override
-    public TickRateModulation tickingRequest(final IGridNode node, final int ticksSinceLastCall) {
-        return this.doBusWork();
-    }
-
-    @Override
-    public ImmutableSet<ICraftingLink> getRequestedJobs() {
-        return this.craftingTracker.getRequestedJobs();
-    }
-
-    @Override
-    public IAEItemStack injectCraftedItems(final ICraftingLink link, final IAEItemStack items, final Actionable mode) {
-        final InventoryAdaptor d = this.getHandler();
-
-        try {
-            if (d != null && this.getProxy().isActive()) {
-                final IEnergyGrid energy = this.getProxy().getEnergy();
-                final double power = items.getStackSize();
-
-                if (energy.extractAEPower(power, mode, PowerMultiplier.CONFIG) > power - 0.01) {
-                    if (mode == Actionable.MODULATE) {
-                        return AEItemStack.create(d.addItems(items.getItemStack()));
-                    }
-                    return AEItemStack.create(d.simulateAdd(items.getItemStack()));
-                }
-            }
-        } catch (final GridAccessException e) {
-            AELog.debug(e);
-        }
-
-        return items;
-    }
-
-    @Override
-    public void jobStateChange(final ICraftingLink link) {
-        this.craftingTracker.jobStateChange(link);
-    }
-
-    @Override
-    protected boolean isSleeping() {
-        return this.getHandler() == null || super.isSleeping();
-    }
-
-    private boolean craftOnly() {
-        return this.getConfigManager().getSetting(Settings.CRAFT_ONLY) == YesNo.YES;
-    }
-
-    private boolean isCraftingEnabled() {
-        return this.getInstalledUpgrades(Upgrades.CRAFTING) > 0;
-    }
-
-    private void pushItemIntoTarget(final InventoryAdaptor d, final IEnergyGrid energy,
-            final IMEInventory<IAEItemStack> inv, IAEItemStack ais) {
-        final ItemStack is = ais.getItemStack();
-        is.stackSize = (int) this.itemToSend;
-
-        final ItemStack o = d.simulateAdd(is);
-        final long canFit = o == null ? this.itemToSend : this.itemToSend - o.stackSize;
-
-        if (canFit > 0) {
-            ais = ais.copy();
-            ais.setStackSize(canFit);
-            final IAEItemStack itemsToAdd = Platform.poweredExtraction(energy, inv, ais, this.mySrc);
-
-            if (itemsToAdd != null) {
-                this.itemToSend -= itemsToAdd.getStackSize();
-
-                final ItemStack failed = d.addItems(itemsToAdd.getItemStack());
-                if (failed != null) {
-                    ais.setStackSize(failed.stackSize);
-                    inv.injectItems(ais, Actionable.MODULATE, this.mySrc);
-                } else {
-                    this.didSomething = true;
-                }
+            for (final IAEItemStack o : fzlist) {
+                this.pushItemIntoTarget(destination, energy, gridInv, o);
             }
         }
     }
 
-    private int getStartingSlot(final SchedulingMode schedulingMode, final int x) {
-        if (schedulingMode == SchedulingMode.RANDOM) {
-            return Platform.getRandom().nextInt(this.availableSlots());
-        }
+    @Override
+    protected void doOreDict(InventoryAdaptor destination, IEnergyGrid energy, IMEMonitor<IAEItemStack> gridInv) {
+        if (!oreFilterString.isEmpty()) {
+            if (filterPredicate == null) filterPredicate = OreFilteredList.makeFilter(oreFilterString);
 
-        if (schedulingMode == SchedulingMode.ROUNDROBIN) {
-            return (this.nextSlot + x) % this.availableSlots();
-        }
-
-        return x;
-    }
-
-    private void updateSchedulingMode(final SchedulingMode schedulingMode, final int x) {
-        if (schedulingMode == SchedulingMode.ROUNDROBIN) {
-            this.nextSlot = (this.nextSlot + x) % this.availableSlots();
+            for (IAEItemStack stack : gridInv.getStorageList()) {
+                if (stack == null || filterPredicate == null || !this.filterPredicate.test(stack)) continue;
+                this.pushItemIntoTarget(destination, energy, gridInv, stack);
+                if (this.itemToSend <= 0) break;
+            }
         }
     }
 

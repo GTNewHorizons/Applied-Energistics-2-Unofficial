@@ -66,6 +66,7 @@ import appeng.api.util.IConfigManager;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.AEConfig;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.helpers.IPriorityHost;
 import appeng.me.GridAccessException;
 import appeng.me.storage.MEInventoryHandler;
@@ -79,7 +80,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 public class PartFormationPlane extends PartUpgradeable
-        implements ICellContainer, IPriorityHost, IMEInventory<IAEItemStack> {
+        implements ICellContainer, IPriorityHost, IMEInventory<IAEItemStack>, IPrimaryGuiIconProvider {
 
     private final MEInventoryHandler myHandler = new MEInventoryHandler(this, StorageChannel.ITEMS);
     private final AppEngInternalAEInventory Config = new AppEngInternalAEInventory(this, 63);
@@ -645,5 +646,10 @@ public class PartFormationPlane extends PartUpgradeable
     @Override
     public void saveChanges(final IMEInventory cellInventory) {
         // nope!
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return AEApi.instance().definitions().parts().formationPlane().maybeStack(1).orNull();
     }
 }

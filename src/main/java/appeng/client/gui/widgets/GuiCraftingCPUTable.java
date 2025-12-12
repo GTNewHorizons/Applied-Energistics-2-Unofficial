@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.input.Mouse;
@@ -228,6 +229,10 @@ public class GuiCraftingCPUTable {
             GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         }
         if (hoveredCpu != null) {
+            EnumChatFormatting green = EnumChatFormatting.GREEN;
+            EnumChatFormatting reset = EnumChatFormatting.RESET;
+            EnumChatFormatting gold = EnumChatFormatting.GOLD;
+
             StringBuilder tooltip = new StringBuilder();
             String name = hoveredCpu.getName();
             if (name != null && !name.isEmpty()) {
@@ -241,6 +246,7 @@ public class GuiCraftingCPUTable {
             }
             IAEItemStack crafting = hoveredCpu.getCrafting();
             if (crafting != null && crafting.getStackSize() > 0) {
+
                 final long elapsedInMilliseconds = TimeUnit.MILLISECONDS
                         .convert(hoveredCpu.getCraftingElapsedTime(), TimeUnit.NANOSECONDS);
                 final String elapsedTimeText = DurationFormatUtils
@@ -248,47 +254,73 @@ public class GuiCraftingCPUTable {
                 final double craftingPercentage = 100
                         - (double) (hoveredCpu.getRemainingItems()) / (double) hoveredCpu.getTotalItems() * 100;
 
-                tooltip.append(GuiText.Crafting.getLocal());
+                tooltip.append(green);
+                tooltip.append(GuiText.CraftName.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
-                tooltip.append(NumberFormat.getInstance().format(crafting.getStackSize()));
-                tooltip.append(' ');
                 tooltip.append(crafting.getItemStack().getDisplayName());
                 tooltip.append('\n');
 
-                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getRemainingItems()));
-                tooltip.append(" / ");
-                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getTotalItems()));
-                tooltip.append(String.format(" %02.2f %%", craftingPercentage));
+                tooltip.append(green);
+                tooltip.append(GuiText.Remains.getLocal());
+                tooltip.append(reset);
+                tooltip.append(": ");
+                tooltip.append(NumberFormat.getInstance().format(crafting.getStackSize()));
                 tooltip.append('\n');
 
+                tooltip.append(green);
+                tooltip.append(GuiText.Progress.getLocal());
+                tooltip.append(reset);
+                tooltip.append(": ");
+                tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getTotalItems()));
+                tooltip.append(" / ");
+                tooltip.append(
+                        NumberFormat.getInstance().format(hoveredCpu.getTotalItems() - hoveredCpu.getRemainingItems()));
+                tooltip.append(" (");
+                tooltip.append(gold);
+                tooltip.append(String.format("%02.2f%%", craftingPercentage));
+                tooltip.append(reset);
+                tooltip.append(") ");
+                tooltip.append('\n');
+
+                tooltip.append(green);
                 tooltip.append(GuiText.TimeUsed.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(elapsedTimeText);
                 tooltip.append('\n');
             }
 
             if (hoveredCpu.getUsedStorage() > 0) {
+                tooltip.append(green);
                 tooltip.append(GuiText.BytesUsed.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(hoveredCpu.formatUsedStorage());
                 tooltip.append(" / ");
                 tooltip.append(hoveredCpu.formatStorage());
                 tooltip.append('\n');
             } else if (hoveredCpu.getStorage() > 0) {
+                tooltip.append(green);
                 tooltip.append(GuiText.Bytes.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(hoveredCpu.formatStorage());
                 tooltip.append('\n');
             }
             if (hoveredCpu.getCoprocessors() > 0) {
+                tooltip.append(green);
                 tooltip.append(GuiText.CoProcessors.getLocal());
+                tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(hoveredCpu.formatCoprocessors());
                 tooltip.append('\n');
             }
 
             // Crafting Allow Mode part
+            tooltip.append(green);
             tooltip.append(GuiText.CPUAllowMode.getLocal());
+            tooltip.append(reset);
             tooltip.append(": ");
             switch (hoveredCpu.allowMode()) {
                 case ALLOW_ALL -> tooltip.append(GuiText.CPUAllowAll.getLocal());

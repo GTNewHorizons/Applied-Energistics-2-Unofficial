@@ -15,7 +15,6 @@ import static appeng.api.storage.data.IItemList.LIST_ITEM;
 import static appeng.api.storage.data.IItemList.LIST_MIXED;
 import static appeng.util.Platform.convertStack;
 import static appeng.util.Platform.isAE2FCLoaded;
-import static appeng.util.Platform.stackConvert;
 import static appeng.util.Platform.writeAEStackListNBT;
 
 import java.text.NumberFormat;
@@ -284,11 +283,7 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         if (is == null) return null;
 
         if (is instanceof IAEItemStack ais) {
-            if (isAE2FCLoaded && ais.getItem() instanceof ItemFluidDrop) {
-                return (StackType) stackConvert(localFluidCache.findPrecise((IAEFluidStack) convertStack(ais)));
-            } else {
-                return (StackType) localItemCache.findPrecise((IAEItemStack) is);
-            }
+            return (StackType) localItemCache.findPrecise((IAEItemStack) is);
         } else {
             return (StackType) localFluidCache.findPrecise((IAEFluidStack) is);
         }

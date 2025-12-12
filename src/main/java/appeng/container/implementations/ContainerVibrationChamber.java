@@ -32,7 +32,7 @@ public class ContainerVibrationChamber extends AEBaseContainer implements IProgr
     public int burnSpeed = 100;
 
     public ContainerVibrationChamber(final InventoryPlayer ip, final TileVibrationChamber vibrationChamber) {
-        super(ip, vibrationChamber, null);
+        super(ip, vibrationChamber);
         this.vibrationChamber = vibrationChamber;
 
         this.addSlotToContainer(

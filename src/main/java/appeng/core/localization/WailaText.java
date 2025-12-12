@@ -46,7 +46,15 @@ public enum WailaText implements Localization {
     wireless_notconnected,
     wireless_channels,
     wireless_power,
-    wireless_name;
+    wireless_name,
+    CoordinateX,
+    CoordinateY,
+    CoordinateZ,
+    Dimension,
+    Id,
+    ConnectedTo,
+    Disconnected,
+    Singularity;
 
     private final String formatedName;
 
