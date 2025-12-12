@@ -1,5 +1,6 @@
 package appeng.client.render.previewBlocks;
 
+import appeng.core.AEConfig;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
@@ -17,10 +18,12 @@ import appeng.parts.networking.PartCable;
 
 public abstract class AbstractRendererPreview {
 
+    private final int lineWidth = AEConfig.instance.previewLineWidth;
+
     protected void renderWireframeCube(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
         Tessellator tessellator = Tessellator.instance;
 
-        GL11.glLineWidth(3.0f);
+        GL11.glLineWidth(lineWidth);
         tessellator.startDrawing(GL11.GL_LINES);
 
         tessellator.addVertex(minX, minY, minZ);
