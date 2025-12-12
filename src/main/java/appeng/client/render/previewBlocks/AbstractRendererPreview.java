@@ -1,6 +1,5 @@
 package appeng.client.render.previewBlocks;
 
-import appeng.core.AEConfig;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,6 +13,7 @@ import appeng.api.implementations.parts.IPartCable;
 import appeng.api.parts.BusSupport;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
+import appeng.core.AEConfig;
 import appeng.parts.networking.PartCable;
 
 public abstract class AbstractRendererPreview {
