@@ -97,7 +97,7 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
             final IMachineSet tw = grid.getMachines(TileWireless.class);
             for (final IGridNode n : tw) {
                 final IWirelessAccessPoint wap = (IWirelessAccessPoint) n.getMachine();
-                if (infiniteRange || (wap.isActive() && testWap(wap, player))) {
+                if (wap.isActive() && (infiniteRange || testWap(wap, player))) {
                     return true;
                 }
             }
