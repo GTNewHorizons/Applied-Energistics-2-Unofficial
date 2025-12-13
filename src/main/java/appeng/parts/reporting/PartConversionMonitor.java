@@ -36,7 +36,7 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
+import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public class PartConversionMonitor extends AbstractPartMonitor {
 
@@ -238,7 +238,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                 if (monitor == null) return;
 
                 IAEStack<?> stored = monitor.getAvailableItem(displayed, IterationCounter.fetchNewId());
-                int amountToFill = type.fillContainer(hand.copy(), stored).rightInt();
+                long amountToFill = type.fillContainer(hand.copy(), stored).rightLong();
 
                 IAEStack<?> extracted = Platform.poweredExtraction(
                         energy,
@@ -247,8 +247,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                         new PlayerSource(player, this));
                 if (extracted == null) return;
 
-                ObjectIntPair<ItemStack> filled = type.fillContainer(hand.copy(), extracted);
-
+                ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), extracted);
                 ItemStack result = filled.left();
                 if (hand.stackSize == 1) {
                     player.inventory.setInventorySlotContents(player.inventory.currentItem, result);

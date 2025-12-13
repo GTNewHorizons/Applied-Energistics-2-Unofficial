@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public interface IAEStackType<T extends IAEStack> {
@@ -45,6 +44,13 @@ public interface IAEStackType<T extends IAEStack> {
     T convertStackFromItem(@NotNull ItemStack itemStack);
 
     /**
+     * @param container container item for this type
+     * @param stack     type for capacity. For containers that only accept certain types.
+     * @return capacity for stack in param
+     */
+    long getContainerItemCapacity(@NotNull ItemStack container, @NotNull T stack);
+
+    /**
      * @param stack to drain with amount
      * @return drained container and drained amount, or null if not drained
      */
@@ -62,5 +68,5 @@ public interface IAEStackType<T extends IAEStack> {
      * @return filled container and amount
      */
     @NotNull
-    ObjectIntPair<ItemStack> fillContainer(@NotNull ItemStack container, @NotNull T stack);
+    ObjectLongPair<ItemStack> fillContainer(@NotNull ItemStack container, @NotNull T stack);
 }

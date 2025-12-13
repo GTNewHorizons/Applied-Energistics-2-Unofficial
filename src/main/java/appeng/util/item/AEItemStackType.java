@@ -13,8 +13,6 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.objects.ObjectIntImmutablePair;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import it.unimi.dsi.fastutil.objects.ObjectLongImmutablePair;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
@@ -64,6 +62,11 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
     }
 
     @Override
+    public long getContainerItemCapacity(@NotNull ItemStack container, @NotNull IAEItemStack stack) {
+        return 0;
+    }
+
+    @Override
     public @NotNull ObjectLongPair<ItemStack> drainStackFromContainer(@NotNull ItemStack container,
             @NotNull IAEItemStack stack) {
         return new ObjectLongImmutablePair<>(container, 0);
@@ -75,7 +78,7 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
     }
 
     @Override
-    public @NotNull ObjectIntPair<ItemStack> fillContainer(@NotNull ItemStack container, @NotNull IAEItemStack stack) {
-        return new ObjectIntImmutablePair<>(null, 0);
+    public @NotNull ObjectLongPair<ItemStack> fillContainer(@NotNull ItemStack container, @NotNull IAEItemStack stack) {
+        return new ObjectLongImmutablePair<>(null, 0);
     }
 }

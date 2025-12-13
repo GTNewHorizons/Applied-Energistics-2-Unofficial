@@ -10,15 +10,9 @@
 
 package appeng.container.implementations;
 
-import static appeng.util.FluidUtils.clearFluidContainer;
-import static appeng.util.FluidUtils.fillFluidContainer;
-import static appeng.util.FluidUtils.getFilledFluidContainer;
-import static appeng.util.FluidUtils.getFluidContainerCapacity;
 import static appeng.util.FluidUtils.getFluidFromContainer;
 import static appeng.util.FluidUtils.isFilledFluidContainer;
-import static appeng.util.FluidUtils.isFluidContainer;
 import static appeng.util.IterationCounter.fetchNewId;
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.IOException;
@@ -39,9 +33,9 @@ import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.IFluidContainerItem;
+
+import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -100,11 +94,12 @@ import appeng.me.helpers.ChannelPowerSrc;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
+import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public class ContainerMEMonitorable extends AEBaseContainer
         implements IConfigManagerHost, IConfigurableObject, IMEMonitorHandlerReceiver<IAEStack<?>>, IPinsHandler {
@@ -208,6 +203,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
     }
 
     @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void detectAndSendChanges() {
         if (Platform.isServer()) {
             for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
@@ -342,6 +338,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
         }
     }
 
+    @SuppressWarnings({ "rawtypes" })
     private PacketMEInventoryUpdate queueInventoryList(PacketMEInventoryUpdate piu, IItemList monitorCache,
             EntityPlayerMP player) {
         try {
@@ -356,7 +353,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            AELog.warn(e);
         }
         return piu;
     }
@@ -404,6 +401,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
     }
 
     @Override
+    @SuppressWarnings({ "rawtypes" })
     public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
         if (this.getGui() != null) {
             this.getGui().updateSetting(manager, settingName, newValue);
@@ -556,14 +554,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
         return (IMEMonitor<T>) this.monitors.get(type);
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void doMonitorableAction(MonitorableAction action, int custom, final EntityPlayerMP player) {
-        IMEMonitor<IAEFluidStack> fluidMonitor = this.getMonitor(FLUID_STACK_TYPE);
-
         IAEItemStack slotItem = null;
-        IAEFluidStack slotFluid = null;
-        if (this.getTargetStack() instanceof IAEFluidStack afs) {
-            slotFluid = this.getMonitor(afs.getStackType()).getAvailableItem(afs, fetchNewId());
-        } else if (this.getTargetStack() instanceof IAEItemStack ais) {
+        if (this.getTargetStack() instanceof IAEItemStack ais) {
             slotItem = this.itemMonitor.getAvailableItem(ais, fetchNewId());
         }
 
@@ -774,87 +768,92 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
             case DRAIN_SINGLE_CONTAINER -> {
                 ItemStack hand = player.inventory.getItemStack();
-                if (!isFilledFluidContainer(hand)) return;
+
+                final IAEStackType type = getStackTypeForContainer(hand);
+                if (type == null) return;
+
+                final IMEMonitor monitor = this.getMonitor(type);
+                if (monitor == null) return;
 
                 if (hand.stackSize == 1) {
-                    extractFromSingleFluidContainer(player, hand);
+                    extractFromSingleFluidContainer(player, hand, type, monitor);
                 } else {
+                    IAEStack<?> stack = type.getStackFromContainerItem(hand);
+                    if (stack == null) return;
+
+                    IAEStack<?> leftover = monitor.injectItems(stack, Actionable.SIMULATE, this.getActionSource());
+                    if (leftover != null && leftover.getStackSize() == stack.getStackSize()) return;
+
+                    long amountToInject = leftover == null ? stack.getStackSize()
+                            : stack.getStackSize() - leftover.getStackSize();
+
+                    ObjectLongPair<ItemStack> simulated = type
+                            .drainStackFromContainer(hand.copy(), stack.setStackSize(amountToInject));
+                    if (simulated.rightLong() == 0 || simulated.left() == null) return;
+
                     final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
-                    if (hand.getItem() instanceof IFluidContainerItem container) {
-                        ItemStack itemToInject = hand.copy();
-                        itemToInject.stackSize = 1;
-                        FluidStack fluid = container.getFluid(itemToInject);
-                        IAEFluidStack aes = AEFluidStack.create(fluid);
-                        IAEFluidStack leftover = fluidMonitor
-                                .injectItems(aes, Actionable.SIMULATE, this.getActionSource());
-                        int injected = leftover == null ? fluid.amount : (int) (fluid.amount - leftover.getStackSize());
-                        if (injected == 0) return;
+                    if (adaptor.addItems(simulated.left()) != null) return;
 
-                        container.drain(itemToInject, injected, true);
-                        if (adaptor.addItems(itemToInject) != null) return;
-
-                        fluidMonitor.injectItems(aes, Actionable.MODULATE, this.getActionSource());
-                        hand.stackSize--;
-                        this.updateHeld(player);
-                    } else if (FluidContainerRegistry.isContainer(hand)) {
-                        FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(hand);
-                        IAEFluidStack toInject = AEFluidStack.create(fluid);
-                        IAEFluidStack leftover = fluidMonitor
-                                .injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
-                        if (leftover != null) return;
-                        ItemStack emptyContainer = FluidContainerRegistry.drainFluidContainer(hand);
-                        if (adaptor.addItems(emptyContainer) != null) return;
-
-                        fluidMonitor.injectItems(toInject, Actionable.MODULATE, this.getActionSource());
-                        hand.stackSize--;
-                        this.updateHeld(player);
-                    }
+                    monitor.injectItems(
+                            stack.setStackSize(simulated.rightLong()),
+                            Actionable.MODULATE,
+                            this.getActionSource());
+                    hand.stackSize--;
+                    this.updateHeld(player);
                 }
 
             }
             case DRAIN_CONTAINERS -> {
                 final ItemStack hand = player.inventory.getItemStack();
-                if (!isFilledFluidContainer(hand)) return;
+
+                final IAEStackType<?> type = getStackTypeForContainer(hand);
+                if (type == null) return;
+
+                final IMEMonitor monitor = this.getMonitor(type);
+                if (monitor == null) return;
 
                 if (hand.stackSize == 1) {
-                    extractFromSingleFluidContainer(player, hand);
+                    extractFromSingleFluidContainer(player, hand, type, monitor);
                 } else {
-                    FluidStack fluid = getFluidFromContainer(hand);
-                    IAEFluidStack toInject = AEFluidStack.create(fluid);
-                    long toInjectAmount = (long) fluid.amount * hand.stackSize;
+                    IAEStack<?> toInject = type.getStackFromContainerItem(hand);
+                    if (toInject == null) return;
+
+                    long toInjectAmount = toInject.getStackSize() * hand.stackSize;
                     toInject.setStackSize(toInjectAmount);
-                    IAEFluidStack leftover = fluidMonitor
-                            .injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
+                    IAEStack<?> leftover = monitor.injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
                     long injected = leftover == null ? toInjectAmount : toInjectAmount - leftover.getStackSize();
                     if (injected <= 0) return;
 
                     ItemStack cleared = hand.copy();
                     cleared.stackSize = 1;
-                    cleared = clearFluidContainer(cleared);
+                    cleared = type.clearFilledContainer(cleared);
                     if (cleared == null) return;
 
+                    // If all stack in hand can be empty
                     if (injected == toInjectAmount && hand.stackSize <= cleared.getMaxStackSize()) {
                         toInject.setStackSize(toInjectAmount);
-                        fluidMonitor.injectItems(toInject, Actionable.MODULATE, this.getActionSource());
+                        monitor.injectItems(toInject, Actionable.MODULATE, this.getActionSource());
                         cleared.stackSize = hand.stackSize;
                         player.inventory.setItemStack(cleared);
                         this.updateHeld(player);
-                    } else {
+                    }
+                    // If partial stack in hand will be empty
+                    else {
                         int stackSize = hand.stackSize;
-                        int fluidAmountPerItem = getFluidFromContainer(hand).amount;
+                        long fluidAmountPerItem = toInject.getStackSize();
                         if (fluidAmountPerItem <= 0) return;
 
                         final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
                         for (int i = 0; i < stackSize; i++) {
                             toInject.setStackSize(fluidAmountPerItem);
-                            leftover = fluidMonitor.injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
+                            leftover = monitor.injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
                             injected = leftover == null ? fluidAmountPerItem : toInjectAmount - leftover.getStackSize();
                             if (injected != fluidAmountPerItem) break;
 
                             if (adaptor.addItems(cleared.copy()) != null) break;
 
                             toInject.setStackSize(fluidAmountPerItem);
-                            fluidMonitor.injectItems(toInject, Actionable.MODULATE, this.getActionSource());
+                            monitor.injectItems(toInject, Actionable.MODULATE, this.getActionSource());
                             hand.stackSize--;
                         }
                         this.updateHeld(player);
@@ -863,71 +862,101 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
             case FILL_SINGLE_CONTAINER -> {
                 ItemStack hand = player.inventory.getItemStack();
-                if (slotFluid == null || slotFluid.getStackSize() <= 0 || !isFluidContainer(hand)) return;
+                IAEStack<?> stackInSlot = this.getTargetStack();
+                if (hand == null || stackInSlot == null) return;
+
+                IAEStackType type = stackInSlot.getStackType();
+                if (!type.isContainerItemForType(hand)) return;
+
+                IMEMonitor monitor = this.getMonitor(type);
+                if (monitor == null) return;
+
+                stackInSlot = monitor.getAvailableItem(stackInSlot, IterationCounter.fetchNewId());
+                if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 if (hand.stackSize == 1) {
                     // Set filled item to player hand
-                    fillSingleFluidContainer(player, hand, slotFluid);
+                    fillSingleFluidContainer(player, hand, stackInSlot, type, monitor);
                 } else {
                     // Insert filled item to player inventory
                     ItemStack itemToFill = hand.copy();
                     itemToFill.stackSize = 1;
-                    ObjectIntPair<ItemStack> filledPair = fillFluidContainer(itemToFill, slotFluid.getFluidStack());
+
+                    ObjectLongPair<ItemStack> filledPair = type.fillContainer(itemToFill, stackInSlot);
                     ItemStack filledContainer = filledPair.left();
-                    int filledAmount = filledPair.rightInt();
+                    long filledAmount = filledPair.rightLong();
                     if (filledContainer == null || filledAmount <= 0) return;
 
                     final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
                     if (adaptor.addItems(filledContainer) != null) return;
 
-                    IAEFluidStack afs = slotFluid.copy();
-                    afs.setStackSize(filledAmount);
-                    fluidMonitor.extractItems(afs, Actionable.MODULATE, this.getActionSource());
+                    monitor.extractItems(
+                            stackInSlot.copy().setStackSize(filledAmount),
+                            Actionable.MODULATE,
+                            this.getActionSource());
                     hand.stackSize--;
                     this.updateHeld(player);
                 }
             }
             case FILL_CONTAINERS -> {
                 ItemStack hand = player.inventory.getItemStack();
-                if (slotFluid == null || slotFluid.getStackSize() <= 0 || !isFluidContainer(hand)) return;
+                IAEStack<?> stackInSlot = this.getTargetStack();
+                if (hand == null || stackInSlot == null) return;
+
+                IAEStackType type = stackInSlot.getStackType();
+                if (!type.isContainerItemForType(hand)) return;
+
+                IMEMonitor monitor = this.getMonitor(type);
+                if (monitor == null) return;
+
+                stackInSlot = monitor.getAvailableItem(stackInSlot, IterationCounter.fetchNewId());
+                if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 // Set filled item to player hand
                 if (hand.stackSize == 1) {
-                    fillSingleFluidContainer(player, hand, slotFluid);
+                    fillSingleFluidContainer(player, hand, stackInSlot, type, monitor);
                 } else {
-                    int capacity = getFluidContainerCapacity(hand, slotFluid.getFluidStack());
-                    if (capacity == 0) return;
+                    long capacity = type.getContainerItemCapacity(hand, stackInSlot);
+                    if (capacity <= 0) return;
 
-                    ItemStack filledContainer = getFilledFluidContainer(hand, slotFluid.getFluidStack());
-                    if (filledContainer.getMaxStackSize() >= hand.stackSize
-                            && (long) capacity * hand.stackSize <= slotFluid.getStackSize()) {
+                    ObjectLongPair<ItemStack> fullFilledPair = type
+                            .fillContainer(hand.copy(), stackInSlot.copy().setStackSize(Long.MAX_VALUE));
+                    ItemStack fullFilledContainer = fullFilledPair.left();
+                    if (fullFilledContainer == null) return;
+
+                    if (fullFilledContainer.getMaxStackSize() >= hand.stackSize
+                            && capacity * hand.stackSize <= stackInSlot.getStackSize()) {
                         // Fill all item in player hand
-                        IAEFluidStack toExtract = slotFluid.copy();
-                        toExtract.setStackSize((long) capacity * hand.stackSize);
-                        fluidMonitor.extractItems(toExtract, Actionable.MODULATE, this.getActionSource());
-                        filledContainer.stackSize = hand.stackSize;
-                        player.inventory.setItemStack(filledContainer);
+                        monitor.extractItems(
+                                stackInSlot.copy().setStackSize(capacity * hand.stackSize),
+                                Actionable.MODULATE,
+                                this.getActionSource());
+                        fullFilledContainer.stackSize = hand.stackSize;
+                        player.inventory.setItemStack(fullFilledContainer);
                         this.updateHeld(player);
                     } else {
                         // Set all filled item to player hand
-                        IAEFluidStack afs = slotFluid.copy();
+                        IAEStack<?> aes = stackInSlot.copy();
                         final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
                         int stackSize = hand.stackSize;
                         for (int i = 0; i < stackSize; i++) {
                             ItemStack itemToFill = hand.copy();
                             itemToFill.stackSize = 1;
-                            FluidStack fluidForFill = afs.getFluidStack();
-                            ObjectIntPair<ItemStack> filled = fillFluidContainer(itemToFill, fluidForFill);
-                            filledContainer = filled.left();
-                            int filledAmount = filled.rightInt();
+
+                            ObjectLongPair<ItemStack> filledPair = type.fillContainer(itemToFill, aes.copy());
+                            ItemStack filledContainer = filledPair.left();
+                            long filledAmount = filledPair.rightLong();
                             if (filledContainer == null || filledAmount <= 0) break;
 
                             if (adaptor.addItems(filledContainer) != null) break;
 
-                            long amountBeforeExtract = afs.getStackSize();
-                            afs.setStackSize(filledAmount);
-                            fluidMonitor.extractItems(afs, Actionable.MODULATE, this.getActionSource());
-                            afs.setStackSize(amountBeforeExtract - filledAmount);
+                            long amountBeforeExtract = aes.getStackSize();
+                            monitor.extractItems(
+                                    aes.setStackSize(filledAmount),
+                                    Actionable.MODULATE,
+                                    this.getActionSource());
+                            aes.setStackSize(amountBeforeExtract - filledAmount);
+                            if (aes.getStackSize() <= 0) break;
                             hand.stackSize--;
                         }
                         this.updateHeld(player);
@@ -937,36 +966,50 @@ public class ContainerMEMonitorable extends AEBaseContainer
         }
     }
 
-    private void fillSingleFluidContainer(EntityPlayerMP player, ItemStack hand, IAEFluidStack slotFluid) {
-        ObjectIntPair<ItemStack> filledPair = fillFluidContainer(hand, slotFluid.getFluidStack());
+    @Nullable
+    private IAEStackType<?> getStackTypeForContainer(final ItemStack itemStack) {
+        if (itemStack == null) return null;
+
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            if (type.isContainerItemForType(itemStack)) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void fillSingleFluidContainer(EntityPlayerMP player, ItemStack hand, IAEStack<?> stack,
+            final IAEStackType type, final IMEMonitor monitor) {
+        ObjectLongPair<ItemStack> filledPair = type.fillContainer(hand, stack);
+
         ItemStack filledContainer = filledPair.left();
-        int filledAmount = filledPair.rightInt();
+        long filledAmount = filledPair.rightLong();
         if (filledContainer == null || filledAmount <= 0) return;
 
-        IAEFluidStack afs = slotFluid.copy();
-        afs.setStackSize(filledAmount);
-        this.getMonitor(FLUID_STACK_TYPE).extractItems(afs, Actionable.MODULATE, this.getActionSource());
+        monitor.extractItems(stack.copy().setStackSize(filledAmount), Actionable.MODULATE, this.getActionSource());
+
         player.inventory.setItemStack(filledContainer);
         this.updateHeld(player);
     }
 
-    private void extractFromSingleFluidContainer(EntityPlayerMP player, ItemStack hand) {
-        if (hand.getItem() instanceof IFluidContainerItem container) {
-            FluidStack fluid = container.getFluid(hand);
-            IAEFluidStack leftover = this.getMonitor(FLUID_STACK_TYPE)
-                    .injectItems(AEFluidStack.create(fluid), Actionable.MODULATE, this.getActionSource());
-            int injected = leftover == null ? fluid.amount : (int) (fluid.amount - leftover.getStackSize());
-            if (injected == 0) return;
-            container.drain(hand, injected, true);
-        } else if (FluidContainerRegistry.isContainer(hand)) {
-            FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(hand);
-            IAEFluidStack toInject = AEFluidStack.create(fluid);
-            IAEFluidStack leftover = this.getMonitor(FLUID_STACK_TYPE)
-                    .injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
-            if (leftover != null) return;
-            this.getMonitor(FLUID_STACK_TYPE).injectItems(toInject, Actionable.MODULATE, this.getActionSource());
-            player.inventory.setItemStack(FluidContainerRegistry.drainFluidContainer(hand));
-        }
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void extractFromSingleFluidContainer(EntityPlayerMP player, ItemStack hand, final IAEStackType type,
+            final IMEMonitor monitor) {
+        IAEStack<?> stack = type.getStackFromContainerItem(hand);
+        if (stack == null) return;
+
+        IAEStack<?> leftover = monitor.injectItems(stack, Actionable.SIMULATE, this.getActionSource());
+        if (leftover != null && leftover.getStackSize() == stack.getStackSize()) return;
+
+        long amountToInject = leftover == null ? stack.getStackSize() : stack.getStackSize() - leftover.getStackSize();
+
+        ObjectLongPair<ItemStack> simulated = type
+                .drainStackFromContainer(hand.copy(), stack.setStackSize(amountToInject));
+        if (simulated.rightLong() == 0 || simulated.left() == null) return;
+
+        monitor.injectItems(stack.setStackSize(simulated.rightLong()), Actionable.MODULATE, this.getActionSource());
+        player.inventory.setItemStack(simulated.left());
         this.updateHeld(player);
     }
 
