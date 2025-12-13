@@ -131,7 +131,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
 
             IAEStack<?> matchingOutput = null;
             for (IAEStack<?> patternOutput : this.patternOutputs) {
-                if (isOutputSameAs(patternOutput)) {
+                if (isOutputAcceptable(patternOutput)) {
                     matchingOutput = patternOutput;
                     break;
                 }
@@ -140,10 +140,6 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
             this.matchingOutput = (StackType) matchingOutput;
 
             if (matchingOutput == null) {
-                state = State.FAILURE;
-            } else if (!request.acceptableSubstituteFn.test(this.matchingOutput)) {
-                // A pattern that accepts substitutes might not accept all fuzzy items found.
-                // Set to State.FAILURE if test fails, to prevent it from being added to tasks.
                 state = State.FAILURE;
             }
         }
@@ -278,8 +274,11 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
             return craftingMachine;
         }
 
-        public boolean isOutputSameAs(IAEStack<?> otherStack) {
+        public boolean isOutputAcceptable(IAEStack<?> otherStack) {
             if (request.substitutionMode == SubstitutionMode.ACCEPT_FUZZY) {
+                if (!this.request.acceptableSubstituteFn.test((StackType) otherStack)) {
+                    return false;
+                }
                 return this.request.stack.fuzzyComparison(otherStack, FuzzyMode.IGNORE_ALL);
             } else {
                 return this.request.stack.isSameType(otherStack);
@@ -312,7 +311,6 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
                 state = State.SUCCESS;
                 return new StepOutput(Collections.emptyList());
             }
-
             final boolean canUseSubstitutes = pattern.canSubstitute();
             final SubstitutionMode childMode = canUseSubstitutes ? SubstitutionMode.ACCEPT_FUZZY
                     : SubstitutionMode.PRECISE;
