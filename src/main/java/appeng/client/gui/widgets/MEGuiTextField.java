@@ -39,6 +39,7 @@ public class MEGuiTextField implements ITooltip {
     private Method setFormatterMethod;
     private String tooltip;
     private int fontPad;
+    private boolean shouldUnfocusWithEnter = true;
 
     public int x;
     public int y;
@@ -197,8 +198,9 @@ public class MEGuiTextField implements ITooltip {
             default -> handled = field.textboxKeyTyped(keyChar, keyID);
         }
 
-        if (!handled && (keyID == Keyboard.KEY_RETURN || keyID == Keyboard.KEY_NUMPADENTER
-                || keyID == Keyboard.KEY_ESCAPE)) {
+        if (this.shouldUnfocusWithEnter && !handled
+                && (keyID == Keyboard.KEY_RETURN || keyID == Keyboard.KEY_NUMPADENTER
+                        || keyID == Keyboard.KEY_ESCAPE)) {
             setFocused(false);
         }
 
@@ -302,6 +304,10 @@ public class MEGuiTextField implements ITooltip {
 
     public void setSelectionPos(int pos) {
         field.setSelectionPos(pos);
+    }
+
+    public void setUnfocusWithEnter(boolean shouldUnfocus) {
+        this.shouldUnfocusWithEnter = shouldUnfocus;
     }
 
     @Override

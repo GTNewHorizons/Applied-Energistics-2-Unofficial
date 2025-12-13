@@ -16,13 +16,21 @@ import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
 import appeng.api.features.ILocatable;
 import appeng.api.features.IWirelessTermHandler;
 import appeng.api.features.IWirelessTermRegistry;
+import appeng.api.implementations.tiles.IWirelessAccessPoint;
+import appeng.api.networking.IGrid;
+import appeng.api.networking.IGridHost;
+import appeng.api.networking.IGridNode;
+import appeng.api.networking.IMachineSet;
+import appeng.api.util.DimensionalCoord;
 import appeng.core.localization.PlayerMessages;
 import appeng.items.tools.powered.ToolWirelessTerminal;
+import appeng.tile.networking.TileWireless;
 import appeng.util.Platform;
 
 public final class WirelessRegistry implements IWirelessTermRegistry {
@@ -60,17 +68,55 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
         return null;
     }
 
+    private static boolean testWap(final IWirelessAccessPoint wap, final EntityPlayer player) {
+        double rangeLimit = wap.getRange();
+        rangeLimit *= rangeLimit;
+
+        final DimensionalCoord dc = wap.getLocation();
+
+        if (dc.getWorld() == player.worldObj) {
+            final double offX = dc.x - player.posX;
+            final double offY = dc.y - player.posY;
+            final double offZ = dc.z - player.posZ;
+
+            final double r = offX * offX + offY * offY + offZ * offZ;
+            return r < rangeLimit;
+        }
+        return false;
+    }
+
+    private static boolean checkRange(final EntityPlayer player, final ILocatable locatable,
+            final boolean infiniteRange) {
+        if (locatable instanceof IGridHost gridHost) {
+            final IGridNode node = gridHost.getGridNode(ForgeDirection.UNKNOWN);
+            if (node == null) return false;
+
+            IGrid grid = node.getGrid();
+            if (grid == null) return false;
+
+            final IMachineSet tw = grid.getMachines(TileWireless.class);
+            for (final IGridNode n : tw) {
+                final IWirelessAccessPoint wap = (IWirelessAccessPoint) n.getMachine();
+                if (wap.isActive() && (infiniteRange || testWap(wap, player))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public boolean performCheck(final ItemStack item, final EntityPlayer player) {
         if (Platform.isClient()) {
             return false;
         }
 
-        if (!this.isWirelessTerminal(item)) {
+        final IWirelessTermHandler handler = this.getWirelessTerminalHandler(item);
+        if (handler == null) {
             player.addChatMessage(PlayerMessages.DeviceNotWirelessTerminal.toChat());
             return false;
         }
 
-        final IWirelessTermHandler handler = this.getWirelessTerminalHandler(item);
         final String unparsedKey = handler.getEncryptionKey(item);
         if (unparsedKey.isEmpty()) {
             player.addChatMessage(PlayerMessages.DeviceNotLinked.toChat());
@@ -84,14 +130,17 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
             return false;
         }
 
-        if (item.getItem() instanceof ToolWirelessTerminal
-                && (handler.hasInfinityPower(item) || handler.hasPower(player, 0.5, item))) {
-            return true;
-        } else {
-            player.addChatMessage(PlayerMessages.DeviceNotPowered.toChat());
+        if (!checkRange(player, securityStation, handler.hasInfinityRange(item))) {
+            player.addChatMessage(PlayerMessages.OutOfRange.toChat());
+            return false;
         }
 
-        return false;
+        if (!handler.hasInfinityPower(item) && !handler.hasPower(player, 0.5, item)) {
+            player.addChatMessage(PlayerMessages.DeviceNotPowered.toChat());
+            return false;
+        }
+
+        return true;
     }
 
     @Override
