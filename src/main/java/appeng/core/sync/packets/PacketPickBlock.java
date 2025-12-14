@@ -9,13 +9,10 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.S09PacketHeldItemChange;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
-
-import com.glodblock.github.common.item.ItemBaseWirelessTerminal;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -27,8 +24,6 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
-import appeng.helpers.WirelessTerminalGuiObject;
-import appeng.util.Platform;
 import appeng.util.PlayerInventoryUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -195,23 +190,12 @@ public class PacketPickBlock extends AppEngPacket {
             return null;
         }
 
-        var wirelessHandler = AEApi.instance().registries().wireless().getWirelessTerminalHandler(wirelessTerminal);
-        if (wirelessHandler == null) {
+        if (!AEApi.instance().registries().wireless().performCheck(wirelessTerminal, player)) {
             return null;
         }
 
-        // Wireless range checking
-        boolean hasInfinityBoosterCard = Platform.isAE2FCLoaded && hasInfinityBoosterCard(wirelessTerminal);
-        WirelessTerminalGuiObject terminalGuiObject = new WirelessTerminalGuiObject(
-                wirelessHandler,
-                wirelessTerminal,
-                player,
-                player.worldObj,
-                player.inventory.currentItem,
-                0,
-                0);
-        // No infinity booster card, and we're out of range.
-        if (!hasInfinityBoosterCard && !terminalGuiObject.rangeCheck()) {
+        var wirelessHandler = AEApi.instance().registries().wireless().getWirelessTerminalHandler(wirelessTerminal);
+        if (wirelessHandler == null) {
             return null;
         }
 
@@ -264,15 +248,4 @@ public class PacketPickBlock extends AppEngPacket {
             PlayerInventoryUtil.setSlotAsActiveSlot(player, pickBlockInventorySlot);
         }
     }
-
-    @cpw.mods.fml.common.Optional.Method(modid = "ae2fc")
-    public static boolean hasInfinityBoosterCard(ItemStack is) {
-        if (Platform.isAE2FCLoaded && is.getItem() instanceof ItemBaseWirelessTerminal) {
-            NBTTagCompound data = Platform.openNbtData(is);
-            return data.hasKey(com.glodblock.github.common.item.ItemBaseWirelessTerminal.infinityBoosterCard)
-                    && data.getBoolean(com.glodblock.github.common.item.ItemBaseWirelessTerminal.infinityBoosterCard);
-        }
-        return false;
-    }
-
 }
