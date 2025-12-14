@@ -46,4 +46,6 @@ public interface ITickManager extends IGridCache {
      * @return if the call was successful.
      */
     boolean wakeDevice(IGridNode node);
+
+    int getTicksSinceLastMachineAdded();
 }

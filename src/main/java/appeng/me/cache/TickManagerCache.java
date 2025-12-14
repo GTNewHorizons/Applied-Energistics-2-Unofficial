@@ -38,6 +38,7 @@ public class TickManagerCache implements ITickManager {
     private final HashMap<IGridNode, TickTracker> awake = new HashMap<>();
     private final PriorityQueue<TickTracker> upcomingTicks = new PriorityQueue<>();
     private long currentTick = 0;
+    private int ticksSinceLastMachineAdded = 0;
 
     public TickManagerCache(final IGrid g) {
         this.myGrid = g;
@@ -111,6 +112,7 @@ public class TickManagerCache implements ITickManager {
                         this.addToQueue(tt);
                     }
                 } else {
+                    this.ticksSinceLastMachineAdded++;
                     return; // done!
                 }
             }
@@ -154,6 +156,8 @@ public class TickManagerCache implements ITickManager {
                     this.awake.put(gridNode, tt);
                     this.addToQueue(tt);
                 }
+
+                this.ticksSinceLastMachineAdded = 0;
             }
         }
     }
@@ -217,5 +221,10 @@ public class TickManagerCache implements ITickManager {
         }
 
         return false;
+    }
+
+    @Override
+    public int getTicksSinceLastMachineAdded() {
+        return this.ticksSinceLastMachineAdded;
     }
 }

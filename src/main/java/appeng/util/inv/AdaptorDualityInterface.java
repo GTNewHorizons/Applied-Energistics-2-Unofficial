@@ -51,6 +51,13 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
     @Override
     public boolean containsItems() {
         DualityInterface dual = interfaceHost.getInterfaceDuality();
+
+        try {
+            if (dual.getGridProxy().getTick().getTicksSinceLastMachineAdded() < 20) return true;
+        } catch (Exception ignored) {
+            return true;
+        }
+
         boolean hasMEItems = false;
         if (dual.getInstalledUpgrades(Upgrades.ADVANCED_BLOCKING) > 0) {
             if (dual.getConfigManager().getSetting(Settings.ADVANCED_BLOCKING_MODE) == AdvancedBlockingMode.DEFAULT) {

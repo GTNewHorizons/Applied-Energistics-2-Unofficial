@@ -1640,6 +1640,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return redstoneState == YesNo.YES;
     }
 
+    public AENetworkProxy getGridProxy() {
+        return this.gridProxy;
+    }
+
     private static class InterfaceRequestSource extends MachineSource {
 
         public InterfaceRequestSource(final IActionHost v) {

@@ -49,7 +49,6 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
     public MEMonitorIInventory(final InventoryAdaptor adaptor) {
         this.adaptor = adaptor;
         this.memory = new ConcurrentSkipListMap<>();
-        this.onTick();
     }
 
     @Override
