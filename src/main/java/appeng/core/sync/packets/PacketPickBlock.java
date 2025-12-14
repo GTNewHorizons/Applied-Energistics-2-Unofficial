@@ -1,7 +1,5 @@
 package appeng.core.sync.packets;
 
-import appeng.core.localization.PlayerMessages;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +10,8 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S09PacketHeldItemChange;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -24,6 +23,7 @@ import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.util.PlayerInventoryUtil;
@@ -35,19 +35,29 @@ public class PacketPickBlock extends AppEngPacket {
     private final int blockX;
     private final int blockY;
     private final int blockZ;
+    private final int blockSide;
+    private final Vec3 hitVec;
 
     // Reflection
     public PacketPickBlock(final ByteBuf stream) {
         this.blockX = stream.readInt();
         this.blockY = stream.readInt();
         this.blockZ = stream.readInt();
+        this.blockSide = stream.readInt();
+
+        double hitVecX = stream.readDouble();
+        double hitVecY = stream.readDouble();
+        double hitVecZ = stream.readDouble();
+        this.hitVec = Vec3.createVectorHelper(hitVecX, hitVecY, hitVecZ);
     }
 
     // Public API
-    public PacketPickBlock(int blockX, int blockY, int blockZ) {
+    public PacketPickBlock(int blockX, int blockY, int blockZ, int blockSide, Vec3 hitVec) {
         this.blockX = blockX;
         this.blockY = blockY;
         this.blockZ = blockZ;
+        this.blockSide = blockSide;
+        this.hitVec = hitVec;
 
         final ByteBuf data = Unpooled.buffer();
 
@@ -55,6 +65,10 @@ public class PacketPickBlock extends AppEngPacket {
         data.writeInt(this.blockX);
         data.writeInt(this.blockY);
         data.writeInt(this.blockZ);
+        data.writeInt(this.blockSide);
+        data.writeDouble(this.hitVec.xCoord);
+        data.writeDouble(this.hitVec.yCoord);
+        data.writeDouble(this.hitVec.zCoord);
 
         this.configureWrite(data);
     }
@@ -82,16 +96,13 @@ public class PacketPickBlock extends AppEngPacket {
             return; // Don't try to withdraw air
         }
 
-        Item targetItem = Item.getItemFromBlock(targetBlock);
-        if (targetItem == null) {
-            return;
-        }
-
-        // Check player inventory for existing stacks to determine how much to withdraw.
-        ItemStack itemToFind = new ItemStack(
-                targetItem,
-                1,
-                world.getBlockMetadata(this.blockX, this.blockY, this.blockZ));
+        ItemStack itemToFind = targetBlock.getPickBlock(
+                new MovingObjectPosition(this.blockX, this.blockY, this.blockZ, this.blockSide, this.hitVec),
+                world,
+                this.blockX,
+                this.blockY,
+                this.blockZ,
+                sender);
 
         // 1. Scan through the player's main inventory to categorize existing stacks of the target block:
         // - If a full stack (stackSize >= maxStackSize) is found, record its slot and stop searching.

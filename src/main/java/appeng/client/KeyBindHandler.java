@@ -44,7 +44,12 @@ public class KeyBindHandler {
             return;
         }
 
-        final var packet = new PacketPickBlock(movingObject.blockX, movingObject.blockY, movingObject.blockZ);
+        final var packet = new PacketPickBlock(
+                movingObject.blockX,
+                movingObject.blockY,
+                movingObject.blockZ,
+                movingObject.sideHit,
+                movingObject.hitVec);
         NetworkHandler.instance.sendToServer(packet);
     }
 
