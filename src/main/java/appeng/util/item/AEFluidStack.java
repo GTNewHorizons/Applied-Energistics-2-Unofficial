@@ -10,7 +10,7 @@
 
 package appeng.util.item;
 
-import static appeng.util.Platform.stackConvertPacket;
+import static appeng.util.Platform.isAE2FCLoaded;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,6 +35,8 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 
 import org.lwjgl.opengl.GL11;
+
+import com.glodblock.github.common.item.ItemFluidPacket;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
@@ -413,10 +415,15 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     @Nullable
     @Override
     public ItemStack getItemStackForNEI() {
-        IAEFluidStack ifs = this.copy();
-        if (ifs.getStackSize() <= 0) ifs.setStackSize(1);
-        ItemStack stack = stackConvertPacket(ifs).getItemStack();
-        return StackInfo.loadFromNBT(StackInfo.itemStackToNBT(stack), 0);
+        if (isAE2FCLoaded) {
+            FluidStack fluidStack = this.getFluidStack();
+            if (fluidStack.amount <= 0) fluidStack.amount = 1;
+
+            ItemStack packet = ItemFluidPacket.newStack(fluidStack);
+            return StackInfo.loadFromNBT(StackInfo.itemStackToNBT(packet));
+        }
+
+        return null;
     }
 
     @Override
