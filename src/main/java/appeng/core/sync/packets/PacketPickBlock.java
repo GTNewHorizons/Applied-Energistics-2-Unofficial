@@ -70,7 +70,6 @@ public class PacketPickBlock extends AppEngPacket {
 
         var wirelessInventory = getWirelessItemInventory(sender, wirelessTerminal);
         if (wirelessInventory == null) {
-            sender.addChatMessage(new ChatComponentText("Could not access AE2 Network."));
             return;
         }
 
