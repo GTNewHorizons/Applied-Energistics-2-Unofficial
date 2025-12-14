@@ -104,8 +104,8 @@ public class PacketPickBlock extends AppEngPacket {
         // Partial stacks will be consolidated in a later step.
         int fullStackSlot = -1;
         List<Integer> partialStackSlotsList = new ArrayList<>();
-        for (int i = 0; i < player.inventory.mainInventory.length; i++) {
-            ItemStack stackInSlot = player.inventory.mainInventory[i];
+        for (int i = 0; i < sender.inventory.mainInventory.length; i++) {
+            ItemStack stackInSlot = sender.inventory.mainInventory[i];
             if (stackInSlot != null && stackInSlot.isItemEqual(itemToFind)
                     && ItemStack.areItemStackTagsEqual(stackInSlot, itemToFind)) {
                 if (stackInSlot.stackSize >= stackInSlot.getMaxStackSize()) {
@@ -124,7 +124,7 @@ public class PacketPickBlock extends AppEngPacket {
 
         // 3. If there are no partial stacks and the player's inventory is full,
         // then return since we cannot add a retrieved stack to a full inventory
-        int nextEmptySlot = PlayerInventoryUtil.getFirstEmptyStackReverse(player.inventory);
+        int nextEmptySlot = PlayerInventoryUtil.getFirstEmptyStackReverse(sender.inventory);
         if (partialStackSlotsList.isEmpty() && nextEmptySlot == -1) {
             return;
         }
@@ -135,15 +135,15 @@ public class PacketPickBlock extends AppEngPacket {
         int consolidatedStackSlot = -1;
         for (Integer partialStackSlot : partialStackSlotsList) {
             if (consolidatedStack == null) {
-                consolidatedStack = player.inventory.getStackInSlot(partialStackSlot);
+                consolidatedStack = sender.inventory.getStackInSlot(partialStackSlot);
                 consolidatedStackSlot = partialStackSlot;
             } else {
-                PlayerInventoryUtil.consolidateItemStacks(player.inventory, partialStackSlot, consolidatedStackSlot);
+                PlayerInventoryUtil.consolidateItemStacks(sender.inventory, partialStackSlot, consolidatedStackSlot);
             }
 
             // Check if we created a full stack of items
             if (consolidatedStack.stackSize == consolidatedStack.getMaxStackSize()) {
-                PlayerInventoryUtil.setSlotAsActiveSlot(sender, consolidatedStackSlot);
+                movePickBlockItemStack(sender, consolidatedStackSlot);
                 return;
             }
         }
@@ -174,7 +174,7 @@ public class PacketPickBlock extends AppEngPacket {
                 // If no consolidation was done, put withdrawn items into next empty slot.
                 // Otherwise, add them to the consolidated slot, and move it to the active slot.
                 if (consolidatedStack == null) {
-                    player.inventory.setInventorySlotContents(nextEmptySlot, itemsToGive);
+                    sender.inventory.setInventorySlotContents(nextEmptySlot, itemsToGive);
                 } else {
                     consolidatedStack.stackSize += itemsToGive.stackSize;
                 }
