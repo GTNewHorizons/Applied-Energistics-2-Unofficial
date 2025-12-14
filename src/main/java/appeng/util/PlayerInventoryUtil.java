@@ -138,6 +138,21 @@ public class PlayerInventoryUtil {
     }
 
     /**
+     * Finds the first empty hotbar slot.
+     *
+     * @param player the player whose inventory to check
+     * @return the slot number of the first empty hotbar slot, otherwise -1
+     */
+    public static int getFirstEmptyHotbarSlot(EntityPlayer player) {
+        for (int i = 0; i <= 8; ++i) {
+            if (player.inventory.mainInventory[i] == null) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
      * Finds the first wireless terminal in the player's bauble slots.
      *
      * @param player the player to check

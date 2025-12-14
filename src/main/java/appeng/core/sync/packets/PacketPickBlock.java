@@ -10,6 +10,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.S09PacketHeldItemChange;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -115,9 +116,9 @@ public class PacketPickBlock extends AppEngPacket {
             }
         }
 
-        // 2. If a full stack already exists, put in active slot and return.
+        // 2. If a full stack already exists, move it into the correct slot
         if (fullStackSlot >= 0) {
-            PlayerInventoryUtil.setSlotAsActiveSlot(sender, fullStackSlot);
+            movePickBlockItemStack(sender, fullStackSlot);
             return;
         }
 
@@ -241,6 +242,27 @@ public class PacketPickBlock extends AppEngPacket {
         }
 
         return wirelessGridCache.getItemInventory();
+    }
+
+    /**
+     * Set the position of the pick block ItemStack. If it is in the hotbar, set the active slot to the pick block slot.
+     * If it is not in the hotbar, move it to the first empty slot in the hotbar and set it as active slot. If there is
+     * no available hotbar slot, swap it with the active slot.
+     *
+     * @param player                 the player whose inventory to be modified
+     * @param pickBlockInventorySlot the inventory slot of the ItemStack to move
+     */
+    private void movePickBlockItemStack(EntityPlayerMP player, int pickBlockInventorySlot) {
+        var firstEmptyHotbarSlot = PlayerInventoryUtil.getFirstEmptyHotbarSlot(player);
+        if (pickBlockInventorySlot <= 8) {
+            PlayerInventoryUtil.setSlotAsActiveSlot(player, pickBlockInventorySlot);
+        } else if (firstEmptyHotbarSlot >= 0) {
+            player.inventory.currentItem = firstEmptyHotbarSlot;
+            player.playerNetServerHandler.sendPacket(new S09PacketHeldItemChange(firstEmptyHotbarSlot));
+            PlayerInventoryUtil.setSlotAsActiveSlot(player, pickBlockInventorySlot);
+        } else {
+            PlayerInventoryUtil.setSlotAsActiveSlot(player, pickBlockInventorySlot);
+        }
     }
 
     @cpw.mods.fml.common.Optional.Method(modid = "ae2fc")
