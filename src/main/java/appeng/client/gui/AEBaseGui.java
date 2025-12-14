@@ -10,11 +10,13 @@
 
 package appeng.client.gui;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -78,6 +80,7 @@ import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInventoryAction;
+import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.helpers.ICustomButtonProvider;
 import appeng.helpers.InventoryAction;
@@ -86,10 +89,17 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.INEI;
 import appeng.util.Platform;
 import codechicken.lib.gui.GuiDraw;
+import codechicken.nei.VisiblityData;
+import codechicken.nei.api.INEIGuiHandler;
+import codechicken.nei.api.TaggedInventoryArea;
 import codechicken.nei.guihook.GuiContainerManager;
 import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.Optional;
+import it.unimi.dsi.fastutil.objects.ObjectIntImmutablePair;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
-public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandler {
+@Optional.Interface(modid = "NotEnoughItems", iface = "codechicken.nei.api.INEIGuiHandler")
+public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandler, INEIGuiHandler {
 
     private static class AEGuiTooltip {
 
@@ -373,6 +383,11 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.drag_click.clear();
         this.draggedSlots.clear();
 
+        ItemStack holdingStack = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
+        if (holdingStack != null && handleClickFakeSlot(xCoord, yCoord, holdingStack)) {
+            return;
+        }
+
         final VirtualMESlot slot = getVirtualMESlotUnderMouse();
         if (slot != null && this.handleVirtualSlotClick(slot, btn)) return;
 
@@ -391,6 +406,39 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
 
         super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    @Override
+    public boolean handleDragNDrop(GuiContainer gui, int mouseX, int mouseY, ItemStack draggedStack, int button) {
+        return handleClickFakeSlot(mouseX, mouseY, draggedStack);
+    }
+
+    private boolean handleClickFakeSlot(int mouseX, int mouseY, ItemStack itemstack) {
+        List<ObjectIntPair<SlotFake>> slots = new ArrayList<>();
+
+        if (!this.inventorySlots.inventorySlots.isEmpty()) {
+            for (int i = 0; i < this.inventorySlots.inventorySlots.size(); i++) {
+                Object slot = this.inventorySlots.inventorySlots.get(i);
+                if (slot instanceof SlotFake slotFake) {
+                    slots.add(new ObjectIntImmutablePair<>(slotFake, i));
+                }
+            }
+        }
+
+        for (ObjectIntPair<SlotFake> fakeSlotPair : slots) {
+            SlotFake fakeSlot = fakeSlotPair.left();
+            if (fakeSlot.isEnabled() && getSlotArea(fakeSlot).contains(mouseX, mouseY)) {
+                fakeSlot.putStack(itemstack);
+                NetworkHandler.instance.sendToServer(new PacketNEIDragClick(itemstack, fakeSlotPair.rightInt()));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Rectangle getSlotArea(SlotFake slot) {
+        return new Rectangle(guiLeft + slot.getX(), guiTop + slot.getY(), 16, 16);
     }
 
     protected boolean handleVirtualSlotClick(final VirtualMESlot slot, final int mouseButton) {
@@ -1064,5 +1112,25 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         if (hoveredAEStack == null) return null;
 
         return hoveredAEStack.getItemStackForNEI();
+    }
+
+    @Override
+    public VisiblityData modifyVisiblity(GuiContainer gui, VisiblityData currentVisibility) {
+        return currentVisibility;
+    }
+
+    @Override
+    public Iterable<Integer> getItemSpawnSlots(GuiContainer gui, ItemStack item) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<TaggedInventoryArea> getInventoryAreas(GuiContainer gui) {
+        return null;
+    }
+
+    @Override
+    public boolean hideItemPanelSlot(GuiContainer gui, int x, int y, int w, int h) {
+        return false;
     }
 }
