@@ -1,5 +1,7 @@
 package appeng.core.sync.packets;
 
+import appeng.core.localization.PlayerMessages;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,7 +66,7 @@ public class PacketPickBlock extends AppEngPacket {
         // Ensure the player has a wireless terminal with access to an AE2 network.
         ItemStack wirelessTerminal = PlayerInventoryUtil.getFirstWirelessTerminal(sender);
         if (wirelessTerminal == null) {
-            sender.addChatMessage(new ChatComponentText("Could not access AE2 Network."));
+            sender.addChatMessage(PlayerMessages.PickBlockTerminalNotFound.toChat());
             return;
         }
 
