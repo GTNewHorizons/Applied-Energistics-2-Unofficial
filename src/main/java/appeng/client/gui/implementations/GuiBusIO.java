@@ -16,6 +16,7 @@ public class GuiBusIO extends GuiUpgradeable {
 
     protected VirtualMEPhantomSlot[] virtualSlots;
     private final PartSharedItemBus<?> bus;
+    private static final int[] slotSequence = new int[] { 5, 3, 6, 1, 0, 2, 7, 4, 8 };
 
     public GuiBusIO(final InventoryPlayer inventoryPlayer, final PartSharedItemBus<?> te) {
         super(new ContainerBusIO(inventoryPlayer, te));
@@ -37,8 +38,8 @@ public class GuiBusIO extends GuiUpgradeable {
                         62 + 18 * x,
                         22 + 18 * (y % (3)),
                         inputInv,
-                        x + y * 3);
-                this.virtualSlots[x + y * 3] = slot;
+                        slotSequence[x + y * 3]);
+                this.virtualSlots[slotSequence[x + y * 3]] = slot;
                 this.registerVirtualSlots(slot);
             }
         }
@@ -92,13 +93,13 @@ public class GuiBusIO extends GuiUpgradeable {
         final boolean secondTier = capacity > 1;
 
         this.virtualSlots[1].setHidden(!firstTier);
+        this.virtualSlots[2].setHidden(!firstTier);
         this.virtualSlots[3].setHidden(!firstTier);
-        this.virtualSlots[5].setHidden(!firstTier);
-        this.virtualSlots[7].setHidden(!firstTier);
+        this.virtualSlots[4].setHidden(!firstTier);
 
-        this.virtualSlots[0].setHidden(!secondTier);
-        this.virtualSlots[2].setHidden(!secondTier);
+        this.virtualSlots[5].setHidden(!secondTier);
         this.virtualSlots[6].setHidden(!secondTier);
+        this.virtualSlots[7].setHidden(!secondTier);
         this.virtualSlots[8].setHidden(!secondTier);
 
     }
