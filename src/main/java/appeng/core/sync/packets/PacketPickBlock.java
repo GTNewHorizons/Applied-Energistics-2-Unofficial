@@ -7,7 +7,6 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S09PacketHeldItemChange;
 import net.minecraft.util.MovingObjectPosition;
@@ -193,7 +192,7 @@ public class PacketPickBlock extends AppEngPacket {
         // The slot to swap will have either been a consolidated stack of partial ItemStacks,
         // or it will have been a newly created ItemStack in the next empty slot.
         int slotToSwap = consolidatedStack == null ? nextEmptySlot : consolidatedStackSlot;
-        PlayerInventoryUtil.setSlotAsActiveSlot(sender, slotToSwap);
+        movePickBlockItemStack(sender, slotToSwap);
     }
 
     private IMEInventoryHandler<IAEItemStack> getWirelessItemInventory(EntityPlayer player,
