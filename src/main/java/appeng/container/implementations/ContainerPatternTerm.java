@@ -280,10 +280,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             // add a new encoded pattern.
             if (isCraftingMode()) {
                 output = AEApi.instance().definitions().items().encodedPattern().maybeStack(1).orNull();
-                this.patternSlotOUT.putStack(output);
             } else {
-                output = AEApi.instance().definitions().items().encodedUltimatePattern().maybeStack(1).orNull();
-                this.patternSlotOUT.putStack(output);
+                output = AEApi.instance().definitions().items().encodedUltimatePattern().maybeStack(1).orNull();;
             }
         }
 
@@ -309,6 +307,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         encodedValue.setString("author", this.getPlayerInv().player.getCommandSenderName());
 
         output.setTagCompound(encodedValue);
+
+        this.patternSlotOUT.putStack(output);
     }
 
     private IAEStack<?>[] getInputs() {

@@ -250,7 +250,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         for (int y = 0; y < outputSlotRow * outputPage; y++) {
             for (int x = 0; x < outputSlotPerRow; x++) {
                 VirtualMEPatternSlot slot = new VirtualMEPatternSlot(
-                        getOutputSlotOffsetX(),
+                        getOutputSlotOffsetX() + 18 * x,
                         this.rows * 18 + getOutputSlotOffsetY() + 18 * (y % outputSlotRow),
                         outputInv,
                         x + y * outputSlotPerRow);

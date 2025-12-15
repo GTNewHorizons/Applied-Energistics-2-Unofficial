@@ -83,7 +83,7 @@ public class GuiPatternTermEx extends GuiPatternTerm {
     }
 
     protected int getOutputSlotOffsetX() {
-        return this.isInverted ? 58 : 112;
+        return 58;
     }
 
     protected int getOutputSlotOffsetY() {
@@ -187,28 +187,38 @@ public class GuiPatternTermEx extends GuiPatternTerm {
 
     @Override
     protected void updateSlotVisibility() {
-        final int inputSlotRow = container.getPatternInputsHeigh();
-        final int inputSlotPerRow = container.getPatternInputsWidth();
-        for (int page = 0; page < container.getPatternInputPages(); page++) {
-            for (int y = 0; y < inputSlotRow; y++) {
-                for (int x = 0; x < inputSlotPerRow; x++) {
-                    VirtualMEPhantomSlot slot = this.craftingSlots[x + y * inputSlotPerRow
-                            + page * (inputSlotPerRow * inputSlotRow)];
-                    slot.setHidden(page != this.activePage);
-                    slot.setX(getInputSlotOffsetX() + 18 * x);
+        final int inputSlotRows = container.getPatternInputsHeigh();
+        final int inputSlotsPerRow = container.getPatternInputsWidth();
+        final int inputSlotPages = container.getPatternInputPages();
+
+        for (int page = 0; page < inputSlotPages; page++) {
+            for (int y = 0; y < inputSlotRows; y++) {
+                for (int x = 0; x < inputSlotsPerRow; x++) {
+                    final int slotIndex = x + y * inputSlotsPerRow + page * (inputSlotsPerRow * inputSlotRows);
+                    VirtualMEPhantomSlot slot = this.craftingSlots[slotIndex];
+
+                    slot.setHidden(this.isInverted ? y != this.activePage || page > 0 : page != this.activePage);
+
+                    slot.setX(getInputSlotOffsetX() + 18 * (this.isInverted ? 0 : x));
+                    slot.setY(this.rows * 18 + getInputSlotOffsetY() + 18 * (this.isInverted ? x : y));
                 }
             }
         }
 
-        final int outputSlotRow = container.getPatternOutputsHeigh();
-        final int outputSlotPerRow = container.getPatternOutputsWidth();
-        for (int page = 0; page < container.getPatternOutputPages(); page++) {
-            for (int y = 0; y < outputSlotRow; y++) {
-                for (int x = 0; x < outputSlotPerRow; x++) {
-                    VirtualMEPhantomSlot slot = this.outputSlots[x + y * outputSlotPerRow
-                            + page * (outputSlotPerRow * outputSlotRow)];
-                    slot.setHidden(page != this.activePage);
-                    slot.setX(getOutputSlotOffsetX());
+        final int outputSlotRows = container.getPatternOutputsHeigh();
+        final int outputSlotsPerRow = container.getPatternOutputsWidth();
+        final int outputSlotPages = container.getPatternOutputPages();
+
+        for (int page = 0; page < outputSlotPages; page++) {
+            for (int y = 0; y < outputSlotRows; y++) {
+                for (int x = 0; x < outputSlotsPerRow; x++) {
+                    final int slotIndex = x + y * outputSlotsPerRow + page * (outputSlotsPerRow * outputSlotRows);
+                    VirtualMEPhantomSlot slot = this.outputSlots[slotIndex];
+
+                    slot.setHidden(!this.isInverted ? y != this.activePage || page != 0 : page != this.activePage);
+
+                    slot.setX((this.isInverted ? getOutputSlotOffsetX() : 112) + 18 * (!this.isInverted ? 0 : x));
+                    slot.setY(this.rows * 18 + getOutputSlotOffsetY() + 18 * (!this.isInverted ? x : y));
                 }
             }
         }
