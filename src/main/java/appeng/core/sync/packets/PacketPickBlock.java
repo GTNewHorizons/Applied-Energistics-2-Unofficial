@@ -154,9 +154,13 @@ public class PacketPickBlock extends AppEngPacket {
             }
         }
 
+        // Determine which of consolidated ItemStack or nextEmptySlot to use as our pick block ItemStack
+        int pickBlockSlot = consolidatedStack == null ? nextEmptySlot : consolidatedStackSlot;
+        ItemStack pickBlockItemStack = consolidatedStack;
+
         // 5. Calculate withdrawal amount
-        int amountToWithdraw = consolidatedStack == null ? itemToFind.getMaxStackSize()
-                : itemToFind.getMaxStackSize() - consolidatedStack.stackSize;
+        int amountToWithdraw = pickBlockItemStack == null ? itemToFind.getMaxStackSize()
+                : itemToFind.getMaxStackSize() - pickBlockItemStack.stackSize;
         if (amountToWithdraw <= 0) {
             return;
         }
@@ -179,19 +183,17 @@ public class PacketPickBlock extends AppEngPacket {
             if (itemsToGive != null && itemsToGive.stackSize > 0) {
                 // If no consolidation was done, put withdrawn items into next empty slot.
                 // Otherwise, add them to the consolidated slot, and move it to the active slot.
-                if (consolidatedStack == null) {
-                    sender.inventory.setInventorySlotContents(nextEmptySlot, itemsToGive);
+                if (pickBlockItemStack == null) {
+                    pickBlockItemStack = itemsToGive;
+                    sender.inventory.setInventorySlotContents(pickBlockSlot, pickBlockItemStack);
                 } else {
-                    consolidatedStack.stackSize += itemsToGive.stackSize;
+                    pickBlockItemStack.stackSize += itemsToGive.stackSize;
                 }
             }
         }
 
-        // Move the target item stack to the player's hotbar.
-        // The slot to swap will either be a consolidated stack of partial ItemStacks,
-        // or it will have been a newly created ItemStack in the next empty slot.
-        int slotToSwap = consolidatedStack == null ? nextEmptySlot : consolidatedStackSlot;
-        movePickBlockItemStack(sender, slotToSwap);
+        // Move the target item stack to the correct slot in the player's hotbar.
+        movePickBlockItemStack(sender, pickBlockSlot);
     }
 
     private IMEInventoryHandler<IAEItemStack> getWirelessItemInventory(EntityPlayer player,
