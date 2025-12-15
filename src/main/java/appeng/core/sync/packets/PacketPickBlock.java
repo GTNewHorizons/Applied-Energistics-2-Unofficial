@@ -192,6 +192,12 @@ public class PacketPickBlock extends AppEngPacket {
             }
         }
 
+        // If the pick block item stack is still null, we had no consolidated stacks and did not withdraw any items.
+        // So, we do nothing.
+        if (pickBlockItemStack == null) {
+            return;
+        }
+
         // Move the target item stack to the correct slot in the player's hotbar.
         movePickBlockItemStack(sender, pickBlockSlot);
     }
