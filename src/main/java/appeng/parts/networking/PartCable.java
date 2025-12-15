@@ -48,6 +48,7 @@ import appeng.client.texture.TextureUtils;
 import appeng.items.parts.ItemMultiPart;
 import appeng.me.GridAccessException;
 import appeng.parts.AEBasePart;
+import appeng.parts.CableBusContainer;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -114,8 +115,13 @@ public class PartCable extends AEBasePart implements IPartCable {
                     return true;
                 }
 
-                this.getHost().removePart(ForgeDirection.UNKNOWN, true);
-                this.getHost().addPart(newPart, ForgeDirection.UNKNOWN, who);
+                setItemStack(newPart);
+
+                getProxy().setColor(newColor);
+                ((CableBusContainer) getHost()).updateConnections();
+                getHost().markForUpdate();
+                getHost().markForSave();
+                getHost().partChanged();
                 return true;
             }
         }

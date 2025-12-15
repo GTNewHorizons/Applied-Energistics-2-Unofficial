@@ -55,6 +55,7 @@ import appeng.client.render.effects.LightningArcFX;
 import appeng.client.render.effects.LightningFX;
 import appeng.client.render.effects.VibrantFX;
 import appeng.client.render.highlighter.HighlighterManager;
+import appeng.client.render.previewBlocks.BlockRendererPreviewEvent;
 import appeng.client.texture.CableBusTextures;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.client.texture.ExtraItemTextures;
@@ -106,6 +107,8 @@ public class ClientHelper extends ServerHelper {
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new BlockPosHighlighter());
         MinecraftForge.EVENT_BUS.register(new HighlighterManager());
+        MinecraftForge.EVENT_BUS.register(BlockRendererPreviewEvent.getInstance());
+        FMLCommonHandler.instance().bus().register(BlockRendererPreviewEvent.getInstance());
         FMLCommonHandler.instance().bus().register(new KeyBindHandler());
 
         for (ActionKey key : ActionKey.values()) {
