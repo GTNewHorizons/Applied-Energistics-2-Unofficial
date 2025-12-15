@@ -1,7 +1,5 @@
 package appeng.items.contents;
 
-import java.util.Objects;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -29,10 +27,11 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
 
     private final AppEngInternalInventory pattern = new AppEngInternalInventory(this, 2);
 
-    private boolean craftingMode = true;
+    private boolean craftingMode;
     private boolean substitute = false;
     private boolean beSubstitute = false;
     private final String nbtPrefix;
+    private final int mode;
 
     private boolean inverted;
     private int activePage;
@@ -40,7 +39,9 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
     public WirelessPatternTerminalGuiObject(IWirelessTermHandler wh, ItemStack is, EntityPlayer ep, World w, int x,
             int y, int z) {
         super(wh, is, ep, w, x, y, z);
-        this.nbtPrefix = getMode() == 2 ? "pattern" : "pattern_ex"; // ...
+        this.mode = y != Integer.MIN_VALUE ? y : getMode();
+        this.nbtPrefix = mode == 1 ? "pattern" : "pattern_ex"; // ...
+        this.craftingMode = mode == 1;
     }
 
     public void setInventorySize(int inputs, int outputs) {
@@ -54,7 +55,7 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
         output = new IAEStackInventory(this, outputInvSize, StorageName.CRAFTING_OUTPUT);
 
         final NBTTagCompound tag = getItemStack().getTagCompound().getCompoundTag(this.nbtPrefix);
-        this.craftingMode = tag.getBoolean("crafting");
+        if (mode == 1) this.craftingMode = tag.getBoolean("crafting");
         this.substitute = tag.getBoolean("substitute");
         this.beSubstitute = tag.getBoolean("beSubstitute");
         this.inverted = tag.getBoolean("inverted");
@@ -67,11 +68,11 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
     @Override
     public void writeInventory() {
         final NBTTagCompound tag = new NBTTagCompound();
-        tag.setBoolean("crafting", this.craftingMode);
+        if (mode == 1) tag.setBoolean("crafting", this.craftingMode);
         tag.setBoolean("substitute", this.substitute);
         tag.setBoolean("beSubstitute", this.beSubstitute);
 
-        if (Objects.equals(this.nbtPrefix, "pattern_ex")) {
+        if (this.mode == 2) {
             tag.setBoolean("inverted", this.inverted);
             tag.setInteger("activePage", this.activePage);
         }
@@ -103,6 +104,7 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
     @Override
     public void setInverted(boolean inverted) {
         this.inverted = inverted;
+        writeInventory();
     }
 
     @Override
@@ -113,6 +115,7 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
     @Override
     public void setActivePage(int activePage) {
         this.activePage = activePage;
+        writeInventory();
     }
 
     @Override
@@ -123,6 +126,7 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
     @Override
     public void setCraftingRecipe(boolean craftingMode) {
         this.craftingMode = craftingMode;
+        writeInventory();
     }
 
     @Override
@@ -138,6 +142,7 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
     @Override
     public void setSubstitution(boolean canSubstitute) {
         this.substitute = canSubstitute;
+        writeInventory();
     }
 
     @Override
@@ -166,7 +171,9 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
 
     @Override
     public void onChangeInventory(IInventory inv, int slot, InvOperation mc, ItemStack removedStack,
-            ItemStack newStack) {}
+            ItemStack newStack) {
+        if (mc != InvOperation.markDirty) writeInventory(); // couz spam
+    }
 
     @Override
     public void updateSetting(IConfigManager manager, Enum settingName, Enum newValue) {}

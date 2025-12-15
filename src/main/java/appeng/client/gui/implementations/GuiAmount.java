@@ -61,6 +61,7 @@ public abstract class GuiAmount extends GuiSub {
         this.amountTextField.y = this.guiTop + 55;
         this.amountTextField.setMaxStringLength(16);
         this.amountTextField.setFocused(true);
+        this.amountTextField.setUnfocusWithEnter(false);
     }
 
     protected int getButtonQtyByIndex(int index) {
