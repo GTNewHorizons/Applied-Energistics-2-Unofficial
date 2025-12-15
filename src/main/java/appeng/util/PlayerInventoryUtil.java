@@ -16,15 +16,13 @@ import baubles.api.BaublesApi;
 public class PlayerInventoryUtil {
 
     /**
-     * Finds the first empty slot in the player's inventory, searching in reverse order (from the last slot to the
-     * first). This prioritizes filling the inventory from the end, which helps keep commonly accessed hotbar slots
-     * free.
+     * Finds the first empty slot in the player's inventory.
      *
      * @param inventory The player's inventory to search.
      * @return The index of the first empty slot found (searching backwards), or -1 if the inventory is full.
      */
-    public static int getFirstEmptyStackReverse(InventoryPlayer inventory) {
-        for (int i = inventory.mainInventory.length - 1; i >= 0; --i) {
+    public static int getFirstEmptyInventorySlot(InventoryPlayer inventory) {
+        for (int i = 0; i < inventory.mainInventory.length; ++i) {
             if (inventory.mainInventory[i] == null) {
                 return i;
             }

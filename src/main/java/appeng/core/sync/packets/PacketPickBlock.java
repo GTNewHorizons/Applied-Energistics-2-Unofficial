@@ -130,7 +130,7 @@ public class PacketPickBlock extends AppEngPacket {
 
         // 3. If there are no partial stacks and the player's inventory is full,
         // then return since we cannot add a retrieved stack to a full inventory
-        int nextEmptySlot = PlayerInventoryUtil.getFirstEmptyStackReverse(sender.inventory);
+        int nextEmptySlot = PlayerInventoryUtil.getFirstEmptyInventorySlot(sender.inventory);
         if (partialStackSlotsList.isEmpty() && nextEmptySlot == -1) {
             return;
         }
@@ -187,9 +187,8 @@ public class PacketPickBlock extends AppEngPacket {
             }
         }
 
-        // If the target stack is already in the player's hotbar, set that as the active slot.
-        // Otherwise, move the target stack to the active slot.
-        // The slot to swap will have either been a consolidated stack of partial ItemStacks,
+        // Move the target item stack to the player's hotbar.
+        // The slot to swap will either be a consolidated stack of partial ItemStacks,
         // or it will have been a newly created ItemStack in the next empty slot.
         int slotToSwap = consolidatedStack == null ? nextEmptySlot : consolidatedStackSlot;
         movePickBlockItemStack(sender, slotToSwap);
