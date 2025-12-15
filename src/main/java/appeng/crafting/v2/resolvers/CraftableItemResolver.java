@@ -131,7 +131,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
 
             IAEStack<?> matchingOutput = null;
             for (IAEStack<?> patternOutput : this.patternOutputs) {
-                if (isOutputSameAs(patternOutput)) {
+                if (isOutputAcceptable(patternOutput)) {
                     matchingOutput = patternOutput;
                     break;
                 }
@@ -274,8 +274,11 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
             return craftingMachine;
         }
 
-        public boolean isOutputSameAs(IAEStack<?> otherStack) {
+        public boolean isOutputAcceptable(IAEStack<?> otherStack) {
             if (request.substitutionMode == SubstitutionMode.ACCEPT_FUZZY) {
+                if (!this.request.acceptableSubstituteFn.test((StackType) otherStack)) {
+                    return false;
+                }
                 return this.request.stack.fuzzyComparison(otherStack, FuzzyMode.IGNORE_ALL);
             } else {
                 return this.request.stack.isSameType(otherStack);

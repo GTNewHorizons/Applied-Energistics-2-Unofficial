@@ -86,6 +86,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public double oreDoublePercentage = 90.0;
     public boolean enableEffects = true;
     public boolean useColoredCraftingStatus;
+    public boolean previewBlocks;
+    public int previewLineWidth;
     public boolean preserveSearchBar = true;
     public boolean showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = false;
     public int MEMonitorableSmallSize = 6;
@@ -341,6 +343,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .getBoolean(true);
         this.enableEffects = this.get("Client", "enableEffects", true).getBoolean(true);
         this.useColoredCraftingStatus = this.get("Client", "useColoredCraftingStatus", true).getBoolean(true);
+        this.previewBlocks = this.get("Client", "previewBlocks", true).getBoolean(true);
+        this.previewLineWidth = this.get("Client", "previewLineWidth", 3).getInt(3);
         this.preserveSearchBar = this.get("Client", "preserveSearchBar", true).getBoolean(true);
         this.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = this
                 .get("Client", "showOnlyInterfacesWithFreeSlotsInInterfaceTerminal", false).getBoolean(false);

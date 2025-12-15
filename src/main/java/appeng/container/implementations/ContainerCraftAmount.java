@@ -117,7 +117,12 @@ public class ContainerCraftAmount extends ContainerSubGui {
     }
 
     public void openConfirmationGUI(EntityPlayer player, TileEntity te) {
-        Platform.openGUI(player, te, this.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_CONFIRM);
+        Platform.openGUI(
+                player,
+                te,
+                this.getOpenContext().getSide(),
+                GuiBridge.GUI_CRAFTING_CONFIRM,
+                getTargetSlotIndex());
         setupConfirmationGUI(player);
     }
 

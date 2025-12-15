@@ -2094,7 +2094,7 @@ public class Platform {
             }
         }
 
-        return (IAEItemStack) stack;
+        return stack instanceof IAEItemStack ais ? ais : null;
     }
 
     public static IAEStack<?> convertStackPacket(ItemStack stack) {
