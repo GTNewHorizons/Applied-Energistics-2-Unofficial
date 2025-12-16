@@ -275,7 +275,7 @@ public class CraftableItemResolver implements CraftingRequestResolver {
 
         public boolean isOutputAcceptable(IAEStack<?> otherStack) {
             if (request.substitutionMode == SubstitutionMode.ACCEPT_FUZZY) {
-                if (!this.request.acceptableSubstituteFn.test((StackType) otherStack)) {
+                if (!this.request.acceptableSubstituteFn.test(otherStack)) {
                     return false;
                 }
                 return this.request.stack.fuzzyComparison(otherStack, FuzzyMode.IGNORE_ALL);

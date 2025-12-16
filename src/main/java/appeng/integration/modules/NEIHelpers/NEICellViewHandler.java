@@ -60,7 +60,7 @@ public class NEICellViewHandler implements IUsageHandler {
                 && AEApi.instance().registries().cell().getCellInventory(
                         ingredient,
                         null,
-                        sc.getStorageChannel()) instanceof CellInventoryHandler handler
+                        sc.getStackType()) instanceof CellInventoryHandler handler
                 && handler.getTotalBytes() > 0) {
             this.cellHandler = handler;
 
