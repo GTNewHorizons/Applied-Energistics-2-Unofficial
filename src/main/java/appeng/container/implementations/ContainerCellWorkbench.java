@@ -215,7 +215,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         if (!(cellInv instanceof CellInventory ci)) return;
 
         final IItemList<?> list = ci
-                .getAvailableItems(ci.getChannel().createPrimitiveList(), IterationCounter.fetchNewId());
+                .getAvailableItems(ci.getStackType().createPrimitiveList(), IterationCounter.fetchNewId());
         Iterator<?> i = list.iterator();
 
         for (int x = 0; x < inv.getSizeInventory(); x++) {

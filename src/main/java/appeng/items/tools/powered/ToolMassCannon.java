@@ -45,9 +45,7 @@ import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.ICellInventory;
-import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -97,10 +95,10 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
         super.addCheckedInformation(stack, player, lines, displayMoreInfo);
 
         final IMEInventory<IAEItemStack> cdi = AEApi.instance().registries().cell()
-                .getCellInventory(stack, null, StorageChannel.ITEMS);
+                .getCellInventory(stack, null, ITEM_STACK_TYPE);
 
-        if (cdi instanceof CellInventoryHandler) {
-            final ICellInventory cd = ((ICellInventoryHandler) cdi).getCellInv();
+        if (cdi instanceof CellInventoryHandler<?>handler) {
+            final ICellInventory<?> cd = handler.getCellInv();
             if (cd != null) {
                 lines.add(
                         cd.getUsedBytes() + " "
@@ -130,8 +128,7 @@ public class ToolMassCannon extends AEBasePoweredItem implements IStorageCell {
                 shots += cu.getInstalledUpgrades(Upgrades.SPEED);
             }
 
-            final IMEInventory inv = AEApi.instance().registries().cell()
-                    .getCellInventory(item, null, StorageChannel.ITEMS);
+            final IMEInventory inv = AEApi.instance().registries().cell().getCellInventory(item, null, ITEM_STACK_TYPE);
             if (inv != null) {
                 final IItemList itemList = inv.getAvailableItems(
                         AEApi.instance().storage().createSortedItemList(),

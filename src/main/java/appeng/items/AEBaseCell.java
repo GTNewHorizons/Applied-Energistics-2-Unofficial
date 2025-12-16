@@ -1,5 +1,7 @@
 package appeng.items;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +34,6 @@ import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellHandler;
 import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventoryHandler;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
@@ -156,9 +157,9 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
                         + GuiText.Types.getLocal());
 
         if (cellInventory.getTotalItemTypes() == 1 && cellInventory.getStoredItemTypes() != 0) {
-            IAEStack<?> aes = handler
-                    .getAvailableItems(cellInventory.getChannel().createPrimitiveList(), IterationCounter.fetchNewId())
-                    .getFirstItem();
+            IAEStack<?> aes = handler.getAvailableItems(
+                    cellInventory.getStackType().createPrimitiveList(),
+                    IterationCounter.fetchNewId()).getFirstItem();
             lines.add(GuiText.Contains.getLocal() + ": " + aes.getDisplayName());
         }
 
@@ -316,11 +317,11 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
             }
             final InventoryPlayer playerInventory = player.inventory;
             final IMEInventoryHandler inv = AEApi.instance().registries().cell()
-                    .getCellInventory(stack, null, StorageChannel.ITEMS);
+                    .getCellInventory(stack, null, ITEM_STACK_TYPE);
             if (inv != null && playerInventory.getCurrentItem() == stack) {
                 final InventoryAdaptor ia = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
                 final IItemList<IAEItemStack> list = inv
-                        .getAvailableItems(StorageChannel.ITEMS.createList(), IterationCounter.fetchNewId());
+                        .getAvailableItems(ITEM_STACK_TYPE.createList(), IterationCounter.fetchNewId());
                 if (list.isEmpty() && ia != null) {
                     playerInventory.setInventorySlotContents(playerInventory.currentItem, null);
 

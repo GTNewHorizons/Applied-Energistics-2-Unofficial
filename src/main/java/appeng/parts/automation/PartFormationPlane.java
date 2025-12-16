@@ -41,6 +41,8 @@ import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.world.BlockEvent;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
@@ -63,6 +65,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.client.texture.CableBusTextures;
@@ -381,8 +384,9 @@ public class PartFormationPlane extends PartUpgradeable
     }
 
     @Override
-    public List<IMEInventoryHandler> getCellArray(final StorageChannel channel) {
-        if (this.getProxy().isActive() && channel == StorageChannel.ITEMS) {
+    @NotNull
+    public List<IMEInventoryHandler> getCellArray(final IAEStackType<?> type) {
+        if (this.getProxy().isActive() && type == ITEM_STACK_TYPE) {
             final List<IMEInventoryHandler> Handler = new ArrayList<>(1);
             Handler.add(this.myHandler);
             return Handler;

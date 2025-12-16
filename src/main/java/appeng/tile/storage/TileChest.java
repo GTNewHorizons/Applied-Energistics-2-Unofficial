@@ -198,8 +198,8 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         return 1;
     }
 
-    public IMEInventoryHandler getInternalHandler(final StorageChannel channel) {
-        return this.cellHandler.getCellInventory(this.inv.getStackInSlot(1), this, channel);
+    public IMEInventoryHandler getInternalHandler(final IAEStackType<?> type) {
+        return this.cellHandler.getCellInventory(this.inv.getStackInSlot(1), this, type);
     }
 
     public IMEInventoryHandler getHandler(final IAEStackType<?> type) throws ChestNoHandler {
@@ -484,8 +484,6 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc, final ItemStack removed,
             final ItemStack added) {
         if (slot == 1) {
-            // this.itemCell = null;
-            // this.fluidCell = null;
             this.cellMap.clear();
             this.isCached = false; // recalculate the storage cell.
 
@@ -509,12 +507,10 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @Override
     public boolean canInsertItem(final int slotIndex, final ItemStack insertingItem, final int side) {
         if (slotIndex == 1) {
-            if (AEApi.instance().registries().cell().getCellInventory(insertingItem, this, StorageChannel.ITEMS)
-                    != null) {
+            if (AEApi.instance().registries().cell().getCellInventory(insertingItem, this, ITEM_STACK_TYPE) != null) {
                 return true;
             }
-            if (AEApi.instance().registries().cell().getCellInventory(insertingItem, this, StorageChannel.FLUIDS)
-                    != null) {
+            if (AEApi.instance().registries().cell().getCellInventory(insertingItem, this, FLUID_STACK_TYPE) != null) {
                 return true;
             }
         } else {
@@ -689,24 +685,22 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {}
 
     public boolean openGui(final EntityPlayer p, final ICellHandler ch, final ItemStack cell, final int side) {
-        try {
-            final IMEInventoryHandler invHandler = this.getHandler(ITEM_STACK_TYPE);
-            if (ch != null && invHandler != null) {
-                ch.openChestGui(p, this, ch, invHandler, cell, StorageChannel.ITEMS);
-                return true;
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            try {
+                final IMEInventoryHandler invHandler = this.getHandler(type);
+                if (ch != null && invHandler != null) {
+                    StorageChannel channel = null;
+                    if (type == ITEM_STACK_TYPE) {
+                        channel = StorageChannel.ITEMS;
+                    } else if (type == FLUID_STACK_TYPE) {
+                        channel = StorageChannel.FLUIDS;
+                    }
+                    ch.openChestGui(p, this, ch, invHandler, cell, channel);
+                    return true;
+                }
+            } catch (final ChestNoHandler e) {
+                // :P
             }
-        } catch (final ChestNoHandler e) {
-            // :P
-        }
-
-        try {
-            final IMEInventoryHandler invHandler = this.getHandler(FLUID_STACK_TYPE);
-            if (ch != null && invHandler != null) {
-                ch.openChestGui(p, this, ch, invHandler, cell, StorageChannel.FLUIDS);
-                return true;
-            }
-        } catch (final ChestNoHandler e) {
-            // :P
         }
 
         return false;
@@ -742,7 +736,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         if (ItemBasicStorageCell.checkInvalidForLockingAndStickyCarding(cell, cellHandler)) {
             return false;
         }
-        final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, StorageChannel.ITEMS);
+        final IMEInventoryHandler<?> inv = cellHandler.getCellInventory(cell, this, ITEM_STACK_TYPE);
         if (inv instanceof ICellInventoryHandler handler) {
             if (ItemBasicStorageCell.cellIsPartitioned(handler)) {
                 TileDrive.unpartitionStorageCell(handler);

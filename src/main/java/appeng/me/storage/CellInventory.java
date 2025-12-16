@@ -32,7 +32,6 @@ import appeng.api.implementations.items.IStorageCell;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.ICellInventory;
-import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
@@ -41,7 +40,6 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.tile.inventory.IAEStackInventory;
-import appeng.util.IterationCounter;
 import appeng.util.Platform;
 
 public abstract class CellInventory<StackType extends IAEStack<StackType>> implements ICellInventory<StackType> {
@@ -167,11 +165,6 @@ public abstract class CellInventory<StackType extends IAEStack<StackType>> imple
             if (type == FLUID_STACK_TYPE) return new FluidCellInventoryHandler(new FluidCellInventory(o, container2));
         } catch (final AppEngException ignored) {}
         return null;
-    }
-
-    private boolean isEmpty(final IMEInventory<?> meInventory) {
-        return meInventory.getAvailableItems(this.getChannel().createPrimitiveList(), IterationCounter.fetchNewId())
-                .isEmpty();
     }
 
     @Override

@@ -493,9 +493,12 @@ public class GridStorageCache implements IStorageGrid {
                     ItemStack stack = tc.getStackInSlot(1);
                     if (stack == null) continue;
 
-                    IMEInventoryHandler handler = tc.getInternalHandler(StorageChannel.ITEMS);
-                    if (handler == null) {
-                        handler = tc.getInternalHandler(StorageChannel.FLUIDS);
+                    IMEInventoryHandler<?> handler = null;
+                    for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                        handler = tc.getInternalHandler(type);
+                        if (handler != null) {
+                            break;
+                        }
                     }
 
                     if (handler instanceof ICellCacheRegistry iccr && iccr.canGetInv()) {
