@@ -19,7 +19,6 @@ import appeng.container.AEBaseContainer;
 import appeng.container.ContainerOpenContext;
 import appeng.container.PrimaryGui;
 import appeng.container.interfaces.IContainerSubGui;
-import appeng.container.interfaces.IInventorySlotAware;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.INetworkInfo;
@@ -82,14 +81,11 @@ public class PacketSwitchGuis extends AppEngPacket {
 
             if (context != null) {
                 final TileEntity te = context.getTile();
-                int slotIndex = te == null && bc.getTarget() instanceof IInventorySlotAware isa ? isa.getInventorySlot()
-                        : Integer.MIN_VALUE;
 
                 if (this.newGui == null) {
-                    pGui.setSlotIndex(slotIndex);
                     pGui.open(player);
                 } else {
-                    Platform.openGUI(player, te, context.getSide(), this.newGui, slotIndex);
+                    Platform.openGUI(player, te, context.getSide(), this.newGui, bc.getTargetSlotIndex());
                 }
             }
 

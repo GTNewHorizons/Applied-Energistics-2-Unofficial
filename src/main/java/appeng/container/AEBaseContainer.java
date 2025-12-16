@@ -122,6 +122,7 @@ public abstract class AEBaseContainer extends Container {
     private int ticksSinceCheck = 900;
     private IAEStack<?> clientRequestedTargetItem = null;
     private PrimaryGui primaryGui;
+    private final int targetSlotIndex;
 
     @Deprecated
     public AEBaseContainer(final InventoryPlayer ip, final TileEntity myTile, final IPart myPart) {
@@ -136,6 +137,11 @@ public abstract class AEBaseContainer extends Container {
         this.part = myPart;
         this.obj = gio;
         this.mySrc = new PlayerSource(ip.player, this.getActionHost());
+
+        this.targetSlotIndex = this.tileEntity == null && getTarget() instanceof IInventorySlotAware isa
+                ? isa.getInventorySlot()
+                : Integer.MIN_VALUE;
+
         this.prepareSync();
     }
 
@@ -196,6 +202,10 @@ public abstract class AEBaseContainer extends Container {
         }
 
         this.mySrc = new PlayerSource(ip.player, this.getActionHost());
+
+        this.targetSlotIndex = this.tileEntity == null && getTarget() instanceof IInventorySlotAware isa
+                ? isa.getInventorySlot()
+                : Integer.MIN_VALUE;
 
         this.prepareSync();
     }
@@ -1052,11 +1062,17 @@ public abstract class AEBaseContainer extends Container {
                         : AEApi.instance().definitions().parts().terminal().maybeStack(1).orNull(),
                 context.getTile(),
                 context.getSide());
+
+        this.primaryGui.setSlotIndex(this.targetSlotIndex);
     }
 
     public PrimaryGui getPrimaryGui() {
         if (primaryGui == null) createPrimaryGui();
         return primaryGui;
+    }
+
+    public int getTargetSlotIndex() {
+        return this.targetSlotIndex;
     }
 
     private int ticks = 0;

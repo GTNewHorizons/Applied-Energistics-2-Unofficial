@@ -277,6 +277,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             refillBlankPatterns(patternSlotIN);
         }
 
+        // add a new encoded pattern.
         if (isCraftingMode()) {
             output = AEApi.instance().definitions().items().encodedPattern().maybeStack(1).orNull();
         } else {

@@ -46,7 +46,10 @@ public class FluidUtils {
 
         fluidStack = fluidStack.copy();
         itemStack = itemStack.copy();
+
         fluidStack.amount = Integer.MAX_VALUE;
+        itemStack.stackSize = 1;
+
         if (itemStack.getItem() instanceof IFluidContainerItem container) {
             container.fill(itemStack, fluidStack, true);
             return itemStack;

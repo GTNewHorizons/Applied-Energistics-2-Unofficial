@@ -49,7 +49,13 @@ public class PacketMonitorableAction extends AppEngPacket {
             final ContainerOpenContext context = container.getOpenContext();
             if (context != null) {
                 final TileEntity te = context.getTile();
-                Platform.openGUI(player, te, container.getOpenContext().getSide(), GuiBridge.GUI_CRAFTING_AMOUNT);
+
+                Platform.openGUI(
+                        player,
+                        te,
+                        context.getSide(),
+                        GuiBridge.GUI_CRAFTING_AMOUNT,
+                        container.getTargetSlotIndex());
 
                 if (player.openContainer instanceof ContainerCraftAmount cca) {
                     if (container.getTargetStack() != null) {
