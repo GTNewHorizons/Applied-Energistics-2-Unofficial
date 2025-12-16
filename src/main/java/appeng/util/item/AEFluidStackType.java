@@ -10,6 +10,7 @@ import net.minecraftforge.fluids.IFluidContainerItem;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEFluidStack;
@@ -44,6 +45,12 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     @Override
     public IItemList<IAEFluidStack> createList() {
         return AEApi.instance().storage().createFluidList();
+    }
+
+    @Override
+    @Range(from = 1, to = Integer.MAX_VALUE)
+    public int getAmountPerUnit() {
+        return 1;
     }
 
     @Override

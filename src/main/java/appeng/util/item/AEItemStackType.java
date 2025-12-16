@@ -7,6 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 import appeng.api.AEApi;
 import appeng.api.storage.data.IAEItemStack;
@@ -39,6 +40,12 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
     @Override
     public IItemList<IAEItemStack> createList() {
         return AEApi.instance().storage().createItemList();
+    }
+
+    @Override
+    @Range(from = 1, to = Integer.MAX_VALUE)
+    public int getAmountPerUnit() {
+        return 1;
     }
 
     @Override

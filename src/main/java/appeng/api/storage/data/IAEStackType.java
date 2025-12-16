@@ -7,6 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
@@ -24,6 +25,9 @@ public interface IAEStackType<T extends IAEStack> {
     default IItemList<T> createPrimitiveList() {
         return this.createList();
     }
+
+    @Range(from = 1, to = Integer.MAX_VALUE)
+    int getAmountPerUnit();
 
     boolean isContainerItemForType(@Nullable ItemStack container);
 
