@@ -57,10 +57,8 @@ public class NEICellViewHandler implements IUsageHandler {
     public IUsageHandler getUsageHandler(String inputId, Object... ingredients) {
         if (ingredients.length > 0 && ingredients[0] instanceof ItemStack ingredient
                 && ingredient.getItem() instanceof IStorageCell sc
-                && AEApi.instance().registries().cell().getCellInventory(
-                        ingredient,
-                        null,
-                        sc.getStackType()) instanceof CellInventoryHandler handler
+                && AEApi.instance().registries().cell()
+                        .getCellInventory(ingredient, null, sc.getStackType()) instanceof CellInventoryHandler handler
                 && handler.getTotalBytes() > 0) {
             this.cellHandler = handler;
 
@@ -74,7 +72,7 @@ public class NEICellViewHandler implements IUsageHandler {
             stacks.clear();
             int count = 0;
             for (IAEStack<?> aes : sortedStacks) {
-                final ItemStack viewStack = aes.getItemStackForNEI();
+                final ItemStack viewStack = aes.copy().setStackSize(0).getItemStackForNEI();
                 if (viewStack == null) continue;
                 viewStack.stackSize = 1;
                 PositionedStack positionedStack = new PositionedStack(

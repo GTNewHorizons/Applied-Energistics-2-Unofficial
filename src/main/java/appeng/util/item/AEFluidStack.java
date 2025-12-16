@@ -424,7 +424,7 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
             if (fluidStack.amount <= 0) fluidStack.amount = 1;
 
             ItemStack packet = ItemFluidPacket.newStack(fluidStack);
-            return StackInfo.loadFromNBT(StackInfo.itemStackToNBT(packet));
+            return StackInfo.loadFromNBT(StackInfo.itemStackToNBT(packet), this.getStackSize());
         }
 
         return null;
