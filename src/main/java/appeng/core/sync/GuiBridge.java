@@ -284,11 +284,11 @@ public enum GuiBridge implements IGuiHandler {
         final boolean pastXLimit = x >= itemGuiSlotOffset;
         final int slotIndex = x - itemGuiSlotOffset;
 
-        if (ID.type.isItem() && pastXLimit) {
+        if (ID.type.isItem() && (stem || pastXLimit)) {
             final ItemStack it = stem ? player.inventory.getCurrentItem()
                     : getItemFromPlayerInventoryBySlotIndex(player, slotIndex);
 
-            final Object myItem = this.getGuiObject(it, player, w, slotIndex, y, z);
+            final Object myItem = this.getGuiObject(it, player, w, stem ? x : slotIndex, y, z);
             if (myItem != null && ID.CorrectTileOrPart(myItem)) {
                 return this.updateGui(
                         ID.ConstructContainer(player.inventory, side, myItem),
@@ -439,11 +439,11 @@ public enum GuiBridge implements IGuiHandler {
         final boolean pastXLimit = x >= itemGuiSlotOffset;
         final int slotIndex = x - itemGuiSlotOffset;
 
-        if (ID.type.isItem() && pastXLimit) {
+        if (ID.type.isItem() && (stem || pastXLimit)) {
             final ItemStack it = stem ? player.inventory.getCurrentItem()
                     : getItemFromPlayerInventoryBySlotIndex(player, slotIndex);
 
-            final Object myItem = this.getGuiObject(it, player, w, slotIndex, y, z);
+            final Object myItem = this.getGuiObject(it, player, w, stem ? x : slotIndex, y, z);
             if (myItem != null && ID.CorrectTileOrPart(myItem)) {
                 return ID.ConstructGui(player.inventory, side, myItem);
             }
@@ -488,9 +488,12 @@ public enum GuiBridge implements IGuiHandler {
 
     public boolean hasPermissions(final TileEntity te, final int x, final int y, final int z, final ForgeDirection side,
             final EntityPlayer player) {
+        return this.hasPermissions(te, x, y, z, side, player, Integer.MIN_VALUE);
+    }
+
+    public boolean hasPermissions(final TileEntity te, final int x, final int y, final int z, final ForgeDirection side,
+            final EntityPlayer player, final int slotIndex) {
         final World w = player.getEntityWorld();
-        final boolean pastXLimit = x >= itemGuiSlotOffset;
-        final int slotIndex = x - itemGuiSlotOffset;
 
         if (Platform.hasPermissions(
                 te != null ? new DimensionalCoord(te) : new DimensionalCoord(player.worldObj, x, y, z),
@@ -507,7 +510,7 @@ public enum GuiBridge implements IGuiHandler {
                         return this.securityCheck(te, player);
                     }
                 }
-            } else if (this.type.isItem() && pastXLimit) {
+            } else if (this.type.isItem() && slotIndex != Integer.MIN_VALUE) {
                 final ItemStack it = getItemFromPlayerInventoryBySlotIndex(player, slotIndex);
                 if (it != null && it.getItem() instanceof IGuiItem guiItem) {
                     return this.CorrectTileOrPart(guiItem.getGuiObject(it, w, player, slotIndex, y, z));
