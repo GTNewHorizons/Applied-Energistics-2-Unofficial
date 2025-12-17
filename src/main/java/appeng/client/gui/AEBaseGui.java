@@ -1062,7 +1062,13 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     public static boolean isCtrlKeyDown() {
-        return Keyboard.isKeyDown(EXTRA_ACTION_KEY.getKeyCode());
+        int keyCode = EXTRA_ACTION_KEY.getKeyCode();
+        if (keyCode < 0) {
+            // In vanilla code, mouse buttons are registered as keyCodes with their values offset by -100.
+            return Mouse.isButtonDown(keyCode + 100);
+        } else {
+            return Keyboard.isKeyDown(keyCode);
+        }
     }
 
     private void drawVirtualSlots(@Nonnull List<VirtualMESlot> slots, int mouseX, int mouseY) {
