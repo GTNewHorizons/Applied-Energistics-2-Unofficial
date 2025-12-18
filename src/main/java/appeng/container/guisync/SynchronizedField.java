@@ -3,7 +3,13 @@ package appeng.container.guisync;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+
+import com.google.common.base.Preconditions;
 
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
@@ -81,6 +87,8 @@ public abstract class SynchronizedField<T> {
             return new StringField(source, field, name);
         } else if (fieldType.isEnum()) {
             return createEnumField(source, field, name, fieldType.asSubclass(Enum.class));
+        } else if (IGuiPacketWritable.class.isAssignableFrom(fieldType)) {
+            return new CustomField(source, field, name);
         } else {
             throw new IllegalArgumentException("Cannot synchronize field " + field);
         }
@@ -201,6 +209,44 @@ public abstract class SynchronizedField<T> {
                 return null;
             } else {
                 return values[ordinal];
+            }
+        }
+    }
+
+    private static class CustomField extends SynchronizedField<Object> {
+
+        private static final Map<Class<?>, Function<ByteBuf, Object>> factories = new HashMap<>();
+        private final Class<?> fieldType;
+
+        private CustomField(Object source, Field field, String name) {
+            super(source, field, name);
+            this.fieldType = field.getType();
+            Preconditions.checkArgument(IGuiPacketWritable.class.isAssignableFrom(field.getType()));
+        }
+
+        @Override
+        protected void writeValue(ByteBuf buf, Object value) {
+            ((IGuiPacketWritable) value).writeToPacket(buf);
+        }
+
+        @Override
+        protected Object readValue(ByteBuf data) {
+            var factory = factories.computeIfAbsent(fieldType, CustomField::getFactory);
+            return factory.apply(data);
+        }
+
+        private static Function<ByteBuf, Object> getFactory(Class<?> clazz) {
+            try {
+                var constructor = clazz.getConstructor(ByteBuf.class);
+                return buffer -> {
+                    try {
+                        return constructor.newInstance(buffer);
+                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                        throw new RuntimeException("Failed to deserialize " + clazz, e);
+                    }
+                };
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException("No constructor taking ByteBuf on " + clazz);
             }
         }
     }
