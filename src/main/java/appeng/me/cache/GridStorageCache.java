@@ -204,14 +204,6 @@ public class GridStorageCache implements IStorageGrid {
                     tracker.postChanges(type, 1, h, actionSrc);
                 }
             }
-            //
-            // for (final IMEInventoryHandler<IAEItemStack> h : cc.getCellArray(StorageChannel.ITEMS)) {
-            // tracker.postChanges(ITEM_STACK_TYPE, 1, h, actionSrc);
-            // }
-            //
-            // for (final IMEInventoryHandler<IAEFluidStack> h : cc.getCellArray(StorageChannel.FLUIDS)) {
-            // tracker.postChanges(FLUID_STACK_TYPE, 1, h, actionSrc);
-            // }
         }
 
         return tracker;
@@ -233,14 +225,6 @@ public class GridStorageCache implements IStorageGrid {
                     tracker.postChanges(type, -1, h, actionSrc);
                 }
             }
-
-            // for (final IMEInventoryHandler<IAEItemStack> h : cc.getCellArray(StorageChannel.ITEMS)) {
-            // tracker.postChanges(ITEM_STACK_TYPE, -1, h, actionSrc);
-            // }
-            //
-            // for (final IMEInventoryHandler<IAEFluidStack> h : cc.getCellArray(StorageChannel.FLUIDS)) {
-            // tracker.postChanges(FLUID_STACK_TYPE, -1, h, actionSrc);
-            // }
         }
 
         return tracker;
