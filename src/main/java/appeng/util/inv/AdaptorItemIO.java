@@ -10,6 +10,7 @@ import com.google.common.collect.Iterators;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
 import com.gtnewhorizon.gtnhlib.item.FastImmutableItemStack;
 import com.gtnewhorizon.gtnhlib.item.ImmutableItemStack;
+import com.gtnewhorizon.gtnhlib.item.InsertionItemStack;
 import com.gtnewhorizon.gtnhlib.item.InventoryIterator;
 import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
@@ -173,7 +174,24 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
     @Override
     public ItemStack simulateAdd(ItemStack toBeSimulated) {
-        return null;
+        if (toBeSimulated == null || toBeSimulated.stackSize == 0) return null;
+
+        InventoryIterator iter = itemIO.simulatedSinkIterator();
+        if (iter == null) return toBeSimulated;
+
+        InsertionItemStack insertion = new InsertionItemStack(new FastImmutableItemStack(toBeSimulated));
+
+        while (iter.hasNext()) {
+            ImmutableItemStack ignored = iter.next();
+
+            insertion.set(iter.insert(insertion, false));
+
+            if (insertion.isEmpty()) return null;
+        }
+
+        final ItemStack left = toBeSimulated.copy();
+        left.stackSize = insertion.getStackSize();
+        return left;
     }
 
     @Override
