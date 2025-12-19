@@ -252,6 +252,10 @@ public class SlotRestrictedInput extends AppEngSlot {
         this.allowEdit = allowEdit;
     }
 
+    public PlacableItemType getItemType() {
+        return this.which;
+    }
+
     public enum PlacableItemType {
 
         STORAGE_CELLS(15),
