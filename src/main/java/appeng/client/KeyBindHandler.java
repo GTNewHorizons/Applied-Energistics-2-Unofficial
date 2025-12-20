@@ -38,6 +38,11 @@ public class KeyBindHandler {
         EntityClientPlayerMP player = minecraft.thePlayer;
         if (player == null) return;
 
+        // Use vanilla pick block when in creative
+        if (player.capabilities.isCreativeMode) {
+            return;
+        }
+
         // Get the block the player is currently looking at
         MovingObjectPosition movingObject = minecraft.objectMouseOver;
         if (movingObject == null || movingObject.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
