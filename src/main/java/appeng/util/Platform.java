@@ -350,7 +350,7 @@ public class Platform {
     }
 
     public static void openGUI(@Nonnull final EntityPlayer p, @Nullable final TileEntity tile,
-            @Nullable final ForgeDirection side, @Nonnull final GuiBridge type, final int slotIndex) {
+            @Nullable final ForgeDirection side, @Nonnull final GuiBridge type, int slotIndex) {
         if (isClient()) {
             return;
         }
@@ -364,13 +364,15 @@ public class Platform {
             z = tile.zCoord;
         }
 
-        if ((type.getType().isItem() && tile == null) || type.hasPermissions(tile, x, y, z, side, p)) {
+        slotIndex = slotIndex == Integer.MIN_VALUE ? p.inventory.currentItem : slotIndex;
+
+        if ((type.getType().isItem() && tile == null) || type.hasPermissions(tile, x, y, z, side, p, slotIndex)) {
             if (tile == null && type.getType() != GuiHostType.WORLD) {
                 p.openGui(
                         AppEng.instance(),
                         type.ordinal() << 5 | (1 << 4),
                         p.getEntityWorld(),
-                        itemGuiSlotOffset + (slotIndex == Integer.MIN_VALUE ? p.inventory.currentItem : slotIndex),
+                        itemGuiSlotOffset + slotIndex,
                         p.openContainer instanceof AEBaseContainer abc ? abc.getSwitchAbleGuiNext() : Integer.MIN_VALUE,
                         0);
             } else if (tile == null || type.getType() == GuiHostType.ITEM) {

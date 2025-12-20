@@ -17,7 +17,6 @@ import org.lwjgl.input.Mouse;
 import appeng.api.config.ActionItems;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.RedstoneMode;
-import appeng.api.config.SchedulingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
@@ -31,7 +30,6 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketSwitchGuis;
-import appeng.parts.automation.PartExportBus;
 import appeng.parts.automation.PartImportBus;
 
 public abstract class GuiUpgradeable extends AEBaseGui {
@@ -42,7 +40,6 @@ public abstract class GuiUpgradeable extends AEBaseGui {
     protected GuiImgButton redstoneMode;
     protected GuiImgButton fuzzyMode;
     protected GuiImgButton craftMode;
-    protected GuiImgButton schedulingMode;
     protected GuiImgButton oreFilter;
 
     public GuiUpgradeable(final ContainerUpgradeable te) {
@@ -89,11 +86,6 @@ public abstract class GuiUpgradeable extends AEBaseGui {
                 Settings.FUZZY_MODE,
                 FuzzyMode.IGNORE_ALL);
         this.craftMode = new GuiImgButton(this.guiLeft - 18, this.guiTop + 48, Settings.CRAFT_ONLY, YesNo.NO);
-        this.schedulingMode = new GuiImgButton(
-                this.guiLeft - 18,
-                this.guiTop + 68,
-                Settings.SCHEDULING_MODE,
-                SchedulingMode.DEFAULT);
         this.oreFilter = new GuiImgButton(
                 this.guiLeft - 18,
                 this.guiTop + 28,
@@ -103,7 +95,6 @@ public abstract class GuiUpgradeable extends AEBaseGui {
         this.buttonList.add(this.craftMode);
         this.buttonList.add(this.redstoneMode);
         this.buttonList.add(this.fuzzyMode);
-        this.buttonList.add(this.schedulingMode);
         this.buttonList.add(this.oreFilter);
     }
 
@@ -130,10 +121,6 @@ public abstract class GuiUpgradeable extends AEBaseGui {
 
         if (this.craftMode != null) {
             this.craftMode.set(this.cvb.getCraftingMode());
-        }
-
-        if (this.schedulingMode != null) {
-            this.schedulingMode.set(this.cvb.getSchedulingMode());
         }
     }
 
@@ -175,10 +162,7 @@ public abstract class GuiUpgradeable extends AEBaseGui {
         if (this.craftMode != null) {
             this.craftMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.CRAFTING) > 0);
         }
-        if (this.schedulingMode != null) {
-            this.schedulingMode.setVisibility(
-                    this.bc.getInstalledUpgrades(Upgrades.CAPACITY) > 0 && this.bc instanceof PartExportBus);
-        }
+
         if (this.oreFilter != null) {
             this.oreFilter.setVisibility(this.bc.getInstalledUpgrades(Upgrades.ORE_FILTER) > 0);
         }
@@ -214,10 +198,6 @@ public abstract class GuiUpgradeable extends AEBaseGui {
 
         if (btn == this.fuzzyMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.fuzzyMode.getSetting(), backwards));
-        }
-
-        if (btn == this.schedulingMode) {
-            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.schedulingMode.getSetting(), backwards));
         }
 
         if (btn == this.oreFilter) {
