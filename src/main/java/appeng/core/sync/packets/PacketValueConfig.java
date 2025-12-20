@@ -28,6 +28,7 @@ import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.AEBaseContainer;
+import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
@@ -117,7 +118,10 @@ public class PacketValueConfig extends AppEngPacket {
             qk.setName(this.Value);
         } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof final ContainerRenamer qk) {
             qk.setNewName(this.Value);
-            qk.getPrimaryGui().open(player);
+            final PrimaryGui pGui = qk.getPrimaryGui();
+            if (pGui != null) {
+                pGui.open(player);
+            }
         } else if (this.Name.equals("TileSecurity.ToggleOption") && c instanceof ContainerSecurity sc) {
             sc.toggleSetting(this.Value, player);
         } else if (this.Name.equals("PriorityHost.Priority") && c instanceof ContainerPriority pc) {

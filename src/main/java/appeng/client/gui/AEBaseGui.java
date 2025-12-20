@@ -10,11 +10,13 @@
 
 package appeng.client.gui;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,7 +31,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
@@ -46,9 +47,9 @@ import org.lwjgl.opengl.GL12;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 
+import appeng.api.config.TerminalFontSize;
 import appeng.api.events.GuiScrollEvent;
 import appeng.api.storage.data.IAEFluidStack;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.ActionKey;
 import appeng.client.ClientHelper;
@@ -57,6 +58,7 @@ import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ITooltip;
 import appeng.client.render.AppEngRenderItem;
+import appeng.client.render.StackSizeRenderer;
 import appeng.client.render.TranslatedRenderItem;
 import appeng.container.AEBaseContainer;
 import appeng.container.slot.AppEngCraftingSlot;
@@ -71,6 +73,7 @@ import appeng.container.slot.SlotInaccessible;
 import appeng.container.slot.SlotOutput;
 import appeng.container.slot.SlotPatternTerm;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.AppEng;
@@ -78,18 +81,22 @@ import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInventoryAction;
+import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.helpers.ICustomButtonProvider;
 import appeng.helpers.InventoryAction;
-import appeng.integration.IntegrationRegistry;
-import appeng.integration.IntegrationType;
-import appeng.integration.abstraction.INEI;
 import appeng.util.Platform;
 import codechicken.lib.gui.GuiDraw;
-import codechicken.nei.guihook.GuiContainerManager;
+import codechicken.nei.VisiblityData;
+import codechicken.nei.api.INEIGuiHandler;
+import codechicken.nei.api.TaggedInventoryArea;
 import cpw.mods.fml.common.Loader;
+import cpw.mods.fml.common.Optional;
+import it.unimi.dsi.fastutil.objects.ObjectIntImmutablePair;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
-public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandler {
+@Optional.Interface(modid = "NotEnoughItems", iface = "codechicken.nei.api.INEIGuiHandler")
+public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandler, INEIGuiHandler {
 
     private static class AEGuiTooltip {
 
@@ -373,6 +380,11 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.drag_click.clear();
         this.draggedSlots.clear();
 
+        ItemStack holdingStack = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
+        if (holdingStack != null && handleClickFakeSlot(xCoord, yCoord, holdingStack)) {
+            return;
+        }
+
         final VirtualMESlot slot = getVirtualMESlotUnderMouse();
         if (slot != null && this.handleVirtualSlotClick(slot, btn)) return;
 
@@ -391,6 +403,39 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
 
         super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    @Override
+    public boolean handleDragNDrop(GuiContainer gui, int mouseX, int mouseY, ItemStack draggedStack, int button) {
+        return handleClickFakeSlot(mouseX, mouseY, draggedStack);
+    }
+
+    private boolean handleClickFakeSlot(int mouseX, int mouseY, ItemStack itemstack) {
+        List<ObjectIntPair<SlotFake>> slots = new ArrayList<>();
+
+        if (!this.inventorySlots.inventorySlots.isEmpty()) {
+            for (int i = 0; i < this.inventorySlots.inventorySlots.size(); i++) {
+                Object slot = this.inventorySlots.inventorySlots.get(i);
+                if (slot instanceof SlotFake slotFake) {
+                    slots.add(new ObjectIntImmutablePair<>(slotFake, i));
+                }
+            }
+        }
+
+        for (ObjectIntPair<SlotFake> fakeSlotPair : slots) {
+            SlotFake fakeSlot = fakeSlotPair.left();
+            if (fakeSlot.isEnabled() && getSlotArea(fakeSlot).contains(mouseX, mouseY)) {
+                fakeSlot.putStack(itemstack);
+                NetworkHandler.instance.sendToServer(new PacketNEIDragClick(itemstack, fakeSlotPair.rightInt()));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Rectangle getSlotArea(SlotFake slot) {
+        return new Rectangle(guiLeft + slot.getX(), guiTop + slot.getY(), 16, 16);
     }
 
     protected boolean handleVirtualSlotClick(final VirtualMESlot slot, final int mouseButton) {
@@ -702,98 +747,6 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         return ((AEBaseContainer) this.inventorySlots).getCustomName();
     }
 
-    private void drawSlot(final Slot s) {
-        if (s instanceof SlotFake) {
-            IAEItemStack stack = Platform.getAEStackInSlot(s);
-            if (s instanceof SlotFake && stack != null && stack.getStackSize() == 1) {
-                this.safeDrawSlot(s);
-                return;
-            }
-
-            RenderItem pIR = this.setItemRender(this.aeRenderItem);
-            try {
-                if (!this.isPowered()) {
-                    this.zLevel = 100.0F;
-                    itemRender.zLevel = 100.0F;
-                    GL11.glDisable(GL11.GL_LIGHTING);
-                    drawRect(
-                            s.xDisplayPosition,
-                            s.yDisplayPosition,
-                            16 + s.xDisplayPosition,
-                            16 + s.yDisplayPosition,
-                            GuiColors.ItemSlotOverlayUnpowered.getColor());
-                    GL11.glEnable(GL11.GL_LIGHTING);
-                    this.zLevel = 0.0F;
-                    itemRender.zLevel = 0.0F;
-                } else {
-                    this.aeRenderItem.setAeStack(Platform.getAEStackInSlot(s));
-
-                    this.drawAESlot(s);
-                }
-
-            } catch (final Exception err) {
-                AELog.warn("[AppEng] AE prevented crash while drawing slot: " + err.toString());
-            }
-            this.setItemRender(pIR);
-            return;
-        } else {
-            try {
-                final ItemStack is = s.getStack();
-                if (s instanceof AppEngSlot aes && (aes.renderIconWithItem() || is == null) && (aes.shouldDisplay()))
-                    drawTextureOnSlot(s, aes.getIcon(), aes.getOpacityOfIcon());
-
-                if (is != null && s instanceof AppEngSlot) {
-                    if (((AppEngSlot) s).getIsValid() == hasCalculatedValidness.NotAvailable) {
-                        boolean isValid = s.isItemValid(is) || s instanceof SlotOutput
-                                || s instanceof AppEngCraftingSlot
-                                || s instanceof SlotDisabled
-                                || s instanceof SlotInaccessible
-                                || s instanceof SlotRestrictedInput;
-                        if (isValid && s instanceof SlotRestrictedInput) {
-                            try {
-                                isValid = ((SlotRestrictedInput) s).isValid(is, this.mc.theWorld);
-                            } catch (final Exception err) {
-                                AELog.debug(err);
-                            }
-                        }
-                        ((AppEngSlot) s)
-                                .setIsValid(isValid ? hasCalculatedValidness.Valid : hasCalculatedValidness.Invalid);
-                    }
-
-                    if (((AppEngSlot) s).getIsValid() == hasCalculatedValidness.Invalid) {
-                        this.zLevel = 100.0F;
-                        itemRender.zLevel = 100.0F;
-
-                        GL11.glDisable(GL11.GL_LIGHTING);
-                        drawRect(
-                                s.xDisplayPosition,
-                                s.yDisplayPosition,
-                                16 + s.xDisplayPosition,
-                                16 + s.yDisplayPosition,
-                                GuiColors.ItemSlotOverlayInvalid.getColor());
-                        GL11.glEnable(GL11.GL_LIGHTING);
-
-                        this.zLevel = 0.0F;
-                        itemRender.zLevel = 0.0F;
-                    }
-                }
-
-                if (s instanceof AppEngSlot) {
-                    ((AppEngSlot) s).setDisplay(true);
-                    this.drawMCSlot(s);
-                } else {
-                    this.safeDrawSlot(s);
-                }
-
-                return;
-            } catch (final Exception err) {
-                AELog.warn("[AppEng] AE prevented crash while drawing slot: " + err.toString());
-            }
-        }
-        // do the usual for non-ME Slots.
-        this.safeDrawSlot(s);
-    }
-
     public void drawTextureOnSlot(Slot s, int icon, float opacity) {
         if (icon < 0) return; // no icon to draw.
 
@@ -832,71 +785,6 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         GL11.glPopAttrib();
     }
 
-    public void drawMCSlot(Slot slotIn) {
-        int i = slotIn.xDisplayPosition;
-        int j = slotIn.yDisplayPosition;
-        ItemStack itemstack = slotIn.getStack();
-        String s = null;
-
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-
-        GuiContainerManager.getManager().renderSlotUnderlay(slotIn);
-
-        translatedRenderItem.zLevel = 100.0f;
-        translatedRenderItem
-                .renderItemAndEffectIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j);
-        translatedRenderItem.zLevel = 200.0f;
-        translatedRenderItem.renderItemOverlayIntoGUI(
-                this.fontRendererObj,
-                this.mc.getTextureManager(),
-                itemstack,
-                i,
-                j,
-                s,
-                (slotIn instanceof OptionalSlotRestrictedInput) ? AEConfig.instance.getTerminalFontSize() : null);
-
-        GuiContainerManager.getManager().renderSlotOverlay(slotIn);
-
-        translatedRenderItem.zLevel = 0.0f;
-    }
-
-    public void drawAESlot(Slot slotIn) {
-        int i = slotIn.xDisplayPosition;
-        int j = slotIn.yDisplayPosition;
-        ItemStack itemstack = slotIn.getStack();
-        String s = null;
-
-        this.zLevel = 100.0F;
-        itemRender.zLevel = 100.0F;
-        itemRender.renderItemAndEffectIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j);
-        itemRender.zLevel = 0.0F;
-
-        this.zLevel = 0.0F;
-        GL11.glTranslatef(0.0f, 0.0f, 200.0f);
-        aeRenderItem.renderItemOverlayIntoGUI(this.fontRendererObj, this.mc.getTextureManager(), itemstack, i, j, s);
-        GL11.glTranslatef(0.0f, 0.0f, -200.0f);
-    }
-
-    private RenderItem setItemRender(final RenderItem item) {
-        if (IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)) {
-            return ((INEI) IntegrationRegistry.INSTANCE.getInstance(IntegrationType.NEI)).setItemRender(item);
-        } else {
-            final RenderItem ri = itemRender;
-            itemRender = item;
-            return ri;
-        }
-    }
-
-    protected boolean isPowered() {
-        return true;
-    }
-
-    private void safeDrawSlot(final Slot s) {
-        try {
-            GuiContainer.class.getDeclaredMethod("func_146977_a_original", Slot.class).invoke(this, s);
-        } catch (final Exception err) {}
-    }
-
     public void bindTexture(final String file) {
         final ResourceLocation loc = new ResourceLocation(AppEng.MOD_ID, "textures/" + file);
         this.mc.getTextureManager().bindTexture(loc);
@@ -906,8 +794,106 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         mc.getTextureManager().bindTexture(loc);
     }
 
+    /**
+     * Draw slot
+     */
     public void func_146977_a(final Slot s) {
-        this.drawSlot(s);
+        if (s instanceof SlotFake slotFake) {
+            this.drawSlotWithAEFont(slotFake);
+            return;
+        } else if (s instanceof AppEngSlot aeSlot) {
+            try {
+                final ItemStack is = s.getStack();
+                if ((aeSlot.renderIconWithItem() || is == null) && aeSlot.shouldDisplay()) {
+                    drawTextureOnSlot(s, aeSlot.getIcon(), aeSlot.getOpacityOfIcon());
+                }
+
+                if (is != null) {
+                    if (aeSlot.getIsValid() == hasCalculatedValidness.NotAvailable) {
+                        boolean isValid = s.isItemValid(is) || s instanceof SlotOutput
+                                || s instanceof AppEngCraftingSlot
+                                || s instanceof SlotDisabled
+                                || s instanceof SlotInaccessible
+                                || s instanceof SlotRestrictedInput;
+                        if (isValid && s instanceof SlotRestrictedInput) {
+                            try {
+                                isValid = ((SlotRestrictedInput) s).isValid(is, this.mc.theWorld);
+                            } catch (final Exception err) {
+                                AELog.debug(err);
+                            }
+                        }
+                        aeSlot.setIsValid(isValid ? hasCalculatedValidness.Valid : hasCalculatedValidness.Invalid);
+                    }
+
+                    if (aeSlot.getIsValid() == hasCalculatedValidness.Invalid) {
+                        this.zLevel = 100.0F;
+                        itemRender.zLevel = 100.0F;
+
+                        GL11.glDisable(GL11.GL_LIGHTING);
+                        drawRect(
+                                s.xDisplayPosition,
+                                s.yDisplayPosition,
+                                16 + s.xDisplayPosition,
+                                16 + s.yDisplayPosition,
+                                GuiColors.ItemSlotOverlayInvalid.getColor());
+                        GL11.glEnable(GL11.GL_LIGHTING);
+
+                        this.zLevel = 0.0F;
+                        itemRender.zLevel = 0.0F;
+                    }
+                }
+
+                this.drawSlotWithAEFont(aeSlot);
+
+                return;
+            } catch (final Exception err) {
+                AELog.warn("[AppEng] AE prevented crash while drawing slot: " + err.toString());
+            }
+        }
+
+        // do the usual for non-ME Slots.
+        super.func_146977_a(s);
+    }
+
+    private void drawSlotWithAEFont(AppEngSlot aeSlot) {
+        aeSlot.setDisplay(true);
+
+        // Set stack size to 1 to disable standard stack size drawing
+        final ItemStack stackToDraw = aeSlot.getStack();
+        int stackSize = 0;
+        if (stackToDraw != null) {
+            stackSize = stackToDraw.stackSize;
+            stackToDraw.stackSize = 1;
+        }
+
+        // Draw slot
+        super.func_146977_a(aeSlot);
+
+        // Draw stack size
+        if (stackSize > 1) {
+            boolean useAEFont = aeSlot instanceof SlotFake || aeSlot instanceof OptionalSlotRestrictedInput
+                    || (aeSlot instanceof SlotRestrictedInput restrictedInput
+                            && restrictedInput.getItemType() == PlacableItemType.ENCODED_PATTERN);
+            TerminalFontSize fontSize = useAEFont ? AEConfig.instance.getTerminalFontSize() : null;
+            GL11.glTranslatef(0.0f, 0.0f, 200);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glDisable(GL11.GL_BLEND);
+            StackSizeRenderer.drawStackSize(
+                    aeSlot.xDisplayPosition,
+                    aeSlot.yDisplayPosition,
+                    StackSizeRenderer.getToBeRenderedStackSize(stackSize, fontSize),
+                    this.mc.fontRenderer,
+                    fontSize);
+            GL11.glEnable(GL11.GL_LIGHTING);
+            GL11.glTranslatef(0.0f, 0.0f, -200);
+        }
+
+        // Restore stack size
+        if (stackToDraw != null) {
+            stackToDraw.stackSize = stackSize;
+        }
+
+        aeSlot.setDisplay(false);
     }
 
     protected GuiScrollbar getScrollBar() {
@@ -1064,5 +1050,25 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         if (hoveredAEStack == null) return null;
 
         return hoveredAEStack.getItemStackForNEI();
+    }
+
+    @Override
+    public VisiblityData modifyVisiblity(GuiContainer gui, VisiblityData currentVisibility) {
+        return currentVisibility;
+    }
+
+    @Override
+    public Iterable<Integer> getItemSpawnSlots(GuiContainer gui, ItemStack item) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<TaggedInventoryArea> getInventoryAreas(GuiContainer gui) {
+        return null;
+    }
+
+    @Override
+    public boolean hideItemPanelSlot(GuiContainer gui, int x, int y, int w, int h) {
+        return false;
     }
 }

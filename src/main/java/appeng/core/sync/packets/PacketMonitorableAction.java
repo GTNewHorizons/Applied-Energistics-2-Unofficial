@@ -45,7 +45,7 @@ public class PacketMonitorableAction extends AppEngPacket {
         if (!(player.openContainer instanceof ContainerMEMonitorable container)) return;
 
         if (action == MonitorableAction.AUTO_CRAFT) {
-            final PrimaryGui pGui = container.getPrimaryGui();
+            final PrimaryGui pGui = container.createPrimaryGui();
             final ContainerOpenContext context = container.getOpenContext();
             if (context != null) {
                 final TileEntity te = context.getTile();

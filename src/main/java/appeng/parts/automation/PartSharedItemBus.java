@@ -53,9 +53,6 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     protected final BaseActionSource mySrc;
     private final StorageChannel channel;
 
-    // XD
-    protected final int[] slotSequence = new int[] { 4, 1, 3, 5, 7, 0, 2, 6, 8 };
-
     public PartSharedItemBus(final ItemStack is) {
         super(is);
 

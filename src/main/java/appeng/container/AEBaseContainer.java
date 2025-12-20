@@ -37,6 +37,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -1069,21 +1070,22 @@ public abstract class AEBaseContainer extends Container {
         this.primaryGui = primaryGui;
     }
 
-    private void createPrimaryGui() {
+    public PrimaryGui createPrimaryGui() {
         ContainerOpenContext context = getOpenContext();
 
-        this.primaryGui = new PrimaryGui(
+        final PrimaryGui pGui = new PrimaryGui(
                 GuiBridge.getGuiByContainerClass(this.getClass()),
                 getTarget() instanceof IPrimaryGuiIconProvider ip ? ip.getPrimaryGuiIcon()
                         : AEApi.instance().definitions().parts().terminal().maybeStack(1).orNull(),
                 context.getTile(),
                 context.getSide());
 
-        this.primaryGui.setSlotIndex(this.targetSlotIndex);
+        pGui.setSlotIndex(this.targetSlotIndex);
+        return pGui;
     }
 
+    @Nullable
     public PrimaryGui getPrimaryGui() {
-        if (primaryGui == null) createPrimaryGui();
         return primaryGui;
     }
 
