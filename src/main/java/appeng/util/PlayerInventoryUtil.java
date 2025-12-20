@@ -66,6 +66,14 @@ public class PlayerInventoryUtil {
         ItemStack sourceStack = inventory.getStackInSlot(slot1);
         ItemStack destinationStack = inventory.getStackInSlot(slot2);
 
+        // Copy the item stacks to prevents any potential shared reference issue.
+        if (sourceStack != null) {
+            sourceStack = sourceStack.copy();
+        }
+        if (destinationStack != null) {
+            destinationStack = destinationStack.copy();
+        }
+
         // Set the destination slot with the source stack (even if it's null)
         inventory.setInventorySlotContents(slot2, sourceStack);
 
@@ -86,6 +94,15 @@ public class PlayerInventoryUtil {
     public static void consolidateItemStacks(InventoryPlayer inventory, int sourceSlot, int destinationSlot) {
         ItemStack sourceStack = inventory.getStackInSlot(sourceSlot);
         ItemStack destinationStack = inventory.getStackInSlot(destinationSlot);
+
+        // We can only consolidate if both the source and destination slots have item stacks.
+        if (sourceStack == null || destinationStack == null) {
+            return;
+        }
+
+        // Copy the item stacks to prevents any potential shared reference issue.
+        sourceStack = sourceStack.copy();
+        destinationStack = destinationStack.copy();
 
         if (!sourceStack.isItemEqual(destinationStack)
                 || !ItemStack.areItemStackTagsEqual(sourceStack, destinationStack)) {
