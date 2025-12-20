@@ -74,7 +74,7 @@ public class PacketCraftRequest extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         if (player.openContainer instanceof ContainerCraftAmount cca) {
-            final PrimaryGui pg = cca.getPrimaryGui();
+            final PrimaryGui pg = cca.createPrimaryGui();
             final Object target = cca.getTarget();
             if (target instanceof IGridHost gh) {
                 final IGridNode gn = gh.getGridNode(ForgeDirection.UNKNOWN);
