@@ -25,6 +25,7 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.IInterfaceViewable;
 import appeng.container.ContainerSubGui;
+import appeng.container.PrimaryGui;
 import appeng.core.AELog;
 import appeng.core.features.registries.InterfaceTerminalRegistry;
 import appeng.core.sync.network.NetworkHandler;
@@ -176,7 +177,9 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
     }
 
     public void switchToOriginalGUI() {
-        getPrimaryGui().open(this.getInventoryPlayer().player);
+        final PrimaryGui pGui = getPrimaryGui();
+        assert pGui != null;
+        pGui.open(this.getInventoryPlayer().player);
     }
 
     public static int getBitMultiplier(long currentCrafts, long perCraft, long maximumCrafts) {
