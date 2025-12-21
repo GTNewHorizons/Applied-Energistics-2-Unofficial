@@ -24,9 +24,9 @@ import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.core.features.AEFeature;
 import appeng.core.sync.GuiBridge;
+import appeng.helpers.ICustomNameObject;
 import appeng.items.AEBaseItem;
 import appeng.items.contents.QuartzKnifeObj;
-import appeng.tile.AEBaseTile;
 import appeng.tile.networking.TileCableBus;
 import appeng.util.Platform;
 
@@ -48,7 +48,7 @@ public class ToolQuartzCuttingKnife extends AEBaseItem implements IGuiItem {
             final int z, final int s, final float hitX, final float hitY, final float hitZ) {
         if (Platform.isServer()) {
             TileEntity te = w.getTileEntity(x, y, z);
-            if (te instanceof AEBaseTile && !(te instanceof TileCableBus))
+            if (te instanceof ICustomNameObject && !(te instanceof TileCableBus))
                 Platform.openGUI(p, te, ForgeDirection.getOrientation(s), GuiBridge.GUI_RENAMER);
             else Platform.openGUI(p, null, ForgeDirection.UNKNOWN, GuiBridge.GUI_QUARTZ_KNIFE);
         }
