@@ -172,6 +172,10 @@ public class WirelessPatternTerminalGuiObject extends WirelessTerminalGuiObject
     @Override
     public void onChangeInventory(IInventory inv, int slot, InvOperation mc, ItemStack removedStack,
             ItemStack newStack) {
+        if (inv == pattern && slot == 1) {
+            loadPatternFromItem(this.pattern.getStackInSlot(1), this.myPlayer.worldObj, this.crafting, this.output);
+            writeInventory();
+        }
         if (mc != InvOperation.markDirty) writeInventory(); // couz spam
     }
 
