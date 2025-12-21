@@ -2,6 +2,7 @@ package appeng.core.sync.packets;
 
 import net.minecraft.entity.player.EntityPlayer;
 
+import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerPatternMulti;
 import appeng.container.implementations.ContainerPatternTerm;
 import appeng.core.sync.AppEngPacket;
@@ -31,7 +32,9 @@ public class PacketPatternMultiSet extends AppEngPacket {
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
         if (player.openContainer instanceof ContainerPatternMulti cpv) {
-            cpv.getPrimaryGui().open(player);
+            PrimaryGui pGui = cpv.getPrimaryGui();
+            assert pGui != null;
+            pGui.open(player);
             if (player.openContainer instanceof ContainerPatternTerm cpt) {
                 cpt.multiplyOrDivideStacks(multi);
             }

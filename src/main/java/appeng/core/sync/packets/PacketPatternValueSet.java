@@ -8,6 +8,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
 import appeng.container.AEBaseContainer;
+import appeng.container.PrimaryGui;
 import appeng.container.interfaces.IVirtualSlotSource;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -44,7 +45,9 @@ public class PacketPatternValueSet extends AppEngPacket {
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
         if (player.openContainer instanceof AEBaseContainer bc) {
-            bc.getPrimaryGui().open(player);
+            PrimaryGui pGui = bc.getPrimaryGui();
+            assert pGui != null;
+            pGui.open(player);
             if (player.openContainer instanceof IVirtualSlotSource vss) {
                 vss.updateVirtualSlot(invName, slotIndex, aes);
             }

@@ -736,11 +736,6 @@ public class GuiMEMonitorable extends AEBaseGui
         }
     }
 
-    @Override
-    protected boolean isPowered() {
-        return this.repo.hasPower();
-    }
-
     protected int getMaxRows() {
         return AEConfig.instance.getConfigManager().getSetting(Settings.TERMINAL_STYLE) == TerminalStyle.SMALL
                 ? AEConfig.instance.MEMonitorableSmallSize
