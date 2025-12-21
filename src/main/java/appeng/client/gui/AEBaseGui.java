@@ -828,8 +828,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
                 if (s instanceof AppEngSlot) {
                     ((AppEngSlot) s).setDisplay(true);
-                    // this.drawMCSlot(s);
-                    this.safeDrawSlot(s);
+                    this.drawMCSlot(s);
                 } else {
                     this.safeDrawSlot(s);
                 }
