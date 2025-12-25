@@ -76,13 +76,15 @@ public class PacketSwitchGuis extends AppEngPacket {
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final Container c = player.openContainer;
         if (c instanceof AEBaseContainer bc) {
-            final PrimaryGui pGui = bc.getPrimaryGui();
+
             final ContainerOpenContext context = bc.getOpenContext();
 
             if (context != null) {
                 final TileEntity te = context.getTile();
 
                 if (this.newGui == null) {
+                    final PrimaryGui pGui = bc.getPrimaryGui();
+                    assert pGui != null;
                     pGui.open(player);
                 } else {
                     Platform.openGUI(player, te, context.getSide(), this.newGui, bc.getTargetSlotIndex());
@@ -90,6 +92,7 @@ public class PacketSwitchGuis extends AppEngPacket {
             }
 
             if (player.openContainer instanceof IContainerSubGui sg) {
+                final PrimaryGui pGui = bc.createPrimaryGui();
                 sg.setPrimaryGui(pGui);
             }
         }

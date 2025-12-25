@@ -120,6 +120,13 @@ public abstract class CraftingTask<RequestStackType extends IAEStack<RequestStac
     }
 
     /**
+     * @return True if this task will only be useful in case the network is missing ingredients
+     */
+    public boolean isSimulated() {
+        return false;
+    }
+
+    /**
      * Compares priorities - highest priority first
      */
     public static final Comparator<CraftingTask> PRIORITY_COMPARATOR = Comparator.comparing(ct -> -ct.priority);
