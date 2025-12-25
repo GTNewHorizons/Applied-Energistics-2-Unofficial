@@ -16,6 +16,7 @@ import appeng.parts.reporting.AbstractPartDisplay;
 import appeng.parts.reporting.PartDarkPanel;
 import appeng.parts.reporting.PartPanel;
 import appeng.parts.reporting.PartSemiDarkPanel;
+import appeng.util.Platform;
 
 public class RendererTerminal extends AbstractRendererPreview implements IRenderPreview {
 
@@ -29,19 +30,30 @@ public class RendererTerminal extends AbstractRendererPreview implements IRender
 
     @Override
     public List<Class<?>> validItemClass() {
-        return ViewHelper.getValidClasses(
-                AbstractPartDisplay.class,
-                PartFluidTerminal.class,
-                PartP2PTunnel.class,
-                PartPanel.class,
-                PartSemiDarkPanel.class,
-                PartDarkPanel.class,
-                PartStorageBus.class,
-                PartFluidStorageBus.class,
-                PartInterface.class,
-                PartFluidInterface.class,
-                PartFluidPatternTerminal.class,
-                PartFluidPatternTerminalEx.class,
-                PartLevelTerminal.class);
+        if (Platform.isAE2FCLoaded) {
+            return ViewHelper.getValidClasses(
+                    AbstractPartDisplay.class,
+                    PartFluidTerminal.class,
+                    PartP2PTunnel.class,
+                    PartPanel.class,
+                    PartSemiDarkPanel.class,
+                    PartDarkPanel.class,
+                    PartStorageBus.class,
+                    PartFluidStorageBus.class,
+                    PartInterface.class,
+                    PartFluidInterface.class,
+                    PartFluidPatternTerminal.class,
+                    PartFluidPatternTerminalEx.class,
+                    PartLevelTerminal.class);
+        } else {
+            return ViewHelper.getValidClasses(
+                    AbstractPartDisplay.class,
+                    PartP2PTunnel.class,
+                    PartPanel.class,
+                    PartSemiDarkPanel.class,
+                    PartDarkPanel.class,
+                    PartStorageBus.class,
+                    PartInterface.class);
+        }
     }
 }
