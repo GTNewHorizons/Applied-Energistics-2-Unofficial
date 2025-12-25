@@ -96,6 +96,11 @@ public class IgnoreMissingItemResolver implements CraftingRequestResolver {
         }
 
         @Override
+        public boolean isSimulated() {
+            return true;
+        }
+
+        @Override
         public String getTooltipText() {
             return GuiText.Missing.getLocal() + ": " + fulfilled;
         }

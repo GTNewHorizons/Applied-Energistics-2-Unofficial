@@ -11,6 +11,9 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
+
 import appeng.api.config.CraftingMode;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEStack;
@@ -71,6 +74,8 @@ public class CraftingRequest implements ITreeSerializable {
         }
     }
 
+    public final CraftingRequest parentRequest;
+    public final Set<CraftingRequest> parentRequests;
     /**
      * An item/fluid + count representing how many need to be crafted
      */
@@ -132,6 +137,8 @@ public class CraftingRequest implements ITreeSerializable {
     public CraftingRequest(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
         final ByteBuf buffer = serializer.getBuffer();
         stack = serializer.readStack();
+        parentRequest = null; // this state is not needed on client side
+        parentRequests = Collections.emptySet();
         substitutionMode = serializer.readEnum(SubstitutionMode.class);
         allowSimulation = buffer.readBoolean();
         remainingToProcess = buffer.readLong();
@@ -147,12 +154,22 @@ public class CraftingRequest implements ITreeSerializable {
     }
 
     /**
+     * @param parentRequest          From which this crafting request is initiated. null if it's the root
      * @param stack                  The item/fluid and stack to request
      * @param substitutionMode       Whether and how to allow substitutions when resolving this request
      * @param acceptableSubstituteFn A predicate testing if a given item (in fuzzy mode) can fulfill the request
      */
-    public CraftingRequest(@Nonnull IAEStack<?> stack, SubstitutionMode substitutionMode, boolean allowSimulation,
-            CraftingMode craftingMode, Predicate<IAEStack<?>> acceptableSubstituteFn) {
+    public CraftingRequest(CraftingRequest parentRequest, @Nonnull IAEStack<?> stack, SubstitutionMode substitutionMode,
+            boolean allowSimulation, CraftingMode craftingMode, Predicate<IAEStack<?>> acceptableSubstituteFn) {
+        this.parentRequest = parentRequest;
+        if (parentRequest == null) {
+            this.parentRequests = Collections.emptySet();
+        } else {
+            Builder<CraftingRequest> builder = ImmutableSet.builder();
+            builder.addAll(parentRequest.parentRequests);
+            builder.add(parentRequest);
+            this.parentRequests = builder.build();
+        }
         this.stack = stack;
         this.substitutionMode = substitutionMode;
         this.acceptableSubstituteFn = acceptableSubstituteFn;
@@ -167,7 +184,7 @@ public class CraftingRequest implements ITreeSerializable {
      */
     public CraftingRequest(IAEStack<?> request, SubstitutionMode substitutionMode, boolean allowSimulation,
             CraftingMode craftingMode) {
-        this(request, substitutionMode, allowSimulation, craftingMode, x -> true);
+        this(null, request, substitutionMode, allowSimulation, craftingMode, x -> true);
         if (substitutionMode == SubstitutionMode.ACCEPT_FUZZY) {
             throw new IllegalArgumentException("Fuzzy requests must have a substitution-valid predicate");
         }
@@ -304,7 +321,7 @@ public class CraftingRequest implements ITreeSerializable {
 
     /**
      * Gets the resolved item stack.
-     * 
+     *
      * @throws IllegalStateException if multiple item types were used to resolve the request
      */
     public IAEStack<?> getOneResolvedType() {

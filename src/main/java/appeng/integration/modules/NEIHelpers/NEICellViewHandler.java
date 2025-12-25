@@ -78,7 +78,7 @@ public class NEICellViewHandler implements IUsageHandler {
                         viewStack,
                         OFFSET_X + count % ROW_ITEM_NUM * 18 + 1,
                         ITEMS_OFFSET_Y + count / ROW_ITEM_NUM * 18 + 1);
-                stacks.add(new ViewItemStack(positionedStack, stackSize));
+                stacks.add(new ViewItemStack(positionedStack, aes.getStackSize()));
                 count++;
             }
             return this;
