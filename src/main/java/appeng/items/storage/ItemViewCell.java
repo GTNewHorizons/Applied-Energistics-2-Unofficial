@@ -10,6 +10,8 @@
 
 package appeng.items.storage;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.EnumSet;
 import java.util.List;
 
@@ -25,7 +27,6 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellWorkbenchItem;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -134,7 +135,7 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
 
     @Override
     public IInventory getConfigInventory(final ItemStack is) {
-        return new CellConfigLegacy(new CellConfig(is), StorageChannel.ITEMS);
+        return new CellConfigLegacy(new CellConfig(is), ITEM_STACK_TYPE);
     }
 
     @Override
@@ -186,10 +187,5 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
 
         String filter = getOreFilter(stack);
         if (!filter.isEmpty()) lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);
-    }
-
-    @Override
-    public StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
     }
 }

@@ -16,14 +16,13 @@ import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 
-public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
-        implements CraftingRequestResolver<StackType> {
+public class SimulateMissingItemResolver implements CraftingRequestResolver {
 
-    public static class ConjureItemTask<StackType extends IAEStack<StackType>> extends CraftingTask<StackType> {
+    public static class ConjureItemTask extends CraftingTask {
 
         private long fulfilled = 0;
 
-        public ConjureItemTask(CraftingRequest<StackType> request) {
+        public ConjureItemTask(CraftingRequest request) {
             super(request, CraftingTask.PRIORITY_SIMULATE); // conjure items for calculations out of thin air as a last
                                                             // resort
         }
@@ -110,10 +109,10 @@ public class SimulateMissingItemResolver<StackType extends IAEStack<StackType>>
 
     @Nonnull
     @Override
-    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<StackType> request,
+    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest request,
             @Nonnull CraftingContext context) {
         if (request.allowSimulation) {
-            return Collections.singletonList(new ConjureItemTask<>(request));
+            return Collections.singletonList(new ConjureItemTask(request));
         } else {
             return Collections.emptyList();
         }

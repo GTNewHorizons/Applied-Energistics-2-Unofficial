@@ -82,7 +82,6 @@ import appeng.items.misc.ItemEncodedPattern;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
-import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
 
 /**
@@ -644,20 +643,20 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         && relMouseY < Math.min(viewY + rowYBot, viewHeight);
                 if (stack != null) {
                     final ItemEncodedPattern iep = (ItemEncodedPattern) stack.getItem();
-                    final ItemStack toRender = iep.getOutput(stack);
+                    final IAEStack<?> displayStack = iep.getOutputAE(stack);
 
                     GL11.glPushMatrix();
                     GL11.glTranslatef(colLeft, viewY + rowYTop + 1, ITEM_STACK_Z);
-                    GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+
+                    GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
                     RenderHelper.enableGUIStandardItemLighting();
-                    translatedRenderItem.zLevel = ITEM_STACK_Z - MAGIC_RENDER_ITEM_Z;
-                    translatedRenderItem
-                            .renderItemAndEffectIntoGUI(fontRendererObj, mc.getTextureManager(), toRender, 0, 0);
+                    GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+                    GL11.glEnable(GL11.GL_DEPTH_TEST);
+                    displayStack.drawInGui(mc, 0, 0);
                     GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
-                    aeRenderItem.setAeStack(AEItemStack.create(toRender));
-                    aeRenderItem.renderItemOverlayIntoGUI(fontRendererObj, mc.getTextureManager(), toRender, 0, 0);
-                    aeRenderItem.zLevel = 0.0f;
-                    RenderHelper.disableStandardItemLighting();
+                    displayStack.drawOverlayInGui(mc, 0, 0, true, true, false, false);
+                    GL11.glPopAttrib();
+
                     if (!tooltip) {
                         if (entry.slotIsBroken(slotIdx)) {
                             GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);

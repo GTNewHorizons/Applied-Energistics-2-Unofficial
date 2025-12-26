@@ -10,6 +10,9 @@
 
 package appeng.me.cache;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
@@ -20,6 +23,8 @@ import java.util.Map.Entry;
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.jetbrains.annotations.NotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -35,6 +40,7 @@ import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.me.storage.ItemWatcher;
 import appeng.util.IterationCounter;
@@ -50,8 +56,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Nonnull
     private final GridStorageCache myGridCache;
 
-    @Nonnull
-    private final StorageChannel myChannel;
+    private final IAEStackType<T> stackType;
 
     @Nonnull
     private final IItemList<T> cachedList;
@@ -65,10 +70,10 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Nonnegative
     private int localDepthSemaphore = 0;
 
-    public NetworkMonitor(final GridStorageCache cache, final StorageChannel chan) {
+    public NetworkMonitor(final GridStorageCache cache, final IAEStackType<T> type) {
         this.myGridCache = cache;
-        this.myChannel = chan;
-        this.cachedList = (IItemList<T>) chan.createList();
+        this.stackType = type;
+        this.cachedList = type.createList();
         this.listeners = new HashMap<>();
     }
 
@@ -117,6 +122,12 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Override
     public StorageChannel getChannel() {
         return this.getHandler().getChannel();
+    }
+
+    @Override
+    @SuppressWarnings({ "unchecked" })
+    public @NotNull IAEStackType<T> getStackType() {
+        return (IAEStackType<T>) this.getHandler().getStackType();
     }
 
     @Override
@@ -192,16 +203,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Nullable
     @SuppressWarnings("unchecked")
     public IMEInventoryHandler<T> getHandler() {
-        switch (this.myChannel) {
-            case ITEMS -> {
-                return (IMEInventoryHandler<T>) this.myGridCache.getItemInventoryHandler();
-            }
-            case FLUIDS -> {
-                return (IMEInventoryHandler<T>) this.myGridCache.getFluidInventoryHandler();
-            }
-            default -> {}
-        }
-        return null;
+        return (IMEInventoryHandler<T>) this.myGridCache.getInventoryHandler(this.stackType);
     }
 
     public IGrid getGrid() {
@@ -323,7 +325,11 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     void onTick() {
         if (this.sendEvent) {
             this.sendEvent = false;
-            this.myGridCache.getGrid().postEvent(new MENetworkStorageEvent(this, this.myChannel));
+            if (this.stackType == ITEM_STACK_TYPE) {
+                this.myGridCache.getGrid().postEvent(new MENetworkStorageEvent(this, StorageChannel.ITEMS));
+            } else if (this.stackType == FLUID_STACK_TYPE) {
+                this.myGridCache.getGrid().postEvent(new MENetworkStorageEvent(this, StorageChannel.FLUIDS));
+            }
         }
     }
 }

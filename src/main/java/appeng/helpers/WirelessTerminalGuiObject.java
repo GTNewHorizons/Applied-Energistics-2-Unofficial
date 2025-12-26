@@ -19,6 +19,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
@@ -37,6 +40,7 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
@@ -122,6 +126,14 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
             return null;
         }
         return this.sg.getFluidInventory();
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        if (this.sg == null) {
+            return null;
+        }
+        return this.sg.getMEMonitor(type);
     }
 
     @Override

@@ -10,6 +10,8 @@
 
 package appeng.parts.automation;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.item.ItemStack;
 
 import appeng.api.AEApi;
@@ -21,6 +23,7 @@ import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.util.InventoryAdaptor;
@@ -51,11 +54,6 @@ public class PartImportBus extends PartBaseImportBus<IAEItemStack> implements II
             return true;
         }
         return out.getStackSize() != stack.stackSize;
-    }
-
-    @Override
-    protected Object getTarget() {
-        return this.getHandler();
     }
 
     @Override
@@ -112,18 +110,21 @@ public class PartImportBus extends PartBaseImportBus<IAEItemStack> implements II
     @Override
     protected boolean importStuff(final Object myTarget, final IAEItemStack whatToImport,
             final IMEMonitor<IAEItemStack> inv, final IEnergySource energy, final FuzzyMode fzMode) {
-        if (!(myTarget instanceof InventoryAdaptor myAdaptor)) return true;
-        final int toSend = this.calculateMaximumAmountToImport(myAdaptor, whatToImport, inv, fzMode);
+        if (!(this.getTarget() instanceof InventoryAdaptor adaptor)) {
+            throw new IllegalStateException("Target is not a InventoryAdaptor");
+        }
+
+        final int toSend = this.calculateMaximumAmountToImport(adaptor, whatToImport, inv, fzMode);
         final ItemStack newItems;
 
         if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
-            newItems = myAdaptor.removeSimilarItems(
+            newItems = adaptor.removeSimilarItems(
                     toSend,
                     whatToImport == null ? null : whatToImport.getItemStack(),
                     fzMode,
                     this.configDestination(inv));
         } else {
-            newItems = myAdaptor.removeItems(
+            newItems = adaptor.removeItems(
                     toSend,
                     whatToImport == null ? null : whatToImport.getItemStack(),
                     this.configDestination(inv));
@@ -145,7 +146,7 @@ public class PartImportBus extends PartBaseImportBus<IAEItemStack> implements II
                     .poweredInsert(energy, this.destination, this.lastItemChecked, this.mySrc);
 
             if (failed != null) {
-                myAdaptor.addItems(failed.getItemStack());
+                adaptor.addItems(failed.getItemStack());
                 return true;
             } else {
                 this.worked = true;
@@ -212,5 +213,10 @@ public class PartImportBus extends PartBaseImportBus<IAEItemStack> implements II
     @Override
     protected int getAdaptorFlags() {
         return InventoryAdaptor.ALLOW_ITEMS | InventoryAdaptor.FOR_EXTRACTS;
+    }
+
+    @Override
+    public IAEStackType<IAEItemStack> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 }

@@ -6,9 +6,7 @@ public enum ActionKey {
 
     TOGGLE_FOCUS(Keyboard.KEY_NONE),
 
-    SEARCH_CONNECTED_INVENTORIES(Keyboard.KEY_NONE),
-
-    CONTROL_OPERATION(Keyboard.KEY_LCONTROL);
+    SEARCH_CONNECTED_INVENTORIES(Keyboard.KEY_NONE);
 
     private final int defaultKey;
 

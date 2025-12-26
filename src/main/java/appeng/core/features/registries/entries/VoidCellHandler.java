@@ -10,6 +10,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.items.storage.ItemVoidStorageCell;
 import appeng.me.storage.VoidCellInventory;
@@ -23,9 +24,9 @@ public class VoidCellHandler implements ICellHandler {
 
     @Override
     @SuppressWarnings("rawtypes")
-    public IMEInventoryHandler getCellInventory(ItemStack is, ISaveProvider host, StorageChannel channel) {
-        if (is.getItem() instanceof ItemVoidStorageCell isc && isc.getStorageChannel() == channel) {
-            return VoidCellInventory.getCell(is, channel);
+    public IMEInventoryHandler getCellInventory(ItemStack is, ISaveProvider host, IAEStackType<?> type) {
+        if (is.getItem() instanceof ItemVoidStorageCell isc && isc.getStackType() == type) {
+            return VoidCellInventory.getCell(is, type);
         }
         return null;
     }

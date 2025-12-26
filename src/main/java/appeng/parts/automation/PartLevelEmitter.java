@@ -56,9 +56,10 @@ import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
 import appeng.api.util.IConfigManager;
@@ -165,8 +166,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
         final boolean flipState = this.getConfigManager().getSetting(Settings.REDSTONE_EMITTER)
                 == RedstoneMode.LOW_SIGNAL;
-        return flipState ? this.reportingValue >= this.lastReportedValue + 1
-                : this.reportingValue < this.lastReportedValue + 1;
+        return flipState == (this.reportingValue >= this.lastReportedValue + 1);
     }
 
     @MENetworkEventSubscribe
@@ -257,10 +257,10 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
                 }
             }
 
-            if (myStack instanceof IAEFluidStack) {
-                this.updateReportingValue(this.getProxy().getStorage().getFluidInventory());
+            if (myStack != null) {
+                this.updateReportingValue(this.getProxy().getStorage().getMEMonitor(myStack.getStackType()));
             } else {
-                this.updateReportingValue(this.getProxy().getStorage().getItemInventory());
+                this.updateReportingValue(null);
             }
 
         } catch (final GridAccessException e) {
@@ -268,15 +268,27 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         }
     }
 
-    private void updateReportingValue(final IMEMonitor monitor) {
+    private void updateReportingValue(IMEMonitor monitor) {
         final IAEStack<?> myStack = this.config.getAEStackInSlot(0);
 
         if (myStack == null) {
             this.lastReportedValue = 0;
-            for (final IAEStack<?> st : ((IMEMonitor<IAEStack>) monitor).getStorageList()) {
-                this.lastReportedValue += st.getStackSize();
+
+            outer: for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                try {
+                    monitor = this.getProxy().getStorage().getMEMonitor(type);
+                    for (final IAEStack<?> st : ((IMEMonitor<IAEStack>) monitor).getStorageList()) {
+                        this.lastReportedValue += st.getStackSize();
+
+                        // Overflow
+                        if (this.lastReportedValue < 0) {
+                            this.lastReportedValue = Long.MAX_VALUE;
+                            break outer;
+                        }
+                    }
+                } catch (final GridAccessException ignored) {}
             }
-        } else if (myStack.getChannel() != monitor.getChannel()) {
+        } else if (myStack.getStackType() != monitor.getStackType()) {
             return;
         } else if (myStack instanceof IAEItemStack ais && this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
             this.lastReportedValue = 0;
@@ -388,9 +400,12 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     @Override
     public void onListUpdate() {
         try {
-            if (this.config.getAEStackInSlot(0) instanceof IAEFluidStack)
-                this.updateReportingValue(this.getProxy().getStorage().getFluidInventory());
-            else this.updateReportingValue(this.getProxy().getStorage().getItemInventory());
+            IAEStack<?> myStack = this.config.getAEStackInSlot(0);
+            if (myStack != null) {
+                this.updateReportingValue(this.getProxy().getStorage().getMEMonitor(myStack.getStackType()));
+            } else {
+                this.updateReportingValue(null);
+            }
         } catch (final GridAccessException e) {
             // ;P
         }

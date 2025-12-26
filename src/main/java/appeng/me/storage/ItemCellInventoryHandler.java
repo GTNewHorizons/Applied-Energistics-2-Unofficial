@@ -1,5 +1,7 @@
 package appeng.me.storage;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.IMEInventory;
@@ -15,7 +17,7 @@ import appeng.util.prioitylist.PrecisePriorityList;
 public class ItemCellInventoryHandler extends CellInventoryHandler<IAEItemStack> {
 
     public ItemCellInventoryHandler(IMEInventory<IAEItemStack> c) {
-        super(c, StorageChannel.ITEMS);
+        super(c, ITEM_STACK_TYPE);
     }
 
     @Override

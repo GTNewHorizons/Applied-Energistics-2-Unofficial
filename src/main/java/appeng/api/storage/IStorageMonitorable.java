@@ -13,9 +13,16 @@
 
 package appeng.api.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import appeng.api.implementations.tiles.ITileStorageMonitorable;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 
 /**
  * represents the internal behavior of a {@link ITileStorageMonitorable} use it to get this value for a tile, or part.
@@ -33,4 +40,14 @@ public interface IStorageMonitorable {
      * Access the fluid inventory for the monitorable storage.
      */
     IMEMonitor<IAEFluidStack> getFluidInventory();
+
+    @Nullable
+    default IMEMonitor<?> getMEMonitor(@Nonnull IAEStackType<?> type) {
+        if (type == ITEM_STACK_TYPE) {
+            return this.getItemInventory();
+        } else if (type == FLUID_STACK_TYPE) {
+            return this.getFluidInventory();
+        }
+        return null;
+    }
 }

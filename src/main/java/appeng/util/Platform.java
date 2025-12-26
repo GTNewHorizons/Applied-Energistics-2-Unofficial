@@ -10,10 +10,6 @@
 
 package appeng.util;
 
-import static appeng.api.storage.data.IAEStack.ST_FLUID;
-import static appeng.api.storage.data.IAEStack.ST_ITEM;
-import static appeng.api.storage.data.IAEStack.ST_NULL;
-
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -104,10 +100,11 @@ import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
-import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IAETagCompound;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AEColor;
@@ -1269,7 +1266,7 @@ public class Platform {
         if (possible != null) {
             retrieved = possible.getStackSize();
         }
-        final int typeMultiplier = request.getPowerMultiplier();
+        final int typeMultiplier = request.getAmountPerUnit();
 
         final double availablePower = energy.extractAEPower(
                 Platform.ceilDiv(retrieved, typeMultiplier),
@@ -1305,7 +1302,7 @@ public class Platform {
         if (possible != null) {
             stored -= possible.getStackSize();
         }
-        final int typeMultiplier = input.getPowerMultiplier();
+        final int typeMultiplier = input.getAmountPerUnit();
 
         final double availablePower = energy
                 .extractAEPower(Platform.ceilDiv(stored, typeMultiplier), Actionable.SIMULATE, PowerMultiplier.CONFIG);
@@ -1346,48 +1343,36 @@ public class Platform {
         return input;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void postChanges(final IStorageGrid gs, final ItemStack removed, final ItemStack added,
             final BaseActionSource src) {
-        final IItemList<IAEItemStack> itemChanges = AEApi.instance().storage().createItemList();
-        final IItemList<IAEFluidStack> fluidChanges = AEApi.instance().storage().createFluidList();
-        IMEInventory<IAEItemStack> myItems = null;
-        IMEInventory<IAEFluidStack> myFluids = null;
-        if (removed != null) {
-            myItems = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.ITEMS);
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            IItemList changeList = null;
 
-            if (myItems != null) {
-                for (final IAEItemStack is : myItems.getAvailableItems(itemChanges, IterationCounter.fetchNewId())) {
-                    is.setStackSize(-is.getStackSize());
+            if (removed != null) {
+                IMEInventory<?> inventory = AEApi.instance().registries().cell().getCellInventory(removed, null, type);
+                if (inventory != null) {
+                    changeList = type.createPrimitiveList();
+                    for (final Object obj : inventory.getAvailableItems(changeList, IterationCounter.fetchNewId())) {
+                        IAEStack<?> aes = (IAEStack<?>) obj;
+                        aes.setStackSize(-aes.getStackSize());
+                    }
                 }
             }
 
-            myFluids = AEApi.instance().registries().cell().getCellInventory(removed, null, StorageChannel.FLUIDS);
-
-            if (myFluids != null) {
-                for (final IAEFluidStack is : myFluids.getAvailableItems(fluidChanges, IterationCounter.fetchNewId())) {
-                    is.setStackSize(-is.getStackSize());
+            if (added != null) {
+                IMEInventory<?> inventory = AEApi.instance().registries().cell().getCellInventory(added, null, type);
+                if (inventory != null) {
+                    if (changeList == null) {
+                        changeList = type.createPrimitiveList();
+                    }
+                    inventory.getAvailableItems(changeList, IterationCounter.fetchNewId());
                 }
             }
-        }
 
-        if (added != null) {
-            myItems = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.ITEMS);
-
-            if (myItems != null) {
-                myItems.getAvailableItems(itemChanges, IterationCounter.fetchNewId());
+            if (changeList != null) {
+                gs.postAlterationOfStoredItems(type, changeList, src);
             }
-
-            myFluids = AEApi.instance().registries().cell().getCellInventory(added, null, StorageChannel.FLUIDS);
-
-            if (myFluids != null) {
-                myFluids.getAvailableItems(fluidChanges, IterationCounter.fetchNewId());
-            }
-        }
-        if (myItems == null) {
-            gs.postAlterationOfStoredItems(StorageChannel.FLUIDS, fluidChanges, src);
-        } else {
-            gs.postAlterationOfStoredItems(StorageChannel.ITEMS, itemChanges, src);
         }
     }
 
@@ -1944,16 +1929,10 @@ public class Platform {
 
     public static void writeStackByte(IAEStack<?> stack, ByteBuf buffer) {
         try {
-            if (stack == null) {
-                ByteBufUtils.writeUTF8String(buffer, ST_NULL);
-            } else if (stack instanceof AEItemStack) {
-                ByteBufUtils.writeUTF8String(buffer, ST_ITEM);
-            } else if (stack instanceof AEFluidStack) {
-                ByteBufUtils.writeUTF8String(buffer, ST_FLUID);
-            } else {
-                throw new UnsupportedOperationException("Can't serialize a stack of type " + stack.getClass());
+            ByteBufUtils.writeUTF8String(buffer, stack == null ? "" : stack.getStackType().getId());
+            if (stack != null) {
+                stack.writeToPacket(buffer);
             }
-            stack.writeToPacket(buffer);
         } catch (RuntimeException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -1962,13 +1941,7 @@ public class Platform {
 
     public static IAEStack<?> readStackByte(ByteBuf buffer) {
         try {
-            final String stackType = ByteBufUtils.readUTF8String(buffer);
-            return switch (stackType) {
-                case ST_NULL -> null;
-                case ST_ITEM -> AEItemStack.loadItemStackFromPacket(buffer);
-                case ST_FLUID -> AEFluidStack.loadFluidStackFromPacket(buffer);
-                default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
-            };
+            return IAEStack.fromPacketGeneric(buffer);
         } catch (RuntimeException | IOException e) {
             throw new RuntimeException(e);
         }
@@ -1980,18 +1953,15 @@ public class Platform {
 
     public static NBTTagCompound writeStackNBT(IAEStack<?> stack, NBTTagCompound tag, boolean isModern) {
         if (stack != null) {
-            if (stack instanceof AEItemStack) {
-                if (isModern) tag.setString("StackType", ST_ITEM);
+            if (isModern) {
+                stack.writeToNBTGeneric(tag);
+            } else if (stack instanceof AEItemStack) {
+                stack.writeToNBT(tag);
             } else if (stack instanceof AEFluidStack) {
-                if (isModern) tag.setString("StackType", ST_FLUID);
-                else {
-                    stackConvert(stack).writeToNBT(tag);
-                    return tag;
-                }
+                stackConvert(stack).writeToNBT(tag);
             } else {
                 throw new UnsupportedOperationException("Can't serialize a stack of type " + stack.getClass());
             }
-            stack.writeToNBT(tag);
         }
         return tag;
     }
@@ -2028,14 +1998,12 @@ public class Platform {
                 default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
             };
         } else {
-            final String stackType = tag.getString("StackType");
-            return switch (stackType) {
-                case ST_NULL -> convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
+            String stackType = tag.getString("StackType");
+            if (stackType.isEmpty()) {
+                return convert ? convertStack(AEItemStack.loadItemStackFromNBT(tag))
                         : AEItemStack.loadItemStackFromNBT(tag); // migration moment
-                case ST_ITEM -> AEItemStack.loadItemStackFromNBT(tag);
-                case ST_FLUID -> AEFluidStack.loadFluidStackFromNBT(tag);
-                default -> throw new UnsupportedOperationException("Unknown stack type " + stackType);
-            };
+            }
+            return IAEStack.fromNBTGeneric(tag);
         }
     }
 
@@ -2075,7 +2043,7 @@ public class Platform {
             ais.setUsedPercent(stack.getUsedPercent());
             return ais;
         }
-        return (IAEItemStack) stack;
+        return stack instanceof IAEItemStack ais ? ais : null;
     }
 
     public static IAEStack convertStack(IAEItemStack stack) {

@@ -1,5 +1,7 @@
 package appeng.util.item;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -7,6 +9,7 @@ import java.util.Iterator;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 
 /**
@@ -146,7 +149,7 @@ public final class ItemImmutableList implements IItemList<IAEItemStack> {
     }
 
     @Override
-    public byte getStackType() {
-        return LIST_ITEM;
+    public IAEStackType<IAEItemStack> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 }

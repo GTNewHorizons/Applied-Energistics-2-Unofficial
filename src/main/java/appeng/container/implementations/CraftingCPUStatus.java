@@ -14,7 +14,7 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.api.config.CraftingAllow;
 import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.util.IWideReadableNumberConverter;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
@@ -40,7 +40,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
     private final boolean isBusy;
     private final long totalItems;
     private final long remainingItems;
-    private final IAEItemStack crafting;
+    private final IAEStack<?> crafting;
     private final CraftingAllow allowMode;
     private final long craftingElapsedTime;
     private final boolean isSuspended;
@@ -67,7 +67,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.serial = serial;
         this.isBusy = cluster.isBusy();
         if (isBusy) {
-            crafting = cluster.getFinalOutput();
+            crafting = cluster.getFinalMultiOutput();
             usedStorage = cluster.getUsedStorage();
             totalItems = cluster.getStartItemCount();
             remainingItems = cluster.getRemainingItemCount();
@@ -183,7 +183,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         return remainingItems;
     }
 
-    public IAEItemStack getCrafting() {
+    public IAEStack<?> getCrafting() {
         return crafting;
     }
 

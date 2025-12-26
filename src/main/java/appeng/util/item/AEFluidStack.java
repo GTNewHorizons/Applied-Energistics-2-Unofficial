@@ -11,6 +11,7 @@
 package appeng.util.item;
 
 import static appeng.util.Platform.isAE2FCLoaded;
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -23,6 +24,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
@@ -30,11 +32,13 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IIcon;
+import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
 import com.glodblock.github.common.item.ItemFluidPacket;
 
@@ -42,6 +46,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IAETagCompound;
 import appeng.util.Platform;
 import codechicken.nei.recipe.StackInfo;
@@ -335,14 +340,14 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     }
 
     @Override
-    void writeIdentity(final ByteBuf i) throws IOException {
+    protected void writeIdentity(final ByteBuf i) throws IOException {
         final byte[] name = this.fluid.getName().getBytes(StandardCharsets.UTF_8);
         i.writeByte((byte) name.length);
         i.writeBytes(name);
     }
 
     @Override
-    void readNBT(final ByteBuf i) throws IOException {
+    protected void readNBT(final ByteBuf i) throws IOException {
         if (this.hasTagCompound()) {
             final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             final DataOutputStream data = new DataOutputStream(bytes);
@@ -417,11 +422,10 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     public ItemStack getItemStackForNEI() {
         if (isAE2FCLoaded) {
             FluidStack fluidStack = this.getFluidStack();
-            int amount = fluidStack.amount;
             if (fluidStack.amount <= 0) fluidStack.amount = 1;
 
             ItemStack packet = ItemFluidPacket.newStack(fluidStack);
-            return StackInfo.loadFromNBT(StackInfo.itemStackToNBT(packet), amount);
+            return StackInfo.loadFromNBT(StackInfo.itemStackToNBT(packet), this.getStackSize());
         }
 
         return null;
@@ -436,6 +440,8 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
 
         mc.renderEngine.bindTexture(TextureMap.locationBlocksTexture);
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -452,7 +458,50 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     }
 
     @Override
-    public int getPowerMultiplier() {
+    public void drawOnBlockFace(World world) {
+        GL11.glPushMatrix();
+
+        GL11.glTranslatef(0, -0.04F, 0);
+        GL11.glScalef(1.0f / 42.0f, 1.0f / 42.0f, 1.0f / 42.0f);
+        GL11.glTranslated(-8.0, -10.2, -10.4);
+        GL11.glScalef(1.0f, 1.0f, 0.005f);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        GL11.glDisable(GL11.GL_LIGHTING);
+        GL11.glEnable(GL11.GL_ALPHA_TEST);
+        GL11.glEnable(GL11.GL_BLEND);
+        OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
+
+        Minecraft.getMinecraft().renderEngine.bindTexture(TextureMap.locationBlocksTexture);
+
+        final int color = this.fluid.getColor();
+        final IIcon icon = this.fluid.getIcon();
+
+        final Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
+        tessellator.setColorRGBA(color >> 16 & 0xFF, color >> 8 & 0xFF, color & 0xFF, 0xFF);
+        tessellator.addVertexWithUV(16, 0, 0, icon.getMaxU(), icon.getMinV());
+        tessellator.addVertexWithUV(0, 0, 0, icon.getMinU(), icon.getMinV());
+        tessellator.addVertexWithUV(0, 16, 0, icon.getMinU(), icon.getMaxV());
+        tessellator.addVertexWithUV(16, 16, 0, icon.getMaxU(), icon.getMaxV());
+        tessellator.draw();
+
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        GL11.glEnable(GL11.GL_LIGHTING);
+        GL11.glDisable(GL11.GL_ALPHA_TEST);
+        GL11.glDisable(GL11.GL_BLEND);
+
+        GL11.glPopMatrix();
+    }
+
+    @Override
+    public int getAmountPerUnit() {
         return 1000;
+    }
+
+    @Override
+    public IAEStackType<IAEFluidStack> getStackType() {
+        return FLUID_STACK_TYPE;
     }
 }

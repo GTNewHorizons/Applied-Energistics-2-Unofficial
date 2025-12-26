@@ -20,6 +20,8 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IExternalStorageRegistry;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
+import appeng.core.features.registries.entries.AEFluidTankHandler;
 import appeng.core.features.registries.entries.ExternalIInv;
 
 public class ExternalStorageRegistry implements IExternalStorageRegistry {
@@ -37,6 +39,7 @@ public class ExternalStorageRegistry implements IExternalStorageRegistry {
     }
 
     @Override
+    @Deprecated
     public IExternalStorageHandler getHandler(final TileEntity te, final ForgeDirection d, final StorageChannel chan,
             final BaseActionSource mySrc) {
         for (final IExternalStorageHandler x : this.Handlers) {
@@ -47,6 +50,24 @@ public class ExternalStorageRegistry implements IExternalStorageRegistry {
 
         if (this.lastHandler.canHandle(te, d, chan, mySrc)) {
             return this.lastHandler;
+        }
+
+        return null;
+    }
+
+    @Override
+    public IExternalStorageHandler getHandler(TileEntity te, ForgeDirection opposite, IAEStackType<?> type,
+            BaseActionSource mySrc) {
+        for (final IExternalStorageHandler x : this.Handlers) {
+            if (x.canHandle(te, opposite, type, mySrc)) {
+                return x;
+            }
+        }
+
+        if (this.lastHandler.canHandle(te, opposite, type, mySrc)) {
+            return this.lastHandler;
+        } else if (AEFluidTankHandler.INSTANCE.canHandle(te, opposite, type, mySrc)) {
+            return AEFluidTankHandler.INSTANCE;
         }
 
         return null;

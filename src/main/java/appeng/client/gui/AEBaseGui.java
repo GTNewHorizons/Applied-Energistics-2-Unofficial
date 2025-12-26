@@ -10,6 +10,8 @@
 
 package appeng.client.gui;
 
+import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+
 import java.awt.Rectangle;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -31,11 +33,13 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -49,10 +53,9 @@ import com.google.common.base.Stopwatch;
 
 import appeng.api.config.TerminalFontSize;
 import appeng.api.events.GuiScrollEvent;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
-import appeng.client.ActionKey;
-import appeng.client.ClientHelper;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.GuiScrollbar;
@@ -153,7 +156,6 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     private ItemStack dbl_whichItem;
     private Slot bl_clicked;
     private boolean subGui;
-    private static int controlKey;
 
     private final List<VirtualMESlot> virtualSlots = new ArrayList<>();
     private final List<VirtualMESlot> draggedSlots = new ArrayList<>();
@@ -164,7 +166,6 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.subGui = switchingGuis;
         switchingGuis = false;
         aeRenderItem.parent = this;
-        controlKey = ClientHelper.proxy.getKeybind(ActionKey.CONTROL_OPERATION);
     }
 
     protected static String join(final Collection<String> toolTip, final String delimiter) {
@@ -459,7 +460,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(true, true, isCtrlKeyDown(), mouseButton);
+        slot.handleMouseClicked(AEStackTypeRegistry.getAllTypes(), isCtrlKeyDown(), mouseButton);
     }
 
     @Override
@@ -804,8 +805,16 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         } else if (s instanceof AppEngSlot aeSlot) {
             try {
                 final ItemStack is = s.getStack();
-                if ((aeSlot.renderIconWithItem() || is == null) && aeSlot.shouldDisplay()) {
-                    drawTextureOnSlot(s, aeSlot.getIcon(), aeSlot.getOpacityOfIcon());
+                if (aeSlot.getBackgroundIconIndex() != null && is == null) {
+                    IIcon iicon = aeSlot.getBackgroundIconIndex();
+                    GL11.glDisable(GL11.GL_LIGHTING);
+                    GL11.glEnable(GL11.GL_BLEND);
+                    this.mc.getTextureManager().bindTexture(TextureMap.locationItemsTexture);
+                    this.drawTexturedModelRectFromIcon(aeSlot.xDisplayPosition, aeSlot.yDisplayPosition, iicon, 16, 16);
+                    GL11.glDisable(GL11.GL_BLEND);
+                    GL11.glEnable(GL11.GL_LIGHTING);
+                } else if ((aeSlot.renderIconWithItem() || is == null) && aeSlot.shouldDisplay()) {
+                    this.drawTextureOnSlot(s, aeSlot.getIcon(), aeSlot.getOpacityOfIcon());
                 }
 
                 if (is != null) {
@@ -983,15 +992,19 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     public static boolean isCtrlKeyDown() {
-        return Keyboard.isKeyDown(controlKey);
+        int keyCode = EXTRA_ACTION_KEY.getKeyCode();
+        if (keyCode < 0) {
+            // In vanilla code, mouse buttons are registered as keyCodes with their values offset by -100.
+            return Mouse.isButtonDown(keyCode + 100);
+        } else {
+            return Keyboard.isKeyDown(keyCode);
+        }
     }
 
     private void drawVirtualSlots(@Nonnull List<VirtualMESlot> slots, int mouseX, int mouseY) {
         final int x = mouseX - this.guiLeft + 1;
         final int y = mouseY - this.guiTop + 1;
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
-        RenderHelper.enableGUIStandardItemLighting();
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
 
         for (VirtualMESlot slot : slots) {
             boolean isHovered = slot.drawStackAndOverlay(this.mc, x, y);

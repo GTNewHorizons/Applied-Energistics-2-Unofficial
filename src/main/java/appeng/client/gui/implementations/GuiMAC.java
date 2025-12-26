@@ -69,7 +69,7 @@ public class GuiMAC extends GuiUpgradeable {
     }
 
     @Override
-    protected GuiText getName() {
-        return GuiText.MolecularAssembler;
+    protected String getName() {
+        return GuiText.MolecularAssembler.getLocal();
     }
 }

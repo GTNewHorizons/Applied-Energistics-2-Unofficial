@@ -11,6 +11,7 @@
 package appeng.client.gui.implementations;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -26,7 +27,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.implementations.tiles.ICellWorkbench;
-import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiToggleButton;
@@ -222,8 +223,8 @@ public class GuiCellWorkbench extends GuiUpgradeable {
     }
 
     @Override
-    protected GuiText getName() {
-        return GuiText.CellWorkbench;
+    protected String getName() {
+        return GuiText.CellWorkbench.getLocal();
     }
 
     @Override
@@ -252,7 +253,7 @@ public class GuiCellWorkbench extends GuiUpgradeable {
 
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        StorageChannel channel = workbench.getStorageChannel();
-        slot.handleMouseClicked(channel == StorageChannel.ITEMS, channel == StorageChannel.FLUIDS, false);
+        IAEStackType<?> type = workbench.getStackType();
+        slot.handleMouseClicked(Collections.singletonList(type), false);
     }
 }

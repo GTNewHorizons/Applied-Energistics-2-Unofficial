@@ -10,6 +10,9 @@
 
 package appeng.parts.reporting;
 
+import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.io.IOException;
 
 import net.minecraft.client.Minecraft;
@@ -26,6 +29,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -36,10 +40,10 @@ import appeng.api.networking.storage.IStackWatcherHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
-import appeng.client.ClientHelper;
 import appeng.core.AELog;
 import appeng.core.localization.PlayerMessages;
 import appeng.helpers.Reflected;
@@ -68,7 +72,7 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         implements IPartStorageMonitor, IStackWatcherHost {
 
     private static final IWideReadableNumberConverter NUMBER_CONVERTER = ReadableNumberConverter.INSTANCE;
-    private IAEItemStack configuredItem;
+    private IAEStack<?> configuredItem;
     private String lastHumanReadableText;
     private boolean isLocked;
     private IStackWatcher myWatcher;
@@ -90,8 +94,11 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
 
         this.isLocked = data.getBoolean("isLocked");
 
-        final NBTTagCompound myItem = data.getCompoundTag("configuredItem");
-        this.configuredItem = AEItemStack.loadItemStackFromNBT(myItem);
+        if (data.hasKey("configuredItem")) {
+            this.configuredItem = Platform.readStackNBT(data.getCompoundTag("configuredItem"));
+        } else {
+            this.configuredItem = null;
+        }
     }
 
     @Override
@@ -100,12 +107,9 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
 
         data.setBoolean("isLocked", this.isLocked);
 
-        final NBTTagCompound myItem = new NBTTagCompound();
         if (this.configuredItem != null) {
-            this.configuredItem.writeToNBT(myItem);
+            data.setTag("configuredItem", this.configuredItem.toNBTGeneric());
         }
-
-        data.setTag("configuredItem", myItem);
     }
 
     @Override
@@ -115,7 +119,7 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         data.writeBoolean(this.isLocked);
         data.writeBoolean(this.configuredItem != null);
         if (this.configuredItem != null) {
-            this.configuredItem.writeToPacket(data);
+            Platform.writeStackByte(this.configuredItem, data);
         }
     }
 
@@ -124,13 +128,13 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         boolean needRedraw = super.readFromStream(data);
 
         final boolean isLocked = data.readBoolean();
-        needRedraw = this.isLocked != isLocked;
+        needRedraw |= this.isLocked != isLocked;
 
         this.isLocked = isLocked;
 
         final boolean val = data.readBoolean();
         if (val) {
-            this.configuredItem = AEItemStack.loadItemStackFromPacket(data);
+            this.configuredItem = IAEStack.fromPacketGeneric(data);
         } else {
             this.configuredItem = null;
         }
@@ -142,7 +146,16 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
 
     @Override
     public boolean onPartActivate(final EntityPlayer player, final Vec3 pos) {
-        if (Platform.isClient()) {
+        return this.onActivate(player, false);
+    }
+
+    @Override
+    public boolean onPartShiftActivate(EntityPlayer player, Vec3 pos) {
+        return this.onActivate(player, true);
+    }
+
+    private boolean onActivate(EntityPlayer player, boolean isShiftDown) {
+        if (player.worldObj.isRemote) {
             return true;
         }
 
@@ -155,22 +168,41 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         }
 
         final TileEntity te = this.getTile();
-        final ItemStack eq = player.getCurrentEquippedItem();
+        final ItemStack hand = player.getCurrentEquippedItem();
 
-        if (Platform.isWrench(player, eq, te.xCoord, te.yCoord, te.zCoord)) {
+        if (Platform.isWrench(player, hand, te.xCoord, te.yCoord, te.zCoord)) {
             this.isLocked = !this.isLocked;
             player.addChatMessage((this.isLocked ? PlayerMessages.isNowLocked : PlayerMessages.isNowUnlocked).toChat());
             this.getHost().markForUpdate();
         } else if (!this.isLocked) {
-            this.configuredItem = AEItemStack.create(eq);
+            if (hand == null) {
+                this.configuredItem = null;
+            } else if (!EXTRA_ACTION_KEY.isKeyDown(player)) {
+                this.configuredItem = AEItemStack.create(hand);
+            } else {
+                this.configuredItem = null;
+                for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                    if (type == ITEM_STACK_TYPE) continue;
+                    if (type.isContainerItemForType(hand)) {
+                        this.configuredItem = type.getStackFromContainerItem(hand);
+                    } else {
+                        this.configuredItem = type.convertStackFromItem(hand);
+                    }
+
+                    if (this.configuredItem != null) break;
+                }
+            }
+
             this.configureWatchers();
             this.getHost().markForUpdate();
         } else {
-            this.extractItem(player);
+            this.onLockedInteraction(player, isShiftDown);
         }
 
         return true;
     }
+
+    protected void onLockedInteraction(final EntityPlayer player, boolean isShiftDown) {}
 
     // update the system...
     private void configureWatchers() {
@@ -184,23 +216,50 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
                     this.myWatcher.add(this.configuredItem);
                 }
 
-                this.updateReportingValue(this.getProxy().getStorage().getItemInventory());
+                this.updateReportingValue(
+                        this.getProxy().getStorage().getMEMonitor(this.configuredItem.getStackType()));
             }
         } catch (final GridAccessException e) {
-            // >.>
+            AELog.debug(e);
         }
     }
 
-    protected void extractItem(final EntityPlayer player) {}
+    @Override
+    public void updateWatcher(final IStackWatcher newWatcher) {
+        this.myWatcher = newWatcher;
+        this.configureWatchers();
+    }
 
-    private void updateReportingValue(final IMEMonitor<IAEItemStack> itemInventory) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void updateReportingValue(final IMEMonitor itemInventory) {
+        if (this.configuredItem != null && itemInventory != null
+                && itemInventory.getStackType() == this.configuredItem.getStackType()) {
+            final IAEStack<?> result = itemInventory.getStorageList().findPrecise(this.configuredItem);
+            this.updateStackSize(result);
+        }
+    }
+
+    @Override
+    public void onStackChange(final IItemList o, final IAEStack fullStack, final IAEStack diffStack,
+            final BaseActionSource src, final StorageChannel chan) {
         if (this.configuredItem != null) {
-            final IAEItemStack result = itemInventory.getStorageList().findPrecise(this.configuredItem);
-            if (result == null) {
-                this.configuredItem.setStackSize(0);
-            } else {
-                this.configuredItem.setStackSize(result.getStackSize());
-            }
+            this.updateStackSize(fullStack);
+        }
+    }
+
+    private void updateStackSize(@Nullable IAEStack<?> newStack) {
+        if (newStack == null) {
+            this.configuredItem.setStackSize(0);
+        } else {
+            this.configuredItem.setStackSize(newStack.getStackSize());
+        }
+
+        final long stackSize = this.configuredItem.getStackSize();
+        final String humanReadableText = NUMBER_CONVERTER.toWideReadableForm(stackSize);
+
+        if (!humanReadableText.equals(this.lastHumanReadableText)) {
+            this.lastHumanReadableText = humanReadableText;
+            this.getHost().markForUpdate();
         }
     }
 
@@ -229,16 +288,16 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
             return;
         }
 
-        final IAEItemStack ais = (IAEItemStack) this.getDisplayed();
+        final IAEStack<?> aes = this.getDisplayed();
 
-        if (ais != null) {
+        if (aes != null) {
             GL11.glPushMatrix();
             GL11.glTranslated(x + 0.5, y + 0.5, z + 0.5);
 
             if (this.updateList) {
                 this.updateList = false;
                 GL11.glNewList(this.dspList, GL11.GL_COMPILE_AND_EXECUTE);
-                this.tesrRenderScreen(tess, ais);
+                this.tesrRenderScreen(tess, aes);
                 GL11.glEndList();
             } else {
                 GL11.glCallList(this.dspList);
@@ -258,9 +317,7 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         return this.configuredItem;
     }
 
-    private void tesrRenderScreen(final Tessellator tess, final IAEItemStack ais) {
-        // GL11.glPushAttrib( GL11.GL_ALL_ATTRIB_BITS );
-
+    private void tesrRenderScreen(final Tessellator tess, final IAEStack<?> aes) {
         final ForgeDirection d = this.getSide();
 
         GL11.glTranslated(d.offsetX * 0.77, d.offsetY * 0.77, d.offsetZ * 0.77);
@@ -293,9 +350,6 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         }
 
         try {
-            final ItemStack sis = ais.getItemStack();
-            sis.stackSize = 1;
-
             final int br = 16 << 20 | 16 << 4;
             final int var11 = br % 65536;
             final int var12 = br / 65536;
@@ -305,10 +359,9 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
 
             GL11.glDisable(GL11.GL_LIGHTING);
             GL11.glDisable(GL12.GL_RESCALE_NORMAL);
-            // RenderHelper.enableGUIStandardItemLighting();
             tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
 
-            ClientHelper.proxy.doRenderItem(sis, this.getTile().getWorldObj());
+            aes.drawOnBlockFace(this.getTile().getWorldObj());
         } catch (final Exception e) {
             AELog.debug(e);
         } finally {
@@ -316,16 +369,14 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
             GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         }
 
-        this.tesrRenderItemNumber(ais);
-
-        // GL11.glPopAttrib();
+        this.tesrRenderItemNumber(aes);
     }
 
-    public void tesrRenderItemNumber(final IAEItemStack ais) {
+    public void tesrRenderItemNumber(final IAEStack<?> aes) {
         GL11.glTranslatef(0.0f, 0.14f, -0.24f);
         GL11.glScalef(1.0f / 62.0f, 1.0f / 62.0f, 1.0f / 62.0f);
 
-        final long stackSize = ais.getStackSize();
+        final long stackSize = aes.getStackSize();
         final String renderedStackSize = NUMBER_CONVERTER.toWideReadableForm(stackSize);
 
         final FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
@@ -337,32 +388,6 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
     @Override
     public boolean isLocked() {
         return this.isLocked;
-    }
-
-    @Override
-    public void updateWatcher(final IStackWatcher newWatcher) {
-        this.myWatcher = newWatcher;
-        this.configureWatchers();
-    }
-
-    @Override
-    public void onStackChange(final IItemList o, final IAEStack fullStack, final IAEStack diffStack,
-            final BaseActionSource src, final StorageChannel chan) {
-        if (this.configuredItem != null) {
-            if (fullStack == null) {
-                this.configuredItem.setStackSize(0);
-            } else {
-                this.configuredItem.setStackSize(fullStack.getStackSize());
-            }
-
-            final long stackSize = this.configuredItem.getStackSize();
-            final String humanReadableText = NUMBER_CONVERTER.toWideReadableForm(stackSize);
-
-            if (!humanReadableText.equals(this.lastHumanReadableText)) {
-                this.lastHumanReadableText = humanReadableText;
-                this.getHost().markForUpdate();
-            }
-        }
     }
 
     @Override

@@ -4,7 +4,7 @@ import net.minecraft.inventory.IInventory;
 
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.storage.ICellWorkbenchItem;
-import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
 import appeng.helpers.ICellRestriction;
 import appeng.helpers.IOreFilterable;
 import appeng.tile.inventory.IAEAppEngInventory;
@@ -20,5 +20,5 @@ public interface ICellWorkbench extends IUpgradeableHost, IAEAppEngInventory, IC
 
     IInventory getCellUpgradeInventory();
 
-    StorageChannel getStorageChannel();
+    IAEStackType<?> getStackType();
 }

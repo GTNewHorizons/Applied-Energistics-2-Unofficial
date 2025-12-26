@@ -1,5 +1,7 @@
 package appeng.me.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+
 import com.glodblock.github.util.Util;
 
 import appeng.api.AEApi;
@@ -17,7 +19,7 @@ import appeng.util.prioitylist.PrecisePriorityList;
 public class FluidCellInventoryHandler extends CellInventoryHandler<IAEFluidStack> {
 
     public FluidCellInventoryHandler(IMEInventory<IAEFluidStack> c) {
-        super(c, StorageChannel.FLUIDS);
+        super(c, FLUID_STACK_TYPE);
     }
 
     @Override
