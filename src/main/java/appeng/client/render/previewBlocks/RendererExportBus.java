@@ -5,7 +5,6 @@ import java.util.List;
 import com.glodblock.github.common.parts.PartFluidExportBus;
 
 import appeng.parts.automation.PartExportBus;
-import appeng.parts.automation.PartLevelEmitter;
 import appeng.util.Platform;
 
 public class RendererExportBus extends AbstractRendererPreview implements IRenderPreview {
@@ -23,6 +22,6 @@ public class RendererExportBus extends AbstractRendererPreview implements IRende
     @Override
     public List<Class<?>> validItemClass() {
         if (Platform.isAE2FCLoaded) return ViewHelper.getValidClasses(PartExportBus.class, PartFluidExportBus.class);
-        else return ViewHelper.getValidClasses(PartLevelEmitter.class);
+        else return ViewHelper.getValidClasses(PartExportBus.class);
     }
 }
