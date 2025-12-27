@@ -103,7 +103,7 @@ public class PacketInventoryAction extends AppEngPacket {
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
         if (sender.openContainer instanceof AEBaseContainer baseContainer) {
-            final PrimaryGui pg = baseContainer.getPrimaryGui();
+            final PrimaryGui pg = baseContainer.createPrimaryGui();
             if (this.action == InventoryAction.AUTO_CRAFT) {
                 final ContainerOpenContext context = baseContainer.getOpenContext();
                 if (context != null) {
@@ -112,7 +112,8 @@ public class PacketInventoryAction extends AppEngPacket {
                             sender,
                             te,
                             baseContainer.getOpenContext().getSide(),
-                            GuiBridge.GUI_CRAFTING_AMOUNT);
+                            GuiBridge.GUI_CRAFTING_AMOUNT,
+                            baseContainer.getTargetSlotIndex());
 
                     if (sender.openContainer instanceof ContainerCraftAmount cca) {
                         cca.setPrimaryGui(pg);

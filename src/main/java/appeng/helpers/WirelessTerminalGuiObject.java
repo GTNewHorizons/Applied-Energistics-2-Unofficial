@@ -55,7 +55,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     private final ItemStack effectiveItem;
     private final IWirelessTermHandler wth;
     private final String encryptionKey;
-    private final EntityPlayer myPlayer;
+    protected final EntityPlayer myPlayer;
     private IGrid targetGrid;
     private IStorageGrid sg;
     private IWirelessAccessPoint myWap;
