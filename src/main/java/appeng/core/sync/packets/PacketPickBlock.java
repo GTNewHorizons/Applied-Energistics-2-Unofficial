@@ -144,7 +144,7 @@ public class PacketPickBlock extends AppEngPacket {
                 consolidatedStack = sender.inventory.getStackInSlot(partialStackSlot);
                 consolidatedStackSlot = partialStackSlot;
             } else {
-                PlayerInventoryUtil.consolidateItemStacks(sender.inventory, partialStackSlot, consolidatedStackSlot);
+                PlayerInventoryUtil.consolidateItemStacks(sender, partialStackSlot, consolidatedStackSlot);
             }
 
             // Check if we created a full stack of items

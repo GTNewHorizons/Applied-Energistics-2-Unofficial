@@ -6,6 +6,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S09PacketHeldItemChange;
+import net.minecraft.network.play.server.S2FPacketSetSlot;
 
 import appeng.api.AEApi;
 import baubles.api.BaublesApi;
@@ -44,7 +45,7 @@ public class PlayerInventoryUtil {
             player.inventory.currentItem = slot;
             player.playerNetServerHandler.sendPacket(new S09PacketHeldItemChange(slot));
         } else {
-            swapInventorySlots(player.inventory, player.inventory.currentItem, slot);
+            swapInventorySlots(player, player.inventory.currentItem, slot);
         }
         player.inventory.markDirty();
     }
@@ -53,18 +54,18 @@ public class PlayerInventoryUtil {
      * Moves an ItemStack from a source slot to a destination slot in the player's inventory. If the destination slot is
      * occupied, the items are swapped.
      *
-     * @param inventory The player's inventory.
-     * @param slot1     The index of the first ItemStack to move.
-     * @param slot2     The index of the second ItemStack to move.
+     * @param player The player whose inventory is to be modified.
+     * @param slot1  The index of the first ItemStack to move.
+     * @param slot2  The index of the second ItemStack to move.
      */
-    public static void swapInventorySlots(InventoryPlayer inventory, int slot1, int slot2) {
+    public static void swapInventorySlots(EntityPlayerMP player, int slot1, int slot2) {
         if (slot1 == slot2) {
             return;
         }
 
         // Get the stacks from both slots
-        ItemStack sourceStack = inventory.getStackInSlot(slot1);
-        ItemStack destinationStack = inventory.getStackInSlot(slot2);
+        ItemStack sourceStack = player.inventory.getStackInSlot(slot1);
+        ItemStack destinationStack = player.inventory.getStackInSlot(slot2);
 
         // Copy the item stacks to prevents any potential shared reference issue.
         if (sourceStack != null) {
@@ -75,25 +76,27 @@ public class PlayerInventoryUtil {
         }
 
         // Set the destination slot with the source stack (even if it's null)
-        inventory.setInventorySlotContents(slot2, sourceStack);
+        player.inventory.setInventorySlotContents(slot2, sourceStack);
 
         // Set the source slot with the original destination stack
-        inventory.setInventorySlotContents(slot1, destinationStack);
+        player.inventory.setInventorySlotContents(slot1, destinationStack);
 
         // Mark the inventory as dirty to ensure changes are saved and synced
-        inventory.markDirty();
+        player.inventory.markDirty();
+        player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(-2, slot2, sourceStack));
+        player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(-2, slot1, destinationStack));
     }
 
     /**
      * Consolidate ItemStacks from a source slot to a destination slot in the player's inventory.
      *
-     * @param inventory       The player's inventory.
+     * @param player          The player whose inventory is to be modified.
      * @param sourceSlot      The index of the slot to move the item from.
      * @param destinationSlot The index of the slot to move the item to.
      */
-    public static void consolidateItemStacks(InventoryPlayer inventory, int sourceSlot, int destinationSlot) {
-        ItemStack sourceStack = inventory.getStackInSlot(sourceSlot);
-        ItemStack destinationStack = inventory.getStackInSlot(destinationSlot);
+    public static void consolidateItemStacks(EntityPlayerMP player, int sourceSlot, int destinationSlot) {
+        ItemStack sourceStack = player.inventory.getStackInSlot(sourceSlot);
+        ItemStack destinationStack = player.inventory.getStackInSlot(destinationSlot);
 
         // We can only consolidate if both the source and destination slots have item stacks.
         if (sourceStack == null || destinationStack == null) {
@@ -119,11 +122,13 @@ public class PlayerInventoryUtil {
         }
 
         // Update the inventory stacks
-        inventory.setInventorySlotContents(destinationSlot, destinationStack);
-        inventory.setInventorySlotContents(sourceSlot, sourceStack);
+        player.inventory.setInventorySlotContents(destinationSlot, destinationStack);
+        player.inventory.setInventorySlotContents(sourceSlot, sourceStack);
 
         // Mark the inventory as dirty to ensure changes are saved and synced
-        inventory.markDirty();
+        player.inventory.markDirty();
+        player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(-2, destinationSlot, destinationStack));
+        player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(-2, sourceSlot, sourceStack));
     }
 
     /**
