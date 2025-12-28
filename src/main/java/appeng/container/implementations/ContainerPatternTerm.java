@@ -51,6 +51,7 @@ import appeng.container.slot.SlotRestrictedInput;
 import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.items.contents.WirelessPatternTerminalGuiObject;
+import appeng.items.misc.ItemEncodedPattern;
 import appeng.items.storage.ItemViewCell;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
@@ -259,7 +260,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 
         // first check the output slots, should either be null, or a pattern
         if (output != null) {
-            if (!this.isEncodedPattern(output) && !this.isUltimatePattern(output)) {
+            if (!this.isEncodedPattern(output)) {
                 return;
             }
         } // if nothing is there we should snag a new pattern.
@@ -276,13 +277,13 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             }
 
             refillBlankPatterns(patternSlotIN);
+        }
 
-            // add a new encoded pattern.
-            if (isCraftingMode()) {
-                output = AEApi.instance().definitions().items().encodedPattern().maybeStack(1).orNull();
-            } else {
-                output = AEApi.instance().definitions().items().encodedUltimatePattern().maybeStack(1).orNull();;
-            }
+        // add a new encoded pattern.
+        if (isCraftingMode()) {
+            output = AEApi.instance().definitions().items().encodedPattern().maybeStack(1).orNull();
+        } else {
+            output = AEApi.instance().definitions().items().encodedUltimatePattern().maybeStack(1).orNull();;
         }
 
         // encode the slot.
@@ -362,11 +363,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
     }
 
     private boolean isEncodedPattern(final ItemStack stack) {
-        return stack != null && AEApi.instance().definitions().items().encodedPattern().isSameAs(stack);
-    }
-
-    private boolean isUltimatePattern(final ItemStack stack) {
-        return stack != null && AEApi.instance().definitions().items().encodedUltimatePattern().isSameAs(stack);
+        return stack != null && stack.getItem() instanceof ItemEncodedPattern;
     }
 
     @Override
@@ -492,7 +489,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             this.beSubstitute = this.patternTerminal.canBeSubstitution();
 
             if (this.isFirstUpdate) {
-                if (isCraftingMode()) {
+                if (craftingModeSupport && isCraftingMode()) {
                     this.copyToMatrix();
                 } else {
                     this.updateVirtualSlots(StorageName.CRAFTING_INPUT, this.inputs, craftingSlotsClient);
