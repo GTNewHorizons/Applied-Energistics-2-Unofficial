@@ -55,7 +55,12 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
 
         renderer.setRenderBounds(0, 0, 0, 1, 1, 1);
 
-        final boolean result = super.renderInWorld(imb, world, x, y, z, renderer);
+        int driveColor = sp.getColor().driveVariant;
+        float driveRed = (float) (driveColor >> 16 & 255) / 255.0F;
+        float driveGreen = (float) (driveColor >> 8 & 255) / 255.0F;
+        float driveBlue = (float) (driveColor & 255) / 255.0F;
+
+        final boolean result = renderer.renderStandardBlockWithColorMultiplier(imb, x, y, z, driveRed, driveGreen, driveBlue);
 
         final Tessellator tess = Tessellator.instance;
         final IIcon ico = ExtraBlockTextures.MEStorageCellTextures.getIcon();
@@ -150,8 +155,9 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
                 double v4 = ico.getInterpolatedV(((spin) % 4 < 2) ? m : mx);
 
                 tess.setBrightness(b);
-                // uses special color when rendering drive face.
-                tess.setColorOpaque_I(sp.getColor().driveVariant);
+                // Set to white to not paint drive with block color
+                tess.setColorOpaque_I(0xFFFFFF);
+
                 switch (forward.offsetX + forward.offsetY * 2 + forward.offsetZ * 3) {
                     case 1 -> {
                         tess.addVertexWithUV(
