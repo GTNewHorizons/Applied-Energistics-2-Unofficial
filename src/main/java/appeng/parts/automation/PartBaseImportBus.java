@@ -22,6 +22,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.settings.TickRates;
 import appeng.me.GridAccessException;
+import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -122,12 +123,11 @@ public abstract class PartBaseImportBus<StackType extends IAEStack<StackType>> e
         if (myTarget != null) {
             try {
                 this.itemToSend = this.calculateAmountToSend();
-                this.itemToSend = Math.min(
-                        this.itemToSend,
-                        (int) (0.01 + this.getProxy().getEnergy().extractAEPower(
-                                this.itemToSend / getPowerMultiplier(),
-                                Actionable.SIMULATE,
-                                PowerMultiplier.CONFIG)));
+                final double availablePower = this.getProxy().getEnergy().extractAEPower(
+                        Platform.ceilDiv(this.itemToSend, getPowerMultiplier()),
+                        Actionable.SIMULATE,
+                        PowerMultiplier.CONFIG);
+                this.itemToSend = Math.min(this.itemToSend, (int) (availablePower * getPowerMultiplier() + 0.01));
 
                 final IMEMonitor<StackType> inv = this.getMonitor();
                 final IEnergyGrid energy = this.getProxy().getEnergy();
