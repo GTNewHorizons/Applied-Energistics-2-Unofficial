@@ -60,7 +60,11 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
         float driveGreen = (float) (driveColor >> 8 & 255) / 255.0F;
         float driveBlue = (float) (driveColor & 255) / 255.0F;
 
+        this.preRenderInWorld(imb, world, x, y, z, renderer);
+
         final boolean result = renderer.renderStandardBlockWithColorMultiplier(imb, x, y, z, driveRed, driveGreen, driveBlue);
+
+        this.postRenderInWorld(renderer);
 
         final Tessellator tess = Tessellator.instance;
         final IIcon ico = ExtraBlockTextures.MEStorageCellTextures.getIcon();
