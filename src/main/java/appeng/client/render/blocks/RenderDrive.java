@@ -62,7 +62,8 @@ public class RenderDrive extends BaseBlockRender<BlockDrive, TileDrive> {
 
         this.preRenderInWorld(imb, world, x, y, z, renderer);
 
-        final boolean result = renderer.renderStandardBlockWithColorMultiplier(imb, x, y, z, driveRed, driveGreen, driveBlue);
+        final boolean result = renderer
+                .renderStandardBlockWithColorMultiplier(imb, x, y, z, driveRed, driveGreen, driveBlue);
 
         this.postRenderInWorld(renderer);
 
