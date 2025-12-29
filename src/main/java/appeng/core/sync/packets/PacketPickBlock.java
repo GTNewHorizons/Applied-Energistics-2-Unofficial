@@ -75,33 +75,17 @@ public class PacketPickBlock extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
-
-        // Ensure the player has a wireless terminal with access to an AE2 network.
-        ItemStack wirelessTerminal = PlayerInventoryUtil.getFirstWirelessTerminal(sender);
-        if (wirelessTerminal == null) {
-            sender.addChatMessage(PlayerMessages.PickBlockTerminalNotFound.toChat());
-            return;
-        }
-
-        var wirelessInventory = getWirelessItemInventory(sender, wirelessTerminal);
-        if (wirelessInventory == null) {
-            return;
-        }
+        World world = sender.worldObj;
 
         // Get the target block
-        World world = sender.worldObj;
         Block targetBlock = world.getBlock(this.blockX, this.blockY, this.blockZ);
         if (targetBlock == Blocks.air) {
             return; // Don't try to withdraw air
         }
 
-        ItemStack itemToFind = targetBlock.getPickBlock(
-                new MovingObjectPosition(this.blockX, this.blockY, this.blockZ, this.blockSide, this.hitVec),
-                world,
-                this.blockX,
-                this.blockY,
-                this.blockZ,
-                sender);
+        var movingTarget = new MovingObjectPosition(this.blockX, this.blockY, this.blockZ, this.blockSide, this.hitVec);
+        ItemStack itemToFind = targetBlock
+                .getPickBlock(movingTarget, world, this.blockX, this.blockY, this.blockZ, sender);
 
         // 1. Scan through the player's main inventory to categorize existing stacks of the target block:
         // - If a full stack (stackSize >= maxStackSize) is found, record its slot and stop searching.
@@ -144,7 +128,11 @@ public class PacketPickBlock extends AppEngPacket {
                 consolidatedStack = sender.inventory.getStackInSlot(partialStackSlot);
                 consolidatedStackSlot = partialStackSlot;
             } else {
-                PlayerInventoryUtil.consolidateItemStacks(sender, partialStackSlot, consolidatedStackSlot);
+                var newStack = PlayerInventoryUtil
+                        .consolidateItemStacks(sender, partialStackSlot, consolidatedStackSlot);
+                if (newStack != null) {
+                    consolidatedStack = newStack;
+                }
             }
 
             // Check if we created a full stack of items
@@ -162,6 +150,17 @@ public class PacketPickBlock extends AppEngPacket {
         int amountToWithdraw = pickBlockItemStack == null ? itemToFind.getMaxStackSize()
                 : itemToFind.getMaxStackSize() - pickBlockItemStack.stackSize;
         if (amountToWithdraw <= 0) {
+            return;
+        }
+
+        // Ensure the player has a wireless terminal with access to an AE2 network.
+        ItemStack wirelessTerminal = PlayerInventoryUtil.getFirstWirelessTerminal(sender);
+        if (wirelessTerminal == null) {
+            sender.addChatMessage(PlayerMessages.PickBlockTerminalNotFound.toChat());
+            return;
+        }
+        var wirelessInventory = getWirelessItemInventory(sender, wirelessTerminal);
+        if (wirelessInventory == null) {
             return;
         }
 

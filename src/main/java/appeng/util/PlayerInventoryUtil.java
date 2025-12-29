@@ -76,24 +76,25 @@ public class PlayerInventoryUtil {
      * @param player          The player whose inventory is to be modified.
      * @param sourceSlot      The index of the slot to move the item from.
      * @param destinationSlot The index of the slot to move the item to.
+     * @return the consolidated item stack
      */
-    public static void consolidateItemStacks(EntityPlayerMP player, int sourceSlot, int destinationSlot) {
+    public static ItemStack consolidateItemStacks(EntityPlayerMP player, int sourceSlot, int destinationSlot) {
         ItemStack sourceStack = player.inventory.getStackInSlot(sourceSlot);
         ItemStack destinationStack = player.inventory.getStackInSlot(destinationSlot);
 
         // We can only consolidate if both the source and destination slots have item stacks.
         if (sourceStack == null || destinationStack == null) {
-            return;
+            return destinationStack;
+        }
+
+        if (!sourceStack.isItemEqual(destinationStack)
+                || !ItemStack.areItemStackTagsEqual(sourceStack, destinationStack)) {
+            return destinationStack;
         }
 
         // Copy the item stacks to prevents any potential shared reference issue.
         sourceStack = sourceStack.copy();
         destinationStack = destinationStack.copy();
-
-        if (!sourceStack.isItemEqual(destinationStack)
-                || !ItemStack.areItemStackTagsEqual(sourceStack, destinationStack)) {
-            return;
-        }
 
         int missingQuantity = destinationStack.getMaxStackSize() - destinationStack.stackSize;
         if (missingQuantity >= sourceStack.stackSize) {
@@ -112,6 +113,8 @@ public class PlayerInventoryUtil {
         player.inventory.markDirty();
         player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(-2, destinationSlot, destinationStack));
         player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(-2, sourceSlot, sourceStack));
+
+        return player.inventory.getStackInSlot(destinationSlot);
     }
 
     /**
