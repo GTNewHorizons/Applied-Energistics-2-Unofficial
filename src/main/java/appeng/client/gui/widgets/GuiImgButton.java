@@ -277,7 +277,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     Settings.LEVEL_TYPE,
                     LevelType.ITEM_LEVEL,
                     ButtonToolTips.LevelType,
-                    ButtonToolTips.LevelType_Item);
+                    ButtonToolTips.LevelType_Item_Fluid);
 
             this.registerApp(
                     16 * 13,

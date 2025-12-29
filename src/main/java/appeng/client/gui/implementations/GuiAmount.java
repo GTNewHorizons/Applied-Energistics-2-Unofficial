@@ -43,15 +43,71 @@ public abstract class GuiAmount extends GuiSub {
         final int c = this.getButtonQtyByIndex(2);
         final int d = this.getButtonQtyByIndex(3);
 
-        this.buttonList.add(this.plus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 26, 22, 20, "+" + a));
-        this.buttonList.add(this.plus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 26, 28, 20, "+" + b));
-        this.buttonList.add(this.plus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 26, 32, 20, "+" + c));
-        this.buttonList.add(this.plus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 26, 38, 20, "+" + d));
+        this.buttonList.add(
+                this.plus1 = new GuiButton(
+                        0,
+                        this.guiLeft + 20,
+                        this.guiTop + 26,
+                        22,
+                        20,
+                        GuiText.IncreaseAmount.getLocal(a)));
+        this.buttonList.add(
+                this.plus10 = new GuiButton(
+                        0,
+                        this.guiLeft + 48,
+                        this.guiTop + 26,
+                        28,
+                        20,
+                        GuiText.IncreaseAmount.getLocal(b)));
+        this.buttonList.add(
+                this.plus100 = new GuiButton(
+                        0,
+                        this.guiLeft + 82,
+                        this.guiTop + 26,
+                        32,
+                        20,
+                        GuiText.IncreaseAmount.getLocal(c)));
+        this.buttonList.add(
+                this.plus1000 = new GuiButton(
+                        0,
+                        this.guiLeft + 120,
+                        this.guiTop + 26,
+                        38,
+                        20,
+                        GuiText.IncreaseAmount.getLocal(d)));
 
-        this.buttonList.add(this.minus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 75, 22, 20, "-" + a));
-        this.buttonList.add(this.minus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 75, 28, 20, "-" + b));
-        this.buttonList.add(this.minus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 75, 32, 20, "-" + c));
-        this.buttonList.add(this.minus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 75, 38, 20, "-" + d));
+        this.buttonList.add(
+                this.minus1 = new GuiButton(
+                        0,
+                        this.guiLeft + 20,
+                        this.guiTop + 75,
+                        22,
+                        20,
+                        GuiText.DecreaseAmount.getLocal(a)));
+        this.buttonList.add(
+                this.minus10 = new GuiButton(
+                        0,
+                        this.guiLeft + 48,
+                        this.guiTop + 75,
+                        28,
+                        20,
+                        GuiText.DecreaseAmount.getLocal(b)));
+        this.buttonList.add(
+                this.minus100 = new GuiButton(
+                        0,
+                        this.guiLeft + 82,
+                        this.guiTop + 75,
+                        32,
+                        20,
+                        GuiText.DecreaseAmount.getLocal(c)));
+        this.buttonList.add(
+                this.minus1000 = new GuiButton(
+                        0,
+                        this.guiLeft + 120,
+                        this.guiTop + 75,
+                        38,
+                        20,
+                        GuiText.DecreaseAmount.getLocal(d)));
 
         this.buttonList.add(
                 this.nextBtn = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.Next.getLocal()));
