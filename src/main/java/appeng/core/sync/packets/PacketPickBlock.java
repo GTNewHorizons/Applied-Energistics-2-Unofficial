@@ -130,7 +130,7 @@ public class PacketPickBlock extends AppEngPacket {
 
         // 3. If there are no partial stacks and the player's inventory is full,
         // then return since we cannot add a retrieved stack to a full inventory
-        int nextEmptySlot = PlayerInventoryUtil.getFirstEmptyInventorySlot(sender.inventory);
+        int nextEmptySlot = sender.inventory.getFirstEmptyStack();
         if (partialStackSlotsList.isEmpty() && nextEmptySlot == -1) {
             return;
         }

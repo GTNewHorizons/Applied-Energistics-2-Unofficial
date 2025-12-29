@@ -2,7 +2,6 @@ package appeng.util;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S09PacketHeldItemChange;
@@ -15,22 +14,6 @@ import baubles.api.BaublesApi;
  * A collection of utility functions for manipulating player inventories.
  */
 public class PlayerInventoryUtil {
-
-    /**
-     * Finds the first empty slot in the player's inventory.
-     *
-     * @param inventory The player's inventory to search.
-     * @return The index of the first empty slot found (searching backwards), or -1 if the inventory is full.
-     */
-    public static int getFirstEmptyInventorySlot(InventoryPlayer inventory) {
-        for (int i = 0; i < inventory.mainInventory.length; ++i) {
-            if (inventory.mainInventory[i] == null) {
-                return i;
-            }
-        }
-
-        return -1;
-    }
 
     /**
      * Sets the specified inventory slot as the player's active (held) slot. If the target slot is in the hotbar (slots
