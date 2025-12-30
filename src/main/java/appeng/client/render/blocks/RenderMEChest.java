@@ -84,7 +84,6 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
         final boolean result = renderer
                 .renderStandardBlockWithColorMultiplier(imb, x, y, z, driveRed, driveGreen, driveBlue);
 
-        this.postRenderInWorld(renderer);
 
         final int stat = sp.getCellStatus(0);
         final int type = sp.getCellType(0);
