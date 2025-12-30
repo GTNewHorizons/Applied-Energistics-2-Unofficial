@@ -249,7 +249,6 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
             if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0 || myStack == null) {
                 this.getProxy().getStorage().getItemInventory().addListener(this, this.getProxy().getGrid());
                 this.getProxy().getStorage().getFluidInventory().addListener(this, this.getProxy().getGrid());
-
             } else {
                 this.getProxy().getStorage().getItemInventory().removeListener(this);
                 this.getProxy().getStorage().getFluidInventory().removeListener(this);
