@@ -91,7 +91,7 @@ public enum ButtonToolTips implements Localization {
 
     LevelType,
     LevelType_Energy,
-    LevelType_Item,
+    LevelType_Item_Fluid,
     InventoryTweaks,
     TerminalStyle,
     TerminalStyle_Full,

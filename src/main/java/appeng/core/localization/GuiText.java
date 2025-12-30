@@ -144,6 +144,8 @@ public enum GuiText implements Localization {
     Stores,
     Next,
     SelectAmount,
+    IncreaseAmount,
+    DecreaseAmount,
     Lumen,
     Empty,
 

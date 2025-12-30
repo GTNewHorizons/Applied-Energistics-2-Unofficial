@@ -120,7 +120,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
     private IConfigManagerHost gui;
     private IConfigManager serverCM;
     private IGridNode networkNode;
-    protected SlotRestrictedInput patternRefiller = null;
 
     public ContainerMEMonitorable(final InventoryPlayer ip, final ITerminalHost monitorable) {
         this(ip, monitorable, true);
