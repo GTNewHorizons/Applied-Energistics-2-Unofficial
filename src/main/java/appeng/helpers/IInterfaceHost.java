@@ -20,12 +20,14 @@ import net.minecraftforge.common.util.ForgeDirection;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
+import appeng.api.implementations.IPowerChannelState;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingRequester;
 import appeng.api.util.IInterfaceViewable;
 
-public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICraftingRequester, IInterfaceViewable {
+public interface IInterfaceHost
+        extends ICraftingProvider, IUpgradeableHost, ICraftingRequester, IInterfaceViewable, IPowerChannelState {
 
     DualityInterface getInterfaceDuality();
 
