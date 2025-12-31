@@ -248,6 +248,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         try {
             if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0 || myStack == null) {
                 this.getProxy().getStorage().getItemInventory().addListener(this, this.getProxy().getGrid());
+                this.getProxy().getStorage().getFluidInventory().addListener(this, this.getProxy().getGrid());
             } else {
                 this.getProxy().getStorage().getItemInventory().removeListener(this);
                 this.getProxy().getStorage().getFluidInventory().removeListener(this);
@@ -273,8 +274,16 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
         if (myStack == null) {
             this.lastReportedValue = 0;
-            for (final IAEStack<?> st : ((IMEMonitor<IAEStack>) monitor).getStorageList()) {
-                this.lastReportedValue += st.getStackSize();
+            try {
+                for (final IAEItemStack st : this.getProxy().getStorage().getItemInventory().getStorageList()) {
+                    this.lastReportedValue += st.getStackSize();
+                }
+
+                for (final IAEFluidStack st : this.getProxy().getStorage().getFluidInventory().getStorageList()) {
+                    this.lastReportedValue += st.getStackSize();
+                }
+            } catch (final GridAccessException e) {
+                // >.>
             }
         } else if (myStack.getChannel() != monitor.getChannel()) {
             return;
