@@ -628,7 +628,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                     this.handler.setPriority(this.priority);
                     // only READ since READ_WRITE would break compat of existing storage buses
                     // could use a new setting that is applied via button or a card too
-                    this.handler.setIsExtractFilterActive(currentAccess == AccessRestriction.READ);
+                    this.handler.setIsExtractFilterActive(currentAccess == AccessRestriction.READ || currentAccess == AccessRestriction.READ_WRITE);
 
                     if (this.getInstalledUpgrades(Upgrades.STICKY) > 0) {
                         this.handler.setSticky(true);
