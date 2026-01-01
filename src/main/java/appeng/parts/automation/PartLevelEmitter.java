@@ -30,6 +30,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
+import appeng.api.config.TypeFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.features.LevelItemInfo;
@@ -103,6 +104,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
         this.getConfigManager().registerSetting(Settings.LEVEL_TYPE, LevelType.ITEM_LEVEL);
         this.getConfigManager().registerSetting(Settings.CRAFT_VIA_REDSTONE, YesNo.NO);
+        this.getConfigManager().registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
 
         // Workaround the emitter randomly breaking on world load
         if (MinecraftServer.getServer() != null) {
@@ -271,21 +273,29 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
     private void updateReportingValue(final IMEMonitor monitor) {
         final IAEStack<?> myStack = this.config.getAEStackInSlot(0);
-
+        final StorageChannel channel = monitor.getChannel();
         if (myStack == null) {
             this.lastReportedValue = 0;
             try {
-                for (final IAEItemStack st : this.getProxy().getStorage().getItemInventory().getStorageList()) {
-                    this.lastReportedValue += st.getStackSize();
-                }
+                TypeFilter typeFilter = (TypeFilter) this.getConfigManager().getSetting(Settings.TYPE_FILTER);
+                var storage = getProxy().getStorage();
+                boolean checkItems = (typeFilter == TypeFilter.ALL) || (typeFilter == TypeFilter.ITEMS);
+                boolean checkFluids = (typeFilter == TypeFilter.ALL) || (typeFilter == TypeFilter.FLUIDS);
 
-                for (final IAEFluidStack st : this.getProxy().getStorage().getFluidInventory().getStorageList()) {
-                    this.lastReportedValue += st.getStackSize();
+                if (checkItems) {
+                    for (IAEItemStack st : storage.getItemInventory().getStorageList()) {
+                        this.lastReportedValue += st.getStackSize();
+                    }
+                }
+                if (checkFluids) {
+                    for (IAEFluidStack st : storage.getFluidInventory().getStorageList()) {
+                        this.lastReportedValue += st.getStackSize();
+                    }
                 }
             } catch (final GridAccessException e) {
                 // >.>
             }
-        } else if (myStack.getChannel() != monitor.getChannel()) {
+        } else if (myStack.getChannel() != channel) {
             return;
         } else if (myStack instanceof IAEItemStack ais && this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
             this.lastReportedValue = 0;
