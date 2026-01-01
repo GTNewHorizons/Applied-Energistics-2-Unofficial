@@ -30,6 +30,7 @@ import appeng.api.config.CraftingAllow;
 import appeng.api.config.CraftingMode;
 import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.CraftingStatus;
+import appeng.api.config.ExtractionMode;
 import appeng.api.config.FullnessMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.InsertionMode;
@@ -119,6 +120,19 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     AccessRestriction.READ_WRITE,
                     ButtonToolTips.IOMode,
                     ButtonToolTips.ReadWrite);
+
+            this.registerApp(
+                    16 * 1 + 9,
+                    Settings.EXTRACTION_MODE,
+                    ExtractionMode.LOOSE,
+                    ButtonToolTips.ExtractionMode,
+                    ButtonToolTips.Loose);
+            this.registerApp(
+                    16 * 1 + 5,
+                    Settings.EXTRACTION_MODE,
+                    ExtractionMode.STRICT,
+                    ButtonToolTips.ExtractionMode,
+                    ButtonToolTips.Strict);
 
             this.registerApp(
                     16 * 10,
@@ -917,6 +931,10 @@ public class GuiImgButton extends GuiButton implements ITooltip {
     public void setVisibility(final boolean vis) {
         this.visible = vis;
         this.enabled = vis;
+    }
+
+    public void setEnabled(final boolean enabled) {
+        this.enabled = enabled;
     }
 
     @Override
