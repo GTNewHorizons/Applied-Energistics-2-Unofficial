@@ -73,6 +73,7 @@ import appeng.api.networking.events.MENetworkCraftingPushedPattern;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.MachineSource;
+import appeng.api.networking.storage.IStorageInterceptor;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
@@ -121,7 +122,7 @@ import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
 
 public class DualityInterface implements IGridTickable, IStorageMonitorable, IInventoryDestination, IAEAppEngInventory,
-        IConfigManagerHost, ICraftingProvider, IUpgradeableHost, IPriorityHost, IGridProxyable {
+        IConfigManagerHost, ICraftingProvider, IUpgradeableHost, IPriorityHost, IGridProxyable, IStorageInterceptor {
 
     public static final int NUMBER_OF_STORAGE_SLOTS = 9;
     public static final int NUMBER_OF_CONFIG_SLOTS = 9;
@@ -161,7 +162,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     private YesNo redstoneState = YesNo.UNDECIDED;
     private UnlockCraftingEvent unlockEvent;
-    private List<IAEItemStack> unlockStacks;
+    private List<IAEStack<?>> unlockStacks;
     private int lastInputHash = 0;
     private final boolean isFluidInterface;
     private ScheduledReason scheduledReason = ScheduledReason.UNDEFINED;
@@ -261,9 +262,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             if (unlockStacks != null && !unlockStacks.isEmpty()) {
                 data.setByte("unlockEvent", (byte) 2);
                 NBTTagList stackList = new NBTTagList();
-                for (IAEItemStack stack : unlockStacks) {
+                for (IAEStack<?> stack : unlockStacks) {
                     NBTTagCompound stackTag = new NBTTagCompound();
-                    stack.writeToNBT(stackTag);
+                    Platform.writeStackNBT(stack, stackTag, true);
                     stackList.appendTag(stackTag);
                 }
                 data.setTag("unlockStacks", stackList);
@@ -312,7 +313,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             NBTTagList stackList = data.getTagList("unlockStacks", 10);
             for (int index = 0; index < stackList.tagCount(); index++) {
                 NBTTagCompound stackTag = stackList.getCompoundTagAt(index);
-                IAEItemStack unlockStack = AEItemStack.loadItemStackFromNBT(stackTag);
+                IAEStack<?> unlockStack = Platform.readStackNBT(stackTag, true);
                 if (unlockStack == null) {
                     AELog.error("Could not load unlock stack for interface from NBT: {}", data);
                     continue;
@@ -322,6 +323,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
                 this.unlockStacks.add(unlockStack);
             }
+            addInterception();
         } else {
             this.unlockStacks = null;
         }
@@ -823,7 +825,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     } else if (removed.stackSize != diff) {
                         throw new IllegalStateException("bad attempt at managing inventory. ( removeItems )");
                     }
-                    onStackReturnedToNetwork(AEItemStack.create(removed));
                 }
             } else if (this.craftingTracker.isBusy(x)) {
                 changed = this.handleCrafting(x, adaptor, itemStack);
@@ -1082,6 +1083,90 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     public void receivePatternPushedEvent() {
         this.lastInputHash = 0;
+    }
+
+    @Override
+    public boolean canAccept(IAEStack<?> stack) {
+        if (unlockStacks != null && stack != null) {
+            for (IAEStack<?> unlockStack : unlockStacks) {
+                if (stack.equals(unlockStack)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public IAEStack<?> injectItems(IAEStack<?> input, Actionable type, BaseActionSource src) {
+        if (type == Actionable.SIMULATE) return input;
+        if (unlockStacks != null && input != null) {
+            boolean changed = false;
+
+            for (Iterator<IAEStack<?>> iterator = unlockStacks.iterator(); iterator.hasNext();) {
+                IAEStack<?> unlockStack = iterator.next();
+                if (unlockStack.equals(input)) {
+                    changed = true;
+                    unlockStack.decStackSize(input.getStackSize());
+                    if (unlockStack.getStackSize() <= 0) {
+                        iterator.remove();
+                    }
+                    break;
+                }
+            }
+
+            if (changed) {
+                saveChanges();
+            }
+        }
+
+        return input;
+    }
+
+    private void addInterception() {
+        boolean hasItems = false;
+        boolean hasFluids = false;
+
+        for (IAEStack<?> aes : unlockStacks) {
+            if (aes.isItem()) {
+                hasItems = true;
+            } else if (aes.isFluid()) {
+                hasFluids = true;
+            }
+        }
+
+        if (hasItems) {
+            try {
+                if (this.gridProxy.getStorage().getItemInventory() instanceof NetworkMonitor<?>nm) {
+                    nm.addStorageInterceptor(this);
+                }
+            } catch (GridAccessException ignored) {}
+        }
+
+        if (hasFluids) {
+            try {
+                if (this.gridProxy.getStorage().getFluidInventory() instanceof NetworkMonitor<?>nm) {
+                    nm.addStorageInterceptor(this);
+                }
+            } catch (GridAccessException ignored) {}
+        }
+    }
+
+    @Override
+    public boolean shouldRemoveInterceptor(IAEStack<?> stack) {
+        if (unlockStacks != null) {
+            if (unlockStacks.isEmpty()) {
+                unlockEvent = null;
+                unlockStacks = null;
+            } else {
+                for (IAEStack<?> unlockStack : unlockStacks) {
+                    if (stack.isItem() && unlockStack.isItem()) return false;
+                    if (stack.isFluid() && unlockStack.isFluid()) return false;
+                }
+            }
+        }
+        return true;
     }
 
     private static class VerifiedAcceptors {
@@ -1583,9 +1668,13 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 if (unlockStacks == null) {
                     unlockStacks = new ArrayList<>();
                 }
-                for (IAEItemStack output : pattern.getCondensedOutputs()) {
+
+                for (IAEStack<?> output : pattern.getCondensedAEOutputs()) {
                     unlockStacks.add(output.copy());
                 }
+
+                addInterception();
+
                 saveChanges();
             }
         }
@@ -1620,44 +1709,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     /**
      * @return Null if {@linkplain #getCraftingLockedReason()} is not {@link LockCraftingMode#LOCK_UNTIL_RESULT}.
      */
-    public List<IAEItemStack> getUnlockStacks() {
+    public List<IAEStack<?>> getUnlockStacks() {
         return unlockStacks;
-    }
-
-    /**
-     * Called when an ItemStack has been pushed into the network from the internal buffer. Public to enable other
-     * interface types (mainly AE2FC) to work with locking return mode.
-     */
-    public void onStackReturnedToNetwork(IAEItemStack returnedStack) {
-        if (unlockEvent != UnlockCraftingEvent.RESULT) {
-            return; // If we're not waiting for the result, we don't care
-        }
-
-        if (unlockStacks == null) {
-            // Actually an error state...
-            AELog.error("interface was waiting for RESULT, but no result was set");
-            unlockEvent = null;
-            return;
-        }
-        boolean changed = false;
-        for (Iterator<IAEItemStack> iterator = unlockStacks.iterator(); iterator.hasNext();) {
-            IAEItemStack unlockStack = iterator.next();
-            if (unlockStack.equals(returnedStack)) {
-                changed = true;
-                unlockStack.decStackSize(returnedStack.getStackSize());
-                if (unlockStack.getStackSize() <= 0) {
-                    iterator.remove();
-                }
-                break;
-            }
-        }
-        if (unlockStacks.isEmpty()) {
-            unlockEvent = null;
-            unlockStacks = null;
-        }
-        if (changed) {
-            saveChanges();
-        }
     }
 
     public void updateRedstoneState() {
