@@ -23,6 +23,7 @@ import appeng.api.config.LevelType;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
+import appeng.api.config.TypeFilter;
 import appeng.api.config.YesNo;
 import appeng.api.parts.ILevelEmitter;
 import appeng.api.storage.StorageName;
@@ -57,6 +58,8 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
     @GuiSync(4)
     public YesNo cmType;
 
+    @GuiSync(5)
+    public TypeFilter typeFilter;
     private final IAEStack<?>[] configClientSlot = new IAEStack[1];
 
     public ContainerLevelEmitter(final InventoryPlayer ip, final ILevelEmitter te) {
@@ -143,6 +146,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
             this.setCraftingMode(
                     (YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.CRAFT_VIA_REDSTONE));
             this.setLevelMode((LevelType) this.getUpgradeable().getConfigManager().getSetting(Settings.LEVEL_TYPE));
+            this.setTypeFilter((TypeFilter) this.getUpgradeable().getConfigManager().getSetting(Settings.TYPE_FILTER));
             this.setFuzzyMode((FuzzyMode) this.getUpgradeable().getConfigManager().getSetting(Settings.FUZZY_MODE));
             this.setRedStoneMode(
                     (RedstoneMode) this.getUpgradeable().getConfigManager().getSetting(Settings.REDSTONE_EMITTER));
@@ -184,6 +188,14 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
 
     private void setLevelMode(final LevelType lvType) {
         this.lvType = lvType;
+    }
+
+    public TypeFilter getTypeFilter() {
+        return this.typeFilter;
+    }
+
+    private void setTypeFilter(final TypeFilter typeFilter) {
+        this.typeFilter = typeFilter;
     }
 
     public ILevelEmitter getLvlEmitter() {

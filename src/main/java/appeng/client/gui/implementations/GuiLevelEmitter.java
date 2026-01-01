@@ -22,6 +22,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
+import appeng.api.config.TypeFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.parts.ILevelEmitter;
@@ -57,6 +58,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
     private GuiImgButton levelMode;
     private GuiImgButton craftingMode;
+    private GuiImgButton typeFilter;
 
     private VirtualMEPhantomSlot config;
 
@@ -105,6 +107,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                 this.guiTop + 48,
                 Settings.CRAFT_VIA_REDSTONE,
                 YesNo.NO);
+        this.typeFilter = new GuiImgButton(this.guiLeft - 18, this.guiTop + 68, Settings.TYPE_FILTER, TypeFilter.ALL);
 
         final int a = AEConfig.instance.levelByStackAmounts(0);
         final int b = AEConfig.instance.levelByStackAmounts(1);
@@ -190,6 +193,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.buttonList.add(this.redstoneMode);
         this.buttonList.add(this.fuzzyMode);
         this.buttonList.add(this.craftingMode);
+        this.buttonList.add(this.typeFilter);
     }
 
     @Override
@@ -209,6 +213,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.minus1000.enabled = notCraftingMode;
         this.levelMode.enabled = notCraftingMode;
         this.redstoneMode.enabled = notCraftingMode;
+        this.typeFilter.enabled = notCraftingMode && config.getAEStack() == null;
 
         super.drawFG(offsetX, offsetY, mouseX, mouseY);
 
@@ -218,6 +223,10 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
         if (this.levelMode != null) {
             this.levelMode.set(((ContainerLevelEmitter) this.cvb).getLevelMode());
+        }
+
+        if (this.typeFilter != null) {
+            this.typeFilter.set(((ContainerLevelEmitter) this.cvb).getTypeFilter());
         }
     }
 
@@ -231,6 +240,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     protected void handleButtonVisibility() {
         this.craftingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.CRAFTING) > 0);
         this.fuzzyMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.FUZZY) > 0);
+        this.typeFilter.setVisibility(config.getAEStack() == null);
     }
 
     @Override
@@ -261,6 +271,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.craftingMode.getSetting(), backwards));
         } else if (btn == this.levelMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.levelMode.getSetting(), backwards));
+        } else if (btn == this.typeFilter) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.typeFilter.getSetting(), backwards));
         } else {
             final boolean isPlus = btn == this.plus1 || btn == this.plus10
                     || btn == this.plus100
