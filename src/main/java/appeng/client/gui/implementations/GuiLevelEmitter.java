@@ -107,11 +107,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                 this.guiTop + 48,
                 Settings.CRAFT_VIA_REDSTONE,
                 YesNo.NO);
-        this.typeFilter = new GuiImgButton(
-                this.guiLeft - 18,
-                this.guiTop + 68,
-                Settings.TYPE_FILTER,
-                TypeFilter.ALL);
+        this.typeFilter = new GuiImgButton(this.guiLeft - 18, this.guiTop + 68, Settings.TYPE_FILTER, TypeFilter.ALL);
 
         final int a = AEConfig.instance.levelByStackAmounts(0);
         final int b = AEConfig.instance.levelByStackAmounts(1);
