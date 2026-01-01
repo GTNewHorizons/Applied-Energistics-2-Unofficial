@@ -731,9 +731,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             if (te instanceof IInterfaceHost host) {
                 try {
-                    if (host.getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
-                        continue;
-                    }
+                    final DualityInterface di = host.getInterfaceDuality();
+                    if (!di.getProxy().isActive() || di.sameGrid(this.gridProxy.getGrid())) continue;
+
                 } catch (GridAccessException e) {
                     continue;
                 }
@@ -1227,9 +1227,13 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
             }
 
-            if (te instanceof IInterfaceHost) {
+            if (te instanceof IInterfaceHost ih) {
                 try {
-                    if (((IInterfaceHost) te).getInterfaceDuality().sameGrid(this.gridProxy.getGrid())) {
+                    final DualityInterface di = ih.getInterfaceDuality();
+
+                    if (!di.getProxy().isActive()) continue;
+
+                    if (di.sameGrid(this.gridProxy.getGrid())) {
                         if (!foundReason) {
                             foundReason = true;
                             scheduledReason = ScheduledReason.SAME_NETWORK;
