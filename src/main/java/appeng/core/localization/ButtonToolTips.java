@@ -14,6 +14,7 @@ public enum ButtonToolTips implements Localization {
 
     PowerUnits,
     IOMode,
+    ExtractionMode,
     CondenserOutput,
     RedstoneMode,
     MatchingFuzzy,
@@ -41,6 +42,9 @@ public enum ButtonToolTips implements Localization {
     Write,
     ReadWrite,
     AlwaysActive,
+
+    Strict,
+    Loose,
 
     ActiveWithoutSignal,
     ActiveWithSignal,

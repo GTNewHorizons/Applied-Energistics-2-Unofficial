@@ -35,6 +35,7 @@ import com.glodblock.github.inventory.MEMonitorIFluidHandler;
 
 import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
+import appeng.api.config.ExtractionMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.config.Settings;
@@ -132,6 +133,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     public PartStorageBus(final ItemStack is) {
         super(is);
         this.getConfigManager().registerSetting(Settings.ACCESS, AccessRestriction.READ_WRITE);
+        this.getConfigManager().registerSetting(Settings.EXTRACTION_MODE, ExtractionMode.LOOSE);
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
         this.getConfigManager().registerSetting(Settings.STORAGE_FILTER, StorageFilter.EXTRACTABLE_ONLY);
         this.getConfigManager().registerSetting(Settings.STICKY_MODE, YesNo.NO);
@@ -626,9 +628,12 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                             this.getInstalledUpgrades(Upgrades.INVERTER) > 0 ? IncludeExclude.BLACKLIST
                                     : IncludeExclude.WHITELIST);
                     this.handler.setPriority(this.priority);
-                    // only READ since READ_WRITE would break compat of existing storage buses
-                    // could use a new setting that is applied via button or a card too
-                    this.handler.setIsExtractFilterActive(currentAccess == AccessRestriction.READ);
+
+                    boolean extractRights = currentAccess == AccessRestriction.READ;
+                    ExtractionMode currentExtractionMode = (ExtractionMode) this.getConfigManager().getSetting(Settings.EXTRACTION_MODE);
+                    if (currentExtractionMode == ExtractionMode.STRICT) extractRights |= currentAccess == AccessRestriction.READ_WRITE;
+
+                    this.handler.setIsExtractFilterActive(extractRights);
 
                     if (this.getInstalledUpgrades(Upgrades.STICKY) > 0) {
                         this.handler.setSticky(true);

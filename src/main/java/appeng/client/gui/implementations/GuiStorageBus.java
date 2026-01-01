@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
+import appeng.api.config.ExtractionMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
@@ -47,6 +48,7 @@ public class GuiStorageBus extends GuiUpgradeable {
     private GuiTabButton priority;
     private GuiImgButton partition;
     private GuiImgButton clear;
+    private GuiImgButton extractionMode;
     private VirtualMEPhantomSlot[] configSlots;
     private final ContainerStorageBus containerStorageBus;
 
@@ -66,19 +68,24 @@ public class GuiStorageBus extends GuiUpgradeable {
                 this.guiTop + 48,
                 Settings.ACCESS,
                 AccessRestriction.READ_WRITE);
-        this.storageFilter = new GuiImgButton(
+        this.extractionMode = new GuiImgButton(
                 this.guiLeft - 18,
                 this.guiTop + 68,
+                Settings.EXTRACTION_MODE,
+                ExtractionMode.LOOSE);
+        this.storageFilter = new GuiImgButton(
+                this.guiLeft - 18,
+                this.guiTop + 88,
                 Settings.STORAGE_FILTER,
                 StorageFilter.EXTRACTABLE_ONLY);
         this.fuzzyMode = new GuiImgButton(
                 this.guiLeft - 18,
-                this.guiTop + 88,
+                this.guiTop + 108,
                 Settings.FUZZY_MODE,
                 FuzzyMode.IGNORE_ALL);
         this.oreFilter = new GuiImgButton(
                 this.guiLeft - 18,
-                this.guiTop + 88,
+                this.guiTop + 108,
                 Settings.ACTIONS,
                 ActionItems.ORE_FILTER);
 
@@ -93,6 +100,7 @@ public class GuiStorageBus extends GuiUpgradeable {
         this.buttonList.add(this.storageFilter);
         this.buttonList.add(this.fuzzyMode);
         this.buttonList.add(this.rwMode);
+        this.buttonList.add(this.extractionMode);
         this.buttonList.add(this.partition);
         this.buttonList.add(this.clear);
         this.buttonList.add(this.oreFilter);
@@ -126,6 +134,13 @@ public class GuiStorageBus extends GuiUpgradeable {
             }
             if (this.rwMode != null) {
                 this.rwMode.set(csb.getReadWriteMode());
+            }
+            if (this.extractionMode != null) {
+                this.extractionMode.set(csb.getExtractionMode());
+
+                if (this.rwMode != null) {
+                    this.extractionMode.setEnabled(csb.getReadWriteMode() == AccessRestriction.READ_WRITE);
+                }
             }
             if (this.partition != null) {
                 this.partition.set(csb.getPartitionMode());
@@ -176,6 +191,9 @@ public class GuiStorageBus extends GuiUpgradeable {
                 NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_PRIORITY));
             } else if (btn == this.rwMode) {
                 NetworkHandler.instance.sendToServer(new PacketConfigButton(this.rwMode.getSetting(), backwards));
+            } else if (btn == this.extractionMode) {
+                NetworkHandler.instance
+                        .sendToServer(new PacketConfigButton(this.extractionMode.getSetting(), backwards));
             } else if (btn == this.storageFilter) {
                 NetworkHandler.instance
                         .sendToServer(new PacketConfigButton(this.storageFilter.getSetting(), backwards));
