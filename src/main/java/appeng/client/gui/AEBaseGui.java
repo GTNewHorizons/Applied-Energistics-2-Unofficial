@@ -56,6 +56,7 @@ import appeng.client.ActionKey;
 import appeng.client.ClientHelper;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.slots.VirtualMESlot;
+import appeng.client.gui.widgets.GuiQuantityButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.ITooltip;
 import appeng.client.render.AppEngRenderItem;
@@ -175,6 +176,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     protected int getQty(final GuiButton btn) {
+        if (btn instanceof GuiQuantityButton quantityButton) {
+            return quantityButton.getQuantity();
+        }
+
         try {
             final DecimalFormat df = new DecimalFormat("+#;-#");
             final String plain = StringUtils.stripControlCodes(btn.displayString);
