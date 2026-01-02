@@ -53,6 +53,7 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.items.AEBaseItem;
 import appeng.util.Platform;
+import codechicken.nei.NEIClientConfig;
 import gregtech.common.items.ItemIntegratedCircuit;
 
 public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternItem {
@@ -159,6 +160,9 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         final String ingredients = (inItems.length > 1 ? EnumChatFormatting.DARK_GREEN + GuiText.Ingredients.getLocal()
                 : EnumChatFormatting.DARK_GREEN + GuiText.Ingredient.getLocal()) + ": " + EnumChatFormatting.RESET;
         final String holdShift = EnumChatFormatting.GRAY + GuiText.HoldShift.getLocal() + EnumChatFormatting.RESET;
+        final String viewPattern = EnumChatFormatting.GRAY
+                + String.format(GuiText.PatternView.getLocal(), NEIClientConfig.getKeyName("gui.pattern_view"))
+                + EnumChatFormatting.RESET;
 
         recipeIsBroken = addInformation(player, inItems, in, ingredients, displayMoreInfo, EnumChatFormatting.GREEN)
                 || recipeIsBroken;
@@ -175,6 +179,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                 lines.add(holdShift);
             }
 
+            lines.add(viewPattern);
             lines.add(substitutionLabel + canSubstitute);
             lines.add(beSubstitutionLabel + canBeSubstitute);
 

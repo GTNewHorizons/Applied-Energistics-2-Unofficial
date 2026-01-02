@@ -120,6 +120,7 @@ public enum GuiText implements Localization {
     Yes,
     No,
     EncodedBy,
+    PatternView,
 
     MolecularAssembler,
 
