@@ -84,8 +84,6 @@ public class PacketClick extends AppEngPacket {
         } else if (item instanceof IMemoryCard mem) {
             mem.notifyUser(player, MemoryCardMessages.SETTINGS_CLEARED);
             is.setTagCompound(null);
-        } else if (item instanceof ToolColorApplicator mem) {
-            mem.cycleColors(is, mem.getColor(is), 1);
         }
     }
 }

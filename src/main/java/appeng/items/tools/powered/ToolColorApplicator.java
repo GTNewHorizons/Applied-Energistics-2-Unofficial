@@ -10,6 +10,7 @@
 
 package appeng.items.tools.powered;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -17,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import appeng.client.gui.implementations.GuiColorSelect;
+import appeng.client.render.items.ToolColorApplicatorRender;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.entity.player.EntityPlayer;
@@ -51,8 +54,8 @@ import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.block.misc.BlockPaint;
 import appeng.block.networking.BlockCableBus;
-import appeng.client.render.items.ToolColorApplicatorRender;
 import appeng.core.AEConfig;
+import appeng.core.Api;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.helpers.IMouseWheelItem;
@@ -105,6 +108,10 @@ public class ToolColorApplicator extends AEBasePoweredItem
     @Override
     public boolean onItemUse(final ItemStack is, final EntityPlayer p, final World w, final int x, final int y,
             final int z, final int side, final float hitX, final float hitY, final float hitZ) {
+        if (p.isSneaking()) {
+            return false;
+        }
+
         final Block blk = w.getBlock(x, y, z);
 
         ItemStack paintBall = this.getColor(is);
@@ -184,11 +191,19 @@ public class ToolColorApplicator extends AEBasePoweredItem
             }
         }
 
-        if (p.isSneaking()) {
-            this.cycleColors(is, paintBall, 1);
+        return false;
+    }
+
+    @Override
+    public ItemStack onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer player) {
+        if (player.isSneaking()) {
+            if (worldIn.isRemote) {
+                openGui(player);
+            }
+            return itemStackIn;
         }
 
-        return false;
+        return super.onItemRightClick(itemStackIn, worldIn, player);
     }
 
     @Override
@@ -308,6 +323,26 @@ public class ToolColorApplicator extends AEBasePoweredItem
             final NBTTagCompound color = new NBTTagCompound();
             newColor.writeToNBT(color);
             data.setTag("color", color);
+        }
+    }
+
+    /**
+     * Sets the active color using an AEColor Enum. Converts it to a PaintBall ItemStack for internal storage/rendering.
+     */
+    public void setColor(final ItemStack is, final AEColor newColor) {
+        final NBTTagCompound data = Platform.openNbtData(is);
+
+        if (newColor == AEColor.Transparent) {
+            data.removeTag("color");
+        } else {
+            // Get the Paint Ball item definition
+            final ItemStack paintBall = Api.INSTANCE.items().itemPaintBall.stack(newColor, 1);
+
+            if (paintBall != null) {
+                final NBTTagCompound colorTag = new NBTTagCompound();
+                paintBall.writeToNBT(colorTag);
+                data.setTag("color", colorTag);
+            }
         }
     }
 
@@ -511,5 +546,43 @@ public class ToolColorApplicator extends AEBasePoweredItem
     @Override
     public StorageChannel getStorageChannel() {
         return StorageChannel.ITEMS;
+    }
+
+    public Map<AEColor, Long> getAvailableColorsCount(ItemStack stack) {
+        if (this.getAECurrentPower(stack) <= 0) {
+            return Collections.emptyMap();
+        }
+
+        Map<AEColor, Long> availableColors = new HashMap<>();
+
+        final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
+                .getCellInventory(stack, null, StorageChannel.ITEMS);
+
+        if (inv != null) {
+            final IItemList<IAEItemStack> itemList = inv.getAvailableItems(
+                    AEApi.instance().storage().createSortedItemList(),
+                    IterationCounter.fetchNewId());
+
+            for (final IAEItemStack aeItem : itemList) {
+                if (aeItem != null) {
+                    final ItemStack itemStack = aeItem.getItemStack();
+
+                    if (itemStack.getItem() instanceof ItemPaintBall itemPaintBall) {
+                        AEColor color = itemPaintBall.getColor(itemStack);
+
+                        availableColors.put(color, aeItem.getStackSize());
+                    } else if (itemStack.getItem() instanceof ItemSnowball) {
+                        availableColors.put(AEColor.Transparent, aeItem.getStackSize());
+                    }
+                }
+            }
+        }
+
+        return availableColors;
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void openGui(EntityPlayer player) {
+        net.minecraft.client.Minecraft.getMinecraft().displayGuiScreen(new GuiColorSelect(player));
     }
 }

@@ -378,6 +378,8 @@ gui.appliedenergistics2.NumberOfFluids=Number of fluids
 gui.appliedenergistics2.ItemsPerByte=Items per byte:
 gui.appliedenergistics2.FluidsPerByte=Fluids per byte:
 gui.appliedenergistics2.BytesPerType=Bytes per type:
+gui.appliedenergistics2.SelectColor=Select a Color
+gui.appliedenergistics2.Selected=Selected
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
