@@ -129,6 +129,8 @@ gui.appliedenergistics2.StoredSize=Mărime Stocată
 gui.appliedenergistics2.SkyChest=Cufăr de Piatră de Cer
 
 gui.tooltips.appliedenergistics2.FuzzyMode=Comparaţie Fuzzy
+gui.tooltips.appliedenergistics2.FZPercent_1=Împarte Lovitura la 1%
+gui.tooltips.appliedenergistics2.FZPercent_10=Împarte Lovitura la 10%
 gui.tooltips.appliedenergistics2.FZPercent_25=Împarte Lovitura la 25%
 gui.tooltips.appliedenergistics2.FZPercent_50=Împarte Lovitura la 50%
 gui.tooltips.appliedenergistics2.FZPercent_75=Împarte Lovitura la 75%
@@ -186,7 +188,7 @@ gui.tooltips.appliedenergistics2.Craft=Craftează iteme când necesare când se 
 gui.tooltips.appliedenergistics2.DontCraft=Folosește numai iteme stocate când se exportează.
 gui.tooltips.appliedenergistics2.LevelType=Tip de Nivel
 gui.tooltips.appliedenergistics2.LevelType_Energy=Energy
-gui.tooltips.appliedenergistics2.LevelType_Item=Item
+gui.tooltips.appliedenergistics2.LevelType_Item_Fluid=Item / Fluid
 gui.tooltips.appliedenergistics2.InventoryTweaks=Reordonare Inventar
 gui.tooltips.appliedenergistics2.TerminalStyle=Stil de Terminalgui.tooltips.appliedenergistics2.TerminalStyle_Full=Terminal de Ecran Maregui.tooltips.appliedenergistics2.TerminalStyle_Tall=Terminal Centrat Maregui.tooltips.appliedenergistics2.TerminalStyle_Small=Terminal Centrat Mic
 

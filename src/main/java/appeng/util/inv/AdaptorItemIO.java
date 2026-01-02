@@ -10,8 +10,8 @@ import com.google.common.collect.Iterators;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
 import com.gtnewhorizon.gtnhlib.item.FastImmutableItemStack;
 import com.gtnewhorizon.gtnhlib.item.ImmutableItemStack;
+import com.gtnewhorizon.gtnhlib.item.InsertionItemStack;
 import com.gtnewhorizon.gtnhlib.item.InventoryIterator;
-import com.gtnewhorizon.gtnhlib.item.ItemStackPredicate;
 import com.gtnewhorizon.gtnhlib.util.ItemUtil;
 
 import appeng.api.config.FuzzyMode;
@@ -28,9 +28,36 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
     @Override
     public ItemStack removeItems(int amount, ItemStack filter, IInventoryDestination destination) {
-        return itemIO.pull(
-                ItemStackPredicate.matches(filter).and(stack -> destination.canInsert(stack.toStackFast())),
-                stack -> Math.min(stack.getStackSize(), amount));
+        InventoryIterator iter = itemIO.sourceIterator();
+
+        if (iter == null) return null;
+
+        ItemStack out = null;
+
+        while (iter.hasNext() && amount > 0) {
+            ImmutableItemStack immutableStack = iter.next();
+
+            if (immutableStack == null) continue;
+
+            if (filter != null && !immutableStack.matches(filter)) continue;
+
+            ItemStack stack = immutableStack.toStack();
+
+            if (destination != null && !destination.canInsert(stack)) continue;
+
+            if (out == null) {
+                out = immutableStack.toStack(0);
+            }
+
+            ItemStack extracted = iter.extract(amount, false);
+
+            if (extracted != null) {
+                out.stackSize += extracted.stackSize;
+                amount -= extracted.stackSize;
+            }
+        }
+
+        return out;
     }
 
     @Override
@@ -147,14 +174,47 @@ public class AdaptorItemIO extends InventoryAdaptor {
 
     @Override
     public ItemStack simulateAdd(ItemStack toBeSimulated) {
-        return null;
+        if (toBeSimulated == null || toBeSimulated.stackSize == 0) return null;
+
+        InventoryIterator iter = itemIO.simulatedSinkIterator();
+        if (iter == null) return toBeSimulated;
+
+        InsertionItemStack insertion = new InsertionItemStack(new FastImmutableItemStack(toBeSimulated));
+
+        while (iter.hasNext()) {
+            ImmutableItemStack ignored = iter.next();
+
+            insertion.set(iter.insert(insertion, false));
+
+            if (insertion.isEmpty()) return null;
+        }
+
+        final ItemStack left = toBeSimulated.copy();
+        left.stackSize = insertion.getStackSize();
+        return left;
     }
 
     @Override
     public boolean containsItems() {
-        InventoryIterator iter = itemIO.sourceIterator();
+        if (itemIO.getStoredItemsInSink(null).orElse(0) > 0) return true;
 
-        return iter != null && iter.hasNext();
+        InventoryIterator iter = itemIO.sinkIterator();
+
+        if (iter != null) {
+            while (iter.hasNext()) {
+                if (iter.next() != null) return true;
+            }
+        }
+
+        iter = itemIO.sourceIterator();
+
+        if (iter != null) {
+            while (iter.hasNext()) {
+                if (iter.next() != null) return true;
+            }
+        }
+
+        return false;
     }
 
     @Override

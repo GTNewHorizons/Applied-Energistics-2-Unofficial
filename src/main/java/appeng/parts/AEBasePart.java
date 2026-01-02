@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import net.minecraft.client.renderer.RenderBlocks;
@@ -73,7 +74,7 @@ import io.netty.buffer.ByteBuf;
 public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, IUpgradeableHost, ICustomNameObject {
 
     protected final AENetworkProxy proxy;
-    protected final ItemStack is;
+    protected ItemStack is;
     protected ThreadLocal<ISimplifiedBundle> renderCache = new ThreadLocal<>();
     protected TileEntity tile = null;
     protected IPartHost host = null;
@@ -390,7 +391,8 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 if (data != null) {
                     memoryCard.setMemoryCardContents(memCardIS, name, data);
 
-                    ToolMemoryCard.setUpgradesInfo(data, (UpgradeInventory) this.getInventoryByName("upgrades"));
+                    if (this.getInventoryByName("upgrades") instanceof UpgradeInventory ui)
+                        ToolMemoryCard.setUpgradesInfo(data, ui);
 
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
                 }
@@ -513,6 +515,17 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
     public ItemStack getItemStack() {
         return this.is;
+    }
+
+    /**
+     * Advanced method. Take care to properly update any grid related state and update the host after changing the part
+     * item.
+     */
+    protected void setItemStack(ItemStack partItem) {
+        if (partItem != this.is) {
+            this.is = Objects.requireNonNull(partItem);
+            this.getProxy().setVisualRepresentation(partItem);
+        }
     }
 
     public ISimplifiedBundle getRenderCache() {

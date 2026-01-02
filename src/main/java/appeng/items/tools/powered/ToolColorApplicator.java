@@ -45,6 +45,7 @@ import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
@@ -58,10 +59,12 @@ import appeng.helpers.IMouseWheelItem;
 import appeng.hooks.DispenserBlockTool;
 import appeng.hooks.IBlockTool;
 import appeng.items.contents.CellConfig;
+import appeng.items.contents.CellConfigLegacy;
 import appeng.items.contents.CellUpgrades;
 import appeng.items.misc.ItemPaintBall;
 import appeng.items.tools.powered.powersink.AEBasePoweredItem;
 import appeng.me.storage.CellInventoryHandler;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.misc.TilePaint;
 import appeng.util.ItemSorters;
 import appeng.util.IterationCounter;
@@ -420,9 +423,9 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     @Override
-    public boolean isBlackListed(final ItemStack cellItem, final IAEItemStack requestedAddition) {
-        if (requestedAddition != null) {
-            final int[] id = OreDictionary.getOreIDs(requestedAddition.getItemStack());
+    public boolean isBlackListed(final IAEStack<?> requestedAddition) {
+        if (requestedAddition instanceof IAEItemStack ais) {
+            final int[] id = OreDictionary.getOreIDs(ais.getItemStack());
 
             for (final int x : id) {
                 if (ORE_TO_COLOR.containsKey(x)) {
@@ -430,11 +433,11 @@ public class ToolColorApplicator extends AEBasePoweredItem
                 }
             }
 
-            if (requestedAddition.getItem() instanceof ItemSnowball) {
+            if (ais.getItem() instanceof ItemSnowball) {
                 return false;
             }
 
-            return !(requestedAddition.getItem() instanceof ItemPaintBall && requestedAddition.getItemDamage() < 20);
+            return !(ais.getItem() instanceof ItemPaintBall && ais.getItemDamage() < 20);
         }
         return true;
     }
@@ -470,7 +473,13 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     @Override
+    @Deprecated
     public IInventory getConfigInventory(final ItemStack is) {
+        return new CellConfigLegacy(new CellConfig(is), StorageChannel.ITEMS);
+    }
+
+    @Override
+    public IAEStackInventory getConfigAEInventory(ItemStack is) {
         return new CellConfig(is);
     }
 
@@ -497,5 +506,10 @@ public class ToolColorApplicator extends AEBasePoweredItem
     @Override
     public void setOreFilter(ItemStack is, String filter) {
         Platform.openNbtData(is).setString("OreFilter", filter);
+    }
+
+    @Override
+    public StorageChannel getStorageChannel() {
+        return StorageChannel.ITEMS;
     }
 }

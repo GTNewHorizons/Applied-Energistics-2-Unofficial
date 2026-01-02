@@ -116,6 +116,7 @@ import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingWatcher;
 import appeng.crafting.MECraftingInventory;
 import appeng.helpers.DualityInterface;
+import appeng.hooks.CraftingNotificationManager;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.IAECluster;
 import appeng.tile.AEBaseTile;
@@ -127,8 +128,6 @@ import appeng.util.ScheduledReason;
 import appeng.util.inv.MEInventoryCrafting;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 
 public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
@@ -146,7 +145,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private final LinkedList<TileCraftingTile> tiles = new LinkedList<>();
     private final LinkedList<TileCraftingTile> storage = new LinkedList<>();
     private final LinkedList<TileCraftingMonitorTile> status = new LinkedList<>();
-    private final HashMap<IMEMonitorHandlerReceiver<IAEStack<?>>, Object> listeners = new HashMap<>();
+    private final HashMap<IMEMonitorHandlerReceiver, Object> listeners = new HashMap<>();
     private final HashMap<IAEStack<?>, List<NamedDimensionalCoord>> providers = new HashMap<>();
     private ICraftingLink myLastLink;
     private String myName = "";
@@ -188,14 +187,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             finalOutput,
                             numsOfOutput,
                             elapsedTime);
-                    final IChatComponent messageToSend = notification.createMessage();
-
                     for (String playerName : this.playersFollowingCurrentCraft) {
                         // Get each EntityPlayer
                         EntityPlayer player = getPlayerByName(playerName);
                         if (player != null) {
                             // Send message to player
-                            player.addChatMessage(messageToSend);
+                            player.addChatMessage(notification.createMessage());
                             player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
                         } else {
                             this.unreadNotifications.computeIfAbsent(playerName, name -> new ArrayList<>())
@@ -216,20 +213,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     public CraftingCPUCluster(final WorldCoord min, final WorldCoord max) {
         this.min = min;
         this.max = max;
-    }
-
-    @SubscribeEvent
-    public void onPlayerLogIn(PlayerLoggedInEvent event) {
-        final EntityPlayer player = event.player;
-        final String playerName = player.getCommandSenderName();
-        if (this.unreadNotifications.containsKey(playerName)) {
-            List<CraftNotification> notifications = this.unreadNotifications.get(playerName);
-            for (CraftNotification notification : notifications) {
-                player.addChatMessage(notification.createMessage());
-            }
-            player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
-            this.unreadNotifications.remove(playerName);
-        }
+        CraftingNotificationManager.register(this.unreadNotifications);
     }
 
     @Override
@@ -309,7 +293,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
         this.isDestroyed = true;
 
-        FMLCommonHandler.instance().bus().unregister(this);
+        CraftingNotificationManager.unregister(this.unreadNotifications);
 
         boolean posted = false;
 
@@ -479,15 +463,15 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private void postChange(final IAEStack<?> diff, final BaseActionSource src) {
-        final Iterator<Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object>> i = this.getListeners();
+        final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
 
         // protect integrity
         if (i.hasNext()) {
             final ImmutableList<IAEStack<?>> single = ImmutableList.of(diff.copy());
 
             while (i.hasNext()) {
-                final Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object> o = i.next();
-                final IMEMonitorHandlerReceiver<IAEStack<?>> receiver = o.getKey();
+                final Entry<IMEMonitorHandlerReceiver, Object> o = i.next();
+                final IMEMonitorHandlerReceiver receiver = o.getKey();
 
                 if (receiver.isValid(o.getValue())) {
                     receiver.postChange(null, single, src);
@@ -567,7 +551,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    private Iterator<Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object>> getListeners() {
+    private Iterator<Entry<IMEMonitorHandlerReceiver, Object>> getListeners() {
         return this.listeners.entrySet().iterator();
     }
 
@@ -812,8 +796,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                         for (final IAEStack<?> anInput : input) {
                             if (anInput != null) {
-                                if (anInput.isItem()) sum += anInput.getStackSize();
-                                else sum += anInput.getStackSize() / 1000D;
+                                sum += (double) anInput.getStackSize() / anInput.getPowerMultiplier();
                             }
                         }
                         // upgraded interface uses more power
@@ -1035,7 +1018,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (this.myLastLink != null && this.isBusy()
                 && this.finalOutput.isSameType((Object) job.getOutput())
                 && this.availableStorage >= this.usedStorage + job.getByteTotal()) {
-            return mergeJob(g, job, src);
+            return mergeJob(g, job, src, requestingMachine);
         }
 
         if (!this.tasks.isEmpty() || !this.waitingFor.isEmpty()) {
@@ -1169,7 +1152,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    public ICraftingLink mergeJob(final IGrid g, final ICraftingJob job, final BaseActionSource src) {
+    public ICraftingLink mergeJob(final IGrid g, final ICraftingJob job, final BaseActionSource src,
+            final ICraftingRequester requestingMachine) {
         final IStorageGrid sg = g.getCache(IStorageGrid.class);
         final MECraftingInventory ci = new MECraftingInventory(sg, true, false, false);
 
@@ -1197,7 +1181,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 this.prepareStepCount();
                 this.markDirty();
                 this.updateCPU();
-                return this.myLastLink;
+
+                final ICraftingLink whatLink = new CraftingLink(
+                        this.generateLinkData(this.myLastLink.getCraftingID(), false, true),
+                        requestingMachine);
+
+                this.submitLink(whatLink);
+                return whatLink;
             } else {
                 inventory = backupInventory;
                 waitingForMissing = backupWaitingForMissing;
@@ -1640,7 +1630,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         for (final TileCraftingTile te : this.tiles) {
 
             if (te.hasCustomName()) {
-                if (this.myName.length() > 0) {
+                if (!this.myName.isEmpty()) {
                     this.myName += ' ' + te.getCustomName();
                 } else {
                     this.myName = te.getCustomName();
@@ -1729,7 +1719,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.playersFollowingCurrentCraft.add(name);
         }
 
-        final Iterator<Entry<IMEMonitorHandlerReceiver<IAEStack<?>>, Object>> i = this.getListeners();
+        final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
         while (i.hasNext()) {
             if (i.next().getKey() instanceof ContainerCraftingCPU cccpu) {
                 cccpu.sendUpdateFollowPacket(playersFollowingCurrentCraft);
@@ -1738,13 +1728,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     @SuppressWarnings("unchecked")
-    public List<NamedDimensionalCoord> getProviders(IAEItemStack is) {
-        return this.providers.getOrDefault(convertStack(is), Collections.EMPTY_LIST);
+    public List<NamedDimensionalCoord> getProviders(IAEStack<?> is) {
+        return this.providers.getOrDefault(is, Collections.EMPTY_LIST);
     }
 
-    public ScheduledReason getScheduledReason(IAEItemStack is) {
+    public ScheduledReason getScheduledReason(IAEStack<?> is) {
         for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
-            for (final IAEItemStack ais : t.getKey().getCondensedOutputs()) {
+            for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
                 if (Objects.equals(ais, is)) {
                     return reasonProvider.getOrDefault(t.getKey(), ScheduledReason.UNDEFINED);
                 }
@@ -1840,7 +1830,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         private long value;
     }
 
-    private static class CraftNotification {
+    public static class CraftNotification {
 
         private IAEStack<?> finalOutput;
         private long outputsCount;

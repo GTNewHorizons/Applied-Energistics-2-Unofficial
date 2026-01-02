@@ -16,7 +16,6 @@ import java.util.Random;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -31,18 +30,18 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
+import appeng.api.config.TypeFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
+import appeng.api.features.LevelItemInfo;
+import appeng.api.features.LevelState;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.crafting.ICraftingWatcher;
-import appeng.api.networking.crafting.ICraftingWatcherHost;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.energy.IEnergyWatcher;
-import appeng.api.networking.energy.IEnergyWatcherHost;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
@@ -50,15 +49,15 @@ import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.networking.storage.IStackWatcher;
-import appeng.api.networking.storage.IStackWatcherHost;
-import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
+import appeng.api.parts.ILevelEmitter;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -70,18 +69,16 @@ import appeng.core.AELog;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
-import appeng.tile.inventory.AppEngInternalAEInventory;
-import appeng.tile.inventory.InvOperation;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherHost, IStackWatcherHost,
-        ICraftingWatcherHost, IMEMonitorHandlerReceiver<IAEItemStack>, ICraftingProvider, IGridTickable {
+public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
     private static final int FLAG_ON = 8;
 
-    private final AppEngInternalAEInventory config = new AppEngInternalAEInventory(this, 1);
+    private final IAEStackInventory config = new IAEStackInventory(this, 1);
 
     private boolean prevState = false;
 
@@ -91,6 +88,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     private IStackWatcher myWatcher;
     private IEnergyWatcher myEnergyWatcher;
     private ICraftingWatcher myCraftingWatcher;
+
     private double centerX;
     private double centerY;
     private double centerZ;
@@ -106,6 +104,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
         this.getConfigManager().registerSetting(Settings.LEVEL_TYPE, LevelType.ITEM_LEVEL);
         this.getConfigManager().registerSetting(Settings.CRAFT_VIA_REDSTONE, YesNo.NO);
+        this.getConfigManager().registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
 
         // Workaround the emitter randomly breaking on world load
         if (MinecraftServer.getServer() != null) {
@@ -200,7 +199,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
 
     // update the system...
     private void configureWatchers() {
-        final IAEItemStack myStack = this.config.getAEStackInSlot(0);
+        final IAEStack<?> myStack = this.config.getAEStackInSlot(0);
 
         if (this.myWatcher != null) {
             this.myWatcher.clear();
@@ -240,6 +239,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
 
                 // no more item stuff..
                 this.getProxy().getStorage().getItemInventory().removeListener(this);
+                this.getProxy().getStorage().getFluidInventory().removeListener(this);
             } catch (final GridAccessException e) {
                 // :P
             }
@@ -250,37 +250,62 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
         try {
             if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0 || myStack == null) {
                 this.getProxy().getStorage().getItemInventory().addListener(this, this.getProxy().getGrid());
+                this.getProxy().getStorage().getFluidInventory().addListener(this, this.getProxy().getGrid());
             } else {
                 this.getProxy().getStorage().getItemInventory().removeListener(this);
+                this.getProxy().getStorage().getFluidInventory().removeListener(this);
 
                 if (this.myWatcher != null) {
                     this.myWatcher.add(myStack);
                 }
             }
 
-            this.updateReportingValue(this.getProxy().getStorage().getItemInventory());
+            if (myStack instanceof IAEFluidStack) {
+                this.updateReportingValue(this.getProxy().getStorage().getFluidInventory());
+            } else {
+                this.updateReportingValue(this.getProxy().getStorage().getItemInventory());
+            }
+
         } catch (final GridAccessException e) {
             // >.>
         }
     }
 
-    private void updateReportingValue(final IMEMonitor<IAEItemStack> monitor) {
-        final IAEItemStack myStack = this.config.getAEStackInSlot(0);
-
+    private void updateReportingValue(final IMEMonitor monitor) {
+        final IAEStack<?> myStack = this.config.getAEStackInSlot(0);
+        final StorageChannel channel = monitor.getChannel();
         if (myStack == null) {
             this.lastReportedValue = 0;
-            for (final IAEItemStack st : monitor.getStorageList()) {
-                this.lastReportedValue += st.getStackSize();
+            try {
+                TypeFilter typeFilter = (TypeFilter) this.getConfigManager().getSetting(Settings.TYPE_FILTER);
+                var storage = getProxy().getStorage();
+                boolean checkItems = (typeFilter == TypeFilter.ALL) || (typeFilter == TypeFilter.ITEMS);
+                boolean checkFluids = (typeFilter == TypeFilter.ALL) || (typeFilter == TypeFilter.FLUIDS);
+
+                if (checkItems) {
+                    for (IAEItemStack st : storage.getItemInventory().getStorageList()) {
+                        this.lastReportedValue += st.getStackSize();
+                    }
+                }
+                if (checkFluids) {
+                    for (IAEFluidStack st : storage.getFluidInventory().getStorageList()) {
+                        this.lastReportedValue += st.getStackSize();
+                    }
+                }
+            } catch (final GridAccessException e) {
+                // >.>
             }
-        } else if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
+        } else if (myStack.getChannel() != channel) {
+            return;
+        } else if (myStack instanceof IAEItemStack ais && this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
             this.lastReportedValue = 0;
             final FuzzyMode fzMode = (FuzzyMode) this.getConfigManager().getSetting(Settings.FUZZY_MODE);
-            final Collection<IAEItemStack> fuzzyList = monitor.getStorageList().findFuzzy(myStack, fzMode);
+            final Collection<IAEItemStack> fuzzyList = monitor.getStorageList().findFuzzy(ais, fzMode);
             for (final IAEItemStack st : fuzzyList) {
                 this.lastReportedValue += st.getStackSize();
             }
         } else {
-            final IAEItemStack r = monitor.getStorageList().findPrecise(myStack);
+            final IAEStack<?> r = monitor.getStorageList().findPrecise(myStack);
             if (r == null) {
                 this.lastReportedValue = 0;
             } else {
@@ -300,8 +325,10 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     @Override
     public void onStackChange(final IItemList o, final IAEStack fullStack, final IAEStack diffStack,
             final BaseActionSource src, final StorageChannel chan) {
-        if (chan == StorageChannel.ITEMS && fullStack.equals(this.config.getAEStackInSlot(0))
-                && this.getInstalledUpgrades(Upgrades.FUZZY) == 0) {
+        IAEStack<?> myStack = this.config.getAEStackInSlot(0);
+        if (myStack == null) return;
+
+        if (fullStack.equals(myStack)) {
             this.lastReportedValue = fullStack.getStackSize();
             this.updateState();
         }
@@ -353,7 +380,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     }
 
     @Override
-    public void postChange(final IBaseMonitor<IAEItemStack> monitor, final Iterable<IAEItemStack> change,
+    public void postChange(final IBaseMonitor<IAEStack<?>> monitor, final Iterable<IAEStack<?>> change,
             final BaseActionSource actionSource) {
         // todo use change
         if (canDoWork()) {
@@ -366,7 +393,7 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
                 }
             }
             lastWorkingTick = MinecraftServer.getServer().getTickCounter();
-            this.updateReportingValue((IMEMonitor<IAEItemStack>) monitor);
+            this.updateReportingValue((IMEMonitor<IAEStack<?>>) monitor);
         } else if (!delayedUpdatesQueued) {
             delayedUpdatesQueued = true;
             try {
@@ -380,7 +407,9 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     @Override
     public void onListUpdate() {
         try {
-            this.updateReportingValue(this.getProxy().getStorage().getItemInventory());
+            if (this.config.getAEStackInSlot(0) instanceof IAEFluidStack)
+                this.updateReportingValue(this.getProxy().getStorage().getFluidInventory());
+            else this.updateReportingValue(this.getProxy().getStorage().getItemInventory());
         } catch (final GridAccessException e) {
             // ;P
         }
@@ -675,16 +704,6 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     }
 
     @Override
-    public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc,
-            final ItemStack removedStack, final ItemStack newStack) {
-        if (inv == this.config) {
-            this.configureWatchers();
-        }
-
-        super.onChangeInventory(inv, slot, mc, removedStack, newStack);
-    }
-
-    @Override
     public void upgradesChanged() {
         this.configureWatchers();
     }
@@ -713,15 +732,6 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     }
 
     @Override
-    public IInventory getInventoryByName(final String name) {
-        if (name.equals("config")) {
-            return this.config;
-        }
-
-        return super.getInventoryByName(name);
-    }
-
-    @Override
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
         return false;
     }
@@ -735,11 +745,32 @@ public class PartLevelEmitter extends PartUpgradeable implements IEnergyWatcherH
     public void provideCrafting(final ICraftingProviderHelper craftingTracker) {
         if (this.getInstalledUpgrades(Upgrades.CRAFTING) > 0) {
             if (this.getConfigManager().getSetting(Settings.CRAFT_VIA_REDSTONE) == YesNo.YES) {
-                final IAEItemStack what = this.config.getAEStackInSlot(0);
+                final IAEStack<?> what = this.config.getAEStackInSlot(0);
                 if (what != null) {
                     craftingTracker.setEmitable(what);
                 }
             }
         }
+    }
+
+    @Override
+    public LevelItemInfo[] getLevelItemInfoList() {
+        IAEStack<?> stack = this.config.getAEStackInSlot(0);
+        if (stack == null) return new LevelItemInfo[] { null };
+        return new LevelItemInfo[] { new LevelItemInfo(
+                stack,
+                this.getReportingValue(),
+                -1,
+                this.isProvidingStrongPower() > 0 ? LevelState.Craft : LevelState.Idle) };
+    }
+
+    @Override
+    public void saveAEStackInv() {
+        this.configureWatchers();
+    }
+
+    @Override
+    public IAEStackInventory getAEInventoryByName(StorageName name) {
+        return this.config;
     }
 }

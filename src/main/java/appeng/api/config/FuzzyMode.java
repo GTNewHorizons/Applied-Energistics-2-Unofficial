@@ -26,7 +26,9 @@ public enum FuzzyMode {
     PERCENT_99(0),
     PERCENT_75(25),
     PERCENT_50(50),
-    PERCENT_25(75);
+    PERCENT_25(75),
+    PERCENT_10(90),
+    PERCENT_1(99);
 
     public final float breakPoint;
     public final float percentage;

@@ -5,43 +5,30 @@ import java.io.IOException;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
-import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.ActionItems;
-import appeng.api.config.ItemSubstitution;
-import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.PatternSlotConfig;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
+import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.container.implementations.ContainerPatternTermEx;
-import appeng.container.slot.AppEngSlot;
+import appeng.core.AELog;
 import appeng.core.AppEng;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.helpers.InventoryAction;
 
-public class GuiPatternTermEx extends GuiMEMonitorable {
-
-    private static final String SUBSITUTION_DISABLE = "0";
-    private static final String SUBSITUTION_ENABLE = "1";
+public class GuiPatternTermEx extends GuiPatternTerm {
 
     private final ContainerPatternTermEx container;
-
-    private GuiImgButton substitutionsEnabledBtn;
-    private GuiImgButton substitutionsDisabledBtn;
-    private GuiImgButton beSubstitutionsEnabledBtn;
-    private GuiImgButton beSubstitutionsDisabledBtn;
-    private GuiImgButton encodeBtn;
-    private GuiImgButton clearBtn;
     private GuiImgButton invertBtn;
-    private GuiImgButton doubleBtn;
     private final GuiScrollbar processingScrollBar = new GuiScrollbar();
+
+    private boolean isInverted;
+    private int activePage;
 
     public GuiPatternTermEx(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         super(inventoryPlayer, te, new ContainerPatternTermEx(inventoryPlayer, te));
@@ -50,6 +37,9 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
 
         processingScrollBar.setHeight(70).setWidth(7).setLeft(6).setRange(0, 1, 1);
         processingScrollBar.setTexture(AppEng.MOD_ID, "guis/pattern3.png", 242, 0);
+
+        this.isInverted = this.container.inverted;
+        this.activePage = this.container.activePage;
     }
 
     @Override
@@ -57,88 +47,20 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
         super.actionPerformed(btn);
 
         try {
-            if (this.encodeBtn == btn) {
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig(
-                                "PatternTerminalEx.Encode",
-                                isCtrlKeyDown() ? (isShiftKeyDown() ? "6" : "1") : (isShiftKeyDown() ? "2" : "1")));
-            } else if (this.clearBtn == btn) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("PatternTerminalEx.Clear", "1"));
-            } else if (this.invertBtn == btn) {
+            if (this.invertBtn == btn) {
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig("PatternTerminalEx.Invert", container.inverted ? "0" : "1"));
-            } else if (this.substitutionsEnabledBtn == btn || this.substitutionsDisabledBtn == btn) {
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig(
-                                "PatternTerminalEx.Substitute",
-                                this.substitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
-            } else if (this.beSubstitutionsEnabledBtn == btn || this.beSubstitutionsDisabledBtn == btn) {
-                NetworkHandler.instance.sendToServer(
-                        new PacketValueConfig(
-                                "PatternTerminalEx.BeSubstitute",
-                                this.beSubstitutionsEnabledBtn == btn ? SUBSITUTION_DISABLE : SUBSITUTION_ENABLE));
-            } else if (doubleBtn == btn) {
-                int val = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 1 : 0;
-                if (Mouse.isButtonDown(1)) val |= 0b10;
-                NetworkHandler.instance
-                        .sendToServer(new PacketValueConfig("PatternTerminalEx.Double", String.valueOf(val)));
+                container.getExPatternTerminal().setInverted(container.inverted);
+                this.updateSlotVisibility();
             }
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            AELog.error(e);
         }
     }
 
     @Override
     public void initGui() {
         super.initGui();
-
-        this.substitutionsEnabledBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 163,
-                Settings.ACTIONS,
-                ItemSubstitution.ENABLED);
-        this.substitutionsEnabledBtn.setHalfSize(true);
-        this.buttonList.add(this.substitutionsEnabledBtn);
-
-        this.substitutionsDisabledBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 163,
-                Settings.ACTIONS,
-                ItemSubstitution.DISABLED);
-        this.substitutionsDisabledBtn.setHalfSize(true);
-        this.buttonList.add(this.substitutionsDisabledBtn);
-
-        this.beSubstitutionsEnabledBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 143,
-                Settings.ACTIONS,
-                PatternBeSubstitution.ENABLED);
-        this.beSubstitutionsEnabledBtn.setHalfSize(true);
-        this.buttonList.add(this.beSubstitutionsEnabledBtn);
-
-        this.beSubstitutionsDisabledBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 143,
-                Settings.ACTIONS,
-                PatternBeSubstitution.DISABLED);
-        this.beSubstitutionsDisabledBtn.setHalfSize(true);
-        this.buttonList.add(this.beSubstitutionsDisabledBtn);
-
-        this.clearBtn = new GuiImgButton(
-                this.guiLeft + 87,
-                this.guiTop + this.ySize - 163,
-                Settings.ACTIONS,
-                ActionItems.CLOSE);
-        this.clearBtn.setHalfSize(true);
-        this.buttonList.add(this.clearBtn);
-
-        this.encodeBtn = new GuiImgButton(
-                this.guiLeft + 147,
-                this.guiTop + this.ySize - 142,
-                Settings.ACTIONS,
-                ActionItems.ENCODE);
-        this.buttonList.add(this.encodeBtn);
 
         invertBtn = new GuiImgButton(
                 this.guiLeft + 87,
@@ -148,20 +70,28 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
         invertBtn.setHalfSize(true);
         this.buttonList.add(this.invertBtn);
 
-        this.doubleBtn = new GuiImgButton(
-                this.guiLeft + 97,
-                this.guiTop + this.ySize - 153,
-                Settings.ACTIONS,
-                ActionItems.DOUBLE);
-        this.doubleBtn.setHalfSize(true);
-        this.buttonList.add(this.doubleBtn);
-
         processingScrollBar.setTop(this.ySize - 164);
+        this.updateSlotVisibility();
+    }
+
+    protected int getInputSlotOffsetX() {
+        return 15;
+    }
+
+    protected int getInputSlotOffsetY() {
+        return 32;
+    }
+
+    protected int getOutputSlotOffsetX() {
+        return 58;
+    }
+
+    protected int getOutputSlotOffsetY() {
+        return 32;
     }
 
     @Override
-    public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        super.drawFG(offsetX, offsetY, mouseX, mouseY);
+    protected void drawTitle() {
         this.fontRendererObj.drawString(
                 GuiText.PatternTerminalEx.getLocal(),
                 8,
@@ -176,28 +106,7 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
     }
 
     @Override
-    protected void repositionSlot(final AppEngSlot s) {
-        if (s.isPlayerSide()) {
-            s.yDisplayPosition = s.getY() + this.ySize - 78 - 5;
-        } else {
-            s.yDisplayPosition = s.getY() + this.ySize - 78 - 3;
-        }
-    }
-
-    @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
-
-        if (container.substitute) {
-            substitutionsEnabledBtn.visible = true;
-            substitutionsDisabledBtn.visible = false;
-        } else {
-            substitutionsEnabledBtn.visible = false;
-            substitutionsDisabledBtn.visible = true;
-        }
-
-        this.beSubstitutionsEnabledBtn.visible = this.container.beSubstitute;
-        this.beSubstitutionsDisabledBtn.visible = !this.container.beSubstitute;
-
         final int offset = container.inverted ? 18 * -3 : 0;
 
         substitutionsEnabledBtn.xPosition = this.guiLeft + 97 + offset;
@@ -210,6 +119,12 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
 
         processingScrollBar.setCurrentScroll(container.activePage);
 
+        if (this.isInverted != this.container.inverted || this.activePage != this.container.activePage) {
+            this.isInverted = this.container.inverted;
+            this.activePage = this.container.activePage;
+            this.updateSlotVisibility();
+        }
+
         super.drawScreen(mouseX, mouseY, btn);
     }
 
@@ -217,12 +132,8 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         final int currentScroll = this.processingScrollBar.getCurrentScroll();
         this.processingScrollBar.click(this, xCoord - this.guiLeft, yCoord - this.guiTop);
-        if (btn == 2 && doubleBtn.mousePressed(this.mc, xCoord, yCoord)) { //
-            InventoryAction action = InventoryAction.SET_PATTERN_MULTI;
 
-            final PacketInventoryAction p = new PacketInventoryAction(action, 0, 0);
-            NetworkHandler.instance.sendToServer(p);
-        } else super.mouseClicked(xCoord, yCoord, btn);
+        super.mouseClicked(xCoord, yCoord, btn);
 
         if (currentScroll != this.processingScrollBar.getCurrentScroll()) {
             changeActivePage();
@@ -262,14 +173,54 @@ public class GuiPatternTermEx extends GuiMEMonitorable {
     }
 
     private void changeActivePage() {
-
         try {
             NetworkHandler.instance.sendToServer(
                     new PacketValueConfig(
                             "PatternTerminalEx.ActivePage",
                             String.valueOf(this.processingScrollBar.getCurrentScroll())));
+            container.activePage = this.processingScrollBar.getCurrentScroll();
+            this.updateSlotVisibility();
         } catch (final IOException e) {
-            e.printStackTrace();
+            AELog.error(e);
+        }
+    }
+
+    @Override
+    protected void updateSlotVisibility() {
+        final int inputSlotRows = container.getPatternInputsHeigh();
+        final int inputSlotsPerRow = container.getPatternInputsWidth();
+        final int inputSlotPages = container.getPatternInputPages();
+
+        for (int page = 0; page < inputSlotPages; page++) {
+            for (int y = 0; y < inputSlotRows; y++) {
+                for (int x = 0; x < inputSlotsPerRow; x++) {
+                    final int slotIndex = x + y * inputSlotsPerRow + page * (inputSlotsPerRow * inputSlotRows);
+                    VirtualMEPhantomSlot slot = this.craftingSlots[slotIndex];
+
+                    slot.setHidden(this.isInverted ? y != this.activePage || page > 0 : page != this.activePage);
+
+                    slot.setX(getInputSlotOffsetX() + 18 * (this.isInverted ? 0 : x));
+                    slot.setY(this.rows * 18 + getInputSlotOffsetY() + 18 * (this.isInverted ? x : y));
+                }
+            }
+        }
+
+        final int outputSlotRows = container.getPatternOutputsHeigh();
+        final int outputSlotsPerRow = container.getPatternOutputsWidth();
+        final int outputSlotPages = container.getPatternOutputPages();
+
+        for (int page = 0; page < outputSlotPages; page++) {
+            for (int y = 0; y < outputSlotRows; y++) {
+                for (int x = 0; x < outputSlotsPerRow; x++) {
+                    final int slotIndex = x + y * outputSlotsPerRow + page * (outputSlotsPerRow * outputSlotRows);
+                    VirtualMEPhantomSlot slot = this.outputSlots[slotIndex];
+
+                    slot.setHidden(!this.isInverted ? y != this.activePage || page != 0 : page != this.activePage);
+
+                    slot.setX((this.isInverted ? getOutputSlotOffsetX() : 112) + 18 * (!this.isInverted ? 0 : x));
+                    slot.setY(this.rows * 18 + getOutputSlotOffsetY() + 18 * (!this.isInverted ? x : y));
+                }
+            }
         }
     }
 }

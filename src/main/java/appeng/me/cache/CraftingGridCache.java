@@ -10,6 +10,9 @@
 
 package appeng.me.cache;
 
+import static appeng.api.storage.data.IItemList.LIST_FLUID;
+import static appeng.api.storage.data.IItemList.LIST_ITEM;
+import static appeng.api.storage.data.IItemList.LIST_MIXED;
 import static appeng.util.Platform.convertStack;
 import static appeng.util.Platform.stackConvert;
 
@@ -74,6 +77,7 @@ import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
@@ -86,8 +90,6 @@ import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.ItemSorters;
-import appeng.util.Platform;
-import appeng.util.item.FluidList;
 import appeng.util.item.OreListMultiMap;
 
 public class CraftingGridCache
@@ -366,6 +368,11 @@ public class CraftingGridCache
     }
 
     @Override
+    public void setEmitable(final IAEStack<?> someItem) {
+        this.emitableItems.add(someItem.copy());
+    }
+
+    @Override
     public List<IMEInventoryHandler> getCellArray(final StorageChannel channel) {
         return Arrays.asList(this);
     }
@@ -428,15 +435,30 @@ public class CraftingGridCache
 
     @Override
     public IItemList<IAEStack> getAvailableItems(final IItemList<IAEStack> out, int iteration) {
-        if (out.getClass().equals(FluidList.class)) return out;
 
         // add craftable items!
         for (final IAEStack<?> stack : this.craftableItems.keySet()) {
-            out.addCrafting(Platform.stackConvert(stack));
+            if (stack instanceof IAEFluidStack afs) {
+                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_FLUID) {
+                    out.addCrafting(afs);
+                }
+            } else {
+                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_ITEM) {
+                    out.addCrafting(stack);
+                }
+            }
         }
 
-        for (final IAEStack<?> st : this.emitableItems) {
-            out.addCrafting(Platform.stackConvert(st));
+        for (final IAEStack<?> stack : emitableItems) {
+            if (stack instanceof IAEFluidStack afs) {
+                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_FLUID) {
+                    out.addCrafting(afs);
+                }
+            } else {
+                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_ITEM) {
+                    out.addCrafting(stack);
+                }
+            }
         }
 
         return out;
@@ -505,16 +527,22 @@ public class CraftingGridCache
     @Override
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
             final IAEItemStack slotItem, final ICraftingCallback cb) {
-        return beginCraftingJob(world, grid, actionSrc, slotItem, CraftingMode.STANDARD, cb);
+        return beginCraftingJob(world, grid, actionSrc, convertStack(slotItem), CraftingMode.STANDARD, cb);
+    }
+
+    @Override
+    public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
+            final IAEStack<?> stack, final ICraftingCallback cb) {
+        return beginCraftingJob(world, grid, actionSrc, stack, CraftingMode.STANDARD, cb);
     }
 
     public Future<ICraftingJob> beginCraftingJob(final World world, final IGrid grid, final BaseActionSource actionSrc,
-            final IAEItemStack slotItem, final CraftingMode craftingMode, final ICraftingCallback cb) {
-        if (world == null || grid == null || actionSrc == null || slotItem == null) {
+            final IAEStack<?> stack, final CraftingMode craftingMode, final ICraftingCallback cb) {
+        if (world == null || grid == null || actionSrc == null || stack == null) {
             throw new IllegalArgumentException("Invalid Crafting Job Request");
         }
 
-        final ICraftingJob job = new CraftingJobV2<>(world, grid, actionSrc, convertStack(slotItem), craftingMode, cb);
+        final ICraftingJob job = new CraftingJobV2<>(world, grid, actionSrc, (IAEStack) stack, craftingMode, cb);
 
         return job.schedule();
     }

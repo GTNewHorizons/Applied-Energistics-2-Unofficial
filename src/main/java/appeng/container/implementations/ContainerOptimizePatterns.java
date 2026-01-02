@@ -13,7 +13,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -25,30 +24,23 @@ import appeng.api.networking.security.IActionHost;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.IInterfaceViewable;
-import appeng.container.AEBaseContainer;
+import appeng.container.ContainerSubGui;
+import appeng.container.PrimaryGui;
 import appeng.core.AELog;
 import appeng.core.features.registries.InterfaceTerminalRegistry;
-import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
-import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.crafting.v2.CraftingContext;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
 import appeng.crafting.v2.resolvers.CraftingTask;
-import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.me.cache.CraftingGridCache;
-import appeng.parts.reporting.PartCraftingTerminal;
-import appeng.parts.reporting.PartPatternTerminal;
-import appeng.parts.reporting.PartPatternTerminalEx;
-import appeng.parts.reporting.PartTerminal;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
 import appeng.util.PatternMultiplierHelper;
-import appeng.util.Platform;
 import codechicken.nei.ItemStackMap;
 import codechicken.nei.ItemStackSet;
 
-public class ContainerOptimizePatterns extends AEBaseContainer {
+public class ContainerOptimizePatterns extends ContainerSubGui {
 
     private ICraftingJob result;
 
@@ -185,36 +177,9 @@ public class ContainerOptimizePatterns extends AEBaseContainer {
     }
 
     public void switchToOriginalGUI() {
-        GuiBridge originalGui = null;
-
-        final IActionHost ah = this.getActionHost();
-        if (ah instanceof WirelessTerminalGuiObject) {
-            originalGui = GuiBridge.GUI_WIRELESS_TERM;
-        }
-
-        if (ah instanceof PartTerminal) {
-            originalGui = GuiBridge.GUI_ME;
-        }
-
-        if (ah instanceof PartCraftingTerminal) {
-            originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
-        }
-
-        if (ah instanceof PartPatternTerminal) {
-            originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-
-        if (ah instanceof PartPatternTerminalEx) {
-            originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-        }
-
-        if (originalGui != null && this.getOpenContext() != null) {
-            NetworkHandler.instance
-                    .sendTo(new PacketSwitchGuis(originalGui), (EntityPlayerMP) this.getInventoryPlayer().player);
-
-            final TileEntity te = this.getOpenContext().getTile();
-            Platform.openGUI(this.getInventoryPlayer().player, te, this.getOpenContext().getSide(), originalGui);
-        }
+        final PrimaryGui pGui = getPrimaryGui();
+        assert pGui != null;
+        pGui.open(this.getInventoryPlayer().player);
     }
 
     public static int getBitMultiplier(long currentCrafts, long perCraft, long maximumCrafts) {

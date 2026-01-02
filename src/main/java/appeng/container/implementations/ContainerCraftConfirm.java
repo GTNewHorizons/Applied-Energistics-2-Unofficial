@@ -21,7 +21,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ICrafting;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 
@@ -38,10 +37,11 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
+import appeng.container.ContainerSubGui;
+import appeng.container.PrimaryGui;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.AELog;
@@ -49,20 +49,14 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCraftingTreeData;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
-import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingJobV2;
-import appeng.helpers.WirelessTerminalGuiObject;
-import appeng.parts.reporting.PartCraftingTerminal;
-import appeng.parts.reporting.PartPatternTerminal;
-import appeng.parts.reporting.PartPatternTerminalEx;
-import appeng.parts.reporting.PartTerminal;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingCPUSelectorContainer {
+public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingCPUSelectorContainer {
 
     private Future<ICraftingJob> job;
     protected ICraftingJob result;
@@ -263,15 +257,9 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         return h.getActionableNode().getGrid();
     }
 
-    public IAEItemStack getItemToCraft() {
-        try {
-            ByteBuf deserialized = Unpooled.wrappedBuffer(serializedItemToCraft.getBytes(StandardCharsets.ISO_8859_1));
-            return AEApi.instance().storage().readItemFromPacket(deserialized);
-        } catch (IOException e) {
-            AELog.debug(e);
-            AELog.debug("Deserializing IAEItemStack Failed");
-            return null;
-        }
+    public IAEStack<?> getItemToCraft() {
+        ByteBuf deserialized = Unpooled.wrappedBuffer(serializedItemToCraft.getBytes(StandardCharsets.ISO_8859_1));
+        return Platform.readStackByte(deserialized);
     }
 
     public boolean cpuCraftingSameItem(final CraftingCPUStatus c) {
@@ -330,35 +318,10 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
     }
 
     public void switchToOriginalGUI() {
-        GuiBridge originalGui = null;
-
-        final IActionHost ah = this.getActionHost();
-        if (ah instanceof WirelessTerminalGuiObject) {
-            originalGui = GuiBridge.GUI_WIRELESS_TERM;
-        }
-
-        if (ah instanceof PartTerminal) {
-            originalGui = GuiBridge.GUI_ME;
-        }
-
-        if (ah instanceof PartCraftingTerminal) {
-            originalGui = GuiBridge.GUI_CRAFTING_TERMINAL;
-        }
-
-        if (ah instanceof PartPatternTerminal) {
-            originalGui = GuiBridge.GUI_PATTERN_TERMINAL;
-        }
-
-        if (ah instanceof PartPatternTerminalEx) {
-            originalGui = GuiBridge.GUI_PATTERN_TERMINAL_EX;
-        }
-
-        if (originalGui != null && this.getOpenContext() != null) {
-            NetworkHandler.instance
-                    .sendTo(new PacketSwitchGuis(originalGui), (EntityPlayerMP) this.getInventoryPlayer().player);
-
-            final TileEntity te = this.getOpenContext().getTile();
-            Platform.openGUI(this.getInventoryPlayer().player, te, this.getOpenContext().getSide(), originalGui);
+        if (this.getInventoryPlayer().player.openContainer instanceof AEBaseContainer bc) {
+            final PrimaryGui pGui = bc.getPrimaryGui();
+            assert pGui != null;
+            pGui.open(this.getInventoryPlayer().player);
         }
     }
 
@@ -464,14 +427,9 @@ public class ContainerCraftConfirm extends AEBaseContainer implements ICraftingC
         this.job = job;
     }
 
-    public void setItemToCraft(@Nonnull final IAEItemStack itemToCraft) {
-        try {
-            ByteBuf serialized = Unpooled.buffer();
-            itemToCraft.writeToPacket(serialized);
-            this.serializedItemToCraft = serialized.toString(StandardCharsets.ISO_8859_1);
-        } catch (IOException e) {
-            AELog.debug(e);
-            AELog.debug("Deserializing IAEItemStack Failed");
-        }
+    public void setItemToCraft(@Nonnull final IAEStack<?> itemToCraft) {
+        ByteBuf serialized = Unpooled.buffer();
+        Platform.writeStackByte(itemToCraft, serialized);
+        this.serializedItemToCraft = serialized.toString(StandardCharsets.ISO_8859_1);
     }
 }

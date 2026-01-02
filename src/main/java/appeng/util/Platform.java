@@ -112,7 +112,7 @@ import appeng.api.storage.data.IAETagCompound;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
-import appeng.client.me.SlotME;
+import appeng.container.AEBaseContainer;
 import appeng.container.slot.SlotFake;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
@@ -135,6 +135,7 @@ import appeng.util.item.AEStack;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
+import baubles.api.BaublesApi;
 import buildcraft.api.tools.IToolWrench;
 import cofh.api.item.IToolHammer;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -176,6 +177,7 @@ public class Platform {
     private static final DecimalFormat df = new DecimalFormat("#.##");
     public static final boolean isAE2FCLoaded = Loader.isModLoaded("ae2fc");
     public static final boolean isEIOLoaded = Loader.isModLoaded("EnderIO");
+    public static boolean isBaublesLoaded = Loader.isModLoaded("Baubles");
 
     static {
         BYTE_LIMIT = new double[10];
@@ -339,8 +341,16 @@ public class Platform {
         return e == SearchBoxMode.NEI_MANUAL_SEARCH && !IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI);
     }
 
+    // xCord game limit
+    public final static int itemGuiSlotOffset = 30_000_001;
+
     public static void openGUI(@Nonnull final EntityPlayer p, @Nullable final TileEntity tile,
             @Nullable final ForgeDirection side, @Nonnull final GuiBridge type) {
+        openGUI(p, tile, side, type, Integer.MIN_VALUE);
+    }
+
+    public static void openGUI(@Nonnull final EntityPlayer p, @Nullable final TileEntity tile,
+            @Nullable final ForgeDirection side, @Nonnull final GuiBridge type, int slotIndex) {
         if (isClient()) {
             return;
         }
@@ -354,14 +364,16 @@ public class Platform {
             z = tile.zCoord;
         }
 
-        if ((type.getType().isItem() && tile == null) || type.hasPermissions(tile, x, y, z, side, p)) {
-            if (tile == null && type.getType() == GuiHostType.ITEM) {
+        slotIndex = slotIndex == Integer.MIN_VALUE ? p.inventory.currentItem : slotIndex;
+
+        if ((type.getType().isItem() && tile == null) || type.hasPermissions(tile, x, y, z, side, p, slotIndex)) {
+            if (tile == null && type.getType() != GuiHostType.WORLD) {
                 p.openGui(
                         AppEng.instance(),
                         type.ordinal() << 5 | (1 << 4),
                         p.getEntityWorld(),
-                        p.inventory.currentItem,
-                        0,
+                        itemGuiSlotOffset + slotIndex,
+                        p.openContainer instanceof AEBaseContainer abc ? abc.getSwitchAbleGuiNext() : Integer.MIN_VALUE,
                         0);
             } else if (tile == null || type.getType() == GuiHostType.ITEM) {
                 p.openGui(AppEng.instance(), type.ordinal() << 5 | (1 << 3), p.getEntityWorld(), x, y, z);
@@ -792,7 +804,7 @@ public class Platform {
             return "** Null";
         }
 
-        final String n = ((AEItemStack) is).getModID();
+        final String n = ((AEItemStack) is).getModId();
         return n == null ? "** Null" : n;
     }
 
@@ -1257,13 +1269,20 @@ public class Platform {
         if (possible != null) {
             retrieved = possible.getStackSize();
         }
+        final int typeMultiplier = request.getPowerMultiplier();
 
-        final double availablePower = energy.extractAEPower(retrieved, Actionable.SIMULATE, PowerMultiplier.CONFIG);
+        final double availablePower = energy.extractAEPower(
+                Platform.ceilDiv(retrieved, typeMultiplier),
+                Actionable.SIMULATE,
+                PowerMultiplier.CONFIG);
 
-        final long itemToExtract = Math.min((long) (availablePower + 0.9), retrieved);
+        final long itemToExtract = Math.min((long) (availablePower * typeMultiplier + 0.9), retrieved);
 
         if (itemToExtract > 0) {
-            energy.extractAEPower(retrieved, Actionable.MODULATE, PowerMultiplier.CONFIG);
+            energy.extractAEPower(
+                    Platform.ceilDiv(retrieved, typeMultiplier),
+                    Actionable.MODULATE,
+                    PowerMultiplier.CONFIG);
 
             possible.setStackSize(itemToExtract);
             final StackType ret = cell.extractItems(possible, Actionable.MODULATE, src);
@@ -1286,7 +1305,7 @@ public class Platform {
         if (possible != null) {
             stored -= possible.getStackSize();
         }
-        long typeMultiplier = input instanceof IAEFluidStack ? 1000 : 1;
+        final int typeMultiplier = input.getPowerMultiplier();
 
         final double availablePower = energy
                 .extractAEPower(Platform.ceilDiv(stored, typeMultiplier), Actionable.SIMULATE, PowerMultiplier.CONFIG);
@@ -1373,8 +1392,8 @@ public class Platform {
     }
 
     public static <T extends IAEStack<T>> void postListChanges(final IItemList<T> before, final IItemList<T> after,
-            final IMEMonitorHandlerReceiver<T> meMonitorPassthrough, final BaseActionSource source) {
-        final LinkedList<T> changes = new LinkedList<>();
+            final IMEMonitorHandlerReceiver meMonitorPassthrough, final BaseActionSource source) {
+        final LinkedList<IAEStack<?>> changes = new LinkedList<>();
 
         for (final T is : before) {
             is.setStackSize(-is.getStackSize());
@@ -1846,10 +1865,6 @@ public class Platform {
             return null;
         }
 
-        if (slot instanceof SlotME) {
-            return ((SlotME) slot).getAEStack();
-        }
-
         if (slot instanceof SlotFake) {
             return ((SlotFake) slot).getAEStack();
         }
@@ -2000,6 +2015,7 @@ public class Platform {
     }
 
     public static IAEStack<?> readStackNBT(NBTTagCompound tag, boolean convert) {
+        if (tag == null) return null;
         if (tag.hasKey("StackType", 1)) {
             // For old experimental compatibility
             final byte stackType = tag.getByte("StackType");
@@ -2080,7 +2096,7 @@ public class Platform {
             }
         }
 
-        return (IAEItemStack) stack;
+        return stack instanceof IAEItemStack ais ? ais : null;
     }
 
     public static IAEStack<?> convertStackPacket(ItemStack stack) {
@@ -2090,7 +2106,44 @@ public class Platform {
         return AEItemStack.create(stack);
     }
 
+    public static boolean isStacksIdentical(IAEStack<?> a, IAEStack<?> b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        if (a.equals(b)) return a.getStackSize() == b.getStackSize();
+        return false;
+    }
+
+    public final static int baublesSlotsOffset = 100_012;
+
+    public static ItemStack getItemFromPlayerInventoryBySlotIndex(final EntityPlayer p, final int slotIndex) {
+        if (slotIndex < 0) {
+            return p.inventory.getCurrentItem();
+        } else if (isBaublesLoaded && slotIndex >= baublesSlotsOffset) {
+            return BaublesApi.getBaubles(p).getStackInSlot(slotIndex - baublesSlotsOffset);
+        } else if (slotIndex < p.inventory.getSizeInventory()) {
+            return p.inventory.getStackInSlot(slotIndex);
+        }
+
+        return null;
+    }
+
+    public static void setPlayerInventorySlotByIndex(final EntityPlayer p, final int slotIndex, final ItemStack is) {
+        if (isBaublesLoaded && slotIndex >= baublesSlotsOffset) {
+            BaublesApi.getBaubles(p).setInventorySlotContents(slotIndex, is);
+        } else p.inventory.setInventorySlotContents(slotIndex, is);
+    }
+
     public static int longToInt(long number) {
         return (int) Math.min(Integer.MAX_VALUE, number);
+    }
+
+    public static ItemStack copyStackWithSize(ItemStack itemStack, int size) {
+        if (size != 0 && itemStack != null) {
+            ItemStack copy = itemStack.copy();
+            copy.stackSize = size;
+            return copy;
+        } else {
+            return null;
+        }
     }
 }

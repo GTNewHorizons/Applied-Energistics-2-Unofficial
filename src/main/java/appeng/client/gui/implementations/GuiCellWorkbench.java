@@ -25,6 +25,9 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
+import appeng.api.implementations.tiles.ICellWorkbench;
+import appeng.api.storage.StorageChannel;
+import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.container.implementations.ContainerCellWorkbench;
@@ -33,7 +36,7 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.tile.misc.TileCellWorkbench;
+import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.Platform;
 
 public class GuiCellWorkbench extends GuiUpgradeable {
@@ -44,8 +47,9 @@ public class GuiCellWorkbench extends GuiUpgradeable {
     private GuiImgButton partition;
     private GuiToggleButton copyMode;
     protected GuiImgButton cellRestriction;
+    private VirtualMEPhantomSlot[] configSlots;
 
-    public GuiCellWorkbench(final InventoryPlayer inventoryPlayer, final TileCellWorkbench te) {
+    public GuiCellWorkbench(final InventoryPlayer inventoryPlayer, final ICellWorkbench te) {
         super(new ContainerCellWorkbench(inventoryPlayer, te));
         this.workbench = (ContainerCellWorkbench) this.inventorySlots;
         this.ySize = 251;
@@ -84,6 +88,8 @@ public class GuiCellWorkbench extends GuiUpgradeable {
         this.buttonList.add(this.copyMode);
         this.buttonList.add(this.oreFilter);
         this.buttonList.add(this.cellRestriction);
+
+        initVirtualSlots();
     }
 
     @Override
@@ -163,6 +169,25 @@ public class GuiCellWorkbench extends GuiUpgradeable {
         }
     }
 
+    private void initVirtualSlots() {
+        this.configSlots = new VirtualMEPhantomSlot[63];
+        final IAEStackInventory inputInv = this.workbench.getConfig();
+        final int xo = 8;
+        final int yo = -133;
+
+        for (int y = 0; y < 7; y++) {
+            for (int x = 0; x < 9; x++) {
+                VirtualMEPhantomSlot slot = new VirtualMEPhantomSlot(
+                        xo + x * 18,
+                        yo + y * 18 + 9 * 18,
+                        inputInv,
+                        x + y * 9);
+                this.configSlots[x + y * 9] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+    }
+
     @Override
     protected void handleButtonVisibility() {
         this.copyMode.setState(this.workbench.getCopyMode() == CopyMode.CLEAR_ON_REMOVE);
@@ -223,5 +248,11 @@ public class GuiCellWorkbench extends GuiUpgradeable {
                 super.actionPerformed(btn);
             }
         } catch (final IOException ignored) {}
+    }
+
+    @Override
+    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
+        StorageChannel channel = workbench.getStorageChannel();
+        slot.handleMouseClicked(channel == StorageChannel.ITEMS, channel == StorageChannel.FLUIDS, false);
     }
 }

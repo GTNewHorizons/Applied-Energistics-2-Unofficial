@@ -299,6 +299,8 @@ gui.tooltips.appliedenergistics2.Encode=Закодувати шаблон
 gui.tooltips.appliedenergistics2.EncodeDescription=Запишіть введений шаблон до поточного закодованого шаблону або до доступного порожнього шаблону. Утримуйте клавішу Shift, щоб перенести шаблон безпосередньо в інвентар. Утримуйте Shift+Control, щоб закодувати весь стек.
 
 gui.tooltips.appliedenergistics2.FuzzyMode=Нечітке порівняння
+gui.tooltips.appliedenergistics2.FZPercent_1=Розділити шкоду на 1%
+gui.tooltips.appliedenergistics2.FZPercent_10=Розділити шкоду на 10%
 gui.tooltips.appliedenergistics2.FZPercent_25=Розділити шкоду на 25%
 gui.tooltips.appliedenergistics2.FZPercent_50=Розділити шкоду на 50%
 gui.tooltips.appliedenergistics2.FZPercent_75=Розділити шкоду на 75%
@@ -363,7 +365,7 @@ gui.tooltips.appliedenergistics2.CraftOnly=Не використовувати �
 gui.tooltips.appliedenergistics2.CraftEither=Використовувати збережені предмети або створити під час експорту.
 gui.tooltips.appliedenergistics2.LevelType=Тип рівня
 gui.tooltips.appliedenergistics2.LevelType_Energy=Енергія
-gui.tooltips.appliedenergistics2.LevelType_Item=Предмет
+gui.tooltips.appliedenergistics2.LevelType_Item_Fluid=Предмет
 gui.tooltips.appliedenergistics2.InventoryTweaks=Inventory Tweaks
 gui.tooltips.appliedenergistics2.Mod=Мод
 gui.tooltips.appliedenergistics2.TerminalStyle=Стиль терміналу

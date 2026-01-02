@@ -32,6 +32,7 @@ import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingContext;
+import appeng.crafting.v2.CraftingContext.RequestInProcessing;
 import appeng.crafting.v2.CraftingRequest;
 import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
 import appeng.crafting.v2.CraftingTreeSerializer;
@@ -131,7 +132,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
 
             IAEStack<?> matchingOutput = null;
             for (IAEStack<?> patternOutput : this.patternOutputs) {
-                if (isOutputSameAs(patternOutput)) {
+                if (isOutputAcceptable(patternOutput)) {
                     matchingOutput = patternOutput;
                     break;
                 }
@@ -274,8 +275,11 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
             return craftingMachine;
         }
 
-        public boolean isOutputSameAs(IAEStack<?> otherStack) {
+        public boolean isOutputAcceptable(IAEStack<?> otherStack) {
             if (request.substitutionMode == SubstitutionMode.ACCEPT_FUZZY) {
+                if (!this.request.acceptableSubstituteFn.test((StackType) otherStack)) {
+                    return false;
+                }
                 return this.request.stack.fuzzyComparison(otherStack, FuzzyMode.IGNORE_ALL);
             } else {
                 return this.request.stack.isSameType(otherStack);
@@ -432,6 +436,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
                         final int finalSlot = slot; // for lambda capture
 
                         CraftingRequest<?> req = new CraftingRequest<>(
+                                request,
                                 input.copy().setStackSize(amount),
                                 childMode,
                                 allowSimulation,
@@ -457,6 +462,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
                     if (patternRecursionInputs.length > 0) {
                         for (IAEStack<?> recInput : patternRecursionInputs) {
                             CraftingRequest<?> req = new CraftingRequest<>(
+                                    request,
                                     recInput.copy(),
                                     childMode,
                                     allowSimulation,
@@ -470,6 +476,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
                     for (IAEStack<?> input : patternInputs) {
                         final long amount = Math.multiplyExact(input.getStackSize(), toCraft);
                         CraftingRequest<?> req = new CraftingRequest<>(
+                                request,
                                 input.copy().setStackSize(amount),
                                 childMode,
                                 allowSimulation,
@@ -580,6 +587,11 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
         }
 
         @Override
+        public boolean isSimulated() {
+            return allowSimulation;
+        }
+
+        @Override
         public String toString() {
             return "CraftFromPatternTask{" + "request="
                     + request
@@ -683,7 +695,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
             priority--;
         }
         // Fallback: use highest priority pattern to simulate if nothing else works
-        if (!patterns.isEmpty()) {
+        if (!patterns.isEmpty() && shouldAddSimulateMissingExtraCondition(request, context)) {
             ICraftingPatternDetails pattern = patterns.get(0);
             if (context.isPatternComplex(pattern)) {
                 for (int i = 0; i < request.remainingToProcess; i++) {
@@ -706,5 +718,23 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
         }
 
         return Collections.unmodifiableList(tasks);
+    }
+
+    private boolean shouldAddSimulateMissingExtraCondition(CraftingRequest<?> request, CraftingContext context) {
+        // glee: additional safeguard to allow failure in lower level to retry a different pattern in upper level
+        // the simulate missing action is causing the crafting calc to fail prematurely without exhausting every branch
+        // use fallback only if there are no other path in higher up branches
+        if (request.parentRequest == null) return true;
+        boolean found = false;
+        for (RequestInProcessing<?> liveRequest : context.getLiveRequests()) {
+            if (request.parentRequests.contains(liveRequest.request) || liveRequest.request == request) {
+                if (!liveRequest.isRemainingResolversAllSimulated()) return false;
+                found = true;
+            }
+        }
+        // all parents have only one single path left and that is us. we must provide a conjure item task so calculation
+        // can proceed as expected
+        if (found) return true;
+        throw new IllegalStateException("None of the parents are found");
     }
 }

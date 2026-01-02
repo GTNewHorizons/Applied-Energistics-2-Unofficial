@@ -18,14 +18,13 @@ import net.minecraft.util.ResourceLocation;
 
 import appeng.api.AEApi;
 import appeng.api.config.TerminalFontSize;
-import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.implementations.items.IStorageCell;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IItemList;
 import appeng.client.render.StackSizeRenderer;
 import appeng.core.localization.GuiText;
 import appeng.me.storage.CellInventoryHandler;
 import appeng.util.Platform;
-import appeng.util.item.ItemList;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.api.IOverlayHandler;
 import codechicken.nei.api.IRecipeOverlayRenderer;
@@ -57,30 +56,32 @@ public class NEICellViewHandler implements IUsageHandler {
     @Override
     public IUsageHandler getUsageHandler(String inputId, Object... ingredients) {
         if (ingredients.length > 0 && ingredients[0] instanceof ItemStack ingredient
+                && ingredient.getItem() instanceof IStorageCell sc
                 && AEApi.instance().registries().cell().getCellInventory(
                         ingredient,
                         null,
-                        StorageChannel.ITEMS) instanceof CellInventoryHandler handler
+                        sc.getStorageChannel()) instanceof CellInventoryHandler handler
                 && handler.getTotalBytes() > 0) {
             this.cellHandler = handler;
 
-            ItemList list = new ItemList();
+            IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
             handler.getAvailableItems(list, appeng.util.IterationCounter.fetchNewId());
 
-            List<IAEItemStack> sortedStacks = new ArrayList<>();
+            List<IAEStack<?>> sortedStacks = new ArrayList<>();
             list.iterator().forEachRemaining(sortedStacks::add);
             sortedStacks.sort(Comparator.comparing(IAEStack::getStackSize, Comparator.reverseOrder()));
 
             stacks.clear();
             int count = 0;
-            for (IAEItemStack aeStack : sortedStacks) {
-                ItemStack stack = aeStack.getItemStack().copy();
-                stack.stackSize = 1;
+            for (IAEStack<?> aes : sortedStacks) {
+                long stackSize = aes.getStackSize();
+                final ItemStack viewStack = aes.copy().setStackSize(0).getItemStackForNEI();
+                if (viewStack == null) continue;
                 PositionedStack positionedStack = new PositionedStack(
-                        stack,
+                        viewStack,
                         OFFSET_X + count % ROW_ITEM_NUM * 18 + 1,
                         ITEMS_OFFSET_Y + count / ROW_ITEM_NUM * 18 + 1);
-                stacks.add(new ViewItemStack(positionedStack, aeStack.getStackSize()));
+                stacks.add(new ViewItemStack(positionedStack, stackSize));
                 count++;
             }
             return this;

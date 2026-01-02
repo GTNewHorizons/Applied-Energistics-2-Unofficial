@@ -22,8 +22,12 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
+import appeng.api.config.TypeFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
+import appeng.api.parts.ILevelEmitter;
+import appeng.api.storage.StorageName;
+import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerLevelEmitter;
@@ -33,7 +37,6 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.parts.automation.PartLevelEmitter;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
 
@@ -55,8 +58,11 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
     private GuiImgButton levelMode;
     private GuiImgButton craftingMode;
+    private GuiImgButton typeFilter;
 
-    public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final PartLevelEmitter te) {
+    private VirtualMEPhantomSlot config;
+
+    public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final ILevelEmitter te) {
         super(new ContainerLevelEmitter(inventoryPlayer, te));
     }
 
@@ -70,6 +76,13 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.amountTextField.setFocused(true);
         ((ContainerLevelEmitter) this.inventorySlots).setTextField(this.amountTextField);
         this.validateText();
+
+        this.config = new VirtualMEPhantomSlot(
+                17,
+                42,
+                ((ContainerLevelEmitter) inventorySlots).getLvlEmitter().getAEInventoryByName(StorageName.NONE),
+                0);
+        this.registerVirtualSlots(this.config);
     }
 
     @Override
@@ -94,21 +107,78 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                 this.guiTop + 48,
                 Settings.CRAFT_VIA_REDSTONE,
                 YesNo.NO);
+        this.typeFilter = new GuiImgButton(this.guiLeft - 18, this.guiTop + 68, Settings.TYPE_FILTER, TypeFilter.ALL);
 
         final int a = AEConfig.instance.levelByStackAmounts(0);
         final int b = AEConfig.instance.levelByStackAmounts(1);
         final int c = AEConfig.instance.levelByStackAmounts(2);
         final int d = AEConfig.instance.levelByStackAmounts(3);
 
-        this.buttonList.add(this.plus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 17, 22, 20, "+" + a));
-        this.buttonList.add(this.plus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 17, 28, 20, "+" + b));
-        this.buttonList.add(this.plus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 17, 32, 20, "+" + c));
-        this.buttonList.add(this.plus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 17, 38, 20, "+" + d));
+        this.buttonList.add(
+                this.plus1 = new GuiButton(
+                        0,
+                        this.guiLeft + 20,
+                        this.guiTop + 17,
+                        22,
+                        20,
+                        GuiText.IncreaseAmount.getLocal(a)));
+        this.buttonList.add(
+                this.plus10 = new GuiButton(
+                        0,
+                        this.guiLeft + 48,
+                        this.guiTop + 17,
+                        28,
+                        20,
+                        GuiText.IncreaseAmount.getLocal(b)));
+        this.buttonList.add(
+                this.plus100 = new GuiButton(
+                        0,
+                        this.guiLeft + 82,
+                        this.guiTop + 17,
+                        32,
+                        20,
+                        GuiText.IncreaseAmount.getLocal(c)));
+        this.buttonList.add(
+                this.plus1000 = new GuiButton(
+                        0,
+                        this.guiLeft + 120,
+                        this.guiTop + 17,
+                        38,
+                        20,
+                        GuiText.IncreaseAmount.getLocal(d)));
 
-        this.buttonList.add(this.minus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 63, 22, 20, "-" + a));
-        this.buttonList.add(this.minus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 63, 28, 20, "-" + b));
-        this.buttonList.add(this.minus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 63, 32, 20, "-" + c));
-        this.buttonList.add(this.minus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 63, 38, 20, "-" + d));
+        this.buttonList.add(
+                this.minus1 = new GuiButton(
+                        0,
+                        this.guiLeft + 20,
+                        this.guiTop + 63,
+                        22,
+                        20,
+                        GuiText.DecreaseAmount.getLocal(a)));
+        this.buttonList.add(
+                this.minus10 = new GuiButton(
+                        0,
+                        this.guiLeft + 48,
+                        this.guiTop + 63,
+                        28,
+                        20,
+                        GuiText.DecreaseAmount.getLocal(b)));
+        this.buttonList.add(
+                this.minus100 = new GuiButton(
+                        0,
+                        this.guiLeft + 82,
+                        this.guiTop + 63,
+                        32,
+                        20,
+                        GuiText.DecreaseAmount.getLocal(c)));
+        this.buttonList.add(
+                this.minus1000 = new GuiButton(
+                        0,
+                        this.guiLeft + 120,
+                        this.guiTop + 63,
+                        38,
+                        20,
+                        GuiText.DecreaseAmount.getLocal(d)));
 
         this.buttonList.add(
                 this.setButton = new GuiButton(
@@ -123,6 +193,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.buttonList.add(this.redstoneMode);
         this.buttonList.add(this.fuzzyMode);
         this.buttonList.add(this.craftingMode);
+        this.buttonList.add(this.typeFilter);
     }
 
     @Override
@@ -142,6 +213,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.minus1000.enabled = notCraftingMode;
         this.levelMode.enabled = notCraftingMode;
         this.redstoneMode.enabled = notCraftingMode;
+        this.typeFilter.enabled = notCraftingMode && config.getAEStack() == null;
 
         super.drawFG(offsetX, offsetY, mouseX, mouseY);
 
@@ -151,6 +223,10 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
         if (this.levelMode != null) {
             this.levelMode.set(((ContainerLevelEmitter) this.cvb).getLevelMode());
+        }
+
+        if (this.typeFilter != null) {
+            this.typeFilter.set(((ContainerLevelEmitter) this.cvb).getTypeFilter());
         }
     }
 
@@ -164,6 +240,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     protected void handleButtonVisibility() {
         this.craftingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.CRAFTING) > 0);
         this.fuzzyMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.FUZZY) > 0);
+        this.typeFilter.setVisibility(config.getAEStack() == null);
     }
 
     @Override
@@ -194,6 +271,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.craftingMode.getSetting(), backwards));
         } else if (btn == this.levelMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.levelMode.getSetting(), backwards));
+        } else if (btn == this.typeFilter) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.typeFilter.getSetting(), backwards));
         } else {
             final boolean isPlus = btn == this.plus1 || btn == this.plus10
                     || btn == this.plus100
@@ -248,6 +327,11 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         }
 
         super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    @Override
+    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
+        slot.handleMouseClicked(true, true, isCtrlKeyDown());
     }
 
     @Override

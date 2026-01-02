@@ -78,11 +78,11 @@ public class P2PCache implements IGridCache {
 
             if (t.isOutput()) {
                 this.outputs.remove(t.getFrequency(), t);
+                t.onTunnelNetworkChange();
             } else {
                 this.inputs.remove(t.getFrequency());
+                this.updateTunnel(t.getFrequency(), false);
             }
-
-            this.updateTunnel(t.getFrequency(), false);
         }
     }
 
@@ -100,11 +100,11 @@ public class P2PCache implements IGridCache {
 
             if (t.isOutput()) {
                 this.outputs.put(t.getFrequency(), t);
+                t.onTunnelNetworkChange();
             } else {
                 this.inputs.put(t.getFrequency(), t);
+                this.updateTunnel(t.getFrequency(), false);
             }
-
-            this.updateTunnel(t.getFrequency(), false);
         }
     }
 
@@ -124,19 +124,19 @@ public class P2PCache implements IGridCache {
             pausedRebuild = true;
         }
 
-        for (final PartP2PTunnel p : this.outputs.get(freq)) {
-            if (configChange) {
-                p.onTunnelConfigChange();
-            }
-            p.onTunnelNetworkChange();
-        }
-
         final PartP2PTunnel in = this.inputs.get(freq);
         if (in != null) {
             if (configChange) {
                 in.onTunnelConfigChange();
             }
             in.onTunnelNetworkChange();
+        }
+
+        for (final PartP2PTunnel p : this.outputs.get(freq)) {
+            if (configChange) {
+                p.onTunnelConfigChange();
+            }
+            p.onTunnelNetworkChange();
         }
 
         if (pausedRebuild) CraftingGridCache.unpauseRebuilds();
@@ -149,11 +149,12 @@ public class P2PCache implements IGridCache {
 
         if (t.isOutput()) {
             this.outputs.put(t.getFrequency(), t);
+            t.onTunnelConfigChange();
+            t.onTunnelNetworkChange();
         } else {
             this.inputs.put(t.getFrequency(), t);
+            this.updateTunnel(t.getFrequency(), true);
         }
-
-        this.updateTunnel(t.getFrequency(), true);
     }
 
     public void unbind(final PartP2PTunnel t) {

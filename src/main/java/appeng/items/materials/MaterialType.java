@@ -114,7 +114,6 @@ public enum MaterialType {
     Cell4096kPart(59, AEFeature.XtremeStorageCells),
     Cell16384kPart(60, AEFeature.XtremeStorageCells),
     EmptyAdvancedStorageCell(61, AEFeature.XtremeStorageCells),
-    CardPatternRefiller(62),
     CardAdvancedBlocking(63),
     CardSticky(64),
     CardLockCrafting(65),

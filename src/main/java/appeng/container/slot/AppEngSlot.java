@@ -28,6 +28,7 @@ public class AppEngSlot extends Slot {
     private int IIcon = -1;
     private hasCalculatedValidness isValid;
     private boolean isDisplay = false;
+    private ItemStack displayStack = null;
 
     public AppEngSlot(final IInventory inv, final int idx, final int x, final int y) {
         super(inv, idx, x, y);
@@ -73,8 +74,7 @@ public class AppEngSlot extends Slot {
         }
 
         if (this.isDisplay()) {
-            this.setDisplay(false);
-            return this.getDisplayStack();
+            return this.displayStack;
         }
         return super.getStack();
     }
@@ -163,6 +163,11 @@ public class AppEngSlot extends Slot {
     }
 
     public void setDisplay(final boolean isDisplay) {
+        if (isDisplay) {
+            this.displayStack = this.getDisplayStack();
+        } else {
+            this.displayStack = null;
+        }
         this.isDisplay = isDisplay;
     }
 

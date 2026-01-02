@@ -10,8 +10,9 @@
 
 package appeng.helpers;
 
-import javax.annotation.Nonnull;
+import java.util.List;
 
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -19,7 +20,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
-import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.features.ILocatable;
@@ -31,45 +31,47 @@ import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.IMachineSet;
-import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.ITerminalPins;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.container.interfaces.IInventorySlotAware;
+import appeng.core.localization.GuiText;
 import appeng.items.contents.PinsHandler;
 import appeng.items.contents.PinsHolder;
 import appeng.items.contents.WirelessTerminalViewCells;
 import appeng.tile.networking.TileWireless;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
-public class WirelessTerminalGuiObject
-        implements IPortableCell, IActionHost, IInventorySlotAware, IViewCellStorage, ITerminalPins {
+public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, IInventorySlotAware, IViewCellStorage,
+        ITerminalPins, IPrimaryGuiIconProvider, ICustomButtonProvider {
 
     private final ItemStack effectiveItem;
     private final IWirelessTermHandler wth;
     private final String encryptionKey;
-    private final EntityPlayer myPlayer;
+    protected final EntityPlayer myPlayer;
     private IGrid targetGrid;
     private IStorageGrid sg;
-    private IMEMonitor<IAEItemStack> itemStorage;
     private IWirelessAccessPoint myWap;
     private double sqRange = Double.MAX_VALUE;
     private double myRange = Double.MAX_VALUE;
     private final int inventorySlot;
     private final WirelessTerminalViewCells viewCells;
     private final PinsHolder pinsInv;
+    private final boolean infinityRange;
+    private final boolean infinityEnergy;
 
     public WirelessTerminalGuiObject(final IWirelessTermHandler wh, final ItemStack is, final EntityPlayer ep,
             final World w, final int x, final int y, final int z) {
         this.encryptionKey = wh.getEncryptionKey(is);
+        this.infinityRange = wh.hasInfinityRange(is);
+        this.infinityEnergy = wh.hasInfinityPower(is);
         this.effectiveItem = is;
         this.myPlayer = ep;
         this.wth = wh;
@@ -92,16 +94,18 @@ public class WirelessTerminalGuiObject
                 this.targetGrid = n.getGrid();
                 if (this.targetGrid != null) {
                     this.sg = this.targetGrid.getCache(IStorageGrid.class);
-                    if (this.sg != null) {
-                        this.itemStorage = this.sg.getItemInventory();
-                    }
                 }
             }
+        }
+
+        if (getItemStack().getItem() instanceof ICustomButtonSource icbs) {
+            customButtonDataObject = icbs.getCustomDataObject(this);
+            customButtonDataObject.readData(getItemStack().getTagCompound());
         }
     }
 
     public double getRange() {
-        return this.myRange;
+        return this.infinityRange ? 16 : this.myRange;
     }
 
     @Override
@@ -121,115 +125,9 @@ public class WirelessTerminalGuiObject
     }
 
     @Override
-    public void addListener(final IMEMonitorHandlerReceiver<IAEItemStack> l, final Object verificationToken) {
-        if (this.itemStorage != null) {
-            this.itemStorage.addListener(l, verificationToken);
-        }
-    }
-
-    @Override
-    public void removeListener(final IMEMonitorHandlerReceiver<IAEItemStack> l) {
-        if (this.itemStorage != null) {
-            this.itemStorage.removeListener(l);
-        }
-    }
-
-    @Override
-    public IItemList<IAEItemStack> getAvailableItems(final IItemList out, int iteration) {
-        if (this.itemStorage != null) {
-            return this.itemStorage.getAvailableItems(out, iteration);
-        }
-        return out;
-    }
-
-    @Override
-    public IAEItemStack getAvailableItem(@Nonnull IAEItemStack request, int iteration) {
-        if (this.itemStorage != null) {
-            return this.itemStorage.getAvailableItem(request, iteration);
-        }
-        return null;
-    }
-
-    @Override
-    public IItemList<IAEItemStack> getStorageList() {
-        if (this.itemStorage != null) {
-            return this.itemStorage.getStorageList();
-        }
-        return null;
-    }
-
-    @Override
-    public AccessRestriction getAccess() {
-        if (this.itemStorage != null) {
-            return this.itemStorage.getAccess();
-        }
-        return AccessRestriction.NO_ACCESS;
-    }
-
-    @Override
-    public boolean isPrioritized(final IAEItemStack input) {
-        if (this.itemStorage != null) {
-            return this.itemStorage.isPrioritized(input);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean canAccept(final IAEItemStack input) {
-        if (this.itemStorage != null) {
-            return this.itemStorage.canAccept(input);
-        }
-        return false;
-    }
-
-    @Override
-    public int getPriority() {
-        if (this.itemStorage != null) {
-            return this.itemStorage.getPriority();
-        }
-        return 0;
-    }
-
-    @Override
-    public int getSlot() {
-        if (this.itemStorage != null) {
-            return this.itemStorage.getSlot();
-        }
-        return 0;
-    }
-
-    @Override
-    public boolean validForPass(final int i) {
-        return this.itemStorage.validForPass(i);
-    }
-
-    @Override
-    public IAEItemStack injectItems(final IAEItemStack input, final Actionable type, final BaseActionSource src) {
-        if (this.itemStorage != null) {
-            return this.itemStorage.injectItems(input, type, src);
-        }
-        return input;
-    }
-
-    @Override
-    public IAEItemStack extractItems(final IAEItemStack request, final Actionable mode, final BaseActionSource src) {
-        if (this.itemStorage != null) {
-            return this.itemStorage.extractItems(request, mode, src);
-        }
-        return null;
-    }
-
-    @Override
-    public StorageChannel getChannel() {
-        if (this.itemStorage != null) {
-            return this.itemStorage.getChannel();
-        }
-        return StorageChannel.ITEMS;
-    }
-
-    @Override
     public double extractAEPower(final double amt, final Actionable mode, final PowerMultiplier usePowerMultiplier) {
         if (this.wth != null && this.effectiveItem != null) {
+            if (this.infinityEnergy) return amt;
             if (mode == Actionable.SIMULATE) {
                 return this.wth.hasPower(this.myPlayer, amt, this.effectiveItem) ? amt : 0;
             }
@@ -271,32 +169,29 @@ public class WirelessTerminalGuiObject
     }
 
     public boolean rangeCheck() {
+        if (this.targetGrid == null) return false;
+
         this.sqRange = this.myRange = Double.MAX_VALUE;
 
-        if (this.targetGrid != null && this.itemStorage != null) {
-            if (this.myWap != null) {
-                if (this.myWap.getGrid() == this.targetGrid) {
-                    if (this.testWap(this.myWap)) {
-                        return true;
-                    }
-                }
-                return false;
+        if (this.myWap != null) {
+            if (this.myWap.getGrid() == this.targetGrid) {
+                return infinityRange || this.testWap(this.myWap);
             }
-
-            final IMachineSet tw = this.targetGrid.getMachines(TileWireless.class);
-
-            this.myWap = null;
-
-            for (final IGridNode n : tw) {
-                final IWirelessAccessPoint wap = (IWirelessAccessPoint) n.getMachine();
-                if (this.testWap(wap)) {
-                    this.myWap = wap;
-                }
-            }
-
-            return this.myWap != null;
         }
-        return false;
+
+        final IMachineSet tw = this.targetGrid.getMachines(TileWireless.class);
+
+        this.myWap = null;
+
+        for (final IGridNode n : tw) {
+            final IWirelessAccessPoint wap = (IWirelessAccessPoint) n.getMachine();
+            if (infinityRange || this.testWap(wap)) {
+                this.myWap = wap;
+                break;
+            }
+        }
+
+        return this.myWap != null;
     }
 
     private boolean testWap(final IWirelessAccessPoint wap) {
@@ -340,5 +235,58 @@ public class WirelessTerminalGuiObject
     @Override
     public IGrid getGrid() {
         return targetGrid;
+    }
+
+    @Override
+    public GuiText getName() {
+        return GuiText.WirelessTerminal;
+    }
+
+    public int getMode() {
+        return this.getItemStack().getTagCompound().getInteger("mode");
+    }
+
+    public void writeInventory() {}
+
+    public void readInventory() {}
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return this.effectiveItem.copy();
+    }
+
+    private ICustomButtonDataObject customButtonDataObject;
+
+    @Override
+    public void writeCustomButtonData() {
+        this.customButtonDataObject.writeData(this.getItemStack().getTagCompound());
+    }
+
+    @Override
+    public void readCustomButtonData() {
+        this.customButtonDataObject.readData(this.getItemStack().getTagCompound());
+    }
+
+    @Override
+    public void initCustomButtons(int guiLeft, int guiTop, int xSize, int ySize, int xOffset, int yOffset,
+            List<GuiButton> buttonList) {
+        if (customButtonDataObject != null)
+            customButtonDataObject.initCustomButtons(guiLeft, guiTop, xSize, ySize, xOffset, yOffset, buttonList);
+    }
+
+    @SideOnly(Side.CLIENT)
+    @Override
+    public boolean actionPerformedCustomButtons(final GuiButton btn) {
+        return customButtonDataObject != null && customButtonDataObject.actionPerformedCustomButtons(btn);
+    }
+
+    @Override
+    public ICustomButtonDataObject getDataObject() {
+        return customButtonDataObject;
+    }
+
+    @Override
+    public void setDataObject(ICustomButtonDataObject dataObject) {
+        customButtonDataObject = dataObject;
     }
 }

@@ -97,6 +97,11 @@ public class IgnoreMissingItemResolver<StackType extends IAEStack<StackType>>
         }
 
         @Override
+        public boolean isSimulated() {
+            return true;
+        }
+
+        @Override
         public String getTooltipText() {
             return GuiText.Missing.getLocal() + ": " + fulfilled;
         }

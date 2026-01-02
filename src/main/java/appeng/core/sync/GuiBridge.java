@@ -10,6 +10,9 @@
 
 package appeng.core.sync;
 
+import static appeng.util.Platform.getItemFromPlayerInventoryBySlotIndex;
+import static appeng.util.Platform.itemGuiSlotOffset;
+
 import java.lang.reflect.Constructor;
 import java.util.List;
 
@@ -29,17 +32,23 @@ import appeng.api.definitions.IComparableDefinition;
 import appeng.api.definitions.IMaterials;
 import appeng.api.exceptions.AppEngException;
 import appeng.api.features.IWirelessTermHandler;
-import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.implementations.guiobjects.IGuiItem;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.implementations.guiobjects.IPortableCell;
+import appeng.api.implementations.tiles.ICellWorkbench;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.security.ISecurityGrid;
+import appeng.api.parts.ICraftingTerminal;
+import appeng.api.parts.IInterfaceTerminal;
+import appeng.api.parts.ILevelEmitter;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartHost;
+import appeng.api.parts.IPatternTerminal;
+import appeng.api.parts.IPatternTerminalEx;
+import appeng.api.parts.IStorageBus;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.gui.GuiNull;
@@ -47,6 +56,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.ContainerNull;
 import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerAdvancedNetworkTool;
+import appeng.container.implementations.ContainerBusIO;
 import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerChest;
@@ -85,10 +95,8 @@ import appeng.container.implementations.ContainerSecurity;
 import appeng.container.implementations.ContainerSkyChest;
 import appeng.container.implementations.ContainerSpatialIOPort;
 import appeng.container.implementations.ContainerStorageBus;
-import appeng.container.implementations.ContainerUpgradeable;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
-import appeng.container.implementations.ContainerWirelessTerm;
 import appeng.core.stats.Achievements;
 import appeng.helpers.ICellRestriction;
 import appeng.helpers.ICustomNameObject;
@@ -99,16 +107,10 @@ import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.items.contents.PriorityCardObject;
 import appeng.items.contents.QuartzKnifeObj;
 import appeng.parts.automation.PartFormationPlane;
-import appeng.parts.automation.PartLevelEmitter;
-import appeng.parts.misc.PartStorageBus;
-import appeng.parts.reporting.PartCraftingTerminal;
-import appeng.parts.reporting.PartInterfaceTerminal;
-import appeng.parts.reporting.PartPatternTerminal;
-import appeng.parts.reporting.PartPatternTerminalEx;
+import appeng.parts.automation.PartSharedItemBus;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.crafting.TileMolecularAssembler;
 import appeng.tile.grindstone.TileGrinder;
-import appeng.tile.misc.TileCellWorkbench;
 import appeng.tile.misc.TileCondenser;
 import appeng.tile.misc.TileInscriber;
 import appeng.tile.misc.TileSecurity;
@@ -128,6 +130,24 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_Handler(),
 
+    // Terminal
+
+    GUI_ME(ContainerMEMonitorable.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
+
+    GUI_CRAFTING_TERMINAL(ContainerCraftingTerm.class, ICraftingTerminal.class, GuiHostType.ITEM_OR_WORLD,
+            SecurityPermissions.CRAFT),
+
+    GUI_PATTERN_TERMINAL(ContainerPatternTerm.class, IPatternTerminal.class, GuiHostType.ITEM_OR_WORLD,
+            SecurityPermissions.CRAFT),
+
+    GUI_PATTERN_TERMINAL_EX(ContainerPatternTermEx.class, IPatternTerminalEx.class, GuiHostType.ITEM_OR_WORLD,
+            SecurityPermissions.CRAFT),
+
+    GUI_INTERFACE_TERMINAL(ContainerInterfaceTerminal.class, IInterfaceTerminal.class, GuiHostType.ITEM_OR_WORLD,
+            SecurityPermissions.BUILD),
+
+    GUI_PORTABLE_CELL(ContainerMEPortableCell.class, IPortableCell.class, GuiHostType.ITEM, null),
+
     GUI_GRINDER(ContainerGrinder.class, TileGrinder.class, GuiHostType.WORLD, null),
 
     GUI_QNB(ContainerQNB.class, TileQuantumBridge.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
@@ -137,12 +157,6 @@ public enum GuiBridge implements IGuiHandler {
     GUI_CHEST(ContainerChest.class, TileChest.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
 
     GUI_WIRELESS(ContainerWireless.class, TileWireless.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
-
-    GUI_ME(ContainerMEMonitorable.class, ITerminalHost.class, GuiHostType.WORLD, null),
-
-    GUI_PORTABLE_CELL(ContainerMEPortableCell.class, IPortableCell.class, GuiHostType.ITEM, null),
-
-    GUI_WIRELESS_TERM(ContainerWirelessTerm.class, WirelessTerminalGuiObject.class, GuiHostType.ITEM, null),
 
     GUI_NETWORK_STATUS(ContainerNetworkStatus.class, INetworkTool.class, GuiHostType.ITEM, null),
 
@@ -164,11 +178,11 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_INTERFACE(ContainerInterface.class, IInterfaceHost.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
 
-    GUI_BUS(ContainerUpgradeable.class, IUpgradeableHost.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
+    GUI_BUS(ContainerBusIO.class, PartSharedItemBus.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
 
     GUI_IOPORT(ContainerIOPort.class, TileIOPort.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
 
-    GUI_STORAGEBUS(ContainerStorageBus.class, PartStorageBus.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
+    GUI_STORAGEBUS(ContainerStorageBus.class, IStorageBus.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
 
     GUI_FORMATION_PLANE(ContainerFormationPlane.class, PartFormationPlane.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),
@@ -177,17 +191,8 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_SECURITY(ContainerSecurity.class, TileSecurity.class, GuiHostType.WORLD, SecurityPermissions.SECURITY),
 
-    GUI_CRAFTING_TERMINAL(ContainerCraftingTerm.class, PartCraftingTerminal.class, GuiHostType.WORLD,
-            SecurityPermissions.CRAFT),
-
-    GUI_PATTERN_TERMINAL(ContainerPatternTerm.class, PartPatternTerminal.class, GuiHostType.WORLD,
-            SecurityPermissions.CRAFT),
-
-    GUI_PATTERN_TERMINAL_EX(ContainerPatternTermEx.class, PartPatternTerminalEx.class, GuiHostType.WORLD,
-            SecurityPermissions.CRAFT),
-
     // extends (Container/Gui) + Bus
-    GUI_LEVEL_EMITTER(ContainerLevelEmitter.class, PartLevelEmitter.class, GuiHostType.WORLD,
+    GUI_LEVEL_EMITTER(ContainerLevelEmitter.class, ILevelEmitter.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.BUILD),
 
     GUI_SPATIAL_IO_PORT(ContainerSpatialIOPort.class, TileSpatialIOPort.class, GuiHostType.WORLD,
@@ -195,24 +200,23 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_INSCRIBER(ContainerInscriber.class, TileInscriber.class, GuiHostType.WORLD, null),
 
-    GUI_CELL_WORKBENCH(ContainerCellWorkbench.class, TileCellWorkbench.class, GuiHostType.WORLD, null),
+    GUI_CELL_WORKBENCH(ContainerCellWorkbench.class, ICellWorkbench.class, GuiHostType.WORLD, null),
 
     GUI_MAC(ContainerMAC.class, TileMolecularAssembler.class, GuiHostType.WORLD, null),
 
     GUI_CRAFTING_AMOUNT(ContainerCraftAmount.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),
 
-    GUI_PATTERN_VALUE_AMOUNT(ContainerPatternValueAmount.class, ITerminalHost.class, GuiHostType.WORLD,
-            SecurityPermissions.CRAFT),
-    GUI_PATTERN_MULTI(ContainerPatternMulti.class, ITerminalHost.class, GuiHostType.WORLD, SecurityPermissions.CRAFT),
+    GUI_PATTERN_VALUE_AMOUNT(ContainerPatternValueAmount.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
+
+    GUI_PATTERN_MULTI(ContainerPatternMulti.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
+
+    GUI_PATTERN_ITEM_RENAMER(ContainerPatternItemRenamer.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null),
 
     GUI_CRAFTING_CONFIRM(ContainerCraftConfirm.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.CRAFT),
 
     GUI_OPTIMIZE_PATTERNS(ContainerOptimizePatterns.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
-            SecurityPermissions.BUILD),
-
-    GUI_INTERFACE_TERMINAL(ContainerInterfaceTerminal.class, PartInterfaceTerminal.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),
 
     GUI_CRAFTING_STATUS(ContainerCraftingStatus.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD,
@@ -222,9 +226,7 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_ORE_FILTER(ContainerOreFilter.class, IOreFilterable.class, GuiHostType.ITEM_OR_WORLD, null),
 
-    GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null),
-
-    GUI_PATTERN_ITEM_RENAMER(ContainerPatternItemRenamer.class, ITerminalHost.class, GuiHostType.ITEM_OR_WORLD, null);
+    GUI_CELL_RESTRICTION(ContainerCellRestriction.class, ICellRestriction.class, GuiHostType.ITEM_OR_WORLD, null);
 
     private final Class tileClass;
     private final Class containerClass;
@@ -279,17 +281,23 @@ public enum GuiBridge implements IGuiHandler {
         final ForgeDirection side = ForgeDirection.getOrientation(ordinal & 0x07);
         final GuiBridge ID = values()[ordinal >> 5];
         final boolean stem = ((ordinal >> 3) & 1) == 1;
-        final boolean xIsSlotIndex = ((ordinal >> 4) & 1) == 1;
-        if (ID.type.isItem()) {
-            ItemStack it = null;
-            if (stem) {
-                it = player.inventory.getCurrentItem();
-            } else if (xIsSlotIndex && x >= 0 && x < player.inventory.mainInventory.length) {
-                it = player.inventory.getStackInSlot(x);
-            }
-            final Object myItem = this.getGuiObject(it, player, w, x, y, z);
+        final boolean pastXLimit = x >= itemGuiSlotOffset;
+        final int slotIndex = x - itemGuiSlotOffset;
+
+        if (ID.type.isItem() && (stem || pastXLimit)) {
+            final ItemStack it = stem ? player.inventory.getCurrentItem()
+                    : getItemFromPlayerInventoryBySlotIndex(player, slotIndex);
+
+            final Object myItem = this.getGuiObject(it, player, w, stem ? x : slotIndex, y, z);
             if (myItem != null && ID.CorrectTileOrPart(myItem)) {
-                return this.updateGui(ID.ConstructContainer(player.inventory, side, myItem), w, x, y, z, side, myItem);
+                return this.updateGui(
+                        ID.ConstructContainer(player.inventory, side, myItem),
+                        w,
+                        slotIndex,
+                        y,
+                        z,
+                        side,
+                        myItem);
             }
         }
         if (ID.type.isTile()) {
@@ -312,8 +320,8 @@ public enum GuiBridge implements IGuiHandler {
     private Object getGuiObject(final ItemStack it, final EntityPlayer player, final World w, final int x, final int y,
             final int z) {
         if (it != null) {
-            if (it.getItem() instanceof IGuiItem) {
-                return ((IGuiItem) it.getItem()).getGuiObject(it, w, x, y, z);
+            if (it.getItem() instanceof IGuiItem igi) {
+                return igi.getGuiObject(it, w, player, x, y, z);
             }
 
             final IWirelessTermHandler wh = AEApi.instance().registries().wireless().getWirelessTerminalHandler(it);
@@ -428,20 +436,19 @@ public enum GuiBridge implements IGuiHandler {
         final ForgeDirection side = ForgeDirection.getOrientation(ordinal & 0x07);
         final GuiBridge ID = values()[ordinal >> 5];
         final boolean stem = ((ordinal >> 3) & 1) == 1;
-        final boolean xIsSlotIndex = ((ordinal >> 4) & 1) == 1;
-        if (ID.type.isItem()) {
-            ItemStack it = null;
-            if (stem) {
-                it = player.inventory.getCurrentItem();
-            } else if (xIsSlotIndex && x >= 0 && x < player.inventory.mainInventory.length) {
-                it = player.inventory.getStackInSlot(x);
-            }
-            final Object myItem = this.getGuiObject(it, player, w, x, y, z);
+        final boolean pastXLimit = x >= itemGuiSlotOffset;
+        final int slotIndex = x - itemGuiSlotOffset;
+
+        if (ID.type.isItem() && (stem || pastXLimit)) {
+            final ItemStack it = stem ? player.inventory.getCurrentItem()
+                    : getItemFromPlayerInventoryBySlotIndex(player, slotIndex);
+
+            final Object myItem = this.getGuiObject(it, player, w, stem ? x : slotIndex, y, z);
             if (myItem != null && ID.CorrectTileOrPart(myItem)) {
                 return ID.ConstructGui(player.inventory, side, myItem);
             }
         }
-        if (ID.type.isTile()) {
+        if (ID.type.isTile() && !pastXLimit) {
             final TileEntity TE = w.getTileEntity(x, y, z);
             if (TE instanceof IPartHost) {
                 ((IPartHost) TE).getPart(side);
@@ -481,33 +488,32 @@ public enum GuiBridge implements IGuiHandler {
 
     public boolean hasPermissions(final TileEntity te, final int x, final int y, final int z, final ForgeDirection side,
             final EntityPlayer player) {
+        return this.hasPermissions(te, x, y, z, side, player, Integer.MIN_VALUE);
+    }
+
+    public boolean hasPermissions(final TileEntity te, final int x, final int y, final int z, final ForgeDirection side,
+            final EntityPlayer player, final int slotIndex) {
         final World w = player.getEntityWorld();
 
         if (Platform.hasPermissions(
                 te != null ? new DimensionalCoord(te) : new DimensionalCoord(player.worldObj, x, y, z),
                 player)) {
-            if (this.type.isItem()) {
-                final ItemStack it = player.inventory.getCurrentItem();
-                if (it != null && it.getItem() instanceof IGuiItem) {
-                    final Object myItem = ((IGuiItem) it.getItem()).getGuiObject(it, w, x, y, z);
-                    if (this.CorrectTileOrPart(myItem)) {
-                        return true;
-                    }
-                }
-            }
-
-            if (this.type.isTile()) {
-                final TileEntity TE = w.getTileEntity(x, y, z);
-                if (TE instanceof IPartHost) {
-                    ((IPartHost) TE).getPart(side);
-                    final IPart part = ((IPartHost) TE).getPart(side);
+            if (te != null && this.type.isTile()) {
+                if (te instanceof IPartHost host) {
+                    host.getPart(side);
+                    final IPart part = host.getPart(side);
                     if (this.CorrectTileOrPart(part)) {
                         return this.securityCheck(part, player);
                     }
                 } else {
-                    if (this.CorrectTileOrPart(TE)) {
-                        return this.securityCheck(TE, player);
+                    if (this.CorrectTileOrPart(te)) {
+                        return this.securityCheck(te, player);
                     }
+                }
+            } else if (this.type.isItem() && slotIndex != Integer.MIN_VALUE) {
+                final ItemStack it = getItemFromPlayerInventoryBySlotIndex(player, slotIndex);
+                if (it != null && it.getItem() instanceof IGuiItem guiItem) {
+                    return this.CorrectTileOrPart(guiItem.getGuiObject(it, w, player, slotIndex, y, z));
                 }
             }
         }
@@ -542,5 +548,18 @@ public enum GuiBridge implements IGuiHandler {
 
     public GuiHostType getType() {
         return this.type;
+    }
+
+    public Class getContainerClass() {
+        return containerClass;
+    }
+
+    public static GuiBridge getGuiByContainerClass(Class cs) {
+        for (GuiBridge gb : GuiBridge.values()) {
+            if (gb.containerClass == cs) {
+                return gb;
+            }
+        }
+        return null;
     }
 }
