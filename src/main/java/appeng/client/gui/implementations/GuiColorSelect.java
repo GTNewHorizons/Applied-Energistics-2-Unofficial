@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -25,6 +23,8 @@ import appeng.api.util.AEColor;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketColorSelect;
 import appeng.items.tools.powered.ToolColorApplicator;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 /**
  * GUI for selecting colors for the Color Applicator.

@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import appeng.client.gui.implementations.GuiColorSelect;
-import appeng.client.render.items.ToolColorApplicatorRender;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.entity.player.EntityPlayer;
@@ -54,6 +52,8 @@ import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.block.misc.BlockPaint;
 import appeng.block.networking.BlockCableBus;
+import appeng.client.gui.implementations.GuiColorSelect;
+import appeng.client.render.items.ToolColorApplicatorRender;
 import appeng.core.AEConfig;
 import appeng.core.Api;
 import appeng.core.features.AEFeature;
