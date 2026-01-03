@@ -344,11 +344,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
     private boolean recolourBlock(final Block blk, final ForgeDirection side, final World w, final int x, final int y,
             final int z, final ForgeDirection orientation, final AEColor newColor, final EntityPlayer p) {
         if (blk == Blocks.carpet) {
-            final int meta = w.getBlockMetadata(x, y, z);
-            if (newColor.ordinal() == meta) {
-                return false;
-            }
-            return w.setBlock(x, y, z, Blocks.carpet, newColor.ordinal(), 3);
+            return recolourBlock(w, x, y, z, newColor, Blocks.carpet);
         }
 
         if (blk == Blocks.glass) {
@@ -356,11 +352,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         if (blk == Blocks.stained_glass) {
-            final int meta = w.getBlockMetadata(x, y, z);
-            if (newColor.ordinal() == meta) {
-                return false;
-            }
-            return w.setBlock(x, y, z, Blocks.stained_glass, newColor.ordinal(), 3);
+            return recolourBlock(w, x, y, z, newColor, Blocks.stained_glass);
         }
 
         if (blk == Blocks.glass_pane) {
@@ -368,11 +360,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         if (blk == Blocks.stained_glass_pane) {
-            final int meta = w.getBlockMetadata(x, y, z);
-            if (newColor.ordinal() == meta) {
-                return false;
-            }
-            return w.setBlock(x, y, z, Blocks.stained_glass_pane, newColor.ordinal(), 3);
+            return recolourBlock(w, x, y, z, newColor, Blocks.stained_glass_pane);
         }
 
         if (blk == Blocks.hardened_clay) {
@@ -380,18 +368,22 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         if (blk == Blocks.stained_hardened_clay) {
-            final int meta = w.getBlockMetadata(x, y, z);
-            if (newColor.ordinal() == meta) {
-                return false;
-            }
-            return w.setBlock(x, y, z, Blocks.stained_hardened_clay, newColor.ordinal(), 3);
+            return recolourBlock(w, x, y, z, newColor, Blocks.stained_hardened_clay);
         }
 
-        if (blk instanceof BlockCableBus) {
-            return ((BlockCableBus) blk).recolourBlock(w, x, y, z, side, newColor.ordinal(), p);
+        if (blk instanceof BlockCableBus cableBus) {
+            return cableBus.recolourBlock(w, x, y, z, side, newColor.ordinal(), p);
         }
 
         return blk.recolourBlock(w, x, y, z, side, newColor.ordinal());
+    }
+
+    private boolean recolourBlock(World world, int x, int y, int z, AEColor newColor, Block block) {
+        final int meta = world.getBlockMetadata(x, y, z);
+        if (newColor.ordinal() == meta) {
+            return false;
+        }
+        return world.setBlock(x, y, z, block, newColor.ordinal(), 3);
     }
 
     public void cycleColors(final ItemStack is, final ItemStack paintBall, final int i) {
