@@ -20,6 +20,7 @@ import java.util.Set;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
@@ -27,6 +28,8 @@ import net.minecraft.item.ItemSnowball;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -58,6 +61,8 @@ import appeng.core.AEConfig;
 import appeng.core.Api;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketColorSelect;
 import appeng.helpers.IMouseWheelItem;
 import appeng.hooks.DispenserBlockTool;
 import appeng.hooks.IBlockTool;
@@ -556,6 +561,42 @@ public class ToolColorApplicator extends AEBasePoweredItem
     @Override
     public void onWheel(final ItemStack is, final boolean up) {
         this.cycleColors(is, this.getColor(is), up ? 1 : -1);
+    }
+
+    @Override
+    public void onWheelClick(EntityPlayer player, ItemStack is) {
+        if (!player.worldObj.isRemote) {
+            return;
+        }
+
+        final MovingObjectPosition mop = getPlayerLookingTarget(player);
+
+        if (mop == null || mop.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+            return;
+        }
+
+        TileEntity te = player.worldObj.getTileEntity(mop.blockX, mop.blockY, mop.blockZ);
+
+        if (te instanceof IColorableTile colorableTile) {
+            NetworkHandler.instance.sendToServer(new PacketColorSelect(colorableTile.getColor()));
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static MovingObjectPosition getPlayerLookingTarget(EntityPlayer viewpoint) {
+        double reachDistance = Minecraft.getMinecraft().playerController.getBlockReachDistance();
+
+        Vec3 posVec = Vec3.createVectorHelper(
+                viewpoint.posX,
+                viewpoint.posY + (viewpoint.getEyeHeight() - viewpoint.getDefaultEyeHeight()),
+                viewpoint.posZ);
+        Vec3 lookVec = viewpoint.getLook(0);
+        Vec3 modifiedPosVec = posVec.addVector(
+                lookVec.xCoord * reachDistance,
+                lookVec.yCoord * reachDistance,
+                lookVec.zCoord * reachDistance);
+
+        return viewpoint.worldObj.rayTraceBlocks(posVec, modifiedPosVec);
     }
 
     @Override
