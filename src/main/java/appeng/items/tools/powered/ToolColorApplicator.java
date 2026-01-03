@@ -58,7 +58,6 @@ import appeng.block.networking.BlockCableBus;
 import appeng.client.gui.implementations.GuiColorSelect;
 import appeng.client.render.items.ToolColorApplicatorRender;
 import appeng.core.AEConfig;
-import appeng.core.Api;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
@@ -330,7 +329,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
         if (newColor == AEColor.Transparent) {
             setColor(is, (ItemStack) null);
         } else {
-            final ItemStack paintBall = Api.INSTANCE.items().itemPaintBall.stack(newColor, 1);
+            final ItemStack paintBall = AEApi.instance().definitions().items().coloredPaintBall().stack(newColor, 1);
             setColor(is, paintBall);
         }
     }
