@@ -80,6 +80,8 @@ public class ToolColorApplicator extends AEBasePoweredItem
         implements IStorageCell, IItemGroup, IBlockTool, IMouseWheelItem {
 
     private static final Map<Integer, AEColor> ORE_TO_COLOR = new HashMap<>();
+    private static final double POWER_PER_USE = 100;
+    private static final String NBT_COLOR = "color";
 
     static {
         for (final AEColor col : AEColor.values()) {
@@ -106,104 +108,108 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     @Override
-    public boolean onItemUse(final ItemStack is, final EntityPlayer p, final World w, final int x, final int y,
-            final int z, final int side, final float hitX, final float hitY, final float hitZ) {
-        if (p.isSneaking()) {
+    public boolean onItemUse(final ItemStack stack, final EntityPlayer player, final World world, final int x,
+            final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ) {
+
+        final DimensionalCoord coord = new DimensionalCoord(world, x, y, z);
+        final ForgeDirection orientation = ForgeDirection.getOrientation(side);
+
+        if (!Platform.hasPermissions(coord, player)) {
             return false;
         }
 
-        final Block blk = w.getBlock(x, y, z);
-
-        ItemStack paintBall = this.getColor(is);
+        if (this.getAECurrentPower(stack) < POWER_PER_USE) {
+            return false;
+        }
 
         final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
-                .getCellInventory(is, null, StorageChannel.ITEMS);
-        if (inv != null) {
-            final IAEItemStack option = inv
-                    .extractItems(AEItemStack.create(paintBall), Actionable.SIMULATE, new BaseActionSource());
+                .getCellInventory(stack, null, StorageChannel.ITEMS);
+        if (inv == null) {
+            return false;
+        }
 
-            if (option != null) {
-                paintBall = option.getItemStack();
-                paintBall.stackSize = 1;
-            } else {
-                paintBall = null;
+        ItemStack activeConfig = this.getColor(stack);
+        activeConfig.stackSize = 1;
+
+        final IAEItemStack extractedSim = inv
+                .extractItems(AEItemStack.create(activeConfig), Actionable.SIMULATE, new BaseActionSource());
+
+        if (extractedSim == null) {
+            return false;
+        }
+
+        ItemStack paintSource = extractedSim.getItemStack();
+        AEColor paintColor = this.getColorFromItem(paintSource);
+
+        TileEntity targetTe = world.getTileEntity(x, y, z);
+        Block targetBlock = world.getBlock(x, y, z);
+
+        boolean success = false;
+
+        if (paintColor == AEColor.Transparent) {
+            success = performClean(world, x, y, z, orientation, player, targetTe);
+        } else if (paintColor != null) {
+            success = performColor(world, x, y, z, orientation, paintColor, player, targetTe, targetBlock);
+        }
+
+        if (success) {
+            if (this.consumePowerAndItemsForTe(targetTe)) {
+                inv.extractItems(AEItemStack.create(paintSource), Actionable.MODULATE, new BaseActionSource());
+                this.extractAEPower(stack, POWER_PER_USE);
             }
 
-            if (!Platform.hasPermissions(new DimensionalCoord(w, x, y, z), p)) {
-                return false;
-            }
-
-            final double powerPerUse = 100;
-            if (paintBall != null && paintBall.getItem() instanceof ItemSnowball) {
-                final ForgeDirection orientation = ForgeDirection.getOrientation(side);
-                final TileEntity te = w.getTileEntity(x, y, z);
-                // clean cables.
-                if (te instanceof IColorableTile) {
-                    if (this.getAECurrentPower(is) > powerPerUse
-                            && ((IColorableTile) te).getColor() != AEColor.Transparent) {
-                        if (((IColorableTile) te).recolourBlock(orientation, AEColor.Transparent, p)) {
-                            inv.extractItems(
-                                    AEItemStack.create(paintBall),
-                                    Actionable.MODULATE,
-                                    new BaseActionSource());
-                            this.extractAEPower(is, powerPerUse);
-                            return true;
-                        }
-                    }
-                }
-
-                // clean paint balls..
-                final Block testBlk = w
-                        .getBlock(x + orientation.offsetX, y + orientation.offsetY, z + orientation.offsetZ);
-                final TileEntity painted = w
-                        .getTileEntity(x + orientation.offsetX, y + orientation.offsetY, z + orientation.offsetZ);
-                if (this.getAECurrentPower(is) > powerPerUse && testBlk instanceof BlockPaint
-                        && painted instanceof TilePaint) {
-                    inv.extractItems(AEItemStack.create(paintBall), Actionable.MODULATE, new BaseActionSource());
-                    this.extractAEPower(is, powerPerUse);
-                    ((TilePaint) painted).cleanSide(orientation.getOpposite());
-                    return true;
-                }
-            } else if (paintBall != null) {
-                final AEColor color = this.getColorFromItem(paintBall);
-                final TileEntity te = w.getTileEntity(x, y, z);
-                if (te instanceof IColorableTile colorable) {
-                    colorable.recolourBlock(ForgeDirection.getOrientation(side), color, p);
-                    return true;
-                }
-
-                if (color != null && this.getAECurrentPower(is) > powerPerUse) {
-                    if (color != AEColor.Transparent && this.recolourBlock(
-                            blk,
-                            ForgeDirection.getOrientation(side),
-                            w,
-                            x,
-                            y,
-                            z,
-                            ForgeDirection.getOrientation(side),
-                            color,
-                            p)) {
-                        inv.extractItems(AEItemStack.create(paintBall), Actionable.MODULATE, new BaseActionSource());
-                        this.extractAEPower(is, powerPerUse);
-                        return true;
-                    }
-                }
-            }
+            return true;
         }
 
         return false;
     }
 
     @Override
-    public ItemStack onItemRightClick(ItemStack itemStackIn, World worldIn, EntityPlayer player) {
+    public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
         if (player.isSneaking()) {
-            if (worldIn.isRemote) {
+            if (world.isRemote) {
                 openGui(player);
             }
-            return itemStackIn;
+            return stack;
         }
 
-        return super.onItemRightClick(itemStackIn, worldIn, player);
+        return super.onItemRightClick(stack, world, player);
+    }
+
+    private boolean performClean(World world, int x, int y, int z, ForgeDirection side, EntityPlayer player,
+            TileEntity tileEntity) {
+        if (tileEntity instanceof IColorableTile colorable) {
+            if (colorable.getColor() != AEColor.Transparent) {
+                return colorable.recolourBlock(side, AEColor.Transparent, player);
+            }
+        }
+
+        int tx = x + side.offsetX;
+        int ty = y + side.offsetY;
+        int tz = z + side.offsetZ;
+        Block targetBlock = world.getBlock(tx, ty, tz);
+        TileEntity targetTe = world.getTileEntity(tx, ty, tz);
+
+        if (targetBlock instanceof BlockPaint && targetTe instanceof TilePaint) {
+            ((TilePaint) targetTe).cleanSide(side.getOpposite());
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean performColor(World world, int x, int y, int z, ForgeDirection side, AEColor color,
+            EntityPlayer player, TileEntity tileEntity, Block block) {
+
+        if (tileEntity instanceof IColorableTile) {
+            return ((IColorableTile) tileEntity).recolourBlock(side, color, player);
+        }
+
+        return this.recolourBlock(block, side, world, x, y, z, side, color, player);
+    }
+
+    private boolean consumePowerAndItemsForTe(TileEntity tileEntity) {
+        return !(tileEntity instanceof IColorableTile);
     }
 
     @Override
@@ -249,8 +255,8 @@ public class ToolColorApplicator extends AEBasePoweredItem
 
     public ItemStack getColor(final ItemStack is) {
         final NBTTagCompound c = is.getTagCompound();
-        if (c != null && c.hasKey("color")) {
-            final NBTTagCompound color = c.getCompoundTag("color");
+        if (c != null && c.hasKey(NBT_COLOR)) {
+            final NBTTagCompound color = c.getCompoundTag(NBT_COLOR);
             final ItemStack oldColor = ItemStack.loadItemStackFromNBT(color);
             if (oldColor != null) {
                 return oldColor;
@@ -315,34 +321,23 @@ public class ToolColorApplicator extends AEBasePoweredItem
         return newColor;
     }
 
-    private void setColor(final ItemStack is, final ItemStack newColor) {
-        final NBTTagCompound data = Platform.openNbtData(is);
-        if (newColor == null) {
-            data.removeTag("color");
+    public void setColor(final ItemStack is, final AEColor newColor) {
+        if (newColor == AEColor.Transparent) {
+            setColor(is, (ItemStack) null);
         } else {
-            final NBTTagCompound color = new NBTTagCompound();
-            newColor.writeToNBT(color);
-            data.setTag("color", color);
+            final ItemStack paintBall = Api.INSTANCE.items().itemPaintBall.stack(newColor, 1);
+            setColor(is, paintBall);
         }
     }
 
-    /**
-     * Sets the active color using an AEColor Enum. Converts it to a PaintBall ItemStack for internal storage/rendering.
-     */
-    public void setColor(final ItemStack is, final AEColor newColor) {
+    private void setColor(final ItemStack is, final ItemStack newColor) {
         final NBTTagCompound data = Platform.openNbtData(is);
-
-        if (newColor == AEColor.Transparent) {
-            data.removeTag("color");
+        if (newColor == null) {
+            data.removeTag(NBT_COLOR);
         } else {
-            // Get the Paint Ball item definition
-            final ItemStack paintBall = Api.INSTANCE.items().itemPaintBall.stack(newColor, 1);
-
-            if (paintBall != null) {
-                final NBTTagCompound colorTag = new NBTTagCompound();
-                paintBall.writeToNBT(colorTag);
-                data.setTag("color", colorTag);
-            }
+            final NBTTagCompound color = new NBTTagCompound();
+            newColor.writeToNBT(color);
+            data.setTag(NBT_COLOR, color);
         }
     }
 
@@ -405,6 +400,44 @@ public class ToolColorApplicator extends AEBasePoweredItem
         } else {
             this.setColor(is, this.findNextColor(is, paintBall, i));
         }
+    }
+
+    public Map<AEColor, Long> getAvailableColorsCount(ItemStack stack) {
+        if (this.getAECurrentPower(stack) <= 0) {
+            return Collections.emptyMap();
+        }
+
+        Map<AEColor, Long> availableColors = new HashMap<>();
+
+        final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
+                .getCellInventory(stack, null, StorageChannel.ITEMS);
+
+        if (inv != null) {
+            final IItemList<IAEItemStack> itemList = inv.getAvailableItems(
+                    AEApi.instance().storage().createSortedItemList(),
+                    IterationCounter.fetchNewId());
+
+            for (final IAEItemStack aeItem : itemList) {
+                if (aeItem != null) {
+                    final ItemStack itemStack = aeItem.getItemStack();
+
+                    if (itemStack.getItem() instanceof ItemPaintBall itemPaintBall) {
+                        AEColor color = itemPaintBall.getColor(itemStack);
+
+                        availableColors.put(color, aeItem.getStackSize());
+                    } else if (itemStack.getItem() instanceof ItemSnowball) {
+                        availableColors.put(AEColor.Transparent, aeItem.getStackSize());
+                    }
+                }
+            }
+        }
+
+        return availableColors;
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void openGui(EntityPlayer player) {
+        net.minecraft.client.Minecraft.getMinecraft().displayGuiScreen(new GuiColorSelect(player));
     }
 
     @SideOnly(Side.CLIENT)
@@ -546,43 +579,5 @@ public class ToolColorApplicator extends AEBasePoweredItem
     @Override
     public StorageChannel getStorageChannel() {
         return StorageChannel.ITEMS;
-    }
-
-    public Map<AEColor, Long> getAvailableColorsCount(ItemStack stack) {
-        if (this.getAECurrentPower(stack) <= 0) {
-            return Collections.emptyMap();
-        }
-
-        Map<AEColor, Long> availableColors = new HashMap<>();
-
-        final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
-                .getCellInventory(stack, null, StorageChannel.ITEMS);
-
-        if (inv != null) {
-            final IItemList<IAEItemStack> itemList = inv.getAvailableItems(
-                    AEApi.instance().storage().createSortedItemList(),
-                    IterationCounter.fetchNewId());
-
-            for (final IAEItemStack aeItem : itemList) {
-                if (aeItem != null) {
-                    final ItemStack itemStack = aeItem.getItemStack();
-
-                    if (itemStack.getItem() instanceof ItemPaintBall itemPaintBall) {
-                        AEColor color = itemPaintBall.getColor(itemStack);
-
-                        availableColors.put(color, aeItem.getStackSize());
-                    } else if (itemStack.getItem() instanceof ItemSnowball) {
-                        availableColors.put(AEColor.Transparent, aeItem.getStackSize());
-                    }
-                }
-            }
-        }
-
-        return availableColors;
-    }
-
-    @SideOnly(Side.CLIENT)
-    private static void openGui(EntityPlayer player) {
-        net.minecraft.client.Minecraft.getMinecraft().displayGuiScreen(new GuiColorSelect(player));
     }
 }
