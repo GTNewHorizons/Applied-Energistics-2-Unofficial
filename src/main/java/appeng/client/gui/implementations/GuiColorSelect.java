@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL12;
 
 import appeng.api.AEApi;
 import appeng.api.util.AEColor;
+import appeng.core.localization.GuiColors;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketColorSelect;
 import appeng.items.tools.powered.ToolColorApplicator;
@@ -41,10 +42,6 @@ public class GuiColorSelect extends GuiScreen {
     private static final int TITLE_OFFSET_Y = 6;
     private static final int GRID_OFFSET_X = 9;
     private static final int GRID_OFFSET_Y = 20;
-
-    private static final int COLOR_BLACK = 0xFF000000;
-    private static final int COLOR_BORDER_GRAY = 0xFFC6C6C6;
-    private static final int COLOR_TEXT_GRAY = 0x404040;
 
     private final EntityPlayer player;
     private int guiLeft;
@@ -108,14 +105,18 @@ public class GuiColorSelect extends GuiScreen {
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         GL11.glDisable(GL11.GL_LIGHTING);
 
-        // Draw Background
-        drawRect(this.guiLeft, this.guiTop, this.guiLeft + GUI_WIDTH, this.guiTop + GUI_HEIGHT, COLOR_BLACK);
+        drawRect(
+                this.guiLeft,
+                this.guiTop,
+                this.guiLeft + GUI_WIDTH,
+                this.guiTop + GUI_HEIGHT,
+                GuiColors.ColorSelectBackground.getColor());
         drawRect(
                 this.guiLeft + 1,
                 this.guiTop + 1,
                 this.guiLeft + GUI_WIDTH - 1,
                 this.guiTop + GUI_HEIGHT - 1,
-                COLOR_BORDER_GRAY);
+                GuiColors.ColorSelectBorder.getColor());
 
         GL11.glPopAttrib();
 
@@ -132,7 +133,7 @@ public class GuiColorSelect extends GuiScreen {
         final int titleX = (this.width - titleWidth) / 2;
         final int titleY = this.guiTop + TITLE_OFFSET_Y;
 
-        this.fontRendererObj.drawString(title, titleX, titleY, COLOR_TEXT_GRAY);
+        this.fontRendererObj.drawString(title, titleX, titleY, GuiColors.ColorSelectTitle.getColor());
     }
 
     private void drawTooltips(int mouseX, int mouseY) {
@@ -162,18 +163,6 @@ public class GuiColorSelect extends GuiScreen {
     private static final class ColorButton extends GuiButton {
 
         private static final RenderItem ITEM_RENDERER = new RenderItem();
-
-        // Styles
-        private static final int BG_GRAY = 0xFF8B8B8B;
-        private static final int BORDER_SELECTED = 0xFF38de38; // Bright Green
-        private static final int BORDER_HOVER_VALID = 0xFFFFFFFF; // White
-        private static final int BORDER_DEFAULT = 0xFF000000; // Black
-        private static final int BORDER_DISABLED = 0xFF555555; // Dark Gray
-
-        private static final int OVERLAY_DISABLED = 0xB0000000;
-        private static final int OVERLAY_HOVER = 0x80FFFFFF;
-
-        private static final int COLOR_TEXT_WHITE = 0xFFFFFF;
 
         private final AEColor aeColor;
         private final int stackCount;
@@ -250,11 +239,12 @@ public class GuiColorSelect extends GuiScreen {
             final int borderColor;
 
             if (this.isSelected) {
-                borderColor = BORDER_SELECTED;
+                borderColor = GuiColors.ColorSelectBtnBorderSelected.getColor();
             } else if (!this.enabled) {
-                borderColor = BORDER_DISABLED;
+                borderColor = GuiColors.ColorSelectBtnBorderDisabled.getColor();
             } else {
-                borderColor = this.field_146123_n ? BORDER_HOVER_VALID : BORDER_DEFAULT;
+                borderColor = this.field_146123_n ? GuiColors.ColorSelectBtnBorderHover.getColor()
+                        : GuiColors.ColorSelectBtnBorder.getColor();
             }
 
             drawRect(
@@ -268,7 +258,7 @@ public class GuiColorSelect extends GuiScreen {
                     this.yPosition + 1,
                     this.xPosition + this.width - 1,
                     this.yPosition + this.height - 1,
-                    BG_GRAY);
+                    GuiColors.ColorSelectBtnBg.getColor());
         }
 
         private void drawIcon(Minecraft mc) {
@@ -308,7 +298,8 @@ public class GuiColorSelect extends GuiScreen {
             final int renderX = ((this.xPosition + 17) * 2) - stringWidth;
             final int renderY = ((this.yPosition + 17) * 2) - 8;
 
-            mc.fontRenderer.drawStringWithShadow(stackSizeStr, renderX, renderY, COLOR_TEXT_WHITE);
+            mc.fontRenderer
+                    .drawStringWithShadow(stackSizeStr, renderX, renderY, GuiColors.ColorSelectBtnText.getColor());
 
             GL11.glPopMatrix();
         }
@@ -324,14 +315,14 @@ public class GuiColorSelect extends GuiScreen {
                         this.yPosition + 1,
                         this.xPosition + this.width - 1,
                         this.yPosition + this.height - 1,
-                        OVERLAY_DISABLED);
+                        GuiColors.ColorSelectBtnOverlayDisabled.getColor());
             } else if (this.field_146123_n && !this.isSelected) {
                 drawRect(
                         this.xPosition + 1,
                         this.yPosition + 1,
                         this.xPosition + this.width - 1,
                         this.yPosition + this.height - 1,
-                        OVERLAY_HOVER);
+                        GuiColors.ColorSelectBtnOverlayHover.getColor());
             }
 
             GL11.glEnable(GL11.GL_TEXTURE_2D);
