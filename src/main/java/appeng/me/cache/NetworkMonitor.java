@@ -11,13 +11,14 @@
 package appeng.me.cache;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -68,7 +69,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Nonnegative
     private int localDepthSemaphore = 0;
 
-    private final Set<IStorageInterceptor> storageInterceptors = new HashSet<>();
+    private final Set<IStorageInterceptor> storageInterceptors = Collections.newSetFromMap(new WeakHashMap<>());
 
     public NetworkMonitor(final GridStorageCache cache, final StorageChannel chan) {
         this.myGridCache = cache;
@@ -160,7 +161,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
             if (isi.canAccept(input)) {
                 input = (T) isi.injectItems(input, mode, src);
 
-                if (isi.shouldRemoveInterceptor(input)) iterator.remove();
+                if (mode == Actionable.MODULATE && isi.shouldRemoveInterceptor(input)) iterator.remove();
 
                 if (input == null) return null;
             }

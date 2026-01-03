@@ -137,6 +137,8 @@ chat.appliedenergistics2.MachineHighlighted=The %d is now highlighted at %d, %d,
 chat.appliedenergistics2.MachineHighlightedNamed=The %d "%d" is now highlighted at %d, %d, %d
 chat.appliedenergistics2.StorageHighlighted=The %d containing %d %d is now highlighted at %d, %d, %d
 chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dimension: %d and cant be highlighted
+chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
+chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -684,6 +686,9 @@ waila.appliedenergistics2.Id=id
 waila.appliedenergistics2.ConnectedTo=Connected to
 waila.appliedenergistics2.Disconnected=Disconnected
 waila.appliedenergistics2.Singularity=Singularity
+waila.appliedenergistics2.Provider=§5Provider§r
+waila.appliedenergistics2.Accessor=§5Accessor§r
+waila.appliedenergistics2.Waiting=Waiting:
 
 # Baubles Extended
 slot.Terminal=§aTerminal§7
@@ -836,6 +841,7 @@ item.appliedenergistics2.ItemPart.InterfaceTerminal.name=ME Interface Terminal
 item.appliedenergistics2.ItemPart.InvertedToggleBus.name=ME Inverted Toggle Bus
 item.appliedenergistics2.ItemPart.ToggleBus.name=ME Toggle Bus
 item.appliedenergistics2.ItemPart.CraftingMonitor.name=ME Crafting Monitor
+item.appliedenergistics2.ItemPart.PatternRepeater.name=ME Pattern Repeater
 
 item.appliedenergistics2.ItemSpatialStorageCell.128Cubed.name=128³ Spatial Storage Cell
 item.appliedenergistics2.ItemSpatialStorageCell.16Cubed.name=16³ Spatial Storage Cell

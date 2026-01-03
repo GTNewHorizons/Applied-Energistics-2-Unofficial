@@ -19,6 +19,7 @@ import static appeng.util.Platform.stackConvert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -61,6 +63,7 @@ import appeng.api.networking.crafting.ICraftingJob;
 import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingMedium;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.api.networking.crafting.ICraftingPostPatternChangeListener;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.crafting.ICraftingRequester;
@@ -124,6 +127,9 @@ public class CraftingGridCache
     private boolean updateList = false;
     private static int pauseRebuilds = 0;
     private static Set<CraftingGridCache> rebuildNeeded = new HashSet<>();
+
+    private final Set<ICraftingPostPatternChangeListener> postPatternChangeListeners = Collections
+            .newSetFromMap(new WeakHashMap<>());
 
     public CraftingGridCache(final IGrid grid) {
         this.grid = grid;
@@ -268,6 +274,10 @@ public class CraftingGridCache
                 StorageChannel.FLUIDS,
                 this.craftableItems.keySet().stream().filter(IAEStack::isFluid).collect(Collectors.toList()),
                 new BaseActionSource());
+
+        for (final ICraftingPostPatternChangeListener listener : this.postPatternChangeListeners) {
+            listener.onPostPatternChange();
+        }
     }
 
     /** Only for unit test usage */
@@ -682,6 +692,14 @@ public class CraftingGridCache
 
     public GenericInterestManager<CraftingWatcher> getInterestManager() {
         return this.interestManager;
+    }
+
+    public void addPostPatternChangeListeners(final ICraftingPostPatternChangeListener listener) {
+        this.postPatternChangeListeners.add(listener);
+    }
+
+    public void removePostPatternChangeListeners(final ICraftingPostPatternChangeListener listener) {
+        this.postPatternChangeListeners.remove(listener);
     }
 
     private static class ActiveCpuIterator implements Iterator<ICraftingCPU> {
