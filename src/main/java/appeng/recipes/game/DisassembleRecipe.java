@@ -50,7 +50,7 @@ public final class DisassembleRecipe implements IRecipe {
         final IMaterials mats = definitions.materials();
 
         this.cellMappings = new HashMap<>(8);
-        this.nonCellMappings = new HashMap<>(9);
+        this.nonCellMappings = new HashMap<>(10);
 
         this.cellMappings.put(items.cell1k(), mats.cell1kPart());
         this.cellMappings.put(items.cell4k(), mats.cell4kPart());
