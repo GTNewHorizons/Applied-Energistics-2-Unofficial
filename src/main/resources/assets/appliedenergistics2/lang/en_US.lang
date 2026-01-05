@@ -379,6 +379,8 @@ gui.appliedenergistics2.NumberOfFluids=Number of fluids
 gui.appliedenergistics2.ItemsPerByte=Items per byte:
 gui.appliedenergistics2.FluidsPerByte=Fluids per byte:
 gui.appliedenergistics2.BytesPerType=Bytes per type:
+gui.appliedenergistics2.SelectColor=Select a Color
+gui.appliedenergistics2.Selected=Selected
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
@@ -433,6 +435,7 @@ gui.tooltips.appliedenergistics2.NumberOfItems=Number of items
 gui.tooltips.appliedenergistics2.ItemName=Item name
 gui.tooltips.appliedenergistics2.PowerUnits=Power Units
 gui.tooltips.appliedenergistics2.IOMode=Input/Output Mode
+gui.tooltips.appliedenergistics2.ExtractionMode=Extraction Mode
 gui.tooltips.appliedenergistics2.CondenserOutput=ME Condenser - Output
 gui.tooltips.appliedenergistics2.PartitionStorage=Partition Storage
 gui.tooltips.appliedenergistics2.Clear=Clear
@@ -447,6 +450,8 @@ gui.tooltips.appliedenergistics2.Singularity=Condense Into Singularities\n%s per
 gui.tooltips.appliedenergistics2.Read=Extract Only
 gui.tooltips.appliedenergistics2.Write=Insert Only
 gui.tooltips.appliedenergistics2.ReadWrite=Bi-Directional
+gui.tooltips.appliedenergistics2.Strict=Strict - Network sees only filtered items
+gui.tooltips.appliedenergistics2.Loose=Loose - Network sees everything
 
 gui.tooltips.appliedenergistics2.AlwaysActive=Always active
 gui.tooltips.appliedenergistics2.ActiveWithoutSignal=Active without signal

@@ -578,7 +578,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
     }
 
     public boolean isCraftingMode() {
-        return this.craftingMode;
+        return this.craftingModeSupport && this.craftingMode;
     }
 
     public void setCraftingMode(final boolean craftingMode) {
