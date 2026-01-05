@@ -10,6 +10,7 @@
 
 package appeng.items.tools.powered;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -19,6 +20,7 @@ import java.util.Set;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDispenser;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
@@ -26,6 +28,8 @@ import net.minecraft.item.ItemSnowball;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -51,10 +55,13 @@ import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
 import appeng.block.misc.BlockPaint;
 import appeng.block.networking.BlockCableBus;
+import appeng.client.gui.implementations.GuiColorSelect;
 import appeng.client.render.items.ToolColorApplicatorRender;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketColorSelect;
 import appeng.helpers.IMouseWheelItem;
 import appeng.hooks.DispenserBlockTool;
 import appeng.hooks.IBlockTool;
@@ -77,6 +84,8 @@ public class ToolColorApplicator extends AEBasePoweredItem
         implements IStorageCell, IItemGroup, IBlockTool, IMouseWheelItem {
 
     private static final Map<Integer, AEColor> ORE_TO_COLOR = new HashMap<>();
+    private static final double POWER_PER_USE = 100;
+    private static final String NBT_COLOR = "color";
 
     static {
         for (final AEColor col : AEColor.values()) {
@@ -103,92 +112,108 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     @Override
-    public boolean onItemUse(final ItemStack is, final EntityPlayer p, final World w, final int x, final int y,
-            final int z, final int side, final float hitX, final float hitY, final float hitZ) {
-        final Block blk = w.getBlock(x, y, z);
+    public boolean onItemUse(final ItemStack stack, final EntityPlayer player, final World world, final int x,
+            final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ) {
 
-        ItemStack paintBall = this.getColor(is);
+        final DimensionalCoord coord = new DimensionalCoord(world, x, y, z);
+        final ForgeDirection orientation = ForgeDirection.getOrientation(side);
 
-        final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
-                .getCellInventory(is, null, StorageChannel.ITEMS);
-        if (inv != null) {
-            final IAEItemStack option = inv
-                    .extractItems(AEItemStack.create(paintBall), Actionable.SIMULATE, new BaseActionSource());
-
-            if (option != null) {
-                paintBall = option.getItemStack();
-                paintBall.stackSize = 1;
-            } else {
-                paintBall = null;
-            }
-
-            if (!Platform.hasPermissions(new DimensionalCoord(w, x, y, z), p)) {
-                return false;
-            }
-
-            final double powerPerUse = 100;
-            if (paintBall != null && paintBall.getItem() instanceof ItemSnowball) {
-                final ForgeDirection orientation = ForgeDirection.getOrientation(side);
-                final TileEntity te = w.getTileEntity(x, y, z);
-                // clean cables.
-                if (te instanceof IColorableTile) {
-                    if (this.getAECurrentPower(is) > powerPerUse
-                            && ((IColorableTile) te).getColor() != AEColor.Transparent) {
-                        if (((IColorableTile) te).recolourBlock(orientation, AEColor.Transparent, p)) {
-                            inv.extractItems(
-                                    AEItemStack.create(paintBall),
-                                    Actionable.MODULATE,
-                                    new BaseActionSource());
-                            this.extractAEPower(is, powerPerUse);
-                            return true;
-                        }
-                    }
-                }
-
-                // clean paint balls..
-                final Block testBlk = w
-                        .getBlock(x + orientation.offsetX, y + orientation.offsetY, z + orientation.offsetZ);
-                final TileEntity painted = w
-                        .getTileEntity(x + orientation.offsetX, y + orientation.offsetY, z + orientation.offsetZ);
-                if (this.getAECurrentPower(is) > powerPerUse && testBlk instanceof BlockPaint
-                        && painted instanceof TilePaint) {
-                    inv.extractItems(AEItemStack.create(paintBall), Actionable.MODULATE, new BaseActionSource());
-                    this.extractAEPower(is, powerPerUse);
-                    ((TilePaint) painted).cleanSide(orientation.getOpposite());
-                    return true;
-                }
-            } else if (paintBall != null) {
-                final AEColor color = this.getColorFromItem(paintBall);
-                final TileEntity te = w.getTileEntity(x, y, z);
-                if (te instanceof IColorableTile colorable) {
-                    colorable.recolourBlock(ForgeDirection.getOrientation(side), color, p);
-                    return true;
-                }
-
-                if (color != null && this.getAECurrentPower(is) > powerPerUse) {
-                    if (color != AEColor.Transparent && this.recolourBlock(
-                            blk,
-                            ForgeDirection.getOrientation(side),
-                            w,
-                            x,
-                            y,
-                            z,
-                            ForgeDirection.getOrientation(side),
-                            color,
-                            p)) {
-                        inv.extractItems(AEItemStack.create(paintBall), Actionable.MODULATE, new BaseActionSource());
-                        this.extractAEPower(is, powerPerUse);
-                        return true;
-                    }
-                }
-            }
+        if (!Platform.hasPermissions(coord, player)) {
+            return false;
         }
 
-        if (p.isSneaking()) {
-            this.cycleColors(is, paintBall, 1);
+        if (this.getAECurrentPower(stack) < POWER_PER_USE) {
+            return false;
+        }
+
+        final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
+                .getCellInventory(stack, null, StorageChannel.ITEMS);
+        if (inv == null) {
+            return false;
+        }
+
+        ItemStack activeConfig = this.getColor(stack);
+        activeConfig.stackSize = 1;
+
+        final IAEItemStack extractedSim = inv
+                .extractItems(AEItemStack.create(activeConfig), Actionable.SIMULATE, new BaseActionSource());
+
+        if (extractedSim == null) {
+            return false;
+        }
+
+        ItemStack paintSource = extractedSim.getItemStack();
+        AEColor paintColor = this.getColorFromItem(paintSource);
+
+        TileEntity targetTe = world.getTileEntity(x, y, z);
+        Block targetBlock = world.getBlock(x, y, z);
+
+        boolean success = false;
+
+        if (paintColor == AEColor.Transparent) {
+            success = performClean(world, x, y, z, orientation, player, targetTe);
+        } else if (paintColor != null) {
+            success = performColor(world, x, y, z, orientation, paintColor, player, targetTe, targetBlock);
+        }
+
+        if (success) {
+            if (this.consumePowerAndItemsForTe(targetTe)) {
+                inv.extractItems(AEItemStack.create(paintSource), Actionable.MODULATE, new BaseActionSource());
+                this.extractAEPower(stack, POWER_PER_USE);
+            }
+
+            return true;
         }
 
         return false;
+    }
+
+    @Override
+    public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
+        if (player.isSneaking()) {
+            if (world.isRemote) {
+                openGui(player);
+            }
+            return stack;
+        }
+
+        return super.onItemRightClick(stack, world, player);
+    }
+
+    private boolean performClean(World world, int x, int y, int z, ForgeDirection side, EntityPlayer player,
+            TileEntity tileEntity) {
+        if (tileEntity instanceof IColorableTile colorable) {
+            if (colorable.getColor() != AEColor.Transparent) {
+                return colorable.recolourBlock(side, AEColor.Transparent, player);
+            }
+        }
+
+        int tx = x + side.offsetX;
+        int ty = y + side.offsetY;
+        int tz = z + side.offsetZ;
+        Block targetBlock = world.getBlock(tx, ty, tz);
+        TileEntity targetTe = world.getTileEntity(tx, ty, tz);
+
+        if (targetBlock instanceof BlockPaint && targetTe instanceof TilePaint) {
+            ((TilePaint) targetTe).cleanSide(side.getOpposite());
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean performColor(World world, int x, int y, int z, ForgeDirection side, AEColor color,
+            EntityPlayer player, TileEntity tileEntity, Block block) {
+
+        if (tileEntity instanceof IColorableTile) {
+            return ((IColorableTile) tileEntity).recolourBlock(side, color, player);
+        }
+
+        return this.recolourBlock(block, side, world, x, y, z, side, color, player);
+    }
+
+    private boolean consumePowerAndItemsForTe(TileEntity tileEntity) {
+        return !(tileEntity instanceof IColorableTile);
     }
 
     @Override
@@ -234,8 +259,8 @@ public class ToolColorApplicator extends AEBasePoweredItem
 
     public ItemStack getColor(final ItemStack is) {
         final NBTTagCompound c = is.getTagCompound();
-        if (c != null && c.hasKey("color")) {
-            final NBTTagCompound color = c.getCompoundTag("color");
+        if (c != null && c.hasKey(NBT_COLOR)) {
+            final NBTTagCompound color = c.getCompoundTag(NBT_COLOR);
             final ItemStack oldColor = ItemStack.loadItemStackFromNBT(color);
             if (oldColor != null) {
                 return oldColor;
@@ -300,25 +325,30 @@ public class ToolColorApplicator extends AEBasePoweredItem
         return newColor;
     }
 
+    public void setColor(final ItemStack is, final AEColor newColor) {
+        if (newColor == AEColor.Transparent) {
+            setColor(is, (ItemStack) null);
+        } else {
+            final ItemStack paintBall = AEApi.instance().definitions().items().coloredPaintBall().stack(newColor, 1);
+            setColor(is, paintBall);
+        }
+    }
+
     private void setColor(final ItemStack is, final ItemStack newColor) {
         final NBTTagCompound data = Platform.openNbtData(is);
         if (newColor == null) {
-            data.removeTag("color");
+            data.removeTag(NBT_COLOR);
         } else {
             final NBTTagCompound color = new NBTTagCompound();
             newColor.writeToNBT(color);
-            data.setTag("color", color);
+            data.setTag(NBT_COLOR, color);
         }
     }
 
     private boolean recolourBlock(final Block blk, final ForgeDirection side, final World w, final int x, final int y,
             final int z, final ForgeDirection orientation, final AEColor newColor, final EntityPlayer p) {
         if (blk == Blocks.carpet) {
-            final int meta = w.getBlockMetadata(x, y, z);
-            if (newColor.ordinal() == meta) {
-                return false;
-            }
-            return w.setBlock(x, y, z, Blocks.carpet, newColor.ordinal(), 3);
+            return recolourBlock(w, x, y, z, newColor, Blocks.carpet);
         }
 
         if (blk == Blocks.glass) {
@@ -326,11 +356,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         if (blk == Blocks.stained_glass) {
-            final int meta = w.getBlockMetadata(x, y, z);
-            if (newColor.ordinal() == meta) {
-                return false;
-            }
-            return w.setBlock(x, y, z, Blocks.stained_glass, newColor.ordinal(), 3);
+            return recolourBlock(w, x, y, z, newColor, Blocks.stained_glass);
         }
 
         if (blk == Blocks.glass_pane) {
@@ -338,11 +364,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         if (blk == Blocks.stained_glass_pane) {
-            final int meta = w.getBlockMetadata(x, y, z);
-            if (newColor.ordinal() == meta) {
-                return false;
-            }
-            return w.setBlock(x, y, z, Blocks.stained_glass_pane, newColor.ordinal(), 3);
+            return recolourBlock(w, x, y, z, newColor, Blocks.stained_glass_pane);
         }
 
         if (blk == Blocks.hardened_clay) {
@@ -350,18 +372,22 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         if (blk == Blocks.stained_hardened_clay) {
-            final int meta = w.getBlockMetadata(x, y, z);
-            if (newColor.ordinal() == meta) {
-                return false;
-            }
-            return w.setBlock(x, y, z, Blocks.stained_hardened_clay, newColor.ordinal(), 3);
+            return recolourBlock(w, x, y, z, newColor, Blocks.stained_hardened_clay);
         }
 
-        if (blk instanceof BlockCableBus) {
-            return ((BlockCableBus) blk).recolourBlock(w, x, y, z, side, newColor.ordinal(), p);
+        if (blk instanceof BlockCableBus cableBus) {
+            return cableBus.recolourBlock(w, x, y, z, side, newColor.ordinal(), p);
         }
 
         return blk.recolourBlock(w, x, y, z, side, newColor.ordinal());
+    }
+
+    private boolean recolourBlock(World world, int x, int y, int z, AEColor newColor, Block block) {
+        final int meta = world.getBlockMetadata(x, y, z);
+        if (newColor.ordinal() == meta) {
+            return false;
+        }
+        return world.setBlock(x, y, z, block, newColor.ordinal(), 3);
     }
 
     public void cycleColors(final ItemStack is, final ItemStack paintBall, final int i) {
@@ -370,6 +396,44 @@ public class ToolColorApplicator extends AEBasePoweredItem
         } else {
             this.setColor(is, this.findNextColor(is, paintBall, i));
         }
+    }
+
+    public Map<AEColor, Long> getAvailableColorsCount(ItemStack stack) {
+        if (this.getAECurrentPower(stack) <= 0) {
+            return Collections.emptyMap();
+        }
+
+        Map<AEColor, Long> availableColors = new HashMap<>();
+
+        final IMEInventory<IAEItemStack> inv = AEApi.instance().registries().cell()
+                .getCellInventory(stack, null, StorageChannel.ITEMS);
+
+        if (inv != null) {
+            final IItemList<IAEItemStack> itemList = inv.getAvailableItems(
+                    AEApi.instance().storage().createSortedItemList(),
+                    IterationCounter.fetchNewId());
+
+            for (final IAEItemStack aeItem : itemList) {
+                if (aeItem != null) {
+                    final ItemStack itemStack = aeItem.getItemStack();
+
+                    if (itemStack.getItem() instanceof ItemPaintBall itemPaintBall) {
+                        AEColor color = itemPaintBall.getColor(itemStack);
+
+                        availableColors.put(color, aeItem.getStackSize());
+                    } else if (itemStack.getItem() instanceof ItemSnowball) {
+                        availableColors.put(AEColor.Transparent, aeItem.getStackSize());
+                    }
+                }
+            }
+        }
+
+        return availableColors;
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void openGui(EntityPlayer player) {
+        net.minecraft.client.Minecraft.getMinecraft().displayGuiScreen(new GuiColorSelect(player));
     }
 
     @SideOnly(Side.CLIENT)
@@ -496,6 +560,42 @@ public class ToolColorApplicator extends AEBasePoweredItem
     @Override
     public void onWheel(final ItemStack is, final boolean up) {
         this.cycleColors(is, this.getColor(is), up ? 1 : -1);
+    }
+
+    @Override
+    public void onWheelClick(EntityPlayer player, ItemStack is) {
+        if (!player.worldObj.isRemote) {
+            return;
+        }
+
+        final MovingObjectPosition mop = getPlayerLookingTarget(player);
+
+        if (mop == null || mop.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+            return;
+        }
+
+        TileEntity te = player.worldObj.getTileEntity(mop.blockX, mop.blockY, mop.blockZ);
+
+        if (te instanceof IColorableTile colorableTile) {
+            NetworkHandler.instance.sendToServer(new PacketColorSelect(colorableTile.getColor()));
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static MovingObjectPosition getPlayerLookingTarget(EntityPlayer viewpoint) {
+        double reachDistance = Minecraft.getMinecraft().playerController.getBlockReachDistance();
+
+        Vec3 posVec = Vec3.createVectorHelper(
+                viewpoint.posX,
+                viewpoint.posY + (viewpoint.getEyeHeight() - viewpoint.getDefaultEyeHeight()),
+                viewpoint.posZ);
+        Vec3 lookVec = viewpoint.getLook(0);
+        Vec3 modifiedPosVec = posVec.addVector(
+                lookVec.xCoord * reachDistance,
+                lookVec.yCoord * reachDistance,
+                lookVec.zCoord * reachDistance);
+
+        return viewpoint.worldObj.rayTraceBlocks(posVec, modifiedPosVec);
     }
 
     @Override
