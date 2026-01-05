@@ -129,7 +129,6 @@ public class AppEngPacketHandlerBase {
         PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
         PACKET_PICK_BLOCK(PacketPickBlock.class),
         PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
-        PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class);
         PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
         PACKET_COLOR_SELECT(PacketColorSelect.class);
 
