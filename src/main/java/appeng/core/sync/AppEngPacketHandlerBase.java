@@ -131,8 +131,7 @@ public class AppEngPacketHandlerBase {
         PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
         PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
         PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
-        PACKET_COLOR_SELECT(PacketColorSelect.class);
-        PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class);
+        PACKET_COLOR_SELECT(PacketColorSelect.class),
         PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
         PACKET_COLOR_SELECT(PacketColorSelect.class);
 
