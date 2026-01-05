@@ -319,13 +319,15 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     }
 
                     // If the size changed, we need to do a full update of inventory
-                    if (known.rows != machine.rows() || known.rowSize != machine.rowSize() || known.numSlots != machine.numSlots()) {
+                    if (known.rows != machine.rows() || known.rowSize != machine.rowSize()
+                            || known.numSlots != machine.numSlots()) {
                         known.rows = machine.rows();
                         known.rowSize = machine.rowSize();
                         known.numSlots = machine.numSlots();
                         known.updateNBT();
                         if (update == null) update = new PacketInterfaceTerminalUpdate();
-                        update.addOverwriteEntry(known.id).setItems(new int[0], known.invNbt).setSize(known.rows, known.rowSize, known.numSlots);
+                        update.addOverwriteEntry(known.id).setItems(new int[0], known.invNbt)
+                                .setSize(known.rows, known.rowSize, known.numSlots);
                     }
 
                     visited.add(machine);

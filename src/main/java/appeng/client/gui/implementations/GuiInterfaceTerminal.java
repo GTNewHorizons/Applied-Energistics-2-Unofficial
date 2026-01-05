@@ -1353,7 +1353,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
         Boolean[] useSubstitute;
         private int hoveredSlotIdx = -1;
 
-        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, int numSlots, boolean online, boolean p2pOutput) {
+        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, int numSlots, boolean online,
+                boolean p2pOutput) {
             this.id = id;
             this.dispName = CraftingCPUCluster.translateFromNetwork(name);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
