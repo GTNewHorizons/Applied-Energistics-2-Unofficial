@@ -10,7 +10,6 @@
 
 package appeng.items.materials;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -158,7 +157,10 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
         boolean enabled = true;
 
         for (final AEFeature f : mat.getFeature()) {
-            enabled = enabled && AEConfig.instance.isFeatureEnabled(f);
+            if (!AEConfig.instance.isFeatureEnabled(f)) {
+                enabled = false;
+                break;
+            }
         }
 
         mat.setStackSrc(new MaterialStackSrc(mat));
@@ -178,6 +180,9 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
         return mat.getStackSrc();
     }
 
+    /**
+     * Iterates over all materials and either registers or removes them if there's a replacement from another mod
+     */
     public void makeUnique() {
         for (final MaterialType mt : ImmutableSet.copyOf(this.dmgToMaterial.values())) {
             if (mt.getOreName() != null) {
@@ -191,7 +196,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
                     }
 
                     final List<ItemStack> options = OreDictionary.getOres(name);
-                    if (options != null && options.size() > 0) {
+                    if (options != null && !options.isEmpty()) {
                         for (final ItemStack is : options) {
                             if (is != null && is.getItem() != null) {
                                 replacement = is.copy();
@@ -247,10 +252,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
     @Override
     protected void getCheckedSubItems(final Item sameItem, final CreativeTabs creativeTab,
             final List<ItemStack> itemStacks) {
-        final List<MaterialType> types = Arrays.asList(MaterialType.values());
-        types.sort(Comparator.comparing(Enum::name));
-
-        for (final MaterialType mat : types) {
+        for (final MaterialType mat : MaterialType.values()) {
             if (mat.getDamageValue() >= 0 && mat.isRegistered() && mat.getItemInstance() == this) {
                 itemStacks.add(new ItemStack(this, 1, mat.getDamageValue()));
             }

@@ -27,6 +27,7 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+// The order of these items sets the order in NEI
 public enum MaterialType {
 
     InvalidType(-1, AEFeature.Core),
@@ -36,6 +37,8 @@ public enum MaterialType {
 
     CertusQuartzDust(2, AEFeature.Core, "dustCertusQuartz"),
     NetherQuartzDust(3, AEFeature.Core, "dustNetherQuartz"),
+    SkyDust(45, AEFeature.Core),
+    EnderDust(46, AEFeature.QuantumNetworkBridge, "dustEnder,dustEnderPearl", EntitySingularity.class),
     Flour(4, AEFeature.Flour, "dustWheat"),
     GoldDust(51, AEFeature.Core, "dustGold"),
     IronDust(49, AEFeature.Core, "dustIron"),
@@ -55,15 +58,13 @@ public enum MaterialType {
     CalcProcessorPress(13),
     EngProcessorPress(14),
     LogicProcessorPress(15),
+    SiliconPress(19),
+    NamePress(21),
 
     CalcProcessorPrint(16),
     EngProcessorPrint(17),
     LogicProcessorPrint(18),
-
-    SiliconPress(19),
     SiliconPrint(20),
-
-    NamePress(21),
 
     LogicProcessor(22),
     CalcProcessor(23),
@@ -73,12 +74,23 @@ public enum MaterialType {
     BasicCard(25),
     CardRedstone(26),
     CardCapacity(27),
+    CardCrafting(53),
+    CardSticky(64),
+    CardVoidOverflow(68),
 
     // Adv Cards
     AdvCard(28),
     CardFuzzy(29),
     CardSpeed(30),
     CardInverter(31),
+    CardPatternCapacity(54),
+    CardOreFilter(55),
+    CardSuperSpeed(56),
+    CardAdvancedBlocking(63),
+    CardLockCrafting(65),
+    CardFakeCrafting(66),
+    CardSuperluminalSpeed(67),
+    CardDistribution(69),
 
     Cell2SpatialPart(32, AEFeature.SpatialIO),
     Cell16SpatialPart(33, AEFeature.SpatialIO),
@@ -88,7 +100,14 @@ public enum MaterialType {
     Cell4kPart(36, AEFeature.StorageCells),
     Cell16kPart(37, AEFeature.StorageCells),
     Cell64kPart(38, AEFeature.StorageCells),
+    Cell256kPart(57, AEFeature.XtremeStorageCells),
+    Cell1024kPart(58, AEFeature.XtremeStorageCells),
+    Cell4096kPart(59, AEFeature.XtremeStorageCells),
+    Cell16384kPart(60, AEFeature.XtremeStorageCells),
+
     EmptyStorageCell(39, AEFeature.StorageCells),
+    EmptyAdvancedStorageCell(61, AEFeature.XtremeStorageCells),
+    BlankPattern(52),
 
     WoodenGear(40, AEFeature.GrindStone, "gearWood"),
 
@@ -98,29 +117,9 @@ public enum MaterialType {
     FormationCore(43),
     AnnihilationCore(44),
 
-    SkyDust(45, AEFeature.Core),
-
-    EnderDust(46, AEFeature.QuantumNetworkBridge, "dustEnder,dustEnderPearl", EntitySingularity.class),
     Singularity(47, AEFeature.QuantumNetworkBridge, EntitySingularity.class),
-    QESingularity(48, AEFeature.QuantumNetworkBridge, EntitySingularity.class),
-
-    BlankPattern(52),
-    CardCrafting(53),
-    CardPatternCapacity(54),
-    CardOreFilter(55),
-    CardSuperSpeed(56),
-    Cell256kPart(57, AEFeature.XtremeStorageCells),
-    Cell1024kPart(58, AEFeature.XtremeStorageCells),
-    Cell4096kPart(59, AEFeature.XtremeStorageCells),
-    Cell16384kPart(60, AEFeature.XtremeStorageCells),
-    EmptyAdvancedStorageCell(61, AEFeature.XtremeStorageCells),
-    CardAdvancedBlocking(63),
-    CardSticky(64),
-    CardLockCrafting(65),
-    CardFakeCrafting(66),
-    CardSuperluminalSpeed(67),
-    CardVoidOverflow(68),
-    CardDistribution(69);
+    QESingularity(48, AEFeature.QuantumNetworkBridge, EntitySingularity.class);
+    // the last meta is 69
 
     private final EnumSet<AEFeature> features;
     // IIcon for the material.
