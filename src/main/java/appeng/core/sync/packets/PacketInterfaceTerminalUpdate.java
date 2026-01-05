@@ -138,8 +138,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
     }
 
     /**
-     * Adds a new entry. Fill out the rest of the command using the {@link PacketAdd#setItems(int, int, int, NBTTagList)} and
-     * {@link PacketAdd#setLoc(int, int, int, int, int)}.
+     * Adds a new entry. Fill out the rest of the command using the
+     * {@link PacketAdd#setItems(int, int, int, NBTTagList)} and {@link PacketAdd#setLoc(int, int, int, int, int)}.
      *
      * @return the packet, which needs to have information filled out.
      */

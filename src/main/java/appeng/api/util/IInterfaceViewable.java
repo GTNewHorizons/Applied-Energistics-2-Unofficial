@@ -24,9 +24,9 @@ public interface IInterfaceViewable extends IGridHost {
     int rowSize();
 
     /**
-     * The total number of slots of the interface. This allows the final row to be a partial row.
-     * MUST be less than or equal to {@link #rows()} times {@link #rowSize()}.
-     * Defaults to rows * rowSize, most users do not need to override this.
+     * The total number of slots of the interface. This allows the final row to be a partial row. MUST be less than or
+     * equal to {@link #rows()} times {@link #rowSize()}. Defaults to rows * rowSize, most users do not need to override
+     * this.
      */
     default int numSlots() {
         return rows() * rowSize();
