@@ -156,11 +156,17 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                             /* Nothing happens */
                             return;
                         }
+                        if (!inv.patterns.isItemValidForSlot(slot, handStack)) {
+                            return;
+                        }
                         inv.patterns.setInventorySlotContents(slot, playerHand.removeItems(1, null, null));
                     } else {
                         /* Exchange? */
                         if (handStack != null && handStack.stackSize > 1) {
                             /* Exchange is impossible, abort */
+                            return;
+                        }
+                        if (!inv.patterns.isItemValidForSlot(slot, handStack)) {
                             return;
                         }
                         inv.patterns.setInventorySlotContents(slot, playerHand.removeItems(1, null, null));
