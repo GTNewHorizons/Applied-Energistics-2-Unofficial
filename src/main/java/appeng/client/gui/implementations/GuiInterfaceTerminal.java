@@ -184,7 +184,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 masterList.markDirty();
             }
         };
-        searchFieldNames.setFocused(true);
 
         searchStringSave = new GuiImgButton(
                 0,
@@ -234,6 +233,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         searchFieldNames.x = guiLeft + Math.max(32, VIEW_LEFT) + 99;
         searchFieldNames.y = guiTop + 38;
+        searchFieldNames.setFocused(true);
 
         int offset = guiTop + 8;
         terminalStyleBox.xPosition = guiLeft - 18;
