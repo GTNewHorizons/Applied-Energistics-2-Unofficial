@@ -54,7 +54,7 @@ public class PartPatternRepeaterDataProvider extends BasePartWailaDataProvider {
 
                 for (IAEStack<?> stack : waitingStacks) {
                     NBTTagCompound stackTag = new NBTTagCompound();
-                    stackTag.setString("q", "> " + stack.getStackSize() + " " + stack.getDisplayName());
+                    stackTag.setString("q", "> " + stack.getStackSize() + "x " + stack.getDisplayName());
                     stackList.appendTag(stackTag);
                 }
 
