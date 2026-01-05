@@ -643,8 +643,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         && relMouseY >= Math.max(viewY + rowYTop, InterfaceSection.TITLE_HEIGHT)
                         && relMouseY < Math.min(viewY + rowYBot, viewHeight);
                 if (stack != null) {
-                    final ItemEncodedPattern iep = (ItemEncodedPattern) stack.getItem();
-                    final ItemStack toRender = iep.getOutput(stack);
+                    // just in case non-pattern items show up (like in a GT AE machine), render them normally
+                    final ItemStack toRender = stack.getItem() instanceof final ItemEncodedPattern iep ? iep.getOutput(stack) : stack;
 
                     GL11.glPushMatrix();
                     GL11.glTranslatef(colLeft, viewY + rowYTop + 1, ITEM_STACK_Z);
