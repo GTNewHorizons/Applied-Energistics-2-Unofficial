@@ -396,7 +396,7 @@ public class ClientHelper extends ServerHelper {
 
     @SubscribeEvent
     public void wheelEvent(final MouseEvent me) {
-        if (me.isCanceled() || me.dwheel == 0) {
+        if (me.isCanceled()) {
             return;
         }
 
@@ -404,13 +404,27 @@ public class ClientHelper extends ServerHelper {
         final EntityPlayer player = mc.thePlayer;
         final ItemStack is = player.getHeldItem();
 
-        if (is != null && is.getItem() instanceof IMouseWheelItem && player.isSneaking()) {
+        if (is == null || !(is.getItem() instanceof IMouseWheelItem)) {
+            return;
+        }
+
+        // Wheel Scroll
+        if (me.dwheel != 0 && player.isSneaking()) {
             try {
                 NetworkHandler.instance
                         .sendToServer(new PacketValueConfig("Item", me.dwheel > 0 ? "WheelUp" : "WheelDown"));
                 me.setCanceled(true);
             } catch (final IOException e) {
                 AELog.debug(e);
+            }
+        }
+
+        // Wheel Click
+        else if (me.button == 2 && me.buttonstate) {
+            if (player.getHeldItem() != null && player.getHeldItem().getItem() instanceof IMouseWheelItem) {
+                final IMouseWheelItem si = (IMouseWheelItem) is.getItem();
+                si.onWheelClick(player, is);
+                me.setCanceled(true);
             }
         }
     }
