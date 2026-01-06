@@ -418,7 +418,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
                     AEColor color = this.getColorFromItem(aeItem.getItemStack());
 
                     if (color != null) {
-                        availableColors.put(color, aeItem.getStackSize());
+                        availableColors.merge(color, aeItem.getStackSize(), Long::sum);
                     }
                 }
             }
