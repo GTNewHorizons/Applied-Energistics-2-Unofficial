@@ -54,6 +54,7 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import appeng.api.util.DimensionalCoord;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.localization.PlayerMessages;
 import appeng.helpers.Reflected;
@@ -308,7 +309,11 @@ public class PartPatternRepeater extends PartBasicState
 
         if (player.isSneaking()) {
             this.waitingStacks.resetStatus();
-        } else {
+            return true;
+        }
+
+        final DimensionalCoord dc = this.getLocation();
+        if (Platform.isWrench(player, player.getHeldItem(), dc.x, dc.y, dc.z)) {
             this.provider = !this.provider;
 
             if (this.provider) player.addChatMessage(PlayerMessages.PatternRepeaterProvider.toChat());
@@ -316,16 +321,17 @@ public class PartPatternRepeater extends PartBasicState
                 try {
                     this.getProxy().getGrid()
                             .postEvent(new MENetworkCraftingPatternChange(this, this.getProxy().getNode()));
-                } catch (final GridAccessException e) {
-                    // :P
-                }
+                } catch (final GridAccessException ignored) {}
+
                 player.addChatMessage(PlayerMessages.PatternRepeaterAccessor.toChat());
             }
+
+            this.gridChanged();
+
+            return true;
         }
 
-        this.gridChanged();
-
-        return true;
+        return false;
     }
 
     @Override
