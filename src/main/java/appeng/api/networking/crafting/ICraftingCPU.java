@@ -142,6 +142,6 @@ public interface ICraftingCPU extends IBaseMonitor {
     }
 
     default String getSourcePlayer() {
-        return "";
+        return null;
     }
 }

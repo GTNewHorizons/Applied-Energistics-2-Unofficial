@@ -1066,8 +1066,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     this.currentJobSource = src;
                     if (src.isPlayer() && src instanceof PlayerSource ps) {
                         sourcePlayer = ps.player.getCommandSenderName();
-                    } else {
-                        sourcePlayer = "Machine Requested";
                     }
                     for (IAEStack<?> fte : ci.getExtractFailedList()) {
                         this.waitingForMissing.add(fte);
@@ -1187,8 +1185,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 this.currentJobSource = src;
                 if (src.isPlayer() && src instanceof PlayerSource ps) {
                     this.sourcePlayer = ps.player.getCommandSenderName();
-                } else {
-                    this.sourcePlayer = "Machine Requested";
                 }
 
                 this.prepareStepCount();

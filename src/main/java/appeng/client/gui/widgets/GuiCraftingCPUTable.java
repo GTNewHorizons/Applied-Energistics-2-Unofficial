@@ -295,7 +295,11 @@ public class GuiCraftingCPUTable {
                 tooltip.append(reset);
                 tooltip.append(": ");
                 tooltip.append(gold);
-                tooltip.append(hoveredCpu.getSourcePlayer());
+                if (hoveredCpu.getSourcePlayer() != null) {
+                    tooltip.append(hoveredCpu.getSourcePlayer());
+                } else {
+                    tooltip.append(GuiText.CPUSourceMachineRequested.getLocal());
+                }
                 tooltip.append('\n');
             }
 
