@@ -354,6 +354,7 @@ gui.appliedenergistics2.CPUAllowMode=Accept request
 gui.appliedenergistics2.CPUAllowAll=All
 gui.appliedenergistics2.CPUOnlyAllowNonPlayer=Only from non-player
 gui.appliedenergistics2.CPUOnlyAllowPlayer=Only from player
+gui.appliedenergistics2.CPUSourcePlayer=Requester
 
 gui.appliedenergistics2.NetworkBytesDetails=Network Bytes Details
 gui.appliedenergistics2.Items=Items

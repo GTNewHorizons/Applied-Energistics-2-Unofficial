@@ -287,7 +287,8 @@ public enum GuiText implements Localization {
     CPUAllowMode,
     CPUAllowAll,
     CPUOnlyAllowNonPlayer,
-    CPUOnlyAllowPlayer;
+    CPUOnlyAllowPlayer,
+    CPUSourcePlayer;
 
     private final String root;
 

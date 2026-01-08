@@ -289,6 +289,14 @@ public class GuiCraftingCPUTable {
                 tooltip.append(": ");
                 tooltip.append(elapsedTimeText);
                 tooltip.append('\n');
+
+                tooltip.append(green);
+                tooltip.append(GuiText.CPUSourcePlayer.getLocal());
+                tooltip.append(reset);
+                tooltip.append(": ");
+                tooltip.append(gold);
+                tooltip.append(hoveredCpu.getSourcePlayer());
+                tooltip.append('\n');
             }
 
             if (hoveredCpu.getUsedStorage() > 0) {
