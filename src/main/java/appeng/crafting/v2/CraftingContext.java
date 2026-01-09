@@ -93,15 +93,14 @@ public final class CraftingContext {
          */
         public final ArrayList<CraftingTask> resolvers = new ArrayList<>(4);
 
+        public boolean isRemainingResolversAllSimulated = true;
+
         public RequestInProcessing(CraftingRequest<StackType> request) {
             this.request = request;
         }
 
         public boolean isRemainingResolversAllSimulated() {
-            for (CraftingTask<?> resolver : resolvers) {
-                if (!resolver.isSimulated()) return false;
-            }
-            return true;
+            return isRemainingResolversAllSimulated;
         }
 
         @Override
@@ -154,7 +153,7 @@ public final class CraftingContext {
                     "Trying to add requests while inside a CraftingTask handler, return requests in the StepOutput instead");
         }
         final RequestInProcessing<?> processing = new RequestInProcessing<>(request);
-        processing.resolvers.addAll(CraftingCalculations.tryResolveCraftingRequest(request, this));
+        processing.resolvers.addAll(CraftingCalculations.tryResolveCraftingRequest(request, this, processing));
         Collections.reverse(processing.resolvers); // We remove from the end for efficient ArrayList usage
         liveRequests.add(processing);
         if (processing.resolvers.isEmpty()) {

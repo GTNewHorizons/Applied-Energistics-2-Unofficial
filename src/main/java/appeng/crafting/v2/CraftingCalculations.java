@@ -12,6 +12,7 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
+import appeng.crafting.v2.CraftingContext.RequestInProcessing;
 import appeng.crafting.v2.resolvers.CraftableItemResolver;
 import appeng.crafting.v2.resolvers.CraftingRequestResolver;
 import appeng.crafting.v2.resolvers.CraftingTask;
@@ -59,7 +60,7 @@ public class CraftingCalculations {
 
     @SuppressWarnings("unchecked")
     public static <StackType extends IAEStack<StackType>> List<CraftingTask> tryResolveCraftingRequest(
-            CraftingRequest<StackType> request, CraftingContext context) {
+            CraftingRequest<StackType> request, CraftingContext context, RequestInProcessing<?> processing) {
         final ArrayList<CraftingTask> allTasks = new ArrayList<>(4);
 
         final Object[] keyArray = providers.keysArray();
@@ -82,6 +83,11 @@ public class CraftingCalculations {
                     final CraftingRequestResolver<StackType> provider = (CraftingRequestResolver<StackType>) resolver;
                     final List<CraftingTask> tasks = provider.provideCraftingRequestResolvers(request, context);
                     allTasks.addAll(tasks);
+                    for (CraftingTask<?> task : tasks) {
+                        if (!task.isSimulated()) {
+                            processing.isRemainingResolversAllSimulated = false;
+                        }
+                    }
                 } catch (Exception t) {
                     AELog.log(
                             Level.WARN,
