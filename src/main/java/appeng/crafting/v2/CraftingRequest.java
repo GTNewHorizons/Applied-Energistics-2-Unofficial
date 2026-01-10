@@ -19,6 +19,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.crafting.v2.CraftingContext.RequestInProcessing;
 import appeng.crafting.v2.resolvers.CraftingTask;
 import io.netty.buffer.ByteBuf;
 
@@ -79,6 +80,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
 
     public final CraftingRequest<?> parentRequest;
     public final Set<CraftingRequest<?>> parentRequests;
+    RequestInProcessing<StackType> liveRequest;
     public final Class<StackType> stackTypeClass;
     /**
      * An item/fluid + count representing how many need to be crafted
