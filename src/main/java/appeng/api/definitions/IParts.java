@@ -111,4 +111,6 @@ public interface IParts {
     IItemDefinition p2PTunnelGregtech();
 
     IItemDefinition p2PTunnelMEInterface();
+
+    IItemDefinition patternRepeater();
 }
