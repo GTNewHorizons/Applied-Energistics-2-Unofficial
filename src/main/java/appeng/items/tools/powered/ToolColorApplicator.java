@@ -415,14 +415,10 @@ public class ToolColorApplicator extends AEBasePoweredItem
 
             for (final IAEItemStack aeItem : itemList) {
                 if (aeItem != null) {
-                    final ItemStack itemStack = aeItem.getItemStack();
+                    AEColor color = this.getColorFromItem(aeItem.getItemStack());
 
-                    if (itemStack.getItem() instanceof ItemPaintBall itemPaintBall) {
-                        AEColor color = itemPaintBall.getColor(itemStack);
-
-                        availableColors.put(color, aeItem.getStackSize());
-                    } else if (itemStack.getItem() instanceof ItemSnowball) {
-                        availableColors.put(AEColor.Transparent, aeItem.getStackSize());
+                    if (color != null) {
+                        availableColors.merge(color, aeItem.getStackSize(), Long::sum);
                     }
                 }
             }
