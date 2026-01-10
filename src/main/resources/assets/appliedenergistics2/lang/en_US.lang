@@ -248,6 +248,7 @@ gui.appliedenergistics2.MolecularAssembler=Molecular Assembler
 gui.appliedenergistics2.ProcessingPattern=Processing Pattern
 gui.appliedenergistics2.Crafts=Crafts
 gui.appliedenergistics2.HoldShift=Hold [LSHIFT] to show Ingredients
+gui.appliedenergistics2.PatternView=Press [%s] to view pattern
 gui.appliedenergistics2.Result=Result
 gui.appliedenergistics2.Results=Results
 gui.appliedenergistics2.Ingredients=Ingredients
@@ -958,3 +959,6 @@ key.appliedenergistics2.category=Applied Energistics 2
 key.toggle_focus.desc=Toggle search box focus
 key.search_connected_inventories.desc=Search network inventories for item
 key.control_operation.desc=Control operation
+
+# NEI
+nei.options.keys.gui.pattern_view=View Pattern

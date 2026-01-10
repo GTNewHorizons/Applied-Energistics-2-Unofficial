@@ -19,6 +19,8 @@ import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
+import com.github.bsideup.jabel.Desugar;
+
 import appeng.api.config.TerminalFontSize;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
@@ -26,13 +28,14 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.render.StackSizeRenderer;
 import appeng.core.localization.GuiText;
+import codechicken.nei.NEIClientUtils;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.api.IOverlayHandler;
 import codechicken.nei.api.IRecipeOverlayRenderer;
 import codechicken.nei.recipe.GuiRecipe;
 import codechicken.nei.recipe.IUsageHandler;
 
-public class NEIPatternViewHandler implements IUsageHandler {
+public class NEIPatternView extends GuiRecipe<IUsageHandler> {
 
     private static class PatternSlot {
 
@@ -42,6 +45,108 @@ public class NEIPatternViewHandler implements IUsageHandler {
         public PatternSlot(PositionedStack stack, long stackSize) {
             this.stack = stack;
             this.stackSize = stackSize;
+        }
+    }
+
+    @Desugar
+    public record InternalPatternHandler(NEIPatternView parent) implements IUsageHandler {
+
+        @Override
+        public String getHandlerId() {
+            return "appeng.integration.modules.NEIHelpers.NEIPatternView.InternalPatternHandler";
+        }
+
+        @Override
+        public String getRecipeName() {
+            return GuiText.EncodedPattern.getLocal();
+        }
+
+        @Override
+        public int numRecipes() {
+            return 1;
+        }
+
+        @Override
+        public void drawBackground(int recipe) {
+            parent.drawPatternBackground();
+        }
+
+        @Override
+        public void drawForeground(int recipe) {
+            parent.drawPatternForeground();
+        }
+
+        @Override
+        public void onUpdate() {}
+
+        @Override
+        public int recipiesPerPage() {
+            return 1;
+        }
+
+        @Override
+        public List<PositionedStack> getIngredientStacks(int recipe) {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public PositionedStack getResultStack(int recipe) {
+            return null;
+        }
+
+        @Override
+        public List<PositionedStack> getOtherStacks(int recipe) {
+            List<PositionedStack> result = new ArrayList<>();
+            parent.inputSlots.forEach(s -> result.add(s.stack));
+            parent.outputSlots.forEach(s -> result.add(s.stack));
+            return result;
+        }
+
+        @Override
+        public List<String> handleItemTooltip(GuiRecipe<?> gui, ItemStack stack, List<String> currenttip, int recipe) {
+            parent.drawStackSizeTooltip(parent.inputSlots, stack, currenttip);
+            parent.drawStackSizeTooltip(parent.outputSlots, stack, currenttip);
+            return currenttip;
+        }
+
+        @Override
+        public IUsageHandler getUsageHandler(String inputId, Object... ingredients) {
+            return null;
+        }
+
+        @Override
+        public boolean hasOverlay(GuiContainer gui, Container container, int recipe) {
+            return false;
+        }
+
+        @Override
+        public IRecipeOverlayRenderer getOverlayRenderer(GuiContainer gui, int recipe) {
+            return null;
+        }
+
+        @Override
+        public IOverlayHandler getOverlayHandler(GuiContainer gui, int recipe) {
+            return null;
+        }
+
+        @Override
+        public List<String> handleTooltip(GuiRecipe<?> gui, List<String> currenttip, int recipe) {
+            return currenttip;
+        }
+
+        @Override
+        public boolean keyTyped(GuiRecipe<?> gui, char keyChar, int keyCode, int recipe) {
+            return false;
+        }
+
+        @Override
+        public boolean mouseClicked(GuiRecipe<?> gui, int button, int recipe) {
+            return false;
+        }
+
+        @Override
+        public int getRecipeHeight(int recipe) {
+            return parent.calculateRecipeHeight();
         }
     }
 
@@ -92,24 +197,62 @@ public class NEIPatternViewHandler implements IUsageHandler {
     private final ArrayList<PatternSlot> outputSlots = new ArrayList<>();
     private ICraftingPatternDetails patternDetails;
 
-    @Override
-    public IUsageHandler getUsageHandler(String inputId, Object... ingredients) {
-        if (ingredients.length == 0 || !(ingredients[0] instanceof ItemStack ingredient)) {
-            return null;
+    public static boolean openRecipeGui(ICraftingPatternItem patternItem, ItemStack patternStack) {
+        NEIPatternView gui = new NEIPatternView();
+        if (gui.initialize(patternItem, patternStack)) {
+            Minecraft.getMinecraft().displayGuiScreen(gui);
+            return true;
         }
+        return false;
+    }
 
-        if (!(ingredient.getItem() instanceof ICraftingPatternItem patternItem)) {
-            return null;
-        }
+    private NEIPatternView() {
+        super(Minecraft.getMinecraft().currentScreen);
+    }
 
-        this.patternDetails = patternItem.getPatternForItem(ingredient, Minecraft.getMinecraft().theWorld);
-        if (this.patternDetails == null) {
-            return null;
-        }
+    private boolean initialize(ICraftingPatternItem patternItem, ItemStack patternStack) {
+        this.patternDetails = patternItem.getPatternForItem(patternStack, Minecraft.getMinecraft().theWorld);
+        if (this.patternDetails == null) return false;
 
         initializeLayout();
         initializeSlots();
-        return this;
+
+        this.currenthandlers = new ArrayList<>();
+        this.currenthandlers.add(new InternalPatternHandler(this));
+        return true;
+    }
+
+    public void drawPatternBackground() {
+        Minecraft.getMinecraft().getTextureManager().bindTexture(SLOT_TEXTURE_LOCATION);
+
+        Tessellator tessellator = Tessellator.instance;
+        tessellator.startDrawingQuads();
+
+        drawInputSlots(tessellator);
+        drawOutputSlots(tessellator);
+
+        tessellator.draw();
+
+        drawArrow();
+    }
+
+    private void drawPatternForeground() {
+        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
+        String inputs = GuiText.Inputs.getLocal();
+        String outputs = GuiText.Outputs.getLocal();
+
+        int inputsCenterX = inputsOffsetX + (inputsCols * 18) / 2 - fontRenderer.getStringWidth(inputs) / 2;
+        int outputsCenterX = outputsOffsetX + (outputsCols * 18) / 2 - fontRenderer.getStringWidth(outputs) / 2;
+
+        fontRenderer.drawString(inputs, inputsCenterX, INFO_OFFSET_Y, TEXT_COLOR);
+        fontRenderer.drawString(outputs, outputsCenterX, INFO_OFFSET_Y, TEXT_COLOR);
+
+        drawStackSize(inputSlots);
+        drawStackSize(outputSlots);
+    }
+
+    private int calculateRecipeHeight() {
+        return INFO_OFFSET_Y + Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + (inputsRows * 18) + 10;
     }
 
     private void initializeLayout() {
@@ -225,54 +368,23 @@ public class NEIPatternViewHandler implements IUsageHandler {
         return posStack;
     }
 
-    @Override
-    public String getRecipeName() {
-        return GuiText.EncodedPattern.getLocal();
+    private void drawInputSlots(Tessellator tess) {
+        for (int r = 0; r < inputsRows; r++)
+            for (int c = 0; c < inputsCols; c++) drawSlot(tess, inputsOffsetX + c * 18, SLOTS_OFFSET_Y + r * 18);
     }
 
-    @Override
-    public int numRecipes() {
-        return 1;
+    private void drawOutputSlots(Tessellator tess) {
+        for (int r = 0; r < outputsRows; r++) for (int c = 0; c < outputsCols; c++) drawSlot(
+                tess,
+                outputsOffsetX + c * 18,
+                (patternDetails.isCraftable() && r == 0) ? craftingOutputY : SLOTS_OFFSET_Y + r * 18);
     }
 
-    @Override
-    public void drawBackground(int recipe) {
-        Minecraft.getMinecraft().getTextureManager().bindTexture(SLOT_TEXTURE_LOCATION);
-
-        Tessellator tessellator = Tessellator.instance;
-        tessellator.startDrawingQuads();
-
-        drawInputSlots(tessellator);
-        drawOutputSlots(tessellator);
-
-        tessellator.draw();
-
-        drawArrow();
-    }
-
-    private void drawInputSlots(Tessellator tessellator) {
-        for (int row = 0; row < inputsRows; row++) {
-            for (int col = 0; col < inputsCols; col++) {
-                drawSlot(tessellator, inputsOffsetX + col * 18, SLOTS_OFFSET_Y + row * 18);
-            }
-        }
-    }
-
-    private void drawOutputSlots(Tessellator tessellator) {
-        for (int row = 0; row < outputsRows; row++) {
-            for (int col = 0; col < outputsCols; col++) {
-                int x = outputsOffsetX + col * 18;
-                int y = patternDetails.isCraftable() && row == 0 ? craftingOutputY : SLOTS_OFFSET_Y + row * 18;
-                drawSlot(tessellator, x, y);
-            }
-        }
-    }
-
-    private void drawSlot(Tessellator tessellator, int x, int y) {
-        tessellator.addVertexWithUV(x + 18, y, 0, 1, 0);
-        tessellator.addVertexWithUV(x, y, 0, 0, 0);
-        tessellator.addVertexWithUV(x, y + 18, 0, 0, 1);
-        tessellator.addVertexWithUV(x + 18, y + 18, 0, 1, 1);
+    private void drawSlot(Tessellator t, int x, int y) {
+        t.addVertexWithUV(x + 18, y, 0, 1, 0);
+        t.addVertexWithUV(x, y, 0, 0, 0);
+        t.addVertexWithUV(x, y + 18, 0, 0, 1);
+        t.addVertexWithUV(x + 18, y + 18, 0, 1, 1);
     }
 
     private void drawArrow() {
@@ -297,113 +409,24 @@ public class NEIPatternViewHandler implements IUsageHandler {
         tessellator.draw();
     }
 
-    @Override
-    public void drawForeground(int recipe) {
-        FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
-        String inputs = GuiText.Inputs.getLocal();
-        String outputs = GuiText.Outputs.getLocal();
-
-        int inputsCenterX = inputsOffsetX + (inputsCols * 18) / 2 - fontRenderer.getStringWidth(inputs) / 2;
-        int outputsCenterX = outputsOffsetX + (outputsCols * 18) / 2 - fontRenderer.getStringWidth(outputs) / 2;
-
-        fontRenderer.drawString(inputs, inputsCenterX, INFO_OFFSET_Y, TEXT_COLOR);
-        fontRenderer.drawString(outputs, outputsCenterX, INFO_OFFSET_Y, TEXT_COLOR);
-
-        drawStackSize(inputSlots);
-        drawStackSize(outputSlots);
-    }
-
     private void drawStackSize(ArrayList<PatternSlot> stacks) {
-        for (PatternSlot viewStack : stacks) {
-            StackSizeRenderer.drawStackSize(
-                    viewStack.stack.relx,
-                    viewStack.stack.rely,
-                    viewStack.stackSize,
-                    fontRenderer,
-                    TerminalFontSize.SMALL);
+        for (PatternSlot s : stacks) {
+            StackSizeRenderer
+                    .drawStackSize(s.stack.relx, s.stack.rely, s.stackSize, fontRenderer, TerminalFontSize.SMALL);
         }
     }
 
-    private void drawStackSizeTooltip(ArrayList<PatternSlot> stacks, ItemStack curStack, List<String> currenttip) {
-        stacks.stream().filter(viewStack -> viewStack.stack.item.equals(curStack)).findFirst().ifPresent(
-                viewItemStack -> currenttip.add(
+    private void drawStackSizeTooltip(ArrayList<PatternSlot> stacks, ItemStack cur, List<String> tip) {
+        stacks.stream().filter(s -> NEIClientUtils.areStacksSameType(s.stack.item, cur)).findFirst().ifPresent(
+                s -> tip.add(
                         1,
                         GRAY + GuiText.Stored.getLocal()
                                 + ": "
-                                + NumberFormat.getNumberInstance().format(viewItemStack.stackSize)));
+                                + NumberFormat.getNumberInstance().format(s.stackSize)));
     }
 
     @Override
-    public List<PositionedStack> getIngredientStacks(int recipe) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public List<PositionedStack> getOtherStacks(int recipe) {
-        List<PositionedStack> result = new ArrayList<>(inputSlots.size() + outputSlots.size());
-        result.addAll(inputSlots.stream().map(slot -> slot.stack).collect(Collectors.toList()));
-        result.addAll(outputSlots.stream().map(slot -> slot.stack).collect(Collectors.toList()));
-        return result;
-    }
-
-    @Override
-    public PositionedStack getResultStack(int recipe) {
-        return null;
-    }
-
-    @Override
-    public void onUpdate() {}
-
-    @Override
-    public boolean hasOverlay(GuiContainer gui, Container container, int recipe) {
-        return false;
-    }
-
-    @Override
-    public IRecipeOverlayRenderer getOverlayRenderer(GuiContainer gui, int recipe) {
-        return null;
-    }
-
-    @Override
-    public IOverlayHandler getOverlayHandler(GuiContainer gui, int recipe) {
-        return null;
-    }
-
-    @Override
-    public int recipiesPerPage() {
-        return 1;
-    }
-
-    @Override
-    public List<String> handleTooltip(GuiRecipe<?> gui, List<String> currenttip, int recipe) {
-        return currenttip;
-    }
-
-    @Override
-    public List<String> handleItemTooltip(GuiRecipe<?> gui, ItemStack stack, List<String> currenttip, int recipe) {
-        if (stack == null) return currenttip;
-
-        drawStackSizeTooltip(inputSlots, stack, currenttip);
-        drawStackSizeTooltip(outputSlots, stack, currenttip);
-
-        return currenttip;
-    }
-
-    @Override
-    public boolean keyTyped(GuiRecipe<?> gui, char keyChar, int keyCode, int recipe) {
-        return false;
-    }
-
-    @Override
-    public boolean mouseClicked(GuiRecipe<?> gui, int button, int recipe) {
-        return false;
-    }
-
-    @Override
-    public int getRecipeHeight(int recipe) {
-        int headerHeight = INFO_OFFSET_Y + Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT;
-        int slotsHeight = inputsRows * 18;
-        int bottomPadding = 10;
-        return headerHeight + slotsHeight + bottomPadding;
+    public ArrayList<IUsageHandler> getCurrentRecipeHandlers() {
+        return currenthandlers;
     }
 }
