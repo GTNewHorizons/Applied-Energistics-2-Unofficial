@@ -55,7 +55,6 @@ public enum PlayerMessages implements Localization {
     StorageHighlighted,
     PatternRepeaterProvider,
     PatternRepeaterAccessor,
-    StorageHighlighted,
     PickBlockTerminalNotFound;
 
     @Deprecated // kept for backward compat
