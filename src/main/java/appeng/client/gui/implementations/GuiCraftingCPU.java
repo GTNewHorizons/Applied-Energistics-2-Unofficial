@@ -497,8 +497,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         int toolPosX = 0;
         int toolPosY = 0;
 
-        hoveredStack = null;
-
+        IAEStack<?> lastHoveredStack = this.hoveredStack;
+        this.hoveredStack = null;
         final int offY = 23;
 
         final ReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
@@ -616,7 +616,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     dspToolTip = Platform.getItemDisplayName(is);
 
                     if (!lineList.isEmpty()) {
-                        addItemTooltip(refStack, lineList, refStack.equals(this.hoveredStack));
+                        boolean stackChanged = lastHoveredStack == null || !refStack.isSameType(lastHoveredStack);
+                        addItemTooltip(refStack, lineList, stackChanged);
                         dspToolTip = dspToolTip + '\n' + Joiner.on("\n").join(lineList);
                     }
 
