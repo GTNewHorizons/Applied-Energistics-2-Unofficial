@@ -17,9 +17,7 @@ import static appeng.util.Platform.setPlayerInventorySlotByIndex;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,7 +34,6 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
 
 import appeng.api.AEApi;
@@ -62,8 +59,7 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.ItemSearchDTO;
-import appeng.container.guisync.GuiSync;
-import appeng.container.guisync.SyncData;
+import appeng.container.guisync.DataSynchronization;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerUpgradeable;
 import appeng.container.interfaces.IInventorySlotAware;
@@ -81,6 +77,7 @@ import appeng.core.AELog;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketGuiDataSync;
 import appeng.core.sync.packets.PacketHighlightBlockStorage;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketPartialItem;
@@ -103,7 +100,10 @@ import appeng.tile.storage.TileDrive;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
+import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 public abstract class AEBaseContainer extends Container {
 
@@ -114,7 +114,6 @@ public abstract class AEBaseContainer extends Container {
     private final IPart part;
     private final IGuiItemObject obj;
     private final List<PacketPartialItem> dataChunks = new LinkedList<>();
-    private final HashMap<Integer, SyncData> syncData = new HashMap<>();
     private boolean isContainerValid = true;
     private String customName;
     private ContainerOpenContext openContext;
@@ -126,6 +125,11 @@ public abstract class AEBaseContainer extends Container {
     private IAEStack<?> clientRequestedTargetItem = null;
     private PrimaryGui primaryGui;
     private final int targetSlotIndex;
+
+    /**
+     * GuiSync.Recurse requires lazy initialization
+     */
+    private DataSynchronization dataSync;
 
     @Deprecated
     public AEBaseContainer(final InventoryPlayer ip, final TileEntity myTile, final IPart myPart) {
@@ -144,49 +148,6 @@ public abstract class AEBaseContainer extends Container {
         this.targetSlotIndex = this.tileEntity == null && getTarget() instanceof IInventorySlotAware isa
                 ? isa.getInventorySlot()
                 : Integer.MIN_VALUE;
-
-        this.prepareSync();
-    }
-
-    protected IActionHost getActionHost() {
-        if (this.obj instanceof IActionHost) {
-            return (IActionHost) this.obj;
-        }
-
-        if (this.tileEntity instanceof IActionHost) {
-            return (IActionHost) this.tileEntity;
-        }
-
-        if (this.part instanceof IActionHost) {
-            return (IActionHost) this.part;
-        }
-
-        return null;
-    }
-
-    private void prepareSync() {
-        walkSyncFields(0, this.getClass().getFields(), new Field[0]);
-    }
-
-    private void walkSyncFields(int offset, final Field[] fields, final Field[] currentIndirections) {
-        for (final Field f : fields) {
-            if (f.isAnnotationPresent(GuiSync.Recurse.class)) {
-                final GuiSync.Recurse annotation = f.getAnnotation(GuiSync.Recurse.class);
-                walkSyncFields(
-                        offset + annotation.value(),
-                        f.getType().getFields(),
-                        ArrayUtils.add(currentIndirections, f));
-            }
-            if (f.isAnnotationPresent(GuiSync.class)) {
-                final GuiSync annotation = f.getAnnotation(GuiSync.class);
-                final int channel = offset + annotation.value();
-                if (this.syncData.containsKey(channel)) {
-                    AELog.warn("Channel already in use: " + channel + " for " + f.getName());
-                } else {
-                    this.syncData.put(channel, new SyncData(this, currentIndirections, f, channel));
-                }
-            }
-        }
     }
 
     public AEBaseContainer(final InventoryPlayer ip, final Object anchor) {
@@ -209,8 +170,22 @@ public abstract class AEBaseContainer extends Container {
         this.targetSlotIndex = this.tileEntity == null && getTarget() instanceof IInventorySlotAware isa
                 ? isa.getInventorySlot()
                 : Integer.MIN_VALUE;
+    }
 
-        this.prepareSync();
+    protected IActionHost getActionHost() {
+        if (this.obj instanceof IActionHost) {
+            return (IActionHost) this.obj;
+        }
+
+        if (this.tileEntity instanceof IActionHost) {
+            return (IActionHost) this.tileEntity;
+        }
+
+        if (this.part instanceof IActionHost) {
+            return (IActionHost) this.part;
+        }
+
+        return null;
     }
 
     public void postPartial(final PacketPartialItem packetPartialItem) {
@@ -371,18 +346,19 @@ public abstract class AEBaseContainer extends Container {
         return this.tileEntity;
     }
 
-    public final void updateFullProgressBar(final int idx, final long value) {
-        if (this.syncData.containsKey(idx)) {
-            this.syncData.get(idx).update(value);
-            return;
+    public final void receiveSyncData(final ByteBuf buf) {
+        if (this.dataSync == null) {
+            this.dataSync = new DataSynchronization(this);
         }
 
-        this.updateProgressBar(idx, (int) value);
-    }
+        Object2ObjectOpenHashMap<String, Pair<Object, Object>> updatedFields = new Object2ObjectOpenHashMap<>();
+        this.dataSync.readUpdate(buf, updatedFields);
 
-    public void stringSync(final int idx, final String value) {
-        if (this.syncData.containsKey(idx)) {
-            this.syncData.get(idx).update(value);
+        var iter = updatedFields.object2ObjectEntrySet().fastIterator();
+        while (iter.hasNext()) {
+            var entry = iter.next();
+            var values = entry.getValue();
+            this.onUpdate(entry.getKey(), values.left(), values.right());
         }
     }
 
@@ -425,10 +401,16 @@ public abstract class AEBaseContainer extends Container {
         this.sendCustomName();
 
         if (Platform.isServer()) {
-            for (final ICrafting crafter : this.crafters) {
-                for (final SyncData sd : this.syncData.values()) {
-                    sd.tick(crafter);
+            if (this.dataSync == null) {
+                this.dataSync = new DataSynchronization(this);
+
+                if (this.dataSync.hasFields() && this.invPlayer.player instanceof EntityPlayerMP playerMP) {
+                    NetworkHandler.instance.sendTo(new PacketGuiDataSync(this.dataSync::writeAll), playerMP);
                 }
+            }
+
+            if (this.dataSync.hasChanges() && this.invPlayer.player instanceof EntityPlayerMP playerMP) {
+                NetworkHandler.instance.sendTo(new PacketGuiDataSync(this.dataSync::writeChanges), playerMP);
             }
         }
 
@@ -643,13 +625,6 @@ public abstract class AEBaseContainer extends Container {
 
         this.updateSlot(clickSlot);
         return null;
-    }
-
-    @Override
-    public final void updateProgressBar(final int idx, final int value) {
-        if (this.syncData.containsKey(idx)) {
-            this.syncData.get(idx).update((long) value);
-        }
     }
 
     @Override
