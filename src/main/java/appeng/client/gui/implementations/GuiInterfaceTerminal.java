@@ -584,6 +584,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         entry.dispY = viewY;
         /* PASS 1: BG */
+        outerBg:
         for (int row = 0; row < entry.rows; ++row) {
             final int rowYTop = row * 18;
             final int rowYBot = rowYTop + 18;
@@ -594,6 +595,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 continue;
             }
             for (int col = 0; col < entry.rowSize; ++col) {
+                final int slotIdx = row * entry.rowSize + col;
+                if (slotIdx >= entry.numSlots) {
+                    break outerBg;
+                }
                 addTexturedRectToTesselator(
                         col * 18 + slotLeftMargin,
                         viewY + rowYTop,
@@ -624,6 +629,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             entry.optionsButton.yPosition = -1;
         }
         /* PASS 2: Items */
+        outerItems:
         for (int row = 0; row < entry.rows; ++row) {
             final int rowYTop = row * 18;
             final int rowYBot = rowYTop + 18;
@@ -637,14 +643,17 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 final int colLeft = col * 18 + slotLeftMargin + 1;
                 final int colRight = colLeft + 18 + 1;
                 final int slotIdx = row * entry.rowSize + col;
+                if (slotIdx >= entry.numSlots) {
+                    break outerItems;
+                }
                 ItemStack stack = inv.getStackInSlot(slotIdx);
 
                 boolean tooltip = relMouseX > colLeft - 1 && relMouseX < colRight - 1
                         && relMouseY >= Math.max(viewY + rowYTop, InterfaceSection.TITLE_HEIGHT)
                         && relMouseY < Math.min(viewY + rowYBot, viewHeight);
                 if (stack != null) {
-                    final ItemEncodedPattern iep = (ItemEncodedPattern) stack.getItem();
-                    final ItemStack toRender = iep.getOutput(stack);
+                    // just in case non-pattern items show up (like in a GT AE machine), render them normally
+                    final ItemStack toRender = stack.getItem() instanceof final ItemEncodedPattern iep ? iep.getOutput(stack) : stack;
 
                     GL11.glPushMatrix();
                     GL11.glTranslatef(colLeft, viewY + rowYTop + 1, ITEM_STACK_Z);
@@ -890,6 +899,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.name,
                     addCmd.rows,
                     addCmd.rowSize,
+                    addCmd.numSlots,
                     addCmd.online,
                     addCmd.p2pOutput).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
@@ -914,6 +924,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     entry.partialItemUpdate(owCmd.items, owCmd.validIndices);
                 }
             }
+
+            if (owCmd.sizeValid) {
+                entry.rows = owCmd.rows;
+                entry.rowSize = owCmd.rowSize;
+                entry.numSlots = owCmd.numSlots;
+            }
+
             masterList.isDirty = true;
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRename renameCmd) {
             InterfaceTerminalEntry entry = masterList.list.get(id);
@@ -1244,7 +1261,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     continue;
                 }
                 if (AEConfig.instance.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal
-                        && entry.numItems == entry.rows * entry.rowSize) {
+                        && entry.numItems >= entry.numSlots) {
                     continue;
                 }
                 if (onlyBrokenRecipes && !entry.hasBrokenSlot()) {
@@ -1324,6 +1341,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         long id;
         int x, y, z, dim;
         int rows, rowSize;
+        int numSlots;
         int guiHeight;
         int dispY = -9999;
         boolean online;
@@ -1335,12 +1353,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
         Boolean[] useSubstitute;
         private int hoveredSlotIdx = -1;
 
-        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, boolean online, boolean p2pOutput) {
+        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, int numSlots, boolean online,
+                boolean p2pOutput) {
             this.id = id;
             this.dispName = CraftingCPUCluster.translateFromNetwork(name);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
             this.rows = rows;
             this.rowSize = rowSize;
+            this.numSlots = numSlots;
             this.online = online;
             this.p2pOutput = p2pOutput;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
@@ -1504,6 +1524,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 final int col = offsetX / 18;
                 final int row = offsetY / 18;
                 final int slotIdx = row * rowSize + col;
+                if (slotIdx >= numSlots) {
+                    return false;
+                }
 
                 // send packet to server, request an update
                 // TODO: Client prediction.

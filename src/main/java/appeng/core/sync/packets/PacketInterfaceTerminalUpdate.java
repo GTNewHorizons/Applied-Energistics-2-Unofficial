@@ -138,8 +138,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
     }
 
     /**
-     * Adds a new entry. Fill out the rest of the command using the {@link PacketAdd#setItems(int, int, NBTTagList)} and
-     * {@link PacketAdd#setLoc(int, int, int, int, int)}.
+     * Adds a new entry. Fill out the rest of the command using the
+     * {@link PacketAdd#setItems(int, int, int, NBTTagList)} and {@link PacketAdd#setLoc(int, int, int, int, int)}.
      *
      * @return the packet, which needs to have information filled out.
      */
@@ -236,6 +236,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public String name;
         public int x, y, z, dim, side;
         public int rows, rowSize;
+        public int numSlots;
         public boolean online;
         public boolean p2pOutput;
         public ItemStack selfRep, dispRep;
@@ -265,9 +266,10 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             return this;
         }
 
-        public PacketAdd setItems(int rows, int rowSize, NBTTagList items) {
+        public PacketAdd setItems(int rows, int rowSize, int numSlots, NBTTagList items) {
             this.rows = rows;
             this.rowSize = rowSize;
+            this.numSlots = numSlots;
             this.items = items;
 
             return this;
@@ -298,6 +300,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             buf.writeByte(side);
             buf.writeInt(rows);
             buf.writeInt(rowSize);
+            buf.writeInt(numSlots);
             buf.writeBoolean(online);
             buf.writeBoolean(p2pOutput);
 
@@ -333,6 +336,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.side = buf.readByte();
             this.rows = buf.readInt();
             this.rowSize = buf.readInt();
+            this.numSlots = buf.readInt();
             this.online = buf.readBoolean();
             this.p2pOutput = buf.readBoolean();
 
@@ -391,6 +395,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     + rows
                     + ", rowSize="
                     + rowSize
+                    + ", numSlots="
+                    + numSlots
                     + ", online="
                     + online
                     + ", p2pOutput="
@@ -433,7 +439,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
     }
 
     /**
-     * Overwrite online status or inventory of the entry.
+     * Overwrite online status, inventory, or size of the entry.
      */
     public static class PacketOverwrite extends PacketEntry {
 
@@ -441,12 +447,17 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public static final int ONLINE_VALID = 1 << 1;
         public static final int ITEMS_VALID = 1 << 2;
         public static final int ALL_ITEM_UPDATE_BIT = 1 << 3;
+        public static final int SIZE_UPDATE_BIT = 1 << 4;
         public boolean onlineValid;
         public boolean online;
         public boolean itemsValid;
         public boolean allItemUpdate;
         public int[] validIndices;
         public NBTTagList items;
+        public boolean sizeValid;
+        public int rows;
+        public int rowSize;
+        public int numSlots;
 
         protected PacketOverwrite(long id) {
             super(id);
@@ -471,6 +482,14 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             return this;
         }
 
+        public PacketOverwrite setSize(int rows, int rowSize, int numSlots) {
+            this.sizeValid = true;
+            this.rows = rows;
+            this.rowSize = rowSize;
+            this.numSlots = numSlots;
+            return this;
+        }
+
         @Override
         protected void write(ByteBuf buf) throws IOException {
             buf.writeByte(PacketType.OVERWRITE.ordinal());
@@ -481,6 +500,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             if (onlineValid) {
                 flags |= ONLINE_VALID;
                 flags |= online ? ONLINE_BIT : 0;
+            }
+            if (sizeValid) {
+                flags |= SIZE_UPDATE_BIT;
             }
             if (itemsValid) {
                 flags |= ITEMS_VALID;
@@ -511,6 +533,12 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
 
             } else {
                 buf.writeByte(flags);
+            }
+            // size comes after the items, if it exists
+            if (sizeValid) {
+                buf.writeInt(rows);
+                buf.writeInt(rowSize);
+                buf.writeInt(numSlots);
             }
         }
 
@@ -549,6 +577,13 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     }
                 }
             }
+            // size comes after the items, if it exists
+            if ((flags & SIZE_UPDATE_BIT) == SIZE_UPDATE_BIT) {
+                this.sizeValid = true;
+                this.rows = buf.readInt();
+                this.rowSize = buf.readInt();
+                this.numSlots = buf.readInt();
+            }
         }
 
         @Override
@@ -565,6 +600,14 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     + Arrays.toString(validIndices)
                     + ", items="
                     + items
+                    + ", sizeValid"
+                    + sizeValid
+                    + ", rows"
+                    + rows
+                    + ", rowSize"
+                    + rowSize
+                    + ", numSlots"
+                    + numSlots
                     + ", entryId="
                     + entryId
                     + '}';
