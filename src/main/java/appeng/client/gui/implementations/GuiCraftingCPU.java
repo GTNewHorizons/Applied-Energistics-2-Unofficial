@@ -263,18 +263,21 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             // when using the highlight feature in the crafting GUI we want to show all the interfaces
             // that currently received items so the player can see if the items are processed properly
             List<NamedDimensionalCoord> ndcl = NamedDimensionalCoord.readAsListFromNBTNamed(hoveredStackNbt);
-            Map<NamedDimensionalCoord, String[]> ndcm = new HashMap<>();
-            for (NamedDimensionalCoord ndc : ndcl) {
-                ndcm.put(
-                        ndc,
-                        new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
-                                PlayerMessages.MachineInOtherDimNamed.getUnlocalized() });
+
+            if (!ndcl.isEmpty()) {
+                Map<NamedDimensionalCoord, String[]> ndcm = new HashMap<>();
+                for (NamedDimensionalCoord ndc : ndcl) {
+                    ndcm.put(
+                            ndc,
+                            new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                    PlayerMessages.MachineInOtherDimNamed.getUnlocalized() });
+                }
+                BlockPosHighlighter.highlightNamedBlocks(
+                        mc.thePlayer,
+                        ndcm,
+                        ((Localization) () -> "tile.appliedenergistics2.BlockInterface.name").getLocal());
+                mc.thePlayer.closeScreen();
             }
-            BlockPosHighlighter.highlightNamedBlocks(
-                    mc.thePlayer,
-                    ndcm,
-                    ((Localization) () -> "tile.appliedenergistics2.BlockInterface.name").getLocal());
-            mc.thePlayer.closeScreen();
         } else if (this.hoveredStack != null && btn == 2) {
             ((AEBaseContainer) inventorySlots).setTargetStack(this.hoveredStack);
             final PacketInventoryAction p = new PacketInventoryAction(
