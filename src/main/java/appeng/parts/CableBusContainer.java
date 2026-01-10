@@ -57,6 +57,7 @@ import appeng.integration.IntegrationType;
 import appeng.integration.abstraction.ICLApi;
 import appeng.me.GridConnection;
 import appeng.util.Platform;
+import codechicken.multipart.TileMultipart;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -137,6 +138,11 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
                 } else if (!(bp instanceof IPartCable) && side != ForgeDirection.UNKNOWN) {
                     final IPart cable = this.getPart(ForgeDirection.UNKNOWN);
                     if (cable != null && !bp.canBePlacedOn(((IPartCable) cable).supportsBuses())) {
+                        return false;
+                    }
+
+                    if (Platform.isMultiPartLoaded && bp instanceof PartBasicState
+                            && this.getTile() instanceof TileMultipart) {
                         return false;
                     }
 
