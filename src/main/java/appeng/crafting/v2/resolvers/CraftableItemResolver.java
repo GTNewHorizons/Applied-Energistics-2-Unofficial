@@ -726,7 +726,7 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
         // use fallback only if there are no other path in higher up branches
         if (request.parentRequest == null) return true;
         boolean found = false;
-        RequestInProcessing<IAEItemStack> liveRequestCurrent = context.getLiveRequest(request);
+        RequestInProcessing<?> liveRequestCurrent = context.getLiveRequest(request);
         if (liveRequestCurrent != null && !liveRequestCurrent.isRemainingResolversAllSimulated()) return false;
         for (CraftingRequest<?> parentRequest : request.parentRequests) {
             RequestInProcessing<?> liveRequestParent = context.getLiveRequest(parentRequest);
