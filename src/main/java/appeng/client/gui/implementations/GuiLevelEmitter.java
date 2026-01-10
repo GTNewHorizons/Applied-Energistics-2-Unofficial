@@ -29,6 +29,7 @@ import appeng.api.parts.ILevelEmitter;
 import appeng.api.storage.StorageName;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
+import appeng.client.gui.widgets.GuiQuantityButton;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.core.AEConfig;
@@ -45,14 +46,14 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     private MEGuiTextField amountTextField;
     private boolean isValidText;
 
-    private GuiButton plus1;
-    private GuiButton plus10;
-    private GuiButton plus100;
-    private GuiButton plus1000;
-    private GuiButton minus1;
-    private GuiButton minus10;
-    private GuiButton minus100;
-    private GuiButton minus1000;
+    private GuiQuantityButton plus1;
+    private GuiQuantityButton plus10;
+    private GuiQuantityButton plus100;
+    private GuiQuantityButton plus1000;
+    private GuiQuantityButton minus1;
+    private GuiQuantityButton minus10;
+    private GuiQuantityButton minus100;
+    private GuiQuantityButton minus1000;
 
     private GuiButton setButton;
 
@@ -115,70 +116,86 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         final int d = AEConfig.instance.levelByStackAmounts(3);
 
         this.buttonList.add(
-                this.plus1 = new GuiButton(
+                this.plus1 = new GuiQuantityButton(
                         0,
                         this.guiLeft + 20,
                         this.guiTop + 17,
                         22,
                         20,
-                        GuiText.IncreaseAmount.getLocal(a)));
+                        GuiText.IncreaseAmount,
+                        a,
+                        "+%s"));
         this.buttonList.add(
-                this.plus10 = new GuiButton(
+                this.plus10 = new GuiQuantityButton(
                         0,
                         this.guiLeft + 48,
                         this.guiTop + 17,
                         28,
                         20,
-                        GuiText.IncreaseAmount.getLocal(b)));
+                        GuiText.IncreaseAmount,
+                        b,
+                        "+%s"));
         this.buttonList.add(
-                this.plus100 = new GuiButton(
+                this.plus100 = new GuiQuantityButton(
                         0,
                         this.guiLeft + 82,
                         this.guiTop + 17,
                         32,
                         20,
-                        GuiText.IncreaseAmount.getLocal(c)));
+                        GuiText.IncreaseAmount,
+                        c,
+                        "+%s"));
         this.buttonList.add(
-                this.plus1000 = new GuiButton(
+                this.plus1000 = new GuiQuantityButton(
                         0,
                         this.guiLeft + 120,
                         this.guiTop + 17,
                         38,
                         20,
-                        GuiText.IncreaseAmount.getLocal(d)));
+                        GuiText.IncreaseAmount,
+                        d,
+                        "+%s"));
 
         this.buttonList.add(
-                this.minus1 = new GuiButton(
+                this.minus1 = new GuiQuantityButton(
                         0,
                         this.guiLeft + 20,
                         this.guiTop + 63,
                         22,
                         20,
-                        GuiText.DecreaseAmount.getLocal(a)));
+                        GuiText.DecreaseAmount,
+                        a,
+                        "-%s"));
         this.buttonList.add(
-                this.minus10 = new GuiButton(
+                this.minus10 = new GuiQuantityButton(
                         0,
                         this.guiLeft + 48,
                         this.guiTop + 63,
                         28,
                         20,
-                        GuiText.DecreaseAmount.getLocal(b)));
+                        GuiText.DecreaseAmount,
+                        b,
+                        "-%s"));
         this.buttonList.add(
-                this.minus100 = new GuiButton(
+                this.minus100 = new GuiQuantityButton(
                         0,
                         this.guiLeft + 82,
                         this.guiTop + 63,
                         32,
                         20,
-                        GuiText.DecreaseAmount.getLocal(c)));
+                        GuiText.DecreaseAmount,
+                        c,
+                        "-%s"));
         this.buttonList.add(
-                this.minus1000 = new GuiButton(
+                this.minus1000 = new GuiQuantityButton(
                         0,
                         this.guiLeft + 120,
                         this.guiTop + 63,
                         38,
                         20,
-                        GuiText.DecreaseAmount.getLocal(d)));
+                        GuiText.DecreaseAmount,
+                        d,
+                        "-%s"));
 
         this.buttonList.add(
                 this.setButton = new GuiButton(
