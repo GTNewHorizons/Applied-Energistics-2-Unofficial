@@ -233,11 +233,11 @@ public class GridStorageCache implements IStorageGrid {
 
     @MENetworkEventSubscribe
     public void cellUpdate(final MENetworkCellArrayUpdate ev) {
-        for (var type : inventoryHandlers.keySet()) {
+        for (IAEStackType<?> type : inventoryHandlers.keySet()) {
             this.inventoryHandlers.put(type, null);
         }
 
-        final LinkedList<ICellProvider> ll = new LinkedList();
+        final LinkedList<ICellProvider> ll = new LinkedList<>();
         ll.addAll(this.inactiveCellProviders);
         ll.addAll(this.activeCellProviders);
 

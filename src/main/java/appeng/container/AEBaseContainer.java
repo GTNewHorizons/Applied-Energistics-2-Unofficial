@@ -825,13 +825,11 @@ public abstract class AEBaseContainer extends Container {
                         }
                     }
                     if (machine instanceof PartStorageBus innerMachine) {
-                        if (innerMachine.getConnectedGrid() != null || innerMachine.getStackType() != ITEM_STACK_TYPE) { // Check
-                                                                                                                         // if
-                                                                                                                         // storageBus
-                                                                                                                         // is
-                                                                                                                         // subnet
+                        // Check if storageBus is subnet
+                        if (innerMachine.getConnectedGrid() != null || innerMachine.getStackType() != ITEM_STACK_TYPE) {
                             continue;
                         }
+
                         MEInventoryHandler<IAEItemStack> handler = innerMachine.getInternalHandler();
                         if (handler == null) continue;
                         IAEStack<IAEItemStack> result = handler

@@ -187,7 +187,7 @@ public class GuiCraftingTree {
                 }
             }
             drawSlotOutline(x, y, color, true);
-            List<CraftingRequest> children = null;
+
             long displayCount = resolver.resolvedStack.getStackSize();
             if (resolver.task instanceof ExtractItemTask) {
                 final ExtractItemTask task = (ExtractItemTask) resolver.task;
@@ -203,7 +203,7 @@ public class GuiCraftingTree {
                 } else {
                     drawIcon(x, y, 1 * 16 + 3);
                 }
-                children = task.getChildRequests();
+
                 displayCount = task.getTotalCraftsDone();
             } else if (resolver.task instanceof EmitItemTask) {
                 drawIcon(x, y, 1);
@@ -705,7 +705,6 @@ public class GuiCraftingTree {
 
     private void drawStack(final int x, final int y, final IAEStack<?> stack, boolean drawCount) {
         final int textColor = GuiColors.SearchboxText.getColor();
-        // parent.drawItem(x, y, stackConvert(stack).getItemStack());
 
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
         RenderHelper.enableGUIStandardItemLighting();

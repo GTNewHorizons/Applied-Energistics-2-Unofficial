@@ -976,6 +976,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         for (var inventory : this.inventory.getInventoryMap().entrySet()) {
             IMEMonitor monitor = sg.getMEMonitor(inventory.getKey());
+            assert monitor != null;
 
             for (IAEStack<?> is : inventory.getValue()) {
                 is = this.inventory.extractItems(is.copy(), Actionable.MODULATE);

@@ -351,9 +351,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     piu.appendItem(send);
                 }
             }
-        } catch (Exception e) {
-            AELog.warn(e);
-        }
+        } catch (Exception ignored) {}
+
         return piu;
     }
 
