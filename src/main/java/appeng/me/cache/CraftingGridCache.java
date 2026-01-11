@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -59,6 +60,7 @@ import appeng.api.networking.crafting.ICraftingJob;
 import appeng.api.networking.crafting.ICraftingLink;
 import appeng.api.networking.crafting.ICraftingMedium;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.api.networking.crafting.ICraftingPostPatternChangeListener;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingProviderHelper;
 import appeng.api.networking.crafting.ICraftingRequester;
@@ -123,6 +125,9 @@ public class CraftingGridCache
     private boolean updateList = false;
     private static int pauseRebuilds = 0;
     private static Set<CraftingGridCache> rebuildNeeded = new HashSet<>();
+
+    private final Set<ICraftingPostPatternChangeListener> postPatternChangeListeners = Collections
+            .newSetFromMap(new WeakHashMap<>());
 
     public CraftingGridCache(final IGrid grid) {
         this.grid = grid;
@@ -263,6 +268,10 @@ public class CraftingGridCache
             }
 
             this.storageGrid.postAlterationOfStoredItems(type, list, new BaseActionSource());
+        }
+
+        for (final ICraftingPostPatternChangeListener listener : this.postPatternChangeListeners) {
+            listener.onPostPatternChange();
         }
     }
 
@@ -667,6 +676,14 @@ public class CraftingGridCache
 
     public GenericInterestManager<CraftingWatcher> getInterestManager() {
         return this.interestManager;
+    }
+
+    public void addPostPatternChangeListeners(final ICraftingPostPatternChangeListener listener) {
+        this.postPatternChangeListeners.add(listener);
+    }
+
+    public void removePostPatternChangeListeners(final ICraftingPostPatternChangeListener listener) {
+        this.postPatternChangeListeners.remove(listener);
     }
 
     private static class ActiveCpuIterator implements Iterator<ICraftingCPU> {

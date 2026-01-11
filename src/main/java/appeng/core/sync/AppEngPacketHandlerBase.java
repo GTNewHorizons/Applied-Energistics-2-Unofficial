@@ -17,6 +17,7 @@ import java.util.Map;
 
 import appeng.core.sync.packets.PacketAssemblerAnimation;
 import appeng.core.sync.packets.PacketClick;
+import appeng.core.sync.packets.PacketColorSelect;
 import appeng.core.sync.packets.PacketCompassRequest;
 import appeng.core.sync.packets.PacketCompassResponse;
 import appeng.core.sync.packets.PacketCompressedNBT;
@@ -126,7 +127,8 @@ public class AppEngPacketHandlerBase {
         PACKET_PINS_UPDATE(PacketPinsUpdate.class),
         PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
         PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
-        PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class);
+        PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
+        PACKET_COLOR_SELECT(PacketColorSelect.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;

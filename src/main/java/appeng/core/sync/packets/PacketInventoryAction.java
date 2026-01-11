@@ -112,7 +112,8 @@ public class PacketInventoryAction extends AppEngPacket {
                             sender,
                             te,
                             baseContainer.getOpenContext().getSide(),
-                            GuiBridge.GUI_CRAFTING_AMOUNT);
+                            GuiBridge.GUI_CRAFTING_AMOUNT,
+                            baseContainer.getTargetSlotIndex());
 
                     if (sender.openContainer instanceof ContainerCraftAmount cca) {
                         cca.setPrimaryGui(pg);

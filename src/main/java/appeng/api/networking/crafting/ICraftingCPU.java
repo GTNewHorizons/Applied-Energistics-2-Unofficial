@@ -140,4 +140,8 @@ public interface ICraftingCPU extends IBaseMonitor {
     default boolean isSuspended() {
         return false;
     }
+
+    default String getSourcePlayer() {
+        return null;
+    }
 }

@@ -30,6 +30,7 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
+import appeng.api.config.TypeFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.features.LevelItemInfo;
@@ -56,10 +57,9 @@ import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.AEStackTypeRegistry;
+import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
-import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
 import appeng.api.util.IConfigManager;
@@ -104,6 +104,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
         this.getConfigManager().registerSetting(Settings.LEVEL_TYPE, LevelType.ITEM_LEVEL);
         this.getConfigManager().registerSetting(Settings.CRAFT_VIA_REDSTONE, YesNo.NO);
+        this.getConfigManager().registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
 
         // Workaround the emitter randomly breaking on world load
         if (MinecraftServer.getServer() != null) {
@@ -248,6 +249,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         try {
             if (this.getInstalledUpgrades(Upgrades.FUZZY) > 0 || myStack == null) {
                 this.getProxy().getStorage().getItemInventory().addListener(this, this.getProxy().getGrid());
+                this.getProxy().getStorage().getFluidInventory().addListener(this, this.getProxy().getGrid());
             } else {
                 this.getProxy().getStorage().getItemInventory().removeListener(this);
                 this.getProxy().getStorage().getFluidInventory().removeListener(this);
@@ -273,20 +275,24 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
         if (myStack == null) {
             this.lastReportedValue = 0;
+            try {
+                TypeFilter typeFilter = (TypeFilter) this.getConfigManager().getSetting(Settings.TYPE_FILTER);
+                var storage = getProxy().getStorage();
+                boolean checkItems = (typeFilter == TypeFilter.ALL) || (typeFilter == TypeFilter.ITEMS);
+                boolean checkFluids = (typeFilter == TypeFilter.ALL) || (typeFilter == TypeFilter.FLUIDS);
 
-            outer: for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-                try {
-                    monitor = this.getProxy().getStorage().getMEMonitor(type);
-                    for (final IAEStack<?> st : ((IMEMonitor<IAEStack>) monitor).getStorageList()) {
+                if (checkItems) {
+                    for (IAEItemStack st : storage.getItemInventory().getStorageList()) {
                         this.lastReportedValue += st.getStackSize();
-
-                        // Overflow
-                        if (this.lastReportedValue < 0) {
-                            this.lastReportedValue = Long.MAX_VALUE;
-                            break outer;
-                        }
                     }
-                } catch (final GridAccessException ignored) {}
+                }
+                if (checkFluids) {
+                    for (IAEFluidStack st : storage.getFluidInventory().getStorageList()) {
+                        this.lastReportedValue += st.getStackSize();
+                    }
+                }
+            } catch (final GridAccessException e) {
+                // >.>
             }
         } else if (myStack.getStackType() != monitor.getStackType()) {
             return;

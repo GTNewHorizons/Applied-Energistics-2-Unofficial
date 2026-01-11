@@ -76,9 +76,16 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
 
         this.preRenderInWorld(imb, world, x, y, z, renderer);
 
+        int driveColor = sp.getColor().driveVariant;
+        float driveRed = (float) (driveColor >> 16 & 255) / 255.0F;
+        float driveGreen = (float) (driveColor >> 8 & 255) / 255.0F;
+        float driveBlue = (float) (driveColor & 255) / 255.0F;
+
+        final boolean result = renderer
+                .renderStandardBlockWithColorMultiplier(imb, x, y, z, driveRed, driveGreen, driveBlue);
+
         final int stat = sp.getCellStatus(0);
         final int type = sp.getCellType(0);
-        final boolean result = renderer.renderStandardBlock(imb, x, y, z);
 
         this.selectFace(renderer, west, up, forward, 5, 16 - 5, 9, 12);
 
@@ -92,8 +99,8 @@ public class RenderMEChest extends BaseBlockRender<BlockChest, TileChest> {
         int b = world.getLightBrightnessForSkyBlocks(x + forward.offsetX, y + forward.offsetY, z + forward.offsetZ, 0);
         final Tessellator tess = Tessellator.instance;
         tess.setBrightness(b);
-        // uses special color when rendering drive face.
-        tess.setColorOpaque_I(sp.getColor().driveVariant);
+        // Set to white to not pain drive with block color
+        tess.setColorOpaque_I(0xFFFFFF);
 
         final FlippableIcon flippableIcon = new FlippableIcon(
                 new OffsetIcon(ExtraBlockTextures.MEStorageCellTextures.getIcon(), offsetU, offsetV));

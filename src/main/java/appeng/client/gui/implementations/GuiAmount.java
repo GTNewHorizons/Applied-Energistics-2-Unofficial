@@ -6,6 +6,7 @@ import net.minecraft.inventory.Container;
 import org.lwjgl.input.Keyboard;
 
 import appeng.client.gui.GuiSub;
+import appeng.client.gui.widgets.GuiQuantityButton;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.core.AEConfig;
 import appeng.core.localization.GuiText;
@@ -19,14 +20,14 @@ public abstract class GuiAmount extends GuiSub {
 
     protected GuiButton nextBtn;
 
-    protected GuiButton plus1;
-    protected GuiButton plus10;
-    protected GuiButton plus100;
-    protected GuiButton plus1000;
-    protected GuiButton minus1;
-    protected GuiButton minus10;
-    protected GuiButton minus100;
-    protected GuiButton minus1000;
+    protected GuiQuantityButton plus1;
+    protected GuiQuantityButton plus10;
+    protected GuiQuantityButton plus100;
+    protected GuiQuantityButton plus1000;
+    protected GuiQuantityButton minus1;
+    protected GuiQuantityButton minus10;
+    protected GuiQuantityButton minus100;
+    protected GuiQuantityButton minus1000;
 
     @Reflected
     public GuiAmount(final Container container) {
@@ -43,15 +44,87 @@ public abstract class GuiAmount extends GuiSub {
         final int c = this.getButtonQtyByIndex(2);
         final int d = this.getButtonQtyByIndex(3);
 
-        this.buttonList.add(this.plus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 26, 22, 20, "+" + a));
-        this.buttonList.add(this.plus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 26, 28, 20, "+" + b));
-        this.buttonList.add(this.plus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 26, 32, 20, "+" + c));
-        this.buttonList.add(this.plus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 26, 38, 20, "+" + d));
+        this.buttonList.add(
+                this.plus1 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 20,
+                        this.guiTop + 26,
+                        22,
+                        20,
+                        GuiText.IncreaseAmount,
+                        a,
+                        "+%s"));
+        this.buttonList.add(
+                this.plus10 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 48,
+                        this.guiTop + 26,
+                        28,
+                        20,
+                        GuiText.IncreaseAmount,
+                        b,
+                        "+%s"));
+        this.buttonList.add(
+                this.plus100 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 82,
+                        this.guiTop + 26,
+                        32,
+                        20,
+                        GuiText.IncreaseAmount,
+                        c,
+                        "+%s"));
+        this.buttonList.add(
+                this.plus1000 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 120,
+                        this.guiTop + 26,
+                        38,
+                        20,
+                        GuiText.IncreaseAmount,
+                        d,
+                        "+%s"));
 
-        this.buttonList.add(this.minus1 = new GuiButton(0, this.guiLeft + 20, this.guiTop + 75, 22, 20, "-" + a));
-        this.buttonList.add(this.minus10 = new GuiButton(0, this.guiLeft + 48, this.guiTop + 75, 28, 20, "-" + b));
-        this.buttonList.add(this.minus100 = new GuiButton(0, this.guiLeft + 82, this.guiTop + 75, 32, 20, "-" + c));
-        this.buttonList.add(this.minus1000 = new GuiButton(0, this.guiLeft + 120, this.guiTop + 75, 38, 20, "-" + d));
+        this.buttonList.add(
+                this.minus1 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 20,
+                        this.guiTop + 75,
+                        22,
+                        20,
+                        GuiText.DecreaseAmount,
+                        a,
+                        "-%s"));
+        this.buttonList.add(
+                this.minus10 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 48,
+                        this.guiTop + 75,
+                        28,
+                        20,
+                        GuiText.DecreaseAmount,
+                        b,
+                        "-%s"));
+        this.buttonList.add(
+                this.minus100 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 82,
+                        this.guiTop + 75,
+                        32,
+                        20,
+                        GuiText.DecreaseAmount,
+                        c,
+                        "-%s"));
+        this.buttonList.add(
+                this.minus1000 = new GuiQuantityButton(
+                        0,
+                        this.guiLeft + 120,
+                        this.guiTop + 75,
+                        38,
+                        20,
+                        GuiText.DecreaseAmount,
+                        d,
+                        "-%s"));
 
         this.buttonList.add(
                 this.nextBtn = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.Next.getLocal()));

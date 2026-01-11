@@ -391,7 +391,8 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
                 if (data != null) {
                     memoryCard.setMemoryCardContents(memCardIS, name, data);
 
-                    ToolMemoryCard.setUpgradesInfo(data, (UpgradeInventory) this.getInventoryByName("upgrades"));
+                    if (this.getInventoryByName("upgrades") instanceof UpgradeInventory ui)
+                        ToolMemoryCard.setUpgradesInfo(data, ui);
 
                     memoryCard.notifyUser(player, MemoryCardMessages.SETTINGS_SAVED);
                 }

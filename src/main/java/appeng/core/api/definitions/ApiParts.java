@@ -69,6 +69,7 @@ public final class ApiParts implements IParts {
     private final IItemDefinition storageMonitor;
     private final IItemDefinition conversionMonitor;
     private final IItemDefinition throughputMonitor;
+    private final IItemDefinition patternRepeater;
 
     public ApiParts(final DefinitionConstructor constructor, final IPartHelper partHelper) {
         final ItemMultiPart itemMultiPart = new ItemMultiPart(partHelper);
@@ -121,6 +122,7 @@ public final class ApiParts implements IParts {
         this.storageMonitor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.StorageMonitor));
         this.conversionMonitor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.ConversionMonitor));
         this.throughputMonitor = new DamagedItemDefinition(itemMultiPart.createPart(PartType.ThroughputMonitor));
+        this.patternRepeater = new DamagedItemDefinition(itemMultiPart.createPart(PartType.PatternRepeater));
     }
 
     @Override
@@ -350,5 +352,10 @@ public final class ApiParts implements IParts {
     @Override
     public IItemDefinition throughputMonitor() {
         return this.throughputMonitor;
+    }
+
+    @Override
+    public IItemDefinition patternRepeater() {
+        return this.patternRepeater;
     }
 }

@@ -10,9 +10,12 @@
 
 package appeng.helpers;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 
 public interface IMouseWheelItem {
 
     void onWheel(ItemStack is, boolean up);
+
+    void onWheelClick(EntityPlayer player, ItemStack is);
 }

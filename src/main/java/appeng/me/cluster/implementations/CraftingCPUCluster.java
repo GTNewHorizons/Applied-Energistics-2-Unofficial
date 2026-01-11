@@ -59,6 +59,7 @@ import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Level;
@@ -208,6 +209,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private final HashMap<ICraftingPatternDetails, List<ICraftingMedium>> parallelismProvider = new HashMap<>();
     private final HashMap<ICraftingPatternDetails, ScheduledReason> reasonProvider = new HashMap<>();
     private BaseActionSource currentJobSource = null;
+    private String sourcePlayer = null;
 
     public CraftingCPUCluster(final WorldCoord min, final WorldCoord max) {
         this.min = min;
@@ -219,6 +221,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     public void resetFinalOutput() {
         finalOutput = null;
         currentJobSource = null;
+        sourcePlayer = null;
     }
 
     @Override
@@ -1048,6 +1051,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     this.usedStorage = job.getByteTotal();
                     this.numsOfOutput = job.getOutput().getStackSize();
                     this.currentJobSource = src;
+                    if (src.isPlayer() && src instanceof PlayerSource ps) {
+                        sourcePlayer = ps.player.getCommandSenderName();
+                    }
                     for (IAEStack<?> fte : ci.getExtractFailedList()) {
                         this.waitingForMissing.add(fte);
                     }
@@ -1164,6 +1170,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 this.numsOfOutput += job.getOutput().getStackSize();
                 this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
                 this.currentJobSource = src;
+                if (src.isPlayer() && src instanceof PlayerSource ps) {
+                    this.sourcePlayer = ps.player.getCommandSenderName();
+                }
 
                 this.prepareStepCount();
                 this.markDirty();
@@ -1434,6 +1443,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         data.setLong("numsOfOutput", this.numsOfOutput);
         data.setBoolean("isMissingMode", this.isMissingMode);
         data.setInteger("craftingAllowMode", this.craftingAllowMode.ordinal());
+        if (sourcePlayer != null) {
+            data.setString("sourcePlayer", this.sourcePlayer);
+        }
         try {
             data.setTag("craftCompleteListeners", persistListeners(1, craftCompleteListeners));
             data.setTag("onCancelListeners", persistListeners(0, craftCancelListeners));
@@ -1535,6 +1547,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.suspended = data.getBoolean("suspended");
         this.usedStorage = data.getLong("usedStorage");
         this.craftingAllowMode = CraftingAllow.values()[(data.getInteger("craftingAllowMode"))];
+        if (data.hasKey("sourcePlayer", NBT.TAG_STRING)) {
+            this.sourcePlayer = data.getString("sourcePlayer");
+        }
 
         if (data.hasKey("link")) {
             final NBTTagCompound link = data.getCompoundTag("link");
@@ -1810,6 +1825,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
     public BaseActionSource getCurrentJobSource() {
         return currentJobSource;
+    }
+
+    @Override
+    public String getSourcePlayer() {
+        return sourcePlayer;
     }
 
     private static class TaskProgress {
