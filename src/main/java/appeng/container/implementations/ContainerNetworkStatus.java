@@ -191,7 +191,7 @@ public class ContainerNetworkStatus extends AEBaseContainer {
 
             try {
                 final PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
-                final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
+                final IItemList<IAEItemStack> list = AEApi.instance().storage().createPrimitiveItemList();
                 final HashMap<IAEItemStack, ArrayList<NamedDimensionalCoord>> dcMap = new HashMap<>();
 
                 // Network machine

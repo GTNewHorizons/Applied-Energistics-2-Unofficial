@@ -14,7 +14,9 @@ import static appeng.util.Platform.readAEStackListNBT;
 import static appeng.util.Platform.writeAEStackListNBT;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import net.minecraft.client.renderer.RenderBlocks;
@@ -49,10 +51,10 @@ import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.storage.IStorageInterceptor;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartRenderHelper;
-import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.DimensionalCoord;
 import appeng.client.texture.CableBusTextures;
@@ -81,21 +83,22 @@ public class PartPatternRepeater extends PartBasicState
     private boolean provider = false;
     private PartPatternRepeater pairPatternRepeater = null;
 
-    private final MEMonitorPassThrough<IAEItemStack> items = new MEMonitorPassThrough<>(
-            new NullInventory<IAEItemStack>(),
-            StorageChannel.ITEMS);
-    private final MEMonitorPassThrough<IAEFluidStack> fluids = new MEMonitorPassThrough<>(
-            new NullInventory<IAEFluidStack>(),
-            StorageChannel.FLUIDS);
+    @SuppressWarnings({ "rawtypes" })
+    private final Map<IAEStackType<?>, MEMonitorPassThrough> monitors = new IdentityHashMap<>();
     private final MachineSource actionSource;
 
     @Reflected
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public PartPatternRepeater(final ItemStack is) {
         super(is);
 
         this.actionSource = new MachineSource(this);
-        this.items.setChangeSource(actionSource);
-        this.fluids.setChangeSource(actionSource);
+
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            MEMonitorPassThrough monitor = new MEMonitorPassThrough(new NullInventory<>(), type);
+            monitor.setChangeSource(actionSource);
+            this.monitors.put(type, monitor);
+        }
     }
 
     @Override
@@ -136,16 +139,19 @@ public class PartPatternRepeater extends PartBasicState
     }
 
     @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void gridChanged() {
         this.init();
 
         if (this.provider) {
             try {
-                this.items.setInternal(this.getProxy().getStorage().getItemInventory());
-                this.fluids.setInternal(this.getProxy().getStorage().getFluidInventory());
+                for (Map.Entry<IAEStackType<?>, MEMonitorPassThrough> entry : monitors.entrySet()) {
+                    entry.getValue().setInternal(this.getProxy().getStorage().getMEMonitor(entry.getKey()));
+                }
             } catch (final GridAccessException gae) {
-                this.items.setInternal(new NullInventory<>());
-                this.fluids.setInternal(new NullInventory<>());
+                for (MEMonitorPassThrough monitor : monitors.values()) {
+                    monitor.setInternal(new NullInventory<>());
+                }
             }
 
         } else if (this.pairPatternRepeater != null) {
@@ -340,6 +346,7 @@ public class PartPatternRepeater extends PartBasicState
     }
 
     @Override
+    @SuppressWarnings({ "unchecked" })
     public IAEStack<?> injectItems(final IAEStack<?> input, final Actionable type, final BaseActionSource src) {
         if (input == null) return null;
 
@@ -358,11 +365,8 @@ public class PartPatternRepeater extends PartBasicState
 
         final long tempStackSize = tempStack.getStackSize();
 
-        final IAEStack<?> result;
-
-        if (tempStack instanceof IAEItemStack ais) result = this.items.injectItems(ais, type, this.actionSource);
-        else if (tempStack instanceof IAEFluidStack ifs) result = this.fluids.injectItems(ifs, type, this.actionSource);
-        else return input;
+        final IAEStack<?> result = this.monitors.get(tempStack.getStackType())
+                .injectItems(tempStack, type, this.actionSource);
 
         final long reducedSize;
         if (result == null) reducedSize = 0;
@@ -383,33 +387,20 @@ public class PartPatternRepeater extends PartBasicState
     private void addInterception() {
         if (waitingStacks.isEmpty() || this.targetNetworkProxy == null) return;
 
-        boolean hasItems = false;
-        boolean hasFluids = false;
+        List<IAEStackType<?>> types = new ArrayList<>(AEStackTypeRegistry.getAllTypes());
 
         for (IAEStack<?> aes : this.waitingStacks) {
-            if (aes.isItem()) {
-                hasItems = true;
-            } else if (aes.isFluid()) {
-                hasFluids = true;
+            IAEStackType<?> type = aes.getStackType();
+            if (types.contains(type)) {
+                types.remove(type);
+                try {
+                    if (this.targetNetworkProxy.getStorage().getMEMonitor(type) instanceof NetworkMonitor<?>nm) {
+                        nm.addStorageInterceptor(this);
+                    }
+                } catch (GridAccessException ignored) {}
             }
 
-            if (hasItems && hasFluids) break;
-        }
-
-        if (hasItems) {
-            try {
-                if (this.targetNetworkProxy.getStorage().getItemInventory() instanceof NetworkMonitor<?>nm) {
-                    nm.addStorageInterceptor(this);
-                }
-            } catch (GridAccessException ignored) {}
-        }
-
-        if (hasFluids) {
-            try {
-                if (this.targetNetworkProxy.getStorage().getFluidInventory() instanceof NetworkMonitor<?>nm) {
-                    nm.addStorageInterceptor(this);
-                }
-            } catch (GridAccessException ignored) {}
+            if (types.isEmpty()) break;
         }
     }
 

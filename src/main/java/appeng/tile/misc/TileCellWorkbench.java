@@ -24,8 +24,8 @@ import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.implementations.tiles.ICellWorkbench;
 import appeng.api.storage.ICellWorkbenchItem;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.helpers.ICellRestriction;
 import appeng.helpers.IPrimaryGuiIconProvider;
@@ -48,7 +48,7 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
     private boolean locked = false;
     private long cellRestrictAmount;
     private byte cellRestrictTypes;
-    private StorageChannel storageChannel;
+    private IAEStackType<?> type;
 
     public TileCellWorkbench() {
         this.manager.registerSetting(Settings.COPY_MODE, CopyMode.CLEAR_ON_REMOVE);
@@ -142,8 +142,8 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
             }
 
             if (is != null && is.getItem() instanceof ICellWorkbenchItem wi) {
-                if (wi.getStorageChannel() != this.storageChannel) {
-                    this.storageChannel = wi.getStorageChannel();
+                if (wi.getStackType() != this.type) {
+                    this.type = wi.getStackType();
 
                     for (int x = 0; x < this.config.getSizeInventory(); x++) {
                         this.config.putAEStackInSlot(x, null);
@@ -290,7 +290,8 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
         return this.config;
     }
 
-    public StorageChannel getStorageChannel() {
-        return this.storageChannel;
+    @Override
+    public IAEStackType<?> getStackType() {
+        return this.type;
     }
 }

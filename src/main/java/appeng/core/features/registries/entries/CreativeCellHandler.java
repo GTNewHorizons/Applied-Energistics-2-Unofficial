@@ -21,10 +21,10 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.items.AEBaseInfiniteCell;
-import appeng.me.storage.CreativeCellInventory;
 import appeng.util.Platform;
 
 public class CreativeCellHandler implements ICellHandler {
@@ -36,9 +36,9 @@ public class CreativeCellHandler implements ICellHandler {
 
     @Override
     public IMEInventoryHandler getCellInventory(final ItemStack is, final ISaveProvider container,
-            final StorageChannel channel) {
-        if (is != null && is.getItem() instanceof AEBaseInfiniteCell cell && channel == cell.getStorageChannel()) {
-            return CreativeCellInventory.getCell(is, channel);
+            final IAEStackType<?> type) {
+        if (is != null && is.getItem() instanceof AEBaseInfiniteCell cell && type == cell.getStackType()) {
+            return cell.getCellInventory(is);
         }
 
         return null;

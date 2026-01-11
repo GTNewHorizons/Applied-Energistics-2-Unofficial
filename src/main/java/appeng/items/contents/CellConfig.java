@@ -17,7 +17,7 @@ import appeng.util.Platform;
 
 public class CellConfig extends IAEStackInventory {
 
-    private final ItemStack is;
+    protected final ItemStack is;
 
     public CellConfig(final ItemStack is) {
         super(null, 63);

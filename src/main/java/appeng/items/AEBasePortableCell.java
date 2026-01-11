@@ -1,5 +1,7 @@
 package appeng.items;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.text.NumberFormat;
 import java.util.EnumSet;
 import java.util.List;
@@ -21,7 +23,6 @@ import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.implementations.items.IItemGroup;
 import appeng.api.implementations.items.IStorageCell;
 import appeng.api.storage.ICellInventory;
-import appeng.api.storage.StorageChannel;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
@@ -63,7 +64,7 @@ public abstract class AEBasePortableCell extends AEBasePoweredItem implements IS
         super.addCheckedInformation(stack, player, lines, displayMoreInfo);
 
         if (AEApi.instance().registries().cell()
-                .getCellInventory(stack, null, getStorageChannel()) instanceof CellInventoryHandler<?>cih) {
+                .getCellInventory(stack, null, this.getStackType()) instanceof CellInventoryHandler<?>cih) {
             final ICellInventory<?> cd = cih.getCellInv();
             if (cd != null) {
                 lines.add(
@@ -144,7 +145,7 @@ public abstract class AEBasePortableCell extends AEBasePoweredItem implements IS
 
     @Override
     public IInventory getConfigInventory(final ItemStack is) {
-        return new CellConfigLegacy(new CellConfig(is), StorageChannel.ITEMS);
+        return new CellConfigLegacy(new CellConfig(is), ITEM_STACK_TYPE);
     }
 
     @Override
@@ -165,7 +166,7 @@ public abstract class AEBasePortableCell extends AEBasePoweredItem implements IS
     @Override
     public IGuiItemObject getGuiObject(final ItemStack is, final World w, final EntityPlayer p, final int x,
             final int y, final int z) {
-        return new PortableCellViewer<>(is, x, getStorageChannel());
+        return new PortableCellViewer<>(is, x, this.getStackType());
     }
 
     @Override

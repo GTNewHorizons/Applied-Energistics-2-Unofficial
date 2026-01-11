@@ -10,6 +10,8 @@
 
 package appeng.items.tools.powered;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -535,7 +537,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
     @Override
     @Deprecated
     public IInventory getConfigInventory(final ItemStack is) {
-        return new CellConfigLegacy(new CellConfig(is), StorageChannel.ITEMS);
+        return new CellConfigLegacy(new CellConfig(is), ITEM_STACK_TYPE);
     }
 
     @Override
@@ -602,10 +604,5 @@ public class ToolColorApplicator extends AEBasePoweredItem
     @Override
     public void setOreFilter(ItemStack is, String filter) {
         Platform.openNbtData(is).setString("OreFilter", filter);
-    }
-
-    @Override
-    public StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
     }
 }

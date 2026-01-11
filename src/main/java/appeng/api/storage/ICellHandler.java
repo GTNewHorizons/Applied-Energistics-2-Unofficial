@@ -13,11 +13,15 @@
 
 package appeng.api.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 
 import appeng.api.implementations.tiles.IChestOrDrive;
+import appeng.api.storage.data.IAEStackType;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -35,16 +39,35 @@ public interface ICellHandler {
      */
     boolean isCell(ItemStack is);
 
+    @Deprecated
+    default IMEInventoryHandler getCellInventory(ItemStack is, ISaveProvider host, StorageChannel channel) {
+        if (channel == StorageChannel.ITEMS) {
+            return this.getCellInventory(is, host, ITEM_STACK_TYPE);
+        }
+        if (channel == StorageChannel.FLUIDS) {
+            return this.getCellInventory(is, host, FLUID_STACK_TYPE);
+        }
+        return null;
+    }
+
     /**
      * If you cannot handle the provided item, return null
      *
-     * @param is      a storage cell item.
-     * @param host    anytime the contents of your storage cell changes it should use this to request a save, please
-     *                note, this value can be null.
-     * @param channel the storage channel requested.
+     * @param is   a storage cell item.
+     * @param host anytime the contents of your storage cell changes it should use this to request a save, please note,
+     *             this value can be null.
+     * @param type the stack type requested.
      * @return a new IMEHandler for the provided item
      */
-    IMEInventoryHandler getCellInventory(ItemStack is, ISaveProvider host, StorageChannel channel);
+    default IMEInventoryHandler getCellInventory(ItemStack is, ISaveProvider host, IAEStackType<?> type) {
+        if (type == ITEM_STACK_TYPE) {
+            return this.getCellInventory(is, host, StorageChannel.ITEMS);
+        }
+        if (type == FLUID_STACK_TYPE) {
+            return this.getCellInventory(is, host, StorageChannel.FLUIDS);
+        }
+        return null;
+    }
 
     /**
      * @return the ME Chest texture for light pixels this storage cell type, should be 10x10 with 3px of transparent

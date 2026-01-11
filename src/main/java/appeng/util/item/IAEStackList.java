@@ -1,54 +1,53 @@
 package appeng.util.item;
 
 import java.util.Collection;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import appeng.api.AEApi;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.FuzzyMode;
-import appeng.api.storage.data.IAEFluidStack;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 
 public final class IAEStackList implements IItemList<IAEStack<?>> {
 
-    private final IItemList<IAEItemStack> itemList = AEApi.instance().storage().createItemList();
-    private final IItemList<IAEFluidStack> fluidList = AEApi.instance().storage().createFluidList();
+    @SuppressWarnings({ "rawtypes" })
+    private final Map<IAEStackType<?>, IItemList> lists = new IdentityHashMap<>();
 
-    @Override
-    public void add(final IAEStack<?> option) {
-        if (option != null) {
-            if (option.isItem()) {
-                itemList.add((IAEItemStack) option);
-            } else {
-                fluidList.add((IAEFluidStack) option);
-            }
+    public IAEStackList() {
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            this.lists.put(type, type.createList());
         }
     }
 
     @Override
+    @SuppressWarnings({ "unchecked" })
+    public void add(final IAEStack<?> option) {
+        if (option != null) {
+            this.lists.get(option.getStackType()).add(option);
+        }
+    }
+
+    @Override
+    @SuppressWarnings({ "unchecked" })
     public IAEStack<?> findPrecise(final IAEStack<?> stack) {
         if (stack != null) {
-            if (stack.isItem()) {
-                return itemList.findPrecise((IAEItemStack) stack);
-            } else {
-                return fluidList.findPrecise((IAEFluidStack) stack);
-            }
+            return this.lists.get(stack.getStackType()).findPrecise(stack);
         }
         return null;
     }
 
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     public Collection<IAEStack<?>> findFuzzy(final IAEStack<?> filter, final FuzzyMode fuzzy) {
         if (filter != null) {
-            if (filter.isItem()) {
-                return (Collection) itemList.findFuzzy((IAEItemStack) filter, fuzzy);
-            } else {
-                return (Collection) fluidList.findFuzzy((IAEFluidStack) filter, fuzzy);
-            }
+            return this.lists.get(filter.getStackType()).findFuzzy(filter, fuzzy);
         }
         return null;
     }
@@ -59,35 +58,26 @@ public final class IAEStackList implements IItemList<IAEStack<?>> {
     }
 
     @Override
+    @SuppressWarnings({ "unchecked" })
     public void addStorage(final IAEStack<?> option) {
         if (option != null) {
-            if (option.isItem()) {
-                itemList.addStorage((IAEItemStack) option);
-            } else {
-                fluidList.addStorage((IAEFluidStack) option);
-            }
+            this.lists.get(option.getStackType()).addStorage(option);
         }
     }
 
     @Override
+    @SuppressWarnings({ "unchecked" })
     public void addCrafting(final IAEStack<?> option) {
         if (option != null) {
-            if (option.isItem()) {
-                itemList.addCrafting((IAEItemStack) option);
-            } else {
-                fluidList.addCrafting((IAEFluidStack) option);
-            }
+            this.lists.get(option.getStackType()).addCrafting(option);
         }
     }
 
     @Override
+    @SuppressWarnings({ "unchecked" })
     public void addRequestable(final IAEStack<?> option) {
         if (option != null) {
-            if (option.isItem()) {
-                itemList.addRequestable((IAEItemStack) option);
-            } else {
-                fluidList.addRequestable((IAEFluidStack) option);
-            }
+            this.lists.get(option.getStackType()).addRequestable(option);
         }
     }
 
@@ -101,29 +91,32 @@ public final class IAEStackList implements IItemList<IAEStack<?>> {
 
     @Override
     public int size() {
-        return itemList.size() + fluidList.size();
+        int size = 0;
+        for (IItemList<?> list : this.lists.values()) {
+            size += list.size();
+        }
+        return size;
     }
 
     @Override
     @Nonnull
+    @SuppressWarnings({ "rawtypes" })
     public Iterator<IAEStack<?>> iterator() {
         return new MeaningfulAEStackIterator<>(new Iterator<>() {
 
-            private final Iterator<IAEItemStack> itemIterator = itemList.iterator();
-            private final Iterator<IAEFluidStack> fluidIterator = fluidList.iterator();
+            private final Iterator<IItemList> listIterator = lists.values().iterator();
             private Iterator<?> currentIterator;
 
             @Override
             public boolean hasNext() {
-                if (itemIterator.hasNext()) {
-                    currentIterator = itemIterator;
-                    return true;
+                if (currentIterator == null || !currentIterator.hasNext()) {
+                    while (listIterator.hasNext()) {
+                        currentIterator = listIterator.next().iterator();
+                        if (currentIterator.hasNext()) return true;
+                    }
+                    return false;
                 }
-                if (fluidIterator.hasNext()) {
-                    currentIterator = fluidIterator;
-                    return true;
-                }
-                return false;
+                return true;
             }
 
             @Override
@@ -146,7 +139,7 @@ public final class IAEStackList implements IItemList<IAEStack<?>> {
     }
 
     @Override
-    public byte getStackType() {
-        return LIST_MIXED;
+    public @Nullable IAEStackType<IAEStack<?>> getStackType() {
+        return null;
     }
 }

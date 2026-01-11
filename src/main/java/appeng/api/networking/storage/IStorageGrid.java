@@ -13,6 +13,9 @@
 
 package appeng.api.networking.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import appeng.api.networking.IGridCache;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.security.BaseActionSource;
@@ -21,11 +24,15 @@ import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 
 /**
  * Common base class for item / fluid storage caches.
  */
 public interface IStorageGrid extends IGridCache, IStorageMonitorable {
+
+    @Deprecated
+    void postAlterationOfStoredItems(StorageChannel chan, Iterable<? extends IAEStack<?>> input, BaseActionSource src);
 
     /**
      * Used to inform the network of alterations to the storage system that fall outside of the standard Network
@@ -37,7 +44,15 @@ public interface IStorageGrid extends IGridCache, IStorageMonitorable {
      *
      * @param input injected items
      */
-    void postAlterationOfStoredItems(StorageChannel chan, Iterable<? extends IAEStack<?>> input, BaseActionSource src);
+    default void postAlterationOfStoredItems(IAEStackType<?> type, Iterable<? extends IAEStack<?>> input,
+            BaseActionSource src) {
+        if (type == ITEM_STACK_TYPE) {
+            this.postAlterationOfStoredItems(StorageChannel.ITEMS, input, src);
+        }
+        if (type == FLUID_STACK_TYPE) {
+            this.postAlterationOfStoredItems(StorageChannel.FLUIDS, input, src);
+        }
+    }
 
     /**
      * Used to add a cell provider to the storage system

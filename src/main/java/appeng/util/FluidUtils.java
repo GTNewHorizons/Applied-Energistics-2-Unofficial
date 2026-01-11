@@ -9,8 +9,8 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
 
 import codechicken.nei.recipe.StackInfo;
-import it.unimi.dsi.fastutil.objects.ObjectIntMutablePair;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
+import it.unimi.dsi.fastutil.objects.ObjectLongImmutablePair;
+import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public class FluidUtils {
 
@@ -82,17 +82,17 @@ public class FluidUtils {
         }
     }
 
-    public static ObjectIntPair<ItemStack> fillFluidContainer(@Nullable ItemStack itemStack, FluidStack fluidStack) {
-        if (itemStack == null) return new ObjectIntMutablePair<>(null, 0);
+    public static ObjectLongPair<ItemStack> fillFluidContainer(@Nullable ItemStack itemStack, FluidStack fluidStack) {
+        if (itemStack == null) return new ObjectLongImmutablePair<>(null, 0);
 
         if (itemStack.getItem() instanceof IFluidContainerItem container) {
-            return new ObjectIntMutablePair<>(itemStack, container.fill(itemStack, fluidStack, true));
+            return new ObjectLongImmutablePair<>(itemStack, container.fill(itemStack, fluidStack, true));
         } else if (FluidContainerRegistry.isContainer(itemStack)) {
             ItemStack filledContainer = FluidContainerRegistry.fillFluidContainer(fluidStack, itemStack);
             FluidStack filled = FluidContainerRegistry.getFluidForFilledItem(filledContainer);
-            return new ObjectIntMutablePair<>(filledContainer, filled != null ? filled.amount : 0);
+            return new ObjectLongImmutablePair<>(filledContainer, filled != null ? filled.amount : 0);
         }
 
-        return new ObjectIntMutablePair<>(null, 0);
+        return new ObjectLongImmutablePair<>(null, 0);
     }
 }

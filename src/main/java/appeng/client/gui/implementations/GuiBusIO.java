@@ -1,5 +1,7 @@
 package appeng.client.gui.implementations;
 
+import java.util.Collections;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
@@ -9,7 +11,6 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.config.SchedulingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -37,6 +38,20 @@ public class GuiBusIO extends GuiUpgradeable {
         this.initVirtualSlots();
     }
 
+    @Override
+    protected void addButtons() {
+        super.addButtons();
+
+        this.schedulingMode = new GuiImgButton(
+                this.guiLeft - 18,
+                this.guiTop + 68,
+                Settings.SCHEDULING_MODE,
+                SchedulingMode.DEFAULT);
+        this.buttonList.add(this.schedulingMode);
+
+        initCustomButtons(this.guiLeft - 18, 88);
+    }
+
     private void initVirtualSlots() {
         final IAEStackInventory inputInv = this.bus.getAEInventoryByName(StorageName.NONE);
         for (int y = 0; y < 3; y++) {
@@ -53,15 +68,17 @@ public class GuiBusIO extends GuiUpgradeable {
     }
 
     @Override
-    protected void addButtons() {
-        super.addButtons();
+    protected void actionPerformed(GuiButton btn) {
+        super.actionPerformed(btn);
 
-        this.schedulingMode = new GuiImgButton(
-                this.guiLeft - 18,
-                this.guiTop + 68,
-                Settings.SCHEDULING_MODE,
-                SchedulingMode.DEFAULT);
-        this.buttonList.add(this.schedulingMode);
+        final boolean backwards = Mouse.isButtonDown(1);
+
+        if (btn == this.schedulingMode) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.schedulingMode.getSetting(), backwards));
+            return;
+        }
+
+        actionPerformedCustomButtons(btn);
     }
 
     @Override
@@ -141,19 +158,12 @@ public class GuiBusIO extends GuiUpgradeable {
     }
 
     @Override
-    protected void actionPerformed(GuiButton btn) {
-        super.actionPerformed(btn);
-
-        final boolean backwards = Mouse.isButtonDown(1);
-
-        if (btn == this.schedulingMode) {
-            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.schedulingMode.getSetting(), backwards));
-        }
+    protected String getName() {
+        return this.bus.getBusName();
     }
 
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        StorageChannel channel = StorageChannel.getStorageChannelByParametrizedClass(this.bus.getClass());
-        slot.handleMouseClicked(channel == StorageChannel.ITEMS, channel == StorageChannel.FLUIDS, false);
+        slot.handleMouseClicked(Collections.singletonList(this.bus.getStackType()), false);
     }
 }

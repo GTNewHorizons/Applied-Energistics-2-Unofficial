@@ -13,6 +13,7 @@ package appeng.container;
 import static appeng.util.Platform.getItemFromPlayerInventoryBySlotIndex;
 import static appeng.util.Platform.isStacksIdentical;
 import static appeng.util.Platform.setPlayerInventorySlotByIndex;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -58,7 +59,6 @@ import appeng.api.parts.IPart;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.ItemSearchDTO;
@@ -118,8 +118,6 @@ public abstract class AEBaseContainer extends Container {
     private boolean isContainerValid = true;
     private String customName;
     private ContainerOpenContext openContext;
-    private IMEInventoryHandler<IAEItemStack> cellItemInv;
-    private IMEInventoryHandler<IAEFluidStack> cellFluidInv;
     private IEnergySource powerSrc;
     private boolean sentCustomName;
     private int ticksSinceCheck = 900;
@@ -236,7 +234,7 @@ public abstract class AEBaseContainer extends Container {
         try {
             final NBTTagCompound data = CompressedStreamTools.readCompressed(new ByteArrayInputStream(buffer));
             if (data != null) {
-                this.setTargetStack(Platform.readStackNBT(data));
+                this.setTargetStack(IAEStack.fromNBTGeneric(data));
             }
         } catch (final IOException e) {
             AELog.debug(e);
@@ -266,7 +264,7 @@ public abstract class AEBaseContainer extends Container {
             final NBTTagCompound nbt = new NBTTagCompound();
 
             if (stack != null) {
-                Platform.writeStackNBT(stack, nbt, true);
+                stack.writeToNBTGeneric(nbt);
             }
 
             try {
@@ -827,9 +825,11 @@ public abstract class AEBaseContainer extends Container {
                         }
                     }
                     if (machine instanceof PartStorageBus innerMachine) {
-                        if (innerMachine.getConnectedGrid() != null
-                                || innerMachine.getStorageChannel() != StorageChannel.ITEMS) { // Check if storageBus is
-                                                                                               // subnet
+                        if (innerMachine.getConnectedGrid() != null || innerMachine.getStackType() != ITEM_STACK_TYPE) { // Check
+                                                                                                                         // if
+                                                                                                                         // storageBus
+                                                                                                                         // is
+                                                                                                                         // subnet
                             continue;
                         }
                         MEInventoryHandler<IAEItemStack> handler = innerMachine.getInternalHandler();
@@ -841,7 +841,7 @@ public abstract class AEBaseContainer extends Container {
                     }
                     if (machine instanceof TileChest innerMachine) {
                         try {
-                            IMEInventoryHandler handler = innerMachine.getHandler(slotItem.getChannel());
+                            IMEInventoryHandler handler = innerMachine.getHandler(slotItem.getStackType());
                             IAEStack result = handler.getAvailableItem(slotItem, IterationCounter.fetchNewId());
                             if (result == null) continue;
                             coords.add(
@@ -1011,22 +1011,6 @@ public abstract class AEBaseContainer extends Container {
 
     public boolean isValidForSlot(final Slot s, final ItemStack i) {
         return true;
-    }
-
-    public IMEInventoryHandler<IAEItemStack> getCellInventory() {
-        return this.cellItemInv;
-    }
-
-    public void setCellInventory(final IMEInventoryHandler<IAEItemStack> cellInv) {
-        this.cellItemInv = cellInv;
-    }
-
-    public IMEInventoryHandler<IAEFluidStack> getCellFluidInventory() {
-        return this.cellFluidInv;
-    }
-
-    public void setCellFluidInventory(final IMEInventoryHandler<IAEFluidStack> cellInv) {
-        this.cellFluidInv = cellInv;
     }
 
     public String getCustomName() {

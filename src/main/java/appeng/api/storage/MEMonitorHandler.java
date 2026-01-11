@@ -19,12 +19,15 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nonnull;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.google.common.collect.ImmutableList;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
 
@@ -44,9 +47,10 @@ public class MEMonitorHandler<StackType extends IAEStack<?>> implements IMEMonit
 
     public MEMonitorHandler(final IMEInventoryHandler<StackType> t) {
         this.internalHandler = t;
-        this.cachedList = (IItemList<StackType>) t.getChannel().createList();
+        this.cachedList = (IItemList<StackType>) t.getStackType().createList();
     }
 
+    @Deprecated
     public MEMonitorHandler(final IMEInventoryHandler<StackType> t, final StorageChannel chan) {
         this.internalHandler = t;
         this.cachedList = (IItemList<StackType>) chan.createList();
@@ -180,5 +184,10 @@ public class MEMonitorHandler<StackType extends IAEStack<?>> implements IMEMonit
     @Override
     public boolean getSticky() {
         return this.internalHandler.getSticky();
+    }
+
+    @Override
+    public @NotNull IAEStackType<?> getStackType() {
+        return this.getHandler().getStackType();
     }
 }

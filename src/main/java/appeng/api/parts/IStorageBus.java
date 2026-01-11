@@ -1,12 +1,11 @@
 package appeng.api.parts;
 
-import appeng.api.AEApi;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.storage.ICellContainer;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.helpers.IOreFilterable;
 import appeng.helpers.IPrimaryGuiIconProvider;
@@ -29,12 +28,9 @@ public interface IStorageBus
 
     MEInventoryHandler<?> getInternalHandler();
 
-    StorageChannel getStorageChannel();
+    IAEStackType<?> getStackType();
 
     default IItemList getItemList() {
-        return switch (getStorageChannel()) {
-            case ITEMS -> AEApi.instance().storage().createItemList();
-            case FLUIDS -> AEApi.instance().storage().createFluidList();
-        };
+        return getStackType().createList();
     }
 }
