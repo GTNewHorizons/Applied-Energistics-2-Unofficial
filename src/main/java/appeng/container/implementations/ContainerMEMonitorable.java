@@ -18,8 +18,8 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,8 +107,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
     private final SlotRestrictedInput[] cellView = new SlotRestrictedInput[5];
 
     private final IMEMonitor<IAEItemStack> itemMonitor;
-    private final Map<IAEStackType<?>, IMEMonitor<?>> monitors = new HashMap<>();
-    private final Map<IAEStackType<?>, Set<IAEStack<?>>> updateQueue = new HashMap<>();
+    private final Map<IAEStackType<?>, IMEMonitor<?>> monitors = new IdentityHashMap<>();
+    private final Map<IAEStackType<?>, Set<IAEStack<?>>> updateQueue = new IdentityHashMap<>();
 
     private final IConfigManager clientCM;
     private final ITerminalHost host;

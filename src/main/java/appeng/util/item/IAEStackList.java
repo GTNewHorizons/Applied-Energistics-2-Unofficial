@@ -1,7 +1,7 @@
 package appeng.util.item;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -18,10 +18,9 @@ import appeng.api.storage.data.IItemList;
 public final class IAEStackList implements IItemList<IAEStack<?>> {
 
     @SuppressWarnings({ "rawtypes" })
-    private final Map<IAEStackType<?>, IItemList> lists;
+    private final Map<IAEStackType<?>, IItemList> lists = new IdentityHashMap<>();
 
     public IAEStackList() {
-        this.lists = new HashMap<>();
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
             this.lists.put(type, type.createList());
         }

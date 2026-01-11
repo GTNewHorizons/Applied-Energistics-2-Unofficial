@@ -14,7 +14,7 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -92,7 +92,7 @@ public class TileDrive extends AENetworkInvTile
     private final BaseActionSource mySrc;
     private boolean isCached = false;
     @SuppressWarnings("rawtypes")
-    private final Map<IAEStackType<?>, List<IMEInventoryHandler>> cellsMap = new HashMap<>();
+    private final Map<IAEStackType<?>, List<IMEInventoryHandler>> cellsMap = new IdentityHashMap<>();
     private AEColor paintedColor = AEColor.Transparent;
     /**
      * Bit mask representing the state of all cells and the active status of the drive. The lower 20 bits represent the

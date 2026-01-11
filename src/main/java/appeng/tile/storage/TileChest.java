@@ -15,7 +15,7 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -123,7 +123,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     private boolean isCached = false;
     private ICellHandler cellHandler;
     @SuppressWarnings("rawtypes")
-    private final Map<IAEStackType<?>, MEMonitorHandler> cellMap = new HashMap<>();
+    private final Map<IAEStackType<?>, MEMonitorHandler> cellMap = new IdentityHashMap<>();
     private boolean displayNeedsUpdate;
 
     public TileChest() {

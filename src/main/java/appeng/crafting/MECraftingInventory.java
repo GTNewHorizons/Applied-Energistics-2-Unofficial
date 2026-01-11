@@ -14,7 +14,7 @@ import static appeng.util.Platform.writeAEStackListNBT;
 
 import java.text.NumberFormat;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -51,7 +51,7 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     private final MECraftingInventory par;
 
     private final IStorageMonitorable target;
-    private final Map<IAEStackType<?>, IItemList<IAEStack>> inventoryMap = new HashMap<>();
+    private final Map<IAEStackType<?>, IItemList<IAEStack>> inventoryMap = new IdentityHashMap<>();
 
     private final boolean logExtracted;
     private final IItemList<IAEStack<?>> extractedCache;

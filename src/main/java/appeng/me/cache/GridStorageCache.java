@@ -15,6 +15,7 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -69,8 +70,8 @@ public class GridStorageCache implements IStorageGrid {
     private final HashSet<ICellProvider> inactiveCellProviders = new HashSet<>();
     private final SetMultimap<IAEStack, ItemWatcher> interests = HashMultimap.create();
     private final GenericInterestManager<ItemWatcher> interestManager = new GenericInterestManager<>(this.interests);
-    private final Map<IAEStackType<?>, NetworkMonitor<?>> monitors = new HashMap<>();
-    private final Map<IAEStackType<?>, NetworkInventoryHandler<?>> inventoryHandlers = new HashMap<>();
+    private final Map<IAEStackType<?>, NetworkMonitor<?>> monitors = new IdentityHashMap<>();
+    private final Map<IAEStackType<?>, NetworkInventoryHandler<?>> inventoryHandlers = new IdentityHashMap<>();
     private final HashMap<IGridNode, IStackWatcher> watchers = new HashMap<>();
     private double itemBytesTotal;
     private double itemBytesUsed;
