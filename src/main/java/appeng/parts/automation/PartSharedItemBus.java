@@ -12,6 +12,7 @@ package appeng.parts.automation;
 
 import java.util.function.Predicate;
 
+import appeng.api.util.IConfigManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -61,6 +62,11 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
         this.mySrc = new MachineSource(this);
         this.channel = StorageChannel.getStorageChannelByParametrizedClass(this.getClass());
+    }
+
+    @Override
+    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
+        this.updateState();
     }
 
     @Override

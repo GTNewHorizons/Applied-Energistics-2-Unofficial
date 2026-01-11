@@ -105,7 +105,7 @@ public abstract class PartBaseImportBus<StackType extends IAEStack<StackType>> e
         return new TickingRequest(
                 TickRates.ImportBus.getMin(),
                 TickRates.ImportBus.getMax(),
-                this.getHandler() == null,
+                this.isSleeping(),
                 false);
     }
 
