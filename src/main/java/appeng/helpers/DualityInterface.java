@@ -323,7 +323,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
                 this.unlockStacks.add(unlockStack);
             }
-            addInterception();
         } else {
             this.unlockStacks = null;
         }
@@ -595,6 +594,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             this.items.setInternal(new NullInventory<>());
             this.fluids.setInternal(new NullInventory<>());
         }
+
+        this.addInterception();
 
         this.notifyNeighbors();
     }
@@ -1125,6 +1126,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     private void addInterception() {
+        if (unlockStacks == null || unlockStacks.isEmpty()) return;
+
         boolean hasItems = false;
         boolean hasFluids = false;
 
@@ -1134,6 +1137,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             } else if (aes.isFluid()) {
                 hasFluids = true;
             }
+
+            if (hasItems && hasFluids) break;
         }
 
         if (hasItems) {
@@ -1399,6 +1404,15 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public void addDrops(final List<ItemStack> drops) {
+        try {
+            if (this.gridProxy.getStorage().getItemInventory() instanceof NetworkMonitor<?>nm) {
+                nm.removeStorageInterceptor(this);
+            }
+            if (this.gridProxy.getStorage().getFluidInventory() instanceof NetworkMonitor<?>nm) {
+                nm.removeStorageInterceptor(this);
+            }
+        } catch (GridAccessException ignored) {}
+
         if (this.waitingToSend != null) {
             for (final IAEStack<?> is : this.waitingToSend) {
                 if (is != null) {

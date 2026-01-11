@@ -137,6 +137,8 @@ chat.appliedenergistics2.MachineHighlighted=The %d is now highlighted at %d, %d,
 chat.appliedenergistics2.MachineHighlightedNamed=The %d "%d" is now highlighted at %d, %d, %d
 chat.appliedenergistics2.StorageHighlighted=The %d containing %d %d is now highlighted at %d, %d, %d
 chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dimension: %d and cant be highlighted
+chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
+chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -270,8 +272,6 @@ gui.appliedenergistics2.NoSecondOutput=No Secondary Output
 gui.appliedenergistics2.OfSecondOutput=%1$d%% Chance for second output.
 gui.appliedenergistics2.MultipleOutputs=%1$d%% second, %2$d%% third output.
 gui.appliedenergistics2.SelectAmount=Select Amount
-gui.appliedenergistics2.IncreaseAmount=+%s
-gui.appliedenergistics2.DecreaseAmount=-%s
 gui.appliedenergistics2.CopyMode=Copy Mode
 gui.appliedenergistics2.CopyModeDesc=Controls if the contents of the configuration pane are cleared when you remove the cell.
 gui.appliedenergistics2.Next=Next
@@ -354,6 +354,8 @@ gui.appliedenergistics2.CPUAllowMode=Accept request
 gui.appliedenergistics2.CPUAllowAll=All
 gui.appliedenergistics2.CPUOnlyAllowNonPlayer=Only from non-player
 gui.appliedenergistics2.CPUOnlyAllowPlayer=Only from player
+gui.appliedenergistics2.CPUSourcePlayer=Requester
+gui.appliedenergistics2.CPUSourceMachineRequested=Machine Requested
 
 gui.appliedenergistics2.NetworkBytesDetails=Network Bytes Details
 gui.appliedenergistics2.Items=Items
@@ -684,6 +686,9 @@ waila.appliedenergistics2.Id=id
 waila.appliedenergistics2.ConnectedTo=Connected to
 waila.appliedenergistics2.Disconnected=Disconnected
 waila.appliedenergistics2.Singularity=Singularity
+waila.appliedenergistics2.Provider=§5Provider§r
+waila.appliedenergistics2.Accessor=§5Accessor§r
+waila.appliedenergistics2.Waiting=Waiting:
 
 # Baubles Extended
 slot.Terminal=§aTerminal§7
@@ -836,6 +841,7 @@ item.appliedenergistics2.ItemPart.InterfaceTerminal.name=ME Interface Terminal
 item.appliedenergistics2.ItemPart.InvertedToggleBus.name=ME Inverted Toggle Bus
 item.appliedenergistics2.ItemPart.ToggleBus.name=ME Toggle Bus
 item.appliedenergistics2.ItemPart.CraftingMonitor.name=ME Crafting Monitor
+item.appliedenergistics2.ItemPart.PatternRepeater.name=ME Pattern Repeater
 
 item.appliedenergistics2.ItemSpatialStorageCell.128Cubed.name=128³ Spatial Storage Cell
 item.appliedenergistics2.ItemSpatialStorageCell.16Cubed.name=16³ Spatial Storage Cell
