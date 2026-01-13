@@ -12,7 +12,6 @@ package appeng.parts.automation;
 
 import java.util.function.Predicate;
 
-import appeng.api.util.IConfigManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -34,6 +33,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IOreFilterable;
 import appeng.me.GridAccessException;
