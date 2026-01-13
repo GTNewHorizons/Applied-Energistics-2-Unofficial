@@ -53,7 +53,9 @@ public enum PlayerMessages implements Localization {
     MachineHighlightedNamed,
     StorageInOtherDim,
     StorageHighlighted,
-    PickBlockTerminalNotFound;
+    PickBlockTerminalNotFound,
+    PatternRepeaterProvider,
+    PatternRepeaterAccessor;
 
     @Deprecated // kept for backward compat
     public IChatComponent get() {
