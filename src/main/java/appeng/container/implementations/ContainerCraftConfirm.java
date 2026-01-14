@@ -305,7 +305,9 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
         // only V2 supported
         if (this.result instanceof CraftingJobV2 && !this.isSimulation()
                 && getGrid() != null
-                && !getGrid().getMachines(TilePatternOptimizationMatrix.class).isEmpty()) {
+                && !getGrid().getMachines(TilePatternOptimizationMatrix.class).isEmpty()
+                && this.getPlayerInv().player.openContainer instanceof AEBaseContainer baseContainer) {
+            PrimaryGui primaryGui = baseContainer.getPrimaryGui();
             Platform.openGUI(
                     this.getPlayerInv().player,
                     this.getOpenContext().getTile(),
@@ -313,6 +315,7 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
                     GuiBridge.GUI_OPTIMIZE_PATTERNS);
             if (this.getPlayerInv().player.openContainer instanceof ContainerOptimizePatterns cop) {
                 cop.setResult(this.result);
+                cop.setPrimaryGui(primaryGui);
             }
         }
     }

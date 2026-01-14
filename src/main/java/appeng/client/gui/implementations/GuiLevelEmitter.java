@@ -164,7 +164,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                         22,
                         20,
                         GuiText.DecreaseAmount,
-                        a,
+                        -a,
                         "-%s"));
         this.buttonList.add(
                 this.minus10 = new GuiQuantityButton(
@@ -174,7 +174,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                         28,
                         20,
                         GuiText.DecreaseAmount,
-                        b,
+                        -b,
                         "-%s"));
         this.buttonList.add(
                 this.minus100 = new GuiQuantityButton(
@@ -184,7 +184,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                         32,
                         20,
                         GuiText.DecreaseAmount,
-                        c,
+                        -c,
                         "-%s"));
         this.buttonList.add(
                 this.minus1000 = new GuiQuantityButton(
@@ -194,7 +194,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                         38,
                         20,
                         GuiText.DecreaseAmount,
-                        d,
+                        -d,
                         "-%s"));
 
         this.buttonList.add(

@@ -15,7 +15,7 @@ public class GuiQuantityButton extends GuiButton {
 
     public GuiQuantityButton(final int id, final int x, final int y, final int width, final int height,
             final Localization localization, final int quantity, final String fallbackFormat) {
-        super(id, x, y, width, height, resolveDisplayString(localization, quantity, fallbackFormat));
+        super(id, x, y, width, height, resolveDisplayString(localization, Math.abs(quantity), fallbackFormat));
         this.quantity = quantity;
     }
 
