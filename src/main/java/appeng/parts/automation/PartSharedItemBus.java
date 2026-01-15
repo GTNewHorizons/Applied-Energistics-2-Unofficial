@@ -155,6 +155,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     }
 
     private void updateState() {
+        if (this.getGridNode() == null) return;
         try {
             if (!this.isSleeping()) {
                 this.getProxy().getTick().wakeDevice(this.getProxy().getNode());
