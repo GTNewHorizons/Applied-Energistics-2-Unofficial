@@ -66,7 +66,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
     @Override
     public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
-        if(this.getGridNode() == null) return;
+        if (this.getGridNode() == null) return;
         this.updateState();
     }
 
