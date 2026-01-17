@@ -104,6 +104,7 @@ import appeng.api.util.CraftCancelListener;
 import appeng.api.util.CraftCompleteListener;
 import appeng.api.util.CraftUpdateListener;
 import appeng.api.util.DimensionalCoord;
+import appeng.api.util.IInterfaceViewable;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.container.ContainerNull;
@@ -1415,11 +1416,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                     final String dispName;
                                     final DimensionalCoord cord;
 
-                                    if (craftingProvider instanceof ICustomNameObject cno) {
+                                    if (craftingProvider instanceof ICustomNameObject cno && cno.hasCustomName()) {
                                         dispName = cno.getCustomName();
                                     } else {
                                         if (craftingProvider instanceof DualityInterface di) {
                                             dispName = di.getTermName();
+                                        } else if (craftingProvider instanceof IInterfaceViewable iv) {
+                                            dispName = iv.getName();
                                         } else {
                                             final TileEntity tile = this.getTile(craftingProvider);
                                             if (tile == null) continue;
@@ -1778,6 +1781,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private TileEntity getTile(ICraftingMedium craftingProvider) {
+        if (craftingProvider instanceof TileEntity te) return te;
         try {
             Method method = craftingProvider.getClass().getMethod("getTile");
             return (TileEntity) method.invoke(craftingProvider);
