@@ -104,7 +104,6 @@ import appeng.api.util.CraftCancelListener;
 import appeng.api.util.CraftCompleteListener;
 import appeng.api.util.CraftUpdateListener;
 import appeng.api.util.DimensionalCoord;
-import appeng.api.util.IInterfaceViewable;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.container.ContainerNull;
@@ -117,10 +116,11 @@ import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingWatcher;
 import appeng.crafting.MECraftingInventory;
 import appeng.helpers.DualityInterface;
+import appeng.helpers.ICustomNameObject;
 import appeng.hooks.CraftingNotificationManager;
 import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.IAECluster;
-import appeng.tile.AEBaseTile;
+import appeng.me.helpers.IGridProxyable;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.misc.TileInterface;
@@ -1412,12 +1412,31 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                 List<ICraftingMedium> craftingProviders = cache.getMediums(t.getKey());
                                 List<NamedDimensionalCoord> dimensionalCoords = new ArrayList<>();
                                 for (ICraftingMedium craftingProvider : craftingProviders) {
-                                    final TileEntity tile = this.getTile(craftingProvider);
-                                    if (tile instanceof TileInterface tileInterface) {
-                                        final String dispName = translateFromNetwork(
-                                                tileInterface.getInterfaceDuality().getTermName());
-                                        dimensionalCoords.add(new NamedDimensionalCoord(tile, dispName));
+                                    final String dispName;
+                                    final DimensionalCoord cord;
+
+                                    if (craftingProvider instanceof ICustomNameObject cno) {
+                                        dispName = cno.getCustomName();
+                                    } else {
+                                        if (craftingProvider instanceof DualityInterface di) {
+                                            dispName = di.getTermName();
+                                        } else {
+                                            final TileEntity tile = this.getTile(craftingProvider);
+                                            if (tile == null) continue;
+                                            dispName = tile.getBlockType().getUnlocalizedName();
+                                        }
                                     }
+
+                                    if (craftingProvider instanceof IGridProxyable igp) {
+                                        cord = igp.getLocation();
+                                    } else {
+                                        final TileEntity tile = this.getTile(craftingProvider);
+                                        if (tile == null) continue;
+                                        cord = new DimensionalCoord(tile);
+                                    }
+
+                                    dimensionalCoords
+                                            .add(new NamedDimensionalCoord(cord, translateFromNetwork(dispName)));
                                 }
                                 this.providers.put(aes, dimensionalCoords);
                             }
@@ -1759,13 +1778,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     private TileEntity getTile(ICraftingMedium craftingProvider) {
-        if (craftingProvider instanceof DualityInterface) {
-            return ((DualityInterface) craftingProvider).getHost().getTile();
-        } else if (craftingProvider instanceof AEBaseTile) {
-            return ((AEBaseTile) craftingProvider).getTile();
-        } else if (craftingProvider instanceof IInterfaceViewable interfaceViewable) {
-            return interfaceViewable.getTileEntity();
-        }
         try {
             Method method = craftingProvider.getClass().getMethod("getTile");
             return (TileEntity) method.invoke(craftingProvider);
