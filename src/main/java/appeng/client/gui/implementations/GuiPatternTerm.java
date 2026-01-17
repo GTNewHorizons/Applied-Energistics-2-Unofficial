@@ -14,8 +14,6 @@ import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -31,8 +29,6 @@ import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPatternSlot;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -346,18 +342,21 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        if (slot.getStorageName() == StorageName.CRAFTING_INPUT) {
-            List<IAEStackType<?>> list = new ArrayList<>();
-            list.add(ITEM_STACK_TYPE);
-            if (!cragtingMode) {
-                list.add(FLUID_STACK_TYPE);
+        slot.handleMouseClicked(type -> {
+            if (slot.getStorageName() == StorageName.CRAFTING_INPUT) {
+                if (type == ITEM_STACK_TYPE) {
+                    return true;
+                }
+                return !cragtingMode && type == FLUID_STACK_TYPE;
+            } else {
+                return true;
             }
-            slot.handleMouseClicked(list, isCtrlKeyDown(), mouseButton);
-        } else {
-            slot.handleMouseClicked(AEStackTypeRegistry.getAllTypes(), isCtrlKeyDown(), mouseButton);
-        }
+        }, isCtrlKeyDown(), mouseButton);
     }
 
+    /**
+     * Used in addon
+     */
     public VirtualMEPatternSlot[] getCraftingSlots() {
         return craftingSlots;
     }

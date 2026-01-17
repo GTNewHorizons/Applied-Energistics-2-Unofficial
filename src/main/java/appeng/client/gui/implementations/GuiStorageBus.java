@@ -11,7 +11,6 @@
 package appeng.client.gui.implementations;
 
 import java.io.IOException;
-import java.util.Collections;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -27,7 +26,6 @@ import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.parts.IStorageBus;
-import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
@@ -233,7 +231,6 @@ public class GuiStorageBus extends GuiUpgradeable {
 
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        IAEStackType<?> type = containerStorageBus.getStackType();
-        slot.handleMouseClicked(Collections.singletonList(type), false);
+        slot.handleMouseClicked(type -> type == containerStorageBus.getStackType(), false);
     }
 }

@@ -2,8 +2,9 @@ package appeng.client.gui.slots;
 
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
@@ -11,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.core.sync.network.NetworkHandler;
@@ -42,17 +44,24 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
         return this.inventory.getStorageName();
     }
 
-    public void handleMouseClicked(Collection<IAEStackType<?>> acceptTypes, boolean isExtraAction) {
-        handleMouseClicked(acceptTypes, isExtraAction, 0);
+    public void handleMouseClicked(Predicate<IAEStackType<?>> acceptType, boolean isExtraAction) {
+        handleMouseClicked(acceptType, isExtraAction, 0);
     }
 
     // try nei dragNDrop make frind with regular interaction, unfinished
-    public void handleMouseClicked(Collection<IAEStackType<?>> acceptTypes, boolean isExtraAction, int mouseButton) {
+    public void handleMouseClicked(Predicate<IAEStackType<?>> acceptType, boolean isExtraAction, int mouseButton) {
         IAEStack<?> currentStack = this.getAEStack();
         final ItemStack hand = getTargetStack();
 
         if (hand != null && !this.showAmount) {
             hand.stackSize = 1;
+        }
+
+        final List<IAEStackType<?>> acceptTypes = new ArrayList<>();
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            if (acceptType.test(type)) {
+                acceptTypes.add(type);
+            }
         }
 
         // need always convert display fluid stack from nei or nothing.
@@ -61,7 +70,7 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
                 IAEStack<?> converted = type.convertStackFromItem(hand);
                 if (converted != null) {
                     currentStack = converted;
-                    acceptTypes = Collections.EMPTY_LIST;
+                    acceptTypes.clear();
                     isExtraAction = false;
                     break;
                 }

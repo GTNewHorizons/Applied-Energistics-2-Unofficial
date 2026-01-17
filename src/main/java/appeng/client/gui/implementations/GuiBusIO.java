@@ -1,7 +1,5 @@
 package appeng.client.gui.implementations;
 
-import java.util.Collections;
-
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
@@ -164,6 +162,6 @@ public class GuiBusIO extends GuiUpgradeable {
 
     @Override
     protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(Collections.singletonList(this.bus.getStackType()), false);
+        slot.handleMouseClicked(type -> type == this.bus.getStackType(), false);
     }
 }
