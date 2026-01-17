@@ -898,9 +898,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
         // Set stack size to 1 to disable standard stack size drawing
         final ItemStack stackToDraw = aeSlot.getStack();
-        int stackSize = 0;
+        long stackSize = 0;
         if (stackToDraw != null) {
-            stackSize = stackToDraw.stackSize;
+            stackSize = aeSlot instanceof SlotRestrictedInput rSlot ? rSlot.getStackSize() : stackToDraw.stackSize;
             stackToDraw.stackSize = 1;
         }
 
@@ -913,7 +913,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                     || (aeSlot instanceof SlotRestrictedInput restrictedInput
                             && restrictedInput.getItemType() == PlacableItemType.ENCODED_PATTERN);
             TerminalFontSize fontSize = useAEFont ? AEConfig.instance.getTerminalFontSize() : null;
-            GL11.glTranslatef(0.0f, 0.0f, 200);
+            GL11.glTranslatef(0.0f, 0.0f, 300);
             GL11.glDisable(GL11.GL_LIGHTING);
             GL11.glDisable(GL11.GL_BLEND);
             StackSizeRenderer.drawStackSize(
@@ -923,12 +923,12 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                     this.mc.fontRenderer,
                     fontSize);
             GL11.glEnable(GL11.GL_LIGHTING);
-            GL11.glTranslatef(0.0f, 0.0f, -200);
+            GL11.glTranslatef(0.0f, 0.0f, -300);
         }
 
         // Restore stack size
         if (stackToDraw != null) {
-            stackToDraw.stackSize = stackSize;
+            stackToDraw.stackSize = (int) Math.min(stackSize, Integer.MAX_VALUE);
         }
 
         aeSlot.setDisplay(false);

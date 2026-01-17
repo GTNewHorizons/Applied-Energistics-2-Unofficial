@@ -32,6 +32,7 @@ import appeng.api.implementations.items.IStorageComponent;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.ICellWorkbenchItem;
+import appeng.api.storage.data.IAEStack;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.util.Platform;
 
@@ -215,16 +216,43 @@ public class SlotRestrictedInput extends AppEngSlot {
 
     @Override
     public ItemStack getDisplayStack() {
-        if (Platform.isClient() && (this.which == PlacableItemType.ENCODED_PATTERN)) {
+        if (Platform.isClient() && this.which == PlacableItemType.ENCODED_PATTERN) {
             final ItemStack is = super.getStack();
             if (is != null && is.getItem() instanceof ItemEncodedPattern iep) {
-                final ItemStack out = iep.getOutput(is);
-                if (out != null) {
-                    return out;
+                final IAEStack<?> outAE = iep.getOutputAE(is);
+                if (outAE != null) {
+                    final long amount = outAE.getStackSize();
+                    outAE.setStackSize(0);
+                    final ItemStack out = outAE.getItemStackForNEI();
+                    outAE.setStackSize(amount);
+                    if (out != null) {
+                        return out;
+                    }
                 }
             }
         }
         return super.getStack();
+    }
+
+    /**
+     * For encoded pattern output stack size rendering
+     */
+    public long getStackSize() {
+        this.isDisplay = false;
+        final ItemStack is = super.getStack();
+        this.isDisplay = true;
+
+        if (this.which == PlacableItemType.ENCODED_PATTERN) {
+            if (is != null && is.getItem() instanceof ItemEncodedPattern iep) {
+                final IAEStack<?> out = iep.getOutputAE(is);
+                if (out != null) {
+                    return out.getStackSize();
+                }
+                return 0;
+            }
+        }
+
+        return is != null ? is.stackSize : 0;
     }
 
     public static boolean isMetalIngot(final ItemStack i) {
