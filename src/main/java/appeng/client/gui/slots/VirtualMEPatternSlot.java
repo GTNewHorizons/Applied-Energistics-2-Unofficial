@@ -1,10 +1,9 @@
 package appeng.client.gui.slots;
 
-import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 
-import appeng.api.storage.data.IAEStackType;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -12,13 +11,14 @@ import appeng.tile.inventory.IAEStackInventory;
 
 public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
 
-    public VirtualMEPatternSlot(int x, int y, IAEStackInventory inventory, int slotIndex) {
-        super(x, y, inventory, slotIndex);
+    public VirtualMEPatternSlot(int x, int y, IAEStackInventory inventory, int slotIndex,
+            TypeAcceptPredicate acceptType) {
+        super(x, y, inventory, slotIndex, acceptType);
         this.showAmount = true;
     }
 
     @Override
-    public void handleMouseClicked(Predicate<IAEStackType<?>> acceptType, boolean isExtraAction, int mouseButton) {
+    public void handleMouseClicked(@Nullable ItemStack itemStack, boolean isExtraAction, int mouseButton) {
         if (mouseButton == 2) { // middle click
             if (this.getAEStack() != null) {
                 if (isExtraAction) {
@@ -29,9 +29,6 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
             }
         }
 
-        super.handleMouseClicked(acceptType, isExtraAction, mouseButton);
+        super.handleMouseClicked(itemStack, isExtraAction, mouseButton);
     }
-
-    @Override
-    public void setShiftClickStack(ItemStack shiftClickStack) {}
 }

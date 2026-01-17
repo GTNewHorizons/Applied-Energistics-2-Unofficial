@@ -26,6 +26,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.implementations.tiles.ICellWorkbench;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiToggleButton;
@@ -180,7 +181,8 @@ public class GuiCellWorkbench extends GuiUpgradeable {
                         xo + x * 18,
                         yo + y * 18 + 9 * 18,
                         inputInv,
-                        x + y * 9);
+                        x + y * 9,
+                        this::acceptType);
                 this.configSlots[x + y * 9] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -249,8 +251,7 @@ public class GuiCellWorkbench extends GuiUpgradeable {
         } catch (final IOException ignored) {}
     }
 
-    @Override
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(type -> type == workbench.getStackType(), false);
+    private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        return type == workbench.getStackType();
     }
 }

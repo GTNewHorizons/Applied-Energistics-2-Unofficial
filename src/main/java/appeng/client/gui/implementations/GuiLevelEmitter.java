@@ -27,6 +27,7 @@ import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.parts.ILevelEmitter;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiQuantityButton;
@@ -82,7 +83,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                 17,
                 42,
                 ((ContainerLevelEmitter) inventorySlots).getLvlEmitter().getAEInventoryByName(StorageName.NONE),
-                0);
+                0,
+                GuiLevelEmitter::acceptType);
         this.registerVirtualSlots(this.config);
     }
 
@@ -346,9 +348,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         super.mouseClicked(xCoord, yCoord, btn);
     }
 
-    @Override
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(type -> true, isCtrlKeyDown());
+    private static boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        return true;
     }
 
     @Override

@@ -10,6 +10,7 @@ import appeng.api.config.SchedulingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerBusIO;
@@ -58,7 +59,8 @@ public class GuiBusIO extends GuiUpgradeable {
                         62 + 18 * x,
                         22 + 18 * (y % (3)),
                         inputInv,
-                        slotSequence[x + y * 3]);
+                        slotSequence[x + y * 3],
+                        this::acceptType);
                 this.virtualSlots[slotSequence[x + y * 3]] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -160,8 +162,7 @@ public class GuiBusIO extends GuiUpgradeable {
         return this.bus.getBusName();
     }
 
-    @Override
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(type -> type == this.bus.getStackType(), false);
+    private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        return type == this.bus.getStackType();
     }
 }

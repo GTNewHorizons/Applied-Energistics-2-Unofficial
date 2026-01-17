@@ -34,7 +34,6 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -159,8 +158,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     private boolean subGui;
 
     private final List<VirtualMESlot> virtualSlots = new ArrayList<>();
-    private final List<VirtualMESlot> draggedSlots = new ArrayList<>();
+    private final List<VirtualMESlot> draggedVirtualSlots = new ArrayList<>();
     private VirtualMESlot hoveredVirtualSlot = null;
+    private @Nullable ItemStack holdingNEIItem = null;
 
     public AEBaseGui(final Container container) {
         super(container);
@@ -385,19 +385,19 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         this.drag_click.clear();
-        this.draggedSlots.clear();
+        this.draggedVirtualSlots.clear();
+        this.holdingNEIItem = null;
 
         ItemStack holdingStack = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
         if (holdingStack != null && handleClickFakeSlot(xCoord, yCoord, holdingStack)) {
             return;
         }
 
-        final VirtualMESlot slot = getVirtualMESlotUnderMouse();
-        if (slot != null && this.handleVirtualSlotClick(slot, btn)) return;
+        final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
+        if (virtualSlot != null && this.handleVirtualSlotClick(virtualSlot, btn)) return;
 
         if (btn == 1) {
-            for (final Object o : this.buttonList) {
-                final GuiButton guibutton = (GuiButton) o;
+            for (final GuiButton guibutton : this.buttonList) {
                 if (guibutton.mousePressed(this.mc, xCoord, yCoord)) {
                     super.mouseClicked(xCoord, yCoord, 0);
                     return;
@@ -414,6 +414,16 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
     @Override
     public boolean handleDragNDrop(GuiContainer gui, int mouseX, int mouseY, ItemStack draggedStack, int button) {
+        this.drag_click.clear();
+        this.draggedVirtualSlots.clear();
+        this.holdingNEIItem = draggedStack;
+
+        final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
+        if (virtualSlot instanceof VirtualMEPhantomSlot) {
+            this.handleVirtualSlotClick(virtualSlot, button);
+            return true;
+        }
+
         return handleClickFakeSlot(mouseX, mouseY, draggedStack);
     }
 
@@ -432,6 +442,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         for (ObjectIntPair<SlotFake> fakeSlotPair : slots) {
             SlotFake fakeSlot = fakeSlotPair.left();
             if (fakeSlot.isEnabled() && getSlotArea(fakeSlot).contains(mouseX, mouseY)) {
+                this.drag_click.add(fakeSlot);
                 fakeSlot.putStack(itemstack);
                 NetworkHandler.instance.sendToServer(new PacketNEIDragClick(itemstack, fakeSlotPair.rightInt()));
                 return true;
@@ -451,8 +462,8 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
             // Prevent double dragging
             if (this.mc.thePlayer.inventory.getItemStack() != null
-                    && !this.draggedSlots.contains(this.hoveredVirtualSlot)) {
-                this.draggedSlots.add(this.hoveredVirtualSlot);
+                    && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
+                this.draggedVirtualSlots.add(this.hoveredVirtualSlot);
             }
         }
 
@@ -465,12 +476,17 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
     }
 
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(type -> true, isCtrlKeyDown(), mouseButton);
+    private void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
+        ItemStack holding = this.holdingNEIItem != null ? this.holdingNEIItem
+                : this.mc.thePlayer.inventory.getItemStack();
+        slot.handleMouseClicked(holding, isCtrlKeyDown(), mouseButton);
     }
 
     @Override
     protected void mouseClickMove(final int x, final int y, final int c, final long d) {
+        final ItemStack holding = this.holdingNEIItem != null ? this.holdingNEIItem
+                : this.mc.thePlayer.inventory.getItemStack();
+
         // Hold left or right mouse button
         if (c == 0 || c == 1) {
             // Update hovered slot
@@ -481,21 +497,20 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                 }
             }
 
-            if (this.mc.thePlayer.inventory.getItemStack() != null && this.hoveredVirtualSlot != null
-                    && !this.draggedSlots.contains(this.hoveredVirtualSlot)) {
-                this.draggedSlots.add(this.hoveredVirtualSlot);
+            if (holding != null && this.hoveredVirtualSlot != null
+                    && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
+                this.draggedVirtualSlots.add(this.hoveredVirtualSlot);
                 this.handleDragVirtualSlot(this.hoveredVirtualSlot, c);
             }
         }
 
         final Slot slot = this.getSlot(x, y);
-        final ItemStack itemstack = this.mc.thePlayer.inventory.getItemStack();
 
         if (this.getScrollBar() != null) {
             this.getScrollBar().clickMove(y - this.guiTop);
         }
 
-        if (slot instanceof SlotFake && itemstack != null) {
+        if (slot instanceof SlotFake && holding != null) {
             this.drag_click.add(slot);
             if (this.drag_click.size() > 1) {
                 for (final Slot dr : this.drag_click) {
@@ -513,15 +528,13 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
     @Override
     protected void handleMouseClick(final Slot slot, final int slotIdx, final int ctrlDown, final int mouseButton) {
-        final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-
         if (slot instanceof SlotFake) {
-            final InventoryAction action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE
-                    : InventoryAction.PICKUP_OR_SET_DOWN;
-
-            if (this.drag_click.size() > 1) {
+            if (!this.drag_click.isEmpty()) {
                 return;
             }
+
+            final InventoryAction action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE
+                    : InventoryAction.PICKUP_OR_SET_DOWN;
 
             final PacketInventoryAction p = new PacketInventoryAction(action, slotIdx, 0);
             NetworkHandler.instance.sendToServer(p);
@@ -604,8 +617,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                 final ItemStack stack = slot.getStack();
                 for (VirtualMESlot vmeSlot : this.virtualSlots) {
                     if (vmeSlot instanceof VirtualMEPhantomSlot vmepSlot && vmepSlot.getAEStack() == null) {
-                        vmepSlot.setShiftClickStack(stack.copy());
-                        this.handlePhantomSlotInteraction(vmepSlot, mouseButton);
+                        vmepSlot.handleMouseClicked(stack, isCtrlKeyDown(), mouseButton);
                         break;
                     }
                 }

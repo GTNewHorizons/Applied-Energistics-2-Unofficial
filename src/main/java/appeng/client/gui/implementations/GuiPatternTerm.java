@@ -29,6 +29,7 @@ import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPatternSlot;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -238,7 +239,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                         getInputSlotOffsetX() + 18 * x,
                         this.rows * 18 + getInputSlotOffsetY() + 18 * (y % (inputSlotRow)),
                         inputInv,
-                        x + y * inputSlotPerRow);
+                        x + y * inputSlotPerRow,
+                        this::acceptType);
                 this.craftingSlots[x + y * inputSlotPerRow] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -256,7 +258,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                         getOutputSlotOffsetX() + 18 * x,
                         this.rows * 18 + getOutputSlotOffsetY() + 18 * (y % outputSlotRow),
                         outputInv,
-                        x + y * outputSlotPerRow);
+                        x + y * outputSlotPerRow,
+                        this::acceptType);
                 this.outputSlots[x + y * outputSlotPerRow] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -340,18 +343,15 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         }
     }
 
-    @Override
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(type -> {
-            if (slot.getStorageName() == StorageName.CRAFTING_INPUT) {
-                if (type == ITEM_STACK_TYPE) {
-                    return true;
-                }
-                return !cragtingMode && type == FLUID_STACK_TYPE;
-            } else {
+    private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        if (slot.getStorageName() == StorageName.CRAFTING_INPUT) {
+            if (type == ITEM_STACK_TYPE) {
                 return true;
             }
-        }, isCtrlKeyDown(), mouseButton);
+            return !cragtingMode && type == FLUID_STACK_TYPE;
+        } else {
+            return true;
+        }
     }
 
     /**
