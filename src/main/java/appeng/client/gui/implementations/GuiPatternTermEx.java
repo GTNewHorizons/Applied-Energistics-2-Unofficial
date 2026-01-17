@@ -64,7 +64,7 @@ public class GuiPatternTermEx extends GuiPatternTerm {
 
         invertBtn = new GuiImgButton(
                 this.guiLeft + 87,
-                this.guiTop + this.ySize - 153,
+                this.guiTop + this.ySize - 145,
                 Settings.ACTIONS,
                 container.inverted ? PatternSlotConfig.C_4_16 : PatternSlotConfig.C_16_4);
         invertBtn.setHalfSize(true);
@@ -109,13 +109,24 @@ public class GuiPatternTermEx extends GuiPatternTerm {
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
         final int offset = container.inverted ? 18 * -3 : 0;
 
-        substitutionsEnabledBtn.xPosition = this.guiLeft + 97 + offset;
-        substitutionsDisabledBtn.xPosition = this.guiLeft + 97 + offset;
-        beSubstitutionsEnabledBtn.xPosition = this.guiLeft + 97 + offset;
-        beSubstitutionsDisabledBtn.xPosition = this.guiLeft + 97 + offset;
-        doubleBtn.xPosition = this.guiLeft + 97 + offset;
-        clearBtn.xPosition = this.guiLeft + 87 + offset;
-        invertBtn.xPosition = this.guiLeft + 87 + offset;
+        doubleBtn.xPosition = this.guiLeft + 88 + offset;
+        clearBtn.xPosition = doubleBtn.xPosition;
+        invertBtn.xPosition = doubleBtn.xPosition;
+
+        substitutionsEnabledBtn.xPosition = this.guiLeft + 98 + offset;
+        substitutionsDisabledBtn.xPosition = substitutionsEnabledBtn.xPosition;
+        beSubstitutionsEnabledBtn.xPosition = substitutionsEnabledBtn.xPosition;
+        beSubstitutionsDisabledBtn.xPosition = substitutionsEnabledBtn.xPosition;
+
+        clearBtn.yPosition = this.guiTop + this.ySize - 165;
+        substitutionsEnabledBtn.yPosition = clearBtn.yPosition;
+        substitutionsDisabledBtn.yPosition = clearBtn.yPosition;
+
+        doubleBtn.yPosition = this.guiTop + this.ySize - 155;
+        beSubstitutionsEnabledBtn.yPosition = doubleBtn.yPosition;
+        beSubstitutionsDisabledBtn.yPosition = doubleBtn.yPosition;
+
+        invertBtn.yPosition = this.guiTop + this.ySize - 145;
 
         processingScrollBar.setCurrentScroll(container.activePage);
 
