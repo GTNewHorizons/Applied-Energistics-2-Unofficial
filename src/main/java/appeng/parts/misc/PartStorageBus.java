@@ -156,12 +156,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
             if (tag.hasKey("configManager")) {
                 NBTTagCompound configManagerTag = tag.getCompoundTag("configManager");
                 final IConfigManager manager = this.getConfigManager();
-                // cannot use manager.readFromNBT(configManagerTag) because throws an exception
-                for (final Settings setting : manager.getSettings()) {
-                    String value = configManagerTag.getString(setting.name());
-                    Enum<?> oldValue = manager.getSetting(setting);
-                    manager.registerSetting(setting, Enum.valueOf(oldValue.getClass(), value));
-                }
+                manager.readFromNBT(configManagerTag);
             }
             String customName = null; // DisplayName is cached because it is stored on the nbt.
             if (is.hasDisplayName()) customName = is.getDisplayName();
@@ -234,8 +229,11 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
     @Override
     public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
-        this.resetCache(true);
-        this.getHost().markForSave();
+        IPartHost host = this.getHost();
+        if (host != null) {
+            this.resetCache(true);
+            this.getHost().markForSave();
+        }
     }
 
     @Override

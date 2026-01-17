@@ -92,12 +92,21 @@ public final class CraftingContext {
          * Ordered by priority
          */
         public final ArrayList<CraftingTask> resolvers = new ArrayList<>(4);
+        private boolean isRemainingResolversAllSimulated = true;
 
         public RequestInProcessing(CraftingRequest request) {
             this.request = request;
         }
 
+        void refresh() {
+            isRemainingResolversAllSimulated = isRemainingResolversAllSimulatedSlow();
+        }
+
         public boolean isRemainingResolversAllSimulated() {
+            return isRemainingResolversAllSimulated;
+        }
+
+        private boolean isRemainingResolversAllSimulatedSlow() {
             for (CraftingTask resolver : resolvers) {
                 if (!resolver.isSimulated()) return false;
             }
@@ -155,8 +164,10 @@ public final class CraftingContext {
         }
         final RequestInProcessing processing = new RequestInProcessing(request);
         processing.resolvers.addAll(CraftingCalculations.tryResolveCraftingRequest(request, this));
+        processing.refresh();
         Collections.reverse(processing.resolvers); // We remove from the end for efficient ArrayList usage
         liveRequests.add(processing);
+        request.liveRequest = processing;
         if (processing.resolvers.isEmpty()) {
             throw new IllegalStateException("No resolvers available for request " + request.toString());
         }
@@ -229,7 +240,7 @@ public final class CraftingContext {
 
     /**
      * Simulates doing 1 craft with a crafting table.
-     * 
+     *
      * @param inputSlots 3x3 crafting matrix contents
      * @return What remains in the 3x3 crafting matrix
      */
@@ -332,7 +343,7 @@ public final class CraftingContext {
     /**
      * Gets the list of tasks that have finished executing, sorted topologically (dependencies before the tasks that
      * require them)
-     * 
+     *
      * @return An unmodifiable list of resolved tasks.
      */
     public List<CraftingTask> getResolvedTasks() {
@@ -341,11 +352,15 @@ public final class CraftingContext {
 
     /**
      * Gets all requests that have been added to the context.
-     * 
+     *
      * @return An unmodifiable list of the requests.
      */
     public List<RequestInProcessing> getLiveRequests() {
         return Collections.unmodifiableList(liveRequests);
+    }
+
+    public RequestInProcessing getLiveRequest(CraftingRequest request) {
+        return request.liveRequest;
     }
 
     @Override
@@ -365,6 +380,7 @@ public final class CraftingContext {
             return false;
         }
         CraftingTask nextResolver = request.resolvers.remove(request.resolvers.size() - 1);
+        request.refresh();
         if (addResolverTask && !request.resolvers.isEmpty()) {
             tasksToProcess.addFirst(new CheckOtherResolversTask(request));
         }

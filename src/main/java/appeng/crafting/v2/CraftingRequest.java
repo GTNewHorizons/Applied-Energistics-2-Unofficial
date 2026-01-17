@@ -19,6 +19,7 @@ import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
+import appeng.crafting.v2.CraftingContext.RequestInProcessing;
 import appeng.crafting.v2.resolvers.CraftingTask;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
@@ -76,6 +77,7 @@ public class CraftingRequest implements ITreeSerializable {
 
     public final CraftingRequest parentRequest;
     public final Set<CraftingRequest> parentRequests;
+    RequestInProcessing liveRequest;
     /**
      * An item/fluid + count representing how many need to be crafted
      */
