@@ -8,6 +8,8 @@ import javax.annotation.Nonnull;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.networking.security.BaseActionSource;
@@ -70,6 +72,12 @@ public class VoidCellInventory<StackType extends IAEStack<StackType>> implements
             return StorageChannel.FLUIDS;
         }
         return null;
+    }
+
+    @Override
+    @NotNull
+    public IAEStackType<?> getStackType() {
+        return cellType.getStackType();
     }
 
     @Override
