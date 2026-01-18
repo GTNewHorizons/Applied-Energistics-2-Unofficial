@@ -1459,17 +1459,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.craftingTracker.getRequestedJobs();
     }
 
-    public IAEItemStack injectCraftedItems(final ICraftingLink link, final IAEItemStack acquired,
-            final Actionable mode) {
+    public IAEStack<?> injectCraftedItems(final ICraftingLink link, final IAEStack<?> acquired, final Actionable mode) {
         final int slot = this.craftingTracker.getSlot(link);
 
-        if (acquired != null && slot >= 0 && slot <= this.requireWork.length) {
+        if (acquired instanceof IAEItemStack ais && slot >= 0 && slot <= this.requireWork.length) {
             final InventoryAdaptor adaptor = this.getAdaptor(slot);
 
             if (mode == Actionable.SIMULATE) {
-                return AEItemStack.create(adaptor.simulateAdd(acquired.getItemStack()));
+                return AEItemStack.create(adaptor.simulateAdd(ais.getItemStack()));
             } else {
-                final IAEItemStack is = AEItemStack.create(adaptor.addItems(acquired.getItemStack()));
+                final IAEItemStack is = AEItemStack.create(adaptor.addItems(ais.getItemStack()));
                 this.updatePlan(slot);
                 return is;
             }
