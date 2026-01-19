@@ -315,6 +315,15 @@ public interface IAEStack<StackType extends IAEStack> {
     @Nullable
     ItemStack getItemStackForNEI();
 
+    @Nullable
+    default ItemStack getItemStackForNEI(int amount) {
+        long currentAmount = this.getStackSize();
+        this.setStackSize(amount);
+        ItemStack result = this.getItemStackForNEI();
+        this.setStackSize(currentAmount);
+        return result;
+    }
+
     @SideOnly(Side.CLIENT)
     void drawInGui(Minecraft mc, int x, int y);
 
