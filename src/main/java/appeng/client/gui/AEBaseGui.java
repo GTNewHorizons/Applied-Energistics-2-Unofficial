@@ -604,7 +604,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
             if (this.inventorySlots instanceof AEBaseContainer baseContainer) {
                 if (slot instanceof AppEngSlot appEngSlot && baseContainer.isValidSrcSlotForTransfer(appEngSlot)) {
                     ItemStack stackInSlot = appEngSlot.getStack();
-                    final List<Slot> selectedSlots = baseContainer
+                    final List<AppEngSlot> selectedSlots = baseContainer
                             .getValidDestinationSlots(appEngSlot.isPlayerSide(), stackInSlot);
 
                     if (selectedSlots.isEmpty() && appEngSlot.isPlayerSide()

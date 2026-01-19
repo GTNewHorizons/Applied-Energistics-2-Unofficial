@@ -45,6 +45,7 @@ import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
+import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
@@ -455,8 +456,8 @@ public abstract class AEBaseContainer extends Container {
      * @return valid destination slot list
      */
     @NotNull
-    public List<Slot> getValidDestinationSlots(boolean isPlayerSideSlot, @NotNull ItemStack stackInSlot) {
-        final List<Slot> selectedSlots = new ArrayList<>();
+    public List<AppEngSlot> getValidDestinationSlots(boolean isPlayerSideSlot, @NotNull ItemStack stackInSlot) {
+        final List<AppEngSlot> selectedSlots = new ArrayList<>();
 
         // Gather a list of valid destinations.
         for (final Object inventorySlot : this.inventorySlots) {
@@ -512,7 +513,7 @@ public abstract class AEBaseContainer extends Container {
         }
 
         ItemStack stackInSlot = clickSlot.getStack();
-        final List<Slot> selectedSlots = this.getValidDestinationSlots(clickSlot.isPlayerSide(), stackInSlot);
+        final List<AppEngSlot> selectedSlots = this.getValidDestinationSlots(clickSlot.isPlayerSide(), stackInSlot);
 
         // Handle Fake Slot Shift clicking.
         if (selectedSlots.isEmpty() && clickSlot.isPlayerSide()) {
@@ -562,15 +563,22 @@ public abstract class AEBaseContainer extends Container {
         }
 
         // any match..
-        for (final Slot d : selectedSlots) {
+        for (final AppEngSlot d : selectedSlots) {
             // For shift click upgrade card logic
             if (ItemMultiMaterial.instance.getType(stackInSlot) != null) {
                 // Check now container is upgradeable or it's subclass
                 if (ContainerUpgradeable.class.isAssignableFrom(this.getClass())) {
                     // Check source or target
-                    if (!((d.inventory instanceof UpgradeInventory) || (clickSlot.inventory instanceof UpgradeInventory)
-                            || (d.inventory instanceof ContainerCellWorkbench.Upgrades))) {
-                        continue;
+                    if (clickSlot.inventory instanceof UpgradeInventory
+                            || clickSlot.inventory instanceof ContainerCellWorkbench.Upgrades) {
+                        if (!d.isPlayerSide() && !(clickSlot.inventory instanceof INetworkTool)) {
+                            continue;
+                        }
+                    } else {
+                        if (!(d.inventory instanceof UpgradeInventory)
+                                && !(d.inventory instanceof ContainerCellWorkbench.Upgrades)) {
+                            continue;
+                        }
                     }
                 }
             }
