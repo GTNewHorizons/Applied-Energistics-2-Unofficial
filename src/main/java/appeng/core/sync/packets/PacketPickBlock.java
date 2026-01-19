@@ -7,9 +7,10 @@ import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S09PacketHeldItemChange;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -75,17 +76,8 @@ public class PacketPickBlock extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
-        World world = sender.worldObj;
 
-        // Get the target block
-        Block targetBlock = world.getBlock(this.blockX, this.blockY, this.blockZ);
-        if (targetBlock == Blocks.air) {
-            return; // Don't try to withdraw air
-        }
-
-        var movingTarget = new MovingObjectPosition(this.blockX, this.blockY, this.blockZ, this.blockSide, this.hitVec);
-        ItemStack itemToFind = targetBlock
-                .getPickBlock(movingTarget, world, this.blockX, this.blockY, this.blockZ, sender);
+        ItemStack itemToFind = getPickBlock(sender, this.blockX, this.blockY, this.blockZ);
 
         // 1. Scan through the player's main inventory to categorize existing stacks of the target block:
         // - If a full stack (stackSize >= maxStackSize) is found, record its slot and stop searching.
@@ -262,5 +254,25 @@ public class PacketPickBlock extends AppEngPacket {
         } else {
             PlayerInventoryUtil.setSlotAsActiveSlot(player, pickBlockInventorySlot);
         }
+    }
+
+    /**
+     * Copy of the vanilla pick block function, as the vanilla version uses a client-side only function ( getItem() ).
+     */
+    public ItemStack getPickBlock(EntityPlayerMP player, int x, int y, int z) {
+        // Get the target block
+        World world = player.worldObj;
+        Block targetBlock = world.getBlock(this.blockX, this.blockY, this.blockZ);
+        if (targetBlock == null || targetBlock == Blocks.air) {
+            return null;
+        }
+
+        Item item = Item.getItemFromBlock(targetBlock);
+        if (item == null) {
+            return null;
+        }
+
+        Block block = item instanceof ItemBlock ? Block.getBlockFromItem(item) : targetBlock;
+        return new ItemStack(item, 1, block.getDamageValue(world, x, y, z));
     }
 }
