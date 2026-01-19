@@ -19,7 +19,6 @@ import appeng.util.IWideReadableNumberConverter;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
-import appeng.util.item.AEItemStack;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -98,7 +97,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.isBusy = i.getBoolean("isBusy");
         this.totalItems = i.getLong("totalItems");
         this.remainingItems = i.getLong("remainingItems");
-        this.crafting = i.hasKey("crafting") ? AEItemStack.loadItemStackFromNBT(i.getCompoundTag("crafting")) : null;
+        this.crafting = i.hasKey("crafting") ? IAEStack.fromNBTGeneric(i.getCompoundTag("crafting")) : null;
         this.allowMode = i.hasKey("allowMode") ? CraftingAllow.values()[i.getInteger("allowMode")]
                 : CraftingAllow.ALLOW_ALL;
         this.craftingElapsedTime = i.hasKey("craftingElapsedTime") ? i.getLong("craftingElapsedTime") : 0;
@@ -132,7 +131,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         i.setLong("craftingElapsedTime", craftingElapsedTime);
         if (crafting != null) {
             NBTTagCompound stack = new NBTTagCompound();
-            crafting.writeToNBT(stack);
+            crafting.writeToNBTGeneric(stack);
             i.setTag("crafting", stack);
         }
         i.setInteger("allowMode", this.allowMode.ordinal());
