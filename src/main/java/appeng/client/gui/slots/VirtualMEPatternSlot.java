@@ -1,5 +1,7 @@
 package appeng.client.gui.slots;
 
+import net.minecraft.item.ItemStack;
+
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -26,4 +28,7 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
 
         super.handleMouseClicked(acceptItem, acceptFluid, isExtraAction, mouseButton);
     }
+
+    @Override
+    public void setShiftClickStack(ItemStack shiftClickStack) {}
 }

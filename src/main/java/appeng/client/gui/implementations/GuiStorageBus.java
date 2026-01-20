@@ -225,7 +225,7 @@ public class GuiStorageBus extends GuiUpgradeable {
     protected void updateSlotVisibility() {
         for (VirtualMEPhantomSlot slot : this.configSlots) {
             slot.setHidden(
-                    slot.getSlotIndex() > (18
+                    slot.getSlotIndex() >= (18
                             + (9 * this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY))));
         }
     }

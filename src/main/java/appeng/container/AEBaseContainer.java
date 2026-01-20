@@ -37,6 +37,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import appeng.api.AEApi;
@@ -44,6 +45,7 @@ import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
+import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridHost;
@@ -279,7 +281,7 @@ public abstract class AEBaseContainer extends Container {
 
                 final ByteArrayInputStream bis = new ByteArrayInputStream(data, 0, stream.size());
                 while (bis.available() > 0) {
-                    final int nextBLock = bis.available() > maxChunkSize ? maxChunkSize : bis.available();
+                    final int nextBLock = Math.min(bis.available(), maxChunkSize);
                     final byte[] nextSegment = new byte[nextBLock];
                     bis.read(nextSegment);
                     miniPackets.add(nextSegment);
@@ -437,6 +439,67 @@ public abstract class AEBaseContainer extends Container {
         super.detectAndSendChanges();
     }
 
+    public boolean isValidSrcSlotForTransfer(@Nullable AppEngSlot clickSlot) {
+        if (clickSlot == null || !clickSlot.getHasStack()
+                || clickSlot instanceof SlotDisabled
+                || clickSlot instanceof SlotInaccessible) {
+            return false;
+        }
+
+        ItemStack stackInSlot = clickSlot.getStack();
+        return stackInSlot != null;
+    }
+
+    /**
+     * @param isPlayerSideSlot whether clicked slot is player side slot
+     * @param stackInSlot      item stack in clicked slot
+     * @return valid destination slot list
+     */
+    @NotNull
+    public List<AppEngSlot> getValidDestinationSlots(boolean isPlayerSideSlot, @NotNull ItemStack stackInSlot) {
+        final List<AppEngSlot> selectedSlots = new ArrayList<>();
+
+        // Gather a list of valid destinations.
+        for (final Object inventorySlot : this.inventorySlots) {
+            final AppEngSlot cs = (AppEngSlot) inventorySlot;
+
+            if ((isPlayerSideSlot && cs.isPlayerSide()) || (!isPlayerSideSlot && !cs.isPlayerSide())) {
+                continue;
+            }
+
+            if (cs instanceof SlotDisabled || cs instanceof SlotFake || cs instanceof SlotCraftingMatrix) {
+                continue;
+            }
+
+            if (cs.isItemValid(stackInSlot)) {
+                selectedSlots.add(cs);
+            }
+        }
+
+        return selectedSlots;
+    }
+
+    /**
+     * @param stackInSlot item stack in clicked slot
+     * @return valid destination fake slot
+     */
+    @Nullable
+    public SlotFake getValidDestinationFakeSlot(@NotNull ItemStack stackInSlot) {
+        for (final Object inventorySlot : this.inventorySlots) {
+            final AppEngSlot cs = (AppEngSlot) inventorySlot;
+            final ItemStack destination = cs.getStack();
+
+            if (!cs.isPlayerSide() && cs instanceof SlotFake slotFake) {
+                if (Platform.isSameItemPrecise(destination, stackInSlot)) {
+                    return null;
+                } else if (destination == null) {
+                    return slotFake;
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public ItemStack transferStackInSlot(final EntityPlayer p, final int idx) {
         if (Platform.isClient()) {
@@ -445,201 +508,142 @@ public abstract class AEBaseContainer extends Container {
 
         final AppEngSlot clickSlot = (AppEngSlot) this.inventorySlots.get(idx); // require AE SLots!
 
-        if (clickSlot instanceof SlotDisabled || clickSlot instanceof SlotInaccessible) {
+        if (!this.isValidSrcSlotForTransfer(clickSlot)) {
             return null;
         }
-        if (clickSlot != null && clickSlot.getHasStack()) {
-            ItemStack tis = clickSlot.getStack();
 
-            if (tis == null) {
-                return null;
+        ItemStack stackInSlot = clickSlot.getStack();
+        final List<AppEngSlot> selectedSlots = this.getValidDestinationSlots(clickSlot.isPlayerSide(), stackInSlot);
+
+        // Handle Fake Slot Shift clicking.
+        if (selectedSlots.isEmpty() && clickSlot.isPlayerSide()) {
+            SlotFake slotFake = this.getValidDestinationFakeSlot(stackInSlot);
+            if (slotFake != null) {
+                slotFake.putStack(stackInSlot.copy());
+                slotFake.onSlotChanged();
+                this.updateSlot(slotFake);
+            }
+        }
+
+        // find partials..
+        for (final Slot d : selectedSlots) {
+            if (!d.isItemValid(stackInSlot) || !d.getHasStack()) {
+                continue;
             }
 
-            final List<Slot> selectedSlots = new ArrayList<>();
+            final ItemStack t = d.getStack();
 
-            /**
-             * Gather a list of valid destinations.
-             */
-            if (clickSlot.isPlayerSide()) {
-                // target slots in the container...
-                for (final Object inventorySlot : this.inventorySlots) {
-                    final AppEngSlot cs = (AppEngSlot) inventorySlot;
+            if (Platform.isSameItemPrecise(stackInSlot, t)) // t.isItemEqual(tis))
+            {
+                int maxSize = t.getMaxStackSize();
+                if (maxSize > d.getSlotStackLimit()) {
+                    maxSize = d.getSlotStackLimit();
+                }
 
-                    if (!(cs.isPlayerSide()) && !(cs instanceof SlotFake) && !(cs instanceof SlotCraftingMatrix)) {
-                        if (cs.isItemValid(tis)) {
-                            selectedSlots.add(cs);
+                int placeAble = maxSize - t.stackSize;
+
+                if (stackInSlot.stackSize < placeAble) {
+                    placeAble = stackInSlot.stackSize;
+                }
+
+                t.stackSize += placeAble;
+                stackInSlot.stackSize -= placeAble;
+
+                if (stackInSlot.stackSize <= 0) {
+                    clickSlot.putStack(null);
+                    d.onSlotChanged();
+
+                    this.updateSlot(clickSlot);
+                    this.updateSlot(d);
+                    return null;
+                } else {
+                    this.updateSlot(d);
+                }
+            }
+        }
+
+        // any match..
+        for (final AppEngSlot d : selectedSlots) {
+            // For shift click upgrade card logic
+            if (ItemMultiMaterial.instance.getType(stackInSlot) != null) {
+                // Check now container is upgradeable or it's subclass
+                if (ContainerUpgradeable.class.isAssignableFrom(this.getClass())) {
+                    // Check source or target
+                    if (clickSlot.inventory instanceof UpgradeInventory
+                            || clickSlot.inventory instanceof ContainerCellWorkbench.Upgrades) {
+                        if (!d.isPlayerSide() && !(clickSlot.inventory instanceof INetworkTool)) {
+                            continue;
                         }
+                    } else {
+                        if (!(d.inventory instanceof UpgradeInventory)
+                                && !(d.inventory instanceof ContainerCellWorkbench.Upgrades)) {
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            if (!d.isItemValid(stackInSlot)) {
+                continue;
+            }
+
+            if (d.getHasStack()) {
+                final ItemStack t = d.getStack();
+
+                if (Platform.isSameItemPrecise(t, stackInSlot)) {
+                    int maxSize = t.getMaxStackSize();
+                    if (d.getSlotStackLimit() < maxSize) {
+                        maxSize = d.getSlotStackLimit();
+                    }
+
+                    int placeAble = maxSize - t.stackSize;
+
+                    if (stackInSlot.stackSize < placeAble) {
+                        placeAble = stackInSlot.stackSize;
+                    }
+
+                    t.stackSize += placeAble;
+                    stackInSlot.stackSize -= placeAble;
+
+                    if (stackInSlot.stackSize <= 0) {
+                        clickSlot.putStack(null);
+                        d.onSlotChanged();
+
+                        this.updateSlot(clickSlot);
+                        this.updateSlot(d);
+                        return null;
+                    } else {
+                        this.updateSlot(d);
                     }
                 }
             } else {
-                // target slots in the container...
-                for (final Object inventorySlot : this.inventorySlots) {
-                    final AppEngSlot cs = (AppEngSlot) inventorySlot;
+                int maxSize = stackInSlot.getMaxStackSize();
+                if (maxSize > d.getSlotStackLimit()) {
+                    maxSize = d.getSlotStackLimit();
+                }
 
-                    if ((cs.isPlayerSide()) && !(cs instanceof SlotFake) && !(cs instanceof SlotCraftingMatrix)) {
-                        if (cs.isItemValid(tis)) {
-                            selectedSlots.add(cs);
-                        }
-                    }
+                final ItemStack tmp = stackInSlot.copy();
+                if (tmp.stackSize > maxSize) {
+                    tmp.stackSize = maxSize;
+                }
+
+                stackInSlot.stackSize -= tmp.stackSize;
+                d.putStack(tmp);
+
+                if (stackInSlot.stackSize <= 0) {
+                    clickSlot.putStack(null);
+                    d.onSlotChanged();
+
+                    this.updateSlot(clickSlot);
+                    this.updateSlot(d);
+                    return null;
+                } else {
+                    this.updateSlot(d);
                 }
             }
-
-            /**
-             * Handle Fake Slot Shift clicking.
-             */
-            if (selectedSlots.isEmpty() && clickSlot.isPlayerSide()) {
-                if (tis != null) {
-                    // target slots in the container...
-                    for (final Object inventorySlot : this.inventorySlots) {
-                        final AppEngSlot cs = (AppEngSlot) inventorySlot;
-                        final ItemStack destination = cs.getStack();
-
-                        if (!(cs.isPlayerSide()) && cs instanceof SlotFake) {
-                            if (Platform.isSameItemPrecise(destination, tis)) {
-                                break;
-                            } else if (destination == null) {
-                                cs.putStack(tis.copy());
-                                cs.onSlotChanged();
-                                this.updateSlot(cs);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (tis != null) {
-                // find partials..
-                for (final Slot d : selectedSlots) {
-                    if (d instanceof SlotDisabled) {
-                        continue;
-                    }
-
-                    if (d.isItemValid(tis)) {
-                        if (d.getHasStack()) {
-                            final ItemStack t = d.getStack();
-
-                            if (Platform.isSameItemPrecise(tis, t)) // t.isItemEqual(tis))
-                            {
-                                int maxSize = t.getMaxStackSize();
-                                if (maxSize > d.getSlotStackLimit()) {
-                                    maxSize = d.getSlotStackLimit();
-                                }
-
-                                int placeAble = maxSize - t.stackSize;
-
-                                if (tis.stackSize < placeAble) {
-                                    placeAble = tis.stackSize;
-                                }
-
-                                t.stackSize += placeAble;
-                                tis.stackSize -= placeAble;
-
-                                if (tis.stackSize <= 0) {
-                                    clickSlot.putStack(null);
-                                    d.onSlotChanged();
-
-                                    // if ( hasMETiles ) updateClient();
-
-                                    this.updateSlot(clickSlot);
-                                    this.updateSlot(d);
-                                    return null;
-                                } else {
-                                    this.updateSlot(d);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // any match..
-                for (final Slot d : selectedSlots) {
-                    if (d instanceof SlotDisabled) {
-                        continue;
-                    }
-
-                    // For shift click upgrade card logic
-                    if (ItemMultiMaterial.instance.getType(tis) != null) {
-                        // Check now container is upgradeable or it's subclass
-                        if (ContainerUpgradeable.class.isAssignableFrom(this.getClass())) {
-                            // Check source or target
-                            if (!((d.inventory instanceof UpgradeInventory)
-                                    || (clickSlot.inventory instanceof UpgradeInventory)
-                                    || (d.inventory instanceof ContainerCellWorkbench.Upgrades))) {
-                                continue;
-                            }
-                        }
-                    }
-
-                    if (d.isItemValid(tis)) {
-                        if (d.getHasStack()) {
-                            final ItemStack t = d.getStack();
-
-                            if (Platform.isSameItemPrecise(t, tis)) {
-                                int maxSize = t.getMaxStackSize();
-                                if (d.getSlotStackLimit() < maxSize) {
-                                    maxSize = d.getSlotStackLimit();
-                                }
-
-                                int placeAble = maxSize - t.stackSize;
-
-                                if (tis.stackSize < placeAble) {
-                                    placeAble = tis.stackSize;
-                                }
-
-                                t.stackSize += placeAble;
-                                tis.stackSize -= placeAble;
-
-                                if (tis.stackSize <= 0) {
-                                    clickSlot.putStack(null);
-                                    d.onSlotChanged();
-
-                                    // if ( worldEntity != null )
-                                    // worldEntity.markDirty();
-                                    // if ( hasMETiles ) updateClient();
-
-                                    this.updateSlot(clickSlot);
-                                    this.updateSlot(d);
-                                    return null;
-                                } else {
-                                    this.updateSlot(d);
-                                }
-                            }
-                        } else {
-                            int maxSize = tis.getMaxStackSize();
-                            if (maxSize > d.getSlotStackLimit()) {
-                                maxSize = d.getSlotStackLimit();
-                            }
-
-                            final ItemStack tmp = tis.copy();
-                            if (tmp.stackSize > maxSize) {
-                                tmp.stackSize = maxSize;
-                            }
-
-                            tis.stackSize -= tmp.stackSize;
-                            d.putStack(tmp);
-
-                            if (tis.stackSize <= 0) {
-                                clickSlot.putStack(null);
-                                d.onSlotChanged();
-
-                                // if ( worldEntity != null )
-                                // worldEntity.markDirty();
-                                // if ( hasMETiles ) updateClient();
-
-                                this.updateSlot(clickSlot);
-                                this.updateSlot(d);
-                                return null;
-                            } else {
-                                this.updateSlot(d);
-                            }
-                        }
-                    }
-                }
-            }
-
-            clickSlot.putStack(tis != null ? tis.copy() : null);
         }
+
+        clickSlot.putStack(stackInSlot.copy());
 
         this.updateSlot(clickSlot);
         return null;
@@ -732,9 +736,9 @@ public abstract class AEBaseContainer extends Container {
 
                 final List<Slot> from = new LinkedList<>();
 
-                for (final Object j : this.inventorySlots) {
+                for (final Slot j : this.inventorySlots) {
                     if (j instanceof Slot && j.getClass() == s.getClass()) {
-                        from.add((Slot) j);
+                        from.add(j);
                     }
                 }
 

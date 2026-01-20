@@ -726,11 +726,13 @@ public class CraftableItemResolver<StackType extends IAEStack<StackType>>
         // use fallback only if there are no other path in higher up branches
         if (request.parentRequest == null) return true;
         boolean found = false;
-        for (RequestInProcessing<?> liveRequest : context.getLiveRequests()) {
-            if (request.parentRequests.contains(liveRequest.request) || liveRequest.request == request) {
-                if (!liveRequest.isRemainingResolversAllSimulated()) return false;
-                found = true;
-            }
+        RequestInProcessing<?> liveRequestCurrent = context.getLiveRequest(request);
+        if (liveRequestCurrent != null && !liveRequestCurrent.isRemainingResolversAllSimulated()) return false;
+        for (CraftingRequest<?> parentRequest : request.parentRequests) {
+            RequestInProcessing<?> liveRequestParent = context.getLiveRequest(parentRequest);
+            if (liveRequestParent == null) continue;
+            if (!liveRequestParent.isRemainingResolversAllSimulated()) return false;
+            found = true;
         }
         // all parents have only one single path left and that is us. we must provide a conjure item task so calculation
         // can proceed as expected
