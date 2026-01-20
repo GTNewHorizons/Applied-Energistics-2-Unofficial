@@ -27,7 +27,7 @@ import appeng.util.Platform;
 
 public class ContainerFormationPlane extends ContainerUpgradeable {
 
-    @GuiSync(6)
+    @GuiSync(10)
     public YesNo placeMode;
 
     public ContainerFormationPlane(final InventoryPlayer ip, final PartFormationPlane te) {
