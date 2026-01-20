@@ -1002,6 +1002,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
             ItemStack tis = clickSlot.getStack();
             tis = this.shiftStoreItem(tis);
             clickSlot.putStack(tis);
+            this.detectAndSendChanges();
         }
 
         return super.transferStackInSlot(p, idx);
