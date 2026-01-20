@@ -998,14 +998,14 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
         ItemStack result = super.transferStackInSlot(p, idx);
 
-        if (clickSlot != null && clickSlot.getHasStack() && clickSlot.isPlayerSide()) {
+        if (result == null && clickSlot != null && clickSlot.getHasStack() && clickSlot.isPlayerSide()) {
             ItemStack tis = clickSlot.getStack();
             tis = this.shiftStoreItem(tis);
             clickSlot.putStack(tis);
             this.detectAndSendChanges();
         }
 
-        return result;
+        return null;
     }
 
     private ItemStack shiftStoreItem(final ItemStack input) {

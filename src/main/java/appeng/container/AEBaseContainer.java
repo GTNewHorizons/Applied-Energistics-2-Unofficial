@@ -513,6 +513,7 @@ public abstract class AEBaseContainer extends Container {
         }
 
         ItemStack stackInSlot = clickSlot.getStack();
+        final ItemStack result = stackInSlot.copy();
         final List<AppEngSlot> selectedSlots = this.getValidDestinationSlots(clickSlot.isPlayerSide(), stackInSlot);
 
         // Handle Fake Slot Shift clicking.
@@ -522,8 +523,11 @@ public abstract class AEBaseContainer extends Container {
                 slotFake.putStack(stackInSlot.copy());
                 slotFake.onSlotChanged();
                 this.updateSlot(slotFake);
+                return result;
             }
         }
+
+        boolean transferred = false;
 
         // find partials..
         for (final Slot d : selectedSlots) {
@@ -546,6 +550,11 @@ public abstract class AEBaseContainer extends Container {
                     placeAble = stackInSlot.stackSize;
                 }
 
+                if (placeAble <= 0) {
+                    continue;
+                }
+                transferred = true;
+
                 t.stackSize += placeAble;
                 stackInSlot.stackSize -= placeAble;
 
@@ -555,7 +564,7 @@ public abstract class AEBaseContainer extends Container {
 
                     this.updateSlot(clickSlot);
                     this.updateSlot(d);
-                    return null;
+                    return result;
                 } else {
                     this.updateSlot(d);
                 }
@@ -602,6 +611,11 @@ public abstract class AEBaseContainer extends Container {
                         placeAble = stackInSlot.stackSize;
                     }
 
+                    if (placeAble <= 0) {
+                        continue;
+                    }
+                    transferred = true;
+
                     t.stackSize += placeAble;
                     stackInSlot.stackSize -= placeAble;
 
@@ -611,7 +625,7 @@ public abstract class AEBaseContainer extends Container {
 
                         this.updateSlot(clickSlot);
                         this.updateSlot(d);
-                        return null;
+                        return result;
                     } else {
                         this.updateSlot(d);
                     }
@@ -629,6 +643,7 @@ public abstract class AEBaseContainer extends Container {
 
                 stackInSlot.stackSize -= tmp.stackSize;
                 d.putStack(tmp);
+                transferred = true;
 
                 if (stackInSlot.stackSize <= 0) {
                     clickSlot.putStack(null);
@@ -636,7 +651,7 @@ public abstract class AEBaseContainer extends Container {
 
                     this.updateSlot(clickSlot);
                     this.updateSlot(d);
-                    return null;
+                    return result;
                 } else {
                     this.updateSlot(d);
                 }
@@ -644,9 +659,9 @@ public abstract class AEBaseContainer extends Container {
         }
 
         clickSlot.putStack(stackInSlot.copy());
-
         this.updateSlot(clickSlot);
-        return null;
+
+        return transferred ? result : null;
     }
 
     @Override
