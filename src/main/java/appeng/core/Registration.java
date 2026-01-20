@@ -367,6 +367,7 @@ public final class Registration {
         target.partStorageMonitor = this.converter.of(source.storageMonitor());
         target.partThroughputMonitor = this.converter.of(source.throughputMonitor());
         target.partConversionMonitor = this.converter.of(source.conversionMonitor());
+        target.partPatternRepeater = this.converter.of(source.patternRepeater());
     }
 
     /**

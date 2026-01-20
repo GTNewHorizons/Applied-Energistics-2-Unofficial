@@ -44,6 +44,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
     private final CraftingAllow allowMode;
     private final long craftingElapsedTime;
     private final boolean isSuspended;
+    private final String sourcePlayer;
 
     public CraftingCPUStatus() {
         this.serverCluster = null;
@@ -59,6 +60,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.allowMode = CraftingAllow.ALLOW_ALL;
         this.craftingElapsedTime = 0;
         this.isSuspended = false;
+        this.sourcePlayer = null;
     }
 
     public CraftingCPUStatus(ICraftingCPU cluster, int serial) {
@@ -83,6 +85,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         this.coprocessors = cluster.getCoProcessors();
         this.allowMode = cluster.getCraftingAllowMode();
         this.isSuspended = cluster.isSuspended();
+        this.sourcePlayer = cluster.getSourcePlayer();
     }
 
     public CraftingCPUStatus(NBTTagCompound i) {
@@ -100,6 +103,7 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
                 : CraftingAllow.ALLOW_ALL;
         this.craftingElapsedTime = i.hasKey("craftingElapsedTime") ? i.getLong("craftingElapsedTime") : 0;
         this.isSuspended = i.getBoolean("isSuspended");
+        this.sourcePlayer = i.hasKey("sourcePlayer") ? i.getString("sourcePlayer") : null;
     }
 
     public CraftingCPUStatus(ByteBuf packet) throws IOException {
@@ -133,6 +137,9 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
         }
         i.setInteger("allowMode", this.allowMode.ordinal());
         i.setBoolean("isSuspended", this.isSuspended);
+        if (this.sourcePlayer != null) {
+            i.setString("sourcePlayer", this.sourcePlayer);
+        }
     }
 
     public void writeToPacket(ByteBuf i) throws IOException {
@@ -201,6 +208,10 @@ public class CraftingCPUStatus implements Comparable<CraftingCPUStatus> {
 
     public boolean isSuspended() {
         return isSuspended;
+    }
+
+    public String getSourcePlayer() {
+        return sourcePlayer;
     }
 
     @Override
