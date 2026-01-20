@@ -156,11 +156,17 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                             /* Nothing happens */
                             return;
                         }
+                        if (!inv.patterns.isItemValidForSlot(slot, handStack)) {
+                            return;
+                        }
                         inv.patterns.setInventorySlotContents(slot, playerHand.removeItems(1, null, null));
                     } else {
                         /* Exchange? */
                         if (handStack != null && handStack.stackSize > 1) {
                             /* Exchange is impossible, abort */
+                            return;
+                        }
+                        if (!inv.patterns.isItemValidForSlot(slot, handStack)) {
                             return;
                         }
                         inv.patterns.setInventorySlotContents(slot, playerHand.removeItems(1, null, null));
@@ -302,6 +308,28 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                         if (update == null) update = new PacketInterfaceTerminalUpdate();
                         update.addOverwriteEntry(known.id).setOnline(false);
                     }
+
+                    // the machine should no longer be displayed
+                    // not displayed -> displayed is not possible here, we wouldn't be tracking it
+                    final boolean machineShouldDisplay = machine.shouldDisplay();
+                    if (known.shouldDisplay && !machineShouldDisplay) {
+                        known.shouldDisplay = false;
+                        // don't count the machine as visited, it will be removed
+                        continue;
+                    }
+
+                    // If the size changed, we need to do a full update of inventory
+                    if (known.rows != machine.rows() || known.rowSize != machine.rowSize()
+                            || known.numSlots != machine.numSlots()) {
+                        known.rows = machine.rows();
+                        known.rowSize = machine.rowSize();
+                        known.numSlots = machine.numSlots();
+                        known.updateNBT();
+                        if (update == null) update = new PacketInterfaceTerminalUpdate();
+                        update.addOverwriteEntry(known.id).setItems(new int[0], known.invNbt)
+                                .setSize(known.rows, known.rowSize, known.numSlots);
+                    }
+
                     visited.add(machine);
                 } else {
                     if (!machine.shouldDisplay()) continue;
@@ -310,7 +338,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     InvTracker entry = new InvTracker(nextId++, machine, node.isActive());
                     update.addNewEntry(entry.id, entry.name, entry.online)
                             .setLoc(entry.x, entry.y, entry.z, entry.dim, entry.side.ordinal())
-                            .setItems(entry.rows, entry.rowSize, entry.invNbt)
+                            .setItems(entry.rows, entry.rowSize, entry.numSlots, entry.invNbt)
                             .setReps(machine.getSelfRep(), machine.getDisplayRep())
                             .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput());
                     tracked.put(machine, entry);
@@ -352,10 +380,12 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
     private static class InvTracker {
 
         private final long id;
+        private boolean shouldDisplay;
         private String name;
         private final IInventory patterns;
-        private final int rowSize;
-        private final int rows;
+        private int rows;
+        private int rowSize;
+        private int numSlots;
         private final int x;
         private final int y;
         private final int z;
@@ -368,10 +398,12 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             DimensionalCoord location = machine.getLocation();
 
             this.id = id;
+            this.shouldDisplay = machine.shouldDisplay();
             this.name = machine.getName();
             this.patterns = machine.getPatterns();
             this.rowSize = machine.rowSize();
             this.rows = machine.rows();
+            this.numSlots = machine.numSlots();
             this.x = location.x;
             this.y = location.y;
             this.z = location.z;
@@ -402,16 +434,13 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
          */
         private void updateNBT() {
             this.invNbt = new NBTTagList();
-            for (int i = 0; i < this.rows; ++i) {
-                for (int j = 0; j < this.rowSize; ++j) {
-                    final int offset = this.rowSize * i;
-                    ItemStack stack = this.patterns.getStackInSlot(offset + j);
+            for (int slot = 0; slot < this.numSlots; ++slot) {
+                ItemStack stack = this.patterns.getStackInSlot(slot);
 
-                    if (stack != null) {
-                        this.invNbt.appendTag(stack.writeToNBT(new NBTTagCompound()));
-                    } else {
-                        this.invNbt.appendTag(new NBTTagCompound());
-                    }
+                if (stack != null) {
+                    this.invNbt.appendTag(stack.writeToNBT(new NBTTagCompound()));
+                } else {
+                    this.invNbt.appendTag(new NBTTagCompound());
                 }
             }
         }

@@ -22,6 +22,7 @@ import codechicken.nei.recipe.StackInfo;
 public class VirtualMEPhantomSlot extends VirtualMESlot {
 
     private final IAEStackInventory inventory;
+    private ItemStack shiftClickStack = null;
 
     public VirtualMEPhantomSlot(int x, int y, IAEStackInventory inventory, int slotIndex) {
         super(x, y, slotIndex);
@@ -94,12 +95,22 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
     }
 
     private ItemStack getTargetStack() {
-        ItemStack is = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
-        if (is == null && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)) {
-            is = ItemPanels.bookmarkPanel.draggedStack;
-            if (is == null) is = ItemPanels.itemPanel.draggedStack;
+        if (this.shiftClickStack == null) {
+            ItemStack is = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
+            if (is == null && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)) {
+                is = ItemPanels.bookmarkPanel.draggedStack;
+                if (is == null) is = ItemPanels.itemPanel.draggedStack;
+            }
+
+            return is != null ? is.copy() : null;
         }
 
-        return is != null ? is.copy() : null;
+        final ItemStack is = this.shiftClickStack;
+        this.shiftClickStack = null;
+        return is;
+    }
+
+    public void setShiftClickStack(ItemStack shiftClickStack) {
+        this.shiftClickStack = shiftClickStack;
     }
 }

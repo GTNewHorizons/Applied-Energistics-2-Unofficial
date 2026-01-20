@@ -158,7 +158,22 @@ public enum GuiColors implements Localization {
 
     ProcessBarStartColor(0XFFE60A00),
     ProcessBarMiddleColor(0XFFE6E600),
-    ProcessBarEndColor(0XFF0AE600);
+    ProcessBarEndColor(0XFF0AE600),
+
+    ColorSelectBackground(0xFF000000),
+    ColorSelectBorder(0xFFC6C6C6),
+    ColorSelectTitle(0x404040),
+
+    ColorSelectBtnBg(0xFF8B8B8B),
+    ColorSelectBtnBorderSelected(0xFF38de38),
+    ColorSelectBtnBorderHover(0xFFFFFFFF),
+    ColorSelectBtnBorder(0xFF000000),
+    ColorSelectBtnBorderDisabled(0xFF555555),
+
+    ColorSelectBtnOverlayDisabled(0xB0000000),
+    ColorSelectBtnOverlayHover(0x80FFFFFF),
+
+    ColorSelectBtnText(0xFFFFFF);
 
     private final int color;
 

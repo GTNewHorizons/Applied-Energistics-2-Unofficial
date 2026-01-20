@@ -54,7 +54,11 @@ public enum WailaText implements Localization {
     Id,
     ConnectedTo,
     Disconnected,
-    Singularity;
+    Singularity,
+
+    Waiting,
+    Provider,
+    Accessor;
 
     private final String formatedName;
 

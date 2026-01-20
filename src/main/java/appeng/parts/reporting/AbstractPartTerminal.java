@@ -18,7 +18,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.Vec3;
 
-import appeng.api.AEApi;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -61,7 +60,6 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     private final IConfigManager cm = new ConfigManager(this);
     private final AppEngInternalInventory viewCell = new AppEngInternalInventory(this, 5);
     private final PinsHolder pinsInv = new PinsHolder(this);
-    private final AppEngInternalInventory upgrades = new RefillerInventory(this);
 
     public AbstractPartTerminal(final ItemStack is) {
         super(is);
@@ -81,8 +79,6 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
                 drops.add(is);
             }
         }
-        ItemStack u = upgrades.getStackInSlot(0);
-        if (u != null) drops.add(u);
     }
 
     @Override
@@ -96,7 +92,6 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.cm.readFromNBT(data);
         this.viewCell.readFromNBT(data, "viewCell");
         pinsInv.readFromNBT(data, "pins");
-        upgrades.readFromNBT(data, "upgrades");
     }
 
     @Override
@@ -105,7 +100,6 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.cm.writeToNBT(data);
         this.viewCell.writeToNBT(data, "viewCell");
         pinsInv.writeToNBT(data, "pins");
-        upgrades.writeToNBT(data, "upgrades");
     }
 
     @Override
@@ -170,31 +164,6 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc,
             final ItemStack removedStack, final ItemStack newStack) {
         this.getHost().markForSave();
-    }
-
-    @Override
-    public IInventory getInventoryByName(final String name) {
-        if (name.equals("upgrades")) {
-            return this.upgrades;
-        }
-        return super.getInventoryByName(name);
-    }
-
-    public boolean hasRefillerUpgrade() {
-        return upgrades.getStackInSlot(0) != null;
-    }
-
-    static class RefillerInventory extends AppEngInternalInventory {
-
-        public RefillerInventory(final IAEAppEngInventory parent) {
-            super(parent, 1, 1);
-            setTileEntity(parent);
-        }
-
-        public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
-            return i == 0 && getStackInSlot(0) == null
-                    && AEApi.instance().definitions().materials().cardPatternRefiller().isSameAs(itemstack);
-        }
     }
 
     public abstract ItemStack getPrimaryGuiIcon();

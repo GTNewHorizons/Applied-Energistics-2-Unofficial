@@ -11,11 +11,14 @@
 package appeng.me.cache;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
@@ -29,6 +32,7 @@ import appeng.api.config.Actionable;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.events.MENetworkStorageEvent;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.storage.IStorageInterceptor;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
@@ -64,6 +68,8 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 
     @Nonnegative
     private int localDepthSemaphore = 0;
+
+    private final Set<IStorageInterceptor> storageInterceptors = Collections.newSetFromMap(new WeakHashMap<>());
 
     public NetworkMonitor(final GridStorageCache cache, final StorageChannel chan) {
         this.myGridCache = cache;
@@ -148,7 +154,19 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     }
 
     @Override
-    public T injectItems(final T input, final Actionable mode, final BaseActionSource src) {
+    public T injectItems(T input, final Actionable mode, final BaseActionSource src) {
+
+        for (Iterator<IStorageInterceptor> iterator = storageInterceptors.iterator(); iterator.hasNext();) {
+            final IStorageInterceptor isi = iterator.next();
+            if (isi.canAccept(input)) {
+                input = (T) isi.injectItems(input, mode, src);
+
+                if (mode == Actionable.MODULATE && isi.shouldRemoveInterceptor(input)) iterator.remove();
+
+                if (input == null) return null;
+            }
+        }
+
         if (mode == Actionable.SIMULATE) {
             return this.getHandler().injectItems(input, mode, src);
         }
@@ -325,5 +343,13 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
             this.sendEvent = false;
             this.myGridCache.getGrid().postEvent(new MENetworkStorageEvent(this, this.myChannel));
         }
+    }
+
+    public void addStorageInterceptor(IStorageInterceptor storageInterceptor) {
+        this.storageInterceptors.add(storageInterceptor);
+    }
+
+    public void removeStorageInterceptor(IStorageInterceptor storageInterceptor) {
+        this.storageInterceptors.remove(storageInterceptor);
     }
 }

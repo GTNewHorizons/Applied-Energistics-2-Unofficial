@@ -41,6 +41,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.ContainerSubGui;
+import appeng.container.PrimaryGui;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.AELog;
@@ -304,21 +305,28 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
         // only V2 supported
         if (this.result instanceof CraftingJobV2 && !this.isSimulation()
                 && getGrid() != null
-                && !getGrid().getMachines(TilePatternOptimizationMatrix.class).isEmpty()) {
+                && !getGrid().getMachines(TilePatternOptimizationMatrix.class).isEmpty()
+                && this.getPlayerInv().player.openContainer instanceof AEBaseContainer baseContainer) {
+            PrimaryGui primaryGui = baseContainer.getPrimaryGui();
             Platform.openGUI(
                     this.getPlayerInv().player,
                     this.getOpenContext().getTile(),
                     this.getOpenContext().getSide(),
-                    GuiBridge.GUI_OPTIMIZE_PATTERNS);
+                    GuiBridge.GUI_OPTIMIZE_PATTERNS,
+                    getTargetSlotIndex());
             if (this.getPlayerInv().player.openContainer instanceof ContainerOptimizePatterns cop) {
                 cop.setResult(this.result);
+                cop.setPrimaryGui(primaryGui);
             }
         }
     }
 
     public void switchToOriginalGUI() {
-        if (this.getInventoryPlayer().player.openContainer instanceof AEBaseContainer bc)
-            bc.getPrimaryGui().open(this.getInventoryPlayer().player);
+        if (this.getInventoryPlayer().player.openContainer instanceof AEBaseContainer bc) {
+            final PrimaryGui pGui = bc.getPrimaryGui();
+            assert pGui != null;
+            pGui.open(this.getInventoryPlayer().player);
+        }
     }
 
     private BaseActionSource getActionSrc() {

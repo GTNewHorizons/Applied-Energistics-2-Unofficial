@@ -37,7 +37,7 @@ public class BlockRendererPreviewEvent {
             }
 
             if (currentItem == null || !areItemStacksEqual(currentItem, heldItem)) {
-                currentItem = heldItem;
+                currentItem = heldItem.copy();
                 ViewHelper.clearCache();
             }
 

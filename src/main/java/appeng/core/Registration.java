@@ -367,6 +367,7 @@ public final class Registration {
         target.partStorageMonitor = this.converter.of(source.storageMonitor());
         target.partThroughputMonitor = this.converter.of(source.throughputMonitor());
         target.partConversionMonitor = this.converter.of(source.conversionMonitor());
+        target.partPatternRepeater = this.converter.of(source.patternRepeater());
     }
 
     /**
@@ -775,10 +776,6 @@ public final class Registration {
 
         // Inscriber
         Upgrades.SPEED.registerItem(blocks.inscriber(), 3);
-
-        // Terminals
-        Upgrades.PATTERN_REFILLER.registerItem(parts.patternTerminal(), 1);
-        Upgrades.PATTERN_REFILLER.registerItem(parts.patternTerminalEx(), 1);
 
         for (final Item wirelessTerminalItem : items.wirelessTerminal().maybeItem().asSet()) {
             registries.wireless().registerWirelessHandler((IWirelessTermHandler) wirelessTerminalItem);
