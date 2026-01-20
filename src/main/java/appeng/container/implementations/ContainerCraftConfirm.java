@@ -312,7 +312,8 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
                     this.getPlayerInv().player,
                     this.getOpenContext().getTile(),
                     this.getOpenContext().getSide(),
-                    GuiBridge.GUI_OPTIMIZE_PATTERNS);
+                    GuiBridge.GUI_OPTIMIZE_PATTERNS,
+                    getTargetSlotIndex());
             if (this.getPlayerInv().player.openContainer instanceof ContainerOptimizePatterns cop) {
                 cop.setResult(this.result);
                 cop.setPrimaryGui(primaryGui);
