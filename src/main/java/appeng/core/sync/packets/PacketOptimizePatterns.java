@@ -1,16 +1,16 @@
 package appeng.core.sync.packets;
 
 import java.util.HashMap;
-import java.util.Map.Entry;
 
 import net.minecraft.entity.player.EntityPlayer;
 
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.container.implementations.ContainerOptimizePatterns;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
 public class PacketOptimizePatterns extends AppEngPacket {
 
@@ -26,15 +26,15 @@ public class PacketOptimizePatterns extends AppEngPacket {
     }
 
     // api
-    public PacketOptimizePatterns(HashMap<IAEItemStack, Integer> multipliersMap) {
+    public PacketOptimizePatterns(Object2IntMap<IAEStack<?>> multipliersMap) {
         final ByteBuf data = Unpooled.buffer();
 
         data.writeInt(this.getPacketID());
         data.writeInt(multipliersMap.size());
-        for (Entry<IAEItemStack, Integer> entry : multipliersMap.entrySet()) {
+        for (var entry : multipliersMap.object2IntEntrySet()) {
             long encoded = entry.getKey().getStackSize();
             data.writeInt((int) (encoded >> 6) * ((encoded & 0b100000) == 0 ? 1 : -1));
-            data.writeInt(entry.getValue());
+            data.writeInt(entry.getIntValue());
         }
 
         this.configureWrite(data);
