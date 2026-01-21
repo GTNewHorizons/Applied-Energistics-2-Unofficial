@@ -168,6 +168,9 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         registrar.invoke(this.apiClass, GuiPatternTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
 
         GuiContainerManager.addInputHandler(new NEIInputHandler());
+        sendHandler(
+                "appeng.integration.modules.NEIHelpers.NEIPatternViewHandler",
+                "appliedenergistics2:item.ItemEncodedPattern");
     }
 
     public void registerRecipeHandler(final Object o)

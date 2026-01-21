@@ -5,7 +5,6 @@ import static net.minecraft.util.EnumChatFormatting.GRAY;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -122,13 +121,14 @@ public class NEIPatternViewHandler implements IUsageHandler {
 
     @Override
     public List<PositionedStack> getIngredientStacks(int recipe) {
-        return Collections.emptyList();
+        List<PositionedStack> result = new ArrayList<>();
+        inputSlots.forEach(s -> result.add(s.stack));
+        return result;
     }
 
     @Override
     public List<PositionedStack> getOtherStacks(int recipe) {
         List<PositionedStack> result = new ArrayList<>();
-        inputSlots.forEach(s -> result.add(s.stack));
         outputSlots.forEach(s -> result.add(s.stack));
         return result;
     }
