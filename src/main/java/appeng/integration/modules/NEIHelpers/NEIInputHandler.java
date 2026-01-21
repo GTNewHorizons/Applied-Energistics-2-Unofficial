@@ -31,7 +31,7 @@ public class NEIInputHandler implements IContainerInputHandler {
 
         if (item instanceof ICraftingPatternItem pattern) {
             if (NEIClientConfig.isKeyHashDown("gui.pattern_view")) {
-                return NEIPatternView.openRecipeGui(pattern, stack);
+                return GuiUsageRecipe.openRecipeGui("pattern", stack);
             }
 
             ICraftingPatternDetails details = pattern.getPatternForItem(stack, Minecraft.getMinecraft().theWorld);

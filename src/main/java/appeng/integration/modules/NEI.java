@@ -55,6 +55,7 @@ import appeng.integration.modules.NEIHelpers.NEIGuiHandler;
 import appeng.integration.modules.NEIHelpers.NEIInputHandler;
 import appeng.integration.modules.NEIHelpers.NEIInscriberRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIOreDictionaryFilter;
+import appeng.integration.modules.NEIHelpers.NEIPatternViewHandler;
 import appeng.integration.modules.NEIHelpers.NEISearchField;
 import appeng.integration.modules.NEIHelpers.NEIWorldCraftingHandler;
 import appeng.integration.modules.NEIHelpers.TerminalCraftingSlotFinder;
@@ -120,6 +121,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         this.registerRecipeHandler(new NEIWorldCraftingHandler());
 
         this.registerUsageHandler.invoke(this.apiClass, new NEICellViewHandler());
+        this.registerUsageHandler.invoke(this.apiClass, new NEIPatternViewHandler());
 
         if (AEConfig.instance.isFeatureEnabled(AEFeature.GrindStone)) {
             this.registerRecipeHandler(new NEIGrinderRecipeHandler());
@@ -166,9 +168,6 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         registrar.invoke(this.apiClass, GuiPatternTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
 
         GuiContainerManager.addInputHandler(new NEIInputHandler());
-        sendHandler(
-                "appeng.integration.modules.NEIHelpers.NEIPatternView.InternalPatternHandler",
-                "appliedenergistics2:item.ItemEncodedUltimatePattern");
     }
 
     public void registerRecipeHandler(final Object o)
