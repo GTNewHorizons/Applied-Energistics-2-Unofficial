@@ -26,6 +26,7 @@ public enum GuiText implements Localization {
     SpatialIOPort,
     LevelEmitter,
     Terminal,
+    SpatialChamber,
 
     Interface,
     Config,

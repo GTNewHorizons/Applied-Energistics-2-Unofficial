@@ -10,7 +10,7 @@
 
 package appeng.block.spatial;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -41,6 +41,8 @@ public class BlockMatrixFrame extends AEBaseBlock implements ICustomCollision {
         this.setLightOpacity(0);
         this.isOpaque = false;
         this.setFeature(EnumSet.of(AEFeature.SpatialIO));
+
+        this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
     }
 
     @Override
@@ -61,8 +63,7 @@ public class BlockMatrixFrame extends AEBaseBlock implements ICustomCollision {
     @Override
     public Iterable<AxisAlignedBB> getSelectedBoundingBoxesFromPool(final World w, final int x, final int y,
             final int z, final Entity e, final boolean isVisual) {
-        return Arrays.asList(new AxisAlignedBB[] {}); // AxisAlignedBB.getBoundingBox( 0.25, 0, 0.25, 0.75, 0.5, 0.75 )
-        // } );
+        return Collections.singletonList(AxisAlignedBB.getBoundingBox(0.0, 0.0, 0.0, 1.0, 1.0, 1.0));
     }
 
     @Override
@@ -72,8 +73,29 @@ public class BlockMatrixFrame extends AEBaseBlock implements ICustomCollision {
     }
 
     @Override
-    public boolean canPlaceBlockAt(final World world, final int x, final int y, final int z) {
+    public AxisAlignedBB getCollisionBoundingBoxFromPool(final World w, final int x, final int y, final int z) {
+        return AxisAlignedBB.getBoundingBox(x, y, z, x + 1, y + 1, z + 1);
+    }
+
+    @Override
+    public boolean renderAsNormalBlock() {
         return false;
+    }
+
+    @Override
+    public boolean isNormalCube() {
+        return true;
+    }
+
+    @Override
+    public boolean isSideSolid(final IBlockAccess w, final int x, final int y, final int z,
+            final net.minecraftforge.common.util.ForgeDirection side) {
+        return true;
+    }
+
+    @Override
+    public boolean canPlaceBlockAt(final World world, final int x, final int y, final int z) {
+        return true;
     }
 
     @Override
