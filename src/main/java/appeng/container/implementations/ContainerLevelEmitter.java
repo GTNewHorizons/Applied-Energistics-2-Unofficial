@@ -58,7 +58,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
     @GuiSync(4)
     public YesNo cmType;
 
-    @GuiSync(5)
+    @GuiSync(10)
     public TypeFilter typeFilter;
     private final IAEStack<?>[] configClientSlot = new IAEStack[1];
 

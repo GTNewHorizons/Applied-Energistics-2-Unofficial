@@ -37,7 +37,6 @@ import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.slot.OptionalSlotRestrictedInput;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.helpers.ICellRestriction;
-import appeng.me.storage.CellInventory;
 import appeng.tile.inventory.AppEngNullInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.IterationCounter;
@@ -212,10 +211,10 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         final IMEInventory<?> cellInv = AEApi.instance().registries().cell()
                 .getCellInventory(is, null, wi.getStorageChannel());
 
-        if (!(cellInv instanceof CellInventory ci)) return;
+        if (cellInv == null) return;
 
-        final IItemList<?> list = ci
-                .getAvailableItems(ci.getChannel().createPrimitiveList(), IterationCounter.fetchNewId());
+        final IItemList<?> list = cellInv
+                .getAvailableItems(cellInv.getChannel().createPrimitiveList(), IterationCounter.fetchNewId());
         Iterator<?> i = list.iterator();
 
         for (int x = 0; x < inv.getSizeInventory(); x++) {

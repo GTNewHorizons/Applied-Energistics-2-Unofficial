@@ -102,11 +102,7 @@ public abstract class PartBaseImportBus<StackType extends IAEStack<StackType>> e
 
     @Override
     public TickingRequest getTickingRequest(final IGridNode node) {
-        return new TickingRequest(
-                TickRates.ImportBus.getMin(),
-                TickRates.ImportBus.getMax(),
-                this.getHandler() == null,
-                false);
+        return new TickingRequest(TickRates.ImportBus.getMin(), TickRates.ImportBus.getMax(), this.isSleeping(), false);
     }
 
     @Override

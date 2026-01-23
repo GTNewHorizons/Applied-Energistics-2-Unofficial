@@ -5,13 +5,13 @@ import static appeng.client.gui.implementations.GuiCraftConfirm.*;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -36,18 +36,19 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketOptimizePatterns;
 import appeng.core.sync.packets.PacketSwitchGuis;
-import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
 
     private GuiTextField amountToCraft;
     private int amountToCraftI = 1;
 
-    private final List<IAEItemStack> visual = new ArrayList<>();
-    private int rows = 5;
+    private final List<IAEStack<?>> visual = new ArrayList<>();
+    private int rows;
     final private boolean tallMode;
 
     final GuiScrollbar scrollbar;
@@ -56,9 +57,9 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
     private GuiButton optimize;
 
     private int tooltip = -1;
-    private IAEItemStack hoveredStack;
-    private final HashSet<IAEItemStack> ignoreList = new HashSet<>();
-    private final HashMap<IAEItemStack, Integer> multiplierMap = new HashMap<>();
+    private IAEStack<?> hoveredStack;
+    private final HashSet<IAEStack<?>> ignoreList = new HashSet<>();
+    private final Object2IntMap<IAEStack<?>> multiplierMap = new Object2IntOpenHashMap<>();
 
     public GuiOptimizePatterns(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         super(new ContainerOptimizePatterns(inventoryPlayer, te));
@@ -189,7 +190,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
         hoveredStack = null;
 
         for (int z = viewStart; z < Math.min(viewEnd, this.visual.size()); z++) {
-            final IAEItemStack refStack = this.visual.get(z);
+            final IAEStack<?> refStack = this.visual.get(z);
             if (refStack != null) {
                 GL11.glPushMatrix();
                 GL11.glScaled(0.5, 0.5, 0.5);
@@ -244,30 +245,32 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
                                         + NumberFormat.getInstance()
                                                 .format(refStack.getCountRequestable() << multipliedBy));
                     }
-
-                    downY += 5;
                 }
 
                 GL11.glPopMatrix();
                 final int posX = x * (1 + sectionLength) + xo + sectionLength - 19;
                 final int posY = y * offY + yo;
 
-                final ItemStack is = refStack.copy().getItemStack();
-
                 if (this.tooltip == z - viewStart) {
-                    dspToolTip = Platform.getItemDisplayName(is);
+                    dspToolTip = refStack.getDisplayName();
                     if (!lineList.isEmpty()) {
-                        addItemTooltip(is, lineList);
+                        if (refStack instanceof IAEItemStack ais) {
+                            addItemTooltip(ais.getItemStack(), lineList);
+                        }
                         dspToolTip = dspToolTip + '\n' + Joiner.on("\n").join(lineList);
                     }
 
                     toolPosX = x * (1 + sectionLength) + xo + sectionLength - 8;
                     toolPosY = y * offY + yo;
 
-                    hoveredStack = refStack.copy();
+                    hoveredStack = refStack;
                 }
 
-                this.drawItem(posX, posY, is);
+                GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+                RenderHelper.enableGUIStandardItemLighting();
+                GL11.glEnable(GL11.GL_DEPTH_TEST);
+                refStack.drawInGui(this.mc, posX, posY);
+                GL11.glPopAttrib();
 
                 if (ignoreList.contains(refStack) || multipliedBy == 0) {
                     final int startX = x * (1 + sectionLength) + xo;
@@ -356,7 +359,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
         if (amountToCraftI == 0) return;
         multiplierMap.clear();
 
-        for (IAEItemStack stack : this.visual) {
+        for (IAEStack<?> stack : this.visual) {
             if (!ignoreList.contains(stack)) {
                 int v = Math.min(
                         ContainerOptimizePatterns.getBitMultiplier(
@@ -400,9 +403,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
     public void postUpdate(final List<IAEStack<?>> list, final byte ref) {
         visual.clear();
         for (IAEStack<?> stack : list) {
-            if (stack instanceof IAEItemStack ais) {
-                visual.add(ais.copy());
-            }
+            visual.add(stack.copy());
         }
 
         this.sortItems();
@@ -414,11 +415,11 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
 
     @Override
     public ItemStack getHoveredStack() {
-        if (hoveredStack != null) return hoveredStack.getItemStack();
+        if (hoveredStack != null) return hoveredStack.getItemStackForNEI();
         return null;
     }
 
-    Comparator<IAEItemStack> comparator = (i1,
+    Comparator<IAEStack<?>> comparator = (i1,
             i2) -> (int) (i2.getCountRequestableCrafts() - i1.getCountRequestableCrafts());
 
     private void sortItems() {
