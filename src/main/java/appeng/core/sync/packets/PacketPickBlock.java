@@ -259,7 +259,7 @@ public class PacketPickBlock extends AppEngPacket {
     /**
      * Copy of the vanilla pick block function, as the vanilla version uses a client-side only function ( getItem() ).
      */
-    public ItemStack getPickBlock(EntityPlayerMP player, int x, int y, int z) {
+    private ItemStack getPickBlock(EntityPlayerMP player, int x, int y, int z) {
         // Get the target block
         World world = player.worldObj;
         Block targetBlock = world.getBlock(this.blockX, this.blockY, this.blockZ);
