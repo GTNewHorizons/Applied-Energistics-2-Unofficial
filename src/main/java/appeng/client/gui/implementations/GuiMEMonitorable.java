@@ -591,12 +591,18 @@ public class GuiMEMonitorable extends AEBaseGui
                 if (slot instanceof VirtualMEPinSlot) {
                     if (isLShiftDown) {
                         this.sendAction(MonitorableAction.UNSET_PIN, null, slot.getSlotIndex());
-                    } else {
+                        return true;
+                    }
+
+                    if (player.inventory.getItemStack() != null) {
                         this.sendAction(
                                 isLControlDown ? MonitorableAction.SET_CONTAINER_PIN : MonitorableAction.SET_ITEM_PIN,
                                 null,
                                 slot.getSlotIndex());
+                        return true;
                     }
+
+                    this.sendAction(MonitorableAction.SPLIT_OR_PLACE_SINGLE, slotStack, -1);
                     return true;
                 }
 
