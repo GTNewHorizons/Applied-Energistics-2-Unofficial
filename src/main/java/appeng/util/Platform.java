@@ -178,6 +178,7 @@ public class Platform {
     public static final boolean isAE2FCLoaded = Loader.isModLoaded("ae2fc");
     public static final boolean isEIOLoaded = Loader.isModLoaded("EnderIO");
     public static final boolean isBaublesLoaded = Loader.isModLoaded("Baubles|Expanded");
+    public static final boolean isMultiPartLoaded = Loader.isModLoaded("ForgeMultipart");
 
     static {
         BYTE_LIMIT = new double[10];
