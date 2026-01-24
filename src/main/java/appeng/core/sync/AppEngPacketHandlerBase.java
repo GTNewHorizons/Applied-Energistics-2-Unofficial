@@ -50,6 +50,7 @@ import appeng.core.sync.packets.PacketPatternMultiSet;
 import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.core.sync.packets.PacketPatternValueSet;
 import appeng.core.sync.packets.PacketPinsUpdate;
+import appeng.core.sync.packets.PacketRemoteRename;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketTransitionEffect;
@@ -128,7 +129,8 @@ public class AppEngPacketHandlerBase {
         PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
         PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
         PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
-        PACKET_COLOR_SELECT(PacketColorSelect.class);
+        PACKET_COLOR_SELECT(PacketColorSelect.class),
+        PACKET_REMOTE_RENAME(PacketRemoteRename.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;

@@ -77,7 +77,6 @@ public class GuiRenamer extends GuiSub implements IDropToFillTextField {
             } catch (IOException e) {
                 AELog.debug(e);
             }
-            this.mc.thePlayer.closeScreen();
         } else if (!this.textField.textboxKeyTyped(character, key)) {
             super.keyTyped(character, key);
         }
