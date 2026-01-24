@@ -137,6 +137,7 @@ chat.appliedenergistics2.MachineHighlighted=The %d is now highlighted at %d, %d,
 chat.appliedenergistics2.MachineHighlightedNamed=The %d "%d" is now highlighted at %d, %d, %d
 chat.appliedenergistics2.StorageHighlighted=The %d containing %d %d is now highlighted at %d, %d, %d
 chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dimension: %d and cant be highlighted
+chat.appliedenergistics2.PickBlockTerminalNotFound=AE2 wireless terminal not found.
 chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
 chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
 
@@ -956,6 +957,7 @@ stat.ae2.TurnedCranks=Turned Cranks
 
 # Keys
 key.appliedenergistics2.category=Applied Energistics 2
+key.pick_block.desc=AE2 Pick Block
 key.toggle_focus.desc=Toggle search box focus
 key.search_connected_inventories.desc=Search network inventories for item
 key.control_operation.desc=Control operation

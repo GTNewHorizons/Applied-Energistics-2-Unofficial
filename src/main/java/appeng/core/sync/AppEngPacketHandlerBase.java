@@ -49,6 +49,7 @@ import appeng.core.sync.packets.PacketPartialItem;
 import appeng.core.sync.packets.PacketPatternMultiSet;
 import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.core.sync.packets.PacketPatternValueSet;
+import appeng.core.sync.packets.PacketPickBlock;
 import appeng.core.sync.packets.PacketPinsUpdate;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.core.sync.packets.PacketSwitchGuis;
@@ -125,8 +126,9 @@ public class AppEngPacketHandlerBase {
         PACKET_OPTIMIZE_PATTERNS(PacketOptimizePatterns.class),
         PACKET_NETWORK_STATUS_SELECTED(PacketNetworkStatusSelected.class),
         PACKET_PINS_UPDATE(PacketPinsUpdate.class),
-        PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
         PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
+        PACKET_PICK_BLOCK(PacketPickBlock.class),
+        PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
         PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
         PACKET_COLOR_SELECT(PacketColorSelect.class);
 
