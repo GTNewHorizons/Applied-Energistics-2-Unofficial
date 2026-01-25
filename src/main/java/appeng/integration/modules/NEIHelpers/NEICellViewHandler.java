@@ -33,7 +33,7 @@ import codechicken.nei.recipe.IUsageHandler;
 
 public class NEICellViewHandler implements IUsageHandler {
 
-    private static class ViewItemStack {
+    public static class ViewItemStack {
 
         public PositionedStack stack;
         public long stackSize;

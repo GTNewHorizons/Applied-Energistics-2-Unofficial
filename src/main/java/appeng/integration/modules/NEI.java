@@ -24,6 +24,8 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import org.lwjgl.input.Keyboard;
+
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.implementations.GuiCraftConfirm;
 import appeng.client.gui.implementations.GuiCraftingCPU;
@@ -50,6 +52,7 @@ import appeng.integration.modules.NEIHelpers.NEICraftingHandler;
 import appeng.integration.modules.NEIHelpers.NEIFacadeRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIGrinderRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIGuiHandler;
+import appeng.integration.modules.NEIHelpers.NEIInputHandler;
 import appeng.integration.modules.NEIHelpers.NEIInscriberRecipeHandler;
 import appeng.integration.modules.NEIHelpers.NEIOreDictionaryFilter;
 import appeng.integration.modules.NEIHelpers.NEIPatternViewHandler;
@@ -59,6 +62,7 @@ import appeng.integration.modules.NEIHelpers.TerminalCraftingSlotFinder;
 import codechicken.nei.BookmarkPanel.BookmarkViewMode;
 import codechicken.nei.ItemsGrid;
 import codechicken.nei.LayoutManager;
+import codechicken.nei.api.API;
 import codechicken.nei.api.IBookmarkContainerHandler;
 import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.IStackPositioner;
@@ -101,6 +105,8 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
 
     @Override
     public void init() throws Throwable {
+        API.addKeyBind("gui.pattern_view", Keyboard.KEY_P);
+
         this.registerRecipeHandler = this.apiClass
                 .getDeclaredMethod("registerRecipeHandler", codechicken.nei.recipe.ICraftingHandler.class);
         this.registerUsageHandler = this.apiClass
@@ -161,9 +167,10 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         registrar.invoke(this.apiClass, GuiCraftingTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
         registrar.invoke(this.apiClass, GuiPatternTerm.class, defaultConstructor.newInstance(6, 75), "crafting");
 
+        GuiContainerManager.addInputHandler(new NEIInputHandler());
         sendHandler(
                 "appeng.integration.modules.NEIHelpers.NEIPatternViewHandler",
-                "appliedenergistics2:item.ItemEncodedUltimatePattern");
+                "appliedenergistics2:item.ItemEncodedPattern");
     }
 
     public void registerRecipeHandler(final Object o)

@@ -67,13 +67,13 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
     protected VirtualMEPatternSlot[] craftingSlots;
     protected VirtualMEPatternSlot[] outputSlots;
-    private boolean cragtingMode;
+    private boolean craftingMode;
 
     public GuiPatternTerm(final InventoryPlayer inventoryPlayer, final ITerminalHost te,
             final ContainerPatternTerm containerPatternTerm) {
         super(inventoryPlayer, te, containerPatternTerm);
         this.container = (ContainerPatternTerm) this.inventorySlots;
-        this.cragtingMode = this.container.isCraftingMode();
+        this.craftingMode = this.container.isCraftingMode();
         this.setReservedSpace(81);
     }
 
@@ -96,7 +96,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
         try {
             if (this.tabCraftButton == btn || this.tabProcessButton == btn) {
-                this.cragtingMode = this.tabProcessButton == btn;
+                this.craftingMode = this.tabProcessButton == btn;
                 updateSlotVisibility();
                 NetworkHandler.instance.sendToServer(
                         new PacketValueConfig(
@@ -268,7 +268,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     }
 
     protected void updateSlotVisibility() {
-        if (this.cragtingMode) {
+        if (this.craftingMode) {
             for (VirtualMEPhantomSlot outputSlot : outputSlots) {
                 outputSlot.setHidden(true);
             }
@@ -283,8 +283,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.updateButtonVisibility();
 
-        if (this.cragtingMode != this.container.craftingMode) {
-            this.cragtingMode = this.container.craftingMode;
+        if (this.craftingMode != this.container.isCraftingMode()) {
+            this.craftingMode = this.container.isCraftingMode();
             this.updateSlotVisibility();
         }
 
@@ -348,7 +348,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
             if (type == ITEM_STACK_TYPE) {
                 return true;
             }
-            return !cragtingMode && type == FLUID_STACK_TYPE;
+            return !craftingMode && type == FLUID_STACK_TYPE;
         } else {
             return true;
         }
