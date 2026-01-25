@@ -202,14 +202,14 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         return FuzzyMode.IGNORE_ALL;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void partition() {
         final IAEStackInventory inv = this.workBench.getAEInventoryByName(StorageName.NONE);
         final ItemStack is = this.getUpgradeable().getInventoryByName("cell").getStackInSlot(0);
 
         if (!(is != null && is.getItem() instanceof ICellWorkbenchItem wi)) return;
 
-        final IMEInventory<?> cellInv = AEApi.instance().registries().cell()
-                .getCellInventory(is, null, wi.getStackType());
+        final IMEInventory cellInv = AEApi.instance().registries().cell().getCellInventory(is, null, wi.getStackType());
 
         if (cellInv == null) return;
 
