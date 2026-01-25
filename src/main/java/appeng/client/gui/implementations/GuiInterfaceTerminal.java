@@ -74,6 +74,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate.PacketEntry;
 import appeng.core.sync.packets.PacketInventoryAction;
+import appeng.core.sync.packets.PacketRemoteRename;
 import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
@@ -901,7 +902,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.rowSize,
                     addCmd.numSlots,
                     addCmd.online,
-                    addCmd.p2pOutput).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim)
+                    addCmd.p2pOutput).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1339,7 +1340,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         ItemStack dispRep;
         InterfaceSection section;
         long id;
-        int x, y, z, dim;
+        int x, y, z, dim, side;
         int rows, rowSize;
         int numSlots;
         int guiHeight;
@@ -1371,11 +1372,12 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.filteredRecipes = new boolean[rows * rowSize];
         }
 
-        InterfaceTerminalEntry setLocation(int x, int y, int z, int dim) {
+        InterfaceTerminalEntry setLocation(int x, int y, int z, int dim, int side) {
             this.x = x;
             this.y = y;
             this.z = z;
             this.dim = dim;
+            this.side = side;
 
             return this;
         }
@@ -1499,6 +1501,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     && mouseY > Math.max(optionsButton.yPosition, InterfaceSection.TITLE_HEIGHT)
                     && mouseY <= Math.min(optionsButton.yPosition + optionsButton.height, viewHeight)) {
                 optionsButton.func_146113_a(mc.getSoundHandler());
+
+                if (isShiftKeyDown()) {
+                    NetworkHandler.instance.sendToServer(new PacketRemoteRename(x, y, z, dim, side));
+
+                    return true;
+                }
+
                 // When using the highlight from the interface terminal, we want it to only
                 // highlight the interface containing the patterns and not any output p2p interfaces
                 BlockPosHighlighter.highlightNamedBlocks(

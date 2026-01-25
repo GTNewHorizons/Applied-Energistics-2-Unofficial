@@ -121,6 +121,8 @@ public class PacketValueConfig extends AppEngPacket {
             final PrimaryGui pGui = qk.getPrimaryGui();
             if (pGui != null) {
                 pGui.open(player);
+            } else {
+                player.closeScreen();
             }
         } else if (this.Name.equals("TileSecurity.ToggleOption") && c instanceof ContainerSecurity sc) {
             sc.toggleSetting(this.Value, player);
