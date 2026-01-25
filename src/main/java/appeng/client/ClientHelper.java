@@ -41,6 +41,8 @@ import net.minecraftforge.common.MinecraftForge;
 
 import org.lwjgl.opengl.GL11;
 
+import com.gtnewhorizon.gtnhlib.event.PickBlockEvent;
+
 import appeng.api.parts.CableRenderMode;
 import appeng.api.util.AEColor;
 import appeng.block.AEBaseBlock;
@@ -109,6 +111,7 @@ public class ClientHelper extends ServerHelper {
         MinecraftForge.EVENT_BUS.register(new HighlighterManager());
         MinecraftForge.EVENT_BUS.register(BlockRendererPreviewEvent.getInstance());
         FMLCommonHandler.instance().bus().register(BlockRendererPreviewEvent.getInstance());
+        FMLCommonHandler.instance().bus().register(new KeyBindHandler());
 
         for (ActionKey key : ActionKey.values()) {
             final KeyBinding binding = new KeyBinding(key.getTranslationKey(), key.getDefaultKey(), KEY_CATEGORY);
@@ -445,6 +448,26 @@ public class ClientHelper extends ServerHelper {
             for (final CableBusTextures cb : CableBusTextures.values()) {
                 cb.registerIcon(ev.map);
             }
+        }
+    }
+
+    /**
+     * Do not run the vanilla pick block logic if it is double bound with the AE2 pick block keybind, and the player is
+     * not in creative mode. The vanilla pick block event should be canceled and only the AE2 pick block logic should
+     * run. This is to prevent conflicts from the client-side vanilla pick-block and the server-side AE2 pick block.
+     */
+    @SubscribeEvent
+    public void onPickBlockEvent(final PickBlockEvent event) {
+        var minecraft = Minecraft.getMinecraft();
+        if (!minecraft.theWorld.isRemote) {
+            return;
+        }
+
+        var isCreative = minecraft.thePlayer.capabilities.isCreativeMode;
+        var vanillaKeybind = minecraft.gameSettings.keyBindPickBlock.getKeyCode();
+        var ae2Keybind = CommonHelper.proxy.getKeybind(ActionKey.PICK_BLOCK);
+        if (!isCreative && vanillaKeybind == ae2Keybind) {
+            event.setCanceled(true);
         }
     }
 
