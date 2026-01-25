@@ -20,11 +20,12 @@ import appeng.container.interfaces.IInventorySlotAware;
 import appeng.helpers.ICustomButtonDataObject;
 import appeng.helpers.ICustomButtonProvider;
 import appeng.helpers.ICustomButtonSource;
+import appeng.helpers.IPrimaryGuiIconProvider;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class WirelessInterfaceTerminalGuiObject
-        implements IInterfaceTerminal, IGuiItemObject, ICustomButtonProvider, IInventorySlotAware {
+public class WirelessInterfaceTerminalGuiObject implements IInterfaceTerminal, IGuiItemObject, ICustomButtonProvider,
+        IInventorySlotAware, IPrimaryGuiIconProvider {
 
     private boolean needsUpdate;
     private final IGridNode node;
@@ -133,5 +134,10 @@ public class WirelessInterfaceTerminalGuiObject
     @Override
     public int getInventorySlot() {
         return this.slotIndex;
+    }
+
+    @Override
+    public ItemStack getPrimaryGuiIcon() {
+        return this.is.copy();
     }
 }

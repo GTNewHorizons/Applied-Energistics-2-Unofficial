@@ -21,6 +21,7 @@ import net.minecraft.inventory.IInventory;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
+import appeng.api.config.ExtractionMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
@@ -59,6 +60,9 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
 
     @GuiSync(8)
     public ActionItems partitionMode; // use for icon and tooltip
+
+    @GuiSync(9)
+    public ExtractionMode extractionMode;
 
     private final IAEStack<?>[] configClientSlot = new IAEStack[63];
 
@@ -139,6 +143,8 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
             this.setStorageFilter(
                     (StorageFilter) this.getUpgradeable().getConfigManager().getSetting(Settings.STORAGE_FILTER));
             this.setStickyMode((YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.STICKY_MODE));
+            this.setExtractionMode(
+                    (ExtractionMode) this.getUpgradeable().getConfigManager().getSetting(Settings.EXTRACTION_MODE));
 
             final IAEStackInventory config = this.storageBus.getAEInventoryByName(StorageName.NONE);
             this.updateVirtualSlots(StorageName.NONE, config, this.configClientSlot);
@@ -226,6 +232,10 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
         return this.rwMode;
     }
 
+    public ExtractionMode getExtractionMode() {
+        return this.extractionMode;
+    }
+
     public StorageFilter getStorageFilter() {
         return this.storageFilter;
     }
@@ -252,6 +262,10 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
 
     private void setReadWriteMode(final AccessRestriction rwMode) {
         this.rwMode = rwMode;
+    }
+
+    private void setExtractionMode(final ExtractionMode extractionMode) {
+        this.extractionMode = extractionMode;
     }
 
     private static class IteratorState {

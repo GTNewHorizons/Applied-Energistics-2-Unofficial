@@ -28,6 +28,7 @@ public enum Settings {
 
     POWER_UNITS(EnumSet.allOf(PowerUnits.class)),
     ACCESS(EnumSet.of(AccessRestriction.READ_WRITE, AccessRestriction.READ, AccessRestriction.WRITE)),
+    EXTRACTION_MODE(EnumSet.allOf(ExtractionMode.class)),
 
     SORT_DIRECTION(EnumSet.allOf(SortDir.class)),
     SORT_BY(EnumSet.allOf(SortOrder.class)),

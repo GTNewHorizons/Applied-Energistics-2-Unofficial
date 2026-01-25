@@ -33,6 +33,7 @@ import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IOreFilterable;
 import appeng.me.GridAccessException;
@@ -61,6 +62,11 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
         this.mySrc = new MachineSource(this);
         this.channel = StorageChannel.getStorageChannelByParametrizedClass(this.getClass());
+    }
+
+    @Override
+    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
+        this.updateState();
     }
 
     @Override
@@ -149,6 +155,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
     }
 
     private void updateState() {
+        if (this.getGridNode() == null) return;
         try {
             if (!this.isSleeping()) {
                 this.getProxy().getTick().wakeDevice(this.getProxy().getNode());

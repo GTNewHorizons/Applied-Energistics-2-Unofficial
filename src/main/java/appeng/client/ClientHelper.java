@@ -41,6 +41,8 @@ import net.minecraftforge.common.MinecraftForge;
 
 import org.lwjgl.opengl.GL11;
 
+import com.gtnewhorizon.gtnhlib.event.PickBlockEvent;
+
 import appeng.api.parts.CableRenderMode;
 import appeng.api.util.AEColor;
 import appeng.block.AEBaseBlock;
@@ -109,6 +111,7 @@ public class ClientHelper extends ServerHelper {
         MinecraftForge.EVENT_BUS.register(new HighlighterManager());
         MinecraftForge.EVENT_BUS.register(BlockRendererPreviewEvent.getInstance());
         FMLCommonHandler.instance().bus().register(BlockRendererPreviewEvent.getInstance());
+        FMLCommonHandler.instance().bus().register(new KeyBindHandler());
 
         for (ActionKey key : ActionKey.values()) {
             final KeyBinding binding = new KeyBinding(key.getTranslationKey(), key.getDefaultKey(), KEY_CATEGORY);
@@ -396,7 +399,7 @@ public class ClientHelper extends ServerHelper {
 
     @SubscribeEvent
     public void wheelEvent(final MouseEvent me) {
-        if (me.isCanceled() || me.dwheel == 0) {
+        if (me.isCanceled()) {
             return;
         }
 
@@ -404,13 +407,27 @@ public class ClientHelper extends ServerHelper {
         final EntityPlayer player = mc.thePlayer;
         final ItemStack is = player.getHeldItem();
 
-        if (is != null && is.getItem() instanceof IMouseWheelItem && player.isSneaking()) {
+        if (is == null || !(is.getItem() instanceof IMouseWheelItem)) {
+            return;
+        }
+
+        // Wheel Scroll
+        if (me.dwheel != 0 && player.isSneaking()) {
             try {
                 NetworkHandler.instance
                         .sendToServer(new PacketValueConfig("Item", me.dwheel > 0 ? "WheelUp" : "WheelDown"));
                 me.setCanceled(true);
             } catch (final IOException e) {
                 AELog.debug(e);
+            }
+        }
+
+        // Wheel Click
+        else if (me.button == 2 && me.buttonstate) {
+            if (player.getHeldItem() != null && player.getHeldItem().getItem() instanceof IMouseWheelItem) {
+                final IMouseWheelItem si = (IMouseWheelItem) is.getItem();
+                si.onWheelClick(player, is);
+                me.setCanceled(true);
             }
         }
     }
@@ -431,6 +448,26 @@ public class ClientHelper extends ServerHelper {
             for (final CableBusTextures cb : CableBusTextures.values()) {
                 cb.registerIcon(ev.map);
             }
+        }
+    }
+
+    /**
+     * Do not run the vanilla pick block logic if it is double bound with the AE2 pick block keybind, and the player is
+     * not in creative mode. The vanilla pick block event should be canceled and only the AE2 pick block logic should
+     * run. This is to prevent conflicts from the client-side vanilla pick-block and the server-side AE2 pick block.
+     */
+    @SubscribeEvent
+    public void onPickBlockEvent(final PickBlockEvent event) {
+        var minecraft = Minecraft.getMinecraft();
+        if (!minecraft.theWorld.isRemote) {
+            return;
+        }
+
+        var isCreative = minecraft.thePlayer.capabilities.isCreativeMode;
+        var vanillaKeybind = minecraft.gameSettings.keyBindPickBlock.getKeyCode();
+        var ae2Keybind = CommonHelper.proxy.getKeybind(ActionKey.PICK_BLOCK);
+        if (!isCreative && vanillaKeybind == ae2Keybind) {
+            event.setCanceled(true);
         }
     }
 

@@ -76,8 +76,6 @@ import appeng.api.util.IConfigurableObject;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.AppEngSlot;
-import appeng.container.slot.SlotDisabled;
-import appeng.container.slot.SlotInaccessible;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
@@ -120,7 +118,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
     private IConfigManagerHost gui;
     private IConfigManager serverCM;
     private IGridNode networkNode;
-    protected SlotRestrictedInput patternRefiller = null;
 
     public ContainerMEMonitorable(final InventoryPlayer ip, final ITerminalHost monitorable) {
         this(ip, monitorable, true);
@@ -995,17 +992,20 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
         final AppEngSlot clickSlot = (AppEngSlot) this.inventorySlots.get(idx); // require AE SLots!
 
-        if (clickSlot instanceof SlotDisabled || clickSlot instanceof SlotInaccessible) {
+        if (!this.isValidSrcSlotForTransfer(clickSlot)) {
             return null;
         }
 
-        if (clickSlot != null && clickSlot.getHasStack() && clickSlot.isPlayerSide()) {
+        ItemStack result = super.transferStackInSlot(p, idx);
+
+        if (result == null && clickSlot != null && clickSlot.getHasStack() && clickSlot.isPlayerSide()) {
             ItemStack tis = clickSlot.getStack();
             tis = this.shiftStoreItem(tis);
             clickSlot.putStack(tis);
+            this.detectAndSendChanges();
         }
 
-        return super.transferStackInSlot(p, idx);
+        return null;
     }
 
     private ItemStack shiftStoreItem(final ItemStack input) {

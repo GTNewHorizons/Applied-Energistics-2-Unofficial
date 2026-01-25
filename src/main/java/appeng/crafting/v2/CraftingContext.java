@@ -92,9 +92,30 @@ public final class CraftingContext {
          * Ordered by priority
          */
         public final ArrayList<CraftingTask> resolvers = new ArrayList<>(4);
+        private boolean isRemainingResolversAllSimulated = true;
 
         public RequestInProcessing(CraftingRequest<StackType> request) {
             this.request = request;
+        }
+
+        void refresh() {
+            isRemainingResolversAllSimulated = isRemainingResolversAllSimulatedSlow();
+        }
+
+        public boolean isRemainingResolversAllSimulated() {
+            return isRemainingResolversAllSimulated;
+        }
+
+        private boolean isRemainingResolversAllSimulatedSlow() {
+            for (CraftingTask<?> resolver : resolvers) {
+                if (!resolver.isSimulated()) return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "RequestInProcessing{" + "request=" + request + ", resolvers=" + resolvers + '}';
         }
     }
 
@@ -136,15 +157,17 @@ public final class CraftingContext {
         return instance;
     }
 
-    public void addRequest(@Nonnull CraftingRequest<?> request) {
+    public <T extends IAEStack<T>> void addRequest(@Nonnull CraftingRequest<T> request) {
         if (doingWork) {
             throw new IllegalStateException(
                     "Trying to add requests while inside a CraftingTask handler, return requests in the StepOutput instead");
         }
-        final RequestInProcessing<?> processing = new RequestInProcessing<>(request);
+        final RequestInProcessing<T> processing = new RequestInProcessing<>(request);
         processing.resolvers.addAll(CraftingCalculations.tryResolveCraftingRequest(request, this));
+        processing.refresh();
         Collections.reverse(processing.resolvers); // We remove from the end for efficient ArrayList usage
         liveRequests.add(processing);
+        request.liveRequest = processing;
         if (processing.resolvers.isEmpty()) {
             throw new IllegalStateException("No resolvers available for request " + request.toString());
         }
@@ -296,6 +319,7 @@ public final class CraftingContext {
         if (!out.extraInputsRequired.isEmpty()) {
             final Set<ICraftingPatternDetails> parentPatterns = frontTask.request.patternParents;
             // Last pushed gets resolved first, so iterate in reverse order to maintain array ordering
+            // this block propagates parent's patterns used to child
             for (int ri = out.extraInputsRequired.size() - 1; ri >= 0; ri--) {
                 final CraftingRequest<?> request = out.extraInputsRequired.get(ri);
                 request.patternParents.addAll(parentPatterns);
@@ -335,6 +359,11 @@ public final class CraftingContext {
         return Collections.unmodifiableList(liveRequests);
     }
 
+    @SuppressWarnings("unchecked")
+    public <T extends IAEStack<T>> RequestInProcessing<T> getLiveRequest(CraftingRequest<T> request) {
+        return request.liveRequest;
+    }
+
     @Override
     public String toString() {
         final Set<CraftingTask<?>> processed = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -352,6 +381,7 @@ public final class CraftingContext {
             return false;
         }
         CraftingTask nextResolver = request.resolvers.remove(request.resolvers.size() - 1);
+        request.refresh();
         if (addResolverTask && !request.resolvers.isEmpty()) {
             tasksToProcess.addFirst(new CheckOtherResolversTask(request));
         }
@@ -383,9 +413,26 @@ public final class CraftingContext {
             } else if (myRequest.request.remainingToProcess <= 0) {
                 this.state = State.SUCCESS;
             } else {
-                this.state = State.FAILURE;
+                // if any of the parent request still have alternative paths, return success to explore it
+                // even if we didn't actually queue anything
+                if (hasConcreteResolversLeft()) {
+                    this.state = State.SUCCESS;
+                } else {
+                    this.state = State.FAILURE;
+                }
             }
             return new StepOutput();
+        }
+
+        private boolean hasConcreteResolversLeft() {
+            for (RequestInProcessing<?> maybeParentRequest : liveRequests) {
+                if (request.parentRequests.contains(maybeParentRequest.request)) {
+                    if (!maybeParentRequest.isRemainingResolversAllSimulated()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         @Override
@@ -408,6 +455,11 @@ public final class CraftingContext {
         public void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
                 MECraftingInventory craftingInv) {
             // no-op
+        }
+
+        @Override
+        public boolean isSimulated() {
+            return myRequest.resolvers.stream().allMatch(CraftingTask::isSimulated);
         }
 
         @Override

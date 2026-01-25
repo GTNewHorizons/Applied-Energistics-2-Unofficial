@@ -120,6 +120,7 @@ public enum GuiText implements Localization {
     Yes,
     No,
     EncodedBy,
+    PatternView,
 
     MolecularAssembler,
 
@@ -144,6 +145,8 @@ public enum GuiText implements Localization {
     Stores,
     Next,
     SelectAmount,
+    IncreaseAmount,
+    DecreaseAmount,
     Lumen,
     Empty,
 
@@ -285,7 +288,9 @@ public enum GuiText implements Localization {
     CPUAllowMode,
     CPUAllowAll,
     CPUOnlyAllowNonPlayer,
-    CPUOnlyAllowPlayer;
+    CPUOnlyAllowPlayer,
+    CPUSourcePlayer,
+    CPUSourceMachineRequested;
 
     private final String root;
 

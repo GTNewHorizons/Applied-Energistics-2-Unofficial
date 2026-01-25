@@ -17,6 +17,7 @@ import java.util.Map;
 
 import appeng.core.sync.packets.PacketAssemblerAnimation;
 import appeng.core.sync.packets.PacketClick;
+import appeng.core.sync.packets.PacketColorSelect;
 import appeng.core.sync.packets.PacketCompassRequest;
 import appeng.core.sync.packets.PacketCompassResponse;
 import appeng.core.sync.packets.PacketCompressedNBT;
@@ -26,6 +27,7 @@ import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketCraftingTreeData;
+import appeng.core.sync.packets.PacketGuiDataSync;
 import appeng.core.sync.packets.PacketHighlightBlockStorage;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInventoryAction;
@@ -47,8 +49,9 @@ import appeng.core.sync.packets.PacketPartialItem;
 import appeng.core.sync.packets.PacketPatternMultiSet;
 import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.core.sync.packets.PacketPatternValueSet;
+import appeng.core.sync.packets.PacketPickBlock;
 import appeng.core.sync.packets.PacketPinsUpdate;
-import appeng.core.sync.packets.PacketProgressBar;
+import appeng.core.sync.packets.PacketRemoteRename;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketTransitionEffect;
@@ -86,7 +89,7 @@ public class AppEngPacketHandlerBase {
 
         PACKET_TRANSITION_EFFECT(PacketTransitionEffect.class),
 
-        PACKET_PROGRESS_VALUE(PacketProgressBar.class),
+        PACKET_GUI_DATA_SYNC(PacketGuiDataSync.class),
 
         PACKET_CLICK(PacketClick.class),
 
@@ -124,9 +127,12 @@ public class AppEngPacketHandlerBase {
         PACKET_OPTIMIZE_PATTERNS(PacketOptimizePatterns.class),
         PACKET_NETWORK_STATUS_SELECTED(PacketNetworkStatusSelected.class),
         PACKET_PINS_UPDATE(PacketPinsUpdate.class),
-        PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
         PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
-        PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class);
+        PACKET_PICK_BLOCK(PacketPickBlock.class),
+        PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
+        PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
+        PACKET_COLOR_SELECT(PacketColorSelect.class),
+        PACKET_REMOTE_RENAME(PacketRemoteRename.class);
 
         private final Class<? extends AppEngPacket> packetClass;
         private final Constructor<? extends AppEngPacket> packetConstructor;
