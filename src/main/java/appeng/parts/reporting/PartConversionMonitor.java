@@ -10,6 +10,8 @@
 
 package appeng.parts.reporting;
 
+import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -22,13 +24,19 @@ import net.minecraftforge.common.util.ForgeDirection;
 import appeng.api.networking.energy.IEnergySource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.texture.CableBusTextures;
+import appeng.core.AELog;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.util.InventoryAdaptor;
+import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
+import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public class PartConversionMonitor extends AbstractPartMonitor {
 
@@ -44,7 +52,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
 
     @Override
     public boolean onPartShiftActivate(final EntityPlayer player, final Vec3 pos) {
-        if (Platform.isClient()) {
+        if (player.worldObj.isRemote) {
             return true;
         }
 
@@ -56,25 +64,56 @@ public class PartConversionMonitor extends AbstractPartMonitor {
             return false;
         }
 
-        boolean ModeB = false;
+        IAEStack<?> displayed = this.getDisplayed();
+        if (displayed == null) {
+            if (!EXTRA_ACTION_KEY.isKeyDown(player)) {
+                this.injectItemToMonitor(player);
+            } else {
+                this.injectExtraToMonitor(player);
+            }
+        } else {
+            if (displayed instanceof IAEItemStack) {
+                this.injectItemToMonitor(player);
+            } else if (displayed.getStackType().isContainerItemForType(player.getCurrentEquippedItem())) {
+                this.injectExtraToMonitor(player);
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    protected void onLockedInteraction(EntityPlayer player, boolean isShiftDown) {
+        IAEStack<?> displayed = getDisplayed();
+        if (displayed == null) return;
+
+        if (displayed instanceof IAEItemStack) {
+            this.extractItemFromMonitor(player);
+        } else {
+            this.extractExtraFromMonitor(player);
+        }
+    }
+
+    protected void injectItemToMonitor(final EntityPlayer player) {
+        boolean injectFromInventory = false;
 
         ItemStack item = player.getCurrentEquippedItem();
         if (item == null && this.getDisplayed() != null) {
-            ModeB = true;
+            injectFromInventory = true;
             item = ((IAEItemStack) this.getDisplayed()).getItemStack();
         }
 
         if (item != null) {
             try {
                 if (!this.getProxy().isActive()) {
-                    return false;
+                    return;
                 }
 
                 final IEnergySource energy = this.getProxy().getEnergy();
                 final IMEMonitor<IAEItemStack> cell = this.getProxy().getStorage().getItemInventory();
                 final IAEItemStack input = AEItemStack.create(item);
 
-                if (ModeB) {
+                if (injectFromInventory) { // From player inventory
                     for (int x = 0; x < player.inventory.getSizeInventory(); x++) {
                         final ItemStack targetStack = player.inventory.getStackInSlot(x);
                         if (input.equals(targetStack)) {
@@ -87,7 +126,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                                     failedToInsert == null ? null : failedToInsert.getItemStack());
                         }
                     }
-                } else {
+                } else { // From player hand
                     final IAEItemStack failedToInsert = Platform
                             .poweredInsert(energy, cell, input, new PlayerSource(player, this));
                     player.inventory.setInventorySlotContents(
@@ -95,16 +134,13 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                             failedToInsert == null ? null : failedToInsert.getItemStack());
                 }
             } catch (final GridAccessException e) {
-                // :P
+                AELog.debug(e);
             }
         }
-        return true;
     }
 
-    @Override
-    protected void extractItem(final EntityPlayer player) {
-        final IAEItemStack input = (IAEItemStack) this.getDisplayed();
-        if (input != null) {
+    protected void extractItemFromMonitor(final EntityPlayer player) {
+        if (this.getDisplayed() instanceof IAEItemStack input) {
             try {
                 if (!this.getProxy().isActive()) {
                     return;
@@ -138,8 +174,98 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                     }
                 }
             } catch (final GridAccessException e) {
-                // :P
+                AELog.debug(e);
             }
+        }
+    }
+
+    private void injectExtraToMonitor(final EntityPlayer player) {
+        final ItemStack hand = player.getCurrentEquippedItem();
+        if (hand == null) return;
+
+        for (IAEStackType type : AEStackTypeRegistry.getAllTypes()) {
+            if (!type.isContainerItemForType(hand)) continue;
+
+            IAEStack<?> stack = type.getStackFromContainerItem(hand);
+            if (stack == null || stack.getStackSize() <= 0
+                    || (this.getDisplayed() != null && !this.getDisplayed().isSameType(stack)))
+                return;
+
+            try {
+                final IEnergySource energy = this.getProxy().getEnergy();
+                final IMEMonitor monitor = this.getProxy().getStorage().getMEMonitor(type);
+                if (monitor == null) return;
+
+                IAEStack<?> leftover = Platform.poweredInsert(energy, monitor, stack, new PlayerSource(player, this));
+                ItemStack result;
+                if (leftover == null) {
+                    result = type.clearFilledContainer(hand);
+                } else {
+                    stack.decStackSize(leftover.getStackSize());
+                    type.drainStackFromContainer(hand, stack);
+                    result = hand;
+                }
+
+                if (hand.stackSize == 1) {
+                    player.inventory.setInventorySlotContents(player.inventory.currentItem, result);
+                } else {
+                    hand.stackSize--;
+                    if (result != null && !player.inventory.addItemStackToInventory(result)) {
+                        player.entityDropItem(result, 0);
+                    }
+                }
+            } catch (GridAccessException e) {
+                AELog.error(e);
+            }
+
+            return;
+        }
+    }
+
+    private void extractExtraFromMonitor(final EntityPlayer player) {
+        IAEStack<?> displayed = getDisplayed();
+        if (displayed == null) return;
+
+        final ItemStack hand = player.getCurrentEquippedItem();
+        if (hand == null) return;
+
+        for (IAEStackType type : AEStackTypeRegistry.getAllTypes()) {
+            if (!type.isContainerItemForType(hand)) continue;
+
+            try {
+                final IEnergySource energy = this.getProxy().getEnergy();
+                final IMEMonitor monitor = this.getProxy().getStorage().getMEMonitor(type);
+                if (monitor == null) return;
+
+                IAEStack<?> stored = monitor.getAvailableItem(displayed, IterationCounter.fetchNewId());
+                long amountToFill = type.fillContainer(hand.copy(), stored).rightLong();
+
+                IAEStack<?> extracted = Platform.poweredExtraction(
+                        energy,
+                        monitor,
+                        stored.copy().setStackSize(amountToFill),
+                        new PlayerSource(player, this));
+                if (extracted == null) return;
+
+                ObjectLongPair<ItemStack> filled = type.fillContainer(hand.copy(), extracted);
+                ItemStack result = filled.left();
+                if (hand.stackSize == 1) {
+                    player.inventory.setInventorySlotContents(player.inventory.currentItem, result);
+                } else {
+                    hand.stackSize--;
+                    if (result != null && !player.inventory.addItemStackToInventory(result)) {
+                        player.entityDropItem(result, 0);
+                    }
+
+                    if (player.openContainer != null) {
+                        player.openContainer.detectAndSendChanges();
+                    }
+                }
+            } catch (final GridAccessException e) {
+                AELog.error(e);
+            }
+
+            return;
         }
     }
 

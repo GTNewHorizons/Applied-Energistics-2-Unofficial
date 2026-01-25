@@ -18,6 +18,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.Vec3;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -30,6 +33,7 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IPrimaryGuiIconProvider;
@@ -136,6 +140,16 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     public IMEMonitor<IAEFluidStack> getFluidInventory() {
         try {
             return this.getProxy().getStorage().getFluidInventory();
+        } catch (final GridAccessException e) {
+            // err nope?
+        }
+        return null;
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        try {
+            return this.getProxy().getStorage().getMEMonitor(type);
         } catch (final GridAccessException e) {
             // err nope?
         }

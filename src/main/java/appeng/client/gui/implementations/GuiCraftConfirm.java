@@ -12,7 +12,6 @@ package appeng.client.gui.implementations;
 
 import static appeng.api.config.Settings.CRAFTING_SORT_BY;
 import static appeng.api.config.Settings.SORT_DIRECTION;
-import static appeng.util.Platform.stackConvert;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -32,13 +31,11 @@ import org.lwjgl.opengl.GL11;
 
 import com.google.common.base.Joiner;
 
-import appeng.api.AEApi;
 import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.TerminalStyle;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.GuiSub;
@@ -69,7 +66,7 @@ import appeng.util.ColorPickHelper;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import appeng.util.RoundHelper;
-import appeng.util.item.AEItemStack;
+import appeng.util.item.IAEStackList;
 
 public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, IGuiTooltipHandler {
 
@@ -135,12 +132,12 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
 
     private int rows = 5;
 
-    private final IItemList<IAEItemStack> storage = AEApi.instance().storage().createItemList();
-    private final IItemList<IAEItemStack> pending = AEApi.instance().storage().createItemList();
-    private final IItemList<IAEItemStack> missing = AEApi.instance().storage().createItemList();
+    private final IItemList<IAEStack<?>> storage = new IAEStackList();
+    private final IItemList<IAEStack<?>> pending = new IAEStackList();
+    private final IItemList<IAEStack<?>> missing = new IAEStackList();
     private CraftingJobV2 jobTree = null;
 
-    private final List<IAEItemStack> visual = new ArrayList<>();
+    private final List<IAEStack<?>> visual = new ArrayList<>();
 
     private DisplayMode displayMode = DisplayMode.LIST;
     private boolean tallMode;
@@ -164,7 +161,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     private ItemStack hoveredStack;
     private final ArrayList<Integer> goToData = new ArrayList<>();
     private int searchGotoIndex = -1;
-    private IAEItemStack needHighlight;
+    private IAEStack<?> needHighlight;
 
     final GuiScrollbar scrollbar;
 
@@ -467,8 +464,8 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         if (this.searchField.getText().isEmpty()) return;
         String s = this.searchField.getText().toLowerCase();
         int visCount = 0;
-        for (IAEItemStack aeis : this.visual) {
-            if (aeis != null && Platform.getItemDisplayName(aeis).toLowerCase().contains(s)) {
+        for (IAEStack<?> aes : this.visual) {
+            if (aes != null && aes.getDisplayName().toLowerCase().contains(s)) {
                 goToData.add(visCount);
             }
             visCount++;
@@ -487,9 +484,9 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             searchGotoIndex--;
         }
 
-        IAEItemStack aeis = this.visual.get(goToData.get(searchGotoIndex));
+        IAEStack<?> aes = this.visual.get(goToData.get(searchGotoIndex));
         this.getScrollBar().setCurrentScroll(goToData.get(searchGotoIndex) / 3 - this.rows / 2);
-        needHighlight = aeis.copy();
+        needHighlight = aes.copy();
     }
 
     private void drawListFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
@@ -528,14 +525,14 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         final int offY = 23;
 
         for (int z = viewStart; z < Math.min(viewEnd, this.visual.size()); z++) {
-            final IAEItemStack refStack = this.visual.get(z); // repo.getReferenceItem( z );
+            final IAEStack<?> refStack = this.visual.get(z); // repo.getReferenceItem( z );
             if (refStack != null) {
                 GL11.glPushMatrix();
                 GL11.glScaled(0.5, 0.5, 0.5);
 
-                final IAEItemStack stored = this.storage.findPrecise(refStack);
-                final IAEItemStack pendingStack = this.pending.findPrecise(refStack);
-                final IAEItemStack missingStack = this.missing.findPrecise(refStack);
+                final IAEStack<?> stored = this.storage.findPrecise(refStack);
+                final IAEStack<?> pendingStack = this.pending.findPrecise(refStack);
+                final IAEStack<?> missingStack = this.missing.findPrecise(refStack);
 
                 int lines = 0;
 
@@ -648,22 +645,23 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 final int posX = x * (1 + sectionLength) + xo + sectionLength - 19;
                 final int posY = y * offY + yo;
 
-                final ItemStack is = refStack.copy().getItemStack();
-
                 if (this.tooltip == z - viewStart) {
-                    dspToolTip = Platform.getItemDisplayName(is);
+                    dspToolTip = refStack.getDisplayName();
+                    ItemStack itemStack = refStack.getItemStackForNEI();
                     if (!lineList.isEmpty()) {
-                        addItemTooltip(is, lineList);
+                        if (itemStack != null) {
+                            addItemTooltip(itemStack, lineList);
+                        }
                         dspToolTip = dspToolTip + '\n' + Joiner.on("\n").join(lineList);
                     }
 
                     toolPosX = x * (1 + sectionLength) + xo + sectionLength - 8;
                     toolPosY = y * offY + yo;
 
-                    hoveredStack = is;
+                    hoveredStack = itemStack;
                 }
 
-                this.drawItem(posX, posY, is);
+                refStack.drawInGui(this.mc, posX, posY);
 
                 if (red) {
                     final int startX = x * (1 + sectionLength) + xo;
@@ -788,8 +786,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     }
 
     public void postUpdate(final List<IAEStack<?>> list, final byte ref) {
-        for (final IAEStack<?> l : list) {
-            IAEItemStack stack = stackConvert(l);
+        for (final IAEStack<?> stack : list) {
             switch (ref) {
                 case 0 -> {
                     this.handleInput(this.storage, stack);
@@ -803,14 +800,13 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             }
         }
 
-        for (final IAEStack<?> l : list) {
-            IAEItemStack stack = stackConvert(l);
+        for (final IAEStack<?> stack : list) {
             final long amt = this.getTotal(stack);
 
             if (amt <= 0) {
                 this.deleteVisualStack(stack);
             } else {
-                final IAEItemStack is = this.findVisualStack(stack);
+                final IAEStack<?> is = this.findVisualStack(stack);
                 is.setStackSize(amt);
             }
         }
@@ -822,15 +818,15 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         this.jobTree = jobTree;
     }
 
-    Comparator<IAEItemStack> comparator = (i1, i2) -> {
+    Comparator<IAEStack<?>> comparator = (i1, i2) -> {
         // missing items always first
 
-        IAEItemStack storage1 = storage.findPrecise(i1);
-        IAEItemStack storage2 = storage.findPrecise(i2);
-        IAEItemStack pending1 = pending.findPrecise(i1);
-        IAEItemStack pending2 = pending.findPrecise(i2);
-        IAEItemStack missing1 = missing.findPrecise(i1);
-        IAEItemStack missing2 = missing.findPrecise(i2);
+        IAEStack<?> storage1 = storage.findPrecise(i1);
+        IAEStack<?> storage2 = storage.findPrecise(i2);
+        IAEStack<?> pending1 = pending.findPrecise(i1);
+        IAEStack<?> pending2 = pending.findPrecise(i2);
+        IAEStack<?> missing1 = missing.findPrecise(i1);
+        IAEStack<?> missing2 = missing.findPrecise(i2);
 
         if (missing1 != null && missing2 == null) return -1;
         if (missing1 == null && missing2 != null) return 1;
@@ -850,13 +846,10 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             return Long.compare(amount1, amount2) * sortDir.sortHint;
         }
         if (sortMode == CraftingSortOrder.NAME)
-            return ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
-                    * sortDir.sortHint;
+            return i1.getDisplayName().compareToIgnoreCase(i2.getDisplayName()) * sortDir.sortHint;
         if (sortMode == CraftingSortOrder.MOD) {
-            int v = ((AEItemStack) i1).getModId().compareToIgnoreCase(((AEItemStack) i2).getModId());
-            return (v == 0
-                    ? ((AEItemStack) i1).getDisplayName().compareToIgnoreCase(((AEItemStack) i2).getDisplayName())
-                    : v) * sortDir.sortHint;
+            int v = i1.getModId().compareToIgnoreCase(i2.getModId());
+            return (v == 0 ? i1.getDisplayName().compareToIgnoreCase(i2.getDisplayName()) : v) * sortDir.sortHint;
         }
         if (sortMode == CraftingSortOrder.PERCENT) {
             float percent1 = (storage1 != null && pending1 == null && missing1 == null ? storage1.getUsedPercent()
@@ -872,8 +865,8 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         this.visual.sort(comparator);
     }
 
-    private void handleInput(final IItemList<IAEItemStack> s, final IAEItemStack l) {
-        IAEItemStack a = s.findPrecise(l);
+    private void handleInput(final IItemList<IAEStack<?>> s, final IAEStack<?> l) {
+        IAEStack<?> a = s.findPrecise(l);
 
         if (l.getStackSize() <= 0) {
             if (a != null) {
@@ -901,10 +894,10 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         return super.mouseWheelEvent(x, y, wheel);
     }
 
-    private long getTotal(final IAEItemStack is) {
-        final IAEItemStack a = this.storage.findPrecise(is);
-        final IAEItemStack c = this.pending.findPrecise(is);
-        final IAEItemStack m = this.missing.findPrecise(is);
+    private long getTotal(final IAEStack<?> is) {
+        final IAEStack<?> a = this.storage.findPrecise(is);
+        final IAEStack<?> c = this.pending.findPrecise(is);
+        final IAEStack<?> m = this.missing.findPrecise(is);
 
         long total = 0;
 
@@ -923,10 +916,10 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         return total;
     }
 
-    private void deleteVisualStack(final IAEItemStack l) {
-        final Iterator<IAEItemStack> i = this.visual.iterator();
+    private void deleteVisualStack(final IAEStack<?> l) {
+        final Iterator<IAEStack<?>> i = this.visual.iterator();
         while (i.hasNext()) {
-            final IAEItemStack o = i.next();
+            final IAEStack<?> o = i.next();
             if (o.equals(l)) {
                 i.remove();
                 return;
@@ -934,14 +927,14 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         }
     }
 
-    private IAEItemStack findVisualStack(final IAEItemStack l) {
-        for (final IAEItemStack o : this.visual) {
+    private IAEStack<?> findVisualStack(final IAEStack<?> l) {
+        for (final IAEStack<?> o : this.visual) {
             if (o.equals(l)) {
                 return o;
             }
         }
 
-        final IAEItemStack stack = l.copy();
+        final IAEStack<?> stack = l.copy();
         this.visual.add(stack);
         return stack;
     }
@@ -1083,8 +1076,11 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         if (!this.missing.isEmpty() && isShiftKeyDown()) {
             List<ItemStack> missing = new ArrayList<>();
 
-            for (IAEItemStack iaeItemStack : this.missing) {
-                missing.add(iaeItemStack.getItemStack());
+            for (IAEStack<?> stack : this.missing) {
+                ItemStack itemStack = stack.getItemStackForNEI();
+                if (itemStack != null) {
+                    missing.add(itemStack);
+                }
             }
 
             final ItemStack outputStack = this.getItemStackForBookMark();
@@ -1096,18 +1092,6 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     private ItemStack getItemStackForBookMark() {
         final IAEStack<?> outputStack = ((ContainerCraftConfirm) this.inventorySlots).getItemToCraft();
         return outputStack.getItemStackForNEI();
-    }
-
-    public IItemList<IAEItemStack> getStorage() {
-        return this.storage;
-    }
-
-    public IItemList<IAEItemStack> getPending() {
-        return this.pending;
-    }
-
-    public IItemList<IAEItemStack> getMissing() {
-        return this.missing;
     }
 
     @Override

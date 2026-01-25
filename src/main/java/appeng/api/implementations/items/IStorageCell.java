@@ -18,7 +18,6 @@ import javax.annotation.Nullable;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.ICellWorkbenchItem;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 
@@ -119,8 +118,4 @@ public interface IStorageCell extends ICellWorkbenchItem {
      * @return drain in ae/t this storage cell will use.
      */
     double getIdleDrain();
-
-    default StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
-    }
 }

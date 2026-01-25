@@ -1,5 +1,7 @@
 package appeng.items.storage;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.EnumSet;
 import java.util.List;
 
@@ -11,7 +13,6 @@ import net.minecraft.item.ItemStack;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.IncludeExclude;
 import appeng.api.storage.ICellWorkbenchItem;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.GuiText;
@@ -41,7 +42,7 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
         lines.add(0 + " " + GuiText.Of.getLocal() + " \u00A7k9999\u00A77 " + GuiText.BytesUsed.getLocal());
         if (stack.getItem() instanceof ItemVoidStorageCell cell) {
             CellInventoryHandler<?> inv = (CellInventoryHandler<?>) VoidCellInventory
-                    .getCell(stack, cell.getStorageChannel());
+                    .getCell(stack, cell.getStackType());
             if (inv != null && inv.isPreformatted()) {
                 String filter = cell.getOreFilter(stack);
                 if (filter.isEmpty()) {
@@ -81,7 +82,7 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
 
     @Override
     public IInventory getConfigInventory(ItemStack is) {
-        return new CellConfigLegacy(new CellConfig(is), StorageChannel.ITEMS);
+        return new CellConfigLegacy(new CellConfig(is), ITEM_STACK_TYPE);
     }
 
     @Override
@@ -107,10 +108,5 @@ public class ItemVoidStorageCell extends AEBaseItem implements ICellWorkbenchIte
     @Override
     public void setOreFilter(ItemStack is, String filter) {
         Platform.openNbtData(is).setString("OreFilter", filter);
-    }
-
-    @Override
-    public StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
     }
 }

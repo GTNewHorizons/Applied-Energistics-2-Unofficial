@@ -10,13 +10,7 @@
 
 package appeng.items.tools.powered;
 
-import appeng.api.storage.StorageChannel;
 import appeng.items.AEBasePortableCell;
 
 public class ToolPortableCell extends AEBasePortableCell {
-
-    @Override
-    public StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
-    }
 }

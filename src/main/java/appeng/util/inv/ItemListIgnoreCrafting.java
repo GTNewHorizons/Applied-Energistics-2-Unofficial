@@ -13,8 +13,11 @@ package appeng.util.inv;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 
 public class ItemListIgnoreCrafting<T extends IAEStack> implements IItemList<T> {
@@ -86,7 +89,7 @@ public class ItemListIgnoreCrafting<T extends IAEStack> implements IItemList<T> 
     }
 
     @Override
-    public byte getStackType() {
+    public @Nullable IAEStackType<T> getStackType() {
         return target.getStackType();
     }
 }
