@@ -224,8 +224,6 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
 
                     this.itemCell = this.wrap(itemCell);
                     this.fluidCell = this.wrap(fluidCell);
-
-                    markDirty();
                 }
             }
         }
@@ -464,6 +462,11 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @MENetworkEventSubscribe
     public void channelRender(final MENetworkChannelsChanged c) {
         displayNeedsUpdate = true;
+    }
+
+    @MENetworkEventSubscribe
+    public void stateChange(final MENetworkPowerStatusChange c) {
+        this.recalculateDisplay();
     }
 
     @Override
