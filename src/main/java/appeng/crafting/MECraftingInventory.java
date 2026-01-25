@@ -201,11 +201,11 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
             for (IAEStack<?> stack : this.inventoryMap.get(listType)) {
                 out.add(stack);
             }
-        }
-
-        for (IItemList<IAEStack> list : this.inventoryMap.values()) {
-            for (IAEStack<?> stack : list) {
-                out.add(stack);
+        } else {
+            for (IItemList<IAEStack> list : this.inventoryMap.values()) {
+                for (IAEStack<?> stack : list) {
+                    out.add(stack);
+                }
             }
         }
 

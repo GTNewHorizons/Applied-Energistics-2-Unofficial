@@ -814,7 +814,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     IAEStack<?> toInject = type.getStackFromContainerItem(hand);
                     if (toInject == null) return;
 
-                    long toInjectAmount = toInject.getStackSize() * hand.stackSize;
+                    final long amountPerItem = toInject.getStackSize();
+                    long toInjectAmount = amountPerItem * hand.stackSize;
                     toInject.setStackSize(toInjectAmount);
                     IAEStack<?> leftover = monitor.injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
                     long injected = leftover == null ? toInjectAmount : toInjectAmount - leftover.getStackSize();
@@ -836,19 +837,17 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     // If partial stack in hand will be empty
                     else {
                         int stackSize = hand.stackSize;
-                        long fluidAmountPerItem = toInject.getStackSize();
-                        if (fluidAmountPerItem <= 0) return;
 
                         final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
                         for (int i = 0; i < stackSize; i++) {
-                            toInject.setStackSize(fluidAmountPerItem);
+                            toInject.setStackSize(amountPerItem);
                             leftover = monitor.injectItems(toInject, Actionable.SIMULATE, this.getActionSource());
-                            injected = leftover == null ? fluidAmountPerItem : toInjectAmount - leftover.getStackSize();
-                            if (injected != fluidAmountPerItem) break;
+                            injected = leftover == null ? amountPerItem : amountPerItem - leftover.getStackSize();
+                            if (injected != amountPerItem) break;
 
                             if (adaptor.addItems(cleared.copy()) != null) break;
 
-                            toInject.setStackSize(fluidAmountPerItem);
+                            toInject.setStackSize(amountPerItem);
                             monitor.injectItems(toInject, Actionable.MODULATE, this.getActionSource());
                             hand.stackSize--;
                         }

@@ -21,7 +21,6 @@ import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.crafting.v2.CraftingContext.RequestInProcessing;
 import appeng.crafting.v2.resolvers.CraftingTask;
-import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -262,7 +261,7 @@ public class CraftingRequest implements ITreeSerializable {
             throw new IllegalArgumentException(
                     "Can't fulfill crafting request with too many of " + input + " : " + this);
         }
-        this.untransformedByteCost += Platform.ceilDiv(input.getStackSize(), input.getAmountPerUnit());
+        this.untransformedByteCost += input.getStackSize();
         this.byteCost = CraftingCalculations.adjustByteCost(this, untransformedByteCost);
         this.remainingToProcess -= input.getStackSize();
         this.usedResolvers.add(new UsedResolverEntry(this, origin, input.copy()));
@@ -303,7 +302,7 @@ public class CraftingRequest implements ITreeSerializable {
 
         this.stack.setStackSize(newlyRequested);
         this.remainingToProcess = newlyRemainingToProcess;
-        this.untransformedByteCost -= Platform.ceilDiv(refundedAmount, this.stack.getAmountPerUnit());
+        this.untransformedByteCost -= refundedAmount;
         this.byteCost = CraftingCalculations.adjustByteCost(this, untransformedByteCost);
         if (this.remainingToProcess < 0) {
             throw new IllegalArgumentException("Refunded more items than were resolved for request " + this);

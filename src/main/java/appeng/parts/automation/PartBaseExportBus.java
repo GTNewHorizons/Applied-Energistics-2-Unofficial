@@ -79,6 +79,10 @@ public abstract class PartBaseExportBus<StackType extends IAEStack<StackType>> e
 
         try {
             final Object target = this.getTarget();
+            if (target == null) {
+                return TickRateModulation.SLEEP;
+            }
+
             final IMEMonitor<StackType> gridInv = this.getMonitor();
             final IEnergyGrid energy = this.getProxy().getEnergy();
             final ICraftingGrid cg = this.getProxy().getCrafting();
@@ -88,39 +92,17 @@ public abstract class PartBaseExportBus<StackType extends IAEStack<StackType>> e
             final SchedulingMode schedulingMode = (SchedulingMode) this.getConfigManager()
                     .getSetting(Settings.SCHEDULING_MODE);
 
-            if (target != null) {
-                if (this.getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
-                    int x = 0;
+            if (this.getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
+                int x;
 
-                    for (x = 0; x < this.availableSlots() && this.itemToSend > 0; x++) {
-                        final int slotToExport = this.getStartingSlot(schedulingMode, x);
+                for (x = 0; x < this.availableSlots() && this.itemToSend > 0; x++) {
+                    final int slotToExport = this.getStartingSlot(schedulingMode, x);
 
-                        final StackType aes = (StackType) this.getAEInventoryByName(StorageName.NONE)
-                                .getAEStackInSlot(slotToExport);
+                    final StackType aes = (StackType) this.getAEInventoryByName(StorageName.NONE)
+                            .getAEStackInSlot(slotToExport);
 
-                        if (aes == null || this.itemToSend <= 0 || this.craftOnly()) {
-                            if (this.isCraftingEnabled() && this.canInjectStackToTarget(aes)) {
-                                this.didSomething = this.craftingTracker.handleCrafting(
-                                        slotToExport,
-                                        this.itemToSend,
-                                        aes,
-                                        this.getTile().getWorldObj(),
-                                        this.getProxy().getGrid(),
-                                        cg,
-                                        this.mySrc) || this.didSomething;
-                            }
-                            continue;
-                        }
-
-                        final long before = this.itemToSend;
-
-                        if (supportFuzzy() && this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
-                            doFuzzy(aes, fuzzyMode, energy, gridInv);
-                        } else {
-                            this.pushItemIntoTarget(energy, gridInv, aes);
-                        }
-
-                        if (this.itemToSend == before && this.isCraftingEnabled() && this.canInjectStackToTarget(aes)) {
+                    if (aes == null || this.itemToSend <= 0 || this.craftOnly()) {
+                        if (this.isCraftingEnabled() && this.canInjectStackToTarget(aes)) {
                             this.didSomething = this.craftingTracker.handleCrafting(
                                     slotToExport,
                                     this.itemToSend,
@@ -130,14 +112,32 @@ public abstract class PartBaseExportBus<StackType extends IAEStack<StackType>> e
                                     cg,
                                     this.mySrc) || this.didSomething;
                         }
+                        continue;
                     }
 
-                    this.updateSchedulingMode(schedulingMode, x);
-                } else if (supportOreDict()) {
-                    doOreDict(energy, gridInv);
+                    final long before = this.itemToSend;
+
+                    if (supportFuzzy() && this.getInstalledUpgrades(Upgrades.FUZZY) > 0) {
+                        doFuzzy(aes, fuzzyMode, energy, gridInv);
+                    } else {
+                        this.pushItemIntoTarget(energy, gridInv, aes);
+                    }
+
+                    if (this.itemToSend == before && this.isCraftingEnabled() && this.canInjectStackToTarget(aes)) {
+                        this.didSomething = this.craftingTracker.handleCrafting(
+                                slotToExport,
+                                this.itemToSend,
+                                aes,
+                                this.getTile().getWorldObj(),
+                                this.getProxy().getGrid(),
+                                cg,
+                                this.mySrc) || this.didSomething;
+                    }
                 }
-            } else {
-                return TickRateModulation.SLEEP;
+
+                this.updateSchedulingMode(schedulingMode, x);
+            } else if (supportOreDict()) {
+                doOreDict(energy, gridInv);
             }
         } catch (final GridAccessException e) {
             // :P
@@ -260,6 +260,9 @@ public abstract class PartBaseExportBus<StackType extends IAEStack<StackType>> e
     }
 
     protected boolean canInjectStackToTarget(StackType aes) {
+        if (aes == null) {
+            return false;
+        }
         if (this.getTarget() instanceof InventoryAdaptor adaptor) {
             return adaptor.simulateAddStack(aes, InsertionMode.DEFAULT) == null;
         }
