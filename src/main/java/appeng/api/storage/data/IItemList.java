@@ -17,6 +17,8 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Represents a list of items in AE.
  * <p>
@@ -96,7 +98,11 @@ public interface IItemList<StackType extends IAEStack> extends IItemContainer<St
         return i != prevSize ? Arrays.copyOf(output, i) : output;
     }
 
-    byte getStackType();
+    /**
+     * @return stack type for list, null for all stack type
+     */
+    @Nullable
+    IAEStackType<StackType> getStackType();
 
     default public boolean isSorted() {
         return false;

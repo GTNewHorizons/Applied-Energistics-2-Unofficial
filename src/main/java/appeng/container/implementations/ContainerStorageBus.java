@@ -29,9 +29,9 @@ import appeng.api.config.StorageFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.parts.IStorageBus;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.IVirtualSlotHolder;
@@ -300,8 +300,8 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
         }
     }
 
-    public StorageChannel getStorageChannel() {
-        return this.storageBus.getStorageChannel();
+    public IAEStackType<?> getStackType() {
+        return this.storageBus.getStackType();
     }
 
     public IAEStackInventory getConfig() {

@@ -1,5 +1,7 @@
 package appeng.util.item;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -7,6 +9,7 @@ import javax.annotation.Nonnull;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
@@ -113,8 +116,8 @@ public class ItemFilterList implements IItemList<IAEItemStack> {
     }
 
     @Override
-    public byte getStackType() {
-        return LIST_ITEM;
+    public IAEStackType<IAEItemStack> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 
     public void clear() {

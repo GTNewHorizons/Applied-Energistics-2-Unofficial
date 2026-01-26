@@ -1,9 +1,14 @@
 package appeng.me.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import javax.annotation.Nonnull;
 
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+
+import org.jetbrains.annotations.NotNull;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
@@ -12,6 +17,7 @@ import appeng.api.storage.ICellInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.items.storage.ItemVoidStorageCell;
 import appeng.tile.inventory.IAEStackInventory;
@@ -30,9 +36,9 @@ public class VoidCellInventory<StackType extends IAEStack<StackType>> implements
         } else this.cellType = null;
     }
 
-    public static IMEInventoryHandler<?> getCell(final ItemStack o, final StorageChannel sc) {
-        if (sc == StorageChannel.ITEMS) return new ItemCellInventoryHandler(new VoidCellInventory<>(o));
-        if (sc == StorageChannel.FLUIDS) return new FluidCellInventoryHandler(new VoidCellInventory<>(o));
+    public static IMEInventoryHandler<?> getCell(final ItemStack o, final IAEStackType<?> type) {
+        if (type == ITEM_STACK_TYPE) return new ItemCellInventoryHandler(new VoidCellInventory<>(o));
+        if (type == FLUID_STACK_TYPE) return new FluidCellInventoryHandler(new VoidCellInventory<>(o));
         return null;
     }
 
@@ -58,7 +64,20 @@ public class VoidCellInventory<StackType extends IAEStack<StackType>> implements
 
     @Override
     public StorageChannel getChannel() {
-        return this.cellType.getStorageChannel();
+        IAEStackType<?> type = this.getStackType();
+        if (type == ITEM_STACK_TYPE) {
+            return StorageChannel.ITEMS;
+        }
+        if (type == FLUID_STACK_TYPE) {
+            return StorageChannel.FLUIDS;
+        }
+        return null;
+    }
+
+    @Override
+    @NotNull
+    public IAEStackType<?> getStackType() {
+        return cellType.getStackType();
     }
 
     @Override

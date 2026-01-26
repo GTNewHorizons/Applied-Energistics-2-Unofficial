@@ -17,14 +17,13 @@ import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 
-public class IgnoreMissingItemResolver<StackType extends IAEStack<StackType>>
-        implements CraftingRequestResolver<StackType> {
+public class IgnoreMissingItemResolver implements CraftingRequestResolver {
 
-    public static class IgnoreMissingItemTask<StackType extends IAEStack<StackType>> extends CraftingTask<StackType> {
+    public static class IgnoreMissingItemTask extends CraftingTask {
 
         private long fulfilled = 0;
 
-        public IgnoreMissingItemTask(CraftingRequest<StackType> request) {
+        public IgnoreMissingItemTask(CraftingRequest request) {
             super(request, Integer.MIN_VALUE + 200);
         }
 
@@ -109,7 +108,7 @@ public class IgnoreMissingItemResolver<StackType extends IAEStack<StackType>>
 
     @Nonnull
     @Override
-    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<StackType> request,
+    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest request,
             @Nonnull CraftingContext context) {
         if (request.craftingMode == CraftingMode.IGNORE_MISSING && request.allowSimulation) {
             return Collections.singletonList(new IgnoreMissingItemTask(request));

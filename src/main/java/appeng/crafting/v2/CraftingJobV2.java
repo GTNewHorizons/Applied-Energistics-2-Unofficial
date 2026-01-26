@@ -44,7 +44,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
     }
 
     protected CraftingContext context;
-    public CraftingRequest<?> originalRequest;
+    public CraftingRequest originalRequest;
     protected ICraftingCallback callback;
     protected String errorMessage = "";
 
@@ -65,7 +65,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
             final StackType what, final CraftingMode craftingMode, final ICraftingCallback callback) {
         this.context = new CraftingContext(world, meGrid, actionSource);
         this.callback = callback;
-        this.originalRequest = new CraftingRequest<>(what, SubstitutionMode.PRECISE_FRESH, true, craftingMode);
+        this.originalRequest = new CraftingRequest(what, SubstitutionMode.PRECISE_FRESH, true, craftingMode);
         this.context.addRequest(this.originalRequest);
         this.context.itemModel.ignore(what);
     }
@@ -74,7 +74,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
         this.totalByteCost = serializer.getBuffer().readLong();
         this.state = serializer.readEnum(State.class);
         this.errorMessage = ByteBufUtils.readUTF8String(serializer.getBuffer());
-        this.originalRequest = new CraftingRequest<>(serializer, this);
+        this.originalRequest = new CraftingRequest(serializer, this);
     }
 
     public static CraftingJobV2 deserialize(World world, ByteBuf buffer) {
@@ -143,7 +143,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
         long byteCost = totalByteCost;
         if (byteCost < 0) {
             byteCost = 0;
-            for (RequestInProcessing<?> request : context.getLiveRequests()) {
+            for (RequestInProcessing request : context.getLiveRequests()) {
                 byteCost += request.request.getByteCost();
             }
             totalByteCost = byteCost;
@@ -157,7 +157,7 @@ public class CraftingJobV2<StackType extends IAEStack<StackType>>
 
     @Override
     public void populatePlan(IItemList<IAEStack<?>> plan) {
-        for (CraftingTask<?> task : context.getResolvedTasks()) {
+        for (CraftingTask task : context.getResolvedTasks()) {
             task.populatePlan(plan);
         }
     }

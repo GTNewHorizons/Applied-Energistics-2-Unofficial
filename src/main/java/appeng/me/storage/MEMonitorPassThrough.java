@@ -20,8 +20,8 @@ import appeng.api.networking.storage.IBaseMonitor;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
@@ -36,8 +36,8 @@ public class MEMonitorPassThrough<T extends IAEStack<T>> extends MEPassThrough<T
     private IMEMonitor<T> monitor;
     private StorageFilter mode = StorageFilter.EXTRACTABLE_ONLY;
 
-    public MEMonitorPassThrough(final IMEInventory<T> i, final StorageChannel channel) {
-        super(i, channel);
+    public MEMonitorPassThrough(final IMEInventory<T> i, final IAEStackType<T> type) {
+        super(i, type);
         if (i instanceof IMEMonitor) {
             this.monitor = (IMEMonitor<T>) i;
         }

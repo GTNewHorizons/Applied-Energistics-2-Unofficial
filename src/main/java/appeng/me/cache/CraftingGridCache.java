@@ -10,14 +10,10 @@
 
 package appeng.me.cache;
 
-import static appeng.api.storage.data.IItemList.LIST_FLUID;
-import static appeng.api.storage.data.IItemList.LIST_ITEM;
-import static appeng.api.storage.data.IItemList.LIST_MIXED;
 import static appeng.util.Platform.convertStack;
 import static appeng.util.Platform.stackConvert;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,12 +30,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.Nonnull;
 
 import net.minecraft.world.World;
+
+import org.jetbrains.annotations.NotNull;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableCollection;
@@ -80,9 +77,10 @@ import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingLinkNexus;
@@ -232,7 +230,7 @@ public class CraftingGridCache
 
     public static void unpauseRebuilds() {
         pauseRebuilds--;
-        if (pauseRebuilds == 0 && rebuildNeeded.size() > 0) {
+        if (pauseRebuilds == 0 && !rebuildNeeded.isEmpty()) {
             ImmutableSet<CraftingGridCache> needed = ImmutableSet.copyOf(rebuildNeeded);
             rebuildNeeded.clear();
             for (CraftingGridCache cache : needed) {
@@ -248,16 +246,11 @@ public class CraftingGridCache
             return;
         }
 
-        final Map<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> oldItems = this.craftableItems;
-
         // erase list.
         this.craftingMethods.clear();
         this.craftableItems.clear();
         this.craftableItemSubstitutes.clear();
         this.emitableItems.clear();
-
-        // update the stuff that was in the list...
-        this.storageGrid.postAlterationOfStoredItems(StorageChannel.ITEMS, oldItems.keySet(), new BaseActionSource());
 
         // re-create list..
         for (final ICraftingProvider provider : this.craftingProviders) {
@@ -266,14 +259,16 @@ public class CraftingGridCache
 
         setPatternsFromCraftingMethods();
 
-        this.storageGrid.postAlterationOfStoredItems(
-                StorageChannel.ITEMS,
-                this.craftableItems.keySet().stream().filter(IAEStack::isItem).collect(Collectors.toList()),
-                new BaseActionSource());
-        this.storageGrid.postAlterationOfStoredItems(
-                StorageChannel.FLUIDS,
-                this.craftableItems.keySet().stream().filter(IAEStack::isFluid).collect(Collectors.toList()),
-                new BaseActionSource());
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            List<IAEStack<?>> list = new ArrayList<>();
+            for (IAEStack<?> craftable : this.craftableItems.keySet()) {
+                if (craftable.getStackType() == type) {
+                    list.add(craftable);
+                }
+            }
+
+            this.storageGrid.postAlterationOfStoredItems(type, list, new BaseActionSource());
+        }
 
         for (final ICraftingPostPatternChangeListener listener : this.postPatternChangeListeners) {
             listener.onPostPatternChange();
@@ -383,8 +378,8 @@ public class CraftingGridCache
     }
 
     @Override
-    public List<IMEInventoryHandler> getCellArray(final StorageChannel channel) {
-        return Arrays.asList(this);
+    public @NotNull List<IMEInventoryHandler> getCellArray(IAEStackType<?> type) {
+        return Collections.singletonList(this);
     }
 
     @Override
@@ -445,29 +440,18 @@ public class CraftingGridCache
 
     @Override
     public IItemList<IAEStack> getAvailableItems(final IItemList<IAEStack> out, int iteration) {
-
         // add craftable items!
         for (final IAEStack<?> stack : this.craftableItems.keySet()) {
-            if (stack instanceof IAEFluidStack afs) {
-                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_FLUID) {
-                    out.addCrafting(afs);
-                }
-            } else {
-                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_ITEM) {
-                    out.addCrafting(stack);
-                }
+            IAEStackType<?> type = out.getStackType();
+            if (type == null || type == stack.getStackType()) {
+                out.addCrafting(stack);
             }
         }
 
         for (final IAEStack<?> stack : emitableItems) {
-            if (stack instanceof IAEFluidStack afs) {
-                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_FLUID) {
-                    out.addCrafting(afs);
-                }
-            } else {
-                if (out.getStackType() == LIST_MIXED || out.getStackType() == LIST_ITEM) {
-                    out.addCrafting(stack);
-                }
+            IAEStackType<?> type = out.getStackType();
+            if (type == null || type == stack.getStackType()) {
+                out.addCrafting(stack);
             }
         }
 
