@@ -113,4 +113,8 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
     public void setShiftClickStack(ItemStack shiftClickStack) {
         this.shiftClickStack = shiftClickStack;
     }
+
+    public boolean isQuickMoveTarget() {
+        return true;
+    }
 }

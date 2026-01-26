@@ -31,4 +31,9 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
 
     @Override
     public void setShiftClickStack(ItemStack shiftClickStack) {}
+
+    @Override
+    public boolean isQuickMoveTarget() {
+        return false;
+    }
 }
