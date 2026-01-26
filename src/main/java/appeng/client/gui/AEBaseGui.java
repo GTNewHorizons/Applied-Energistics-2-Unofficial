@@ -623,8 +623,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                     if (selectedSlots.isEmpty() && appEngSlot.isPlayerSide()
                             && baseContainer.getValidDestinationFakeSlot(stackInSlot) == null) {
                         for (VirtualMESlot vmeSlot : this.virtualSlots) {
-                            if (vmeSlot instanceof VirtualMEPhantomSlot vmepSlot && vmepSlot.getAEStack() == null) {
-                                vmepSlot.handleMouseClicked(stackInSlot, isCtrlKeyDown(), mouseButton);
+                            if (vmeSlot instanceof VirtualMEPhantomSlot vmepSlot && vmepSlot.isQuickMoveTarget()
+                                    && vmepSlot.getAEStack() == null) {
+                                vmepSlot.setShiftClickStack(stackInSlot.copy());
                                 this.handlePhantomSlotInteraction(vmepSlot, mouseButton);
                                 break;
                             }

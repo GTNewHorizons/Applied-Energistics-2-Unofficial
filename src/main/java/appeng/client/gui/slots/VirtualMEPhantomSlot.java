@@ -144,4 +144,28 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
         NetworkHandler.instance
                 .sendToServer(new PacketVirtualSlot(this.getStorageName(), this.getSlotIndex(), currentStack));
     }
+
+    private ItemStack getTargetStack() {
+        if (this.shiftClickStack == null) {
+            ItemStack is = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
+            if (is == null && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)) {
+                is = ItemPanels.bookmarkPanel.draggedStack;
+                if (is == null) is = ItemPanels.itemPanel.draggedStack;
+            }
+
+            return is != null ? is.copy() : null;
+        }
+
+        final ItemStack is = this.shiftClickStack;
+        this.shiftClickStack = null;
+        return is;
+    }
+
+    public void setShiftClickStack(ItemStack shiftClickStack) {
+        this.shiftClickStack = shiftClickStack;
+    }
+
+    public boolean isQuickMoveTarget() {
+        return true;
+    }
 }

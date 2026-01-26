@@ -31,4 +31,12 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
 
         super.handleMouseClicked(itemStack, isExtraAction, mouseButton);
     }
+
+    @Override
+    public void setShiftClickStack(ItemStack shiftClickStack) {}
+
+    @Override
+    public boolean isQuickMoveTarget() {
+        return false;
+    }
 }
