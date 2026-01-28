@@ -192,7 +192,7 @@ gui.tooltips.appliedenergistics2.LevelType_Item_Fluid=Item / Fluid
 gui.tooltips.appliedenergistics2.InventoryTweaks=Reordonare Inventar
 gui.tooltips.appliedenergistics2.TerminalStyle=Stil de Terminalgui.tooltips.appliedenergistics2.TerminalStyle_Full=Terminal de Ecran Maregui.tooltips.appliedenergistics2.TerminalStyle_Tall=Terminal Centrat Maregui.tooltips.appliedenergistics2.TerminalStyle_Small=Terminal Centrat Mic
 
-gui.appliedenergistics2.units.appliedenergstics=AE
+gui.appliedenergistics2.units.appliedenergistics=AE
 gui.appliedenergistics2.units.ic2=Unități de Energie
 gui.appliedenergistics2.units.universalelectricity=Kilo Jouli
 gui.appliedenergistics2.units.rotarycraft=Wați

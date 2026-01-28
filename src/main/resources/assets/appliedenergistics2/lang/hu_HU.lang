@@ -333,7 +333,7 @@ gui.tooltips.appliedenergistics2.ItemsRequestable=Kérhető Tárgyak száma: %s
 gui.tooltips.appliedenergistics2.CraftingStatus=Barkácsolási Státusz
 
 # Units
-gui.appliedenergistics2.units.appliedenergstics=AE
+gui.appliedenergistics2.units.appliedenergistics=AE
 gui.appliedenergistics2.units.ic2=Energia Egység
 gui.appliedenergistics2.units.mekanism=Joule
 gui.appliedenergistics2.units.rotarycraft=Watt

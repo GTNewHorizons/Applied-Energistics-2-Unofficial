@@ -235,7 +235,7 @@ gui.tooltips.appliedenergistics2.TerminalStyle_Tall=高中央ターミナル
 gui.tooltips.appliedenergistics2.TerminalStyle_Small=小中央ターミナル
 gui.appliedenergistics2.InterfaceTerminal=MEインターフェースターミナル
 
-gui.appliedenergistics2.units.appliedenergstics=AE
+gui.appliedenergistics2.units.appliedenergistics=AE
 gui.appliedenergistics2.units.buildcraft=MJ[BuildCraft](マインクラフトジュール)
 gui.appliedenergistics2.units.ic2=EU[IndustrialCraft2](エネルギーユニット)
 gui.appliedenergistics2.units.universalelectricity=KJ[UniversalElectricity](キロジュール)
