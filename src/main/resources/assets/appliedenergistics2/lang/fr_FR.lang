@@ -332,7 +332,7 @@ gui.tooltips.appliedenergistics2.ItemsRequestable=Eléments recherchable: %s
 gui.tooltips.appliedenergistics2.CraftingStatus=Etat de fabrication
 
 # Units
-gui.appliedenergistics2.units.appliedenergstics=AE
+gui.appliedenergistics2.units.appliedenergistics=AE
 gui.appliedenergistics2.units.ic2=Energy Units
 gui.appliedenergistics2.units.mekanism=Joules
 gui.appliedenergistics2.units.rotarycraft=Watts

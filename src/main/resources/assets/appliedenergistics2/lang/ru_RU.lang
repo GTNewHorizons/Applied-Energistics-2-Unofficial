@@ -605,7 +605,7 @@ gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Отображе
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOffDesc=Показывать только интерфейсы с шаблонами с включённой заменой
 
 # Units
-gui.appliedenergistics2.units.appliedenergstics=AE
+gui.appliedenergistics2.units.appliedenergistics=AE
 gui.appliedenergistics2.units.ic2=EU
 gui.appliedenergistics2.units.mekanism=Дж
 gui.appliedenergistics2.units.rotarycraft=Вт

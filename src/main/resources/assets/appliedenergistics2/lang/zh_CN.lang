@@ -548,7 +548,7 @@ gui.tooltips.appliedenergistics2.StringOrderNatural=默认排序
 gui.tooltips.appliedenergistics2.StringOrderAlphanum=自然数序
 
 # Units
-gui.appliedenergistics2.units.appliedenergstics=AE
+gui.appliedenergistics2.units.appliedenergistics=AE
 gui.appliedenergistics2.units.ic2=EU
 gui.appliedenergistics2.units.mekanism=Joules
 gui.appliedenergistics2.units.rotarycraft=Watts
