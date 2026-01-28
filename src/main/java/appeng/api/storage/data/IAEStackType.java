@@ -4,17 +4,23 @@ import java.io.IOException;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.ResourceLocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public interface IAEStackType<T extends IAEStack> {
 
     String getId();
+
+    String getDisplayName();
 
     T loadStackFromNBT(NBTTagCompound tag);
 
@@ -73,4 +79,10 @@ public interface IAEStackType<T extends IAEStack> {
      */
     @NotNull
     ObjectLongPair<ItemStack> fillContainer(@NotNull ItemStack container, @NotNull T stack);
+
+    @SideOnly(Side.CLIENT)
+    ResourceLocation getButtonTexture();
+
+    @SideOnly(Side.CLIENT)
+    IIcon getButtonIcon();
 }
