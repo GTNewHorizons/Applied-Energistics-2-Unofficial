@@ -13,7 +13,7 @@ package appeng.client.gui.widgets;
 import appeng.api.config.SortDir;
 import appeng.api.config.ViewItems;
 import appeng.api.storage.data.IAEStackType;
-import appeng.container.implementations.MonitorableTypeFilter;
+import appeng.util.MonitorableTypeFilter;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public interface ISortSource {

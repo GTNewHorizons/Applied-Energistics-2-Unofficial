@@ -69,7 +69,6 @@ import appeng.client.gui.widgets.TypeToggleButton;
 import appeng.client.me.ItemRepo;
 import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerMEMonitorable;
-import appeng.container.implementations.MonitorableTypeFilter;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotCraftingMatrix;
 import appeng.container.slot.SlotFakeCraftingMatrix;
@@ -96,6 +95,7 @@ import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
 import appeng.items.storage.ItemViewCell;
 import appeng.util.IConfigManagerHost;
+import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 

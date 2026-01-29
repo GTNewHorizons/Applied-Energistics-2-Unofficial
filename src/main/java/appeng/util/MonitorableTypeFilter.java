@@ -1,4 +1,4 @@
-package appeng.container.implementations;
+package appeng.util;
 
 import java.util.HashMap;
 import java.util.Map;

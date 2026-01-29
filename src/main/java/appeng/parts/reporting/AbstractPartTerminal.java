@@ -35,7 +35,6 @@ import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
-import appeng.container.implementations.MonitorableTypeFilter;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IPrimaryGuiIconProvider;
 import appeng.items.contents.PinsHandler;
@@ -46,6 +45,7 @@ import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
+import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
