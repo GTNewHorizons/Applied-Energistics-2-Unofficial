@@ -19,6 +19,14 @@ public class AEStackTypeRegistry {
         register(FLUID_STACK_TYPE);
     }
 
+    /**
+     * Registers a new stack type with the registry.
+     * <p>
+     * This method must be called during the preInit phase of mod initialization. Registering stack types after preInit
+     * may cause issues with network serialization and type resolution.
+     *
+     * @param type The stack type to register
+     */
     public static void register(IAEStackType<?> type) {
         registry.put(type.getId(), type);
     }
