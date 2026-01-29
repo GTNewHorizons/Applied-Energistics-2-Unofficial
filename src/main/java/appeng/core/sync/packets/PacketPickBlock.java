@@ -78,6 +78,9 @@ public class PacketPickBlock extends AppEngPacket {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
 
         ItemStack itemToFind = getPickBlock(sender, this.blockX, this.blockY, this.blockZ);
+        if (itemToFind == null) {
+            return;
+        }
 
         // 1. Scan through the player's main inventory to categorize existing stacks of the target block:
         // - If a full stack (stackSize >= maxStackSize) is found, record its slot and stop searching.
