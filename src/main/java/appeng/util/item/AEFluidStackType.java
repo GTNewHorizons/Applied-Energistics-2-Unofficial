@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidContainerItem;
@@ -16,8 +18,12 @@ import appeng.api.AEApi;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
+import appeng.client.texture.ExtraBlockTextures;
+import appeng.core.localization.GuiText;
 import appeng.util.FluidUtils;
 import codechicken.nei.recipe.StackInfo;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectLongImmutablePair;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
@@ -30,6 +36,11 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     @Override
     public String getId() {
         return FLUID_STACK_ID;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return GuiText.Fluids.getLocal();
     }
 
     @Override
@@ -115,5 +126,63 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     public @NotNull ObjectLongPair<ItemStack> fillContainer(@NotNull ItemStack container,
             @NotNull IAEFluidStack stack) {
         return FluidUtils.fillFluidContainer(container, stack.getFluidStack());
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public ResourceLocation getButtonTexture() {
+        return ExtraBlockTextures.GuiTexture("guis/states.png");
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public IIcon getButtonIcon() {
+        return new IIcon() {
+
+            @Override
+            public int getIconWidth() {
+                return 16;
+            }
+
+            @Override
+            public int getIconHeight() {
+                return 16;
+            }
+
+            @Override
+            public float getMinU() {
+                return (float) 128 / 256;
+            }
+
+            @Override
+            public float getMaxU() {
+                return (float) 144 / 256;
+            }
+
+            @Override
+            public float getInterpolatedU(double p_94214_1_) {
+                return 0;
+            }
+
+            @Override
+            public float getMinV() {
+                return (float) 48 / 256;
+            }
+
+            @Override
+            public float getMaxV() {
+                return (float) 64 / 256;
+            }
+
+            @Override
+            public float getInterpolatedV(double p_94207_1_) {
+                return 0;
+            }
+
+            @Override
+            public String getIconName() {
+                return "FluidIcon";
+            }
+        };
     }
 }

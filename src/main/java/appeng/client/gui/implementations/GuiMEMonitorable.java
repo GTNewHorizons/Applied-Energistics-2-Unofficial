@@ -12,8 +12,10 @@ package appeng.client.gui.implementations;
 
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -24,6 +26,8 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -41,8 +45,11 @@ import appeng.api.config.YesNo;
 import appeng.api.implementations.tiles.IViewCellStorage;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
+import appeng.api.storage.ITerminalTypeFilterProvider;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IDisplayRepo;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
@@ -58,6 +65,7 @@ import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.gui.widgets.MEGuiTextField;
+import appeng.client.gui.widgets.TypeToggleButton;
 import appeng.client.me.ItemRepo;
 import appeng.container.AEBaseContainer;
 import appeng.container.implementations.ContainerMEMonitorable;
@@ -75,6 +83,7 @@ import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketMonitorableAction;
+import appeng.core.sync.packets.PacketMonitorableTypeFilter;
 import appeng.core.sync.packets.PacketPinsUpdate;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
@@ -86,7 +95,9 @@ import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
 import appeng.items.storage.ItemViewCell;
 import appeng.util.IConfigManagerHost;
+import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class GuiMEMonitorable extends AEBaseGui
         implements ISortSource, IConfigManagerHost, IDropToFillTextField, IPinsHandler {
@@ -119,8 +130,8 @@ public class GuiMEMonitorable extends AEBaseGui
     private GuiImgButton searchBoxSettings;
     private GuiImgButton terminalStyleBox;
     private GuiImgButton searchStringSave;
-    private GuiImgButton typeFilter;
     private GuiImgButton pinsStateButton;
+    private final Map<TypeToggleButton, IAEStackType<?>> typeToggleButtons = new IdentityHashMap<>();
     private boolean canBeAutoFocused = false;
     private boolean isAutoFocused = false;
     private int currentMouseX = 0;
@@ -131,6 +142,8 @@ public class GuiMEMonitorable extends AEBaseGui
 
     protected VirtualMEPinSlot[] pinSlots = null;
     protected VirtualMEMonitorableSlot[] monitorableSlots = null;
+    @Nullable
+    protected Reference2BooleanMap<IAEStackType<?>> typeFilters;
 
     private final ITerminalHost host;
 
@@ -177,6 +190,10 @@ public class GuiMEMonitorable extends AEBaseGui
         };
 
         NEI.searchField.putFormatter(this.searchField);
+
+        if (this.host instanceof ITerminalTypeFilterProvider) {
+            this.typeFilters = MonitorableTypeFilter.createDefaultMap();
+        }
     }
 
     public void postUpdate(final List<IAEStack<?>> list) {
@@ -198,6 +215,24 @@ public class GuiMEMonitorable extends AEBaseGui
 
     @Override
     protected void actionPerformed(final GuiButton btn) {
+        if (btn instanceof final TypeToggleButton tbtn) {
+            final IAEStackType<?> type = this.typeToggleButtons.get(tbtn);
+            if (type != null && this.typeFilters != null) {
+                // Optimistic client-side feedback; server will sync authoritative state shortly.
+                final boolean next = !this.typeFilters.getBoolean(type);
+                this.typeFilters.put(type, next);
+                tbtn.setEnabled(next);
+                this.repo.updateView();
+
+                try {
+                    NetworkHandler.instance.sendToServer(new PacketMonitorableTypeFilter(this.typeFilters));
+                } catch (final IOException e) {
+                    AELog.debug(e);
+                }
+            }
+            return;
+        }
+
         if (actionPerformedCustomButtons(btn)) return;
 
         if (btn == this.craftingStatusBtn || btn == this.craftingStatusImgBtn) {
@@ -321,6 +356,8 @@ public class GuiMEMonitorable extends AEBaseGui
 
         buttonList.clear();
 
+        initTypeToggleButtons(this.guiLeft - 36, offset);
+
         if (this.customSortOrder) {
             this.buttonList.add(
                     this.SortByBox = new GuiImgButton(
@@ -340,13 +377,6 @@ public class GuiMEMonitorable extends AEBaseGui
                             this.configSrc.getSetting(Settings.VIEW_MODE)));
             offset += 20;
         }
-        this.buttonList.add(
-                this.typeFilter = new GuiImgButton(
-                        this.guiLeft - 18,
-                        offset,
-                        Settings.TYPE_FILTER,
-                        this.configSrc.getSetting(Settings.TYPE_FILTER)));
-        offset += 20;
 
         this.buttonList.add(
                 this.SortDirBox = new GuiImgButton(
@@ -456,6 +486,26 @@ public class GuiMEMonitorable extends AEBaseGui
         craftingGridOffsetY -= 6;
 
         this.enableShiftPause = AEConfig.instance.settings.getSetting(Settings.PAUSE_WHEN_HOLDING_SHIFT) == YesNo.YES;
+    }
+
+    private void initTypeToggleButtons(final int x, final int yStart) {
+        this.typeToggleButtons.clear();
+        if (this.typeFilters == null) return;
+
+        int y = yStart;
+        for (final IAEStackType<?> type : AEStackTypeRegistry.getSortedTypes()) {
+            final ResourceLocation texture = type.getButtonTexture();
+            final IIcon icon = type.getButtonIcon();
+            if (texture == null || icon == null) continue;
+
+            final TypeToggleButton btn = new TypeToggleButton(x, y, texture, icon, type.getDisplayName());
+
+            btn.setEnabled(this.typeFilters.getBoolean(type));
+            this.typeToggleButtons.put(btn, type);
+            this.buttonList.add(btn);
+
+            y += 20;
+        }
     }
 
     protected int calculateRowsCount() {
@@ -836,8 +886,9 @@ public class GuiMEMonitorable extends AEBaseGui
     }
 
     @Override
-    public Enum getTypeFilter() {
-        return this.configSrc.getSetting(Settings.TYPE_FILTER);
+    @Nullable
+    public Reference2BooleanMap<IAEStackType<?>> getTypeFilter() {
+        return this.typeFilters;
     }
 
     @Override
@@ -859,15 +910,27 @@ public class GuiMEMonitorable extends AEBaseGui
             this.ViewBox.set(this.configSrc.getSetting(Settings.VIEW_MODE));
         }
 
-        if (this.typeFilter != null) {
-            this.typeFilter.set(this.configSrc.getSetting(Settings.TYPE_FILTER));
-        }
-
         if (this.pinsStateButton != null) {
             pinsState = (PinsState) this.configSrc.getSetting(Settings.PINS_STATE);
             this.pinsStateButton.set(pinsState);
 
             reinitalize();
+        }
+
+        this.repo.updateView();
+    }
+
+    public void updateTypeFilters(Reference2BooleanMap<IAEStackType<?>> map) {
+        if (this.typeFilters == null) return;
+
+        for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : map.reference2BooleanEntrySet()) {
+            this.typeFilters.put(entry.getKey(), entry.getBooleanValue());
+        }
+
+        // Update Buttons
+        for (final Map.Entry<TypeToggleButton, IAEStackType<?>> entry : this.typeToggleButtons.entrySet()) {
+            final boolean enabled = this.typeFilters.getBoolean(entry.getValue());
+            entry.getKey().setEnabled(enabled);
         }
 
         this.repo.updateView();

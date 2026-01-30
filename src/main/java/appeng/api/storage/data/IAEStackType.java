@@ -4,17 +4,23 @@ import java.io.IOException;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.ResourceLocation;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public interface IAEStackType<T extends IAEStack> {
 
     String getId();
+
+    String getDisplayName();
 
     T loadStackFromNBT(NBTTagCompound tag);
 
@@ -40,7 +46,7 @@ public interface IAEStackType<T extends IAEStack> {
 
     /**
      * mainly used for GT Fluid Display and TC4 aspect item
-     * 
+     *
      * @param itemStack should not be container
      * @return AEStack
      */
@@ -73,4 +79,21 @@ public interface IAEStackType<T extends IAEStack> {
      */
     @NotNull
     ObjectLongPair<ItemStack> fillContainer(@NotNull ItemStack container, @NotNull T stack);
+
+    /**
+     * Gets the texture resource location for the button representing this stack type. Primarily used for terminal
+     * buttons.
+     *
+     * @return The texture resource location for the button
+     */
+    @SideOnly(Side.CLIENT)
+    ResourceLocation getButtonTexture();
+
+    /**
+     * Gets the icon for the button representing this stack type. Primarily used for terminal buttons.
+     *
+     * @return The icon for the button
+     */
+    @SideOnly(Side.CLIENT)
+    IIcon getButtonIcon();
 }

@@ -49,7 +49,6 @@ import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
-import appeng.api.config.TypeFilter;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.implementations.tiles.IMEChest;
@@ -67,6 +66,7 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
+import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
@@ -82,6 +82,7 @@ import appeng.container.slot.SlotRestrictedInput;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
+import appeng.core.sync.packets.PacketMonitorableTypeFilter;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IPinsHandler;
 import appeng.helpers.MonitorableAction;
@@ -98,6 +99,7 @@ import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class ContainerMEMonitorable extends AEBaseContainer
         implements IConfigManagerHost, IConfigurableObject, IMEMonitorHandlerReceiver<IAEStack<?>>, IPinsHandler {
@@ -110,6 +112,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     private final IConfigManager clientCM;
     private final ITerminalHost host;
+    private Reference2BooleanMap<IAEStackType<?>> typeFilters;
 
     private PinsHandler pinsHandler = null;
 
@@ -137,7 +140,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
         this.clientCM.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.clientCM.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.clientCM.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-        this.clientCM.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
         this.clientCM.registerSetting(Settings.PINS_STATE, PinsState.DISABLED); // use for GUI
 
         if (Platform.isServer()) {
@@ -170,6 +172,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 if (g != null) {
                     this.setPowerSource(new ChannelPowerSrc(this.networkNode, g.getCache(IEnergyGrid.class)));
                 }
+            }
+
+            if (monitorable instanceof ITerminalTypeFilterProvider provider) {
+                this.typeFilters = provider.getTypeFilter(ip.player);
             }
         } else {
             this.itemMonitor = null;
@@ -316,22 +322,31 @@ public class ContainerMEMonitorable extends AEBaseContainer
     @Override
     public void addCraftingToCrafters(final ICrafting c) {
         super.addCraftingToCrafters(c);
-        this.queueInventory(c);
+        if (Platform.isServer() && c instanceof EntityPlayerMP player) {
+            if (this.host instanceof ITerminalTypeFilterProvider provider) {
+                this.typeFilters = provider.getTypeFilter(player);
+                try {
+                    NetworkHandler.instance.sendTo(new PacketMonitorableTypeFilter(this.typeFilters), player);
+                } catch (final IOException e) {
+                    AELog.debug(e);
+                }
+            }
+
+            this.queueInventory(player);
+        }
     }
 
-    private void queueInventory(final ICrafting c) {
-        if (Platform.isServer() && c instanceof EntityPlayerMP player) {
-            try {
-                PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
+    private void queueInventory(final EntityPlayerMP player) {
+        try {
+            PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
 
-                for (var monitor : this.monitors.values()) {
-                    piu = queueInventoryList(piu, monitor.getStorageList(), player);
-                }
-
-                NetworkHandler.instance.sendTo(piu, player);
-            } catch (final IOException e) {
-                AELog.debug(e);
+            for (var monitor : this.monitors.values()) {
+                piu = queueInventoryList(piu, monitor.getStorageList(), player);
             }
+
+            NetworkHandler.instance.sendTo(piu, player);
+        } catch (final IOException e) {
+            AELog.debug(e);
         }
     }
 
@@ -390,8 +405,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
     @Override
     public void onListUpdate() {
         for (final Object c : this.crafters) {
-            if (c instanceof ICrafting cr) {
-                this.queueInventory(cr);
+            if (c instanceof EntityPlayerMP player) {
+                this.queueInventory(player);
             }
         }
     }
@@ -439,6 +454,16 @@ public class ContainerMEMonitorable extends AEBaseContainer
         if (!(cellStack.getItem() instanceof ItemViewCell viewCell)) return;
         viewCell.toggleViewMode(cellStack);
         detectAndSendChanges();
+    }
+
+    public void updateTypeFilters(Reference2BooleanMap<IAEStackType<?>> map) {
+        if (this.host instanceof ITerminalTypeFilterProvider provider) {
+            for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : map.reference2BooleanEntrySet()) {
+                this.typeFilters.put(entry.getKey(), entry.getBooleanValue());
+            }
+
+            provider.saveTypeFilter();
+        }
     }
 
     public boolean isPowered() {

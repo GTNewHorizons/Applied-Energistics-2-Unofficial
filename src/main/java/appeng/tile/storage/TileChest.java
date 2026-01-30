@@ -33,6 +33,8 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
@@ -41,7 +43,6 @@ import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
-import appeng.api.config.TypeFilter;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.tiles.IColorableTile;
 import appeng.api.implementations.tiles.IMEChest;
@@ -75,6 +76,7 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.MEMonitorHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.AEStackTypeRegistry;
@@ -96,12 +98,14 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
+import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
 import appeng.util.item.AEFluidStack;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHandler, ITerminalHost, IPriorityHost,
-        IConfigManagerHost, IColorableTile, IGridTickable, IPrimaryGuiIconProvider {
+        IConfigManagerHost, IColorableTile, IGridTickable, IPrimaryGuiIconProvider, ITerminalTypeFilterProvider {
 
     private static final ChestNoHandler NO_HANDLER = new ChestNoHandler();
     private static final int[] SIDES = { 0 };
@@ -125,6 +129,8 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
     @SuppressWarnings("rawtypes")
     private final Map<IAEStackType<?>, MEMonitorHandler> cellMap = new IdentityHashMap<>();
     private boolean displayNeedsUpdate;
+    @NotNull
+    private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
 
     public TileChest() {
         this.setInternalMaxPower(PowerMultiplier.CONFIG.multiply(40));
@@ -132,7 +138,6 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         this.config.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.config.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.config.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-        this.config.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
         this.setInternalPublicPowerStorage(true);
         this.setInternalPowerFlow(AccessRestriction.WRITE);
     }
@@ -432,6 +437,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             this.paintedColor = AEColor.values()[data.getByte("paintedColor")];
             this.getProxy().setColor(this.paintedColor);
         }
+        this.typeFilters.readFromNBT(data);
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)
@@ -439,6 +445,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         this.config.writeToNBT(data);
         data.setInteger("priority", this.priority);
         data.setByte("paintedColor", (byte) this.paintedColor.ordinal());
+        this.typeFilters.writeToNBT(data);
     }
 
     @MENetworkEventSubscribe
@@ -770,6 +777,17 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
             }
         }
         return 0;
+    }
+
+    @Override
+    @NotNull
+    public Reference2BooleanMap<IAEStackType<?>> getTypeFilter(EntityPlayer player) {
+        return this.typeFilters.getFilters(player);
+    }
+
+    @Override
+    public void saveTypeFilter() {
+        this.saveChanges();
     }
 
     private static class ChestNoHandler extends Exception {
