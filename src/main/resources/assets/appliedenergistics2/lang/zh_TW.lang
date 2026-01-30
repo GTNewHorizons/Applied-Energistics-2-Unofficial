@@ -283,7 +283,7 @@ gui.tooltips.appliedenergistics2.SwitchBytesInfo_Item=物品
 gui.tooltips.appliedenergistics2.SwitchBytesInfo_Fluid=流體
 gui.tooltips.appliedenergistics2.SwitchBytesInfo_Essentia=源質
 
-gui.appliedenergistics2.units.appliedenergstics=AE
+gui.appliedenergistics2.units.appliedenergistics=AE
 gui.appliedenergistics2.units.ic2=EU
 gui.appliedenergistics2.units.universalelectricity=KJ
 gui.appliedenergistics2.units.rotarycraft=Watts
