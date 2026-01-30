@@ -5,6 +5,7 @@ tile.appliedenergistics2.BlockCharger.name=充能器
 tile.appliedenergistics2.BlockChest.name=ME箱子
 tile.appliedenergistics2.BlockCondenser.name=物质聚合器
 tile.appliedenergistics2.BlockController.name=ME控制器
+tile.appliedenergistics2.BlockCreativeEnergyController.name=ME Self Powered Controller
 tile.appliedenergistics2.BlockCrank.name=木质曲柄
 tile.appliedenergistics2.BlockCreativeEnergyCell.name=创造能源元件
 tile.appliedenergistics2.BlockDenseEnergyCell.name=致密能源元件
@@ -60,8 +61,12 @@ tile.appliedenergistics2.BlockCraftingAccelerator256x.name=256核并行处理单
 tile.appliedenergistics2.BlockCraftingAccelerator1024x.name=1024核并行处理单元
 tile.appliedenergistics2.BlockCraftingAccelerator4096x.name=4096核并行处理单元
 tile.appliedenergistics2.BlockCraftingUnit.name=合成单元
+tile.appliedenergistics2.BlockAdvancedCraftingStorage.name=Crafting Storage
+tile.appliedenergistics2.BlockAdvancedCraftingUnit.name=Crafting Unit
 tile.appliedenergistics2.BlockMolecularAssembler.name=分子装配室
 tile.appliedenergistics2.BlockPatternOptimizationMatrix.name=样板优化矩阵
+tile.appliedenergistics2.BlockSingularityCraftingStorage.name=Singularity Crafting Storage
+tile.appliedenergistics2.BlockPaint.name=Paint
 
 # Stairs
 tile.appliedenergistics2.ChiseledQuartzStairBlock.name=錾制赛特斯石英楼梯
@@ -75,13 +80,21 @@ tile.appliedenergistics2.SkyStoneStairBlock.name=陨石楼梯
 
 # Slabs
 tile.appliedenergistics2.ChiseledQuartzSlabBlock.name=錾制赛特斯石英台阶
+tile.appliedenergistics2.ChiseledQuartzSlabBlock.double.name=Chiseled Certus Quartz Slabs
 tile.appliedenergistics2.FluixSlabBlock.name=福鲁伊克斯台阶
+tile.appliedenergistics2.FluixSlabBlock.double.name=Fluix Slabs
 tile.appliedenergistics2.QuartzPillarSlabBlock.name=竖纹赛特斯石英台阶
+tile.appliedenergistics2.QuartzPillarSlabBlock.double.name=Certus Quartz Pillar Slabs
 tile.appliedenergistics2.QuartzSlabBlock.name=赛特斯石英台阶
+tile.appliedenergistics2.QuartzSlabBlock.double.name=Certus Quartz Slabs
 tile.appliedenergistics2.SkyStoneBlockSlabBlock.name=陨石块台阶
+tile.appliedenergistics2.SkyStoneBlockSlabBlock.double.name=Sky Stone Block Slabs
 tile.appliedenergistics2.SkyStoneBrickSlabBlock.name=陨石石砖台阶
+tile.appliedenergistics2.SkyStoneBrickSlabBlock.double.name=Sky Stone Brick Slabs
 tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.name=陨石砖块台阶
+tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.double.name=Sky Stone Small Brick Slabs
 tile.appliedenergistics2.SkyStoneSlabBlock.name=陨石台阶
+tile.appliedenergistics2.SkyStoneSlabBlock.double.name=Sky Stone Slabs
 
 # Chat Messages
 chat.appliedenergistics2.ChestCannotReadStorageCell=ME箱子无法读取存储元件.
@@ -105,14 +118,28 @@ chat.appliedenergistics2.TunnelHasNoOutputs=通道无出口.
 chat.appliedenergistics2.TunnelOutputsAreAt=通道出口位于:
 chat.appliedenergistics2.InterfaceInOtherDim=接口位于 %d 世界，无法高亮显示
 chat.appliedenergistics2.InterfaceHighlighted=接口已高亮，坐标：%d, %d, %d
+chat.appliedenergistics2.LevelEmitterInAnotherDim=Level emitter located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.LevelEmitterHighlighted=The level emitter is now highlighted at %d, %d, %d
+chat.appliedenergistics2.P2PInAnotherDim=P2P located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.P2PHighlighted=The P2P is now highlighted at %d, %d, %d
 chat.appliedenergistics2.CraftingItemsWentMissing=无法开始合成, 材料缺少: %d * %s
 chat.appliedenergistics2.FBOUnsupported=不支持OpenGL FBOs,无法导出图片
 chat.appliedenergistics2.PriorityInvalidTarget=目标没有优先级
 chat.appliedenergistics2.PriorityReadout=当前优先级是%d
 chat.appliedenergistics2.PriorityConfigured=更新优先级到%d
-chat.appliedenergistics2.DriveLocked=Digital Singularity cells in drive were locked to the current item on them
-chat.appliedenergistics2.ChestLocked=Digital Singularity cell in chest was locked to the current item on it
+chat.appliedenergistics2.DriveLockingToggled=Cells in drive were partitioned/unpartitioned
+chat.appliedenergistics2.ChestLockingToggled=Cell in chest was partitioned/unpartitioned
 chat.appliedenergistics2.FinishCraftingRemind=合成 %s 个 %s 的任务已完成, 总计使用时间 %s。
+chat.appliedenergistics2.CraftingCantExtract=Can't extract ingredient: %d / %d | %s
+chat.appliedenergistics2.MachineInOtherDim=%d located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.MachineInOtherDimNamed=%d "%s" located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.MachineHighlighted=The %d is now highlighted at %d, %d, %d
+chat.appliedenergistics2.MachineHighlightedNamed=The %d "%d" is now highlighted at %d, %d, %d
+chat.appliedenergistics2.StorageHighlighted=The %d containing %d %d is now highlighted at %d, %d, %d
+chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.PickBlockTerminalNotFound=AE2 wireless terminal not found.
+chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
+chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
 
 # Creative Tabs
 itemGroup.appliedenergistics2=应用能源2
@@ -206,6 +233,9 @@ gui.appliedenergistics2.IOBuses=ME输入/输出总线
 gui.appliedenergistics2.Stores=存储
 gui.appliedenergistics2.BytesUsed=字节已使用
 gui.appliedenergistics2.TimeUsed=已使用时间
+gui.appliedenergistics2.CraftName=Craft Name
+gui.appliedenergistics2.Remains=Remains
+gui.appliedenergistics2.Progress=Progress
 gui.appliedenergistics2.Types=类型
 gui.appliedenergistics2.Blank=空白
 gui.appliedenergistics2.Unlinked=未链接
@@ -220,6 +250,10 @@ gui.appliedenergistics2.ProcessingPattern=处理样板
 gui.appliedenergistics2.Crafts=合成
 gui.appliedenergistics2.HoldShift=按住 [LSHIFT] 以显示原料
 gui.appliedenergistics2.PatternView=按下 [%s] 查看样板
+gui.appliedenergistics2.Result=Result
+gui.appliedenergistics2.Results=Results
+gui.appliedenergistics2.Ingredients=Ingredients
+gui.appliedenergistics2.Ingredient=Ingredient
 gui.appliedenergistics2.And=与
 gui.appliedenergistics2.Creates=制作
 gui.appliedenergistics2.With=使用
@@ -246,7 +280,10 @@ gui.appliedenergistics2.Next=下一页
 gui.appliedenergistics2.Lumen=光通
 gui.appliedenergistics2.Empty=空
 gui.appliedenergistics2.Stored=现存
+gui.appliedenergistics2.AddToBookmark=Bookmark
 gui.appliedenergistics2.Cancel=取消
+gui.appliedenergistics2.Suspend=Suspend
+gui.appliedenergistics2.Resume=Resume
 gui.appliedenergistics2.ETAFormat=HH:mm:ss
 gui.appliedenergistics2.SwitchCraftingSimulationDisplayMode=切换显示模式(列表/树形图)
 gui.appliedenergistics2.Crafting=正在合成
@@ -265,6 +302,7 @@ gui.appliedenergistics2.Merge=合并
 gui.appliedenergistics2.Missing=缺失
 gui.appliedenergistics2.NoCraftingTreeReceived=未收到合成树
 gui.appliedenergistics2.CraftingStepLimitExceeded=超出合成步骤限制
+gui.appliedenergistics2.CraftingSizeLimitExceeded=Crafting size limit exceeded
 gui.appliedenergistics2.RequestedItem=需要物品
 gui.appliedenergistics2.SimulationIncomplete=模拟不完全
 gui.appliedenergistics2.Bytes=可存储
@@ -308,11 +346,18 @@ gui.appliedenergistics2.HoldShiftForTooltip=按住Shift以查看拓展tooltip
 gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=shift点击,高亮ME接口
 gui.appliedenergistics2.Nothing=无
 gui.appliedenergistics2.VoidCellTooltip=删除§任何§7存储在里面的物品
+gui.appliedenergistics2.CellView=Cell View
+gui.appliedenergistics2.Inputs=Inputs
+gui.appliedenergistics2.Outputs=Outputs
+gui.appliedenergistics2.EncodedPattern=Encoded Pattern
 gui.appliedenergistics2.Deprecated=已弃用,会在后续版本移除!
+gui.appliedenergistics2.ViewCellToggleKey=Right-click to toggle
 gui.appliedenergistics2.CPUAllowMode=接受的合成来源
 gui.appliedenergistics2.CPUAllowAll=所有来源
 gui.appliedenergistics2.CPUOnlyAllowNonPlayer=仅非玩家请求
 gui.appliedenergistics2.CPUOnlyAllowPlayer=仅玩家请求
+gui.appliedenergistics2.CPUSourcePlayer=Requester
+gui.appliedenergistics2.CPUSourceMachineRequested=Machine Requested
 
 gui.appliedenergistics2.NetworkBytesDetails=网络存储信息
 gui.appliedenergistics2.Items=物品
@@ -326,15 +371,21 @@ gui.appliedenergistics2.TypesInfo=种类
 gui.appliedenergistics2.BytesInfo=字节
 gui.appliedenergistics2.ToFollow=订阅
 gui.appliedenergistics2.ToUnfollow=取消
-
-gui.tooltips.appliedenergistics2.CPUAllowMode=合成请求限制
-gui.tooltips.appliedenergistics2.CPUAllowAllDesc=接受所有合成请求
-gui.tooltips.appliedenergistics2.CPUOnlyAllowPlayerDesc=仅接受玩家提出合成请求
-gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=仅接受非玩家提出合成请求
+gui.appliedenergistics2.CellRestriction=Cell Restriction
+gui.appliedenergistics2.Restricted=Restricted
+gui.appliedenergistics2.CellRestrictionTips=0 for default
+gui.appliedenergistics2.MaxItems=Max Items:
+gui.appliedenergistics2.MaxFluid=Max Fluids:
+gui.appliedenergistics2.MaxTypes=Max Types:
+gui.appliedenergistics2.NumberOfItems=Number of items
+gui.appliedenergistics2.NumberOfFluids=Number of fluids
+gui.appliedenergistics2.ItemsPerByte=Items per byte:
+gui.appliedenergistics2.FluidsPerByte=Fluids per byte:
+gui.appliedenergistics2.BytesPerType=Bytes per type:
+gui.appliedenergistics2.SelectColor=Select a Color
+gui.appliedenergistics2.Selected=Selected
 
 # GUI Colors - ARGB
-gui.color.appliedenergistics2.SearchboxFocused=6E000000
-gui.color.appliedenergistics2.SearchboxUnfocused=00000000
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
 gui.color.appliedenergistics2.SearchboxUnfocused=00000000
 gui.color.appliedenergistics2.ItemSlotOverlayUnpowered=66111111
@@ -387,12 +438,14 @@ gui.tooltips.appliedenergistics2.NumberOfItems=物品数量
 gui.tooltips.appliedenergistics2.ItemName=物品名称
 gui.tooltips.appliedenergistics2.PowerUnits=能源单位
 gui.tooltips.appliedenergistics2.IOMode=输入/输出模式
+gui.tooltips.appliedenergistics2.ExtractionMode=Extraction Mode
 gui.tooltips.appliedenergistics2.CondenserOutput=ME聚合器-输出
 gui.tooltips.appliedenergistics2.PartitionStorage=分区存储
 gui.tooltips.appliedenergistics2.Clear=清除
 gui.tooltips.appliedenergistics2.TrashController=通过按下shift或空格点击删除.
 
 gui.tooltips.appliedenergistics2.InterfaceBlockingMode=阻挡模式
+gui.tooltips.appliedenergistics2.InterfaceSmartBlockingMode=Smart Blocking Mode
 gui.tooltips.appliedenergistics2.InterfaceCraftingMode=合成模式
 gui.tooltips.appliedenergistics2.Trash=销毁物品
 gui.tooltips.appliedenergistics2.MatterBalls=每%s个物品\n聚合为一个物质球
@@ -400,6 +453,8 @@ gui.tooltips.appliedenergistics2.Singularity=每%s个物品\n聚合为一个奇�
 gui.tooltips.appliedenergistics2.Read=只读
 gui.tooltips.appliedenergistics2.Write=只写
 gui.tooltips.appliedenergistics2.ReadWrite=双向
+gui.tooltips.appliedenergistics2.Strict=Strict - Network sees only filtered items
+gui.tooltips.appliedenergistics2.Loose=Loose - Network sees everything
 
 gui.tooltips.appliedenergistics2.AlwaysActive=总是激活
 gui.tooltips.appliedenergistics2.ActiveWithoutSignal=无信号时激活
@@ -415,6 +470,7 @@ gui.tooltips.appliedenergistics2.SearchMode_NEIStandard=NEI标准同步
 gui.tooltips.appliedenergistics2.SearchMode=搜索框模式
 
 gui.tooltips.appliedenergistics2.PartitionStorageHint=基于当前已存储物品进行分区编辑.
+gui.tooltips.appliedenergistics2.NextPartitionStorageHint=Click to get next item in the storage.
 gui.tooltips.appliedenergistics2.ClearSettings=清除配置
 gui.tooltips.appliedenergistics2.Craftable=可合成
 gui.tooltips.appliedenergistics2.MoveWhenEmpty=当元件为空时移动至输出口.
@@ -424,6 +480,8 @@ gui.tooltips.appliedenergistics2.Disabled=禁用
 gui.tooltips.appliedenergistics2.Enable=启用
 gui.tooltips.appliedenergistics2.Blocking=当容器内有物品时不传送物品.
 gui.tooltips.appliedenergistics2.NonBlocking=忽略目标容器的内容.
+gui.tooltips.appliedenergistics2.SmartBlocking=Allow insert same recipe.
+gui.tooltips.appliedenergistics2.NonSmartBlocking=Regular blocking mode behavior.
 gui.tooltips.appliedenergistics2.Craft=输出时若有需要则合成物品.
 gui.tooltips.appliedenergistics2.CraftOnly=不使用已存储物品,只使用合成物品.
 gui.tooltips.appliedenergistics2.CraftEither=输出时使用已存储物品或合成物品.
@@ -438,6 +496,7 @@ gui.tooltips.appliedenergistics2.TerminalStyle_Full=全屏
 gui.tooltips.appliedenergistics2.TerminalStyle_Tall=长
 gui.tooltips.appliedenergistics2.TerminalStyle_Small=短
 gui.tooltips.appliedenergistics2.SaveAsImage=保存为图片
+gui.tooltips.appliedenergistics2.HideStored=Hide Stored Items
 
 gui.tooltips.appliedenergistics2.DoesntDespawn=该物品不会消失.
 gui.tooltips.appliedenergistics2.EmitterMode=合成发信模式
@@ -546,6 +605,40 @@ gui.tooltips.appliedenergistics2.ToUnfollow=当前已经订阅该合成的消息
 gui.tooltips.appliedenergistics2.StringOrder=排序方式
 gui.tooltips.appliedenergistics2.StringOrderNatural=默认排序
 gui.tooltips.appliedenergistics2.StringOrderAlphanum=自然数序
+gui.tooltips.appliedenergistics2.CellRestrictionLabel=Cell Restriction
+gui.tooltips.appliedenergistics2.CellRestrictionHint=Setup Cell Restriction
+
+gui.tooltips.appliedenergistics2.SearchGotoNext=Find next
+gui.tooltips.appliedenergistics2.SearchGotoPrev=Find prev
+
+gui.tooltips.appliedenergistics2.CPUAllowMode=合成请求限制
+gui.tooltips.appliedenergistics2.CPUAllowAllDesc=接受所有合成请求
+gui.tooltips.appliedenergistics2.CPUOnlyAllowPlayerDesc=仅接受玩家提出合成请求
+gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=仅接受非玩家提出合成请求
+
+gui.tooltips.appliedenergistics2.Suspend=Click to stop this CPU from sending out crafts
+gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts again
+
+gui.tooltips.appliedenergistics2.PinsSection=Pins Section
+gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled
+gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
+
+gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
+gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode
+gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=Lock Mode
+gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=Can't find target to push
+gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=Not enough ingredients
+gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=Target interface in same network
+
+gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Toggles showing interfaces with patterns with substitutions enabled
+gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Showing all interfaces
+gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOffDesc=Showing only interfaces with patterns with substitutions enabled
+
+gui.tooltips.appliedenergistics2.BlockDriveWarning=§4Do not move chests with AE drives; It may corrupt your profile. No refunds!
+gui.tooltips.appliedenergistics2.BlockCreativeEnergyCell=§dInfinite Energy
+gui.tooltips.appliedenergistics2.PartCreativeEnergy=§dInfinite Energy
+gui.tooltips.appliedenergistics2.BlockCreativeEnergyController=§dInfinite Energy
+gui.tooltips.appliedenergistics2.PreconfiguredPriority=Preconfigured storage priority: §f%s
 
 # Units
 gui.appliedenergistics2.units.appliedenergistics=AE
@@ -583,6 +676,7 @@ waila.appliedenergistics2.Unlocked=未锁定
 waila.appliedenergistics2.Showing=显示
 waila.appliedenergistics2.Contains=容纳
 waila.appliedenergistics2.Channels=%1$d / %2$d 频道
+waila.appliedenergistics2.ChannelsUnbound=%1$d Channels
 waila.appliedenergistics2.P2PUnlinked=未链接
 waila.appliedenergistics2.P2PInputOneOutput=已链接(输入)
 waila.appliedenergistics2.P2PInputManyOutputs=已链接(输入)- %d 输出
@@ -592,6 +686,20 @@ waila.appliedenergistics2.CraftingLockedByLackOfRedstoneSignal=因没有红石�
 waila.appliedenergistics2.CraftingLockedByRedstoneSignal=因红石信号而被锁定
 waila.appliedenergistics2.CraftingLockedUntilPulse=等待红石脉冲以解锁
 waila.appliedenergistics2.CraftingLockedUntilResult=等待合成产物以解锁
+waila.appliedenergistics2.CoordinateX=X
+waila.appliedenergistics2.CoordinateY=Y
+waila.appliedenergistics2.CoordinateZ=Z
+waila.appliedenergistics2.Dimension=Dimension
+waila.appliedenergistics2.Id=id
+waila.appliedenergistics2.ConnectedTo=Connected to
+waila.appliedenergistics2.Disconnected=Disconnected
+waila.appliedenergistics2.Singularity=Singularity
+waila.appliedenergistics2.Provider=§5Provider§r
+waila.appliedenergistics2.Accessor=§5Accessor§r
+waila.appliedenergistics2.Waiting=Waiting:
+
+# Baubles Extended
+slot.Terminal=§aTerminal§7
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=1k-ME存储元件
@@ -609,15 +717,20 @@ item.appliedenergistics2.ItemExtremeStorageCell.Universe.name=ME人工寰宇存�
 item.appliedenergistics2.ItemCreativeStorageCell.name=创造型ME存储元件
 item.appliedenergistics2.ItemVoidStorageCell.name=ME虚空存储元件
 item.appliedenergistics2.ItemEncodedPattern.name=编码样板
+item.appliedenergistics2.ItemEncodedUltimatePattern.name=Encoded Ultimate Pattern
 item.appliedenergistics2.ItemViewCell.name=显示元件
 item.appliedenergistics2.ItemFacade.name=线缆伪装板
 
+item.appliedenergistics2.ItemCrystalSeed.name=Seed
 item.appliedenergistics2.ItemCrystalSeed.Certus.name=赛特斯石英种子
 item.appliedenergistics2.ItemCrystalSeed.Nether.name=下界石英种子
 item.appliedenergistics2.ItemCrystalSeed.Fluix.name=福鲁伊克斯种子
 
 item.appliedenergistics2.ItemPart.InvalidType.name=已禁用
 item.appliedenergistics2.ItemMaterial.InvalidType.name=该物品被禁用.
+
+item.appliedenergistics2.ItemMaterial.name=ME Component
+item.appliedenergistics2.ItemPart.name=ME Cable and/or Bus
 
 item.appliedenergistics2.ItemMaterial.BlankPattern.name=空白样板
 item.appliedenergistics2.ItemMaterial.FormationCore.name=成型核心
@@ -638,7 +751,10 @@ item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=空白样板重�
 item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=高级阻挡卡
 item.appliedenergistics2.ItemMaterial.CardLockCrafting.name=Locking Card
 item.appliedenergistics2.ItemMaterial.CardSticky.name=粘性卡
+item.appliedenergistics2.ItemMaterial.CardVoidOverflow.name=Overflow Void Card
+item.appliedenergistics2.ItemMaterial.CardDistribution.name=Equal Distribution Card
 item.appliedenergistics2.ItemMaterial.CardFakeCrafting.name=伪合成卡
+item.appliedenergistics2.ItemMaterial.CardSuperluminalSpeed.name=Superluminal Acceleration Card
 
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=2³-空间组件
 item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=16³-空间组件
@@ -725,6 +841,7 @@ item.appliedenergistics2.ItemPart.P2PTunnel.name=P2P通道
 item.appliedenergistics2.ItemPart.PatternTerminal.name=ME样板终端
 item.appliedenergistics2.ItemPart.PatternTerminalEx.name=ME增广样板终端
 item.appliedenergistics2.ItemPart.QuartzFiber.name=石英纤维
+item.appliedenergistics2.ItemPart.PartCreativeEnergy.name=Creative Energy Anchor
 item.appliedenergistics2.ItemPart.StorageBus.name=ME存储总线
 item.appliedenergistics2.ItemPart.Terminal.name=ME终端
 item.appliedenergistics2.ItemPart.CraftingTerminal.name=ME合成终端
@@ -732,6 +849,7 @@ item.appliedenergistics2.ItemPart.InterfaceTerminal.name=ME接口终端
 item.appliedenergistics2.ItemPart.InvertedToggleBus.name=ME反相触发总线
 item.appliedenergistics2.ItemPart.ToggleBus.name=ME触发总线
 item.appliedenergistics2.ItemPart.CraftingMonitor.name=ME合成监控器
+item.appliedenergistics2.ItemPart.PatternRepeater.name=ME Pattern Repeater
 
 item.appliedenergistics2.ItemSpatialStorageCell.128Cubed.name=128³-空间存储元件
 item.appliedenergistics2.ItemSpatialStorageCell.16Cubed.name=16³-空间存储元件
@@ -845,4 +963,10 @@ stat.ae2.TurnedCranks=转动曲柄
 
 # Keys
 key.appliedenergistics2.category=应用能源2
+key.pick_block.desc=AE2 Pick Block
 key.toggle_focus.desc=切换是否选中搜索框
+key.search_connected_inventories.desc=Search network inventories for item
+key.control_operation.desc=Control operation
+
+# NEI
+nei.options.keys.gui.pattern_view=View Pattern
