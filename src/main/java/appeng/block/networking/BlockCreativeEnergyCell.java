@@ -11,11 +11,18 @@
 package appeng.block.networking;
 
 import java.util.EnumSet;
+import java.util.List;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.StatCollector;
 
 import appeng.block.AEBaseTileBlock;
 import appeng.core.features.AEFeature;
 import appeng.helpers.AEGlassMaterial;
 import appeng.tile.networking.TileCreativeEnergyCell;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockCreativeEnergyCell extends AEBaseTileBlock {
 
@@ -23,5 +30,12 @@ public class BlockCreativeEnergyCell extends AEBaseTileBlock {
         super(AEGlassMaterial.INSTANCE);
         this.setTileEntity(TileCreativeEnergyCell.class);
         this.setFeature(EnumSet.of(AEFeature.Creative));
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack is, EntityPlayer player, List<String> lines, boolean advancedItemTooltips) {
+        super.addInformation(is, player, lines, advancedItemTooltips);
+        lines.add(StatCollector.translateToLocal("gui.tooltips.appliedenergistics2.BlockCreativeEnergyCell"));
     }
 }
