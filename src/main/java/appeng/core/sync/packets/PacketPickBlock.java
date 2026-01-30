@@ -122,11 +122,13 @@ public class PacketPickBlock extends AppEngPacket {
         // Ensure the player has a wireless terminal with access to an AE2 network.
         ItemStack wirelessTerminal = PlayerInventoryUtil.getFirstWirelessTerminal(sender);
         if (wirelessTerminal == null) {
+            movePickBlockItemStack(sender, pickBlockSlot);
             sender.addChatMessage(PlayerMessages.PickBlockTerminalNotFound.toChat());
             return;
         }
         var wirelessInventory = getWirelessItemInventory(sender, wirelessTerminal);
         if (wirelessInventory == null) {
+            movePickBlockItemStack(sender, pickBlockSlot);
             return;
         }
 
@@ -135,6 +137,7 @@ public class PacketPickBlock extends AppEngPacket {
         targetItemStack.stackSize = amountToWithdraw;
         IAEItemStack targetAeItemStack = AEApi.instance().storage().createItemStack(targetItemStack);
         if (targetAeItemStack == null) {
+            movePickBlockItemStack(sender, pickBlockSlot);
             return;
         }
 
@@ -218,6 +221,9 @@ public class PacketPickBlock extends AppEngPacket {
      * @param pickBlockInventorySlot the inventory slot of the ItemStack to move
      */
     private void movePickBlockItemStack(EntityPlayerMP player, int pickBlockInventorySlot) {
+        if (player.inventory.getStackInSlot(pickBlockInventorySlot) == null) {
+            return;
+        }
         var firstEmptyHotbarSlot = PlayerInventoryUtil.getFirstEmptyHotbarSlot(player);
         if (pickBlockInventorySlot <= 8) {
             PlayerInventoryUtil.setSlotAsActiveSlot(player, pickBlockInventorySlot);
