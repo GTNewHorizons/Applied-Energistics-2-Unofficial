@@ -21,8 +21,6 @@ import appeng.block.AEBaseTileBlock;
 import appeng.core.features.AEFeature;
 import appeng.helpers.AEGlassMaterial;
 import appeng.tile.networking.TileCreativeEnergyCell;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockCreativeEnergyCell extends AEBaseTileBlock {
 
@@ -33,7 +31,6 @@ public class BlockCreativeEnergyCell extends AEBaseTileBlock {
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack is, EntityPlayer player, List<String> lines, boolean advancedItemTooltips) {
         super.addInformation(is, player, lines, advancedItemTooltips);
         lines.add(StatCollector.translateToLocal("gui.tooltips.appliedenergistics2.BlockCreativeEnergyCell"));

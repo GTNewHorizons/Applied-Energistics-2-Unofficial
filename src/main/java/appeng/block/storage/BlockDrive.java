@@ -74,7 +74,6 @@ public class BlockDrive extends AEBaseTileBlock {
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack is, EntityPlayer player, List<String> lines, boolean advancedItemTooltips) {
         super.addInformation(is, player, lines, advancedItemTooltips);
         lines.add(StatCollector.translateToLocal("gui.tooltips.appliedenergistics2.BlockDriveWarning"));

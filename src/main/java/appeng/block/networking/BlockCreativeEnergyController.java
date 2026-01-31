@@ -8,8 +8,6 @@ import net.minecraft.util.StatCollector;
 
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.tile.networking.TileCreativeEnergyController;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 
 public class BlockCreativeEnergyController extends BlockController {
 
@@ -31,7 +29,6 @@ public class BlockCreativeEnergyController extends BlockController {
     }
 
     @Override
-    @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack is, EntityPlayer player, List<String> lines, boolean advancedItemTooltips) {
         super.addInformation(is, player, lines, advancedItemTooltips);
         lines.add(StatCollector.translateToLocal("gui.tooltips.appliedenergistics2.BlockCreativeEnergyController"));
