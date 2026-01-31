@@ -44,6 +44,11 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     }
 
     @Override
+    public String getDisplayUnit() {
+        return "mB";
+    }
+
+    @Override
     public IAEFluidStack loadStackFromNBT(NBTTagCompound tag) {
         return AEFluidStack.loadFluidStackFromNBT(tag);
     }

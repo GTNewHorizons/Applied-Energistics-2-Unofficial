@@ -27,6 +27,7 @@ import appeng.api.parts.IPart;
 import appeng.helpers.ICustomNameObject;
 import appeng.integration.modules.waila.part.BasePartWailaDataProvider;
 import appeng.integration.modules.waila.part.ChannelWailaDataProvider;
+import appeng.integration.modules.waila.part.IOBusWailaDataProvider;
 import appeng.integration.modules.waila.part.IPartWailaDataProvider;
 import appeng.integration.modules.waila.part.P2PStateWailaDataProvider;
 import appeng.integration.modules.waila.part.PartAccessor;
@@ -76,6 +77,7 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
         final IPartWailaDataProvider partStack = new BasePartWailaDataProvider();
         final IPartWailaDataProvider partInterface = new PartInterfaceDataProvider();
         final IPartWailaDataProvider partPatternRepeater = new PartPatternRepeaterDataProvider();
+        final IPartWailaDataProvider partIOBus = new IOBusWailaDataProvider();
 
         this.providers = Lists.newArrayList(
                 channel,
@@ -84,7 +86,8 @@ public final class PartWailaDataProvider implements IWailaDataProvider {
                 p2pState,
                 partStack,
                 partInterface,
-                partPatternRepeater);
+                partPatternRepeater,
+                partIOBus);
     }
 
     @Override

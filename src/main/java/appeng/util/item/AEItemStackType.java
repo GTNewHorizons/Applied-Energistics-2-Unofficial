@@ -39,6 +39,11 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
     }
 
     @Override
+    public String getDisplayUnit() {
+        return "";
+    }
+
+    @Override
     public IAEItemStack loadStackFromNBT(NBTTagCompound tag) {
         return AEItemStack.loadItemStackFromNBT(tag);
     }
