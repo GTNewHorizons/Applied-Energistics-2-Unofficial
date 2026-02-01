@@ -22,6 +22,8 @@ public interface IAEStackType<T extends IAEStack> {
 
     String getDisplayName();
 
+    String getDisplayUnit();
+
     T loadStackFromNBT(NBTTagCompound tag);
 
     T loadStackFromByte(ByteBuf buffer) throws IOException;
