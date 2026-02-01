@@ -523,7 +523,7 @@ public abstract class AEBaseBlock extends Block implements IAEFeature {
         return this.getUnlocalizedName();
     }
 
-    void addInformation(final ItemStack is, final EntityPlayer player, final List<String> lines,
+    public void addInformation(final ItemStack is, final EntityPlayer player, final List<String> lines,
             final boolean advancedItemTooltips) {}
 
     public Class<? extends AEBaseItemBlock> getItemBlockClass() {
