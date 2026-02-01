@@ -146,8 +146,8 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
             this.setExtractionMode(
                     (ExtractionMode) this.getUpgradeable().getConfigManager().getSetting(Settings.EXTRACTION_MODE));
 
-            final IAEStackInventory config = this.storageBus.getAEInventoryByName(StorageName.NONE);
-            this.updateVirtualSlots(StorageName.NONE, config, this.configClientSlot);
+            final IAEStackInventory config = this.storageBus.getAEInventoryByName(StorageName.CONFIG);
+            this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
         }
 
         this.standardDetectAndSendChanges();
@@ -163,7 +163,7 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
     }
 
     public void clear() {
-        final IAEStackInventory inv = this.storageBus.getAEInventoryByName(StorageName.NONE);
+        final IAEStackInventory inv = this.storageBus.getAEInventoryByName(StorageName.CONFIG);
         for (int x = 0; x < inv.getSizeInventory(); x++) {
             inv.putAEStackInSlot(x, null);
         }
@@ -181,7 +181,7 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
             clearPartitionIterator(player);
             return;
         }
-        final IAEStackInventory inv = this.storageBus.getAEInventoryByName(StorageName.NONE);
+        final IAEStackInventory inv = this.storageBus.getAEInventoryByName(StorageName.CONFIG);
 
         final MEInventoryHandler cellInv = this.storageBus.getInternalHandler();
 
@@ -290,13 +290,13 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
 
     @Override
     public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
-        final IAEStackInventory config = this.storageBus.getAEInventoryByName(StorageName.NONE);
+        final IAEStackInventory config = this.storageBus.getAEInventoryByName(StorageName.CONFIG);
         for (var entry : slotStacks.int2ObjectEntrySet()) {
             config.putAEStackInSlot(entry.getIntKey(), entry.getValue());
         }
 
         if (isServer()) {
-            this.updateVirtualSlots(StorageName.NONE, config, this.configClientSlot);
+            this.updateVirtualSlots(StorageName.CONFIG, config, this.configClientSlot);
         }
     }
 
@@ -305,6 +305,6 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
     }
 
     public IAEStackInventory getConfig() {
-        return this.storageBus.getAEInventoryByName(StorageName.NONE);
+        return this.storageBus.getAEInventoryByName(StorageName.CONFIG);
     }
 }

@@ -24,12 +24,15 @@ public class ContainerBusIO extends ContainerUpgradeable implements IVirtualSlot
     @Override
     public void detectAndSendChanges() {
         super.detectAndSendChanges();
-        this.updateVirtualSlots(StorageName.NONE, this.bus.getAEInventoryByName(StorageName.NONE), virtualSlotsClient);
+        this.updateVirtualSlots(
+                StorageName.CONFIG,
+                this.bus.getAEInventoryByName(StorageName.CONFIG),
+                virtualSlotsClient);
     }
 
     @Override
     public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
-        final IAEStackInventory storage = this.bus.getAEInventoryByName(StorageName.NONE);
+        final IAEStackInventory storage = this.bus.getAEInventoryByName(StorageName.CONFIG);
         for (var entry : slotStacks.int2ObjectEntrySet()) {
             storage.putAEStackInSlot(entry.getIntKey(), entry.getValue());
         }
