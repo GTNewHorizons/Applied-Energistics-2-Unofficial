@@ -113,6 +113,8 @@ chat.appliedenergistics2.PriorityConfigured=更新优先级到%d
 chat.appliedenergistics2.DriveLocked=Digital Singularity cells in drive were locked to the current item on them
 chat.appliedenergistics2.ChestLocked=Digital Singularity cell in chest was locked to the current item on it
 chat.appliedenergistics2.FinishCraftingRemind=合成 %s 个 %s 的任务已完成, 总计使用时间 %s。
+chat.appliedenergistics2.CraftComplete=§5自动合成完毕！
+chat.appliedenergistics2.CraftComplete.tip=%s %s, 用时 %s
 
 # Creative Tabs
 itemGroup.appliedenergistics2=应用能源2

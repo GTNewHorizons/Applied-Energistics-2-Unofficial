@@ -112,6 +112,8 @@ import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketCraftingCompleteNotification;
 import appeng.crafting.CraftBranchFailure;
 import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingWatcher;
@@ -194,6 +196,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         EntityPlayer player = getPlayerByName(playerName);
                         if (player != null) {
                             // Send message to player
+                            try {
+                                NetworkHandler.instance.sendTo(
+                                        new PacketCraftingCompleteNotification(notification),
+                                        (EntityPlayerMP) player);
+                            } catch (IOException e) {
+                                AELog.debug(e);
+                            }
+
                             player.addChatMessage(notification.createMessage());
                             player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
                         } else {
@@ -1882,6 +1892,18 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.finalOutput = finalOutput;
             this.outputsCount = outputsCount;
             this.elapsedTime = elapsedTime;
+        }
+
+        public IAEStack<?> getFinalOutput() {
+            return finalOutput;
+        }
+
+        public long getOutputsCount() {
+            return outputsCount;
+        }
+
+        public long getElapsedTime() {
+            return elapsedTime;
         }
 
         public IChatComponent createMessage() {
