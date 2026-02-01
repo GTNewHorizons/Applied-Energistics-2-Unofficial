@@ -5,6 +5,7 @@ tile.appliedenergistics2.BlockCharger.name=Caricatore
 tile.appliedenergistics2.BlockChest.name=Baule ME
 tile.appliedenergistics2.BlockCondenser.name=Condensatore di materia
 tile.appliedenergistics2.BlockController.name=Controllore ME
+tile.appliedenergistics2.BlockCreativeEnergyController.name=ME Self Powered Controller
 tile.appliedenergistics2.BlockCrank.name=Manovella di legno
 tile.appliedenergistics2.BlockCreativeEnergyCell.name=Cella creativa di energia
 tile.appliedenergistics2.BlockDenseEnergyCell.name=Cella densa di energia
@@ -47,11 +48,25 @@ tile.appliedenergistics2.BlockCraftingStorage.name=Deposito per fabbricazione da
 tile.appliedenergistics2.BlockCraftingStorage4k.name=Deposito per fabbricazione da 4k
 tile.appliedenergistics2.BlockCraftingStorage16k.name=Deposito per fabbricazione da 16k
 tile.appliedenergistics2.BlockCraftingStorage64k.name=Deposito per fabbricazione da 64k
+tile.appliedenergistics2.BlockCraftingStorage256k.name=§9256k§r Crafting Storage
+tile.appliedenergistics2.BlockCraftingStorage1024k.name=§d1024k§r Crafting Storage
+tile.appliedenergistics2.BlockCraftingStorage4096k.name=§c4096k§r Crafting Storage
+tile.appliedenergistics2.BlockCraftingStorage16384k.name=§516384k§r Crafting Storage
+tile.appliedenergistics2.BlockCraftingStorageSingularity.name=Singularity Crafting Storage
 tile.appliedenergistics2.BlockCraftingAccelerator.name=Unità co-processore per fabbricazione
 tile.appliedenergistics2.BlockCraftingAccelerator4x.name=4 Nucleo Unità co-processore per fabbricazione
 tile.appliedenergistics2.BlockCraftingAccelerator16x.name=16 Nucleo Unità co-processore per fabbricazione
+tile.appliedenergistics2.BlockCraftingAccelerator64x.name=64 Core Co-Processing Unit
+tile.appliedenergistics2.BlockCraftingAccelerator256x.name=256 Core Co-Processing Unit
+tile.appliedenergistics2.BlockCraftingAccelerator1024x.name=1024 Core Co-Processing Unit
+tile.appliedenergistics2.BlockCraftingAccelerator4096x.name=4096 Core Co-Processing Unit
 tile.appliedenergistics2.BlockCraftingUnit.name=Unità di fabbricazione
+tile.appliedenergistics2.BlockAdvancedCraftingStorage.name=Crafting Storage
+tile.appliedenergistics2.BlockAdvancedCraftingUnit.name=Crafting Unit
 tile.appliedenergistics2.BlockMolecularAssembler.name=Assemblatore moleculare
+tile.appliedenergistics2.BlockPatternOptimizationMatrix.name=Pattern Optimization Matrix
+tile.appliedenergistics2.BlockSingularityCraftingStorage.name=Singularity Crafting Storage
+tile.appliedenergistics2.BlockPaint.name=Paint
 
 # Stairs
 tile.appliedenergistics2.ChiseledQuartzStairBlock.name=Scalini di quarzo certus intagliato
@@ -62,6 +77,24 @@ tile.appliedenergistics2.SkyStoneBlockStairBlock.name=Scalini di blocco di rocci
 tile.appliedenergistics2.SkyStoneBrickStairBlock.name=Scalini di roccia del cielo concia
 tile.appliedenergistics2.SkyStoneSmallBrickStairBlock.name=Scalini di mattoni di roccia del cielo
 tile.appliedenergistics2.SkyStoneStairBlock.name=Scalini di roccia del cielo
+
+# Slabs
+tile.appliedenergistics2.ChiseledQuartzSlabBlock.name=Chiseled Certus Quartz Slab
+tile.appliedenergistics2.ChiseledQuartzSlabBlock.double.name=Chiseled Certus Quartz Slabs
+tile.appliedenergistics2.FluixSlabBlock.name=Fluix Slab
+tile.appliedenergistics2.FluixSlabBlock.double.name=Fluix Slabs
+tile.appliedenergistics2.QuartzPillarSlabBlock.name=Certus Quartz Pillar Slab
+tile.appliedenergistics2.QuartzPillarSlabBlock.double.name=Certus Quartz Pillar Slabs
+tile.appliedenergistics2.QuartzSlabBlock.name=Certus Quartz Slab
+tile.appliedenergistics2.QuartzSlabBlock.double.name=Certus Quartz Slabs
+tile.appliedenergistics2.SkyStoneBlockSlabBlock.name=Sky Stone Block Slab
+tile.appliedenergistics2.SkyStoneBlockSlabBlock.double.name=Sky Stone Block Slabs
+tile.appliedenergistics2.SkyStoneBrickSlabBlock.name=Sky Stone Brick Slab
+tile.appliedenergistics2.SkyStoneBrickSlabBlock.double.name=Sky Stone Brick Slabs
+tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.name=Sky Stone Small Brick Slab
+tile.appliedenergistics2.SkyStoneSmallBrickSlabBlock.double.name=Sky Stone Small Brick Slabs
+tile.appliedenergistics2.SkyStoneSlabBlock.name=Sky Stone Slab
+tile.appliedenergistics2.SkyStoneSlabBlock.double.name=Sky Stone Slabs
 
 # Chat Messages
 chat.appliedenergistics2.ChestCannotReadStorageCell=Baule ME non riesce a leggere cella di immagazzinaggio.
@@ -79,6 +112,34 @@ chat.appliedenergistics2.SavedSettings=Impostazioni salvate con successo.
 chat.appliedenergistics2.AmmoDepleted=Arma scarica.
 chat.appliedenergistics2.isNowLocked=Il monitor è ora bloccato.
 chat.appliedenergistics2.isNowUnlocked=Il monitor è ora sbloccato.
+chat.appliedenergistics2.TunnelNotConnected=Tunnel is not connected.
+chat.appliedenergistics2.TunnelInputIsAt=Tunnel input is at (%d, %d, %d)
+chat.appliedenergistics2.TunnelHasNoOutputs=Tunnel has no outputs.
+chat.appliedenergistics2.TunnelOutputsAreAt=Tunnel outputs are at:
+chat.appliedenergistics2.InterfaceInOtherDim=Interface located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.InterfaceHighlighted=The interface is now highlighted at %d, %d, %d
+chat.appliedenergistics2.LevelEmitterInAnotherDim=Level emitter located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.LevelEmitterHighlighted=The level emitter is now highlighted at %d, %d, %d
+chat.appliedenergistics2.P2PInAnotherDim=P2P located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.P2PHighlighted=The P2P is now highlighted at %d, %d, %d
+chat.appliedenergistics2.CraftingItemsWentMissing=Missing ingredient: %d * %s
+chat.appliedenergistics2.FBOUnsupported=OpenGL FBOs not supported, cannot export image
+chat.appliedenergistics2.PriorityInvalidTarget=Target has no priority
+chat.appliedenergistics2.PriorityReadout=Current priority is %d
+chat.appliedenergistics2.PriorityConfigured=Updated priority to %d
+chat.appliedenergistics2.DriveLockingToggled=Cells in drive were partitioned/unpartitioned
+chat.appliedenergistics2.ChestLockingToggled=Cell in chest was partitioned/unpartitioned
+chat.appliedenergistics2.FinishCraftingRemind=Crafting of %s * %s finished in %s.
+chat.appliedenergistics2.CraftingCantExtract=Can't extract ingredient: %d / %d | %s
+chat.appliedenergistics2.MachineInOtherDim=%d located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.MachineInOtherDimNamed=%d "%s" located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.MachineHighlighted=The %d is now highlighted at %d, %d, %d
+chat.appliedenergistics2.MachineHighlightedNamed=The %d "%d" is now highlighted at %d, %d, %d
+chat.appliedenergistics2.StorageHighlighted=The %d containing %d %d is now highlighted at %d, %d, %d
+chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.PickBlockTerminalNotFound=AE2 wireless terminal not found.
+chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
+chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -93,6 +154,11 @@ gui.appliedenergistics2.RedstoneTunnel=Pietrarossa
 gui.appliedenergistics2.EUTunnel=EU
 gui.appliedenergistics2.RFTunnel=RF
 gui.appliedenergistics2.LightTunnel=Luce
+gui.appliedenergistics2.SoundTunnel=Sound
+gui.appliedenergistics2.OCTunnel=OpenComputers
+gui.appliedenergistics2.PressureTunnel=Pressure
+gui.appliedenergistics2.GTTunnel=GT EU
+gui.appliedenergistics2.IFACETunnel=ME Interface
 
 gui.appliedenergistics2.security.extract.name=Estrai
 gui.appliedenergistics2.security.inject.name=Deposita
@@ -122,6 +188,7 @@ gui.appliedenergistics2.StorageBus=Bus di immagazzinaggio
 gui.appliedenergistics2.EnergyDrain=Uso passivo di energia
 gui.appliedenergistics2.Installed=Installato
 gui.appliedenergistics2.NetworkTool=Attrezzo per sistema
+gui.appliedenergistics2.AdvancedNetworkTool=Advanced Network Tool
 gui.appliedenergistics2.PowerUsageRate=Uso di energia
 gui.appliedenergistics2.PowerInputRate=Generazione di energia
 gui.appliedenergistics2.PortableCell=Cella portabile
@@ -143,9 +210,21 @@ gui.appliedenergistics2.Patterns=Modelli
 gui.appliedenergistics2.SpatialIOPort=Porta IO per spazio
 gui.appliedenergistics2.StoredEnergy=Energia conservata
 gui.appliedenergistics2.StoredItems=Oggetti conservati
+gui.appliedenergistics2.StoredStacks=Stored Stacks
 gui.appliedenergistics2.Terminal=Terminale
 gui.appliedenergistics2.InterfaceTerminal=Terminale con interfaccia
 gui.appliedenergistics2.InterfaceTerminalHint=Mostra o nascondi Terminale con interfaccia.
+gui.appliedenergistics2.PatternOptimization=Allow pattern optimization
+gui.appliedenergistics2.PatternOptimizationHint=Allows patterns from this interface to be modified by pattern optimizer.
+gui.appliedenergistics2.PatternOptimizer=Pattern optimizer
+gui.appliedenergistics2.StepsPerCraft=Max steps per craft
+gui.appliedenergistics2.PatternsAffected=Patterns affected
+gui.appliedenergistics2.Multiplied=Multiplied
+gui.appliedenergistics2.MultipliedBy=Multiplied by
+gui.appliedenergistics2.CurrentPatternOutput=Current pattern output
+gui.appliedenergistics2.NewPatternOutput=New pattern output
+gui.appliedenergistics2.Optimize=Optimize
+
 gui.appliedenergistics2.FormationPlane=Piano di formazione
 gui.appliedenergistics2.VibrationChamber=Camera vibrante
 gui.appliedenergistics2.NetworkDetails=Dettagli del sistema
@@ -153,6 +232,10 @@ gui.appliedenergistics2.StorageCells=Cella di immagazzinazione ME
 gui.appliedenergistics2.IOBuses=ME Bus importatore/esportatore
 gui.appliedenergistics2.Stores=Contiene
 gui.appliedenergistics2.BytesUsed=Bytes usati
+gui.appliedenergistics2.TimeUsed=Time Used
+gui.appliedenergistics2.CraftName=Craft Name
+gui.appliedenergistics2.Remains=Remains
+gui.appliedenergistics2.Progress=Progress
 gui.appliedenergistics2.Types=Tipi
 gui.appliedenergistics2.Blank=Vuoto
 gui.appliedenergistics2.Unlinked=Non collegato
@@ -160,13 +243,25 @@ gui.appliedenergistics2.Linked=Collegato
 gui.appliedenergistics2.StoredSize=Grandezza immagazzinata
 gui.appliedenergistics2.SkyChest=Baule di roccia del cielo
 gui.appliedenergistics2.PatternTerminal=Terminale per modelli
+gui.appliedenergistics2.PatternTerminalEx=Processing Pattern Terminal
 gui.appliedenergistics2.CraftingPattern=Modello per fabbricazione
 gui.appliedenergistics2.MolecularAssembler=Assemblatore moleculare
 gui.appliedenergistics2.ProcessingPattern=Modelli in lavoro
 gui.appliedenergistics2.Crafts=Fabbrica
+gui.appliedenergistics2.HoldShift=Hold [LSHIFT] to show Ingredients
+gui.appliedenergistics2.PatternView=Press [%s] to view pattern
+gui.appliedenergistics2.Result=Result
+gui.appliedenergistics2.Results=Results
+gui.appliedenergistics2.Ingredients=Ingredients
+gui.appliedenergistics2.Ingredient=Ingredient
 gui.appliedenergistics2.And=e
 gui.appliedenergistics2.Creates=Crea
 gui.appliedenergistics2.With=con
+gui.appliedenergistics2.Substitute=Using Substitutions:
+gui.appliedenergistics2.BeSubstitute=Can be a substitution:
+gui.appliedenergistics2.Yes=Yes
+gui.appliedenergistics2.No=No
+gui.appliedenergistics2.EncodedBy=Encoded by: %s
 gui.appliedenergistics2.InWorldCrafting=AE2 Fabbricazione nel mondo
 gui.appliedenergistics2.inWorldFluix=Butta insieme in una pozzanghera 1 Quarzo certus carico + 1 Quarzo degli Inferi + Pietrarossa e aspetta un momento per ottenere due Cristalli di Fluix.
 gui.appliedenergistics2.inWorldPurificationCertus=Butta in una pozzanghera un Seme di quarzo certus creato con Polvere di quarzo certus e Sabbia; per velocizzare il processo aggiungi dei Acceleratore della crescita di cristalli.
@@ -175,8 +270,9 @@ gui.appliedenergistics2.inWorldPurificationFluix=Butta in una pozzanghera un Sem
 gui.appliedenergistics2.inWorldSingularity=Per creare butta 1 Singolarità e 1 Polvere d'omega e causa un esplosione presso gli oggetti.
 gui.appliedenergistics2.ChargedQuartz=Quarzo certus carico si ottiene inserendo un Cristallo di quarzo certus normale in un Caricatore alimentato di elettricità.
 gui.appliedenergistics2.ChargedQuartzFind=Quarzo certus carico si trova abbastanza raramente nel mondo, è simile al quarzo certus normale, solo che brilla.
-gui.appliedenergistics2.OfSecondOutput=%1$d%% Cambia per output secondario.
 gui.appliedenergistics2.NoSecondOutput=Nessun output secondario
+gui.appliedenergistics2.OfSecondOutput=%1$d%% Cambia per output secondario.
+gui.appliedenergistics2.MultipleOutputs=%1$d%% second, %2$d%% third output.
 gui.appliedenergistics2.SelectAmount=Seleziona quantità
 gui.appliedenergistics2.CopyMode=Modalità copia
 gui.appliedenergistics2.CopyModeDesc=Controlla se il contenuto del pannello di configurazione è vuoto quando rimuovi la cella.
@@ -184,17 +280,33 @@ gui.appliedenergistics2.Next=Pros
 gui.appliedenergistics2.Lumen=Lumen
 gui.appliedenergistics2.Empty=Vuoto
 gui.appliedenergistics2.Stored=Immagazinato
+gui.appliedenergistics2.AddToBookmark=Bookmark
 gui.appliedenergistics2.Cancel=Cancella
+gui.appliedenergistics2.Suspend=Suspend
+gui.appliedenergistics2.Resume=Resume
+gui.appliedenergistics2.ETAFormat=HH:mm:ss
+gui.appliedenergistics2.SwitchCraftingSimulationDisplayMode=Switch display mode (List/Tree)
 gui.appliedenergistics2.Crafting=Fabbricazione
 gui.appliedenergistics2.Scheduled=Programmato
 gui.appliedenergistics2.CraftingStatus=Stato della fabbricazione
+gui.appliedenergistics2.RemainingOperations=Idle Processors
 gui.appliedenergistics2.FromStorage=Avviabile
+gui.appliedenergistics2.FromStoragePercent=Used
 gui.appliedenergistics2.ToCraft=a essere fabbricato
+gui.appliedenergistics2.ToCraftRequests=Steps
 gui.appliedenergistics2.CraftingPlan=Piano di fabbricazione
 gui.appliedenergistics2.Automatic=Automatico
 gui.appliedenergistics2.Start=Inizia
+gui.appliedenergistics2.StartWithFollow=Start With Follow
+gui.appliedenergistics2.Merge=Merge
 gui.appliedenergistics2.Missing=Manca
+gui.appliedenergistics2.NoCraftingTreeReceived=No crafting tree received
+gui.appliedenergistics2.CraftingStepLimitExceeded=Crafting step limit exceeded
+gui.appliedenergistics2.CraftingSizeLimitExceeded=Crafting size limit exceeded
+gui.appliedenergistics2.RequestedItem=Requested item
+gui.appliedenergistics2.SimulationIncomplete=Simulation incomplete
 gui.appliedenergistics2.Bytes=Deposito
+gui.appliedenergistics2.Set=Set
 gui.appliedenergistics2.Simulation=Simulazione
 gui.appliedenergistics2.CoProcessors=Co-Processore
 gui.appliedenergistics2.CraftingCPU=CPU di fabbricazione
@@ -202,6 +314,7 @@ gui.appliedenergistics2.NoCraftingCPUs=Nessuna CPU di fabbricazione è disponibi
 gui.appliedenergistics2.CalculatingWait=Calcolando, aspettare...
 gui.appliedenergistics2.Clean=Clean
 gui.appliedenergistics2.InvalidPattern=Modello invalido
+gui.appliedenergistics2.UnknownItem=Unknown Item
 gui.appliedenergistics2.Range=Raggio
 gui.appliedenergistics2.TransparentFacades=Facciate trasparenti
 gui.appliedenergistics2.TransparentFacadesHint=Controlla la visibilità della facciata con un Attrezzo per sistema a portata di mano.
@@ -212,21 +325,94 @@ gui.appliedenergistics2.inWorldCraftingPresses=I stampi si trovano nel centro de
 gui.appliedenergistics2.Included=Incluso
 gui.appliedenergistics2.Excluded=Escluso
 gui.appliedenergistics2.Partitioned=Suddiviso
+gui.appliedenergistics2.PartitionedOre=Ore dictionary filter
 gui.appliedenergistics2.Precise=Preciso
 gui.appliedenergistics2.Fuzzy=Vago
+gui.appliedenergistics2.Filter=Filter
 gui.appliedenergistics2.SmallFontCraft=Fabbrica
 gui.appliedenergistics2.LargeFontCraft=+
+gui.appliedenergistics2.Renamer=Custom Name: (Enter to set)
+gui.appliedenergistics2.OreFilterLabel=Ore dictionary filter
+gui.appliedenergistics2.PriorityCard=Priority Card
+gui.appliedenergistics2.PriorityCardTooltip=For all your prioritization needs!
+gui.appliedenergistics2.PriorityCardTooltipModeEdit=Mode: Edit priority
+gui.appliedenergistics2.PriorityCardTooltipModeView=Mode: Print priority
+gui.appliedenergistics2.PriorityCardTooltipModeSet=Mode: Apply priority
+gui.appliedenergistics2.PriorityCardTooltipModeInc=Mode: Apply and increment priority
+gui.appliedenergistics2.PriorityCardTooltipModeDec=Mode: Apply and decrement priority
+gui.appliedenergistics2.Sticky=Sticky
+gui.appliedenergistics2.Contains=Contains Item
+gui.appliedenergistics2.HoldShiftForTooltip=Hold shift for extended tooltip
+gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=Hold shift click to highlight interface
 gui.appliedenergistics2.Nothing=Niente
+gui.appliedenergistics2.VoidCellTooltip=Deletes §4everything§7 stored on it
+gui.appliedenergistics2.CellView=Cell View
+gui.appliedenergistics2.Inputs=Inputs
+gui.appliedenergistics2.Outputs=Outputs
+gui.appliedenergistics2.EncodedPattern=Encoded Pattern
+gui.appliedenergistics2.Deprecated=Deprecated, will be removed soon!
+gui.appliedenergistics2.ViewCellToggleKey=Right-click to toggle
+gui.appliedenergistics2.CPUAllowMode=Accept request
+gui.appliedenergistics2.CPUAllowAll=All
+gui.appliedenergistics2.CPUOnlyAllowNonPlayer=Only from non-player
+gui.appliedenergistics2.CPUOnlyAllowPlayer=Only from player
+gui.appliedenergistics2.CPUSourcePlayer=Requester
+gui.appliedenergistics2.CPUSourceMachineRequested=Machine Requested
+
+gui.appliedenergistics2.NetworkBytesDetails=Network Bytes Details
+gui.appliedenergistics2.Items=Items
+gui.appliedenergistics2.Fluids=Fluids
+gui.appliedenergistics2.Essentias=Essentias
+gui.appliedenergistics2.NetworkCellStatus=Cell status
+gui.appliedenergistics2.NetworkItemCellCount=Network Item Cell Count
+gui.appliedenergistics2.NetworkFluidCellCount=Network Fluid Cell Count
+gui.appliedenergistics2.NetworkEssentiaCellCount=Network Essentia Cell Count
+gui.appliedenergistics2.TypesInfo=Types
+gui.appliedenergistics2.BytesInfo=Bytes
+gui.appliedenergistics2.ToFollow=Follow
+gui.appliedenergistics2.ToUnfollow=Unfollow
+gui.appliedenergistics2.CellRestriction=Cell Restriction
+gui.appliedenergistics2.Restricted=Restricted
+gui.appliedenergistics2.CellRestrictionTips=0 for default
+gui.appliedenergistics2.MaxItems=Max Items:
+gui.appliedenergistics2.MaxFluid=Max Fluids:
+gui.appliedenergistics2.MaxTypes=Max Types:
+gui.appliedenergistics2.NumberOfItems=Number of items
+gui.appliedenergistics2.NumberOfFluids=Number of fluids
+gui.appliedenergistics2.ItemsPerByte=Items per byte:
+gui.appliedenergistics2.FluidsPerByte=Fluids per byte:
+gui.appliedenergistics2.BytesPerType=Bytes per type:
+gui.appliedenergistics2.SelectColor=Select a Color
+gui.appliedenergistics2.Selected=Selected
+
+# GUI Colors - ARGB
+gui.color.appliedenergistics2.SearchboxFocused=6E000000
+gui.color.appliedenergistics2.SearchboxUnfocused=00000000
+gui.color.appliedenergistics2.ItemSlotOverlayUnpowered=66111111
+gui.color.appliedenergistics2.ItemSlotOverlayInvalid=66ff6666
+gui.color.appliedenergistics2.CraftConfirmMissingItem=1AFF0000
+gui.color.appliedenergistics2.CraftingCPUActive=5A45A021
+gui.color.appliedenergistics2.CraftingCPUScheduled=FF787878
+gui.color.appliedenergistics2.InterfaceTerminalMatch=2A00FF00
+gui.color.appliedenergistics2.ProcessBarStartColor=FFE60A00
+gui.color.appliedenergistics2.ProcessBarMiddleColor=FFE6E600
+gui.color.appliedenergistics2.ProcessBarEndColor=FF0AE600
 
 # GUI Tooltips
 gui.tooltips.appliedenergistics2.Stash=Oggetti immagazinati
 gui.tooltips.appliedenergistics2.StashDesc=Manda gli oggetti sulla griglia di fabbricazione nel deposito del sistema.
 gui.tooltips.appliedenergistics2.Substitutions=Sostituzione Ore-Dict
-gui.tooltips.appliedenergistics2.SubstitutionsDesc=Modifica le opzioni di sostituzioni per componenti in entrata.
-gui.tooltips.appliedenergistics2.SubstitutionsOn=Sostituzione attivata
-gui.tooltips.appliedenergistics2.SubstitutionsOff=Sostituzione disattivata
+gui.tooltips.appliedenergistics2.SubstitutionsDescEnabled=Allow substitutions of input components.
+gui.tooltips.appliedenergistics2.SubstitutionsDescDisabled=Prevent substitutions of input components.
+gui.tooltips.appliedenergistics2.BeSubstitutions=Use as substitution
+gui.tooltips.appliedenergistics2.BeSubstitutionsDescEnabled=Allow crafting as substitutions of input components.
+gui.tooltips.appliedenergistics2.BeSubstitutionsDescDisabled=Prevent crafting as substitutions of input components. If all patterns available for an ingredient are disabled to be substitutions, crafting simulator will treat them as if they're enabled to be substitutions.
+
+gui.tooltips.appliedenergistics2.PatternSlotConfigTitle=Switch Terminal Mode
+gui.tooltips.appliedenergistics2.PatternSlotConfigInfo=Switch slot pattern mode between (16 -> 4) and (4 -> 16)
 gui.tooltips.appliedenergistics2.Encode=Codifica modello
 gui.tooltips.appliedenergistics2.EncodeDescription=Iscrivi il modello scritto nel modello codificato corrente, o in un modello vuoto avviabile.
+
 gui.tooltips.appliedenergistics2.FuzzyMode=Confronto vago
 gui.tooltips.appliedenergistics2.FZPercent_1=Dividi il danno al 1%
 gui.tooltips.appliedenergistics2.FZPercent_10=Dividi il danno al 25%
@@ -234,6 +420,7 @@ gui.tooltips.appliedenergistics2.FZPercent_25=Dividi il danno al 25%
 gui.tooltips.appliedenergistics2.FZPercent_50=Dividi il danno al 50%
 gui.tooltips.appliedenergistics2.FZPercent_75=Dividi il danno al 75%
 gui.tooltips.appliedenergistics2.FZPercent_99=Dividi il danno al 99%
+
 gui.tooltips.appliedenergistics2.SortOrder=Modifica ordine
 gui.tooltips.appliedenergistics2.SortBy=Ordina per
 gui.tooltips.appliedenergistics2.FZIgnoreAll=Abbina qualunque
@@ -241,6 +428,7 @@ gui.tooltips.appliedenergistics2.TransferDirection=Trasferisci direzione
 gui.tooltips.appliedenergistics2.TransferToNetwork=Trasferisci data al Sistema
 gui.tooltips.appliedenergistics2.TransferToStorageCell=Trasferisci data alla Cella di immagazzinaggio
 gui.tooltips.appliedenergistics2.ToggleSortDirection=Modifica la direzione dell'ordine
+
 gui.tooltips.appliedenergistics2.StoredItems=Oggetti depositati
 gui.tooltips.appliedenergistics2.StoredCraftable=Immagazinati / Fabbricabili
 gui.tooltips.appliedenergistics2.View=Vedi
@@ -255,7 +443,9 @@ gui.tooltips.appliedenergistics2.CondenserOutput=Condensatore ME - Uscita
 gui.tooltips.appliedenergistics2.PartitionStorage=Divisione del deposito
 gui.tooltips.appliedenergistics2.Clear=Cancella
 gui.tooltips.appliedenergistics2.TrashController=Cancella via Shift / cliccando SPAZIO.
+
 gui.tooltips.appliedenergistics2.InterfaceBlockingMode=Modalità bloccando
+gui.tooltips.appliedenergistics2.InterfaceSmartBlockingMode=Smart Blocking Mode
 gui.tooltips.appliedenergistics2.InterfaceCraftingMode=Modalità fabbricazione
 gui.tooltips.appliedenergistics2.Trash=Distruggi oggetti
 gui.tooltips.appliedenergistics2.MatterBalls=Condensa in Sfere di materia\n%s per oggetto
@@ -265,18 +455,22 @@ gui.tooltips.appliedenergistics2.Write=Inserisci solo
 gui.tooltips.appliedenergistics2.ReadWrite=Bi-Direzionale
 gui.tooltips.appliedenergistics2.Strict=Rigida - Sistema vede solo oggetti filtrati
 gui.tooltips.appliedenergistics2.Loose=Rilassata - Sistema vede tutto
+
 gui.tooltips.appliedenergistics2.AlwaysActive=Sempre attivo
 gui.tooltips.appliedenergistics2.ActiveWithoutSignal=Attivo senza segnale
 gui.tooltips.appliedenergistics2.ActiveWithSignal=Attivo con segnale
 gui.tooltips.appliedenergistics2.ActiveOnPulse=Attivo una volta per impulso
 gui.tooltips.appliedenergistics2.EmitLevelsBelow=Emetti quando il livello è minore o uguale al limite.
 gui.tooltips.appliedenergistics2.EmitLevelAbove=Emetti quando il livello è sopra al limite.
+
 gui.tooltips.appliedenergistics2.SearchMode_Auto=Auto-cerca
 gui.tooltips.appliedenergistics2.SearchMode_Standard=Ricerca normale
 gui.tooltips.appliedenergistics2.SearchMode_NEIAuto=Sincronizazione NEI automatica
 gui.tooltips.appliedenergistics2.SearchMode_NEIStandard=Sincronizazione NEI normale
 gui.tooltips.appliedenergistics2.SearchMode=Modalità ricerca
+
 gui.tooltips.appliedenergistics2.PartitionStorageHint=Configura divisione basato sugli oggetti depositati ora.
+gui.tooltips.appliedenergistics2.NextPartitionStorageHint=Click to get next item in the storage.
 gui.tooltips.appliedenergistics2.ClearSettings=Cancella config/impostazioni
 gui.tooltips.appliedenergistics2.Craftable=Fabbricabile
 gui.tooltips.appliedenergistics2.MoveWhenEmpty=Muovi a uscita quando vuoto.
@@ -286,6 +480,8 @@ gui.tooltips.appliedenergistics2.Disabled=Disabilita
 gui.tooltips.appliedenergistics2.Enable=Abilita
 gui.tooltips.appliedenergistics2.Blocking=Non usare oggetti fabbricati se l'inventario contiene gli oggetti.
 gui.tooltips.appliedenergistics2.NonBlocking=Ignora il contenuto dell'inventario.
+gui.tooltips.appliedenergistics2.SmartBlocking=Allow insert same recipe.
+gui.tooltips.appliedenergistics2.NonSmartBlocking=Regular blocking mode behavior.
 gui.tooltips.appliedenergistics2.Craft=Funzionalità fabbricazione
 gui.tooltips.appliedenergistics2.CraftOnly=Non usare oggetti immagazinati, fabbricali quando esporta oggetti.
 gui.tooltips.appliedenergistics2.CraftEither=Usa oggetti immagazinati, o fabbrica gli oggetti quando esporta.
@@ -294,23 +490,155 @@ gui.tooltips.appliedenergistics2.LevelType_Energy=Energia
 gui.tooltips.appliedenergistics2.LevelType_Item_Fluid=Oggetti
 gui.tooltips.appliedenergistics2.InventoryTweaks=Inventory Tweaks
 gui.tooltips.appliedenergistics2.Mod=Mod
+gui.tooltips.appliedenergistics2.UsedPercent=Percentage
 gui.tooltips.appliedenergistics2.TerminalStyle=Stile terminale
 gui.tooltips.appliedenergistics2.TerminalStyle_Full=Terminale schermo intero
 gui.tooltips.appliedenergistics2.TerminalStyle_Tall=Terminale centrato grande
 gui.tooltips.appliedenergistics2.TerminalStyle_Small=Terminale centrato piccolo
+gui.tooltips.appliedenergistics2.SaveAsImage=Save as image
+gui.tooltips.appliedenergistics2.HideStored=Hide Stored Items
+
 gui.tooltips.appliedenergistics2.DoesntDespawn=Questo oggetto non scomparirà (de-spawn).
 gui.tooltips.appliedenergistics2.EmitterMode=Modalità pietrarossa per fabbricazione
 gui.tooltips.appliedenergistics2.CraftViaRedstone=Emette pietrarossa per fabbricare oggetto.
 gui.tooltips.appliedenergistics2.EmitWhenCrafting=Emette pietrarossa mentre fabbrica oggetto.
+
 gui.tooltips.appliedenergistics2.ReportInaccessibleItems=Riporta oggetti inaccessibili
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=Si: gli oggetti che non possono essere estratti sono visibili.
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=No: Solo oggetti estrabili sono visibili.
+
+gui.tooltips.appliedenergistics2.TypeFilter=Filter Types
+gui.tooltips.appliedenergistics2.TypeFilterShowAll=Show All
+gui.tooltips.appliedenergistics2.TypeFilterShowItemsOnly=Show Items only
+gui.tooltips.appliedenergistics2.TypeFilterShowFluidsOnly=Show Fluids only
+
 gui.tooltips.appliedenergistics2.BlockPlacement=Piazzamento di blocco
 gui.tooltips.appliedenergistics2.BlockPlacementYes=I blocchi saranno piazzati come blocco.
 gui.tooltips.appliedenergistics2.BlockPlacementNo=I blocchi saranno fatti cadere come oggetti.
+
+gui.tooltips.appliedenergistics2.SchedulingMode=Scheduling Mode
+gui.tooltips.appliedenergistics2.SchedulingModeDefault=Export the first item until the network is empty, then try the next ones.
+gui.tooltips.appliedenergistics2.SchedulingModeRoundRobin=Export using round robin mode.
+gui.tooltips.appliedenergistics2.SchedulingModeRandom=Export items in random mode.
+
 gui.tooltips.appliedenergistics2.ItemsStored=Oggetti contenuti: %s
+gui.tooltips.appliedenergistics2.ItemCount=Count: %s
 gui.tooltips.appliedenergistics2.ItemsRequestable=Oggetti richiedibili: %s
+gui.tooltips.appliedenergistics2.P2PFrequency=Frequency: %s
+gui.tooltips.appliedenergistics2.OreFilterHint=Filter items using ore dictionary names
+gui.tooltips.appliedenergistics2.OreFilter=Ore Dictionary Filter
+gui.tooltips.appliedenergistics2.SearchStringTooltip=Right click to clear the search bar
+gui.tooltips.appliedenergistics2.SaveSearchString=Save Search String
+gui.tooltips.appliedenergistics2.SaveSearchStringYes=Yes
+gui.tooltips.appliedenergistics2.SaveSearchStringNo=No
+gui.tooltips.appliedenergistics2.DoublePattern=Double pattern
+gui.tooltips.appliedenergistics2.DoublePatternHint=Double stack sizes of pattern inputs and output(s) if it can. x8 when shift is held. Right click to divide instead. Click the middle mouse button to customize the multiplier.
+gui.tooltips.appliedenergistics2.DoublePatterns=Double patterns
+gui.tooltips.appliedenergistics2.DoublePatternsHint=Double stack sizes of pattern inputs and output(s) if it can. x8 when shift is held. Right click to divide instead.
 gui.tooltips.appliedenergistics2.CraftingStatus=Stato della fabbricazione
+gui.tooltips.appliedenergistics2.CraftingStatusDesc=Opens crafting status window
+gui.tooltips.appliedenergistics2.ToggleMolecularAssemblers=Toggles showing crafting interfaces only
+gui.tooltips.appliedenergistics2.ToggleMolecularAssemblersDescOff=Showing all interfaces
+gui.tooltips.appliedenergistics2.ToggleMolecularAssemblersDescOn=Showing only interfaces on molecular assemblers
+gui.tooltips.appliedenergistics2.ToggleShowFullInterfaces=Toggles showing interfaces with full slots
+gui.tooltips.appliedenergistics2.ToggleShowFullInterfacesOnDesc=Showing all interfaces
+gui.tooltips.appliedenergistics2.ToggleShowFullInterfacesOffDesc=Showing only interfaces with free slots
+gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterface=Toggles showing interfaces with invalid patterns
+gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOnDesc=Showing all interfaces
+gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOffDesc=Showing only interfaces with invalid patterns
+gui.tooltips.appliedenergistics2.HighlightInterface=Highlight interface
+gui.tooltips.appliedenergistics2.SearchFieldInputs=Recipe Inputs
+gui.tooltips.appliedenergistics2.SearchFieldOutputs=Recipe Outputs
+gui.tooltips.appliedenergistics2.SearchFieldNames=Interface Names
+gui.tooltips.appliedenergistics2.OptimizePatterns=Optimize patterns
+gui.tooltips.appliedenergistics2.OptimizePatternsNoReq=§cThis option is unavailable because there is no Pattern Optimization Matrix in your network!
+
+gui.tooltips.appliedenergistics2.InsertionModeDefault=Default Insertion Mode
+gui.tooltips.appliedenergistics2.InsertionModeDefaultDesc=First to last, merge stacks as necessary
+gui.tooltips.appliedenergistics2.InsertionModePreferEmpty=Insertion prefer empty slots
+gui.tooltips.appliedenergistics2.InsertionModePreferEmptyDesc=Same as default, but try empty slots first
+gui.tooltips.appliedenergistics2.InsertionModeOnlyEmpty=Insert to empty slots only
+gui.tooltips.appliedenergistics2.InsertionModeOnlyEmptyDesc=First to last, does not merge stacks
+
+gui.tooltips.appliedenergistics2.SidelessModeSided=Sided Mode
+gui.tooltips.appliedenergistics2.SidelessModeSidedDesc=Each fluid is accessible only from one specific side
+gui.tooltips.appliedenergistics2.SidelessModeSideless=Sideless Mode
+gui.tooltips.appliedenergistics2.SidelessModeSidelessDesc=All fluids are accessible from all sides
+
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefault=Default Blocking Mode
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeDefaultDesc=Blocking interfaces follow normal blocking rules (ignore circuits, etc.)
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeAll=Loose Mode
+gui.tooltips.appliedenergistics2.AdvancedBlockingModeAllDesc=Blocking interfaces will block on any item in this ME system.
+
+gui.tooltips.appliedenergistics2.LockCraftingMode=Lock Crafting
+gui.tooltips.appliedenergistics2.LockCraftingModeNone=Never
+gui.tooltips.appliedenergistics2.LockCraftingUntilRedstonePulse=Until redstone pulse is received
+gui.tooltips.appliedenergistics2.LockCraftingUntilResultReturned=Until crafting result is returned
+gui.tooltips.appliedenergistics2.LockCraftingWhileRedstoneHigh=With redstone signal
+gui.tooltips.appliedenergistics2.LockCraftingWhileRedstoneLow=Without redstone signal
+
+gui.tooltips.appliedenergistics2.CraftingModeStandard=Standard Crafting Mode
+gui.tooltips.appliedenergistics2.CraftingModeStandardDesc=Only starts craft if all ingredients are available in the ME System.
+gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissing=Ignore Missing Crafting Mode
+gui.tooltips.appliedenergistics2.CraftingModeIgnoreMissingDesc=Starts craft even if ingredients are missing from the ME System.
+
+gui.tooltips.appliedenergistics2.ExtraOptions=Extra Options
+
+gui.tooltips.appliedenergistics2.SwitchBytesInfo=Cell Info
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Item=Item
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Fluid=Fluid
+gui.tooltips.appliedenergistics2.SwitchBytesInfo_Essentia=Essentia
+
+gui.tooltips.appliedenergistics2.PriorityCardMode=Priority Card Mode
+gui.tooltips.appliedenergistics2.PriorityCardMode_Edit=Edit priority of targets.
+gui.tooltips.appliedenergistics2.PriorityCardMode_View=Print priority of targets.
+gui.tooltips.appliedenergistics2.PriorityCardMode_Set=Apply priority to targets.
+gui.tooltips.appliedenergistics2.PriorityCardMode_Inc=Apply priority to targets and increment by 1.
+gui.tooltips.appliedenergistics2.PriorityCardMode_Dec=Apply priority to targets and decrement by 1.
+
+gui.tooltips.appliedenergistics2.MultiplyPattern=Multiply
+gui.tooltips.appliedenergistics2.DividePattern=Divide
+gui.tooltips.appliedenergistics2.MultiplyOrDividePatternHint=If it's positive, it's multiplying by that number. If it's negative, it's dividing by that number. It will not work if it is not divisible.
+gui.tooltips.appliedenergistics2.ToFollow=Click to follow this craft and receive message when it is complete\nYou are not following this crafting job right now
+gui.tooltips.appliedenergistics2.ToUnfollow=Click to stop following this craft\nYou are following this crafting job and will receive chat message when it's complete
+
+gui.tooltips.appliedenergistics2.StringOrder=Sorting
+gui.tooltips.appliedenergistics2.StringOrderNatural=Default
+gui.tooltips.appliedenergistics2.StringOrderAlphanum=Natural Order
+gui.tooltips.appliedenergistics2.CellRestrictionLabel=Cell Restriction
+gui.tooltips.appliedenergistics2.CellRestrictionHint=Setup Cell Restriction
+
+gui.tooltips.appliedenergistics2.SearchGotoNext=Find next
+gui.tooltips.appliedenergistics2.SearchGotoPrev=Find prev
+
+gui.tooltips.appliedenergistics2.CPUAllowMode=Crafting requests limitation
+gui.tooltips.appliedenergistics2.CPUAllowAllDesc=Allow all crafting requests
+gui.tooltips.appliedenergistics2.CPUOnlyAllowPlayerDesc=Only allow crafting requests from player
+gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=Only allow crafting requests from non-player
+
+gui.tooltips.appliedenergistics2.Suspend=Click to stop this CPU from sending out crafts
+gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts again
+
+gui.tooltips.appliedenergistics2.PinsSection=Pins Section
+gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled
+gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
+
+gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
+gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode
+gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=Lock Mode
+gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=Can't find target to push
+gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=Not enough ingredients
+gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=Target interface in same network
+
+gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Toggles showing interfaces with patterns with substitutions enabled
+gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Showing all interfaces
+gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOffDesc=Showing only interfaces with patterns with substitutions enabled
+
+gui.tooltips.appliedenergistics2.BlockDriveWarning=§4Do not move chests with AE drives; It may corrupt your profile. No refunds!
+gui.tooltips.appliedenergistics2.BlockCreativeEnergyCell=§dInfinite Energy
+gui.tooltips.appliedenergistics2.PartCreativeEnergy=§dInfinite Energy
+gui.tooltips.appliedenergistics2.BlockCreativeEnergyController=§dInfinite Energy
+gui.tooltips.appliedenergistics2.PreconfiguredPriority=Preconfigured storage priority: §f%s
 
 # Units
 gui.appliedenergistics2.units.appliedenergistics=AE
@@ -348,54 +676,116 @@ waila.appliedenergistics2.Unlocked=Sbloccato
 waila.appliedenergistics2.Showing=Mostra
 waila.appliedenergistics2.Contains=Contiene
 waila.appliedenergistics2.Channels=Canali %1$d di %2$d
+waila.appliedenergistics2.ChannelsUnbound=%1$d Channels
+waila.appliedenergistics2.P2PUnlinked=Unlinked
+waila.appliedenergistics2.P2PInputOneOutput=Linked (Input Side)
+waila.appliedenergistics2.P2PInputManyOutputs=Linked (Input Side) - %d Outputs
+waila.appliedenergistics2.P2POutput=Linked (Output Side)
+waila.appliedenergistics2.Booting=Network is booting
+waila.appliedenergistics2.CraftingLockedByLackOfRedstoneSignal=Locked by lack of redstone signal
+waila.appliedenergistics2.CraftingLockedByRedstoneSignal=Locked by redstone signal
+waila.appliedenergistics2.CraftingLockedUntilPulse=Waiting for redstone pulse to unlock
+waila.appliedenergistics2.CraftingLockedUntilResult=Waiting for results to unlock
+waila.appliedenergistics2.CoordinateX=X
+waila.appliedenergistics2.CoordinateY=Y
+waila.appliedenergistics2.CoordinateZ=Z
+waila.appliedenergistics2.Dimension=Dimension
+waila.appliedenergistics2.Id=id
+waila.appliedenergistics2.ConnectedTo=Connected to
+waila.appliedenergistics2.Disconnected=Disconnected
+waila.appliedenergistics2.Singularity=Singularity
+waila.appliedenergistics2.Provider=§5Provider§r
+waila.appliedenergistics2.Accessor=§5Accessor§r
+waila.appliedenergistics2.Waiting=Waiting:
+
+# Baubles Extended
+slot.Terminal=§aTerminal§7
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=Cella di immagazzinaggio da 1k ME
 item.appliedenergistics2.ItemBasicStorageCell.4k.name=Cella di immagazzinaggio da 4k ME
 item.appliedenergistics2.ItemBasicStorageCell.16k.name=Cella di immagazzinaggio da 16k ME
 item.appliedenergistics2.ItemBasicStorageCell.64k.name=Cella di immagazzinaggio da 64k ME
+item.appliedenergistics2.ItemAdvancedStorageCell.256k.name=§9256k§r ME Storage Cell
+item.appliedenergistics2.ItemAdvancedStorageCell.1024k.name=§d1024k§r ME Storage Cell
+item.appliedenergistics2.ItemAdvancedStorageCell.4096k.name=§c4096k§r ME Storage Cell
+item.appliedenergistics2.ItemAdvancedStorageCell.16384k.name=§516384k§r ME Storage Cell
+item.appliedenergistics2.ItemExtremeStorageCell.Container.name=Block Container ME Storage Cell
+item.appliedenergistics2.ItemExtremeStorageCell.Quantum.name=Quantum ME Storage Cell
+item.appliedenergistics2.ItemExtremeStorageCell.Singularity.name=Digital Singularity ME Storage Cell
+item.appliedenergistics2.ItemExtremeStorageCell.Universe.name=Artificial Universe ME Storage Cell
 item.appliedenergistics2.ItemCreativeStorageCell.name=Cella di immagazzinaggio ME creativa
+item.appliedenergistics2.ItemVoidStorageCell.name=Void ME Storage Cell
 item.appliedenergistics2.ItemEncodedPattern.name=Modello Codificato
+item.appliedenergistics2.ItemEncodedUltimatePattern.name=Encoded Ultimate Pattern
 item.appliedenergistics2.ItemViewCell.name=Cella olografica
 item.appliedenergistics2.ItemFacade.name=Facciata per cavo
 
+item.appliedenergistics2.ItemCrystalSeed.name=Seed
 item.appliedenergistics2.ItemCrystalSeed.Certus.name=Seme di quarzo certus
 item.appliedenergistics2.ItemCrystalSeed.Nether.name=Seme di quarzo degli Inferi
 item.appliedenergistics2.ItemCrystalSeed.Fluix.name=Seme di fluix
+
+item.appliedenergistics2.ItemPart.InvalidType.name=Disabled Item
 item.appliedenergistics2.ItemMaterial.InvalidType.name=Quest'oggetto è disabilitato.
-item.appliedenergistics2.ItemMaterial.AdvCard.name=Scheda avanzata
+
+item.appliedenergistics2.ItemMaterial.name=ME Component
+item.appliedenergistics2.ItemPart.name=ME Cable and/or Bus
+
+item.appliedenergistics2.ItemMaterial.BlankPattern.name=Modello vuoto
+item.appliedenergistics2.ItemMaterial.FormationCore.name=Nucleo di formazione
 item.appliedenergistics2.ItemMaterial.AnnihilationCore.name=Nucleo di annientamento
 item.appliedenergistics2.ItemMaterial.BasicCard.name=Scheda base
-item.appliedenergistics2.ItemMaterial.BlankPattern.name=Modello vuoto
-item.appliedenergistics2.ItemMaterial.CalcProcessor.name=Processore di calcolo
+item.appliedenergistics2.ItemMaterial.AdvCard.name=Scheda avanzata
+
+
 item.appliedenergistics2.ItemMaterial.CardCapacity.name=Sceda per capacità
+item.appliedenergistics2.ItemMaterial.CardPatternCapacity.name=Pattern Capacity Card
 item.appliedenergistics2.ItemMaterial.CardFuzzy.name=Scheda vaga
 item.appliedenergistics2.ItemMaterial.CardInverter.name=Scheda invertita
 item.appliedenergistics2.ItemMaterial.CardRedstone.name=Sceda pietrarossa
 item.appliedenergistics2.ItemMaterial.CardSpeed.name=Sceda acceleratore
+item.appliedenergistics2.ItemMaterial.CardSuperSpeed.name=Hyper-Acceleration Card
+item.appliedenergistics2.ItemMaterial.CardOreFilter.name=Oredictionary Filter Card
+item.appliedenergistics2.ItemMaterial.CardPatternRefiller.name=Pattern Refiller Card
+item.appliedenergistics2.ItemMaterial.CardAdvancedBlocking.name=Advanced Blocking Card
+item.appliedenergistics2.ItemMaterial.CardLockCrafting.name=Locking Card
+item.appliedenergistics2.ItemMaterial.CardSticky.name=Sticky Card
+item.appliedenergistics2.ItemMaterial.CardVoidOverflow.name=Overflow Void Card
+item.appliedenergistics2.ItemMaterial.CardDistribution.name=Equal Distribution Card
+item.appliedenergistics2.ItemMaterial.CardFakeCrafting.name=Fake Crafting Card
+item.appliedenergistics2.ItemMaterial.CardSuperluminalSpeed.name=Superluminal Acceleration Card
+
 item.appliedenergistics2.ItemMaterial.Cell2SpatialPart.name=Componente per spazio da 2³
 item.appliedenergistics2.ItemMaterial.Cell16SpatialPart.name=Componente per spazio da 16³
 item.appliedenergistics2.ItemMaterial.Cell128SpatialPart.name=Componente per spazio da 128³
+
 item.appliedenergistics2.ItemMaterial.Cell1kPart.name=Componente per immagazzinaggio da 1k ME
 item.appliedenergistics2.ItemMaterial.Cell4kPart.name=Componente per immagazzinaggio da 4k ME
 item.appliedenergistics2.ItemMaterial.Cell16kPart.name=Componente per immagazzinaggio da 16k ME
 item.appliedenergistics2.ItemMaterial.Cell64kPart.name=Componente per immagazzinaggio da 64k ME
+item.appliedenergistics2.ItemMaterial.Cell256kPart.name=§9256k§r ME Storage Component
+item.appliedenergistics2.ItemMaterial.Cell1024kPart.name=§d1024k§r ME Storage Component
+item.appliedenergistics2.ItemMaterial.Cell4096kPart.name=§c4096k§r ME Storage Component
+item.appliedenergistics2.ItemMaterial.Cell16384kPart.name=§516384k§r ME Storage Component
+
 item.appliedenergistics2.ItemMaterial.CertusQuartzCrystal.name=Cristallo di quarzo certus
 item.appliedenergistics2.ItemMaterial.CertusQuartzCrystalCharged.name=Cristallo di quarzo certus carico
 item.appliedenergistics2.ItemMaterial.CertusQuartzDust.name=Polvere di quarzo certus
 item.appliedenergistics2.ItemMaterial.EmptyStorageCell.name=Custodia per cella ME
+item.appliedenergistics2.ItemMaterial.EmptyAdvancedStorageCell.name=ME Advanced Storage Housing
 item.appliedenergistics2.ItemMaterial.EnderDust.name=Polvere d'omega
-item.appliedenergistics2.ItemMaterial.EngProcessor.name=Processore di ingegneria
+
 item.appliedenergistics2.ItemMaterial.Flour.name=Farina
 item.appliedenergistics2.ItemMaterial.FluixCrystal.name=Cristallo di Fluix
 item.appliedenergistics2.ItemMaterial.FluixDust.name=Polvere di Fluix
 item.appliedenergistics2.ItemMaterial.FluixPearl.name=Perla di Fluix
-item.appliedenergistics2.ItemMaterial.FormationCore.name=Nucleo di formazione
+
 item.appliedenergistics2.ItemMaterial.GoldDust.name=Polvere d'oro
 item.appliedenergistics2.ItemMaterial.IronDust.name=Polvere di ferro
 item.appliedenergistics2.ItemMaterial.IronNugget.name=Pepita di ferro
-item.appliedenergistics2.ItemMaterial.LogicProcessor.name=Processore logico
-item.appliedenergistics2.ItemMaterial.LogicProcessorAsm.name=Processore logico incompleto
+
+
 item.appliedenergistics2.ItemMaterial.MatterBall.name=Sfera di materia
 item.appliedenergistics2.ItemMaterial.NetherQuartzDust.name=Polvere di quarzo degli Inferi
 item.appliedenergistics2.ItemMaterial.PurifiedCertusQuartzCrystal.name=Cristallo di quarzo certus puro
@@ -407,44 +797,59 @@ item.appliedenergistics2.ItemMaterial.Singularity.name=Singolarità
 item.appliedenergistics2.ItemMaterial.Wireless.name=Ricevitore wireless
 item.appliedenergistics2.ItemMaterial.WirelessBooster.name=Amplificatori wireless
 item.appliedenergistics2.ItemMaterial.WoodenGear.name=Ingranaggio di legno
+
+item.appliedenergistics2.ItemMaterial.NamePress.name=Stampo di nomi per incisore
 item.appliedenergistics2.ItemMaterial.EngProcessorPress.name=Stampo di ingegneria per incisore
 item.appliedenergistics2.ItemMaterial.CalcProcessorPress.name=Stampo di calcolo per incisore
 item.appliedenergistics2.ItemMaterial.LogicProcessorPress.name=Stampo di logica per incisore
+item.appliedenergistics2.ItemMaterial.SiliconPress.name=Stampo di silicone per incisore
+
 item.appliedenergistics2.ItemMaterial.EngProcessorPrint.name=Circuito di ingegneria stampato
 item.appliedenergistics2.ItemMaterial.CalcProcessorPrint.name=Circuito di calcolo stampato
 item.appliedenergistics2.ItemMaterial.LogicProcessorPrint.name=Circuito di logica stampato
-item.appliedenergistics2.ItemMaterial.SiliconPress.name=Stampo di silicone per incisore
 item.appliedenergistics2.ItemMaterial.SiliconPrint.name=Silicone stampato
-item.appliedenergistics2.ItemMaterial.NamePress.name=Stampo di nomi per incisore
+
+item.appliedenergistics2.ItemMaterial.EngProcessor.name=Processore di ingegneria
+item.appliedenergistics2.ItemMaterial.CalcProcessor.name=Processore di calcolo
+item.appliedenergistics2.ItemMaterial.LogicProcessor.name=Processore logico
+item.appliedenergistics2.ItemMaterial.LogicProcessorAsm.name=Processore logico incompleto
+
 item.appliedenergistics2.ItemMaterial.SkyDust.name=Polvere di roccia del cielo
 item.appliedenergistics2.ItemMaterial.CardCrafting.name=Scheda di fabbricazione
 
+item.appliedenergistics2.ItemPart.FormationPlane.name=Piano di formazione ME
 item.appliedenergistics2.ItemPart.AnnihilationPlane.name=Piano annientatore ME
+item.appliedenergistics2.ItemPart.IdentityAnnihilationPlane.name=ME Identity Annihilation Plane
 item.appliedenergistics2.ItemPart.CableAnchor.name=Ancoraggio per cavi
 item.appliedenergistics2.ItemPart.CableCovered.name=Cavo comperto ME
 item.appliedenergistics2.ItemPart.CableGlass.name=Cavo di vetro ME
 item.appliedenergistics2.ItemPart.CableSmart.name=Cavo intelligente ME
 item.appliedenergistics2.ItemPart.CableDense.name=Cavo denso ME
+item.appliedenergistics2.ItemPart.CableDenseCovered.name=ME Dense Covered Cable
 item.appliedenergistics2.ItemPart.StorageMonitor.name=Monitor per deposito ME
 item.appliedenergistics2.ItemPart.ConversionMonitor.name=Monitor convertitore ME
-item.appliedenergistics2.ItemPart.CraftingTerminal.name=Terminale con banco da lavoro ME
+item.appliedenergistics2.ItemPart.ThroughputMonitor.name=ME Throughput Monitor
 item.appliedenergistics2.ItemPart.SemiDarkMonitor.name=Pannello illuminato
 item.appliedenergistics2.ItemPart.Monitor.name=Pannello illuminato chiaro
 item.appliedenergistics2.ItemPart.DarkMonitor.name=Pannello illuminato scuro
+
 item.appliedenergistics2.ItemPart.ExportBus.name=Bus esportatore ME
-item.appliedenergistics2.ItemPart.FormationPlane.name=Piano di formazione ME
 item.appliedenergistics2.ItemPart.ImportBus.name=Bus importatore ME
 item.appliedenergistics2.ItemPart.Interface.name=Interfaccia ME
 item.appliedenergistics2.ItemPart.LevelEmitter.name=Emettitore di pietrarossa ME
 item.appliedenergistics2.ItemPart.P2PTunnel.name=P2P Tunnel
 item.appliedenergistics2.ItemPart.PatternTerminal.name=Terminale per modelli ME
+item.appliedenergistics2.ItemPart.PatternTerminalEx.name=ME Processing Pattern Terminal
 item.appliedenergistics2.ItemPart.QuartzFiber.name=Fibra quarzo
+item.appliedenergistics2.ItemPart.PartCreativeEnergy.name=Creative Energy Anchor
 item.appliedenergistics2.ItemPart.StorageBus.name=Bus di immagazzinaggio ME
 item.appliedenergistics2.ItemPart.Terminal.name=Terminale ME
+item.appliedenergistics2.ItemPart.CraftingTerminal.name=Terminale con banco da lavoro ME
+item.appliedenergistics2.ItemPart.InterfaceTerminal.name=Terminale con interfaccia ME
 item.appliedenergistics2.ItemPart.InvertedToggleBus.name=Bus alternatore inverso ME
 item.appliedenergistics2.ItemPart.ToggleBus.name=Bus alternatore ME
 item.appliedenergistics2.ItemPart.CraftingMonitor.name=Monitor per fabbricazione ME
-item.appliedenergistics2.ItemPart.InterfaceTerminal.name=Terminale con interfaccia ME
+item.appliedenergistics2.ItemPart.PatternRepeater.name=ME Pattern Repeater
 
 item.appliedenergistics2.ItemSpatialStorageCell.128Cubed.name=Cella di immagazzinaggio per spazio da 128³
 item.appliedenergistics2.ItemSpatialStorageCell.16Cubed.name=Cella di immagazzinaggio per spazio da 16³
@@ -469,10 +874,12 @@ item.appliedenergistics2.ToolNetherQuartzWrench.name=Chiave inglese di quarzo de
 item.appliedenergistics2.ItemPaintBall.name=Sfera di vernice
 item.appliedenergistics2.ToolPortableCell.name=Cella portabile
 item.appliedenergistics2.ToolNetworkTool.name=Attrezzo per sistema
+item.appliedenergistics2.ToolAdvancedNetworkTool.name=Advanced Network Tool
 item.appliedenergistics2.ToolChargedStaff.name=Bastone carico
 item.appliedenergistics2.ToolEntropyManipulator.name=Manipulatore di entropia
 item.appliedenergistics2.ToolMassCannon.name=Cannone di materia
 item.appliedenergistics2.ToolMemoryCard.name=Scheda per la memoria
+item.appliedenergistics2.ToolPriorityCard.name=Priority Card
 item.appliedenergistics2.ToolColorApplicator.name=Applicatore di colore
 item.appliedenergistics2.ToolWirelessTerminal.name=Terminale wireless
 item.appliedenergistics2.ToolBiometricCard.name=Scheda biometrica
@@ -487,6 +894,15 @@ commands.ae2.ChunkLogger=Altera tra Chunk Loading e Unloading nel server log. ( 
 commands.ae2.ChunkLoggerOn=Chunk Logging è ora attivato
 commands.ae2.ChunkLoggerOff=Chunk Logging è ora disattivato
 commands.ae2.Supporters=Mostra una lista dei Sostenitori di AE2
+commands.ae2.Profiler=Grid profiling command, pass <x y z [dimension]> of some tile in the grid to start/stop profiling
+commands.ae2.ProfilerStart=Profiling started
+commands.ae2.ProfilerFailed=No AE tile here
+commands.ae2.ProfilerGridDown=This grid is offline
+commands.ae2.ProfilerStop=Average nanoseconds taken by this grid per tick:
+commands.ae2.ProfilerFailedDim=No such dimension
+commands.ae2.ToggleFullAccess=Toggle OP full AE access ignoring security terminal settings
+commands.ae2.ToggleDebugTiming=Toggle debug tick manager logging
+commands.ae2.ToggleDebugPathfinding=Toggle pathfinding debug logging
 
 # Achievements
 achievement.ae2.Compass=Cacciatore di meteoriti
@@ -531,7 +947,7 @@ achievement.ae2.CraftingCPU=Fabbricazione Next Gen
 achievement.ae2.CraftingCPU.desc=Fabbrica una Unità di fabbricazione
 achievement.ae2.Facade=Estetica del sistema
 achievement.ae2.Facade.desc=Fabbrica una Facciata per cavo
-achievement.ae2.NetworkTool=Diagnostica del sistema 
+achievement.ae2.NetworkTool=Diagnostica del sistema
 achievement.ae2.NetworkTool.desc=Fabbrica un Attrezzo per sistema
 achievement.ae2.PortableCell=Nomade magazziniere
 achievement.ae2.PortableCell.desc=Fabbrica una Cella portabile
@@ -544,3 +960,13 @@ achievement.ae2.QNB.desc=Crea un Collegamento quantistico
 stat.ae2.ItemsInserted=Oggetti aggiunti al Deposito ME
 stat.ae2.ItemsExtracted=Oggetti estratti dal Deposito ME
 stat.ae2.TurnedCranks=Manovelle girate
+
+# Keys
+key.appliedenergistics2.category=Applied Energistics 2
+key.pick_block.desc=AE2 Pick Block
+key.toggle_focus.desc=Toggle search box focus
+key.search_connected_inventories.desc=Search network inventories for item
+key.control_operation.desc=Control operation
+
+# NEI
+nei.options.keys.gui.pattern_view=View Pattern
