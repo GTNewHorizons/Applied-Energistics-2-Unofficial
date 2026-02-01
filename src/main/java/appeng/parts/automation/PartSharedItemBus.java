@@ -229,7 +229,10 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
     @Override
     public IAEStackInventory getAEInventoryByName(StorageName name) {
-        return this.config;
+        if (name == StorageName.CONFIG) {
+            return this.config;
+        }
+        return null;
     }
 
     public StorageChannel getStorageChannel() {
