@@ -132,7 +132,14 @@ chat.appliedenergistics2.ChestLockingToggled=Ячейка в сундуке бы
 chat.appliedenergistics2.FinishCraftingRemind=Создание %s * %s завершено за %s.
 chat.appliedenergistics2.CraftingCantExtract=Невозможно извлечь необходимое количество ингредиента из хранилища: %d / %d | %s
 chat.appliedenergistics2.MachineInOtherDim=%d расположен в измерении: %d и не может быть подсвечен
+chat.appliedenergistics2.MachineInOtherDimNamed=%d "%s" located in dimension: %d and can't be highlighted
 chat.appliedenergistics2.MachineHighlighted=%d сейчас подсвечен и находится: %d, %d, %d
+chat.appliedenergistics2.MachineHighlightedNamed=The %d "%d" is now highlighted at %d, %d, %d
+chat.appliedenergistics2.StorageHighlighted=The %d containing %d %d is now highlighted at %d, %d, %d
+chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dimension: %d and can't be highlighted
+chat.appliedenergistics2.PickBlockTerminalNotFound=AE2 wireless terminal not found.
+chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
+chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -226,6 +233,9 @@ gui.appliedenergistics2.IOBuses=МЭ шина импорта\экспорта
 gui.appliedenergistics2.Stores=Хранит
 gui.appliedenergistics2.BytesUsed=байт использовано
 gui.appliedenergistics2.TimeUsed=Затраченное время
+gui.appliedenergistics2.CraftName=Craft Name
+gui.appliedenergistics2.Remains=Remains
+gui.appliedenergistics2.Progress=Progress
 gui.appliedenergistics2.Types=типов
 gui.appliedenergistics2.Blank=Чистый
 gui.appliedenergistics2.Unlinked=Не связанный
@@ -239,6 +249,7 @@ gui.appliedenergistics2.MolecularAssembler=Молекулярный сборщи
 gui.appliedenergistics2.ProcessingPattern=Обработка шаблона
 gui.appliedenergistics2.Crafts=Создаёт
 gui.appliedenergistics2.HoldShift=Удерживайте [LSHIFT], чтобы показать ингредиенты
+gui.appliedenergistics2.PatternView=Press [%s] to view pattern
 gui.appliedenergistics2.Result=Результат
 gui.appliedenergistics2.Results=Результаты
 gui.appliedenergistics2.Ingredients=Ингредиенты
@@ -271,6 +282,8 @@ gui.appliedenergistics2.Empty=Пустой
 gui.appliedenergistics2.Stored=Хранится
 gui.appliedenergistics2.AddToBookmark=Закладка
 gui.appliedenergistics2.Cancel=Отмена
+gui.appliedenergistics2.Suspend=Suspend
+gui.appliedenergistics2.Resume=Resume
 gui.appliedenergistics2.ETAFormat=HH:mm:ss
 gui.appliedenergistics2.SwitchCraftingSimulationDisplayMode=Переключить режим отображения (Список/Дерево)
 gui.appliedenergistics2.Crafting=Создание
@@ -334,8 +347,17 @@ gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=Нажмите Shift+
 gui.appliedenergistics2.Nothing=Ничего
 gui.appliedenergistics2.VoidCellTooltip=Удаляет §4всё§7, что помещено в неё
 gui.appliedenergistics2.CellView=Ячейка отображения
+gui.appliedenergistics2.Inputs=Inputs
+gui.appliedenergistics2.Outputs=Outputs
+gui.appliedenergistics2.EncodedPattern=Encoded Pattern
 gui.appliedenergistics2.Deprecated=Устарело, скоро будет удалено!
 gui.appliedenergistics2.ViewCellToggleKey=ПКМ для переключения
+gui.appliedenergistics2.CPUAllowMode=Accept request
+gui.appliedenergistics2.CPUAllowAll=All
+gui.appliedenergistics2.CPUOnlyAllowNonPlayer=Only from non-player
+gui.appliedenergistics2.CPUOnlyAllowPlayer=Only from player
+gui.appliedenergistics2.CPUSourcePlayer=Requester
+gui.appliedenergistics2.CPUSourceMachineRequested=Machine Requested
 
 gui.appliedenergistics2.NetworkBytesDetails=Подробности о сетевых байтах
 gui.appliedenergistics2.Items=Предметы
@@ -360,6 +382,8 @@ gui.appliedenergistics2.NumberOfFluids=Количество жидкости
 gui.appliedenergistics2.ItemsPerByte=Предметов на байт:
 gui.appliedenergistics2.FluidsPerByte=Жидкости на байт:
 gui.appliedenergistics2.BytesPerType=Байтов на тип:
+gui.appliedenergistics2.SelectColor=Select a Color
+gui.appliedenergistics2.Selected=Selected
 
 # GUI Colors - ARGB
 gui.color.appliedenergistics2.SearchboxFocused=6E000000
@@ -414,6 +438,7 @@ gui.tooltips.appliedenergistics2.NumberOfItems=Количество предме
 gui.tooltips.appliedenergistics2.ItemName=Имя предмета
 gui.tooltips.appliedenergistics2.PowerUnits=Энергетические единицы
 gui.tooltips.appliedenergistics2.IOMode=Режим ввода\вывода
+gui.tooltips.appliedenergistics2.ExtractionMode=Extraction Mode
 gui.tooltips.appliedenergistics2.CondenserOutput=МЭ конденсатор - Выход
 gui.tooltips.appliedenergistics2.PartitionStorage=Раздел хранения
 gui.tooltips.appliedenergistics2.Clear=Очистить
@@ -428,6 +453,8 @@ gui.tooltips.appliedenergistics2.Singularity=Конденсировать в с�
 gui.tooltips.appliedenergistics2.Read=Только извлекать
 gui.tooltips.appliedenergistics2.Write=Только вкладывать
 gui.tooltips.appliedenergistics2.ReadWrite=Двухсторонний
+gui.tooltips.appliedenergistics2.Strict=Strict - Network sees only filtered items
+gui.tooltips.appliedenergistics2.Loose=Loose - Network sees everything
 
 gui.tooltips.appliedenergistics2.AlwaysActive=Всегда активен
 gui.tooltips.appliedenergistics2.ActiveWithoutSignal=Активен без сигнала
@@ -589,6 +616,9 @@ gui.tooltips.appliedenergistics2.CPUAllowAllDesc=Разрешить все за�
 gui.tooltips.appliedenergistics2.CPUOnlyAllowPlayerDesc=Разрешить только запросы на создание предметов от игрока
 gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=Разрешить запросы на создание предметов только от неигроков
 
+gui.tooltips.appliedenergistics2.Suspend=Click to stop this CPU from sending out crafts
+gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts again
+
 gui.tooltips.appliedenergistics2.PinsSection=Секция закрепленных
 gui.tooltips.appliedenergistics2.PinsSectionActive=Секция закрепленных включена
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Секция закрепленных отключена
@@ -603,6 +633,12 @@ gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=Целевой и�
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Переключает отображение интерфейсов с шаблонами с включённой заменой
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Отображение всех интерфейсов
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOffDesc=Показывать только интерфейсы с шаблонами с включённой заменой
+
+gui.tooltips.appliedenergistics2.BlockDriveWarning=§4Не перемещайте сундуки с AE-ячейками; это может повредить профиль. Возвратов нет!
+gui.tooltips.appliedenergistics2.BlockCreativeEnergyCell=§dБесконечная энергия
+gui.tooltips.appliedenergistics2.PartCreativeEnergy=§dБесконечная энергия
+gui.tooltips.appliedenergistics2.BlockCreativeEnergyController=§dБесконечная энергия
+gui.tooltips.appliedenergistics2.PreconfiguredPriority=Преднастроенный приоритет хранения: §f%s
 
 # Units
 gui.appliedenergistics2.units.appliedenergistics=AE
@@ -640,6 +676,7 @@ waila.appliedenergistics2.Unlocked=Разблокировано
 waila.appliedenergistics2.Showing=Показывает
 waila.appliedenergistics2.Contains=Содержит
 waila.appliedenergistics2.Channels=Каналы: %1$d из %2$d
+waila.appliedenergistics2.ChannelsUnbound=%1$d Channels
 waila.appliedenergistics2.P2PUnlinked=Несвязанный
 waila.appliedenergistics2.P2PInputOneOutput=Связанный (Входная сторона)
 waila.appliedenergistics2.P2PInputManyOutputs=Связанный (Входная сторона) - выходов %d
@@ -649,6 +686,20 @@ waila.appliedenergistics2.CraftingLockedByLackOfRedstoneSignal=Заблокир�
 waila.appliedenergistics2.CraftingLockedByRedstoneSignal=Заблокировано сигналом красного камня
 waila.appliedenergistics2.CraftingLockedUntilPulse=Ожидает импульс красного камня для разблокировки
 waila.appliedenergistics2.CraftingLockedUntilResult=Ожидает результатов создания для разблокировки
+waila.appliedenergistics2.CoordinateX=X
+waila.appliedenergistics2.CoordinateY=Y
+waila.appliedenergistics2.CoordinateZ=Z
+waila.appliedenergistics2.Dimension=Dimension
+waila.appliedenergistics2.Id=id
+waila.appliedenergistics2.ConnectedTo=Connected to
+waila.appliedenergistics2.Disconnected=Disconnected
+waila.appliedenergistics2.Singularity=Singularity
+waila.appliedenergistics2.Provider=§5Provider§r
+waila.appliedenergistics2.Accessor=§5Accessor§r
+waila.appliedenergistics2.Waiting=Waiting:
+
+# Baubles Extended
+slot.Terminal=§aTerminal§7
 
 # Items
 item.appliedenergistics2.ItemBasicStorageCell.1k.name=§61К§r МЭ ячейка хранения
@@ -666,6 +717,7 @@ item.appliedenergistics2.ItemExtremeStorageCell.Universe.name=МЭ ячейка 
 item.appliedenergistics2.ItemCreativeStorageCell.name=МЭ творческая ячейка хранения
 item.appliedenergistics2.ItemVoidStorageCell.name=МЭ пустотная ячейка хранения
 item.appliedenergistics2.ItemEncodedPattern.name=Закодированный шаблон
+item.appliedenergistics2.ItemEncodedUltimatePattern.name=Encoded Ultimate Pattern
 item.appliedenergistics2.ItemViewCell.name=Ячейка представления
 item.appliedenergistics2.ItemFacade.name=Кабельный фасад
 
@@ -678,7 +730,7 @@ item.appliedenergistics2.ItemPart.InvalidType.name=Отключенный пре
 item.appliedenergistics2.ItemMaterial.InvalidType.name=Этот предмет отключен.
 
 item.appliedenergistics2.ItemMaterial.name=МЭ компонент
-item.appliedenergistics2.ItemPart.name=МЭ кабель и/или шина 
+item.appliedenergistics2.ItemPart.name=МЭ кабель и/или шина
 
 item.appliedenergistics2.ItemMaterial.BlankPattern.name=Пустой шаблон
 item.appliedenergistics2.ItemMaterial.FormationCore.name=Ядро формирования
@@ -797,6 +849,7 @@ item.appliedenergistics2.ItemPart.InterfaceTerminal.name=МЭ терминал �
 item.appliedenergistics2.ItemPart.InvertedToggleBus.name=МЭ инвертированная шина переключения
 item.appliedenergistics2.ItemPart.ToggleBus.name=МЭ шина переключения
 item.appliedenergistics2.ItemPart.CraftingMonitor.name=МЭ монитор создания
+item.appliedenergistics2.ItemPart.PatternRepeater.name=ME Pattern Repeater
 
 item.appliedenergistics2.ItemSpatialStorageCell.128Cubed.name=128³ пространственная ячейка хранения
 item.appliedenergistics2.ItemSpatialStorageCell.16Cubed.name=16³ пространственная ячейка хранения
@@ -910,4 +963,10 @@ stat.ae2.TurnedCranks=Сломано рукояток
 
 # Keys
 key.appliedenergistics2.category=Applied Energistics 2
+key.pick_block.desc=AE2 Pick Block
 key.toggle_focus.desc=Переключить фокус на окно поиска
+key.search_connected_inventories.desc=Search network inventories for item
+key.control_operation.desc=Control operation
+
+# NEI
+nei.options.keys.gui.pattern_view=View Pattern

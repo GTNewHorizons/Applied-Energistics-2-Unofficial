@@ -28,8 +28,10 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 
 import com.google.common.base.Preconditions;
@@ -245,6 +247,29 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
         if (part != null && part.deprecated) {
             lines.add(EnumChatFormatting.RED + GuiText.Deprecated.getLocal());
         }
+
+        if (stack.hasTagCompound()) {
+            NBTTagCompound nbt = stack.getTagCompound();
+
+            if (nbt.hasKey("priority")) {
+                int priority = nbt.getInteger("priority");
+                String priorityText = StatCollector
+                        .translateToLocalFormatted("gui.tooltips.appliedenergistics2.PreconfiguredPriority", priority);
+                lines.add(EnumChatFormatting.GRAY + priorityText);
+            }
+        }
+
+        if (part != null) {
+            PartType type = part.part;
+            String tooltipKey = "gui.tooltips.appliedenergistics2." + type.name();
+
+            if (StatCollector.canTranslate(tooltipKey)) {
+                String tooltip = StatCollector.translateToLocal(tooltipKey);
+                for (String line : tooltip.split("\\\\n")) {
+                    lines.add(line);
+                }
+            }
+        }
     }
 
     private String getName(final ItemStack is) {
@@ -377,4 +402,5 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
             return o1.getValue().part.name().compareTo(o2.getValue().part.name());
         }
     }
+
 }
