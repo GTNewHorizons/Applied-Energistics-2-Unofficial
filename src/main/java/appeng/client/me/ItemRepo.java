@@ -252,7 +252,7 @@ public class ItemRepo implements IDisplayRepo {
                 continue;
             }
 
-            if (!typeFilters.getBoolean(is.getStackType())) continue;
+            if (typeFilters != null && !typeFilters.getBoolean(is.getStackType())) continue;
 
             if (is instanceof IAEItemStack ais) {
                 if (registry.isBlacklisted(ais.getItemStack().getItem())
