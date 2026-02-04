@@ -95,7 +95,7 @@ public abstract class PartBaseExportBus<StackType extends IAEStack<StackType>> e
                     for (x = 0; x < this.availableSlots() && this.itemToSend > 0; x++) {
                         final int slotToExport = this.getStartingSlot(schedulingMode, x);
 
-                        final StackType aes = (StackType) this.getAEInventoryByName(StorageName.NONE)
+                        final StackType aes = (StackType) this.getAEInventoryByName(StorageName.CONFIG)
                                 .getAEStackInSlot(slotToExport);
 
                         if (aes == null || this.itemToSend <= 0 || this.craftOnly()) {

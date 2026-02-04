@@ -38,7 +38,7 @@ public class GuiBusIO extends GuiUpgradeable {
     }
 
     private void initVirtualSlots() {
-        final IAEStackInventory inputInv = this.bus.getAEInventoryByName(StorageName.NONE);
+        final IAEStackInventory inputInv = this.bus.getAEInventoryByName(StorageName.CONFIG);
         for (int y = 0; y < 3; y++) {
             for (int x = 0; x < 3; x++) {
                 VirtualMEPhantomSlot slot = new VirtualMEPhantomSlot(

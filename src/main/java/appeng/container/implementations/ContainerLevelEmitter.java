@@ -151,8 +151,8 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
             this.setRedStoneMode(
                     (RedstoneMode) this.getUpgradeable().getConfigManager().getSetting(Settings.REDSTONE_EMITTER));
             this.updateVirtualSlots(
-                    StorageName.NONE,
-                    this.lvlEmitter.getAEInventoryByName(StorageName.NONE),
+                    StorageName.CONFIG,
+                    this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG),
                     this.configClientSlot);
         }
 
@@ -205,14 +205,14 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
     @Override
     public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
         for (var entry : slotStacks.int2ObjectEntrySet()) {
-            this.lvlEmitter.getAEInventoryByName(StorageName.NONE)
+            this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG)
                     .putAEStackInSlot(entry.getIntKey(), entry.getValue());
         }
 
         if (isServer()) {
             this.updateVirtualSlots(
-                    StorageName.NONE,
-                    this.lvlEmitter.getAEInventoryByName(StorageName.NONE),
+                    StorageName.CONFIG,
+                    this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG),
                     this.configClientSlot);
         }
     }

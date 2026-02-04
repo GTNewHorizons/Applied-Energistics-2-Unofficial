@@ -26,6 +26,8 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
 import appeng.api.config.RedstoneMode;
@@ -71,6 +73,7 @@ import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.Platform;
+import appeng.util.SettingsFrom;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -732,6 +735,20 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     }
 
     @Override
+    protected void uploadSettings(@NotNull SettingsFrom from, @NotNull NBTTagCompound compound) {
+        super.uploadSettings(from, compound);
+        this.reportingValue = compound.getLong("reportingValue");
+        this.configureWatchers();
+    }
+
+    @Override
+    protected NBTTagCompound downloadSettings(SettingsFrom from) {
+        NBTTagCompound nbt = super.downloadSettings(from);
+        nbt.setLong("reportingValue", this.reportingValue);
+        return nbt;
+    }
+
+    @Override
     public boolean pushPattern(final ICraftingPatternDetails patternDetails, final InventoryCrafting table) {
         return false;
     }
@@ -771,6 +788,9 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
     @Override
     public IAEStackInventory getAEInventoryByName(StorageName name) {
-        return this.config;
+        if (name == StorageName.CONFIG) {
+            return this.config;
+        }
+        return null;
     }
 }

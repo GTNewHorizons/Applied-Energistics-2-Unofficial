@@ -97,7 +97,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
     private final BaseActionSource mySrc;
-    private final IAEStackInventory Config = new IAEStackInventory(this, 63) {
+    private final IAEStackInventory config = new IAEStackInventory(this, 63) {
 
         @Override
         public void putAEStackInSlot(int n, IAEStack<?> aes) {
@@ -144,7 +144,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                 priority = tag.getInteger("priority");
             }
             if (tag.hasKey("config")) {
-                Config.readFromNBT(tag, "config");
+                config.readFromNBT(tag, "config");
             }
             if (tag.hasKey("filter")) {
                 previousOreFilterString = tag.getString("filter");
@@ -172,7 +172,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
         if (type == PartItemStack.Wrench) {
             final NBTTagCompound tag = new NBTTagCompound();
 
-            if (!this.Config.isEmpty()) this.Config.writeToNBT(tag, "config");
+            if (!this.config.isEmpty()) this.config.writeToNBT(tag, "config");
             if (this.priority != 0) tag.setInteger("priority", this.priority);
             if (!this.oreFilterString.isEmpty()) tag.setString("filter", this.oreFilterString);
 
@@ -244,7 +244,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
         for (int x = 0; x < (this.getInstalledUpgrades(Upgrades.CAPACITY) * 9); x++) {
             final IAEStack<?> aes = filterCache[x];
-            if (aes != null) this.Config.putAEStackInSlot(x + 18, aes);
+            if (aes != null) this.config.putAEStackInSlot(x + 18, aes);
         }
         needSyncGUI = true;
 
@@ -285,7 +285,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     @Override
     public void readFromNBT(final NBTTagCompound data) {
         super.readFromNBT(data);
-        this.Config.readFromNBT(data, "config");
+        this.config.readFromNBT(data, "config");
         this.priority = data.getInteger("priority");
         this.oreFilterString = data.getString("filter");
         final NBTTagCompound filterCacheTag = data.getCompoundTag("filterCache");
@@ -296,7 +296,7 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
     @Override
     public void writeToNBT(final NBTTagCompound data) {
         super.writeToNBT(data);
-        this.Config.writeToNBT(data, "config");
+        this.config.writeToNBT(data, "config");
         data.setInteger("priority", this.priority);
         data.setString("filter", this.oreFilterString);
         final NBTTagCompound tagCompound = new NBTTagCompound();
@@ -641,8 +641,8 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
                         final IItemList priorityList = getItemList();
 
                         final int slotsToUse = 18 + this.getInstalledUpgrades(Upgrades.CAPACITY) * 9;
-                        for (int x = 0; x < this.Config.getSizeInventory() && x < slotsToUse; x++) {
-                            IAEStack<?> is = this.Config.getAEStackInSlot(x);
+                        for (int x = 0; x < this.config.getSizeInventory() && x < slotsToUse; x++) {
+                            IAEStack<?> is = this.config.getAEStackInSlot(x);
 
                             if (getStorageChannel() == StorageChannel.FLUIDS && isAE2FCLoaded && is instanceof IAEItemStack ais && ais.getItem() instanceof ItemFluidPacket) {
                                 is = ItemFluidPacket.getFluidAEStack(ais);
@@ -784,6 +784,9 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
     @Override
     public IAEStackInventory getAEInventoryByName(StorageName name) {
-        return this.Config;
+        if (name == StorageName.CONFIG) {
+            return this.config;
+        }
+        return null;
     }
 }
