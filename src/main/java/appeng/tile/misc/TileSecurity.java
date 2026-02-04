@@ -13,6 +13,7 @@ package appeng.tile.misc;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -71,7 +72,6 @@ import io.netty.buffer.ByteBuf;
 public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEAppEngInventory, ILocatable,
         IConfigManagerHost, ISecurityProvider, IColorableTile {
 
-    private static int difference = 0;
     private final AppEngInternalInventory configSlot = new AppEngInternalInventory(this, 1);
     private final IConfigManager cm = new ConfigManager(this);
     private final SecurityInventory inventory = new SecurityInventory(this);
@@ -83,12 +83,8 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
     public TileSecurity() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
         this.getProxy().setIdlePowerUsage(2.0);
-        difference++;
 
-        this.securityKey = System.currentTimeMillis() * 10 + difference;
-        if (difference > 10) {
-            difference = 0;
-        }
+        this.securityKey = UUID.randomUUID().hashCode();
 
         this.cm.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.cm.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
