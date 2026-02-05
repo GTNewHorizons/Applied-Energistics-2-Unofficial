@@ -1264,7 +1264,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     continue;
                 }
 
-                verifiedSides.add(new VerifiedAcceptors(tile, s, ad));
+                verifiedSides.add(new VerifiedAcceptors(te, s, ad));
             }
         }
 
