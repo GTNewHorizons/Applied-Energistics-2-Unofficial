@@ -33,6 +33,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.google.common.base.Preconditions;
 
 import appeng.api.AEApi;
@@ -50,6 +52,7 @@ import appeng.api.parts.IPartHost;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.parts.ISimplifiedBundle;
 import appeng.api.parts.PartItemStack;
+import appeng.api.storage.StorageName;
 import appeng.api.util.AECableType;
 import appeng.api.util.AEColor;
 import appeng.api.util.DimensionalCoord;
@@ -65,6 +68,8 @@ import appeng.me.helpers.IGridProxyable;
 import appeng.parts.automation.UpgradeInventory;
 import appeng.parts.networking.PartCable;
 import appeng.tile.inventory.AppEngInternalAEInventory;
+import appeng.tile.inventory.IAEStackInventory;
+import appeng.tile.inventory.IIAEStackInventory;
 import appeng.util.Platform;
 import appeng.util.SettingsFrom;
 import cpw.mods.fml.relauncher.Side;
@@ -316,24 +321,27 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
      * @param from     source of settings
      * @param compound compound of source
      */
-    private void uploadSettings(final SettingsFrom from, final NBTTagCompound compound) {
-        if (compound != null) {
-            final IConfigManager cm = this.getConfigManager();
-            if (cm != null) {
-                cm.readFromNBT(compound);
-            }
+    protected void uploadSettings(@NotNull final SettingsFrom from, @NotNull final NBTTagCompound compound) {
+        final IConfigManager cm = this.getConfigManager();
+        if (cm != null) {
+            cm.readFromNBT(compound);
         }
 
         if (this instanceof IPriorityHost pHost) {
             pHost.setPriority(compound.getInteger("priority"));
         }
 
-        final IInventory inv = this.getInventoryByName("config");
-        if (inv instanceof AppEngInternalAEInventory target) {
-            final AppEngInternalAEInventory tmp = new AppEngInternalAEInventory(null, target.getSizeInventory());
-            tmp.readFromNBT(compound, "config");
-            for (int x = 0; x < tmp.getSizeInventory(); x++) {
-                target.setInventorySlotContents(x, tmp.getStackInSlot(x));
+        if (this instanceof IIAEStackInventory iiaeStackInventory) {
+            IAEStackInventory inv = iiaeStackInventory.getAEInventoryByName(StorageName.CONFIG);
+            inv.readFromNBT(compound, "config");
+        } else {
+            final IInventory inv = this.getInventoryByName("config");
+            if (inv instanceof AppEngInternalAEInventory target) {
+                final AppEngInternalAEInventory tmp = new AppEngInternalAEInventory(null, target.getSizeInventory());
+                tmp.readFromNBT(compound, "config");
+                for (int x = 0; x < tmp.getSizeInventory(); x++) {
+                    target.setInventorySlotContents(x, tmp.getStackInSlot(x));
+                }
             }
         }
     }
@@ -344,7 +352,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
      * @param from source of settings
      * @return compound of source
      */
-    private NBTTagCompound downloadSettings(final SettingsFrom from) {
+    protected NBTTagCompound downloadSettings(final SettingsFrom from) {
         final NBTTagCompound output = new NBTTagCompound();
 
         final IConfigManager cm = this.getConfigManager();
@@ -356,12 +364,17 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
             output.setInteger("priority", pHost.getPriority());
         }
 
-        final IInventory inv = this.getInventoryByName("config");
-        if (inv instanceof AppEngInternalAEInventory) {
-            ((AppEngInternalAEInventory) inv).writeToNBT(output, "config");
+        if (this instanceof IIAEStackInventory iiaeStackInventory) {
+            IAEStackInventory inv = iiaeStackInventory.getAEInventoryByName(StorageName.CONFIG);
+            inv.writeToNBT(output, "config");
+        } else {
+            final IInventory inv = this.getInventoryByName("config");
+            if (inv instanceof AppEngInternalAEInventory) {
+                ((AppEngInternalAEInventory) inv).writeToNBT(output, "config");
+            }
         }
 
-        return output.hasNoTags() ? null : output;
+        return output;
     }
 
     public boolean useStandardMemoryCard() {
@@ -388,7 +401,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
 
             if (player.isSneaking()) {
                 final NBTTagCompound data = this.downloadSettings(SettingsFrom.MEMORY_CARD);
-                if (data != null) {
+                if (data != null && !data.hasNoTags()) {
                     memoryCard.setMemoryCardContents(memCardIS, name, data);
 
                     if (this.getInventoryByName("upgrades") instanceof UpgradeInventory ui)

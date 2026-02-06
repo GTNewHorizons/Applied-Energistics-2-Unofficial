@@ -89,7 +89,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.config = new VirtualMEPhantomSlot(
                 17,
                 42,
-                ((ContainerLevelEmitter) inventorySlots).getLvlEmitter().getAEInventoryByName(StorageName.NONE),
+                ((ContainerLevelEmitter) inventorySlots).getLvlEmitter().getAEInventoryByName(StorageName.CONFIG),
                 0,
                 GuiLevelEmitter::acceptType);
         this.registerVirtualSlots(this.config);
