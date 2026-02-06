@@ -10,6 +10,8 @@
 
 package appeng.parts.automation;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +41,8 @@ import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.world.BlockEvent;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.AEApi;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
@@ -61,6 +65,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.client.texture.CableBusTextures;
@@ -82,7 +87,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 public class PartFormationPlane extends PartUpgradeable
         implements ICellContainer, IPriorityHost, IMEInventory<IAEItemStack>, IPrimaryGuiIconProvider {
 
-    private final MEInventoryHandler myHandler = new MEInventoryHandler(this, StorageChannel.ITEMS);
+    private final MEInventoryHandler myHandler = new MEInventoryHandler(this, ITEM_STACK_TYPE);
     private final AppEngInternalAEInventory Config = new AppEngInternalAEInventory(this, 63);
     private EntityPlayer owner = null;
     private int priority = 0;
@@ -379,8 +384,9 @@ public class PartFormationPlane extends PartUpgradeable
     }
 
     @Override
-    public List<IMEInventoryHandler> getCellArray(final StorageChannel channel) {
-        if (this.getProxy().isActive() && channel == StorageChannel.ITEMS) {
+    @NotNull
+    public List<IMEInventoryHandler> getCellArray(final IAEStackType<?> type) {
+        if (this.getProxy().isActive() && type == ITEM_STACK_TYPE) {
             final List<IMEInventoryHandler> Handler = new ArrayList<>(1);
             Handler.add(this.myHandler);
             return Handler;

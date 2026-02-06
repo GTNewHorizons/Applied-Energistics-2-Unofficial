@@ -12,7 +12,6 @@ package appeng.container.implementations;
 
 import static appeng.parts.reporting.PartPatternTerminal.*;
 import static appeng.util.Platform.isServer;
-import static appeng.util.Platform.writeStackNBT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -293,11 +292,11 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         final NBTTagList tagOut = new NBTTagList();
 
         for (final IAEStack<?> i : in) {
-            tagIn.appendTag(writeStackNBT(i, new NBTTagCompound(), true));
+            tagIn.appendTag(i != null ? i.toNBTGeneric() : new NBTTagCompound());
         }
 
         for (final IAEStack<?> i : out) {
-            tagOut.appendTag(writeStackNBT(i, new NBTTagCompound(), true));
+            tagOut.appendTag(i != null ? i.toNBTGeneric() : new NBTTagCompound());
         }
 
         encodedValue.setTag("in", tagIn);
@@ -308,7 +307,6 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         encodedValue.setString("author", this.getPlayerInv().player.getCommandSenderName());
 
         output.setTagCompound(encodedValue);
-
         this.patternSlotOUT.putStack(output);
     }
 
@@ -378,7 +376,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
     }
 
     public void craftOrGetItem(final PacketPatternSlot packetPatternSlot) {
-        if (packetPatternSlot.slotItem != null && this.getCellInventory() != null) {
+        if (packetPatternSlot.slotItem != null) {
             final IAEItemStack out = packetPatternSlot.slotItem.copy();
             InventoryAdaptor inv = new AdaptorPlayerHand(this.getPlayerInv().player);
             final InventoryAdaptor playerInv = InventoryAdaptor
@@ -393,7 +391,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             }
 
             final IAEItemStack extracted = Platform
-                    .poweredExtraction(this.getPowerSource(), this.getCellInventory(), out, this.getActionSource());
+                    .poweredExtraction(this.getPowerSource(), this.getItemMonitor(), out, this.getActionSource());
             final EntityPlayer p = this.getPlayerInv().player;
 
             if (extracted != null) {
@@ -467,7 +465,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                 for (int x = 0; x < real.getSizeInventory(); x++) {
                     final ItemStack failed = real.getStackInSlot(x);
                     if (failed != null) {
-                        this.getCellInventory().injectItems(
+                        this.getItemMonitor().injectItems(
                                 AEItemStack.create(failed),
                                 Actionable.MODULATE,
                                 new MachineSource(this.getPatternTerminal()));
@@ -546,7 +544,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             final AEItemStack request = AEItemStack
                     .create(AEApi.instance().definitions().materials().blankPattern().maybeStack(blanksToRefill).get());
             final IAEItemStack extracted = Platform
-                    .poweredExtraction(this.getPowerSource(), this.getCellInventory(), request, this.getActionSource());
+                    .poweredExtraction(this.getPowerSource(), this.getItemMonitor(), request, this.getActionSource());
             if (extracted != null) {
                 if (blanks != null) blanks.stackSize += (int) extracted.getStackSize();
                 else {

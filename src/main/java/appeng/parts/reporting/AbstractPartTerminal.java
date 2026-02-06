@@ -18,18 +18,22 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.Vec3;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
-import appeng.api.config.TypeFilter;
 import appeng.api.config.ViewItems;
 import appeng.api.implementations.tiles.IViewCellStorage;
 import appeng.api.networking.IGrid;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
+import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IPrimaryGuiIconProvider;
@@ -41,7 +45,9 @@ import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
+import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 /**
  * Anything resembling an network terminal with view cells can reuse this.
@@ -55,11 +61,14 @@ import appeng.util.Platform;
  * @since rv3
  */
 public abstract class AbstractPartTerminal extends AbstractPartDisplay implements ITerminalHost, IConfigManagerHost,
-        IViewCellStorage, IAEAppEngInventory, ITerminalPins, IPrimaryGuiIconProvider {
+        IViewCellStorage, IAEAppEngInventory, ITerminalPins, IPrimaryGuiIconProvider, ITerminalTypeFilterProvider {
 
     private final IConfigManager cm = new ConfigManager(this);
     private final AppEngInternalInventory viewCell = new AppEngInternalInventory(this, 5);
     private final PinsHolder pinsInv = new PinsHolder(this);
+
+    @NotNull
+    private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
 
     public AbstractPartTerminal(final ItemStack is) {
         super(is);
@@ -67,7 +76,6 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.cm.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.cm.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.cm.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-        this.cm.registerSetting(Settings.TYPE_FILTER, TypeFilter.ALL);
     }
 
     @Override
@@ -92,6 +100,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.cm.readFromNBT(data);
         this.viewCell.readFromNBT(data, "viewCell");
         pinsInv.readFromNBT(data, "pins");
+        this.typeFilters.readFromNBT(data);
     }
 
     @Override
@@ -100,6 +109,7 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
         this.cm.writeToNBT(data);
         this.viewCell.writeToNBT(data, "viewCell");
         pinsInv.writeToNBT(data, "pins");
+        this.typeFilters.writeToNBT(data);
     }
 
     @Override
@@ -143,6 +153,16 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     }
 
     @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        try {
+            return this.getProxy().getStorage().getMEMonitor(type);
+        } catch (final GridAccessException e) {
+            // err nope?
+        }
+        return null;
+    }
+
+    @Override
     public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {}
 
     @Override
@@ -167,4 +187,15 @@ public abstract class AbstractPartTerminal extends AbstractPartDisplay implement
     }
 
     public abstract ItemStack getPrimaryGuiIcon();
+
+    @Override
+    @NotNull
+    public Reference2BooleanMap<IAEStackType<?>> getTypeFilter(EntityPlayer player) {
+        return this.typeFilters.getFilters(player);
+    }
+
+    @Override
+    public void saveTypeFilter() {
+        this.saveChanges();
+    }
 }

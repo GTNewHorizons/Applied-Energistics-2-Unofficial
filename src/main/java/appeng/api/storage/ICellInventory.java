@@ -45,7 +45,7 @@ public interface ICellInventory<StackType extends IAEStack<StackType>> extends I
      */
     @Deprecated
     default IInventory getConfigInventory() {
-        return new CellConfigLegacy(this.getConfigAEInventory(), this.getChannel());
+        return new CellConfigLegacy(this.getConfigAEInventory(), this.getStackType());
     }
 
     /**

@@ -15,7 +15,7 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.networking.ticking.TickingRequest;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.client.texture.CableBusTextures;
 import appeng.core.settings.TickRates;
 import appeng.helpers.Reflected;
@@ -144,7 +144,7 @@ public class PartThroughputMonitor extends AbstractPartMonitor implements IGridT
     }
 
     @Override
-    public void tesrRenderItemNumber(final IAEItemStack ais) {
+    public void tesrRenderItemNumber(final IAEStack<?> ais) {
         GL11.glTranslatef(0.0f, 0.14f, -0.24f);
         GL11.glScalef(1.0f / 120.0f, 1.0f / 120.0f, 1.0f / 120.0f);
 

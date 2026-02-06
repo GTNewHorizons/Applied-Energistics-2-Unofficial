@@ -25,14 +25,15 @@ import appeng.api.storage.ICellInventoryHandler;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.prioitylist.FuzzyPriorityList;
 
 public abstract class CellInventoryHandler<StackType extends IAEStack<StackType>> extends MEInventoryHandler<StackType>
         implements ICellInventoryHandler<StackType>, ICellCacheRegistry {
 
-    CellInventoryHandler(final IMEInventory<StackType> c, final StorageChannel sc) {
-        super(c, sc);
+    protected CellInventoryHandler(final IMEInventory<StackType> c, final IAEStackType<StackType> type) {
+        super(c, type);
 
         final ICellInventory<StackType> ci = this.getCellInv();
 
