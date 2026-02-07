@@ -13,6 +13,8 @@
 
 package appeng.api.networking.crafting;
 
+import static appeng.util.Platform.stackConvert;
+
 import javax.annotation.Nullable;
 
 import appeng.api.config.CraftingAllow;
@@ -69,7 +71,7 @@ public interface ICraftingCPU extends IBaseMonitor {
     @Deprecated
     @Nullable
     default IAEItemStack getFinalOutput() {
-        return null;
+        return stackConvert(getFinalMultiOutput());
     }
 
     /**
