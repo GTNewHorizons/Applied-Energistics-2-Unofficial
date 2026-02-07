@@ -16,6 +16,8 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -60,6 +62,7 @@ import appeng.integration.modules.NEIHelpers.NEISearchField;
 import appeng.integration.modules.NEIHelpers.NEIWorldCraftingHandler;
 import appeng.integration.modules.NEIHelpers.TerminalCraftingSlotFinder;
 import codechicken.nei.BookmarkPanel.BookmarkViewMode;
+import codechicken.nei.ItemPanels;
 import codechicken.nei.ItemsGrid;
 import codechicken.nei.LayoutManager;
 import codechicken.nei.api.API;
@@ -82,6 +85,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     public static NEISearchField searchField = new NEISearchField();
 
     private final Class<?> apiClass;
+    private final boolean hasItemPanels;
 
     // recipe handler...
     private Method registerRecipeHandler;
@@ -99,6 +103,15 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.ICraftingHandler.class);
         IntegrationHelper.testClassExistence(this, codechicken.nei.recipe.IUsageHandler.class);
         IntegrationHelper.testClassExistence(this, codechicken.nei.api.IBookmarkContainerHandler.class);
+
+        boolean itemPanelsExists = false;
+        try {
+            Class.forName("codechicken.nei.ItemPanels");
+            itemPanelsExists = true;
+        } catch (ClassNotFoundException e) {
+            itemPanelsExists = false;
+        }
+        this.hasItemPanels = itemPanelsExists;
 
         this.apiClass = Class.forName("codechicken.nei.api.API");
     }
@@ -284,6 +297,19 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         } else {
             LayoutManager.bookmarkPanel.addGroup(missing, BookmarkViewMode.DEFAULT, false);
         }
+    }
+
+    @Nullable
+    public ItemStack getDraggingPhantomItem() {
+        if (!this.hasItemPanels) return null;
+
+        ItemStack is = ItemPanels.bookmarkPanel.draggedStack;
+        if (is != null) return is.copy();
+
+        is = ItemPanels.itemPanel.draggedStack;
+        if (is != null) return is.copy();
+
+        return null;
     }
 
     private static void sendHandler(String name, String itemStack) {

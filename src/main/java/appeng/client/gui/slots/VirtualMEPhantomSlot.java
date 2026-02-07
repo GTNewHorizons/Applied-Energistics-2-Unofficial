@@ -117,19 +117,21 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
                         }
                     }
 
+                    IAEStack<?> stackForHand = null;
                     if (acceptExtra && (!acceptItem || isExtraAction)) {
                         if (stackFromContainer != null) {
-                            currentStack = stackFromContainer;
+                            stackForHand = stackFromContainer;
                         }
                     } else if (acceptItem) {
-                        currentStack = AEItemStack.create(hand);
+                        stackForHand = AEItemStack.create(hand);
                     }
 
-                    if (currentStack != null && stackFromContainer != null
-                            && acceptTypes.contains(stackFromContainer.getStackType())
-                            && currentStack.equals(this.getAEStack())) {
-                        currentStack = this.getAEStack();
+                    if (stackForHand != null && this.showAmount
+                            && acceptTypes.contains(stackForHand.getStackType())
+                            && stackForHand.equals(currentStack)) {
                         currentStack.decStackSize(-1);
+                    } else {
+                        currentStack = stackForHand;
                     }
                 } else if (currentStack != null) {
                     currentStack.decStackSize(1);

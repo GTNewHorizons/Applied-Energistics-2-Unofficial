@@ -88,6 +88,9 @@ import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.helpers.ICustomButtonProvider;
 import appeng.helpers.InventoryAction;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
+import appeng.integration.modules.NEI;
 import appeng.util.Platform;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.VisiblityData;
@@ -415,14 +418,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     @Override
     public boolean handleDragNDrop(GuiContainer gui, int mouseX, int mouseY, ItemStack draggedStack, int button) {
         this.drag_click.clear();
-        this.draggedVirtualSlots.clear();
         this.holdingNEIItem = draggedStack;
-
-        final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
-        if (virtualSlot instanceof VirtualMEPhantomSlot) {
-            this.handleVirtualSlotClick(virtualSlot, button);
-            return true;
-        }
 
         return handleClickFakeSlot(mouseX, mouseY, draggedStack);
     }
@@ -477,8 +473,11 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     private void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        ItemStack holding = this.holdingNEIItem != null ? this.holdingNEIItem
-                : this.mc.thePlayer.inventory.getItemStack();
+        ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
+                ? NEI.instance.getDraggingPhantomItem()
+                : null;
+        ItemStack holding = phantom != null ? phantom : this.mc.thePlayer.inventory.getItemStack();
+
         slot.handleMouseClicked(holding, isCtrlKeyDown(), mouseButton);
     }
 
