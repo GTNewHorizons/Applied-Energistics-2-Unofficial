@@ -28,6 +28,7 @@ public enum PlayerMessages implements Localization {
     OutOfRange,
     DeviceNotPowered,
     DeviceNotWirelessTerminal,
+    DeviceSuccessLinked,
     DeviceNotLinked,
     StationCanNotBeLocated,
     SettingCleared,
