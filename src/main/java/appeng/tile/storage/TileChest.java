@@ -267,19 +267,14 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         final ICellHandler ch = AEApi.instance().registries().cell().getHandler(cell);
 
         if (ch != null) {
-            try {
-                final IMEInventoryHandler handler = this.getHandler(ITEM_STACK_TYPE);
-                if (handler instanceof ChestMonitorHandler) {
-                    return ch.getStatusForCell(cell, ((ChestMonitorHandler) handler).getInternalHandler());
-                }
-            } catch (final ChestNoHandler ignored) {}
-
-            try {
-                final IMEInventoryHandler handler = this.getHandler(FLUID_STACK_TYPE);
-                if (handler instanceof ChestMonitorHandler) {
-                    return ch.getStatusForCell(cell, ((ChestMonitorHandler) handler).getInternalHandler());
-                }
-            } catch (final ChestNoHandler ignored) {}
+            for (IAEStackType<?> internalType : AEStackTypeRegistry.getAllTypes()) {
+                try {
+                    final IMEInventoryHandler handler = this.getHandler(internalType);
+                    if (handler instanceof ChestMonitorHandler) {
+                        return ch.getStatusForCell(cell, ((ChestMonitorHandler) handler).getInternalHandler());
+                    }
+                } catch (final ChestNoHandler ignored) {}
+            }
         }
 
         return 0;
@@ -295,27 +290,22 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         final ICellHandler ch = AEApi.instance().registries().cell().getHandler(cell);
         ChestMonitorHandler tempCMH = null;
         if (ch != null) {
-            try {
-                final IMEInventoryHandler handler = this.getHandler(ITEM_STACK_TYPE);
-                if (handler instanceof ChestMonitorHandler CMH) {
-                    tempCMH = CMH;
-                }
-            } catch (final ChestNoHandler ignored) {}
-            try {
-                final IMEInventoryHandler handler = this.getHandler(FLUID_STACK_TYPE);
-                if (handler instanceof ChestMonitorHandler CMH) {
-                    tempCMH = CMH;
-                }
-            } catch (final ChestNoHandler ignored) {}
+            for (IAEStackType<?> internalType : AEStackTypeRegistry.getAllTypes()) {
+                try {
+                    final IMEInventoryHandler handler = this.getHandler(internalType);
+                    if (handler instanceof ChestMonitorHandler CMH) {
+                        tempCMH = CMH;
+                        break;
+                    }
+                } catch (final ChestNoHandler ignored) {}
+            }
+
             if (tempCMH != null && tempCMH.getInternalHandler() instanceof ICellCacheRegistry iccr) {
-                switch (iccr.getCellType()) {
-                    case ITEM:
-                        return 0;
-                    case FLUID:
-                        return 1;
-                    case ESSENTIA:
-                        return 2;
-                }
+                return switch (iccr.getCellType()) {
+                    case ITEM -> 0;
+                    case FLUID -> 1;
+                    case ESSENTIA -> 2;
+                };
             }
         }
 
