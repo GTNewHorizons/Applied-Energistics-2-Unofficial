@@ -578,7 +578,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void doMonitorableAction(MonitorableAction action, int custom, final EntityPlayerMP player) {
         IAEItemStack slotItem = null;
-        if (this.getTargetStack() instanceof IAEItemStack ais) {
+        if (this.itemMonitor != null && this.getTargetStack() instanceof IAEItemStack ais) {
             slotItem = this.itemMonitor.getAvailableItem(ais, fetchNewId());
         }
 
@@ -614,7 +614,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 this.setPin(null, custom);
             }
             case SHIFT_CLICK -> { // shift left click
-                if (this.getPowerSource() == null || slotItem == null) {
+                if (this.getPowerSource() == null || this.itemMonitor == null || slotItem == null) {
                     return;
                 }
 
@@ -636,7 +636,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
             case PICKUP_SINGLE, ROLL_UP -> { // shift right click, roll up
-                if (this.getPowerSource() == null || slotItem == null) {
+                if (this.getPowerSource() == null || this.itemMonitor == null || slotItem == null) {
                     return;
                 }
 
@@ -662,7 +662,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
             case PICKUP_OR_SET_DOWN -> { // left click
-                if (this.getPowerSource() == null) {
+                if (this.getPowerSource() == null || this.itemMonitor == null) {
                     return;
                 }
 
@@ -692,7 +692,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
             case SPLIT_OR_PLACE_SINGLE -> { // right click
-                if (this.getPowerSource() == null) {
+                if (this.getPowerSource() == null || this.itemMonitor == null) {
                     return;
                 }
 
@@ -737,7 +737,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
             case ROLL_DOWN -> {
                 final ItemStack hand = player.inventory.getItemStack();
-                if (this.getPowerSource() == null || hand == null) {
+                if (this.getPowerSource() == null || this.itemMonitor == null || hand == null) {
                     return;
                 }
 
@@ -754,7 +754,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
             case MOVE_REGION -> {
-                if (slotItem == null) return;
+                if (slotItem == null || this.itemMonitor == null) return;
 
                 final long maxSize = slotItem.getItemStack().getMaxStackSize();
                 final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
