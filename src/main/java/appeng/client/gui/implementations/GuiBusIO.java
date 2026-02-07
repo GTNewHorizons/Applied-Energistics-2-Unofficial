@@ -9,8 +9,8 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.config.SchedulingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerBusIO;
@@ -37,21 +37,6 @@ public class GuiBusIO extends GuiUpgradeable {
         this.initVirtualSlots();
     }
 
-    private void initVirtualSlots() {
-        final IAEStackInventory inputInv = this.bus.getAEInventoryByName(StorageName.CONFIG);
-        for (int y = 0; y < 3; y++) {
-            for (int x = 0; x < 3; x++) {
-                VirtualMEPhantomSlot slot = new VirtualMEPhantomSlot(
-                        62 + 18 * x,
-                        22 + 18 * (y % (3)),
-                        inputInv,
-                        slotSequence[x + y * 3]);
-                this.virtualSlots[slotSequence[x + y * 3]] = slot;
-                this.registerVirtualSlots(slot);
-            }
-        }
-    }
-
     @Override
     protected void addButtons() {
         super.addButtons();
@@ -62,6 +47,38 @@ public class GuiBusIO extends GuiUpgradeable {
                 Settings.SCHEDULING_MODE,
                 SchedulingMode.DEFAULT);
         this.buttonList.add(this.schedulingMode);
+
+        initCustomButtons(this.guiLeft - 18, 88);
+    }
+
+    private void initVirtualSlots() {
+        final IAEStackInventory inputInv = this.bus.getAEInventoryByName(StorageName.CONFIG);
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < 3; x++) {
+                VirtualMEPhantomSlot slot = new VirtualMEPhantomSlot(
+                        62 + 18 * x,
+                        22 + 18 * (y % (3)),
+                        inputInv,
+                        slotSequence[x + y * 3],
+                        this::acceptType);
+                this.virtualSlots[slotSequence[x + y * 3]] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+    }
+
+    @Override
+    protected void actionPerformed(GuiButton btn) {
+        super.actionPerformed(btn);
+
+        final boolean backwards = Mouse.isButtonDown(1);
+
+        if (btn == this.schedulingMode) {
+            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.schedulingMode.getSetting(), backwards));
+            return;
+        }
+
+        actionPerformedCustomButtons(btn);
     }
 
     @Override
@@ -141,19 +158,11 @@ public class GuiBusIO extends GuiUpgradeable {
     }
 
     @Override
-    protected void actionPerformed(GuiButton btn) {
-        super.actionPerformed(btn);
-
-        final boolean backwards = Mouse.isButtonDown(1);
-
-        if (btn == this.schedulingMode) {
-            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.schedulingMode.getSetting(), backwards));
-        }
+    protected String getName() {
+        return this.bus.getBusName();
     }
 
-    @Override
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        StorageChannel channel = StorageChannel.getStorageChannelByParametrizedClass(this.bus.getClass());
-        slot.handleMouseClicked(channel == StorageChannel.ITEMS, channel == StorageChannel.FLUIDS, false);
+    private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        return type == this.bus.getStackType();
     }
 }

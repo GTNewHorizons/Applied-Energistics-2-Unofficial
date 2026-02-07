@@ -24,9 +24,12 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 
 /**
@@ -235,9 +238,9 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
     }
 
     @Override
-    public byte getStackType() {
+    public @Nullable IAEStackType<T> getStackType() {
         IItemList<T> list = networkItemLists.values().stream().findAny().orElse(null);
-        return list == null ? LIST_NUll : list.getStackType();
+        return list == null ? null : list.getStackType();
     }
 
     static class NetworkItemStack<U extends IAEStack> {

@@ -10,9 +10,11 @@
 
 package appeng.items.storage;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import com.google.common.base.Optional;
 
-import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
 import appeng.items.AEBaseCell;
 import appeng.items.materials.MaterialType;
 
@@ -27,7 +29,7 @@ public class ItemBasicStorageCell extends AEBaseCell {
     }
 
     @Override
-    public StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
+    public IAEStackType<?> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 }

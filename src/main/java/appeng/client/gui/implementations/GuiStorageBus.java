@@ -26,7 +26,7 @@ import appeng.api.config.Settings;
 import appeng.api.config.StorageFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.parts.IStorageBus;
-import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
@@ -215,7 +215,8 @@ public class GuiStorageBus extends GuiUpgradeable {
                         xo + x * 18,
                         yo + y * 18 + 9 * 18,
                         inputInv,
-                        x + y * 9);
+                        x + y * 9,
+                        this::acceptType);
                 this.configSlots[x + y * 9] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -230,9 +231,7 @@ public class GuiStorageBus extends GuiUpgradeable {
         }
     }
 
-    @Override
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        StorageChannel channel = containerStorageBus.getStorageChannel();
-        slot.handleMouseClicked(channel == StorageChannel.ITEMS, channel == StorageChannel.FLUIDS, false);
+    private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        return type == containerStorageBus.getStackType();
     }
 }

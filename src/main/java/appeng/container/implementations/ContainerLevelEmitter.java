@@ -12,6 +12,7 @@ package appeng.container.implementations;
 
 import static appeng.util.Platform.isServer;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
@@ -23,12 +24,14 @@ import appeng.api.config.LevelType;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
-import appeng.api.config.TypeFilter;
 import appeng.api.config.YesNo;
 import appeng.api.parts.ILevelEmitter;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.IGuiSub;
+import appeng.client.gui.implementations.GuiLevelEmitter;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.PrimaryGui;
 import appeng.container.guisync.GuiSync;
@@ -37,10 +40,12 @@ import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.slot.SlotInaccessible;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.tile.inventory.AppEngInternalInventory;
+import appeng.util.LevelEmitterTypeFilter;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirtualSlotHolder, IContainerSubGui {
 
@@ -59,12 +64,13 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
     public YesNo cmType;
 
     @GuiSync(10)
-    public TypeFilter typeFilter;
+    public LevelEmitterTypeFilter typeFilters;
     private final IAEStack<?>[] configClientSlot = new IAEStack[1];
 
     public ContainerLevelEmitter(final InventoryPlayer ip, final ILevelEmitter te) {
         super(ip, te);
         this.lvlEmitter = te;
+        this.typeFilters = new LevelEmitterTypeFilter(this.lvlEmitter.getTypeFilters());
 
         // sub gui copy paste
         this.primaryGuiButtonIcon = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 0, -9000);
@@ -146,7 +152,6 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
             this.setCraftingMode(
                     (YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.CRAFT_VIA_REDSTONE));
             this.setLevelMode((LevelType) this.getUpgradeable().getConfigManager().getSetting(Settings.LEVEL_TYPE));
-            this.setTypeFilter((TypeFilter) this.getUpgradeable().getConfigManager().getSetting(Settings.TYPE_FILTER));
             this.setFuzzyMode((FuzzyMode) this.getUpgradeable().getConfigManager().getSetting(Settings.FUZZY_MODE));
             this.setRedStoneMode(
                     (RedstoneMode) this.getUpgradeable().getConfigManager().getSetting(Settings.REDSTONE_EMITTER));
@@ -169,6 +174,10 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
                     this.textField.setCursorPositionEnd();
                 }
             }
+        } else if (field.equals("typeFilters")) {
+            if (Minecraft.getMinecraft().currentScreen instanceof GuiLevelEmitter guiLevelEmitter) {
+                guiLevelEmitter.onUpdateTypeFilters();
+            }
         }
     }
 
@@ -190,16 +199,29 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
         this.lvType = lvType;
     }
 
-    public TypeFilter getTypeFilter() {
-        return this.typeFilter;
-    }
-
-    private void setTypeFilter(final TypeFilter typeFilter) {
-        this.typeFilter = typeFilter;
+    public LevelEmitterTypeFilter getTypeFilters() {
+        return this.typeFilters;
     }
 
     public ILevelEmitter getLvlEmitter() {
         return this.lvlEmitter;
+    }
+
+    public void toggleTypeFilter(String typeId, EntityPlayer player) {
+        if (typeId == null || typeId.isEmpty()) {
+            return;
+        }
+
+        final IAEStackType<?> type = AEStackTypeRegistry.getType(typeId);
+        if (type == null) {
+            return;
+        }
+
+        final Reference2BooleanMap<IAEStackType<?>> filterMap = this.lvlEmitter.getTypeFilters().getFilters();
+        filterMap.put(type, !filterMap.getBoolean(type));
+        // Create a new instance so that GuiSync can detect changes
+        this.typeFilters = new LevelEmitterTypeFilter(this.lvlEmitter.getTypeFilters());
+        this.lvlEmitter.onChangeTypeFilters();
     }
 
     @Override

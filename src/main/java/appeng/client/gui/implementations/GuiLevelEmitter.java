@@ -11,9 +11,13 @@
 package appeng.client.gui.implementations;
 
 import java.io.IOException;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.ResourceLocation;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -22,15 +26,17 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.Settings;
-import appeng.api.config.TypeFilter;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.parts.ILevelEmitter;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.AEStackTypeRegistry;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiQuantityButton;
 import appeng.client.gui.widgets.MEGuiTextField;
+import appeng.client.gui.widgets.TypeToggleButton;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
@@ -40,9 +46,11 @@ import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class GuiLevelEmitter extends GuiUpgradeable {
 
+    private final ContainerLevelEmitter container;
     private MEGuiTextField amountTextField;
     private boolean isValidText;
 
@@ -59,12 +67,12 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
     private GuiImgButton levelMode;
     private GuiImgButton craftingMode;
-    private GuiImgButton typeFilter;
-
+    private final Map<TypeToggleButton, IAEStackType<?>> typeToggleButtons = new IdentityHashMap<>();
     private VirtualMEPhantomSlot config;
 
     public GuiLevelEmitter(final InventoryPlayer inventoryPlayer, final ILevelEmitter te) {
         super(new ContainerLevelEmitter(inventoryPlayer, te));
+        this.container = (ContainerLevelEmitter) this.cvb;
     }
 
     @Override
@@ -82,7 +90,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                 17,
                 42,
                 ((ContainerLevelEmitter) inventorySlots).getLvlEmitter().getAEInventoryByName(StorageName.CONFIG),
-                0);
+                0,
+                GuiLevelEmitter::acceptType);
         this.registerVirtualSlots(this.config);
     }
 
@@ -108,7 +117,6 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                 this.guiTop + 48,
                 Settings.CRAFT_VIA_REDSTONE,
                 YesNo.NO);
-        this.typeFilter = new GuiImgButton(this.guiLeft - 18, this.guiTop + 68, Settings.TYPE_FILTER, TypeFilter.ALL);
 
         final int a = AEConfig.instance.levelByStackAmounts(0);
         final int b = AEConfig.instance.levelByStackAmounts(1);
@@ -210,7 +218,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.buttonList.add(this.redstoneMode);
         this.buttonList.add(this.fuzzyMode);
         this.buttonList.add(this.craftingMode);
-        this.buttonList.add(this.typeFilter);
+        this.initTypeToggleButtons(this.guiLeft - 18, this.guiTop + 68);
     }
 
     @Override
@@ -230,7 +238,6 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         this.minus1000.enabled = notCraftingMode;
         this.levelMode.enabled = notCraftingMode;
         this.redstoneMode.enabled = notCraftingMode;
-        this.typeFilter.enabled = notCraftingMode && config.getAEStack() == null;
 
         super.drawFG(offsetX, offsetY, mouseX, mouseY);
 
@@ -240,10 +247,6 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
         if (this.levelMode != null) {
             this.levelMode.set(((ContainerLevelEmitter) this.cvb).getLevelMode());
-        }
-
-        if (this.typeFilter != null) {
-            this.typeFilter.set(((ContainerLevelEmitter) this.cvb).getTypeFilter());
         }
     }
 
@@ -257,7 +260,9 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     protected void handleButtonVisibility() {
         this.craftingMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.CRAFTING) > 0);
         this.fuzzyMode.setVisibility(this.bc.getInstalledUpgrades(Upgrades.FUZZY) > 0);
-        this.typeFilter.setVisibility(config.getAEStack() == null);
+        for (final TypeToggleButton btn : this.typeToggleButtons.keySet()) {
+            btn.visible = config.getAEStack() == null;
+        }
     }
 
     @Override
@@ -266,8 +271,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     }
 
     @Override
-    protected GuiText getName() {
-        return GuiText.LevelEmitter;
+    protected String getName() {
+        return GuiText.LevelEmitter.getLocal();
     }
 
     @Override
@@ -288,8 +293,6 @@ public class GuiLevelEmitter extends GuiUpgradeable {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.craftingMode.getSetting(), backwards));
         } else if (btn == this.levelMode) {
             NetworkHandler.instance.sendToServer(new PacketConfigButton(this.levelMode.getSetting(), backwards));
-        } else if (btn == this.typeFilter) {
-            NetworkHandler.instance.sendToServer(new PacketConfigButton(this.typeFilter.getSetting(), backwards));
         } else {
             final boolean isPlus = btn == this.plus1 || btn == this.plus10
                     || btn == this.plus100
@@ -302,6 +305,27 @@ public class GuiLevelEmitter extends GuiUpgradeable {
                 long result = addOrderAmount(this.getQty(btn));
                 this.amountTextField.setText(Long.toString(result));
             }
+        }
+
+        if (btn instanceof final TypeToggleButton tbtn) {
+            final IAEStackType<?> type = this.typeToggleButtons.get(tbtn);
+            final Reference2BooleanMap<IAEStackType<?>> filters = this.container.getTypeFilters().getFilters();
+            final boolean notCraftingMode = this.bc.getInstalledUpgrades(Upgrades.CRAFTING) == 0;
+            if (!notCraftingMode || this.config.getAEStack() != null) {
+                return;
+            }
+            if (type != null) {
+                final boolean next = !filters.getBoolean(type);
+                filters.put(type, next);
+                tbtn.setEnabled(next);
+
+                try {
+                    NetworkHandler.instance.sendToServer(new PacketValueConfig("LevelEmitter.TypeFilter", type.getId()));
+                } catch (final IOException e) {
+                    AELog.debug(e);
+                }
+            }
+            return;
         }
     }
 
@@ -346,9 +370,35 @@ public class GuiLevelEmitter extends GuiUpgradeable {
         super.mouseClicked(xCoord, yCoord, btn);
     }
 
-    @Override
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(true, true, isCtrlKeyDown());
+    private static boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        return true;
+    }
+
+    private void initTypeToggleButtons(final int x, final int yStart) {
+        this.typeToggleButtons.clear();
+        final Reference2BooleanMap<IAEStackType<?>> filters = this.container.getTypeFilters().getFilters();
+
+        int y = yStart;
+        for (final IAEStackType<?> type : AEStackTypeRegistry.getSortedTypes()) {
+            final ResourceLocation texture = type.getButtonTexture();
+            final IIcon icon = type.getButtonIcon();
+            if (texture == null || icon == null) continue;
+
+            final TypeToggleButton btn = new TypeToggleButton(x, y, texture, icon, type.getDisplayName());
+            btn.setEnabled(filters.getBoolean(type));
+            this.typeToggleButtons.put(btn, type);
+            this.buttonList.add(btn);
+
+            y += 20;
+        }
+    }
+
+    public void onUpdateTypeFilters() {
+        final Reference2BooleanMap<IAEStackType<?>> filters = this.container.getTypeFilters().getFilters();
+        for (final Map.Entry<TypeToggleButton, IAEStackType<?>> entry : this.typeToggleButtons.entrySet()) {
+            final boolean enabled = filters.getBoolean(entry.getValue());
+            entry.getKey().setEnabled(enabled);
+        }
     }
 
     @Override

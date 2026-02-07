@@ -55,6 +55,7 @@ public enum WailaText implements Localization {
     ConnectedTo,
     Disconnected,
     Singularity,
+    IOBusSpeed,
 
     Waiting,
     Provider,

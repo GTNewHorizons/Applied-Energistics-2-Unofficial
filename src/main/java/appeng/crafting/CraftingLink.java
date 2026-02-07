@@ -10,9 +10,6 @@
 
 package appeng.crafting;
 
-import static appeng.util.Platform.convertStack;
-import static appeng.util.Platform.stackConvert;
-
 import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.api.config.Actionable;
@@ -150,10 +147,7 @@ public class CraftingLink implements ICraftingLink {
             return input;
         }
 
-        return convertStack(
-                this.tie.getRequest().getRequester()
-                        .injectCraftedItems(this.tie.getRequest(), stackConvert(input), mode)); // Fluid still not
-                                                                                                // supported
+        return this.tie.getRequest().getRequester().injectCraftedItems(this.tie.getRequest(), input, mode);
     }
 
     public void markDone() {

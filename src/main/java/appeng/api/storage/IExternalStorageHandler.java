@@ -13,15 +13,30 @@
 
 package appeng.api.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.storage.data.IAEStackType;
 
 /**
  * A Registration Record for {@link IExternalStorageRegistry}
  */
 public interface IExternalStorageHandler {
+
+    @Deprecated
+    default boolean canHandle(TileEntity te, ForgeDirection d, StorageChannel channel, BaseActionSource mySrc) {
+        if (channel == StorageChannel.ITEMS) {
+            return this.canHandle(te, d, ITEM_STACK_TYPE, mySrc);
+        }
+        if (channel == StorageChannel.FLUIDS) {
+            return this.canHandle(te, d, FLUID_STACK_TYPE, mySrc);
+        }
+        return false;
+    }
 
     /**
      * if this can handle the provided inventory, return true. ( Generally skipped by AE, and it just calls getInventory
@@ -31,7 +46,26 @@ public interface IExternalStorageHandler {
      * @param mySrc source
      * @return true, if it can get a handler via getInventory
      */
-    boolean canHandle(TileEntity te, ForgeDirection d, StorageChannel channel, BaseActionSource mySrc);
+    default boolean canHandle(TileEntity te, ForgeDirection d, IAEStackType<?> type, BaseActionSource mySrc) {
+        if (type == ITEM_STACK_TYPE) {
+            return this.canHandle(te, d, StorageChannel.ITEMS, mySrc);
+        }
+        if (type == FLUID_STACK_TYPE) {
+            return this.canHandle(te, d, StorageChannel.FLUIDS, mySrc);
+        }
+        return false;
+    }
+
+    @Deprecated
+    default IMEInventory getInventory(TileEntity te, ForgeDirection d, StorageChannel channel, BaseActionSource src) {
+        if (channel == StorageChannel.ITEMS) {
+            return this.getInventory(te, d, ITEM_STACK_TYPE, src);
+        }
+        if (channel == StorageChannel.FLUIDS) {
+            return this.getInventory(te, d, FLUID_STACK_TYPE, src);
+        }
+        return null;
+    }
 
     /**
      * if this can handle the given inventory, return the a IMEInventory implementing class for it, if not return null
@@ -39,11 +73,19 @@ public interface IExternalStorageHandler {
      * please note that if your inventory changes and requires polling, you must use an {@link IMEMonitor} instead of an
      * {@link IMEInventory} failure to do so will result in invalid item counts and reporting of the inventory.
      *
-     * @param te      to be handled tile entity
-     * @param d       direction
-     * @param channel channel
-     * @param src     source
+     * @param te   to be handled tile entity
+     * @param d    direction
+     * @param type stack type
+     * @param src  source
      * @return The Handler for the inventory
      */
-    IMEInventory getInventory(TileEntity te, ForgeDirection d, StorageChannel channel, BaseActionSource src);
+    default IMEInventory getInventory(TileEntity te, ForgeDirection d, IAEStackType<?> type, BaseActionSource src) {
+        if (type == ITEM_STACK_TYPE) {
+            return this.getInventory(te, d, StorageChannel.ITEMS, src);
+        }
+        if (type == FLUID_STACK_TYPE) {
+            return this.getInventory(te, d, StorageChannel.FLUIDS, src);
+        }
+        return null;
+    }
 }

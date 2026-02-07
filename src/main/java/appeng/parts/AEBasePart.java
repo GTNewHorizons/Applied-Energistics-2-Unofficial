@@ -381,7 +381,7 @@ public abstract class AEBasePart implements IPart, IGridProxyable, IActionHost, 
         return true;
     }
 
-    private boolean useMemoryCard(final EntityPlayer player) {
+    protected boolean useMemoryCard(final EntityPlayer player) {
         final ItemStack memCardIS = player.inventory.getCurrentItem();
         if (memCardIS != null && this.useStandardMemoryCard()
                 && memCardIS.getItem() instanceof IMemoryCard memoryCard) {

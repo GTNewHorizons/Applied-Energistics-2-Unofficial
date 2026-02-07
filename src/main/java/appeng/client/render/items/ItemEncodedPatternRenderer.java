@@ -12,18 +12,18 @@ package appeng.client.render.items;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.IItemRenderer;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
+import appeng.api.storage.data.IAEStack;
 import appeng.items.misc.ItemEncodedPattern;
 
 public class ItemEncodedPatternRenderer implements IItemRenderer {
 
-    private final RenderItem ri = new RenderItem();
     private boolean recursive = false;
 
     @Override
@@ -33,7 +33,7 @@ public class ItemEncodedPatternRenderer implements IItemRenderer {
         if (!this.recursive && type == IItemRenderer.ItemRenderType.INVENTORY && isShiftHeld) {
             final ItemEncodedPattern iep = (ItemEncodedPattern) item.getItem();
 
-            if (iep.getOutput(item) != null) {
+            if (iep.getOutputAE(item) != null) {
                 return true;
             }
         }
@@ -52,13 +52,14 @@ public class ItemEncodedPatternRenderer implements IItemRenderer {
         this.recursive = true;
 
         final ItemEncodedPattern iep = (ItemEncodedPattern) item.getItem();
-        final ItemStack is = iep.getOutput(item);
-        final Minecraft mc = Minecraft.getMinecraft();
+        IAEStack<?> stack = iep.getOutputAE(item);
 
+        final Minecraft mc = Minecraft.getMinecraft();
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
         RenderHelper.enableGUIStandardItemLighting();
-        this.ri.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), is, 0, 0);
-        RenderHelper.disableStandardItemLighting();
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        stack.drawInGui(mc, 0, 0);
         GL11.glPopAttrib();
 
         this.recursive = false;

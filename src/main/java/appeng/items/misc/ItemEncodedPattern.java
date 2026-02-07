@@ -12,7 +12,6 @@ package appeng.items.misc;
 
 import static appeng.helpers.PatternHelper.convertToCondensedAEList;
 import static appeng.helpers.UltimatePatternHelper.loadIAEStackFromNBT;
-import static appeng.util.Platform.stackConvertPacket;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -220,12 +219,29 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         }
 
         final IAEStack<?> output = details.getCondensedAEOutputs()[0];
-        out = stackConvertPacket(output).getItemStackForNEI();
+        out = output.getItemStackForNEI();
         long count = output.getStackSize();
         if (out != null) out.stackSize = count > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) count;
 
         SIMPLE_CACHE.put(item, out);
         return out;
+    }
+
+    public IAEStack<?> getOutputAE(final ItemStack item) {
+        final World w = CommonHelper.proxy.getWorld();
+
+        if (w == null) {
+            return null;
+        }
+
+        final ICraftingPatternDetails details = this.getPatternForItem(item, w);
+
+        if (details == null) {
+            return null;
+        }
+
+        final IAEStack<?> output = details.getCondensedAEOutputs()[0];
+        return output;
     }
 
     private boolean addInformation(final EntityPlayer player, final IAEStack<?>[] items, final List<String> lines,

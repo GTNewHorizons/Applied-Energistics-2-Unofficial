@@ -28,9 +28,9 @@ import appeng.api.config.Settings;
 import appeng.api.implementations.tiles.ICellWorkbench;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.IVirtualSlotHolder;
@@ -202,19 +202,19 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         return FuzzyMode.IGNORE_ALL;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void partition() {
         final IAEStackInventory inv = this.workBench.getAEInventoryByName(StorageName.NONE);
         final ItemStack is = this.getUpgradeable().getInventoryByName("cell").getStackInSlot(0);
 
         if (!(is != null && is.getItem() instanceof ICellWorkbenchItem wi)) return;
 
-        final IMEInventory<?> cellInv = AEApi.instance().registries().cell()
-                .getCellInventory(is, null, wi.getStorageChannel());
+        final IMEInventory cellInv = AEApi.instance().registries().cell().getCellInventory(is, null, wi.getStackType());
 
         if (cellInv == null) return;
 
         final IItemList<?> list = cellInv
-                .getAvailableItems(cellInv.getChannel().createPrimitiveList(), IterationCounter.fetchNewId());
+                .getAvailableItems(cellInv.getStackType().createPrimitiveList(), IterationCounter.fetchNewId());
         Iterator<?> i = list.iterator();
 
         for (int x = 0; x < inv.getSizeInventory(); x++) {
@@ -250,8 +250,8 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         }
     }
 
-    public StorageChannel getStorageChannel() {
-        return this.workBench.getStorageChannel();
+    public IAEStackType<?> getStackType() {
+        return this.workBench.getStackType();
     }
 
     public IAEStackInventory getConfig() {
