@@ -10,9 +10,6 @@
 
 package appeng.me.cache;
 
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
@@ -343,11 +340,7 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     void onTick() {
         if (this.sendEvent) {
             this.sendEvent = false;
-            if (this.stackType == ITEM_STACK_TYPE) {
-                this.myGridCache.getGrid().postEvent(new MENetworkStorageEvent(this, StorageChannel.ITEMS));
-            } else if (this.stackType == FLUID_STACK_TYPE) {
-                this.myGridCache.getGrid().postEvent(new MENetworkStorageEvent(this, StorageChannel.FLUIDS));
-            }
+            this.myGridCache.getGrid().postEvent(new MENetworkStorageEvent(this, this.stackType));
         }
     }
 
