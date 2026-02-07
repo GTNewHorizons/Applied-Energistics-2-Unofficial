@@ -10,7 +10,6 @@
 
 package appeng.client.gui.implementations;
 
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.IOException;
@@ -344,11 +343,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     }
 
     private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
-        if (slot.getStorageName() == StorageName.CRAFTING_INPUT) {
-            if (type == ITEM_STACK_TYPE) {
-                return true;
-            }
-            return !craftingMode && type == FLUID_STACK_TYPE;
+        if (slot.getStorageName() == StorageName.CRAFTING_INPUT && this.craftingMode) {
+            return type == ITEM_STACK_TYPE;
         } else {
             return true;
         }
