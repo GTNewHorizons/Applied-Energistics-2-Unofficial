@@ -1,8 +1,11 @@
 package appeng.client;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityClientPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.world.World;
 
 import appeng.core.CommonHelper;
 import appeng.core.sync.network.NetworkHandler;
@@ -33,6 +36,7 @@ public class KeyBindHandler {
 
     private void handlePickBlock() {
         Minecraft minecraft = Minecraft.getMinecraft();
+        World world = minecraft.theWorld;
         if (minecraft.currentScreen != null) return; // Don't act if a GUI is open
 
         EntityClientPlayerMP player = minecraft.thePlayer;
@@ -44,17 +48,26 @@ public class KeyBindHandler {
         }
 
         // Get the block the player is currently looking at
-        MovingObjectPosition movingObject = minecraft.objectMouseOver;
-        if (movingObject == null || movingObject.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+        MovingObjectPosition target = minecraft.objectMouseOver;
+        if (target == null || target.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
             return;
         }
 
-        final var packet = new PacketPickBlock(
-                movingObject.blockX,
-                movingObject.blockY,
-                movingObject.blockZ,
-                movingObject.sideHit,
-                movingObject.hitVec);
+        int x = target.blockX;
+        int y = target.blockY;
+        int z = target.blockZ;
+        Block block = world.getBlock(x, y, z);
+
+        if (block.isAir(world, x, y, z)) {
+            return;
+        }
+
+        ItemStack pickedBlock = block.getPickBlock(target, world, x, y, z, player);
+        if (pickedBlock == null) {
+            return;
+        }
+
+        final var packet = new PacketPickBlock(pickedBlock);
         NetworkHandler.instance.sendToServer(packet);
     }
 

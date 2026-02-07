@@ -9,15 +9,17 @@ import java.util.function.Predicate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
 import appeng.api.AEApi;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerCPUTable;
 import appeng.container.implementations.CraftingCPUStatus;
@@ -163,7 +165,7 @@ public class GuiCraftingCPUTable {
 
                 GL11.glPushMatrix();
                 GL11.glTranslatef(x + 3, y + 11, 0);
-                final IAEItemStack craftingStack = cpu.getCrafting();
+                final IAEStack<?> craftingStack = cpu.getCrafting();
                 if (craftingStack != null) {
                     final int iconIndex = 16 * 11 + 2;
                     parent.bindTexture("guis/states.png");
@@ -186,7 +188,13 @@ public class GuiCraftingCPUTable {
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
                     GL11.glTranslatef(x + CPU_TABLE_SLOT_WIDTH - 19, y + 3, 0);
-                    parent.drawItem(0, 0, craftingStack.getItemStack());
+
+                    GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+                    RenderHelper.enableGUIStandardItemLighting();
+                    GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+                    GL11.glEnable(GL11.GL_DEPTH_TEST);
+                    craftingStack.drawInGui(Minecraft.getMinecraft(), 0, 0);
+                    GL11.glPopAttrib();
 
                     GL11.glPopMatrix();
                     GL11.glPushMatrix();
@@ -244,7 +252,7 @@ public class GuiCraftingCPUTable {
                 tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getSerial()));
                 tooltip.append('\n');
             }
-            IAEItemStack crafting = hoveredCpu.getCrafting();
+            IAEStack<?> crafting = hoveredCpu.getCrafting();
             if (crafting != null && crafting.getStackSize() > 0) {
 
                 final long elapsedInMilliseconds = TimeUnit.MILLISECONDS
@@ -258,7 +266,7 @@ public class GuiCraftingCPUTable {
                 tooltip.append(GuiText.CraftName.getLocal());
                 tooltip.append(reset);
                 tooltip.append(": ");
-                tooltip.append(crafting.getItemStack().getDisplayName());
+                tooltip.append(crafting.getDisplayName());
                 tooltip.append('\n');
 
                 tooltip.append(green);

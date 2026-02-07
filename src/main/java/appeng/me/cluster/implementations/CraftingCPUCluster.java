@@ -93,7 +93,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.networking.storage.IStorageGrid;
-import appeng.api.storage.IMEInventory;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
@@ -111,6 +111,8 @@ import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketCraftingCompleteNotification;
 import appeng.crafting.CraftBranchFailure;
 import appeng.crafting.CraftingLink;
 import appeng.crafting.CraftingWatcher;
@@ -139,11 +141,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private final Comparator<ICraftingPatternDetails> priorityComparator = Comparator
             .comparing(ICraftingPatternDetails::getPriority).thenComparing(ICraftingPatternDetails::hashCode);
     private final Map<ICraftingPatternDetails, TaskProgress> tasks = new TreeMap<>(priorityComparator);
-    private Map<ICraftingPatternDetails, TaskProgress> workableTasks = new TreeMap<>(priorityComparator);
-    private HashSet<ICraftingMedium> knownBusyMediums = new HashSet<>();
+    private final Map<ICraftingPatternDetails, TaskProgress> workableTasks = new TreeMap<>(priorityComparator);
+    private final HashSet<ICraftingMedium> knownBusyMediums = new HashSet<>();
     // INSTANCE sate
     private final LinkedList<TileCraftingTile> tiles = new LinkedList<>();
-    private final LinkedList<TileCraftingTile> storage = new LinkedList<>();
     private final LinkedList<TileCraftingMonitorTile> status = new LinkedList<>();
     private final HashMap<IMEMonitorHandlerReceiver, Object> listeners = new HashMap<>();
     private final HashMap<IAEStack<?>, List<NamedDimensionalCoord>> providers = new HashMap<>();
@@ -190,6 +191,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         EntityPlayer player = getPlayerByName(playerName);
                         if (player != null) {
                             // Send message to player
+                            try {
+                                NetworkHandler.instance.sendTo(
+                                        new PacketCraftingCompleteNotification(notification),
+                                        (EntityPlayerMP) player);
+                            } catch (IOException e) {
+                                AELog.debug(e);
+                            }
+
                             player.addChatMessage(notification.createMessage());
                             player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);
                         } else {
@@ -325,7 +334,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             if (Long.MAX_VALUE - additionalStorage >= this.availableStorage) {
                 // Safe to add as it does not cause overflow
                 this.availableStorage += additionalStorage;
-                this.storage.add(te);
             } else {
                 // Prevent form CPU if storage overflowed
                 this.tiles.remove(te);
@@ -777,7 +785,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                         for (final IAEStack<?> anInput : input) {
                             if (anInput != null) {
-                                sum += (double) anInput.getStackSize() / anInput.getPowerMultiplier();
+                                sum += (double) anInput.getStackSize() / anInput.getAmountPerUnit();
                             }
                         }
                         // upgraded interface uses more power
@@ -928,41 +936,31 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void storeItems() {
         final IGrid g = this.getGrid();
-
         if (g == null) {
             return;
         }
 
         final IStorageGrid sg = g.getCache(IStorageGrid.class);
-        final IMEInventory<IAEItemStack> ii = sg.getItemInventory();
-        final IMEInventory<IAEFluidStack> fi = sg.getFluidInventory();
 
-        for (IAEItemStack is : this.inventory.getItemList()) {
-            is = this.inventory.extractItems(is.copy(), Actionable.MODULATE);
+        for (var inventory : this.inventory.getInventoryMap().entrySet()) {
+            IMEMonitor monitor = sg.getMEMonitor(inventory.getKey());
+            assert monitor != null;
 
-            if (is != null) {
-                this.postChange(is, this.machineSrc);
-                is = ii.injectItems(is, Actionable.MODULATE, this.machineSrc);
+            for (IAEStack<?> is : inventory.getValue()) {
+                is = this.inventory.extractItems(is.copy(), Actionable.MODULATE);
 
-            }
+                if (is != null) {
+                    this.postChange(is, this.machineSrc);
+                    is = monitor.injectItems(is, Actionable.MODULATE, this.machineSrc);
 
-            if (is != null) {
-                this.inventory.injectItems(is, Actionable.MODULATE);
-            }
-        }
+                }
 
-        for (IAEFluidStack is : this.inventory.getFluidList()) {
-            is = this.inventory.extractItems(is.copy(), Actionable.MODULATE);
-
-            if (is != null) {
-                this.postChange(is, this.machineSrc);
-                is = fi.injectItems(is, Actionable.MODULATE, this.machineSrc);
-            }
-
-            if (is != null) {
-                this.inventory.injectItems(is, Actionable.MODULATE);
+                if (is != null) {
+                    this.inventory.injectItems(is, Actionable.MODULATE);
+                }
             }
         }
 
@@ -1849,6 +1847,18 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.finalOutput = finalOutput;
             this.outputsCount = outputsCount;
             this.elapsedTime = elapsedTime;
+        }
+
+        public IAEStack<?> getFinalOutput() {
+            return finalOutput;
+        }
+
+        public long getOutputsCount() {
+            return outputsCount;
+        }
+
+        public long getElapsedTime() {
+            return elapsedTime;
         }
 
         public IChatComponent createMessage() {

@@ -27,7 +27,7 @@ public class AppEngSlot extends Slot {
     private AEBaseContainer myContainer = null;
     private int IIcon = -1;
     private hasCalculatedValidness isValid;
-    private boolean isDisplay = false;
+    protected boolean isDisplay = false;
     private ItemStack displayStack = null;
 
     public AppEngSlot(final IInventory inv, final int idx, final int x, final int y) {

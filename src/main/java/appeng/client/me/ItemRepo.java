@@ -15,7 +15,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -28,12 +27,11 @@ import appeng.api.AEApi;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
 import appeng.api.config.SortOrder;
-import appeng.api.config.TypeFilter;
 import appeng.api.config.ViewItems;
 import appeng.api.storage.IItemDisplayRegistry;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IDisplayRepo;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.widgets.IScrollSource;
@@ -46,6 +44,7 @@ import appeng.util.Platform;
 import appeng.util.item.OreHelper;
 import appeng.util.item.OreReference;
 import appeng.util.prioitylist.IPartitionList;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class ItemRepo implements IDisplayRepo {
 
@@ -223,7 +222,7 @@ public class ItemRepo implements IDisplayRepo {
 
     private void addEntriesToView(Iterable<IAEStack<?>> entries) {
         final Enum viewMode = this.sortSrc.getSortDisplay();
-        final Enum typeFilter = this.sortSrc.getTypeFilter();
+        Reference2BooleanMap<IAEStackType<?>> typeFilters = this.sortSrc.getTypeFilter();
         Predicate<IAEStack<?>> itemFilter = null;
 
         if (!this.searchString.trim().isEmpty()) {
@@ -240,7 +239,7 @@ public class ItemRepo implements IDisplayRepo {
 
         IItemDisplayRegistry registry = AEApi.instance().registries().itemDisplay();
 
-        out: for (IAEStack<?> is : entries) {
+        for (IAEStack<?> is : entries) {
             if (viewMode == ViewItems.CRAFTABLE && !is.isCraftable()) {
                 continue;
             }
@@ -253,20 +252,12 @@ public class ItemRepo implements IDisplayRepo {
                 continue;
             }
 
-            if (typeFilter == TypeFilter.ITEMS) {
-                if (!(is instanceof IAEItemStack)) continue;
-            } else if (typeFilter == TypeFilter.FLUIDS) {
-                if (!(is instanceof IAEFluidStack)) continue;
-            }
+            if (typeFilters != null && !typeFilters.getBoolean(is.getStackType())) continue;
 
             if (is instanceof IAEItemStack ais) {
                 if (registry.isBlacklisted(ais.getItemStack().getItem())
                         || registry.isBlacklisted(ais.getItemStack().getItem().getClass())) {
                     continue;
-                }
-
-                for (final BiPredicate<TypeFilter, IAEItemStack> filter : registry.getItemFilters()) {
-                    if (!filter.test((TypeFilter) typeFilter, ais)) continue out;
                 }
             }
 

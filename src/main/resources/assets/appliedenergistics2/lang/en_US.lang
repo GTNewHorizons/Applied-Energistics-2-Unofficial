@@ -130,6 +130,8 @@ chat.appliedenergistics2.PriorityConfigured=Updated priority to %d
 chat.appliedenergistics2.DriveLockingToggled=Cells in drive were partitioned/unpartitioned
 chat.appliedenergistics2.ChestLockingToggled=Cell in chest was partitioned/unpartitioned
 chat.appliedenergistics2.FinishCraftingRemind=Crafting of %s * %s finished in %s.
+chat.appliedenergistics2.CraftComplete=§5Auto-Crafting Complete
+chat.appliedenergistics2.CraftComplete.tip=%s %s, took %s
 chat.appliedenergistics2.CraftingCantExtract=Can't extract ingredient: %d / %d | %s
 chat.appliedenergistics2.MachineInOtherDim=%d located in dimension: %d and can't be highlighted
 chat.appliedenergistics2.MachineInOtherDimNamed=%d "%s" located in dimension: %d and can't be highlighted
@@ -507,11 +509,6 @@ gui.tooltips.appliedenergistics2.ReportInaccessibleItems=Report Inaccessible Ite
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=Yes: Items that cannot be extracted will be visible.
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=No: Only extractable items will be visible.
 
-gui.tooltips.appliedenergistics2.TypeFilter=Filter Types
-gui.tooltips.appliedenergistics2.TypeFilterShowAll=Show All
-gui.tooltips.appliedenergistics2.TypeFilterShowItemsOnly=Show Items only
-gui.tooltips.appliedenergistics2.TypeFilterShowFluidsOnly=Show Fluids only
-
 gui.tooltips.appliedenergistics2.BlockPlacement=Block Placement
 gui.tooltips.appliedenergistics2.BlockPlacementYes=Blocks will be placed as block.
 gui.tooltips.appliedenergistics2.BlockPlacementNo=Blocks will be dropped as item.
@@ -620,7 +617,7 @@ gui.tooltips.appliedenergistics2.Suspend=Click to stop this CPU from sending out
 gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts again
 
 gui.tooltips.appliedenergistics2.PinsSection=Pins Section
-gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled
+gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
@@ -697,6 +694,7 @@ waila.appliedenergistics2.Singularity=Singularity
 waila.appliedenergistics2.Provider=§5Provider§r
 waila.appliedenergistics2.Accessor=§5Accessor§r
 waila.appliedenergistics2.Waiting=Waiting:
+waila.appliedenergistics2.IOBusSpeed=Speed: %s %s/t
 
 # Baubles Extended
 slot.Terminal=§aTerminal§7

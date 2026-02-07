@@ -24,6 +24,7 @@ import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.core.sync.GuiBridge;
 import appeng.me.storage.CellInventory;
@@ -39,9 +40,9 @@ public class BasicCellHandler implements ICellHandler {
 
     @Override
     public IMEInventoryHandler getCellInventory(final ItemStack is, final ISaveProvider container,
-            final StorageChannel channel) {
-        if (is != null && is.getItem() instanceof IStorageCell cell && cell.getStorageChannel() == channel) {
-            return CellInventory.getCell(is, container, channel);
+            final IAEStackType<?> type) {
+        if (is != null && is.getItem() instanceof IStorageCell cell && cell.getStackType() == type) {
+            return CellInventory.getCell(is, container, type);
         }
         return null;
     }

@@ -1,5 +1,7 @@
 package appeng.client.gui.slots;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.item.ItemStack;
 
 import appeng.core.sync.GuiBridge;
@@ -9,13 +11,14 @@ import appeng.tile.inventory.IAEStackInventory;
 
 public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
 
-    public VirtualMEPatternSlot(int x, int y, IAEStackInventory inventory, int slotIndex) {
-        super(x, y, inventory, slotIndex);
+    public VirtualMEPatternSlot(int x, int y, IAEStackInventory inventory, int slotIndex,
+            TypeAcceptPredicate acceptType) {
+        super(x, y, inventory, slotIndex, acceptType);
         this.showAmount = true;
     }
 
     @Override
-    public void handleMouseClicked(boolean acceptItem, boolean acceptFluid, boolean isExtraAction, int mouseButton) {
+    public void handleMouseClicked(@Nullable ItemStack itemStack, boolean isExtraAction, int mouseButton) {
         if (mouseButton == 2) { // middle click
             if (this.getAEStack() != null) {
                 if (isExtraAction) {
@@ -26,14 +29,6 @@ public class VirtualMEPatternSlot extends VirtualMEPhantomSlot {
             }
         }
 
-        super.handleMouseClicked(acceptItem, acceptFluid, isExtraAction, mouseButton);
-    }
-
-    @Override
-    public void setShiftClickStack(ItemStack shiftClickStack) {}
-
-    @Override
-    public boolean isQuickMoveTarget() {
-        return false;
+        super.handleMouseClicked(itemStack, isExtraAction, mouseButton);
     }
 }

@@ -1,7 +1,5 @@
 package appeng.crafting.v2.resolvers;
 
-import static appeng.util.Platform.stackConvert;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -18,13 +16,13 @@ import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 
-public class EmitableItemResolver<StackType extends IAEStack<StackType>> implements CraftingRequestResolver<StackType> {
+public class EmitableItemResolver implements CraftingRequestResolver {
 
-    public static class EmitItemTask<StackType extends IAEStack<StackType>> extends CraftingTask<StackType> {
+    public static class EmitItemTask extends CraftingTask {
 
         private long fulfilled = 0;
 
-        public EmitItemTask(CraftingRequest<StackType> request) {
+        public EmitItemTask(CraftingRequest request) {
             super(request, CraftingTask.PRIORITY_CRAFTING_EMITTER); // conjure items for calculations out of thin air as
                                                                     // a last
         }
@@ -104,9 +102,9 @@ public class EmitableItemResolver<StackType extends IAEStack<StackType>> impleme
 
     @Nonnull
     @Override
-    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<StackType> request,
+    public List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest request,
             @Nonnull CraftingContext context) {
-        if (context.craftingGrid.canEmitFor(stackConvert(request.stack))) {
+        if (context.craftingGrid.canEmitFor(request.stack)) {
             return Collections.singletonList(new EmitItemTask(request));
         } else {
             return Collections.emptyList();

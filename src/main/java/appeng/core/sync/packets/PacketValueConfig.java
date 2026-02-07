@@ -132,6 +132,8 @@ public class PacketValueConfig extends AppEngPacket {
             fc.setFilter(this.Value);
         } else if (this.Name.equals("LevelEmitter.Value") && c instanceof ContainerLevelEmitter lvc) {
             lvc.setLevel(Long.parseLong(this.Value), player);
+        } else if (this.Name.equals("LevelEmitter.TypeFilter") && c instanceof ContainerLevelEmitter lvc) {
+            lvc.toggleTypeFilter(this.Value, player);
         } else if (this.Name.startsWith("PatternTerminal.") && c instanceof final ContainerPatternTerm cpt) {
             switch (this.Name) {
                 case "PatternTerminal.CraftMode" -> cpt.getPatternTerminal().setCraftingRecipe(this.Value.equals("1"));

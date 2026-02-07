@@ -1,11 +1,16 @@
 package appeng.hooks;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 
+import appeng.core.AELog;
+import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketCraftingCompleteNotification;
 import appeng.me.cluster.implementations.CraftingCPUCluster.CraftNotification;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
@@ -22,6 +27,13 @@ public class CraftingNotificationManager {
             if (map.containsKey(playerName)) {
                 List<CraftNotification> notifications = map.remove(playerName);
                 for (CraftNotification notification : notifications) {
+                    try {
+                        NetworkHandler.instance
+                                .sendTo(new PacketCraftingCompleteNotification(notification), (EntityPlayerMP) player);
+                    } catch (IOException e) {
+                        AELog.debug(e);
+                    }
+
                     player.addChatMessage(notification.createMessage());
                 }
                 player.worldObj.playSoundAtEntity(player, "random.levelup", 1f, 1f);

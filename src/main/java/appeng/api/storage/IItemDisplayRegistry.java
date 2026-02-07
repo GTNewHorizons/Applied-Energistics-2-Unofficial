@@ -36,8 +36,10 @@ public interface IItemDisplayRegistry {
     /**
      * Adds a filter option. This is primarily for ae2fc's item drops, but can be expanded.
      */
+    @Deprecated
     void addItemFilter(BiPredicate<TypeFilter, IAEItemStack> filter);
 
+    @Deprecated
     List<BiPredicate<TypeFilter, IAEItemStack>> getItemFilters();
 
     /**

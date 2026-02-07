@@ -130,6 +130,8 @@ chat.appliedenergistics2.PriorityConfigured=更新优先级到%d
 chat.appliedenergistics2.DriveLockingToggled=Cells in drive were partitioned/unpartitioned
 chat.appliedenergistics2.ChestLockingToggled=Cell in chest was partitioned/unpartitioned
 chat.appliedenergistics2.FinishCraftingRemind=合成 %s 个 %s 的任务已完成, 总计使用时间 %s。
+chat.appliedenergistics2.CraftComplete=§5自动合成完毕！
+chat.appliedenergistics2.CraftComplete.tip=%s %s, 用时 %s
 chat.appliedenergistics2.CraftingCantExtract=Can't extract ingredient: %d / %d | %s
 chat.appliedenergistics2.MachineInOtherDim=%d located in dimension: %d and can't be highlighted
 chat.appliedenergistics2.MachineInOtherDimNamed=%d "%s" located in dimension: %d and can't be highlighted
@@ -507,11 +509,6 @@ gui.tooltips.appliedenergistics2.ReportInaccessibleItems=报告不可交互的�
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=是: 显示无法取出的物品.
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=否: 只显示可以取出的物品.
 
-gui.tooltips.appliedenergistics2.TypeFilter=过滤类型
-gui.tooltips.appliedenergistics2.TypeFilterShowAll=显示所有
-gui.tooltips.appliedenergistics2.TypeFilterShowItemsOnly=只显示物品
-gui.tooltips.appliedenergistics2.TypeFilterShowFluidsOnly=只显示流体液滴(FC)
-
 gui.tooltips.appliedenergistics2.BlockPlacement=方块放置方式
 gui.tooltips.appliedenergistics2.BlockPlacementYes=方块将被放置.
 gui.tooltips.appliedenergistics2.BlockPlacementNo=方块将以物品形式掉落.
@@ -620,7 +617,7 @@ gui.tooltips.appliedenergistics2.Suspend=Click to stop this CPU from sending out
 gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts again
 
 gui.tooltips.appliedenergistics2.PinsSection=Pins Section
-gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled
+gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
