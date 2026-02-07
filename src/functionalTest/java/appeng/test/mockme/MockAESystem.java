@@ -1,5 +1,7 @@
 package appeng.test.mockme;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +17,7 @@ import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.ICellProvider;
+import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
@@ -155,7 +158,9 @@ public class MockAESystem implements ICellProvider {
 
     // Simulated inventories
     private final MECraftingInventory itemStorage = new MECraftingInventory();
-    private final IMEInventoryHandler<IAEStack> storageHandler = new MEPassThrough<>(itemStorage, StorageChannel.ITEMS);
+    private final IMEInventoryHandler<IAEStack> storageHandler = new MEPassThrough<>(
+            (IMEInventory) itemStorage,
+            ITEM_STACK_TYPE);
 
     @Override
     public List<IMEInventoryHandler> getCellArray(StorageChannel channel) {

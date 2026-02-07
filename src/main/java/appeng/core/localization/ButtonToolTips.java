@@ -130,11 +130,6 @@ public enum ButtonToolTips implements Localization {
     ReportInaccessibleItemsYes,
     ReportInaccessibleItemsNo,
 
-    TypeFilter,
-    TypeFilterShowAll,
-    TypeFilterShowItemsOnly,
-    TypeFilterShowFluidsOnly,
-
     BlockPlacement,
     BlockPlacementYes,
     BlockPlacementNo,

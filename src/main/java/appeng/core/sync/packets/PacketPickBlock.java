@@ -3,16 +3,10 @@ package appeng.core.sync.packets;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.server.S09PacketHeldItemChange;
-import net.minecraft.util.Vec3;
-import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
@@ -27,48 +21,26 @@ import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.util.PlayerInventoryUtil;
+import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 public class PacketPickBlock extends AppEngPacket {
 
-    private final int blockX;
-    private final int blockY;
-    private final int blockZ;
-    private final int blockSide;
-    private final Vec3 hitVec;
+    private final ItemStack pickedBlock;
 
     // Reflection
     public PacketPickBlock(final ByteBuf stream) {
-        this.blockX = stream.readInt();
-        this.blockY = stream.readInt();
-        this.blockZ = stream.readInt();
-        this.blockSide = stream.readInt();
-
-        double hitVecX = stream.readDouble();
-        double hitVecY = stream.readDouble();
-        double hitVecZ = stream.readDouble();
-        this.hitVec = Vec3.createVectorHelper(hitVecX, hitVecY, hitVecZ);
+        this.pickedBlock = ByteBufUtils.readItemStack(stream);
     }
 
     // Public API
-    public PacketPickBlock(int blockX, int blockY, int blockZ, int blockSide, Vec3 hitVec) {
-        this.blockX = blockX;
-        this.blockY = blockY;
-        this.blockZ = blockZ;
-        this.blockSide = blockSide;
-        this.hitVec = hitVec;
+    public PacketPickBlock(ItemStack pickedBlock) {
+        this.pickedBlock = pickedBlock;
 
         final ByteBuf data = Unpooled.buffer();
-
         data.writeInt(this.getPacketID());
-        data.writeInt(this.blockX);
-        data.writeInt(this.blockY);
-        data.writeInt(this.blockZ);
-        data.writeInt(this.blockSide);
-        data.writeDouble(this.hitVec.xCoord);
-        data.writeDouble(this.hitVec.yCoord);
-        data.writeDouble(this.hitVec.zCoord);
+        ByteBufUtils.writeItemStack(data, pickedBlock);
 
         this.configureWrite(data);
     }
@@ -77,7 +49,9 @@ public class PacketPickBlock extends AppEngPacket {
     public void serverPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
 
-        ItemStack itemToFind = getPickBlock(sender, this.blockX, this.blockY, this.blockZ);
+        if (pickedBlock == null) {
+            return;
+        }
 
         // 1. Scan through the player's main inventory to categorize existing stacks of the target block:
         // - If a full stack (stackSize >= maxStackSize) is found, record its slot and stop searching.
@@ -88,8 +62,8 @@ public class PacketPickBlock extends AppEngPacket {
         List<Integer> partialStackSlotsList = new ArrayList<>();
         for (int i = 0; i < sender.inventory.mainInventory.length; i++) {
             ItemStack stackInSlot = sender.inventory.mainInventory[i];
-            if (stackInSlot != null && stackInSlot.isItemEqual(itemToFind)
-                    && ItemStack.areItemStackTagsEqual(stackInSlot, itemToFind)) {
+            if (stackInSlot != null && stackInSlot.isItemEqual(pickedBlock)
+                    && ItemStack.areItemStackTagsEqual(stackInSlot, pickedBlock)) {
                 if (stackInSlot.stackSize >= stackInSlot.getMaxStackSize()) {
                     fullStackSlot = i;
                     break; // Found a full stack, no need to continue consolidating.
@@ -139,8 +113,8 @@ public class PacketPickBlock extends AppEngPacket {
         ItemStack pickBlockItemStack = consolidatedStack;
 
         // 5. Calculate withdrawal amount
-        int amountToWithdraw = pickBlockItemStack == null ? itemToFind.getMaxStackSize()
-                : itemToFind.getMaxStackSize() - pickBlockItemStack.stackSize;
+        int amountToWithdraw = pickBlockItemStack == null ? pickedBlock.getMaxStackSize()
+                : pickedBlock.getMaxStackSize() - pickBlockItemStack.stackSize;
         if (amountToWithdraw <= 0) {
             return;
         }
@@ -148,19 +122,22 @@ public class PacketPickBlock extends AppEngPacket {
         // Ensure the player has a wireless terminal with access to an AE2 network.
         ItemStack wirelessTerminal = PlayerInventoryUtil.getFirstWirelessTerminal(sender);
         if (wirelessTerminal == null) {
+            movePickBlockItemStack(sender, pickBlockSlot);
             sender.addChatMessage(PlayerMessages.PickBlockTerminalNotFound.toChat());
             return;
         }
         var wirelessInventory = getWirelessItemInventory(sender, wirelessTerminal);
         if (wirelessInventory == null) {
+            movePickBlockItemStack(sender, pickBlockSlot);
             return;
         }
 
         // Create an IAEItemStack for the target block with the calculated amount
-        ItemStack targetItemStack = itemToFind.copy();
+        ItemStack targetItemStack = pickedBlock.copy();
         targetItemStack.stackSize = amountToWithdraw;
         IAEItemStack targetAeItemStack = AEApi.instance().storage().createItemStack(targetItemStack);
         if (targetAeItemStack == null) {
+            movePickBlockItemStack(sender, pickBlockSlot);
             return;
         }
 
@@ -244,6 +221,9 @@ public class PacketPickBlock extends AppEngPacket {
      * @param pickBlockInventorySlot the inventory slot of the ItemStack to move
      */
     private void movePickBlockItemStack(EntityPlayerMP player, int pickBlockInventorySlot) {
+        if (player.inventory.getStackInSlot(pickBlockInventorySlot) == null) {
+            return;
+        }
         var firstEmptyHotbarSlot = PlayerInventoryUtil.getFirstEmptyHotbarSlot(player);
         if (pickBlockInventorySlot <= 8) {
             PlayerInventoryUtil.setSlotAsActiveSlot(player, pickBlockInventorySlot);
@@ -254,25 +234,5 @@ public class PacketPickBlock extends AppEngPacket {
         } else {
             PlayerInventoryUtil.setSlotAsActiveSlot(player, pickBlockInventorySlot);
         }
-    }
-
-    /**
-     * Copy of the vanilla pick block function, as the vanilla version uses a client-side only function ( getItem() ).
-     */
-    private ItemStack getPickBlock(EntityPlayerMP player, int x, int y, int z) {
-        // Get the target block
-        World world = player.worldObj;
-        Block targetBlock = world.getBlock(this.blockX, this.blockY, this.blockZ);
-        if (targetBlock == null || targetBlock == Blocks.air) {
-            return null;
-        }
-
-        Item item = Item.getItemFromBlock(targetBlock);
-        if (item == null) {
-            return null;
-        }
-
-        Block block = item instanceof ItemBlock ? Block.getBlockFromItem(item) : targetBlock;
-        return new ItemStack(item, 1, block.getDamageValue(world, x, y, z));
     }
 }

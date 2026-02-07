@@ -131,7 +131,7 @@ public abstract class PartBaseImportBus<StackType extends IAEStack<StackType>> e
                 boolean configured = false;
                 if (this.getInstalledUpgrades(Upgrades.ORE_FILTER) == 0) {
                     for (int x = 0; x < this.availableSlots(); x++) {
-                        final StackType ais = (StackType) this.getAEInventoryByName(StorageName.NONE)
+                        final StackType ais = (StackType) this.getAEInventoryByName(StorageName.CONFIG)
                                 .getAEStackInSlot(x);
                         if (ais != null && this.itemToSend > 0) {
                             configured = true;
@@ -160,8 +160,6 @@ public abstract class PartBaseImportBus<StackType extends IAEStack<StackType>> e
 
         return this.worked ? TickRateModulation.FASTER : TickRateModulation.SLOWER;
     }
-
-    protected abstract Object getTarget();
 
     protected abstract boolean importStuff(final Object myTarget, final StackType whatToImport,
             final IMEMonitor<StackType> inv, final IEnergySource energy, final FuzzyMode fzMode);

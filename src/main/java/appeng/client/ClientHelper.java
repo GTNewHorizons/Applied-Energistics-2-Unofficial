@@ -57,6 +57,7 @@ import appeng.client.render.effects.LightningArcFX;
 import appeng.client.render.effects.LightningFX;
 import appeng.client.render.effects.VibrantFX;
 import appeng.client.render.highlighter.HighlighterManager;
+import appeng.client.render.notification.NotificationManager;
 import appeng.client.render.previewBlocks.BlockRendererPreviewEvent;
 import appeng.client.texture.CableBusTextures;
 import appeng.client.texture.ExtraBlockTextures;
@@ -84,8 +85,6 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class ClientHelper extends ServerHelper {
 
-    private static final String KEY_CATEGORY = "key.appliedenergistics2.category";
-
     private final EnumMap<ActionKey, KeyBinding> bindings = new EnumMap<>(ActionKey.class);
 
     private static final RenderItem ITEM_RENDERER = new RenderItem();
@@ -112,6 +111,7 @@ public class ClientHelper extends ServerHelper {
         MinecraftForge.EVENT_BUS.register(BlockRendererPreviewEvent.getInstance());
         FMLCommonHandler.instance().bus().register(BlockRendererPreviewEvent.getInstance());
         FMLCommonHandler.instance().bus().register(new KeyBindHandler());
+        FMLCommonHandler.instance().bus().register(new NotificationManager());
 
         for (ActionKey key : ActionKey.values()) {
             final KeyBinding binding = new KeyBinding(key.getTranslationKey(), key.getDefaultKey(), KEY_CATEGORY);
@@ -357,6 +357,7 @@ public class ClientHelper extends ServerHelper {
 
     @Override
     public void postInit() {
+        super.postInit();
         RenderingRegistry.registerBlockHandler(WorldRender.INSTANCE);
         RenderManager.instance.entityRenderMap.put(EntityTinyTNTPrimed.class, new RenderTinyTNTPrimed());
         RenderManager.instance.entityRenderMap.put(EntityFloatingItem.class, new RenderFloatingItem());

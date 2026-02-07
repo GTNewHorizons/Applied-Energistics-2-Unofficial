@@ -114,7 +114,7 @@ public class TileSpatialIOPort extends AENetworkInvTile implements IWorldCallabl
                     final MENetworkEvent res = gi.postEvent(new MENetworkSpatialEvent(this, req));
                     if (!res.isCanceled()) {
                         final TransitionResult tr = sc
-                                .doSpatialTransition(cell, this.worldObj, spc.getMin(), spc.getMax(), true);
+                                .doSpatialTransition(cell, spc.getMin().getWorld(), spc.getMin(), spc.getMax(), true);
                         if (tr.success) {
                             energy.extractAEPower(req, Actionable.MODULATE, PowerMultiplier.CONFIG);
                             this.setInventorySlotContents(0, null);

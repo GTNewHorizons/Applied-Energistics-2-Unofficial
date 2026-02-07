@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import appeng.api.storage.data.IAEStack;
 import appeng.crafting.v2.CraftingContext;
 import appeng.crafting.v2.CraftingRequest;
 
@@ -12,7 +11,7 @@ import appeng.crafting.v2.CraftingRequest;
  * See {@link CraftingRequestResolver#provideCraftingRequestResolvers(CraftingRequest, CraftingContext)}
  */
 @FunctionalInterface
-public interface CraftingRequestResolver<StackType extends IAEStack<StackType>> {
+public interface CraftingRequestResolver {
 
     /**
      * Provides a list of potential solutions for doing one crafting step, the calculator will try the solutions ordered
@@ -28,6 +27,6 @@ public interface CraftingRequestResolver<StackType extends IAEStack<StackType>> 
      * @return The list of potential solutions - return an empty list if none are available
      */
     @Nonnull
-    List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest<StackType> request,
+    List<CraftingTask> provideCraftingRequestResolvers(@Nonnull CraftingRequest request,
             @Nonnull CraftingContext context);
 }

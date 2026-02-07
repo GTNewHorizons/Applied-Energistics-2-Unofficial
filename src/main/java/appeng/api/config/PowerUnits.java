@@ -17,7 +17,7 @@ import appeng.core.localization.Localization;
 
 public enum PowerUnits implements Localization {
 
-    AE("gui.appliedenergistics2.units.appliedenergstics"), // Native Units - AE Energy
+    AE("gui.appliedenergistics2.units.appliedenergistics"), // Native Units - AE Energy
     EU("gui.appliedenergistics2.units.ic2"), // IndustrialCraft 2 - Energy Units
     WA("gui.appliedenergistics2.units.rotarycraft"), // RotaryCraft - Watts
     RF("gui.appliedenergistics2.units.thermalexpansion"), // ThermalExpansion - Redstone Flux

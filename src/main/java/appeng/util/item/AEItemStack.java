@@ -10,6 +10,8 @@
 
 package appeng.util.item;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -20,19 +22,32 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.StatCollector;
+import net.minecraft.world.World;
+import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.client.IItemRenderer;
+import net.minecraftforge.client.MinecraftForgeClient;
 
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IAETagCompound;
 import appeng.util.Platform;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -634,13 +649,13 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     }
 
     @Override
-    void writeIdentity(final ByteBuf i) throws IOException {
+    protected void writeIdentity(final ByteBuf i) throws IOException {
         i.writeShort(Item.itemRegistry.getIDForObject(this.getDefinition().getItem()));
         i.writeShort(this.getItemDamage());
     }
 
     @Override
-    void readNBT(final ByteBuf i) throws IOException {
+    protected void readNBT(final ByteBuf i) throws IOException {
         if (this.hasTagCompound()) {
             final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             final DataOutputStream data = new DataOutputStream(bytes);
@@ -687,6 +702,11 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     public void drawInGui(Minecraft mc, int x, int y) {
         ItemStack itemStack = this.getItemStack();
         RenderItem itemRender = RenderItem.getInstance();
+
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        RenderHelper.enableGUIStandardItemLighting();
+
         itemRender.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.getTextureManager(), itemStack, x, y);
 
         GL11.glTranslatef(0.0f, 0.0f, 200.0f);
@@ -700,7 +720,90 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     }
 
     @Override
-    public int getPowerMultiplier() {
+    public void drawOnBlockFace(World world) {
+        ItemStack itemstack = this.getItemStack();
+        itemstack.stackSize = 1;
+
+        final EntityItem entityitem = new EntityItem(world, 0.0D, 0.0D, 0.0D, itemstack);
+        entityitem.getEntityItem().stackSize = 1;
+
+        // set all this stuff and then do shit? meh?
+        entityitem.hoverStart = 0;
+        entityitem.age = 0;
+        entityitem.rotationYaw = 0;
+
+        GL11.glPushMatrix();
+        GL11.glTranslatef(0, -0.04F, 0);
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+
+        if (itemstack.isItemEnchanted() || itemstack.getItem().requiresMultipleRenderPasses()) {
+            GL11.glTranslatef(0.0f, -0.05f, -0.25f);
+            GL11.glScalef(1.0f / 1.5f, 1.0f / 1.5f, 1.0f / 1.5f);
+            GL11.glScalef(1.0f, -1.0f, 0.005f);
+
+            final Block block = Block.getBlockFromItem(itemstack.getItem());
+            if ((itemstack.getItemSpriteNumber() == 0 && block != null
+                    && RenderBlocks.renderItemIn3d(block.getRenderType()))) {
+                GL11.glRotatef(25.0f, 1.0f, 0.0f, 0.0f);
+                GL11.glRotatef(15.0f, 0.0f, 1.0f, 0.0f);
+                GL11.glRotatef(30.0f, 0.0f, 1.0f, 0.0f);
+            }
+
+            final IItemRenderer customRenderer = MinecraftForgeClient
+                    .getItemRenderer(itemstack, IItemRenderer.ItemRenderType.ENTITY);
+            if (customRenderer != null && !(itemstack.getItem() instanceof ItemBlock)) {
+                if (customRenderer.shouldUseRenderHelper(
+                        IItemRenderer.ItemRenderType.ENTITY,
+                        itemstack,
+                        IItemRenderer.ItemRendererHelper.BLOCK_3D)) {
+                    GL11.glTranslatef(0, -0.04F, 0);
+                    GL11.glScalef(0.7f, 0.7f, 0.7f);
+                    GL11.glRotatef(35, 1, 0, 0);
+                    GL11.glRotatef(45, 0, 1, 0);
+                    GL11.glRotatef(-90, 0, 1, 0);
+                }
+            } else if (itemstack.getItem() instanceof ItemBlock) {
+                GL11.glTranslatef(0, -0.04F, 0);
+                GL11.glScalef(1.1f, 1.1f, 1.1f);
+                GL11.glRotatef(-90, 0, 1, 0);
+            } else {
+                GL11.glTranslatef(0, -0.14F, 0);
+                GL11.glScalef(0.8f, 0.8f, 0.8f);
+            }
+
+            RenderItem.renderInFrame = true;
+            RenderManager.instance.renderEntityWithPosYaw(entityitem, 0.0D, 0.0D, 0.0D, 0.0F, 0.0F);
+            RenderItem.renderInFrame = false;
+        } else {
+            GL11.glScalef(1.0f / 42.0f, 1.0f / 42.0f, 1.0f / 42.0f);
+            GL11.glTranslated(-8.0, -10.2, -10.4);
+            GL11.glScalef(1.0f, 1.0f, 0.005f);
+
+            RenderItem.renderInFrame = false;
+            final FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
+            if (!ForgeHooksClient.renderInventoryItem(
+                    RenderBlocks.getInstance(),
+                    Minecraft.getMinecraft().renderEngine,
+                    itemstack,
+                    true,
+                    0,
+                    0,
+                    0)) {
+                RenderItem.getInstance()
+                        .renderItemIntoGUI(fr, Minecraft.getMinecraft().renderEngine, itemstack, 0, 0, false);
+            }
+        }
+
+        GL11.glPopMatrix();
+    }
+
+    @Override
+    public int getAmountPerUnit() {
         return 1;
+    }
+
+    @Override
+    public IAEStackType<IAEItemStack> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 }

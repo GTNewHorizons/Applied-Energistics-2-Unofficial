@@ -24,6 +24,7 @@ import appeng.core.sync.packets.PacketCompressedNBT;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketCraftRequest;
 import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
+import appeng.core.sync.packets.PacketCraftingCompleteNotification;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketCraftingTreeData;
@@ -36,6 +37,7 @@ import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketMatterCannon;
 import appeng.core.sync.packets.PacketMockExplosion;
 import appeng.core.sync.packets.PacketMonitorableAction;
+import appeng.core.sync.packets.PacketMonitorableTypeFilter;
 import appeng.core.sync.packets.PacketMultiPart;
 import appeng.core.sync.packets.PacketNEIBookmark;
 import appeng.core.sync.packets.PacketNEIDragClick;
@@ -115,6 +117,8 @@ public class AppEngPacketHandlerBase {
 
         PACKET_CRAFTING_CPUS_UPDATE(PacketCraftingCPUsUpdate.class),
 
+        PACKET_CRAFTING_COMPLETE_NOTIFICATION(PacketCraftingCompleteNotification.class),
+
         PACKET_NEI_DRAG(PacketNEIDragClick.class),
 
         PACKET_PATTERN_VALUE(PacketPatternValueSet.class),
@@ -130,6 +134,7 @@ public class AppEngPacketHandlerBase {
         PACKET_HIGHLIGHT_BLOCKS(PacketHighlightBlockStorage.class),
         PACKET_PICK_BLOCK(PacketPickBlock.class),
         PACKET_MONITORABLE_ACTION(PacketMonitorableAction.class),
+        PACKET_MONITORABLE_TYPE_FILTER(PacketMonitorableTypeFilter.class),
         PACKET_VIRTUAL_SLOT(PacketVirtualSlot.class),
         PACKET_COLOR_SELECT(PacketColorSelect.class),
         PACKET_REMOTE_RENAME(PacketRemoteRename.class);

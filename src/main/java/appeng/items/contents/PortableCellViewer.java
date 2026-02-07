@@ -10,8 +10,14 @@
 
 package appeng.items.contents;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
@@ -24,10 +30,10 @@ import appeng.api.implementations.items.IAEItemPowerStorage;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.MEMonitorHandler;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.me.storage.CellInventory;
 import appeng.util.ConfigManager;
@@ -39,11 +45,11 @@ public class PortableCellViewer<StackType extends IAEStack<?>> extends MEMonitor
     private final ItemStack target;
     private final IAEItemPowerStorage ips;
     private final int inventorySlot;
-    private final StorageChannel sc;
+    private final IAEStackType<?> type;
 
-    public PortableCellViewer(final ItemStack is, final int slot, StorageChannel sc) {
-        super((IMEInventoryHandler<StackType>) CellInventory.getCell(is, null, sc));
-        this.sc = sc;
+    public PortableCellViewer(final ItemStack is, final int slot, IAEStackType<?> type) {
+        super((IMEInventoryHandler<StackType>) CellInventory.getCell(is, null, type));
+        this.type = type;
         this.ips = (IAEItemPowerStorage) is.getItem();
         this.target = is;
         this.inventorySlot = slot;
@@ -72,13 +78,21 @@ public class PortableCellViewer<StackType extends IAEStack<?>> extends MEMonitor
 
     @Override
     public IMEMonitor<IAEItemStack> getItemInventory() {
-        if (sc == StorageChannel.ITEMS) return (IMEMonitor<IAEItemStack>) this;
+        if (type == ITEM_STACK_TYPE) return (IMEMonitor<IAEItemStack>) this;
         return null;
     }
 
     @Override
     public IMEMonitor<IAEFluidStack> getFluidInventory() {
-        if (sc == StorageChannel.FLUIDS) return (IMEMonitor<IAEFluidStack>) this;
+        if (type == FLUID_STACK_TYPE) return (IMEMonitor<IAEFluidStack>) this;
+        return null;
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        if (this.type == type) {
+            return this;
+        }
         return null;
     }
 

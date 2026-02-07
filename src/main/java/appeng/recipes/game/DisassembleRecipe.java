@@ -10,6 +10,8 @@
 
 package appeng.recipes.game;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +33,6 @@ import appeng.api.definitions.IItemDefinition;
 import appeng.api.definitions.IItems;
 import appeng.api.definitions.IMaterials;
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
@@ -96,10 +97,10 @@ public final class DisassembleRecipe implements IRecipe {
                 for (final ItemStack storageCellStack : this.getCellOutput(stackInSlot).asSet()) {
                     // make sure the storage cell stackInSlot empty...
                     final IMEInventory<IAEItemStack> cellInv = AEApi.instance().registries().cell()
-                            .getCellInventory(stackInSlot, null, StorageChannel.ITEMS);
+                            .getCellInventory(stackInSlot, null, ITEM_STACK_TYPE);
                     if (cellInv != null) {
                         final IItemList<IAEItemStack> list = cellInv
-                                .getAvailableItems(StorageChannel.ITEMS.createList(), IterationCounter.fetchNewId());
+                                .getAvailableItems(ITEM_STACK_TYPE.createList(), IterationCounter.fetchNewId());
                         if (!list.isEmpty()) {
                             return null;
                         }
