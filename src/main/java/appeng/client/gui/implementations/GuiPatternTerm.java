@@ -268,10 +268,16 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
     protected void updateSlotVisibility() {
         if (this.craftingMode) {
+            for (VirtualMEPatternSlot slot : craftingSlots) {
+                slot.setShowAmount(false);
+            }
             for (VirtualMEPhantomSlot outputSlot : outputSlots) {
                 outputSlot.setHidden(true);
             }
         } else {
+            for (VirtualMEPatternSlot slot : craftingSlots) {
+                slot.setShowAmount(true);
+            }
             for (VirtualMEPhantomSlot outputSlot : outputSlots) {
                 outputSlot.setHidden(false);
             }
