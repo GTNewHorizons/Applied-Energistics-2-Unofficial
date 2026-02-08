@@ -189,6 +189,10 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             }
         }
         if (ItemTunnelPattern.isTunnelPattern(stack)) {
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo1.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo2.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo3.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo4.getLocal());
             final java.util.UUID uuid = ItemTunnelPattern.getTunnelUuid(stack);
             if (uuid != null) {
                 lines.add(EnumChatFormatting.GRAY + "UUID: " + uuid);
@@ -228,7 +232,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         if (outputs.length == 0) {
             return null;
         }
-        final IAEStack<?> output = details.getCondensedAEOutputs()[0];
+        final IAEStack<?> output = outputs[0];
         out = output.getItemStackForNEI();
         long count = output.getStackSize();
         if (out != null) out.stackSize = count > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) count;
@@ -250,8 +254,11 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             return null;
         }
 
-        final IAEStack<?> output = details.getCondensedAEOutputs()[0];
-        return output;
+        final IAEStack<?>[] outputs = details.getCondensedAEOutputs();
+        if (outputs.length == 0) {
+            return null;
+        }
+        return outputs[0];
     }
 
     private boolean addInformation(final EntityPlayer player, final IAEStack<?>[] items, final List<String> lines,
