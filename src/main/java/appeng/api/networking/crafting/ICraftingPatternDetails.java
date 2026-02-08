@@ -127,4 +127,18 @@ public interface ICraftingPatternDetails {
      * @param priority priority of pattern
      */
     void setPriority(int priority);
+
+    /**
+     * @return true if this pattern is input-only and should be inlined during resolution.
+     */
+    default boolean isInputOnly() {
+        return false;
+    }
+
+    /**
+     * @return unique id for input-only patterns, or null if not applicable.
+     */
+    default java.util.UUID getInputOnlyUuid() {
+        return null;
+    }
 }

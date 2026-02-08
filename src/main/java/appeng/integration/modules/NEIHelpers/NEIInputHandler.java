@@ -36,7 +36,9 @@ public class NEIInputHandler implements IContainerInputHandler {
 
             ICraftingPatternDetails details = pattern.getPatternForItem(stack, Minecraft.getMinecraft().theWorld);
             if (details == null) return false;
-            stack = details.getCondensedAEOutputs()[0].getItemStackForNEI();
+            final var outputs = details.getCondensedAEOutputs();
+            if (outputs.length == 0) return false;
+            stack = outputs[0].getItemStackForNEI();
 
             if (NEIClientConfig.isKeyHashDown("gui.recipe")) {
                 return GuiCraftingRecipe.openRecipeGui("item", stack);
