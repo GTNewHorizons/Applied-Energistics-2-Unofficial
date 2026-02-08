@@ -1998,7 +1998,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         public void merge(IAEStack<?> toMerge) {
             this.originalOutput.add(toMerge);
-            this.patternOutputs = null;
+            this.init(this.originalOutput);
         }
 
         public void reset() {
