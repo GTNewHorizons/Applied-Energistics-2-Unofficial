@@ -975,8 +975,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
                                     Actionable.MODULATE,
                                     this.getActionSource());
                             aes.setStackSize(amountBeforeExtract - filledAmount);
-                            if (aes.getStackSize() <= 0) break;
                             hand.stackSize--;
+                            if (aes.getStackSize() <= 0) break;
                         }
                         this.updateHeld(player);
                     }
