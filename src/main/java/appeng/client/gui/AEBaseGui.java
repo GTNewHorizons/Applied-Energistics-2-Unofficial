@@ -452,13 +452,20 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         return new Rectangle(guiLeft + slot.getX(), guiTop + slot.getY(), 16, 16);
     }
 
+    private ItemStack getStackFromHand() {
+        final ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
+                ? NEI.instance.getDraggingPhantomItem()
+                : null;
+
+        return phantom != null ? phantom : this.mc.thePlayer.inventory.getItemStack();
+    }
+
     protected boolean handleVirtualSlotClick(final VirtualMESlot slot, final int mouseButton) {
         if (slot instanceof VirtualMEPhantomSlot vSlot) {
             this.handlePhantomSlotInteraction(vSlot, mouseButton);
 
             // Prevent double dragging
-            if (this.mc.thePlayer.inventory.getItemStack() != null
-                    && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
+            if (this.getStackFromHand() != null && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
                 this.draggedVirtualSlots.add(this.hoveredVirtualSlot);
             }
         }
@@ -473,12 +480,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     private void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
-                ? NEI.instance.getDraggingPhantomItem()
-                : null;
-        ItemStack holding = phantom != null ? phantom : this.mc.thePlayer.inventory.getItemStack();
-
-        slot.handleMouseClicked(holding, isCtrlKeyDown(), mouseButton);
+        slot.handleMouseClicked(this.getStackFromHand(), isCtrlKeyDown(), mouseButton);
     }
 
     @Override
