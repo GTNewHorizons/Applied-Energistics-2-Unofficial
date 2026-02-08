@@ -38,10 +38,10 @@ import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
 import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.crafting.v2.resolvers.CraftingTask.State;
-import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.me.cache.CraftingGridCache;
-import appeng.util.TunnelPatternExpander;
+import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
+import appeng.util.TunnelPatternExpander;
 import appeng.util.item.AEItemStack;
 import io.netty.buffer.ByteBuf;
 
@@ -605,7 +605,6 @@ public class CraftableItemResolver implements CraftingRequestResolver {
         public boolean isSimulated() {
             return allowSimulation;
         }
-
 
         @Override
         public String toString() {

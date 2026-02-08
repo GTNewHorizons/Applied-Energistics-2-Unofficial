@@ -129,8 +129,8 @@ import appeng.tile.crafting.TileCraftingTile;
 import appeng.tile.misc.TileInterface;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
-import appeng.util.inv.MEInventoryCrafting;
 import appeng.util.TunnelPatternExpander;
+import appeng.util.inv.MEInventoryCrafting;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.FMLCommonHandler;
 
@@ -825,8 +825,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     double sum = 0;
                     if (craftingInventory == null) {
                         final boolean craftable = details.isCraftable();
-                        final List<IAEStack<?>> expandedInputs = craftable
-                                ? Arrays.asList(details.getAEInputs())
+                        final List<IAEStack<?>> expandedInputs = craftable ? Arrays.asList(details.getAEInputs())
                                 : getExpandedInputs(details, cc);
                         if (expandedInputs == null) {
                             throw new IllegalStateException("Input-only pattern expansion failed");
@@ -844,8 +843,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         // check if there is enough power
                         if (eg.extractAEPower(sum, Actionable.SIMULATE, PowerMultiplier.CONFIG) < sum - 0.01) continue;
 
-                        craftingInventory = craftable
-                                ? new MEInventoryCrafting(new ContainerNull(), 3, 3)
+                        craftingInventory = craftable ? new MEInventoryCrafting(new ContainerNull(), 3, 3)
                                 : new MEInventoryCrafting(new ContainerNull(), expandedInputs.size(), 1);
 
                         // Check if all items can be used for crafting.
