@@ -523,7 +523,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
             pinsHandler.addItemsToPins(craftedItems);
         }
         pinsHandler.update(forceUpdate);
-        onListUpdate(); // notify the repo that the pins have changed
     }
 
     @Override
