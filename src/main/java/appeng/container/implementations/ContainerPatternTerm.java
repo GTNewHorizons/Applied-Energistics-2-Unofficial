@@ -15,6 +15,7 @@ import static appeng.util.Platform.isServer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -51,6 +52,7 @@ import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.items.contents.WirelessPatternTerminalGuiObject;
 import appeng.items.misc.ItemEncodedPattern;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.items.storage.ItemViewCell;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
@@ -253,9 +255,16 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         final IAEStack<?>[] out = this.getOutputs();
 
         // if there is no input, this would be silly.
-        if (in == null || out == null) {
+        if (in == null) {
             return;
         }
+        final boolean inputOnly = !isCraftingMode() && (out == null || out.length == 0);
+        if (!inputOnly && out == null) {
+            return;
+        }
+        final UUID inputOnlyUuid = inputOnly && ItemTunnelPattern.isTunnelPattern(output)
+                ? ItemTunnelPattern.getTunnelUuid(output)
+                : null;
 
         // first check the output slots, should either be null, or a pattern
         if (output != null) {
@@ -281,8 +290,13 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         // add a new encoded pattern.
         if (isCraftingMode()) {
             output = AEApi.instance().definitions().items().encodedPattern().maybeStack(1).orNull();
+        } else if (inputOnly) {
+            output = AEApi.instance().definitions().items().encodedTunnelPattern().maybeStack(1).orNull();
         } else {
-            output = AEApi.instance().definitions().items().encodedUltimatePattern().maybeStack(1).orNull();;
+            output = AEApi.instance().definitions().items().encodedUltimatePattern().maybeStack(1).orNull();
+        }
+        if (output == null) {
+            return;
         }
 
         // encode the slot.
@@ -295,8 +309,10 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             tagIn.appendTag(i != null ? i.toNBTGeneric() : new NBTTagCompound());
         }
 
-        for (final IAEStack<?> i : out) {
-            tagOut.appendTag(i != null ? i.toNBTGeneric() : new NBTTagCompound());
+        if (out != null) {
+            for (final IAEStack<?> o : out) {
+                tagOut.appendTag(o != null ? o.toNBTGeneric() : new NBTTagCompound());
+            }
         }
 
         encodedValue.setTag("in", tagIn);
@@ -304,6 +320,10 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         if (isCraftingMode()) encodedValue.setBoolean("crafting", this.isCraftingMode());
         encodedValue.setBoolean("substitute", this.isSubstitute());
         encodedValue.setBoolean("beSubstitute", this.canBeSubstitute());
+        if (inputOnly) {
+            final UUID uuid = inputOnlyUuid != null ? inputOnlyUuid : UUID.randomUUID();
+            ItemTunnelPattern.writeTunnelUuid(encodedValue, uuid);
+        }
         encodedValue.setString("author", this.getPlayerInv().player.getCommandSenderName());
 
         output.setTagCompound(encodedValue);
