@@ -9,13 +9,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import javax.annotation.Nonnull;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSet.Builder;
 
 import appeng.api.config.CraftingMode;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.storage.data.IAEFluidStack;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
@@ -25,10 +25,8 @@ import io.netty.buffer.ByteBuf;
 
 /**
  * A single requested stack (item or fluid) to craft, e.g. 32x Torches
- *
- * @param <StackType> Should be {@link IAEItemStack} or {@link appeng.api.storage.data.IAEFluidStack}
  */
-public class CraftingRequest<StackType extends IAEStack<StackType>> implements ITreeSerializable {
+public class CraftingRequest implements ITreeSerializable {
 
     public enum SubstitutionMode {
         /**
@@ -46,22 +44,21 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
         ACCEPT_FUZZY
     }
 
-    public static class UsedResolverEntry<T extends IAEStack<T>> implements ITreeSerializable {
+    public static class UsedResolverEntry implements ITreeSerializable {
 
-        public final CraftingRequest<T> parent;
-        public CraftingTask<T> task;
-        public final IAEStack<T> resolvedStack;
+        public final CraftingRequest parent;
+        public CraftingTask task;
+        public final IAEStack<?> resolvedStack;
 
-        public UsedResolverEntry(CraftingRequest<T> parent, CraftingTask<T> task, IAEStack<T> resolvedStack) {
+        public UsedResolverEntry(CraftingRequest parent, CraftingTask task, IAEStack<?> resolvedStack) {
             this.parent = parent;
             this.task = task;
             this.resolvedStack = resolvedStack;
         }
 
-        @SuppressWarnings("unchecked")
         public UsedResolverEntry(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
-            this.parent = (CraftingRequest<T>) parent;
-            this.resolvedStack = (IAEStack<T>) serializer.readStack();
+            this.parent = (CraftingRequest) parent;
+            this.resolvedStack = serializer.readStack();
             this.task = null; // to be filled by loadChildren
         }
 
@@ -72,28 +69,26 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public void loadChildren(List<ITreeSerializable> children) throws IOException {
-            task = Objects.requireNonNull((CraftingTask<T>) children.iterator().next());
+            task = Objects.requireNonNull((CraftingTask) children.iterator().next());
         }
     }
 
-    public final CraftingRequest<?> parentRequest;
-    public final Set<CraftingRequest<?>> parentRequests;
-    RequestInProcessing<StackType> liveRequest;
-    public final Class<StackType> stackTypeClass;
+    public final CraftingRequest parentRequest;
+    public final Set<CraftingRequest> parentRequests;
+    RequestInProcessing liveRequest;
     /**
      * An item/fluid + count representing how many need to be crafted
      */
-    public final StackType stack;
+    public final IAEStack<?> stack;
 
     public final SubstitutionMode substitutionMode;
-    public final Predicate<StackType> acceptableSubstituteFn;
+    public final Predicate<IAEStack<?>> acceptableSubstituteFn;
     // (task, amount fulfilled by task)
 
     public final CraftingMode craftingMode;
 
-    public final List<UsedResolverEntry<StackType>> usedResolvers = new ArrayList<>();
+    public final List<UsedResolverEntry> usedResolvers = new ArrayList<>();
     /**
      * Whether this request and its children can be fulfilled by simulations
      */
@@ -133,26 +128,16 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void loadChildren(List<ITreeSerializable> children) throws IOException {
         for (ITreeSerializable child : children) {
-            usedResolvers.add((UsedResolverEntry<StackType>) child);
+            usedResolvers.add((UsedResolverEntry) child);
         }
     }
 
-    @SuppressWarnings({ "unchecked", "unused" })
+    @SuppressWarnings({ "unused" })
     public CraftingRequest(CraftingTreeSerializer serializer, ITreeSerializable parent) throws IOException {
         final ByteBuf buffer = serializer.getBuffer();
-        stack = (StackType) serializer.readStack();
-        if (stack == null) {
-            stackTypeClass = (Class<StackType>) IAEItemStack.class;
-        } else if (stack instanceof IAEItemStack) {
-            stackTypeClass = (Class<StackType>) IAEItemStack.class;
-        } else if (stack instanceof IAEFluidStack) {
-            stackTypeClass = (Class<StackType>) IAEFluidStack.class;
-        } else {
-            throw new UnsupportedOperationException("Unknown stack type " + stack.getClass());
-        }
+        stack = serializer.readStack();
         parentRequest = null; // this state is not needed on client side
         parentRequests = Collections.emptySet();
         substitutionMode = serializer.readEnum(SubstitutionMode.class);
@@ -175,27 +160,18 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
      * @param substitutionMode       Whether and how to allow substitutions when resolving this request
      * @param acceptableSubstituteFn A predicate testing if a given item (in fuzzy mode) can fulfill the request
      */
-    public CraftingRequest(CraftingRequest<?> parentRequest, StackType stack, SubstitutionMode substitutionMode,
-            boolean allowSimulation, CraftingMode craftingMode, Predicate<StackType> acceptableSubstituteFn) {
+    public CraftingRequest(CraftingRequest parentRequest, @Nonnull IAEStack<?> stack, SubstitutionMode substitutionMode,
+            boolean allowSimulation, CraftingMode craftingMode, Predicate<IAEStack<?>> acceptableSubstituteFn) {
         this.parentRequest = parentRequest;
         if (parentRequest == null) {
             this.parentRequests = Collections.emptySet();
         } else {
-            Builder<CraftingRequest<?>> builder = ImmutableSet.builder();
+            Builder<CraftingRequest> builder = ImmutableSet.builder();
             builder.addAll(parentRequest.parentRequests);
             builder.add(parentRequest);
             this.parentRequests = builder.build();
         }
         this.stack = stack;
-        if (stack == null) {
-            stackTypeClass = (Class<StackType>) IAEItemStack.class;
-        } else if (stack instanceof IAEItemStack) {
-            stackTypeClass = (Class<StackType>) IAEItemStack.class;
-        } else if (stack instanceof IAEFluidStack) {
-            stackTypeClass = (Class<StackType>) IAEFluidStack.class;
-        } else {
-            throw new UnsupportedOperationException("Unknown stack type " + stack.getClass());
-        }
         this.substitutionMode = substitutionMode;
         this.acceptableSubstituteFn = acceptableSubstituteFn;
         this.remainingToProcess = stack.getStackSize();
@@ -207,7 +183,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
      * @param request          The item/fluid and stack to request
      * @param substitutionMode Whether and how to allow substitutions when resolving this request
      */
-    public CraftingRequest(StackType request, SubstitutionMode substitutionMode, boolean allowSimulation,
+    public CraftingRequest(IAEStack<?> request, SubstitutionMode substitutionMode, boolean allowSimulation,
             CraftingMode craftingMode) {
         this(null, request, substitutionMode, allowSimulation, craftingMode, x -> true);
         if (substitutionMode == SubstitutionMode.ACCEPT_FUZZY) {
@@ -273,7 +249,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
     /**
      * Reduces the items needed to fulfill this request, and adds any leftovers into the item cache of the context.
      */
-    public void fulfill(CraftingTask origin, StackType input, CraftingContext context) {
+    public void fulfill(CraftingTask origin, IAEStack<?> input, CraftingContext context) {
         if (input == null || input.getStackSize() == 0) {
             return;
         }
@@ -285,9 +261,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
             throw new IllegalArgumentException(
                     "Can't fulfill crafting request with too many of " + input + " : " + this);
         }
-        this.untransformedByteCost += stackTypeClass == IAEFluidStack.class
-                ? (long) Math.ceil(input.getStackSize() / 1000D)
-                : input.getStackSize();
+        this.untransformedByteCost += input.getStackSize();
         this.byteCost = CraftingCalculations.adjustByteCost(this, untransformedByteCost);
         this.remainingToProcess -= input.getStackSize();
         this.usedResolvers.add(new UsedResolverEntry(this, origin, input.copy()));
@@ -328,8 +302,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
 
         this.stack.setStackSize(newlyRequested);
         this.remainingToProcess = newlyRemainingToProcess;
-        this.untransformedByteCost -= stackTypeClass == IAEFluidStack.class ? (long) Math.ceil(refundedAmount / 1000D)
-                : refundedAmount;
+        this.untransformedByteCost -= refundedAmount;
         this.byteCost = CraftingCalculations.adjustByteCost(this, untransformedByteCost);
         if (this.remainingToProcess < 0) {
             throw new IllegalArgumentException("Refunded more items than were resolved for request " + this);
@@ -349,7 +322,7 @@ public class CraftingRequest<StackType extends IAEStack<StackType>> implements I
 
     /**
      * Gets the resolved item stack.
-     * 
+     *
      * @throws IllegalStateException if multiple item types were used to resolve the request
      */
     public IAEStack<?> getOneResolvedType() {

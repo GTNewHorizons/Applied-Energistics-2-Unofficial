@@ -1,7 +1,5 @@
 package appeng.client.gui.widgets;
 
-import static appeng.util.Platform.stackConvert;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.IntBuffer;
@@ -22,6 +20,7 @@ import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.util.ChatComponentText;
@@ -58,7 +57,7 @@ public class GuiCraftingTree {
     public int widgetX, widgetY, widgetW, widgetH;
 
     public float scrollX = -8, scrollY = -8;
-    private CraftingRequest<?> request;
+    private CraftingRequest request;
 
     // Y -> list of nodes sorted by X
     private final TreeMap<Integer, ArrayList<Node>> treeNodes = new TreeMap<>();
@@ -116,10 +115,10 @@ public class GuiCraftingTree {
 
     private class RequestNode extends Node {
 
-        public CraftingRequest<?> request;
+        public CraftingRequest request;
         private String tooltip = null;
 
-        public RequestNode(int x, int y, Node parentNode, CraftingRequest<?> request) {
+        public RequestNode(int x, int y, Node parentNode, CraftingRequest request) {
             super(x, y, parentNode);
             this.request = request;
         }
@@ -168,10 +167,10 @@ public class GuiCraftingTree {
 
     private class TaskNode extends Node {
 
-        public UsedResolverEntry<?> resolver;
+        public UsedResolverEntry resolver;
         private String tooltip;
 
-        public TaskNode(int x, int y, Node parentNode, UsedResolverEntry<?> resolver) {
+        public TaskNode(int x, int y, Node parentNode, UsedResolverEntry resolver) {
             super(x, y, parentNode);
             this.resolver = resolver;
         }
@@ -188,7 +187,7 @@ public class GuiCraftingTree {
                 }
             }
             drawSlotOutline(x, y, color, true);
-            List<CraftingRequest<IAEItemStack>> children = null;
+
             long displayCount = resolver.resolvedStack.getStackSize();
             if (resolver.task instanceof ExtractItemTask) {
                 final ExtractItemTask task = (ExtractItemTask) resolver.task;
@@ -204,7 +203,7 @@ public class GuiCraftingTree {
                 } else {
                     drawIcon(x, y, 1 * 16 + 3);
                 }
-                children = task.getChildRequests();
+
                 displayCount = task.getTotalCraftsDone();
             } else if (resolver.task instanceof EmitItemTask) {
                 drawIcon(x, y, 1);
@@ -233,7 +232,7 @@ public class GuiCraftingTree {
         this.widgetH = widgetH;
     }
 
-    private <T extends IAEStack<T>> IAEStack<T> getDisplayItemForRequest(CraftingRequest<T> request) {
+    private IAEStack<?> getDisplayItemForRequest(CraftingRequest request) {
         if (request.usedResolvers.isEmpty()) {
             return request.stack;
         } else {
@@ -250,12 +249,12 @@ public class GuiCraftingTree {
     private class NodeBuilderRequestWalker extends NodeBuilderTask {
 
         public final int x, y;
-        public final CraftingRequest<?> request;
+        public final CraftingRequest request;
         private int currentChild = 0;
         private RequestNode myNode;
         private Node parentNode;
 
-        private NodeBuilderRequestWalker(int x, int y, Node parentNode, CraftingRequest<?> request) {
+        private NodeBuilderRequestWalker(int x, int y, Node parentNode, CraftingRequest request) {
             this.x = x;
             this.y = y;
             this.parentNode = parentNode;
@@ -274,7 +273,7 @@ public class GuiCraftingTree {
                 if (currentChild > 0) {
                     treeWidth += X_SPACING;
                 }
-                UsedResolverEntry<?> resolver = request.usedResolvers.get(currentChild);
+                UsedResolverEntry resolver = request.usedResolvers.get(currentChild);
                 if (resolver != null && resolver.resolvedStack != null) {
                     stack.add(
                             new NodeBuilderTaskWalker(
@@ -291,13 +290,13 @@ public class GuiCraftingTree {
     private class NodeBuilderTaskWalker extends NodeBuilderTask {
 
         public final int x, y;
-        public final UsedResolverEntry<?> resolver;
+        public final UsedResolverEntry resolver;
         private int currentChild = 0;
-        private List<CraftingRequest<IAEItemStack>> children = null;
+        private List<CraftingRequest> children = null;
         private TaskNode myNode;
         private Node parentNode;
 
-        private NodeBuilderTaskWalker(int x, int y, Node parentNode, UsedResolverEntry<?> resolver) {
+        private NodeBuilderTaskWalker(int x, int y, Node parentNode, UsedResolverEntry resolver) {
             this.x = x;
             this.y = y;
             this.resolver = resolver;
@@ -381,7 +380,7 @@ public class GuiCraftingTree {
         scrollY = nd.y - nd.width;
     }
 
-    public void setRequest(final CraftingRequest<?> request) {
+    public void setRequest(final CraftingRequest request) {
         final boolean isDifferent = (request != this.request);
         this.request = request;
         if (isDifferent) {
@@ -693,7 +692,9 @@ public class GuiCraftingTree {
         final int uv_x = iconIndex - uv_y * 16;
 
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        GL11.glTranslatef(0, 0, 100f);
         parent.drawTexturedModalRect(x, y, uv_x * 16, uv_y * 16, 16, 16);
+        GL11.glTranslatef(0, 0, -100f);
     }
 
     private void drawSlotOutline(final int x, final int y, final int rgb, final boolean isOperation) {
@@ -704,9 +705,16 @@ public class GuiCraftingTree {
 
     private void drawStack(final int x, final int y, final IAEStack<?> stack, boolean drawCount) {
         final int textColor = GuiColors.SearchboxText.getColor();
-        parent.drawItem(x, y, stackConvert(stack).getItemStack());
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+        RenderHelper.enableGUIStandardItemLighting();
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        stack.drawInGui(Minecraft.getMinecraft(), x, y);
+        GL11.glPopAttrib();
+
         if (drawCount) {
-            drawSmallStackCount(x, y, (stack == null) ? 0L : stack.getStackSize(), textColor);
+            drawSmallStackCount(x, y, stack.getStackSize(), textColor);
         }
     }
 
@@ -722,7 +730,9 @@ public class GuiCraftingTree {
     private void drawSmallStackCount(final int x, final int y, final String countText, final int textColor) {
         final int countWidth = parent.getFontRenderer().getStringWidth(countText);
         GL11.glScalef(0.5f, 0.5f, 1.0f);
+        GL11.glTranslatef(0, 0, 100f);
         parent.getFontRenderer().drawString(countText, x * 2 + 32 - countWidth, y * 2 + 22, textColor, true);
+        GL11.glTranslatef(0, 0, -100f);
         GL11.glScalef(2.0f, 2.0f, 1.0f);
     }
 

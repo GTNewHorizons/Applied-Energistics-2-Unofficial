@@ -10,6 +10,8 @@
 
 package appeng.client.gui;
 
+import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+
 import java.awt.Rectangle;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -31,11 +33,12 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.common.MinecraftForge;
@@ -52,8 +55,6 @@ import appeng.api.config.TerminalFontSize;
 import appeng.api.events.GuiScrollEvent;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
-import appeng.client.ActionKey;
-import appeng.client.ClientHelper;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.GuiQuantityButton;
@@ -87,6 +88,9 @@ import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.helpers.ICustomButtonProvider;
 import appeng.helpers.InventoryAction;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
+import appeng.integration.modules.NEI;
 import appeng.util.Platform;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.VisiblityData;
@@ -155,18 +159,17 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     private ItemStack dbl_whichItem;
     private Slot bl_clicked;
     private boolean subGui;
-    private static int controlKey;
 
     private final List<VirtualMESlot> virtualSlots = new ArrayList<>();
-    private final List<VirtualMESlot> draggedSlots = new ArrayList<>();
+    private final List<VirtualMESlot> draggedVirtualSlots = new ArrayList<>();
     private VirtualMESlot hoveredVirtualSlot = null;
+    private @Nullable ItemStack holdingNEIItem = null;
 
     public AEBaseGui(final Container container) {
         super(container);
         this.subGui = switchingGuis;
         switchingGuis = false;
         aeRenderItem.parent = this;
-        controlKey = ClientHelper.proxy.getKeybind(ActionKey.CONTROL_OPERATION);
     }
 
     protected static String join(final Collection<String> toolTip, final String delimiter) {
@@ -385,19 +388,19 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
         this.drag_click.clear();
-        this.draggedSlots.clear();
+        this.draggedVirtualSlots.clear();
+        this.holdingNEIItem = null;
 
         ItemStack holdingStack = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
         if (holdingStack != null && handleClickFakeSlot(xCoord, yCoord, holdingStack)) {
             return;
         }
 
-        final VirtualMESlot slot = getVirtualMESlotUnderMouse();
-        if (slot != null && this.handleVirtualSlotClick(slot, btn)) return;
+        final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
+        if (virtualSlot != null && this.handleVirtualSlotClick(virtualSlot, btn)) return;
 
         if (btn == 1) {
-            for (final Object o : this.buttonList) {
-                final GuiButton guibutton = (GuiButton) o;
+            for (final GuiButton guibutton : this.buttonList) {
                 if (guibutton.mousePressed(this.mc, xCoord, yCoord)) {
                     super.mouseClicked(xCoord, yCoord, 0);
                     return;
@@ -414,6 +417,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
     @Override
     public boolean handleDragNDrop(GuiContainer gui, int mouseX, int mouseY, ItemStack draggedStack, int button) {
+        this.drag_click.clear();
+        this.holdingNEIItem = draggedStack;
+
         return handleClickFakeSlot(mouseX, mouseY, draggedStack);
     }
 
@@ -432,6 +438,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         for (ObjectIntPair<SlotFake> fakeSlotPair : slots) {
             SlotFake fakeSlot = fakeSlotPair.left();
             if (fakeSlot.isEnabled() && getSlotArea(fakeSlot).contains(mouseX, mouseY)) {
+                this.drag_click.add(fakeSlot);
                 fakeSlot.putStack(itemstack);
                 NetworkHandler.instance.sendToServer(new PacketNEIDragClick(itemstack, fakeSlotPair.rightInt()));
                 return true;
@@ -451,8 +458,8 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
             // Prevent double dragging
             if (this.mc.thePlayer.inventory.getItemStack() != null
-                    && !this.draggedSlots.contains(this.hoveredVirtualSlot)) {
-                this.draggedSlots.add(this.hoveredVirtualSlot);
+                    && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
+                this.draggedVirtualSlots.add(this.hoveredVirtualSlot);
             }
         }
 
@@ -465,12 +472,20 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
     }
 
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(true, true, isCtrlKeyDown(), mouseButton);
+    private void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
+        ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
+                ? NEI.instance.getDraggingPhantomItem()
+                : null;
+        ItemStack holding = phantom != null ? phantom : this.mc.thePlayer.inventory.getItemStack();
+
+        slot.handleMouseClicked(holding, isCtrlKeyDown(), mouseButton);
     }
 
     @Override
     protected void mouseClickMove(final int x, final int y, final int c, final long d) {
+        final ItemStack holding = this.holdingNEIItem != null ? this.holdingNEIItem
+                : this.mc.thePlayer.inventory.getItemStack();
+
         // Hold left or right mouse button
         if (c == 0 || c == 1) {
             // Update hovered slot
@@ -481,21 +496,20 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                 }
             }
 
-            if (this.mc.thePlayer.inventory.getItemStack() != null && this.hoveredVirtualSlot != null
-                    && !this.draggedSlots.contains(this.hoveredVirtualSlot)) {
-                this.draggedSlots.add(this.hoveredVirtualSlot);
+            if (holding != null && this.hoveredVirtualSlot != null
+                    && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
+                this.draggedVirtualSlots.add(this.hoveredVirtualSlot);
                 this.handleDragVirtualSlot(this.hoveredVirtualSlot, c);
             }
         }
 
         final Slot slot = this.getSlot(x, y);
-        final ItemStack itemstack = this.mc.thePlayer.inventory.getItemStack();
 
         if (this.getScrollBar() != null) {
             this.getScrollBar().clickMove(y - this.guiTop);
         }
 
-        if (slot instanceof SlotFake && itemstack != null) {
+        if (slot instanceof SlotFake && holding != null) {
             this.drag_click.add(slot);
             if (this.drag_click.size() > 1) {
                 for (final Slot dr : this.drag_click) {
@@ -513,15 +527,13 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
     @Override
     protected void handleMouseClick(final Slot slot, final int slotIdx, final int ctrlDown, final int mouseButton) {
-        final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-
         if (slot instanceof SlotFake) {
-            final InventoryAction action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE
-                    : InventoryAction.PICKUP_OR_SET_DOWN;
-
-            if (this.drag_click.size() > 1) {
+            if (!this.drag_click.isEmpty()) {
                 return;
             }
+
+            final InventoryAction action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE
+                    : InventoryAction.PICKUP_OR_SET_DOWN;
 
             final PacketInventoryAction p = new PacketInventoryAction(action, slotIdx, 0);
             NetworkHandler.instance.sendToServer(p);
@@ -610,9 +622,8 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                     if (selectedSlots.isEmpty() && appEngSlot.isPlayerSide()
                             && baseContainer.getValidDestinationFakeSlot(stackInSlot) == null) {
                         for (VirtualMESlot vmeSlot : this.virtualSlots) {
-                            if (vmeSlot instanceof VirtualMEPhantomSlot vmepSlot && vmepSlot.isQuickMoveTarget()
-                                    && vmepSlot.getAEStack() == null) {
-                                vmepSlot.setShiftClickStack(stackInSlot.copy());
+                            if (vmeSlot instanceof VirtualMEPhantomSlot vmepSlot && vmepSlot.getAEStack() == null) {
+                                vmepSlot.handleMouseClicked(stackInSlot, isCtrlKeyDown(), mouseButton);
                                 this.handlePhantomSlotInteraction(vmepSlot, mouseButton);
                                 break;
                             }
@@ -832,8 +843,16 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         } else if (s instanceof AppEngSlot aeSlot) {
             try {
                 final ItemStack is = s.getStack();
-                if ((aeSlot.renderIconWithItem() || is == null) && aeSlot.shouldDisplay()) {
-                    drawTextureOnSlot(s, aeSlot.getIcon(), aeSlot.getOpacityOfIcon());
+                if (aeSlot.getBackgroundIconIndex() != null && is == null) {
+                    IIcon iicon = aeSlot.getBackgroundIconIndex();
+                    GL11.glDisable(GL11.GL_LIGHTING);
+                    GL11.glEnable(GL11.GL_BLEND);
+                    this.mc.getTextureManager().bindTexture(TextureMap.locationItemsTexture);
+                    this.drawTexturedModelRectFromIcon(aeSlot.xDisplayPosition, aeSlot.yDisplayPosition, iicon, 16, 16);
+                    GL11.glDisable(GL11.GL_BLEND);
+                    GL11.glEnable(GL11.GL_LIGHTING);
+                } else if ((aeSlot.renderIconWithItem() || is == null) && aeSlot.shouldDisplay()) {
+                    this.drawTextureOnSlot(s, aeSlot.getIcon(), aeSlot.getOpacityOfIcon());
                 }
 
                 if (is != null) {
@@ -888,9 +907,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
         // Set stack size to 1 to disable standard stack size drawing
         final ItemStack stackToDraw = aeSlot.getStack();
-        int stackSize = 0;
+        long stackSize = 0;
         if (stackToDraw != null) {
-            stackSize = stackToDraw.stackSize;
+            stackSize = aeSlot instanceof SlotRestrictedInput rSlot ? rSlot.getStackSize() : stackToDraw.stackSize;
             stackToDraw.stackSize = 1;
         }
 
@@ -903,7 +922,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                     || (aeSlot instanceof SlotRestrictedInput restrictedInput
                             && restrictedInput.getItemType() == PlacableItemType.ENCODED_PATTERN);
             TerminalFontSize fontSize = useAEFont ? AEConfig.instance.getTerminalFontSize() : null;
-            GL11.glTranslatef(0.0f, 0.0f, 200);
+            GL11.glTranslatef(0.0f, 0.0f, 300);
             GL11.glDisable(GL11.GL_LIGHTING);
             GL11.glDisable(GL11.GL_BLEND);
             StackSizeRenderer.drawStackSize(
@@ -913,12 +932,12 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                     this.mc.fontRenderer,
                     fontSize);
             GL11.glEnable(GL11.GL_LIGHTING);
-            GL11.glTranslatef(0.0f, 0.0f, -200);
+            GL11.glTranslatef(0.0f, 0.0f, -300);
         }
 
         // Restore stack size
         if (stackToDraw != null) {
-            stackToDraw.stackSize = stackSize;
+            stackToDraw.stackSize = (int) Math.min(stackSize, Integer.MAX_VALUE);
         }
 
         aeSlot.setDisplay(false);
@@ -1011,15 +1030,19 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     public static boolean isCtrlKeyDown() {
-        return Keyboard.isKeyDown(controlKey);
+        int keyCode = EXTRA_ACTION_KEY.getKeyCode();
+        if (keyCode < 0) {
+            // In vanilla code, mouse buttons are registered as keyCodes with their values offset by -100.
+            return Mouse.isButtonDown(keyCode + 100);
+        } else {
+            return Keyboard.isKeyDown(keyCode);
+        }
     }
 
     private void drawVirtualSlots(@Nonnull List<VirtualMESlot> slots, int mouseX, int mouseY) {
         final int x = mouseX - this.guiLeft + 1;
         final int y = mouseY - this.guiTop + 1;
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
-        RenderHelper.enableGUIStandardItemLighting();
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
 
         for (VirtualMESlot slot : slots) {
             boolean isHovered = slot.drawStackAndOverlay(this.mc, x, y);

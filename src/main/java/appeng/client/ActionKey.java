@@ -8,9 +8,7 @@ public enum ActionKey {
 
     SEARCH_CONNECTED_INVENTORIES(Keyboard.KEY_NONE),
 
-    PICK_BLOCK(Keyboard.KEY_NONE),
-
-    CONTROL_OPERATION(Keyboard.KEY_LCONTROL);
+    PICK_BLOCK(Keyboard.KEY_NONE);
 
     private final int defaultKey;
 

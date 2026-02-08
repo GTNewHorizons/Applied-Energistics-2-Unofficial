@@ -27,8 +27,8 @@ import appeng.api.config.Actionable;
 import appeng.api.config.StorageFilter;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.ticking.TickRateModulation;
-import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
+import appeng.api.storage.IStorageBusMonitor;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
@@ -38,7 +38,7 @@ import appeng.util.Platform;
 import appeng.util.inv.ItemSlot;
 import appeng.util.item.ItemFilterList;
 
-public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
+public class MEMonitorIInventory implements IStorageBusMonitor<IAEItemStack> {
 
     private final InventoryAdaptor adaptor;
     private final IItemList<IAEItemStack> list = AEApi.instance().storage().createItemList();
@@ -118,6 +118,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
         return StorageChannel.ITEMS;
     }
 
+    @Override
     public TickRateModulation onTick() {
 
         final LinkedList<IAEStack<?>> changes = new LinkedList<>();
@@ -293,6 +294,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
         return this.mode;
     }
 
+    @Override
     public void setMode(final StorageFilter mode) {
         this.mode = mode;
     }
@@ -301,6 +303,7 @@ public class MEMonitorIInventory implements IMEMonitor<IAEItemStack> {
         return this.mySource;
     }
 
+    @Override
     public void setActionSource(final BaseActionSource mySource) {
         this.mySource = mySource;
     }

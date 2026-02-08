@@ -1,33 +1,40 @@
 package appeng.client.gui.slots;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.annotation.Nullable;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketVirtualSlot;
-import appeng.integration.IntegrationRegistry;
-import appeng.integration.IntegrationType;
 import appeng.tile.inventory.IAEStackInventory;
-import appeng.util.FluidUtils;
-import appeng.util.Platform;
-import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
-import codechicken.nei.ItemPanels;
-import codechicken.nei.recipe.StackInfo;
 
 public class VirtualMEPhantomSlot extends VirtualMESlot {
 
-    private final IAEStackInventory inventory;
-    private ItemStack shiftClickStack = null;
+    @FunctionalInterface
+    public interface TypeAcceptPredicate {
 
-    public VirtualMEPhantomSlot(int x, int y, IAEStackInventory inventory, int slotIndex) {
+        boolean test(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton);
+    }
+
+    private final IAEStackInventory inventory;
+    private final TypeAcceptPredicate acceptType;
+
+    public VirtualMEPhantomSlot(int x, int y, IAEStackInventory inventory, int slotIndex,
+            TypeAcceptPredicate acceptType) {
         super(x, y, slotIndex);
         this.inventory = inventory;
         this.showAmount = false;
+        this.acceptType = acceptType;
     }
 
     @Nullable
@@ -40,45 +47,91 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
         return this.inventory.getStorageName();
     }
 
-    public void handleMouseClicked(boolean acceptItem, boolean acceptFluid, boolean isExtraAction) {
-        handleMouseClicked(acceptItem, acceptFluid, isExtraAction, 0);
-    }
-
-    // try nei dragNDrop make frind with regular interaction, unfinished
-    public void handleMouseClicked(boolean acceptItem, boolean acceptFluid, boolean isExtraAction, int mouseButton) {
+    /**
+     * @param itemStack holding item stack
+     */
+    public void handleMouseClicked(@Nullable ItemStack itemStack, boolean isExtraAction, int mouseButton) {
         IAEStack<?> currentStack = this.getAEStack();
-        final ItemStack newStack = getTargetStack();
+        final ItemStack hand = itemStack != null ? itemStack.copy() : null;
 
-        if (newStack != null && !this.showAmount) {
-            newStack.stackSize = 1;
+        if (hand != null && !this.showAmount) {
+            hand.stackSize = 1;
+        }
+
+        final List<IAEStackType<?>> acceptTypes = new ArrayList<>();
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            if (this.acceptType.test(this, type, mouseButton)) {
+                acceptTypes.add(type);
+            }
         }
 
         // need always convert display fluid stack from nei or nothing.
-        if (newStack != null && !FluidUtils.isFluidContainer(newStack)
-                && StackInfo.getFluid(Platform.copyStackWithSize(newStack, 1)) != null) {
-            isExtraAction = true;
-            acceptItem = false;
+        if (hand != null) {
+            for (IAEStackType<?> type : acceptTypes) {
+                IAEStack<?> converted = type.convertStackFromItem(hand);
+                if (converted != null) {
+                    currentStack = converted;
+                    acceptTypes.clear();
+                    isExtraAction = false;
+                    break;
+                }
+            }
+        }
+
+        final boolean acceptItem = acceptTypes.contains(ITEM_STACK_TYPE);
+        boolean acceptExtra = false;
+        for (IAEStackType<?> type : acceptTypes) {
+            if (type != ITEM_STACK_TYPE) {
+                acceptExtra = true;
+                break;
+            }
         }
 
         switch (mouseButton) {
             case 0 -> { // left click
-                if (newStack != null) {
-                    if (acceptFluid && (!acceptItem || isExtraAction)) {
-                        currentStack = AEFluidStack.create(FluidUtils.getFluidFromContainer(newStack));
-                    } else if (acceptItem) currentStack = AEItemStack.create(newStack);
-                } else currentStack = null;
+                if (hand != null) {
+                    if (acceptExtra && (!acceptItem || isExtraAction)) {
+                        for (IAEStackType<?> type : acceptTypes) {
+                            IAEStack<?> stackFromContainer = type.getStackFromContainerItem(hand);
+                            if (stackFromContainer != null) {
+                                currentStack = stackFromContainer;
+                                break;
+                            }
+                        }
+                    } else if (acceptItem) {
+                        currentStack = AEItemStack.create(hand);
+                    }
+                } else {
+                    currentStack = null;
+                }
             }
             case 1 -> { // right click
-                if (newStack != null) {
-                    newStack.stackSize = 1;
+                if (hand != null) {
+                    hand.stackSize = 1;
 
-                    if (acceptFluid && (!acceptItem || isExtraAction))
-                        currentStack = AEFluidStack.create(FluidUtils.getFluidFromContainer(newStack));
-                    else if (acceptItem) currentStack = AEItemStack.create(newStack);
+                    IAEStack<?> stackFromContainer = null;
+                    for (IAEStackType<?> type : acceptTypes) {
+                        stackFromContainer = type.getStackFromContainerItem(hand);
+                        if (stackFromContainer != null) {
+                            break;
+                        }
+                    }
 
-                    if (currentStack != null && currentStack.equals(this.getAEStack())) {
-                        currentStack = this.getAEStack();
+                    IAEStack<?> stackForHand = null;
+                    if (acceptExtra && (!acceptItem || isExtraAction)) {
+                        if (stackFromContainer != null) {
+                            stackForHand = stackFromContainer;
+                        }
+                    } else if (acceptItem) {
+                        stackForHand = AEItemStack.create(hand);
+                    }
+
+                    if (stackForHand != null && this.showAmount
+                            && acceptTypes.contains(stackForHand.getStackType())
+                            && stackForHand.equals(currentStack)) {
                         currentStack.decStackSize(-1);
+                    } else {
+                        currentStack = stackForHand;
                     }
                 } else if (currentStack != null) {
                     currentStack.decStackSize(1);
@@ -92,29 +145,5 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
 
         NetworkHandler.instance
                 .sendToServer(new PacketVirtualSlot(this.getStorageName(), this.getSlotIndex(), currentStack));
-    }
-
-    private ItemStack getTargetStack() {
-        if (this.shiftClickStack == null) {
-            ItemStack is = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
-            if (is == null && IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)) {
-                is = ItemPanels.bookmarkPanel.draggedStack;
-                if (is == null) is = ItemPanels.itemPanel.draggedStack;
-            }
-
-            return is != null ? is.copy() : null;
-        }
-
-        final ItemStack is = this.shiftClickStack;
-        this.shiftClickStack = null;
-        return is;
-    }
-
-    public void setShiftClickStack(ItemStack shiftClickStack) {
-        this.shiftClickStack = shiftClickStack;
-    }
-
-    public boolean isQuickMoveTarget() {
-        return true;
     }
 }

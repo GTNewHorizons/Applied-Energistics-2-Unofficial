@@ -2,7 +2,6 @@ package appeng.client.gui.widgets;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.FileAlreadyExistsException;
 import java.time.LocalDateTime;
@@ -14,11 +13,9 @@ import javax.imageio.ImageIO;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.event.ClickEvent;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.ResourceLocation;
@@ -28,7 +25,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.gui.AEBaseGui;
 import appeng.core.AELog;
@@ -52,8 +49,8 @@ public class GuiCraftingList {
             .ofPattern("yyyy-MM-dd_HH.mm.ss", Locale.ROOT);
     protected static RenderItem itemRender = new RenderItem();
 
-    public static void saveScreenShot(AEBaseGui parent, List<IAEItemStack> visual, IItemList<IAEItemStack> storage,
-            IItemList<IAEItemStack> pending, IItemList<IAEItemStack> missing) {
+    public static void saveScreenShot(AEBaseGui parent, List<IAEStack<?>> visual, IItemList<IAEStack<?>> storage,
+            IItemList<IAEStack<?>> pending, IItemList<IAEStack<?>> missing) {
         // Make a better size for reading
         int visualSize = visual.size();
         int width = (int) Math.ceil(Math.max(Math.sqrt((double) visualSize * FIELD_HEIGHT / FIELD_WIDTH), 3));
@@ -94,10 +91,10 @@ public class GuiCraftingList {
                         boolean need_red = false;
                         if (width * y + x < visualSize) {
                             // Draw field with string and itemstack
-                            IAEItemStack refStack = visual.get(width * y + x);
-                            final IAEItemStack stored = storage.findPrecise(refStack);
-                            final IAEItemStack pendingStack = pending.findPrecise(refStack);
-                            final IAEItemStack missingStack = missing.findPrecise(refStack);
+                            IAEStack<?> refStack = visual.get(width * y + x);
+                            final IAEStack<?> stored = storage.findPrecise(refStack);
+                            final IAEStack<?> pendingStack = pending.findPrecise(refStack);
+                            final IAEStack<?> missingStack = missing.findPrecise(refStack);
 
                             if (missingStack != null && missingStack.getStackSize() > 0) {
                                 need_red = true;
@@ -198,15 +195,16 @@ public class GuiCraftingList {
         }
     }
 
-    private static void drawStringAndItem(AEBaseGui parent, IAEItemStack refStack, IAEItemStack stored,
-            IAEItemStack pendingStack, IAEItemStack missingStack) {
+    private static void drawStringAndItem(AEBaseGui parent, IAEStack<?> refStack, IAEStack<?> stored,
+            IAEStack<?> pendingStack, IAEStack<?> missingStack) {
         final int xo = 9;
         final int yo = 22;
         if (refStack != null) {
             GL11.glPushMatrix();
             GL11.glScaled(4.0d, 4.0d, 1.0d);
-            final ItemStack is = refStack.copy().getItemStack();
-            drawItem((int) (FIELD_SECTIONLENGTH / 4 - 18), (int) ((FIELD_HEIGHT / 8) - 8), is, true);
+
+            drawStack(FIELD_SECTIONLENGTH / 4 - 18, (FIELD_HEIGHT / 8) - 8, refStack);
+
             GL11.glPopMatrix();
 
             GL11.glPushMatrix();
@@ -293,35 +291,11 @@ public class GuiCraftingList {
         }
     }
 
-    public static void drawItem(final int x, final int y, final ItemStack is, boolean enhanceLight) {
-        itemRender.zLevel = 100.0F;
-
-        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-        GL11.glEnable(GL11.GL_LIGHTING);
-        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
-        GL11.glEnable(GL11.GL_DEPTH_TEST);
-        GL11.glTranslatef(0.0f, 0.0f, 101.0f);
-        RenderHelper.enableGUIStandardItemLighting();
-
-        if (enhanceLight) {
-            GL11.glLight(GL11.GL_LIGHT0, GL11.GL_DIFFUSE, createColorBuffer(1.0F, 1.0F, 1.0F, 1.0F));
-            GL11.glLight(GL11.GL_LIGHT1, GL11.GL_DIFFUSE, createColorBuffer(1.0F, 1.0F, 1.0F, 1.0F));
-            GL11.glLightModel(GL11.GL_LIGHT_MODEL_AMBIENT, createColorBuffer(0.6F, 0.6F, 0.6F, 1.0F));
-        }
-
+    private static void drawStack(final int x, final int y, final IAEStack<?> stack) {
         Minecraft mc = Minecraft.getMinecraft();
-        itemRender.renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, is, x, y);
-        GL11.glTranslatef(0.0f, 0.0f, -101.0f);
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+        stack.drawInGui(mc, x, y);
         GL11.glPopAttrib();
-
-        itemRender.zLevel = 0.0F;
     }
-
-    private static FloatBuffer createColorBuffer(float r, float g, float b, float a) {
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(4);
-        buffer.put(r).put(g).put(b).put(a);
-        buffer.flip();
-        return buffer;
-    }
-
 }

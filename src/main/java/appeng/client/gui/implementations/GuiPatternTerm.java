@@ -10,6 +10,8 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.io.IOException;
 
 import net.minecraft.client.gui.GuiButton;
@@ -26,6 +28,7 @@ import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPatternSlot;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -235,7 +238,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                         getInputSlotOffsetX() + 18 * x,
                         this.rows * 18 + getInputSlotOffsetY() + 18 * (y % (inputSlotRow)),
                         inputInv,
-                        x + y * inputSlotPerRow);
+                        x + y * inputSlotPerRow,
+                        this::acceptType);
                 this.craftingSlots[x + y * inputSlotPerRow] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -253,7 +257,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
                         getOutputSlotOffsetX() + 18 * x,
                         this.rows * 18 + getOutputSlotOffsetY() + 18 * (y % outputSlotRow),
                         outputInv,
-                        x + y * outputSlotPerRow);
+                        x + y * outputSlotPerRow,
+                        this::acceptType);
                 this.outputSlots[x + y * outputSlotPerRow] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -263,10 +268,16 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
     protected void updateSlotVisibility() {
         if (this.craftingMode) {
+            for (VirtualMEPatternSlot slot : craftingSlots) {
+                slot.setShowAmount(false);
+            }
             for (VirtualMEPhantomSlot outputSlot : outputSlots) {
                 outputSlot.setHidden(true);
             }
         } else {
+            for (VirtualMEPatternSlot slot : craftingSlots) {
+                slot.setShowAmount(true);
+            }
             for (VirtualMEPhantomSlot outputSlot : outputSlots) {
                 outputSlot.setHidden(false);
             }
@@ -337,11 +348,17 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         }
     }
 
-    @Override
-    protected void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        slot.handleMouseClicked(true, !craftingMode, isCtrlKeyDown(), mouseButton);
+    private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
+        if (slot.getStorageName() == StorageName.CRAFTING_INPUT && this.craftingMode) {
+            return type == ITEM_STACK_TYPE;
+        } else {
+            return true;
+        }
     }
 
+    /**
+     * Used in addon
+     */
     public VirtualMEPatternSlot[] getCraftingSlots() {
         return craftingSlots;
     }

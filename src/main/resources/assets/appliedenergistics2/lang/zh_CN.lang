@@ -509,11 +509,6 @@ gui.tooltips.appliedenergistics2.ReportInaccessibleItems=报告不可交互的�
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=是: 显示无法取出的物品.
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=否: 只显示可以取出的物品.
 
-gui.tooltips.appliedenergistics2.TypeFilter=过滤类型
-gui.tooltips.appliedenergistics2.TypeFilterShowAll=显示所有
-gui.tooltips.appliedenergistics2.TypeFilterShowItemsOnly=只显示物品
-gui.tooltips.appliedenergistics2.TypeFilterShowFluidsOnly=只显示流体液滴(FC)
-
 gui.tooltips.appliedenergistics2.BlockPlacement=方块放置方式
 gui.tooltips.appliedenergistics2.BlockPlacementYes=方块将被放置.
 gui.tooltips.appliedenergistics2.BlockPlacementNo=方块将以物品形式掉落.

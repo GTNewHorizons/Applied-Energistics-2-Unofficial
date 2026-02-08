@@ -11,7 +11,6 @@
 package appeng.tile.crafting;
 
 import static appeng.util.Platform.readStackByte;
-import static appeng.util.Platform.stackConvert;
 import static appeng.util.Platform.writeStackByte;
 
 import java.io.IOException;
@@ -21,7 +20,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.implementations.tiles.IColorableTile;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.AEColor;
 import appeng.tile.TileEvent;
@@ -104,13 +102,8 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
         }
     }
 
-    @Deprecated
-    public IAEItemStack getJobProgress() {
-        return stackConvert(this.dspPlay); // AEItemStack.create( new ItemStack( Items.diamond, 64 ) );
-    }
-
-    public IAEStack<?> getMultiJobProgress() {
-        return this.dspPlay; // AEItemStack.create( new ItemStack( Items.diamond, 64 ) );
+    public IAEStack<?> getJobProgress() {
+        return dspPlay;
     }
 
     @Override

@@ -10,6 +10,9 @@
 
 package appeng.me.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -17,7 +20,8 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
-import appeng.api.AEApi;
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
@@ -32,6 +36,7 @@ import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.me.cache.SecurityCache;
 import appeng.util.SortedArrayList;
@@ -78,15 +83,16 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         boolean o1ValidFor2 = o1.validForPass(2);
         return Boolean.compare(o2ValidFor2, o1ValidFor2);
     };
-    private final StorageChannel myChannel;
+
+    private final IAEStackType<?> type;
     private final SecurityCache security;
     private final List<IMEInventoryHandler<T>> priorityInventory;
     private int myPass = 0;
     private NetworkItemList<T> iterationItems = null;
     private PrioritizedNetworkItemList<T> prioritizedIterationItems = null;
 
-    public NetworkInventoryHandler(final StorageChannel chan, final SecurityCache security) {
-        this.myChannel = chan;
+    public NetworkInventoryHandler(final IAEStackType<?> type, final SecurityCache security) {
+        this.type = type;
         this.security = security;
         this.priorityInventory = new SortedArrayList<>(CRAFTING_STICKY_PRIORITY_PLACEMENT_PASS_SORTER);
     }
@@ -307,7 +313,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
 
         final NetworkItemList<T> networkItemList = new NetworkItemList<>(
                 this,
-                () -> (IItemList<T>) getChannel().createList());
+                () -> (IItemList<T>) getStackType().createList());
         this.iterationItems = networkItemList;
 
         final IItemList<T> currentNetworkItemList = isIgnoreCrafting
@@ -343,9 +349,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
 
     @SuppressWarnings("unchecked")
     private IItemList<T> getPrimitiveItemList() {
-        return (IItemList<T>) (getChannel() == StorageChannel.ITEMS
-                ? AEApi.instance().storage().createPrimitiveItemList()
-                : AEApi.instance().storage().createFluidList());
+        return (IItemList<T>) this.getStackType().createPrimitiveList();
     }
 
     @Override
@@ -472,7 +476,8 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
             final IMEInventoryHandler<T> invObject = priorityInventory.get(i);
 
             if (!invObject.isAutoCraftingInventory()) {
-                final IItemList inv = invObject.getAvailableItems(invObject.getChannel().createList(), iteration);
+                final IItemList inv = invObject
+                        .getAvailableItems((IItemList) invObject.getStackType().createList(), iteration);
                 if (!inv.isEmpty()) {
                     final Collection fzlist = inv.findFuzzy(fuzzyItem, fuzzyMode);
                     out.addAll(fzlist);
@@ -487,7 +492,18 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
 
     @Override
     public StorageChannel getChannel() {
-        return this.myChannel;
+        if (this.type == ITEM_STACK_TYPE) {
+            return StorageChannel.ITEMS;
+        }
+        if (this.type == FLUID_STACK_TYPE) {
+            return StorageChannel.FLUIDS;
+        }
+        return null;
+    }
+
+    @Override
+    public @NotNull IAEStackType<?> getStackType() {
+        return this.type;
     }
 
     @Override

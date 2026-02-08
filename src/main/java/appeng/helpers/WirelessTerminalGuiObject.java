@@ -19,6 +19,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
@@ -35,8 +38,10 @@ import appeng.api.networking.security.IActionHost;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalPins;
+import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
@@ -46,11 +51,14 @@ import appeng.items.contents.PinsHandler;
 import appeng.items.contents.PinsHolder;
 import appeng.items.contents.WirelessTerminalViewCells;
 import appeng.tile.networking.TileWireless;
+import appeng.util.MonitorableTypeFilter;
+import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, IInventorySlotAware, IViewCellStorage,
-        ITerminalPins, IPrimaryGuiIconProvider, ICustomButtonProvider {
+        ITerminalPins, IPrimaryGuiIconProvider, ICustomButtonProvider, ITerminalTypeFilterProvider {
 
     private final ItemStack effectiveItem;
     private final IWirelessTermHandler wth;
@@ -66,6 +74,8 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     private final PinsHolder pinsInv;
     private final boolean infinityRange;
     private final boolean infinityEnergy;
+    @NotNull
+    private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
 
     public WirelessTerminalGuiObject(final IWirelessTermHandler wh, final ItemStack is, final EntityPlayer ep,
             final World w, final int x, final int y, final int z) {
@@ -77,7 +87,8 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
         this.wth = wh;
         this.inventorySlot = x;
         this.viewCells = new WirelessTerminalViewCells(is);
-        pinsInv = new PinsHolder(is);
+        this.pinsInv = new PinsHolder(is);
+        this.typeFilters.readFromNBT(Platform.openNbtData(is));
 
         ILocatable obj = null;
 
@@ -122,6 +133,14 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
             return null;
         }
         return this.sg.getFluidInventory();
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        if (this.sg == null) {
+            return null;
+        }
+        return this.sg.getMEMonitor(type);
     }
 
     @Override
@@ -288,5 +307,15 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
     @Override
     public void setDataObject(ICustomButtonDataObject dataObject) {
         customButtonDataObject = dataObject;
+    }
+
+    @Override
+    public @NotNull Reference2BooleanMap<IAEStackType<?>> getTypeFilter(EntityPlayer player) {
+        return this.typeFilters.getFilters(player);
+    }
+
+    @Override
+    public void saveTypeFilter() {
+        this.typeFilters.writeToNBT(Platform.openNbtData(this.effectiveItem));
     }
 }
