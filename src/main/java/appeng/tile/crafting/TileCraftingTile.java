@@ -30,6 +30,7 @@ import appeng.api.implementations.IPowerChannelState;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.events.MENetworkChannelsChanged;
+import appeng.api.networking.events.MENetworkCraftingPatternChange;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.parts.ISimplifiedBundle;
@@ -228,6 +229,11 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
     @MENetworkEventSubscribe
     public void onPowerStateChange(final MENetworkPowerStatusChange ev) {
         this.updateMeta(false);
+    }
+
+    @MENetworkEventSubscribe
+    public void updateCPUClusters(final MENetworkCraftingPatternChange c) {
+        this.cluster.onPatternChange();
     }
 
     public boolean isStatus() {
