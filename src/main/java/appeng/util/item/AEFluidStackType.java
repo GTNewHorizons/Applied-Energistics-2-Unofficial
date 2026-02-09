@@ -101,6 +101,7 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     @Override
     public @NotNull ObjectLongPair<ItemStack> drainStackFromContainer(@NotNull ItemStack itemStack,
             @NotNull IAEFluidStack stack) {
+        itemStack.stackSize = 1;
         if (itemStack.getItem() instanceof IFluidContainerItem container) {
             FluidStack fluid = container.getFluid(itemStack);
             if (fluid == null || !stack.getFluidStack().isFluidEqual(fluid))
