@@ -85,6 +85,8 @@ public class FluidUtils {
     public static ObjectLongPair<ItemStack> fillFluidContainer(@Nullable ItemStack itemStack, FluidStack fluidStack) {
         if (itemStack == null) return new ObjectLongImmutablePair<>(null, 0);
 
+        itemStack.stackSize = 1;
+
         if (itemStack.getItem() instanceof IFluidContainerItem container) {
             return new ObjectLongImmutablePair<>(itemStack, container.fill(itemStack, fluidStack, true));
         } else if (FluidContainerRegistry.isContainer(itemStack)) {
