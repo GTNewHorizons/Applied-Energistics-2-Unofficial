@@ -524,6 +524,10 @@ gui.tooltips.appliedenergistics2.ItemsStored=Stored: %s
 gui.tooltips.appliedenergistics2.ItemCount=Count: %s
 gui.tooltips.appliedenergistics2.ItemsRequestable=Items Requestable: %s
 gui.tooltips.appliedenergistics2.P2PFrequency=Frequency: %s
+gui.tooltips.appliedenergistics2.ExtractFromNetworkToContainer=§e%s + Left-click§f to extract §b%s§f from network
+gui.tooltips.appliedenergistics2.InsertFromContainerToNetwork=§e%s + Right-click§f to insert §b%s§f into network
+gui.tooltips.appliedenergistics2.HoldShiftProcessStack=Hold Shift to process the entire stack
+gui.tooltips.appliedenergistics2.RegisterContainerContent=Hold §e%s§f to register as §b%s§f
 gui.tooltips.appliedenergistics2.OreFilterHint=Filter items using ore dictionary names
 gui.tooltips.appliedenergistics2.OreFilter=Ore Dictionary Filter
 gui.tooltips.appliedenergistics2.SearchStringTooltip=Right click to clear the search bar
@@ -966,7 +970,7 @@ key.appliedenergistics2.category=Applied Energistics 2
 key.pick_block.desc=AE2 Pick Block
 key.toggle_focus.desc=Toggle search box focus
 key.search_connected_inventories.desc=Search network inventories for item
-key.control_operation.desc=Control operation
+key.container_interaction.desc=Container Item Interaction
 
 # NEI
 nei.options.keys.gui.pattern_view=View Pattern
