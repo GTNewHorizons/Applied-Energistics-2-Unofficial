@@ -3,8 +3,6 @@ package appeng.tile.spatial;
 import java.util.EnumSet;
 
 import appeng.api.networking.IGridNode;
-import appeng.spatial.StorageHelper.METeleporter;
-import appeng.spatial.StorageWorldProvider;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import io.netty.buffer.ByteBuf;

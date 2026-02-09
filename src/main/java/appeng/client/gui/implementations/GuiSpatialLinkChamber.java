@@ -29,7 +29,7 @@ public class GuiSpatialLinkChamber extends AEBaseGui {
 
 
         this.buttonList.add(
-                this.tpButton = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.TeleportInside.getLocal()));
+                this.tpButton = new GuiButton(0, this.guiLeft + 132, this.guiTop + 35, 38, 20, GuiText.TeleportInside.getLocal()));
     }
 
     @Override

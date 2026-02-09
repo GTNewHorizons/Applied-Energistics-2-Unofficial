@@ -24,7 +24,7 @@ public class GuiSpatialNetworkRelay extends AEBaseGui {
 
 
         this.buttonList.add(
-                this.tpButton = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.TeleportInside.getLocal()));
+                this.tpButton = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.TeleportOutside.getLocal()));
     }
 
     @Override

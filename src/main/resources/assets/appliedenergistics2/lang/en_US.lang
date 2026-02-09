@@ -229,8 +229,8 @@ gui.appliedenergistics2.CurrentPatternOutput=Current pattern output
 gui.appliedenergistics2.NewPatternOutput=New pattern output
 gui.appliedenergistics2.Optimize=Optimize
 gui.appliedenergistics2.SpatialChamber=Spatial Link Chamber
-gui.appliedenergistics2.TeleportInside=Teleport Inside
-gui.appliedenergistics2.TeleportOutside=Teleport Outside
+gui.appliedenergistics2.TeleportInside=Dive in
+gui.appliedenergistics2.TeleportOutside=Dive out
 
 gui.appliedenergistics2.FormationPlane=Formation Plane
 gui.appliedenergistics2.VibrationChamber=Vibration Chamber
