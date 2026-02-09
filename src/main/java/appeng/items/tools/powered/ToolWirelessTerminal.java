@@ -142,7 +142,7 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
         return new String[] { AppEng.BAUBLESLOT };
     }
 
-    public static void openGui(final ItemStack is, final World w, final EntityPlayer player, final Object mode) {
+    public void openGui(final ItemStack is, final World w, final EntityPlayer player, final Object mode) {
         Platform.openGUI(player, null, null, GuiBridge.GUI_ME);
     }
 
