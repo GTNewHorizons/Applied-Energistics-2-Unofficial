@@ -507,11 +507,6 @@ gui.tooltips.appliedenergistics2.ReportInaccessibleItems=Сообщать о н�
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsYes=Да: Предметы, которые не могут быть извлечены, будут видны.
 gui.tooltips.appliedenergistics2.ReportInaccessibleItemsNo=Нет: Только извлекаемые предметы будут видны.
 
-gui.tooltips.appliedenergistics2.TypeFilter=Фильтр типов
-gui.tooltips.appliedenergistics2.TypeFilterShowAll=Показать всё
-gui.tooltips.appliedenergistics2.TypeFilterShowItemsOnly=Показать только предметы
-gui.tooltips.appliedenergistics2.TypeFilterShowFluidsOnly=Показать только капли
-
 gui.tooltips.appliedenergistics2.BlockPlacement=Размещение блоков
 gui.tooltips.appliedenergistics2.BlockPlacementYes=Блоки будут размещаться в виде блоков.
 gui.tooltips.appliedenergistics2.BlockPlacementNo=Блоки будут выпадать в виде предметов.

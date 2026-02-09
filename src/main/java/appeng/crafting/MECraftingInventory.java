@@ -10,17 +10,13 @@
 
 package appeng.crafting;
 
-import static appeng.api.storage.data.IItemList.LIST_FLUID;
-import static appeng.api.storage.data.IItemList.LIST_ITEM;
-import static appeng.api.storage.data.IItemList.LIST_MIXED;
-import static appeng.util.Platform.convertStack;
-import static appeng.util.Platform.isAE2FCLoaded;
 import static appeng.util.Platform.writeAEStackListNBT;
 
 import java.text.NumberFormat;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
@@ -32,19 +28,19 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StatCollector;
 
-import com.glodblock.github.common.item.ItemFluidDrop;
-
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.FuzzyMode;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.PlayerSource;
 import appeng.api.storage.IMEInventory;
+import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.IAEFluidStack;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.core.AELog;
 import appeng.core.localization.PlayerMessages;
@@ -55,8 +51,7 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     private final MECraftingInventory par;
 
     private final IStorageMonitorable target;
-    private final IItemList<IAEItemStack> localItemCache;
-    private final IItemList<IAEFluidStack> localFluidCache;
+    private final Map<IAEStackType<?>, IItemList<IAEStack>> inventoryMap = new IdentityHashMap<>();
 
     private final boolean logExtracted;
     private final IItemList<IAEStack<?>> extractedCache;
@@ -72,8 +67,9 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     private boolean isMissingMode;
 
     public MECraftingInventory() {
-        this.localItemCache = AEApi.instance().storage().createItemList();
-        this.localFluidCache = AEApi.instance().storage().createFluidList();
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            this.inventoryMap.put(type, (IItemList) type.createList());
+        }
         this.extractedCache = null;
         this.injectedCache = null;
         this.missingCache = null;
@@ -108,8 +104,9 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
             this.injectedCache = null;
         }
 
-        this.localItemCache = parent.getAvailableItems(AEApi.instance().storage().createItemList());
-        this.localFluidCache = parent.getAvailableItems(AEApi.instance().storage().createFluidList());
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            this.inventoryMap.put(type, parent.getAvailableItems(type.createList()));
+        }
 
         this.par = parent;
     }
@@ -144,14 +141,12 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
             this.injectedCache = null;
         }
 
-        this.localItemCache = AEApi.instance().storage().createItemList();
-        this.localFluidCache = AEApi.instance().storage().createFluidList();
-
-        for (final IAEItemStack is : target.getItemInventory().getStorageList()) {
-            this.localItemCache.add(is.copy());
-        }
-        for (final IAEFluidStack is : target.getFluidInventory().getStorageList()) {
-            this.localFluidCache.add(is.copy());
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            IItemList list = type.createList();
+            this.inventoryMap.put(type, list);
+            for (final IAEStack<?> is : target.getMEMonitor(type).getStorageList()) {
+                list.add(is.copy());
+            }
         }
 
         this.par = null;
@@ -160,18 +155,10 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     public void injectItems(final IAEStack<?> input, final Actionable mode) {
         if (input != null) {
             if (mode == Actionable.MODULATE) {
-                boolean convert = false;
-                if (input instanceof IAEItemStack ais) {
-                    if (isAE2FCLoaded && ais.getItem() instanceof ItemFluidDrop) {
-                        this.localFluidCache.add((IAEFluidStack) convertStack(ais));
-                        convert = true;
-                    } else {
-                        this.localItemCache.add(ais);
-                    }
-                } else {
-                    this.localFluidCache.add((IAEFluidStack) input);
+                this.inventoryMap.get(input.getStackType()).add(input);
+                if (this.logInjections) {
+                    this.injectedCache.add(input);
                 }
-                if (this.logInjections) this.injectedCache.add(convert ? convertStack((IAEItemStack) input) : input);
             }
         }
     }
@@ -180,23 +167,14 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
             final Actionable mode) {
         if (request == null) return null;
 
-        IAEStack<?> list;
-        boolean convert = false;
-        if (request instanceof IAEItemStack ais) {
-            if (isAE2FCLoaded && ais.getItem() instanceof ItemFluidDrop) {
-                list = this.localFluidCache.findPrecise((IAEFluidStack) convertStack(ais));
-                convert = true;
-            } else list = this.localItemCache.findPrecise(ais);
-        } else {
-            list = this.localFluidCache.findPrecise((IAEFluidStack) request);
-        }
-        if (list == null || list.getStackSize() == 0) return null;
+        IAEStack<?> stack = this.inventoryMap.get(request.getStackType()).findPrecise(request);
+        if (stack == null || stack.getStackSize() <= 0) return null;
 
-        if (list.getStackSize() >= request.getStackSize()) {
+        if (stack.getStackSize() >= request.getStackSize()) {
             if (mode == Actionable.MODULATE) {
-                list.decStackSize(request.getStackSize());
+                stack.decStackSize(request.getStackSize());
                 if (this.logExtracted) {
-                    this.extractedCache.add(convert ? convertStack((IAEItemStack) request) : request);
+                    this.extractedCache.add(request);
                 }
             }
 
@@ -204,12 +182,12 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         }
 
         final StackType ret = request.copy();
-        ret.setStackSize(list.getStackSize());
+        ret.setStackSize(stack.getStackSize());
 
         if (mode == Actionable.MODULATE) {
-            list.reset();
+            stack.reset();
             if (this.logExtracted) {
-                this.extractedCache.add(convert ? convertStack((IAEItemStack) ret) : ret);
+                this.extractedCache.add(ret);
             }
         }
 
@@ -217,76 +195,42 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     }
 
     public IItemList getAvailableItems(final IItemList out) {
-        byte listType = out.getStackType();
-        if (listType == LIST_ITEM || listType == LIST_MIXED) {
-            for (final IAEItemStack is : this.localItemCache) {
-                out.add(is);
-            }
-        }
+        IAEStackType<?> listType = out.getStackType();
 
-        if (listType == LIST_FLUID || listType == LIST_MIXED) {
-            for (final IAEFluidStack is : this.localFluidCache) {
-                out.add(is);
+        if (listType != null) {
+            for (IAEStack<?> stack : this.inventoryMap.get(listType)) {
+                out.add(stack);
+            }
+        } else {
+            for (IItemList<IAEStack> list : this.inventoryMap.values()) {
+                for (IAEStack<?> stack : list) {
+                    out.add(stack);
+                }
             }
         }
 
         return out;
     }
 
+    @SuppressWarnings({ "rawtypes" })
     public IAEStack getAvailableItem(@Nonnull IAEStack request) {
-        long count = 0;
-
-        IItemList<?> list;
-        boolean convert = false;
-        if (request instanceof IAEItemStack ais) {
-            if (isAE2FCLoaded && ais.getItem() instanceof ItemFluidDrop) {
-                list = localFluidCache;
-                convert = true;
-            } else {
-                list = localItemCache;
-            }
-        } else {
-            list = localFluidCache;
-        }
-
-        for (final IAEStack is : list) {
-            if (is != null && is.getStackSize() > 0
-                    && (convert ? is.isSameType((Object) convertStack((IAEItemStack) request))
-                            : is.isSameType((Object) request))) {
-                count += is.getStackSize();
-                if (count < 0) {
-                    // overflow
-                    count = Long.MAX_VALUE;
-                    break;
-                }
-            }
-        }
-
-        return count == 0 ? null : request.copy().setStackSize(count);
+        IAEStack<?> stack = this.inventoryMap.get(request.getStackType()).findPrecise(request);
+        return stack != null ? stack.copy() : null;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <StackType extends IAEStack<StackType>> Collection<StackType> findFuzzy(final StackType filter,
             final FuzzyMode fuzzy) {
         if (filter == null) return null;
-        if (filter instanceof IAEItemStack ais) {
-            if (isAE2FCLoaded && ais.getItem() instanceof ItemFluidDrop) {
-                return Collections.singletonList((StackType) findPrecise(ais));
-            } else {
-                return (Collection<StackType>) localItemCache.findFuzzy(ais, fuzzy);
-            }
-        } else {
-            return (Collection<StackType>) localFluidCache.findFuzzy((IAEFluidStack) filter, fuzzy);
-        }
+
+        return (Collection) this.inventoryMap.get(filter.getStackType()).findFuzzy(filter, fuzzy);
     }
 
+    @SuppressWarnings({ "unchecked" })
     public <StackType extends IAEStack<StackType>> StackType findPrecise(final StackType is) {
         if (is == null) return null;
 
-        if (is instanceof IAEItemStack ais) {
-            return (StackType) localItemCache.findPrecise((IAEItemStack) is);
-        } else {
-            return (StackType) localFluidCache.findPrecise((IAEFluidStack) is);
-        }
+        return (StackType) this.inventoryMap.get(is.getStackType()).findPrecise(is);
     }
 
     public IItemList<IAEStack<?>> getExtractFailedList() {
@@ -301,25 +245,32 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         this.cpuinv = cp;
     }
 
-    public IItemList<IAEItemStack> getItemList() {
-        return this.localItemCache;
+    public Map<IAEStackType<?>, IItemList<IAEStack>> getInventoryMap() {
+        return this.inventoryMap;
     }
 
-    public IItemList<IAEFluidStack> getFluidList() {
-        return this.localFluidCache;
-    }
-
+    @SuppressWarnings({ "rawtypes" })
     public boolean isEmpty() {
-        return localItemCache.isEmpty() && localFluidCache.isEmpty();
+        for (IItemList list : this.inventoryMap.values()) {
+            if (!list.isEmpty()) return false;
+        }
+        return true;
     }
 
+    @SuppressWarnings({ "rawtypes" })
     public void resetStatus() {
-        localItemCache.resetStatus();
-        localFluidCache.resetStatus();
+        for (IItemList list : this.inventoryMap.values()) {
+            list.resetStatus();
+        }
     }
 
+    @SuppressWarnings({ "rawtypes" })
     public NBTTagList writeInventory() {
-        return writeAEStackListNBT(localFluidCache, writeAEStackListNBT(localItemCache));
+        NBTTagList tag = new NBTTagList();
+        for (IItemList list : this.inventoryMap.values()) {
+            writeAEStackListNBT(list, tag);
+        }
+        return tag;
     }
 
     public void readInventory(NBTTagList tag) {
@@ -329,6 +280,7 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public boolean commit(final BaseActionSource src) {
         final IItemList<IAEStack<?>> added = AEApi.instance().storage().createAEStackList();
         final IItemList<IAEStack<?>> pulled = AEApi.instance().storage().createAEStackList();
@@ -337,14 +289,10 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
         if (this.logInjections) {
             for (final IAEStack<?> inject : this.injectedCache) {
-                IAEStack<?> result;
-                if (inject.isItem()) {
-                    result = this.target.getItemInventory()
-                            .injectItems((IAEItemStack) inject, Actionable.MODULATE, src);
-                } else {
-                    result = this.target.getFluidInventory()
-                            .injectItems((IAEFluidStack) inject, Actionable.MODULATE, src);
-                }
+
+                IMEMonitor monitor = this.target.getMEMonitor(inject.getStackType());
+                IAEStack<?> result = monitor.injectItems(inject, Actionable.MODULATE, src);
+
                 added.add(result);
 
                 if (result != null) {
@@ -356,11 +304,8 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
         if (failed) {
             for (final IAEStack<?> is : added) {
-                if (is.isItem()) {
-                    this.target.getItemInventory().extractItems((IAEItemStack) is, Actionable.MODULATE, src);
-                } else {
-                    this.target.getFluidInventory().extractItems((IAEFluidStack) is, Actionable.MODULATE, src);
-                }
+                IMEMonitor monitor = this.target.getMEMonitor(is.getStackType());
+                monitor.extractItems(is, Actionable.MODULATE, src);
             }
 
             return false;
@@ -368,14 +313,9 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
         if (this.logExtracted) {
             for (final IAEStack<?> extra : this.extractedCache) {
-                IAEStack<?> result;
-                if (extra.isItem()) {
-                    result = this.target.getItemInventory()
-                            .extractItems((IAEItemStack) extra, Actionable.MODULATE, src);
-                } else {
-                    result = this.target.getFluidInventory()
-                            .extractItems((IAEFluidStack) extra, Actionable.MODULATE, src);
-                }
+                IMEMonitor monitor = this.target.getMEMonitor(extra.getStackType());
+                IAEStack<?> result = monitor.extractItems(extra, Actionable.MODULATE, src);
+
                 pulled.add(result);
 
                 if (result == null || result.getStackSize() != extra.getStackSize()) {
@@ -383,24 +323,14 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
                         if (result == null) {
                             failedToExtract.add(extra.copy());
 
-                            if (extra.isItem()) {
-                                cpuinv.localItemCache.findPrecise((IAEItemStack) extra).setStackSize(0);
-                            } else {
-                                cpuinv.localFluidCache.findPrecise((IAEFluidStack) extra).setStackSize(0);
-                            }
+                            this.cpuinv.inventoryMap.get(extra.getStackType()).findPrecise(extra).setStackSize(0);
 
                             extra.setStackSize(0);
                         } else if (result.getStackSize() != extra.getStackSize()) {
                             failedToExtract
                                     .add(extra.copy().setStackSize(extra.getStackSize() - result.getStackSize()));
 
-                            if (extra.isItem()) {
-                                cpuinv.localItemCache.findPrecise((IAEItemStack) extra)
-                                        .setStackSize(result.getStackSize());
-                            } else {
-                                cpuinv.localFluidCache.findPrecise((IAEFluidStack) extra)
-                                        .setStackSize(result.getStackSize());
-                            }
+                            this.cpuinv.inventoryMap.get(extra.getStackType()).findPrecise(extra);
 
                             extra.setStackSize(result.getStackSize());
                         }
@@ -415,19 +345,13 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
 
         if (failed) {
             for (final IAEStack<?> is : added) {
-                if (is.isItem()) {
-                    this.target.getItemInventory().extractItems((IAEItemStack) is, Actionable.MODULATE, src);
-                } else {
-                    this.target.getFluidInventory().extractItems((IAEFluidStack) is, Actionable.MODULATE, src);
-                }
+                IMEMonitor monitor = this.target.getMEMonitor(is.getStackType());
+                monitor.extractItems(is, Actionable.MODULATE, src);
             }
 
             for (final IAEStack<?> is : pulled) {
-                if (is.isItem()) {
-                    this.target.getItemInventory().injectItems((IAEItemStack) is, Actionable.MODULATE, src);
-                } else {
-                    this.target.getFluidInventory().injectItems((IAEFluidStack) is, Actionable.MODULATE, src);
-                }
+                IMEMonitor monitor = this.target.getMEMonitor(is.getStackType());
+                monitor.injectItems(is, Actionable.MODULATE, src);
             }
 
             return false;
@@ -447,12 +371,9 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     }
 
     public void ignore(final IAEStack<?> what) {
-        if (what.isItem()) {
-            final IAEItemStack list = this.localItemCache.findPrecise((IAEItemStack) what);
-            if (list != null) list.setStackSize(0);
-        } else {
-            final IAEFluidStack list = this.localFluidCache.findPrecise((IAEFluidStack) what);
-            if (list != null) list.setStackSize(0);
+        IAEStack<?> stack = this.inventoryMap.get(what.getStackType()).findPrecise(what);
+        if (stack != null) {
+            stack.setStackSize(0);
         }
     }
 
@@ -500,14 +421,16 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
     }
 
     @Override
+    @SuppressWarnings({ "rawtypes" })
     public IAEStack injectItems(IAEStack input, Actionable type, BaseActionSource src) {
-        injectItems(input, type);
+        this.injectItems(input, type);
         return null;
     }
 
     @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public IAEStack extractItems(IAEStack request, Actionable mode, BaseActionSource src) {
-        return extractItems(request, mode);
+        return this.extractItems(request, mode);
     }
 
     @Override

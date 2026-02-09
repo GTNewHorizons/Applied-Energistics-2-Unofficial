@@ -20,6 +20,7 @@ import appeng.api.storage.ICellRegistry;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.StorageChannel;
+import appeng.api.storage.data.IAEStackType;
 import appeng.core.features.registries.entries.BasicCellHandler;
 
 public class CellRegistry implements ICellRegistry {
@@ -78,5 +79,19 @@ public class CellRegistry implements ICellRegistry {
             }
         }
         return basicCellHandler.isCell(is) ? basicCellHandler.getCellInventory(is, container, chan) : null;
+    }
+
+    @Override
+    public IMEInventoryHandler getCellInventory(final ItemStack is, final ISaveProvider container,
+            final IAEStackType<?> type) {
+        if (is == null) {
+            return null;
+        }
+        for (final ICellHandler ch : this.handlers) {
+            if (ch.isCell(is)) {
+                return ch.getCellInventory(is, container, type);
+            }
+        }
+        return basicCellHandler.isCell(is) ? basicCellHandler.getCellInventory(is, container, type) : null;
     }
 }

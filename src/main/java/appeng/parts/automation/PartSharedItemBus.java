@@ -29,10 +29,10 @@ import appeng.api.networking.security.MachineSource;
 import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.networking.ticking.TickRateModulation;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.IOreFilterable;
@@ -41,18 +41,19 @@ import appeng.tile.inventory.IAEStackInventory;
 import appeng.tile.inventory.IIAEStackInventory;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> extends PartUpgradeable
         implements IGridTickable, IOreFilterable, IIAEStackInventory {
 
     private final IAEStackInventory config = new IAEStackInventory(this, 9);
-    private int adaptorHash = 0;
-    private InventoryAdaptor adaptor;
+    private int cachedAdaptorHash = 0;
+    private InventoryAdaptor cachedAdaptor;
     private boolean lastRedstone = false;
     protected String oreFilterString = "";
     protected Predicate<IAEItemStack> filterPredicate = null;
     protected final BaseActionSource mySrc;
-    private final StorageChannel channel;
 
     public PartSharedItemBus(final ItemStack is) {
         super(is);
@@ -61,7 +62,6 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         this.getConfigManager().registerSetting(Settings.FUZZY_MODE, FuzzyMode.IGNORE_ALL);
 
         this.mySrc = new MachineSource(this);
-        this.channel = StorageChannel.getStorageChannelByParametrizedClass(this.getClass());
     }
 
     @Override
@@ -107,7 +107,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         return InventoryAdaptor.DEFAULT & ~InventoryAdaptor.ALLOW_FLUIDS;
     }
 
-    protected InventoryAdaptor getHandler() {
+    protected Object getTarget() {
         final TileEntity self = this.getHost().getTile();
         final TileEntity target = this.getTileEntity(
                 self,
@@ -117,15 +117,15 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
         final int newAdaptorHash = Platform.generateTileHash(target);
 
-        if (this.adaptorHash == newAdaptorHash && newAdaptorHash != 0) {
-            return this.adaptor;
+        if (this.cachedAdaptorHash == newAdaptorHash && newAdaptorHash != 0) {
+            return this.cachedAdaptor;
         }
 
-        this.adaptorHash = newAdaptorHash;
+        this.cachedAdaptorHash = newAdaptorHash;
         // noinspection MagicConstant
-        this.adaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite(), getAdaptorFlags());
+        this.cachedAdaptor = InventoryAdaptor.getAdaptor(target, this.getSide().getOpposite(), getAdaptorFlags());
 
-        return this.adaptor;
+        return this.cachedAdaptor;
     }
 
     protected int availableSlots() {
@@ -167,7 +167,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         }
     }
 
-    private TileEntity getTileEntity(final TileEntity self, final int x, final int y, final int z) {
+    protected TileEntity getTileEntity(final TileEntity self, final int x, final int y, final int z) {
         final World w = self.getWorldObj();
 
         if (w.getChunkProvider().chunkExists(x >> 4, z >> 4)) {
@@ -192,7 +192,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
     @Override
     protected boolean isSleeping() {
-        return this.getHandler() == null || super.isSleeping();
+        return this.getTarget() == null || super.isSleeping();
     }
 
     @Override
@@ -235,9 +235,7 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
         return null;
     }
 
-    public StorageChannel getStorageChannel() {
-        return this.channel;
-    }
+    public abstract IAEStackType<StackType> getStackType();
 
     protected abstract IMEMonitor<StackType> getMonitor();
 
@@ -247,5 +245,10 @@ public abstract class PartSharedItemBus<StackType extends IAEStack<StackType>> e
 
     protected boolean supportOreDict() {
         return false;
+    }
+
+    @SideOnly(Side.CLIENT)
+    public String getBusName() {
+        return this.getItemStack().getDisplayName();
     }
 }

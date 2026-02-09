@@ -13,9 +13,13 @@
 
 package appeng.api.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.item.ItemStack;
 
 import appeng.api.IAppEngApi;
+import appeng.api.storage.data.IAEStackType;
 
 /**
  * Storage Cell Registry, used for specially implemented cells, if you just want to make a item act like a cell, or new
@@ -49,13 +53,24 @@ public interface ICellRegistry {
      */
     ICellHandler getHandler(ItemStack is);
 
+    @Deprecated
+    IMEInventoryHandler getCellInventory(ItemStack is, ISaveProvider host, StorageChannel chan);
+
     /**
      * returns an IMEInventoryHandler for the provided item.
      *
      * @param is   item with inventory handler
      * @param host can be null, or the hosting tile / part.
-     * @param chan the storage channel to request the handler for.
+     * @param type the stack type to request the handler for.
      * @return new IMEInventoryHandler, or null if there isn't one.
      */
-    IMEInventoryHandler getCellInventory(ItemStack is, ISaveProvider host, StorageChannel chan);
+    default IMEInventoryHandler getCellInventory(ItemStack is, ISaveProvider host, IAEStackType<?> type) {
+        if (type == ITEM_STACK_TYPE) {
+            return this.getCellInventory(is, host, StorageChannel.ITEMS);
+        }
+        if (type == FLUID_STACK_TYPE) {
+            return this.getCellInventory(is, host, StorageChannel.FLUIDS);
+        }
+        return null;
+    }
 }

@@ -85,16 +85,16 @@ public final class CraftingContext {
 
     public boolean wasSimulated = false;
 
-    public static final class RequestInProcessing<StackType extends IAEStack<StackType>> {
+    public static final class RequestInProcessing {
 
-        public final CraftingRequest<StackType> request;
+        public final CraftingRequest request;
         /**
          * Ordered by priority
          */
         public final ArrayList<CraftingTask> resolvers = new ArrayList<>(4);
         private boolean isRemainingResolversAllSimulated = true;
 
-        public RequestInProcessing(CraftingRequest<StackType> request) {
+        public RequestInProcessing(CraftingRequest request) {
             this.request = request;
         }
 
@@ -107,7 +107,7 @@ public final class CraftingContext {
         }
 
         private boolean isRemainingResolversAllSimulatedSlow() {
-            for (CraftingTask<?> resolver : resolvers) {
+            for (CraftingTask resolver : resolvers) {
                 if (!resolver.isSimulated()) return false;
             }
             return true;
@@ -119,7 +119,7 @@ public final class CraftingContext {
         }
     }
 
-    private final List<RequestInProcessing<?>> liveRequests = new ArrayList<>(32);
+    private final List<RequestInProcessing> liveRequests = new ArrayList<>(32);
     private final List<CraftingTask> resolvedTasks = new ArrayList<>();
     private final ArrayDeque<CraftingTask> tasksToProcess = new ArrayDeque<>(64);
     private boolean doingWork = false;
@@ -157,12 +157,12 @@ public final class CraftingContext {
         return instance;
     }
 
-    public <T extends IAEStack<T>> void addRequest(@Nonnull CraftingRequest<T> request) {
+    public void addRequest(@Nonnull CraftingRequest request) {
         if (doingWork) {
             throw new IllegalStateException(
                     "Trying to add requests while inside a CraftingTask handler, return requests in the StepOutput instead");
         }
-        final RequestInProcessing<T> processing = new RequestInProcessing<>(request);
+        final RequestInProcessing processing = new RequestInProcessing(request);
         processing.resolvers.addAll(CraftingCalculations.tryResolveCraftingRequest(request, this));
         processing.refresh();
         Collections.reverse(processing.resolvers); // We remove from the end for efficient ArrayList usage
@@ -240,7 +240,7 @@ public final class CraftingContext {
 
     /**
      * Simulates doing 1 craft with a crafting table.
-     * 
+     *
      * @param inputSlots 3x3 crafting matrix contents
      * @return What remains in the 3x3 crafting matrix
      */
@@ -321,7 +321,7 @@ public final class CraftingContext {
             // Last pushed gets resolved first, so iterate in reverse order to maintain array ordering
             // this block propagates parent's patterns used to child
             for (int ri = out.extraInputsRequired.size() - 1; ri >= 0; ri--) {
-                final CraftingRequest<?> request = out.extraInputsRequired.get(ri);
+                final CraftingRequest request = out.extraInputsRequired.get(ri);
                 request.patternParents.addAll(parentPatterns);
                 this.addRequest(request);
             }
@@ -343,7 +343,7 @@ public final class CraftingContext {
     /**
      * Gets the list of tasks that have finished executing, sorted topologically (dependencies before the tasks that
      * require them)
-     * 
+     *
      * @return An unmodifiable list of resolved tasks.
      */
     public List<CraftingTask> getResolvedTasks() {
@@ -352,21 +352,20 @@ public final class CraftingContext {
 
     /**
      * Gets all requests that have been added to the context.
-     * 
+     *
      * @return An unmodifiable list of the requests.
      */
-    public List<RequestInProcessing<?>> getLiveRequests() {
+    public List<RequestInProcessing> getLiveRequests() {
         return Collections.unmodifiableList(liveRequests);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends IAEStack<T>> RequestInProcessing<T> getLiveRequest(CraftingRequest<T> request) {
+    public RequestInProcessing getLiveRequest(CraftingRequest request) {
         return request.liveRequest;
     }
 
     @Override
     public String toString() {
-        final Set<CraftingTask<?>> processed = Collections.newSetFromMap(new IdentityHashMap<>());
+        final Set<CraftingTask> processed = Collections.newSetFromMap(new IdentityHashMap<>());
         return getResolvedTasks().stream().map(rt -> {
             boolean isNew = processed.add(rt);
             return (isNew ? "  " : "  [duplicate] ") + rt.toString();
@@ -376,7 +375,7 @@ public final class CraftingContext {
     /**
      * @return If a task was added
      */
-    private boolean queueNextTaskOf(RequestInProcessing<?> request, boolean addResolverTask) {
+    private boolean queueNextTaskOf(RequestInProcessing request, boolean addResolverTask) {
         if (request.request.remainingToProcess <= 0 || request.resolvers.isEmpty()) {
             return false;
         }
@@ -396,11 +395,11 @@ public final class CraftingContext {
      * A task to call queueNextTaskOf after a resolver gets computed to check if more resolving is needed for the same
      * request-in-processing.
      */
-    private final class CheckOtherResolversTask<T extends IAEStack<T>> extends CraftingTask<T> {
+    private final class CheckOtherResolversTask extends CraftingTask {
 
-        private final RequestInProcessing<?> myRequest;
+        private final RequestInProcessing myRequest;
 
-        public CheckOtherResolversTask(RequestInProcessing<T> myRequest) {
+        public CheckOtherResolversTask(RequestInProcessing myRequest) {
             super(myRequest.request, 0); // priority doesn't matter as this task is never a resolver output
             this.myRequest = myRequest;
         }
@@ -425,7 +424,7 @@ public final class CraftingContext {
         }
 
         private boolean hasConcreteResolversLeft() {
-            for (RequestInProcessing<?> maybeParentRequest : liveRequests) {
+            for (RequestInProcessing maybeParentRequest : liveRequests) {
                 if (request.parentRequests.contains(maybeParentRequest.request)) {
                     if (!maybeParentRequest.isRemainingResolversAllSimulated()) {
                         return true;

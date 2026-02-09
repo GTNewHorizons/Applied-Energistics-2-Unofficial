@@ -14,6 +14,8 @@ import static appeng.util.Platform.isAE2FCLoaded;
 import static appeng.util.Platform.readStackNBT;
 import static appeng.util.Platform.stackConvertPacket;
 import static appeng.util.Platform.writeStackNBT;
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import static com.gtnewhorizon.gtnhlib.capability.Capabilities.getCapability;
 
 import java.util.ArrayList;
@@ -81,7 +83,6 @@ import appeng.api.parts.IPart;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IStorageMonitorable;
-import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
@@ -143,11 +144,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private final AppEngInternalInventory patterns = new AppEngInternalInventory(this, NUMBER_OF_PATTERN_SLOTS * 4);
     private WrapperInvSlot slotInv = new WrapperInvSlot(this.storage);
     private final MEMonitorPassThrough<IAEItemStack> items = new MEMonitorPassThrough<>(
-            new NullInventory<IAEItemStack>(),
-            StorageChannel.ITEMS);
+            new NullInventory<>(),
+            ITEM_STACK_TYPE);
     private final MEMonitorPassThrough<IAEFluidStack> fluids = new MEMonitorPassThrough<>(
-            new NullInventory<IAEFluidStack>(),
-            StorageChannel.FLUIDS);
+            new NullInventory<>(),
+            FLUID_STACK_TYPE);
     private final UpgradeInventory upgrades;
     private ItemStack stored;
     private IAEItemStack fuzzyItemStack;
@@ -1458,17 +1459,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.craftingTracker.getRequestedJobs();
     }
 
-    public IAEItemStack injectCraftedItems(final ICraftingLink link, final IAEItemStack acquired,
-            final Actionable mode) {
+    public IAEStack<?> injectCraftedItems(final ICraftingLink link, final IAEStack<?> acquired, final Actionable mode) {
         final int slot = this.craftingTracker.getSlot(link);
 
-        if (acquired != null && slot >= 0 && slot <= this.requireWork.length) {
+        if (acquired instanceof IAEItemStack ais && slot >= 0 && slot <= this.requireWork.length) {
             final InventoryAdaptor adaptor = this.getAdaptor(slot);
 
             if (mode == Actionable.SIMULATE) {
-                return AEItemStack.create(adaptor.simulateAdd(acquired.getItemStack()));
+                return AEItemStack.create(adaptor.simulateAdd(ais.getItemStack()));
             } else {
-                final IAEItemStack is = AEItemStack.create(adaptor.addItems(acquired.getItemStack()));
+                final IAEItemStack is = AEItemStack.create(adaptor.addItems(ais.getItemStack()));
                 this.updatePlan(slot);
                 return is;
             }

@@ -13,10 +13,13 @@
 
 package appeng.api.storage;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.FuzzyMode;
+import appeng.api.storage.data.IAEStackType;
 import appeng.items.contents.CellConfigLegacy;
 import appeng.items.contents.CellConfigLegacyWrapper;
 import appeng.tile.inventory.IAEStackInventory;
@@ -41,7 +44,7 @@ public interface ICellWorkbenchItem {
 
     @Deprecated
     default IInventory getConfigInventory(ItemStack is) {
-        return new CellConfigLegacy(this.getConfigAEInventory(is), this.getStorageChannel());
+        return new CellConfigLegacy(this.getConfigAEInventory(is), this.getStackType());
     }
 
     /**
@@ -79,7 +82,7 @@ public interface ICellWorkbenchItem {
      */
     default void setOreFilter(ItemStack is, String filter) {}
 
-    default StorageChannel getStorageChannel() {
-        return StorageChannel.ITEMS;
+    default IAEStackType<?> getStackType() {
+        return ITEM_STACK_TYPE;
     }
 }

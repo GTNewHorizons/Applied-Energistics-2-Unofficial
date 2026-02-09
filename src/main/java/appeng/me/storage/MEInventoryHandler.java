@@ -14,6 +14,8 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.config.IncludeExclude;
@@ -24,6 +26,7 @@ import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.ItemFilterList;
 import appeng.util.prioitylist.DefaultPriorityList;
@@ -44,11 +47,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     protected boolean isSticky;
     protected boolean isExtractFilterActive;
 
-    public MEInventoryHandler(final IMEInventory<T> i, final StorageChannel channel) {
+    public MEInventoryHandler(final IMEInventory<T> i, final IAEStackType<T> type) {
         if (i instanceof IMEInventoryHandler) {
             this.internal = (IMEInventoryHandler<T>) i;
         } else {
-            this.internal = new MEPassThrough<>(i, channel);
+            this.internal = new MEPassThrough<>(i, type);
         }
 
         this.myPriority = 0;
@@ -140,7 +143,7 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
         final IItemList<T> allAvailableItems = this.internal
-                .getAvailableItems((IItemList<T>) this.internal.getChannel().createList(), iteration);
+                .getAvailableItems((IItemList<T>) this.internal.getStackType().createList(), iteration);
         Predicate<T> filterCondition = this.getExtractFilterCondition();
         for (T item : allAvailableItems) {
             if (filterCondition.test(item)) {
@@ -192,6 +195,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
     @Override
     public StorageChannel getChannel() {
         return this.internal.getChannel();
+    }
+
+    @Override
+    public @NotNull IAEStackType<?> getStackType() {
+        return this.internal.getStackType();
     }
 
     @Override
