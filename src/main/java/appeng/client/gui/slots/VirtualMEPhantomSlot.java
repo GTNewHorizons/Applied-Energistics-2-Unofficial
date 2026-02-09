@@ -1,6 +1,6 @@
 package appeng.client.gui.slots;
 
-import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.ArrayList;
@@ -163,7 +163,7 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
                 if (stack != null && stack.getStackSize() > 0) {
                     lines.add(
                             ButtonToolTips.RegisterContainerContent.getLocal(
-                                    Keyboard.getKeyName(EXTRA_ACTION_KEY.getKeyCode()),
+                                    Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode()),
                                     stack.getDisplayName()));
                     return;
                 }

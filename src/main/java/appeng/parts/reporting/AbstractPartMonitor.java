@@ -10,7 +10,7 @@
 
 package appeng.parts.reporting;
 
-import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.IOException;
@@ -177,7 +177,7 @@ public abstract class AbstractPartMonitor extends AbstractPartDisplay
         } else if (!this.isLocked) {
             if (hand == null) {
                 this.configuredItem = null;
-            } else if (!EXTRA_ACTION_KEY.isKeyDown(player)) {
+            } else if (!CONTAINER_INTERACTION_KEY.isKeyDown(player)) {
                 this.configuredItem = AEItemStack.create(hand);
             } else {
                 this.configuredItem = null;

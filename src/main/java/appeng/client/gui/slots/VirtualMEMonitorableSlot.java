@@ -1,6 +1,6 @@
 package appeng.client.gui.slots;
 
-import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 
 import java.util.List;
 
@@ -54,7 +54,7 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
                 if (result.rightLong() > 0) {
                     lines.add(
                             ButtonToolTips.ExtractFromNetworkToContainer.getLocal(
-                                    Keyboard.getKeyName(EXTRA_ACTION_KEY.getKeyCode()),
+                                    Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode()),
                                     stackInSlot.getDisplayName()));
                     added = true;
                 }
@@ -67,7 +67,7 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
                 if (stack != null && stack.getStackSize() > 0) {
                     lines.add(
                             ButtonToolTips.InsertFromContainerToNetwork.getLocal(
-                                    Keyboard.getKeyName(EXTRA_ACTION_KEY.getKeyCode()),
+                                    Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode()),
                                     stack.getDisplayName()));
                     added = true;
                 }
