@@ -140,6 +140,10 @@ public enum ButtonToolTips implements Localization {
     ItemsRequestable,
     P2PFrequency,
     SearchStringTooltip,
+    ExtractFromNetworkToContainer,
+    InsertFromContainerToNetwork,
+    HoldShiftProcessStack,
+    RegisterContainerContent,
 
     SchedulingMode,
     SchedulingModeDefault,
