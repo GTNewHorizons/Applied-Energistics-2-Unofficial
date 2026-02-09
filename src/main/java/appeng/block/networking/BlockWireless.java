@@ -16,13 +16,20 @@ import java.util.List;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.AEApi;
+import appeng.api.features.INetworkEncodable;
+import appeng.api.features.IWirelessTermHandler;
+import appeng.api.networking.security.PlayerSource;
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderBlockWireless;
 import appeng.core.features.AEFeature;
+import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.AEGlassMaterial;
 import appeng.helpers.ICustomCollision;
@@ -51,11 +58,28 @@ public class BlockWireless extends AEBaseTileBlock implements ICustomCollision {
     @Override
     public boolean onBlockActivated(final World w, final int x, final int y, final int z, final EntityPlayer p,
             final int side, final float hitX, final float hitY, final float hitZ) {
-        final TileWireless tg = this.getTileEntity(w, x, y, z);
+        if (Platform.isServer() && !p.isSneaking()) {
+            final TileWireless tg = this.getTileEntity(w, x, y, z);
+            if (tg != null && Platform.canAccess(tg.getProxy(), new PlayerSource(p, tg))) {
+                final ItemStack term = p.getHeldItem();
+                INetworkEncodable networkEncodable = null;
 
-        if (tg != null && !p.isSneaking()) {
-            if (Platform.isServer()) {
-                Platform.openGUI(p, tg, ForgeDirection.getOrientation(side), GuiBridge.GUI_WIRELESS);
+                if (term != null) {
+                    if (term.getItem() instanceof INetworkEncodable) {
+                        networkEncodable = (INetworkEncodable) term.getItem();
+                    }
+
+                    final IWirelessTermHandler wTermHandler = AEApi.instance().registries().wireless()
+                            .getWirelessTerminalHandler(term);
+                    if (wTermHandler != null) {
+                        networkEncodable = wTermHandler;
+                    }
+                }
+
+                if (networkEncodable != null) {
+                    networkEncodable.setEncryptionKey(term, String.valueOf(tg.getLocatableSerial()), "");
+                    p.addChatMessage(PlayerMessages.DeviceSuccessLinked.toChat());
+                } else Platform.openGUI(p, tg, ForgeDirection.getOrientation(side), GuiBridge.GUI_WIRELESS);
             }
             return true;
         }
@@ -180,5 +204,11 @@ public class BlockWireless extends AEBaseTileBlock implements ICustomCollision {
         } else {
             out.add(AxisAlignedBB.getBoundingBox(0.0, 0.0, 0.0, 1.0, 1.0, 1.0));
         }
+    }
+
+    @Override
+    public void addInformation(ItemStack is, EntityPlayer player, List<String> lines, boolean advancedItemTooltips) {
+        super.addInformation(is, player, lines, advancedItemTooltips);
+        lines.add(StatCollector.translateToLocal("tile.appliedenergistics2.BlockWireless.desc"));
     }
 }
