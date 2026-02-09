@@ -78,7 +78,7 @@ public class TileWireless extends AENetworkInvTile implements IWirelessAccessPoi
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileWireless(final NBTTagCompound data) {
-        this.serial = data.getInteger("serial");
+        if (data.hasKey("serial")) this.serial = data.getLong("serial");
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)

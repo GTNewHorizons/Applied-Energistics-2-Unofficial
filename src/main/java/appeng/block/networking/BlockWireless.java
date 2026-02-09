@@ -25,6 +25,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import appeng.api.AEApi;
 import appeng.api.features.INetworkEncodable;
 import appeng.api.features.IWirelessTermHandler;
+import appeng.api.networking.security.PlayerSource;
 import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RenderBlockWireless;
 import appeng.core.features.AEFeature;
@@ -59,7 +60,7 @@ public class BlockWireless extends AEBaseTileBlock implements ICustomCollision {
             final int side, final float hitX, final float hitY, final float hitZ) {
         if (Platform.isServer() && !p.isSneaking()) {
             final TileWireless tg = this.getTileEntity(w, x, y, z);
-            if (tg != null) {
+            if (tg != null && Platform.canAccess(tg.getProxy(), new PlayerSource(p, tg))) {
                 final ItemStack term = p.getHeldItem();
                 INetworkEncodable networkEncodable = null;
 
