@@ -17,6 +17,7 @@ import appeng.api.storage.StorageName;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
+import appeng.core.AEConfig;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketVirtualSlot;
@@ -154,6 +155,10 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
 
     @Override
     public void addTooltip(List<String> lines) {
+        if (!AEConfig.instance.showContainerInteractionTooltips) {
+            return;
+        }
+
         ItemStack hand = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
         if (hand == null) return;
 
