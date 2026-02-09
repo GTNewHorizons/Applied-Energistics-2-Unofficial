@@ -1,5 +1,6 @@
 package appeng.container.implementations;
 
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import appeng.container.AEBaseContainer;
@@ -22,4 +23,10 @@ public class ContainerSpatialLinkChamber extends AEBaseContainer {
 
         this.bindPlayerInventory(ip, 0, 166 - /* height of player inventory */ 82);
     }
+
+    public void teleport() {
+        ((TileSpatialLinkChamber)this.getTileEntity()).teleportInside((EntityPlayerMP) this.getInventoryPlayer().player);
+    }
+
+
 }

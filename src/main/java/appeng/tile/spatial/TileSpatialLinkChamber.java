@@ -3,10 +3,12 @@ package appeng.tile.spatial;
 import java.util.EnumSet;
 
 import appeng.api.networking.IGridNode;
+import appeng.spatial.StorageHelper.METeleporter;
 import appeng.spatial.StorageWorldProvider;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -135,6 +137,13 @@ public class TileSpatialLinkChamber extends AENetworkInvTile {
 
     public boolean hasBoundStorage() {
         return this.cachedStorageDim != 0;
+    }
+
+    public void teleportInside(EntityPlayerMP playerMP){
+        if (cachedStorageDim == 0) return;
+        playerMP.mcServer.getConfigurationManager().transferPlayerToDimension(
+                playerMP,
+                cachedStorageDim);
     }
 
     @Override

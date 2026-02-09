@@ -28,6 +28,9 @@ public enum GuiText implements Localization {
     Terminal,
     SpatialChamber,
 
+    TeleportInside,
+    TeleportOutside,
+
     Interface,
     Config,
     StoredItems,

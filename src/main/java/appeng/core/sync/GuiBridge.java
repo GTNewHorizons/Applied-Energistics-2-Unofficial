@@ -16,6 +16,8 @@ import static appeng.util.Platform.itemGuiSlotOffset;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
+import appeng.container.implementations.ContainerSpatialNetworkRelay;
+import appeng.tile.spatial.TileSpatialNetworkRelay;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
@@ -201,6 +203,8 @@ public enum GuiBridge implements IGuiHandler {
             SecurityPermissions.BUILD),
 
     GUI_SPATIAL_LINK_CHAMBER(ContainerSpatialLinkChamber.class, TileSpatialLinkChamber.class, GuiHostType.WORLD,
+            SecurityPermissions.BUILD),
+    GUI_SPATIAL_NETWORK_RELAY(ContainerSpatialNetworkRelay.class, TileSpatialNetworkRelay.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),
 
     GUI_INSCRIBER(ContainerInscriber.class, TileInscriber.class, GuiHostType.WORLD, null),

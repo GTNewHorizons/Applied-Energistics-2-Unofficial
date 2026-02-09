@@ -1,25 +1,20 @@
 package appeng.client.gui.implementations;
 
-import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketSpatialAction;
-import appeng.core.sync.packets.PacketValueConfig;
+import appeng.client.gui.AEBaseGui;
+import appeng.container.implementations.ContainerSpatialNetworkRelay;
+import appeng.core.localization.GuiText;
 import appeng.helpers.Reflected;
+import appeng.tile.spatial.TileSpatialNetworkRelay;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
-import appeng.client.gui.AEBaseGui;
-import appeng.container.implementations.ContainerSpatialLinkChamber;
-import appeng.core.localization.GuiColors;
-import appeng.core.localization.GuiText;
-import appeng.tile.spatial.TileSpatialLinkChamber;
-
-public class GuiSpatialLinkChamber extends AEBaseGui {
+public class GuiSpatialNetworkRelay extends AEBaseGui {
 
     protected GuiButton tpButton;
 
     @Reflected
-    public GuiSpatialLinkChamber(final InventoryPlayer inventoryPlayer, final TileSpatialLinkChamber te) {
-        super(new ContainerSpatialLinkChamber(inventoryPlayer, te));
+    public GuiSpatialNetworkRelay(final InventoryPlayer inventoryPlayer, final TileSpatialNetworkRelay te) {
+        super(new ContainerSpatialNetworkRelay(inventoryPlayer, te));
         this.ySize = 166;
     }
 
@@ -30,16 +25,6 @@ public class GuiSpatialLinkChamber extends AEBaseGui {
 
         this.buttonList.add(
                 this.tpButton = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.TeleportInside.getLocal()));
-    }
-
-    @Override
-    protected void actionPerformed(GuiButton button) {
-        super.actionPerformed(button);
-
-        if (button == tpButton){
-            NetworkHandler.instance
-                    .sendToServer(new PacketSpatialAction());
-        }
     }
 
     @Override
@@ -61,4 +46,5 @@ public class GuiSpatialLinkChamber extends AEBaseGui {
         this.bindTexture("guis/spatialchamber.png");
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, this.xSize, this.ySize);
     }
+
 }
