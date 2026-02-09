@@ -542,7 +542,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     private void updateCPU() {
         IAEStack<?> send = this.finalOutput.get();
 
-        if (!this.finalOutput.isEmpty()) {
+        if (this.finalOutput.isEmpty()) {
             send = null;
         }
 
@@ -2027,10 +2027,13 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             tag.setTag("originalOutput", writeStackNBT(this.originalOutput, new NBTTagCompound(), true));
 
             NBTTagList patternOutputs = new NBTTagList();
-            for (final IAEStack<?> ais : this.patternOutputs) {
-                NBTTagCompound temp = new NBTTagCompound();
-                writeStackNBT(ais, temp, true);
-                patternOutputs.appendTag(temp);
+
+            if (this.patternOutputs != null) {
+                for (final IAEStack<?> ais : this.patternOutputs) {
+                    NBTTagCompound temp = new NBTTagCompound();
+                    writeStackNBT(ais, temp, true);
+                    patternOutputs.appendTag(temp);
+                }
             }
 
             tag.setTag("patternOutputs", patternOutputs);
