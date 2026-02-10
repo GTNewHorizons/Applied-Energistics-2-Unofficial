@@ -21,6 +21,9 @@ import appeng.core.AEConfig;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketVirtualSlot;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
+import appeng.integration.modules.NEI;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.item.AEItemStack;
 
@@ -159,7 +162,10 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
             return;
         }
 
-        ItemStack hand = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
+        final ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
+                ? NEI.instance.getDraggingPhantomItem()
+                : null;
+        final ItemStack hand = phantom != null ? phantom : Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
         if (hand == null) return;
 
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
