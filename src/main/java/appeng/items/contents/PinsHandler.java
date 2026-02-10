@@ -116,9 +116,13 @@ public class PinsHandler {
         final IAEStack<?>[] newPins = new IAEStack<?>[pinsState.ordinal() * 9];
         // fetch lines according to the setting
         for (int i = 0; i < pinsState.ordinal() * 9; i++) {
-            newPins[i] = pinsInv.getPin(i);
+            if (i < pinsInv.size()) newPins[i] = pinsInv.getPin(i);
+            else newPins[i] = null;
         }
+
         if (!forceSendPacket && Arrays.equals(cache, newPins)) return;
+
+        pinsInv.newList(newPins);
         cache = newPins;
 
         if (player instanceof EntityPlayerMP mp) {
