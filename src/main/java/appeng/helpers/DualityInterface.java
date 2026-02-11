@@ -1220,7 +1220,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     stacksToPush.add(stackConvertPacket(aes));
                 }
             } else if (aes != null) {
-                scheduledReason = ScheduledReason.SOMETHING_STUCK;
+                scheduledReason = ScheduledReason.UNSUPPORTED_STACK;
                 return false;
             }
         }

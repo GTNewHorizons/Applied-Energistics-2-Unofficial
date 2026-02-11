@@ -632,6 +632,7 @@ gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=Lock Mode
 gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=Can't find target to push
 gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=Not enough ingredients
 gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=Target interface in same network
+gui.tooltips.appliedenergistics2.scheduledreason.UNSUPPORTED_STACK=Contains a stack not supported by this interface
 
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Toggles showing interfaces with patterns with substitutions enabled
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Showing all interfaces
