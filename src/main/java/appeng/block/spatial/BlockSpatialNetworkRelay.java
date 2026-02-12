@@ -11,6 +11,8 @@ import appeng.client.render.blocks.RenderSpatialNetworkRelay;
 import appeng.core.features.AEFeature;
 import appeng.tile.AEBaseTile;
 import appeng.tile.spatial.TileSpatialNetworkRelay;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 /**
  * A simple in-dimension AE network anchor for Spatial Storage dimensions.
@@ -27,6 +29,7 @@ public class BlockSpatialNetworkRelay extends AEBaseTileBlock {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     protected BaseBlockRender<? extends AEBaseBlock, ? extends AEBaseTile> getRenderer() {
         return new RenderSpatialNetworkRelay();
     }

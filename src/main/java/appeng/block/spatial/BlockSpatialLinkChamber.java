@@ -16,6 +16,8 @@ import appeng.core.sync.GuiBridge;
 import appeng.tile.AEBaseTile;
 import appeng.tile.spatial.TileSpatialLinkChamber;
 import appeng.util.Platform;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 /**
  * Overworld-side endpoint for linking into a Spatial Storage dimension. Similar in spirit to Quantum Link Chamber, but
@@ -48,6 +50,7 @@ public class BlockSpatialLinkChamber extends AEBaseTileBlock {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     protected BaseBlockRender<? extends AEBaseBlock, ? extends AEBaseTile> getRenderer() {
         return new RenderSpatialLinkChamber();
     }
