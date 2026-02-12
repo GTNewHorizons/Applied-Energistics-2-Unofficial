@@ -6,10 +6,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.entity.player.EntityPlayerMP;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import appeng.api.networking.IGridNode;
+import appeng.tile.spatial.TileSpatialLinkChamber;
 import appeng.tile.spatial.TileSpatialNetworkRelay;
 
 /**
@@ -65,6 +68,17 @@ public final class SpatialEntangledRegistry {
     public static void unbindHost(final int storageDim) {
         DIM_TO_GRID_HOST.remove(storageDim);
         updateSlaves(storageDim);
+    }
+
+    public static void teleportPlayerOut(EntityPlayerMP playerMP, int storageDim) {
+        if (storageDim == 0) {
+            return;
+        }
+        IGridNode hostNode = findHostNode(storageDim);
+        if (hostNode != null && hostNode.getMachine() instanceof TileSpatialLinkChamber anchor) {
+            anchor.teleportOutside(playerMP);
+        }
+
     }
 
     public static @Nullable IGridNode findHostNode(final int storageDim) {

@@ -2,18 +2,18 @@ package appeng.block.spatial;
 
 import java.util.EnumSet;
 
-import appeng.block.AEBaseBlock;
-import appeng.client.render.BaseBlockRender;
-import appeng.client.render.blocks.RenderSpatialLinkChamber;
-import appeng.tile.AEBaseTile;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.block.AEBaseBlock;
 import appeng.block.AEBaseTileBlock;
+import appeng.client.render.BaseBlockRender;
+import appeng.client.render.blocks.RenderSpatialLinkChamber;
 import appeng.core.features.AEFeature;
 import appeng.core.sync.GuiBridge;
+import appeng.tile.AEBaseTile;
 import appeng.tile.spatial.TileSpatialLinkChamber;
 import appeng.util.Platform;
 

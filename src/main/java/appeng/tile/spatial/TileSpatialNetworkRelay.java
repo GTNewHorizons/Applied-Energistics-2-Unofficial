@@ -2,22 +2,20 @@ package appeng.tile.spatial;
 
 import java.util.EnumSet;
 
-import appeng.me.GridAccessException;
-import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.exceptions.FailedConnection;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridConnection;
 import appeng.api.networking.IGridNode;
-import appeng.api.networking.events.MENetworkEventSubscribe;
-import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.spatial.SpatialEntangledRegistry;
 import appeng.spatial.StorageWorldProvider;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
 import appeng.util.Platform;
+import io.netty.buffer.ByteBuf;
 
 /**
  * Network anchor tile used inside spatial storage dimension.
@@ -51,7 +49,6 @@ public class TileSpatialNetworkRelay extends AENetworkTile {
     public void writeToStream_TileWireless(final ByteBuf data) {
         data.writeBoolean(isConnected());
     }
-
 
     @TileEvent(TileEventType.TICK)
     public void onTick() {
@@ -135,10 +132,14 @@ public class TileSpatialNetworkRelay extends AENetworkTile {
         super.onChunkUnload();
     }
 
-    public boolean isConnected(){
-        if (Platform.isClient())
-            return hasConnection;
+    public boolean isConnected() {
+        if (Platform.isClient()) return hasConnection;
         return this.linkConnection != null;
+    }
+
+    public void teleport(EntityPlayerMP playerMP) {
+        if (!hasConnection) return;
+        SpatialEntangledRegistry.teleportPlayerOut(playerMP, this.worldObj.provider.dimensionId);
     }
 
 }

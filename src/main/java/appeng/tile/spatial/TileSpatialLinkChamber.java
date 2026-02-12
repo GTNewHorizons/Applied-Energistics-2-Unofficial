@@ -2,10 +2,6 @@ package appeng.tile.spatial;
 
 import java.util.EnumSet;
 
-import appeng.api.networking.IGridNode;
-import appeng.tile.TileEvent;
-import appeng.tile.events.TileEventType;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -14,15 +10,21 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.implementations.items.ISpatialStorageCell;
 import appeng.api.networking.GridFlags;
+import appeng.api.networking.IGridNode;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.spatial.SpatialEntangledRegistry;
+import appeng.spatial.StorageHelper;
+import appeng.spatial.StorageHelper.TelDestination;
+import appeng.tile.TileEvent;
+import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
+import io.netty.buffer.ByteBuf;
 
 /**
  * Overworld-side endpoint. Holds a Spatial Storage Cell and exposes the owning storage dimension id.
@@ -70,7 +72,7 @@ public class TileSpatialLinkChamber extends AENetworkInvTile {
     @Override
     public void onReady() {
         super.onReady();
-        //updateBinding();
+        // updateBinding();
     }
 
     @TileEvent(TileEventType.NETWORK_READ)
@@ -126,8 +128,7 @@ public class TileSpatialLinkChamber extends AENetworkInvTile {
 
         if (this.cachedStorageDim != newDim) {
             SpatialEntangledRegistry.unbindHost(this.cachedStorageDim);
-            if (newDim != 0)
-                SpatialEntangledRegistry.bindHost(newDim, this.getActionableNode());
+            if (newDim != 0) SpatialEntangledRegistry.bindHost(newDim, this.getActionableNode());
             this.cachedStorageDim = newDim;
             this.markForUpdate();
         }
@@ -137,11 +138,17 @@ public class TileSpatialLinkChamber extends AENetworkInvTile {
         return this.cachedStorageDim != 0;
     }
 
-    public void teleportInside(EntityPlayerMP playerMP){
+    public void teleportInside(EntityPlayerMP playerMP) {
         if (cachedStorageDim == 0) return;
-        playerMP.mcServer.getConfigurationManager().transferPlayerToDimension(
+        StorageHelper.getInstance().teleportEntity(
                 playerMP,
-                cachedStorageDim);
+                new TelDestination(playerMP.mcServer.worldServerForDimension(cachedStorageDim), 2, 66, 2));
+    }
+
+    public void teleportOutside(EntityPlayerMP playerMP) {
+        StorageHelper.getInstance().teleportEntity(
+                playerMP,
+                new TelDestination(this.worldObj, this.xCoord, this.yCoord + 1.5d, this.zCoord));
     }
 
     @Override
@@ -177,15 +184,13 @@ public class TileSpatialLinkChamber extends AENetworkInvTile {
 
     @Override
     public void invalidate() {
-        if (cachedStorageDim != 0)
-            SpatialEntangledRegistry.unbindHost(this.cachedStorageDim);
+        if (cachedStorageDim != 0) SpatialEntangledRegistry.unbindHost(this.cachedStorageDim);
         super.invalidate();
     }
 
     @Override
     public void onChunkUnload() {
-        if (cachedStorageDim != 0)
-            SpatialEntangledRegistry.unbindHost(this.cachedStorageDim);
+        if (cachedStorageDim != 0) SpatialEntangledRegistry.unbindHost(this.cachedStorageDim);
         super.onChunkUnload();
     }
 }

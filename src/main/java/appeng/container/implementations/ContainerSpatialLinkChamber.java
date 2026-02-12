@@ -25,8 +25,8 @@ public class ContainerSpatialLinkChamber extends AEBaseContainer {
     }
 
     public void teleport() {
-        ((TileSpatialLinkChamber)this.getTileEntity()).teleportInside((EntityPlayerMP) this.getInventoryPlayer().player);
+        ((TileSpatialLinkChamber) this.getTileEntity())
+                .teleportInside((EntityPlayerMP) this.getInventoryPlayer().player);
     }
-
 
 }
