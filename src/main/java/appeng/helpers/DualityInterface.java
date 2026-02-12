@@ -1210,7 +1210,19 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         final List<IAEStack<?>> stacksToPush = new ArrayList<>(table.getSizeInventory());
         for (int x = 0; x < table.getSizeInventory(); x++) {
             IAEStack<?> aes = ((MEInventoryCrafting) table).getAEStackInSlot(x);
-            stacksToPush.add(isFluidInterface ? aes : stackConvertPacket(aes));
+
+            if (aes instanceof IAEItemStack) {
+                stacksToPush.add(aes);
+            } else if (aes instanceof IAEFluidStack) {
+                if (isFluidInterface) {
+                    stacksToPush.add(aes);
+                } else {
+                    stacksToPush.add(stackConvertPacket(aes));
+                }
+            } else if (aes != null) {
+                scheduledReason = ScheduledReason.UNSUPPORTED_STACK;
+                return false;
+            }
         }
 
         final ArrayList<VerifiedAcceptors> verifiedSides = new ArrayList<>();

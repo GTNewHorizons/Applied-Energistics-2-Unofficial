@@ -28,4 +28,6 @@ public interface IWorldSpawnData {
     boolean addNearByMeteorites(int dim, int chunkX, int chunkZ, NBTTagCompound newData);
 
     Collection<NBTTagCompound> getNearByMeteorites(int dim, int chunkX, int chunkZ);
+
+    default void flush() {}
 }

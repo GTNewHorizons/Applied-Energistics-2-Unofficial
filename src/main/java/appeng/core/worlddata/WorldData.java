@@ -81,7 +81,7 @@ public final class WorldData implements IWorldData {
         final CompassService compassService = new CompassService(this.compassDirectory, compassThreadFactory);
         final CompassData compassData = new CompassData(this.compassDirectory, compassService);
 
-        final IWorldSpawnData spawnData = new SpawnData(this.spawnDirectory);
+        final SpawnData spawnData = new SpawnData(this.spawnDirectory);
 
         this.playerData = playerData;
         this.dimensionData = dimensionData;
@@ -90,7 +90,7 @@ public final class WorldData implements IWorldData {
         this.spawnData = spawnData;
 
         this.startables = Lists.newArrayList(playerData, dimensionData, storageData);
-        this.stoppables = Lists.newArrayList(playerData, dimensionData, storageData, compassData);
+        this.stoppables = Lists.newArrayList(playerData, dimensionData, storageData, compassData, spawnData);
     }
 
     /**
