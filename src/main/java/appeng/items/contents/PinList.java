@@ -13,6 +13,14 @@ public class PinList {
         this.pins = new IAEStack[PinsState.getPinsCount()];
     }
 
+    public PinList(PinsState state) {
+        this.pins = new IAEStack[state.ordinal() * 9];
+    }
+
+    public void newList(IAEStack<?>[] newPins) {
+        this.pins = newPins;
+    }
+
     public int size() {
         return this.pins.length;
     }
