@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -116,6 +117,7 @@ public class CraftingGridCache
     private final Map<IAEItemStack, ImmutableList<ICraftingPatternDetails>> craftableItemsLegacy = new HashMap<>();
     private final Map<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> craftableItems = new HashMap<>();
     private final Set<IAEStack<?>> emitableItems = new HashSet<>();
+    private final Map<UUID, ICraftingPatternDetails> inputOnlyPatterns = new HashMap<>();
     private final Map<String, CraftingLinkNexus> craftingLinks = new HashMap<>();
     private final Multimap<IAEStack, CraftingWatcher> interests = HashMultimap.create();
     private final GenericInterestManager<CraftingWatcher> interestManager = new GenericInterestManager<>(
@@ -251,6 +253,7 @@ public class CraftingGridCache
         this.craftableItems.clear();
         this.craftableItemSubstitutes.clear();
         this.emitableItems.clear();
+        this.inputOnlyPatterns.clear();
 
         // re-create list..
         for (final ICraftingProvider provider : this.craftingProviders) {
@@ -280,6 +283,7 @@ public class CraftingGridCache
         this.craftableItems.clear();
         this.craftableItemSubstitutes.clear();
         this.emitableItems.clear();
+        this.inputOnlyPatterns.clear();
         setPatternsFromCraftingMethods();
     }
 
@@ -288,6 +292,13 @@ public class CraftingGridCache
 
         // new craftables!
         for (final ICraftingPatternDetails details : this.craftingMethods.keySet()) {
+            if (details.isInputOnly()) {
+                final UUID uuid = details.getInputOnlyUuid();
+                if (uuid != null) {
+                    this.inputOnlyPatterns.putIfAbsent(uuid, details);
+                }
+                continue;
+            }
             for (IAEStack<?> out : details.getAEOutputs()) {
                 out = out.copy();
                 out.reset();
@@ -311,6 +322,10 @@ public class CraftingGridCache
 
             craftableItemsLegacy.put(stackConvert(e.getKey()), ImmutableList.copyOf(e.getValue()));
         }
+    }
+
+    public ICraftingPatternDetails getInputOnlyPattern(final UUID uuid) {
+        return this.inputOnlyPatterns.get(uuid);
     }
 
     private void updateCPUClusters() {
