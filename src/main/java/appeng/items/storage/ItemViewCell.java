@@ -22,6 +22,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Upgrades;
@@ -29,6 +31,7 @@ import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.core.features.AEFeature;
 import appeng.core.localization.ButtonToolTips;
@@ -187,5 +190,11 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
 
         String filter = getOreFilter(stack);
         if (!filter.isEmpty()) lines.add(GuiText.PartitionedOre.getLocal() + " : " + filter);
+    }
+
+    @Override
+    @Nullable
+    public IAEStackType<?> getStackType() {
+        return null;
     }
 }
