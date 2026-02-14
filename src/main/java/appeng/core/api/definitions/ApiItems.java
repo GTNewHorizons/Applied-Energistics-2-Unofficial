@@ -23,6 +23,7 @@ import appeng.items.misc.ItemCrystalSeed;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.items.misc.ItemEncodedUltimatePattern;
 import appeng.items.misc.ItemPaintBall;
+import appeng.items.misc.ItemTunnelPattern;
 import appeng.items.parts.ItemFacade;
 import appeng.items.storage.ItemAdvancedStorageCell;
 import appeng.items.storage.ItemBasicStorageCell;
@@ -109,6 +110,7 @@ public final class ApiItems implements IItems {
     // rv1
     private final IItemDefinition encodedPattern;
     private final IItemDefinition encodedUltimatePattern;
+    private final IItemDefinition encodedTunnelPattern;
     private final IItemDefinition colorApplicator;
 
     private final IItemDefinition paintBall;
@@ -186,6 +188,7 @@ public final class ApiItems implements IItems {
         // rv1
         this.encodedPattern = constructor.registerItemDefinition(new ItemEncodedPattern());
         encodedUltimatePattern = constructor.registerItemDefinition(new ItemEncodedUltimatePattern());
+        this.encodedTunnelPattern = constructor.registerItemDefinition(new ItemTunnelPattern());
         this.colorApplicator = constructor.registerItemDefinition(new ToolColorApplicator());
 
         this.paintBall = constructor.registerItemDefinition(new ItemPaintBall());
@@ -426,6 +429,11 @@ public final class ApiItems implements IItems {
     @Override
     public IItemDefinition encodedUltimatePattern() {
         return this.encodedUltimatePattern;
+    }
+
+    @Override
+    public IItemDefinition encodedTunnelPattern() {
+        return this.encodedTunnelPattern;
     }
 
     @Override
