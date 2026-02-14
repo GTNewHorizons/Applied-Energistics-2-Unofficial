@@ -248,7 +248,18 @@ public enum ButtonToolTips implements Localization {
 
     ToggleShowOnlySubstitute,
     ToggleShowOnlySubstituteOnDesc,
-    ToggleShowOnlySubstituteOffDesc;
+    ToggleShowOnlySubstituteOffDesc,
+
+    ReshuffleStorage,
+    ReshuffleStorageDesc,
+    ReshuffleStorageCancel,
+    ReshuffleStorageCancelDesc,
+    ReshuffleStorageAll,
+    ReshuffleStorageAllDesc,
+    ReshuffleStorageItems,
+    ReshuffleStorageItemsDesc,
+    ReshuffleStorageFluids,
+    ReshuffleStorageFluidsDesc;
 
     ButtonToolTips() {}
 

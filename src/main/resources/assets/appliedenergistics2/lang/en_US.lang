@@ -144,6 +144,26 @@ chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dim
 chat.appliedenergistics2.PickBlockTerminalNotFound=AE2 wireless terminal not found.
 chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
 chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
+chat.appliedenergistics2.ReshuffleStarted=§aReshuffle started§r - processing %d item types...
+chat.appliedenergistics2.ReshuffleStartedWithOptions=§aReshuffle started§r - processing %d types | Mode: %s | Void Protection: %s | Overwrite Protection: %s
+chat.appliedenergistics2.ReshuffleProgress=§eReshuffle progress:§r %d/%d (%d%%)
+chat.appliedenergistics2.ReshuffleComplete=§aReshuffle complete!§r Successfully redistributed %d item types.
+chat.appliedenergistics2.ReshuffleCompleteWithSkipped=§aReshuffle complete!§r Processed %d item types. §e%d skipped§r (void/overwrite protection).
+chat.appliedenergistics2.ReshuffleCancelled=§cReshuffle cancelled.§r Processed %d/%d items before stopping.
+chat.appliedenergistics2.ReshuffleCancelledGuiClosed=§cReshuffle cancelled§r - GUI closed. Processed %d/%d items. §7Keep the terminal open during reshuffle!§r
+chat.appliedenergistics2.ReshuffleConfirmRequired=§eLarge network detected!§r %d item types to process. Hold §bShift§r and click to confirm, or click again to start anyway.
+chat.appliedenergistics2.ReshuffleEmpty=§7Nothing to reshuffle§r - storage is empty.
+chat.appliedenergistics2.ReshuffleNoPermission=§cNo permission§r - requires both inject and extract permissions.
+chat.appliedenergistics2.ReshuffleNoPower=§cNo power§r - network is not powered.
+chat.appliedenergistics2.ReshuffleCraftingActive=§cCannot reshuffle§r - %d crafting job(s) are currently active. Wait for crafting to complete first.
+chat.appliedenergistics2.ReshufflePreviewError=§cError generating preview§r - please check server logs.
+chat.appliedenergistics2.PreviewGenerating=§eGenerating reshuffle preview...§r This may take a moment for large networks.
+chat.appliedenergistics2.PreviewCancelled=§cPreview generation cancelled.§r
+chat.appliedenergistics2.PreviewAlreadyGenerating=§ePreview is already generating.§r Click to cancel.
+chat.appliedenergistics2.ReshuffleAlreadyRunning=§cReshuffle is already running.§r Click to cancel first.
+chat.appliedenergistics2.ReshuffleModeAll=All Types
+chat.appliedenergistics2.ReshuffleModeItems=Items Only
+chat.appliedenergistics2.ReshuffleModeFluids=Fluids Only
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -625,6 +645,17 @@ gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts a
 gui.tooltips.appliedenergistics2.PinsSection=Pins Section
 gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
+
+gui.tooltips.appliedenergistics2.ReshuffleStorage=Reshuffle Storage
+gui.tooltips.appliedenergistics2.ReshuffleStorageDesc=Redistribute items based on storage priority.\n§bLeft-click§r: Start reshuffle\n§bRight-click§r: Cycle mode (All/Items/Fluids)\n§bMiddle-click§r: Toggle void protection\n§bShift+click§r: Skip confirmation\n§bCtrl+click§r: Enable overwrite protection
+gui.tooltips.appliedenergistics2.ReshuffleStorageCancel=Cancel Reshuffle
+gui.tooltips.appliedenergistics2.ReshuffleStorageCancelDesc=Click to cancel the current reshuffle operation.
+gui.tooltips.appliedenergistics2.ReshuffleStorageAll=Reshuffle All
+gui.tooltips.appliedenergistics2.ReshuffleStorageAllDesc=Mode: All Types (Items & Fluids)
+gui.tooltips.appliedenergistics2.ReshuffleStorageItems=Reshuffle Items
+gui.tooltips.appliedenergistics2.ReshuffleStorageItemsDesc=Mode: Items Only
+gui.tooltips.appliedenergistics2.ReshuffleStorageFluids=Reshuffle Fluids
+gui.tooltips.appliedenergistics2.ReshuffleStorageFluidsDesc=Mode: Fluids Only
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode

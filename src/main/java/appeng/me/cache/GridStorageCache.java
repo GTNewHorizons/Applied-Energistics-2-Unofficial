@@ -338,6 +338,28 @@ public class GridStorageCache implements IStorageGrid {
         return this.interestManager;
     }
 
+    /**
+     * Get all active cell providers (TileDrives, TileChests, etc.) that are currently providing storage to the network.
+     * This includes both active and inactive providers.
+     * 
+     * @return Collection of all cell providers
+     */
+    public java.util.Collection<ICellProvider> getAllCellProviders() {
+        java.util.List<ICellProvider> all = new java.util.ArrayList<>();
+        all.addAll(this.activeCellProviders);
+        all.addAll(this.inactiveCellProviders);
+        return all;
+    }
+
+    /**
+     * Get only the active cell providers
+     * 
+     * @return Collection of active cell providers
+     */
+    public java.util.Collection<ICellProvider> getActiveCellProviders() {
+        return new java.util.ArrayList<>(this.activeCellProviders);
+    }
+
     IGrid getGrid() {
         return this.myGrid;
     }
