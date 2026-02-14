@@ -10,7 +10,8 @@ public enum ScheduledReason implements Localization {
     LOCK_MODE,
     NO_TARGET,
     NOT_ENOUGH_INGREDIENTS,
-    SAME_NETWORK;
+    SAME_NETWORK,
+    UNSUPPORTED_STACK;
 
     @Override
     public String getUnlocalized() {

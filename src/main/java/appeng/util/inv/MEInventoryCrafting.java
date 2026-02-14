@@ -4,7 +4,9 @@ import static appeng.util.Platform.stackConvertPacket;
 
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.ItemStack;
 
+import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 
 public class MEInventoryCrafting extends InventoryCrafting {
@@ -22,6 +24,15 @@ public class MEInventoryCrafting extends InventoryCrafting {
 
     public void setInventorySlotContents(int index, IAEStack<?> stack) {
         aeStackList[index] = stack;
-        setInventorySlotContents(index, stack == null ? null : stackConvertPacket(stack).getItemStack());
+
+        ItemStack itemStack = null;
+        if (stack != null) {
+            IAEItemStack ais = stackConvertPacket(stack);
+            if (ais != null) {
+                itemStack = ais.getItemStack();
+            }
+        }
+
+        setInventorySlotContents(index, itemStack);
     }
 }

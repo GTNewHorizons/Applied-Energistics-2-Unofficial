@@ -2054,6 +2054,7 @@ public class Platform {
         return stack;
     }
 
+    @Nullable
     public static IAEItemStack stackConvertPacket(IAEStack<?> stack) {
         if (stack == null) return null;
         if (isAE2FCLoaded) {

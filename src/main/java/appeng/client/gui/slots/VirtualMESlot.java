@@ -4,6 +4,8 @@ import static appeng.integration.modules.NEI.searchField;
 import static codechicken.nei.NEIClientConfig.getSearchExpression;
 import static net.minecraft.client.gui.Gui.drawRect;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
@@ -141,5 +143,9 @@ public abstract class VirtualMESlot {
 
     public void setShowCraftableIcon(boolean showCraftableIcon) {
         this.showCraftableIcon = showCraftableIcon;
+    }
+
+    public void addTooltip(List<String> lineList) {
+
     }
 }

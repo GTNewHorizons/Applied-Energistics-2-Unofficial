@@ -10,7 +10,7 @@
 
 package appeng.parts.reporting;
 
-import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 
 import java.util.Collections;
 import java.util.List;
@@ -66,7 +66,7 @@ public class PartConversionMonitor extends AbstractPartMonitor {
 
         IAEStack<?> displayed = this.getDisplayed();
         if (displayed == null) {
-            if (!EXTRA_ACTION_KEY.isKeyDown(player)) {
+            if (!CONTAINER_INTERACTION_KEY.isKeyDown(player)) {
                 this.injectItemToMonitor(player);
             } else {
                 this.injectExtraToMonitor(player);
