@@ -23,6 +23,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.FuzzyMode;
+import appeng.api.config.ReshuffleMode;
 import appeng.api.config.Settings;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
@@ -105,6 +106,27 @@ public class PacketValueConfig extends AppEngPacket {
             qk.optimizePatterns();
         } else if (this.Name.equals("Terminal.UpdateViewCell") && c instanceof final ContainerMEMonitorable qk) {
             qk.toggleViewCell(Integer.parseInt(this.Value));
+        } else if (this.Name.equals("Terminal.Reshuffle") && c instanceof final ContainerMEMonitorable qk) {
+            // Parse value: "confirmed,mode,voidProtection,overwriteProtection" or just "confirmed" for legacy
+            String[] parts = this.Value.split(",");
+            boolean confirmed = parts.length > 0 && "confirmed".equals(parts[0]);
+            ReshuffleMode mode = ReshuffleMode.ALL;
+            boolean voidProtection = true;
+            boolean overwriteProtection = false;
+
+            if (parts.length >= 4) {
+                try {
+                    mode = ReshuffleMode.valueOf(parts[1]);
+                } catch (IllegalArgumentException e) {
+                    mode = ReshuffleMode.ALL;
+                }
+                voidProtection = "true".equals(parts[2]);
+                overwriteProtection = "true".equals(parts[3]);
+            }
+
+            qk.reshuffleStorage(player, confirmed, mode, voidProtection, overwriteProtection);
+        } else if (this.Name.equals("Terminal.ReshuffleCancel") && c instanceof final ContainerMEMonitorable qk) {
+            qk.cancelReshuffle();
         } else if(this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk){
             qk.doublePatterns(Integer.parseInt(this.Value));
         } else if(this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPU qk) {
