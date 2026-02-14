@@ -94,6 +94,7 @@ import appeng.container.implementations.ContainerRenamer;
 import appeng.container.implementations.ContainerSecurity;
 import appeng.container.implementations.ContainerSkyChest;
 import appeng.container.implementations.ContainerSpatialIOPort;
+import appeng.container.implementations.ContainerSpatialLinkChamber;
 import appeng.container.implementations.ContainerStorageBus;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
@@ -118,6 +119,7 @@ import appeng.tile.misc.TileVibrationChamber;
 import appeng.tile.networking.TileWireless;
 import appeng.tile.qnb.TileQuantumBridge;
 import appeng.tile.spatial.TileSpatialIOPort;
+import appeng.tile.spatial.TileSpatialLinkChamber;
 import appeng.tile.storage.TileChest;
 import appeng.tile.storage.TileDrive;
 import appeng.tile.storage.TileIOPort;
@@ -196,6 +198,9 @@ public enum GuiBridge implements IGuiHandler {
             SecurityPermissions.BUILD),
 
     GUI_SPATIAL_IO_PORT(ContainerSpatialIOPort.class, TileSpatialIOPort.class, GuiHostType.WORLD,
+            SecurityPermissions.BUILD),
+
+    GUI_SPATIAL_LINK_CHAMBER(ContainerSpatialLinkChamber.class, TileSpatialLinkChamber.class, GuiHostType.WORLD,
             SecurityPermissions.BUILD),
 
     GUI_INSCRIBER(ContainerInscriber.class, TileInscriber.class, GuiHostType.WORLD, null),
