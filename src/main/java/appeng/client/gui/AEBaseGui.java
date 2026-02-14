@@ -10,7 +10,7 @@
 
 package appeng.client.gui;
 
-import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 
 import java.awt.Rectangle;
 import java.io.IOException;
@@ -1032,7 +1032,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     public static boolean isCtrlKeyDown() {
-        int keyCode = EXTRA_ACTION_KEY.getKeyCode();
+        int keyCode = CONTAINER_INTERACTION_KEY.getKeyCode();
         if (keyCode < 0) {
             // In vanilla code, mouse buttons are registered as keyCodes with their values offset by -100.
             return Mouse.isButtonDown(keyCode + 100);

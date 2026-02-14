@@ -15,6 +15,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 import javax.annotation.Nonnull;
@@ -31,13 +33,16 @@ import appeng.core.AELog;
  * @version rv3 - 30.05.2015
  * @since rv3 30.05.2015
  */
-final class SpawnData implements IWorldSpawnData {
+final class SpawnData implements IWorldSpawnData, IOnWorldStoppable {
 
     @Nonnull
     private final File spawnDirectory;
 
     @Nonnull
     private final MeteorDataNameEncoder encoder;
+
+    private final HashMap<String, NBTTagCompound> cache = new HashMap<>();
+    private final HashSet<String> dirty = new HashSet<>();
 
     public SpawnData(@Nonnull final File spawnDirectory) {
         Preconditions.checkNotNull(spawnDirectory);
@@ -54,7 +59,7 @@ final class SpawnData implements IWorldSpawnData {
             // edit.
             data.setBoolean(chunkX + "," + chunkZ, true);
 
-            this.writeSpawnData(dim, chunkX, chunkZ, data);
+            this.dirty.add(this.encoder.encode(dim, chunkX, chunkZ));
         }
     }
 
@@ -77,7 +82,7 @@ final class SpawnData implements IWorldSpawnData {
             data.setTag(String.valueOf(size), newData);
             data.setInteger("num", size + 1);
 
-            this.writeSpawnData(dim, chunkX, chunkZ, data);
+            this.dirty.add(this.encoder.encode(dim, chunkX, chunkZ));
 
             return true;
         }
@@ -114,8 +119,14 @@ final class SpawnData implements IWorldSpawnData {
             throw new IllegalStateException("Invalid Request");
         }
 
-        NBTTagCompound data = null;
         final String fileName = this.encoder.encode(dim, chunkX, chunkZ);
+
+        NBTTagCompound cached = this.cache.get(fileName);
+        if (cached != null) {
+            return cached;
+        }
+
+        NBTTagCompound data = null;
         final File file = new File(this.spawnDirectory, fileName);
 
         if (file.isFile()) {
@@ -140,15 +151,11 @@ final class SpawnData implements IWorldSpawnData {
             data = new NBTTagCompound();
         }
 
+        this.cache.put(fileName, data);
         return data;
     }
 
-    private void writeSpawnData(final int dim, final int chunkX, final int chunkZ, final NBTTagCompound data) {
-        if (!Thread.holdsLock(SpawnData.class)) {
-            throw new IllegalStateException("Invalid Request");
-        }
-
-        final String fileName = this.encoder.encode(dim, chunkX, chunkZ);
+    private void writeSpawnData(final String fileName, final NBTTagCompound data) {
         final File file = new File(this.spawnDirectory, fileName);
         FileOutputStream fileOutputStream = null;
 
@@ -166,5 +173,23 @@ final class SpawnData implements IWorldSpawnData {
                 }
             }
         }
+    }
+
+    @Override
+    public void flush() {
+        synchronized (SpawnData.class) {
+            for (final String fileName : this.dirty) {
+                final NBTTagCompound data = this.cache.get(fileName);
+                if (data != null) {
+                    this.writeSpawnData(fileName, data);
+                }
+            }
+            this.dirty.clear();
+        }
+    }
+
+    @Override
+    public void onWorldStop() {
+        this.flush();
     }
 }

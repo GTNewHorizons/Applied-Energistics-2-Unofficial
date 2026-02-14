@@ -29,6 +29,7 @@ import appeng.api.networking.IGridNode;
 import appeng.api.networking.IMachineSet;
 import appeng.api.util.DimensionalCoord;
 import appeng.core.localization.PlayerMessages;
+import appeng.core.sync.GuiBridge;
 import appeng.items.tools.powered.ToolWirelessTerminal;
 import appeng.tile.networking.TileWireless;
 import appeng.util.Platform;
@@ -145,6 +146,12 @@ public final class WirelessRegistry implements IWirelessTermRegistry {
 
     @Override
     public void openWirelessTerminalGui(final ItemStack item, final World w, final EntityPlayer player) {
-        if (performCheck(item, player)) ((ToolWirelessTerminal) item.getItem()).openGui(item, w, player, null);
+        if (performCheck(item, player)) {
+            if (item.getItem() instanceof ToolWirelessTerminal twt) {
+                twt.openGui(item, w, player, null);
+            } else {
+                Platform.openGUI(player, null, null, GuiBridge.GUI_ME);
+            }
+        }
     }
 }

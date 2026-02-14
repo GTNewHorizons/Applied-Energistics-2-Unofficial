@@ -13,13 +13,18 @@
 
 package appeng.api.implementations.items;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 
 /**
  * Any item which implements this can be treated as an IMEInventory via Util.getCell / Util.isCell It automatically
@@ -118,4 +123,9 @@ public interface IStorageCell extends ICellWorkbenchItem {
      * @return drain in ae/t this storage cell will use.
      */
     double getIdleDrain();
+
+    @NotNull
+    default IAEStackType<?> getStackType() {
+        return ITEM_STACK_TYPE;
+    }
 }
