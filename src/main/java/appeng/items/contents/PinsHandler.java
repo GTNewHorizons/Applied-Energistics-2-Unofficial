@@ -65,7 +65,7 @@ public class PinsHandler {
         }
 
         IAEStack<?> itemStack = null;
-        for (int i = 0; i < pinsInv.size(); i++) {
+        for (int i = 0; i < pinsState.ordinal() * 9 && i < pinsInv.size(); i++) {
             IAEStack<?> AEis;
             while (itemStack == null && it.hasNext()) {
                 AEis = it.next();
@@ -116,13 +116,10 @@ public class PinsHandler {
         final IAEStack<?>[] newPins = new IAEStack<?>[pinsState.ordinal() * 9];
         // fetch lines according to the setting
         for (int i = 0; i < pinsState.ordinal() * 9; i++) {
-            if (i < pinsInv.size()) newPins[i] = pinsInv.getPin(i);
-            else newPins[i] = null;
+            newPins[i] = pinsInv.getPin(i);
         }
 
         if (!forceSendPacket && Arrays.equals(cache, newPins)) return;
-
-        pinsInv.newList(newPins);
         cache = newPins;
 
         if (player instanceof EntityPlayerMP mp) {

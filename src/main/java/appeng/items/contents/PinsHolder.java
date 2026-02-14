@@ -72,9 +72,8 @@ public class PinsHolder implements IAEAppEngInventory {
             final NBTTagCompound itemList = list.getCompoundTagAt(i);
             final String playerIdStr = itemList.getString("playerId");
             final UUID playerId = UUID.fromString(playerIdStr);
-            final PinsState pinsState = PinsState.values()[itemList.getInteger("pinsState")];
 
-            final PinList pins = new PinList(pinsState);
+            final PinList pins = new PinList();
 
             for (int x = 0; x < pins.size(); x++) {
                 if (itemList.hasKey("#" + x)) {
@@ -92,7 +91,7 @@ public class PinsHolder implements IAEAppEngInventory {
             }
 
             this.pinsMap.put(playerId, pins);
-            this.pinsStateMap.put(playerId, pinsState);
+            this.pinsStateMap.put(playerId, PinsState.values()[itemList.getInteger("pinsState")]);
         }
     }
 
