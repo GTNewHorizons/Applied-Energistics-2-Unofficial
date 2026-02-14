@@ -12,6 +12,7 @@ package appeng.client.gui.implementations;
 
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -545,6 +546,15 @@ public class GuiMEMonitorable extends AEBaseGui
 
         this.currentMouseX = mouseX;
         this.currentMouseY = mouseY;
+
+        VirtualMESlot slot = this.getVirtualMESlotUnderMouse();
+        if (slot != null) {
+            List<String> lines = new ArrayList<>();
+            slot.addTooltip(lines);
+            if (!lines.isEmpty()) {
+                this.drawTooltip(mouseX - guiLeft, mouseY - guiTop, lines.toArray(new String[0]));
+            }
+        }
     }
 
     @Override

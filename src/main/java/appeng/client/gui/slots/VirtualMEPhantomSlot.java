@@ -1,5 +1,6 @@
 package appeng.client.gui.slots;
 
+import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.ArrayList;
@@ -7,14 +8,22 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
+
+import org.lwjgl.input.Keyboard;
 
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
+import appeng.core.AEConfig;
+import appeng.core.localization.ButtonToolTips;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketVirtualSlot;
+import appeng.integration.IntegrationRegistry;
+import appeng.integration.IntegrationType;
+import appeng.integration.modules.NEI;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.item.AEItemStack;
 
@@ -145,5 +154,31 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
 
         NetworkHandler.instance
                 .sendToServer(new PacketVirtualSlot(this.getStorageName(), this.getSlotIndex(), currentStack));
+    }
+
+    @Override
+    public void addTooltip(List<String> lines) {
+        if (!AEConfig.instance.showContainerInteractionTooltips) {
+            return;
+        }
+
+        final ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
+                ? NEI.instance.getDraggingPhantomItem()
+                : null;
+        final ItemStack hand = phantom != null ? phantom : Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
+        if (hand == null) return;
+
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            if (this.acceptType.test(this, type, 0) && type.isContainerItemForType(hand)) {
+                IAEStack<?> stack = type.getStackFromContainerItem(hand);
+                if (stack != null && stack.getStackSize() > 0) {
+                    lines.add(
+                            ButtonToolTips.RegisterContainerContent.getLocal(
+                                    Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode()),
+                                    stack.getDisplayName()));
+                    return;
+                }
+            }
+        }
     }
 }

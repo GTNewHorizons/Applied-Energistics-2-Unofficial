@@ -2,6 +2,8 @@ package appeng.api.implementations.tiles;
 
 import net.minecraft.inventory.IInventory;
 
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.data.IAEStackType;
@@ -20,5 +22,6 @@ public interface ICellWorkbench extends IUpgradeableHost, IAEAppEngInventory, IC
 
     IInventory getCellUpgradeInventory();
 
+    @Nullable
     IAEStackType<?> getStackType();
 }

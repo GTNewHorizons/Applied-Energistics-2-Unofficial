@@ -42,8 +42,8 @@ import cpw.mods.fml.common.FMLCommonHandler;
 public class ServerHelper extends CommonHelper {
 
     public static final String KEY_CATEGORY = "key.appliedenergistics2.category";
-    public static final SyncedKeybind EXTRA_ACTION_KEY = SyncedKeybind
-            .createConfigurable("key.control_operation.desc", KEY_CATEGORY, Keyboard.KEY_LCONTROL);
+    public static final SyncedKeybind CONTAINER_INTERACTION_KEY = SyncedKeybind
+            .createConfigurable("key.container_interaction.desc", KEY_CATEGORY, Keyboard.KEY_LCONTROL);
 
     private EntityPlayer renderModeBased;
 

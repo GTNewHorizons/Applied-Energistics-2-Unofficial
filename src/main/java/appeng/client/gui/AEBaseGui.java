@@ -10,7 +10,7 @@
 
 package appeng.client.gui;
 
-import static appeng.server.ServerHelper.EXTRA_ACTION_KEY;
+import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 
 import java.awt.Rectangle;
 import java.io.IOException;
@@ -452,13 +452,20 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         return new Rectangle(guiLeft + slot.getX(), guiTop + slot.getY(), 16, 16);
     }
 
+    private ItemStack getStackFromHand() {
+        final ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
+                ? NEI.instance.getDraggingPhantomItem()
+                : null;
+
+        return phantom != null ? phantom : this.mc.thePlayer.inventory.getItemStack();
+    }
+
     protected boolean handleVirtualSlotClick(final VirtualMESlot slot, final int mouseButton) {
         if (slot instanceof VirtualMEPhantomSlot vSlot) {
             this.handlePhantomSlotInteraction(vSlot, mouseButton);
 
             // Prevent double dragging
-            if (this.mc.thePlayer.inventory.getItemStack() != null
-                    && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
+            if (this.getStackFromHand() != null && !this.draggedVirtualSlots.contains(this.hoveredVirtualSlot)) {
                 this.draggedVirtualSlots.add(this.hoveredVirtualSlot);
             }
         }
@@ -473,12 +480,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     private void handlePhantomSlotInteraction(VirtualMEPhantomSlot slot, int mouseButton) {
-        ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
-                ? NEI.instance.getDraggingPhantomItem()
-                : null;
-        ItemStack holding = phantom != null ? phantom : this.mc.thePlayer.inventory.getItemStack();
-
-        slot.handleMouseClicked(holding, isCtrlKeyDown(), mouseButton);
+        slot.handleMouseClicked(this.getStackFromHand(), isCtrlKeyDown(), mouseButton);
     }
 
     @Override
@@ -1030,7 +1032,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
     }
 
     public static boolean isCtrlKeyDown() {
-        int keyCode = EXTRA_ACTION_KEY.getKeyCode();
+        int keyCode = CONTAINER_INTERACTION_KEY.getKeyCode();
         if (keyCode < 0) {
             // In vanilla code, mouse buttons are registered as keyCodes with their values offset by -100.
             return Mouse.isButtonDown(keyCode + 100);

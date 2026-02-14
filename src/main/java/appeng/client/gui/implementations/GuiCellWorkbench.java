@@ -252,6 +252,7 @@ public class GuiCellWorkbench extends GuiUpgradeable {
     }
 
     private boolean acceptType(VirtualMEPhantomSlot slot, IAEStackType<?> type, int mouseButton) {
-        return type == workbench.getStackType();
+        IAEStackType<?> cellType = workbench.getStackType();
+        return cellType == null || type == cellType;
     }
 }
