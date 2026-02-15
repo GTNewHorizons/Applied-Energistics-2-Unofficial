@@ -18,8 +18,6 @@ import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-import org.jetbrains.annotations.Nullable;
-
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.data.IAEStackType;
 import appeng.items.contents.CellConfigLegacy;
@@ -84,10 +82,6 @@ public interface ICellWorkbenchItem {
      */
     default void setOreFilter(ItemStack is, String filter) {}
 
-    /**
-     * @return stack type for this cell. null for all types.
-     */
-    @Nullable
     default IAEStackType<?> getStackType() {
         return ITEM_STACK_TYPE;
     }
