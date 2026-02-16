@@ -191,6 +191,9 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_SECURITY(ContainerSecurity.class, TileSecurity.class, GuiHostType.WORLD, SecurityPermissions.SECURITY),
 
+    GUI_STORAGE_RESHUFFLE(appeng.container.implementations.ContainerStorageReshuffle.class,
+            appeng.tile.misc.TileStorageReshuffle.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
+
     // extends (Container/Gui) + Bus
     GUI_LEVEL_EMITTER(ContainerLevelEmitter.class, ILevelEmitter.class, GuiHostType.ITEM_OR_WORLD,
             SecurityPermissions.BUILD),

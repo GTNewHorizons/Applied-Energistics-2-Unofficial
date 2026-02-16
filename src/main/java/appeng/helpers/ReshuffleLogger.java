@@ -18,12 +18,13 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Set;
 
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.DimensionManager;
 
-import appeng.api.config.ReshuffleMode;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.core.AELog;
 
 /**
@@ -113,11 +114,18 @@ public class ReshuffleLogger {
         writer.println();
     }
 
-    public void logConfig(ReshuffleMode mode, boolean voidProtection, boolean overwriteProtection) {
+    public void logConfig(Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean overwriteProtection) {
         if (writer == null) return;
 
         log("CONFIGURATION:");
-        log("  Mode: " + mode.name());
+        StringBuilder typesStr = new StringBuilder();
+        for (IAEStackType<?> type : allowedTypes) {
+            if (typesStr.length() > 0) typesStr.append(", ");
+            // Get simple class name for display
+            String typeName = type.getClass().getSimpleName().replace("AE", "").replace("StackType", "");
+            typesStr.append(typeName);
+        }
+        log("  Allowed Types: " + (typesStr.length() > 0 ? typesStr.toString() : "None"));
         log("  Void Protection: " + (voidProtection ? "ENABLED" : "DISABLED"));
         log("  Overwrite Protection: " + (overwriteProtection ? "ENABLED" : "DISABLED"));
         log("");

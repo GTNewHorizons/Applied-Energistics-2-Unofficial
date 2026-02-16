@@ -41,6 +41,7 @@ import appeng.block.misc.BlockQuartzGrowthAccelerator;
 import appeng.block.misc.BlockQuartzTorch;
 import appeng.block.misc.BlockSecurity;
 import appeng.block.misc.BlockSkyCompass;
+import appeng.block.misc.BlockStorageReshuffle;
 import appeng.block.misc.BlockTinyTNT;
 import appeng.block.misc.BlockVibrationChamber;
 import appeng.block.networking.BlockCableBus;
@@ -109,6 +110,7 @@ public final class ApiBlocks implements IBlocks {
     private final ITileDefinition charger;
     private final IBlockDefinition tinyTNT;
     private final ITileDefinition security;
+    private final ITileDefinition storageReshuffle;
     private final ITileDefinition quantumRing;
     private final ITileDefinition quantumLink;
     private final ITileDefinition spatialPylon;
@@ -206,6 +208,7 @@ public final class ApiBlocks implements IBlocks {
         this.charger = constructor.registerTileDefinition(new BlockCharger());
         this.tinyTNT = constructor.registerBlockDefinition(new BlockTinyTNT());
         this.security = constructor.registerTileDefinition(new BlockSecurity());
+        this.storageReshuffle = constructor.registerTileDefinition(new BlockStorageReshuffle());
         this.quantumRing = constructor.registerTileDefinition(new BlockQuantumRing());
         this.quantumLink = constructor.registerTileDefinition(new BlockQuantumLinkChamber());
         this.spatialPylon = constructor.registerTileDefinition(new BlockSpatialPylon());
@@ -503,6 +506,11 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition security() {
         return this.security;
+    }
+
+    @Override
+    public ITileDefinition storageReshuffle() {
+        return this.storageReshuffle;
     }
 
     @Override

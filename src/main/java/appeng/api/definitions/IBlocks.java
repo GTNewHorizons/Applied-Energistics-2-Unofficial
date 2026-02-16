@@ -99,6 +99,8 @@ public interface IBlocks {
 
     ITileDefinition security();
 
+    ITileDefinition storageReshuffle();
+
     /*
      * quantum Network Bridge
      */

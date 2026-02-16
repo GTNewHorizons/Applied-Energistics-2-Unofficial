@@ -36,6 +36,7 @@ tile.appliedenergistics2.BlockWireless.desc=Right click with terminal in hand to
 tile.appliedenergistics2.OreQuartz.name=Certus Quartz Ore
 tile.appliedenergistics2.OreQuartzCharged.name=Charged Certus Quartz Ore
 tile.appliedenergistics2.BlockSecurity.name=ME Security Terminal
+tile.appliedenergistics2.BlockStorageReshuffle.name=ME Storage Reshuffle
 tile.appliedenergistics2.BlockQuartzGrowthAccelerator.name=Crystal Growth Accelerator
 tile.appliedenergistics2.BlockSkyStone.name=Sky Stone
 tile.appliedenergistics2.BlockSkyStone.Block.name=Sky Stone Block
@@ -156,14 +157,9 @@ chat.appliedenergistics2.ReshuffleEmpty=§7Nothing to reshuffle§r - storage is 
 chat.appliedenergistics2.ReshuffleNoPermission=§cNo permission§r - requires both inject and extract permissions.
 chat.appliedenergistics2.ReshuffleNoPower=§cNo power§r - network is not powered.
 chat.appliedenergistics2.ReshuffleCraftingActive=§cCannot reshuffle§r - %d crafting job(s) are currently active. Wait for crafting to complete first.
+chat.appliedenergistics2.ReshuffleStorageLocked=§cStorage reshuffle already in progress!§r Another reshuffle operation is currently running. Please wait for it to complete.
+chat.appliedenergistics2.ReshuffleError=§cReshuffle error!§r An unexpected error occurred. Check server logs for details.
 chat.appliedenergistics2.ReshufflePreviewError=§cError generating preview§r - please check server logs.
-chat.appliedenergistics2.PreviewGenerating=§eGenerating reshuffle preview...§r This may take a moment for large networks.
-chat.appliedenergistics2.PreviewCancelled=§cPreview generation cancelled.§r
-chat.appliedenergistics2.PreviewAlreadyGenerating=§ePreview is already generating.§r Click to cancel.
-chat.appliedenergistics2.ReshuffleAlreadyRunning=§cReshuffle is already running.§r Click to cancel first.
-chat.appliedenergistics2.ReshuffleModeAll=All Types
-chat.appliedenergistics2.ReshuffleModeItems=Items Only
-chat.appliedenergistics2.ReshuffleModeFluids=Fluids Only
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -195,6 +191,90 @@ gui.appliedenergistics2.security.inject.tip=User is allowed to store new items i
 gui.appliedenergistics2.security.craft.tip=User can initiate new crafting jobs.
 gui.appliedenergistics2.security.build.tip=User can modify the physical structure of the network, and make configuration changes.
 gui.appliedenergistics2.security.security.tip=User can access and modify the security terminal of the network.
+
+# Storage Reshuffle GUI
+gui.appliedenergistics2.reshuffle.title=Storage Reshuffle
+gui.appliedenergistics2.reshuffle.filter=Filter:
+gui.appliedenergistics2.reshuffle.filter.all=All
+gui.appliedenergistics2.reshuffle.filter.items=Items
+gui.appliedenergistics2.reshuffle.filter.fluids=Fluids
+gui.appliedenergistics2.reshuffle.protection=Protection:
+gui.appliedenergistics2.reshuffle.voidProtection=Void
+gui.appliedenergistics2.reshuffle.overwriteProtection=Overwrite
+gui.appliedenergistics2.reshuffle.voidOn=Void: ON
+gui.appliedenergistics2.reshuffle.voidOff=Void: OFF
+gui.appliedenergistics2.reshuffle.overwriteOn=OW: ON
+gui.appliedenergistics2.reshuffle.overwriteOff=OW: OFF
+gui.appliedenergistics2.reshuffle.start=START RESHUFFLE
+gui.appliedenergistics2.reshuffle.cancel=CANCEL
+gui.appliedenergistics2.reshuffle.scan=Scan
+gui.appliedenergistics2.reshuffle.report=Report:
+gui.appliedenergistics2.reshuffle.statusIdle=Status: Idle
+gui.appliedenergistics2.reshuffle.statusScanning=Status: Scanning...
+gui.appliedenergistics2.reshuffle.statusRunning=Status: Running
+gui.appliedenergistics2.reshuffle.processed=%d / %d types processed
+
+# Button tooltips
+gui.appliedenergistics2.reshuffle.tooltip.start.title=§6Start Reshuffle
+gui.appliedenergistics2.reshuffle.tooltip.start.desc1=§7Reorganizes storage by priority
+gui.appliedenergistics2.reshuffle.tooltip.start.desc2=§7Hold SHIFT to bypass confirmation
+gui.appliedenergistics2.reshuffle.tooltip.cancel.title=§6Cancel Reshuffle
+gui.appliedenergistics2.reshuffle.tooltip.cancel.desc1=§7Stops the running operation
+
+gui.appliedenergistics2.reshuffle.tooltip.all.title=§5All Types
+gui.appliedenergistics2.reshuffle.tooltip.all.desc1=§7Reshuffles all storage types
+gui.appliedenergistics2.reshuffle.tooltip.items.title=§aItems Only
+gui.appliedenergistics2.reshuffle.tooltip.items.desc1=§7Reshuffles only item storage
+gui.appliedenergistics2.reshuffle.tooltip.fluids.title=§9Fluids Only
+gui.appliedenergistics2.reshuffle.tooltip.fluids.desc1=§7Reshuffles only fluid storage
+
+gui.appliedenergistics2.reshuffle.tooltip.void.title=§dVoid Protection
+gui.appliedenergistics2.reshuffle.tooltip.void.state=§7Status: %s
+gui.appliedenergistics2.reshuffle.tooltip.void.desc1=§7Prevents items from being voided
+gui.appliedenergistics2.reshuffle.tooltip.overwrite.title=§dOverwrite Protection
+gui.appliedenergistics2.reshuffle.tooltip.overwrite.state=§7Status: %s
+gui.appliedenergistics2.reshuffle.tooltip.overwrite.desc1=§7Prevents overwriting existing data
+
+# Help tooltip
+gui.appliedenergistics2.reshuffle.help.title=§6Storage Reshuffle
+gui.appliedenergistics2.reshuffle.help.desc1=§7Reorganizes ME storage based on priority.
+gui.appliedenergistics2.reshuffle.help.desc2=§7Items are extracted and re-inserted to
+gui.appliedenergistics2.reshuffle.help.desc3=§7optimize storage cell usage.
+gui.appliedenergistics2.reshuffle.help.filterHeader=§eFilter Modes:
+gui.appliedenergistics2.reshuffle.help.filterAll=  §a■ All§7 - All stack types
+gui.appliedenergistics2.reshuffle.help.filterItems=  §a■ Items§7 - Items only
+gui.appliedenergistics2.reshuffle.help.filterFluids=  §9■ Fluids§7 - Fluids only
+gui.appliedenergistics2.reshuffle.help.protectionHeader=§eProtection:
+gui.appliedenergistics2.reshuffle.help.protectionVoid=  §aVoid§7 - Prevents item loss
+gui.appliedenergistics2.reshuffle.help.protectionOverwrite=  §cOverwrite§7 - Prevents data overwrite
+
+# Scan button tooltip
+gui.appliedenergistics2.reshuffle.tooltip.scan.title=§6Network Scan
+gui.appliedenergistics2.reshuffle.tooltip.scan.desc1=§7Analyzes storage without changes
+gui.appliedenergistics2.reshuffle.tooltip.scan.desc2=§7Shows current cell usage and
+gui.appliedenergistics2.reshuffle.tooltip.scan.desc3=§7fragmentation statistics
+
+# Reshuffle Error Messages
+gui.appliedenergistics2.reshuffle.error.craftingActive=Cannot Start Reshuffle
+gui.appliedenergistics2.reshuffle.error.craftingActiveDesc=Crafting jobs are currently running. Please wait for them to complete before starting a reshuffle operation.
+
+# Storage Reshuffle Scan Report
+gui.appliedenergistics2.reshuffle.report.header=Network Storage Analysis
+gui.appliedenergistics2.reshuffle.report.stackTypes=Stack Types
+gui.appliedenergistics2.reshuffle.report.items=Items: %,d types (%,d total)
+gui.appliedenergistics2.reshuffle.report.fluids=Fluids: %,d types (%,d mB total)
+gui.appliedenergistics2.reshuffle.report.essentia=Essentia: %,d types (%,d total)
+gui.appliedenergistics2.reshuffle.report.storageCells=Storage Cells
+gui.appliedenergistics2.reshuffle.report.totalCells=Total Cells: %d
+gui.appliedenergistics2.reshuffle.report.usedBytes=Used Bytes: %,d / %,d
+gui.appliedenergistics2.reshuffle.report.freeBytes=Free Bytes: %,d (%.1f%%)
+gui.appliedenergistics2.reshuffle.report.cellTypes=Cell Types
+gui.appliedenergistics2.reshuffle.report.cellType=%s: %d cells
+gui.appliedenergistics2.reshuffle.report.reshuffleEstimate=Reshuffle Estimate
+gui.appliedenergistics2.reshuffle.report.potentialFreed=Potential freed bytes: %,d
+gui.appliedenergistics2.reshuffle.report.efficiencyGain=Efficiency gain: %.1f%%
+gui.appliedenergistics2.reshuffle.report.networkNotActive=Network is not active
+gui.appliedenergistics2.reshuffle.report.scanFailed=Failed to scan network
 
 gui.appliedenergistics2.Efficiency=Efficiency
 gui.appliedenergistics2.RequiredPower=Required Power
@@ -646,16 +726,17 @@ gui.tooltips.appliedenergistics2.PinsSection=Pins Section
 gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
 
-gui.tooltips.appliedenergistics2.ReshuffleStorage=Reshuffle Storage
-gui.tooltips.appliedenergistics2.ReshuffleStorageDesc=Redistribute items based on storage priority.\n§bLeft-click§r: Start reshuffle\n§bRight-click§r: Cycle mode (All/Items/Fluids)\n§bMiddle-click§r: Toggle void protection\n§bShift+click§r: Skip confirmation\n§bCtrl+click§r: Enable overwrite protection
-gui.tooltips.appliedenergistics2.ReshuffleStorageCancel=Cancel Reshuffle
-gui.tooltips.appliedenergistics2.ReshuffleStorageCancelDesc=Click to cancel the current reshuffle operation.
-gui.tooltips.appliedenergistics2.ReshuffleStorageAll=Reshuffle All
-gui.tooltips.appliedenergistics2.ReshuffleStorageAllDesc=Mode: All Types (Items & Fluids)
-gui.tooltips.appliedenergistics2.ReshuffleStorageItems=Reshuffle Items
-gui.tooltips.appliedenergistics2.ReshuffleStorageItemsDesc=Mode: Items Only
-gui.tooltips.appliedenergistics2.ReshuffleStorageFluids=Reshuffle Fluids
-gui.tooltips.appliedenergistics2.ReshuffleStorageFluidsDesc=Mode: Fluids Only
+# Reshuffle Block Button Tooltips
+gui.tooltips.appliedenergistics2.ReshuffleStorageAll=All Types
+gui.tooltips.appliedenergistics2.ReshuffleStorageAllDesc=Reshuffles all storage types
+gui.tooltips.appliedenergistics2.ReshuffleStorageItems=Items Only
+gui.tooltips.appliedenergistics2.ReshuffleStorageItemsDesc=Reshuffles only item storage
+gui.tooltips.appliedenergistics2.ReshuffleStorageFluids=Fluids Only
+gui.tooltips.appliedenergistics2.ReshuffleStorageFluidsDesc=Reshuffles only fluid storage
+gui.tooltips.appliedenergistics2.ReshuffleVoidProtection=Void Protection
+gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionDesc=Prevents items from being voided during reshuffle operations
+gui.tooltips.appliedenergistics2.ReshuffleOverwriteProtection=Overwrite Protection
+gui.tooltips.appliedenergistics2.ReshuffleOverwriteProtectionDesc=Prevents overwriting existing storage allocations
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode

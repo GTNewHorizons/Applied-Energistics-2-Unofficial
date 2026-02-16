@@ -937,6 +937,22 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.RESHUFFLE_STORAGE_CANCEL,
                     ButtonToolTips.ReshuffleStorageCancel,
                     ButtonToolTips.ReshuffleStorageCancelDesc);
+
+            // Void protection button - row 9, spot 5
+            this.registerApp(
+                    16 * 8 + 4,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_VOID_PROTECTION,
+                    ButtonToolTips.ReshuffleVoidProtection,
+                    ButtonToolTips.ReshuffleVoidProtectionDesc);
+
+            // Overwrite protection button - row 9, spot 6
+            this.registerApp(
+                    16 * 8 + 5,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_OVERWRITE_PROTECTION,
+                    ButtonToolTips.ReshuffleOverwriteProtection,
+                    ButtonToolTips.ReshuffleOverwriteProtectionDesc);
         }
     }
 

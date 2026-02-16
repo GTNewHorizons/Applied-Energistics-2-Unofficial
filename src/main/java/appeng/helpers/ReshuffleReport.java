@@ -13,16 +13,17 @@ package appeng.helpers;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
 
-import appeng.api.config.ReshuffleMode;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
@@ -88,7 +89,7 @@ public class ReshuffleReport {
     private final List<ItemChange> lostItems = new ArrayList<>();
     private final List<ItemChange> gainedItems = new ArrayList<>();
 
-    private ReshuffleMode mode;
+    private Set<IAEStackType<?>> allowedTypes = new HashSet<>();
     private boolean voidProtection;
     private boolean overwriteProtection;
     private long startTime;
@@ -235,159 +236,123 @@ public class ReshuffleReport {
     }
 
     /**
-     * Sends the report to the player via chat messages.
+     * Generates the report as a list of formatted strings for GUI display.
+     *
+     * @return List of formatted strings with color codes
      */
-    public void sendToPlayer(EntityPlayer player) {
-        if (!(player instanceof EntityPlayerMP)) return;
-
+    public List<String> generateReportLines() {
+        List<String> lines = new ArrayList<>();
         NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
         long durationMs = endTime - startTime;
         double durationSec = durationMs / 1000.0;
 
         // Header
-        player.addChatMessage(new ChatComponentText(""));
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "═══════ Reshuffle Report ═══════"));
+        lines.add("");
+        lines.add("§3═══════ Reshuffle Report ═══════"); // Dark aqua instead of gold
 
         // Summary stats
-        player.addChatMessage(
-                new ChatComponentText(
-                        EnumChatFormatting.YELLOW + "Duration: "
-                                + EnumChatFormatting.WHITE
-                                + String.format("%.2fs", durationSec)));
-        player.addChatMessage(
-                new ChatComponentText(
-                        EnumChatFormatting.YELLOW + "Mode: "
-                                + EnumChatFormatting.WHITE
-                                + mode.name()
-                                + EnumChatFormatting.GRAY
-                                + " | Void Protection: "
-                                + (voidProtection ? EnumChatFormatting.GREEN + "ON" : EnumChatFormatting.RED + "OFF")
-                                + EnumChatFormatting.GRAY
-                                + " | Overwrite Protection: "
-                                + (overwriteProtection ? EnumChatFormatting.GREEN + "ON"
-                                        : EnumChatFormatting.RED + "OFF")));
+        lines.add("§bDuration: §7" + String.format("%.2fs", durationSec)); // Aqua -> gray
 
-        player.addChatMessage(new ChatComponentText(""));
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "── Processing Stats ──"));
-        player.addChatMessage(
-                new ChatComponentText(
-                        EnumChatFormatting.WHITE + "  Processed: "
-                                + EnumChatFormatting.GREEN
-                                + nf.format(itemsProcessed)
-                                + EnumChatFormatting.GRAY
-                                + " | Skipped: "
-                                + EnumChatFormatting.YELLOW
-                                + nf.format(itemsSkipped)));
+        // Format allowed types string
+        StringBuilder typesStr = new StringBuilder();
+        for (IAEStackType<?> type : allowedTypes) {
+            if (typesStr.length() > 0) typesStr.append(", ");
+            String typeName = type.getClass().getSimpleName().replace("AE", "").replace("StackType", "");
+            typesStr.append(typeName);
+        }
+
+        lines.add(
+                "§bMode: §7" + (typesStr.length() > 0 ? typesStr.toString() : "None") // Aqua -> gray
+                        + "§8 | Void Protection: " // Dark gray
+                        + (voidProtection ? "§2ON" : "§cOFF") // Dark green / red
+                        + "§8 | Overwrite Protection: "
+                        + (overwriteProtection ? "§2ON" : "§cOFF"));
+
+        lines.add("");
+        lines.add("§3── Processing Stats ──"); // Dark aqua
+        lines.add("§7  Processed: §2" + nf.format(itemsProcessed) + "§8 | Skipped: §6" + nf.format(itemsSkipped)); // Gray,
+                                                                                                                   // dark
+                                                                                                                   // green,
+                                                                                                                   // dark
+                                                                                                                   // gray,
+                                                                                                                   // gold
 
         // Before/After comparison
-        player.addChatMessage(new ChatComponentText(""));
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "── Storage Totals ──"));
-        player.addChatMessage(
-                new ChatComponentText(
-                        EnumChatFormatting.WHITE + "  Item Types: "
-                                + EnumChatFormatting.GRAY
-                                + nf.format(totalItemTypesBefore)
-                                + " → "
-                                + EnumChatFormatting.WHITE
-                                + nf.format(totalItemTypesAfter)
-                                + getDifferenceColor(totalItemTypesAfter - totalItemTypesBefore)
-                                + " ("
-                                + formatDifference(totalItemTypesAfter - totalItemTypesBefore)
-                                + ")"));
-        player.addChatMessage(
-                new ChatComponentText(
-                        EnumChatFormatting.WHITE + "  Total Stacks: "
-                                + EnumChatFormatting.GRAY
-                                + nf.format(totalStacksBefore)
-                                + " → "
-                                + EnumChatFormatting.WHITE
-                                + nf.format(totalStacksAfter)
-                                + getDifferenceColor(totalStacksAfter - totalStacksBefore)
-                                + " ("
-                                + formatDifference(totalStacksAfter - totalStacksBefore)
-                                + ")"));
+        lines.add("");
+        lines.add("§3── Storage Totals ──"); // Dark aqua
+        lines.add(
+                "§7  Item Types: §8" + nf.format(totalItemTypesBefore) // Gray, dark gray
+                        + " → §7"
+                        + nf.format(totalItemTypesAfter)
+                        + getDifferenceColorCode(totalItemTypesAfter - totalItemTypesBefore)
+                        + " ("
+                        + formatDifference(totalItemTypesAfter - totalItemTypesBefore)
+                        + ")");
+        lines.add(
+                "§7  Total Stacks: §8" + nf.format(totalStacksBefore) // Gray, dark gray
+                        + " → §7"
+                        + nf.format(totalStacksAfter)
+                        + getDifferenceColorCode(totalStacksAfter - totalStacksBefore)
+                        + " ("
+                        + formatDifference(totalStacksAfter - totalStacksBefore)
+                        + ")");
 
         // Changes summary
-        player.addChatMessage(new ChatComponentText(""));
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "── Item Changes ──"));
-        player.addChatMessage(
-                new ChatComponentText(
-                        EnumChatFormatting.GREEN + "  Gained: "
-                                + nf.format(itemsGained)
-                                + " types (+"
-                                + nf.format(totalGained)
-                                + " items)"));
-        player.addChatMessage(
-                new ChatComponentText(
-                        EnumChatFormatting.RED + "  Lost: "
-                                + nf.format(itemsLost)
-                                + " types (-"
-                                + nf.format(totalLost)
-                                + " items)"));
-        player.addChatMessage(
-                new ChatComponentText(
-                        EnumChatFormatting.GRAY + "  Unchanged: " + nf.format(itemsUnchanged) + " types"));
+        lines.add("");
+        lines.add("§3── Item Changes ──"); // Dark aqua
+        lines.add("§2  Gained: " + nf.format(itemsGained) + " types (+" + nf.format(totalGained) + " items)"); // Dark
+                                                                                                               // green
+        lines.add("§c  Lost: " + nf.format(itemsLost) + " types (-" + nf.format(totalLost) + " items)"); // Red
+        lines.add("§8  Unchanged: " + nf.format(itemsUnchanged) + " types"); // Dark gray
 
         // Show top lost items (if any)
         if (!lostItems.isEmpty()) {
-            player.addChatMessage(new ChatComponentText(""));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "── Top Lost Items ──"));
+            lines.add("");
+            lines.add("§c── Top Lost Items ──");
             int shown = 0;
             for (ItemChange change : lostItems) {
                 if (shown >= 5) {
                     int remaining = lostItems.size() - 5;
                     if (remaining > 0) {
-                        player.addChatMessage(
-                                new ChatComponentText(EnumChatFormatting.GRAY + "  ... and " + remaining + " more"));
+                        lines.add("§8  ... and " + remaining + " more"); // Dark gray
                     }
                     break;
                 }
-                player.addChatMessage(
-                        new ChatComponentText(
-                                EnumChatFormatting.RED + "  • "
-                                        + EnumChatFormatting.WHITE
-                                        + getStackDisplayName(change.stack)
-                                        + EnumChatFormatting.RED
-                                        + " -"
-                                        + nf.format(Math.abs(change.difference))
-                                        + EnumChatFormatting.GRAY
-                                        + " ("
-                                        + nf.format(change.beforeCount)
-                                        + " → "
-                                        + nf.format(change.afterCount)
-                                        + ")"));
+                lines.add(
+                        "§c  • §7" + getStackDisplayName(change.stack) // Red, gray
+                                + "§c -"
+                                + nf.format(Math.abs(change.difference))
+                                + "§8 (" // Dark gray
+                                + nf.format(change.beforeCount)
+                                + " → "
+                                + nf.format(change.afterCount)
+                                + ")");
                 shown++;
             }
         }
 
-        // Show top gained items (if any - this would indicate new items appeared, which is unusual)
+        // Show top gained items
         if (!gainedItems.isEmpty() && totalGained > 0) {
-            player.addChatMessage(new ChatComponentText(""));
-            player.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "── Top Gained Items ──"));
+            lines.add("");
+            lines.add("§2── Top Gained Items ──"); // Dark green
             int shown = 0;
             for (ItemChange change : gainedItems) {
                 if (shown >= 5) {
                     int remaining = gainedItems.size() - 5;
                     if (remaining > 0) {
-                        player.addChatMessage(
-                                new ChatComponentText(EnumChatFormatting.GRAY + "  ... and " + remaining + " more"));
+                        lines.add("§8  ... and " + remaining + " more"); // Dark gray
                     }
                     break;
                 }
-                player.addChatMessage(
-                        new ChatComponentText(
-                                EnumChatFormatting.GREEN + "  • "
-                                        + EnumChatFormatting.WHITE
-                                        + getStackDisplayName(change.stack)
-                                        + EnumChatFormatting.GREEN
-                                        + " +"
-                                        + nf.format(change.difference)
-                                        + EnumChatFormatting.GRAY
-                                        + " ("
-                                        + nf.format(change.beforeCount)
-                                        + " → "
-                                        + nf.format(change.afterCount)
-                                        + ")"));
+                lines.add(
+                        "§2  • §7" + getStackDisplayName(change.stack) // Dark green, gray
+                                + "§2 +"
+                                + nf.format(change.difference)
+                                + "§8 (" // Dark gray
+                                + nf.format(change.beforeCount)
+                                + " → "
+                                + nf.format(change.afterCount)
+                                + ")");
                 shown++;
             }
         }
@@ -395,27 +360,40 @@ public class ReshuffleReport {
         // Integrity check
         long netChange = totalStacksAfter - totalStacksBefore;
         if (netChange != 0) {
-            player.addChatMessage(new ChatComponentText(""));
-            player.addChatMessage(
-                    new ChatComponentText(
-                            EnumChatFormatting.GOLD + "⚠ "
-                                    + EnumChatFormatting.YELLOW
-                                    + "Net change: "
-                                    + getDifferenceColor(netChange)
-                                    + formatDifference(netChange)
-                                    + " items"
-                                    + EnumChatFormatting.GRAY
-                                    + " (may be due to ongoing crafts or network activity)"));
+            lines.add("");
+            lines.add(
+                    "§6⚠ §7Net change: " + getDifferenceColorCode(netChange) // Gold warning, gray text
+                            + formatDifference(netChange)
+                            + " items§8 (may be due to ongoing crafts or network activity)"); // Dark gray
         } else {
-            player.addChatMessage(new ChatComponentText(""));
-            player.addChatMessage(
-                    new ChatComponentText(
-                            EnumChatFormatting.GREEN + "✓ "
-                                    + EnumChatFormatting.WHITE
-                                    + "No net change - storage integrity verified"));
+            lines.add("");
+            lines.add("§2✓ §7No net change - storage integrity verified"); // Dark green, gray
         }
 
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.GOLD + "═══════════════════════════════"));
+        lines.add("§3═══════════════════════════════"); // Dark aqua
+        return lines;
+    }
+
+    /**
+     * Sends the report to the player via chat messages (deprecated - use generateReportLines for GUI).
+     *
+     * @deprecated Use generateReportLines() instead and display in GUI
+     */
+    @Deprecated
+    public void sendToPlayer(EntityPlayer player) {
+        if (!(player instanceof EntityPlayerMP)) return;
+
+        // Use the new method to generate lines, then send to chat
+        List<String> lines = generateReportLines();
+        for (String line : lines) {
+            player.addChatMessage(new ChatComponentText(line));
+        }
+    }
+
+    private String getDifferenceColorCode(long diff) {
+        if (diff > 0) return "§a";
+        else if (diff < 0) return "§c";
+        else return "§7";
     }
 
     private String getStackDisplayName(IAEStack<?> stack) {
@@ -446,8 +424,8 @@ public class ReshuffleReport {
     }
 
     // Setters for configuration info
-    public void setMode(ReshuffleMode mode) {
-        this.mode = mode;
+    public void setAllowedTypes(Set<IAEStackType<?>> allowedTypes) {
+        this.allowedTypes = new HashSet<>(allowedTypes);
     }
 
     public void setVoidProtection(boolean voidProtection) {

@@ -19,6 +19,8 @@ import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.minecraft.item.ItemStack;
 
@@ -111,6 +113,11 @@ public class GridStorageCache implements IStorageGrid {
     private static final int CELL_BLUE = 2;
     private static final int CELL_ORANGE = 3;
     private static final int CELL_RED = 4;
+
+    // Storage locking mechanism using ReadWriteLock for thread-safe operations
+    // Multiple readers can access simultaneously, but writers get exclusive access
+    private final ReadWriteLock storageLock = new ReentrantReadWriteLock();
+    private volatile Object writeLockHolder = null; // Track who holds the write lock for debugging
 
     public GridStorageCache(final IGrid g) {
         this.myGrid = g;
@@ -677,5 +684,75 @@ public class GridStorageCache implements IStorageGrid {
 
     public long getEssentiaCellCount() {
         return essentiaCellCount;
+    }
+
+    /**
+     * Attempts to lock storage for exclusive write access during critical operations like reshuffle. This acquires a
+     * write lock, blocking all other read and write operations until unlocked.
+     *
+     * @param locker The object requesting the lock (e.g., TileStorageReshuffle)
+     * @return true if lock was acquired, false if storage is already locked by another writer
+     */
+    public boolean lockStorage(Object locker) {
+        // Try to acquire write lock with timeout to prevent deadlocks
+        try {
+            if (storageLock.writeLock().tryLock()) {
+                writeLockHolder = locker;
+                appeng.core.AELog.info("Storage write lock acquired by %s", locker.getClass().getSimpleName());
+                return true;
+            } else {
+                appeng.core.AELog.debug(
+                        "Storage lock failed - already locked by %s",
+                        writeLockHolder != null ? writeLockHolder.getClass().getSimpleName() : "unknown");
+                return false;
+            }
+        } catch (Exception e) {
+            appeng.core.AELog.error("Failed to acquire storage lock: %s", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Unlocks storage, allowing normal operations to resume.
+     *
+     * @param locker The object that previously acquired the lock
+     */
+    public void unlockStorage(Object locker) {
+        try {
+            if (writeLockHolder == locker) {
+                writeLockHolder = null;
+                storageLock.writeLock().unlock();
+                appeng.core.AELog.info("Storage write lock released by %s", locker.getClass().getSimpleName());
+            } else {
+                appeng.core.AELog.warn("Unlock attempt by %s but lock is held by %s", locker, writeLockHolder);
+            }
+        } catch (IllegalMonitorStateException e) {
+            appeng.core.AELog
+                    .error("Unlock failed - %s does not hold the write lock", locker.getClass().getSimpleName());
+        }
+    }
+
+    /**
+     * Checks if storage is currently locked by a write operation.
+     *
+     * @return true if locked, false if available
+     */
+    public boolean isStorageLocked() {
+        return writeLockHolder != null;
+    }
+
+    /**
+     * Acquires a read lock for non-mutating storage operations. Multiple readers can hold locks simultaneously, but
+     * will be blocked if a write lock is held.
+     */
+    public void acquireReadLock() {
+        storageLock.readLock().lock();
+    }
+
+    /**
+     * Releases a read lock.
+     */
+    public void releaseReadLock() {
+        storageLock.readLock().unlock();
     }
 }

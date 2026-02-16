@@ -35,10 +35,8 @@ import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.ActionItems;
 import appeng.api.config.CraftingStatus;
 import appeng.api.config.PinsState;
-import appeng.api.config.ReshuffleMode;
 import appeng.api.config.SearchBoxFocusPriority;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
@@ -67,7 +65,6 @@ import appeng.client.gui.widgets.GuiScrollbar;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.client.gui.widgets.IDropToFillTextField;
 import appeng.client.gui.widgets.ISortSource;
-import appeng.client.gui.widgets.ITooltip;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.gui.widgets.TypeToggleButton;
 import appeng.client.me.ItemRepo;
@@ -135,14 +132,9 @@ public class GuiMEMonitorable extends AEBaseGui
     private GuiImgButton terminalStyleBox;
     private GuiImgButton searchStringSave;
     private GuiImgButton pinsStateButton;
-    private GuiImgButton reshuffleButton;
-
-    // Reshuffle options (client-side state for UI)
-    private ReshuffleMode reshuffleMode = ReshuffleMode.ALL;
-    private boolean reshuffleVoidProtection = true;
-    private boolean reshuffleOverwriteProtection = false;
 
     private final Map<TypeToggleButton, IAEStackType<?>> typeToggleButtons = new IdentityHashMap<>();
+    // ...existing code...
     private boolean canBeAutoFocused = false;
     private boolean isAutoFocused = false;
     private int currentMouseX = 0;
@@ -250,49 +242,6 @@ public class GuiMEMonitorable extends AEBaseGui
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_CRAFTING_STATUS));
         }
 
-        // Handle reshuffle button click
-        if (btn == this.reshuffleButton) {
-            try {
-                boolean isRightClick = Mouse.isButtonDown(1);
-                boolean isMiddleClick = Mouse.isButtonDown(2);
-                boolean isAltHeld = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
-
-                if (this.monitorableContainer.previewGenerating) {
-                    // Cancel preview generation if in progress (any click)
-                    NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.PreviewCancel", ""));
-                } else if (this.monitorableContainer.reshuffleRunning) {
-                    // Cancel if already running (any click)
-                    NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.ReshuffleCancel", ""));
-                } else if (isRightClick) {
-                    // Right-click: cycle through modes
-                    this.reshuffleMode = switch (this.reshuffleMode) {
-                        case ALL -> ReshuffleMode.ITEMS_ONLY;
-                        case ITEMS_ONLY -> ReshuffleMode.FLUIDS_ONLY;
-                        case FLUIDS_ONLY -> ReshuffleMode.ALL;
-                    };
-                } else if (isMiddleClick) {
-                    // Middle-click: toggle void protection
-                    this.reshuffleVoidProtection = !this.reshuffleVoidProtection;
-                } else {
-                    // Left-click: start reshuffle with current options
-                    // Check if shift is held for confirmed start (bypasses confirmation dialog)
-                    boolean confirmed = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
-                    // Check if ctrl is held to toggle overwrite protection for this operation
-                    boolean overwrite = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
-
-                    String value = String.format("%s,%s,%s,%s",
-                        confirmed ? "confirmed" : "",
-                        this.reshuffleMode.name(),
-                        this.reshuffleVoidProtection ? "true" : "false",
-                        overwrite ? "true" : "false"
-                    );
-                    NetworkHandler.instance.sendToServer(new PacketValueConfig("Terminal.Reshuffle", value));
-                }
-            } catch (final IOException e) {
-                AELog.debug(e);
-            }
-            return;
-        }
 
         if (!(btn instanceof GuiImgButton iBtn) || iBtn.getSetting() == Settings.ACTIONS) return;
 
@@ -499,16 +448,6 @@ public class GuiMEMonitorable extends AEBaseGui
                             configSrc.getSetting(Settings.PINS_STATE)));
         }
 
-        // Add reshuffle button below the pins button
-        if (this.viewCell) {
-            this.buttonList.add(
-                    this.reshuffleButton = new GuiImgButton(
-                            getReshuffleButtonX(),
-                            getReshuffleButtonY(),
-                            Settings.ACTIONS,
-                            ActionItems.RESHUFFLE_STORAGE));
-        }
-
         // Enum setting = AEConfig.INSTANCE.getSetting( "Terminal", SearchBoxMode.class, SearchBoxMode.AUTOSEARCH );
         final Enum searchMode = AEConfig.instance.settings.getSetting(Settings.SEARCH_MODE);
         this.canBeAutoFocused = SearchBoxMode.AUTOSEARCH == searchMode || SearchBoxMode.NEI_AUTOSEARCH == searchMode;
@@ -627,70 +566,6 @@ public class GuiMEMonitorable extends AEBaseGui
                 this.drawTooltip(mouseX - guiLeft, mouseY - guiTop, lines.toArray(new String[0]));
             }
         }
-    }
-
-    @Override
-    protected void handleTooltip(int mouseX, int mouseY, ITooltip tooltip) {
-        // Custom tooltip for reshuffle button showing current settings
-        if (tooltip == this.reshuffleButton && this.reshuffleButton != null) {
-            final int x = tooltip.xPos();
-            final int y = tooltip.yPos();
-
-            if (tooltip.isVisible() && x < mouseX
-                    && x + tooltip.getWidth() > mouseX
-                    && y < mouseY
-                    && y + tooltip.getHeight() > mouseY) {
-
-                String tooltipText = buildReshuffleTooltip();
-                drawTooltip(x + 11, Math.max(y, 15) + 4, tooltipText);
-            }
-            return;
-        }
-        super.handleTooltip(mouseX, mouseY, tooltip);
-    }
-
-    private String buildReshuffleTooltip() {
-        StringBuilder sb = new StringBuilder();
-
-        if (this.monitorableContainer.previewGenerating) {
-            // Preview generating state - show cancel option
-            sb.append("§eGenerating Preview...§r\n");
-            sb.append("§7Click to cancel preview generation.§r");
-        } else if (this.monitorableContainer.reshuffleRunning) {
-            // Running state - show cancel tooltip with progress
-            sb.append("§6Cancel Reshuffle§r\n");
-            sb.append("§7Progress: §f").append(this.monitorableContainer.reshuffleProgress).append("%§r\n");
-            sb.append("§7Click to cancel the operation.§r");
-        } else {
-            // Not running - show configuration options
-            sb.append("§6Reshuffle Storage§r\n\n");
-
-            // Current mode
-            String modeStr = switch (this.reshuffleMode) {
-                case ALL -> "§aAll Types§r";
-                case ITEMS_ONLY -> "§bItems Only§r";
-                case FLUIDS_ONLY -> "§9Fluids Only§r";
-            };
-            sb.append("§7Mode: §r").append(modeStr).append("\n");
-
-            // Void protection
-            String voidStr = this.reshuffleVoidProtection ? "§a✓ ON§r" : "§c✗ OFF§r";
-            sb.append("§7Void Protection: §r").append(voidStr).append("\n");
-
-            // Overwrite protection (note: activated with Ctrl during click)
-            sb.append("§7Overwrite Protection: §8(Ctrl+click)§r\n\n");
-
-            // Controls
-            sb.append("§8─── Controls ───§r\n");
-            sb.append("§bLeft-click§7: Start reshuffle§r\n");
-            sb.append("§bRight-click§7: Cycle mode§r\n");
-            sb.append("§bMiddle-click§7: Toggle void protection§r\n");
-            sb.append("§bAlt+click§7: Preview mode§r\n");
-            sb.append("§bShift+click§7: Skip confirmation§r\n");
-            sb.append("§bCtrl+click§7: Enable overwrite protection§r");
-        }
-
-        return sb.toString();
     }
 
     @Override
@@ -1019,21 +894,6 @@ public class GuiMEMonitorable extends AEBaseGui
     public void updateScreen() {
         this.repo.setPowered(this.monitorableContainer.isPowered());
 
-        // Update reshuffle button state based on running status and mode
-        if (this.reshuffleButton != null) {
-            if (this.monitorableContainer.reshuffleRunning) {
-                this.reshuffleButton.set(ActionItems.RESHUFFLE_STORAGE_CANCEL);
-            } else {
-                // Show icon based on current mode
-                ActionItems modeIcon = switch (this.reshuffleMode) {
-                    case ALL -> ActionItems.RESHUFFLE_STORAGE_ALL;
-                    case ITEMS_ONLY -> ActionItems.RESHUFFLE_STORAGE_ITEMS;
-                    case FLUIDS_ONLY -> ActionItems.RESHUFFLE_STORAGE_FLUIDS;
-                };
-                this.reshuffleButton.set(modeIcon);
-            }
-        }
-
         super.updateScreen();
     }
 
@@ -1077,21 +937,6 @@ public class GuiMEMonitorable extends AEBaseGui
             this.pinsStateButton.set(pinsState);
 
             reinitalize();
-        }
-
-        // Update reshuffle button state based on running status
-        if (this.reshuffleButton != null) {
-            if (this.monitorableContainer.reshuffleRunning) {
-                this.reshuffleButton.set(ActionItems.RESHUFFLE_STORAGE_CANCEL);
-            } else {
-                // Show icon based on current mode
-                ActionItems modeIcon = switch (this.reshuffleMode) {
-                    case ALL -> ActionItems.RESHUFFLE_STORAGE_ALL;
-                    case ITEMS_ONLY -> ActionItems.RESHUFFLE_STORAGE_ITEMS;
-                    case FLUIDS_ONLY -> ActionItems.RESHUFFLE_STORAGE_FLUIDS;
-                };
-                this.reshuffleButton.set(modeIcon);
-            }
         }
 
         this.repo.updateView();

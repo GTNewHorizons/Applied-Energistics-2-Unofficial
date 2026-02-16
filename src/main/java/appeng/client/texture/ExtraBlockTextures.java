@@ -99,6 +99,19 @@ public enum ExtraBlockTextures {
     BlockMESecurityOn_Light("BlockMESecurityOn_Light"),
     BlockMESecurityOn_Medium("BlockMESecurityOn_Medium"),
     BlockMESecurityOn_Dark("BlockMESecurityOn_Dark"),
+
+    // Storage Reshuffle block textures
+    BlockReshuffleFrontAll("BlockReshuffleFrontAll"),
+    BlockReshuffleFrontAllActive("BlockReshuffleFrontAllActive"),
+    BlockReshuffleFrontItems("BlockReshuffleFrontItems"),
+    BlockReshuffleFrontItemsActive("BlockReshuffleFrontItemsActive"),
+    BlockReshuffleFrontFluids("BlockReshuffleFrontFluids"),
+    BlockReshuffleFrontFluidsActive("BlockReshuffleFrontFluidsActive"),
+    BlockReshuffleBack("BlockReshuffleBack"),
+    BlockReshuffleSide("BlockReshuffleSide"),
+    BlockReshuffleTop("BlockReshuffleTop"),
+    BlockReshuffleBottom("BlockReshuffleBottom"),
+
     BlockInscriberInside("BlockInscriberInside"),
 
     BlockQuartzGrowthAcceleratorOn("BlockQuartzGrowthAcceleratorOn"),

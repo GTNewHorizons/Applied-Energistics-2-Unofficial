@@ -1,48 +1,465 @@
-# Reshuffle Storage Feature
+# ME Storage Reshuffle
 
 ## Overview
 
-The **Reshuffle Storage** feature allows you to redistribute all items in your ME network based on storage priority settings. This is useful when you've configured sticky cells, partitioned storage, or changed priority settings and want existing items to be moved to their optimal storage locations.
+The **ME Storage Reshuffle** block is a powerful tool that reorganizes your entire ME network storage based on storage priority, partitions, and cell configurations. It allows you to redistribute items, fluids, and essentia to their optimal storage locations.
 
-> ⚠️ **Important**: You must keep the terminal GUI open during the entire reshuffle operation. Closing the GUI will cancel the reshuffle!
+---
 
-## How It Works
+## What It Does
 
-### The Process
+The reshuffle operation processes every item type in your ME network and redistributes them according to:
 
-1. **Snapshot**: Before starting, the system takes a snapshot of all items currently in storage
-2. **Extract & Re-inject**: For each item type in storage:
-   - The item is **extracted** from wherever it currently resides
-   - The item is **re-injected** into the network
-   - The ME system's priority routing automatically places items in their optimal location
-3. **Report**: After completion, a detailed report shows what changed
+1. **Storage Priority** - Higher priority storage cells receive items first
+2. **Partitioned Cells** - Items configured in cell partitions go to those cells
+3. **Digital Singularities** - Items with allocated singularity storage move there
+4. **Cell Type & Capacity** - Optimizes distribution from lower to higher capacity cells
 
-### Priority Routing
+### Cross-Dimensional Support
 
-When items are re-injected, the ME network routes them based on:
+The reshuffle block processes storage across **all dimensions**:
+- Works with Quantum Network Bridges
+- Accesses drives in unloaded chunks
+- Handles storage in Overworld, Nether, End, and modded dimensions
 
-1. **Sticky Cells** (highest priority) - Items configured in a cell's partition with "sticky" mode enabled
-2. **Storage Priority** - Higher priority storage receives items first
-3. **Partitioned Storage** - Cells configured to only accept specific items
-4. **Default Storage** - Any remaining space in the network
+---
 
-## Using the Feature
+## The Reshuffle Block
 
-### Button Location
+### Crafting
 
-The reshuffle button appears in the ME Terminal GUI, below the pins button (right side of the terminal).
+Place the **ME Storage Reshuffle** block adjacent to any cable in your ME network.
 
-### Controls
+### Placement
 
-| Action | Effect |
-|--------|--------|
-| **Left-click** | Start the reshuffle operation |
-| **Right-click** | Cycle through modes (All → Items → Fluids) |
-| **Middle-click** | Toggle void protection ON/OFF |
-| **Shift + Left-click** | Start immediately (skip confirmation for large networks) |
-| **Ctrl + Left-click** | Enable overwrite protection for this operation |
+- Connect to your ME network via any cable side
+- Requires ME network power to operate
+- Must be on the same network as the storage you want to reshuffle
 
-### Tooltip
+### Block States
+
+The block's front face changes based on the current filter mode and activity:
+
+| Filter Mode | Idle Texture | Active Texture |
+|-------------|--------------|----------------|
+| **All Types** | Purple arrows | Purple arrows + animation |
+| **Items Only** | Green arrows | Green arrows + animation |
+| **Fluids Only** | Blue arrows | Blue arrows + animation |
+
+---
+
+## GUI Interface
+
+### Opening the GUI
+
+Right-click the **ME Storage Reshuffle** block to open its interface.
+
+### GUI Layout
+
+```
+┌─────────────────────────────────────────┐
+│  Filter:                  Protection:   │
+│  [ALL] [Items] [Fluids]   [Void] [OW]  │
+├─────────────────────────────────────────┤
+│  [START RESHUFFLE]  [Scan]              │
+├─────────────────────────────────────────┤
+│  Status: Idle                           │
+│  ████████████████░░░░░░░░░░░░░░ 65%     │
+│  4,523 / 6,900 types processed          │
+├─────────────────────────────────────────┤
+│  Report:                                │
+│  (scrollable text area)                 │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## GUI Controls
+
+### Filter Buttons
+
+Select which storage types to reshuffle:
+
+| Button | Icon | Description |
+|--------|------|-------------|
+| **All** | Purple shuffle arrows | Reshuffles items, fluids, and essentia |
+| **Items** | Green shuffle arrows | Only reshuffles item storage |
+| **Fluids** | Blue shuffle arrows | Only reshuffles fluid storage |
+
+### Protection Buttons
+
+| Button | Icon | Description |
+|--------|------|-------------|
+| **Void** | Shield icon | Prevents items from being voided (recommended: ON) |
+| **Overwrite** | Lock icon | Prevents overwriting existing storage allocations |
+
+### Action Buttons
+
+| Button | Function |
+|--------|----------|
+| **START RESHUFFLE** | Begins the reshuffle operation |
+| **Scan** | Analyzes network without reshuffling (generates preview report) |
+
+### Status Display
+
+Shows:
+- **Current state**: Idle, Scanning, Reshuffling, or Complete
+- **Progress bar**: Visual indicator with percentage
+- **Counter**: Types processed / Total types
+
+### Report Area
+
+Scrollable text area displaying:
+- **Scan Report**: Network statistics, cell counts, storage analysis
+- **Reshuffle Report**: Completion summary, item changes, integrity check
+
+---
+
+## Using Reshuffle
+
+### Step 1: Scan the Network (Optional)
+
+Click **[Scan]** to analyze your network without making changes:
+
+```
+═══════ Network Scan Report ═══════
+
+── Stack Types ──
+  Items: 6,900 types (3,456,789 total)
+  Fluids: 123 types (98,765,432 mB)
+  Essentia: 45 types (12,345 total)
+
+── Storage Cells ──
+  Total Cells: 847
+
+── Cell Types ──
+  16384k Storage Cell: 425
+  4096k Storage Cell: 198
+  1024k Fluid Cell: 124
+  Digital Singularity: 67
+  Quantum Storage Cell: 33
+
+── Reshuffle Estimate ──
+  Potential Freed Bytes: 2,456,789
+```
+
+### Step 2: Configure Options
+
+- **Select filter mode**: Choose which types to reshuffle
+- **Enable protections**:
+  - ✅ **Void Protection** - Recommended for safety
+  - ⚠️ **Overwrite Protection** - Use when testing
+
+### Step 3: Start Reshuffle
+
+Click **[START RESHUFFLE]** to begin:
+
+1. System locks storage (prevents external changes)
+2. Progress bar updates every 500 types (10% increments)
+3. Report generates upon completion
+4. Storage unlocks automatically
+
+### Progress Updates
+
+During operation, the GUI shows:
+```
+Status: Reshuffling
+██████████████████████░░░░░░░░ 72%
+5,000 / 6,900 types processed
+```
+
+### Completion Report
+
+```
+═══════ Reshuffle Report ═══════
+
+Duration: 25.96s
+Mode: All Types | Void Protection: ON | Overwrite Protection: OFF
+
+── Processing Stats ──
+  Processed: 6,900 | Skipped: 23
+
+── Storage Totals ──
+  Item Types: 6,900 → 6,899 (-1)
+  Total Stacks: 3,456,789 → 3,456,789 (0)
+
+── Item Changes ──
+  Gained: 234 types (+1,234,567 items)
+  Lost: 235 types (-1,234,568 items)
+  Unchanged: 6,430 types
+
+── Top Lost Items ──
+  • Cobblestone -50,000 (100,000 → 50,000)
+  • Dirt -25,000 (50,000 → 25,000)
+  ... and 233 more
+
+── Top Gained Items ──
+  • Diamond +10,000 (5,000 → 15,000)
+  • Gold Ingot +8,000 (2,000 → 10,000)
+  ... and 232 more
+
+✓ No net change - storage integrity verified
+═══════════════════════════════
+```
+
+---
+
+## Protection Systems
+
+### Void Protection (Recommended: ON)
+
+**Prevents item loss** during reshuffle operations.
+
+**How it works:**
+1. Before extracting an item, the system simulates re-injection
+2. If the simulation shows items would be voided, that type is **skipped**
+3. Skipped items remain in their original location
+
+**When items might void:**
+- Storage is full and can't accept items back
+- Partitioned cells reject the items after extraction
+- Network configuration changed during operation
+
+**Example:**
+```
+[Void Protection: ON]
+- Processing: Diamond (1000x)
+- Simulation: Only 950 can be re-injected
+- Action: SKIP (prevents loss of 50 diamonds)
+```
+
+### Overwrite Protection
+
+**Prevents unnecessary storage moves** that would just return items to the same location.
+
+**Use when:**
+- Testing reshuffle behavior
+- You want items to stay where they are unless there's a better location
+- Avoiding unnecessary cell wear (if that's a concern in your modpack)
+
+---
+
+## Advanced Features
+
+### Batched Processing
+
+The reshuffle operates in **batches** to prevent server lag:
+- **Default**: 500 types per server tick
+- Processes large networks smoothly
+- Prevents freezing on networks with 10,000+ item types
+
+### Storage Locking
+
+During reshuffle, the storage grid is **locked**:
+- External insertions/extractions are blocked
+- Autocrafting is paused
+- Pattern/crafting job changes are prevented
+
+**Warning**: Do not start reshuffle if crafting jobs are running!
+
+### Crafting Detection
+
+The system checks for active crafting jobs before starting:
+```
+❌ Cannot start reshuffle: Crafting jobs are still running.
+   Please wait for them to complete.
+```
+
+### Log File Generation
+
+For debugging, complete operation logs are written to:
+```
+minecraft/logs/reshuffle_<timestamp>.log
+```
+
+Contains:
+- Every item processed
+- Skip reasons
+- Simulation results
+- Error messages
+
+---
+
+## Technical Details
+
+### Cell Detection
+
+The reshuffle scans all cell providers in the network:
+
+1. **Primary**: `getAllCellProviders()` from GridStorageCache
+2. **Iterates**: Each ICellProvider's `getCellArray()`
+3. **Detects**: Cell type, tier, and capacity
+4. **Supports**:
+   - Standard Storage Cells (1k - 16384k)
+   - Fluid Cells (single & multi-fluid variants)
+   - Quantum Storage Cells
+   - Digital Singularities
+   - Artificial Universe cells
+   - Essentia Cells
+   - Block Container cells
+
+### Item Movement
+
+Each item type is processed:
+```java
+1. Extract all items of this type
+2. If (void protection) {
+      Simulate re-injection
+      If (would void) skip to next type
+   }
+3. Re-inject items into network
+4. Network routes to optimal storage
+```
+
+### Storage Optimization
+
+The system prioritizes **higher capacity cells**:
+- Items in 1k cells move to 4k cells (if available)
+- Items in 4k cells move to 16k cells (if available)
+- Final report shows cell usage optimization
+
+**Example:**
+```
+Before: 16 × 1k cells (fully used)
+After:  8 × 16k cells (optimized)
+```
+
+---
+
+## Performance
+
+### Network Size vs. Duration
+
+| Item Types | Estimated Time |
+|-----------|----------------|
+| 1,000 | ~2 seconds |
+| 5,000 | ~10 seconds |
+| 10,000 | ~20 seconds |
+| 50,000 | ~100 seconds |
+
+*Times vary based on server TPS and network complexity*
+
+### Optimization Tips
+
+1. **Use higher capacity cells** - Faster to process
+2. **Partition cells** - Reduces routing calculations
+3. **Scan first** - Preview changes before committing
+4. **Close unnecessary GUIs** - Frees up network bandwidth
+
+---
+
+## Troubleshooting
+
+### "Crafting jobs are running"
+
+**Problem**: Cannot start reshuffle while crafts are active
+
+**Solution**: Wait for all crafting jobs to complete or cancel them
+
+---
+
+### Items are skipped
+
+**Problem**: Many items show as "Skipped" in the report
+
+**Cause**: Void protection detected potential item loss
+
+**Solutions**:
+1. Add more storage capacity
+2. Check partition configurations
+3. Review storage priorities
+
+---
+
+### Progress stops at X%
+
+**Problem**: Reshuffle seems frozen
+
+**Check**:
+1. Is the GUI still open? (Required for operation)
+2. Server TPS - Low TPS slows processing
+3. Check logs for errors
+
+---
+
+### Report shows net change
+
+**Problem**: Report warns "items were voided"
+
+**Explanation**: 
+- This can happen if autocrafting is running during reshuffle
+- External mods inserting/extracting items
+- Network changes during operation
+
+**Prevention**: Stop all automation before reshuffling
+
+---
+
+## Best Practices
+
+### ✅ Do
+
+- **Scan first** - Preview changes before starting
+- **Enable void protection** - Prevents item loss
+- **Stop autocrafting** - Prevents interference
+- **Use during low activity** - Better performance
+- **Have spare storage** - Ensures items can be redistributed
+
+### ❌ Don't
+
+- Don't close the GUI during reshuffle
+- Don't start with active crafting jobs
+- Don't disable void protection unless you're sure
+- Don't run reshuffle during high server load
+
+---
+
+## Localization
+
+All GUI text and tooltips support full localization via `en_US.lang`:
+
+```properties
+gui.appliedenergistics2.reshuffle.start=Start Reshuffle
+gui.appliedenergistics2.reshuffle.scan=Scan Network
+gui.tooltips.appliedenergistics2.ReshuffleStorageAll=All Types
+gui.tooltips.appliedenergistics2.ReshuffleStorageAllDesc=Reshuffles all storage types
+gui.tooltips.appliedenergistics2.ReshuffleVoidProtection=Void Protection
+gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionDesc=Prevents items from being voided during reshuffle operations
+```
+
+---
+
+## FAQ
+
+**Q: Can I run reshuffle on a live server?**  
+A: Yes, but warn players and ensure autocrafting is idle.
+
+**Q: Does reshuffle work with AE2 Fluid Crafting?**  
+A: Yes, fully supported including Quantum Fluid cells and Singularities.
+
+**Q: Will reshuffle damage my storage cells?**  
+A: No, it's a safe operation that only moves items internally.
+
+**Q: Can I cancel a reshuffle?**  
+A: Yes, close the GUI or click Cancel (items already processed won't roll back).
+
+**Q: Does it work with Gregtech Digital Storage?**  
+A: Yes, supports all Gregtech storage cell types.
+
+---
+
+## Summary
+
+The **ME Storage Reshuffle** block is a powerful maintenance tool for optimizing ME network storage. Use it after:
+
+- Adding new storage cells
+- Changing storage priorities
+- Configuring partitions
+- Adding Digital Singularities
+- Major network reorganization
+
+Always **scan first**, enable **void protection**, and ensure **crafting is idle** for best results! 🎯
+
 
 Hovering over the button shows:
 - Current mode (All Types / Items Only / Fluids Only)

@@ -23,7 +23,6 @@ import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 
 import appeng.api.config.FuzzyMode;
-import appeng.api.config.ReshuffleMode;
 import appeng.api.config.Settings;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
@@ -107,26 +106,45 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.equals("Terminal.UpdateViewCell") && c instanceof final ContainerMEMonitorable qk) {
             qk.toggleViewCell(Integer.parseInt(this.Value));
         } else if (this.Name.equals("Terminal.Reshuffle") && c instanceof final ContainerMEMonitorable qk) {
-            // Parse value: "confirmed,mode,voidProtection,overwriteProtection" or just "confirmed" for legacy
+            // Parse value: "confirmed,typeFilter,voidProtection,overwriteProtection"
+            // typeFilter can be: "ALL", "ITEMS", "FLUIDS", or comma-separated type names
             String[] parts = this.Value.split(",");
             boolean confirmed = parts.length > 0 && "confirmed".equals(parts[0]);
-            ReshuffleMode mode = ReshuffleMode.ALL;
-            boolean voidProtection = true;
-            boolean overwriteProtection = false;
+            boolean voidProtection = parts.length > 2 ? "true".equals(parts[2]) : true;
+            boolean overwriteProtection = parts.length > 3 ? "true".equals(parts[3]) : false;
 
-            if (parts.length >= 4) {
-                try {
-                    mode = ReshuffleMode.valueOf(parts[1]);
-                } catch (IllegalArgumentException e) {
-                    mode = ReshuffleMode.ALL;
+            // Build allowed types set
+            java.util.Set<appeng.api.storage.data.IAEStackType<?>> allowedTypes = new java.util.HashSet<>();
+            String typeFilter = parts.length > 1 ? parts[1] : "ALL";
+
+            if ("ALL".equals(typeFilter) || typeFilter.isEmpty()) {
+                // Add all stack types
+                for (appeng.api.storage.data.IAEStackType<?> type : appeng.api.storage.data.AEStackTypeRegistry.getAllTypes()) {
+                    allowedTypes.add(type);
                 }
-                voidProtection = "true".equals(parts[2]);
-                overwriteProtection = "true".equals(parts[3]);
+            } else if ("ITEMS".equals(typeFilter)) {
+                allowedTypes.add(appeng.util.item.AEItemStackType.ITEM_STACK_TYPE);
+            } else if ("FLUIDS".equals(typeFilter)) {
+                allowedTypes.add(appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE);
+            } else {
+                // For future extensibility, support comma-separated type names
+                for (appeng.api.storage.data.IAEStackType<?> type : appeng.api.storage.data.AEStackTypeRegistry.getAllTypes()) {
+                    allowedTypes.add(type);
+                }
             }
 
-            qk.reshuffleStorage(player, confirmed, mode, voidProtection, overwriteProtection);
+            qk.reshuffleStorage(player, confirmed, allowedTypes, voidProtection, overwriteProtection);
         } else if (this.Name.equals("Terminal.ReshuffleCancel") && c instanceof final ContainerMEMonitorable qk) {
             qk.cancelReshuffle();
+        } else if (this.Name.startsWith("Reshuffle.") && c instanceof final appeng.container.implementations.ContainerStorageReshuffle qk) {
+            switch(this.Name) {
+                case "Reshuffle.ToggleVoidProtection" -> qk.toggleVoidProtection();
+                case "Reshuffle.ToggleOverwriteProtection" -> qk.toggleOverwriteProtection();
+                case "Reshuffle.SetTypeFilter" -> qk.setTypeFilterMode(this.Value);
+                case "Reshuffle.Start" -> qk.startReshuffle(player, "confirmed".equals(this.Value));
+                case "Reshuffle.Cancel" -> qk.cancelReshuffle();
+                case "Reshuffle.Scan" -> qk.performNetworkScan();
+            }
         } else if(this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk){
             qk.doublePatterns(Integer.parseInt(this.Value));
         } else if(this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPU qk) {
@@ -224,27 +242,32 @@ public class PacketValueConfig extends AppEngPacket {
 
         if (this.Name.equals("CustomName") && c instanceof AEBaseContainer) {
             ((AEBaseContainer) c).setCustomName(this.Value);
-        } else if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
-            final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-            if (gs instanceof GuiCraftingCPU) {
-                ((GuiCraftingCPU) gs).clearItems();
-            }
-        } else if (c instanceof IConfigurableObject) {
-            final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
+        } else if (this.Name.equals("Reshuffle.Report")
+                && c instanceof appeng.container.implementations.ContainerStorageReshuffle) {
+                    // Update report in container for display in GUI
+                    ((appeng.container.implementations.ContainerStorageReshuffle) c).updateReport(this.Value);
+                } else
+            if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
+                final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
+                if (gs instanceof GuiCraftingCPU) {
+                    ((GuiCraftingCPU) gs).clearItems();
+                }
+            } else if (c instanceof IConfigurableObject) {
+                final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 
-            for (final Settings e : cm.getSettings()) {
-                if (e.name().equals(this.Name)) {
-                    final Enum<?> def = cm.getSetting(e);
+                for (final Settings e : cm.getSettings()) {
+                    if (e.name().equals(this.Name)) {
+                        final Enum<?> def = cm.getSetting(e);
 
-                    try {
-                        cm.putSetting(e, Enum.valueOf(def.getClass(), this.Value));
-                    } catch (final IllegalArgumentException err) {
-                        // :P
+                        try {
+                            cm.putSetting(e, Enum.valueOf(def.getClass(), this.Value));
+                        } catch (final IllegalArgumentException err) {
+                            // :P
+                        }
+
+                        break;
                     }
-
-                    break;
                 }
             }
-        }
     }
 }

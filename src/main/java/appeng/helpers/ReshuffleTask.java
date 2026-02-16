@@ -10,9 +10,6 @@
 
 package appeng.helpers;
 
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -25,10 +22,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentTranslation;
 
 import appeng.api.config.Actionable;
-import appeng.api.config.ReshuffleMode;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
@@ -36,12 +31,13 @@ import appeng.core.AELog;
 
 /**
  * Manages the batched reshuffle operation for ME storage networks. Processes items in batches over multiple ticks to
- * prevent server freezing.
+ * prevent server freezing. Uses stack type filters instead of mode enum.
  */
 public class ReshuffleTask {
 
-    /** Number of item types to process per tick */
-    private static final int BATCH_SIZE = 100;
+    /** Number of item types to process per tick - configurable for performance tuning */
+    private static final int DEFAULT_BATCH_SIZE = 500; // Increased from 100 for faster processing
+    private final int batchSize;
 
     /** Threshold for requiring confirmation (number of unique item types) */
     public static final int LARGE_NETWORK_THRESHOLD = 1000;
@@ -49,13 +45,12 @@ public class ReshuffleTask {
     private final Map<IAEStackType<?>, IMEMonitor<?>> monitors;
     private final BaseActionSource actionSource;
     private final EntityPlayer player;
-    private final ReshuffleMode mode;
+    private final Set<IAEStackType<?>> allowedTypes;
     private final boolean voidProtection;
     private final boolean overwriteProtection;
     private final boolean generateReport;
 
     private final List<IAEStack<?>> itemsToProcess = new ArrayList<>();
-    private final Set<IAEStackType<?>> allowedTypes = new HashSet<>();
     private int currentIndex = 0;
     private int totalItems = 0;
     private int processedItems = 0;
@@ -77,29 +72,53 @@ public class ReshuffleTask {
      * @param monitors            The storage monitors to use
      * @param actionSource        The action source for security
      * @param player              The player initiating the reshuffle
-     * @param mode                Which types of storage to reshuffle (ALL, ITEMS_ONLY, FLUIDS_ONLY)
+     * @param allowedTypes        Set of IAEStackType to process (e.g., items, fluids, etc.)
      * @param voidProtection      If true, items won't be extracted if they can't be fully re-inserted
      * @param overwriteProtection If true, items won't be moved if they would just go back to same location
      * @param generateReport      If true, generates a detailed report at the end
      */
     public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
-            EntityPlayer player, ReshuffleMode mode, boolean voidProtection, boolean overwriteProtection,
+            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean overwriteProtection,
             boolean generateReport) {
+        this(
+                monitors,
+                actionSource,
+                player,
+                allowedTypes,
+                voidProtection,
+                overwriteProtection,
+                generateReport,
+                DEFAULT_BATCH_SIZE);
+    }
+
+    /**
+     * Creates a new ReshuffleTask with custom batch size.
+     *
+     * @param monitors            The storage monitors to use
+     * @param actionSource        The action source for security
+     * @param player              The player initiating the reshuffle
+     * @param allowedTypes        Set of IAEStackType to process (e.g., items, fluids, etc.)
+     * @param voidProtection      If true, items won't be extracted if they can't be fully re-inserted
+     * @param overwriteProtection If true, items won't be moved if they would just go back to same location
+     * @param generateReport      If true, generates a detailed report at the end
+     * @param batchSize           Number of items to process per tick
+     */
+    public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
+            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean overwriteProtection,
+            boolean generateReport, int batchSize) {
         this.monitors = new IdentityHashMap<>(monitors);
         this.actionSource = actionSource;
         this.player = player;
-        this.mode = mode;
+        this.allowedTypes = new HashSet<>(allowedTypes);
         this.voidProtection = voidProtection;
         this.overwriteProtection = overwriteProtection;
         this.generateReport = generateReport;
-
-        // Setup allowed types based on mode
-        setupAllowedTypes();
+        this.batchSize = batchSize;
 
         // Initialize report if enabled
         if (generateReport) {
             this.report = new ReshuffleReport();
-            this.report.setMode(mode);
+            this.report.setAllowedTypes(allowedTypes);
             this.report.setVoidProtection(voidProtection);
             this.report.setOverwriteProtection(overwriteProtection);
         }
@@ -107,40 +126,7 @@ public class ReshuffleTask {
         // Initialize debug logger
         if (ReshuffleLogger.DEBUG_LOGGING_ENABLED) {
             this.logger = new ReshuffleLogger(player.getCommandSenderName());
-            this.logger.logConfig(mode, voidProtection, overwriteProtection);
-        }
-    }
-
-    /**
-     * Constructor with default report generation enabled
-     */
-    public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
-            EntityPlayer player, ReshuffleMode mode, boolean voidProtection, boolean overwriteProtection) {
-        this(monitors, actionSource, player, mode, voidProtection, overwriteProtection, true);
-    }
-
-    /**
-     * Legacy constructor with default options (all types, void protection on, overwrite protection off, report on)
-     */
-    public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
-            EntityPlayer player) {
-        this(monitors, actionSource, player, ReshuffleMode.ALL, true, false, true);
-    }
-
-    private void setupAllowedTypes() {
-        allowedTypes.clear();
-        switch (mode) {
-            case ALL:
-                for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-                    allowedTypes.add(type);
-                }
-                break;
-            case ITEMS_ONLY:
-                allowedTypes.add(ITEM_STACK_TYPE);
-                break;
-            case FLUIDS_ONLY:
-                allowedTypes.add(FLUID_STACK_TYPE);
-                break;
+            this.logger.logConfig(allowedTypes, voidProtection, overwriteProtection);
         }
     }
 
@@ -191,7 +177,7 @@ public class ReshuffleTask {
         }
 
         int processed = 0;
-        while (currentIndex < itemsToProcess.size() && processed < BATCH_SIZE) {
+        while (currentIndex < itemsToProcess.size() && processed < batchSize) {
             try {
                 IAEStack<?> stack = itemsToProcess.get(currentIndex);
                 IAEStackType type = stack.getStackType();
@@ -307,10 +293,11 @@ public class ReshuffleTask {
 
     private void sendCompletionMessage() {
         if (player instanceof EntityPlayerMP) {
-            // Generate and send the full report
+            // Generate the report - it will be displayed in GUI
             if (report != null) {
                 report.generateReport(monitors, allowedTypes, processedItems, skippedItems);
-                report.sendToPlayer(player);
+                // Report is now available via getReport().generateReportLines()
+                // The tile entity will handle updating the GUI with the report
             } else {
                 // Fallback to simple message if report is disabled
                 if (skippedItems > 0) {
@@ -371,8 +358,8 @@ public class ReshuffleTask {
         return totalItems > 0 ? (processedItems * 100) / totalItems : 0;
     }
 
-    public ReshuffleMode getMode() {
-        return mode;
+    public Set<IAEStackType<?>> getAllowedTypes() {
+        return new HashSet<>(allowedTypes);
     }
 
     public boolean hasVoidProtection() {
