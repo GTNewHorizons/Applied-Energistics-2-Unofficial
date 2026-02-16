@@ -284,7 +284,7 @@ gui.appliedenergistics2.AddToBookmark=Закладка
 gui.appliedenergistics2.Cancel=Скасувати
 gui.appliedenergistics2.Suspend=Призупинити
 gui.appliedenergistics2.Resume=Відновити
-gui.appliedenergistics2.ETAFormat=ГГ:хх:сс
+gui.appliedenergistics2.ETAFormat=HH:mm:ss
 gui.appliedenergistics2.SwitchCraftingSimulationDisplayMode=Перемикання режиму відображення (Список/Дерево)
 gui.appliedenergistics2.Crafting=Створення
 gui.appliedenergistics2.Scheduled=Заплановано
@@ -823,7 +823,7 @@ item.appliedenergistics2.ItemPart.CableDense.name=ME Щільний розумн
 item.appliedenergistics2.ItemPart.CableDenseCovered.name=ME Щільний покритий кабель
 item.appliedenergistics2.ItemPart.StorageMonitor.name=ME Монітор сховища
 item.appliedenergistics2.ItemPart.ConversionMonitor.name=ME Монітор перетворення
-item.appliedenergistics2.ItemPart.ThroughputMonitor.name=ME монітор пропускної здатності
+item.appliedenergistics2.ItemPart.ThroughputMonitor.name=ME Монітор пропускної здатності
 item.appliedenergistics2.ItemPart.SemiDarkMonitor.name=Освітлювальна панель
 item.appliedenergistics2.ItemPart.Monitor.name=Яскрава освітлювальна панель
 item.appliedenergistics2.ItemPart.DarkMonitor.name=Темна освітлювальна панель
@@ -844,7 +844,7 @@ item.appliedenergistics2.ItemPart.InterfaceTerminal.name=ME Термінал і�
 item.appliedenergistics2.ItemPart.InvertedToggleBus.name=МЕ інвертована шина перемикання
 item.appliedenergistics2.ItemPart.ToggleBus.name=МЕ шина перемикання
 item.appliedenergistics2.ItemPart.CraftingMonitor.name=ME Монітор створення
-item.appliedenergistics2.ItemPart.PatternRepeater.name=ME повторювач шаблонів
+item.appliedenergistics2.ItemPart.PatternRepeater.name=ME Повторювач шаблонів
 
 item.appliedenergistics2.ItemSpatialStorageCell.128Cubed.name=128³ диск зберігання простору
 item.appliedenergistics2.ItemSpatialStorageCell.16Cubed.name=16³ диск зберігання простору
@@ -958,7 +958,7 @@ stat.ae2.TurnedCranks=Зламано рукояток
 
 # Keys
 key.appliedenergistics2.category=Applied Energistics 2
-key.pick_block.desc=AE2 вибір блоку
+key.pick_block.desc=AE2 Вибір блоку
 key.toggle_focus.desc=Перемкнути фокус вікна пошуку
 key.search_connected_inventories.desc=Пошук предмета в мережевих інвентарях
 key.control_operation.desc=Керування операцією
