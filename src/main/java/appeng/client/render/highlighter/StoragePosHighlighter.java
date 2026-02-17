@@ -8,7 +8,6 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.MathHelper;
-import net.minecraft.util.StatCollector;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -49,8 +48,7 @@ public class StoragePosHighlighter extends BlockPosHighlighter {
                 if (foundMsg == null) {
                     continue;
                 }
-                final String blockName = storage.blockNameNeedsTranslation ? translateBlockName(storage.blockName)
-                        : storage.blockName;
+                final String blockName = storage.getDisplayBlockName();
                 final String itemName = storage.getDisplayItemName();
                 player.addChatMessage(
                         new ChatComponentTranslation(
@@ -62,8 +60,7 @@ public class StoragePosHighlighter extends BlockPosHighlighter {
                                 storage.coord.y,
                                 storage.coord.z));
             } else if (wrongDimMsg != null) {
-                final String blockName = storage.blockNameNeedsTranslation ? translateBlockName(storage.blockName)
-                        : storage.blockName;
+                final String blockName = storage.getDisplayBlockName();
                 final String itemName = storage.getDisplayItemName();
                 player.addChatMessage(
                         new ChatComponentTranslation(
@@ -75,22 +72,6 @@ public class StoragePosHighlighter extends BlockPosHighlighter {
             }
         }
         INSTANCE.expireHighlightTime = System.currentTimeMillis() + highlightDuration;
-    }
-
-    private static String translateBlockName(final String unlocalizedName) {
-        if (unlocalizedName == null || unlocalizedName.isEmpty()) {
-            return " ";
-        }
-
-        final String nameKey = unlocalizedName.endsWith(".name") ? unlocalizedName : unlocalizedName + ".name";
-        if (StatCollector.canTranslate(nameKey)) {
-            return StatCollector.translateToLocal(nameKey);
-        }
-        if (StatCollector.canTranslate(unlocalizedName)) {
-            return StatCollector.translateToLocal(unlocalizedName);
-        }
-
-        return unlocalizedName;
     }
 
     public void clear() {

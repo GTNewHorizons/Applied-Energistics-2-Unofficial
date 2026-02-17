@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.storage.data.IAEItemStack;
@@ -113,6 +114,29 @@ public class ItemSearchDTO {
             return this.itemStack.getDisplayName();
         }
         return this.itemName;
+    }
+
+    public String getDisplayBlockName() {
+        if (!this.blockNameNeedsTranslation) {
+            return this.blockName;
+        }
+        return translateBlockName(this.blockName);
+    }
+
+    private static String translateBlockName(final String unlocalizedName) {
+        if (unlocalizedName == null || unlocalizedName.isEmpty()) {
+            return " ";
+        }
+
+        final String nameKey = unlocalizedName.endsWith(".name") ? unlocalizedName : unlocalizedName + ".name";
+        if (StatCollector.canTranslate(nameKey)) {
+            return StatCollector.translateToLocal(nameKey);
+        }
+        if (StatCollector.canTranslate(unlocalizedName)) {
+            return StatCollector.translateToLocal(unlocalizedName);
+        }
+
+        return unlocalizedName;
     }
 
 }
