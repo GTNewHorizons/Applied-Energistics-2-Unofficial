@@ -46,6 +46,7 @@ import appeng.api.implementations.guiobjects.IGuiItemObject;
 import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.implementations.guiobjects.IPortableCell;
 import appeng.api.networking.IGrid;
+import appeng.api.networking.IGridBlock;
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.energy.IEnergyGrid;
@@ -796,6 +797,7 @@ public abstract class AEBaseContainer extends Container {
                     }
                     machineCount++;
                     IGridHost machine = gridNode.getMachine();
+                    final HighlightNameData machineNameData = this.getHighlightNameData(gridNode, machine);
 
                     if (machine instanceof TileDrive innerMachine) {
                         for (int i = 0; i < innerMachine.getSizeInventory(); i++) {
@@ -806,13 +808,12 @@ public abstract class AEBaseContainer extends Container {
                                     .getAvailableItem(slotItem, IterationCounter.fetchNewId());
                             if (result == null) continue;
 
-                            String blockName = innerMachine.getCustomName();
-
                             coords.add(
                                     new ItemSearchDTO(
                                             innerMachine.getLocation(),
                                             result,
-                                            blockName,
+                                            machineNameData.name,
+                                            machineNameData.translate,
                                             i,
                                             innerMachine.getForward(),
                                             innerMachine.getUp()));
@@ -829,7 +830,12 @@ public abstract class AEBaseContainer extends Container {
                         IAEStack<IAEItemStack> result = handler
                                 .getAvailableItem(slotItem, IterationCounter.fetchNewId());
                         if (result == null) continue;
-                        coords.add(new ItemSearchDTO(innerMachine.getLocation(), result, innerMachine.getCustomName()));
+                        coords.add(
+                                new ItemSearchDTO(
+                                        innerMachine.getLocation(),
+                                        result,
+                                        machineNameData.name,
+                                        machineNameData.translate));
                     }
                     if (machine instanceof TileChest innerMachine) {
                         try {
@@ -840,7 +846,8 @@ public abstract class AEBaseContainer extends Container {
                                     new ItemSearchDTO(
                                             innerMachine.getLocation(),
                                             result,
-                                            innerMachine.getCustomName()));
+                                            machineNameData.name,
+                                            machineNameData.translate));
                         } catch (Exception e) {
                             // :/
                         }
@@ -865,6 +872,33 @@ public abstract class AEBaseContainer extends Container {
             } catch (final IOException e) {
                 AELog.debug(e);
             }
+        }
+    }
+
+    private HighlightNameData getHighlightNameData(final IGridNode gridNode, final IGridHost machine) {
+        if (machine instanceof final ICustomNameObject customNameObject && customNameObject.hasCustomName()) {
+            return new HighlightNameData(customNameObject.getCustomName(), false);
+        }
+
+        final IGridBlock gridBlock = gridNode.getGridBlock();
+        if (gridBlock != null) {
+            final ItemStack machineRepresentation = gridBlock.getMachineRepresentation();
+            if (machineRepresentation != null && machineRepresentation.getItem() != null) {
+                return new HighlightNameData(machineRepresentation.getUnlocalizedName(), true);
+            }
+        }
+
+        return new HighlightNameData(machine.getClass().getSimpleName(), false);
+    }
+
+    private static final class HighlightNameData {
+
+        private final String name;
+        private final boolean translate;
+
+        private HighlightNameData(final String name, final boolean translate) {
+            this.name = name;
+            this.translate = translate;
         }
     }
 
