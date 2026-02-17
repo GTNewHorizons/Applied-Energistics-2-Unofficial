@@ -1270,7 +1270,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 foundTarget = true;
                 if (hasNotItemOrFluid && !(ad instanceof AdaptorDualityInterface) && !(ad instanceof AdaptorMEChest)) {
                     scheduledReason = ScheduledReason.UNSUPPORTED_STACK;
-                    return false;
+                    continue;
                 }
 
                 if (this.isBlocking() && !(this.isSmartBlocking() && this.lastInputHash == patternDetails.hashCode())
