@@ -1168,6 +1168,8 @@ public abstract class AEBaseContainer extends Container {
         this.switchAbleGuiItemNext = n;
     }
 
+    private boolean needsFullSync = true;
+
     protected void updateVirtualSlots(StorageName invName, IAEStackInventory inventory,
             IAEStack<?>[] clientSlotsStacks) {
         var list = new Int2ObjectOpenHashMap<IAEStack<?>>();
@@ -1175,11 +1177,12 @@ public abstract class AEBaseContainer extends Container {
             IAEStack<?> aes = inventory.getAEStackInSlot(i);
             IAEStack<?> aesClient = clientSlotsStacks[i];
 
-            if (!isStacksIdentical(aes, aesClient)) {
+            if (needsFullSync || !isStacksIdentical(aes, aesClient)) {
                 list.put(i, aes);
                 clientSlotsStacks[i] = aes != null ? aes.copy() : null;
             }
         }
+        needsFullSync = false;
 
         if (!list.isEmpty()) {
             for (ICrafting crafter : this.crafters) {
