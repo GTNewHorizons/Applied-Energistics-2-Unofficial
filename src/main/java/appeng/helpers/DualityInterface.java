@@ -116,6 +116,7 @@ import appeng.util.Platform;
 import appeng.util.ScheduledReason;
 import appeng.util.inv.AdaptorDualityInterface;
 import appeng.util.inv.AdaptorIInventory;
+import appeng.util.inv.AdaptorMEChest;
 import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
 import appeng.util.inv.MEInventoryCrafting;
@@ -1267,7 +1268,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
                 foundTarget = true;
-                if (hasNotItemOrFluid && !(ad instanceof AdaptorDualityInterface)) {
+                if (hasNotItemOrFluid && !(ad instanceof AdaptorDualityInterface) && !(ad instanceof AdaptorMEChest)) {
                     scheduledReason = ScheduledReason.UNSUPPORTED_STACK;
                     return false;
                 }
