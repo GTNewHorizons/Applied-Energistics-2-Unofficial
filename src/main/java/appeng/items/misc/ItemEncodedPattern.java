@@ -278,10 +278,9 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             String itemCountText = NumberFormat.getNumberInstance(locale).format(item.getStackSize());
             String itemText;
             if (isGTLoaded) {
-                itemText = isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
-                        : ((IAEItemStack) item).getItem() instanceof ItemIntegratedCircuit
-                                ? Platform.getItemDisplayName(item) + " "
-                                        + ((IAEItemStack) item).getItemStack().getItemDamage()
+                itemText = isFluid ? Platform.getItemDisplayName(item)
+                        : item instanceof IAEItemStack ais && ais.getItem() instanceof ItemIntegratedCircuit
+                                ? Platform.getItemDisplayName(item) + " " + ais.getItemStack().getItemDamage()
                                 : Platform.getItemDisplayName(item);
             } else {
                 itemText = Platform.getItemDisplayName(item);
