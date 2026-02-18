@@ -19,6 +19,7 @@ import appeng.block.misc.BlockInterface;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.render.BlockRenderInfo;
 import appeng.client.texture.ExtraBlockTextures;
+import appeng.core.AEConfig;
 import appeng.tile.misc.TileInterface;
 
 public class RenderBlockInterface extends BaseBlockRender<BlockInterface, TileInterface> {
@@ -46,7 +47,7 @@ public class RenderBlockInterface extends BaseBlockRender<BlockInterface, TileIn
 
         this.preRenderInWorld(block, world, x, y, z, renderer);
         boolean fz;
-        if (ti != null && ti.somethingStuck) {
+        if (AEConfig.instance.redTintWhenSomethingStuckInInterface && ti != null && ti.somethingStuck) {
             fz = renderer.renderStandardBlockWithColorMultiplier(block, x, y, z, 0.75f, 0.5f, 0.5f);
         } else {
             fz = renderer.renderStandardBlock(block, x, y, z);
