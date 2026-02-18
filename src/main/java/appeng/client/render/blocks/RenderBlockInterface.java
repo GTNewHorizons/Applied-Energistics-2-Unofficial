@@ -44,7 +44,15 @@ public class RenderBlockInterface extends BaseBlockRender<BlockInterface, TileIn
                     side);
         }
 
-        final boolean fz = super.renderInWorld(block, world, x, y, z, renderer);
+        this.preRenderInWorld(block, world, x, y, z, renderer);
+        boolean fz;
+        if (ti != null && ti.somethingStuck) {
+            fz = renderer.renderStandardBlockWithColorMultiplier(block, x, y, z, 0.75f, 0.5f, 0.5f);
+        } else {
+            fz = renderer.renderStandardBlock(block, x, y, z);
+        }
+
+        this.postRenderInWorld(renderer);
 
         info.setTemporaryRenderIcon(null);
 

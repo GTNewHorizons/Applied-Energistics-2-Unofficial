@@ -78,6 +78,7 @@ public class TileInterface extends AENetworkInvTile
     private static final int CHANNEL_FLAG = 2;
     private static final int BOOTING_FLAG = 4;
     private int clientFlags = 0; // sent as byte.
+    public boolean somethingStuck = false;
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkChannelsChanged c) {
@@ -303,6 +304,14 @@ public class TileInterface extends AENetworkInvTile
             this.markForUpdate();
             return true;
         }
+
+        final boolean oldSomethingStuck = this.somethingStuck;
+        this.somethingStuck = data.readBoolean();
+        if (oldSomethingStuck != somethingStuck) {
+            worldObj.markBlockRangeForRenderUpdate(xCoord, yCoord, zCoord, xCoord, yCoord, zCoord);
+            return true;
+        }
+
         return false;
     }
 
@@ -320,6 +329,7 @@ public class TileInterface extends AENetworkInvTile
         }
 
         data.writeByte(clientFlags);
+        data.writeBoolean(duality.somethingStuck);
     }
 
     @Override

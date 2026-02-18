@@ -167,6 +167,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private int lastInputHash = 0;
     private final boolean isFluidInterface;
     private ScheduledReason scheduledReason = ScheduledReason.UNDEFINED;
+    public boolean somethingStuck = false;
 
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
         this.gridProxy = networkProxy;
@@ -719,6 +720,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             return false;
         }
 
+        this.somethingStuck = true;
+
         final TileEntity tile = this.iHost.getTileEntity();
         final World w = tile.getWorldObj();
 
@@ -772,6 +775,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         if (this.waitingToSend.isEmpty()) {
             this.waitingToSend = null;
+            this.somethingStuck = false;
         }
         return sentSomething;
     }
