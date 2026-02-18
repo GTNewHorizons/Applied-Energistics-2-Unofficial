@@ -638,7 +638,7 @@ gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Toggles showing interf
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Showing all interfaces
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOffDesc=Showing only interfaces with patterns with substitutions enabled
 
-gui.tooltips.appliedenergistics2.BlockDriveWarning=§4Do not move chests with AE drives; It may corrupt your profile. No refunds!
+gui.tooltips.appliedenergistics2.BlockDriveWarning=§4Do not move chests with AE drives\n§4It may corrupt your profile. No refunds!
 gui.tooltips.appliedenergistics2.BlockCreativeEnergyCell=§dInfinite Energy
 gui.tooltips.appliedenergistics2.PartCreativeEnergy=§dInfinite Energy
 gui.tooltips.appliedenergistics2.BlockCreativeEnergyController=§dInfinite Energy
