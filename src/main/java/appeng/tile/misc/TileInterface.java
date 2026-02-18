@@ -299,20 +299,21 @@ public class TileInterface extends AENetworkInvTile
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileInterface(final ByteBuf data) {
         int newState = data.readByte();
+        boolean somethingChanged = false;
         if (newState != clientFlags) {
             clientFlags = newState;
             this.markForUpdate();
-            return true;
+            somethingChanged = true;
         }
 
         final boolean oldSomethingStuck = this.somethingStuck;
         this.somethingStuck = data.readBoolean();
         if (oldSomethingStuck != somethingStuck) {
             worldObj.markBlockRangeForRenderUpdate(xCoord, yCoord, zCoord, xCoord, yCoord, zCoord);
-            return true;
+            somethingChanged = true;
         }
 
-        return false;
+        return somethingChanged;
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)

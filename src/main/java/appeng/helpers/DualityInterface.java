@@ -107,6 +107,7 @@ import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
+import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
@@ -720,8 +721,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             return false;
         }
 
-        this.somethingStuck = true;
-
         final TileEntity tile = this.iHost.getTileEntity();
         final World w = tile.getWorldObj();
 
@@ -775,9 +774,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         if (this.waitingToSend.isEmpty()) {
             this.waitingToSend = null;
-            this.somethingStuck = false;
-        }
+            this.toggleTint(false);
+        } else this.toggleTint(true);
         return sentSomething;
+    }
+
+    private void toggleTint(boolean stuck) {
+        if (stuck != this.somethingStuck && this.iHost instanceof TileInterface ti) {
+            this.somethingStuck = stuck;
+            ti.markForUpdate();
+        }
     }
 
     private boolean updateStorage() {
