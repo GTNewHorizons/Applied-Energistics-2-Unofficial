@@ -638,7 +638,7 @@ gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Переключает
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Отображение всех интерфейсов
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOffDesc=Показывать только интерфейсы с шаблонами с включённой заменой
 
-gui.tooltips.appliedenergistics2.BlockDriveWarning=§4Не перемещайте сундуки с AE-ячейками; это может повредить профиль. Возвратов нет!
+gui.tooltips.appliedenergistics2.BlockDriveWarning=§4Не перемещайте сундуки с AE-ячейками\n§4Это может повредить профиль. Возвратов нет!
 gui.tooltips.appliedenergistics2.BlockCreativeEnergyCell=§dБесконечная энергия
 gui.tooltips.appliedenergistics2.PartCreativeEnergy=§dБесконечная энергия
 gui.tooltips.appliedenergistics2.BlockCreativeEnergyController=§dБесконечная энергия
