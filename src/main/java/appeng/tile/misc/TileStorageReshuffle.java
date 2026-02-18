@@ -36,6 +36,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.AECableType;
 import appeng.core.AELog;
+import appeng.helpers.CellScanner;
 import appeng.helpers.ReshuffleReport;
 import appeng.helpers.ReshuffleTask;
 import appeng.me.GridAccessException;
@@ -63,6 +64,7 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
     private int reshuffleTotalItems = 0;
     private boolean reshuffleRunning = false;
     private java.util.List<String> reshuffleReport = new java.util.ArrayList<>();
+    private java.util.List<String> reshuffleTooltipReport = new java.util.ArrayList<>();
 
     public TileStorageReshuffle() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
@@ -115,9 +117,17 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
                     // Task completed - get report and send to container
                     ReshuffleReport report = this.activeTask.getReport();
                     if (report != null) {
+                        // Generate compact report for GUI display
                         java.util.List<String> reportLines = report.generateReportLines();
                         // Store report for sending to clients
                         this.reshuffleReport = reportLines;
+
+                        // Also generate full tooltip report (with all items, no truncation)
+                        java.util.List<String> tooltipReportLines = report.generateTooltipReportLines();
+                        this.reshuffleTooltipReport = tooltipReportLines;
+
+                        // Mark for NBT save so the report persists
+                        this.markDirty();
                     }
 
                     // Unlock storage
@@ -241,236 +251,39 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
     }
 
     /**
-     * Scans the ME Network storage and generates a detailed report
+     * Scans the ME Network storage and generates a detailed report using the comprehensive CellScanner
      *
-     * @return Formatted report string
+     * @return List of formatted report strings for display in GUI
      */
-    public String scanNetwork() {
+    public java.util.List<String> scanNetwork() {
         if (!this.getProxy().isActive()) {
-            return net.minecraft.util.StatCollector
-                    .translateToLocal("gui.appliedenergistics2.reshuffle.report.networkNotActive");
+            java.util.List<String> error = new java.util.ArrayList<>();
+            error.add(
+                    net.minecraft.util.StatCollector
+                            .translateToLocal("gui.appliedenergistics2.reshuffle.report.networkNotActive"));
+            return error;
         }
 
         try {
             IGrid grid = this.getProxy().getGrid();
-            IStorageGrid storageGrid = grid.getCache(IStorageGrid.class);
-            appeng.me.cache.GridStorageCache cache = (appeng.me.cache.GridStorageCache) storageGrid;
+            java.util.List<String> scanReport = CellScanner.generateReport(grid);
+            java.util.List<String> scanTooltip = CellScanner.generateTooltipReport(grid);
 
-            StringBuilder report = new StringBuilder();
-            report.append("§3═══════ "); // Dark aqua instead of gold
-            report.append(
-                    net.minecraft.util.StatCollector
-                            .translateToLocal("gui.appliedenergistics2.reshuffle.report.header"));
-            report.append(" ═══════\n\n");
+            // Store both the GUI report and the tooltip report
+            this.reshuffleReport = new java.util.ArrayList<>(scanReport);
+            this.reshuffleTooltipReport = new java.util.ArrayList<>(scanTooltip);
 
-            // Count different stack types
-            long itemTypes = 0;
-            long fluidTypes = 0;
-            long essentiaTypes = 0;
-            long totalItems = 0;
-            long totalFluids = 0;
-            long totalEssentia = 0;
+            // Mark for NBT save
+            this.markDirty();
 
-            // Get monitors for each type
-            for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-                IMEMonitor<?> monitor = storageGrid.getMEMonitor(type);
-                if (monitor != null) {
-                    var list = monitor.getStorageList();
-                    if (type == appeng.util.item.AEItemStackType.ITEM_STACK_TYPE) {
-                        itemTypes = list.size();
-                        for (var stack : list) {
-                            totalItems += stack.getStackSize();
-                        }
-                    } else if (type == appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE) {
-                        fluidTypes = list.size();
-                        for (var stack : list) {
-                            totalFluids += stack.getStackSize();
-                        }
-                    } else if (type.toString().contains("Essentia")) {
-                        essentiaTypes = list.size();
-                        for (var stack : list) {
-                            totalEssentia += stack.getStackSize();
-                        }
-                    }
-                }
-            }
-
-            report.append("§b── ");
-            report.append(
-                    net.minecraft.util.StatCollector
-                            .translateToLocal("gui.appliedenergistics2.reshuffle.report.stackTypes"));
-            report.append(" ──\n");
-            report.append("§7  "); // Gray instead of white
-            report.append(
-                    net.minecraft.util.StatCollector.translateToLocalFormatted(
-                            "gui.appliedenergistics2.reshuffle.report.items",
-                            itemTypes,
-                            totalItems));
-            report.append("\n");
-            report.append("§7  "); // Gray instead of white
-            report.append(
-                    net.minecraft.util.StatCollector.translateToLocalFormatted(
-                            "gui.appliedenergistics2.reshuffle.report.fluids",
-                            fluidTypes,
-                            totalFluids));
-            report.append("\n");
-            if (essentiaTypes > 0) {
-                report.append("§7  "); // Gray instead of white
-                report.append(
-                        net.minecraft.util.StatCollector.translateToLocalFormatted(
-                                "gui.appliedenergistics2.reshuffle.report.essentia",
-                                essentiaTypes,
-                                totalEssentia));
-                report.append("\n");
-            }
-            report.append("\n");
-
-            // Analyze storage cells
-            var cellStats = analyzeCells(cache);
-            report.append("§3── "); // Dark aqua instead of bright aqua
-            report.append(
-                    net.minecraft.util.StatCollector
-                            .translateToLocal("gui.appliedenergistics2.reshuffle.report.storageCells"));
-            report.append(" ──\n");
-            report.append("§7  "); // Gray instead of white
-            report.append(
-                    net.minecraft.util.StatCollector.translateToLocalFormatted(
-                            "gui.appliedenergistics2.reshuffle.report.totalCells",
-                            cellStats.totalCells));
-            report.append("\n\n");
-
-            // Cell type breakdown
-            if (!cellStats.cellsByType.isEmpty()) {
-                report.append("§3── "); // Dark aqua
-                report.append(
-                        net.minecraft.util.StatCollector
-                                .translateToLocal("gui.appliedenergistics2.reshuffle.report.cellTypes"));
-                report.append(" ──\n");
-                for (var entry : cellStats.cellsByType.entrySet()) {
-                    report.append("§7  "); // Gray
-                    report.append(
-                            net.minecraft.util.StatCollector.translateToLocalFormatted(
-                                    "gui.appliedenergistics2.reshuffle.report.cellType",
-                                    entry.getKey(),
-                                    entry.getValue()));
-                    report.append("\n");
-                }
-                report.append("\n");
-            }
-
-            // Estimate potential savings from reshuffle
-            long estimatedFreedBytes = estimateReshuffleSavings(cache);
-            if (estimatedFreedBytes > 0) {
-                report.append("§3── "); // Dark aqua
-                report.append(
-                        net.minecraft.util.StatCollector
-                                .translateToLocal("gui.appliedenergistics2.reshuffle.report.reshuffleEstimate"));
-                report.append(" ──\n");
-                report.append("§7  "); // Gray
-                report.append(
-                        net.minecraft.util.StatCollector.translateToLocalFormatted(
-                                "gui.appliedenergistics2.reshuffle.report.potentialFreed",
-                                estimatedFreedBytes));
-                report.append("\n");
-            }
-
-            report.append("\n§3═══════════════════════════════════"); // Dark aqua
-
-            return report.toString();
-
+            return scanReport;
         } catch (GridAccessException e) {
             AELog.warn(e, "Failed to access grid for scan");
-            return net.minecraft.util.StatCollector
-                    .translateToLocal("gui.appliedenergistics2.reshuffle.report.scanFailed");
-        }
-    }
-
-    private static class CellStats {
-
-        int totalCells = 0;
-        long itemCount = 0;
-        long fluidCount = 0;
-        Map<String, Integer> cellsByType = new java.util.HashMap<>();
-    }
-
-    private CellStats analyzeCells(appeng.me.cache.GridStorageCache cache) {
-        CellStats stats = new CellStats();
-
-        try {
-            // Get all cell providers (drives, chests, etc.)
-            var cellProviders = cache.getAllCellProviders();
-
-            for (var provider : cellProviders) {
-                // Count item cells
-                var itemHandlers = provider.getCellArray(appeng.util.item.AEItemStackType.ITEM_STACK_TYPE);
-                stats.totalCells += itemHandlers.size();
-                stats.cellsByType.merge("Item Cells", itemHandlers.size(), Integer::sum);
-                for (var handler : itemHandlers) {
-                    if (handler != null) {
-                        var list = appeng.util.item.AEItemStackType.ITEM_STACK_TYPE.createList();
-                        handler.getAvailableItems(list);
-                        stats.itemCount += list.size();
-                    }
-                }
-
-                // Count fluid cells
-                var fluidHandlers = provider.getCellArray(appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE);
-                stats.totalCells += fluidHandlers.size();
-                stats.cellsByType.merge("Fluid Cells", fluidHandlers.size(), Integer::sum);
-                for (var handler : fluidHandlers) {
-                    if (handler != null) {
-                        var list = appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE.createList();
-                        handler.getAvailableItems(list);
-                        stats.fluidCount += list.size();
-                    }
-                }
-            }
-
-        } catch (Exception e) {
-            AELog.warn(e, "Failed to analyze cells");
-        }
-
-        return stats;
-    }
-
-    private long estimateReshuffleSavings(appeng.me.cache.GridStorageCache cache) {
-        // Estimate how many bytes could be saved by optimizing storage
-        // This is a rough estimate based on fragmentation
-        try {
-            long potentialSavings = 0;
-
-            // Check for items spread across multiple cells that could be consolidated
-            var cellProviders = cache.getAllCellProviders();
-            Map<String, Integer> itemCellCount = new java.util.HashMap<>();
-
-            for (var provider : cellProviders) {
-                for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-                    var handlers = provider.getCellArray(type);
-                    for (var handler : handlers) {
-                        if (handler != null) {
-                            var list = type.createList();
-                            handler.getAvailableItems(list);
-                            for (var stack : list) {
-                                String key = stack.toString();
-                                itemCellCount.merge(key, 1, Integer::sum);
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Items in multiple cells = fragmentation = potential savings
-            for (var count : itemCellCount.values()) {
-                if (count > 1) {
-                    potentialSavings += (count - 1) * 8; // Rough estimate: 8 bytes per type overhead
-                }
-            }
-
-            return potentialSavings;
-
-        } catch (Exception e) {
-            AELog.warn(e, "Failed to estimate reshuffle savings");
-            return 0;
+            java.util.List<String> error = new java.util.ArrayList<>();
+            error.add(
+                    net.minecraft.util.StatCollector
+                            .translateToLocal("gui.appliedenergistics2.reshuffle.report.scanFailed"));
+            return error;
         }
     }
 
@@ -544,6 +357,25 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
             types.append(type.getClass().getSimpleName());
         }
         data.setString("allowedTypes", types.toString());
+
+        // Save the last generated reports (both compact and tooltip versions)
+        if (!this.reshuffleReport.isEmpty()) {
+            NBTTagCompound reportNBT = new NBTTagCompound();
+            reportNBT.setInteger("lineCount", this.reshuffleReport.size());
+            for (int i = 0; i < this.reshuffleReport.size(); i++) {
+                reportNBT.setString("line" + i, this.reshuffleReport.get(i));
+            }
+            data.setTag("lastReport", reportNBT);
+        }
+
+        if (!this.reshuffleTooltipReport.isEmpty()) {
+            NBTTagCompound tooltipReportNBT = new NBTTagCompound();
+            tooltipReportNBT.setInteger("lineCount", this.reshuffleTooltipReport.size());
+            for (int i = 0; i < this.reshuffleTooltipReport.size(); i++) {
+                tooltipReportNBT.setString("line" + i, this.reshuffleTooltipReport.get(i));
+            }
+            data.setTag("lastTooltipReport", tooltipReportNBT);
+        }
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
@@ -559,6 +391,29 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
                 // For now, just load all types - proper type deserialization can be added later
                 for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
                     this.allowedTypes.add(type);
+                }
+            }
+        }
+
+        // Load the last generated reports
+        this.reshuffleReport.clear();
+        if (data.hasKey("lastReport")) {
+            NBTTagCompound reportNBT = data.getCompoundTag("lastReport");
+            int lineCount = reportNBT.getInteger("lineCount");
+            for (int i = 0; i < lineCount; i++) {
+                if (reportNBT.hasKey("line" + i)) {
+                    this.reshuffleReport.add(reportNBT.getString("line" + i));
+                }
+            }
+        }
+
+        this.reshuffleTooltipReport.clear();
+        if (data.hasKey("lastTooltipReport")) {
+            NBTTagCompound tooltipReportNBT = data.getCompoundTag("lastTooltipReport");
+            int lineCount = tooltipReportNBT.getInteger("lineCount");
+            for (int i = 0; i < lineCount; i++) {
+                if (tooltipReportNBT.hasKey("line" + i)) {
+                    this.reshuffleTooltipReport.add(tooltipReportNBT.getString("line" + i));
                 }
             }
         }
@@ -652,5 +507,73 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
 
     public java.util.List<String> getReshuffleReport() {
         return new java.util.ArrayList<>(this.reshuffleReport);
+    }
+
+    public java.util.List<String> getReshuffleTooltipReport() {
+        return new java.util.ArrayList<>(this.reshuffleTooltipReport);
+    }
+
+    /**
+     * Get the full item name from a truncated version shown in the report. This is used for tooltip display when
+     * hovering over truncated names.
+     *
+     * @param truncatedName The truncated name (without "...")
+     * @return The full item name, or null if not found
+     */
+    public String getFullItemNameFromTruncated(String truncatedName) {
+        if (this.activeTask == null || truncatedName == null) {
+            return null;
+        }
+
+        // Get the full item name map from the task's report
+        ReshuffleReport report = this.activeTask.getReport();
+        if (report != null) {
+            return report.getFullNameForTruncated(truncatedName);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the list of hidden items for a "... and X more" line. This is used to show tooltips with the complete list.
+     *
+     * @param lineIndex   The index of the "... and X more" line in the report
+     * @param reportLines All report lines
+     * @return List of hidden item entries, or null if not found
+     */
+    public java.util.List<String> getHiddenItemsForMoreLine(int lineIndex, java.util.List<String> reportLines) {
+        if (this.activeTask == null || lineIndex < 0 || lineIndex >= reportLines.size()) {
+            return null;
+        }
+
+        // Determine which section this "more" line belongs to by looking at previous lines
+        String moreLine = reportLines.get(lineIndex);
+
+        // Find the section header before this line
+        String sectionType = null;
+        for (int i = lineIndex - 1; i >= 0; i--) {
+            String line = reportLines.get(i);
+            String cleanLine = line.replaceAll("§.", "");
+
+            if (cleanLine.contains("Top Lost Items")) {
+                sectionType = "lost";
+                break;
+            } else if (cleanLine.contains("Top Gained Items")) {
+                sectionType = "gained";
+                break;
+            }
+        }
+
+        if (sectionType == null) {
+            return null;
+        }
+
+        // Get the hidden items from the report
+        ReshuffleReport report = this.activeTask.getReport();
+        if (report != null) {
+            return report.getHiddenItems(sectionType);
+        }
+
+        return null;
     }
 }

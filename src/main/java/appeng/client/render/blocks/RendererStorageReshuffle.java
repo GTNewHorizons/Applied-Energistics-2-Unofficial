@@ -25,8 +25,6 @@ import appeng.block.misc.BlockStorageReshuffle;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.tile.misc.TileStorageReshuffle;
-import appeng.util.item.AEFluidStackType;
-import appeng.util.item.AEItemStackType;
 
 /**
  * Custom renderer for the Storage Reshuffle block. Handles different textures based on: - Active/inactive state - Type
@@ -105,36 +103,43 @@ public class RendererStorageReshuffle extends BaseBlockRender<BlockStorageReshuf
     }
 
     /**
-     * Gets the front icon based on active state and type filter.
+     * Gets the front icon based on active state and type filter. Dynamically supports any stack types from
+     * AEStackTypeRegistry without requiring code changes when new types are added.
      */
     private IIcon getFrontIcon(TileStorageReshuffle tile) {
         boolean isActive = tile.isReshuffleRunning();
         Set<IAEStackType<?>> allowedTypes = tile.getAllowedTypes();
 
-        // Determine filter mode
-        boolean hasItems = allowedTypes.contains(AEItemStackType.ITEM_STACK_TYPE);
-        boolean hasFluids = allowedTypes.contains(AEFluidStackType.FLUID_STACK_TYPE);
+        // Get all registered types for comparison
+        java.util.List<IAEStackType<?>> allTypes = new java.util.ArrayList<>(AEStackTypeRegistry.getAllTypes());
 
-        // Check for other types (essentia, etc.)
-        int totalTypes = AEStackTypeRegistry.getAllTypes().size();
-        boolean hasAll = allowedTypes.size() >= totalTypes || (allowedTypes.size() > 2);
-
-        if (hasAll || (hasItems && hasFluids)) {
+        // Check if all types are enabled
+        if (allowedTypes.size() == allTypes.size()) {
             // All types mode
             return isActive ? ExtraBlockTextures.BlockReshuffleFrontAllActive.getIcon()
                     : ExtraBlockTextures.BlockReshuffleFrontAll.getIcon();
-        } else if (hasItems && !hasFluids) {
-            // Items only mode
-            return isActive ? ExtraBlockTextures.BlockReshuffleFrontItemsActive.getIcon()
-                    : ExtraBlockTextures.BlockReshuffleFrontItems.getIcon();
-        } else if (hasFluids && !hasItems) {
-            // Fluids only mode
-            return isActive ? ExtraBlockTextures.BlockReshuffleFrontFluidsActive.getIcon()
-                    : ExtraBlockTextures.BlockReshuffleFrontFluids.getIcon();
-        } else {
-            // Default/fallback to All mode
-            return isActive ? ExtraBlockTextures.BlockReshuffleFrontAllActive.getIcon()
-                    : ExtraBlockTextures.BlockReshuffleFrontAll.getIcon();
         }
+
+        // Check if exactly one type is enabled
+        if (allowedTypes.size() == 1) {
+            IAEStackType<?> singleType = allowedTypes.iterator().next();
+            String typeId = singleType.getId();
+
+            // Map to specific textures based on type ID for known types
+            // This is flexible - new types will fall through to default
+            switch (typeId) {
+                case "item":
+                    return isActive ? ExtraBlockTextures.BlockReshuffleFrontItemsActive.getIcon()
+                            : ExtraBlockTextures.BlockReshuffleFrontItems.getIcon();
+                case "fluid":
+                    return isActive ? ExtraBlockTextures.BlockReshuffleFrontFluidsActive.getIcon()
+                            : ExtraBlockTextures.BlockReshuffleFrontFluids.getIcon();
+                // Future types (essentia, etc.) will fall through to default
+            }
+        }
+
+        // Default/fallback to All mode for multiple types or unknown single types
+        return isActive ? ExtraBlockTextures.BlockReshuffleFrontAllActive.getIcon()
+                : ExtraBlockTextures.BlockReshuffleFrontAll.getIcon();
     }
 }

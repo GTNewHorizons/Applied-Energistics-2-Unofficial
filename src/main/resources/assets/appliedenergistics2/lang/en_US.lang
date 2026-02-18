@@ -258,6 +258,26 @@ gui.appliedenergistics2.reshuffle.tooltip.scan.desc3=§7fragmentation statistics
 gui.appliedenergistics2.reshuffle.error.craftingActive=Cannot Start Reshuffle
 gui.appliedenergistics2.reshuffle.error.craftingActiveDesc=Crafting jobs are currently running. Please wait for them to complete before starting a reshuffle operation.
 
+# Cell Scanner Report
+gui.appliedenergistics2.reshuffle.scan.header=Storage Analysis
+gui.appliedenergistics2.reshuffle.scan.summary=Summary
+gui.appliedenergistics2.reshuffle.scan.totalCells=Total Cells
+gui.appliedenergistics2.reshuffle.scan.emptyCells=Empty Cells
+gui.appliedenergistics2.reshuffle.scan.bytesUtil=Bytes Utilization
+gui.appliedenergistics2.reshuffle.scan.typesUtil=Types Utilization
+gui.appliedenergistics2.reshuffle.scan.bytesUsed=Used
+gui.appliedenergistics2.reshuffle.scan.typesUsed=Used
+gui.appliedenergistics2.reshuffle.scan.utilization=Utilization
+gui.appliedenergistics2.reshuffle.scan.median=Median
+gui.appliedenergistics2.reshuffle.scan.fragmentation=Fragmentation
+gui.appliedenergistics2.reshuffle.scan.typeLockedCells=Type-Locked Cells
+gui.appliedenergistics2.reshuffle.scan.wastedBytes=Wasted Bytes
+gui.appliedenergistics2.reshuffle.scan.itemCells=Item Cells
+gui.appliedenergistics2.reshuffle.scan.fluidCells=Fluid Cells
+gui.appliedenergistics2.reshuffle.scan.essentiaCells=Essentia Cells
+gui.appliedenergistics2.reshuffle.scan.count=Count
+gui.appliedenergistics2.reshuffle.scan.mostFragmented=Most Fragmented Cells
+
 # Storage Reshuffle Scan Report
 gui.appliedenergistics2.reshuffle.report.header=Network Storage Analysis
 gui.appliedenergistics2.reshuffle.report.stackTypes=Stack Types
@@ -275,6 +295,11 @@ gui.appliedenergistics2.reshuffle.report.potentialFreed=Potential freed bytes: %
 gui.appliedenergistics2.reshuffle.report.efficiencyGain=Efficiency gain: %.1f%%
 gui.appliedenergistics2.reshuffle.report.networkNotActive=Network is not active
 gui.appliedenergistics2.reshuffle.report.scanFailed=Failed to scan network
+gui.appliedenergistics2.reshuffle.report.hiddenItems=Hidden Items
+gui.appliedenergistics2.reshuffle.report.pagination=Page %d / %d
+gui.appliedenergistics2.reshuffle.report.paginationHelp=Press Z/X to navigate pages
+gui.appliedenergistics2.reshuffle.report.full=Full Report
+gui.appliedenergistics2.reshuffle.report.noData=No report data available
 
 gui.appliedenergistics2.Efficiency=Efficiency
 gui.appliedenergistics2.RequiredPower=Required Power
@@ -737,6 +762,32 @@ gui.tooltips.appliedenergistics2.ReshuffleVoidProtection=Void Protection
 gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionDesc=Prevents items from being voided during reshuffle operations
 gui.tooltips.appliedenergistics2.ReshuffleOverwriteProtection=Overwrite Protection
 gui.tooltips.appliedenergistics2.ReshuffleOverwriteProtectionDesc=Prevents overwriting existing storage allocations
+
+# Storage Scan Report
+gui.appliedenergistics2.StorageScan=Storage Scan
+gui.appliedenergistics2.StorageScanSummary=Summary
+gui.appliedenergistics2.StorageScanCells=Cells
+gui.appliedenergistics2.StorageScanEmpty=empty
+gui.appliedenergistics2.StorageScanUtil=util
+gui.appliedenergistics2.StorageScanUtilization=Utilization
+gui.appliedenergistics2.StorageScanBytesAll=Bytes (all)
+gui.appliedenergistics2.StorageScanBytesExclSing=Bytes (excl. sing)
+gui.appliedenergistics2.StorageScanMedian=median
+gui.appliedenergistics2.StorageScanFragmentation=Fragmentation
+gui.appliedenergistics2.StorageScanLocked=Locked
+gui.appliedenergistics2.StorageScanWasted=Wasted
+gui.appliedenergistics2.StorageScanSingularityExcluded=(Singularity cells excluded)
+gui.appliedenergistics2.StorageScanExplainLocked=Locked: Cells at type capacity with free bytes
+gui.appliedenergistics2.StorageScanExplainWasted=Wasted: Bytes that can't be used (type-full)
+gui.appliedenergistics2.StorageScanExplainFragmented=Fragmented: Cells with poor utilization
+gui.appliedenergistics2.StorageScanCellTypes=Cell Types
+gui.appliedenergistics2.StorageScanCellTypesUtilization=Cell Types Utilization
+gui.appliedenergistics2.StorageScanDuplicatePartitions=Duplicate Partitions
+gui.appliedenergistics2.StorageScanLockedTo=locked to
+gui.appliedenergistics2.StorageScanLocations=Locations
+gui.appliedenergistics2.StorageScanMostFragmented=Most Fragmented
+gui.appliedenergistics2.StorageScanDrive=Drive
+gui.appliedenergistics2.StorageScanChest=Chest
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode

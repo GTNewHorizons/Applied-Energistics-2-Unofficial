@@ -34,6 +34,13 @@ import appeng.core.sync.packets.PacketValueConfig;
  */
 public class GuiStorageReshuffle extends AEBaseGui {
 
+    // Layout constants (v8c Tall layout)
+    private static final int REPORT_LABEL_Y = 230;
+    private static final int REPORT_VIEW_X = 12;
+    private static final int REPORT_VIEW_Y = 242;
+    private static final int REPORT_VIEW_W = 200;
+    private static final int REPORT_VIEW_H = 104;
+
     private final ContainerStorageReshuffle container;
 
     // Filter buttons
@@ -48,6 +55,19 @@ public class GuiStorageReshuffle extends AEBaseGui {
     // Action buttons
     private GuiButton startButton;
     private GuiButton scanButton;
+
+    // Pagination for "... x more" tooltip
+    private int tooltipPage = 0;
+    private int maxTooltipPage = 0;
+
+    // Full report button
+    private GuiImgButton fullReportButton;
+    private boolean fullReportMode = false;
+
+    // Scrollbar dragging state
+    private boolean isDraggingScrollbar = false;
+    private int dragStartY = 0;
+    private int dragStartScrollPos = 0;
 
     public GuiStorageReshuffle(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         super(new ContainerStorageReshuffle(inventoryPlayer, te));
@@ -116,6 +136,16 @@ public class GuiStorageReshuffle extends AEBaseGui {
                 20,
                 net.minecraft.util.StatCollector.translateToLocal("gui.appliedenergistics2.reshuffle.scan"));
         this.buttonList.add(this.scanButton);
+
+        // Full report toggle button in Report header area (right side of "Report:" label)
+        // Using EXTRA_OPTIONS icon from states.png for "more details"
+        this.fullReportButton = new GuiImgButton(
+                this.guiLeft + REPORT_VIEW_X + REPORT_VIEW_W + 4,
+                this.guiTop + REPORT_LABEL_Y,
+                Settings.ACTIONS,
+                ActionItems.EXTRA_OPTIONS);
+        this.fullReportButton.setHalfSize(true);
+        this.buttonList.add(this.fullReportButton);
     }
 
     @Override
@@ -124,11 +154,14 @@ public class GuiStorageReshuffle extends AEBaseGui {
 
         try {
             if (btn == this.filterAllButton) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.SetTypeFilter", "ALL"));
+                // -1 = All types
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.SetTypeFilter", "-1"));
             } else if (btn == this.filterItemsButton) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.SetTypeFilter", "ITEMS"));
+                // 0 = First type (typically Items)
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.SetTypeFilter", "0"));
             } else if (btn == this.filterFluidsButton) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.SetTypeFilter", "FLUIDS"));
+                // 1 = Second type (typically Fluids)
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.SetTypeFilter", "1"));
             } else if (btn == this.voidProtectionButton) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.ToggleVoidProtection", ""));
             } else if (btn == this.overwriteProtectionButton) {
@@ -144,6 +177,10 @@ public class GuiStorageReshuffle extends AEBaseGui {
                 }
             } else if (btn == this.scanButton) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.Scan", ""));
+            } else if (btn == this.fullReportButton) {
+                // Toggle full report mode (shows full untruncated report as tooltip)
+                fullReportMode = !fullReportMode;
+                this.tooltipPage = 0; // Reset pagination when toggling
             }
         } catch (final IOException e) {
             // Handle silently
@@ -153,6 +190,87 @@ public class GuiStorageReshuffle extends AEBaseGui {
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         super.mouseClicked(mouseX, mouseY, mouseButton);
+
+        if (mouseButton == 0) { // Left click
+            // Check if clicking on scrollbar
+            java.util.List<String> reportLines = this.container.getReportLines();
+            int maxVisibleLines = 13;
+            int totalLines = reportLines.size();
+
+            if (totalLines > maxVisibleLines) {
+                int scrollbarX = this.guiLeft + 216;
+                int scrollbarY = this.guiTop + 242;
+                int scrollbarHeight = 104;
+                int scrollbarWidth = 12;
+
+                // Calculate knob position
+                int knobHeight = 15;
+                int scrollPos = this.container.getReportScrollPosition();
+                int maxScroll = Math.max(0, totalLines - maxVisibleLines);
+                int knobOffset = maxScroll > 0 ? (scrollPos * (scrollbarHeight - knobHeight) / maxScroll) : 0;
+                int knobY = scrollbarY + knobOffset;
+
+                // Check if clicking on knob
+                if (mouseX >= scrollbarX && mouseX <= scrollbarX + scrollbarWidth
+                        && mouseY >= knobY
+                        && mouseY <= knobY + knobHeight) {
+                    this.isDraggingScrollbar = true;
+                    this.dragStartY = mouseY;
+                    this.dragStartScrollPos = scrollPos;
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void mouseMovedOrUp(int mouseX, int mouseY, int mouseButton) {
+        super.mouseMovedOrUp(mouseX, mouseY, mouseButton);
+
+        if (mouseButton == 0) { // Left button released
+            this.isDraggingScrollbar = false;
+        }
+    }
+
+    @Override
+    protected void mouseClickMove(int mouseX, int mouseY, int mouseButton, long timeSinceClick) {
+        super.mouseClickMove(mouseX, mouseY, mouseButton, timeSinceClick);
+
+        if (this.isDraggingScrollbar && mouseButton == 0) {
+            java.util.List<String> reportLines = this.container.getReportLines();
+            int maxVisibleLines = 13;
+            int totalLines = reportLines.size();
+            int maxScroll = Math.max(0, totalLines - maxVisibleLines);
+
+            if (maxScroll > 0) {
+                int scrollbarHeight = 104;
+                int knobHeight = 15;
+                int dragDeltaY = mouseY - this.dragStartY;
+
+                // Convert pixel delta to scroll position delta
+                int scrollDelta = (dragDeltaY * maxScroll) / (scrollbarHeight - knobHeight);
+                int newScrollPos = Math.max(0, Math.min(maxScroll, this.dragStartScrollPos + scrollDelta));
+
+                this.container.setReportScrollPosition(newScrollPos);
+            }
+        }
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) {
+        // Handle pagination keys for tooltip
+        if (keyCode == Keyboard.KEY_Z) {
+            // Previous page
+            if (this.tooltipPage > 0) {
+                this.tooltipPage--;
+            }
+        } else if (keyCode == Keyboard.KEY_X) {
+            // Next page
+            if (this.tooltipPage < this.maxTooltipPage) {
+                this.tooltipPage++;
+            }
+        } else {
+            super.keyTyped(typedChar, keyCode);
+        }
     }
 
     @Override
@@ -251,6 +369,61 @@ public class GuiStorageReshuffle extends AEBaseGui {
             return;
         }
 
+        // Full report toggle button tooltip
+        int fullReportBtnX = REPORT_VIEW_X + REPORT_VIEW_W + 4;
+        int fullReportBtnY = REPORT_LABEL_Y;
+        if (relX >= fullReportBtnX && relX <= (fullReportBtnX + 8)
+                && relY >= fullReportBtnY
+                && relY <= (fullReportBtnY + 8)) {
+
+            // Show the full untruncated report as a paginated tooltip
+            java.util.List<String> fullReportLines = new java.util.ArrayList<>();
+
+            // Get the full report (works for both scan and reshuffle reports)
+            java.util.List<String> fullReport = this.container.getFullReportLines();
+
+            if (fullReport != null && !fullReport.isEmpty()) {
+                // Show ALL items with pagination for very large reports
+                int itemsPerPage = 30; // Items per page
+                this.maxTooltipPage = Math.max(0, (fullReport.size() - 1) / itemsPerPage);
+
+                // Clamp tooltip page
+                if (this.tooltipPage > this.maxTooltipPage) {
+                    this.tooltipPage = this.maxTooltipPage;
+                }
+
+                // Add header with consistent color scheme
+                fullReportLines.add("§3§lFull Report"); // Dark aqua to match report style
+                fullReportLines.add("§8━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+                // Calculate page range
+                int startIdx = this.tooltipPage * itemsPerPage;
+                int endIdx = Math.min(startIdx + itemsPerPage, fullReport.size());
+
+                // Add items for current page - preserve all original colors
+                for (int i = startIdx; i < endIdx; i++) {
+                    String line = fullReport.get(i);
+                    // Keep original colors from report generation
+                    fullReportLines.add(line);
+                }
+
+                // Add pagination info if needed
+                if (this.maxTooltipPage > 0) {
+                    fullReportLines.add("");
+                    fullReportLines.add("§8━━━━━━━━━━━━━━━━━━━━━━━━━━");
+                    fullReportLines.add("§7Page " + (this.tooltipPage + 1) + " / " + (this.maxTooltipPage + 1));
+                    fullReportLines.add("§ePress Z/X to navigate pages");
+                }
+            } else {
+                // No report data available
+                fullReportLines.add("§7No scan data available");
+                fullReportLines.add("§7Click 'Scan' to generate report");
+            }
+
+            this.drawHoveringText(fullReportLines, mouseX, mouseY, this.fontRendererObj);
+            return;
+        }
+
         // Scan button tooltip
         if (relX >= 132 && relX <= 204 && relY >= 130 && relY <= 150) {
             java.util.List<String> scanLines = new java.util.ArrayList<>();
@@ -270,7 +443,125 @@ public class GuiStorageReshuffle extends AEBaseGui {
             return;
         }
 
-        // Note: Filter and protection button tooltips are handled by GuiImgButton automatically
+        // Handle report area tooltips for truncated text and "... x more" (lowest priority)
+        // Only show if not hovering over any GUI buttons
+        boolean overGuiButton = false;
+        for (Object obj : this.buttonList) {
+            if (obj instanceof GuiButton) {
+                GuiButton btn = (GuiButton) obj;
+                if (relX >= btn.xPosition - this.guiLeft && relX < btn.xPosition - this.guiLeft + btn.width
+                        && relY >= btn.yPosition - this.guiTop
+                        && relY < btn.yPosition - this.guiTop + btn.height) {
+                    overGuiButton = true;
+                    break;
+                }
+            }
+        }
+
+        if (!overGuiButton) {
+            renderReportTooltips(mouseX, mouseY);
+        }
+    }
+
+    /**
+     * Render tooltips for the report area - shows expanded "... x more" lists
+     */
+    private void renderReportTooltips(int mouseX, int mouseY) {
+        int reportX = this.guiLeft + 14;
+        int reportY = this.guiTop + 246;
+        int reportW = 196;
+        int reportH = 98;
+
+        // Check if mouse is in report area
+        if (mouseX < reportX || mouseX > reportX + reportW || mouseY < reportY || mouseY > reportY + reportH) {
+            return;
+        }
+
+        java.util.List<String> reportLines = this.container.getReportLines();
+        if (reportLines.isEmpty()) {
+            return;
+        }
+
+        int scrollPos = this.container.getReportScrollPosition();
+        int lineHeight = 7;
+        int maxVisibleLines = 13;
+
+        // Calculate which line the mouse is hovering over
+        // Account for the 4px top padding added to fix text cutoff
+        int relativeY = mouseY - reportY;
+        int hoveredLineIndex = (int) (relativeY / (lineHeight * 0.8125f)); // Account for 0.8125 scale
+
+        if (hoveredLineIndex < 0 || hoveredLineIndex >= maxVisibleLines) {
+            return;
+        }
+
+        int actualLineIndex = scrollPos + hoveredLineIndex;
+        if (actualLineIndex >= reportLines.size()) {
+            return;
+        }
+
+        String hoveredLine = reportLines.get(actualLineIndex);
+
+        // Strip color codes for detection
+        String cleanLine = hoveredLine.replaceAll("§.", "");
+
+        // Check if it's a "... and X more" line (case insensitive, flexible spacing)
+        if (cleanLine.toLowerCase().contains("...") && cleanLine.toLowerCase().contains("more")) {
+            showMoreItemsTooltip(actualLineIndex, mouseX, mouseY);
+        }
+    }
+
+    /**
+     * Show tooltip for "... and X more" lines with pagination
+     */
+    private void showMoreItemsTooltip(int lineIndex, int mouseX, int mouseY) {
+        java.util.List<String> hiddenItems = this.container.getHiddenItemsForMoreLine(lineIndex);
+
+        if (hiddenItems == null || hiddenItems.isEmpty()) {
+            return;
+        }
+
+        // Pagination settings
+        int itemsPerPage = 10;
+        this.maxTooltipPage = Math.max(0, (hiddenItems.size() - 1) / itemsPerPage);
+
+        // Clamp tooltip page
+        if (this.tooltipPage > this.maxTooltipPage) {
+            this.tooltipPage = this.maxTooltipPage;
+        }
+
+        java.util.List<String> tooltip = new java.util.ArrayList<>();
+
+        // Add header with cyan color
+        tooltip.add(
+                "§b" + net.minecraft.util.StatCollector
+                        .translateToLocal("gui.appliedenergistics2.reshuffle.report.hiddenItems"));
+        tooltip.add("§8" + "━━━━━━━━━━━━━━━━━━━━━━━━"); // Separator
+
+        // Calculate page range
+        int startIdx = this.tooltipPage * itemsPerPage;
+        int endIdx = Math.min(startIdx + itemsPerPage, hiddenItems.size());
+
+        // Add items for current page
+        for (int i = startIdx; i < endIdx; i++) {
+            tooltip.add(hiddenItems.get(i));
+        }
+
+        // Add pagination info if needed
+        if (this.maxTooltipPage > 0) {
+            tooltip.add(""); // Blank line
+            tooltip.add("§8" + "━━━━━━━━━━━━━━━━━━━━━━━━"); // Separator
+            tooltip.add(
+                    "§7" + net.minecraft.util.StatCollector.translateToLocalFormatted(
+                            "gui.appliedenergistics2.reshuffle.report.pagination",
+                            this.tooltipPage + 1,
+                            this.maxTooltipPage + 1));
+            tooltip.add(
+                    "§e" + net.minecraft.util.StatCollector
+                            .translateToLocal("gui.appliedenergistics2.reshuffle.report.paginationHelp"));
+        }
+
+        this.drawHoveringText(tooltip, mouseX, mouseY, this.fontRendererObj);
     }
 
     @Override
@@ -310,7 +601,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
             this.startButton.enabled = true;
         } else {
             this.fontRendererObj.drawString(
-                    "§7" + net.minecraft.util.StatCollector
+                    "§8" + net.minecraft.util.StatCollector
                             .translateToLocal("gui.appliedenergistics2.reshuffle.statusIdle"),
                     12,
                     statusY,
@@ -321,22 +612,22 @@ public class GuiStorageReshuffle extends AEBaseGui {
         }
 
         String percentText = this.container.reshuffleProgress + "%";
-        this.fontRendererObj.drawString(percentText, 196, 183, 0xFFFFFF);
+        this.fontRendererObj.drawString(percentText, 196, 183, 0x808080); // Neutral gray like §8
 
         int processed = this.container.reshuffleProgress * this.container.reshuffleTotalItems / 100;
         String counterText = net.minecraft.util.StatCollector.translateToLocalFormatted(
                 "gui.appliedenergistics2.reshuffle.processed",
                 processed,
                 this.container.reshuffleTotalItems);
-        this.fontRendererObj.drawString(counterText, 12, 200, 0x808080);
+        this.fontRendererObj.drawString(counterText, 12, 200, 0x303030);
 
-        this.fontRendererObj.drawString("?", 217, 8, 0x404040);
+        this.fontRendererObj.drawString("?", 217, 8, 0x202020);
 
         this.fontRendererObj.drawString(
                 net.minecraft.util.StatCollector.translateToLocal("gui.appliedenergistics2.reshuffle.filter"),
                 12,
                 34,
-                0x404040);
+                0x202020);
 
         // Draw filter labels with scaled text (0.8x)
         GL11.glPushMatrix();
@@ -344,17 +635,17 @@ public class GuiStorageReshuffle extends AEBaseGui {
 
         String allLabelText = net.minecraft.util.StatCollector
                 .translateToLocal("gui.appliedenergistics2.reshuffle.filter.all");
-        String allLabel = allActive ? "§a" + allLabelText : "§7" + allLabelText;
+        String allLabel = allActive ? "§a" + allLabelText : "§8" + allLabelText;
         this.fontRendererObj.drawString(allLabel, (int) (44 / 0.8f), (int) (54 / 0.8f), 0xFFFFFF);
 
         String itemsLabelText = net.minecraft.util.StatCollector
                 .translateToLocal("gui.appliedenergistics2.reshuffle.filter.items");
-        String itemsLabel = itemsActive ? "§a" + itemsLabelText : "§7" + itemsLabelText;
+        String itemsLabel = itemsActive ? "§a" + itemsLabelText : "§8" + itemsLabelText;
         this.fontRendererObj.drawString(itemsLabel, (int) (44 / 0.8f), (int) (74 / 0.8f), 0xFFFFFF);
 
         String fluidsLabelText = net.minecraft.util.StatCollector
                 .translateToLocal("gui.appliedenergistics2.reshuffle.filter.fluids");
-        String fluidsLabel = fluidsActive ? "§a" + fluidsLabelText : "§7" + fluidsLabelText;
+        String fluidsLabel = fluidsActive ? "§a" + fluidsLabelText : "§8" + fluidsLabelText;
         this.fontRendererObj.drawString(fluidsLabel, (int) (44 / 0.8f), (int) (94 / 0.8f), 0xFFFFFF);
 
         GL11.glPopMatrix();
@@ -363,25 +654,24 @@ public class GuiStorageReshuffle extends AEBaseGui {
                 net.minecraft.util.StatCollector.translateToLocal("gui.appliedenergistics2.reshuffle.protection"),
                 124,
                 34,
-                0x404040);
+                0x202020);
 
         // Draw protection labels with scaled text (0.8x)
         GL11.glPushMatrix();
         GL11.glScalef(0.8f, 0.8f, 0.8f);
 
-        String voidLabel = this.container.voidProtection ? "§aON" : "§cOFF";
+        // Label uses neutral gray (§8), only state (ON/OFF) is colored
+        String voidLabelText = net.minecraft.util.StatCollector
+                .translateToLocal("gui.appliedenergistics2.reshuffle.voidProtection");
+        String voidState = this.container.voidProtection ? "§aON" : "§cOFF";
         this.fontRendererObj
-                .drawString(
-                        net.minecraft.util.StatCollector.translateToLocal(
-                                "gui.appliedenergistics2.reshuffle.voidProtection") + ": " + voidLabel,
-                        (int) (156 / 0.8f),
-                        (int) (54 / 0.8f),
-                        0xFFFFFF);
+                .drawString("§8" + voidLabelText + ": " + voidState, (int) (156 / 0.8f), (int) (54 / 0.8f), 0xFFFFFF);
 
-        String overwriteLabel = this.container.overwriteProtection ? "§aON" : "§cOFF";
+        String overwriteLabelText = net.minecraft.util.StatCollector
+                .translateToLocal("gui.appliedenergistics2.reshuffle.overwriteProtection");
+        String overwriteState = this.container.overwriteProtection ? "§aON" : "§cOFF";
         this.fontRendererObj.drawString(
-                net.minecraft.util.StatCollector.translateToLocal(
-                        "gui.appliedenergistics2.reshuffle.overwriteProtection") + ": " + overwriteLabel,
+                "§8" + overwriteLabelText + ": " + overwriteState,
                 (int) (156 / 0.8f),
                 (int) (74 / 0.8f),
                 0xFFFFFF);
@@ -392,7 +682,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
                 net.minecraft.util.StatCollector.translateToLocal("gui.appliedenergistics2.reshuffle.report"),
                 12,
                 230,
-                0x404040);
+                0x202020);
 
         // Render scrollable report content
         java.util.List<String> reportLines = this.container.getReportLines();
@@ -400,8 +690,8 @@ public class GuiStorageReshuffle extends AEBaseGui {
             int scrollPos = this.container.getReportScrollPosition();
             int reportX = 14; // 2px padding from left edge (was 12)
             int reportY = 246; // 4px padding from top (was 242) to prevent text cutoff
-            int lineHeight = 8; // Reduced from 9 to fit smaller font
-            int maxVisibleLines = 12; // Can fit more lines with smaller font
+            int lineHeight = 7; // Reduced from 8 for smaller font
+            int maxVisibleLines = 13; // Can fit more lines with smaller font
 
             GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
@@ -417,9 +707,9 @@ public class GuiStorageReshuffle extends AEBaseGui {
 
             // Scale down text rendering for smaller font
             GL11.glPushMatrix();
-            GL11.glScalef(0.875f, 0.875f, 1.0f); // 87.5% scale = roughly 1 point smaller
+            GL11.glScalef(0.8125f, 0.8125f, 1.0f); // 81.25% scale = roughly 1.5 points smaller
 
-            float invScale = 1.0f / 0.875f;
+            float invScale = 1.0f / 0.8125f;
             for (int i = 0; i < maxVisibleLines && (scrollPos + i) < reportLines.size(); i++) {
                 String line = reportLines.get(scrollPos + i);
                 int scaledX = (int) (reportX * invScale);
@@ -455,6 +745,36 @@ public class GuiStorageReshuffle extends AEBaseGui {
             int knobX = barX + fillWidth;
             int knobWidth = 3;
             this.drawRect(knobX, barY, knobX + knobWidth, barY + barHeight, 0xFFFFFFFF); // White knob
+        }
+
+        // Draw scrollbar knob for report area (using AE2 style from creative tabs texture)
+        java.util.List<String> reportLines = this.container.getReportLines();
+        if (!reportLines.isEmpty()) {
+            int maxVisibleLines = 13;
+            int totalLines = reportLines.size();
+
+            if (totalLines > maxVisibleLines) {
+                // Scrollbar is needed
+                int scrollbarX = offsetX + 216;
+                int scrollbarY = offsetY + 242;
+                int scrollbarHeight = 104;
+                int scrollbarWidth = 12;
+
+                // Calculate knob position (knob is fixed 15px height like AE2 standard)
+                int knobHeight = 15;
+                int scrollPos = this.container.getReportScrollPosition();
+                int maxScroll = Math.max(0, totalLines - maxVisibleLines);
+                int knobOffset = maxScroll > 0 ? (scrollPos * (scrollbarHeight - knobHeight) / maxScroll) : 0;
+                int knobY = scrollbarY + knobOffset;
+
+                // Bind the creative inventory tabs texture (same as GuiScrollbar)
+                this.bindTexture("minecraft", "gui/container/creative_inventory/tabs.png");
+                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+                // Draw the scrollbar knob using the texture
+                // Texture coordinates: (232, 0) for active scrollbar
+                this.drawTexturedModalRect(scrollbarX, knobY, 232, 0, scrollbarWidth, knobHeight);
+            }
         }
     }
 

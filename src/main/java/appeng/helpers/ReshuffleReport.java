@@ -22,7 +22,6 @@ import java.util.Set;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.EnumChatFormatting;
 
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEStack;
@@ -34,6 +33,35 @@ import appeng.api.storage.data.IItemList;
  * show what changed.
  */
 public class ReshuffleReport {
+
+    // Approximate character width budget for the GUI text area.
+    // Minecraft's default font: most chars ~6px wide, GUI panel ~660px wide -> ~38 chars.
+    // Adjust this constant if your GUI panel is wider/narrower.
+    private static final int LINE_WIDTH = 38;
+
+    // Color codes matching scan report for consistency in both GUI and tooltips
+    // Designed for good contrast against Minecraft's light-gray GUI background
+    private static final String C_HEADER = "§3"; // dark aqua – section headers / decorators
+    private static final String C_LABEL = "§3"; // dark aqua – field labels (matching scan report)
+    private static final String C_VALUE = "§0"; // black – normal values (matching scan report)
+    private static final String C_GAIN = "§2"; // dark green – positive / gained
+    private static final String C_LOSS = "§4"; // dark red – negative / lost
+    private static final String C_NEUTRAL = "§8"; // dark gray – secondary/footnote text (matching scan report)
+    private static final String C_WARN = "§6"; // gold – warnings/percentages (matching scan report)
+    private static final String C_ON = "§2"; // dark green – ON state (matching gain color)
+    private static final String C_OFF = "§4"; // dark red – OFF state (matching loss color)
+    private static final String C_RESET = "§r"; // reset
+
+    // Tooltip colors - brighter/more vibrant for dark purple tooltip background
+    // These match the scan report tooltip style for consistency
+    private static final String CT_HEADER = "§b"; // bright aqua – section headers
+    private static final String CT_LABEL = "§b"; // bright aqua – labels
+    private static final String CT_VALUE = "§f"; // white – values
+    private static final String CT_GAIN = "§a"; // bright green – gains
+    private static final String CT_LOSS = "§c"; // bright red – losses
+    private static final String CT_NEUTRAL = "§7"; // light gray – secondary text
+    private static final String CT_WARN = "§e"; // yellow – warnings
+    private static final String CT_DIVIDER = "§7"; // light gray – divider lines
 
     /**
      * Represents a single item's change during reshuffle
@@ -89,6 +117,10 @@ public class ReshuffleReport {
     private final List<ItemChange> lostItems = new ArrayList<>();
     private final List<ItemChange> gainedItems = new ArrayList<>();
 
+    // Maps for tooltip support
+    private final Map<String, String> truncatedToFullName = new HashMap<>(); // truncated -> full name
+    private final Map<String, List<String>> hiddenItemsMap = new HashMap<>(); // "lost" or "gained" -> hidden items
+
     private Set<IAEStackType<?>> allowedTypes = new HashSet<>();
     private boolean voidProtection;
     private boolean overwriteProtection;
@@ -99,9 +131,10 @@ public class ReshuffleReport {
         this.startTime = System.currentTimeMillis();
     }
 
-    /**
-     * Takes a snapshot of the current storage state before reshuffling.
-     */
+    // -------------------------------------------------------------------------
+    // Snapshot / generation logic (unchanged from original)
+    // -------------------------------------------------------------------------
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void snapshotBefore(Map<IAEStackType<?>, IMEMonitor<?>> monitors,
             java.util.Set<IAEStackType<?>> allowedTypes) {
@@ -128,9 +161,6 @@ public class ReshuffleReport {
         }
     }
 
-    /**
-     * Compares current storage state with the before snapshot and generates the report.
-     */
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void generateReport(Map<IAEStackType<?>, IMEMonitor<?>> monitors,
             java.util.Set<IAEStackType<?>> allowedTypes, int processed, int skipped) {
@@ -142,7 +172,6 @@ public class ReshuffleReport {
         totalStacksAfter = 0;
         totalItemTypesAfter = 0;
 
-        // Build after snapshot
         for (IAEStackType<?> type : allowedTypes) {
             IMEMonitor monitor = monitors.get(type);
             if (monitor == null) continue;
@@ -153,16 +182,13 @@ public class ReshuffleReport {
                 if (stack != null && stack.getStackSize() > 0) {
                     String key = getStackKey(stack);
                     afterSnapshot.put(key, stack.getStackSize());
-                    if (!stackLookup.containsKey(key)) {
-                        stackLookup.put(key, stack.copy());
-                    }
+                    if (!stackLookup.containsKey(key)) stackLookup.put(key, stack.copy());
                     totalStacksAfter += stack.getStackSize();
                     totalItemTypesAfter++;
                 }
             }
         }
 
-        // Compare snapshots
         java.util.Set<String> allKeys = new java.util.HashSet<>();
         allKeys.addAll(beforeSnapshot.keySet());
         allKeys.addAll(afterSnapshot.keySet());
@@ -171,7 +197,6 @@ public class ReshuffleReport {
             long before = beforeSnapshot.getOrDefault(key, 0L);
             long after = afterSnapshot.getOrDefault(key, 0L);
             IAEStack<?> stack = stackLookup.get(key);
-
             if (stack == null) continue;
 
             ItemChange change = new ItemChange(stack, before, after);
@@ -194,249 +219,457 @@ public class ReshuffleReport {
             }
         }
 
-        // Sort by absolute difference (largest changes first)
         lostItems.sort((a, b) -> Long.compare(Math.abs(b.difference), Math.abs(a.difference)));
         gainedItems.sort((a, b) -> Long.compare(Math.abs(b.difference), Math.abs(a.difference)));
     }
 
+    // -------------------------------------------------------------------------
+    // Formatted report lines (the main improvement)
+    // -------------------------------------------------------------------------
+
     /**
-     * Gets a unique key for a stack (for comparison purposes). This should identify the item TYPE, not the quantity.
+     * Generates compact, color-coded report lines suitable for the GUI scroll panel.
+     * <p>
+     * Design goals:
+     * <ul>
+     * <li>Every logical line fits within {@value #LINE_WIDTH} visible characters so the GUI never wraps mid-word.</li>
+     * <li>Large numbers are abbreviated (K / M / B) on lines that are already long, keeping full precision only where
+     * the value stands alone.</li>
+     * <li>Color scheme: dark-aqua headers, gray labels, white values, green/red for positive/negative deltas, dark-gray
+     * for footnotes.</li>
+     * </ul>
      */
+    public List<String> generateReportLines() {
+        List<String> lines = new ArrayList<>();
+        long durationMs = endTime - startTime;
+
+        // ── Header ──────────────────────────────────────────────────────────
+        lines.add(C_HEADER + center("= Reshuffle Report =", LINE_WIDTH, '='));
+
+        // Duration + mode on one line, abbrev if needed
+        String modeStr = buildModeString();
+        lines.add(
+                C_LABEL + "Time: "
+                        + C_VALUE
+                        + String.format("%.2fs", durationMs / 1000.0)
+                        + C_LABEL
+                        + "  Mode: "
+                        + C_VALUE
+                        + modeStr);
+
+        // Protection flags – two short tokens, always fit
+        lines.add(
+                C_LABEL + "Void: "
+                        + (voidProtection ? C_ON + "ON" : C_OFF + "OFF")
+                        + C_LABEL
+                        + "  Overwrite: "
+                        + (overwriteProtection ? C_ON + "ON" : C_OFF + "OFF"));
+
+        // ── Processing ──────────────────────────────────────────────────────
+        lines.add("");
+        lines.add(C_HEADER + "-- Processing --");
+        lines.add(
+                C_LABEL + "Done: " + C_GAIN + fmt(itemsProcessed) + C_LABEL + "  Skip: " + C_WARN + fmt(itemsSkipped));
+
+        // ── Storage totals ───────────────────────────────────────────────────
+        // Each stat gets its own line so long numbers never wrap.
+        lines.add("");
+        lines.add(C_HEADER + "-- Storage Totals --");
+        lines.add(buildTotalLine("Types:", totalItemTypesBefore, totalItemTypesAfter));
+        lines.add(buildTotalLine("Stacks:", totalStacksBefore, totalStacksAfter));
+
+        // ── Item changes ─────────────────────────────────────────────────────
+        lines.add("");
+        lines.add(C_HEADER + "-- Item Changes --");
+        lines.add(C_GAIN + "+" + fmt(itemsGained) + " types  +" + abbrev(totalGained) + " items");
+        lines.add(C_LOSS + "-" + fmt(itemsLost) + " types  -" + abbrev(totalLost) + " items");
+        lines.add(C_NEUTRAL + "=" + fmt(itemsUnchanged) + " types unchanged");
+
+        // ── Top lost ─────────────────────────────────────────────────────────
+        if (!lostItems.isEmpty()) {
+            lines.add("");
+            lines.add(C_LOSS + "-- Top Lost Items --");
+            int shown = 0;
+            for (ItemChange c : lostItems) {
+                if (shown >= 5) break;
+                lines.addAll(buildItemLines(c, C_LOSS, "-"));
+                shown++;
+            }
+            int rem = lostItems.size() - 5;
+            if (rem > 0) {
+                lines.add(C_NEUTRAL + "  ...and " + rem + " more");
+
+                // Store hidden items for tooltip (using tooltip colors for dark background)
+                List<String> hiddenLostItems = new ArrayList<>();
+                for (int i = 5; i < lostItems.size(); i++) {
+                    ItemChange c = lostItems.get(i);
+                    String fullName = getStackDisplayName(c.stack);
+                    String delta = abbrev(Math.abs(c.difference));
+                    hiddenLostItems.add(CT_LOSS + "• " + CT_VALUE + fullName + " " + CT_LOSS + "-" + delta);
+                    hiddenLostItems
+                            .add(CT_NEUTRAL + "  (" + abbrev(c.beforeCount) + " -> " + abbrev(c.afterCount) + ")");
+                }
+                setHiddenItems("lost", hiddenLostItems);
+            }
+        }
+
+        // ── Top gained ───────────────────────────────────────────────────────
+        if (!gainedItems.isEmpty() && totalGained > 0) {
+            lines.add("");
+            lines.add(C_GAIN + "-- Top Gained Items --");
+            int shown = 0;
+            for (ItemChange c : gainedItems) {
+                if (shown >= 5) break;
+                lines.addAll(buildItemLines(c, C_GAIN, "+"));
+                shown++;
+            }
+            int rem = gainedItems.size() - 5;
+            if (rem > 0) {
+                lines.add(C_NEUTRAL + "  ...and " + rem + " more");
+
+                // Store hidden items for tooltip (using tooltip colors for dark background)
+                List<String> hiddenGainedItems = new ArrayList<>();
+                for (int i = 5; i < gainedItems.size(); i++) {
+                    ItemChange c = gainedItems.get(i);
+                    String fullName = getStackDisplayName(c.stack);
+                    String delta = abbrev(Math.abs(c.difference));
+                    hiddenGainedItems.add(CT_GAIN + "• " + CT_VALUE + fullName + " " + CT_GAIN + "+" + delta);
+                    hiddenGainedItems
+                            .add(CT_NEUTRAL + "  (" + abbrev(c.beforeCount) + " -> " + abbrev(c.afterCount) + ")");
+                }
+                setHiddenItems("gained", hiddenGainedItems);
+            }
+        }
+
+        // ── Integrity ────────────────────────────────────────────────────────
+        lines.add("");
+        long net = totalStacksAfter - totalStacksBefore;
+        if (net != 0) {
+            lines.add(C_WARN + "! Net: " + diffColor(net) + signedAbbrev(net) + C_NEUTRAL + " (network/crafts)");
+        } else {
+            lines.add(C_GAIN + "✓ Integrity OK – no net change");
+        }
+
+        lines.add(C_HEADER + repeat('=', LINE_WIDTH));
+        return lines;
+    }
+
+    /**
+     * Generates tooltip-specific report lines with brighter colors optimized for dark tooltip background. This method
+     * uses the same structure as generateReportLines() but with tooltip-appropriate colors.
+     */
+    public List<String> generateTooltipReportLines() {
+        List<String> lines = new ArrayList<>();
+        long durationMs = endTime - startTime;
+
+        // ── Header ──────────────────────────────────────────────────────────
+        lines.add(CT_HEADER + "═══════ Reshuffle Report ═══════");
+
+        // Duration + mode on one line
+        String modeStr = buildModeString();
+        lines.add(
+                CT_LABEL + "Time: "
+                        + CT_VALUE
+                        + String.format("%.2fs", durationMs / 1000.0)
+                        + CT_LABEL
+                        + "  Mode: "
+                        + CT_VALUE
+                        + modeStr);
+
+        // Protection flags
+        lines.add(
+                CT_LABEL + "Void: "
+                        + (voidProtection ? CT_GAIN + "ON" : CT_LOSS + "OFF")
+                        + CT_LABEL
+                        + "  Overwrite: "
+                        + (overwriteProtection ? CT_GAIN + "ON" : CT_LOSS + "OFF"));
+
+        // ── Processing ──────────────────────────────────────────────────────
+        lines.add("");
+        lines.add(CT_DIVIDER + "-- Processing --");
+        lines.add(
+                CT_LABEL + "Done: "
+                        + CT_GAIN
+                        + fmt(itemsProcessed)
+                        + CT_LABEL
+                        + "  Skip: "
+                        + CT_WARN
+                        + fmt(itemsSkipped));
+
+        // ── Storage totals ───────────────────────────────────────────────────
+        lines.add("");
+        lines.add(CT_DIVIDER + "-- Storage Totals --");
+        lines.add(buildTooltipTotalLine("Types:", totalItemTypesBefore, totalItemTypesAfter));
+        lines.add(buildTooltipTotalLine("Stacks:", totalStacksBefore, totalStacksAfter));
+
+        // ── Item changes ─────────────────────────────────────────────────────
+        lines.add("");
+        lines.add(CT_DIVIDER + "-- Item Changes --");
+        lines.add(CT_GAIN + "+" + fmt(itemsGained) + " types  +" + abbrev(totalGained) + " items");
+        lines.add(CT_LOSS + "-" + fmt(itemsLost) + " types  -" + abbrev(totalLost) + " items");
+        lines.add(CT_NEUTRAL + "=" + fmt(itemsUnchanged) + " types unchanged");
+
+        // ── Top lost (ALL items, not truncated) ─────────────────────────────
+        if (!lostItems.isEmpty()) {
+            lines.add("");
+            lines.add(CT_LOSS + "-- Top Lost Items --");
+            for (ItemChange c : lostItems) {
+                lines.addAll(buildTooltipItemLines(c, CT_LOSS, "-"));
+            }
+        }
+
+        // ── Top gained (ALL items, not truncated) ───────────────────────────
+        if (!gainedItems.isEmpty() && totalGained > 0) {
+            lines.add("");
+            lines.add(CT_GAIN + "-- Top Gained Items --");
+            for (ItemChange c : gainedItems) {
+                lines.addAll(buildTooltipItemLines(c, CT_GAIN, "+"));
+            }
+        }
+
+        // ── Integrity ────────────────────────────────────────────────────────
+        lines.add("");
+        long net = totalStacksAfter - totalStacksBefore;
+        if (net != 0) {
+            lines.add(
+                    CT_WARN + "! Net: " + diffColorTooltip(net) + signedAbbrev(net) + CT_NEUTRAL + " (network/crafts)");
+        } else {
+            lines.add(CT_GAIN + "✓ Integrity OK – no net change");
+        }
+
+        lines.add(CT_DIVIDER + "════════════════════════");
+        return lines;
+    }
+
+    // -------------------------------------------------------------------------
+    // Private formatting helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Builds a "before → after (delta)" line where numbers are abbreviated so the line stays within
+     * {@value #LINE_WIDTH} visible chars.
+     */
+    private String buildTotalLine(String label, long before, long after) {
+        long delta = after - before;
+        // e.g. "Types: 6,897 → 6,895 (-2)"
+        // Use abbreviated numbers to guarantee it fits.
+        return C_LABEL + label
+                + " "
+                + C_NEUTRAL
+                + abbrev(before)
+                + C_VALUE
+                + " -> "
+                + C_VALUE
+                + abbrev(after)
+                + " "
+                + diffColor(delta)
+                + "("
+                + signedAbbrev(delta)
+                + ")";
+    }
+
+    /**
+     * Builds 1-2 lines for a single item change entry. Line 1: "• ItemName +delta" Line 2 (indented): "(before →
+     * after)" – only if both numbers > abbrev threshold
+     */
+    private List<String> buildItemLines(ItemChange c, String accentColor, String sign) {
+        List<String> out = new ArrayList<>();
+        String fullName = getStackDisplayName(c.stack);
+        String displayName = truncate(fullName, 20);
+        String delta = abbrev(Math.abs(c.difference));
+
+        // Store mapping if name was truncated
+        if (!fullName.equals(displayName)) {
+            addTruncatedNameMapping(displayName, fullName);
+        }
+
+        // Primary line: bullet + name + delta
+        out.add(accentColor + "• " + C_VALUE + displayName + " " + accentColor + sign + delta);
+
+        // Secondary line: full before/after for context (abbreviated)
+        out.add(C_NEUTRAL + "  (" + abbrev(c.beforeCount) + " -> " + abbrev(c.afterCount) + ")");
+        return out;
+    }
+
+    /** Builds the comma-separated mode string (abbreviated to short names). */
+    private String buildModeString() {
+        if (allowedTypes.isEmpty()) return "None";
+        StringBuilder sb = new StringBuilder();
+        for (IAEStackType<?> type : allowedTypes) {
+            if (sb.length() > 0) sb.append('/');
+            // Shorten class names: AEItemStackType -> Item, AEFluidStackType -> Fluid, etc.
+            String n = type.getClass().getSimpleName().replace("AE", "").replace("StackType", "").replace("Stack", "");
+            sb.append(n.isEmpty() ? "?" : n);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Abbreviates large numbers: 1,200 -> 1.2K | 1,500,000 -> 1.5M | 2,000,000,000 -> 2.0B Numbers below 10 000 are
+     * formatted with commas (full precision).
+     */
+    private static String abbrev(long v) {
+        if (v < 0) return "-" + abbrev(-v);
+        if (v >= 1_000_000_000L) return String.format("%.1fB", v / 1_000_000_000.0);
+        if (v >= 1_000_000L) return String.format("%.1fM", v / 1_000_000.0);
+        if (v >= 10_000L) return String.format("%.1fK", v / 1_000.0);
+        return NumberFormat.getNumberInstance(Locale.US).format(v);
+    }
+
+    /** Like {@link #abbrev} but always prefixes with + or – sign. */
+    private static String signedAbbrev(long v) {
+        if (v > 0) return "+" + abbrev(v);
+        if (v < 0) return "-" + abbrev(-v);
+        return "0";
+    }
+
+    /** Full comma-formatted integer (for small standalone numbers). */
+    private static String fmt(long v) {
+        return NumberFormat.getNumberInstance(Locale.US).format(v);
+    }
+
+    /** Returns the color code appropriate for a delta value. */
+    private static String diffColor(long delta) {
+        if (delta > 0) return C_GAIN;
+        if (delta < 0) return C_LOSS;
+        return C_NEUTRAL;
+    }
+
+    /** Returns the tooltip color code appropriate for a delta value. */
+    private static String diffColorTooltip(long delta) {
+        if (delta > 0) return CT_GAIN;
+        if (delta < 0) return CT_LOSS;
+        return CT_NEUTRAL;
+    }
+
+    /**
+     * Builds a "before → after (delta)" line for tooltips using bright colors.
+     */
+    private String buildTooltipTotalLine(String label, long before, long after) {
+        long delta = after - before;
+        return CT_LABEL + label
+                + " "
+                + CT_NEUTRAL
+                + abbrev(before)
+                + CT_VALUE
+                + " -> "
+                + CT_VALUE
+                + abbrev(after)
+                + " "
+                + diffColorTooltip(delta)
+                + "("
+                + signedAbbrev(delta)
+                + ")";
+    }
+
+    /**
+     * Builds 1-2 lines for a single item change entry in tooltip (bright colors).
+     */
+    private List<String> buildTooltipItemLines(ItemChange c, String accentColor, String sign) {
+        List<String> out = new ArrayList<>();
+        String fullName = getStackDisplayName(c.stack);
+        String delta = abbrev(Math.abs(c.difference));
+
+        // Primary line: bullet + name + delta (no truncation for tooltip)
+        out.add(accentColor + "• " + CT_VALUE + fullName + " " + accentColor + sign + delta);
+
+        // Secondary line: full before/after for context
+        out.add(CT_NEUTRAL + "  (" + abbrev(c.beforeCount) + " -> " + abbrev(c.afterCount) + ")");
+        return out;
+    }
+
+    /** Centers {@code text} within {@code width} chars, padding with {@code pad}. */
+    private static String center(String text, int width, char pad) {
+        int totalPad = Math.max(0, width - text.length());
+        int left = totalPad / 2, right = totalPad - left;
+        return repeat(pad, left) + text + repeat(pad, right);
+    }
+
+    /** Returns a string of {@code count} copies of character {@code c}. */
+    private static String repeat(char c, int count) {
+        if (count <= 0) return "";
+        char[] buf = new char[count];
+        java.util.Arrays.fill(buf, c);
+        return new String(buf);
+    }
+
+    /**
+     * Truncates a string to {@code maxLen} visible characters, appending "…" if cut. Color codes (§X) are not counted
+     * toward the length.
+     */
+    private static String truncate(String s, int maxLen) {
+        if (s == null) return "Unknown";
+        // Strip color codes for length measurement
+        String plain = s.replaceAll("§.", "");
+        if (plain.length() <= maxLen) return s;
+        return plain.substring(0, maxLen - 1) + "…";
+    }
+
+    // -------------------------------------------------------------------------
+    // Stack key + display name (unchanged from original)
+    // -------------------------------------------------------------------------
+
     private String getStackKey(IAEStack<?> stack) {
-        // Create a key based on item identity, NOT quantity
-        // For AEItemStack: use item ID + damage + NBT hash
-        // For AEFluidStack: use fluid ID + NBT hash
         if (stack instanceof appeng.util.item.AEItemStack itemStack) {
             net.minecraft.item.ItemStack is = itemStack.getItemStack();
             if (is != null) {
                 String key = net.minecraft.item.Item.itemRegistry.getNameForObject(is.getItem()) + "@"
                         + is.getItemDamage();
-                if (is.hasTagCompound()) {
-                    key += "#" + is.getTagCompound().hashCode();
-                }
+                if (is.hasTagCompound()) key += "#" + is.getTagCompound().hashCode();
                 return "item:" + key;
             }
         } else if (stack instanceof appeng.util.item.AEFluidStack fluidStack) {
             net.minecraftforge.fluids.FluidStack fs = fluidStack.getFluidStack();
             if (fs != null && fs.getFluid() != null) {
                 String key = fs.getFluid().getName();
-                if (fs.tag != null) {
-                    key += "#" + fs.tag.hashCode();
-                }
+                if (fs.tag != null) key += "#" + fs.tag.hashCode();
                 return "fluid:" + key;
             }
         }
-        // Fallback for other types - still use toString but try to strip quantity
         String str = stack.toString();
-        // Try to remove leading quantity like "64x"
-        if (str.matches("^\\d+x.*")) {
-            str = str.replaceFirst("^\\d+x", "");
-        }
+        if (str.matches("^\\d+x.*")) str = str.replaceFirst("^\\d+x", "");
         return stack.getStackType().getClass().getSimpleName() + ":" + str;
-    }
-
-    /**
-     * Generates the report as a list of formatted strings for GUI display.
-     *
-     * @return List of formatted strings with color codes
-     */
-    public List<String> generateReportLines() {
-        List<String> lines = new ArrayList<>();
-        NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
-        long durationMs = endTime - startTime;
-        double durationSec = durationMs / 1000.0;
-
-        // Header
-        lines.add("");
-        lines.add("§3═══════ Reshuffle Report ═══════"); // Dark aqua instead of gold
-
-        // Summary stats
-        lines.add("§bDuration: §7" + String.format("%.2fs", durationSec)); // Aqua -> gray
-
-        // Format allowed types string
-        StringBuilder typesStr = new StringBuilder();
-        for (IAEStackType<?> type : allowedTypes) {
-            if (typesStr.length() > 0) typesStr.append(", ");
-            String typeName = type.getClass().getSimpleName().replace("AE", "").replace("StackType", "");
-            typesStr.append(typeName);
-        }
-
-        lines.add(
-                "§bMode: §7" + (typesStr.length() > 0 ? typesStr.toString() : "None") // Aqua -> gray
-                        + "§8 | Void Protection: " // Dark gray
-                        + (voidProtection ? "§2ON" : "§cOFF") // Dark green / red
-                        + "§8 | Overwrite Protection: "
-                        + (overwriteProtection ? "§2ON" : "§cOFF"));
-
-        lines.add("");
-        lines.add("§3── Processing Stats ──"); // Dark aqua
-        lines.add("§7  Processed: §2" + nf.format(itemsProcessed) + "§8 | Skipped: §6" + nf.format(itemsSkipped)); // Gray,
-                                                                                                                   // dark
-                                                                                                                   // green,
-                                                                                                                   // dark
-                                                                                                                   // gray,
-                                                                                                                   // gold
-
-        // Before/After comparison
-        lines.add("");
-        lines.add("§3── Storage Totals ──"); // Dark aqua
-        lines.add(
-                "§7  Item Types: §8" + nf.format(totalItemTypesBefore) // Gray, dark gray
-                        + " → §7"
-                        + nf.format(totalItemTypesAfter)
-                        + getDifferenceColorCode(totalItemTypesAfter - totalItemTypesBefore)
-                        + " ("
-                        + formatDifference(totalItemTypesAfter - totalItemTypesBefore)
-                        + ")");
-        lines.add(
-                "§7  Total Stacks: §8" + nf.format(totalStacksBefore) // Gray, dark gray
-                        + " → §7"
-                        + nf.format(totalStacksAfter)
-                        + getDifferenceColorCode(totalStacksAfter - totalStacksBefore)
-                        + " ("
-                        + formatDifference(totalStacksAfter - totalStacksBefore)
-                        + ")");
-
-        // Changes summary
-        lines.add("");
-        lines.add("§3── Item Changes ──"); // Dark aqua
-        lines.add("§2  Gained: " + nf.format(itemsGained) + " types (+" + nf.format(totalGained) + " items)"); // Dark
-                                                                                                               // green
-        lines.add("§c  Lost: " + nf.format(itemsLost) + " types (-" + nf.format(totalLost) + " items)"); // Red
-        lines.add("§8  Unchanged: " + nf.format(itemsUnchanged) + " types"); // Dark gray
-
-        // Show top lost items (if any)
-        if (!lostItems.isEmpty()) {
-            lines.add("");
-            lines.add("§c── Top Lost Items ──");
-            int shown = 0;
-            for (ItemChange change : lostItems) {
-                if (shown >= 5) {
-                    int remaining = lostItems.size() - 5;
-                    if (remaining > 0) {
-                        lines.add("§8  ... and " + remaining + " more"); // Dark gray
-                    }
-                    break;
-                }
-                lines.add(
-                        "§c  • §7" + getStackDisplayName(change.stack) // Red, gray
-                                + "§c -"
-                                + nf.format(Math.abs(change.difference))
-                                + "§8 (" // Dark gray
-                                + nf.format(change.beforeCount)
-                                + " → "
-                                + nf.format(change.afterCount)
-                                + ")");
-                shown++;
-            }
-        }
-
-        // Show top gained items
-        if (!gainedItems.isEmpty() && totalGained > 0) {
-            lines.add("");
-            lines.add("§2── Top Gained Items ──"); // Dark green
-            int shown = 0;
-            for (ItemChange change : gainedItems) {
-                if (shown >= 5) {
-                    int remaining = gainedItems.size() - 5;
-                    if (remaining > 0) {
-                        lines.add("§8  ... and " + remaining + " more"); // Dark gray
-                    }
-                    break;
-                }
-                lines.add(
-                        "§2  • §7" + getStackDisplayName(change.stack) // Dark green, gray
-                                + "§2 +"
-                                + nf.format(change.difference)
-                                + "§8 (" // Dark gray
-                                + nf.format(change.beforeCount)
-                                + " → "
-                                + nf.format(change.afterCount)
-                                + ")");
-                shown++;
-            }
-        }
-
-        // Integrity check
-        long netChange = totalStacksAfter - totalStacksBefore;
-        if (netChange != 0) {
-            lines.add("");
-            lines.add(
-                    "§6⚠ §7Net change: " + getDifferenceColorCode(netChange) // Gold warning, gray text
-                            + formatDifference(netChange)
-                            + " items§8 (may be due to ongoing crafts or network activity)"); // Dark gray
-        } else {
-            lines.add("");
-            lines.add("§2✓ §7No net change - storage integrity verified"); // Dark green, gray
-        }
-
-        lines.add("§3═══════════════════════════════"); // Dark aqua
-        return lines;
-    }
-
-    /**
-     * Sends the report to the player via chat messages (deprecated - use generateReportLines for GUI).
-     *
-     * @deprecated Use generateReportLines() instead and display in GUI
-     */
-    @Deprecated
-    public void sendToPlayer(EntityPlayer player) {
-        if (!(player instanceof EntityPlayerMP)) return;
-
-        // Use the new method to generate lines, then send to chat
-        List<String> lines = generateReportLines();
-        for (String line : lines) {
-            player.addChatMessage(new ChatComponentText(line));
-        }
-    }
-
-    private String getDifferenceColorCode(long diff) {
-        if (diff > 0) return "§a";
-        else if (diff < 0) return "§c";
-        else return "§7";
     }
 
     private String getStackDisplayName(IAEStack<?> stack) {
         if (stack == null) return "Unknown";
         try {
-            String displayName = stack.getDisplayName();
-            if (displayName != null && !displayName.isEmpty()) {
-                return displayName;
-            }
-            // Fallback for items without proper display name
-            return "Unknown Item";
+            String name = stack.getDisplayName();
+            return (name != null && !name.isEmpty()) ? name : "Unknown";
         } catch (Exception e) {
-            return "Unknown Item";
+            return "Unknown";
         }
     }
 
-    private String formatDifference(long diff) {
-        NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
-        if (diff > 0) return "+" + nf.format(diff);
-        else if (diff < 0) return nf.format(diff);
-        else return "0";
+    // -------------------------------------------------------------------------
+    // Legacy / deprecated
+    // -------------------------------------------------------------------------
+
+    /** @deprecated Use {@link #generateReportLines()} and render in GUI. */
+    @Deprecated
+    public void sendToPlayer(EntityPlayer player) {
+        if (!(player instanceof EntityPlayerMP)) return;
+        for (String line : generateReportLines()) {
+            player.addChatMessage(new ChatComponentText(line));
+        }
     }
 
-    private EnumChatFormatting getDifferenceColor(long diff) {
-        if (diff > 0) return EnumChatFormatting.GREEN;
-        else if (diff < 0) return EnumChatFormatting.RED;
-        else return EnumChatFormatting.GRAY;
-    }
+    // -------------------------------------------------------------------------
+    // Setters / Getters
+    // -------------------------------------------------------------------------
 
-    // Setters for configuration info
     public void setAllowedTypes(Set<IAEStackType<?>> allowedTypes) {
         this.allowedTypes = new HashSet<>(allowedTypes);
     }
 
-    public void setVoidProtection(boolean voidProtection) {
-        this.voidProtection = voidProtection;
+    public void setVoidProtection(boolean v) {
+        this.voidProtection = v;
     }
 
-    public void setOverwriteProtection(boolean overwriteProtection) {
-        this.overwriteProtection = overwriteProtection;
+    public void setOverwriteProtection(boolean v) {
+        this.overwriteProtection = v;
     }
 
-    // Getters for statistics
     public int getItemsProcessed() {
         return itemsProcessed;
     }
@@ -483,5 +716,57 @@ public class ReshuffleReport {
 
     public List<ItemChange> getAllChanges() {
         return changes;
+    }
+
+    /**
+     * Get the full item name from a truncated version (used for tooltips).
+     *
+     * @param truncatedName The truncated name (without "...")
+     * @return The full item name, or null if not found
+     */
+    public String getFullNameForTruncated(String truncatedName) {
+        if (truncatedName == null) {
+            return null;
+        }
+
+        // Clean up the truncated name (remove Unicode ellipsis "…" or ASCII "..." if present)
+        String cleanTruncated = truncatedName.replace("…", "").replace("...", "").trim();
+
+        return this.truncatedToFullName.get(cleanTruncated);
+    }
+
+    /**
+     * Store a mapping from truncated name to full name (called during report generation).
+     *
+     * @param truncatedName The truncated name shown in the report
+     * @param fullName      The full item name
+     */
+    public void addTruncatedNameMapping(String truncatedName, String fullName) {
+        if (truncatedName != null && fullName != null) {
+            String cleanTruncated = truncatedName.replace("…", "").replace("...", "").trim();
+            this.truncatedToFullName.put(cleanTruncated, fullName);
+        }
+    }
+
+    /**
+     * Get the list of hidden items for a section ("lost" or "gained").
+     *
+     * @param sectionType Either "lost" or "gained"
+     * @return List of hidden item lines, or null if not found
+     */
+    public List<String> getHiddenItems(String sectionType) {
+        return this.hiddenItemsMap.get(sectionType);
+    }
+
+    /**
+     * Store the list of hidden items for a section (called during report generation).
+     *
+     * @param sectionType Either "lost" or "gained"
+     * @param hiddenItems List of formatted item lines that were hidden
+     */
+    public void setHiddenItems(String sectionType, List<String> hiddenItems) {
+        if (sectionType != null && hiddenItems != null) {
+            this.hiddenItemsMap.put(sectionType, new ArrayList<>(hiddenItems));
+        }
     }
 }

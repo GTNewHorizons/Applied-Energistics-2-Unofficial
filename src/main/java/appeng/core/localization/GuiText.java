@@ -290,7 +290,33 @@ public enum GuiText implements Localization {
     CPUOnlyAllowNonPlayer,
     CPUOnlyAllowPlayer,
     CPUSourcePlayer,
-    CPUSourceMachineRequested;
+    CPUSourceMachineRequested,
+
+    // Storage Scan Report
+    StorageScan,
+    StorageScanSummary,
+    StorageScanCells,
+    StorageScanEmpty,
+    StorageScanUtil,
+    StorageScanUtilization,
+    StorageScanBytesAll,
+    StorageScanBytesExclSing,
+    StorageScanMedian,
+    StorageScanFragmentation,
+    StorageScanLocked,
+    StorageScanWasted,
+    StorageScanSingularityExcluded,
+    StorageScanExplainLocked,
+    StorageScanExplainWasted,
+    StorageScanExplainFragmented,
+    StorageScanCellTypes,
+    StorageScanCellTypesUtilization,
+    StorageScanDuplicatePartitions,
+    StorageScanLockedTo,
+    StorageScanLocations,
+    StorageScanMostFragmented,
+    StorageScanDrive,
+    StorageScanChest;
 
     private final String root;
 

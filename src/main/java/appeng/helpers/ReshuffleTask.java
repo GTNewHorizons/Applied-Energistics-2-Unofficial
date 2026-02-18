@@ -279,15 +279,6 @@ public class ReshuffleTask {
             if (logger != null) {
                 logger.logProgress(processedItems, totalItems, percent);
             }
-
-            if (player instanceof EntityPlayerMP) {
-                player.addChatMessage(
-                        new ChatComponentTranslation(
-                                "chat.appliedenergistics2.ReshuffleProgress",
-                                processedItems,
-                                totalItems,
-                                percent));
-            }
         }
     }
 

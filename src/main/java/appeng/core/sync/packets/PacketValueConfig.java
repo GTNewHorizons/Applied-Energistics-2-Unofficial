@@ -140,7 +140,7 @@ public class PacketValueConfig extends AppEngPacket {
             switch(this.Name) {
                 case "Reshuffle.ToggleVoidProtection" -> qk.toggleVoidProtection();
                 case "Reshuffle.ToggleOverwriteProtection" -> qk.toggleOverwriteProtection();
-                case "Reshuffle.SetTypeFilter" -> qk.setTypeFilterMode(this.Value);
+                case "Reshuffle.SetTypeFilter" -> qk.setTypeFilterMode(Integer.parseInt(this.Value));
                 case "Reshuffle.Start" -> qk.startReshuffle(player, "confirmed".equals(this.Value));
                 case "Reshuffle.Cancel" -> qk.cancelReshuffle();
                 case "Reshuffle.Scan" -> qk.performNetworkScan();
@@ -247,27 +247,33 @@ public class PacketValueConfig extends AppEngPacket {
                     // Update report in container for display in GUI
                     ((appeng.container.implementations.ContainerStorageReshuffle) c).updateReport(this.Value);
                 } else
-            if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
-                final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-                if (gs instanceof GuiCraftingCPU) {
-                    ((GuiCraftingCPU) gs).clearItems();
-                }
-            } else if (c instanceof IConfigurableObject) {
-                final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
+            if (this.Name.equals("Reshuffle.TooltipReport")
+                    && c instanceof appeng.container.implementations.ContainerStorageReshuffle) {
+                        // Update full tooltip report (untruncated) in container
+                        ((appeng.container.implementations.ContainerStorageReshuffle) c)
+                                .updateTooltipReport(this.Value);
+                    } else
+                if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
+                    final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
+                    if (gs instanceof GuiCraftingCPU) {
+                        ((GuiCraftingCPU) gs).clearItems();
+                    }
+                } else if (c instanceof IConfigurableObject) {
+                    final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 
-                for (final Settings e : cm.getSettings()) {
-                    if (e.name().equals(this.Name)) {
-                        final Enum<?> def = cm.getSetting(e);
+                    for (final Settings e : cm.getSettings()) {
+                        if (e.name().equals(this.Name)) {
+                            final Enum<?> def = cm.getSetting(e);
 
-                        try {
-                            cm.putSetting(e, Enum.valueOf(def.getClass(), this.Value));
-                        } catch (final IllegalArgumentException err) {
-                            // :P
+                            try {
+                                cm.putSetting(e, Enum.valueOf(def.getClass(), this.Value));
+                            } catch (final IllegalArgumentException err) {
+                                // :P
+                            }
+
+                            break;
                         }
-
-                        break;
                     }
                 }
-            }
     }
 }
