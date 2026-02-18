@@ -51,15 +51,15 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
 
     @Override
     public IAEStack<?> addStack(IAEStack<?> toBeAdded, InsertionMode insertionMode) {
-        return aes(toBeAdded, Actionable.MODULATE);
+        return addStackToMonitor(toBeAdded, Actionable.MODULATE);
     }
 
     @Override
     public IAEStack<?> simulateAddStack(IAEStack<?> toBeSimulated, InsertionMode insertionMode) {
-        return aes(toBeSimulated, Actionable.SIMULATE);
+        return addStackToMonitor(toBeSimulated, Actionable.SIMULATE);
     }
 
-    private IAEStack<?> aes(IAEStack<?> aes, Actionable act) {
+    private IAEStack<?> addStackToMonitor(IAEStack<?> aes, Actionable act) {
         final DualityInterface dual = interfaceHost.getInterfaceDuality();
         final IMEMonitor monitor = dual.getMEMonitor(aes.getStackType());
         if (monitor == null) return aes;

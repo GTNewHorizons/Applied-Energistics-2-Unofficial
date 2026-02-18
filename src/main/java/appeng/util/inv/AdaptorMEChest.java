@@ -65,15 +65,15 @@ public class AdaptorMEChest extends AdaptorIInventory {
 
     @Override
     public IAEStack<?> addStack(IAEStack<?> toBeAdded, InsertionMode insertionMode) {
-        return aes(toBeAdded, Actionable.MODULATE);
+        return addStackToMonitor(toBeAdded, Actionable.MODULATE);
     }
 
     @Override
     public IAEStack<?> simulateAddStack(IAEStack<?> toBeSimulated, InsertionMode insertionMode) {
-        return aes(toBeSimulated, Actionable.SIMULATE);
+        return addStackToMonitor(toBeSimulated, Actionable.SIMULATE);
     }
 
-    private IAEStack<?> aes(IAEStack<?> aes, Actionable act) {
+    private IAEStack<?> addStackToMonitor(IAEStack<?> aes, Actionable act) {
         final IMEMonitor monitor = meChest.getMEMonitor(aes.getStackType());
         if (monitor == null) return aes;
         return monitor.injectItems(aes, act, meChest.getActionSource());

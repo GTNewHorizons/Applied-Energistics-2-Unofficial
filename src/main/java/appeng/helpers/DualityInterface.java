@@ -1224,6 +1224,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                 }
             } else if (aes != null) {
                 hasNotItemOrFluid = true;
+                stacksToPush.add(aes);
             }
         }
 
@@ -1332,7 +1333,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             return true;
-        } else if (foundTarget) {
+        } else if (foundTarget && !hasNotItemOrFluid) {
             foundReason = true;
             scheduledReason = ScheduledReason.SOMETHING_STUCK;
         }
