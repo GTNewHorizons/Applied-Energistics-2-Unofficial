@@ -27,13 +27,8 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.core.AELog;
 
-/**
- * Handles detailed file logging for reshuffle operations. Logs are written to the game's logs folder as
- * reshuffle_TIMESTAMP.log
- */
 public class ReshuffleLogger {
 
-    /** Set to true to enable detailed file logging for debugging */
     public static final boolean DEBUG_LOGGING_ENABLED = true;
 
     private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
@@ -66,7 +61,6 @@ public class ReshuffleLogger {
         if (!DEBUG_LOGGING_ENABLED) return null;
 
         try {
-            // Try to get the game directory
             File gameDir = null;
 
             // Try server-side first
@@ -75,12 +69,10 @@ public class ReshuffleLogger {
                 gameDir = worldDir.getParentFile();
             }
 
-            // Fallback to client-side
             if (gameDir == null) {
                 try {
                     gameDir = Minecraft.getMinecraft().mcDataDir;
                 } catch (Exception e) {
-                    // Not on client, use current directory
                     gameDir = new File(".");
                 }
             }
