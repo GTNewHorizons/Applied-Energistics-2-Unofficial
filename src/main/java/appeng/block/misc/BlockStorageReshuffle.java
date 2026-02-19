@@ -20,10 +20,7 @@ import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-/**
- * Block for the Storage Reshuffle system. Allows players to redistribute items across storage cells based on priority.
- * Similar to Security Terminal but for storage management.
- */
+
 public class BlockStorageReshuffle extends AEBaseTileBlock {
 
     public BlockStorageReshuffle() {
@@ -40,15 +37,9 @@ public class BlockStorageReshuffle extends AEBaseTileBlock {
         return new RendererStorageReshuffle();
     }
 
-    /**
-     * Register block icons and initialize the BlockRenderInfo with proper textures. This is critical for NEI and
-     * inventory rendering to work correctly.
-     */
     @Override
     @SideOnly(Side.CLIENT)
     public void registerBlockIcons(final IIconRegister iconRegistry) {
-        // Register icons using the iconRegistry (which registers them with Minecraft)
-        // Note: ExtraBlockTextures also registers these, but we need FlippableIcon wrappers here
         final FlippableIcon topIcon = new FlippableIcon(
                 iconRegistry.registerIcon("appliedenergistics2:BlockReshuffleTop"));
         final FlippableIcon bottomIcon = new FlippableIcon(
@@ -60,12 +51,7 @@ public class BlockStorageReshuffle extends AEBaseTileBlock {
         final FlippableIcon sideIcon = new FlippableIcon(
                 iconRegistry.registerIcon("appliedenergistics2:BlockReshuffleSide"));
 
-        // Set the main block icon (used as default)
         this.blockIcon = topIcon.getOriginal();
-
-        // Update the renderer's BlockRenderInfo with these icons
-        // This is what makes NEI and inventory rendering work!
-        // Order: bottom, top, north(back), south(front), east(side), west(side)
         this.getRendererInstance().updateIcons(bottomIcon, topIcon, backIcon, frontIcon, sideIcon, sideIcon);
     }
 
