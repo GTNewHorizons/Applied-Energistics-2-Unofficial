@@ -45,21 +45,15 @@ import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
 import io.netty.buffer.ByteBuf;
 
-/**
- * Tile entity for the Storage Reshuffle block. Handles the reshuffling of storage contents based on priority. Can run
- * in the background without requiring the GUI to stay open.
- */
 public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost {
 
     private ReshuffleTask activeTask = null;
     private boolean isActive = false;
 
-    // Configuration
     private Set<IAEStackType<?>> allowedTypes = new HashSet<>();
     private boolean voidProtection = true;
     private boolean overwriteProtection = false;
 
-    // Progress tracking
     private int reshuffleProgress = 0;
     private int reshuffleTotalItems = 0;
     private boolean reshuffleRunning = false;
@@ -70,7 +64,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
         this.getProxy().setIdlePowerUsage(4.0);
 
-        // Default to all types
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
             this.allowedTypes.add(type);
         }
@@ -97,7 +90,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
             this.isActive = currentActive;
             this.markForUpdate();
 
-            // Cancel reshuffle if power is lost
             if (!currentActive && this.activeTask != null) {
                 this.cancelReshuffle();
             }
@@ -114,61 +106,45 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
                 this.reshuffleRunning = this.activeTask.isRunning();
 
                 if (!this.activeTask.isRunning()) {
-                    // Task completed - get report and send to container
                     ReshuffleReport report = this.activeTask.getReport();
                     if (report != null) {
-                        // Generate compact report for GUI display
                         java.util.List<String> reportLines = report.generateReportLines();
-                        // Store report for sending to clients
                         this.reshuffleReport = reportLines;
 
-                        // Also generate full tooltip report (with all items, no truncation)
                         java.util.List<String> tooltipReportLines = report.generateTooltipReportLines();
                         this.reshuffleTooltipReport = tooltipReportLines;
 
-                        // Mark for NBT save so the report persists
                         this.markDirty();
                     }
 
-                    // Unlock storage
                     unlockStorage();
                     this.activeTask = null;
                     this.markForUpdate();
                 }
             } catch (Exception e) {
                 AELog.error(e, "Error during reshuffle task processing in tile entity");
-                // Cancel the task on error
                 cancelReshuffle();
             }
         }
     }
-
-    /**
-     * Starts a reshuffle operation with the current configuration.
-     *
-     * @param player    The player initiating the reshuffle
-     * @param confirmed Whether the operation has been confirmed (for large networks)
-     * @return true if started successfully, false otherwise
-     */
+    
     public boolean startReshuffle(EntityPlayer player, boolean confirmed) {
         if (!this.getProxy().isActive()) {
             return false;
         }
 
         if (this.activeTask != null && this.activeTask.isRunning()) {
-            return false; // Already running
+            return false;
         }
 
         try {
             IGrid grid = this.getProxy().getGrid();
 
-            // Check for running crafting jobs
             appeng.api.networking.crafting.ICraftingGrid craftingGrid = grid
                     .getCache(appeng.api.networking.crafting.ICraftingGrid.class);
             if (craftingGrid != null) {
                 for (appeng.api.networking.crafting.ICraftingCPU cpu : craftingGrid.getCpus()) {
                     if (cpu.isBusy()) {
-                        // Cannot reshuffle while crafting - notify via report
                         return false;
                     }
                 }
@@ -176,15 +152,11 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
 
             IStorageGrid storageGrid = grid.getCache(IStorageGrid.class);
 
-            // Try to lock storage
             appeng.me.cache.GridStorageCache cache = (appeng.me.cache.GridStorageCache) storageGrid;
             if (!cache.lockStorage(this)) {
-                return false; // Another operation is running
+                return false; 
             }
 
-            // ...existing code...
-
-            // Get monitors
             Map<IAEStackType<?>, IMEMonitor<?>> monitors = new IdentityHashMap<>();
             for (IAEStackType<?> type : this.allowedTypes) {
                 IMEMonitor<?> monitor = storageGrid.getMEMonitor(type);
@@ -193,10 +165,8 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
                 }
             }
 
-            // Create action source
             BaseActionSource actionSource = player != null ? new PlayerSource(player, this) : new MachineSource(this);
 
-            // Create task
             this.activeTask = new ReshuffleTask(
                     monitors,
                     actionSource,
@@ -204,26 +174,24 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
                     this.allowedTypes,
                     this.voidProtection,
                     this.overwriteProtection,
-                    true // generate report
+                    true 
             );
 
             int totalItems = this.activeTask.initialize();
 
-            // Check confirmation for large networks
             if (!confirmed && totalItems >= ReshuffleTask.LARGE_NETWORK_THRESHOLD) {
                 this.activeTask = null;
                 cache.unlockStorage(this);
                 this.reshuffleTotalItems = totalItems;
-                return false; // Needs confirmation
+                return false; 
             }
 
             if (totalItems == 0) {
                 this.activeTask = null;
                 cache.unlockStorage(this);
-                return false; // Nothing to do
+                return false;
             }
 
-            // Start the reshuffle
             this.reshuffleTotalItems = totalItems;
             this.reshuffleProgress = 0;
             this.reshuffleRunning = true;
@@ -237,9 +205,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         }
     }
 
-    /**
-     * Cancels any running reshuffle operation.
-     */
     public void cancelReshuffle() {
         if (this.activeTask != null && this.activeTask.isRunning()) {
             this.activeTask.cancel();
@@ -250,11 +215,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         }
     }
 
-    /**
-     * Scans the ME Network storage and generates a detailed report using the comprehensive CellScanner
-     *
-     * @return List of formatted report strings for display in GUI
-     */
     public java.util.List<String> scanNetwork() {
         if (!this.getProxy().isActive()) {
             java.util.List<String> error = new java.util.ArrayList<>();
@@ -269,11 +229,9 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
             java.util.List<String> scanReport = CellScanner.generateReport(grid);
             java.util.List<String> scanTooltip = CellScanner.generateTooltipReport(grid);
 
-            // Store both the GUI report and the tooltip report
             this.reshuffleReport = new java.util.ArrayList<>(scanReport);
             this.reshuffleTooltipReport = new java.util.ArrayList<>(scanTooltip);
 
-            // Mark for NBT save
             this.markDirty();
 
             return scanReport;
@@ -311,7 +269,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         this.voidProtection = data.readBoolean();
         this.overwriteProtection = data.readBoolean();
 
-        // Read allowed types mask
         int typesMask = data.readByte();
         this.allowedTypes.clear();
         int index = 0;
@@ -333,7 +290,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         data.writeBoolean(this.voidProtection);
         data.writeBoolean(this.overwriteProtection);
 
-        // Write allowed types as bitmask
         int typesMask = 0;
         int index = 0;
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
@@ -350,15 +306,12 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         data.setBoolean("voidProtection", this.voidProtection);
         data.setBoolean("overwriteProtection", this.overwriteProtection);
 
-        // Save allowed types
         StringBuilder types = new StringBuilder();
         for (IAEStackType<?> type : this.allowedTypes) {
             if (types.length() > 0) types.append(",");
             types.append(type.getClass().getSimpleName());
         }
         data.setString("allowedTypes", types.toString());
-
-        // Save the last generated reports (both compact and tooltip versions)
         if (!this.reshuffleReport.isEmpty()) {
             NBTTagCompound reportNBT = new NBTTagCompound();
             reportNBT.setInteger("lineCount", this.reshuffleReport.size());
@@ -383,19 +336,16 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         this.voidProtection = data.getBoolean("voidProtection");
         this.overwriteProtection = data.getBoolean("overwriteProtection");
 
-        // Load allowed types (if saved)
         if (data.hasKey("allowedTypes")) {
             String typesStr = data.getString("allowedTypes");
             this.allowedTypes.clear();
             if (!typesStr.isEmpty()) {
-                // For now, just load all types - proper type deserialization can be added later
                 for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
                     this.allowedTypes.add(type);
                 }
             }
         }
-
-        // Load the last generated reports
+        
         this.reshuffleReport.clear();
         if (data.hasKey("lastReport")) {
             NBTTagCompound reportNBT = data.getCompoundTag("lastReport");
@@ -419,7 +369,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         }
     }
 
-    // Getters and setters for configuration
     public Set<IAEStackType<?>> getAllowedTypes() {
         return new HashSet<>(this.allowedTypes);
     }
@@ -462,7 +411,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         return this.reshuffleTotalItems;
     }
 
-    // ITerminalHost implementation
     @Override
     public IMEMonitor<IAEItemStack> getItemInventory() {
         try {
@@ -500,8 +448,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
 
     @Override
     public appeng.api.util.IConfigManager getConfigManager() {
-        // Storage reshuffle doesn't need a config manager for settings
-        // Configuration is stored directly in the tile entity
         return null;
     }
 
@@ -513,13 +459,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         return new java.util.ArrayList<>(this.reshuffleTooltipReport);
     }
 
-    /**
-     * Get the full item name from a truncated version shown in the report. This is used for tooltip display when
-     * hovering over truncated names.
-     *
-     * @param truncatedName The truncated name (without "...")
-     * @return The full item name, or null if not found
-     */
     public String getFullItemNameFromTruncated(String truncatedName) {
         if (this.activeTask == null || truncatedName == null) {
             return null;
@@ -529,49 +468,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         ReshuffleReport report = this.activeTask.getReport();
         if (report != null) {
             return report.getFullNameForTruncated(truncatedName);
-        }
-
-        return null;
-    }
-
-    /**
-     * Get the list of hidden items for a "... and X more" line. This is used to show tooltips with the complete list.
-     *
-     * @param lineIndex   The index of the "... and X more" line in the report
-     * @param reportLines All report lines
-     * @return List of hidden item entries, or null if not found
-     */
-    public java.util.List<String> getHiddenItemsForMoreLine(int lineIndex, java.util.List<String> reportLines) {
-        if (this.activeTask == null || lineIndex < 0 || lineIndex >= reportLines.size()) {
-            return null;
-        }
-
-        // Determine which section this "more" line belongs to by looking at previous lines
-        String moreLine = reportLines.get(lineIndex);
-
-        // Find the section header before this line
-        String sectionType = null;
-        for (int i = lineIndex - 1; i >= 0; i--) {
-            String line = reportLines.get(i);
-            String cleanLine = line.replaceAll("§.", "");
-
-            if (cleanLine.contains("Top Lost Items")) {
-                sectionType = "lost";
-                break;
-            } else if (cleanLine.contains("Top Gained Items")) {
-                sectionType = "gained";
-                break;
-            }
-        }
-
-        if (sectionType == null) {
-            return null;
-        }
-
-        // Get the hidden items from the report
-        ReshuffleReport report = this.activeTask.getReport();
-        if (report != null) {
-            return report.getHiddenItems(sectionType);
         }
 
         return null;
