@@ -845,9 +845,22 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         }
 
                         if (this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)) {
-                            this.finalOutput.performFakeCrafting(details);
                             craftingEntry.getValue().value--;
-                            continue;
+
+                            if (craftingEntry.getValue().value <= 0) {
+                                this.tasks.remove(details);
+                                parallelismProvider.remove(details);
+                                reasonProvider.remove(details);
+                                craftingTaskIterator.remove();
+
+                                this.finalOutput.performFakeCrafting(details);
+
+                                break;
+                            } else {
+                                this.finalOutput.performFakeCrafting(details);
+
+                                continue;
+                            }
                         }
 
                         // Process output items.
