@@ -106,19 +106,15 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.equals("Terminal.UpdateViewCell") && c instanceof final ContainerMEMonitorable qk) {
             qk.toggleViewCell(Integer.parseInt(this.Value));
         } else if (this.Name.equals("Terminal.Reshuffle") && c instanceof final ContainerMEMonitorable qk) {
-            // Parse value: "confirmed,typeFilter,voidProtection,overwriteProtection"
-            // typeFilter can be: "ALL", "ITEMS", "FLUIDS", or comma-separated type names
             String[] parts = this.Value.split(",");
             boolean confirmed = parts.length > 0 && "confirmed".equals(parts[0]);
             boolean voidProtection = parts.length > 2 ? "true".equals(parts[2]) : true;
             boolean overwriteProtection = parts.length > 3 ? "true".equals(parts[3]) : false;
 
-            // Build allowed types set
             java.util.Set<appeng.api.storage.data.IAEStackType<?>> allowedTypes = new java.util.HashSet<>();
             String typeFilter = parts.length > 1 ? parts[1] : "ALL";
 
             if ("ALL".equals(typeFilter) || typeFilter.isEmpty()) {
-                // Add all stack types
                 for (appeng.api.storage.data.IAEStackType<?> type : appeng.api.storage.data.AEStackTypeRegistry.getAllTypes()) {
                     allowedTypes.add(type);
                 }
@@ -127,7 +123,6 @@ public class PacketValueConfig extends AppEngPacket {
             } else if ("FLUIDS".equals(typeFilter)) {
                 allowedTypes.add(appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE);
             } else {
-                // For future extensibility, support comma-separated type names
                 for (appeng.api.storage.data.IAEStackType<?> type : appeng.api.storage.data.AEStackTypeRegistry.getAllTypes()) {
                     allowedTypes.add(type);
                 }
