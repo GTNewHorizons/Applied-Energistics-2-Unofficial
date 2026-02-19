@@ -1482,7 +1482,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void readFromNBT(final NBTTagCompound data) {
-        this.finalOutput.readFromNBT((NBTTagCompound) data.getTag("finalOutput"));
         this.inventory.readInventory((NBTTagList) data.getTag("inventory"));
         this.waiting = data.getBoolean("waiting");
         this.isComplete = data.getBoolean("isComplete");
@@ -1513,6 +1512,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             }
         }
 
+        this.finalOutput.readFromNBT((NBTTagCompound) data.getTag("finalOutput"));
         this.waitingFor = readAEStackListNBT((NBTTagList) data.getTag("waitingFor"), true);
         for (final IAEStack<?> is : this.waitingFor) {
             this.postCraftingStatusChange(is.copy());
@@ -1954,7 +1954,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         public boolean isFinalPattern(ICraftingPatternDetails details) {
-            if (details.getCondensedAEOutputs().length != this.patternOutputs.length) return false;
+            if (this.patternOutputs == null || details.getCondensedAEOutputs().length != this.patternOutputs.length)
+                return false;
             int matches = 0;
             for (IAEStack<?> aes : details.getCondensedAEOutputs()) {
                 for (IAEStack<?> aes2 : this.patternOutputs) {
