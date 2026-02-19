@@ -100,7 +100,6 @@ public enum ExtraBlockTextures {
     BlockMESecurityOn_Medium("BlockMESecurityOn_Medium"),
     BlockMESecurityOn_Dark("BlockMESecurityOn_Dark"),
 
-    // Storage Reshuffle block textures
     BlockReshuffleFrontAll("BlockReshuffleFrontAll"),
     BlockReshuffleFrontAllActive("BlockReshuffleFrontAllActive"),
     BlockReshuffleFrontItems("BlockReshuffleFrontItems"),
