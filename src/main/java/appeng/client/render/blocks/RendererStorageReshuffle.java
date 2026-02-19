@@ -26,10 +26,6 @@ import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.tile.misc.TileStorageReshuffle;
 
-/**
- * Custom renderer for the Storage Reshuffle block. Handles different textures based on: - Active/inactive state - Type
- * filter mode (All/Items/Fluids) - Directional orientation
- */
 public class RendererStorageReshuffle extends BaseBlockRender<BlockStorageReshuffle, TileStorageReshuffle> {
 
     public RendererStorageReshuffle() {
@@ -39,8 +35,6 @@ public class RendererStorageReshuffle extends BaseBlockRender<BlockStorageReshuf
     @Override
     public void renderInventory(final BlockStorageReshuffle block, final ItemStack is, final RenderBlocks renderer,
             final ItemRenderType type, final Object[] obj) {
-        // Use the standard inventory rendering from BaseBlockRender
-        // The textures are set via BlockRenderInfo.updateIcons() in BlockStorageReshuffle.registerBlockIcons()
         super.renderInventory(block, is, renderer, type, obj);
     }
 
@@ -57,8 +51,6 @@ public class RendererStorageReshuffle extends BaseBlockRender<BlockStorageReshuf
 
         final ForgeDirection forward = tile.getForward();
         final ForgeDirection up = tile.getUp();
-
-        // Render all sides with appropriate textures
         for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
             IIcon icon = getIconForSide(tile, side, forward, up);
             if (icon != null) {
@@ -73,60 +65,42 @@ public class RendererStorageReshuffle extends BaseBlockRender<BlockStorageReshuf
         return true;
     }
 
-    /**
-     * Gets the appropriate icon for a specific side of the block.
-     */
     private IIcon getIconForSide(TileStorageReshuffle tile, ForgeDirection side, ForgeDirection forward,
             ForgeDirection up) {
-        // Front face - varies based on state and filter
         if (side == forward) {
             return getFrontIcon(tile);
         }
 
-        // Back face
         if (side == forward.getOpposite()) {
             return ExtraBlockTextures.BlockReshuffleBack.getIcon();
         }
 
-        // Top face
         if (side == up) {
             return ExtraBlockTextures.BlockReshuffleTop.getIcon();
         }
 
-        // Bottom face
         if (side == up.getOpposite()) {
             return ExtraBlockTextures.BlockReshuffleBottom.getIcon();
         }
 
-        // Side faces (left/right)
         return ExtraBlockTextures.BlockReshuffleSide.getIcon();
     }
 
-    /**
-     * Gets the front icon based on active state and type filter. Dynamically supports any stack types from
-     * AEStackTypeRegistry without requiring code changes when new types are added.
-     */
     private IIcon getFrontIcon(TileStorageReshuffle tile) {
         boolean isActive = tile.isReshuffleRunning();
         Set<IAEStackType<?>> allowedTypes = tile.getAllowedTypes();
 
-        // Get all registered types for comparison
         java.util.List<IAEStackType<?>> allTypes = new java.util.ArrayList<>(AEStackTypeRegistry.getAllTypes());
 
-        // Check if all types are enabled
         if (allowedTypes.size() == allTypes.size()) {
-            // All types mode
             return isActive ? ExtraBlockTextures.BlockReshuffleFrontAllActive.getIcon()
                     : ExtraBlockTextures.BlockReshuffleFrontAll.getIcon();
         }
 
-        // Check if exactly one type is enabled
         if (allowedTypes.size() == 1) {
             IAEStackType<?> singleType = allowedTypes.iterator().next();
             String typeId = singleType.getId();
 
-            // Map to specific textures based on type ID for known types
-            // This is flexible - new types will fall through to default
             switch (typeId) {
                 case "item":
                     return isActive ? ExtraBlockTextures.BlockReshuffleFrontItemsActive.getIcon()
@@ -134,11 +108,9 @@ public class RendererStorageReshuffle extends BaseBlockRender<BlockStorageReshuf
                 case "fluid":
                     return isActive ? ExtraBlockTextures.BlockReshuffleFrontFluidsActive.getIcon()
                             : ExtraBlockTextures.BlockReshuffleFrontFluids.getIcon();
-                // Future types (essentia, etc.) will fall through to default
             }
         }
 
-        // Default/fallback to All mode for multiple types or unknown single types
         return isActive ? ExtraBlockTextures.BlockReshuffleFrontAllActive.getIcon()
                 : ExtraBlockTextures.BlockReshuffleFrontAll.getIcon();
     }
