@@ -31,50 +31,39 @@ import appeng.core.localization.GuiText;
 import appeng.tile.storage.TileChest;
 import appeng.tile.storage.TileDrive;
 
-/**
- * Comprehensive cell scanner and statistical analyzer for ME Network storage. Provides detailed per-cell metrics and
- * aggregated statistics for storage optimization.
- */
 public final class CellScanner {
 
     private CellScanner() {}
 
-    // ========== COLOR CONSTANTS ==========
+    private static final String GUI_HEADER = "§1";
+    private static final String GUI_LABEL = "§1";
+    private static final String GUI_VALUE = "§8";
+    private static final String GUI_SECONDARY = "§8";
+    private static final String GUI_WARN = "§6";
+    private static final String GUI_ERROR = "§4";
+    private static final String GUI_GOOD = "§2";
+    private static final String GUI_CHANNEL_ITEM = "§8";
+    private static final String GUI_CHANNEL_FLUID = "§1";
+    private static final String GUI_CHANNEL_ESSENTIA = "§5";
 
-    // GUI Report Colors (optimized for light gray background - high contrast)
-    private static final String GUI_HEADER = "§1"; // dark blue - section headers (high contrast)
-    private static final String GUI_LABEL = "§1"; // dark blue - field labels (readable, not black)
-    private static final String GUI_VALUE = "§8"; // dark gray - normal values (readable, not black)
-    private static final String GUI_SECONDARY = "§8"; // dark gray - secondary/footnote
-    private static final String GUI_WARN = "§6"; // gold - warnings/percentages
-    private static final String GUI_ERROR = "§4"; // dark red - errors/critical
-    private static final String GUI_GOOD = "§2"; // dark green - positive/good
-    private static final String GUI_CHANNEL_ITEM = "§8"; // dark gray - item channel
-    private static final String GUI_CHANNEL_FLUID = "§1"; // dark blue - fluid channel
-    private static final String GUI_CHANNEL_ESSENTIA = "§5"; // purple - essentia channel
-
-    // Tooltip Colors (optimized for dark purple background) - matching reshuffle tooltip colors
-    private static final String TT_HEADER = "§b"; // bright aqua - section headers
-    private static final String TT_LABEL = "§b"; // bright aqua - labels
-    private static final String TT_VALUE = "§f"; // white - values (good contrast on dark background)
-    private static final String TT_SECONDARY = "§7"; // light gray - secondary text
-    private static final String TT_WARN = "§e"; // yellow - warnings
-    private static final String TT_ERROR = "§c"; // bright red - errors
-    private static final String TT_GOOD = "§a"; // bright green - positive
-    private static final String TT_DIVIDER = "§7"; // light gray - dividers
-    private static final String TT_CHANNEL_ITEM = "§f"; // white - item channel (matching reshuffle)
-    private static final String TT_CHANNEL_FLUID = "§b"; // cyan - fluid channel
-    private static final String TT_CHANNEL_ESSENTIA = "§d"; // pink - essentia channel
-
-    /**
-     * Unique identifier for a storage cell type
-     */
+    private static final String TT_HEADER = "§b";
+    private static final String TT_LABEL = "§b";
+    private static final String TT_VALUE = "§f";
+    private static final String TT_SECONDARY = "§7";
+    private static final String TT_WARN = "§e";
+    private static final String TT_ERROR = "§c";
+    private static final String TT_GOOD = "§a"
+    private static final String TT_DIVIDER = "§7";s
+    private static final String TT_CHANNEL_ITEM = "§f";
+    private static final String TT_CHANNEL_FLUID = "§b";
+    private static final String TT_CHANNEL_ESSENTIA = "§d";
+    
     public static final class CellKey {
 
         public final String itemId;
         public final int meta;
         public final ICellCacheRegistry.TYPE cellType;
-        public final String displayName; // Add display name for proper cell identification
+        public final String displayName;
 
         public CellKey(String itemId, int meta, ICellCacheRegistry.TYPE cellType, String displayName) {
             this.itemId = itemId;
@@ -102,9 +91,6 @@ public final class CellScanner {
         }
     }
 
-    /**
-     * Complete information about a single physical storage cell
-     */
     public static final class CellRecord {
 
         public final String deviceType;
@@ -112,14 +98,14 @@ public final class CellScanner {
         public final int slot;
         public final String cellItemId;
         public final int cellMeta;
-        public final String cellDisplayName; // Add display name
+        public final String cellDisplayName;
         public final ICellCacheRegistry.TYPE cellType;
         public final double bytesTotal;
         public final double bytesUsed;
         public final double typesTotal;
         public final double typesUsed;
-        public final boolean isPartitioned; // Whether cell has partition/filter configured
-        public final List<String> partitionedItems; // List of partitioned item names (if any)
+        public final boolean isPartitioned;
+        public final List<String> partitionedItems;
 
         public CellRecord(String deviceType, String deviceId, int slot, String cellItemId, int cellMeta,
                 String cellDisplayName, ICellCacheRegistry.TYPE cellType, double bytesTotal, double bytesUsed,
@@ -175,17 +161,11 @@ public final class CellScanner {
             return typesUsed > 0 ? bytesUsed / typesUsed : 0;
         }
 
-        /**
-         * Check if this is a singularity cell (cells that only hold 1 type)
-         */
         public boolean isSingularityCell() {
             return typesTotal == 1;
         }
     }
 
-    /**
-     * Statistical summary of a population of cells
-     */
     public static final class Summary {
 
         public int numCells;
@@ -225,14 +205,10 @@ public final class CellScanner {
         public double typesMax;
     }
 
-    /**
-     * Scans all storage cells in the grid and returns detailed per-cell records
-     */
     public static List<CellRecord> scanGrid(IGrid grid) {
         List<CellRecord> records = new ArrayList<>();
 
         try {
-            // Scan ME Drives - check all slots for all stack types
             var driveSet = grid.getMachines(TileDrive.class);
             AELog.info("CellScanner: Found " + driveSet.size() + " ME Drives in grid");
 
@@ -248,18 +224,14 @@ public final class CellScanner {
                             .format("Drive@%d,%d,%d (Dim %d)", drive.xCoord, drive.yCoord, drive.zCoord, dimension);
                     IInventory inv = drive.getInternalInventory();
 
-                    // Drives have 10 slots (INV_SIZE = 10)
-                    // We need to check each slot for ANY stack type
                     for (int slot = 0; slot < 10; slot++) {
                         ItemStack cellStack = inv.getStackInSlot(slot);
                         if (cellStack == null) continue;
 
-                        // Try to find a handler for this cell across all stack types
                         appeng.api.storage.ICellHandler cellHandler = appeng.api.AEApi.instance().registries().cell()
                                 .getHandler(cellStack);
                         if (cellHandler == null) continue;
 
-                        // Try each stack type until we find the right one
                         for (appeng.api.storage.data.IAEStackType<?> stackType : appeng.api.storage.data.AEStackTypeRegistry
                                 .getAllTypes()) {
                             try {
@@ -267,11 +239,9 @@ public final class CellScanner {
                                         .getCellInventory(cellStack, drive, stackType);
                                 if (cellInv == null) continue;
 
-                                // Check if this is a ICellCacheRegistry implementation
                                 if (cellInv instanceof ICellCacheRegistry reg && reg.canGetInv()) {
                                     String displayName = cellStack.getDisplayName();
 
-                                    // Check if cell is partitioned (has config filter)
                                     boolean isPartitioned = false;
                                     List<String> partitionedItems = new ArrayList<>();
 
@@ -308,7 +278,7 @@ public final class CellScanner {
                                                     isPartitioned,
                                                     partitionedItems));
                                     cellsFound++;
-                                    break; // Found the right stack type for this cell, move to next slot
+                                    break;
                                 }
                             } catch (Exception e) {
                                 // This stack type doesn't match, try next
@@ -322,7 +292,6 @@ public final class CellScanner {
 
             AELog.info("CellScanner: Found " + cellsFound + " cells in drives");
 
-            // Scan ME Chests
             var chestSet = grid.getMachines(TileChest.class);
             AELog.info("CellScanner: Found " + chestSet.size() + " ME Chests in grid");
 
@@ -336,16 +305,13 @@ public final class CellScanner {
                             .format("Chest@%d,%d,%d (Dim %d)", chest.xCoord, chest.yCoord, chest.zCoord, dimension);
                     IInventory inv = chest.getInternalInventory();
 
-                    // Chest cell is in slot 1 (fixed slot)
                     ItemStack cellStack = inv.getStackInSlot(1);
                     if (cellStack == null) continue;
 
-                    // Get cell handler
                     appeng.api.storage.ICellHandler cellHandler = appeng.api.AEApi.instance().registries().cell()
                             .getHandler(cellStack);
                     if (cellHandler == null) continue;
 
-                    // Try all stack types to find the one this chest supports
                     for (appeng.api.storage.data.IAEStackType<?> stackType : appeng.api.storage.data.AEStackTypeRegistry
                             .getAllTypes()) {
                         try {
@@ -356,7 +322,6 @@ public final class CellScanner {
                             if (cellInv instanceof ICellCacheRegistry reg && reg.canGetInv()) {
                                 String displayName = cellStack.getDisplayName();
 
-                                // Check if cell is partitioned (has config filter)
                                 boolean isPartitioned = false;
                                 List<String> partitionedItems = new ArrayList<>();
 
@@ -381,7 +346,7 @@ public final class CellScanner {
                                         new CellRecord(
                                                 "CHEST",
                                                 deviceId,
-                                                1, // Always slot 1 for chests
+                                                1,
                                                 Item.itemRegistry.getNameForObject(cellStack.getItem()),
                                                 cellStack.getItemDamage(),
                                                 displayName,
@@ -393,7 +358,7 @@ public final class CellScanner {
                                                 isPartitioned,
                                                 partitionedItems));
                                 cellsFound++;
-                                break; // Found this cell's type, no need to try other types
+                                break;
                             }
                         } catch (Exception e) {
                             // This stack type not supported, try next
@@ -413,9 +378,6 @@ public final class CellScanner {
         return records;
     }
 
-    /**
-     * Computes comprehensive statistics for a list of cells
-     */
     public static Summary summarize(List<CellRecord> cells) {
         Summary s = new Summary();
 
@@ -469,46 +431,29 @@ public final class CellScanner {
         return s;
     }
 
-    /**
-     * Groups cells by their type (item ID + meta + cell type)
-     */
     public static Map<CellKey, List<CellRecord>> groupByType(List<CellRecord> cells) {
         return cells.stream().collect(
                 Collectors.groupingBy(c -> new CellKey(c.cellItemId, c.cellMeta, c.cellType, c.cellDisplayName)));
     }
 
-    /**
-     * Filters cells by channel type
-     */
     public static List<CellRecord> filterByType(List<CellRecord> cells, ICellCacheRegistry.TYPE type) {
         return cells.stream().filter(c -> c.cellType == type).collect(Collectors.toList());
     }
 
-    /**
-     * Filters to get only singularity cells (1 type slot cells)
-     */
     public static List<CellRecord> filterSingularityCells(List<CellRecord> cells) {
         return cells.stream().filter(CellRecord::isSingularityCell).collect(Collectors.toList());
     }
 
-    /**
-     * Filters to get only non-singularity cells (multi-type cells)
-     */
     public static List<CellRecord> filterNonSingularityCells(List<CellRecord> cells) {
         return cells.stream().filter(c -> !c.isSingularityCell()).collect(Collectors.toList());
     }
 
-    /**
-     * Finds duplicate partitioned cells - cells that are locked to the same item types
-     */
     public static Map<String, List<CellRecord>> findDuplicatePartitionedCells(List<CellRecord> cells) {
-        // Group partitioned cells by their partition signature
         Map<String, List<CellRecord>> duplicates = new java.util.HashMap<>();
 
         for (CellRecord cell : cells) {
             if (!cell.isPartitioned || cell.partitionedItems.isEmpty()) continue;
 
-            // Create signature from sorted partition items
             List<String> sortedItems = new ArrayList<>(cell.partitionedItems);
             java.util.Collections.sort(sortedItems);
             String signature = String.join("|", sortedItems) + "|" + cell.cellType.name();
@@ -516,7 +461,6 @@ public final class CellScanner {
             duplicates.computeIfAbsent(signature, k -> new ArrayList<>()).add(cell);
         }
 
-        // Filter to only include groups with 2+ cells (actual duplicates)
         Map<String, List<CellRecord>> result = new java.util.HashMap<>();
         for (Map.Entry<String, List<CellRecord>> entry : duplicates.entrySet()) {
             if (entry.getValue().size() >= 2) {
@@ -527,26 +471,17 @@ public final class CellScanner {
         return result;
     }
 
-    /**
-     * Finds the most fragmented cells (type-locked with most wasted bytes)
-     */
     public static List<CellRecord> getTopFragmented(List<CellRecord> cells, int limit) {
         return cells.stream().filter(CellRecord::typeLocked)
                 .sorted((a, b) -> Double.compare(b.typeLockedBytes(), a.typeLockedBytes())).limit(limit)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Finds cells with lowest utilization
-     */
     public static List<CellRecord> getLowestUtilization(List<CellRecord> cells, int limit) {
         return cells.stream().filter(c -> !c.isEmpty()).sorted(Comparator.comparingDouble(CellRecord::bytesUtilPct))
                 .limit(limit).collect(Collectors.toList());
     }
 
-    /**
-     * Generates a human-readable report for display in GUI or chat
-     */
     public static List<String> generateReport(IGrid grid) {
         List<String> lines = new ArrayList<>();
         NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
@@ -554,15 +489,12 @@ public final class CellScanner {
         List<CellRecord> allCells = scanGrid(grid);
         Summary overall = summarize(allCells);
 
-        // Separate singularity cells from regular cells for analysis
         List<CellRecord> regularCells = filterNonSingularityCells(allCells);
         List<CellRecord> singularityCells = filterSingularityCells(allCells);
 
-        // Header
         lines.add(GUI_HEADER + "═══════ " + GuiText.StorageScan.getLocal() + " ═══════");
         lines.add("");
 
-        // Global summary
         lines.add(GUI_HEADER + "── " + GuiText.StorageScanSummary.getLocal() + " ──");
         lines.add(
                 GUI_LABEL + GuiText.StorageScanCells.getLocal()
@@ -579,7 +511,6 @@ public final class CellScanner {
                         + ")");
         lines.add("");
 
-        // Separate rows for Items/Fluids/Essentia (filter types)
         List<CellRecord> itemCells = filterByType(allCells, ICellCacheRegistry.TYPE.ITEM);
         List<CellRecord> fluidCells = filterByType(allCells, ICellCacheRegistry.TYPE.FLUID);
         List<CellRecord> essentiaCells = filterByType(allCells, ICellCacheRegistry.TYPE.ESSENTIA);
@@ -637,10 +568,8 @@ public final class CellScanner {
 
         lines.add("");
 
-        // ====== UTILIZATION SECTION ======
         lines.add(GUI_HEADER + "── " + GuiText.StorageScanUtilization.getLocal() + " ──");
 
-        // Bytes utilization - WITH and WITHOUT singularities
         Summary regularSummary = summarize(regularCells);
         Summary singularitySummary = summarize(singularityCells);
 
@@ -692,7 +621,6 @@ public final class CellScanner {
 
         lines.add("");
 
-        // Types utilization
         lines.add(
                 GUI_LABEL + GuiText.Types.getLocal()
                         + ": "
@@ -717,7 +645,6 @@ public final class CellScanner {
 
         lines.add("");
 
-        // Fragmentation - EXCLUDING singularity cells
         List<CellRecord> framedRegularCells = regularCells.stream().filter(CellRecord::typeLocked)
                 .collect(Collectors.toList());
         if (!framedRegularCells.isEmpty()) {
@@ -736,12 +663,10 @@ public final class CellScanner {
             lines.add("");
         }
 
-        // Cell type breakdown - counts only (no utilization)
         Map<CellKey, List<CellRecord>> byType = groupByType(allCells);
         if (!byType.isEmpty()) {
             lines.add(GUI_HEADER + "── " + GuiText.StorageScanCellTypes.getLocal() + " ──");
 
-            // Sort by count descending
             List<Map.Entry<CellKey, List<CellRecord>>> sortedTypes = new ArrayList<>(byType.entrySet());
             sortedTypes.sort((a, b) -> Integer.compare(b.getValue().size(), a.getValue().size()));
 
@@ -751,7 +676,6 @@ public final class CellScanner {
 
                 String cellName = key.displayName;
 
-                // Channel type suffix
                 String channelSuffix = "";
                 if (key.cellType == ICellCacheRegistry.TYPE.FLUID) {
                     channelSuffix = GUI_CHANNEL_FLUID + " (F)";
@@ -767,11 +691,9 @@ public final class CellScanner {
             lines.add("");
         }
 
-        // Cell Types Utilization - separate section
         if (!byType.isEmpty()) {
             lines.add(GUI_HEADER + "── " + GuiText.StorageScanCellTypesUtilization.getLocal() + " ──");
 
-            // Sort by count descending
             List<Map.Entry<CellKey, List<CellRecord>>> sortedTypes = new ArrayList<>(byType.entrySet());
             sortedTypes.sort((a, b) -> Integer.compare(b.getValue().size(), a.getValue().size()));
 
@@ -782,7 +704,6 @@ public final class CellScanner {
 
                 String cellName = key.displayName;
 
-                // Channel type suffix
                 String channelSuffix = "";
                 if (key.cellType == ICellCacheRegistry.TYPE.FLUID) {
                     channelSuffix = GUI_CHANNEL_FLUID + " (F)";
@@ -803,7 +724,6 @@ public final class CellScanner {
             lines.add("");
         }
 
-        // Duplicate partitioned cells analysis - full details, no truncation
         Map<String, List<CellRecord>> duplicates = findDuplicatePartitionedCells(allCells);
         if (!duplicates.isEmpty()) {
             lines.add(GUI_HEADER + "── " + GuiText.StorageScanDuplicatePartitions.getLocal() + " ──");
@@ -811,7 +731,6 @@ public final class CellScanner {
             for (Map.Entry<String, List<CellRecord>> entry : duplicates.entrySet()) {
                 List<CellRecord> dupes = entry.getValue();
 
-                // Build full partition list (no truncation)
                 String partitionList = String.join(", ", dupes.get(0).partitionedItems);
                 if (partitionList.isEmpty()) partitionList = "Empty";
 
@@ -827,7 +746,6 @@ public final class CellScanner {
                                 + ":");
                 lines.add(GUI_VALUE + "  " + partitionList);
 
-                // Show locations
                 lines.add(GUI_HEADER + "  -- " + GuiText.StorageScanLocations.getLocal() + " --");
                 for (CellRecord cell : dupes) {
                     String deviceType = cell.deviceType.equals("DRIVE") ? GuiText.StorageScanDrive.getLocal()
@@ -839,7 +757,6 @@ public final class CellScanner {
             lines.add("");
         }
 
-        // Top fragmented cells (excluding singularities)
         List<CellRecord> fragmented = getTopFragmented(regularCells, 3);
         if (!fragmented.isEmpty()) {
             lines.add(GUI_HEADER + "── " + GuiText.StorageScanMostFragmented.getLocal() + " ──");
@@ -863,7 +780,6 @@ public final class CellScanner {
             lines.add("");
         }
 
-        // Bottom line
         lines.add(GUI_HEADER + "═════════════════════");
 
         return lines;
@@ -886,17 +802,11 @@ public final class CellScanner {
         return String.format("%.1f GB", bytes / (1024 * 1024 * 1024));
     }
 
-    /**
-     * Strips Minecraft formatting codes (§x) from a string
-     */
     private static String stripFormatting(String text) {
         if (text == null) return "";
         return text.replaceAll("§.", "");
     }
 
-    /**
-     * Generates a tooltip-optimized report with brighter colors for dark backgrounds
-     */
     public static List<String> generateTooltipReport(IGrid grid) {
         List<String> lines = new ArrayList<>();
         NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
@@ -904,15 +814,12 @@ public final class CellScanner {
         List<CellRecord> allCells = scanGrid(grid);
         Summary overall = summarize(allCells);
 
-        // Separate singularity cells from regular cells
         List<CellRecord> regularCells = filterNonSingularityCells(allCells);
         List<CellRecord> singularityCells = filterSingularityCells(allCells);
 
-        // Header
         lines.add(TT_HEADER + "═══════════x " + GuiText.StorageScan.getLocal() + " ═══════════");
         lines.add("");
 
-        // Add explanatory text for key terms
         lines.add(TT_DIVIDER + "───────────────────────────────");
         lines.add(TT_SECONDARY + GuiText.StorageScanExplainLocked.getLocal());
         lines.add(TT_SECONDARY + GuiText.StorageScanExplainWasted.getLocal());
@@ -920,7 +827,6 @@ public final class CellScanner {
         lines.add(TT_DIVIDER + "───────────────────────────────");
         lines.add("");
 
-        // Global summary
         lines.add(TT_DIVIDER + "-- " + GuiText.StorageScanSummary.getLocal() + " --");
         lines.add(
                 TT_LABEL + GuiText.StorageScanCells.getLocal()
@@ -937,7 +843,6 @@ public final class CellScanner {
                         + ")");
         lines.add("");
 
-        // Filter types
         List<CellRecord> itemCells = filterByType(allCells, ICellCacheRegistry.TYPE.ITEM);
         List<CellRecord> fluidCells = filterByType(allCells, ICellCacheRegistry.TYPE.FLUID);
         List<CellRecord> essentiaCells = filterByType(allCells, ICellCacheRegistry.TYPE.ESSENTIA);
@@ -995,7 +900,6 @@ public final class CellScanner {
 
         lines.add("");
 
-        // Utilization
         lines.add(TT_DIVIDER + "-- " + TT_LABEL + GuiText.StorageScanUtilization.getLocal() + TT_DIVIDER + " --");
 
         Summary regularSummary = summarize(regularCells);
@@ -1077,7 +981,6 @@ public final class CellScanner {
 
         lines.add("");
 
-        // Fragmentation (excluding singularities)
         List<CellRecord> framedRegularCells = regularCells.stream().filter(CellRecord::typeLocked)
                 .collect(Collectors.toList());
         if (!framedRegularCells.isEmpty()) {
@@ -1097,7 +1000,6 @@ public final class CellScanner {
             lines.add("");
         }
 
-        // Cell type breakdown - counts only (no utilization)
         Map<CellKey, List<CellRecord>> byType = groupByType(allCells);
         if (!byType.isEmpty()) {
             lines.add(TT_DIVIDER + "-- " + TT_LABEL + GuiText.StorageScanCellTypes.getLocal() + TT_DIVIDER + " --");
@@ -1109,7 +1011,6 @@ public final class CellScanner {
                 CellKey key = entry.getKey();
                 List<CellRecord> cells = entry.getValue();
 
-                // Strip any formatting codes from cell name to prevent color conflicts
                 String cellName = stripFormatting(key.displayName);
                 String channelSuffix = "";
                 if (key.cellType == ICellCacheRegistry.TYPE.FLUID) {
@@ -1126,7 +1027,6 @@ public final class CellScanner {
             lines.add("");
         }
 
-        // Cell Types Utilization - separate section
         if (!byType.isEmpty()) {
             lines.add(
                     TT_DIVIDER + "-- "
@@ -1143,7 +1043,6 @@ public final class CellScanner {
                 List<CellRecord> cells = entry.getValue();
                 Summary typeSummary = summarize(cells);
 
-                // Strip any formatting codes from cell name to prevent color conflicts
                 String cellName = stripFormatting(key.displayName);
                 String channelSuffix = "";
                 if (key.cellType == ICellCacheRegistry.TYPE.FLUID) {
@@ -1166,7 +1065,6 @@ public final class CellScanner {
             lines.add("");
         }
 
-        // Duplicate partitioned cells - full details, no truncation
         Map<String, List<CellRecord>> duplicates = findDuplicatePartitionedCells(allCells);
         if (!duplicates.isEmpty()) {
             lines.add(
@@ -1179,7 +1077,6 @@ public final class CellScanner {
             for (Map.Entry<String, List<CellRecord>> entry : duplicates.entrySet()) {
                 List<CellRecord> dupes = entry.getValue();
 
-                // Build full partition list (no truncation)
                 String partitionList = String.join(", ", dupes.get(0).partitionedItems);
                 if (partitionList.isEmpty()) partitionList = TT_SECONDARY + GuiText.Empty.getLocal();
 
@@ -1196,12 +1093,10 @@ public final class CellScanner {
                                 + ":");
                 lines.add(TT_VALUE + "  " + partitionList);
 
-                // Show all duplicate locations with full coordinates (including dimension)
                 lines.add(TT_HEADER + "  -- " + TT_LABEL + GuiText.StorageScanLocations.getLocal() + TT_HEADER + " --");
                 for (CellRecord cell : dupes) {
                     String deviceType = cell.deviceType.equals("DRIVE") ? TT_VALUE + GuiText.StorageScanDrive.getLocal()
                             : TT_VALUE + GuiText.StorageScanChest.getLocal();
-                    // deviceId already includes dimension in format "Drive@x,y,z (Dim N)" or "Chest@x,y,z (Dim N)"
                     String fullLocation = cell.deviceId.substring(cell.deviceId.indexOf('@') + 1);
                     lines.add(
                             TT_SECONDARY + "    "
@@ -1218,7 +1113,6 @@ public final class CellScanner {
             lines.add("");
         }
 
-        // Top fragmented (excluding singularities)
         List<CellRecord> fragmented = getTopFragmented(regularCells, 5);
         if (!fragmented.isEmpty()) {
             lines.add(
