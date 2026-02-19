@@ -19,53 +19,34 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.ChatComponentText;
-
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 
-/**
- * Tracks and reports the results of a reshuffle operation. Records the state of items before and after reshuffling to
- * show what changed.
- */
 public class ReshuffleReport {
 
-    // Approximate character width budget for the GUI text area.
-    // Minecraft's default font: most chars ~6px wide, GUI panel ~660px wide -> ~38 chars.
-    // Adjust this constant if your GUI panel is wider/narrower.
     private static final int LINE_WIDTH = 38;
+    
+    private static final String C_HEADER = "§3";
+    private static final String C_LABEL = "§3";
+    private static final String C_VALUE = "§0";
+    private static final String C_GAIN = "§2";
+    private static final String C_LOSS = "§4";
+    private static final String C_NEUTRAL = "§8";
+    private static final String C_WARN = "§6";
+    private static final String C_ON = "§2";
+    private static final String C_OFF = "§4";
 
-    // Color codes matching scan report for consistency in both GUI and tooltips
-    // Designed for good contrast against Minecraft's light-gray GUI background
-    private static final String C_HEADER = "§3"; // dark aqua – section headers / decorators
-    private static final String C_LABEL = "§3"; // dark aqua – field labels (matching scan report)
-    private static final String C_VALUE = "§0"; // black – normal values (matching scan report)
-    private static final String C_GAIN = "§2"; // dark green – positive / gained
-    private static final String C_LOSS = "§4"; // dark red – negative / lost
-    private static final String C_NEUTRAL = "§8"; // dark gray – secondary/footnote text (matching scan report)
-    private static final String C_WARN = "§6"; // gold – warnings/percentages (matching scan report)
-    private static final String C_ON = "§2"; // dark green – ON state (matching gain color)
-    private static final String C_OFF = "§4"; // dark red – OFF state (matching loss color)
-    private static final String C_RESET = "§r"; // reset
+    private static final String CT_HEADER = "§b";
+    private static final String CT_LABEL = "§b";
+    private static final String CT_VALUE = "§f";
+    private static final String CT_GAIN = "§a";
+    private static final String CT_LOSS = "§c";
+    private static final String CT_NEUTRAL = "§7";
+    private static final String CT_WARN = "§e";
+    private static final String CT_DIVIDER = "§7";
 
-    // Tooltip colors - brighter/more vibrant for dark purple tooltip background
-    // These match the scan report tooltip style for consistency
-    private static final String CT_HEADER = "§b"; // bright aqua – section headers
-    private static final String CT_LABEL = "§b"; // bright aqua – labels
-    private static final String CT_VALUE = "§f"; // white – values
-    private static final String CT_GAIN = "§a"; // bright green – gains
-    private static final String CT_LOSS = "§c"; // bright red – losses
-    private static final String CT_NEUTRAL = "§7"; // light gray – secondary text
-    private static final String CT_WARN = "§e"; // yellow – warnings
-    private static final String CT_DIVIDER = "§7"; // light gray – divider lines
-
-    /**
-     * Represents a single item's change during reshuffle
-     */
     public static class ItemChange {
 
         public final IAEStack<?> stack;
@@ -96,11 +77,9 @@ public class ReshuffleReport {
         UNCHANGED
     }
 
-    // Snapshot of storage before reshuffle (stack hash -> count)
     private final Map<String, Long> beforeSnapshot = new HashMap<>();
     private final Map<String, IAEStack<?>> stackLookup = new HashMap<>();
 
-    // Statistics
     private int totalItemTypesBefore = 0;
     private int totalItemTypesAfter = 0;
     private long totalStacksBefore = 0;
@@ -117,23 +96,17 @@ public class ReshuffleReport {
     private final List<ItemChange> lostItems = new ArrayList<>();
     private final List<ItemChange> gainedItems = new ArrayList<>();
 
-    // Maps for tooltip support
-    private final Map<String, String> truncatedToFullName = new HashMap<>(); // truncated -> full name
-    private final Map<String, List<String>> hiddenItemsMap = new HashMap<>(); // "lost" or "gained" -> hidden items
+    private final Map<String, String> truncatedToFullName = new HashMap<>();
+    private final Map<String, List<String>> hiddenItemsMap = new HashMap<>();
 
     private Set<IAEStackType<?>> allowedTypes = new HashSet<>();
     private boolean voidProtection;
-    private boolean overwriteProtection;
     private long startTime;
     private long endTime;
 
     public ReshuffleReport() {
         this.startTime = System.currentTimeMillis();
     }
-
-    // -------------------------------------------------------------------------
-    // Snapshot / generation logic (unchanged from original)
-    // -------------------------------------------------------------------------
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void snapshotBefore(Map<IAEStackType<?>, IMEMonitor<?>> monitors,
@@ -222,31 +195,13 @@ public class ReshuffleReport {
         lostItems.sort((a, b) -> Long.compare(Math.abs(b.difference), Math.abs(a.difference)));
         gainedItems.sort((a, b) -> Long.compare(Math.abs(b.difference), Math.abs(a.difference)));
     }
-
-    // -------------------------------------------------------------------------
-    // Formatted report lines (the main improvement)
-    // -------------------------------------------------------------------------
-
-    /**
-     * Generates compact, color-coded report lines suitable for the GUI scroll panel.
-     * <p>
-     * Design goals:
-     * <ul>
-     * <li>Every logical line fits within {@value #LINE_WIDTH} visible characters so the GUI never wraps mid-word.</li>
-     * <li>Large numbers are abbreviated (K / M / B) on lines that are already long, keeping full precision only where
-     * the value stands alone.</li>
-     * <li>Color scheme: dark-aqua headers, gray labels, white values, green/red for positive/negative deltas, dark-gray
-     * for footnotes.</li>
-     * </ul>
-     */
+    
     public List<String> generateReportLines() {
         List<String> lines = new ArrayList<>();
         long durationMs = endTime - startTime;
 
-        // ── Header ──────────────────────────────────────────────────────────
         lines.add(C_HEADER + center("= Reshuffle Report =", LINE_WIDTH, '='));
 
-        // Duration + mode on one line, abbrev if needed
         String modeStr = buildModeString();
         lines.add(
                 C_LABEL + "Time: "
@@ -257,35 +212,26 @@ public class ReshuffleReport {
                         + C_VALUE
                         + modeStr);
 
-        // Protection flags – two short tokens, always fit
         lines.add(
                 C_LABEL + "Void: "
-                        + (voidProtection ? C_ON + "ON" : C_OFF + "OFF")
-                        + C_LABEL
-                        + "  Overwrite: "
-                        + (overwriteProtection ? C_ON + "ON" : C_OFF + "OFF"));
+                        + (voidProtection ? C_ON + "ON" : C_OFF + "OFF"));
 
-        // ── Processing ──────────────────────────────────────────────────────
         lines.add("");
         lines.add(C_HEADER + "-- Processing --");
         lines.add(
                 C_LABEL + "Done: " + C_GAIN + fmt(itemsProcessed) + C_LABEL + "  Skip: " + C_WARN + fmt(itemsSkipped));
 
-        // ── Storage totals ───────────────────────────────────────────────────
-        // Each stat gets its own line so long numbers never wrap.
         lines.add("");
         lines.add(C_HEADER + "-- Storage Totals --");
         lines.add(buildTotalLine("Types:", totalItemTypesBefore, totalItemTypesAfter));
         lines.add(buildTotalLine("Stacks:", totalStacksBefore, totalStacksAfter));
 
-        // ── Item changes ─────────────────────────────────────────────────────
         lines.add("");
         lines.add(C_HEADER + "-- Item Changes --");
         lines.add(C_GAIN + "+" + fmt(itemsGained) + " types  +" + abbrev(totalGained) + " items");
         lines.add(C_LOSS + "-" + fmt(itemsLost) + " types  -" + abbrev(totalLost) + " items");
         lines.add(C_NEUTRAL + "=" + fmt(itemsUnchanged) + " types unchanged");
 
-        // ── Top lost ─────────────────────────────────────────────────────────
         if (!lostItems.isEmpty()) {
             lines.add("");
             lines.add(C_LOSS + "-- Top Lost Items --");
@@ -299,7 +245,6 @@ public class ReshuffleReport {
             if (rem > 0) {
                 lines.add(C_NEUTRAL + "  ...and " + rem + " more");
 
-                // Store hidden items for tooltip (using tooltip colors for dark background)
                 List<String> hiddenLostItems = new ArrayList<>();
                 for (int i = 5; i < lostItems.size(); i++) {
                     ItemChange c = lostItems.get(i);
@@ -313,7 +258,6 @@ public class ReshuffleReport {
             }
         }
 
-        // ── Top gained ───────────────────────────────────────────────────────
         if (!gainedItems.isEmpty() && totalGained > 0) {
             lines.add("");
             lines.add(C_GAIN + "-- Top Gained Items --");
@@ -327,7 +271,6 @@ public class ReshuffleReport {
             if (rem > 0) {
                 lines.add(C_NEUTRAL + "  ...and " + rem + " more");
 
-                // Store hidden items for tooltip (using tooltip colors for dark background)
                 List<String> hiddenGainedItems = new ArrayList<>();
                 for (int i = 5; i < gainedItems.size(); i++) {
                     ItemChange c = gainedItems.get(i);
@@ -341,7 +284,6 @@ public class ReshuffleReport {
             }
         }
 
-        // ── Integrity ────────────────────────────────────────────────────────
         lines.add("");
         long net = totalStacksAfter - totalStacksBefore;
         if (net != 0) {
@@ -354,18 +296,12 @@ public class ReshuffleReport {
         return lines;
     }
 
-    /**
-     * Generates tooltip-specific report lines with brighter colors optimized for dark tooltip background. This method
-     * uses the same structure as generateReportLines() but with tooltip-appropriate colors.
-     */
     public List<String> generateTooltipReportLines() {
         List<String> lines = new ArrayList<>();
         long durationMs = endTime - startTime;
 
-        // ── Header ──────────────────────────────────────────────────────────
         lines.add(CT_HEADER + "═══════ Reshuffle Report ═══════");
 
-        // Duration + mode on one line
         String modeStr = buildModeString();
         lines.add(
                 CT_LABEL + "Time: "
@@ -376,15 +312,10 @@ public class ReshuffleReport {
                         + CT_VALUE
                         + modeStr);
 
-        // Protection flags
         lines.add(
                 CT_LABEL + "Void: "
-                        + (voidProtection ? CT_GAIN + "ON" : CT_LOSS + "OFF")
-                        + CT_LABEL
-                        + "  Overwrite: "
-                        + (overwriteProtection ? CT_GAIN + "ON" : CT_LOSS + "OFF"));
+                        + (voidProtection ? CT_GAIN + "ON" : CT_LOSS + "OFF"));
 
-        // ── Processing ──────────────────────────────────────────────────────
         lines.add("");
         lines.add(CT_DIVIDER + "-- Processing --");
         lines.add(
@@ -396,20 +327,17 @@ public class ReshuffleReport {
                         + CT_WARN
                         + fmt(itemsSkipped));
 
-        // ── Storage totals ───────────────────────────────────────────────────
         lines.add("");
         lines.add(CT_DIVIDER + "-- Storage Totals --");
         lines.add(buildTooltipTotalLine("Types:", totalItemTypesBefore, totalItemTypesAfter));
         lines.add(buildTooltipTotalLine("Stacks:", totalStacksBefore, totalStacksAfter));
 
-        // ── Item changes ─────────────────────────────────────────────────────
         lines.add("");
         lines.add(CT_DIVIDER + "-- Item Changes --");
         lines.add(CT_GAIN + "+" + fmt(itemsGained) + " types  +" + abbrev(totalGained) + " items");
         lines.add(CT_LOSS + "-" + fmt(itemsLost) + " types  -" + abbrev(totalLost) + " items");
         lines.add(CT_NEUTRAL + "=" + fmt(itemsUnchanged) + " types unchanged");
 
-        // ── Top lost (ALL items, not truncated) ─────────────────────────────
         if (!lostItems.isEmpty()) {
             lines.add("");
             lines.add(CT_LOSS + "-- Top Lost Items --");
@@ -418,7 +346,6 @@ public class ReshuffleReport {
             }
         }
 
-        // ── Top gained (ALL items, not truncated) ───────────────────────────
         if (!gainedItems.isEmpty() && totalGained > 0) {
             lines.add("");
             lines.add(CT_GAIN + "-- Top Gained Items --");
@@ -427,7 +354,6 @@ public class ReshuffleReport {
             }
         }
 
-        // ── Integrity ────────────────────────────────────────────────────────
         lines.add("");
         long net = totalStacksAfter - totalStacksBefore;
         if (net != 0) {
@@ -441,18 +367,8 @@ public class ReshuffleReport {
         return lines;
     }
 
-    // -------------------------------------------------------------------------
-    // Private formatting helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Builds a "before → after (delta)" line where numbers are abbreviated so the line stays within
-     * {@value #LINE_WIDTH} visible chars.
-     */
     private String buildTotalLine(String label, long before, long after) {
         long delta = after - before;
-        // e.g. "Types: 6,897 → 6,895 (-2)"
-        // Use abbreviated numbers to guarantee it fits.
         return C_LABEL + label
                 + " "
                 + C_NEUTRAL
@@ -468,46 +384,33 @@ public class ReshuffleReport {
                 + ")";
     }
 
-    /**
-     * Builds 1-2 lines for a single item change entry. Line 1: "• ItemName +delta" Line 2 (indented): "(before →
-     * after)" – only if both numbers > abbrev threshold
-     */
     private List<String> buildItemLines(ItemChange c, String accentColor, String sign) {
         List<String> out = new ArrayList<>();
         String fullName = getStackDisplayName(c.stack);
         String displayName = truncate(fullName, 20);
         String delta = abbrev(Math.abs(c.difference));
 
-        // Store mapping if name was truncated
         if (!fullName.equals(displayName)) {
             addTruncatedNameMapping(displayName, fullName);
         }
 
-        // Primary line: bullet + name + delta
         out.add(accentColor + "• " + C_VALUE + displayName + " " + accentColor + sign + delta);
 
-        // Secondary line: full before/after for context (abbreviated)
         out.add(C_NEUTRAL + "  (" + abbrev(c.beforeCount) + " -> " + abbrev(c.afterCount) + ")");
         return out;
     }
 
-    /** Builds the comma-separated mode string (abbreviated to short names). */
     private String buildModeString() {
         if (allowedTypes.isEmpty()) return "None";
         StringBuilder sb = new StringBuilder();
         for (IAEStackType<?> type : allowedTypes) {
             if (sb.length() > 0) sb.append('/');
-            // Shorten class names: AEItemStackType -> Item, AEFluidStackType -> Fluid, etc.
             String n = type.getClass().getSimpleName().replace("AE", "").replace("StackType", "").replace("Stack", "");
             sb.append(n.isEmpty() ? "?" : n);
         }
         return sb.toString();
     }
 
-    /**
-     * Abbreviates large numbers: 1,200 -> 1.2K | 1,500,000 -> 1.5M | 2,000,000,000 -> 2.0B Numbers below 10 000 are
-     * formatted with commas (full precision).
-     */
     private static String abbrev(long v) {
         if (v < 0) return "-" + abbrev(-v);
         if (v >= 1_000_000_000L) return String.format("%.1fB", v / 1_000_000_000.0);
@@ -516,35 +419,28 @@ public class ReshuffleReport {
         return NumberFormat.getNumberInstance(Locale.US).format(v);
     }
 
-    /** Like {@link #abbrev} but always prefixes with + or – sign. */
     private static String signedAbbrev(long v) {
         if (v > 0) return "+" + abbrev(v);
         if (v < 0) return "-" + abbrev(-v);
         return "0";
     }
 
-    /** Full comma-formatted integer (for small standalone numbers). */
     private static String fmt(long v) {
         return NumberFormat.getNumberInstance(Locale.US).format(v);
     }
 
-    /** Returns the color code appropriate for a delta value. */
     private static String diffColor(long delta) {
         if (delta > 0) return C_GAIN;
         if (delta < 0) return C_LOSS;
         return C_NEUTRAL;
     }
 
-    /** Returns the tooltip color code appropriate for a delta value. */
     private static String diffColorTooltip(long delta) {
         if (delta > 0) return CT_GAIN;
         if (delta < 0) return CT_LOSS;
         return CT_NEUTRAL;
     }
 
-    /**
-     * Builds a "before → after (delta)" line for tooltips using bright colors.
-     */
     private String buildTooltipTotalLine(String label, long before, long after) {
         long delta = after - before;
         return CT_LABEL + label
@@ -562,30 +458,23 @@ public class ReshuffleReport {
                 + ")";
     }
 
-    /**
-     * Builds 1-2 lines for a single item change entry in tooltip (bright colors).
-     */
     private List<String> buildTooltipItemLines(ItemChange c, String accentColor, String sign) {
         List<String> out = new ArrayList<>();
         String fullName = getStackDisplayName(c.stack);
         String delta = abbrev(Math.abs(c.difference));
 
-        // Primary line: bullet + name + delta (no truncation for tooltip)
         out.add(accentColor + "• " + CT_VALUE + fullName + " " + accentColor + sign + delta);
 
-        // Secondary line: full before/after for context
         out.add(CT_NEUTRAL + "  (" + abbrev(c.beforeCount) + " -> " + abbrev(c.afterCount) + ")");
         return out;
     }
 
-    /** Centers {@code text} within {@code width} chars, padding with {@code pad}. */
     private static String center(String text, int width, char pad) {
         int totalPad = Math.max(0, width - text.length());
         int left = totalPad / 2, right = totalPad - left;
         return repeat(pad, left) + text + repeat(pad, right);
     }
 
-    /** Returns a string of {@code count} copies of character {@code c}. */
     private static String repeat(char c, int count) {
         if (count <= 0) return "";
         char[] buf = new char[count];
@@ -593,21 +482,12 @@ public class ReshuffleReport {
         return new String(buf);
     }
 
-    /**
-     * Truncates a string to {@code maxLen} visible characters, appending "…" if cut. Color codes (§X) are not counted
-     * toward the length.
-     */
     private static String truncate(String s, int maxLen) {
         if (s == null) return "Unknown";
-        // Strip color codes for length measurement
         String plain = s.replaceAll("§.", "");
         if (plain.length() <= maxLen) return s;
         return plain.substring(0, maxLen - 1) + "…";
     }
-
-    // -------------------------------------------------------------------------
-    // Stack key + display name (unchanged from original)
-    // -------------------------------------------------------------------------
 
     private String getStackKey(IAEStack<?> stack) {
         if (stack instanceof appeng.util.item.AEItemStack itemStack) {
@@ -641,33 +521,12 @@ public class ReshuffleReport {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Legacy / deprecated
-    // -------------------------------------------------------------------------
-
-    /** @deprecated Use {@link #generateReportLines()} and render in GUI. */
-    @Deprecated
-    public void sendToPlayer(EntityPlayer player) {
-        if (!(player instanceof EntityPlayerMP)) return;
-        for (String line : generateReportLines()) {
-            player.addChatMessage(new ChatComponentText(line));
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Setters / Getters
-    // -------------------------------------------------------------------------
-
     public void setAllowedTypes(Set<IAEStackType<?>> allowedTypes) {
         this.allowedTypes = new HashSet<>(allowedTypes);
     }
 
     public void setVoidProtection(boolean v) {
         this.voidProtection = v;
-    }
-
-    public void setOverwriteProtection(boolean v) {
-        this.overwriteProtection = v;
     }
 
     public int getItemsProcessed() {
@@ -718,29 +577,16 @@ public class ReshuffleReport {
         return changes;
     }
 
-    /**
-     * Get the full item name from a truncated version (used for tooltips).
-     *
-     * @param truncatedName The truncated name (without "...")
-     * @return The full item name, or null if not found
-     */
     public String getFullNameForTruncated(String truncatedName) {
         if (truncatedName == null) {
             return null;
         }
 
-        // Clean up the truncated name (remove Unicode ellipsis "…" or ASCII "..." if present)
         String cleanTruncated = truncatedName.replace("…", "").replace("...", "").trim();
 
         return this.truncatedToFullName.get(cleanTruncated);
     }
 
-    /**
-     * Store a mapping from truncated name to full name (called during report generation).
-     *
-     * @param truncatedName The truncated name shown in the report
-     * @param fullName      The full item name
-     */
     public void addTruncatedNameMapping(String truncatedName, String fullName) {
         if (truncatedName != null && fullName != null) {
             String cleanTruncated = truncatedName.replace("…", "").replace("...", "").trim();
@@ -748,22 +594,10 @@ public class ReshuffleReport {
         }
     }
 
-    /**
-     * Get the list of hidden items for a section ("lost" or "gained").
-     *
-     * @param sectionType Either "lost" or "gained"
-     * @return List of hidden item lines, or null if not found
-     */
     public List<String> getHiddenItems(String sectionType) {
         return this.hiddenItemsMap.get(sectionType);
     }
 
-    /**
-     * Store the list of hidden items for a section (called during report generation).
-     *
-     * @param sectionType Either "lost" or "gained"
-     * @param hiddenItems List of formatted item lines that were hidden
-     */
     public void setHiddenItems(String sectionType, List<String> hiddenItems) {
         if (sectionType != null && hiddenItems != null) {
             this.hiddenItemsMap.put(sectionType, new ArrayList<>(hiddenItems));
