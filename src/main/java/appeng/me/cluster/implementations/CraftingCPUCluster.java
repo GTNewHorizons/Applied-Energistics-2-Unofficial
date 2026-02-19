@@ -844,10 +844,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             }
                         }
 
-                        if (this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)
-                                && this.finalOutput.performFakeCrafting(details)) {
+                        if (this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)) {
+                            this.finalOutput.performFakeCrafting(details);
                             craftingEntry.getValue().value--;
-                            return;
+                            continue;
                         }
 
                         // Process output items.
@@ -1965,7 +1965,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             return matches == this.patternOutputs.length;
         }
 
-        public boolean performFakeCrafting(ICraftingPatternDetails details) {
+        public void performFakeCrafting(ICraftingPatternDetails details) {
             for (IAEStack<?> aes : details.getCondensedAEOutputs()) {
                 final IAEStack<?> tempAes = this.outputs.findPrecise(aes);
                 if (tempAes != null) tempAes.decStackSize(aes.getStackSize());
@@ -1980,11 +1980,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                 completeJob();
                 updateCPU();
-
-                return true;
             }
-
-            return false;
         }
 
         public IAEStack<?> getOriginalOutput() {
