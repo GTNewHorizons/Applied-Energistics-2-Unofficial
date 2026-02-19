@@ -134,7 +134,6 @@ public class GuiMEMonitorable extends AEBaseGui
     private GuiImgButton pinsStateButton;
 
     private final Map<TypeToggleButton, IAEStackType<?>> typeToggleButtons = new IdentityHashMap<>();
-    // ...existing code...
     private boolean canBeAutoFocused = false;
     private boolean isAutoFocused = false;
     private int currentMouseX = 0;
