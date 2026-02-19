@@ -239,12 +239,10 @@ public class PacketValueConfig extends AppEngPacket {
             ((AEBaseContainer) c).setCustomName(this.Value);
         } else if (this.Name.equals("Reshuffle.Report")
                 && c instanceof appeng.container.implementations.ContainerStorageReshuffle) {
-                    // Update report in container for display in GUI
                     ((appeng.container.implementations.ContainerStorageReshuffle) c).updateReport(this.Value);
                 } else
             if (this.Name.equals("Reshuffle.TooltipReport")
                     && c instanceof appeng.container.implementations.ContainerStorageReshuffle) {
-                        // Update full tooltip report (untruncated) in container
                         ((appeng.container.implementations.ContainerStorageReshuffle) c)
                                 .updateTooltipReport(this.Value);
                     } else
