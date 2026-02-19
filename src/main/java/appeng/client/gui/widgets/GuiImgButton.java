@@ -898,7 +898,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ToggleShowOnlySubstitute,
                     ButtonToolTips.ToggleShowOnlySubstituteOffDesc);
 
-            // Reshuffle storage button - All types (purple) at tile (11, 2)
             this.registerApp(
                     16 * 2 + 11,
                     Settings.ACTIONS,
@@ -906,7 +905,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ReshuffleStorage,
                     ButtonToolTips.ReshuffleStorageDesc);
 
-            // Reshuffle storage - All types (purple) at tile (11, 2)
             this.registerApp(
                     16 * 2 + 11,
                     Settings.ACTIONS,
@@ -914,7 +912,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ReshuffleStorageAll,
                     ButtonToolTips.ReshuffleStorageAllDesc);
 
-            // Reshuffle storage - Items only (green) at tile (10, 2)
             this.registerApp(
                     16 * 2 + 10,
                     Settings.ACTIONS,
@@ -922,7 +919,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ReshuffleStorageItems,
                     ButtonToolTips.ReshuffleStorageItemsDesc);
 
-            // Reshuffle storage - Fluids only (blue) at tile (9, 2)
             this.registerApp(
                     16 * 2 + 9,
                     Settings.ACTIONS,
@@ -930,7 +926,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ReshuffleStorageFluids,
                     ButtonToolTips.ReshuffleStorageFluidsDesc);
 
-            // Reshuffle cancel button (red X) at tile (12, 1)
             this.registerApp(
                     16 * 1 + 12,
                     Settings.ACTIONS,
@@ -938,7 +933,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ReshuffleStorageCancel,
                     ButtonToolTips.ReshuffleStorageCancelDesc);
 
-            // Void protection button - row 9, spot 5
             this.registerApp(
                     16 * 8 + 4,
                     Settings.ACTIONS,
@@ -946,7 +940,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ReshuffleVoidProtection,
                     ButtonToolTips.ReshuffleVoidProtectionDesc);
 
-            // Overwrite protection button - row 9, spot 6
             this.registerApp(
                     16 * 8 + 5,
                     Settings.ACTIONS,
