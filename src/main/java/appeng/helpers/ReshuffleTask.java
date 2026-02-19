@@ -76,7 +76,6 @@ public class ReshuffleTask {
             this.report = new ReshuffleReport();
             this.report.setAllowedTypes(allowedTypes);
             this.report.setVoidProtection(voidProtection);
-            this.report.setOverwriteProtection(overwriteProtection);
         }
     }
 
