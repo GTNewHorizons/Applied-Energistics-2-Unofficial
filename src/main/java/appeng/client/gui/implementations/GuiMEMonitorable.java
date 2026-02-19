@@ -132,7 +132,6 @@ public class GuiMEMonitorable extends AEBaseGui
     private GuiImgButton terminalStyleBox;
     private GuiImgButton searchStringSave;
     private GuiImgButton pinsStateButton;
-
     private final Map<TypeToggleButton, IAEStackType<?>> typeToggleButtons = new IdentityHashMap<>();
     private boolean canBeAutoFocused = false;
     private boolean isAutoFocused = false;
@@ -240,7 +239,6 @@ public class GuiMEMonitorable extends AEBaseGui
         if (btn == this.craftingStatusBtn || btn == this.craftingStatusImgBtn) {
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_CRAFTING_STATUS));
         }
-
 
         if (!(btn instanceof GuiImgButton iBtn) || iBtn.getSetting() == Settings.ACTIONS) return;
 
@@ -529,14 +527,6 @@ public class GuiMEMonitorable extends AEBaseGui
 
     protected int getPinButtonY() {
         return this.guiTop + 18 + (rows * 18) + 25;
-    }
-
-    protected int getReshuffleButtonX() {
-        return this.guiLeft + 178;
-    }
-
-    protected int getReshuffleButtonY() {
-        return this.guiTop + 18 + (rows * 18) + 45;
     }
 
     @Override
@@ -892,7 +882,6 @@ public class GuiMEMonitorable extends AEBaseGui
     @Override
     public void updateScreen() {
         this.repo.setPowered(this.monitorableContainer.isPowered());
-
         super.updateScreen();
     }
 
