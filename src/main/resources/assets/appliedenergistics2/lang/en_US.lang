@@ -145,21 +145,6 @@ chat.appliedenergistics2.StorageInOtherDim=%d containing %d %d is located in dim
 chat.appliedenergistics2.PickBlockTerminalNotFound=AE2 wireless terminal not found.
 chat.appliedenergistics2.PatternRepeaterProvider=§5Provider§r - will provide pattern to current system from in front §5Accessor§r.
 chat.appliedenergistics2.PatternRepeaterAccessor=§5Accessor§r - will provide pattern to in front §5Provider§r.
-chat.appliedenergistics2.ReshuffleStarted=§aReshuffle started§r - processing %d item types...
-chat.appliedenergistics2.ReshuffleStartedWithOptions=§aReshuffle started§r - processing %d types | Mode: %s | Void Protection: %s | Overwrite Protection: %s
-chat.appliedenergistics2.ReshuffleProgress=§eReshuffle progress:§r %d/%d (%d%%)
-chat.appliedenergistics2.ReshuffleComplete=§aReshuffle complete!§r Successfully redistributed %d item types.
-chat.appliedenergistics2.ReshuffleCompleteWithSkipped=§aReshuffle complete!§r Processed %d item types. §e%d skipped§r (void/overwrite protection).
-chat.appliedenergistics2.ReshuffleCancelled=§cReshuffle cancelled.§r Processed %d/%d items before stopping.
-chat.appliedenergistics2.ReshuffleCancelledGuiClosed=§cReshuffle cancelled§r - GUI closed. Processed %d/%d items. §7Keep the terminal open during reshuffle!§r
-chat.appliedenergistics2.ReshuffleConfirmRequired=§eLarge network detected!§r %d item types to process. Hold §bShift§r and click to confirm, or click again to start anyway.
-chat.appliedenergistics2.ReshuffleEmpty=§7Nothing to reshuffle§r - storage is empty.
-chat.appliedenergistics2.ReshuffleNoPermission=§cNo permission§r - requires both inject and extract permissions.
-chat.appliedenergistics2.ReshuffleNoPower=§cNo power§r - network is not powered.
-chat.appliedenergistics2.ReshuffleCraftingActive=§cCannot reshuffle§r - %d crafting job(s) are currently active. Wait for crafting to complete first.
-chat.appliedenergistics2.ReshuffleStorageLocked=§cStorage reshuffle already in progress!§r Another reshuffle operation is currently running. Please wait for it to complete.
-chat.appliedenergistics2.ReshuffleError=§cReshuffle error!§r An unexpected error occurred. Check server logs for details.
-chat.appliedenergistics2.ReshufflePreviewError=§cError generating preview§r - please check server logs.
 
 # Creative Tabs
 itemGroup.appliedenergistics2=Applied Energistics 2
@@ -192,7 +177,6 @@ gui.appliedenergistics2.security.craft.tip=User can initiate new crafting jobs.
 gui.appliedenergistics2.security.build.tip=User can modify the physical structure of the network, and make configuration changes.
 gui.appliedenergistics2.security.security.tip=User can access and modify the security terminal of the network.
 
-# Storage Reshuffle GUI
 gui.appliedenergistics2.reshuffle.title=Storage Reshuffle
 gui.appliedenergistics2.reshuffle.filter=Filter:
 gui.appliedenergistics2.reshuffle.filter.all=All
@@ -214,7 +198,6 @@ gui.appliedenergistics2.reshuffle.statusScanning=Status: Scanning...
 gui.appliedenergistics2.reshuffle.statusRunning=Status: Running
 gui.appliedenergistics2.reshuffle.processed=%d / %d types processed
 
-# Button tooltips
 gui.appliedenergistics2.reshuffle.tooltip.start.title=§6Start Reshuffle
 gui.appliedenergistics2.reshuffle.tooltip.start.desc1=§7Reorganizes storage by priority
 gui.appliedenergistics2.reshuffle.tooltip.start.desc2=§7Hold SHIFT to bypass confirmation
@@ -235,7 +218,6 @@ gui.appliedenergistics2.reshuffle.tooltip.overwrite.title=§dOverwrite Protectio
 gui.appliedenergistics2.reshuffle.tooltip.overwrite.state=§7Status: %s
 gui.appliedenergistics2.reshuffle.tooltip.overwrite.desc1=§7Prevents overwriting existing data
 
-# Help tooltip
 gui.appliedenergistics2.reshuffle.help.title=§6Storage Reshuffle
 gui.appliedenergistics2.reshuffle.help.desc1=§7Reorganizes ME storage based on priority.
 gui.appliedenergistics2.reshuffle.help.desc2=§7Items are extracted and re-inserted to
@@ -248,17 +230,14 @@ gui.appliedenergistics2.reshuffle.help.protectionHeader=§eProtection:
 gui.appliedenergistics2.reshuffle.help.protectionVoid=  §aVoid§7 - Prevents item loss
 gui.appliedenergistics2.reshuffle.help.protectionOverwrite=  §cOverwrite§7 - Prevents data overwrite
 
-# Scan button tooltip
 gui.appliedenergistics2.reshuffle.tooltip.scan.title=§6Network Scan
 gui.appliedenergistics2.reshuffle.tooltip.scan.desc1=§7Analyzes storage without changes
 gui.appliedenergistics2.reshuffle.tooltip.scan.desc2=§7Shows current cell usage and
 gui.appliedenergistics2.reshuffle.tooltip.scan.desc3=§7fragmentation statistics
 
-# Reshuffle Error Messages
 gui.appliedenergistics2.reshuffle.error.craftingActive=Cannot Start Reshuffle
 gui.appliedenergistics2.reshuffle.error.craftingActiveDesc=Crafting jobs are currently running. Please wait for them to complete before starting a reshuffle operation.
 
-# Cell Scanner Report
 gui.appliedenergistics2.reshuffle.scan.header=Storage Analysis
 gui.appliedenergistics2.reshuffle.scan.summary=Summary
 gui.appliedenergistics2.reshuffle.scan.totalCells=Total Cells
@@ -278,7 +257,6 @@ gui.appliedenergistics2.reshuffle.scan.essentiaCells=Essentia Cells
 gui.appliedenergistics2.reshuffle.scan.count=Count
 gui.appliedenergistics2.reshuffle.scan.mostFragmented=Most Fragmented Cells
 
-# Storage Reshuffle Scan Report
 gui.appliedenergistics2.reshuffle.report.header=Network Storage Analysis
 gui.appliedenergistics2.reshuffle.report.stackTypes=Stack Types
 gui.appliedenergistics2.reshuffle.report.items=Items: %,d types (%,d total)
@@ -751,7 +729,6 @@ gui.tooltips.appliedenergistics2.PinsSection=Pins Section
 gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
 
-# Reshuffle Block Button Tooltips
 gui.tooltips.appliedenergistics2.ReshuffleStorageAll=All Types
 gui.tooltips.appliedenergistics2.ReshuffleStorageAllDesc=Reshuffles all storage types
 gui.tooltips.appliedenergistics2.ReshuffleStorageItems=Items Only
@@ -763,7 +740,6 @@ gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionDesc=Prevents items from
 gui.tooltips.appliedenergistics2.ReshuffleOverwriteProtection=Overwrite Protection
 gui.tooltips.appliedenergistics2.ReshuffleOverwriteProtectionDesc=Prevents overwriting existing storage allocations
 
-# Storage Scan Report
 gui.appliedenergistics2.StorageScan=Storage Scan
 gui.appliedenergistics2.StorageScanSummary=Summary
 gui.appliedenergistics2.StorageScanCells=Cells
