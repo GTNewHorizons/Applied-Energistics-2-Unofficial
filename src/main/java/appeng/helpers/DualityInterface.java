@@ -1333,7 +1333,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             return true;
-        } else if (foundTarget && scheduledReason != ScheduledReason.UNSUPPORTED_STACK;) {
+        } else if (foundTarget && scheduledReason != ScheduledReason.UNSUPPORTED_STACK) {
             foundReason = true;
             scheduledReason = ScheduledReason.SOMETHING_STUCK;
         }
