@@ -29,7 +29,7 @@ import appeng.core.AELog;
 
 public class ReshuffleLogger {
 
-    public static final boolean DEBUG_LOGGING_ENABLED = true;
+    public static final boolean DEBUG_LOGGING_ENABLED = false;
 
     private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
     private static final SimpleDateFormat LOG_DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
@@ -63,7 +63,6 @@ public class ReshuffleLogger {
         try {
             File gameDir = null;
 
-            // Try server-side first
             File worldDir = DimensionManager.getCurrentSaveRootDirectory();
             if (worldDir != null) {
                 gameDir = worldDir.getParentFile();
@@ -113,7 +112,7 @@ public class ReshuffleLogger {
         StringBuilder typesStr = new StringBuilder();
         for (IAEStackType<?> type : allowedTypes) {
             if (typesStr.length() > 0) typesStr.append(", ");
-            // Get simple class name for display
+            
             String typeName = type.getClass().getSimpleName().replace("AE", "").replace("StackType", "");
             typesStr.append(typeName);
         }
@@ -141,7 +140,7 @@ public class ReshuffleLogger {
                 String.format(
                         "[%d/%d] Processing: %s (count: %s)",
                         index + 1,
-                        -1, // Will be filled by caller
+                        -1,
                         getStackDisplayName(stack),
                         NUMBER_FORMAT.format(stack.getStackSize())));
     }
