@@ -2039,6 +2039,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         public void readFromNBT(NBTTagCompound tag) {
+            final IAEStack<?> legacy = readStackNBT(tag, true);
+            if (legacy != null) {
+                this.init(legacy);
+                return;
+            }
+
             this.fakeCrafting = tag.getBoolean("fakeCrafting");
             this.originalOutput = Platform.readStackNBT(tag.getCompoundTag("originalOutput"));
 
