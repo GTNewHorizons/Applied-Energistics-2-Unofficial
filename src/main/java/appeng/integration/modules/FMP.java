@@ -18,6 +18,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.collect.Lists;
 
@@ -35,6 +36,8 @@ import appeng.integration.IIntegrationModule;
 import appeng.integration.abstraction.IFMP;
 import appeng.integration.modules.helpers.FMPPacketEvent;
 import appeng.parts.CableBusContainer;
+import appeng.parts.PartBasicState;
+import appeng.tile.networking.TileCableBus;
 import codechicken.lib.vec.BlockCoord;
 import codechicken.microblock.BlockMicroMaterial;
 import codechicken.multipart.MultiPartRegistry;
@@ -68,6 +71,14 @@ public class FMP implements IIntegrationModule, IPartFactory, IPartConverter, IF
 
         final TMultiPart part = PartRegistry.getPartByBlock(blk, meta);
         if (part instanceof CableBusPart cbp) {
+            if (world.getTileEntity(pos.x, pos.y, pos.z) instanceof TileCableBus tcb) {
+                for (ForgeDirection fd : ForgeDirection.VALID_DIRECTIONS) {
+                    if (tcb.getPart(fd) instanceof PartBasicState) {
+                        return null;
+                    }
+                }
+
+            }
             cbp.convertFromTile(world.getTileEntity(pos.x, pos.y, pos.z));
         }
 
