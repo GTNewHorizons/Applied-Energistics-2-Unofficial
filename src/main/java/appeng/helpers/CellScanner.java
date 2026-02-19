@@ -52,8 +52,8 @@ public final class CellScanner {
     private static final String TT_SECONDARY = "§7";
     private static final String TT_WARN = "§e";
     private static final String TT_ERROR = "§c";
-    private static final String TT_GOOD = "§a"
-    private static final String TT_DIVIDER = "§7";s
+    private static final String TT_GOOD = "§a";
+    private static final String TT_DIVIDER = "§7";
     private static final String TT_CHANNEL_ITEM = "§f";
     private static final String TT_CHANNEL_FLUID = "§b";
     private static final String TT_CHANNEL_ESSENTIA = "§d";
@@ -210,9 +210,6 @@ public final class CellScanner {
 
         try {
             var driveSet = grid.getMachines(TileDrive.class);
-            AELog.info("CellScanner: Found " + driveSet.size() + " ME Drives in grid");
-
-            int cellsFound = 0;
 
             for (Object obj : driveSet) {
                 try {
@@ -234,89 +231,14 @@ public final class CellScanner {
 
                         for (appeng.api.storage.data.IAEStackType<?> stackType : appeng.api.storage.data.AEStackTypeRegistry
                                 .getAllTypes()) {
+                            appeng.api.storage.IMEInventoryHandler<?> cellInv;
                             try {
-                                appeng.api.storage.IMEInventoryHandler<?> cellInv = cellHandler
+                                cellInv = cellHandler
                                         .getCellInventory(cellStack, drive, stackType);
-                                if (cellInv == null) continue;
-
-                                if (cellInv instanceof ICellCacheRegistry reg && reg.canGetInv()) {
-                                    String displayName = cellStack.getDisplayName();
-
-                                    boolean isPartitioned = false;
-                                    List<String> partitionedItems = new ArrayList<>();
-
-                                    if (cellStack.getItem() instanceof appeng.api.storage.ICellWorkbenchItem) {
-                                        appeng.api.storage.ICellWorkbenchItem cellItem = (appeng.api.storage.ICellWorkbenchItem) cellStack
-                                                .getItem();
-                                        net.minecraft.inventory.IInventory configInv = cellItem
-                                                .getConfigInventory(cellStack);
-
-                                        if (configInv != null) {
-                                            for (int i = 0; i < configInv.getSizeInventory(); i++) {
-                                                ItemStack filterStack = configInv.getStackInSlot(i);
-                                                if (filterStack != null) {
-                                                    isPartitioned = true;
-                                                    partitionedItems.add(filterStack.getDisplayName());
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    records.add(
-                                            new CellRecord(
-                                                    "DRIVE",
-                                                    deviceId,
-                                                    slot,
-                                                    Item.itemRegistry.getNameForObject(cellStack.getItem()),
-                                                    cellStack.getItemDamage(),
-                                                    displayName,
-                                                    reg.getCellType(),
-                                                    reg.getTotalBytes(),
-                                                    reg.getUsedBytes(),
-                                                    reg.getTotalTypes(),
-                                                    reg.getUsedTypes(),
-                                                    isPartitioned,
-                                                    partitionedItems));
-                                    cellsFound++;
-                                    break;
-                                }
-                            } catch (Exception e) {
-                                // This stack type doesn't match, try next
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    AELog.warn(e, "Error scanning individual drive");
-                }
-            }
-
-            AELog.info("CellScanner: Found " + cellsFound + " cells in drives");
-
-            var chestSet = grid.getMachines(TileChest.class);
-            AELog.info("CellScanner: Found " + chestSet.size() + " ME Chests in grid");
-
-            for (Object obj : chestSet) {
-                try {
-                    TileChest chest = (obj instanceof IGridNode) ? (TileChest) ((IGridNode) obj).getMachine()
-                            : (TileChest) obj;
-
-                    int dimension = chest.getWorldObj() != null ? chest.getWorldObj().provider.dimensionId : 0;
-                    String deviceId = String
-                            .format("Chest@%d,%d,%d (Dim %d)", chest.xCoord, chest.yCoord, chest.zCoord, dimension);
-                    IInventory inv = chest.getInternalInventory();
-
-                    ItemStack cellStack = inv.getStackInSlot(1);
-                    if (cellStack == null) continue;
-
-                    appeng.api.storage.ICellHandler cellHandler = appeng.api.AEApi.instance().registries().cell()
-                            .getHandler(cellStack);
-                    if (cellHandler == null) continue;
-
-                    for (appeng.api.storage.data.IAEStackType<?> stackType : appeng.api.storage.data.AEStackTypeRegistry
-                            .getAllTypes()) {
-                        try {
-                            appeng.api.storage.IMEInventoryHandler<?> cellInv = cellHandler
-                                    .getCellInventory(cellStack, chest, stackType);
+                            } catch (ClassCastException | IllegalArgumentException e) {
+                                continue;
+                            } 
+                            
                             if (cellInv == null) continue;
 
                             if (cellInv instanceof ICellCacheRegistry reg && reg.canGetInv()) {
@@ -344,9 +266,9 @@ public final class CellScanner {
 
                                 records.add(
                                         new CellRecord(
-                                                "CHEST",
+                                                "DRIVE",
                                                 deviceId,
-                                                1,
+                                                slot,
                                                 Item.itemRegistry.getNameForObject(cellStack.getItem()),
                                                 cellStack.getItemDamage(),
                                                 displayName,
@@ -357,22 +279,92 @@ public final class CellScanner {
                                                 reg.getUsedTypes(),
                                                 isPartitioned,
                                                 partitionedItems));
-                                cellsFound++;
                                 break;
                             }
-                        } catch (Exception e) {
-                            // This stack type not supported, try next
                         }
                     }
-                } catch (Exception e) {
-                    AELog.warn(e, "Error scanning individual chest");
+                } catch (Exception ignored) {
+                    // Skip this drive and continue scanning others
                 }
             }
 
-            AELog.info("CellScanner: Total cells found: " + records.size());
+            var chestSet = grid.getMachines(TileChest.class);
 
+            for (Object obj : chestSet) {
+                try {
+                    TileChest chest = (obj instanceof IGridNode) ? (TileChest) ((IGridNode) obj).getMachine()
+                            : (TileChest) obj;
+
+                    int dimension = chest.getWorldObj() != null ? chest.getWorldObj().provider.dimensionId : 0;
+                    String deviceId = String
+                            .format("Chest@%d,%d,%d (Dim %d)", chest.xCoord, chest.yCoord, chest.zCoord, dimension);
+                    IInventory inv = chest.getInternalInventory();
+
+                    ItemStack cellStack = inv.getStackInSlot(1);
+                    if (cellStack == null) continue;
+
+                    appeng.api.storage.ICellHandler cellHandler = appeng.api.AEApi.instance().registries().cell()
+                            .getHandler(cellStack);
+                    if (cellHandler == null) continue;
+
+                    for (appeng.api.storage.data.IAEStackType<?> stackType : appeng.api.storage.data.AEStackTypeRegistry
+                            .getAllTypes()) {
+                        appeng.api.storage.IMEInventoryHandler<?> cellInv;
+                        try {
+                            cellInv = cellHandler
+                                    .getCellInventory(cellStack, chest, stackType);
+                        } catch (ClassCastException | IllegalArgumentException e) {
+                            continue;
+                        }
+                        if (cellInv == null) continue;
+
+                        if (cellInv instanceof ICellCacheRegistry reg && reg.canGetInv()) {
+                            String displayName = cellStack.getDisplayName();
+
+                            boolean isPartitioned = false;
+                            List<String> partitionedItems = new ArrayList<>();
+
+                            if (cellStack.getItem() instanceof appeng.api.storage.ICellWorkbenchItem) {
+                                appeng.api.storage.ICellWorkbenchItem cellItem = (appeng.api.storage.ICellWorkbenchItem) cellStack
+                                        .getItem();
+                                net.minecraft.inventory.IInventory configInv = cellItem
+                                        .getConfigInventory(cellStack);
+
+                                if (configInv != null) {
+                                    for (int i = 0; i < configInv.getSizeInventory(); i++) {
+                                        ItemStack filterStack = configInv.getStackInSlot(i);
+                                        if (filterStack != null) {
+                                            isPartitioned = true;
+                                            partitionedItems.add(filterStack.getDisplayName());
+                                        }
+                                    }
+                                }
+                            }
+
+                            records.add(
+                                    new CellRecord(
+                                            "CHEST",
+                                            deviceId,
+                                            1,
+                                            Item.itemRegistry.getNameForObject(cellStack.getItem()),
+                                            cellStack.getItemDamage(),
+                                            displayName,
+                                            reg.getCellType(),
+                                            reg.getTotalBytes(),
+                                            reg.getUsedBytes(),
+                                            reg.getTotalTypes(),
+                                            reg.getUsedTypes(),
+                                            isPartitioned,
+                                            partitionedItems));
+                            break;
+                        }
+                    }
+                } catch (Exception ignored) {
+                    // Skip this chest and continue scanning others
+                } 
+            }
         } catch (Exception e) {
-            AELog.error(e, "Error scanning grid cells");
+            AELog.error(e, "CellScanner: Grid scan failed");
         }
 
         return records;
