@@ -776,12 +776,12 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         if (this.waitingToSend.isEmpty()) {
             this.waitingToSend = null;
-            this.toggleTint(false);
-        } else this.toggleTint(true);
+            this.updateStuckState(false);
+        } else this.updateStuckState(true);
         return sentSomething;
     }
 
-    private void toggleTint(boolean stuck) {
+    private void updateStuckState(boolean stuck) {
         if (stuck != this.somethingStuck && this.iHost instanceof TileInterface ti) {
             this.somethingStuck = stuck;
             ti.markForUpdate();

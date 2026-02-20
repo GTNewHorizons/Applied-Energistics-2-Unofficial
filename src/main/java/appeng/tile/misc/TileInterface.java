@@ -10,12 +10,15 @@
 
 package appeng.tile.misc;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
@@ -54,6 +57,8 @@ import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.capabilities.MEItemIO;
+import appeng.client.render.highlighter.BlockPosHighlighter;
+import appeng.core.AEConfig;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPrimaryGuiIconProvider;
@@ -71,6 +76,7 @@ public class TileInterface extends AENetworkInvTile
         implements IGridTickable, ITileStorageMonitorable, IStorageMonitorable, IInventoryDestination, IInterfaceHost,
         IPriorityHost, IPowerChannelState, IPrimaryGuiIconProvider {
 
+    private static final long STUCK_HIGHLIGHT_REFRESH_MS = 2000L;
     private final DualityInterface duality = new DualityInterface(this.getProxy(), this);
     private ForgeDirection pointAt = ForgeDirection.UNKNOWN;
 
@@ -79,6 +85,7 @@ public class TileInterface extends AENetworkInvTile
     private static final int BOOTING_FLAG = 4;
     private int clientFlags = 0; // sent as byte.
     public boolean somethingStuck = false;
+    private long nextStuckHighlightAt = 0L;
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkChannelsChanged c) {
@@ -309,7 +316,11 @@ public class TileInterface extends AENetworkInvTile
         final boolean oldSomethingStuck = this.somethingStuck;
         this.somethingStuck = data.readBoolean();
         if (oldSomethingStuck != somethingStuck) {
-            worldObj.markBlockRangeForRenderUpdate(xCoord, yCoord, zCoord, xCoord, yCoord, zCoord);
+            if (this.somethingStuck) {
+                this.highlightStuckInterfaceInWorld();
+            } else {
+                this.nextStuckHighlightAt = 0L;
+            }
             somethingChanged = true;
         }
 
@@ -331,6 +342,32 @@ public class TileInterface extends AENetworkInvTile
 
         data.writeByte(clientFlags);
         data.writeBoolean(duality.somethingStuck);
+    }
+
+    @TileEvent(TileEventType.TICK)
+    public void tickStuckHighlight_TileInterface() {
+        if (!Platform.isClient() || !AEConfig.instance.highlightWhenSomethingStuckInInterface || !this.somethingStuck) {
+            return;
+        }
+
+        final long now = System.currentTimeMillis();
+        if (now >= this.nextStuckHighlightAt) {
+            this.highlightStuckInterfaceInWorld();
+        }
+    }
+
+    private void highlightStuckInterfaceInWorld() {
+        if (!Platform.isClient() || !AEConfig.instance.highlightWhenSomethingStuckInInterface || !this.somethingStuck) {
+            return;
+        }
+
+        final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        if (player == null) {
+            return;
+        }
+
+        BlockPosHighlighter.highlightBlocks(player, Collections.singletonList(new DimensionalCoord(this)), null, null);
+        this.nextStuckHighlightAt = System.currentTimeMillis() + STUCK_HIGHLIGHT_REFRESH_MS;
     }
 
     @Override
