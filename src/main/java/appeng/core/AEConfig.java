@@ -93,6 +93,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean showContainerInteractionTooltips = true;
     public int MEMonitorableSmallSize = 6;
     public int InterfaceTerminalSmallSize = 6;
+    public boolean redTintWhenSomethingStuckInInterface = true;
 
     public boolean debugLogTiming = false;
     public boolean debugPathFinding = false;
@@ -350,6 +351,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.showOnlyInterfacesWithFreeSlotsInInterfaceTerminal = this
                 .get("Client", "showOnlyInterfacesWithFreeSlotsInInterfaceTerminal", false).getBoolean(false);
         this.showContainerInteractionTooltips = this.get("Client", "showContainerInteractionTooltips", true)
+                .getBoolean(true);
+        this.redTintWhenSomethingStuckInInterface = this.get("Client", "redTintWhenSomethingStuckInInterface", true)
                 .getBoolean(true);
         this.MEMonitorableSmallSize = this.get("Client", "MEMonitorableSmallSize", 6).getInt(6);
         this.InterfaceTerminalSmallSize = this.get("Client", "InterfaceTerminalSmallSize", 6).getInt(6);
