@@ -16,7 +16,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
@@ -159,29 +158,13 @@ public class GuiStorageBus extends GuiUpgradeable {
         final int capacity = isOreDict ? 0
                 : this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
 
-        if (isOreDict) {
-            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.6F);
-            GL11.glEnable(GL11.GL_BLEND);
-
-            this.drawTexturedModalRect(offsetX + 7, offsetY + 28, 7, 64, 162, 36);
-
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-            GL11.glPopAttrib();
-        }
-
-        for (int i = 0; i < 5; i++) {
-            if (i >= capacity) {
-                GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-                GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.4F);
-                GL11.glEnable(GL11.GL_BLEND);
-            }
-
-            this.drawTexturedModalRect(offsetX + 7, offsetY + 64 + (18 * i), 7, 28, 162, 18);
-
-            if (i >= capacity) {
-                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-                GL11.glPopAttrib();
+        for (int i = 0; i < 7; i++) {
+            if (isOreDict || i >= capacity + 2) {
+                // fadeout slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 28 + (18 * i), 7, 46, 162, 18);
+            } else {
+                // normal slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 28 + (18 * i), 7, 28, 162, 18);
             }
         }
     }
