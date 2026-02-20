@@ -107,6 +107,7 @@ import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
+import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
@@ -114,7 +115,9 @@ import appeng.util.InventoryAdaptor;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
+import appeng.util.inv.AdaptorDualityInterface;
 import appeng.util.inv.AdaptorIInventory;
+import appeng.util.inv.AdaptorMEChest;
 import appeng.util.inv.IInventoryDestination;
 import appeng.util.inv.ItemSlot;
 import appeng.util.inv.MEInventoryCrafting;
@@ -167,6 +170,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private int lastInputHash = 0;
     private final boolean isFluidInterface;
     private ScheduledReason scheduledReason = ScheduledReason.UNDEFINED;
+    public boolean somethingStuck = false;
 
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
         this.gridProxy = networkProxy;
@@ -752,8 +756,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     }
 
                     long amountToPush = aes.getStackSize();
-                    IAEStack<?> leftover = ad
-                            .addStack(isFluidInterface ? aes : stackConvertPacket(aes), getInsertionMode());
+
+                    IAEStack<?> leftover = ad.addStack(aes, getInsertionMode());
                     if (leftover != null && leftover.getStackSize() == amountToPush) {
                         continue;
                     }
@@ -772,8 +776,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         if (this.waitingToSend.isEmpty()) {
             this.waitingToSend = null;
-        }
+            this.toggleTint(false);
+        } else this.toggleTint(true);
         return sentSomething;
+    }
+
+    private void toggleTint(boolean stuck) {
+        if (stuck != this.somethingStuck && this.iHost instanceof TileInterface ti) {
+            this.somethingStuck = stuck;
+            ti.markForUpdate();
+        }
     }
 
     private boolean updateStorage() {
@@ -1206,6 +1218,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         boolean foundReason = false;
         boolean foundTarget = false;
         boolean hadAcceptedSome = false;
+        boolean hasNotItemOrFluid = false;
 
         final List<IAEStack<?>> stacksToPush = new ArrayList<>(table.getSizeInventory());
         for (int x = 0; x < table.getSizeInventory(); x++) {
@@ -1220,8 +1233,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     stacksToPush.add(stackConvertPacket(aes));
                 }
             } else if (aes != null) {
-                scheduledReason = ScheduledReason.UNSUPPORTED_STACK;
-                return false;
+                hasNotItemOrFluid = true;
+                stacksToPush.add(aes);
             }
         }
 
@@ -1266,6 +1279,11 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             final InventoryAdaptor ad = InventoryAdaptor.getAdaptor(te, s.getOpposite());
             if (ad != null) {
                 foundTarget = true;
+                if (hasNotItemOrFluid && !(ad instanceof AdaptorDualityInterface) && !(ad instanceof AdaptorMEChest)) {
+                    scheduledReason = ScheduledReason.UNSUPPORTED_STACK;
+                    continue;
+                }
+
                 if (this.isBlocking() && !(this.isSmartBlocking() && this.lastInputHash == patternDetails.hashCode())
                         && ad.containsItems()
                         && !inventoryCountsAsEmpty(te, ad, s.getOpposite())) {
@@ -1325,7 +1343,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
 
             return true;
-        } else if (foundTarget) {
+        } else if (foundTarget && scheduledReason != ScheduledReason.UNSUPPORTED_STACK) {
             foundReason = true;
             scheduledReason = ScheduledReason.SOMETHING_STUCK;
         }

@@ -844,10 +844,23 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             }
                         }
 
-                        if (this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)
-                                && this.finalOutput.performFakeCrafting(details)) {
+                        if (this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)) {
                             craftingEntry.getValue().value--;
-                            return;
+
+                            if (craftingEntry.getValue().value <= 0) {
+                                this.tasks.remove(details);
+                                parallelismProvider.remove(details);
+                                reasonProvider.remove(details);
+                                craftingTaskIterator.remove();
+
+                                this.finalOutput.performFakeCrafting(details);
+
+                                break;
+                            } else {
+                                this.finalOutput.performFakeCrafting(details);
+
+                                continue;
+                            }
                         }
 
                         // Process output items.
@@ -1482,7 +1495,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void readFromNBT(final NBTTagCompound data) {
-        this.finalOutput.readFromNBT((NBTTagCompound) data.getTag("finalOutput"));
         this.inventory.readInventory((NBTTagList) data.getTag("inventory"));
         this.waiting = data.getBoolean("waiting");
         this.isComplete = data.getBoolean("isComplete");
@@ -1513,6 +1525,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             }
         }
 
+        this.finalOutput.readFromNBT((NBTTagCompound) data.getTag("finalOutput"));
         this.waitingFor = readAEStackListNBT((NBTTagList) data.getTag("waitingFor"), true);
         for (final IAEStack<?> is : this.waitingFor) {
             this.postCraftingStatusChange(is.copy());
@@ -1954,7 +1967,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         public boolean isFinalPattern(ICraftingPatternDetails details) {
-            if (details.getCondensedAEOutputs().length != this.patternOutputs.length) return false;
+            if (this.patternOutputs == null || details.getCondensedAEOutputs().length != this.patternOutputs.length)
+                return false;
             int matches = 0;
             for (IAEStack<?> aes : details.getCondensedAEOutputs()) {
                 for (IAEStack<?> aes2 : this.patternOutputs) {
@@ -1965,7 +1979,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             return matches == this.patternOutputs.length;
         }
 
-        public boolean performFakeCrafting(ICraftingPatternDetails details) {
+        public void performFakeCrafting(ICraftingPatternDetails details) {
             for (IAEStack<?> aes : details.getCondensedAEOutputs()) {
                 final IAEStack<?> tempAes = this.outputs.findPrecise(aes);
                 if (tempAes != null) tempAes.decStackSize(aes.getStackSize());
@@ -1980,11 +1994,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                 completeJob();
                 updateCPU();
-
-                return true;
             }
-
-            return false;
         }
 
         public IAEStack<?> getOriginalOutput() {
@@ -2043,6 +2053,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         public void readFromNBT(NBTTagCompound tag) {
+            final IAEStack<?> legacy = readStackNBT(tag, true);
+            if (legacy != null) {
+                this.init(legacy);
+                return;
+            }
+
             this.fakeCrafting = tag.getBoolean("fakeCrafting");
             this.originalOutput = Platform.readStackNBT(tag.getCompoundTag("originalOutput"));
 
