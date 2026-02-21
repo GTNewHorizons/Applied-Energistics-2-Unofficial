@@ -457,6 +457,7 @@ public final class Registration {
         target.itemViewCell = this.converter.of(source.viewCell());
         target.itemEncodedPattern = this.converter.of(source.encodedPattern());
         target.itemEncodedUltimatePattern = converter.of(source.encodedUltimatePattern());
+        target.itemEncodedTunnelPattern = converter.of(source.encodedTunnelPattern());
 
         target.itemCell1k = this.converter.of(source.cell1k());
         target.itemCell4k = this.converter.of(source.cell4k());

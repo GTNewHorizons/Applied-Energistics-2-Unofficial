@@ -92,6 +92,8 @@ public class Items {
 
     public AEItemDefinition itemEncodedUltimatePattern;
 
+    public AEItemDefinition itemEncodedTunnelPattern;
+
     public AEItemDefinition itemColorApplicator;
 
     public AEColoredItemDefinition itemPaintBall;
