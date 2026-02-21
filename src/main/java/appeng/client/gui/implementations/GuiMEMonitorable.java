@@ -683,7 +683,7 @@ public class GuiMEMonitorable extends AEBaseGui
                 this.sendAction(MonitorableAction.SPLIT_OR_PLACE_SINGLE, slotStack, -1);
                 return true;
             }
-            case 2 -> { // middle click
+            case 3 -> { // keyBindPickBlock
                 if (slot.getAEStack() != null && slot.getAEStack().isCraftable()) {
                     this.sendAction(MonitorableAction.AUTO_CRAFT, slot.getAEStack(), -1);
                     return true;

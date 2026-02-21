@@ -397,7 +397,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
 
         final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
-        if (virtualSlot != null && this.handleVirtualSlotClick(virtualSlot, btn)) return;
+        if (virtualSlot != null && this.handleVirtualSlotClick(
+                virtualSlot,
+                btn == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100 ? 3 : btn))
+            return;
 
         if (btn == 1) {
             for (final GuiButton guibutton : this.buttonList) {
@@ -413,6 +416,16 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
 
         super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) {
+        if (keyCode == this.mc.gameSettings.keyBindPickBlock.getKeyCode()) {
+            final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
+            if (virtualSlot != null && this.handleVirtualSlotClick(virtualSlot, 3)) return;
+        }
+
+        super.keyTyped(typedChar, keyCode);
     }
 
     @Override
