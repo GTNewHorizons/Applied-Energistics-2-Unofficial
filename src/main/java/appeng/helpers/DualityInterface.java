@@ -107,6 +107,7 @@ import appeng.tile.inventory.AppEngInternalAEInventory;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
+import appeng.tile.misc.TileInterface;
 import appeng.tile.networking.TileCableBus;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
@@ -169,6 +170,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private int lastInputHash = 0;
     private final boolean isFluidInterface;
     private ScheduledReason scheduledReason = ScheduledReason.UNDEFINED;
+    public boolean somethingStuck = false;
 
     public DualityInterface(final AENetworkProxy networkProxy, final IInterfaceHost ih) {
         this.gridProxy = networkProxy;
@@ -774,8 +776,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         if (this.waitingToSend.isEmpty()) {
             this.waitingToSend = null;
-        }
+            this.updateStuckState(false);
+        } else this.updateStuckState(true);
         return sentSomething;
+    }
+
+    private void updateStuckState(boolean stuck) {
+        if (stuck != this.somethingStuck && this.iHost instanceof TileInterface ti) {
+            this.somethingStuck = stuck;
+            ti.markForUpdate();
+        }
     }
 
     private boolean updateStorage() {
