@@ -83,7 +83,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     @GuiSync(18)
     public boolean isConfigEmpty;
 
-    public static final int SLOT_Y_OFFSET = 10;
+    public static final int SLOT_Y_OFFSET = 4;
 
     public ContainerInterface(final InventoryPlayer ip, final IInterfaceHost te) {
         super(ip, te.getInterfaceDuality().getHost());

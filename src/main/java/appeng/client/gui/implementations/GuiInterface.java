@@ -44,6 +44,7 @@ import static appeng.container.implementations.ContainerInterface.SLOT_Y_OFFSET;
 public class GuiInterface extends GuiUpgradeable {
 
     private GuiTabButton priority;
+    private GuiTabButton priority2;
     private GuiImgButton BlockMode;
     private GuiImgButton SmartBlockMode;
     private GuiImgButton fuzzyMode;
@@ -63,12 +64,22 @@ public class GuiInterface extends GuiUpgradeable {
     @Override
     protected void addButtons() {
         this.priority = new GuiTabButton(
-                this.guiLeft + 154,
-                this.guiTop,
+                this.guiLeft + 154 - 3,
+                this.guiTop - 4,
                 2 + 4 * 16,
                 GuiText.Priority.getLocal(),
                 itemRender);
+        this.priority.setHideEdge(13);
         this.buttonList.add(this.priority);
+
+        this.priority2 = new GuiTabButton(
+                this.guiLeft + 154 - 26,
+                this.guiTop - 4,
+                2 + 4 * 16,
+                GuiText.Priority.getLocal(),
+                itemRender);
+        this.priority2.setHideEdge(13);
+        this.buttonList.add(this.priority2);
 
         int offset = 8;
 
