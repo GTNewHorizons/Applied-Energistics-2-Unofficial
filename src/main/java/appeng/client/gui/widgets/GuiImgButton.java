@@ -897,6 +897,19 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.TOGGLE_SHOW_ONLY_SUBSTITUTE_OFF,
                     ButtonToolTips.ToggleShowOnlySubstitute,
                     ButtonToolTips.ToggleShowOnlySubstituteOffDesc);
+
+            this.registerApp(
+                    16 * 8 + 4,
+                    Settings.VOID_PROTECTION,
+                    YesNo.YES,
+                    ButtonToolTips.ReshuffleVoidProtection,
+                    ButtonToolTips.ReshuffleVoidProtectionOn);
+            this.registerApp(
+                    16 * 8 + 5,
+                    Settings.VOID_PROTECTION,
+                    YesNo.NO,
+                    ButtonToolTips.ReshuffleVoidProtection,
+                    ButtonToolTips.ReshuffleVoidProtectionOff);
         }
     }
 
