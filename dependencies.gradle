@@ -7,7 +7,7 @@ dependencies {
 
 	compileOnlyApi('com.github.GTNewHorizons:Angelica:2.0.0-alpha17:dev')
     compileOnlyApi('com.github.GTNewHorizons:EnderCore:0.5.5:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.9:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.6:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.55:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:ForestryMC:4.11.4:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.7.2:dev') {transitive = false}
@@ -41,6 +41,8 @@ dependencies {
     //runtimeOnlyNonPublishable('curse.maven:thermal-expansion-69163:2388759')
 
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.22:dev') {transitive = false}
+
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.2.13:dev')
 
     testImplementation('junit:junit:4.12')
     functionalTestImplementation(platform('org.junit:junit-bom:5.9.2'))

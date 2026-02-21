@@ -10,14 +10,15 @@
 
 package appeng.block.spatial;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 import net.minecraft.block.material.Material;
-import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.AxisAlignedBB;
@@ -29,6 +30,8 @@ import appeng.block.AEBaseBlock;
 import appeng.client.render.blocks.RenderNull;
 import appeng.core.features.AEFeature;
 import appeng.helpers.ICustomCollision;
+import appeng.spatial.SpatialEntangledRegistry;
+import appeng.spatial.StorageWorldProvider;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -41,6 +44,8 @@ public class BlockMatrixFrame extends AEBaseBlock implements ICustomCollision {
         this.setLightOpacity(0);
         this.isOpaque = false;
         this.setFeature(EnumSet.of(AEFeature.SpatialIO));
+
+        this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
     }
 
     @Override
@@ -48,9 +53,6 @@ public class BlockMatrixFrame extends AEBaseBlock implements ICustomCollision {
     protected RenderNull getRenderer() {
         return new RenderNull();
     }
-
-    @Override
-    public void registerBlockIcons(final IIconRegister iconRegistry) {}
 
     @Override
     @SideOnly(Side.CLIENT)
@@ -61,8 +63,7 @@ public class BlockMatrixFrame extends AEBaseBlock implements ICustomCollision {
     @Override
     public Iterable<AxisAlignedBB> getSelectedBoundingBoxesFromPool(final World w, final int x, final int y,
             final int z, final Entity e, final boolean isVisual) {
-        return Arrays.asList(new AxisAlignedBB[] {}); // AxisAlignedBB.getBoundingBox( 0.25, 0, 0.25, 0.75, 0.5, 0.75 )
-        // } );
+        return Collections.singletonList(AxisAlignedBB.getBoundingBox(0.0, 0.0, 0.0, 1.0, 1.0, 1.0));
     }
 
     @Override
@@ -72,8 +73,29 @@ public class BlockMatrixFrame extends AEBaseBlock implements ICustomCollision {
     }
 
     @Override
-    public boolean canPlaceBlockAt(final World world, final int x, final int y, final int z) {
+    public AxisAlignedBB getCollisionBoundingBoxFromPool(final World w, final int x, final int y, final int z) {
+        return AxisAlignedBB.getBoundingBox(x, y, z, x + 1, y + 1, z + 1);
+    }
+
+    @Override
+    public boolean renderAsNormalBlock() {
         return false;
+    }
+
+    @Override
+    public boolean isNormalCube() {
+        return true;
+    }
+
+    @Override
+    public boolean isSideSolid(final IBlockAccess w, final int x, final int y, final int z,
+            final net.minecraftforge.common.util.ForgeDirection side) {
+        return true;
+    }
+
+    @Override
+    public boolean canPlaceBlockAt(final World world, final int x, final int y, final int z) {
+        return true;
     }
 
     @Override
@@ -84,6 +106,15 @@ public class BlockMatrixFrame extends AEBaseBlock implements ICustomCollision {
     @Override
     public boolean canEntityDestroy(final IBlockAccess world, final int x, final int y, final int z,
             final Entity entity) {
+        return false;
+    }
+
+    @Override
+    public boolean onBlockActivated(World worldIn, int x, int y, int z, EntityPlayer player, int side, float subX,
+            float subY, float subZ) {
+        if (!worldIn.isRemote && worldIn.provider instanceof StorageWorldProvider && player.isSneaking()) {
+            SpatialEntangledRegistry.teleportPlayerOut((EntityPlayerMP) player, worldIn.provider.dimensionId);
+        }
         return false;
     }
 }
