@@ -125,6 +125,10 @@ public enum GuiText implements Localization {
     No,
     EncodedBy,
     PatternView,
+    TunnelPatternInfo1,
+    TunnelPatternInfo2,
+    TunnelPatternInfo3,
+    TunnelPatternInfo4,
 
     MolecularAssembler,
 
