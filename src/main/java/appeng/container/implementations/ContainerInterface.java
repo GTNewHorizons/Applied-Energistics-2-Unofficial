@@ -83,6 +83,8 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     @GuiSync(18)
     public boolean isConfigEmpty;
 
+    public static final int SLOT_Y_OFFSET = 10;
+
     public ContainerInterface(final InventoryPlayer ip, final IInterfaceHost te) {
         super(ip, te.getInterfaceDuality().getHost());
 
@@ -99,24 +101,24 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
                                 this,
                                 x + row * DualityInterface.NUMBER_OF_PATTERN_SLOTS,
                                 8 + 18 * x,
-                                108 - row * 18,
+                                108 - row * 18 + SLOT_Y_OFFSET,
                                 row,
                                 this.getInventoryPlayer()).setStackLimit(1));
             }
         }
 
         for (int x = 0; x < DualityInterface.NUMBER_OF_CONFIG_SLOTS; x++) {
-            this.addSlotToContainer(new OptionalSlotFake(this.myDuality.getConfig(), this, x, 8 + 18 * x, 15, 0));
+            this.addSlotToContainer(new OptionalSlotFake(this.myDuality.getConfig(), this, x, 8 + 18 * x, 15 + SLOT_Y_OFFSET, 0));
         }
 
         for (int x = 0; x < DualityInterface.NUMBER_OF_STORAGE_SLOTS; x++) {
-            this.addSlotToContainer(new SlotNormal(this.myDuality.getStorage(), x, 8 + 18 * x, 15 + 18));
+            this.addSlotToContainer(new SlotNormal(this.myDuality.getStorage(), x, 8 + 18 * x, 15 + 18 + SLOT_Y_OFFSET));
         }
     }
 
     @Override
     protected int getHeight() {
-        return 211;
+        return 211 + SLOT_Y_OFFSET;
     }
 
     @Override

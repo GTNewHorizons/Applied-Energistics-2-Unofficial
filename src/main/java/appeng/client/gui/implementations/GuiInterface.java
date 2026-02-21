@@ -39,6 +39,8 @@ import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IInterfaceHost;
 
+import static appeng.container.implementations.ContainerInterface.SLOT_Y_OFFSET;
+
 public class GuiInterface extends GuiUpgradeable {
 
     private GuiTabButton priority;
@@ -55,7 +57,7 @@ public class GuiInterface extends GuiUpgradeable {
 
     public GuiInterface(final InventoryPlayer inventoryPlayer, final IInterfaceHost te) {
         super(new ContainerInterface(inventoryPlayer, te));
-        this.ySize = 211;
+        this.ySize = 211 + SLOT_Y_OFFSET;
     }
 
     @Override
@@ -199,21 +201,23 @@ public class GuiInterface extends GuiUpgradeable {
 
         final int capacity = (((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled());
 
+        offsetY += SLOT_Y_OFFSET;
+
         // config slots
         if (capacity == -1) {
-            this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 89, 162, 18);
+            this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 89 + SLOT_Y_OFFSET, 162, 18);
         } else {
-            this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 71, 162, 18);
+            this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 71 + SLOT_Y_OFFSET, 162, 18);
         }
 
         // pattern slots
         for (int i = 4; i > 0; i--) {
             if (i > capacity + 1) {
                 // fadeout slots
-                this.drawTexturedModalRect(offsetX + 7, offsetY + 125 - (18 * i), 7, 89, 162, 18);
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 125 - (18 * i), 7, 89 + SLOT_Y_OFFSET, 162, 18);
             } else {
                 // normal slots
-                this.drawTexturedModalRect(offsetX + 7, offsetY + 125 - (18 * i), 7, 107, 162, 18);
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 125 - (18 * i), 7, 107 + SLOT_Y_OFFSET, 162, 18);
             }
         }
     }
