@@ -95,6 +95,7 @@ import appeng.container.implementations.ContainerSecurity;
 import appeng.container.implementations.ContainerSkyChest;
 import appeng.container.implementations.ContainerSpatialIOPort;
 import appeng.container.implementations.ContainerStorageBus;
+import appeng.container.implementations.ContainerStorageReshuffle;
 import appeng.container.implementations.ContainerVibrationChamber;
 import appeng.container.implementations.ContainerWireless;
 import appeng.core.stats.Achievements;
@@ -114,6 +115,7 @@ import appeng.tile.grindstone.TileGrinder;
 import appeng.tile.misc.TileCondenser;
 import appeng.tile.misc.TileInscriber;
 import appeng.tile.misc.TileSecurity;
+import appeng.tile.misc.TileStorageReshuffle;
 import appeng.tile.misc.TileVibrationChamber;
 import appeng.tile.networking.TileWireless;
 import appeng.tile.qnb.TileQuantumBridge;
@@ -191,8 +193,8 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_SECURITY(ContainerSecurity.class, TileSecurity.class, GuiHostType.WORLD, SecurityPermissions.SECURITY),
 
-    GUI_STORAGE_RESHUFFLE(appeng.container.implementations.ContainerStorageReshuffle.class,
-            appeng.tile.misc.TileStorageReshuffle.class, GuiHostType.WORLD, SecurityPermissions.BUILD),
+    GUI_STORAGE_RESHUFFLE(ContainerStorageReshuffle.class, TileStorageReshuffle.class, GuiHostType.WORLD,
+            SecurityPermissions.BUILD),
 
     // extends (Container/Gui) + Bus
     GUI_LEVEL_EMITTER(ContainerLevelEmitter.class, ILevelEmitter.class, GuiHostType.ITEM_OR_WORLD,
