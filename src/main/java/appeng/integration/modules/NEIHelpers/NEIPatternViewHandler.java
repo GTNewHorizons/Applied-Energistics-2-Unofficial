@@ -21,7 +21,6 @@ import net.minecraft.util.ResourceLocation;
 import appeng.api.config.TerminalFontSize;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.render.StackSizeRenderer;
 import appeng.core.localization.GuiText;
@@ -183,7 +182,7 @@ public class NEIPatternViewHandler implements IUsageHandler {
 
     public void initializeLayout() {
         boolean isCraftable = patternDetails.isCraftable();
-        List<IAEItemStack> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
+        List<IAEStack<?>> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
         int nonNullOutputs = (int) aeOutputs.stream().filter(Objects::nonNull).count();
 
         if (isCraftable) {
@@ -229,26 +228,24 @@ public class NEIPatternViewHandler implements IUsageHandler {
         outputsOffsetX = inputsOffsetX + inputsCols * 18 + 40;
     }
 
-    public List<IAEItemStack> getFilteredStacks(IAEStack<?>[] stacks) {
+    public List<IAEStack<?>> getFilteredStacks(IAEStack<?>[] stacks) {
         boolean isCraftable = patternDetails.isCraftable();
 
-        return Arrays.stream(stacks).filter(stack -> isCraftable || stack != null)
-                .map(stack -> stack instanceof IAEItemStack ? (IAEItemStack) stack : null)
-                .filter(stack -> isCraftable || stack != null).collect(Collectors.toList());
+        return Arrays.stream(stacks).filter(stack -> isCraftable || stack != null).collect(Collectors.toList());
     }
 
     public void initializeSlots() {
         inputSlots.clear();
         outputSlots.clear();
 
-        List<IAEItemStack> aeInputs = getFilteredStacks(patternDetails.getAEInputs());
-        List<IAEItemStack> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
+        List<IAEStack<?>> aeInputs = getFilteredStacks(patternDetails.getAEInputs());
+        List<IAEStack<?>> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
 
         populateInputSlots(aeInputs);
         populateOutputSlots(aeOutputs);
     }
 
-    public void populateInputSlots(List<IAEItemStack> inputs) {
+    public void populateInputSlots(List<IAEStack<?>> inputs) {
         for (int i = 0; i < inputsCols * inputsRows; i++) {
             int row = i / inputsCols;
             int col = i % inputsCols;
@@ -256,10 +253,10 @@ public class NEIPatternViewHandler implements IUsageHandler {
             int y = SLOTS_OFFSET_Y + row * 18 + 1;
 
             if (i < inputs.size()) {
-                IAEItemStack aeInput = inputs.get(i);
+                IAEStack<?> aeInput = inputs.get(i);
                 if (aeInput != null) {
-                    ItemStack inputStack = aeInput.getItemStack().copy();
-                    inputStack.stackSize = 1;
+                    ItemStack inputStack = aeInput.getItemStackForNEI(aeInput.isFluid() ? 0 : 1);
+                    if (inputStack == null) continue;
                     PositionedStack posStack = createPositionedStack(inputStack, x, y);
                     inputSlots.add(new ViewItemStack(posStack, aeInput.getStackSize()));
                 }
@@ -267,7 +264,7 @@ public class NEIPatternViewHandler implements IUsageHandler {
         }
     }
 
-    public void populateOutputSlots(List<IAEItemStack> outputs) {
+    public void populateOutputSlots(List<IAEStack<?>> outputs) {
         for (int i = 0; i < outputsCols * outputsRows; i++) {
             int row = i / outputsCols;
             int col = i % outputsCols;
@@ -275,10 +272,10 @@ public class NEIPatternViewHandler implements IUsageHandler {
             int y = patternDetails.isCraftable() && i == 0 ? craftingOutputY + 1 : SLOTS_OFFSET_Y + row * 18 + 1;
 
             if (i < outputs.size()) {
-                IAEItemStack aeOutput = outputs.get(i);
+                IAEStack<?> aeOutput = outputs.get(i);
                 if (aeOutput != null) {
-                    ItemStack outputStack = aeOutput.getItemStack().copy();
-                    outputStack.stackSize = 1;
+                    ItemStack outputStack = aeOutput.getItemStackForNEI(aeOutput.isFluid() ? 0 : 1);
+                    if (outputStack == null) continue;
                     PositionedStack posStack = createPositionedStack(outputStack, x, y);
                     outputSlots.add(new ViewItemStack(posStack, aeOutput.getStackSize()));
                 }
