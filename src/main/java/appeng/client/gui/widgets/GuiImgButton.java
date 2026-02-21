@@ -899,53 +899,17 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.ToggleShowOnlySubstituteOffDesc);
 
             this.registerApp(
-                    16 * 2 + 11,
-                    Settings.ACTIONS,
-                    ActionItems.RESHUFFLE_STORAGE,
-                    ButtonToolTips.ReshuffleStorage,
-                    ButtonToolTips.ReshuffleStorageDesc);
-
-            this.registerApp(
-                    16 * 2 + 11,
-                    Settings.ACTIONS,
-                    ActionItems.RESHUFFLE_STORAGE_ALL,
-                    ButtonToolTips.ReshuffleStorageAll,
-                    ButtonToolTips.ReshuffleStorageAllDesc);
-
-            this.registerApp(
-                    16 * 2 + 10,
-                    Settings.ACTIONS,
-                    ActionItems.RESHUFFLE_STORAGE_ITEMS,
-                    ButtonToolTips.ReshuffleStorageItems,
-                    ButtonToolTips.ReshuffleStorageItemsDesc);
-
-            this.registerApp(
-                    16 * 2 + 9,
-                    Settings.ACTIONS,
-                    ActionItems.RESHUFFLE_STORAGE_FLUIDS,
-                    ButtonToolTips.ReshuffleStorageFluids,
-                    ButtonToolTips.ReshuffleStorageFluidsDesc);
-
-            this.registerApp(
-                    16 * 1 + 12,
-                    Settings.ACTIONS,
-                    ActionItems.RESHUFFLE_STORAGE_CANCEL,
-                    ButtonToolTips.ReshuffleStorageCancel,
-                    ButtonToolTips.ReshuffleStorageCancelDesc);
-
-            this.registerApp(
                     16 * 8 + 4,
-                    Settings.ACTIONS,
-                    ActionItems.RESHUFFLE_VOID_PROTECTION,
+                    Settings.VOID_PROTECTION,
+                    YesNo.YES,
                     ButtonToolTips.ReshuffleVoidProtection,
-                    ButtonToolTips.ReshuffleVoidProtectionDesc);
-
+                    ButtonToolTips.ReshuffleVoidProtectionOn);
             this.registerApp(
                     16 * 8 + 5,
-                    Settings.ACTIONS,
-                    ActionItems.RESHUFFLE_OVERWRITE_PROTECTION,
-                    ButtonToolTips.ReshuffleOverwriteProtection,
-                    ButtonToolTips.ReshuffleOverwriteProtectionDesc);
+                    Settings.VOID_PROTECTION,
+                    YesNo.NO,
+                    ButtonToolTips.ReshuffleVoidProtection,
+                    ButtonToolTips.ReshuffleVoidProtectionOff);
         }
     }
 

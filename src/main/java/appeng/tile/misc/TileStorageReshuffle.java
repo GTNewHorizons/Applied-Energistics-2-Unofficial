@@ -10,90 +10,116 @@
 
 package appeng.tile.misc;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 
-import appeng.api.config.SecurityPermissions;
+import org.jetbrains.annotations.NotNull;
+
+import appeng.api.config.Settings;
+import appeng.api.config.YesNo;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
+import appeng.api.networking.crafting.ICraftingCPU;
+import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
 import appeng.api.networking.security.BaseActionSource;
-import appeng.api.networking.security.MachineSource;
-import appeng.api.networking.security.PlayerSource;
+import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.ITerminalHost;
+import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.api.storage.data.IAEFluidStack;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStackType;
-import appeng.api.util.AECableType;
+import appeng.api.util.IConfigManager;
+import appeng.api.util.IConfigurableObject;
 import appeng.core.AELog;
-import appeng.helpers.CellScanner;
+import appeng.core.localization.GuiText;
+import appeng.helpers.CellScanReport;
+import appeng.helpers.CellScanTask;
 import appeng.helpers.ReshuffleReport;
 import appeng.helpers.ReshuffleTask;
 import appeng.me.GridAccessException;
+import appeng.me.cache.NetworkMonitor;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
+import appeng.util.ConfigManager;
+import appeng.util.IConfigManagerHost;
+import appeng.util.MonitorableTypeFilter;
 import io.netty.buffer.ByteBuf;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
-public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost {
+public class TileStorageReshuffle extends AENetworkTile
+        implements ITerminalTypeFilterProvider, IConfigurableObject, IConfigManagerHost {
 
     private ReshuffleTask activeTask = null;
     private boolean isActive = false;
 
-    private Set<IAEStackType<?>> allowedTypes = new HashSet<>();
-    private boolean voidProtection = true;
-    private boolean overwriteProtection = false;
+    private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
+    private final ConfigManager cm = new ConfigManager(this);
 
     private int reshuffleProgress = 0;
     private int reshuffleTotalItems = 0;
+    private int reshuffleProcessedItems = 0;
     private boolean reshuffleRunning = false;
-    private java.util.List<String> reshuffleReport = new java.util.ArrayList<>();
-    private java.util.List<String> reshuffleTooltipReport = new java.util.ArrayList<>();
+    private List<String> reshuffleReport = new ArrayList<>();
 
     public TileStorageReshuffle() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
         this.getProxy().setIdlePowerUsage(4.0);
-
-        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-            this.allowedTypes.add(type);
-        }
-    }
-
-    @Override
-    public AECableType getCableConnectionType(net.minecraftforge.common.util.ForgeDirection dir) {
-        return AECableType.SMART;
+        this.cm.registerSetting(Settings.VOID_PROTECTION, YesNo.YES);
     }
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkChannelsChanged c) {
-        final boolean currentActive = this.getProxy().isActive();
-        if (this.isActive != currentActive) {
-            this.isActive = currentActive;
+        final boolean current = this.getProxy().isActive();
+        if (this.isActive != current) {
+            this.isActive = current;
             this.markForUpdate();
         }
     }
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkPowerStatusChange c) {
-        final boolean currentActive = this.getProxy().isActive();
-        if (this.isActive != currentActive) {
-            this.isActive = currentActive;
+        final boolean current = this.getProxy().isActive();
+        if (this.isActive != current) {
+            this.isActive = current;
             this.markForUpdate();
-
-            if (!currentActive && this.activeTask != null) {
-                this.cancelReshuffle();
-            }
+            if (!current && this.activeTask != null) this.cancelReshuffle();
         }
+    }
+
+    @TileEvent(TileEventType.NETWORK_WRITE)
+    public void writeToStream(final ByteBuf data) {
+        data.writeBoolean(this.reshuffleRunning);
+    }
+
+    @TileEvent(TileEventType.NETWORK_READ)
+    public boolean readFromStream(final ByteBuf data) {
+        final boolean wasRunning = this.reshuffleRunning;
+        this.reshuffleRunning = data.readBoolean();
+        return wasRunning != this.reshuffleRunning;
+    }
+
+    @TileEvent(TileEventType.WORLD_NBT_WRITE)
+    public void writeToNBT_TileStorageReshuffle(final NBTTagCompound data) {
+        this.cm.writeToNBT(data);
+        this.typeFilters.writeToNBT(data);
+    }
+
+    @TileEvent(TileEventType.WORLD_NBT_READ)
+    public void readFromNBT_TileStorageReshuffle(final NBTTagCompound data) {
+        this.cm.readFromNBT(data);
+        this.typeFilters.readFromNBT(data);
     }
 
     @TileEvent(TileEventType.TICK)
@@ -103,92 +129,84 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
                 this.activeTask.processNextBatch();
                 this.reshuffleProgress = this.activeTask.getProgressPercent();
                 this.reshuffleTotalItems = this.activeTask.getTotalItems();
+                this.reshuffleProcessedItems = this.activeTask.getProcessedItems();
                 this.reshuffleRunning = this.activeTask.isRunning();
-
                 if (!this.activeTask.isRunning()) {
                     ReshuffleReport report = this.activeTask.getReport();
                     if (report != null) {
-                        java.util.List<String> reportLines = report.generateReportLines();
-                        this.reshuffleReport = reportLines;
-
-                        java.util.List<String> tooltipReportLines = report.generateTooltipReportLines();
-                        this.reshuffleTooltipReport = tooltipReportLines;
-
+                        this.reshuffleReport = report.generateReportLines();
                         this.markDirty();
                     }
-
                     unlockStorage();
                     this.activeTask = null;
                     this.markForUpdate();
                 }
             } catch (Exception e) {
-                AELog.error(e, "Error during reshuffle task processing in tile entity");
+                AELog.error(e, "Error during reshuffle task processing");
                 cancelReshuffle();
             }
         }
     }
-    
-    public boolean startReshuffle(EntityPlayer player, boolean confirmed) {
-        if (!this.getProxy().isActive()) {
-            return false;
-        }
 
-        if (this.activeTask != null && this.activeTask.isRunning()) {
-            return false;
-        }
+    @Override
+    @NotNull
+    public Reference2BooleanMap<IAEStackType<?>> getTypeFilter(final EntityPlayer player) {
+        return this.typeFilters.getFilters(player);
+    }
+
+    @Override
+    public void saveTypeFilter() {
+        this.saveChanges();
+        this.markForUpdate();
+    }
+
+    public boolean startReshuffle(EntityPlayer player, boolean confirmed) {
+        if (!this.getProxy().isActive()) return false;
+        if (this.activeTask != null && this.activeTask.isRunning()) return false;
 
         try {
-            IGrid grid = this.getProxy().getGrid();
-
-            appeng.api.networking.crafting.ICraftingGrid craftingGrid = grid
-                    .getCache(appeng.api.networking.crafting.ICraftingGrid.class);
-            if (craftingGrid != null) {
-                for (appeng.api.networking.crafting.ICraftingCPU cpu : craftingGrid.getCpus()) {
-                    if (cpu.isBusy()) {
-                        return false;
-                    }
+            final ICraftingGrid craftingGrid = this.getProxy().getCrafting();
+            for (final ICraftingCPU cpu : craftingGrid.getCpus()) {
+                if (cpu.isBusy()) {
+                    this.reshuffleReport = java.util.Arrays.asList(
+                            GuiText.ReshuffleReportActiveCrafts.getLocal(),
+                            GuiText.ReshuffleReportActiveCraftsDetail.getLocal());
+                    this.markDirty();
+                    return false;
                 }
             }
 
-            IStorageGrid storageGrid = grid.getCache(IStorageGrid.class);
+            final IStorageGrid storageGrid = this.getProxy().getStorage();
 
-            appeng.me.cache.GridStorageCache cache = (appeng.me.cache.GridStorageCache) storageGrid;
-            if (!cache.lockStorage(this)) {
-                return false; 
+            final Reference2BooleanMap<IAEStackType<?>> filters = this.typeFilters.getFilters(player);
+            final Set<IAEStackType<?>> allowedTypes = new HashSet<>();
+            for (Reference2BooleanMap.Entry<IAEStackType<?>> e : filters.reference2BooleanEntrySet()) {
+                if (e.getBooleanValue()) allowedTypes.add(e.getKey());
             }
 
             Map<IAEStackType<?>, IMEMonitor<?>> monitors = new IdentityHashMap<>();
-            for (IAEStackType<?> type : this.allowedTypes) {
+            for (IAEStackType<?> type : allowedTypes) {
                 IMEMonitor<?> monitor = storageGrid.getMEMonitor(type);
                 if (monitor != null) {
                     monitors.put(type, monitor);
+                    if (monitor instanceof NetworkMonitor<?>nm) nm.setLocked(true);
                 }
             }
 
-            BaseActionSource actionSource = player != null ? new PlayerSource(player, this) : new MachineSource(this);
-
-            this.activeTask = new ReshuffleTask(
-                    monitors,
-                    actionSource,
-                    player,
-                    this.allowedTypes,
-                    this.voidProtection,
-                    this.overwriteProtection,
-                    true 
-            );
+            BaseActionSource actionSource = new ReshuffleActionSource(player, this);
+            final boolean voidProtection = this.cm.getSetting(Settings.VOID_PROTECTION) == YesNo.YES;
+            this.activeTask = new ReshuffleTask(monitors, actionSource, player, allowedTypes, voidProtection, true);
 
             int totalItems = this.activeTask.initialize();
-
-            if (!confirmed && totalItems >= ReshuffleTask.LARGE_NETWORK_THRESHOLD) {
+            if (!confirmed && totalItems >= 3000) {
                 this.activeTask = null;
-                cache.unlockStorage(this);
+                unlockMonitors(monitors);
                 this.reshuffleTotalItems = totalItems;
-                return false; 
+                return false;
             }
-
             if (totalItems == 0) {
                 this.activeTask = null;
-                cache.unlockStorage(this);
+                unlockMonitors(monitors);
                 return false;
             }
 
@@ -196,7 +214,6 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
             this.reshuffleProgress = 0;
             this.reshuffleRunning = true;
             this.markForUpdate();
-
             return true;
 
         } catch (GridAccessException e) {
@@ -215,187 +232,54 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         }
     }
 
-    public java.util.List<String> scanNetwork() {
+    public void scanNetwork() {
         if (!this.getProxy().isActive()) {
-            java.util.List<String> error = new java.util.ArrayList<>();
-            error.add(
-                    net.minecraft.util.StatCollector
-                            .translateToLocal("gui.appliedenergistics2.reshuffle.report.networkNotActive"));
-            return error;
-        }
-
-        try {
-            IGrid grid = this.getProxy().getGrid();
-            java.util.List<String> scanReport = CellScanner.generateReport(grid);
-            java.util.List<String> scanTooltip = CellScanner.generateTooltipReport(grid);
-
-            this.reshuffleReport = new java.util.ArrayList<>(scanReport);
-            this.reshuffleTooltipReport = new java.util.ArrayList<>(scanTooltip);
-
+            this.reshuffleReport = Collections.singletonList(GuiText.ReshuffleReportNetworkNotActive.getLocal());
             this.markDirty();
-
-            return scanReport;
+            return;
+        }
+        try {
+            final IGrid grid = this.getProxy().getGrid();
+            final List<CellScanTask.CellRecord> cells = CellScanTask.scanGrid(grid);
+            this.reshuffleReport = new CellScanReport(cells).generateReportLines();
+            this.markDirty();
         } catch (GridAccessException e) {
             AELog.warn(e, "Failed to access grid for scan");
-            java.util.List<String> error = new java.util.ArrayList<>();
-            error.add(
-                    net.minecraft.util.StatCollector
-                            .translateToLocal("gui.appliedenergistics2.reshuffle.report.scanFailed"));
-            return error;
+            this.reshuffleReport = Collections.singletonList(GuiText.ReshuffleReportScanFailed.getLocal());
+            this.markDirty();
         }
     }
 
     private void unlockStorage() {
         try {
-            if (this.getProxy().getGrid() != null) {
-                IStorageGrid storageGrid = this.getProxy().getGrid().getCache(IStorageGrid.class);
-                if (storageGrid instanceof appeng.me.cache.GridStorageCache cache) {
-                    cache.unlockStorage(this);
-                }
+            final IStorageGrid storageGrid = this.getProxy().getStorage();
+            for (final IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                final IMEMonitor<?> monitor = storageGrid.getMEMonitor(type);
+                if (monitor instanceof NetworkMonitor<?>nm) nm.setLocked(false);
             }
         } catch (Exception e) {
-            AELog.warn(e, "Failed to unlock storage");
+            AELog.warn(e, "Failed to unlock storage monitors");
         }
     }
 
-    @TileEvent(TileEventType.NETWORK_READ)
-    public boolean readFromStream_TileStorageReshuffle(final ByteBuf data) {
-        final boolean wasActive = this.isActive;
-        final boolean wasRunning = this.reshuffleRunning;
-
-        this.isActive = data.readBoolean();
-        this.reshuffleRunning = data.readBoolean();
-        this.reshuffleProgress = data.readInt();
-        this.voidProtection = data.readBoolean();
-        this.overwriteProtection = data.readBoolean();
-
-        int typesMask = data.readByte();
-        this.allowedTypes.clear();
-        int index = 0;
-        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-            if ((typesMask & (1 << index)) != 0) {
-                this.allowedTypes.add(type);
-            }
-            index++;
+    private void unlockMonitors(Map<IAEStackType<?>, IMEMonitor<?>> monitors) {
+        for (IMEMonitor<?> monitor : monitors.values()) {
+            if (monitor instanceof NetworkMonitor<?>nm) nm.setLocked(false);
         }
-
-        return wasActive != this.isActive || wasRunning != this.reshuffleRunning;
-    }
-
-    @TileEvent(TileEventType.NETWORK_WRITE)
-    public void writeToStream_TileStorageReshuffle(final ByteBuf data) {
-        data.writeBoolean(this.getProxy().isActive());
-        data.writeBoolean(this.reshuffleRunning);
-        data.writeInt(this.reshuffleProgress);
-        data.writeBoolean(this.voidProtection);
-        data.writeBoolean(this.overwriteProtection);
-
-        int typesMask = 0;
-        int index = 0;
-        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-            if (this.allowedTypes.contains(type)) {
-                typesMask |= (1 << index);
-            }
-            index++;
-        }
-        data.writeByte(typesMask);
-    }
-
-    @TileEvent(TileEventType.WORLD_NBT_WRITE)
-    public void writeToNBT_TileStorageReshuffle(final NBTTagCompound data) {
-        data.setBoolean("voidProtection", this.voidProtection);
-        data.setBoolean("overwriteProtection", this.overwriteProtection);
-
-        StringBuilder types = new StringBuilder();
-        for (IAEStackType<?> type : this.allowedTypes) {
-            if (types.length() > 0) types.append(",");
-            types.append(type.getClass().getSimpleName());
-        }
-        data.setString("allowedTypes", types.toString());
-        if (!this.reshuffleReport.isEmpty()) {
-            NBTTagCompound reportNBT = new NBTTagCompound();
-            reportNBT.setInteger("lineCount", this.reshuffleReport.size());
-            for (int i = 0; i < this.reshuffleReport.size(); i++) {
-                reportNBT.setString("line" + i, this.reshuffleReport.get(i));
-            }
-            data.setTag("lastReport", reportNBT);
-        }
-
-        if (!this.reshuffleTooltipReport.isEmpty()) {
-            NBTTagCompound tooltipReportNBT = new NBTTagCompound();
-            tooltipReportNBT.setInteger("lineCount", this.reshuffleTooltipReport.size());
-            for (int i = 0; i < this.reshuffleTooltipReport.size(); i++) {
-                tooltipReportNBT.setString("line" + i, this.reshuffleTooltipReport.get(i));
-            }
-            data.setTag("lastTooltipReport", tooltipReportNBT);
-        }
-    }
-
-    @TileEvent(TileEventType.WORLD_NBT_READ)
-    public void readFromNBT_TileStorageReshuffle(final NBTTagCompound data) {
-        this.voidProtection = data.getBoolean("voidProtection");
-        this.overwriteProtection = data.getBoolean("overwriteProtection");
-
-        if (data.hasKey("allowedTypes")) {
-            String typesStr = data.getString("allowedTypes");
-            this.allowedTypes.clear();
-            if (!typesStr.isEmpty()) {
-                for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-                    this.allowedTypes.add(type);
-                }
-            }
-        }
-        
-        this.reshuffleReport.clear();
-        if (data.hasKey("lastReport")) {
-            NBTTagCompound reportNBT = data.getCompoundTag("lastReport");
-            int lineCount = reportNBT.getInteger("lineCount");
-            for (int i = 0; i < lineCount; i++) {
-                if (reportNBT.hasKey("line" + i)) {
-                    this.reshuffleReport.add(reportNBT.getString("line" + i));
-                }
-            }
-        }
-
-        this.reshuffleTooltipReport.clear();
-        if (data.hasKey("lastTooltipReport")) {
-            NBTTagCompound tooltipReportNBT = data.getCompoundTag("lastTooltipReport");
-            int lineCount = tooltipReportNBT.getInteger("lineCount");
-            for (int i = 0; i < lineCount; i++) {
-                if (tooltipReportNBT.hasKey("line" + i)) {
-                    this.reshuffleTooltipReport.add(tooltipReportNBT.getString("line" + i));
-                }
-            }
-        }
-    }
-
-    public Set<IAEStackType<?>> getAllowedTypes() {
-        return new HashSet<>(this.allowedTypes);
-    }
-
-    public void setAllowedTypes(Set<IAEStackType<?>> types) {
-        this.allowedTypes = new HashSet<>(types);
-        this.markDirty();
-        this.markForUpdate();
     }
 
     public boolean isVoidProtection() {
-        return this.voidProtection;
+        return this.cm.getSetting(Settings.VOID_PROTECTION) == YesNo.YES;
     }
 
-    public void setVoidProtection(boolean voidProtection) {
-        this.voidProtection = voidProtection;
-        this.markDirty();
-        this.markForUpdate();
+    @Override
+    public IConfigManager getConfigManager() {
+        return this.cm;
     }
 
-    public boolean isOverwriteProtection() {
-        return this.overwriteProtection;
-    }
-
-    public void setOverwriteProtection(boolean overwriteProtection) {
-        this.overwriteProtection = overwriteProtection;
-        this.markDirty();
+    @Override
+    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
+        this.saveChanges();
         this.markForUpdate();
     }
 
@@ -411,65 +295,11 @@ public class TileStorageReshuffle extends AENetworkTile implements ITerminalHost
         return this.reshuffleTotalItems;
     }
 
-    @Override
-    public IMEMonitor<IAEItemStack> getItemInventory() {
-        try {
-            return this.getProxy().getStorage().getItemInventory();
-        } catch (GridAccessException e) {
-            return null;
-        }
+    public int getReshuffleProcessedItems() {
+        return this.reshuffleProcessedItems;
     }
 
-    @Override
-    public IMEMonitor<IAEFluidStack> getFluidInventory() {
-        try {
-            return this.getProxy().getStorage().getFluidInventory();
-        } catch (GridAccessException e) {
-            return null;
-        }
-    }
-
-    @Override
-    public IMEMonitor<?> getMEMonitor(IAEStackType<?> type) {
-        try {
-            return this.getProxy().getStorage().getMEMonitor(type);
-        } catch (GridAccessException e) {
-            return null;
-        }
-    }
-
-    public boolean hasPermission(EntityPlayer player, SecurityPermissions permission) {
-        try {
-            return this.getProxy().getSecurity().hasPermission(player, permission);
-        } catch (GridAccessException e) {
-            return false;
-        }
-    }
-
-    @Override
-    public appeng.api.util.IConfigManager getConfigManager() {
-        return null;
-    }
-
-    public java.util.List<String> getReshuffleReport() {
-        return new java.util.ArrayList<>(this.reshuffleReport);
-    }
-
-    public java.util.List<String> getReshuffleTooltipReport() {
-        return new java.util.ArrayList<>(this.reshuffleTooltipReport);
-    }
-
-    public String getFullItemNameFromTruncated(String truncatedName) {
-        if (this.activeTask == null || truncatedName == null) {
-            return null;
-        }
-
-        // Get the full item name map from the task's report
-        ReshuffleReport report = this.activeTask.getReport();
-        if (report != null) {
-            return report.getFullNameForTruncated(truncatedName);
-        }
-
-        return null;
+    public List<String> getReshuffleReport() {
+        return new ArrayList<>(this.reshuffleReport);
     }
 }

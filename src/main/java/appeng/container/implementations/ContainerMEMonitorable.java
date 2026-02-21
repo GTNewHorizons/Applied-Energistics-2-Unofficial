@@ -32,7 +32,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -87,7 +86,6 @@ import appeng.core.sync.packets.PacketMonitorableTypeFilter;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IPinsHandler;
 import appeng.helpers.MonitorableAction;
-import appeng.helpers.ReshuffleTask;
 import appeng.helpers.WirelessTerminalGuiObject;
 import appeng.items.contents.PinsHandler;
 import appeng.items.storage.ItemViewCell;
@@ -118,29 +116,11 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     private PinsHandler pinsHandler = null;
 
-    // Reshuffle task management
-    private ReshuffleTask reshuffleTask = null;
-
-    @GuiSync(80)
-    public int reshuffleProgress = 0;
-
-    @GuiSync(81)
-    public int reshuffleTotalItems = 0;
-
-    @GuiSync(82)
-    public boolean reshuffleRunning = false;
-
-    @GuiSync(83)
-    public boolean previewGenerating = false;
-
     @GuiSync(99)
     public boolean canAccessViewCells = false;
 
     @GuiSync(98)
     public boolean hasPower = false;
-
-    // Preview generation cancellation flag
-    private volatile boolean previewCancelled = false;
 
     private IConfigManagerHost gui;
     private IConfigManager serverCM;
@@ -296,53 +276,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
             this.updatePowerStatus();
 
-            // Process reshuffle task if running
-            if (this.reshuffleTask != null && this.reshuffleTask.isRunning()) {
-                try {
-                    this.reshuffleTask.processNextBatch();
-                    this.reshuffleProgress = this.reshuffleTask.getProgressPercent();
-                    this.reshuffleTotalItems = this.reshuffleTask.getTotalItems();
-                    this.reshuffleRunning = this.reshuffleTask.isRunning();
-
-                    if (!this.reshuffleTask.isRunning()) {
-                        // Task completed - unlock storage
-                        try {
-                            if (this.networkNode != null && this.networkNode.getGrid() != null) {
-                                appeng.me.cache.GridStorageCache cache = (appeng.me.cache.GridStorageCache) this.networkNode
-                                        .getGrid().getCache(appeng.api.networking.storage.IStorageGrid.class);
-                                if (cache != null) {
-                                    cache.unlockStorage(this);
-                                }
-                            }
-                        } catch (Exception unlockError) {
-                            AELog.warn(unlockError, "Failed to unlock storage after reshuffle completion");
-                        }
-                        this.reshuffleTask = null;
-                    }
-                } catch (Exception e) {
-                    AELog.error(e, "Error during reshuffle task processing");
-                    // Cancel the task on error and unlock storage
-                    try {
-                        if (this.networkNode != null && this.networkNode.getGrid() != null) {
-                            appeng.me.cache.GridStorageCache cache = (appeng.me.cache.GridStorageCache) this.networkNode
-                                    .getGrid().getCache(appeng.api.networking.storage.IStorageGrid.class);
-                            if (cache != null) {
-                                cache.unlockStorage(this);
-                            }
-                        }
-                    } catch (Exception unlockError) {
-                        AELog.warn(unlockError, "Failed to unlock storage after reshuffle error");
-                    }
-                    if (this.reshuffleTask != null) {
-                        this.reshuffleTask.cancel();
-                        this.reshuffleTask = null;
-                    }
-                    this.reshuffleRunning = false;
-                }
-            } else {
-                this.reshuffleRunning = false;
-            }
-
             final boolean oldAccessible = this.canAccessViewCells;
             this.canAccessViewCells = this.host instanceof WirelessTerminalGuiObject
                     || this.hasAccess(SecurityPermissions.BUILD, false);
@@ -449,36 +382,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     @Override
     public void onContainerClosed(final EntityPlayer player) {
-        // Warn if reshuffle is still running
-        if (this.reshuffleTask != null && this.reshuffleTask.isRunning()) {
-            AELog.info(
-                    "Reshuffle task cancelled due to container close - processed %d/%d items",
-                    this.reshuffleTask.getProcessedItems(),
-                    this.reshuffleTask.getTotalItems());
-
-            // Unlock storage before cancelling
-            try {
-                if (this.networkNode != null && this.networkNode.getGrid() != null) {
-                    appeng.me.cache.GridStorageCache cache = (appeng.me.cache.GridStorageCache) this.networkNode
-                            .getGrid().getCache(appeng.api.networking.storage.IStorageGrid.class);
-                    if (cache != null) {
-                        cache.unlockStorage(this);
-                    }
-                }
-            } catch (Exception e) {
-                AELog.warn(e, "Failed to unlock storage on container close");
-            }
-
-            if (player instanceof EntityPlayerMP) {
-                player.addChatMessage(
-                        new ChatComponentTranslation(
-                                "chat.appliedenergistics2.ReshuffleCancelledGuiClosed",
-                                this.reshuffleTask.getProcessedItems(),
-                                this.reshuffleTask.getTotalItems()));
-            }
-            this.reshuffleTask = null;
-        }
-
         super.onContainerClosed(player);
 
         for (IMEMonitor<?> monitor : this.monitors.values()) {
@@ -551,237 +454,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
         if (!(cellStack.getItem() instanceof ItemViewCell viewCell)) return;
         viewCell.toggleViewMode(cellStack);
         detectAndSendChanges();
-    }
-
-    /**
-     * Initiates or manages the reshuffle storage operation.
-     * 
-     * @param player              The player initiating the action
-     * @param confirmed           Whether the player has confirmed the operation (for large networks)
-     * @param allowedTypes        Set of IAEStackType to reshuffle (e.g., items, fluids)
-     * @param voidProtection      If true, items won't be extracted if they can't be fully re-inserted
-     * @param overwriteProtection If true, items won't be moved if they would just go back to same location
-     */
-    public void reshuffleStorage(final EntityPlayer player, boolean confirmed, Set<IAEStackType<?>> allowedTypes,
-            boolean voidProtection, boolean overwriteProtection) {
-        if (!Platform.isServer()) return;
-
-        // If already running, cancel the current operation
-        if (this.reshuffleTask != null && this.reshuffleTask.isRunning()) {
-            this.reshuffleTask.cancel();
-            this.reshuffleTask = null;
-            this.reshuffleRunning = false;
-            return;
-        }
-
-        // Check security permissions
-        if (!this.hasAccess(SecurityPermissions.INJECT, false) || !this.hasAccess(SecurityPermissions.EXTRACT, false)) {
-            if (player instanceof EntityPlayerMP) {
-                player.addChatMessage(new ChatComponentTranslation("chat.appliedenergistics2.ReshuffleNoPermission"));
-            }
-            return;
-        }
-
-        if (this.getPowerSource() == null) {
-            if (player instanceof EntityPlayerMP) {
-                player.addChatMessage(new ChatComponentTranslation("chat.appliedenergistics2.ReshuffleNoPower"));
-            }
-            return;
-        }
-
-        // Check for active crafting jobs - don't allow reshuffle during crafting
-        int activeCrafts = getActiveCraftingJobCount();
-        if (activeCrafts > 0) {
-            if (player instanceof EntityPlayerMP) {
-                player.addChatMessage(
-                        new ChatComponentTranslation("chat.appliedenergistics2.ReshuffleCraftingActive", activeCrafts));
-            }
-            return;
-        }
-
-        // Acquire storage lock to prevent concurrent modifications
-        appeng.me.cache.GridStorageCache storageCache = null;
-        try {
-            if (this.networkNode != null && this.networkNode.getGrid() != null) {
-                storageCache = (appeng.me.cache.GridStorageCache) this.networkNode.getGrid()
-                        .getCache(appeng.api.networking.storage.IStorageGrid.class);
-
-                if (storageCache != null && !storageCache.lockStorage(this)) {
-                    if (player instanceof EntityPlayerMP) {
-                        player.addChatMessage(
-                                new ChatComponentTranslation("chat.appliedenergistics2.ReshuffleStorageLocked"));
-                    }
-                    return;
-                }
-            }
-        } catch (Exception e) {
-            AELog.warn(e, "Failed to acquire storage lock for reshuffle");
-            if (player instanceof EntityPlayerMP) {
-                player.addChatMessage(new ChatComponentTranslation("chat.appliedenergistics2.ReshuffleError"));
-            }
-            return;
-        }
-
-        try {
-            // Create a new task and initialize it with the specified options
-            this.reshuffleTask = new ReshuffleTask(
-                    this.monitors,
-                    this.getActionSource(),
-                    player,
-                    allowedTypes,
-                    voidProtection,
-                    overwriteProtection,
-                    true); // Generate report by default
-            int totalItems = this.reshuffleTask.initialize();
-
-            // Check if confirmation is required for large networks
-            if (!confirmed && totalItems >= ReshuffleTask.LARGE_NETWORK_THRESHOLD) {
-                // Send message asking for confirmation
-                if (player instanceof EntityPlayerMP) {
-                    player.addChatMessage(
-                            new ChatComponentTranslation(
-                                    "chat.appliedenergistics2.ReshuffleConfirmRequired",
-                                    totalItems));
-                }
-                this.reshuffleTask = null;
-                this.reshuffleTotalItems = totalItems;
-                // Unlock storage since we're not starting the reshuffle yet
-                if (storageCache != null) {
-                    storageCache.unlockStorage(this);
-                }
-                return;
-            }
-
-            if (totalItems == 0) {
-                if (player instanceof EntityPlayerMP) {
-                    player.addChatMessage(new ChatComponentTranslation("chat.appliedenergistics2.ReshuffleEmpty"));
-                }
-                this.reshuffleTask = null;
-                // Unlock storage since there's nothing to reshuffle
-                if (storageCache != null) {
-                    storageCache.unlockStorage(this);
-                }
-                return;
-            }
-
-            // Start the reshuffle
-            this.reshuffleTotalItems = totalItems;
-            this.reshuffleProgress = 0;
-            this.reshuffleRunning = true;
-
-            // Build types string for display
-            StringBuilder typesStr = new StringBuilder();
-            for (IAEStackType<?> type : allowedTypes) {
-                if (typesStr.length() > 0) typesStr.append(", ");
-                // Get simple class name for display
-                String typeName = type.getClass().getSimpleName().replace("AE", "").replace("StackType", "");
-                typesStr.append(typeName);
-            }
-
-            if (player instanceof EntityPlayerMP) {
-                player.addChatMessage(
-                        new ChatComponentTranslation(
-                                "chat.appliedenergistics2.ReshuffleStartedWithOptions",
-                                totalItems,
-                                typesStr.toString(),
-                                voidProtection ? "§a✓" : "§c✗",
-                                overwriteProtection ? "§a✓" : "§c✗"));
-            }
-        } catch (Exception e) {
-            // On any error, unlock storage and cleanup
-            AELog.error(e, "Error starting reshuffle operation");
-            if (storageCache != null) {
-                storageCache.unlockStorage(this);
-            }
-            this.reshuffleTask = null;
-            this.reshuffleRunning = false;
-            if (player instanceof EntityPlayerMP) {
-                player.addChatMessage(new ChatComponentTranslation("chat.appliedenergistics2.ReshuffleError"));
-            }
-        }
-    }
-
-    /**
-     * Initiates reshuffle with confirmed flag only - uses default options (all types, void protection on)
-     */
-    public void reshuffleStorage(final EntityPlayer player, boolean confirmed) {
-        Set<IAEStackType<?>> allTypes = new HashSet<>();
-        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-            allTypes.add(type);
-        }
-        reshuffleStorage(player, confirmed, allTypes, true, false);
-    }
-
-    /**
-     * Legacy method for backward compatibility - calls with default options
-     */
-    public void reshuffleStorage(final EntityPlayer player) {
-        reshuffleStorage(player, false);
-    }
-
-    /**
-     * Cancels any running reshuffle operation.
-     */
-    public void cancelReshuffle() {
-        if (this.reshuffleTask != null && this.reshuffleTask.isRunning()) {
-            this.reshuffleTask.cancel();
-
-            // Unlock storage
-            try {
-                if (this.networkNode != null && this.networkNode.getGrid() != null) {
-                    appeng.me.cache.GridStorageCache cache = (appeng.me.cache.GridStorageCache) this.networkNode
-                            .getGrid().getCache(appeng.api.networking.storage.IStorageGrid.class);
-                    if (cache != null) {
-                        cache.unlockStorage(this);
-                    }
-                }
-            } catch (Exception e) {
-                AELog.warn(e, "Failed to unlock storage on manual cancel");
-            }
-
-            this.reshuffleTask = null;
-            this.reshuffleRunning = false;
-        }
-    }
-
-    /**
-     * Checks if a reshuffle operation is currently running.
-     */
-    public boolean isReshuffleRunning() {
-        return this.reshuffleRunning;
-    }
-
-    /**
-     * Returns the number of active crafting jobs in the network.
-     */
-    private int getActiveCraftingJobCount() {
-        if (this.networkNode == null) return 0;
-
-        try {
-            IGrid grid = this.networkNode.getGrid();
-            if (grid == null) return 0;
-
-            ICraftingGrid craftingGrid = grid.getCache(ICraftingGrid.class);
-            if (craftingGrid == null) return 0;
-
-            int activeCount = 0;
-            for (ICraftingCPU cpu : craftingGrid.getCpus()) {
-                if (cpu.isBusy()) {
-                    activeCount++;
-                }
-            }
-            return activeCount;
-        } catch (Exception e) {
-            AELog.debug(e, "Error checking for active crafting jobs");
-            return 0;
-        }
-    }
-
-    /**
-     * Gets the count of items to reshuffle (for confirmation dialog).
-     */
-    public int getReshuffleItemCount() {
-        return this.reshuffleTotalItems;
     }
 
     public void updateTypeFilters(Reference2BooleanMap<IAEStackType<?>> map) {

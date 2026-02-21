@@ -45,6 +45,7 @@ import appeng.container.implementations.ContainerQuartzKnife;
 import appeng.container.implementations.ContainerRenamer;
 import appeng.container.implementations.ContainerSecurity;
 import appeng.container.implementations.ContainerStorageBus;
+import appeng.container.implementations.ContainerStorageReshuffle;
 import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -98,57 +99,29 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.equals("CPUTable.Cpu.Set") && c instanceof final ICraftingCPUSelectorContainer qk) {
             qk.selectCPU(Integer.parseInt(this.Value));
         } else if (this.Name.equals("Terminal.StartWithFollow") && c instanceof final ContainerCraftConfirm qk) {
-        	qk.startJob(true);
+            qk.startJob(true);
         } else if (this.Name.equals("Terminal.Start") && c instanceof final ContainerCraftConfirm qk) {
-        	qk.startJob();
-        } else if(this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk) {
+            qk.startJob();
+        } else if (this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk) {
             qk.optimizePatterns();
         } else if (this.Name.equals("Terminal.UpdateViewCell") && c instanceof final ContainerMEMonitorable qk) {
             qk.toggleViewCell(Integer.parseInt(this.Value));
-        } else if (this.Name.equals("Terminal.Reshuffle") && c instanceof final ContainerMEMonitorable qk) {
-            String[] parts = this.Value.split(",");
-            boolean confirmed = parts.length > 0 && "confirmed".equals(parts[0]);
-            boolean voidProtection = parts.length > 2 ? "true".equals(parts[2]) : true;
-            boolean overwriteProtection = parts.length > 3 ? "true".equals(parts[3]) : false;
-
-            java.util.Set<appeng.api.storage.data.IAEStackType<?>> allowedTypes = new java.util.HashSet<>();
-            String typeFilter = parts.length > 1 ? parts[1] : "ALL";
-
-            if ("ALL".equals(typeFilter) || typeFilter.isEmpty()) {
-                for (appeng.api.storage.data.IAEStackType<?> type : appeng.api.storage.data.AEStackTypeRegistry.getAllTypes()) {
-                    allowedTypes.add(type);
-                }
-            } else if ("ITEMS".equals(typeFilter)) {
-                allowedTypes.add(appeng.util.item.AEItemStackType.ITEM_STACK_TYPE);
-            } else if ("FLUIDS".equals(typeFilter)) {
-                allowedTypes.add(appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE);
-            } else {
-                for (appeng.api.storage.data.IAEStackType<?> type : appeng.api.storage.data.AEStackTypeRegistry.getAllTypes()) {
-                    allowedTypes.add(type);
-                }
-            }
-
-            qk.reshuffleStorage(player, confirmed, allowedTypes, voidProtection, overwriteProtection);
-        } else if (this.Name.equals("Terminal.ReshuffleCancel") && c instanceof final ContainerMEMonitorable qk) {
-            qk.cancelReshuffle();
-        } else if (this.Name.startsWith("Reshuffle.") && c instanceof final appeng.container.implementations.ContainerStorageReshuffle qk) {
-            switch(this.Name) {
-                case "Reshuffle.ToggleVoidProtection" -> qk.toggleVoidProtection();
-                case "Reshuffle.ToggleOverwriteProtection" -> qk.toggleOverwriteProtection();
-                case "Reshuffle.SetTypeFilter" -> qk.setTypeFilterMode(Integer.parseInt(this.Value));
+        } else if (this.Name.startsWith("Reshuffle.") && c instanceof final ContainerStorageReshuffle qk) {
+            switch (this.Name) {
+                case "Reshuffle.TypeFilter" -> qk.toggleTypeFilter(this.Value);
                 case "Reshuffle.Start" -> qk.startReshuffle(player, "confirmed".equals(this.Value));
                 case "Reshuffle.Cancel" -> qk.cancelReshuffle();
                 case "Reshuffle.Scan" -> qk.performNetworkScan();
             }
-        } else if(this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk){
+        } else if (this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk) {
             qk.doublePatterns(Integer.parseInt(this.Value));
-        } else if(this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPU qk) {
-        	switch(this.Name) {
-        	case "TileCrafting.Cancel" -> qk.cancelCrafting();
-            case "TileCrafting.Suspend" -> qk.suspendCrafting();
-        	case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
-        	case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
-        	}
+        } else if (this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPU qk) {
+            switch (this.Name) {
+                case "TileCrafting.Cancel" -> qk.cancelCrafting();
+                case "TileCrafting.Suspend" -> qk.suspendCrafting();
+                case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
+                case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
+            }
         } else if (this.Name.equals("QuartzKnife.Name") && c instanceof final ContainerQuartzKnife qk) {
             qk.setName(this.Value);
         } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof final ContainerRenamer qk) {
@@ -237,36 +210,27 @@ public class PacketValueConfig extends AppEngPacket {
 
         if (this.Name.equals("CustomName") && c instanceof AEBaseContainer) {
             ((AEBaseContainer) c).setCustomName(this.Value);
-        } else if (this.Name.equals("Reshuffle.Report")
-                && c instanceof appeng.container.implementations.ContainerStorageReshuffle) {
-                    ((appeng.container.implementations.ContainerStorageReshuffle) c).updateReport(this.Value);
-                } else
-            if (this.Name.equals("Reshuffle.TooltipReport")
-                    && c instanceof appeng.container.implementations.ContainerStorageReshuffle) {
-                        ((appeng.container.implementations.ContainerStorageReshuffle) c)
-                                .updateTooltipReport(this.Value);
-                    } else
-                if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
-                    final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-                    if (gs instanceof GuiCraftingCPU) {
-                        ((GuiCraftingCPU) gs).clearItems();
+        } else if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
+            final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
+            if (gs instanceof GuiCraftingCPU) {
+                ((GuiCraftingCPU) gs).clearItems();
+            }
+        } else if (c instanceof IConfigurableObject) {
+            final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
+
+            for (final Settings e : cm.getSettings()) {
+                if (e.name().equals(this.Name)) {
+                    final Enum<?> def = cm.getSetting(e);
+
+                    try {
+                        cm.putSetting(e, Enum.valueOf(def.getClass(), this.Value));
+                    } catch (final IllegalArgumentException err) {
+                        // :P
                     }
-                } else if (c instanceof IConfigurableObject) {
-                    final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 
-                    for (final Settings e : cm.getSettings()) {
-                        if (e.name().equals(this.Name)) {
-                            final Enum<?> def = cm.getSetting(e);
-
-                            try {
-                                cm.putSetting(e, Enum.valueOf(def.getClass(), this.Value));
-                            } catch (final IllegalArgumentException err) {
-                                // :P
-                            }
-
-                            break;
-                        }
-                    }
+                    break;
                 }
+            }
+        }
     }
 }

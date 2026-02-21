@@ -34,6 +34,7 @@ import appeng.api.config.Actionable;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.events.MENetworkStorageEvent;
 import appeng.api.networking.security.BaseActionSource;
+import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.networking.storage.IStorageInterceptor;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
@@ -71,6 +72,8 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
     @Nonnegative
     private int localDepthSemaphore = 0;
 
+    private volatile boolean locked = false;
+
     private final Set<IStorageInterceptor> storageInterceptors = Collections.newSetFromMap(new WeakHashMap<>());
 
     public NetworkMonitor(final GridStorageCache cache, final IAEStackType<T> type) {
@@ -78,6 +81,18 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
         this.stackType = type;
         this.cachedList = type.createList();
         this.listeners = new HashMap<>();
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
+    public boolean isLocked() {
+        return this.locked;
+    }
+
+    private boolean isReshuffleSource(BaseActionSource src) {
+        return src instanceof ReshuffleActionSource;
     }
 
     @Override
@@ -92,6 +107,10 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 
     @Override
     public T extractItems(final T request, final Actionable mode, final BaseActionSource src) {
+        if (this.locked && !isReshuffleSource(src)) {
+            return null;
+        }
+
         if (mode == Actionable.SIMULATE) {
             return this.getHandler().extractItems(request, mode, src);
         }
@@ -163,6 +182,9 @@ public class NetworkMonitor<T extends IAEStack<T>> implements IMEMonitor<T> {
 
     @Override
     public T injectItems(T input, final Actionable mode, final BaseActionSource src) {
+        if (this.locked && !isReshuffleSource(src)) {
+            return input;
+        }
 
         for (Iterator<IStorageInterceptor> iterator = storageInterceptors.iterator(); iterator.hasNext();) {
             final IStorageInterceptor isi = iterator.next();

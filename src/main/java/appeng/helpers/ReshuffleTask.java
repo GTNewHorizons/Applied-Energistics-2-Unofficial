@@ -29,6 +29,7 @@ import appeng.api.storage.data.IItemList;
 import appeng.core.AELog;
 
 public class ReshuffleTask {
+
     private static final int DEFAULT_BATCH_SIZE = 500;
     private final int batchSize;
 
@@ -39,6 +40,7 @@ public class ReshuffleTask {
     private final boolean voidProtection;
 
     private final List<IAEStack<?>> itemsToProcess = new ArrayList<>();
+    private final List<IAEStack<?>> skippedItemsList = new ArrayList<>();
     private int currentIndex = 0;
     private int totalItems = 0;
     private int processedItems = 0;
@@ -49,22 +51,13 @@ public class ReshuffleTask {
     private ReshuffleReport report = null;
 
     public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
-            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean overwriteProtection,
-            boolean generateReport) {
-        this(
-                monitors,
-                actionSource,
-                player,
-                allowedTypes,
-                voidProtection,
-                overwriteProtection,
-                generateReport,
-                DEFAULT_BATCH_SIZE);
+            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean generateReport) {
+        this(monitors, actionSource, player, allowedTypes, voidProtection, generateReport, DEFAULT_BATCH_SIZE);
     }
 
     public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
-            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean overwriteProtection,
-            boolean generateReport, int batchSize) {
+            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean generateReport,
+            int batchSize) {
         this.monitors = new IdentityHashMap<>(monitors);
         this.actionSource = actionSource;
         this.player = player;
@@ -79,9 +72,9 @@ public class ReshuffleTask {
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public int initialize() {
         itemsToProcess.clear();
+        skippedItemsList.clear();
         currentIndex = 0;
         processedItems = 0;
         skippedItems = 0;
@@ -132,6 +125,7 @@ public class ReshuffleTask {
                             if (simLeftover != null && simLeftover.getStackSize() > 0) {
                                 shouldProcess = false;
                                 skippedItems++;
+                                skippedItemsList.add(stack.copy());
                             }
                         }
                     }
@@ -141,17 +135,19 @@ public class ReshuffleTask {
 
                         if (extracted != null && extracted.getStackSize() > 0) {
                             IAEStack<?> leftover = monitor.injectItems(extracted, Actionable.MODULATE, actionSource);
-                            
+
                             if (leftover != null && leftover.getStackSize() > 0) {
                                 monitor.injectItems(leftover, Actionable.MODULATE, actionSource);
                                 skippedItems++;
+                                skippedItemsList.add(stack.copy());
                             }
                         }
                     }
                 }
             } catch (Exception e) {
-                AELog.warn(e, "Reshuffle: skipped %s", itemsToProcess.get(currentIndex));
+                AELog.warn("Reshuffle: skipped %s", itemsToProcess.get(currentIndex));
                 skippedItems++;
+                skippedItemsList.add(itemsToProcess.get(currentIndex).copy());
             }
 
             currentIndex++;
@@ -170,7 +166,7 @@ public class ReshuffleTask {
 
     private void finalizeReport() {
         if (report != null && player instanceof EntityPlayerMP) {
-            report.generateReport(monitors, allowedTypes, processedItems, skippedItems);
+            report.generateReport(monitors, allowedTypes, processedItems, skippedItems, skippedItemsList);
         }
     }
 
@@ -178,14 +174,6 @@ public class ReshuffleTask {
         if (!completed && !cancelled) {
             cancelled = true;
         }
-    }
-
-    public boolean isCompleted() {
-        return completed;
-    }
-
-    public boolean isCancelled() {
-        return cancelled;
     }
 
     public boolean isRunning() {
@@ -200,20 +188,8 @@ public class ReshuffleTask {
         return processedItems;
     }
 
-    public int getSkippedItems() {
-        return skippedItems;
-    }
-
     public int getProgressPercent() {
         return totalItems > 0 ? (processedItems * 100) / totalItems : 0;
-    }
-
-    public Set<IAEStackType<?>> getAllowedTypes() {
-        return new HashSet<>(allowedTypes);
-    }
-
-    public boolean hasVoidProtection() {
-        return voidProtection;
     }
 
     public ReshuffleReport getReport() {

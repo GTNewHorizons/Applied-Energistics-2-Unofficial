@@ -102,10 +102,6 @@ public enum ExtraBlockTextures {
 
     BlockReshuffleFrontAll("BlockReshuffleFrontAll"),
     BlockReshuffleFrontAllActive("BlockReshuffleFrontAllActive"),
-    BlockReshuffleFrontItems("BlockReshuffleFrontItems"),
-    BlockReshuffleFrontItemsActive("BlockReshuffleFrontItemsActive"),
-    BlockReshuffleFrontFluids("BlockReshuffleFrontFluids"),
-    BlockReshuffleFrontFluidsActive("BlockReshuffleFrontFluidsActive"),
     BlockReshuffleBack("BlockReshuffleBack"),
     BlockReshuffleSide("BlockReshuffleSide"),
     BlockReshuffleTop("BlockReshuffleTop"),

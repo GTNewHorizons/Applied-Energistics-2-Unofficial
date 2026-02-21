@@ -10,17 +10,11 @@
 
 package appeng.client.render.blocks;
 
-import java.util.Set;
-
 import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
-import net.minecraftforge.client.IItemRenderer.ItemRenderType;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.api.storage.data.IAEStackType;
 import appeng.block.misc.BlockStorageReshuffle;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.texture.ExtraBlockTextures;
@@ -30,12 +24,6 @@ public class RendererStorageReshuffle extends BaseBlockRender<BlockStorageReshuf
 
     public RendererStorageReshuffle() {
         super(false, 20);
-    }
-
-    @Override
-    public void renderInventory(final BlockStorageReshuffle block, final ItemStack is, final RenderBlocks renderer,
-            final ItemRenderType type, final Object[] obj) {
-        super.renderInventory(block, is, renderer, type, obj);
     }
 
     @Override
@@ -87,31 +75,7 @@ public class RendererStorageReshuffle extends BaseBlockRender<BlockStorageReshuf
     }
 
     private IIcon getFrontIcon(TileStorageReshuffle tile) {
-        boolean isActive = tile.isReshuffleRunning();
-        Set<IAEStackType<?>> allowedTypes = tile.getAllowedTypes();
-
-        java.util.List<IAEStackType<?>> allTypes = new java.util.ArrayList<>(AEStackTypeRegistry.getAllTypes());
-
-        if (allowedTypes.size() == allTypes.size()) {
-            return isActive ? ExtraBlockTextures.BlockReshuffleFrontAllActive.getIcon()
-                    : ExtraBlockTextures.BlockReshuffleFrontAll.getIcon();
-        }
-
-        if (allowedTypes.size() == 1) {
-            IAEStackType<?> singleType = allowedTypes.iterator().next();
-            String typeId = singleType.getId();
-
-            switch (typeId) {
-                case "item":
-                    return isActive ? ExtraBlockTextures.BlockReshuffleFrontItemsActive.getIcon()
-                            : ExtraBlockTextures.BlockReshuffleFrontItems.getIcon();
-                case "fluid":
-                    return isActive ? ExtraBlockTextures.BlockReshuffleFrontFluidsActive.getIcon()
-                            : ExtraBlockTextures.BlockReshuffleFrontFluids.getIcon();
-            }
-        }
-
-        return isActive ? ExtraBlockTextures.BlockReshuffleFrontAllActive.getIcon()
+        return tile.isReshuffleRunning() ? ExtraBlockTextures.BlockReshuffleFrontAllActive.getIcon()
                 : ExtraBlockTextures.BlockReshuffleFrontAll.getIcon();
     }
 }

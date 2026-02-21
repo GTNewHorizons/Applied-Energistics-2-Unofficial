@@ -1,3 +1,13 @@
+/*
+ * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
+ * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
+ * later version. Applied Energistics 2 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
+ * Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
+ * Applied Energistics 2. If not, see <http://www.gnu.org/licenses/lgpl>.
+ */
+
 package appeng.block.misc;
 
 import java.util.EnumSet;
@@ -14,12 +24,12 @@ import appeng.block.AEBaseTileBlock;
 import appeng.client.render.blocks.RendererStorageReshuffle;
 import appeng.client.texture.FlippableIcon;
 import appeng.core.features.AEFeature;
+import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.tile.misc.TileStorageReshuffle;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
 
 public class BlockStorageReshuffle extends AEBaseTileBlock {
 
@@ -59,16 +69,9 @@ public class BlockStorageReshuffle extends AEBaseTileBlock {
     @SideOnly(Side.CLIENT)
     public void addInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
             final boolean advancedItemTooltips) {
-        lines.add("§7Reorganizes ME storage based on priority");
-        lines.add("§7Extracts and re-inserts items to optimize");
-        lines.add("§7storage cell usage and reduce fragmentation");
-        lines.add("");
-        lines.add("§eFeatures:");
-        lines.add("  §7• §aFilter modes§7: All, Items, Fluids");
-        lines.add("  §7• §aVoid protection§7: Prevents item loss");
-        lines.add("  §7• §cOverwrite protection§7: Preserves data");
-        lines.add("  §7• §6Real-time progress§7 tracking");
-        lines.add("  §7• §bDetailed reports§7 with statistics");
+        lines.add(GuiText.ReshuffleTooltipDesc1.getLocal());
+        lines.add(GuiText.ReshuffleTooltipDesc2.getLocal());
+        lines.add(GuiText.ReshuffleTooltipDesc3.getLocal());
     }
 
     @Override
