@@ -17,8 +17,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-import org.jetbrains.annotations.Nullable;
-
 import appeng.api.AEApi;
 import appeng.api.config.CopyMode;
 import appeng.api.config.Settings;
@@ -50,7 +48,6 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
     private boolean locked = false;
     private long cellRestrictAmount;
     private byte cellRestrictTypes;
-    @Nullable
     private IAEStackType<?> type;
 
     public TileCellWorkbench() {
@@ -294,7 +291,6 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
     }
 
     @Override
-    @Nullable
     public IAEStackType<?> getStackType() {
         return this.type;
     }

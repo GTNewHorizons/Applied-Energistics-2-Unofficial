@@ -21,8 +21,6 @@ import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
-import org.jetbrains.annotations.Nullable;
-
 import appeng.api.AEApi;
 import appeng.api.config.CopyMode;
 import appeng.api.config.FuzzyMode;
@@ -252,7 +250,6 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         }
     }
 
-    @Nullable
     public IAEStackType<?> getStackType() {
         return this.workBench.getStackType();
     }
