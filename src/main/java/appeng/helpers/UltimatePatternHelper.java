@@ -40,68 +40,74 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
     private final IAEStack<?>[] aeOutputs;
 
     public UltimatePatternHelper(final ItemStack is) {
-        if (is.hasTagCompound()) {
-            final NBTTagCompound encodedValue = is.getTagCompound();
+        final NBTTagCompound nbt = is.getTagCompound();
 
-            this.canSubstitute = encodedValue.getBoolean("substitute");
-            this.canBeSubstitute = encodedValue.getBoolean("beSubstitute");
-            this.patternItem = is;
-            if (encodedValue.hasKey("author")) {
-                final ItemStack forComparison = this.patternItem.copy();
-                forComparison.stackTagCompound.removeTag("author");
-                this.pattern = AEItemStack.create(forComparison);
-            } else {
-                this.pattern = AEItemStack.create(is);
-            }
+        if (nbt == null || nbt.getBoolean("InvalidPattern")) {
+            throw new IllegalArgumentException("No pattern here!");
+        }
 
-            final NBTTagList inTag = encodedValue.getTagList("in", 10);
-            final NBTTagList outTag = encodedValue.getTagList("out", 10);
+        this.canSubstitute = nbt.getBoolean("substitute");
+        this.canBeSubstitute = nbt.getBoolean("beSubstitute");
+        this.patternItem = is;
+        if (nbt.hasKey("author")) {
+            final ItemStack forComparison = this.patternItem.copy();
+            forComparison.stackTagCompound.removeTag("author");
+            this.pattern = AEItemStack.create(forComparison);
+        } else {
+            this.pattern = AEItemStack.create(is);
+        }
 
-            final List<IAEItemStack> inLegacy = new ArrayList<>();
-            final List<IAEItemStack> outLegacy = new ArrayList<>();
+        final NBTTagList inTag = nbt.getTagList("in", 10);
+        final NBTTagList outTag = nbt.getTagList("out", 10);
 
-            final List<IAEStack<?>> in = new ArrayList<>();
-            final List<IAEStack<?>> out = new ArrayList<>();
+        final List<IAEItemStack> inLegacy = new ArrayList<>();
+        final List<IAEItemStack> outLegacy = new ArrayList<>();
 
-            for (int x = 0; x < inTag.tagCount(); x++) {
-                final NBTTagCompound tag = inTag.getCompoundTagAt(x);
-                final IAEStack<?> aeStack = readStackNBT(tag, true);
+        final List<IAEStack<?>> in = new ArrayList<>();
+        final List<IAEStack<?>> out = new ArrayList<>();
 
-                if (aeStack == null && !tag.hasNoTags()) {
-                    throw new IllegalStateException("No pattern here!");
-                }
+        for (int x = 0; x < inTag.tagCount(); x++) {
+            final NBTTagCompound tag = inTag.getCompoundTagAt(x);
+            final IAEStack<?> aeStack = readStackNBT(tag, true);
 
-                inLegacy.add(stackConvert(aeStack));
-                in.add(aeStack);
-            }
-
-            for (int x = 0; x < outTag.tagCount(); x++) {
-                final NBTTagCompound tag = outTag.getCompoundTagAt(x);
-                final IAEStack<?> aeStack = readStackNBT(tag, true);
-
-                if (aeStack == null && !tag.hasNoTags()) {
-                    throw new IllegalStateException("No pattern here!");
-                }
-
-                outLegacy.add(stackConvert(aeStack));
-                out.add(aeStack);
-            }
-
-            inputs = inLegacy.toArray(new IAEItemStack[0]);
-            outputs = outLegacy.toArray(new IAEItemStack[0]);
-
-            condensedInputs = convertToCondensedList(inputs);
-            condensedOutputs = convertToCondensedList(outputs);
-
-            aeInputs = in.toArray(new IAEStack<?>[0]);
-            aeOutputs = out.toArray(new IAEStack<?>[0]);
-
-            condensedAEInputs = convertToCondensedAEList(aeInputs);
-            condensedAEOutputs = convertToCondensedAEList(aeOutputs);
-
-            if (condensedAEInputs.length == 0 || condensedAEOutputs.length == 0)
+            if (aeStack == null && !tag.hasNoTags()) {
+                nbt.setBoolean("InvalidPattern", true);
                 throw new IllegalStateException("No pattern here!");
-        } else throw new IllegalArgumentException("No pattern here!");
+            }
+
+            inLegacy.add(stackConvert(aeStack));
+            in.add(aeStack);
+        }
+
+        for (int x = 0; x < outTag.tagCount(); x++) {
+            final NBTTagCompound tag = outTag.getCompoundTagAt(x);
+            final IAEStack<?> aeStack = readStackNBT(tag, true);
+
+            if (aeStack == null && !tag.hasNoTags()) {
+                nbt.setBoolean("InvalidPattern", true);
+                throw new IllegalStateException("No pattern here!");
+            }
+
+            outLegacy.add(stackConvert(aeStack));
+            out.add(aeStack);
+        }
+
+        inputs = inLegacy.toArray(new IAEItemStack[0]);
+        outputs = outLegacy.toArray(new IAEItemStack[0]);
+
+        condensedInputs = convertToCondensedList(inputs);
+        condensedOutputs = convertToCondensedList(outputs);
+
+        aeInputs = in.toArray(new IAEStack<?>[0]);
+        aeOutputs = out.toArray(new IAEStack<?>[0]);
+
+        condensedAEInputs = convertToCondensedAEList(aeInputs);
+        condensedAEOutputs = convertToCondensedAEList(aeOutputs);
+
+        if (condensedAEInputs.length == 0 || condensedAEOutputs.length == 0) {
+            nbt.setBoolean("InvalidPattern", true);
+            throw new IllegalStateException("No pattern here!");
+        }
     }
 
     @Override
