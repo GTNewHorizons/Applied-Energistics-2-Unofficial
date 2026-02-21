@@ -399,7 +399,16 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
 
         @Override
         public int compare(final Entry<Integer, PartTypeWithVariant> o1, final Entry<Integer, PartTypeWithVariant> o2) {
-            return o1.getValue().part.name().compareTo(o2.getValue().part.name());
+            final int base1 = o1.getValue().part.getBaseDamage();
+            final int base2 = o2.getValue().part.getBaseDamage();
+            final int cmp = Integer.compare(base1, base2);
+
+            if (cmp != 0) {
+                return cmp;
+            }
+
+            return o1.getKey() == base1 + 16 ? -1
+                    : o2.getKey() == base2 + 16 ? 1 : Integer.compare(o1.getKey(), o2.getKey());
         }
     }
 
