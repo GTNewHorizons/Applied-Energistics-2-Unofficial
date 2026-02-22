@@ -85,8 +85,8 @@ public class TileInterface extends AENetworkInvTile
     private static final int POWERED_FLAG = 1;
     private static final int CHANNEL_FLAG = 2;
     private static final int BOOTING_FLAG = 4;
+    private static final int STUCK_FLAG = 8;
     private int clientFlags = 0; // sent as byte.
-    public boolean somethingStuck = false;
     private long nextStuckHighlightAt = 0L;
 
     @MENetworkEventSubscribe
@@ -307,26 +307,24 @@ public class TileInterface extends AENetworkInvTile
 
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileInterface(final ByteBuf data) {
-        int newState = data.readByte();
-        boolean somethingChanged = false;
+        final boolean oldStuck = isStuck();
+        final int newState = data.readByte();
+        boolean changed = false;
         if (newState != clientFlags) {
             clientFlags = newState;
             this.markForUpdate();
-            somethingChanged = true;
+            changed = true;
         }
 
-        final boolean oldSomethingStuck = this.somethingStuck;
-        this.somethingStuck = data.readBoolean();
-        if (oldSomethingStuck != somethingStuck) {
-            if (this.somethingStuck) {
+        if (oldStuck != isStuck()) {
+            if (isStuck()) {
                 this.highlightStuckInterface();
             } else {
                 this.nextStuckHighlightAt = 0L;
             }
-            somethingChanged = true;
         }
 
-        return somethingChanged;
+        return changed;
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
@@ -341,21 +339,23 @@ public class TileInterface extends AENetworkInvTile
         } catch (final GridAccessException e) {
             // meh
         }
-
+        if (duality.somethingStuck) clientFlags |= STUCK_FLAG;
         data.writeByte(clientFlags);
-        data.writeBoolean(duality.somethingStuck);
     }
 
+    @SideOnly(Side.CLIENT)
     @TileEvent(TileEventType.TICK)
     public void tickStuckHighlight_TileInterface() {
-        final long now = System.currentTimeMillis();
-        if (now >= this.nextStuckHighlightAt) {
-            this.highlightStuckInterface();
+        if (this.isStuck()) {
+            final long now = System.currentTimeMillis();
+            if (now >= this.nextStuckHighlightAt) {
+                this.highlightStuckInterface();
+            }
         }
     }
 
     private void highlightStuckInterface() {
-        if (Platform.isClient() && AEConfig.instance.highlightWhenSomethingStuckInInterface && this.somethingStuck) {
+        if (AEConfig.instance.highlightWhenSomethingStuckInInterface && Platform.isClient()) {
             this.doStuckHighlightOnClient();
         }
     }
@@ -383,6 +383,10 @@ public class TileInterface extends AENetworkInvTile
         return (clientFlags & BOOTING_FLAG) == BOOTING_FLAG;
     }
 
+    private boolean isStuck() {
+        return (clientFlags & STUCK_FLAG) == STUCK_FLAG;
+    }
+
     @Override
     public ItemStack getSelfRep() {
         return this.getItemFromTile(this);
@@ -406,7 +410,6 @@ public class TileInterface extends AENetworkInvTile
         if (capability == ItemSource.class || capability == ItemSink.class || capability == ItemIO.class) {
             return capability.cast(getItemIO());
         }
-
         return super.getCapability(capability, side);
     }
 }
