@@ -70,6 +70,8 @@ import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.inv.IInventoryDestination;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
 public class TileInterface extends AENetworkInvTile
@@ -317,7 +319,7 @@ public class TileInterface extends AENetworkInvTile
         this.somethingStuck = data.readBoolean();
         if (oldSomethingStuck != somethingStuck) {
             if (this.somethingStuck) {
-                this.highlightStuckInterfaceInWorld();
+                this.highlightStuckInterface();
             } else {
                 this.nextStuckHighlightAt = 0L;
             }
@@ -346,26 +348,22 @@ public class TileInterface extends AENetworkInvTile
 
     @TileEvent(TileEventType.TICK)
     public void tickStuckHighlight_TileInterface() {
-        if (!Platform.isClient() || !AEConfig.instance.highlightWhenSomethingStuckInInterface || !this.somethingStuck) {
-            return;
-        }
-
         final long now = System.currentTimeMillis();
         if (now >= this.nextStuckHighlightAt) {
-            this.highlightStuckInterfaceInWorld();
+            this.highlightStuckInterface();
         }
     }
 
-    private void highlightStuckInterfaceInWorld() {
-        if (!Platform.isClient() || !AEConfig.instance.highlightWhenSomethingStuckInInterface || !this.somethingStuck) {
-            return;
+    private void highlightStuckInterface() {
+        if (Platform.isClient() && AEConfig.instance.highlightWhenSomethingStuckInInterface && this.somethingStuck) {
+            this.doStuckHighlightOnClient();
         }
+    }
 
+    @SideOnly(Side.CLIENT)
+    private void doStuckHighlightOnClient() {
         final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-        if (player == null) {
-            return;
-        }
-
+        if (player == null) return;
         BlockPosHighlighter.highlightBlocks(player, Collections.singletonList(new DimensionalCoord(this)), null, null);
         this.nextStuckHighlightAt = System.currentTimeMillis() + STUCK_HIGHLIGHT_REFRESH_MS;
     }
