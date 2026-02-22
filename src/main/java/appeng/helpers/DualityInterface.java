@@ -22,10 +22,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.OptionalInt;
 
 import net.minecraft.block.Block;
@@ -41,6 +43,9 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import com.glodblock.github.common.parts.PartFluidInterface;
 import com.glodblock.github.common.parts.PartFluidP2PInterface;
@@ -83,9 +88,11 @@ import appeng.api.parts.IPart;
 import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IStorageMonitorable;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
@@ -146,12 +153,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private AppEngInternalInventory storage = new AppEngInternalInventory(this, NUMBER_OF_STORAGE_SLOTS);
     private final AppEngInternalInventory patterns = new AppEngInternalInventory(this, NUMBER_OF_PATTERN_SLOTS * 4);
     private WrapperInvSlot slotInv = new WrapperInvSlot(this.storage);
-    private final MEMonitorPassThrough<IAEItemStack> items = new MEMonitorPassThrough<>(
-            new NullInventory<>(),
-            ITEM_STACK_TYPE);
-    private final MEMonitorPassThrough<IAEFluidStack> fluids = new MEMonitorPassThrough<>(
-            new NullInventory<>(),
-            FLUID_STACK_TYPE);
+    private final Map<IAEStackType<?>, MEMonitorPassThrough<?>> monitorMap;
     private final UpgradeInventory upgrades;
     private ItemStack stored;
     private IAEItemStack fuzzyItemStack;
@@ -191,8 +193,13 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         final MachineSource actionSource = new MachineSource(this.iHost);
         this.mySource = actionSource;
-        this.fluids.setChangeSource(actionSource);
-        this.items.setChangeSource(actionSource);
+
+        this.monitorMap = new IdentityHashMap<>();
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            MEMonitorPassThrough<?> monitor = new MEMonitorPassThrough(new NullInventory<>(), type);
+            monitor.setChangeSource(actionSource);
+            this.monitorMap.put(type, monitor);
+        }
 
         this.interfaceRequestSource = new InterfaceRequestSource(this.iHost);
 
@@ -550,10 +557,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             return true;
         }
         return out.getStackSize() != stack.stackSize;
-        // ItemStack after = adaptor.simulateAdd( stack );
-        // if ( after == null )
-        // return true;
-        // return after.stackSize != stack.stackSize;
     }
 
     public AppEngInternalAEInventory getConfig() {
@@ -591,13 +594,18 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.slotInv;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void gridChanged() {
         try {
-            this.items.setInternal(this.gridProxy.getStorage().getItemInventory());
-            this.fluids.setInternal(this.gridProxy.getStorage().getFluidInventory());
+            for (var entry : this.monitorMap.entrySet()) {
+                MEMonitorPassThrough<?> monitor = entry.getValue();
+                IMEMonitor internal = this.gridProxy.getStorage().getMEMonitor(entry.getKey());
+                monitor.setInternal(internal);
+            }
         } catch (final GridAccessException gae) {
-            this.items.setInternal(new NullInventory<>());
-            this.fluids.setInternal(new NullInventory<>());
+            for (var monitor : this.monitorMap.values()) {
+                monitor.setInternal(new NullInventory<>());
+            }
         }
 
         this.addInterception();
@@ -930,12 +938,39 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public IMEMonitor<IAEItemStack> getItemInventory() {
         if (this.hasConfig()) {
             return new InterfaceInventory();
         }
 
-        return this.items;
+        return (IMEMonitor<IAEItemStack>) this.monitorMap.get(ITEM_STACK_TYPE);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public IMEMonitor<IAEFluidStack> getFluidInventory() {
+        if (this.hasConfig()) {
+            return null;
+        }
+
+        return (IMEMonitor<IAEFluidStack>) this.monitorMap.get(FLUID_STACK_TYPE);
+    }
+
+    @Override
+    @Nullable
+    public IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        if (type == ITEM_STACK_TYPE) {
+            return this.getItemInventory();
+        } else if (type == FLUID_STACK_TYPE) {
+            return this.getFluidInventory();
+        }
+
+        if (this.hasConfig()) {
+            return null;
+        }
+
+        return this.monitorMap.get(type);
     }
 
     public boolean hasConfig() {
@@ -975,15 +1010,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         }
 
         this.markDirty();
-    }
-
-    @Override
-    public IMEMonitor<IAEFluidStack> getFluidInventory() {
-        if (this.hasConfig()) {
-            return null;
-        }
-
-        return this.fluids;
     }
 
     private void cancelCrafting() {
