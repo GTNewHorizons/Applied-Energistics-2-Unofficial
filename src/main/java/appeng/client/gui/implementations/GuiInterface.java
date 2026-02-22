@@ -10,6 +10,8 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.container.implementations.ContainerInterface.SLOT_Y_OFFSET;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
@@ -39,12 +41,9 @@ import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.IInterfaceHost;
 
-import static appeng.container.implementations.ContainerInterface.SLOT_Y_OFFSET;
-
 public class GuiInterface extends GuiUpgradeable {
 
     private GuiTabButton priority;
-    private GuiTabButton priority2;
     private GuiImgButton BlockMode;
     private GuiImgButton SmartBlockMode;
     private GuiImgButton fuzzyMode;
@@ -69,17 +68,10 @@ public class GuiInterface extends GuiUpgradeable {
                 2 + 4 * 16,
                 GuiText.Priority.getLocal(),
                 itemRender);
-        this.priority.setHideEdge(13);
-        this.buttonList.add(this.priority);
 
-        this.priority2 = new GuiTabButton(
-                this.guiLeft + 154 - 26,
-                this.guiTop - 4,
-                2 + 4 * 16,
-                GuiText.Priority.getLocal(),
-                itemRender);
-        this.priority2.setHideEdge(13);
-        this.buttonList.add(this.priority2);
+        this.priority.setHideEdge(1);
+
+        this.buttonList.add(this.priority);
 
         int offset = 8;
 

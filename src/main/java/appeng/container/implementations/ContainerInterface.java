@@ -108,11 +108,13 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         }
 
         for (int x = 0; x < DualityInterface.NUMBER_OF_CONFIG_SLOTS; x++) {
-            this.addSlotToContainer(new OptionalSlotFake(this.myDuality.getConfig(), this, x, 8 + 18 * x, 15 + SLOT_Y_OFFSET, 0));
+            this.addSlotToContainer(
+                    new OptionalSlotFake(this.myDuality.getConfig(), this, x, 8 + 18 * x, 15 + SLOT_Y_OFFSET, 0));
         }
 
         for (int x = 0; x < DualityInterface.NUMBER_OF_STORAGE_SLOTS; x++) {
-            this.addSlotToContainer(new SlotNormal(this.myDuality.getStorage(), x, 8 + 18 * x, 15 + 18 + SLOT_Y_OFFSET));
+            this.addSlotToContainer(
+                    new SlotNormal(this.myDuality.getStorage(), x, 8 + 18 * x, 15 + 18 + SLOT_Y_OFFSET));
         }
     }
 
