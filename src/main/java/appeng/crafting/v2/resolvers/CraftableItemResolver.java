@@ -38,8 +38,10 @@ import appeng.crafting.v2.CraftingRequest.SubstitutionMode;
 import appeng.crafting.v2.CraftingTreeSerializer;
 import appeng.crafting.v2.ITreeSerializable;
 import appeng.crafting.v2.resolvers.CraftingTask.State;
+import appeng.me.cache.CraftingGridCache;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
+import appeng.util.TunnelPatternExpander;
 import appeng.util.item.AEItemStack;
 import io.netty.buffer.ByteBuf;
 
@@ -472,7 +474,21 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                         }
                         state = State.NEEDS_MORE_WORK;
                     }
-                    for (IAEStack<?> input : patternInputs) {
+                    final List<IAEStack<?>> expandedInputs;
+                    if (pattern.isCraftable()) {
+                        expandedInputs = Arrays.asList(patternInputs);
+                    } else {
+                        final CraftingGridCache cache = context.craftingGrid instanceof CraftingGridCache
+                                ? (CraftingGridCache) context.craftingGrid
+                                : null;
+                        expandedInputs = TunnelPatternExpander
+                                .expandInputs(patternInputs, cache, request.patternParents);
+                        if (expandedInputs == null) {
+                            state = State.FAILURE;
+                            return new StepOutput(Collections.emptyList());
+                        }
+                    }
+                    for (IAEStack<?> input : expandedInputs) {
                         final long amount = Math.multiplyExact(input.getStackSize(), toCraft);
                         CraftingRequest req = new CraftingRequest(
                                 request,
