@@ -54,20 +54,20 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
     private int priority = 0;
 
     public PatternHelper(final ItemStack is, final World w) {
-        final NBTTagCompound encodedValue = is.getTagCompound();
+        final NBTTagCompound nbt = is.getTagCompound();
 
-        if (encodedValue == null) {
+        if (nbt == null || nbt.getBoolean("InvalidPattern")) {
             throw new IllegalArgumentException("No pattern here!");
         }
 
-        final NBTTagList inTag = encodedValue.getTagList("in", 10);
-        final NBTTagList outTag = encodedValue.getTagList("out", 10);
-        this.isCrafting = encodedValue.getBoolean("crafting");
+        final NBTTagList inTag = nbt.getTagList("in", 10);
+        final NBTTagList outTag = nbt.getTagList("out", 10);
+        this.isCrafting = nbt.getBoolean("crafting");
 
-        this.canSubstitute = encodedValue.getBoolean("substitute");
-        this.canBeSubstitute = encodedValue.getBoolean("beSubstitute");
+        this.canSubstitute = nbt.getBoolean("substitute");
+        this.canBeSubstitute = nbt.getBoolean("beSubstitute");
         this.patternItem = is;
-        if (encodedValue.hasKey("author")) {
+        if (nbt.hasKey("author")) {
             final ItemStack forComparison = this.patternItem.copy();
             forComparison.stackTagCompound.removeTag("author");
             this.pattern = AEItemStack.create(forComparison);
@@ -83,6 +83,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
             final ItemStack gs = Platform.loadItemStackFromNBT(tag);
 
             if (gs == null && !tag.hasNoTags()) {
+                nbt.setBoolean("InvalidPattern", true);
                 throw new IllegalStateException("No pattern here!");
             }
 
@@ -111,6 +112,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
                 this.correctOutput = this.standardRecipe.getCraftingResult(this.crafting);
                 out.add(AEApi.instance().storage().createItemStack(this.correctOutput));
             } else {
+                nbt.setBoolean("InvalidPattern", true);
                 throw new IllegalStateException("No pattern here!");
             }
         } else {
@@ -125,6 +127,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
                     if (gs.stackSize == 0) gs.stackSize = (int) tag.getLong("Cnt");
                     out.add(AEApi.instance().storage().createItemStack(gs));
                 } else if (!tag.hasNoTags()) {
+                    nbt.setBoolean("InvalidPattern", true);
                     throw new IllegalStateException("No pattern here!");
                 }
             }
@@ -137,6 +140,7 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
         this.condensedOutputs = convertToCondensedList(this.outputs);
 
         if (condensedInputs.length == 0 || condensedOutputs.length == 0) {
+            nbt.setBoolean("InvalidPattern", true);
             throw new IllegalStateException("No pattern here!");
         }
     }

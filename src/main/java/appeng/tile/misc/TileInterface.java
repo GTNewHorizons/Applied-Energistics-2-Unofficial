@@ -70,6 +70,8 @@ import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.inv.IInventoryDestination;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
 public class TileInterface extends AENetworkInvTile
@@ -83,8 +85,8 @@ public class TileInterface extends AENetworkInvTile
     private static final int POWERED_FLAG = 1;
     private static final int CHANNEL_FLAG = 2;
     private static final int BOOTING_FLAG = 4;
+    private static final int STUCK_FLAG = 8;
     private int clientFlags = 0; // sent as byte.
-    public boolean somethingStuck = false;
     private long nextStuckHighlightAt = 0L;
 
     @MENetworkEventSubscribe
@@ -305,26 +307,24 @@ public class TileInterface extends AENetworkInvTile
 
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileInterface(final ByteBuf data) {
-        int newState = data.readByte();
-        boolean somethingChanged = false;
+        final boolean oldStuck = isStuck();
+        final int newState = data.readByte();
+        boolean changed = false;
         if (newState != clientFlags) {
             clientFlags = newState;
             this.markForUpdate();
-            somethingChanged = true;
+            changed = true;
         }
 
-        final boolean oldSomethingStuck = this.somethingStuck;
-        this.somethingStuck = data.readBoolean();
-        if (oldSomethingStuck != somethingStuck) {
-            if (this.somethingStuck) {
-                this.highlightStuckInterfaceInWorld();
+        if (oldStuck != isStuck()) {
+            if (isStuck()) {
+                this.highlightStuckInterface();
             } else {
                 this.nextStuckHighlightAt = 0L;
             }
-            somethingChanged = true;
         }
 
-        return somethingChanged;
+        return changed;
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
@@ -339,33 +339,31 @@ public class TileInterface extends AENetworkInvTile
         } catch (final GridAccessException e) {
             // meh
         }
-
+        if (duality.somethingStuck) clientFlags |= STUCK_FLAG;
         data.writeByte(clientFlags);
-        data.writeBoolean(duality.somethingStuck);
     }
 
+    @SideOnly(Side.CLIENT)
     @TileEvent(TileEventType.TICK)
     public void tickStuckHighlight_TileInterface() {
-        if (!Platform.isClient() || !AEConfig.instance.highlightWhenSomethingStuckInInterface || !this.somethingStuck) {
-            return;
-        }
-
-        final long now = System.currentTimeMillis();
-        if (now >= this.nextStuckHighlightAt) {
-            this.highlightStuckInterfaceInWorld();
+        if (this.isStuck()) {
+            final long now = System.currentTimeMillis();
+            if (now >= this.nextStuckHighlightAt) {
+                this.highlightStuckInterface();
+            }
         }
     }
 
-    private void highlightStuckInterfaceInWorld() {
-        if (!Platform.isClient() || !AEConfig.instance.highlightWhenSomethingStuckInInterface || !this.somethingStuck) {
-            return;
+    private void highlightStuckInterface() {
+        if (AEConfig.instance.highlightWhenSomethingStuckInInterface && Platform.isClient()) {
+            this.doStuckHighlightOnClient();
         }
+    }
 
+    @SideOnly(Side.CLIENT)
+    private void doStuckHighlightOnClient() {
         final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-        if (player == null) {
-            return;
-        }
-
+        if (player == null) return;
         BlockPosHighlighter.highlightBlocks(player, Collections.singletonList(new DimensionalCoord(this)), null, null);
         this.nextStuckHighlightAt = System.currentTimeMillis() + STUCK_HIGHLIGHT_REFRESH_MS;
     }
@@ -383,6 +381,10 @@ public class TileInterface extends AENetworkInvTile
     @Override
     public boolean isBooting() {
         return (clientFlags & BOOTING_FLAG) == BOOTING_FLAG;
+    }
+
+    private boolean isStuck() {
+        return (clientFlags & STUCK_FLAG) == STUCK_FLAG;
     }
 
     @Override
@@ -408,7 +410,6 @@ public class TileInterface extends AENetworkInvTile
         if (capability == ItemSource.class || capability == ItemSink.class || capability == ItemIO.class) {
             return capability.cast(getItemIO());
         }
-
         return super.getCapability(capability, side);
     }
 }
