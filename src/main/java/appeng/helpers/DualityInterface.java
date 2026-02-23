@@ -944,23 +944,13 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     @Override
     public IInventory getInventoryByName(final String name) {
-        if (name.equals("storage")) {
-            return this.storage;
-        }
-
-        if (name.equals("patterns")) {
-            return this.patterns;
-        }
-
-        if (name.equals("config")) {
-            return this.config;
-        }
-
-        if (name.equals("upgrades")) {
-            return this.upgrades;
-        }
-
-        return null;
+        return switch (name) {
+            case "storage" -> this.storage;
+            case "patterns" -> this.patterns;
+            case "config" -> this.config;
+            case "upgrades" -> this.upgrades;
+            default -> null;
+        };
     }
 
     public AppEngInternalInventory getStorage() {
@@ -1089,9 +1079,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                         host.getInterfaceDuality().receivePatternPushedEvent();
                     }
                 }
-            } catch (final GridAccessException e) {
-                continue;
-            }
+            } catch (final GridAccessException ignored) {}
         }
     }
 
@@ -1447,7 +1435,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         if (this.waitingToSend != null) {
             for (final IAEStack<?> is : this.waitingToSend) {
                 if (is != null) {
-                    drops.add(stackConvertPacket(is).getItemStack());
+                    final IAEItemStack iaeStack = stackConvertPacket(is);
+                    if (iaeStack != null) {
+                        drops.add(iaeStack.getItemStack());
+                    }
                 }
             }
         }

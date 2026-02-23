@@ -43,78 +43,101 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
     private final UUID inputOnlyUuid;
 
     public UltimatePatternHelper(final ItemStack is) {
-        if (is.hasTagCompound()) {
-            final NBTTagCompound encodedValue = is.getTagCompound();
+        final NBTTagCompound encodedValue = is.getTagCompound();
 
-            this.canSubstitute = encodedValue.getBoolean("substitute");
-            this.canBeSubstitute = encodedValue.getBoolean("beSubstitute");
-            this.patternItem = is;
-            this.inputOnly = encodedValue.getBoolean("tunnel");
-            this.inputOnlyUuid = readInputOnlyUuid(encodedValue, this.inputOnly);
-            if (encodedValue.hasKey("author")) {
-                final ItemStack forComparison = this.patternItem.copy();
-                forComparison.stackTagCompound.removeTag("author");
-                this.pattern = AEItemStack.create(forComparison);
-            } else {
-                this.pattern = AEItemStack.create(is);
-            }
+        if (encodedValue == null || encodedValue.getBoolean("InvalidPattern")) {
+            throw new IllegalArgumentException("No pattern here!");
+        }
 
-            final NBTTagList inTag = encodedValue.getTagList("in", 10);
-            final NBTTagList outTag = encodedValue.getTagList("out", 10);
+        this.canSubstitute = encodedValue.getBoolean("substitute");
+        this.canBeSubstitute = encodedValue.getBoolean("beSubstitute");
+        this.patternItem = is;
+        this.inputOnly = encodedValue.getBoolean("tunnel");
+        this.inputOnlyUuid = readInputOnlyUuid(encodedValue, this.inputOnly);
 
-            final List<IAEItemStack> inLegacy = new ArrayList<>();
-            final List<IAEItemStack> outLegacy = new ArrayList<>();
+        if (encodedValue.hasKey("author")) {
+            final ItemStack forComparison = this.patternItem.copy();
+            forComparison.stackTagCompound.removeTag("author");
+            this.pattern = AEItemStack.create(forComparison);
+        } else {
+            this.pattern = AEItemStack.create(is);
+        }
 
-            final List<IAEStack<?>> in = new ArrayList<>();
-            final List<IAEStack<?>> out = new ArrayList<>();
+        final NBTTagList inTag = encodedValue.getTagList("in", 10);
+        final NBTTagList outTag = encodedValue.getTagList("out", 10);
 
-            for (int x = 0; x < inTag.tagCount(); x++) {
-                final NBTTagCompound tag = inTag.getCompoundTagAt(x);
-                final IAEStack<?> aeStack = readStackNBT(tag, true);
+        this.canSubstitute = nbt.getBoolean("substitute");
+        this.canBeSubstitute = nbt.getBoolean("beSubstitute");
+        this.patternItem = is;
+        if (nbt.hasKey("author")) {
+            final ItemStack forComparison = this.patternItem.copy();
+            forComparison.stackTagCompound.removeTag("author");
+            this.pattern = AEItemStack.create(forComparison);
+        } else {
+            this.pattern = AEItemStack.create(is);
+        }
 
-                if (aeStack == null && !tag.hasNoTags()) {
-                    throw new IllegalStateException("No pattern here!");
-                }
+        final NBTTagList inTag = nbt.getTagList("in", 10);
+        final NBTTagList outTag = nbt.getTagList("out", 10);
 
-                inLegacy.add(stackConvert(aeStack));
-                in.add(aeStack);
-            }
+        final List<IAEItemStack> inLegacy = new ArrayList<>();
+        final List<IAEItemStack> outLegacy = new ArrayList<>();
 
-            for (int x = 0; x < outTag.tagCount(); x++) {
-                final NBTTagCompound tag = outTag.getCompoundTagAt(x);
-                final IAEStack<?> aeStack = readStackNBT(tag, true);
+        final List<IAEStack<?>> in = new ArrayList<>();
+        final List<IAEStack<?>> out = new ArrayList<>();
 
-                if (aeStack == null && !tag.hasNoTags()) {
-                    throw new IllegalStateException("No pattern here!");
-                }
+        for (int x = 0; x < inTag.tagCount(); x++) {
+            final NBTTagCompound tag = inTag.getCompoundTagAt(x);
+            final IAEStack<?> aeStack = readStackNBT(tag, true);
 
-                outLegacy.add(stackConvert(aeStack));
-                out.add(aeStack);
-            }
-
-            inputs = inLegacy.toArray(new IAEItemStack[0]);
-            outputs = outLegacy.toArray(new IAEItemStack[0]);
-
-            condensedInputs = convertToCondensedList(inputs);
-            condensedOutputs = convertToCondensedList(outputs);
-
-            aeInputs = in.toArray(new IAEStack<?>[0]);
-            aeOutputs = out.toArray(new IAEStack<?>[0]);
-
-            condensedAEInputs = convertToCondensedAEList(aeInputs);
-            condensedAEOutputs = convertToCondensedAEList(aeOutputs);
-
-            if (condensedAEInputs.length == 0) {
+            if (aeStack == null && !tag.hasNoTags()) {
+                nbt.setBoolean("InvalidPattern", true);
                 throw new IllegalStateException("No pattern here!");
             }
-            if (inputOnly) {
-                if (condensedAEOutputs.length != 0) {
-                    throw new IllegalStateException("Input-only pattern has outputs");
-                }
-            } else if (condensedAEOutputs.length == 0) {
+
+            inLegacy.add(stackConvert(aeStack));
+            in.add(aeStack);
+        }
+
+        for (int x = 0; x < outTag.tagCount(); x++) {
+            final NBTTagCompound tag = outTag.getCompoundTagAt(x);
+            final IAEStack<?> aeStack = readStackNBT(tag, true);
+
+            if (aeStack == null && !tag.hasNoTags()) {
+                nbt.setBoolean("InvalidPattern", true);
                 throw new IllegalStateException("No pattern here!");
             }
-        } else throw new IllegalArgumentException("No pattern here!");
+
+            outLegacy.add(stackConvert(aeStack));
+            out.add(aeStack);
+        }
+
+        inputs = inLegacy.toArray(new IAEItemStack[0]);
+        outputs = outLegacy.toArray(new IAEItemStack[0]);
+
+        condensedInputs = convertToCondensedList(inputs);
+        condensedOutputs = convertToCondensedList(outputs);
+
+        aeInputs = in.toArray(new IAEStack<?>[0]);
+        aeOutputs = out.toArray(new IAEStack<?>[0]);
+      
+        condensedAEInputs = convertToCondensedAEList(aeInputs);
+        condensedAEOutputs = convertToCondensedAEList(aeOutputs);
+
+        if (condensedAEInputs.length == 0) {
+            encodedValue.setBoolean("InvalidPattern", true);
+            throw new IllegalStateException("No pattern here!");
+        }
+
+        if (inputOnly) {
+            if (condensedAEOutputs.length != 0) {
+                encodedValue.setBoolean("InvalidPattern", true);
+                throw new IllegalStateException("Input-only pattern has outputs");
+            }
+        } else if (condensedAEOutputs.length == 0) {
+            encodedValue.setBoolean("InvalidPattern", true);
+            throw new IllegalStateException("No pattern here!");
+        }
     }
 
     @Override

@@ -194,14 +194,33 @@ public class GuiInterface extends GuiUpgradeable {
     }
 
     @Override
+    public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {
+        super.drawBG(offsetX, offsetY, mouseX, mouseY);
+
+        final int capacity = (((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled());
+
+        // config slots
+        if (capacity == -1) {
+            this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 89, 162, 18);
+        } else {
+            this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 71, 162, 18);
+        }
+
+        // pattern slots
+        for (int i = 4; i > 0; i--) {
+            if (i > capacity + 1) {
+                // fadeout slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 125 - (18 * i), 7, 89, 162, 18);
+            } else {
+                // normal slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 125 - (18 * i), 7, 107, 162, 18);
+            }
+        }
+    }
+
+    @Override
     protected String getBackground() {
-        return switch (((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled()) {
-            case -1 -> "guis/interfacenonenoconfig.png";
-            case 1 -> "guis/interface2.png";
-            case 2 -> "guis/interface3.png";
-            case 3 -> "guis/interface4.png";
-            default -> "guis/interface.png";
-        };
+        return "guis/interface.png";
     }
 
     @Override
