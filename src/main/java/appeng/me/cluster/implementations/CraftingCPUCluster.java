@@ -629,7 +629,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (details.isCraftable() || cache == null) {
             return Arrays.asList(details.getCondensedAEInputs());
         }
-        final List<IAEStack<?>> expanded = TunnelPatternExpander.expandInputs(details.getCondensedAEInputs(), cache, null);
+        final List<IAEStack<?>> expanded = TunnelPatternExpander
+                .expandInputs(details.getCondensedAEInputs(), cache, null);
         if (expanded == null) {
             return null;
         }
