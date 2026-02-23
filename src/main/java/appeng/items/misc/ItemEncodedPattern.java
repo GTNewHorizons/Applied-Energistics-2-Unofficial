@@ -261,7 +261,9 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
         if (outputs.length == 0) {
             return null;
         }
-        return outputs[0];
+        final IAEStack<?> output = outputs[0];
+        OUTPUT_STACK_CACHE.put(item, output);
+        return output;
     }
 
     private boolean addInformation(final EntityPlayer player, final IAEStack<?>[] items, final List<String> lines,
