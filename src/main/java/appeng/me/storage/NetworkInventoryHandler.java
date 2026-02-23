@@ -419,13 +419,13 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         }
         if (readsFromOtherNetwork) {
             for (int i = 0; i < size; i++) {
-                IMEInventoryHandler<T> inventoryHandler = priorityInventory.get(i);
-                IMENetworkInventory<T> externalNetworkInventory = inventoryHandler.getExternalNetworkInventory();
-                if (externalNetworkInventory == null) {
+                final IMEInventoryHandler<T> inventoryHandler = priorityInventory.get(i);
+                final IMENetworkInventory<T> externalNetworkInventory = inventoryHandler.getExternalNetworkInventory();
+                if (externalNetworkInventory == null || externalNetworkInventory == this) {
                     continue;
                 }
 
-                T stack = externalNetworkInventory.getAvailableItem(request, iteration);
+                final T stack = externalNetworkInventory.getAvailableItem(request, iteration);
                 count = addStackCount(stack, count);
                 if (count == Long.MAX_VALUE) {
                     break;
