@@ -31,7 +31,7 @@ import appeng.core.AELog;
 public class ReshuffleTask {
 
     private static final int DEFAULT_BATCH_SIZE = 500;
-    private final int batchSize;
+    public static final long TICK_BUDGET_NS = 8_000_000L;
 
     private final Map<IAEStackType<?>, IMEMonitor<?>> monitors;
     private final BaseActionSource actionSource;
@@ -51,25 +51,13 @@ public class ReshuffleTask {
     private ReshuffleReport report = null;
 
     public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
-            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean generateReport) {
-        this(monitors, actionSource, player, allowedTypes, voidProtection, generateReport, DEFAULT_BATCH_SIZE);
-    }
-
-    public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
-            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean generateReport,
-            int batchSize) {
+            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection) {
         this.monitors = new IdentityHashMap<>(monitors);
         this.actionSource = actionSource;
         this.player = player;
         this.allowedTypes = new HashSet<>(allowedTypes);
         this.voidProtection = voidProtection;
-        this.batchSize = batchSize;
-
-        if (generateReport) {
-            this.report = new ReshuffleReport();
-            this.report.setAllowedTypes(allowedTypes);
-            this.report.setVoidProtection(voidProtection);
-        }
+        this.report = new ReshuffleReport(this.allowedTypes, voidProtection);
     }
 
     public int initialize() {
@@ -84,10 +72,10 @@ public class ReshuffleTask {
         }
 
         for (IAEStackType<?> type : allowedTypes) {
-            IMEMonitor monitor = monitors.get(type);
+            IMEMonitor<?> monitor = monitors.get(type);
             if (monitor == null) continue;
 
-            IItemList storageList = monitor.getStorageList();
+            IItemList<?> storageList = monitor.getStorageList();
             for (Object obj : storageList) {
                 IAEStack<?> stack = (IAEStack<?>) obj;
                 if (stack != null && stack.getStackSize() > 0) {
@@ -101,43 +89,25 @@ public class ReshuffleTask {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public boolean processNextBatch() {
+    public void processNextBatch() {
         if (cancelled || completed) {
-            return false;
+            return;
         }
 
         int processed = 0;
-        while (currentIndex < itemsToProcess.size() && processed < batchSize) {
+        while (currentIndex < itemsToProcess.size() && processed < DEFAULT_BATCH_SIZE) {
             try {
                 IAEStack<?> stack = itemsToProcess.get(currentIndex);
                 IAEStackType type = stack.getStackType();
                 IMEMonitor monitor = monitors.get(type);
 
                 if (monitor != null && allowedTypes.contains(type)) {
-                    boolean shouldProcess = true;
-
-                    if (voidProtection) {
-                        IAEStack<?> simExtracted = monitor
-                                .extractItems(stack.copy(), Actionable.SIMULATE, actionSource);
-                        if (simExtracted != null && simExtracted.getStackSize() > 0) {
-                            IAEStack<?> simLeftover = monitor
-                                    .injectItems(simExtracted.copy(), Actionable.SIMULATE, actionSource);
-                            if (simLeftover != null && simLeftover.getStackSize() > 0) {
-                                shouldProcess = false;
-                                skippedItems++;
-                                skippedItemsList.add(stack.copy());
-                            }
-                        }
-                    }
-
-                    if (shouldProcess) {
-                        IAEStack<?> extracted = monitor.extractItems(stack.copy(), Actionable.MODULATE, actionSource);
-
-                        if (extracted != null && extracted.getStackSize() > 0) {
-                            IAEStack<?> leftover = monitor.injectItems(extracted, Actionable.MODULATE, actionSource);
-
-                            if (leftover != null && leftover.getStackSize() > 0) {
-                                monitor.injectItems(leftover, Actionable.MODULATE, actionSource);
+                    final IAEStack<?> extracted = monitor.extractItems(stack.copy(), Actionable.MODULATE, actionSource);
+                    if (extracted != null && extracted.getStackSize() > 0) {
+                        final IAEStack<?> leftover = monitor.injectItems(extracted, Actionable.MODULATE, actionSource);
+                        if (leftover != null && leftover.getStackSize() > 0) {
+                            monitor.injectItems(leftover, Actionable.MODULATE, actionSource);
+                            if (voidProtection) {
                                 skippedItems++;
                                 skippedItemsList.add(stack.copy());
                             }
@@ -158,14 +128,12 @@ public class ReshuffleTask {
         if (currentIndex >= itemsToProcess.size()) {
             completed = true;
             finalizeReport();
-            return false;
         }
 
-        return true;
     }
 
     private void finalizeReport() {
-        if (report != null && player instanceof EntityPlayerMP) {
+        if (player instanceof EntityPlayerMP) {
             report.generateReport(monitors, allowedTypes, processedItems, skippedItems, skippedItemsList);
         }
     }

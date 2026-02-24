@@ -28,6 +28,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -45,12 +46,14 @@ import appeng.client.me.ItemRepo;
 import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
 import appeng.core.sync.packets.PacketNetworkStatusSelected;
+import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
 
 public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
@@ -59,6 +62,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private final int rows = 4;
     private GuiImgButton units;
     private GuiImgButton cell;
+    private GuiImgButton tReshuffle;
     private int tooltip = -1;
     private final DecimalFormat df;
     private final boolean isAdvanced;
@@ -123,8 +127,21 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     @Override
     protected void mouseClicked(int xCoord, int yCoord, int btn) {
 
-        // Check if the context menu is active and handle it
         if (menu.mouseClick(xCoord, yCoord, btn)) {
+            return;
+        }
+
+        if (btn == 0 && this.tReshuffle != null
+                && this.tReshuffle.enabled
+                && xCoord >= this.tReshuffle.xPosition
+                && xCoord < this.tReshuffle.xPosition + this.tReshuffle.width
+                && yCoord >= this.tReshuffle.yPosition
+                && yCoord < this.tReshuffle.yPosition + this.tReshuffle.height) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "OpenReshuffle"));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
             return;
         }
 
@@ -220,6 +237,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     Settings.CELL_TYPE,
                     AEConfig.instance.selectedCellType());
             this.buttonList.add(this.cell);
+
+            this.tReshuffle = new GuiImgButton(
+                    this.guiLeft - 18,
+                    this.guiTop + 48,
+                    Settings.ACTIONS,
+                    ActionItems.OPEN_RESHUFFLE);
         }
     }
 
@@ -254,12 +277,30 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             }
         }
 
+        if (this.tReshuffle != null && mouseX >= this.tReshuffle.xPosition
+                && mouseX < this.tReshuffle.xPosition + this.tReshuffle.width
+                && mouseY >= this.tReshuffle.yPosition
+                && mouseY < this.tReshuffle.yPosition + this.tReshuffle.height) {
+            final String tip = this.tReshuffle.enabled ? this.tReshuffle.getMessage()
+                    : "§c" + GuiText.ReshuffleNotPresent.getLocal();
+            this.drawTooltip(this.guiLeft - 8, this.tReshuffle.yPosition + 16, tip);
+        }
+
         super.drawScreen(mouseX, mouseY, btn);
+
+        if (this.tReshuffle != null) {
+            this.tReshuffle.drawButton(this.mc, mouseX, mouseY);
+        }
+
         menu.draw(mouseX, mouseY);
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        if (this.tReshuffle != null) {
+            final boolean present = ((ContainerNetworkStatus) this.inventorySlots).reshufflePresent;
+            this.tReshuffle.setEnabled(present);
+        }
         if (this.isConsume) drawConsume();
         else {
             switch (AEConfig.instance.selectedCellType()) {

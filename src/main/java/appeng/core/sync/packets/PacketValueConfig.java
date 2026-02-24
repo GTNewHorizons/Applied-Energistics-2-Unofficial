@@ -36,6 +36,7 @@ import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerInterface;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.container.implementations.ContainerMEMonitorable;
+import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.container.implementations.ContainerPatternTerm;
@@ -112,6 +113,8 @@ public class PacketValueConfig extends AppEngPacket {
                 case "Reshuffle.Start" -> qk.startReshuffle(player, "confirmed".equals(this.Value));
                 case "Reshuffle.Cancel" -> qk.cancelReshuffle();
                 case "Reshuffle.Scan" -> qk.performNetworkScan();
+                case "Reshuffle.Mode" -> qk.setScanMode("scan".equals(this.Value));
+                case "Reshuffle.ToggleVoidProtection" -> qk.toggleVoidProtection();
             }
         } else if (this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk) {
             qk.doublePatterns(Integer.parseInt(this.Value));
@@ -185,6 +188,9 @@ public class PacketValueConfig extends AppEngPacket {
             if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
                 ((ContainerNetworkTool) c).toggleFacadeMode();
             }
+        } else if (this.Name.equals("NetworkStatus") && this.Value.equals("OpenReshuffle")
+                && c instanceof ContainerNetworkStatus cns) {
+            cns.openReshuffle(player);
         } else if (c instanceof IConfigurableObject) {
             final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 

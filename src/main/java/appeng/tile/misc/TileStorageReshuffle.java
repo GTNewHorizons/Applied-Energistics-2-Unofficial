@@ -10,8 +10,7 @@
 
 package appeng.tile.misc;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -27,8 +26,6 @@ import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
-import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.api.networking.crafting.ICraftingGrid;
 import appeng.api.networking.events.MENetworkChannelsChanged;
 import appeng.api.networking.events.MENetworkEventSubscribe;
 import appeng.api.networking.events.MENetworkPowerStatusChange;
@@ -37,13 +34,11 @@ import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.ITerminalTypeFilterProvider;
-import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
-import appeng.helpers.CellScanReport;
 import appeng.helpers.CellScanTask;
 import appeng.helpers.ReshuffleReport;
 import appeng.helpers.ReshuffleTask;
@@ -62,6 +57,7 @@ public class TileStorageReshuffle extends AENetworkTile
         implements ITerminalTypeFilterProvider, IConfigurableObject, IConfigManagerHost {
 
     private ReshuffleTask activeTask = null;
+    private Map<IAEStackType<?>, IMEMonitor<?>> lockedMonitors = null;
     private boolean isActive = false;
 
     private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
@@ -71,7 +67,11 @@ public class TileStorageReshuffle extends AENetworkTile
     private int reshuffleTotalItems = 0;
     private int reshuffleProcessedItems = 0;
     private boolean reshuffleRunning = false;
-    private List<String> reshuffleReport = new ArrayList<>();
+    private boolean reshuffleFailed = false;
+    private boolean reshuffleCancelled = false;
+    private boolean reshuffleComplete = false;
+    private String reshuffleReport = "";
+    private Map<String, List<CellScanTask.CellRecord>> lastScanDuplicates = new HashMap<>();
 
     public TileStorageReshuffle() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
@@ -126,19 +126,23 @@ public class TileStorageReshuffle extends AENetworkTile
     public void onTick() {
         if (this.activeTask != null && this.activeTask.isRunning()) {
             try {
-                this.activeTask.processNextBatch();
+                final long deadline = System.nanoTime() + ReshuffleTask.TICK_BUDGET_NS;
+                while (this.activeTask.isRunning() && System.nanoTime() < deadline) {
+                    this.activeTask.processNextBatch();
+                }
                 this.reshuffleProgress = this.activeTask.getProgressPercent();
                 this.reshuffleTotalItems = this.activeTask.getTotalItems();
                 this.reshuffleProcessedItems = this.activeTask.getProcessedItems();
                 this.reshuffleRunning = this.activeTask.isRunning();
                 if (!this.activeTask.isRunning()) {
-                    ReshuffleReport report = this.activeTask.getReport();
+                    final ReshuffleReport report = this.activeTask.getReport();
                     if (report != null) {
-                        this.reshuffleReport = report.generateReportLines();
+                        this.reshuffleReport = String.join("\n", report.generateReportLines());
                         this.markDirty();
                     }
                     unlockStorage();
                     this.activeTask = null;
+                    this.reshuffleComplete = true;
                     this.markForUpdate();
                 }
             } catch (Exception e) {
@@ -160,22 +164,11 @@ public class TileStorageReshuffle extends AENetworkTile
         this.markForUpdate();
     }
 
-    public boolean startReshuffle(EntityPlayer player, boolean confirmed) {
-        if (!this.getProxy().isActive()) return false;
-        if (this.activeTask != null && this.activeTask.isRunning()) return false;
+    public void startReshuffle(EntityPlayer player, boolean confirmed) {
+        if (!this.getProxy().isActive()) return;
+        if (this.activeTask != null && this.activeTask.isRunning()) return;
 
         try {
-            final ICraftingGrid craftingGrid = this.getProxy().getCrafting();
-            for (final ICraftingCPU cpu : craftingGrid.getCpus()) {
-                if (cpu.isBusy()) {
-                    this.reshuffleReport = java.util.Arrays.asList(
-                            GuiText.ReshuffleReportActiveCrafts.getLocal(),
-                            GuiText.ReshuffleReportActiveCraftsDetail.getLocal());
-                    this.markDirty();
-                    return false;
-                }
-            }
-
             final IStorageGrid storageGrid = this.getProxy().getStorage();
 
             final Reference2BooleanMap<IAEStackType<?>> filters = this.typeFilters.getFilters(player);
@@ -195,30 +188,35 @@ public class TileStorageReshuffle extends AENetworkTile
 
             BaseActionSource actionSource = new ReshuffleActionSource(player, this);
             final boolean voidProtection = this.cm.getSetting(Settings.VOID_PROTECTION) == YesNo.YES;
-            this.activeTask = new ReshuffleTask(monitors, actionSource, player, allowedTypes, voidProtection, true);
+            this.lockedMonitors = monitors;
+            this.activeTask = new ReshuffleTask(monitors, actionSource, player, allowedTypes, voidProtection);
 
             int totalItems = this.activeTask.initialize();
             if (!confirmed && totalItems >= 3000) {
                 this.activeTask = null;
                 unlockMonitors(monitors);
                 this.reshuffleTotalItems = totalItems;
-                return false;
+                return;
             }
             if (totalItems == 0) {
                 this.activeTask = null;
                 unlockMonitors(monitors);
-                return false;
+                this.reshuffleFailed = true;
+                this.reshuffleReport = GuiText.ReshuffleReportNoMatchingCells.getLocal();
+                this.markDirty();
+                return;
             }
 
             this.reshuffleTotalItems = totalItems;
             this.reshuffleProgress = 0;
             this.reshuffleRunning = true;
+            this.reshuffleFailed = false;
+            this.reshuffleCancelled = false;
+            this.reshuffleComplete = false;
             this.markForUpdate();
-            return true;
 
         } catch (GridAccessException e) {
             AELog.warn(e, "Failed to access grid for reshuffle");
-            return false;
         }
     }
 
@@ -228,37 +226,38 @@ public class TileStorageReshuffle extends AENetworkTile
             unlockStorage();
             this.activeTask = null;
             this.reshuffleRunning = false;
+            this.reshuffleCancelled = true;
+            this.reshuffleFailed = false;
             this.markForUpdate();
         }
     }
 
     public void scanNetwork() {
         if (!this.getProxy().isActive()) {
-            this.reshuffleReport = Collections.singletonList(GuiText.ReshuffleReportNetworkNotActive.getLocal());
+            this.lastScanDuplicates = new HashMap<>();
             this.markDirty();
             return;
         }
         try {
             final IGrid grid = this.getProxy().getGrid();
             final List<CellScanTask.CellRecord> cells = CellScanTask.scanGrid(grid);
-            this.reshuffleReport = new CellScanReport(cells).generateReportLines();
+            this.lastScanDuplicates = CellScanTask.findDuplicatePartitionedCells(cells);
             this.markDirty();
         } catch (GridAccessException e) {
             AELog.warn(e, "Failed to access grid for scan");
-            this.reshuffleReport = Collections.singletonList(GuiText.ReshuffleReportScanFailed.getLocal());
+            this.lastScanDuplicates = new HashMap<>();
             this.markDirty();
         }
     }
 
+    public Map<String, List<CellScanTask.CellRecord>> getScanDuplicates() {
+        return this.lastScanDuplicates;
+    }
+
     private void unlockStorage() {
-        try {
-            final IStorageGrid storageGrid = this.getProxy().getStorage();
-            for (final IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-                final IMEMonitor<?> monitor = storageGrid.getMEMonitor(type);
-                if (monitor instanceof NetworkMonitor<?>nm) nm.setLocked(false);
-            }
-        } catch (Exception e) {
-            AELog.warn(e, "Failed to unlock storage monitors");
+        if (this.lockedMonitors != null) {
+            unlockMonitors(this.lockedMonitors);
+            this.lockedMonitors = null;
         }
     }
 
@@ -287,6 +286,18 @@ public class TileStorageReshuffle extends AENetworkTile
         return this.reshuffleRunning;
     }
 
+    public boolean isReshuffleComplete() {
+        return this.reshuffleComplete;
+    }
+
+    public boolean isReshuffleFailed() {
+        return this.reshuffleFailed;
+    }
+
+    public boolean isReshuffleCancelled() {
+        return this.reshuffleCancelled;
+    }
+
     public int getReshuffleProgress() {
         return this.reshuffleProgress;
     }
@@ -299,7 +310,7 @@ public class TileStorageReshuffle extends AENetworkTile
         return this.reshuffleProcessedItems;
     }
 
-    public List<String> getReshuffleReport() {
-        return new ArrayList<>(this.reshuffleReport);
+    public String getReshuffleReport() {
+        return this.reshuffleReport;
     }
 }

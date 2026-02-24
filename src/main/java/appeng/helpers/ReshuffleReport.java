@@ -34,7 +34,7 @@ import appeng.util.item.AEItemStack;
 
 public class ReshuffleReport {
 
-    private static final int LINE_WIDTH = 38;
+    private static final int LINE_WIDTH = 36;
 
     private static final String DARK_AQUA = "§3";
     private static final String BLACK = "§0";
@@ -92,12 +92,14 @@ public class ReshuffleReport {
     private final List<ItemChange> gainedItems = new ArrayList<>();
     private final List<IAEStack<?>> skippedItemsList = new ArrayList<>();
 
-    private Set<IAEStackType<?>> allowedTypes = new HashSet<>();
-    private boolean voidProtection;
+    private final Set<IAEStackType<?>> allowedTypes;
+    private final boolean voidProtection;
     private final long startTime;
     private long endTime;
 
-    public ReshuffleReport() {
+    public ReshuffleReport(final Set<IAEStackType<?>> allowedTypes, final boolean voidProtection) {
+        this.allowedTypes = allowedTypes;
+        this.voidProtection = voidProtection;
         this.startTime = System.currentTimeMillis();
     }
 
@@ -108,10 +110,10 @@ public class ReshuffleReport {
         totalItemTypesBefore = 0;
 
         for (IAEStackType<?> type : allowedTypes) {
-            IMEMonitor monitor = monitors.get(type);
+            IMEMonitor<?> monitor = monitors.get(type);
             if (monitor == null) continue;
 
-            IItemList storageList = monitor.getStorageList();
+            IItemList<?> storageList = monitor.getStorageList();
             for (Object obj : storageList) {
                 IAEStack<?> stack = (IAEStack<?>) obj;
                 if (stack != null && stack.getStackSize() > 0) {
@@ -142,10 +144,10 @@ public class ReshuffleReport {
         totalItemTypesAfter = 0;
 
         for (IAEStackType<?> type : allowedTypes) {
-            IMEMonitor monitor = monitors.get(type);
+            IMEMonitor<?> monitor = monitors.get(type);
             if (monitor == null) continue;
 
-            IItemList storageList = monitor.getStorageList();
+            IItemList<?> storageList = monitor.getStorageList();
             for (Object obj : storageList) {
                 IAEStack<?> stack = (IAEStack<?>) obj;
                 if (stack != null && stack.getStackSize() > 0) {
@@ -191,10 +193,6 @@ public class ReshuffleReport {
         gainedItems.sort((a, b) -> Long.compare(Math.abs(b.difference), Math.abs(a.difference)));
     }
 
-    private static String t(GuiText text) {
-        return text.getLocal();
-    }
-
     private List<String> buildItemLines(ItemChange c, String accentColor, String sign) {
         List<String> out = new ArrayList<>();
         String name = getStackDisplayName(c.stack);
@@ -208,70 +206,62 @@ public class ReshuffleReport {
         List<String> lines = new ArrayList<>();
         long durationMs = endTime - startTime;
 
-        lines.add(DARK_AQUA + centerTitle(t(GuiText.ReshuffleReportTitle)));
+        lines.add(DARK_AQUA + centerTitle(GuiText.ReshuffleReportTitle.getLocal()));
 
         lines.add(
-                DARK_AQUA + t(GuiText.ReshuffleReportTime)
+                DARK_AQUA + GuiText.ReshuffleReportTime.getLocal()
                         + " "
                         + BLACK
                         + String.format("%.2fs", durationMs / 1000.0)
                         + DARK_AQUA
                         + "  "
-                        + t(GuiText.ReshuffleReportMode)
+                        + GuiText.ReshuffleReportMode.getLocal()
                         + " "
                         + BLACK
                         + buildModeString());
 
         lines.add(
-                DARK_AQUA + t(GuiText.ReshuffleReportVoidLabel)
+                DARK_AQUA + GuiText.ReshuffleReportVoidLabel.getLocal()
                         + " "
-                        + (voidProtection ? DARK_GREEN + t(GuiText.ReshuffleReportVoidOn)
-                                : DARK_RED + t(GuiText.ReshuffleReportVoidOff)));
+                        + (voidProtection ? DARK_GREEN + GuiText.ReshuffleReportVoidOn.getLocal()
+                                : DARK_RED + GuiText.ReshuffleReportVoidOff.getLocal()));
 
         lines.add("");
-        lines.add(DARK_AQUA + t(GuiText.ReshuffleReportSectionProcessing));
+        lines.add(DARK_AQUA + GuiText.ReshuffleReportSectionProcessing.getLocal());
         lines.add(
-                DARK_AQUA + t(GuiText.ReshuffleReportDone)
+                DARK_AQUA + GuiText.ReshuffleReportDone.getLocal()
                         + " "
                         + DARK_GREEN
                         + fmt(itemsProcessed)
                         + DARK_AQUA
                         + "  "
-                        + t(GuiText.ReshuffleReportSkip)
+                        + GuiText.ReshuffleReportSkip.getLocal()
                         + " "
                         + GOLD
                         + fmt(itemsSkipped));
 
         lines.add("");
-        lines.add(DARK_AQUA + t(GuiText.ReshuffleReportSectionStorageTotals));
-        lines.add(buildTotalLine(t(GuiText.ReshuffleReportLabelTypes), totalItemTypesBefore, totalItemTypesAfter));
-        lines.add(buildTotalLine(t(GuiText.ReshuffleReportLabelStacks), totalStacksBefore, totalStacksAfter));
+        lines.add(DARK_AQUA + GuiText.ReshuffleReportSectionStorageTotals.getLocal());
+        lines.add(
+                buildTotalLine(
+                        GuiText.ReshuffleReportLabelTypes.getLocal(),
+                        totalItemTypesBefore,
+                        totalItemTypesAfter));
+        lines.add(buildTotalLine(GuiText.ReshuffleReportLabelStacks.getLocal(), totalStacksBefore, totalStacksAfter));
 
         lines.add("");
-        lines.add(DARK_AQUA + t(GuiText.ReshuffleReportSectionItemChanges));
+        lines.add(DARK_AQUA + GuiText.ReshuffleReportSectionItemChanges.getLocal());
         lines.add(
-                DARK_GREEN + t(GuiText.ReshuffleReportGainedLabel)
-                        + " "
-                        + BLACK
-                        + fmt(itemsGained)
-                        + DARK_GREEN
-                        + " ("
-                        + abbrev(totalGained)
-                        + ")");
+                DARK_GREEN + GuiText.ReshuffleReportGainedLabel
+                        .getLocal() + " " + BLACK + fmt(itemsGained) + DARK_GREEN + " (" + abbrev(totalGained) + ")");
         lines.add(
-                DARK_RED + t(GuiText.ReshuffleReportLostLabel)
-                        + " "
-                        + BLACK
-                        + fmt(itemsLost)
-                        + DARK_RED
-                        + " ("
-                        + abbrev(totalLost)
-                        + ")");
-        lines.add(DARK_GRAY + t(GuiText.ReshuffleReportUnchangedLabel) + " " + BLACK + fmt(itemsUnchanged));
+                DARK_RED + GuiText.ReshuffleReportLostLabel
+                        .getLocal() + " " + BLACK + fmt(itemsLost) + DARK_RED + " (" + abbrev(totalLost) + ")");
+        lines.add(DARK_GRAY + GuiText.ReshuffleReportUnchangedLabel.getLocal() + " " + BLACK + fmt(itemsUnchanged));
 
         if (!lostItems.isEmpty()) {
             lines.add("");
-            lines.add(DARK_RED + t(GuiText.ReshuffleReportSectionTopLost));
+            lines.add(DARK_RED + GuiText.ReshuffleReportSectionTopLost.getLocal());
             for (ItemChange c : lostItems) {
                 lines.addAll(buildItemLines(c, DARK_RED, "-"));
             }
@@ -279,7 +269,7 @@ public class ReshuffleReport {
 
         if (!gainedItems.isEmpty() && totalGained > 0) {
             lines.add("");
-            lines.add(DARK_GREEN + t(GuiText.ReshuffleReportSectionTopGained));
+            lines.add(DARK_GREEN + GuiText.ReshuffleReportSectionTopGained.getLocal());
             for (ItemChange c : gainedItems) {
                 lines.addAll(buildItemLines(c, DARK_GREEN, "+"));
             }
@@ -287,7 +277,7 @@ public class ReshuffleReport {
 
         if (!skippedItemsList.isEmpty()) {
             lines.add("");
-            lines.add(GOLD + t(GuiText.ReshuffleReportSectionSkipped));
+            lines.add(GOLD + GuiText.ReshuffleReportSectionSkipped.getLocal());
             for (IAEStack<?> stack : skippedItemsList) {
                 lines.add(
                         GOLD + "• "
@@ -303,15 +293,15 @@ public class ReshuffleReport {
         long net = totalStacksAfter - totalStacksBefore;
         if (net != 0) {
             lines.add(
-                    GOLD + t(GuiText.ReshuffleReportNetChanged)
+                    GOLD + GuiText.ReshuffleReportNetChanged.getLocal()
                             + " "
                             + diffColor(net)
                             + signedAbbrev(net)
                             + " "
                             + DARK_GRAY
-                            + t(GuiText.ReshuffleReportNetChangedReason));
+                            + GuiText.ReshuffleReportNetChangedReason.getLocal());
         } else {
-            lines.add(DARK_GREEN + t(GuiText.ReshuffleReportIntegrityOk));
+            lines.add(DARK_GREEN + GuiText.ReshuffleReportIntegrityOk.getLocal());
         }
 
         lines.add(DARK_AQUA + repeatEquals(LINE_WIDTH));
@@ -336,7 +326,7 @@ public class ReshuffleReport {
     }
 
     private String buildModeString() {
-        if (allowedTypes.isEmpty()) return t(GuiText.ReshuffleReportModeNone);
+        if (allowedTypes.isEmpty()) return GuiText.ReshuffleReportModeNone.getLocal();
         StringBuilder sb = new StringBuilder();
         for (IAEStackType<?> type : allowedTypes) {
             if (sb.length() > 0) sb.append('/');
@@ -387,12 +377,12 @@ public class ReshuffleReport {
         if (stack instanceof AEItemStack itemStack) {
             final ItemStack is = itemStack.getItemStack();
             String key = Item.itemRegistry.getNameForObject(is.getItem()) + "@" + is.getItemDamage();
-            if (is.hasTagCompound()) key += "#" + is.getTagCompound().hashCode();
+            if (is.hasTagCompound()) key += "#" + is.getTagCompound().toString();
             return "item:" + key;
         } else if (stack instanceof AEFluidStack fluidStack) {
             final FluidStack fs = fluidStack.getFluidStack();
             String key = fs.getFluid().getName();
-            if (fs.tag != null) key += "#" + fs.tag.hashCode();
+            if (fs.tag != null) key += "#" + fs.tag.toString();
             return "fluid:" + key;
         }
         String str = stack.toString();
@@ -401,20 +391,12 @@ public class ReshuffleReport {
     }
 
     private String getStackDisplayName(IAEStack<?> stack) {
-        if (stack == null) return t(GuiText.ReshuffleReportUnknown);
+        if (stack == null) return GuiText.ReshuffleReportUnknown.getLocal();
         try {
             String name = stack.getDisplayName();
-            return (name != null && !name.isEmpty()) ? name : t(GuiText.ReshuffleReportUnknown);
+            return (name != null && !name.isEmpty()) ? name : GuiText.ReshuffleReportUnknown.getLocal();
         } catch (Exception e) {
-            return t(GuiText.ReshuffleReportUnknown);
+            return GuiText.ReshuffleReportUnknown.getLocal();
         }
-    }
-
-    public void setAllowedTypes(Set<IAEStackType<?>> allowedTypes) {
-        this.allowedTypes = new HashSet<>(allowedTypes);
-    }
-
-    public void setVoidProtection(boolean v) {
-        this.voidProtection = v;
     }
 }

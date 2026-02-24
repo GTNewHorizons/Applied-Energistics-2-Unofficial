@@ -178,38 +178,24 @@ gui.appliedenergistics2.security.build.tip=User can modify the physical structur
 gui.appliedenergistics2.security.security.tip=User can access and modify the security terminal of the network.
 
 gui.appliedenergistics2.StorageReshuffle=Storage Reshuffle
-gui.appliedenergistics2.ReshuffleStart=START RESHUFFLE
+gui.appliedenergistics2.ReshuffleStart=START
+gui.appliedenergistics2.ReshuffleStartShiftHint=Shift+Click to confirm and start
 gui.appliedenergistics2.ReshuffleCancel=CANCEL
 gui.appliedenergistics2.ReshuffleScan=Scan
 gui.appliedenergistics2.ReshuffleReport=Report:
-gui.appliedenergistics2.ReshuffleStatusIdle=Status: Idle
+gui.appliedenergistics2.ReshuffleStatusLabel=Status:
+gui.appliedenergistics2.ReshuffleStatusIdle=Idle
 gui.appliedenergistics2.ReshuffleTotalItems=%d / %d types
-gui.appliedenergistics2.ReshuffleStatusRunning=Status: Running
-
-gui.appliedenergistics2.ReshuffleTooltipStartTitle=§6Start Reshuffle
-gui.appliedenergistics2.ReshuffleTooltipStartDesc1=§7Reorganizes storage by priority
-gui.appliedenergistics2.ReshuffleTooltipStartDesc2=§7Hold SHIFT to bypass confirmation
-gui.appliedenergistics2.ReshuffleTooltipCancelTitle=§6Cancel Reshuffle
-gui.appliedenergistics2.ReshuffleTooltipCancelDesc1=§7Stops the running operation
-
-gui.appliedenergistics2.ReshuffleHelpTitle=§6Storage Reshuffle
-gui.appliedenergistics2.ReshuffleHelpDesc1=§7Reorganizes ME storage based on priority.
-gui.appliedenergistics2.ReshuffleHelpDesc2=§7Items are extracted and re-inserted to
-gui.appliedenergistics2.ReshuffleHelpDesc3=§7optimize storage cell usage.
-
-gui.appliedenergistics2.ReshuffleTooltipScanTitle=§6Network Scan
-gui.appliedenergistics2.ReshuffleTooltipScanDesc1=§7Analyzes storage without changes
-gui.appliedenergistics2.ReshuffleTooltipScanDesc2=§7Shows current cell usage and
-gui.appliedenergistics2.ReshuffleTooltipScanDesc3=§7fragmentation statistics
+gui.appliedenergistics2.ReshuffleStatusRunning=Running
+gui.appliedenergistics2.ReshuffleStatusComplete=Complete
+gui.appliedenergistics2.ReshuffleStatusFailed=Failed
+gui.appliedenergistics2.ReshuffleStatusCancelled=Cancelled
 
 gui.appliedenergistics2.ReshuffleTooltipDesc1=§7Reorganizes ME storage based on priority
 gui.appliedenergistics2.ReshuffleTooltipDesc2=§7Extracts and re-inserts items to optimize cell usage
 gui.appliedenergistics2.ReshuffleTooltipDesc3=§7and reduce fragmentation
 
-gui.appliedenergistics2.ReshuffleReportNetworkNotActive=Network is not active
-gui.appliedenergistics2.ReshuffleReportScanFailed=Failed to scan network
-gui.appliedenergistics2.ReshuffleReportActiveCrafts=§4= Reshuffle Cancelled =
-gui.appliedenergistics2.ReshuffleReportActiveCraftsDetail=§8Active crafting jobs detected
+gui.appliedenergistics2.ReshuffleReportNoMatchingCells=§8No cells matching filter found!
 gui.appliedenergistics2.ReshuffleReportTitle== Reshuffle Report =
 gui.appliedenergistics2.ReshuffleReportTime=Time:
 gui.appliedenergistics2.ReshuffleReportMode=Mode:
@@ -230,10 +216,24 @@ gui.appliedenergistics2.ReshuffleReportUnchangedLabel=Unchanged:
 gui.appliedenergistics2.ReshuffleReportSectionTopLost=-- Top Lost Items --
 gui.appliedenergistics2.ReshuffleReportSectionTopGained=-- Top Gained Items --
 gui.appliedenergistics2.ReshuffleReportSectionSkipped=-- Skipped Items --
-gui.appliedenergistics2.ReshuffleReportNetChanged=! Net: %s (%s)
+gui.appliedenergistics2.ReshuffleReportNetChanged=! Net:
 gui.appliedenergistics2.ReshuffleReportNetChangedReason=network/crafts
-gui.appliedenergistics2.ReshuffleReportIntegrityOk= Integrity OK, no net change
+gui.appliedenergistics2.ReshuffleReportIntegrityOk= No net change
 gui.appliedenergistics2.ReshuffleReportUnknown=Unknown
+
+gui.appliedenergistics2.ReshuffleTabReshuffle=Reshuffle
+gui.appliedenergistics2.ReshuffleTabScan=Scan
+gui.appliedenergistics2.ReshuffleTabReshuffleHint=Switch to Reshuffle mode
+gui.appliedenergistics2.ReshuffleTabScanHint=Scan network for duplicate cell partitions
+gui.appliedenergistics2.ReshuffleLocate=Locate
+gui.appliedenergistics2.ReshuffleScanEmpty=No duplicate partitions found
+gui.appliedenergistics2.ReshuffleScanDuplicatesTitle=Duplicate Partitions:
+gui.appliedenergistics2.ReshuffleScanSlot=Slot
+gui.appliedenergistics2.ReshuffleScanDuplicatePartition=Duplicate partition:
+gui.appliedenergistics2.ReshufflePartitionScanner=Partition Scanner
+gui.appliedenergistics2.ReshuffleOpenFromTool=Storage Reshuffle
+gui.appliedenergistics2.ReshuffleOpenFromToolHint=Open Storage Reshuffle GUI
+gui.appliedenergistics2.ReshuffleNotPresent=No Storage Reshuffle block found on this network
 
 gui.appliedenergistics2.Efficiency=Efficiency
 gui.appliedenergistics2.RequiredPower=Required Power
@@ -688,31 +688,9 @@ gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
 gui.tooltips.appliedenergistics2.ReshuffleVoidProtection=Void Protection
 gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionOn=Enabled - items will not be voided
 gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionOff=Disabled - items may be voided
+gui.tooltips.appliedenergistics2.OpenReshuffle=Storage Reshuffle
+gui.tooltips.appliedenergistics2.OpenReshuffleDesc=Open Storage Reshuffle Interface
 
-gui.appliedenergistics2.StorageScan=Storage Scan
-gui.appliedenergistics2.StorageScanSummary=Summary
-gui.appliedenergistics2.StorageScanCells=Cells
-gui.appliedenergistics2.StorageScanEmpty=empty
-gui.appliedenergistics2.StorageScanUtil=util
-gui.appliedenergistics2.StorageScanUtilization=Utilization
-gui.appliedenergistics2.StorageScanBytesAll=Bytes (all)
-gui.appliedenergistics2.StorageScanBytesExclSing=Bytes (excl. sing)
-gui.appliedenergistics2.StorageScanMedian=median
-gui.appliedenergistics2.StorageScanFragmentation=Fragmentation
-gui.appliedenergistics2.StorageScanLocked=Locked
-gui.appliedenergistics2.StorageScanWasted=Wasted
-gui.appliedenergistics2.StorageScanSingularityExcluded=(Singularity cells excluded)
-gui.appliedenergistics2.StorageScanExplainLocked=Locked: Cells at type capacity with free bytes
-gui.appliedenergistics2.StorageScanExplainWasted=Wasted: Bytes that can't be used (type-full)
-gui.appliedenergistics2.StorageScanExplainFragmented=Fragmented: Cells with poor utilization
-gui.appliedenergistics2.StorageScanCellTypes=Cell Types
-gui.appliedenergistics2.StorageScanCellTypesUtilization=Cell Types Utilization
-gui.appliedenergistics2.StorageScanDuplicatePartitions=Duplicate Partitions
-gui.appliedenergistics2.StorageScanLockedTo=locked to
-gui.appliedenergistics2.StorageScanLocations=Locations
-gui.appliedenergistics2.StorageScanMostFragmented=Most Fragmented
-gui.appliedenergistics2.StorageScanDrive=Drive
-gui.appliedenergistics2.StorageScanChest=Chest
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode
