@@ -7,6 +7,7 @@ import static appeng.util.Platform.stackConvert;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
@@ -38,18 +39,23 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
     private final IAEStack<?>[] condensedAEOutputs;
     private final IAEStack<?>[] aeInputs;
     private final IAEStack<?>[] aeOutputs;
+    private final boolean inputOnly;
+    private final UUID inputOnlyUuid;
 
     public UltimatePatternHelper(final ItemStack is) {
-        final NBTTagCompound nbt = is.getTagCompound();
+        final NBTTagCompound encodedValue = is.getTagCompound();
 
-        if (nbt == null || nbt.getBoolean("InvalidPattern")) {
+        if (encodedValue == null || encodedValue.getBoolean("InvalidPattern")) {
             throw new IllegalArgumentException("No pattern here!");
         }
 
-        this.canSubstitute = nbt.getBoolean("substitute");
-        this.canBeSubstitute = nbt.getBoolean("beSubstitute");
+        this.canSubstitute = encodedValue.getBoolean("substitute");
+        this.canBeSubstitute = encodedValue.getBoolean("beSubstitute");
         this.patternItem = is;
-        if (nbt.hasKey("author")) {
+        this.inputOnly = encodedValue.getBoolean("tunnel");
+        this.inputOnlyUuid = readInputOnlyUuid(encodedValue, this.inputOnly);
+
+        if (encodedValue.hasKey("author")) {
             final ItemStack forComparison = this.patternItem.copy();
             forComparison.stackTagCompound.removeTag("author");
             this.pattern = AEItemStack.create(forComparison);
@@ -57,8 +63,8 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
             this.pattern = AEItemStack.create(is);
         }
 
-        final NBTTagList inTag = nbt.getTagList("in", 10);
-        final NBTTagList outTag = nbt.getTagList("out", 10);
+        final NBTTagList inTag = encodedValue.getTagList("in", 10);
+        final NBTTagList outTag = encodedValue.getTagList("out", 10);
 
         final List<IAEItemStack> inLegacy = new ArrayList<>();
         final List<IAEItemStack> outLegacy = new ArrayList<>();
@@ -71,7 +77,7 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
             final IAEStack<?> aeStack = readStackNBT(tag, true);
 
             if (aeStack == null && !tag.hasNoTags()) {
-                nbt.setBoolean("InvalidPattern", true);
+                encodedValue.setBoolean("InvalidPattern", true);
                 throw new IllegalStateException("No pattern here!");
             }
 
@@ -84,7 +90,7 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
             final IAEStack<?> aeStack = readStackNBT(tag, true);
 
             if (aeStack == null && !tag.hasNoTags()) {
-                nbt.setBoolean("InvalidPattern", true);
+                encodedValue.setBoolean("InvalidPattern", true);
                 throw new IllegalStateException("No pattern here!");
             }
 
@@ -104,8 +110,18 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
         condensedAEInputs = convertToCondensedAEList(aeInputs);
         condensedAEOutputs = convertToCondensedAEList(aeOutputs);
 
-        if (condensedAEInputs.length == 0 || condensedAEOutputs.length == 0) {
-            nbt.setBoolean("InvalidPattern", true);
+        if (condensedAEInputs.length == 0) {
+            encodedValue.setBoolean("InvalidPattern", true);
+            throw new IllegalStateException("No pattern here!");
+        }
+
+        if (inputOnly) {
+            if (condensedAEOutputs.length != 0) {
+                encodedValue.setBoolean("InvalidPattern", true);
+                throw new IllegalStateException("Input-only pattern has outputs");
+            }
+        } else if (condensedAEOutputs.length == 0) {
+            encodedValue.setBoolean("InvalidPattern", true);
             throw new IllegalStateException("No pattern here!");
         }
     }
@@ -186,6 +202,16 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
     }
 
     @Override
+    public boolean isInputOnly() {
+        return inputOnly;
+    }
+
+    @Override
+    public UUID getInputOnlyUuid() {
+        return inputOnlyUuid;
+    }
+
+    @Override
     public int hashCode() {
         return this.pattern.hashCode();
     }
@@ -242,5 +268,20 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
         }
 
         return items.toArray(new IAEStack<?>[0]);
+    }
+
+    private static UUID readInputOnlyUuid(final NBTTagCompound encodedValue, boolean inputOnly) {
+        if (!inputOnly) {
+            return null;
+        }
+        final String rawUuid = encodedValue.getString("tunnelUuid");
+        if (rawUuid == null || rawUuid.isEmpty()) {
+            throw new IllegalStateException("No pattern here!");
+        }
+        try {
+            return UUID.fromString(rawUuid);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException("No pattern here!");
+        }
     }
 }
