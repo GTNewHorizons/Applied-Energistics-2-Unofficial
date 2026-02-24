@@ -28,7 +28,6 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
@@ -59,8 +58,7 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
 
     // rather simple client side caching.
     private static final Map<ItemStack, ItemStack> SIMPLE_CACHE = new WeakHashMap<>();
-    private static Item FLUID_DROP_ITEM;
-    private static boolean checkedCache = false;
+    private static final Map<ItemStack, IAEStack<?>> OUTPUT_STACK_CACHE = new WeakHashMap<>();
     private static final boolean isGTLoaded = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.GT);
     private static final Locale locale = Locale.getDefault();
 
@@ -188,6 +186,16 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
                                 + EnumChatFormatting.RESET);
             }
         }
+        if (ItemTunnelPattern.isTunnelPattern(stack)) {
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo1.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo2.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo3.getLocal());
+            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo4.getLocal());
+            final java.util.UUID uuid = ItemTunnelPattern.getTunnelUuid(stack);
+            if (uuid != null) {
+                lines.add(EnumChatFormatting.GRAY + "UUID: " + uuid);
+            }
+        }
     }
 
     @Override
@@ -218,7 +226,11 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             return null;
         }
 
-        final IAEStack<?> output = details.getCondensedAEOutputs()[0];
+        final IAEStack<?>[] outputs = details.getCondensedAEOutputs();
+        if (outputs.length == 0) {
+            return null;
+        }
+        final IAEStack<?> output = outputs[0];
         out = output.getItemStackForNEI();
         long count = output.getStackSize();
         if (out != null) out.stackSize = count > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) count;
@@ -228,6 +240,11 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
     }
 
     public IAEStack<?> getOutputAE(final ItemStack item) {
+        IAEStack<?> cached = OUTPUT_STACK_CACHE.get(item);
+        if (cached != null) {
+            return cached;
+        }
+
         final World w = CommonHelper.proxy.getWorld();
 
         if (w == null) {
@@ -240,7 +257,12 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             return null;
         }
 
-        final IAEStack<?> output = details.getCondensedAEOutputs()[0];
+        final IAEStack<?>[] outputs = details.getCondensedAEOutputs();
+        if (outputs.length == 0) {
+            return null;
+        }
+        final IAEStack<?> output = outputs[0];
+        OUTPUT_STACK_CACHE.put(item, output);
         return output;
     }
 
@@ -274,10 +296,9 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             String itemCountText = NumberFormat.getNumberInstance(locale).format(item.getStackSize());
             String itemText;
             if (isGTLoaded) {
-                itemText = isFluid ? Platform.getItemDisplayName(item).replace("drop of", "")
-                        : ((IAEItemStack) item).getItem() instanceof ItemIntegratedCircuit
-                                ? Platform.getItemDisplayName(item) + " "
-                                        + ((IAEItemStack) item).getItemStack().getItemDamage()
+                itemText = isFluid ? Platform.getItemDisplayName(item)
+                        : item instanceof IAEItemStack ais && ais.getItem() instanceof ItemIntegratedCircuit
+                                ? Platform.getItemDisplayName(item) + " " + ais.getItemStack().getItemDamage()
                                 : Platform.getItemDisplayName(item);
             } else {
                 itemText = Platform.getItemDisplayName(item);

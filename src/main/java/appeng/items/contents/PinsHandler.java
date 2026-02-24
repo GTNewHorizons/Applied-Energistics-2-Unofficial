@@ -65,7 +65,7 @@ public class PinsHandler {
         }
 
         IAEStack<?> itemStack = null;
-        for (int i = 0; i < pinsInv.size(); i++) {
+        for (int i = 0; i < pinsState.ordinal() * 9 && i < pinsInv.size(); i++) {
             IAEStack<?> AEis;
             while (itemStack == null && it.hasNext()) {
                 AEis = it.next();
@@ -118,6 +118,7 @@ public class PinsHandler {
         for (int i = 0; i < pinsState.ordinal() * 9; i++) {
             newPins[i] = pinsInv.getPin(i);
         }
+
         if (!forceSendPacket && Arrays.equals(cache, newPins)) return;
         cache = newPins;
 

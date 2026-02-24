@@ -967,6 +967,11 @@ public class ContainerMEMonitorable extends AEBaseContainer
                             long filledAmount = filledPair.rightLong();
                             if (filledContainer == null || filledAmount <= 0) break;
 
+                            if (hand.stackSize - 1 == 0) {
+                                player.inventory.setItemStack(filledContainer);
+                                break;
+                            }
+
                             if (adaptor.addItems(filledContainer) != null) break;
 
                             long amountBeforeExtract = aes.getStackSize();
@@ -975,6 +980,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                                     Actionable.MODULATE,
                                     this.getActionSource());
                             aes.setStackSize(amountBeforeExtract - filledAmount);
+
                             hand.stackSize--;
                             if (aes.getStackSize() <= 0) break;
                         }
