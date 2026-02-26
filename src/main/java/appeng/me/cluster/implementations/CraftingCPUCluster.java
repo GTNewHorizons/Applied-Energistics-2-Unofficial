@@ -356,7 +356,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         {
             if (is != null && is.getStackSize() > 0) {
                 if (is.getStackSize() >= what.getStackSize()) {
-                    if (Objects.equals(this.finalOutput, what)) {
+                    if (this.finalOutput.isFinalOutput(what)) {
                         if (this.myLastLink != null) {
                             return ((CraftingLink) this.myLastLink).injectItems(what.copy(), type);
                         }
@@ -373,7 +373,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 final IAEStack<?> used = what.copy();
                 used.setStackSize(is.getStackSize());
 
-                if (Objects.equals(finalOutput, what)) {
+                if (this.finalOutput.isFinalOutput(what)) {
                     if (this.myLastLink != null) {
                         leftOver.add(((CraftingLink) this.myLastLink).injectItems(used.copy(), type));
                         return leftOver;
