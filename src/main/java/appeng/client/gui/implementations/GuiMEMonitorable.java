@@ -827,8 +827,7 @@ public class GuiMEMonitorable extends AEBaseGui
     @Override
     protected void keyTyped(final char character, final int key) {
         if (NEI.searchField.existsSearchField()) {
-            if ((NEI.searchField.focused() || searchField.isFocused())
-                    && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
+            if (CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
                 final boolean focused = searchField.isFocused();
                 searchField.setFocused(!focused);
                 NEI.searchField.setFocus(focused);
