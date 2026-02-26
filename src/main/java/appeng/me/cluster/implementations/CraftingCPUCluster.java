@@ -123,6 +123,7 @@ import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.Platform;
 import appeng.util.ScheduledReason;
+import appeng.util.TunnelPatternExpander;
 import appeng.util.inv.MEInventoryCrafting;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -355,7 +356,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         {
             if (is != null && is.getStackSize() > 0) {
                 if (is.getStackSize() >= what.getStackSize()) {
-                    if (Objects.equals(this.finalOutput, what)) {
+                    if (this.finalOutput.isFinalOutput(what)) {
                         if (this.myLastLink != null) {
                             return ((CraftingLink) this.myLastLink).injectItems(what.copy(), type);
                         }
@@ -372,7 +373,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 final IAEStack<?> used = what.copy();
                 used.setStackSize(is.getStackSize());
 
-                if (Objects.equals(finalOutput, what)) {
+                if (this.finalOutput.isFinalOutput(what)) {
                     if (this.myLastLink != null) {
                         leftOver.add(((CraftingLink) this.myLastLink).injectItems(used.copy(), type));
                         return leftOver;
@@ -614,13 +615,35 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return list;
     }
 
-    private boolean canCraft(final ICraftingPatternDetails details, final IAEStack<?>[] condensedInputs) {
+    private boolean canCraft(final ICraftingPatternDetails details, final List<IAEStack<?>> condensedInputs) {
         for (IAEStack<?> g : condensedInputs) {
             if (getExtractItems(g, details).isEmpty()) {
                 return false;
             }
         }
         return true;
+    }
+
+    private List<IAEStack<?>> getExpandedCondensedInputs(final ICraftingPatternDetails details,
+            final CraftingGridCache cache) {
+        if (details.isCraftable() || cache == null) {
+            return Arrays.asList(details.getCondensedAEInputs());
+        }
+        final List<IAEStack<?>> expanded = TunnelPatternExpander
+                .expandInputs(details.getCondensedAEInputs(), cache, null);
+        if (expanded == null) {
+            return null;
+        }
+        final IAEStack<?>[] condensed = appeng.helpers.PatternHelper
+                .convertToCondensedAEList(expanded.toArray(new IAEStack<?>[0]));
+        return Arrays.asList(condensed);
+    }
+
+    private List<IAEStack<?>> getExpandedInputs(final ICraftingPatternDetails details, final CraftingGridCache cache) {
+        if (details.isCraftable() || cache == null) {
+            return Arrays.asList(details.getAEInputs());
+        }
+        return TunnelPatternExpander.expandInputs(details.getAEInputs(), cache, null);
     }
 
     public void cancel() {
@@ -733,7 +756,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
             final ICraftingPatternDetails details = craftingEntry.getKey();
             ScheduledReason sr = null;
-            if (!this.canCraft(details, details.getCondensedAEInputs())) {
+            final List<IAEStack<?>> condensedInputs = getExpandedCondensedInputs(details, cc);
+            if (condensedInputs == null) {
+                throw new IllegalStateException("Input-only pattern expansion failed");
+            }
+            if (!this.canCraft(details, condensedInputs)) {
                 craftingTaskIterator.remove(); // No need to revisit this task on next executeCrafting this tick
                 reasonProvider.put(details, ScheduledReason.NOT_ENOUGH_INGREDIENTS);
                 continue;
@@ -777,9 +804,14 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     // Find a valid craftingInventory for this craft.
                     double sum = 0;
                     if (craftingInventory == null) {
-                        final IAEStack<?>[] input = details.getAEInputs();
+                        final boolean craftable = details.isCraftable();
+                        final List<IAEStack<?>> expandedInputs = craftable ? Arrays.asList(details.getAEInputs())
+                                : getExpandedInputs(details, cc);
+                        if (expandedInputs == null) {
+                            throw new IllegalStateException("Input-only pattern expansion failed");
+                        }
 
-                        for (final IAEStack<?> anInput : input) {
+                        for (final IAEStack<?> anInput : expandedInputs) {
                             if (anInput != null) {
                                 sum += (double) anInput.getStackSize() / anInput.getAmountPerUnit();
                             }
@@ -791,18 +823,18 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         // check if there is enough power
                         if (eg.extractAEPower(sum, Actionable.SIMULATE, PowerMultiplier.CONFIG) < sum - 0.01) continue;
 
-                        craftingInventory = details.isCraftable() ? new MEInventoryCrafting(new ContainerNull(), 3, 3)
-                                : new MEInventoryCrafting(new ContainerNull(), details.getAEInputs().length, 1);
+                        craftingInventory = craftable ? new MEInventoryCrafting(new ContainerNull(), 3, 3)
+                                : new MEInventoryCrafting(new ContainerNull(), expandedInputs.size(), 1);
 
                         // Check if all items can be used for crafting.
                         boolean found = false;
-                        for (int x = 0; x < input.length; x++) {
-                            if (input[x] != null) {
+                        for (int x = 0; x < expandedInputs.size(); x++) {
+                            final IAEStack<?> slotInput = expandedInputs.get(x);
+                            if (slotInput != null) {
                                 found = false;
-                                for (IAEStack ias : getExtractItems(input[x], details)) {
+                                for (IAEStack ias : getExtractItems(slotInput, details)) {
                                     IAEStack tempStack = ias.copy();
-                                    if (details.isCraftable()
-                                            && !details.isValidItemForSlot(x, tempStack, this.getWorld()))
+                                    if (craftable && !details.isValidItemForSlot(x, tempStack, this.getWorld()))
                                         continue;
 
                                     final IAEStack<?> aes = this.inventory.extractItems(tempStack, Actionable.MODULATE);
@@ -810,8 +842,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                                         found = true;
                                         craftingInventory.setInventorySlotContents(x, aes);
                                         if (!details.canBeSubstitute()
-                                                && aes.getStackSize() == input[x].getStackSize()) {
-                                            this.postChange(input[x], this.machineSrc);
+                                                && aes.getStackSize() == slotInput.getStackSize()) {
+                                            this.postChange(slotInput, this.machineSrc);
                                             break;
                                         } else {
                                             this.postChange(aes, this.machineSrc);
@@ -844,10 +876,23 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                             }
                         }
 
-                        if (this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)
-                                && this.finalOutput.performFakeCrafting(details)) {
+                        if (this.finalOutput.isFakeCrafting() && this.finalOutput.isFinalPattern(details)) {
                             craftingEntry.getValue().value--;
-                            return;
+
+                            if (craftingEntry.getValue().value <= 0) {
+                                this.tasks.remove(details);
+                                parallelismProvider.remove(details);
+                                reasonProvider.remove(details);
+                                craftingTaskIterator.remove();
+
+                                this.finalOutput.performFakeCrafting(details);
+
+                                break;
+                            } else {
+                                this.finalOutput.performFakeCrafting(details);
+
+                                continue;
+                            }
                         }
 
                         // Process output items.
@@ -891,7 +936,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                         // Smart blocking is fine sending the same recipe again.
                         if (medium.getBlockingMode() == BlockingMode.BLOCKING) break;
 
-                        if (!this.canCraft(details, details.getCondensedAEInputs())) {
+                        final List<IAEStack<?>> condensedInputsForRetry = getExpandedCondensedInputs(details, cc);
+                        if (condensedInputsForRetry == null) {
+                            throw new IllegalStateException("Input-only pattern expansion failed");
+                        }
+                        if (!this.canCraft(details, condensedInputsForRetry)) {
                             sr = ScheduledReason.NOT_ENOUGH_INGREDIENTS;
                             break;
                         }
@@ -1482,7 +1531,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public void readFromNBT(final NBTTagCompound data) {
-        this.finalOutput.readFromNBT((NBTTagCompound) data.getTag("finalOutput"));
         this.inventory.readInventory((NBTTagList) data.getTag("inventory"));
         this.waiting = data.getBoolean("waiting");
         this.isComplete = data.getBoolean("isComplete");
@@ -1513,6 +1561,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             }
         }
 
+        this.finalOutput.readFromNBT((NBTTagCompound) data.getTag("finalOutput"));
         this.waitingFor = readAEStackListNBT((NBTTagList) data.getTag("waitingFor"), true);
         for (final IAEStack<?> is : this.waitingFor) {
             this.postCraftingStatusChange(is.copy());
@@ -1954,7 +2003,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         public boolean isFinalPattern(ICraftingPatternDetails details) {
-            if (details.getCondensedAEOutputs().length != this.patternOutputs.length) return false;
+            if (this.patternOutputs == null || details.getCondensedAEOutputs().length != this.patternOutputs.length)
+                return false;
             int matches = 0;
             for (IAEStack<?> aes : details.getCondensedAEOutputs()) {
                 for (IAEStack<?> aes2 : this.patternOutputs) {
@@ -1965,7 +2015,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             return matches == this.patternOutputs.length;
         }
 
-        public boolean performFakeCrafting(ICraftingPatternDetails details) {
+        public void performFakeCrafting(ICraftingPatternDetails details) {
             for (IAEStack<?> aes : details.getCondensedAEOutputs()) {
                 final IAEStack<?> tempAes = this.outputs.findPrecise(aes);
                 if (tempAes != null) tempAes.decStackSize(aes.getStackSize());
@@ -1980,11 +2030,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
                 completeJob();
                 updateCPU();
-
-                return true;
             }
-
-            return false;
         }
 
         public IAEStack<?> getOriginalOutput() {
@@ -2043,6 +2089,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
 
         public void readFromNBT(NBTTagCompound tag) {
+            final IAEStack<?> legacy = readStackNBT(tag, true);
+            if (legacy != null) {
+                this.init(legacy);
+                return;
+            }
+
             this.fakeCrafting = tag.getBoolean("fakeCrafting");
             this.originalOutput = Platform.readStackNBT(tag.getCompoundTag("originalOutput"));
 
