@@ -1911,10 +1911,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             final String elapsedTimeText = DurationFormatUtils.formatDuration(
                     TimeUnit.MILLISECONDS.convert(this.elapsedTime, TimeUnit.NANOSECONDS),
                     GuiText.ETAFormat.getLocal());
-            return PlayerMessages.FinishCraftingRemind.toChat(
-                    new ChatComponentText(EnumChatFormatting.GREEN + String.valueOf(this.outputsCount)),
-                    this.finalOutput.getDisplayName(),
-                    new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText));
+            IChatComponent countComponent = new ChatComponentText(
+                    EnumChatFormatting.GREEN + String.valueOf(this.outputsCount));
+            IChatComponent itemComponent = new ChatComponentTranslation(
+                    this.finalOutput.getUnlocalizedName() + ".name");
+            IChatComponent timeComponent = new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText);
+            return PlayerMessages.FinishCraftingRemind.toChat(countComponent, itemComponent, timeComponent);
         }
 
         public void readFromNBT(NBTTagCompound tag) {
