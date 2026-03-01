@@ -42,6 +42,8 @@ dependencies {
 
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.22:dev') {transitive = false}
 
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.2.13:dev')
+
     testImplementation('junit:junit:4.12')
     functionalTestImplementation(platform('org.junit:junit-bom:5.9.2'))
     functionalTestImplementation('org.junit.jupiter:junit-jupiter')
