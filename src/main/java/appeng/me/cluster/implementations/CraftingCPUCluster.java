@@ -1913,8 +1913,12 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     GuiText.ETAFormat.getLocal());
             IChatComponent countComponent = new ChatComponentText(
                     EnumChatFormatting.GREEN + String.valueOf(this.outputsCount));
-            IChatComponent itemComponent = new ChatComponentTranslation(
-                    this.finalOutput.getUnlocalizedName() + ".name");
+            final String itemTranslationKey = this.finalOutput.isItem()
+                    ? this.finalOutput.getUnlocalizedName() + ".name"
+                    : this.finalOutput.getUnlocalizedName();
+            final IChatComponent itemComponent = StatCollector.canTranslate(itemTranslationKey)
+                    ? new ChatComponentTranslation(itemTranslationKey)
+                    : new ChatComponentText(this.finalOutput.getDisplayName());
             IChatComponent timeComponent = new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText);
             return PlayerMessages.FinishCraftingRemind.toChat(countComponent, itemComponent, timeComponent);
         }
