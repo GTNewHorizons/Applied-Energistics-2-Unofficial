@@ -777,7 +777,7 @@ public class GuiMEMonitorable extends AEBaseGui
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, x_width, 18);
 
         if (this.viewCell || (this instanceof GuiSecurity)) {
-            this.drawTexturedModalRect(offsetX + x_width, offsetY, x_width, 0, 46, 128);
+            this.drawTexturedModalRect(offsetX + x_width, offsetY, x_width, 0, 47, 128);
         }
 
         for (int x = 0; x < this.rows; x++) {
