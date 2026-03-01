@@ -63,19 +63,20 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private final DecimalFormat df;
     private final boolean isAdvanced;
     private boolean isConsume;
-    private final StringBuilder sb;
-    private final String Equal;
-    private final String Minus;
     private double totalBytes;
     private double usedBytes;
     private final int counterNumberGap = 20;
+    private static final int BAR_TEXTURE_X = 12;
+    private static final int BAR_EMPTY_TEXTURE_Y = 183;
+    private static final int BAR_FULL_TEXTURE_Y = 190;
+    private static final int BAR_WIDTH = 131;
+    private static final int BAR_HEIGHT = 7;
     private GuiContextMenu menu;
 
     public GuiNetworkStatus(final InventoryPlayer inventoryPlayer, final INetworkTool te) {
         super(new ContainerNetworkStatus(inventoryPlayer, te));
         final GuiScrollbar scrollbar = new GuiScrollbar();
 
-        this.sb = new StringBuilder();
         this.df = new DecimalFormat("#.##");
         this.setScrollBar(scrollbar);
         this.repo = new ItemRepo(scrollbar, this);
@@ -84,8 +85,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         this.repo.setRowSize(5);
         this.isAdvanced = te.getSize() != 3;
         this.isConsume = true;
-        this.Equal = "=";
-        this.Minus = "-";
         menu = new GuiContextMenu(5) {
 
             @Override
@@ -476,16 +475,16 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
         }
     }
 
-    private String getProgressBar(final double percentage) {
-        int count = (int) Math.round(percentage / 5d);
-        sb.setLength(0);
-        sb.append('<');
-        for (int i = 0; i < 20; i++) {
-            if (i < count) sb.append(this.Equal);
-            else sb.append(this.Minus);
+    private void drawProgressBar(final int x, final int y, final double percentage) {
+        this.bindTexture("guis/networkstatus.png");
+        GL11.glColor4f(1, 1, 1, 1);
+        this.drawTexturedModalRect(x, y, BAR_TEXTURE_X, BAR_EMPTY_TEXTURE_Y, BAR_WIDTH, BAR_HEIGHT);
+
+        double clamped = Double.isNaN(percentage) ? 0d : Math.max(0d, Math.min(percentage, 100d));
+        int filledWidth = (int) Math.round(BAR_WIDTH * clamped / 100d);
+        if (filledWidth > 0) {
+            this.drawTexturedModalRect(x, y, BAR_TEXTURE_X, BAR_FULL_TEXTURE_Y, filledWidth, BAR_HEIGHT);
         }
-        sb.append('>');
-        return sb.toString();
     }
 
     private void drawItemInfo() {
@@ -515,11 +514,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143 - 20,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 - 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 - 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 - 10, getCorrespondingColor(tempDouble).getColor());
 
         // Item type status
         tempDouble = ns.getItemTypesUsed() * 100d / ns.getItemTypesTotal();
@@ -529,11 +525,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 + 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 + 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 + 10, getCorrespondingColor(tempDouble).getColor());
 
         this.drawItemRepo();
     }
@@ -565,11 +558,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143 - 20,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 - 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 - 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 - 10, getCorrespondingColor(tempDouble).getColor());
 
         // Fluid type status
         tempDouble = ns.getFluidTypesUsed() * 100d / ns.getFluidTypesTotal();
@@ -579,11 +569,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 + 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 + 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 + 10, getCorrespondingColor(tempDouble).getColor());
 
         this.drawItemRepo();
     }
@@ -619,11 +606,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143 - 20,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 - 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 - 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 - 10, getCorrespondingColor(tempDouble).getColor());
 
         // Essentia type status
         tempDouble = ns.getEssentiaTypesUsed() * 100d / ns.getEssentiaTypesTotal();
@@ -633,11 +617,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                 13,
                 143,
                 getCorrespondingColor(tempDouble).getColor());
-        this.fontRendererObj.drawString(
-                getProgressBar(tempDouble) + tempStr,
-                13,
-                143 + 10,
-                getCorrespondingColor(tempDouble).getColor());
+        this.drawProgressBar(13, 143 + 10, tempDouble);
+        this.fontRendererObj.drawString(tempStr, 145, 143 + 10, getCorrespondingColor(tempDouble).getColor());
 
         this.drawItemRepo();
     }
