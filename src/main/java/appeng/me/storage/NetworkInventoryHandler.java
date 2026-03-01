@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 
@@ -304,6 +305,11 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
     @Override
     @SuppressWarnings("unchecked")
     public IItemList<T> getAvailableItems(IItemList out, int iteration) {
+        return getAvailableItems(out, iteration, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public IItemList<T> getAvailableItems(IItemList out, int iteration, Predicate<T> filter) {
         if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
             return this.iterationItems == null ? out : this.iterationItems;
         }
@@ -328,13 +334,18 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 continue; // ignore any attempts to read self
             }
             final IItemList<T> passedInList = getPrimitiveItemList();
-            final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
+            final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration, filter);
 
             if (externalNetworkInventory != null && passedOutList instanceof NetworkItemList) {
+                if (filter != null) {
+                    ((NetworkItemList<T>) passedOutList).addFilter(filter);
+                }
                 networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
             } else {
                 for (T item : passedOutList) {
-                    currentNetworkItemList.add(item);
+                    if (filter == null || filter.test(item)) {
+                        currentNetworkItemList.add(item);
+                    }
                 }
             }
         }
@@ -418,25 +429,10 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
             }
         }
         if (readsFromOtherNetwork) {
-            if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
-                return null;
-            }
-
-            for (int i = 0; i < size; i++) {
-                final IMEInventoryHandler<T> inventoryHandler = priorityInventory.get(i);
-                final IMENetworkInventory<T> externalNetworkInventory = inventoryHandler.getExternalNetworkInventory();
-                if (externalNetworkInventory == this) {
-                    continue;
-                }
-
-                final T stack = inventoryHandler.getAvailableItem(request, iteration);
-                count = addStackCount(stack, count);
-                if (count == Long.MAX_VALUE) {
-                    break;
-                }
-            }
-
-            this.surface(this, Actionable.SIMULATE);
+            final T stack = this
+                    .getAvailableItems(getPrimitiveItemList(), iteration, stack -> stack.isSameType(request))
+                    .findPrecise(request);
+            count = addStackCount(stack, count);
         } else {
             if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
                 return null;

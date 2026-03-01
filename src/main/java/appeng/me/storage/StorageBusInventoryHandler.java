@@ -19,29 +19,37 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
+        return this.getAvailableItems(out, iteration, null);
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Predicate<T> preFilter) {
         if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
 
-        if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
+        if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration, preFilter);
+
+        Predicate<T> filterCondition = preFilter;
 
         if (this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()) {
-            return this.filterAvailableItems(out, iteration);
-        } else {
-            return this.getAvailableItems(out, iteration, e -> true);
+            Predicate<T> extractFilter = this.getExtractFilterCondition();
+            filterCondition = filterCondition == null ? extractFilter : extractFilter.and(filterCondition);
         }
+
+        return this.getAvailableItemsInternal(out, iteration, filterCondition == null ? e -> true : filterCondition);
     }
 
     @Override
     protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
         Predicate<T> filterCondition = this.getExtractFilterCondition();
-        return getAvailableItems(out, iteration, filterCondition);
+        return getAvailableItemsInternal(out, iteration, filterCondition);
     }
 
     @SuppressWarnings("unchecked")
-    private IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
+    private IItemList<T> getAvailableItemsInternal(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
         final IItemList<T> availableItems = this.getInternal()
-                .getAvailableItems((IItemList<T>) this.getStackType().createList(), iteration);
+                .getAvailableItems((IItemList<T>) this.getStackType().createList(), iteration, filterCondition);
         if (availableItems instanceof NetworkItemList) {
             NetworkItemList<T> networkItemList = new NetworkItemList<>((NetworkItemList<T>) availableItems);
             networkItemList.addFilter(filterCondition);
