@@ -36,6 +36,7 @@ tile.appliedenergistics2.BlockWireless.desc=Right click with terminal in hand to
 tile.appliedenergistics2.OreQuartz.name=Certus Quartz Ore
 tile.appliedenergistics2.OreQuartzCharged.name=Charged Certus Quartz Ore
 tile.appliedenergistics2.BlockSecurity.name=ME Security Terminal
+tile.appliedenergistics2.BlockStorageReshuffle.name=ME Storage Reshuffle
 tile.appliedenergistics2.BlockQuartzGrowthAccelerator.name=Crystal Growth Accelerator
 tile.appliedenergistics2.BlockSkyStone.name=Sky Stone
 tile.appliedenergistics2.BlockSkyStone.Block.name=Sky Stone Block
@@ -175,6 +176,64 @@ gui.appliedenergistics2.security.inject.tip=User is allowed to store new items i
 gui.appliedenergistics2.security.craft.tip=User can initiate new crafting jobs.
 gui.appliedenergistics2.security.build.tip=User can modify the physical structure of the network, and make configuration changes.
 gui.appliedenergistics2.security.security.tip=User can access and modify the security terminal of the network.
+
+gui.appliedenergistics2.StorageReshuffle=Storage Reshuffle
+gui.appliedenergistics2.ReshuffleStart=START
+gui.appliedenergistics2.ReshuffleStartShiftHint=Shift+Click to confirm and start
+gui.appliedenergistics2.ReshuffleCancel=CANCEL
+gui.appliedenergistics2.ReshuffleScan=Scan
+gui.appliedenergistics2.ReshuffleReport=Report:
+gui.appliedenergistics2.ReshuffleStatusLabel=Status:
+gui.appliedenergistics2.ReshuffleStatusIdle=Idle
+gui.appliedenergistics2.ReshuffleTotalItems=%d / %d types
+gui.appliedenergistics2.ReshuffleStatusRunning=Running
+gui.appliedenergistics2.ReshuffleStatusComplete=Complete
+gui.appliedenergistics2.ReshuffleStatusFailed=Failed
+gui.appliedenergistics2.ReshuffleStatusCancelled=Cancelled
+
+gui.appliedenergistics2.ReshuffleTooltipDesc1=§7Reorganizes ME storage based on priority
+gui.appliedenergistics2.ReshuffleTooltipDesc2=§7Extracts and re-inserts items to optimize cell usage
+gui.appliedenergistics2.ReshuffleTooltipDesc3=§7and reduce fragmentation
+
+gui.appliedenergistics2.ReshuffleReportNoMatchingCells=§8No cells matching filter found!
+gui.appliedenergistics2.ReshuffleReportTitle== Reshuffle Report =
+gui.appliedenergistics2.ReshuffleReportTime=Time:
+gui.appliedenergistics2.ReshuffleReportMode=Mode:
+gui.appliedenergistics2.ReshuffleReportModeNone=None
+gui.appliedenergistics2.ReshuffleReportVoidLabel=Void:
+gui.appliedenergistics2.ReshuffleReportVoidOn=ON
+gui.appliedenergistics2.ReshuffleReportVoidOff=OFF
+gui.appliedenergistics2.ReshuffleReportSectionProcessing=-- Processing --
+gui.appliedenergistics2.ReshuffleReportDone=Done:
+gui.appliedenergistics2.ReshuffleReportSkip=Skip:
+gui.appliedenergistics2.ReshuffleReportSectionStorageTotals=-- Storage Totals --
+gui.appliedenergistics2.ReshuffleReportLabelTypes=Types:
+gui.appliedenergistics2.ReshuffleReportLabelStacks=Stacks:
+gui.appliedenergistics2.ReshuffleReportSectionItemChanges=-- Item Changes --
+gui.appliedenergistics2.ReshuffleReportGainedLabel=Gained:
+gui.appliedenergistics2.ReshuffleReportLostLabel=Lost:
+gui.appliedenergistics2.ReshuffleReportUnchangedLabel=Unchanged:
+gui.appliedenergistics2.ReshuffleReportSectionTopLost=-- Top Lost Items --
+gui.appliedenergistics2.ReshuffleReportSectionTopGained=-- Top Gained Items --
+gui.appliedenergistics2.ReshuffleReportSectionSkipped=-- Skipped Items --
+gui.appliedenergistics2.ReshuffleReportNetChanged=! Net:
+gui.appliedenergistics2.ReshuffleReportNetChangedReason=network/crafts
+gui.appliedenergistics2.ReshuffleReportIntegrityOk= No net change
+gui.appliedenergistics2.ReshuffleReportUnknown=Unknown
+
+gui.appliedenergistics2.ReshuffleTabReshuffle=Reshuffle
+gui.appliedenergistics2.ReshuffleTabScan=Scan
+gui.appliedenergistics2.ReshuffleTabReshuffleHint=Switch to Reshuffle mode
+gui.appliedenergistics2.ReshuffleTabScanHint=Scan network for duplicate cell partitions
+gui.appliedenergistics2.ReshuffleLocate=Locate
+gui.appliedenergistics2.ReshuffleScanEmpty=No duplicate partitions found
+gui.appliedenergistics2.ReshuffleScanDuplicatesTitle=Duplicate Partitions:
+gui.appliedenergistics2.ReshuffleScanSlot=Slot
+gui.appliedenergistics2.ReshuffleScanDuplicatePartition=Duplicate partition:
+gui.appliedenergistics2.ReshufflePartitionScanner=Partition Scanner
+gui.appliedenergistics2.ReshuffleOpenFromTool=Storage Reshuffle
+gui.appliedenergistics2.ReshuffleOpenFromToolHint=Open Storage Reshuffle GUI
+gui.appliedenergistics2.ReshuffleNotPresent=No Storage Reshuffle block found on this network
 
 gui.appliedenergistics2.Efficiency=Efficiency
 gui.appliedenergistics2.RequiredPower=Required Power
@@ -629,6 +688,13 @@ gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts a
 gui.tooltips.appliedenergistics2.PinsSection=Pins Section
 gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
+
+gui.tooltips.appliedenergistics2.ReshuffleVoidProtection=Void Protection
+gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionOn=Enabled - items will not be voided
+gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionOff=Disabled - items may be voided
+gui.tooltips.appliedenergistics2.OpenReshuffle=Storage Reshuffle
+gui.tooltips.appliedenergistics2.OpenReshuffleDesc=Open Storage Reshuffle Interface
+
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode
