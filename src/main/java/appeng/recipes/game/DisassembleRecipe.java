@@ -12,6 +12,7 @@ package appeng.recipes.game;
 
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,7 +65,10 @@ public final class DisassembleRecipe implements IRecipe {
 
         this.nonCellMappings.put(items.encodedPattern(), mats.blankPattern());
         this.nonCellMappings.put(items.encodedUltimatePattern(), mats.blankPattern());
-        this.nonCellMappings.put(items.encodedTunnelPattern(), mats.blankPattern());
+        final IItemDefinition tunnelPattern = getOptionalItemDefinition(items, "encodedTunnelPattern");
+        if (tunnelPattern != null) {
+            this.nonCellMappings.put(tunnelPattern, mats.blankPattern());
+        }
         this.nonCellMappings.put(blocks.craftingStorage1k(), mats.cell1kPart());
         this.nonCellMappings.put(blocks.craftingStorage4k(), mats.cell4kPart());
         this.nonCellMappings.put(blocks.craftingStorage16k(), mats.cell16kPart());
@@ -73,6 +77,16 @@ public final class DisassembleRecipe implements IRecipe {
         this.nonCellMappings.put(blocks.craftingStorage1024k(), mats.cell1024kPart());
         this.nonCellMappings.put(blocks.craftingStorage4096k(), mats.cell4096kPart());
         this.nonCellMappings.put(blocks.craftingStorage16384k(), mats.cell16384kPart());
+    }
+
+    private static IItemDefinition getOptionalItemDefinition(final IItems items, final String methodName) {
+        try {
+            final Method method = items.getClass().getMethod(methodName);
+            final Object result = method.invoke(items);
+            return result instanceof IItemDefinition ? (IItemDefinition) result : null;
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
     }
 
     @Override

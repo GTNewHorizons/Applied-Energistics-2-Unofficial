@@ -187,15 +187,22 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             }
         }
         if (ItemTunnelPattern.isTunnelPattern(stack)) {
-            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo1.getLocal());
-            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo2.getLocal());
-            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo3.getLocal());
-            lines.add(EnumChatFormatting.GRAY + GuiText.TunnelPatternInfo4.getLocal());
+            addOptionalTunnelInfo(lines, "TunnelPatternInfo1");
+            addOptionalTunnelInfo(lines, "TunnelPatternInfo2");
+            addOptionalTunnelInfo(lines, "TunnelPatternInfo3");
+            addOptionalTunnelInfo(lines, "TunnelPatternInfo4");
             final java.util.UUID uuid = ItemTunnelPattern.getTunnelUuid(stack);
             if (uuid != null) {
                 lines.add(EnumChatFormatting.GRAY + "UUID: " + uuid);
             }
         }
+    }
+
+    private static void addOptionalTunnelInfo(final List lines, final String key) {
+        try {
+            final GuiText text = GuiText.valueOf(key);
+            lines.add(EnumChatFormatting.GRAY + text.getLocal());
+        } catch (IllegalArgumentException ignored) {}
     }
 
     @Override

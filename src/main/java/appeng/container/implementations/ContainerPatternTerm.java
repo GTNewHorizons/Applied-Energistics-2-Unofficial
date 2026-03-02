@@ -13,6 +13,7 @@ package appeng.container.implementations;
 import static appeng.parts.reporting.PartPatternTerminal.*;
 import static appeng.util.Platform.isServer;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,6 +34,8 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
+import appeng.api.definitions.IItemDefinition;
+import appeng.api.definitions.IItems;
 import appeng.api.networking.security.MachineSource;
 import appeng.api.parts.IPatternTerminal;
 import appeng.api.storage.IMEMonitor;
@@ -291,7 +294,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         if (isCraftingMode()) {
             output = AEApi.instance().definitions().items().encodedPattern().maybeStack(1).orNull();
         } else if (inputOnly) {
-            output = AEApi.instance().definitions().items().encodedTunnelPattern().maybeStack(1).orNull();
+            output = getOptionalEncodedTunnelPattern().maybeStack(1).orNull();
         } else {
             output = AEApi.instance().definitions().items().encodedUltimatePattern().maybeStack(1).orNull();
         }
@@ -328,6 +331,18 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 
         output.setTagCompound(encodedValue);
         this.patternSlotOUT.putStack(output);
+    }
+
+    private IItemDefinition getOptionalEncodedTunnelPattern() {
+        final IItems items = AEApi.instance().definitions().items();
+        try {
+            final Method method = items.getClass().getMethod("encodedTunnelPattern");
+            final Object result = method.invoke(items);
+            if (result instanceof IItemDefinition def) {
+                return def;
+            }
+        } catch (ReflectiveOperationException ignored) {}
+        return items.encodedUltimatePattern();
     }
 
     private IAEStack<?>[] getInputs() {

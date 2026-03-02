@@ -22,11 +22,9 @@ import javax.annotation.Nonnull;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IChatComponent;
-import net.minecraft.util.StatCollector;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -38,7 +36,6 @@ import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.StorageChannel;
 import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
@@ -387,18 +384,7 @@ public class MECraftingInventory implements IMEInventory<IAEStack> {
             EntityPlayer player = ((PlayerSource) src).player;
             if (player == null || expected == null) return;
 
-            IChatComponent missingItem;
-            if (expected instanceof IAEItemStack ais) {
-                missingItem = ais.getItemStack().func_151000_E();
-            } else {
-                String missingName = expected.getUnlocalizedName();
-                if (StatCollector.canTranslate(missingName + ".name")
-                        && StatCollector.translateToLocal(missingName + ".name").equals(expected.getDisplayName())) {
-                    missingItem = new ChatComponentTranslation(missingName + ".name");
-                } else {
-                    missingItem = new ChatComponentText(expected.getDisplayName());
-                }
-            }
+            IChatComponent missingItem = expected.getChatComponent();
 
             missingItem.getChatStyle().setColor(EnumChatFormatting.GOLD);
             String expectedCount = EnumChatFormatting.RED
