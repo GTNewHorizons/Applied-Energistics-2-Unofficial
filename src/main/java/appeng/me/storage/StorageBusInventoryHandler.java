@@ -1,5 +1,6 @@
 package appeng.me.storage;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import appeng.api.storage.IMEInventory;
@@ -19,18 +20,18 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
-        return this.getAvailableItems(out, iteration, null);
+        return this.getAvailableItems(out, iteration, Optional.empty());
     }
 
     @Override
-    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Predicate<T> preFilter) {
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {
         if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
 
         if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration, preFilter);
 
-        Predicate<T> filterCondition = preFilter;
+        Predicate<T> filterCondition = preFilter.orElse(null);
 
         if (this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()) {
             Predicate<T> extractFilter = this.getExtractFilterCondition();
@@ -48,8 +49,10 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
 
     @SuppressWarnings("unchecked")
     private IItemList<T> getAvailableItemsInternal(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
-        final IItemList<T> availableItems = this.getInternal()
-                .getAvailableItems((IItemList<T>) this.getStackType().createList(), iteration, filterCondition);
+        final IItemList<T> availableItems = this.getInternal().getAvailableItems(
+                (IItemList<T>) this.getStackType().createList(),
+                iteration,
+                Optional.of(filterCondition));
         if (availableItems instanceof NetworkItemList) {
             NetworkItemList<T> networkItemList = new NetworkItemList<>((NetworkItemList<T>) availableItems);
             networkItemList.addFilter(filterCondition);
