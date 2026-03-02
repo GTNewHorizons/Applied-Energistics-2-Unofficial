@@ -17,6 +17,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 
@@ -303,7 +305,13 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
 
     @Override
     @SuppressWarnings("unchecked")
-    public IItemList<T> getAvailableItems(IItemList out, int iteration) {
+    public IItemList<T> getAvailableItems(IItemList<T> out, int iteration) {
+        return getAvailableItems(out, iteration, Optional.empty());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Optional<Predicate<T>> filter) {
         if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
             return this.iterationItems == null ? out : this.iterationItems;
         }
@@ -328,13 +336,16 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 continue; // ignore any attempts to read self
             }
             final IItemList<T> passedInList = getPrimitiveItemList();
-            final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration);
+            final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration, filter);
 
             if (externalNetworkInventory != null && passedOutList instanceof NetworkItemList) {
+                filter.ifPresent(f -> ((NetworkItemList<T>) passedOutList).addFilter(f));
                 networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
             } else {
                 for (T item : passedOutList) {
-                    currentNetworkItemList.add(item);
+                    if (filter.map(f -> f.test(item)).orElse(true)) {
+                        currentNetworkItemList.add(item);
+                    }
                 }
             }
         }
@@ -418,7 +429,9 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
             }
         }
         if (readsFromOtherNetwork) {
-            final T stack = this.getAvailableItems(getPrimitiveItemList(), iteration).findPrecise(request);
+            final T stack = this
+                    .getAvailableItems(getPrimitiveItemList(), iteration, Optional.of(s -> s.isSameType(request)))
+                    .findPrecise(request);
             count = addStackCount(stack, count);
         } else {
             if (this.diveIteration(this, Actionable.SIMULATE, iteration)) {
