@@ -23,10 +23,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.config.FuzzyMode;
 import appeng.api.storage.StorageChannel;
 import appeng.core.AELog;
-import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -219,11 +220,20 @@ public interface IAEStack<StackType extends IAEStack> {
      */
     void writeToPacket(ByteBuf data) throws IOException;
 
-    static IAEStack<?> fromPacketGeneric(ByteBuf buffer) throws IOException {
-        final String id = ByteBufUtils.readUTF8String(buffer);
-        if (id.isEmpty()) return null;
+    static void writeToPacketGeneric(@NotNull ByteBuf buffer, @Nullable IAEStack<?> stack) throws IOException {
+        if (stack == null) {
+            buffer.writeByte(AEStackTypeRegistry.NULL_NETWORK_ID);
+        } else {
+            buffer.writeByte(AEStackTypeRegistry.getNetworkId(stack.getStackType()));
+            stack.writeToPacket(buffer);
+        }
+    }
 
-        IAEStackType<?> type = AEStackTypeRegistry.getType(id);
+    static IAEStack<?> fromPacketGeneric(ByteBuf buffer) throws IOException {
+        final byte id = buffer.readByte();
+        if (id == AEStackTypeRegistry.NULL_NETWORK_ID) return null;
+
+        IAEStackType<?> type = AEStackTypeRegistry.getTypeFromNetworkId(id);
         if (type == null) {
             AELog.warn("Cannot deserialize generic stack from ByteBuf because stack type %s is missing.", id);
             return null;

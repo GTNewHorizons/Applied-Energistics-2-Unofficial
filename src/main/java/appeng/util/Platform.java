@@ -138,7 +138,6 @@ import cofh.api.item.IToolHammer;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
-import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -1930,14 +1929,10 @@ public class Platform {
 
     public static void writeStackByte(IAEStack<?> stack, ByteBuf buffer) {
         try {
-            ByteBufUtils.writeUTF8String(buffer, stack == null ? "" : stack.getStackType().getId());
-            if (stack != null) {
-                stack.writeToPacket(buffer);
-            }
+            IAEStack.writeToPacketGeneric(buffer, stack);
         } catch (RuntimeException | IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public static IAEStack<?> readStackByte(ByteBuf buffer) {
