@@ -311,10 +311,6 @@ public interface IAEStack<StackType extends IAEStack> {
     String getDisplayName();
 
     default IChatComponent getChatComponent() {
-        if (this instanceof IAEItemStack ais) {
-            return ais.getItemStack().func_151000_E();
-        }
-
         final String unlocalizedName = this.getUnlocalizedName();
         if (unlocalizedName != null && !unlocalizedName.isEmpty()) {
             final String translationKey = this.isItem() ? unlocalizedName + ".name" : unlocalizedName;

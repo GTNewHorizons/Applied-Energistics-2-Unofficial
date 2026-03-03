@@ -13,8 +13,6 @@ package appeng.core;
 import static net.minecraft.init.Blocks.air;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import javax.annotation.Nonnull;
 
@@ -37,7 +35,6 @@ import appeng.api.config.Upgrades;
 import appeng.api.definitions.Blocks;
 import appeng.api.definitions.IBlocks;
 import appeng.api.definitions.IDefinitions;
-import appeng.api.definitions.IItemDefinition;
 import appeng.api.definitions.IItems;
 import appeng.api.definitions.IMaterials;
 import appeng.api.definitions.IParts;
@@ -460,10 +457,7 @@ public final class Registration {
         target.itemViewCell = this.converter.of(source.viewCell());
         target.itemEncodedPattern = this.converter.of(source.encodedPattern());
         target.itemEncodedUltimatePattern = converter.of(source.encodedUltimatePattern());
-        final IItemDefinition encodedTunnelPattern = getOptionalItemDefinition(source, "encodedTunnelPattern");
-        if (encodedTunnelPattern != null) {
-            setOptionalLegacyItemField(target, "itemEncodedTunnelPattern", this.converter.of(encodedTunnelPattern));
-        }
+        target.itemEncodedTunnelPattern = converter.of(source.encodedTunnelPattern());
 
         target.itemCell1k = this.converter.of(source.cell1k());
         target.itemCell4k = this.converter.of(source.cell4k());
@@ -506,23 +500,6 @@ public final class Registration {
 
         target.itemPaintBall = source.coloredPaintBall();
         target.itemLumenPaintBall = source.coloredLumenPaintBall();
-    }
-
-    private static IItemDefinition getOptionalItemDefinition(final IItems source, final String methodName) {
-        try {
-            final Method method = source.getClass().getMethod(methodName);
-            final Object result = method.invoke(source);
-            return result instanceof IItemDefinition ? (IItemDefinition) result : null;
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
-    }
-
-    private static void setOptionalLegacyItemField(final Items target, final String fieldName, final Object value) {
-        try {
-            final Field field = target.getClass().getField(fieldName);
-            field.set(target, value);
-        } catch (ReflectiveOperationException ignored) {}
     }
 
     void initialize(@Nonnull final FMLInitializationEvent event, @Nonnull final File recipeDirectory,

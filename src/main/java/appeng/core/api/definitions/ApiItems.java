@@ -431,6 +431,7 @@ public final class ApiItems implements IItems {
         return this.encodedUltimatePattern;
     }
 
+    @Override
     public IItemDefinition encodedTunnelPattern() {
         return this.encodedTunnelPattern;
     }

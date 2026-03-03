@@ -35,6 +35,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -553,6 +554,11 @@ public final class AEItemStack extends AEStack<IAEItemStack> implements IAEItemS
     @Override
     public String getUnlocalizedName() {
         return getItem().getUnlocalizedName();
+    }
+
+    @Override
+    public IChatComponent getChatComponent() {
+        return this.getItemStack().func_151000_E();
     }
 
     // addon...
