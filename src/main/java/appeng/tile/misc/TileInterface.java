@@ -166,13 +166,7 @@ public class TileInterface extends AENetworkInvTile
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileInterface(final NBTTagCompound data) {
         final int val = data.getInteger("pointAt");
-
-        if (val >= 0 && val < ForgeDirection.values().length) {
-            this.pointAt = ForgeDirection.values()[val];
-        } else {
-            this.pointAt = ForgeDirection.UNKNOWN;
-        }
-
+        this.pointAt = ForgeDirection.getOrientation(val);
         this.duality.readFromNBT(data);
     }
 
