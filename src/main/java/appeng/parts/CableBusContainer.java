@@ -847,7 +847,7 @@ public class CableBusContainer extends CableBusStorage implements AEMultiTile, I
 
     public void readFromNBT(final NBTTagCompound data) {
         if (data.hasKey("hasRedstone")) {
-            this.hasRedstone = YesNo.values()[data.getInteger("hasRedstone")];
+            this.hasRedstone = YesNo.fromOrdinal(data.getInteger("hasRedstone"));
         }
 
         for (int x = 0; x < 7; x++) {
