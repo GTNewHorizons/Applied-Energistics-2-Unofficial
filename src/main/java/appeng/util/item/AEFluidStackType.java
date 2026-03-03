@@ -66,7 +66,7 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     @Override
     @Range(from = 1, to = Integer.MAX_VALUE)
     public int getAmountPerUnit() {
-        return 1;
+        return 1000;
     }
 
     @Override

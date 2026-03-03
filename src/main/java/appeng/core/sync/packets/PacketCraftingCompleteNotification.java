@@ -65,7 +65,7 @@ public class PacketCraftingCompleteNotification extends AppEngPacket {
                 this.stack.getDisplayName(),
                 elapsedTimeText);
 
-        NotificationManager.guiNotification.queueNotification(
+        NotificationManager.getGuiNotification().queueNotification(
                 new Notification(
                         this.stack,
                         StatCollector.translateToLocal("chat.appliedenergistics2.CraftComplete"),
