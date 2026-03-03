@@ -116,7 +116,7 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
         this.isActive = data.readBoolean();
 
         final AEColor oldPaintedColor = this.paintedColor;
-        this.paintedColor = AEColor.values()[data.readByte()];
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
 
         return oldPaintedColor != this.paintedColor || wasActive != this.isActive;
     }
@@ -152,7 +152,7 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
     public void readFromNBT_TileSecurity(final NBTTagCompound data) {
         this.cm.readFromNBT(data);
         if (data.hasKey("paintedColor")) {
-            this.paintedColor = AEColor.values()[data.getByte("paintedColor")];
+            this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
         }
 
         this.securityKey = data.getLong("securityKey");

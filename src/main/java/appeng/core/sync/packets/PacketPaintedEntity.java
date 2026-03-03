@@ -29,7 +29,7 @@ public class PacketPaintedEntity extends AppEngPacket {
     // automatic.
     public PacketPaintedEntity(final ByteBuf stream) {
         this.entityId = stream.readInt();
-        this.myColor = AEColor.values()[stream.readByte()];
+        this.myColor = AEColor.fromOrdinal(stream.readByte());
         this.ticks = stream.readInt();
     }
 

@@ -202,12 +202,11 @@ public final class ItemMultiPart extends AEBaseItem implements IPartItem, IItemG
         final PartType pt = this.getTypeByStack(is);
 
         if (pt.isCable()) {
-            final AEColor[] variants = AEColor.values();
-
             final int itemDamage = is.getItemDamage();
             final PartTypeWithVariant registeredPartType = this.registered.get(itemDamage);
             if (registeredPartType != null) {
-                return super.getItemStackDisplayName(is) + " - " + variants[registeredPartType.variant].getLocal();
+                return super.getItemStackDisplayName(is) + " - "
+                        + AEColor.fromOrdinal(registeredPartType.variant).getLocal();
             }
         }
 

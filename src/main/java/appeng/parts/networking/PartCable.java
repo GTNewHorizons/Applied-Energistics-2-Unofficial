@@ -65,7 +65,7 @@ public class PartCable extends AEBasePart implements IPartCable {
         super(is);
         this.getProxy().setFlags(GridFlags.PREFERRED);
         this.getProxy().setIdlePowerUsage(0.0);
-        this.getProxy().setColor(AEColor.values()[((ItemMultiPart) is.getItem()).variantOf(is.getItemDamage())]);
+        this.getProxy().setColor(AEColor.fromOrdinal(((ItemMultiPart) is.getItem()).variantOf(is.getItemDamage())));
     }
 
     @Override

@@ -401,7 +401,7 @@ public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection 
     public boolean recolourBlock(final World world, final int x, final int y, final int z, final ForgeDirection side,
             final int colour, final EntityPlayer who) {
         try {
-            return this.cb(world, x, y, z).recolourBlock(side, AEColor.values()[colour], who);
+            return this.cb(world, x, y, z).recolourBlock(side, AEColor.fromOrdinal(colour), who);
         } catch (final Throwable ignored) {}
         return false;
     }
