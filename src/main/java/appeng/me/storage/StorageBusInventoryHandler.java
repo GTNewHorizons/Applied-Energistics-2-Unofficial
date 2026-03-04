@@ -41,12 +41,6 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
         return this.getAvailableItemsInternal(out, iteration, filterCondition == null ? e -> true : filterCondition);
     }
 
-    @Override
-    protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
-        Predicate<T> filterCondition = this.getExtractFilterCondition();
-        return getAvailableItemsInternal(out, iteration, filterCondition);
-    }
-
     @SuppressWarnings("unchecked")
     private IItemList<T> getAvailableItemsInternal(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
         final IItemList<T> availableItems = this.getInternal().getAvailableItems(
