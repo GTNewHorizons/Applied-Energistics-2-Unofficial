@@ -150,10 +150,6 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         return bool;
     }
 
-    protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
-        return this.filterAvailableItems(out, iteration, this.getExtractFilterCondition());
-    }
-
     protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
         final IItemList<T> allAvailableItems = this.internal.getAvailableItems(
                 (IItemList<T>) this.internal.getStackType().createList(),
@@ -165,10 +161,6 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
             }
         }
         return out;
-    }
-
-    protected IItemList<T> getAvailableItemsFilter(IItemList<T> out, int iteration) {
-        return this.getAvailableItemsFilter(out, iteration, Optional.empty());
     }
 
     protected IItemList<T> getAvailableItemsFilter(IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {

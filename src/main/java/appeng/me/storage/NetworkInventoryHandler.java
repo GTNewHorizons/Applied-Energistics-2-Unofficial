@@ -339,7 +339,6 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
             final IItemList<T> passedOutList = inv.getAvailableItems(passedInList, iteration, filter);
 
             if (externalNetworkInventory != null && passedOutList instanceof NetworkItemList) {
-                filter.ifPresent(f -> ((NetworkItemList<T>) passedOutList).addFilter(f));
                 networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
             } else {
                 for (T item : passedOutList) {
