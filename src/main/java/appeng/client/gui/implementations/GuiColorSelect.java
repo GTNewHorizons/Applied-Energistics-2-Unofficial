@@ -77,7 +77,7 @@ public class GuiColorSelect extends GuiScreen {
         int col = 0;
         int row = 0;
 
-        for (final AEColor color : AEColor.values()) {
+        for (final AEColor color : AEColor.VALUES) {
             final long longCount = availableColors.getOrDefault(color, 0L);
             final int count = (int) Math.min(longCount, Integer.MAX_VALUE);
 

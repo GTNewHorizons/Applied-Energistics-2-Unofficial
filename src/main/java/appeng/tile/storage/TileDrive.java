@@ -196,7 +196,7 @@ public class TileDrive extends AENetworkInvTile
         this.state = data.readInt() & STATE_MASK;
         this.type = data.readInt();
         final AEColor oldPaintedColor = this.paintedColor;
-        this.paintedColor = AEColor.values()[data.readByte()];
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
         this.getProxy().setColor(this.paintedColor);
         return oldPaintedColor != this.paintedColor || this.state != oldState || this.type != oldType;
     }
@@ -206,7 +206,7 @@ public class TileDrive extends AENetworkInvTile
         this.isCached = false;
         this.priority = data.getInteger("priority");
         if (data.hasKey("paintedColor")) {
-            this.paintedColor = AEColor.values()[data.getByte("paintedColor")];
+            this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
             this.getProxy().setColor(this.paintedColor);
         }
     }

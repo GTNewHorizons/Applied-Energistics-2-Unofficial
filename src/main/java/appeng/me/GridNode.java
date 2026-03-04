@@ -457,7 +457,7 @@ public class GridNode implements IGridNode, IPathItem {
     }
 
     private AEColor getColor() {
-        return AEColor.values()[(this.compressedData >> 3) & 0x1F];
+        return AEColor.fromOrdinal((this.compressedData >> 3) & 0x1F);
     }
 
     private void visitorConnection(final Object tracker, final IGridVisitor g, final Deque<GridNode> nextRun,

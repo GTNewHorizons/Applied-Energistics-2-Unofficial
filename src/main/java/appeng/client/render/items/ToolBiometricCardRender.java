@@ -96,7 +96,7 @@ public class ToolBiometricCardRender implements IItemRenderer {
                 username = gp.getName();
             }
         }
-        final int hash = username.length() > 0 ? username.hashCode() : 0;
+        final int hash = !username.isEmpty() ? username.hashCode() : 0;
 
         GL11.glScalef(1F / 16F, 1F / 16F, 1F);
         GL11.glTranslatef(4, 6, 0);
@@ -104,7 +104,7 @@ public class ToolBiometricCardRender implements IItemRenderer {
 
         tessellator.startDrawingQuads();
 
-        AEColor col = AEColor.values()[Math.abs(3 + hash) % AEColor.values().length];
+        AEColor col = AEColor.fromOrdinal(Math.abs(3 + hash) % AEColor.VALUES.length);
         if (hash == 0) {
             col = AEColor.Black;
         }

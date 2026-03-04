@@ -56,8 +56,8 @@ import io.netty.buffer.ByteBuf;
 
 public class PartCable extends AEBasePart implements IPartCable {
 
+    private static final ForgeDirection[] FORGE_DIRECTIONS = ForgeDirection.values();
     private final int[] channelsOnSide = { 0, 0, 0, 0, 0, 0 };
-
     private EnumSet<ForgeDirection> connections = EnumSet.noneOf(ForgeDirection.class);
     private boolean powered = false;
 
@@ -65,7 +65,7 @@ public class PartCable extends AEBasePart implements IPartCable {
         super(is);
         this.getProxy().setFlags(GridFlags.PREFERRED);
         this.getProxy().setIdlePowerUsage(0.0);
-        this.getProxy().setColor(AEColor.values()[((ItemMultiPart) is.getItem()).variantOf(is.getItemDamage())]);
+        this.getProxy().setColor(AEColor.fromOrdinal(((ItemMultiPart) is.getItem()).variantOf(is.getItemDamage())));
     }
 
     @Override
@@ -394,7 +394,7 @@ public class PartCable extends AEBasePart implements IPartCable {
         this.powered = false;
         boolean channelsChanged = false;
 
-        for (final ForgeDirection d : ForgeDirection.values()) {
+        for (final ForgeDirection d : FORGE_DIRECTIONS) {
             if (d != ForgeDirection.UNKNOWN) {
                 final int ch = (sideOut >> (d.ordinal() * 4)) & 0xF;
                 if (ch != this.getChannelsOnSide()[d.ordinal()]) {
@@ -403,13 +403,12 @@ public class PartCable extends AEBasePart implements IPartCable {
                 }
             }
 
+            final int id = 1 << d.ordinal();
             if (d == ForgeDirection.UNKNOWN) {
-                final int id = 1 << d.ordinal();
                 if (id == (cs & id)) {
                     this.powered = true;
                 }
             } else {
-                final int id = 1 << d.ordinal();
                 if (id == (cs & id)) {
                     this.getConnections().add(d);
                 } else {
