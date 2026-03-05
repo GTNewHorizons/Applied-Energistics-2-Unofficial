@@ -32,6 +32,7 @@ import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IIcon;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -402,6 +403,21 @@ public final class AEFluidStack extends AEStack<IAEFluidStack> implements IAEFlu
     @Override
     public String getUnlocalizedName() {
         return fluid.getUnlocalizedName();
+    }
+
+    @Override
+    public IChatComponent getChatComponent() {
+        if (isAE2FCLoaded) {
+            FluidStack fluidStack = this.getFluidStack();
+            if (fluidStack.amount <= 0) fluidStack.amount = 1;
+
+            ItemStack packet = ItemFluidPacket.newStack(fluidStack);
+            if (packet != null) {
+                return packet.func_151000_E();
+            }
+        }
+
+        return IAEFluidStack.super.getChatComponent();
     }
 
     @Override
