@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidContainerRegistry;
@@ -67,6 +68,11 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     @Range(from = 1, to = Integer.MAX_VALUE)
     public int getAmountPerUnit() {
         return 1000;
+    }
+
+    @Override
+    public EnumChatFormatting getColorDefinition() {
+        return EnumChatFormatting.GOLD;
     }
 
     @Override
