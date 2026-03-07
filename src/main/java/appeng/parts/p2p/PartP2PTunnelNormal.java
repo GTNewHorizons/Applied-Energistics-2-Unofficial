@@ -3,6 +3,7 @@ package appeng.parts.p2p;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Vec3;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 
@@ -33,7 +34,17 @@ public class PartP2PTunnelNormal<T extends PartP2PTunnelNormal> extends PartP2PT
 
         final TunnelType tt = AEApi.instance().registries().p2pTunnel().getTunnelTypeByItem(is);
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
-            if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
+            if (!(player instanceof FakePlayer)) {
+                if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
+            }
+            if (player.isSneaking()) {
+                if (Platform.isClient()) return true;
+                PartP2PTunnel<?> tunnel = this.convertToInput(player, null);
+                if (tunnel != null) {
+                    tunnel.saveInputToMemoryCard(player, mc, is);
+                }
+                return true;
+            }
             return applyMemoryCard(player, mc, is) != null;
         } else if (!player.isSneaking()
                 && Platform.isWrench(player, is, (int) pos.xCoord, (int) pos.yCoord, (int) pos.zCoord)

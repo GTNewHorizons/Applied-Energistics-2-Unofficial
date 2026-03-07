@@ -24,6 +24,7 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
+import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 
@@ -261,7 +262,9 @@ public abstract class PartP2PTunnel<T extends PartP2PTunnel> extends PartBasicSt
     public boolean onPartShiftActivate(final EntityPlayer player, final Vec3 pos) {
         final ItemStack is = player.inventory.getCurrentItem();
         if (is != null && is.getItem() instanceof IMemoryCard mc) {
-            if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
+            if (!(player instanceof FakePlayer)) {
+                if (ForgeEventFactory.onItemUseStart(player, is, 1) <= 0) return false;
+            }
             if (Platform.isClient()) return true;
             PartP2PTunnel<?> tunnel = this.convertToInput(player, null);
             tunnel.saveInputToMemoryCard(player, mc, is);
