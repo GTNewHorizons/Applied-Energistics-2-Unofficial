@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1780,12 +1781,22 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return ScheduledReason.UNDEFINED;
     }
 
+    private IdentityHashMap<Class<?>, Method> getTileMethodCache = new IdentityHashMap<Class<?>, Method>();
+
     private TileEntity getTile(ICraftingMedium craftingProvider) {
         if (craftingProvider instanceof TileEntity te) return te;
+        Class<?> clazz = craftingProvider.getClass();
         try {
-            Method method = craftingProvider.getClass().getMethod("getTile");
-            return (TileEntity) method.invoke(craftingProvider);
+            if (!getTileMethodCache.containsKey(clazz)) {
+                getTileMethodCache.put(clazz, clazz.getMethod("getTile"));
+            }
+            Method getter = getTileMethodCache.get(clazz);
+            if (getter == null) {
+                return null;
+            }
+            return (TileEntity) getter.invoke(craftingProvider);
         } catch (Exception ignored) {
+            getTileMethodCache.put(clazz, null);
             return null;
         }
 
