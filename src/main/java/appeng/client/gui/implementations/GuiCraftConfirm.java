@@ -326,7 +326,9 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         this.updateCancelButtonText();
         cpuTable.drawScreen();
 
-        this.start.enabled = !(this.ccc.hasNoCPU() || this.isSimulation());
+        final boolean requiresShiftToStart = this.isSimulation();
+        this.start.enabled = !(this.ccc.hasNoCPU() || !this.ccc.canStartCrafting()
+                || (requiresShiftToStart && !isShiftKeyDown()));
         if (this.start.enabled) {
             CraftingCPUStatus selected = this.cpuTable.getContainer().getSelectedCPU();
             if (selected != null && this.ccc.cpuCraftingSameItem(selected)) {
@@ -341,8 +343,8 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
 
         this.startWithFollow.enabled = this.start.enabled;
 
-        this.selectCPU.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation();
-        this.optimizeButton.enabled = (displayMode == DisplayMode.LIST) && !this.isSimulation()
+        this.selectCPU.enabled = (displayMode == DisplayMode.LIST) && this.ccc.canStartCrafting();
+        this.optimizeButton.enabled = (displayMode == DisplayMode.LIST) && this.ccc.canStartCrafting()
                 && this.ccc.isAllowedToRunPatternOptimization;
         if (!this.ccc.isAllowedToRunPatternOptimization) this.optimizeButton.setTooltip(
                 ButtonToolTips.OptimizePatterns.getLocal() + "\n" + ButtonToolTips.OptimizePatternsNoReq.getLocal());
