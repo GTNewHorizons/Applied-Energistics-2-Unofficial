@@ -19,19 +19,28 @@ import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.logging.log4j.Level;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import com.gtnewhorizon.gtnhlib.asm.ClassConstantPoolParser;
+
 import appeng.helpers.Reflected;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
-import appeng.transformer.annotations.Integration;
 import cpw.mods.fml.relauncher.FMLRelaunchLog;
 
 @Reflected
 public final class ASMIntegration implements IClassTransformer {
+
+    private static final String INTERFACE_ANNOTATION = "Lappeng/transformer/annotations/Integration$Interface;";
+    private static final String INTERFACE_LIST_ANNOTATION = "Lappeng/transformer/annotations/Integration$InterfaceList;";
+    private static final String METHOD_ANNOTATION = "Lappeng/transformer/annotations/Integration$Method;";
+
+    private final ClassConstantPoolParser cstPoolParser = new ClassConstantPoolParser(
+            INTERFACE_ANNOTATION,
+            INTERFACE_LIST_ANNOTATION,
+            METHOD_ANNOTATION);
 
     @Reflected
     public ASMIntegration() {
@@ -56,11 +65,19 @@ public final class ASMIntegration implements IClassTransformer {
     @Nullable
     @Override
     public byte[] transform(final String name, final String transformedName, final byte[] basicClass) {
-        if (basicClass == null || transformedName.startsWith("appeng.transformer")) {
+        if (basicClass == null) {
             return basicClass;
         }
 
         if (transformedName.startsWith("appeng.")) {
+            if (transformedName.startsWith("appeng.transformer")) {
+                return basicClass;
+            }
+
+            if (!cstPoolParser.find(basicClass)) {
+                return basicClass;
+            }
+
             final ClassNode classNode = new ClassNode();
             final ClassReader classReader = new ClassReader(basicClass);
             classReader.accept(classNode, 0);
@@ -69,7 +86,7 @@ public final class ASMIntegration implements IClassTransformer {
                 final boolean reWrite = this.removeOptionals(classNode);
 
                 if (reWrite) {
-                    final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+                    final ClassWriter writer = new ClassWriter(0);
                     classNode.accept(writer);
                     return writer.toByteArray();
                 }
@@ -85,13 +102,13 @@ public final class ASMIntegration implements IClassTransformer {
 
         if (classNode.visibleAnnotations != null) {
             for (final AnnotationNode an : classNode.visibleAnnotations) {
-                if (this.hasAnnotation(an, Integration.Interface.class)) {
-                    if (this.stripInterface(classNode, Integration.Interface.class, an)) {
+                if (an.desc.equals(INTERFACE_ANNOTATION)) {
+                    if (this.stripInterface(classNode, an)) {
                         changed = true;
                     }
-                } else if (this.hasAnnotation(an, Integration.InterfaceList.class)) {
-                    for (final Object o : ((Iterable) an.values.get(1))) {
-                        if (this.stripInterface(classNode, Integration.InterfaceList.class, (AnnotationNode) o)) {
+                } else if (an.desc.equals(INTERFACE_LIST_ANNOTATION)) {
+                    for (final AnnotationNode o : ((Iterable<AnnotationNode>) an.values.get(1))) {
+                        if (this.stripInterface(classNode, o)) {
                             changed = true;
                         }
                     }
@@ -105,8 +122,8 @@ public final class ASMIntegration implements IClassTransformer {
 
             if (mn.visibleAnnotations != null) {
                 for (final AnnotationNode an : mn.visibleAnnotations) {
-                    if (this.hasAnnotation(an, Integration.Method.class)) {
-                        if (this.stripMethod(classNode, mn, i, Integration.Method.class, an)) {
+                    if (an.desc.equals(METHOD_ANNOTATION)) {
+                        if (this.stripMethod(classNode, mn, i, an)) {
                             changed = true;
                         }
                     }
@@ -121,11 +138,7 @@ public final class ASMIntegration implements IClassTransformer {
         return changed;
     }
 
-    private boolean hasAnnotation(final AnnotationNode ann, final Class<?> annotation) {
-        return ann.desc.equals(Type.getDescriptor(annotation));
-    }
-
-    private boolean stripInterface(final ClassNode classNode, final Class<?> class1, final AnnotationNode an) {
+    private boolean stripInterface(final ClassNode classNode, final AnnotationNode an) {
         if (an.values.size() != 4) {
             throw new IllegalArgumentException("Unable to handle Interface annotation on " + classNode.name);
         }
@@ -174,7 +187,7 @@ public final class ASMIntegration implements IClassTransformer {
     }
 
     private boolean stripMethod(final ClassNode classNode, final MethodNode mn, final Iterator<MethodNode> i,
-            final Class class1, final AnnotationNode an) {
+            final AnnotationNode an) {
         if (an.values.size() != 2) {
             throw new IllegalArgumentException("Unable to handle Method annotation on " + classNode.name);
         }
