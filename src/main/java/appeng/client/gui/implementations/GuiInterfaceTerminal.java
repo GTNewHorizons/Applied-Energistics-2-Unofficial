@@ -10,6 +10,7 @@
 
 package appeng.client.gui.implementations;
 
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -495,9 +497,71 @@ public class GuiInterfaceTerminal extends AEBaseGui
     /**
      * Gets the total height of the title after wrapping, using TITLE_HEIGHT as step
      */
-    private int getWrappedTitleHeight(String name, int maxWidth) {
-        List<String> lines = fontRendererObj.listFormattedStringToWidth(name, maxWidth);
+    public int getWrappedTitleHeight(String name, int maxWidth) {
+        List<String> lines = breakText(name, maxWidth);
         return Math.max(InterfaceSection.TITLE_HEIGHT, lines.size() * InterfaceSection.TITLE_HEIGHT);
+    }
+
+    public List<String> breakText(String text, int maxWidth) {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.isEmpty()) return lines;
+
+        var lang = mc.getLanguageManager().getCurrentLanguage();
+        Locale locale = Locale.forLanguageTag(lang.toString().replace(" (", "-").replace(")", ""));
+        if (locale == null) locale = Locale.forLanguageTag(lang.getLanguageCode());
+        if (locale == null) locale = Locale.ENGLISH;
+
+        var breaker = BreakIterator.getLineInstance(locale);
+        breaker.setText(text);
+
+        var currentLine = new StringBuilder();
+        int start = breaker.first();
+        for (int end = breaker.next(); end != BreakIterator.DONE; start = end, end = breaker.next()) {
+            String word = text.substring(start, end);
+
+            if (fontRendererObj.getStringWidth(word) > maxWidth) {
+                if (currentLine.length() > 0) {
+                    lines.add(currentLine.toString());
+                    currentLine = new StringBuilder(toControlCodes(getControlCodes(currentLine.toString())));
+                }
+
+                for (int i = 0; i < word.length(); i++) {
+                    char c = word.charAt(i);
+                    if (fontRendererObj.getStringWidth(currentLine.toString() + c) > maxWidth) {
+                        lines.add(currentLine.toString());
+                        currentLine = new StringBuilder(toControlCodes(getControlCodes(currentLine.toString())) + c);
+                    } else {
+                        currentLine.append(c);
+                    }
+                }
+                continue;
+            }
+
+            String linePreview = currentLine + word;
+            if (fontRendererObj.getStringWidth(linePreview) > maxWidth && currentLine.length() > 0) {
+                lines.add(currentLine.toString());
+                String codes = toControlCodes(getControlCodes(currentLine.toString()));
+                currentLine = new StringBuilder(codes + word);
+            } else {
+                currentLine.append(word);
+            }
+        }
+
+        if (currentLine.length() > 0) {
+            lines.add(currentLine.toString());
+        }
+
+        return lines;
+    }
+
+    public static String getControlCodes(String s) {
+        String controls = s.replaceAll("(?<!\u00a7)(.)", "");
+        String wiped = controls.replaceAll(".*r", "r");
+        return wiped;
+    }
+
+    public static String toControlCodes(String s) {
+        return s.replaceAll(".", "\u00a7$0");
     }
 
     /**
@@ -512,7 +576,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private int drawSection(InterfaceSection section, int viewY, int relMouseX, int relMouseY) {
         int renderY = 0;
         final int fontColor = GuiColors.InterfaceTerminalInventory.getColor();
-        List<String> titleLines = fontRendererObj.listFormattedStringToWidth(section.name, VIEW_WIDTH - 4);
+        List<String> titleLines = breakText(section.name, VIEW_WIDTH - 4);
 
         int actualTitleHeight = Math
                 .max(InterfaceSection.TITLE_HEIGHT, titleLines.size() * InterfaceSection.TITLE_HEIGHT);
