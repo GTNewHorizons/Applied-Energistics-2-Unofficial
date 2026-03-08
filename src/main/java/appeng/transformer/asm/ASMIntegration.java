@@ -19,6 +19,7 @@ import net.minecraft.launchwrapper.IClassTransformer;
 import org.apache.logging.log4j.Level;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -28,14 +29,15 @@ import com.gtnewhorizon.gtnhlib.asm.ClassConstantPoolParser;
 import appeng.helpers.Reflected;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
+import appeng.transformer.annotations.Integration;
 import cpw.mods.fml.relauncher.FMLRelaunchLog;
 
 @Reflected
 public final class ASMIntegration implements IClassTransformer {
 
-    private static final String INTERFACE_ANNOTATION = "Lappeng/transformer/annotations/Integration$Interface;";
-    private static final String INTERFACE_LIST_ANNOTATION = "Lappeng/transformer/annotations/Integration$InterfaceList;";
-    private static final String METHOD_ANNOTATION = "Lappeng/transformer/annotations/Integration$Method;";
+    private static final String INTERFACE_ANNOTATION = Type.getDescriptor(Integration.Interface.class);
+    private static final String INTERFACE_LIST_ANNOTATION = Type.getDescriptor(Integration.InterfaceList.class);
+    private static final String METHOD_ANNOTATION = Type.getDescriptor(Integration.Method.class);
 
     private final ClassConstantPoolParser cstPoolParser = new ClassConstantPoolParser(
             INTERFACE_ANNOTATION,
@@ -66,7 +68,7 @@ public final class ASMIntegration implements IClassTransformer {
     @Override
     public byte[] transform(final String name, final String transformedName, final byte[] basicClass) {
         if (basicClass == null) {
-            return basicClass;
+            return null;
         }
 
         if (transformedName.startsWith("appeng.")) {
