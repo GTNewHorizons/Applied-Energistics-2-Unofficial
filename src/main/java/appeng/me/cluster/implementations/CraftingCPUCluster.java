@@ -1781,25 +1781,23 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return ScheduledReason.UNDEFINED;
     }
 
-    private IdentityHashMap<Class<?>, Method> getTileMethodCache = new IdentityHashMap<Class<?>, Method>();
+    private final IdentityHashMap<Class<?>, Method> getTileMethodCache = new IdentityHashMap<>();
 
     private TileEntity getTile(ICraftingMedium craftingProvider) {
+        if (craftingProvider == null) return null;
         if (craftingProvider instanceof TileEntity te) return te;
-        Class<?> clazz = craftingProvider.getClass();
+        final Class<?> clazz = craftingProvider.getClass();
         try {
-            if (!getTileMethodCache.containsKey(clazz)) {
-                getTileMethodCache.put(clazz, clazz.getMethod("getTile"));
+            Method method = getTileMethodCache.get(clazz);
+            if (method == null) {
+                method = clazz.getMethod("getTile");
+                getTileMethodCache.put(clazz, method);
             }
-            Method getter = getTileMethodCache.get(clazz);
-            if (getter == null) {
-                return null;
-            }
-            return (TileEntity) getter.invoke(craftingProvider);
+            return (TileEntity) method.invoke(craftingProvider);
         } catch (Exception ignored) {
             getTileMethodCache.put(clazz, null);
             return null;
         }
-
     }
 
     public int getRemainingOperations() {
