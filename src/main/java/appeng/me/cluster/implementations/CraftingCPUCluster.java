@@ -1788,16 +1788,19 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (craftingProvider instanceof TileEntity te) return te;
         final Class<?> clazz = craftingProvider.getClass();
         try {
+            if (!getTileMethodCache.containsKey(clazz)) {
+                getTileMethodCache.put(clazz, clazz.getMethod("getTile"));
+            }
             Method method = getTileMethodCache.get(clazz);
             if (method == null) {
-                method = clazz.getMethod("getTile");
-                getTileMethodCache.put(clazz, method);
+                return null;
             }
             return (TileEntity) method.invoke(craftingProvider);
         } catch (Exception ignored) {
             getTileMethodCache.put(clazz, null);
             return null;
         }
+
     }
 
     public int getRemainingOperations() {
