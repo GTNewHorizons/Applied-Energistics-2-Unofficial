@@ -147,7 +147,10 @@ public interface IMEInventory<StackType extends IAEStack> {
     @SuppressWarnings("unchecked") // changing the generic StackType to be correct here is too much of a breaking API
                                    // change
     default StackType getAvailableItem(@Nonnull StackType request, int iteration) {
-        return getAvailableItems((IItemList<StackType>) getStackType().createList(), iteration).findPrecise(request);
+        return getAvailableItems(
+                (IItemList<StackType>) getStackType().createList(),
+                iteration,
+                Optional.of(s -> s.isSameType(request))).findPrecise(request);
     }
 
     /**
