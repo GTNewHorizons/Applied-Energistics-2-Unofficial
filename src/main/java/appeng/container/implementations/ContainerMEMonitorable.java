@@ -126,6 +126,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
     private IConfigManager serverCM;
     private IGridNode networkNode;
 
+    private boolean needListUpdate = false;
+
     public ContainerMEMonitorable(final InventoryPlayer ip, final ITerminalHost monitorable) {
         this(ip, monitorable, true);
     }
@@ -243,35 +245,45 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
 
-            try {
-                final PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
+            if (this.needListUpdate) {
+                this.needListUpdate = false;
 
-                for (var entry : this.updateQueue.entrySet()) {
-                    IItemList list = this.monitors.get(entry.getKey()).getStorageList();
-                    for (IAEStack<?> aes : entry.getValue()) {
-                        final IAEStack<?> send = list.findPrecise(aes);
-                        if (send == null) {
-                            aes.setStackSize(0);
-                            piu.appendItem(aes);
-                        } else {
-                            piu.appendItem(send);
-                        }
+                for (final Object c : this.crafters) {
+                    if (c instanceof EntityPlayerMP player) {
+                        this.queueInventory(player);
                     }
                 }
+            } else {
+                try {
+                    final PacketMEInventoryUpdate piu = new PacketMEInventoryUpdate();
 
-                if (!piu.isEmpty()) {
-                    for (var list : this.updateQueue.values()) {
-                        list.clear();
-                    }
-
-                    for (final Object c : this.crafters) {
-                        if (c instanceof EntityPlayer) {
-                            NetworkHandler.instance.sendTo(piu, (EntityPlayerMP) c);
+                    for (var entry : this.updateQueue.entrySet()) {
+                        IItemList list = this.monitors.get(entry.getKey()).getStorageList();
+                        for (IAEStack<?> aes : entry.getValue()) {
+                            final IAEStack<?> send = list.findPrecise(aes);
+                            if (send == null) {
+                                aes.setStackSize(0);
+                                piu.appendItem(aes);
+                            } else {
+                                piu.appendItem(send);
+                            }
                         }
                     }
+
+                    if (!piu.isEmpty()) {
+                        for (var list : this.updateQueue.values()) {
+                            list.clear();
+                        }
+
+                        for (final Object c : this.crafters) {
+                            if (c instanceof EntityPlayer) {
+                                NetworkHandler.instance.sendTo(piu, (EntityPlayerMP) c);
+                            }
+                        }
+                    }
+                } catch (final IOException e) {
+                    AELog.debug(e);
                 }
-            } catch (final IOException e) {
-                AELog.debug(e);
             }
 
             this.updatePowerStatus();
@@ -404,11 +416,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     @Override
     public void onListUpdate() {
-        for (final Object c : this.crafters) {
-            if (c instanceof EntityPlayerMP player) {
-                this.queueInventory(player);
-            }
-        }
+        this.needListUpdate = true;
     }
 
     @Override
