@@ -30,6 +30,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
+import appeng.util.item.NetworkItemList;
 
 /**
  * AE's Equivalent to IInventory, used to reading contents, and manipulating contents of ME Inventories.
@@ -99,7 +100,8 @@ public interface IMEInventory<StackType extends IAEStack> {
      * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
      *                  conflicts
      * @param filter    optional filter
-     * @return returns same list that was passed in, is passed out
+     * @return returns same list that was passed in, is passed out. Network-aware implementations may instead return a
+     *         filtered {@link NetworkItemList} to preserve per-network accounting during nested scans.
      */
     default IItemList<StackType> getAvailableItems(IItemList<StackType> out, int iteration,
             Optional<Predicate<StackType>> filter) {
@@ -109,7 +111,13 @@ public interface IMEInventory<StackType extends IAEStack> {
 
         final Predicate<StackType> predicate = filter.get();
         final IItemList<StackType> allItems = (IItemList<StackType>) getStackType().createList();
-        for (final StackType item : getAvailableItems(allItems, iteration)) {
+        final IItemList<StackType> availableItems = getAvailableItems(allItems, iteration);
+
+        if (availableItems instanceof NetworkItemList) {
+            return ((NetworkItemList<StackType>) availableItems).createFilteredView(predicate);
+        }
+
+        for (final StackType item : availableItems) {
             if (predicate.test(item)) {
                 out.add(item);
             }

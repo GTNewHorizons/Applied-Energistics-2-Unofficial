@@ -10,9 +10,6 @@
 
 package appeng.me.storage;
 
-import java.util.Optional;
-import java.util.function.Predicate;
-
 import javax.annotation.Nonnull;
 
 import org.jetbrains.annotations.NotNull;
@@ -74,11 +71,6 @@ public class MEPassThrough<T extends IAEStack<T>> implements IMEInventoryHandler
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
         return this.internal.getAvailableItems(out, iteration);
-    }
-
-    @Override
-    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> filter) {
-        return this.internal.getAvailableItems(out, iteration, filter);
     }
 
     @Override

@@ -147,6 +147,20 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         predicates.add(filter);
     }
 
+    public NetworkItemList<T> createFilteredView(Predicate<T> filter) {
+        final NetworkItemList<T> copy = new NetworkItemList<>(this);
+
+        if (this.predicates.isEmpty()) {
+            copy.predicates.add(filter);
+        } else {
+            for (Predicate<T> existingFilter : this.predicates) {
+                copy.predicates.add(existingFilter.and(filter));
+            }
+        }
+
+        return copy;
+    }
+
     Predicate<T> buildFilter() {
         Predicate<T> predicate = null;
         for (Predicate<T> filter : predicates) {

@@ -16,8 +16,6 @@ package appeng.api.storage;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 
@@ -161,12 +159,6 @@ public class MEMonitorHandler<StackType extends IAEStack<?>> implements IMEMonit
     @Override
     public IItemList<StackType> getAvailableItems(final IItemList out, int iteration) {
         return this.getHandler().getAvailableItems(out, iteration);
-    }
-
-    @Override
-    public IItemList<StackType> getAvailableItems(final IItemList<StackType> out, int iteration,
-            Optional<Predicate<StackType>> filter) {
-        return this.getHandler().getAvailableItems(out, iteration, filter);
     }
 
     @Override

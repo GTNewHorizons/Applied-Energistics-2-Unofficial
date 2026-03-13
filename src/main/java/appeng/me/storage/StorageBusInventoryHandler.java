@@ -9,7 +9,6 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.ItemFilterList;
-import appeng.util.item.NetworkItemList;
 import appeng.util.item.PrioritizedNetworkItemList;
 
 public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
@@ -47,10 +46,8 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
                 (IItemList<T>) this.getStackType().createList(),
                 iteration,
                 Optional.of(filterCondition));
-        if (availableItems instanceof NetworkItemList) {
-            NetworkItemList<T> networkItemList = new NetworkItemList<>((NetworkItemList<T>) availableItems);
-            networkItemList.addFilter(filterCondition);
-            return networkItemList;
+        if (availableItems instanceof appeng.util.item.NetworkItemList) {
+            return availableItems;
         } else {
             for (T items : availableItems) {
                 if (filterCondition.test(items)) {
