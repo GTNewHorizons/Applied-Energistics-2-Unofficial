@@ -30,6 +30,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.ItemFilterList;
+import appeng.util.item.NetworkItemList;
 import appeng.util.prioitylist.DefaultPriorityList;
 import appeng.util.prioitylist.IPartitionList;
 
@@ -155,6 +156,13 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
                 (IItemList<T>) this.internal.getStackType().createList(),
                 iteration,
                 Optional.of(filterCondition));
+
+        if (allAvailableItems instanceof NetworkItemList) {
+            final NetworkItemList<T> networkItemList = new NetworkItemList<>((NetworkItemList<T>) allAvailableItems);
+            networkItemList.addFilter(filterCondition);
+            return networkItemList;
+        }
+
         for (T item : allAvailableItems) {
             if (filterCondition.test(item)) {
                 out.add(item);

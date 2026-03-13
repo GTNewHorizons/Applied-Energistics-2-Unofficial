@@ -321,7 +321,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
 
         final NetworkItemList<T> networkItemList = new NetworkItemList<>(
                 this,
-                () -> (IItemList<T>) getStackType().createList());
+                () -> (IItemList<T>) getStackType().createPrimitiveList());
         this.iterationItems = networkItemList;
 
         final IItemList<T> currentNetworkItemList = isIgnoreCrafting
