@@ -110,7 +110,7 @@ public interface IMEInventory<StackType extends IAEStack> {
         }
 
         final Predicate<StackType> predicate = filter.get();
-        final IItemList<StackType> allItems = (IItemList<StackType>) getStackType().createPrimitiveItemList();
+        final IItemList<StackType> allItems = (IItemList<StackType>) getStackType().createPrimitiveList();
         final IItemList<StackType> availableItems = getAvailableItems(allItems, iteration);
 
         if (availableItems instanceof NetworkItemList) {
