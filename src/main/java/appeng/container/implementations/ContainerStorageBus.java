@@ -19,6 +19,8 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
 import appeng.api.config.ExtractionMode;
@@ -56,7 +58,7 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
     @GuiSync(7)
     public YesNo stickyMode = YesNo.NO;
 
-    private static final HashMap<EntityPlayer, IteratorState> PartitionIteratorMap = new HashMap<>();
+    private static final HashMap<EntityPlayer, Pair<IAEStackType<?>, IteratorState>> PartitionIteratorMap = new HashMap<>();
 
     @GuiSync(8)
     public ActionItems partitionMode; // use for icon and tooltip
@@ -189,17 +191,18 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
             clearPartitionIterator(player);
             return;
         }
-        IteratorState it;
-        if (!PartitionIteratorMap.containsKey(player)) {
+        final Pair<IAEStackType<?>, IteratorState> pair = PartitionIteratorMap.get(player);
+        final IteratorState it;
+        if (pair == null || pair.getKey() != this.storageBus.getStackType()) {
             // clear filter for fetching items
             cellInv.setPartitionList(new PrecisePriorityList<>(this.storageBus.getItemList()));
             final IItemList list = cellInv
                     .getAvailableItems(this.storageBus.getItemList(), IterationCounter.fetchNewId());
             it = new IteratorState(list.iterator());
-            PartitionIteratorMap.put(player, it);
+            PartitionIteratorMap.put(player, Pair.of(this.storageBus.getStackType(), it));
             partitionMode = ActionItems.NEXT_PARTITION;
         } else {
-            it = PartitionIteratorMap.get(player);
+            it = pair.getValue();
         }
         boolean skip = false;
         for (int x = 0; x < inv.getSizeInventory(); x++) {
