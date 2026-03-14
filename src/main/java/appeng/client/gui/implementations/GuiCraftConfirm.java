@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -157,11 +158,9 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     private GuiAeButton findNext;
     private GuiAeButton findPrev;
     private MEGuiTextField searchField;
+    protected List<IAEStack<?>> filteredVisual = new ArrayList<>();
     private int tooltip = -1;
     private ItemStack hoveredStack;
-    private final ArrayList<Integer> goToData = new ArrayList<>();
-    private int searchGotoIndex = -1;
-    private IAEStack<?> needHighlight;
 
     final GuiScrollbar scrollbar;
 
@@ -282,13 +281,15 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         this.optimizeButton.enabled = false;
         this.buttonList.add(this.optimizeButton);
 
-        this.searchField = new MEGuiTextField(52, 12, "Search") {
+        this.searchField = new MEGuiTextField(displayMode == DisplayMode.LIST ? 76 : 52, 12, "Search") {
 
             @Override
             public void onTextChange(String oldText) {
                 super.onTextChange(oldText);
                 switch (displayMode) {
-                    case LIST -> updateSearchGoToList();
+                    case LIST -> {
+                        updateFilteredList();
+                    }
                     case TREE -> craftingTree.updateSearchGoToList(this.getText().toLowerCase());
                 }
             }
@@ -304,7 +305,6 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 10,
                 "↑",
                 ButtonToolTips.SearchGotoPrev.getLocal());
-        this.buttonList.add(this.findPrev);
 
         this.findNext = new GuiAeButton(
                 0,
@@ -314,7 +314,11 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 10,
                 "↓",
                 ButtonToolTips.SearchGotoNext.getLocal());
-        this.buttonList.add(this.findNext);
+
+        if (displayMode == DisplayMode.TREE) {
+            this.buttonList.add(this.findPrev);
+            this.buttonList.add(this.findNext);
+        }
     }
 
     @Override
@@ -452,45 +456,28 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 GuiColors.CraftConfirmCraftingPlan.getColor());
 
         switch (displayMode) {
-            case LIST -> drawListFG(offsetX, offsetY, mouseX, mouseY);
+            case LIST -> drawListFG();
             case TREE -> drawTreeFG(offsetX, offsetY, mouseX, mouseY);
         }
     }
 
-    private void updateSearchGoToList() {
-        needHighlight = null;
-        searchGotoIndex = -1;
-        goToData.clear();
-        if (this.searchField.getText().isEmpty()) return;
-        String s = this.searchField.getText().toLowerCase();
-        int visCount = 0;
-        for (IAEStack<?> aes : this.visual) {
-            if (aes != null && aes.getDisplayName().toLowerCase().contains(s)) {
-                goToData.add(visCount);
-            }
-            visCount++;
-        }
-        searchGoTo(true);
-    }
+    private void updateFilteredList() {
+        filteredVisual.clear();
+        String searchText = this.searchField.getText().toLowerCase();
 
-    private void searchGoTo(boolean forward) {
-        String s = this.searchField.getText().toLowerCase();
-        if (s.isEmpty() || goToData.isEmpty()) return;
-        if (forward) {
-            searchGotoIndex++;
-            if (searchGotoIndex >= goToData.size()) searchGotoIndex = 0;
+        if (searchText.isEmpty()) {
+            filteredVisual.addAll(this.visual);
         } else {
-            if (searchGotoIndex <= 0) searchGotoIndex = goToData.size();
-            searchGotoIndex--;
+            for (IAEStack<?> stack : this.visual) {
+                if (stack != null && stack.getDisplayName().toLowerCase().contains(searchText)) {
+                    filteredVisual.add(stack);
+                }
+            }
         }
-
-        IAEStack<?> aes = this.visual.get(goToData.get(searchGotoIndex));
-        this.getScrollBar().setCurrentScroll(goToData.get(searchGotoIndex) / 3 - this.rows / 2);
-        needHighlight = aes.copy();
     }
 
-    private void drawListFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        String dsp = null;
+    private void drawListFG() {
+        String dsp;
 
         if (this.isSimulation()) {
             dsp = GuiText.Simulation.getLocal();
@@ -524,8 +511,8 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         hoveredStack = null;
         final int offY = 23;
 
-        for (int z = viewStart; z < Math.min(viewEnd, this.visual.size()); z++) {
-            final IAEStack<?> refStack = this.visual.get(z); // repo.getReferenceItem( z );
+        for (int z = viewStart; z < Math.min(viewEnd, this.filteredVisual.size()); z++) {
+            final IAEStack<?> refStack = this.filteredVisual.get(z); // repo.getReferenceItem( z );
             if (refStack != null) {
                 GL11.glPushMatrix();
                 GL11.glScaled(0.5, 0.5, 0.5);
@@ -674,18 +661,6 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                             GuiColors.CraftConfirmMissingItem.getColor());
                 }
 
-                if (!this.searchField.getText().isEmpty() && goToData.contains(z)) {
-                    final int startX = x * (1 + sectionLength) + xo;
-                    final int startY = posY - 4;
-                    final int color = needHighlight != null && needHighlight.isSameType(refStack)
-                            ? GuiColors.SearchGoToHighlight.getColor()
-                            : GuiColors.SearchHighlight.getColor();
-                    drawVerticalLine(startX, startY, startY + offY, color);
-                    drawVerticalLine(startX + sectionLength - 1, startY, startY + offY, color);
-                    drawHorizontalLine(startX + 1, startX + sectionLength - 2, startY + 1, color);
-                    drawHorizontalLine(startX + 1, startX + sectionLength - 2, startY + offY - 1, color);
-                }
-
                 x++;
 
                 if (x > 2) {
@@ -763,7 +738,13 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             }
         }
         this.bindTexture("guis/searchField.png");
-        this.drawTexturedModalRect(this.guiLeft + this.xSize - 101, this.guiTop + 5, 0, 0, 52, 12);
+        this.drawTexturedModalRect(
+                this.guiLeft + this.xSize - 101,
+                this.guiTop + 5,
+                0,
+                0,
+                displayMode == DisplayMode.LIST ? 76 : 52,
+                12);
         this.searchField.drawTextBox();
     }
 
@@ -773,7 +754,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 if (getScrollBar() == null) {
                     setScrollBar(scrollbar);
                 }
-                final int size = this.visual.size();
+                final int size = this.filteredVisual.size();
                 this.getScrollBar().setTop(19).setLeft(218).setHeight(ySize - 92);
                 this.getScrollBar().setRange(0, (size + 2) / 3 - this.rows, 1);
             }
@@ -811,6 +792,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             }
         }
         this.sortItems();
+        updateFilteredList();
         this.setScrollBar();
     }
 
@@ -967,6 +949,8 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             recalculateScreenSize();
             this.setWorldAndResolution(mc, width, height);
             this.searchField.setText("");
+            updateFilteredList();
+            this.setScrollBar();
         } else if (btn == this.takeScreenshot) {
             switch (displayMode) {
                 case LIST -> {
@@ -1014,14 +998,12 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 AELog.debug(e);
             }
         } else if (btn == this.findNext) {
-            switch (displayMode) {
-                case LIST -> searchGoTo(true);
-                case TREE -> craftingTree.searchGoTo(true);
+            if (Objects.requireNonNull(displayMode) == DisplayMode.TREE) {
+                craftingTree.searchGoTo(true);
             }
         } else if (btn == this.findPrev) {
-            switch (displayMode) {
-                case LIST -> searchGoTo(false);
-                case TREE -> craftingTree.searchGoTo(false);
+            if (Objects.requireNonNull(displayMode) == DisplayMode.TREE) {
+                craftingTree.searchGoTo(false);
             }
         }
     }
