@@ -71,7 +71,10 @@ public class ContainerStorageBus extends ContainerUpgradeable implements IVirtua
     public ContainerStorageBus(final InventoryPlayer ip, final IStorageBus te) {
         super(ip, te);
         this.storageBus = te;
-        partitionMode = PartitionIteratorMap.containsKey(ip.player) ? ActionItems.NEXT_PARTITION : ActionItems.WRENCH;
+        final Pair<IAEStackType<?>, IteratorState> pair = PartitionIteratorMap.get(ip.player);
+        this.partitionMode = pair != null && pair.getKey() == this.storageBus.getStackType()
+                ? ActionItems.NEXT_PARTITION
+                : ActionItems.WRENCH;
     }
 
     @Override
