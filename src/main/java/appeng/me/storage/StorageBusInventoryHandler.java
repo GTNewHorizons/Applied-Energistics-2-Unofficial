@@ -48,11 +48,14 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
                 iteration,
                 Optional.of(filterCondition));
         if (availableItems instanceof NetworkItemList) {
-            // when we cross between networks on a NetworkInventoryHandler dive, we need to break the "out" contract to avoid modifying
-            // the passed in list which belongs to a different network (and would cause double-counting for triangle-shaped networks)
+            // when we cross between networks on a NetworkInventoryHandler dive, we need to break the "out" contract to
+            // avoid modifying
+            // the passed in list which belongs to a different network (and would cause double-counting for
+            // triangle-shaped networks)
             return availableItems;
         } else {
-            // for non-cross-network dives, we need to honor the "out" contract and put the results in the passed in list
+            // for non-cross-network dives, we need to honor the "out" contract and put the results in the passed in
+            // list
             for (T items : availableItems) {
                 out.add(items);
             }
