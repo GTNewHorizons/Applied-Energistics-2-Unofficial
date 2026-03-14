@@ -157,7 +157,12 @@ public enum ExtraBlockTextures {
     BlockCraftingFitSolid("BlockCraftingFitSolid"),
 
     BlockPaint2("BlockPaint2"),
-    BlockPaint3("BlockPaint3");
+    BlockPaint3("BlockPaint3"),
+
+    BlockSpatialNetworkRelayConnected("BlockSpatialNetworkRelayConnected"),
+    BlockSpatialLinkChamberFrontFull("BlockSpatialLinkChamberFrontFull"),
+
+    ;
 
     private final String name;
     private IIcon IIcon;
