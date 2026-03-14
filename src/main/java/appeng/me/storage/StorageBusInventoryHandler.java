@@ -9,6 +9,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.item.ItemFilterList;
+import appeng.util.item.NetworkItemList;
 import appeng.util.item.PrioritizedNetworkItemList;
 
 public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInventoryHandler<T> {
@@ -46,13 +47,14 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
                 (IItemList<T>) this.getStackType().createList(),
                 iteration,
                 Optional.of(filterCondition));
-        if (availableItems instanceof appeng.util.item.NetworkItemList) {
+        if (availableItems instanceof NetworkItemList) {
+            // when we cross between networks on a NetworkInventoryHandler dive, we need to break the "out" contract to avoid modifying
+            // the passed in list which belongs to a different network (and would cause double-counting for triangle-shaped networks)
             return availableItems;
         } else {
+            // for non-cross-network dives, we need to honor the "out" contract and put the results in the passed in list
             for (T items : availableItems) {
-                if (filterCondition.test(items)) {
-                    out.add(items);
-                }
+                out.add(items);
             }
             return out;
         }

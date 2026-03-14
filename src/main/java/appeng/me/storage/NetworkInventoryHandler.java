@@ -342,9 +342,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
                 networkItemList.addNetworkItems(externalNetworkInventory, passedOutList);
             } else {
                 for (T item : passedOutList) {
-                    if (filter.map(f -> f.test(item)).orElse(true)) {
-                        currentNetworkItemList.add(item);
-                    }
+                    currentNetworkItemList.add(item);
                 }
             }
         }

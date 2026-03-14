@@ -114,7 +114,7 @@ public interface IMEInventory<StackType extends IAEStack> {
         final IItemList<StackType> availableItems = getAvailableItems(allItems, iteration);
 
         if (availableItems instanceof NetworkItemList) {
-            return ((NetworkItemList<StackType>) availableItems).createFilteredView(predicate);
+            return availableItems;
         }
 
         for (final StackType item : availableItems) {
