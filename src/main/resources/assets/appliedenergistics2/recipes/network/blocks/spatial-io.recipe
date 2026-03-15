@@ -20,4 +20,4 @@ shaped=
     ae2:ItemMaterial.EngProcessor ae2:ItemMaterial.Wireless ae2:ItemMaterial.EngProcessor,
     oredictionary:ingotIron ae2:ItemMaterial.PurifiedFluixCrystal oredictionary:ingotIron,
     cable oredictionary:ingotIron cable
-    -> ae2:BlockNetworkRelay
+    -> ae2:BlockSpatialNetworkRelay
