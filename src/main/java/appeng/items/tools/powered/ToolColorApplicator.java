@@ -90,7 +90,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
     private static final String NBT_COLOR = "color";
 
     static {
-        for (final AEColor col : AEColor.values()) {
+        for (final AEColor col : AEColor.VALUES) {
             if (col == AEColor.Transparent) {
                 continue;
             }

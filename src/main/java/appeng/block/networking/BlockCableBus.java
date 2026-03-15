@@ -70,6 +70,7 @@ import powercrystals.minefactoryreloaded.api.rednet.connectivity.RedNetConnectio
         iname = IntegrationType.MFR)
 public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection {
 
+    private static final ForgeDirection[] FORGE_DIRECTIONS = ForgeDirection.values();
     private static final ICableBusContainer NULL_CABLE_BUS = new NullCableBusContainer();
     private static Class<? extends TileEntity> noTesrTile;
     private static Class<? extends TileEntity> tesrTile;
@@ -230,7 +231,7 @@ public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection 
         final Object object = this.cb(world, target.blockX, target.blockY, target.blockZ);
         if (object instanceof IPartHost host) {
 
-            for (final ForgeDirection side : ForgeDirection.values()) {
+            for (final ForgeDirection side : FORGE_DIRECTIONS) {
                 final IPart p = host.getPart(side);
                 final IIcon ico = this.getIcon(p);
 
@@ -280,7 +281,7 @@ public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection 
         final Object object = this.cb(world, x, y, z);
         if (object instanceof IPartHost host) {
 
-            for (final ForgeDirection side : ForgeDirection.values()) {
+            for (final ForgeDirection side : FORGE_DIRECTIONS) {
                 final IPart p = host.getPart(side);
                 final IIcon ico = this.getIcon(p);
 
@@ -401,7 +402,7 @@ public class BlockCableBus extends AEBaseTileBlock implements IRedNetConnection 
     public boolean recolourBlock(final World world, final int x, final int y, final int z, final ForgeDirection side,
             final int colour, final EntityPlayer who) {
         try {
-            return this.cb(world, x, y, z).recolourBlock(side, AEColor.values()[colour], who);
+            return this.cb(world, x, y, z).recolourBlock(side, AEColor.fromOrdinal(colour), who);
         } catch (final Throwable ignored) {}
         return false;
     }

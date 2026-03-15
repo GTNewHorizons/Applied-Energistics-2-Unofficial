@@ -18,8 +18,8 @@ public class PacketColorSelect extends AppEngPacket {
     // Receiving Constructor (Server Side)
     public PacketColorSelect(final ByteBuf stream) {
         int ord = stream.readInt();
-        if (ord >= 0 && ord < AEColor.values().length) {
-            this.color = AEColor.values()[ord];
+        if (ord >= 0 && ord < AEColor.VALUES.length) {
+            this.color = AEColor.fromOrdinal(ord);
         } else {
             this.color = AEColor.Transparent;
         }

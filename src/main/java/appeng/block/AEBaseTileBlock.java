@@ -168,7 +168,7 @@ public abstract class AEBaseTileBlock extends AEBaseBlock implements IAEFeature,
 
         if (te instanceof IColorableTile ct) {
             final AEColor c = ct.getColor();
-            final AEColor newColor = AEColor.values()[colour];
+            final AEColor newColor = AEColor.fromOrdinal(colour);
 
             if (c != newColor) {
                 ct.recolourBlock(side, newColor, null);

@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 
@@ -36,6 +37,10 @@ public interface IAEStackType<T extends IAEStack> {
 
     @Range(from = 1, to = Integer.MAX_VALUE)
     int getAmountPerUnit();
+
+    default EnumChatFormatting getColorDefinition() {
+        return EnumChatFormatting.AQUA;
+    }
 
     boolean isContainerItemForType(@Nullable ItemStack container);
 

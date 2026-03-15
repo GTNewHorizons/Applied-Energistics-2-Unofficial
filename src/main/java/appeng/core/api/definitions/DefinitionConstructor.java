@@ -92,7 +92,7 @@ public class DefinitionConstructor {
             boolean deprecated) {
         final ColoredItemDefinition definition = new ColoredItemDefinition();
 
-        for (final AEColor color : AEColor.values()) {
+        for (final AEColor color : AEColor.VALUES) {
             final ItemStackSrc multiPartSource = target.createPart(type, color, deprecated);
 
             definition.add(color, multiPartSource);
