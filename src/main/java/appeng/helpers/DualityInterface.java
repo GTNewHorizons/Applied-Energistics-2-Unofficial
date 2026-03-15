@@ -142,7 +142,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private static final Collection<Block> BAD_BLOCKS = new HashSet<>(100);
     private final int[] sides = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
     private final IAEItemStack[] requireWork = { null, null, null, null, null, null, null, null, null };
-    private final boolean[] hasFuzzyConfig = { false, false, false, false, false, false, false, false, false };
     private final MultiCraftingTracker craftingTracker;
     protected final AENetworkProxy gridProxy;
     private final IInterfaceHost iHost;
@@ -155,8 +154,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private WrapperInvSlot slotInv = new WrapperInvSlot(this.storage);
     private final Map<IAEStackType<?>, MEMonitorPassThrough<?>> monitorMap;
     private final UpgradeInventory upgrades;
-    private ItemStack stored;
-    private IAEItemStack fuzzyItemStack;
     private boolean hasConfig = false;
     private int priority;
     public List<ICraftingPatternDetails> craftingList = null;
@@ -462,7 +459,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
         final int fuzzycards = this.getInstalledUpgrades(Upgrades.FUZZY);
         final ItemStack Stored = this.storage.getStackInSlot(slot);
-        this.stored = Stored;
 
         if (req == null && Stored != null) {
             final IAEItemStack work = AEApi.instance().storage().createItemStack(Stored);
@@ -480,11 +476,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                  * slot. This ensures fast and accurate adjustment of the stack size stocked in the storage slot.
                  */
             } else if (((fuzzycards == 1) && (slot) > 5) || ((fuzzycards == 2) && (slot > 2)) || (fuzzycards == 3)) {
-                if (this.fuzzyItemStack == null) {
-                    this.fuzzyItemStack = AEApi.instance().storage().createItemStack(Stored);
-                }
                 if ((req.getStackSize() != Stored.stackSize)) {
-                    this.requireWork[slot] = this.fuzzyItemStack.copy();
+                    this.requireWork[slot] = req.copy(); // we won't drift from base for fuzzy match setting
                     this.requireWork[slot].setStackSize(req.getStackSize() - Stored.stackSize);
                     return;
                 }
@@ -652,42 +645,34 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.sides;
     }
 
-    public IAEItemStack[] fuzzyPoweredExtraction(final IEnergySource energy, final IMEInventory<IAEItemStack> cell,
-            final IAEItemStack itemStack, final ItemStack is, final BaseActionSource src, int iteration) {
-        Collection<IAEItemStack> fzlist = null;
-        IAEItemStack fuzzyItemStack = null;
-        IAEItemStack pe = null;
+    public IAEItemStack fuzzyPoweredExtraction(final IEnergySource energy, final IMEInventory<IAEItemStack> cell,
+            final IAEItemStack config, final ItemStack currentInStorage, final BaseActionSource src, int iteration) {
+        Collection<IAEItemStack> fzlist;
         /*
          * This returns a NetworkInventoryHandler object. getSortedFuzzyItems has an Override definition in there.
          */
         if (cell instanceof NetworkMonitor<?>) {
             fzlist = ((NetworkMonitor<IAEItemStack>) cell).getHandler().getSortedFuzzyItems(
                     new ArrayList<>(),
-                    itemStack,
+                    config,
                     ((FuzzyMode) cm.getSetting(Settings.FUZZY_MODE)),
                     iteration);
 
-        } else return new IAEItemStack[] { null, fuzzyItemStack };
+        } else return null;
 
         if (fzlist.iterator().hasNext()) {
-            fuzzyItemStack = fzlist.iterator().next();
-
+            final IAEItemStack fuzzyMatch = fzlist.iterator().next();
             /*
              * Checks if the fuzzy-matched item can be merged with the ItemStack currently in the storage slot.
              */
-            if ((fuzzyItemStack.isSameType(is)) || (is == null)) {
-                fuzzyItemStack.setStackSize(itemStack.getStackSize());
+            if ((fuzzyMatch.isSameType(currentInStorage)) || (currentInStorage == null)) {
+                fuzzyMatch.setStackSize(config.getStackSize());
+            } else return null;
 
-                // To prevent duping in case fuzzy-matched item cannot be merged with stack in storage
-                // slot...
-            } else fuzzyItemStack = null;
-
-            if (fuzzyItemStack != null) {
-                pe = Platform.poweredExtraction(energy, cell, fuzzyItemStack, src);
-            }
+            return Platform.poweredExtraction(energy, cell, fuzzyMatch, src);
         }
-        return new IAEItemStack[] { pe, fuzzyItemStack };
 
+        return null;
     }
 
     @Override
@@ -859,20 +844,17 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
                 if (((fuzzycards == 1) && (x > 5)) || ((fuzzycards == 2) && (x > 2)) || (fuzzycards == 3)) {
                     int iteration = IterationCounter.fetchNewId();
-                    final IAEItemStack[] fpe = fuzzyPoweredExtraction(
+                    final IAEItemStack fzOut = fuzzyPoweredExtraction(
                             src,
                             this.destination,
                             itemStack,
-                            this.stored,
+                            this.storage.getStackInSlot(x),
                             this.interfaceRequestSource,
                             iteration);
-                    acquired = fpe[0];
-                    this.fuzzyItemStack = fpe[1];
-                    hasFuzzyConfig[x] = true;
+                    acquired = fzOut;
                 } else {
                     acquired = Platform
                             .poweredExtraction(src, this.destination, itemStack, this.interfaceRequestSource);
-                    this.fuzzyItemStack = null;
                 }
                 if (acquired != null) {
                     changed = true;
