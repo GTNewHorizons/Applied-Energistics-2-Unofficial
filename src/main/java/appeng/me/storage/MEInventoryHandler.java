@@ -10,6 +10,7 @@
 
 package appeng.me.storage;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
@@ -122,16 +123,24 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
+        return this.getAvailableItems(out, iteration, Optional.empty());
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {
         if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
 
-        if (out instanceof ItemFilterList) return getAvailableItemsFilter(out, iteration);
+        if (out instanceof ItemFilterList) return getAvailableItemsFilter(out, iteration, preFilter);
 
         if (this.isExtractFilterActive() && !this.myExtractPartitionList.isEmpty()) {
-            return this.filterAvailableItems(out, iteration);
+            Predicate<T> extractFilter = this.getExtractFilterCondition();
+            Predicate<T> effectiveFilter = preFilter.map(extractFilter::and).orElse(extractFilter);
+            return this.filterAvailableItems(out, iteration, effectiveFilter);
         } else {
-            return this.internal.getAvailableItems(out, iteration);
+            return !preFilter.isPresent() ? this.internal.getAvailableItems(out, iteration)
+                    : this.internal.getAvailableItems(out, iteration, preFilter);
         }
     }
 
@@ -141,10 +150,16 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         return bool;
     }
 
-    protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
-        final IItemList<T> allAvailableItems = this.internal
-                .getAvailableItems((IItemList<T>) this.internal.getStackType().createList(), iteration);
-        Predicate<T> filterCondition = this.getExtractFilterCondition();
+    protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
+        final IItemList<T> allAvailableItems = this.internal.getAvailableItems(
+                (IItemList<T>) this.internal.getStackType().createList(),
+                iteration,
+                Optional.of(filterCondition));
+
+        if (allAvailableItems instanceof appeng.util.item.NetworkItemList) {
+            return allAvailableItems;
+        }
+
         for (T item : allAvailableItems) {
             if (filterCondition.test(item)) {
                 out.add(item);
@@ -153,14 +168,17 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         return out;
     }
 
-    protected IItemList<T> getAvailableItemsFilter(IItemList<T> out, int iteration) {
+    protected IItemList<T> getAvailableItemsFilter(IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {
         if (!getPartitionList().isEmpty() && getWhitelist() == IncludeExclude.WHITELIST) {
             for (T is : myPartitionList.getItems()) {
-                out.add(is);
+                if (preFilter.map(f -> f.test(is)).orElse(true)) {
+                    out.add(is);
+                }
             }
             return out;
         }
-        return this.getInternal().getAvailableItems(out, iteration);
+        return !preFilter.isPresent() ? this.getInternal().getAvailableItems(out, iteration)
+                : this.getInternal().getAvailableItems(out, iteration, preFilter);
     }
 
     @Override

@@ -169,6 +169,22 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
         return buildFinalItemList(out);
     }
 
+    public NetworkItemList<T> createFilteredView(Predicate<T> filter) {
+        final NetworkItemList<T> copy = new NetworkItemList<>(this);
+
+        if (this.predicates.isEmpty()) {
+            copy.predicates.add(filter);
+        } else {
+            // if there were existing filters then we need to add the final filter
+            // as AND instead of OR
+            for (Predicate<T> existingFilter : this.predicates) {
+                copy.predicates.add(existingFilter.and(filter));
+            }
+        }
+
+        return copy;
+    }
+
     /**
      * Writes all available items to the provided list.
      *
