@@ -72,7 +72,6 @@ public class TileSpatialLinkChamber extends AENetworkInvTile {
     @Override
     public void onReady() {
         super.onReady();
-        // updateBinding();
     }
 
     @TileEvent(TileEventType.NETWORK_READ)

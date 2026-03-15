@@ -18,13 +18,10 @@ import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
 
 /**
- * Network anchor tile used inside spatial storage dimension.
+ * Network relay tile used inside spatial storage dimension.
  *
- * It is a normal AE network tile, but it only activates in {@link StorageWorldProvider}. When active, it behaves like a
- * regular AE device so AE cables can connect to it.
- *
- * The actual joining of the "owning" overworld grid is performed by the Grid's spatial-dimension bridge logic (see
- * {@code appeng.me.Grid#add}).
+ * This tile will create a {@link IGridConnection} to the host node in the main world, allowing it to be part of the AE
+ * network outside.
  */
 public class TileSpatialNetworkRelay extends AENetworkTile {
 
