@@ -64,6 +64,8 @@ import appeng.block.solids.OreQuartz;
 import appeng.block.solids.OreQuartzCharged;
 import appeng.block.spatial.BlockMatrixFrame;
 import appeng.block.spatial.BlockSpatialIOPort;
+import appeng.block.spatial.BlockSpatialLinkChamber;
+import appeng.block.spatial.BlockSpatialNetworkRelay;
 import appeng.block.spatial.BlockSpatialPylon;
 import appeng.block.stair.ChiseledQuartzStairBlock;
 import appeng.block.stair.FluixStairBlock;
@@ -113,6 +115,8 @@ public final class ApiBlocks implements IBlocks {
     private final ITileDefinition quantumLink;
     private final ITileDefinition spatialPylon;
     private final ITileDefinition spatialIOPort;
+    private final ITileDefinition spatialLinkChamber;
+    private final ITileDefinition spatialNetworkRelay;
     private final ITileDefinition multiPart;
     private final ITileDefinition controller;
     private final ITileDefinition creativeEnergyController;
@@ -210,6 +214,8 @@ public final class ApiBlocks implements IBlocks {
         this.quantumLink = constructor.registerTileDefinition(new BlockQuantumLinkChamber());
         this.spatialPylon = constructor.registerTileDefinition(new BlockSpatialPylon());
         this.spatialIOPort = constructor.registerTileDefinition(new BlockSpatialIOPort());
+        this.spatialLinkChamber = constructor.registerTileDefinition(new BlockSpatialLinkChamber());
+        this.spatialNetworkRelay = constructor.registerTileDefinition(new BlockSpatialNetworkRelay());
         this.multiPart = constructor.registerTileDefinition(new BlockCableBus());
         this.controller = constructor.registerTileDefinition(new BlockController());
         this.creativeEnergyController = constructor.registerTileDefinition(new BlockCreativeEnergyController());
@@ -523,6 +529,16 @@ public final class ApiBlocks implements IBlocks {
     @Override
     public ITileDefinition spatialIOPort() {
         return this.spatialIOPort;
+    }
+
+    @Override
+    public ITileDefinition spatialLinkChamber() {
+        return this.spatialLinkChamber;
+    }
+
+    @Override
+    public ITileDefinition spatialNetworkRelay() {
+        return this.spatialNetworkRelay;
     }
 
     @Override
