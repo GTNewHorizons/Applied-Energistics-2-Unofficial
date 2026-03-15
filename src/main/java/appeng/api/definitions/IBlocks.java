@@ -113,6 +113,16 @@ public interface IBlocks {
 
     ITileDefinition spatialIOPort();
 
+    /**
+     * Overworld-side endpoint for linking into a Spatial Storage dimension.
+     */
+    ITileDefinition spatialLinkChamber();
+
+    /**
+     * A network anchor usable inside a spatial storage dimension to join the owning AE network.
+     */
+    ITileDefinition spatialNetworkRelay();
+
     /*
      * Bus / cables
      */
