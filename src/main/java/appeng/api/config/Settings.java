@@ -88,8 +88,6 @@ public enum Settings {
 
     CRAFTING_ALLOW(EnumSet.allOf(CraftingAllow.class)),
 
-    PINS_STATE(EnumSet.allOf(PinsState.class)),
-
     CRAFTING_PINS_ROWS(EnumSet.allOf(CraftingPinsRows.class)),
     PLAYER_PINS_ROWS(EnumSet.allOf(PlayerPinsRows.class)),
 

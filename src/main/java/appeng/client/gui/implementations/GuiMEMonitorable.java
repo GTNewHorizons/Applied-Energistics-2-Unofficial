@@ -341,6 +341,16 @@ public class GuiMEMonitorable extends AEBaseGui
 
         int craftingRows = craftingPinsRows.ordinal();
         int playerRows = playerPinsRows.ordinal();
+        int pinMaxSize = Math.max(0, this.rows - 1);
+        int totalRequested = craftingRows + playerRows;
+        if (totalRequested > pinMaxSize) {
+            if (playerRows > pinMaxSize) {
+                playerRows = pinMaxSize;
+                craftingRows = 0;
+            } else {
+                craftingRows = Math.min(craftingRows, pinMaxSize - playerRows);
+            }
+        }
         int pinsRows = craftingRows + playerRows;
         final int pinsPerRow = 9;
         this.pinSlots = new VirtualMEPinSlot[craftingRows * pinsPerRow + playerRows * pinsPerRow];
@@ -370,7 +380,7 @@ public class GuiMEMonitorable extends AEBaseGui
             }
         }
 
-        int normalSlotRows = this.rows - pinsRows;
+        int normalSlotRows = Math.max(0, this.rows - pinsRows);
         this.monitorableSlots = new VirtualMEMonitorableSlot[normalSlotRows * this.perRow];
         for (int y = 0; y < normalSlotRows; y++) {
             for (int x = 0; x < this.perRow; x++) {

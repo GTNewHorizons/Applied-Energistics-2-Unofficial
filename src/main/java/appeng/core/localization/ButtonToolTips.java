@@ -242,17 +242,9 @@ public enum ButtonToolTips implements Localization {
     Suspend,
     Resume,
 
-    PinsSection,
-    PinsSectionActive,
-    PinsSectionDisabled,
-
     CraftingPinsSection,
     CraftingPinsSectionActive,
     CraftingPinsSectionDisabled,
-
-    PlayerPinsSection,
-    PlayerPinsSectionActive,
-    PlayerPinsSectionDisabled,
 
     ToggleShowOnlySubstitute,
     ToggleShowOnlySubstituteOnDesc,

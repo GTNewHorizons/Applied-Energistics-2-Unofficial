@@ -631,17 +631,9 @@ gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=Only allow crafting r
 gui.tooltips.appliedenergistics2.Suspend=Click to stop this CPU from sending out crafts
 gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts again
 
-gui.tooltips.appliedenergistics2.PinsSection=Pins Section
-gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
-gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
-
 gui.tooltips.appliedenergistics2.CraftingPinsSection=Pins
 gui.tooltips.appliedenergistics2.CraftingPinsSectionActive=Ctrl+LMB: add crafting row. Ctrl+RMB: remove.\nLMB: add player row. RMB: remove.
 gui.tooltips.appliedenergistics2.CraftingPinsSectionDisabled=Pins (use Ctrl+LMB/RMB for crafting rows, LMB/RMB for player rows).
-
-gui.tooltips.appliedenergistics2.PlayerPinsSection=Player Pins
-gui.tooltips.appliedenergistics2.PlayerPinsSectionActive=Blue rows (0-16). Your manual pins. Shift+Right-click pin to remove.
-gui.tooltips.appliedenergistics2.PlayerPinsSectionDisabled=Off. No manual pin rows.
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode

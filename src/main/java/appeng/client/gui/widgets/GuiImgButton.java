@@ -870,16 +870,16 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     16 * 15 + 14,
                     Settings.PLAYER_PINS_ROWS,
                     PlayerPinsRows.DISABLED,
-                    ButtonToolTips.PlayerPinsSection,
-                    ButtonToolTips.PlayerPinsSectionDisabled);
+                    ButtonToolTips.CraftingPinsSection,
+                    ButtonToolTips.CraftingPinsSectionDisabled);
             for (PlayerPinsRows r : PlayerPinsRows.values()) {
                 if (r == PlayerPinsRows.DISABLED) continue;
                 this.registerApp(
                         16 * 15 + 13,
                         Settings.PLAYER_PINS_ROWS,
                         r,
-                        ButtonToolTips.PlayerPinsSection,
-                        ButtonToolTips.PlayerPinsSectionActive);
+                        ButtonToolTips.CraftingPinsSection,
+                        ButtonToolTips.CraftingPinsSectionActive);
             }
 
             this.registerApp(
