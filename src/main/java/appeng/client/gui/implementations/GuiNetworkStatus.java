@@ -131,20 +131,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             return;
         }
 
-        if (btn == 0 && this.tReshuffle != null
-                && this.tReshuffle.enabled
-                && xCoord >= this.tReshuffle.xPosition
-                && xCoord < this.tReshuffle.xPosition + this.tReshuffle.width
-                && yCoord >= this.tReshuffle.yPosition
-                && yCoord < this.tReshuffle.yPosition + this.tReshuffle.height) {
-            try {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "OpenReshuffle"));
-            } catch (final IOException e) {
-                AELog.debug(e);
-            }
-            return;
-        }
-
         ItemStack is = null;
         if (tooltip > -1) {
             final IAEStack<?> aeStack = repo.getReferenceStack(tooltip);
@@ -192,6 +178,15 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     @Override
     protected void actionPerformed(final GuiButton btn) {
         super.actionPerformed(btn);
+
+        if (btn == this.tReshuffle) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "OpenReshuffle"));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
+            return;
+        }
 
         final boolean backwards = Mouse.isButtonDown(1);
         boolean oldConsume = this.isConsume;
@@ -242,7 +237,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     this.guiLeft - 18,
                     this.guiTop + 48,
                     Settings.ACTIONS,
-                    ActionItems.OPEN_RESHUFFLE);
+                    ActionItems.OPEN_RESHUFFLE_OFF);
+            this.buttonList.add(this.tReshuffle);
         }
     }
 
@@ -277,20 +273,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             }
         }
 
-        if (this.tReshuffle != null && mouseX >= this.tReshuffle.xPosition
-                && mouseX < this.tReshuffle.xPosition + this.tReshuffle.width
-                && mouseY >= this.tReshuffle.yPosition
-                && mouseY < this.tReshuffle.yPosition + this.tReshuffle.height) {
-            final String tip = this.tReshuffle.enabled ? this.tReshuffle.getMessage()
-                    : "§c" + GuiText.ReshuffleNotPresent.getLocal();
-            this.drawTooltip(this.guiLeft - 8, this.tReshuffle.yPosition + 16, tip);
-        }
-
         super.drawScreen(mouseX, mouseY, btn);
-
-        if (this.tReshuffle != null) {
-            this.tReshuffle.drawButton(this.mc, mouseX, mouseY);
-        }
 
         menu.draw(mouseX, mouseY);
     }
@@ -299,6 +282,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         if (this.tReshuffle != null) {
             final boolean present = ((ContainerNetworkStatus) this.inventorySlots).reshufflePresent;
+            this.tReshuffle.set(present ? ActionItems.OPEN_RESHUFFLE_ON : ActionItems.OPEN_RESHUFFLE_OFF);
             this.tReshuffle.setEnabled(present);
         }
         if (this.isConsume) drawConsume();

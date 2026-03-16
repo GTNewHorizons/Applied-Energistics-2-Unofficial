@@ -110,11 +110,14 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.startsWith("Reshuffle.") && c instanceof final ContainerStorageReshuffle qk) {
             switch (this.Name) {
                 case "Reshuffle.TypeFilter" -> qk.toggleTypeFilter(this.Value);
-                case "Reshuffle.Start" -> qk.startReshuffle(player, "confirmed".equals(this.Value));
+                case "Reshuffle.Start" -> qk.startReshuffle(player);
                 case "Reshuffle.Cancel" -> qk.cancelReshuffle();
                 case "Reshuffle.Scan" -> qk.performNetworkScan();
-                case "Reshuffle.Mode" -> qk.setScanMode("scan".equals(this.Value));
+                case "Reshuffle.View" -> qk.setView(this.Value);
+                case "Reshuffle.HealthSort" -> qk.setHealthSort(this.Value);
+                case "Reshuffle.HealthSortDir" -> qk.setHealthSortDir(this.Value);
                 case "Reshuffle.ToggleVoidProtection" -> qk.toggleVoidProtection();
+                case "Reshuffle.ToggleIncludeSubnets" -> qk.toggleIncludeSubnets();
             }
         } else if (this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk) {
             qk.doublePatterns(Integer.parseInt(this.Value));
