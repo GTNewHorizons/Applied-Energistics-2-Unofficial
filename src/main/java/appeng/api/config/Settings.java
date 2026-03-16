@@ -90,6 +90,9 @@ public enum Settings {
 
     PINS_STATE(EnumSet.allOf(PinsState.class)),
 
+    CRAFTING_PINS_ROWS(EnumSet.allOf(CraftingPinsRows.class)),
+    PLAYER_PINS_ROWS(EnumSet.allOf(PlayerPinsRows.class)),
+
     PAUSE_WHEN_HOLDING_SHIFT(EnumSet.of(YesNo.YES, YesNo.NO));
 
     private final EnumSet<? extends Enum<?>> values;

@@ -40,7 +40,9 @@ import appeng.api.config.LockCraftingMode;
 import appeng.api.config.OperationMode;
 import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.PatternSlotConfig;
+import appeng.api.config.CraftingPinsRows;
 import appeng.api.config.PinsState;
+import appeng.api.config.PlayerPinsRows;
 import appeng.api.config.PowerUnits;
 import appeng.api.config.PriorityCardMode;
 import appeng.api.config.RedstoneMode;
@@ -851,38 +853,35 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
             this.registerApp(
                     16 * 15 + 14,
-                    Settings.PINS_STATE,
-                    PinsState.DISABLED,
-                    ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionDisabled);
+                    Settings.CRAFTING_PINS_ROWS,
+                    CraftingPinsRows.DISABLED,
+                    ButtonToolTips.CraftingPinsSection,
+                    ButtonToolTips.CraftingPinsSectionDisabled);
+            for (CraftingPinsRows r : CraftingPinsRows.values()) {
+                if (r == CraftingPinsRows.DISABLED) continue;
+                this.registerApp(
+                        16 * 15 + 13,
+                        Settings.CRAFTING_PINS_ROWS,
+                        r,
+                        ButtonToolTips.CraftingPinsSection,
+                        ButtonToolTips.CraftingPinsSectionActive);
+            }
 
             this.registerApp(
-                    16 * 15 + 13,
-                    Settings.PINS_STATE,
-                    PinsState.ONE,
-                    ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionActive);
-
-            this.registerApp(
-                    16 * 15 + 13,
-                    Settings.PINS_STATE,
-                    PinsState.TWO,
-                    ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionActive);
-
-            this.registerApp(
-                    16 * 15 + 13,
-                    Settings.PINS_STATE,
-                    PinsState.THREE,
-                    ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionActive);
-
-            this.registerApp(
-                    16 * 15 + 13,
-                    Settings.PINS_STATE,
-                    PinsState.FOUR,
-                    ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionActive);
+                    16 * 15 + 14,
+                    Settings.PLAYER_PINS_ROWS,
+                    PlayerPinsRows.DISABLED,
+                    ButtonToolTips.PlayerPinsSection,
+                    ButtonToolTips.PlayerPinsSectionDisabled);
+            for (PlayerPinsRows r : PlayerPinsRows.values()) {
+                if (r == PlayerPinsRows.DISABLED) continue;
+                this.registerApp(
+                        16 * 15 + 13,
+                        Settings.PLAYER_PINS_ROWS,
+                        r,
+                        ButtonToolTips.PlayerPinsSection,
+                        ButtonToolTips.PlayerPinsSectionActive);
+            }
 
             this.registerApp(
                     16 * 3 + 7,

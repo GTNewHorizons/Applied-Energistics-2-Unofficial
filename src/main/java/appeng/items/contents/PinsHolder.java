@@ -10,7 +10,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
+import appeng.api.config.CraftingPinsRows;
 import appeng.api.config.PinsState;
+import appeng.api.config.PlayerPinsRows;
 import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.data.IAEStack;
 import appeng.tile.inventory.IAEAppEngInventory;
@@ -23,7 +25,8 @@ public class PinsHolder implements IAEAppEngInventory {
     private final ItemStack holder;
 
     private final HashMap<UUID, PinList> pinsMap = new HashMap<>();
-    private final HashMap<UUID, PinsState> pinsStateMap = new HashMap<>();
+    private final HashMap<UUID, CraftingPinsRows> craftingPinsRowsMap = new HashMap<>();
+    private final HashMap<UUID, PlayerPinsRows> playerPinsRowsMap = new HashMap<>();
 
     private boolean initialized = false;
 
@@ -47,13 +50,13 @@ public class PinsHolder implements IAEAppEngInventory {
 
             final NBTTagCompound itemList = new NBTTagCompound();
             itemList.setString("playerId", playerId.toString());
-            int state = pinsStateMap.get(playerId) != null ? pinsStateMap.get(playerId).ordinal() : 0;
-            itemList.setInteger("pinsState", state);
+            CraftingPinsRows cr = craftingPinsRowsMap.get(playerId);
+            PlayerPinsRows pr = playerPinsRowsMap.get(playerId);
+            itemList.setInteger("craftingPinsRows", cr != null ? cr.ordinal() : 0);
+            itemList.setInteger("playerPinsRows", pr != null ? pr.ordinal() : 0);
             for (int x = 0; x < pins.size(); x++) {
-                // final ItemStack pinStack = pins.getStackInSlot(x);
                 final IAEStack<?> pinStack = pins.getPin(x);
                 if (pinStack != null) {
-                    // itemList.setTag("#" + x, pinStack.writeToNBT(new NBTTagCompound()));
                     itemList.setTag("#" + x, Platform.writeStackNBT(pinStack, new NBTTagCompound(), true));
                 }
             }
@@ -75,23 +78,49 @@ public class PinsHolder implements IAEAppEngInventory {
 
             final PinList pins = new PinList();
 
+            final boolean hasNewFormat = itemList.hasKey("craftingPinsRows");
+            int craftingOrdinal = hasNewFormat ? itemList.getInteger("craftingPinsRows") : 0;
+            int playerOrdinal;
+            if (hasNewFormat) {
+                playerOrdinal = Math.min(itemList.getInteger("playerPinsRows"), PlayerPinsRows.values().length - 1);
+            } else {
+                int oldState = itemList.getInteger("pinsState");
+                int oldOrdinal = Math.min(Math.max(oldState, 0), PinsState.values().length - 1);
+                playerOrdinal = oldOrdinal;
+                for (int x = 0; x < 36; x++) {
+                    if (itemList.hasKey("#" + x)) {
+                        NBTTagCompound tag = itemList.getCompoundTag("#" + x);
+                        int destIdx = PinList.PLAYER_OFFSET + x;
+                        if (tag.hasKey("StackType")) {
+                            pins.setPin(destIdx, Platform.readStackNBT(tag));
+                        } else {
+                            ItemStack pinStack = ItemStack.loadItemStackFromNBT(itemList.getCompoundTag("#" + x));
+                            pins.setPin(destIdx, AEItemStack.create(pinStack));
+                        }
+                    }
+                }
+            }
+
+            if (!hasNewFormat) {
+                craftingOrdinal = Math.min(craftingOrdinal, CraftingPinsRows.values().length - 1);
+            }
+
             for (int x = 0; x < pins.size(); x++) {
-                if (itemList.hasKey("#" + x)) {
+                if (hasNewFormat && itemList.hasKey("#" + x)) {
                     NBTTagCompound tag = itemList.getCompoundTag("#" + x);
                     if (tag.hasKey("StackType")) {
                         IAEStack<?> stack = Platform.readStackNBT(tag);
-                        // pins.setInventorySlotContents();
                         pins.setPin(x, stack);
                     } else {
                         ItemStack pinStack = ItemStack.loadItemStackFromNBT(itemList.getCompoundTag("#" + x));
-                        // pins.setInventorySlotContents(x, pinStack);
                         pins.setPin(x, AEItemStack.create(pinStack));
                     }
                 }
             }
 
             this.pinsMap.put(playerId, pins);
-            this.pinsStateMap.put(playerId, PinsState.values()[itemList.getInteger("pinsState")]);
+            this.craftingPinsRowsMap.put(playerId, CraftingPinsRows.fromOrdinal(Math.min(craftingOrdinal, CraftingPinsRows.values().length - 1)));
+            this.playerPinsRowsMap.put(playerId, PlayerPinsRows.fromOrdinal(Math.min(playerOrdinal, PlayerPinsRows.values().length - 1)));
         }
     }
 
@@ -104,12 +133,21 @@ public class PinsHolder implements IAEAppEngInventory {
         return pinsInv;
     }
 
-    public PinsState getPinsState(EntityPlayer player) {
-        return this.pinsStateMap.computeIfAbsent(player.getPersistentID(), k -> PinsState.DISABLED);
+    public CraftingPinsRows getCraftingPinsRows(EntityPlayer player) {
+        return this.craftingPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> CraftingPinsRows.DISABLED);
     }
 
-    public void setPinsState(EntityPlayer player, PinsState state) {
-        this.pinsStateMap.put(player.getPersistentID(), state);
+    public void setCraftingPinsRows(EntityPlayer player, CraftingPinsRows rows) {
+        this.craftingPinsRowsMap.put(player.getPersistentID(), rows);
+        markDirty();
+    }
+
+    public PlayerPinsRows getPlayerPinsRows(EntityPlayer player) {
+        return this.playerPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> PlayerPinsRows.DISABLED);
+    }
+
+    public void setPlayerPinsRows(EntityPlayer player, PlayerPinsRows rows) {
+        this.playerPinsRowsMap.put(player.getPersistentID(), rows);
         markDirty();
     }
 

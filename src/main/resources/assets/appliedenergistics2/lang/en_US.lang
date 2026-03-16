@@ -635,6 +635,14 @@ gui.tooltips.appliedenergistics2.PinsSection=Pins Section
 gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
 
+gui.tooltips.appliedenergistics2.CraftingPinsSection=Crafting Pins (auto-add)
+gui.tooltips.appliedenergistics2.CraftingPinsSectionActive=Crafting pins section (orange): newly crafted items auto-added, up to 8 rows
+gui.tooltips.appliedenergistics2.CraftingPinsSectionDisabled=Crafting pins disabled
+
+gui.tooltips.appliedenergistics2.PlayerPinsSection=Player Pins
+gui.tooltips.appliedenergistics2.PlayerPinsSectionActive=Player pins section (blue): manual pins, up to 16 rows\n[Shift + Right Click] pinned item to remove
+gui.tooltips.appliedenergistics2.PlayerPinsSectionDisabled=Player pins disabled
+
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode
 gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=Lock Mode
