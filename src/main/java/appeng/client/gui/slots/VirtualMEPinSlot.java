@@ -1,5 +1,7 @@
 package appeng.client.gui.slots;
 
+import static net.minecraft.client.gui.Gui.drawRect;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
@@ -11,6 +13,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IDisplayRepo;
 import appeng.core.AppEng;
+import appeng.core.localization.GuiColors;
 
 public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
 
@@ -21,11 +24,6 @@ public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
     private static final int SLOT_SIZE = 18;
     private static final float PIN_ICON_OPACITY = 0.4f;
     private static final ResourceLocation TEXTURE = new ResourceLocation(AppEng.MOD_ID, "textures/guis/states.png");
-
-    /** Orange tint for crafting auto-add pin section (RGBA). */
-    private static final float CRAFTING_R = 0.9f, CRAFTING_G = 0.45f, CRAFTING_B = 0.1f, CRAFTING_A = 0.5f;
-    /** Blue tint for player pin section (RGBA). */
-    private static final float PLAYER_R = 0.1f, PLAYER_G = 0.35f, PLAYER_B = 0.85f, PLAYER_A = 0.5f;
 
     private final boolean isCraftingSlot;
 
@@ -46,27 +44,22 @@ public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
     public static void drawSlotsBackground(VirtualMEPinSlot[] slots, Minecraft mc, float z) {
         final Tessellator tessellator = Tessellator.instance;
 
+        for (VirtualMEPinSlot slot : slots) {
+            if (slot.isCraftingSlot()) {
+                drawRect(
+                        slot.getX() - 1,
+                        slot.getY() - 1,
+                        slot.getX() - 1 + SLOT_SIZE,
+                        slot.getY() - 1 + SLOT_SIZE,
+                        GuiColors.CraftingPinSlotBackground.getColor());
+            }
+        }
+
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glDisable(GL11.GL_LIGHTING);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-        tessellator.startDrawingQuads();
-        for (VirtualMEPinSlot slot : slots) {
-            final float x = slot.getX() - 1;
-            final float y = slot.getY() - 1;
-            if (slot.isCraftingSlot()) {
-                tessellator.setColorRGBA_F(CRAFTING_R, CRAFTING_G, CRAFTING_B, CRAFTING_A);
-            } else {
-                tessellator.setColorRGBA_F(PLAYER_R, PLAYER_G, PLAYER_B, PLAYER_A);
-            }
-            tessellator.addVertex(x, y + SLOT_SIZE, z);
-            tessellator.addVertex(x + SLOT_SIZE, y + SLOT_SIZE, z);
-            tessellator.addVertex(x + SLOT_SIZE, y, z);
-            tessellator.addVertex(x, y, z);
-        }
-        tessellator.draw();
 
         GL11.glEnable(GL11.GL_TEXTURE_2D);
         mc.getTextureManager().bindTexture(TEXTURE);

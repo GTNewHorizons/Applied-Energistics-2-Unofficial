@@ -38,6 +38,7 @@ import appeng.client.gui.widgets.IScrollSource;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.core.AEConfig;
 import appeng.integration.modules.NEI;
+import appeng.items.contents.PinList;
 import appeng.items.storage.ItemViewCell;
 import appeng.util.ItemSorters;
 import appeng.util.Platform;
@@ -50,6 +51,8 @@ public class ItemRepo implements IDisplayRepo {
 
     private final IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
     private IAEStack<?>[] pinsRepo = new IAEStack<?>[0];
+    private int visibleCraftingRows = 0;
+    private int visiblePlayerRows = 0;
     private final ArrayList<IAEStack<?>> view = new ArrayList<>();
     private final IScrollSource src;
     private final ISortSource sortSrc;
@@ -71,37 +74,53 @@ public class ItemRepo implements IDisplayRepo {
     public void setAEPins(IAEStack<?>[] newPins) {
         IItemList<IAEStack<?>> oldPins = getPinsCache();
         pinsRepo = new IAEStack<?>[newPins.length];
+
         for (int i = 0; i < pinsRepo.length; i++) {
             IAEStack<?> isToPin = list.findPrecise(newPins[i]);
 
             if (isToPin == null) {
-                // If the item is not found in the repo, try to find it in the previous pins.
                 isToPin = oldPins.findPrecise(newPins[i]);
             }
 
             if (isToPin != null) {
                 pinsRepo[i] = isToPin.copy();
-                isToPin.reset();
             } else {
                 pinsRepo[i] = newPins[i];
             }
         }
 
         for (IAEStack<?> ais : oldPins) {
-            if (ais.getStackSize() != -1) list.add(ais);
+            if (ais.getStackSize() != -1) {
+                IAEStack<?> copy = ais.copy();
+                copy.setStackSize(0);
+                list.add(copy);
+            }
         }
 
         updateView();
     }
 
-    /** pin order is not keep */
+    @Override
+    public void setVisiblePinRows(int craftingRows, int playerRows) {
+        if (this.visibleCraftingRows != craftingRows || this.visiblePlayerRows != playerRows) {
+            this.visibleCraftingRows = craftingRows;
+            this.visiblePlayerRows = playerRows;
+            updateView();
+        }
+    }
+
+    /** Returns only pins in currently visible rows, so items in reduced rows show in main inventory. */
     private IItemList<IAEStack<?>> getPinsCache() {
         IItemList<IAEStack<?>> oldPins = AEApi.instance().storage().createAEStackList();
 
-        for (IAEStack<?> pin : pinsRepo) {
-            if (pin != null) {
-                oldPins.add(pin);
-            }
+        int craftLimit = Math.min(visibleCraftingRows * 9, pinsRepo.length);
+        for (int i = 0; i < craftLimit; i++) {
+            if (pinsRepo[i] != null) oldPins.add(pinsRepo[i]);
+        }
+        int playerStart = PinList.PLAYER_OFFSET;
+        int playerLimit = Math.min(playerStart + visiblePlayerRows * 9, pinsRepo.length);
+        for (int i = playerStart; i < playerLimit; i++) {
+            if (pinsRepo[i] != null) oldPins.add(pinsRepo[i]);
         }
 
         return oldPins;
@@ -152,7 +171,7 @@ public class ItemRepo implements IDisplayRepo {
             if (pin != null && pin.isSameType((Object) is)) {
                 pin.reset();
                 pin.add(is);
-                return;
+                break;
             }
         }
 
@@ -172,21 +191,19 @@ public class ItemRepo implements IDisplayRepo {
 
     @Override
     public void updateView() {
+        IItemList<IAEStack<?>> visiblePins = getPinsCache();
         if (this.paused) {
-            // Update existing view with new data
-            IItemList<IAEStack<?>> pins = getPinsCache();
-            for (int i = 0; i < this.view.size(); i++) {
+            for (int i = this.view.size() - 1; i >= 0; i--) {
                 IAEStack<?> entry = this.view.get(i);
                 IAEStack<?> serverEntry = this.list.findPrecise(entry);
-                IAEStack<?> pinsEntry = pins.findPrecise(serverEntry);
+                IAEStack<?> pinsEntry = visiblePins.findPrecise(serverEntry != null ? serverEntry : entry);
                 if (serverEntry == null || pinsEntry != null) {
-                    entry.setStackSize(0);
+                    this.view.remove(i);
                 } else {
                     this.view.set(i, serverEntry);
                 }
             }
 
-            // Append newly added item stacks to the end of the view
             Set<IAEStack<?>> viewSet = new HashSet<>(this.view);
             ArrayList<IAEStack<?>> entriesToAdd = new ArrayList<>();
             for (IAEStack<?> serverEntry : this.list) {
@@ -194,11 +211,11 @@ public class ItemRepo implements IDisplayRepo {
                     entriesToAdd.add(serverEntry);
                 }
             }
-            addEntriesToView(entriesToAdd);
+            addEntriesToView(entriesToAdd, visiblePins);
         } else {
             this.view.clear();
             this.view.ensureCapacity(this.list.size());
-            addEntriesToView(this.list);
+            addEntriesToView(this.list, visiblePins);
         }
 
         // Don't sort the view if paused.
@@ -220,7 +237,7 @@ public class ItemRepo implements IDisplayRepo {
         }
     }
 
-    private void addEntriesToView(Iterable<IAEStack<?>> entries) {
+    private void addEntriesToView(Iterable<IAEStack<?>> entries, IItemList<IAEStack<?>> visiblePins) {
         final Enum viewMode = this.sortSrc.getSortDisplay();
         Reference2BooleanMap<IAEStackType<?>> typeFilters = this.sortSrc.getTypeFilter();
         Predicate<IAEStack<?>> itemFilter = null;
@@ -240,6 +257,10 @@ public class ItemRepo implements IDisplayRepo {
         IItemDisplayRegistry registry = AEApi.instance().registries().itemDisplay();
 
         for (IAEStack<?> is : entries) {
+            if (visiblePins != null && visiblePins.findPrecise(is) != null) {
+                continue;
+            }
+
             if (viewMode == ViewItems.CRAFTABLE && !is.isCraftable()) {
                 continue;
             }

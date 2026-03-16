@@ -119,8 +119,12 @@ public class PinsHolder implements IAEAppEngInventory {
             }
 
             this.pinsMap.put(playerId, pins);
-            this.craftingPinsRowsMap.put(playerId, CraftingPinsRows.fromOrdinal(Math.min(craftingOrdinal, CraftingPinsRows.values().length - 1)));
-            this.playerPinsRowsMap.put(playerId, PlayerPinsRows.fromOrdinal(Math.min(playerOrdinal, PlayerPinsRows.values().length - 1)));
+            this.craftingPinsRowsMap.put(
+                    playerId,
+                    CraftingPinsRows.fromOrdinal(Math.min(craftingOrdinal, CraftingPinsRows.values().length - 1)));
+            this.playerPinsRowsMap.put(
+                    playerId,
+                    PlayerPinsRows.fromOrdinal(Math.min(playerOrdinal, PlayerPinsRows.values().length - 1)));
         }
     }
 

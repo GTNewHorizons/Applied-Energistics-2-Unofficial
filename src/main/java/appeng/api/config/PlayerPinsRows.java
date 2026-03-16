@@ -1,6 +1,7 @@
 package appeng.api.config;
 
 public enum PlayerPinsRows {
+
     DISABLED,
     ONE,
     TWO,

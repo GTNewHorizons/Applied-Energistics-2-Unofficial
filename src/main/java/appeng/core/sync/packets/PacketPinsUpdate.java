@@ -44,7 +44,8 @@ public class PacketPinsUpdate extends AppEngPacket {
         }
     }
 
-    public PacketPinsUpdate(IAEStack<?>[] arr, CraftingPinsRows craftingRows, PlayerPinsRows playerRows) throws IOException {
+    public PacketPinsUpdate(IAEStack<?>[] arr, CraftingPinsRows craftingRows, PlayerPinsRows playerRows)
+            throws IOException {
         list = arr;
         this.craftingRowsOrdinal = craftingRows.ordinal();
         this.playerRowsOrdinal = playerRows.ordinal();
@@ -84,9 +85,9 @@ public class PacketPinsUpdate extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
         if (gs instanceof IPinsHandler iph) {
-            if (list != null) iph.setAEPins(list);
             iph.setCraftingPinsRows(CraftingPinsRows.fromOrdinal(craftingRowsOrdinal));
             iph.setPlayerPinsRows(PlayerPinsRows.fromOrdinal(playerRowsOrdinal));
+            if (list != null) iph.setAEPins(list);
         }
     }
 
