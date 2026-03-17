@@ -19,6 +19,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.util.StatCollector;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.AccessRestriction;
@@ -854,32 +855,32 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     16 * 15 + 14,
                     Settings.CRAFTING_PINS_ROWS,
                     CraftingPinsRows.DISABLED,
-                    ButtonToolTips.CraftingPinsSection,
-                    ButtonToolTips.CraftingPinsSectionDisabled);
+                    ButtonToolTips.PinsSection,
+                    ButtonToolTips.PinsSection);
             for (CraftingPinsRows r : CraftingPinsRows.values()) {
                 if (r == CraftingPinsRows.DISABLED) continue;
                 this.registerApp(
                         16 * 15 + 13,
                         Settings.CRAFTING_PINS_ROWS,
                         r,
-                        ButtonToolTips.CraftingPinsSection,
-                        ButtonToolTips.CraftingPinsSectionActive);
+                        ButtonToolTips.PinsSection,
+                        ButtonToolTips.PinsSectionActive);
             }
 
             this.registerApp(
                     16 * 15 + 14,
                     Settings.PLAYER_PINS_ROWS,
                     PlayerPinsRows.DISABLED,
-                    ButtonToolTips.CraftingPinsSection,
-                    ButtonToolTips.CraftingPinsSectionDisabled);
+                    ButtonToolTips.PinsSection,
+                    ButtonToolTips.PinsSection);
             for (PlayerPinsRows r : PlayerPinsRows.values()) {
                 if (r == PlayerPinsRows.DISABLED) continue;
                 this.registerApp(
                         16 * 15 + 13,
                         Settings.PLAYER_PINS_ROWS,
                         r,
-                        ButtonToolTips.CraftingPinsSection,
-                        ButtonToolTips.CraftingPinsSectionActive);
+                        ButtonToolTips.PinsSection,
+                        ButtonToolTips.PinsSectionActive);
             }
 
             this.registerApp(
@@ -982,13 +983,21 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
         if (displayName != null) {
             String name = StatCollector.translateToLocal(displayName);
-            String value = StatCollector.translateToLocal(displayValue);
+            String valueKey = displayValue;
+            if (!Platform.isServer() && displayValue != null
+                    && displayValue.equals(ButtonToolTips.PinsSectionActive.getUnlocalized())) {
+                boolean altHeld = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
+                if (!altHeld) {
+                    valueKey = ButtonToolTips.PinsSectionHint.getUnlocalized();
+                }
+            }
+            String value = StatCollector.translateToLocal(valueKey);
 
             if (name == null || name.isEmpty()) {
                 name = displayName;
             }
             if (value == null || value.isEmpty()) {
-                value = displayValue;
+                value = valueKey;
             }
 
             if (this.fillVar != null) {
@@ -999,7 +1008,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
             if (Platform.isServer()) return name + '\n' + value;
 
-            value = Minecraft.getMinecraft().fontRenderer.wrapFormattedStringToWidth(value, 150);
+            value = Minecraft.getMinecraft().fontRenderer.wrapFormattedStringToWidth(value, 250);
 
             return name + '\n' + value;
         }
