@@ -46,7 +46,7 @@ public class StorageHelper {
      * @param link   destination
      * @return teleported entity
      */
-    private Entity teleportEntity(Entity entity, final TelDestination link) {
+    public Entity teleportEntity(Entity entity, final TelDestination link) {
         final WorldServer oldWorld;
         final WorldServer newWorld;
         final EntityPlayerMP player;
@@ -276,7 +276,7 @@ public class StorageHelper {
         }
     }
 
-    private static class TelDestination {
+    public static class TelDestination {
 
         private final World dim;
         private final double x;
@@ -286,7 +286,7 @@ public class StorageHelper {
         private final int yOff;
         private final int zOff;
 
-        TelDestination(final World dimension, final AxisAlignedBB srcBox, final double x, final double y,
+        public TelDestination(final World dimension, final AxisAlignedBB srcBox, final double x, final double y,
                 final double z, final int tileX, final int tileY, final int tileZ) {
             this.dim = dimension;
             this.x = Math.min(srcBox.maxX - 0.5, Math.max(srcBox.minX + 0.5, x + tileX));
@@ -295,6 +295,27 @@ public class StorageHelper {
             this.xOff = tileX;
             this.yOff = tileY;
             this.zOff = tileZ;
+        }
+
+        public TelDestination(final World dimension, final double x, final double y, final double z, final int tileX,
+                final int tileY, final int tileZ) {
+            this.dim = dimension;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.xOff = tileX;
+            this.yOff = tileY;
+            this.zOff = tileZ;
+        }
+
+        public TelDestination(final World dimension, final double x, final double y, final double z) {
+            this.dim = dimension;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.xOff = 0;
+            this.yOff = 0;
+            this.zOff = 0;
         }
     }
 
