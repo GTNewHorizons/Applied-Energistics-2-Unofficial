@@ -25,6 +25,7 @@ import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingPinsRows;
 import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.CraftingStatus;
+import appeng.api.config.PinSectionOrder;
 import appeng.api.config.PlayerPinsRows;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnits;
@@ -95,6 +96,19 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int MEMonitorableSmallSize = 6;
     public int InterfaceTerminalSmallSize = 6;
     public boolean highlightWhenSomethingStuckInInterface = true;
+
+    /** Max rows for crafting pins section (1-16). Caps the cycle button options. */
+    public int maxCraftingPinRows = 16;
+    /** Max rows for player pins section (1-16). Caps the cycle button options. */
+    public int maxPlayerPinRows = 16;
+    /** True = crafting section first, false = player section first. */
+    public boolean pinCraftingSectionFirst = false;
+    /** Which pin section is shown first (derived from pinCraftingSectionFirst). */
+    public PinSectionOrder pinSectionOrder = PinSectionOrder.PLAYER_FIRST;
+    /** Crafting pin slot background color. Default orange tint. */
+    public int craftingPinSlotColor = 0x38E6731A;
+    /** Player pin slot background color. 0 = no tint. */
+    public int playerPinSlotColor = 0x00000000;
 
     public boolean debugLogTiming = false;
     public boolean debugPathFinding = false;
@@ -358,6 +372,30 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .getBoolean(true);
         this.MEMonitorableSmallSize = this.get("Client", "MEMonitorableSmallSize", 6).getInt(6);
         this.InterfaceTerminalSmallSize = this.get("Client", "InterfaceTerminalSmallSize", 6).getInt(6);
+
+        // Pin options (under Client category)
+        Property pMaxCraft = this.get("Client", "maxCraftingPinRows", this.maxCraftingPinRows);
+        pMaxCraft.comment = "Max rows for crafting pins section (1-16). Caps the pin button cycle.";
+        this.maxCraftingPinRows = pMaxCraft.getInt(this.maxCraftingPinRows);
+        this.maxCraftingPinRows = Math.max(1, Math.min(this.maxCraftingPinRows, 16));
+        Property pMaxPlayer = this.get("Client", "maxPlayerPinRows", this.maxPlayerPinRows);
+        pMaxPlayer.comment = "Max rows for player pins section (1-16). Caps the pin button cycle.";
+        this.maxPlayerPinRows = pMaxPlayer.getInt(this.maxPlayerPinRows);
+        this.maxPlayerPinRows = Math.max(1, Math.min(this.maxPlayerPinRows, 16));
+        Property pOrder = this.get("Client", "pinCraftingSectionFirst", this.pinCraftingSectionFirst);
+        pOrder.comment = "True = crafting pin section first, False = player pin section first.";
+        this.pinCraftingSectionFirst = pOrder.getBoolean(this.pinCraftingSectionFirst);
+        this.pinSectionOrder = this.pinCraftingSectionFirst ? PinSectionOrder.CRAFTING_FIRST
+                : PinSectionOrder.PLAYER_FIRST;
+        Property pCraftColor = this.get("Client", "craftingPinSlotColor", "0x38E6731A");
+        pCraftColor.comment = "Crafting pin slot background color. ARGB format (e.g. 0x38E6731A). Alpha in high byte.";
+        this.craftingPinSlotColor = parseColor(pCraftColor.getString(), this.craftingPinSlotColor);
+        pCraftColor.set(String.format("0x%08X", this.craftingPinSlotColor));
+        Property pPlayerColor = this.get("Client", "playerPinSlotColor", "0x00000000");
+        pPlayerColor.comment = "Player pin slot background color. ARGB format. 0 = no tint.";
+        this.playerPinSlotColor = parseColor(pPlayerColor.getString(), this.playerPinSlotColor);
+        pPlayerColor.set(String.format("0x%08X", this.playerPinSlotColor));
+
         // load buttons..
         for (int btnNum = 0; btnNum < 4; btnNum++) {
             final Property cmb = this.get("Client", "craftAmtButton" + (btnNum + 1), this.craftByStacks[btnNum]);
@@ -416,6 +454,17 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         return comment.toString();
     }
 
+    private static int parseColor(String hex, int defaultColor) {
+        if (hex == null || hex.isEmpty()) return defaultColor;
+        String s = hex.trim().toLowerCase();
+        if (s.startsWith("0x")) s = s.substring(2);
+        try {
+            return (int) Long.parseLong(s, 16);
+        } catch (NumberFormatException e) {
+            return defaultColor;
+        }
+    }
+
     public boolean isFeatureEnabled(final AEFeature f) {
         return this.featureFlags.contains(f);
     }
@@ -452,7 +501,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public Property get(String category, String key, String[] defaultValues) { // compatibility for old configs
         Property prop = super.get(category, key, defaultValues, null, false, -1, null);
         if (prop.getType() != Type.STRING) {
-            ConfigCategory cat = getCategory(category.toLowerCase());
+            ConfigCategory cat = getCategory(category);
             cat.remove(key);
             prop = super.get(category, key, defaultValues, null, false, -1, null);
             save();
@@ -469,6 +518,9 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 
         this.get("Client", "PowerUnit", this.selectedPowerUnit.name(), this.getListComment(this.selectedPowerUnit))
                 .set(this.selectedPowerUnit.name());
+        this.get("Client", "craftingPinSlotColor", "0x38E6731A")
+                .set(String.format("0x%08X", this.craftingPinSlotColor));
+        this.get("Client", "playerPinSlotColor", "0x00000000").set(String.format("0x%08X", this.playerPinSlotColor));
 
         if (this.hasChanged()) {
             super.save();

@@ -59,6 +59,7 @@ import appeng.api.config.TerminalStyle;
 import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
 import appeng.client.texture.ExtraBlockTextures;
+import appeng.core.AEConfig;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.util.Platform;
@@ -857,8 +858,11 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     CraftingPinsRows.DISABLED,
                     ButtonToolTips.PinsSection,
                     ButtonToolTips.PinsSection);
+            int maxCrafting = AEConfig.instance != null ? AEConfig.instance.maxCraftingPinRows
+                    : CraftingPinsRows.values().length - 1;
             for (CraftingPinsRows r : CraftingPinsRows.values()) {
                 if (r == CraftingPinsRows.DISABLED) continue;
+                if (r.ordinal() > maxCrafting) continue;
                 this.registerApp(
                         16 * 15 + 13,
                         Settings.CRAFTING_PINS_ROWS,
@@ -873,8 +877,11 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     PlayerPinsRows.DISABLED,
                     ButtonToolTips.PinsSection,
                     ButtonToolTips.PinsSection);
+            int maxPlayer = AEConfig.instance != null ? AEConfig.instance.maxPlayerPinRows
+                    : PlayerPinsRows.values().length - 1;
             for (PlayerPinsRows r : PlayerPinsRows.values()) {
                 if (r == PlayerPinsRows.DISABLED) continue;
+                if (r.ordinal() > maxPlayer) continue;
                 this.registerApp(
                         16 * 15 + 13,
                         Settings.PLAYER_PINS_ROWS,

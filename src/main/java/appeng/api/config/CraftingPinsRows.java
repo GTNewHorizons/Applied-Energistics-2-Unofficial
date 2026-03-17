@@ -10,7 +10,15 @@ public enum CraftingPinsRows {
     FIVE,
     SIX,
     SEVEN,
-    EIGHT;
+    EIGHT,
+    NINE,
+    TEN,
+    ELEVEN,
+    TWELVE,
+    THIRTEEN,
+    FOURTEEN,
+    FIFTEEN,
+    SIXTEEN;
 
     public static CraftingPinsRows fromOrdinal(int ordinal) {
         if (ordinal < 0 || ordinal >= values().length) {
