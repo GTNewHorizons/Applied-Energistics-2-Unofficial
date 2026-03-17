@@ -79,6 +79,7 @@ public class ItemRepo implements IDisplayRepo {
             IAEStack<?> isToPin = list.findPrecise(newPins[i]);
 
             if (isToPin == null) {
+                // If the item is not found in the repo, try to find it in the previous pins.
                 isToPin = oldPins.findPrecise(newPins[i]);
             }
 
@@ -203,7 +204,7 @@ public class ItemRepo implements IDisplayRepo {
                     this.view.set(i, serverEntry);
                 }
             }
-
+            // Append newly added item stacks to the end of the view
             Set<IAEStack<?>> viewSet = new HashSet<>(this.view);
             ArrayList<IAEStack<?>> entriesToAdd = new ArrayList<>();
             for (IAEStack<?> serverEntry : this.list) {

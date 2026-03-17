@@ -55,8 +55,10 @@ public class PinsHolder implements IAEAppEngInventory {
             itemList.setInteger("craftingPinsRows", cr != null ? cr.ordinal() : 0);
             itemList.setInteger("playerPinsRows", pr != null ? pr.ordinal() : 0);
             for (int x = 0; x < pins.size(); x++) {
+                // final ItemStack pinStack = pins.getStackInSlot(x);
                 final IAEStack<?> pinStack = pins.getPin(x);
                 if (pinStack != null) {
+                    // itemList.setTag("#" + x, pinStack.writeToNBT(new NBTTagCompound()));
                     itemList.setTag("#" + x, Platform.writeStackNBT(pinStack, new NBTTagCompound(), true));
                 }
             }
@@ -110,9 +112,11 @@ public class PinsHolder implements IAEAppEngInventory {
                     NBTTagCompound tag = itemList.getCompoundTag("#" + x);
                     if (tag.hasKey("StackType")) {
                         IAEStack<?> stack = Platform.readStackNBT(tag);
+                        // pins.setInventorySlotContents();
                         pins.setPin(x, stack);
                     } else {
                         ItemStack pinStack = ItemStack.loadItemStackFromNBT(itemList.getCompoundTag("#" + x));
+                        // pins.setInventorySlotContents(x, pinStack);
                         pins.setPin(x, AEItemStack.create(pinStack));
                     }
                 }

@@ -41,12 +41,13 @@ public class PinsHandler {
             stack.setStackSize(0);
             for (int i = 0; i < pinsInv.size(); i++) {
                 if (pinsInv.getPin(i) != null && pinsInv.getPin(i).isSameType(stack)) {
+                    // pinsInv.setInventorySlotContents(i, pinsInv.getStackInSlot(idx)); // swap the pin
                     pinsInv.setPin(i, pinsInv.getPin(idx));
                     break;
                 }
             }
         }
-
+        // pinsInv.setInventorySlotContents(idx, stack); // set the pin
         pinsInv.setPin(idx, stack);
         needUpdate = true;
         holder.markDirty();
@@ -56,7 +57,7 @@ public class PinsHandler {
         return pinsInv.getPin(idx);
     }
 
-    /** Adds crafted items only to the crafting pin section (indices 0 to craftingRows*9-1). */
+    // Adds crafted items only to the crafting pin section (indices 0 to craftingRows*9-1).
     public void addItemsToPins(Iterable<IAEStack<?>> pinsList) {
         int maxCraftingSlots = craftingPinsRows.getSlotCount();
         if (maxCraftingSlots <= 0) return;
