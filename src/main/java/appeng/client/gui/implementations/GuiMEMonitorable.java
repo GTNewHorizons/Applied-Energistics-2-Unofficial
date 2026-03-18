@@ -298,6 +298,23 @@ public class GuiMEMonitorable extends AEBaseGui
         }
     }
 
+    private int createPinSection(int slotIdx, int sectionRows, int pinsPerRow, int rowOffset, boolean isCrafting) {
+        int baseIndex = isCrafting ? 0 : appeng.items.contents.PinList.PLAYER_OFFSET;
+        for (int y = 0; y < sectionRows; y++) {
+            for (int x = 0; x < pinsPerRow; x++) {
+                VirtualMEPinSlot slot = new VirtualMEPinSlot(
+                        this.offsetRepoX + x * 18,
+                        (rowOffset + y) * 18 + this.offsetRepoY,
+                        this.repo,
+                        baseIndex + y * pinsPerRow + x,
+                        isCrafting);
+                this.pinSlots[slotIdx++] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+        return slotIdx;
+    }
+
     private void adjustPinsSize() {
         final int pinMaxSize = rows - 1;
         int craft = Math.min(craftingPinsRows.ordinal(), AEConfig.instance.maxCraftingPinRows);
@@ -360,57 +377,11 @@ public class GuiMEMonitorable extends AEBaseGui
         this.pinSlots = new VirtualMEPinSlot[craftingRows * pinsPerRow + playerRows * pinsPerRow];
         int slotIdx = 0;
         boolean playerFirst = AEConfig.instance.pinSectionOrder == PinSectionOrder.PLAYER_FIRST;
-        if (playerFirst) {
-            for (int y = 0; y < playerRows; y++) {
-                for (int x = 0; x < pinsPerRow; x++) {
-                    VirtualMEPinSlot slot = new VirtualMEPinSlot(
-                            this.offsetRepoX + x * 18,
-                            y * 18 + this.offsetRepoY,
-                            this.repo,
-                            appeng.items.contents.PinList.PLAYER_OFFSET + y * pinsPerRow + x,
-                            false);
-                    this.pinSlots[slotIdx++] = slot;
-                    this.registerVirtualSlots(slot);
-                }
-            }
-            for (int y = 0; y < craftingRows; y++) {
-                for (int x = 0; x < pinsPerRow; x++) {
-                    VirtualMEPinSlot slot = new VirtualMEPinSlot(
-                            this.offsetRepoX + x * 18,
-                            (playerRows + y) * 18 + this.offsetRepoY,
-                            this.repo,
-                            y * pinsPerRow + x,
-                            true);
-                    this.pinSlots[slotIdx++] = slot;
-                    this.registerVirtualSlots(slot);
-                }
-            }
-        } else {
-            for (int y = 0; y < craftingRows; y++) {
-                for (int x = 0; x < pinsPerRow; x++) {
-                    VirtualMEPinSlot slot = new VirtualMEPinSlot(
-                            this.offsetRepoX + x * 18,
-                            y * 18 + this.offsetRepoY,
-                            this.repo,
-                            y * pinsPerRow + x,
-                            true);
-                    this.pinSlots[slotIdx++] = slot;
-                    this.registerVirtualSlots(slot);
-                }
-            }
-            for (int y = 0; y < playerRows; y++) {
-                for (int x = 0; x < pinsPerRow; x++) {
-                    VirtualMEPinSlot slot = new VirtualMEPinSlot(
-                            this.offsetRepoX + x * 18,
-                            (craftingRows + y) * 18 + this.offsetRepoY,
-                            this.repo,
-                            appeng.items.contents.PinList.PLAYER_OFFSET + y * pinsPerRow + x,
-                            false);
-                    this.pinSlots[slotIdx++] = slot;
-                    this.registerVirtualSlots(slot);
-                }
-            }
-        }
+        int firstRows = playerFirst ? playerRows : craftingRows;
+        int secondRows = playerFirst ? craftingRows : playerRows;
+        boolean firstIsCrafting = !playerFirst;
+        slotIdx = createPinSection(slotIdx, firstRows, pinsPerRow, 0, firstIsCrafting);
+        slotIdx = createPinSection(slotIdx, secondRows, pinsPerRow, firstRows, !firstIsCrafting);
 
         int normalSlotRows = Math.max(0, this.rows - pinsRows);
         this.monitorableSlots = new VirtualMEMonitorableSlot[normalSlotRows * this.perRow];
@@ -632,12 +603,7 @@ public class GuiMEMonitorable extends AEBaseGui
                 this.ySize - 96 + 3,
                 GuiColors.MEMonitorableInventory.getColor());
 
-        VirtualMEPinSlot.drawSlotsBackground(
-                this.pinSlots,
-                this.mc,
-                this.zLevel,
-                AEConfig.instance.craftingPinSlotColor,
-                AEConfig.instance.playerPinSlotColor);
+        VirtualMEPinSlot.drawSlotsBackground(this.pinSlots, this.mc, this.zLevel);
 
         this.currentMouseX = mouseX;
         this.currentMouseY = mouseY;

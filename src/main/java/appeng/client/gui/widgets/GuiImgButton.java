@@ -867,7 +867,8 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                         Settings.CRAFTING_PINS_ROWS,
                         r,
                         ButtonToolTips.PinsSection,
-                        ButtonToolTips.PinsSectionActive);
+                        ButtonToolTips.PinsSectionActive,
+                        ButtonToolTips.PinsSectionHint);
             }
 
             this.registerApp(
@@ -886,7 +887,8 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                         Settings.PLAYER_PINS_ROWS,
                         r,
                         ButtonToolTips.PinsSection,
-                        ButtonToolTips.PinsSectionActive);
+                        ButtonToolTips.PinsSectionActive,
+                        ButtonToolTips.PinsSectionHint);
             }
 
             this.registerApp(
@@ -907,9 +909,15 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
     private void registerApp(final int iconIndex, final Settings setting, final Enum val, final ButtonToolTips title,
             final Object hint) {
+        registerApp(iconIndex, setting, val, title, hint, null);
+    }
+
+    private void registerApp(final int iconIndex, final Settings setting, final Enum val, final ButtonToolTips title,
+            final Object hint, final ButtonToolTips altHint) {
         final ButtonAppearance a = new ButtonAppearance();
         a.displayName = title.getUnlocalized();
         a.displayValue = (String) (hint instanceof String ? hint : ((ButtonToolTips) hint).getUnlocalized());
+        a.altDisplayValue = altHint != null ? altHint.getUnlocalized() : null;
         a.index = iconIndex;
         appearances.put(new EnumPair(setting, val), a);
     }
@@ -975,10 +983,10 @@ public class GuiImgButton extends GuiButton implements ITooltip {
     public String getMessage() {
         String displayName = null;
         String displayValue = null;
+        ButtonAppearance buttonAppearance = null;
 
         if (this.buttonSetting != null && this.currentValue != null) {
-            final ButtonAppearance buttonAppearance = appearances
-                    .get(new EnumPair(this.buttonSetting, this.currentValue));
+            buttonAppearance = appearances.get(new EnumPair(this.buttonSetting, this.currentValue));
             if (buttonAppearance == null) {
                 return "No Such Message";
             }
@@ -990,11 +998,10 @@ public class GuiImgButton extends GuiButton implements ITooltip {
         if (displayName != null) {
             String name = StatCollector.translateToLocal(displayName);
             String valueKey = displayValue;
-            if (!Platform.isServer() && displayValue != null
-                    && displayValue.equals(ButtonToolTips.PinsSectionActive.getUnlocalized())) {
+            if (!Platform.isServer() && buttonAppearance != null && buttonAppearance.altDisplayValue != null) {
                 boolean altHeld = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
                 if (!altHeld) {
-                    valueKey = ButtonToolTips.PinsSectionHint.getUnlocalized();
+                    valueKey = buttonAppearance.altDisplayValue;
                 }
             }
             String value = StatCollector.translateToLocal(valueKey);
@@ -1106,5 +1113,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
         public int index;
         public String displayName;
         public String displayValue;
+        public String altDisplayValue;
     }
 }
