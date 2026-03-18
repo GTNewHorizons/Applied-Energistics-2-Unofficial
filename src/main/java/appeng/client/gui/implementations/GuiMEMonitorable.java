@@ -35,10 +35,9 @@ import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import appeng.api.config.CraftingPinsRows;
 import appeng.api.config.CraftingStatus;
 import appeng.api.config.PinSectionOrder;
-import appeng.api.config.PlayerPinsRows;
+import appeng.api.config.PinsRows;
 import appeng.api.config.SearchBoxFocusPriority;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
@@ -143,8 +142,8 @@ public class GuiMEMonitorable extends AEBaseGui
     private boolean isAutoFocused = false;
     private int currentMouseX = 0;
     private int currentMouseY = 0;
-    private CraftingPinsRows craftingPinsRows;
-    private PlayerPinsRows playerPinsRows;
+    private PinsRows craftingPinsRows;
+    private PinsRows playerPinsRows;
     public final boolean hasPinHost;
     private boolean enableShiftPause = true;
 
@@ -176,8 +175,8 @@ public class GuiMEMonitorable extends AEBaseGui
 
         this.configSrc = ((IConfigurableObject) this.inventorySlots).getConfigManager();
 
-        craftingPinsRows = (CraftingPinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS);
-        playerPinsRows = (PlayerPinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS);
+        craftingPinsRows = (PinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS);
+        playerPinsRows = (PinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS);
 
         (this.monitorableContainer = (ContainerMEMonitorable) this.inventorySlots).setGui(this);
 
@@ -278,7 +277,7 @@ public class GuiMEMonitorable extends AEBaseGui
                 }
                 if (c + p >= rows) return;
                 NetworkHandler.instance.sendToServer(new PacketPinsUpdate(
-                        CraftingPinsRows.fromOrdinal(c), PlayerPinsRows.fromOrdinal(p)));
+                        PinsRows.fromOrdinal(c), PinsRows.fromOrdinal(p)));
             } catch (final IOException e) {
                 AELog.debug(e);
             }
@@ -313,8 +312,8 @@ public class GuiMEMonitorable extends AEBaseGui
             } else {
                 craft = Math.min(craft, pinMaxSize - player);
             }
-            NetworkHandler.instance.sendToServer(
-                    new PacketPinsUpdate(CraftingPinsRows.fromOrdinal(craft), PlayerPinsRows.fromOrdinal(player)));
+            NetworkHandler.instance
+                    .sendToServer(new PacketPinsUpdate(PinsRows.fromOrdinal(craft), PinsRows.fromOrdinal(player)));
         } catch (final IOException e) {
             AELog.debug(e);
         }
@@ -530,10 +529,10 @@ public class GuiMEMonitorable extends AEBaseGui
                             getPinButtonX(),
                             getPinButtonY(),
                             Settings.CRAFTING_PINS_ROWS,
-                            CraftingPinsRows.ONE));
+                            PinsRows.ONE));
             this.repo.setVisiblePinRows(
-                    ((CraftingPinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS)).ordinal(),
-                    ((PlayerPinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS)).ordinal());
+                    ((PinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS)).ordinal(),
+                    ((PinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS)).ordinal());
         }
 
         // Enum setting = AEConfig.INSTANCE.getSetting( "Terminal", SearchBoxMode.class, SearchBoxMode.AUTOSEARCH );
@@ -1035,8 +1034,8 @@ public class GuiMEMonitorable extends AEBaseGui
         }
 
         if (this.pinsStateButton != null) {
-            craftingPinsRows = (CraftingPinsRows) this.configSrc.getSetting(Settings.CRAFTING_PINS_ROWS);
-            playerPinsRows = (PlayerPinsRows) this.configSrc.getSetting(Settings.PLAYER_PINS_ROWS);
+            craftingPinsRows = (PinsRows) this.configSrc.getSetting(Settings.CRAFTING_PINS_ROWS);
+            playerPinsRows = (PinsRows) this.configSrc.getSetting(Settings.PLAYER_PINS_ROWS);
             this.repo.setVisiblePinRows(craftingPinsRows.ordinal(), playerPinsRows.ordinal());
             reinitalize();
         }
@@ -1159,18 +1158,16 @@ public class GuiMEMonitorable extends AEBaseGui
     }
 
     @Override
-    public void setCraftingPinsRows(CraftingPinsRows rows) {
+    public void setCraftingPinsRows(PinsRows rows) {
         configSrc.putSetting(Settings.CRAFTING_PINS_ROWS, rows);
-        repo.setVisiblePinRows(
-                rows.ordinal(),
-                ((PlayerPinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS)).ordinal());
+        repo.setVisiblePinRows(rows.ordinal(), ((PinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS)).ordinal());
     }
 
     @Override
-    public void setPlayerPinsRows(PlayerPinsRows rows) {
+    public void setPlayerPinsRows(PinsRows rows) {
         configSrc.putSetting(Settings.PLAYER_PINS_ROWS, rows);
         repo.setVisiblePinRows(
-                ((CraftingPinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS)).ordinal(),
+                ((PinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS)).ordinal(),
                 rows.ordinal());
     }
 }

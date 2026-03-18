@@ -8,8 +8,7 @@ import java.util.Iterator;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
-import appeng.api.config.CraftingPinsRows;
-import appeng.api.config.PlayerPinsRows;
+import appeng.api.config.PinsRows;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
@@ -19,8 +18,8 @@ public class PinsHandler {
 
     private final PinsHolder holder;
     private final PinList pinsInv;
-    private CraftingPinsRows craftingPinsRows;
-    private PlayerPinsRows playerPinsRows;
+    private PinsRows craftingPinsRows;
+    private PinsRows playerPinsRows;
     private final EntityPlayer player;
 
     private boolean needUpdate = true;
@@ -91,25 +90,25 @@ public class PinsHandler {
         holder.markDirty();
     }
 
-    public void setCraftingPinsRows(CraftingPinsRows rows) {
+    public void setCraftingPinsRows(PinsRows rows) {
         if (craftingPinsRows == rows) return;
         craftingPinsRows = rows;
         holder.setCraftingPinsRows(player, rows);
         update(false);
     }
 
-    public void setPlayerPinsRows(PlayerPinsRows rows) {
+    public void setPlayerPinsRows(PinsRows rows) {
         if (playerPinsRows == rows) return;
         playerPinsRows = rows;
         holder.setPlayerPinsRows(player, rows);
         update(false);
     }
 
-    public CraftingPinsRows getCraftingPinsRows() {
+    public PinsRows getCraftingPinsRows() {
         return craftingPinsRows;
     }
 
-    public PlayerPinsRows getPlayerPinsRows() {
+    public PinsRows getPlayerPinsRows() {
         return playerPinsRows;
     }
 

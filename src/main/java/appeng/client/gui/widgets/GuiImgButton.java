@@ -29,7 +29,6 @@ import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingAllow;
 import appeng.api.config.CraftingMode;
-import appeng.api.config.CraftingPinsRows;
 import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.CraftingStatus;
 import appeng.api.config.ExtractionMode;
@@ -42,7 +41,7 @@ import appeng.api.config.LockCraftingMode;
 import appeng.api.config.OperationMode;
 import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.PatternSlotConfig;
-import appeng.api.config.PlayerPinsRows;
+import appeng.api.config.PinsRows;
 import appeng.api.config.PowerUnits;
 import appeng.api.config.PriorityCardMode;
 import appeng.api.config.RedstoneMode;
@@ -855,13 +854,13 @@ public class GuiImgButton extends GuiButton implements ITooltip {
             this.registerApp(
                     16 * 15 + 14,
                     Settings.CRAFTING_PINS_ROWS,
-                    CraftingPinsRows.DISABLED,
+                    PinsRows.DISABLED,
                     ButtonToolTips.PinsSection,
                     ButtonToolTips.PinsSection);
             int maxCrafting = AEConfig.instance != null ? AEConfig.instance.maxCraftingPinRows
-                    : CraftingPinsRows.values().length - 1;
-            for (CraftingPinsRows r : CraftingPinsRows.values()) {
-                if (r == CraftingPinsRows.DISABLED) continue;
+                    : PinsRows.values().length - 1;
+            for (PinsRows r : PinsRows.values()) {
+                if (r == PinsRows.DISABLED) continue;
                 if (r.ordinal() > maxCrafting) continue;
                 this.registerApp(
                         16 * 15 + 13,
@@ -874,13 +873,13 @@ public class GuiImgButton extends GuiButton implements ITooltip {
             this.registerApp(
                     16 * 15 + 14,
                     Settings.PLAYER_PINS_ROWS,
-                    PlayerPinsRows.DISABLED,
+                    PinsRows.DISABLED,
                     ButtonToolTips.PinsSection,
                     ButtonToolTips.PinsSection);
             int maxPlayer = AEConfig.instance != null ? AEConfig.instance.maxPlayerPinRows
-                    : PlayerPinsRows.values().length - 1;
-            for (PlayerPinsRows r : PlayerPinsRows.values()) {
-                if (r == PlayerPinsRows.DISABLED) continue;
+                    : PinsRows.values().length - 1;
+            for (PinsRows r : PinsRows.values()) {
+                if (r == PinsRows.DISABLED) continue;
                 if (r.ordinal() > maxPlayer) continue;
                 this.registerApp(
                         16 * 15 + 13,

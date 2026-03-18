@@ -10,9 +10,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
-import appeng.api.config.CraftingPinsRows;
+import appeng.api.config.PinsRows;
 import appeng.api.config.PinsState;
-import appeng.api.config.PlayerPinsRows;
 import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.data.IAEStack;
 import appeng.tile.inventory.IAEAppEngInventory;
@@ -25,8 +24,8 @@ public class PinsHolder implements IAEAppEngInventory {
     private final ItemStack holder;
 
     private final HashMap<UUID, PinList> pinsMap = new HashMap<>();
-    private final HashMap<UUID, CraftingPinsRows> craftingPinsRowsMap = new HashMap<>();
-    private final HashMap<UUID, PlayerPinsRows> playerPinsRowsMap = new HashMap<>();
+    private final HashMap<UUID, PinsRows> craftingPinsRowsMap = new HashMap<>();
+    private final HashMap<UUID, PinsRows> playerPinsRowsMap = new HashMap<>();
 
     private boolean initialized = false;
 
@@ -50,8 +49,8 @@ public class PinsHolder implements IAEAppEngInventory {
 
             final NBTTagCompound itemList = new NBTTagCompound();
             itemList.setString("playerId", playerId.toString());
-            CraftingPinsRows cr = craftingPinsRowsMap.get(playerId);
-            PlayerPinsRows pr = playerPinsRowsMap.get(playerId);
+            PinsRows cr = craftingPinsRowsMap.get(playerId);
+            PinsRows pr = playerPinsRowsMap.get(playerId);
             itemList.setInteger("craftingPinsRows", cr != null ? cr.ordinal() : 0);
             itemList.setInteger("playerPinsRows", pr != null ? pr.ordinal() : 0);
             for (int x = 0; x < pins.size(); x++) {
@@ -84,7 +83,7 @@ public class PinsHolder implements IAEAppEngInventory {
             int craftingOrdinal = hasNewFormat ? itemList.getInteger("craftingPinsRows") : 0;
             int playerOrdinal;
             if (hasNewFormat) {
-                playerOrdinal = Math.min(itemList.getInteger("playerPinsRows"), PlayerPinsRows.values().length - 1);
+                playerOrdinal = Math.min(itemList.getInteger("playerPinsRows"), PinsRows.values().length - 1);
             } else {
                 int oldState = itemList.getInteger("pinsState");
                 int oldOrdinal = Math.min(Math.max(oldState, 0), PinsState.values().length - 1);
@@ -104,7 +103,7 @@ public class PinsHolder implements IAEAppEngInventory {
             }
 
             if (!hasNewFormat) {
-                craftingOrdinal = Math.min(craftingOrdinal, CraftingPinsRows.values().length - 1);
+                craftingOrdinal = Math.min(craftingOrdinal, PinsRows.values().length - 1);
             }
 
             for (int x = 0; x < pins.size(); x++) {
@@ -123,12 +122,10 @@ public class PinsHolder implements IAEAppEngInventory {
             }
 
             this.pinsMap.put(playerId, pins);
-            this.craftingPinsRowsMap.put(
-                    playerId,
-                    CraftingPinsRows.fromOrdinal(Math.min(craftingOrdinal, CraftingPinsRows.values().length - 1)));
-            this.playerPinsRowsMap.put(
-                    playerId,
-                    PlayerPinsRows.fromOrdinal(Math.min(playerOrdinal, PlayerPinsRows.values().length - 1)));
+            this.craftingPinsRowsMap
+                    .put(playerId, PinsRows.fromOrdinal(Math.min(craftingOrdinal, PinsRows.values().length - 1)));
+            this.playerPinsRowsMap
+                    .put(playerId, PinsRows.fromOrdinal(Math.min(playerOrdinal, PinsRows.values().length - 1)));
         }
     }
 
@@ -141,20 +138,20 @@ public class PinsHolder implements IAEAppEngInventory {
         return pinsInv;
     }
 
-    public CraftingPinsRows getCraftingPinsRows(EntityPlayer player) {
-        return this.craftingPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> CraftingPinsRows.DISABLED);
+    public PinsRows getCraftingPinsRows(EntityPlayer player) {
+        return this.craftingPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> PinsRows.DISABLED);
     }
 
-    public void setCraftingPinsRows(EntityPlayer player, CraftingPinsRows rows) {
+    public void setCraftingPinsRows(EntityPlayer player, PinsRows rows) {
         this.craftingPinsRowsMap.put(player.getPersistentID(), rows);
         markDirty();
     }
 
-    public PlayerPinsRows getPlayerPinsRows(EntityPlayer player) {
-        return this.playerPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> PlayerPinsRows.DISABLED);
+    public PinsRows getPlayerPinsRows(EntityPlayer player) {
+        return this.playerPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> PinsRows.DISABLED);
     }
 
-    public void setPlayerPinsRows(EntityPlayer player, PlayerPinsRows rows) {
+    public void setPlayerPinsRows(EntityPlayer player, PinsRows rows) {
         this.playerPinsRowsMap.put(player.getPersistentID(), rows);
         markDirty();
     }

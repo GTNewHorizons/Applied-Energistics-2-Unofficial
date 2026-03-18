@@ -9,8 +9,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
-import appeng.api.config.CraftingPinsRows;
-import appeng.api.config.PlayerPinsRows;
+import appeng.api.config.PinsRows;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -44,8 +43,7 @@ public class PacketPinsUpdate extends AppEngPacket {
         }
     }
 
-    public PacketPinsUpdate(IAEStack<?>[] arr, CraftingPinsRows craftingRows, PlayerPinsRows playerRows)
-            throws IOException {
+    public PacketPinsUpdate(IAEStack<?>[] arr, PinsRows craftingRows, PinsRows playerRows) throws IOException {
         list = arr;
         this.craftingRowsOrdinal = craftingRows.ordinal();
         this.playerRowsOrdinal = playerRows.ordinal();
@@ -68,7 +66,7 @@ public class PacketPinsUpdate extends AppEngPacket {
     }
 
     /** State-only update (e.g. button click). */
-    public PacketPinsUpdate(CraftingPinsRows craftingRows, PlayerPinsRows playerRows) throws IOException {
+    public PacketPinsUpdate(PinsRows craftingRows, PinsRows playerRows) throws IOException {
         list = null;
         this.craftingRowsOrdinal = craftingRows.ordinal();
         this.playerRowsOrdinal = playerRows.ordinal();
@@ -85,10 +83,10 @@ public class PacketPinsUpdate extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
         if (gs instanceof IPinsHandler iph) {
-            int craftOrd = Math.max(0, Math.min(craftingRowsOrdinal, CraftingPinsRows.values().length - 1));
-            int playerOrd = Math.max(0, Math.min(playerRowsOrdinal, PlayerPinsRows.values().length - 1));
-            iph.setCraftingPinsRows(CraftingPinsRows.values()[craftOrd]);
-            iph.setPlayerPinsRows(PlayerPinsRows.values()[playerOrd]);
+            int craftOrd = Math.max(0, Math.min(craftingRowsOrdinal, PinsRows.values().length - 1));
+            int playerOrd = Math.max(0, Math.min(playerRowsOrdinal, PinsRows.values().length - 1));
+            iph.setCraftingPinsRows(PinsRows.values()[craftOrd]);
+            iph.setPlayerPinsRows(PinsRows.values()[playerOrd]);
             if (list != null) iph.setAEPins(list);
         }
     }
@@ -97,10 +95,10 @@ public class PacketPinsUpdate extends AppEngPacket {
     public void serverPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
         if (sender.openContainer instanceof IPinsHandler container) {
-            int craftOrd = Math.max(0, Math.min(craftingRowsOrdinal, CraftingPinsRows.values().length - 1));
-            int playerOrd = Math.max(0, Math.min(playerRowsOrdinal, PlayerPinsRows.values().length - 1));
-            container.setCraftingPinsRows(CraftingPinsRows.values()[craftOrd]);
-            container.setPlayerPinsRows(PlayerPinsRows.values()[playerOrd]);
+            int craftOrd = Math.max(0, Math.min(craftingRowsOrdinal, PinsRows.values().length - 1));
+            int playerOrd = Math.max(0, Math.min(playerRowsOrdinal, PinsRows.values().length - 1));
+            container.setCraftingPinsRows(PinsRows.values()[craftOrd]);
+            container.setPlayerPinsRows(PinsRows.values()[playerOrd]);
         }
     }
 }

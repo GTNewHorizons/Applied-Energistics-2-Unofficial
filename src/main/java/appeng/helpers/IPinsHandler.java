@@ -1,7 +1,6 @@
 package appeng.helpers;
 
-import appeng.api.config.CraftingPinsRows;
-import appeng.api.config.PlayerPinsRows;
+import appeng.api.config.PinsRows;
 import appeng.api.storage.data.IAEStack;
 import appeng.items.contents.PinList;
 
@@ -27,19 +26,19 @@ public interface IPinsHandler {
         throw new UnsupportedOperationException("getAEPin is not supported by this handler");
     }
 
-    default CraftingPinsRows getCraftingPinsRows() {
-        return CraftingPinsRows.DISABLED;
+    default PinsRows getCraftingPinsRows() {
+        return PinsRows.DISABLED;
     }
 
-    default void setCraftingPinsRows(CraftingPinsRows rows) {
+    default void setCraftingPinsRows(PinsRows rows) {
         throw new UnsupportedOperationException("setCraftingPinsRows is not supported by this handler");
     }
 
-    default PlayerPinsRows getPlayerPinsRows() {
-        return PlayerPinsRows.DISABLED;
+    default PinsRows getPlayerPinsRows() {
+        return PinsRows.DISABLED;
     }
 
-    default void setPlayerPinsRows(PlayerPinsRows rows) {
+    default void setPlayerPinsRows(PinsRows rows) {
         throw new UnsupportedOperationException("setPlayerPinsRows is not supported by this handler");
     }
 }

@@ -1,6 +1,6 @@
 package appeng.api.config;
 
-public enum CraftingPinsRows {
+public enum PinsRows {
 
     DISABLED,
     ONE,
@@ -20,9 +20,9 @@ public enum CraftingPinsRows {
     FIFTEEN,
     SIXTEEN;
 
-    public static CraftingPinsRows fromOrdinal(int ordinal) {
+    public static PinsRows fromOrdinal(int ordinal) {
         if (ordinal < 0 || ordinal >= values().length) {
-            throw new IllegalArgumentException("Invalid ordinal for CraftingPinsRows: " + ordinal);
+            throw new IllegalArgumentException("Invalid ordinal for PinsRows: " + ordinal);
         }
         return values()[ordinal];
     }
