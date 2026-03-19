@@ -79,6 +79,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
@@ -93,13 +94,13 @@ import appeng.me.helpers.ChannelPowerSrc;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
-import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap.Entry;
 
 public class ContainerMEMonitorable extends AEBaseContainer
         implements IConfigManagerHost, IConfigurableObject, IMEMonitorHandlerReceiver<IAEStack<?>>, IPinsHandler {
@@ -187,7 +188,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
         if (monitorable instanceof IViewCellStorage vcs) {
             for (int y = 0; y < 5; y++) {
                 this.cellView[y] = new SlotRestrictedInput(
-                        SlotRestrictedInput.PlacableItemType.VIEW_CELL,
+                        PlacableItemType.VIEW_CELL,
                         vcs.getViewCellStorage(),
                         y,
                         206,
@@ -466,7 +467,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     public void updateTypeFilters(Reference2BooleanMap<IAEStackType<?>> map) {
         if (this.host instanceof ITerminalTypeFilterProvider provider) {
-            for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : map.reference2BooleanEntrySet()) {
+            for (Entry<IAEStackType<?>> entry : map.reference2BooleanEntrySet()) {
                 this.typeFilters.put(entry.getKey(), entry.getBooleanValue());
             }
 
@@ -898,7 +899,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IMEMonitor monitor = this.getMonitor(type);
                 if (monitor == null) return;
 
-                stackInSlot = monitor.getAvailableItem(stackInSlot, IterationCounter.fetchNewId());
+                stackInSlot = monitor.getAvailableItem(stackInSlot, fetchNewId());
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 if (hand.stackSize == 1) {
@@ -936,7 +937,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IMEMonitor monitor = this.getMonitor(type);
                 if (monitor == null) return;
 
-                stackInSlot = monitor.getAvailableItem(stackInSlot, IterationCounter.fetchNewId());
+                stackInSlot = monitor.getAvailableItem(stackInSlot, fetchNewId());
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 // Set filled item to player hand
@@ -977,10 +978,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
                             if (hand.stackSize - 1 == 0) {
                                 player.inventory.setItemStack(filledContainer);
-                                break;
-                            }
-
-                            if (adaptor.addItems(filledContainer) != null) break;
+                            } else if (adaptor.addItems(filledContainer) != null) break;
 
                             long amountBeforeExtract = aes.getStackSize();
                             monitor.extractItems(
