@@ -1,5 +1,7 @@
 package appeng.client.gui.slots;
 
+import static net.minecraft.client.gui.Gui.drawRect;
+
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
@@ -10,6 +12,7 @@ import org.lwjgl.opengl.GL11;
 
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IDisplayRepo;
+import appeng.core.AEConfig;
 import appeng.core.AppEng;
 
 public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
@@ -18,11 +21,19 @@ public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
     private static final int UV_Y = (int) Math.floor((double) PIN_ICON_INDEX / 16);
     private static final int UV_X = PIN_ICON_INDEX - UV_Y * 16;
     private static final int ICON_SIZE = 16;
+    private static final int SLOT_SIZE = 18;
     private static final float PIN_ICON_OPACITY = 0.4f;
     private static final ResourceLocation TEXTURE = new ResourceLocation(AppEng.MOD_ID, "textures/guis/states.png");
 
-    public VirtualMEPinSlot(int x, int y, IDisplayRepo repo, int slotIndex) {
+    private final boolean isCraftingSlot;
+
+    public VirtualMEPinSlot(int x, int y, IDisplayRepo repo, int slotIndex, boolean isCraftingSlot) {
         super(x, y, repo, slotIndex);
+        this.isCraftingSlot = isCraftingSlot;
+    }
+
+    public boolean isCraftingSlot() {
+        return isCraftingSlot;
     }
 
     @Override
@@ -30,16 +41,34 @@ public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
         return this.repo.getAEPin(this.slotIndex);
     }
 
+    /**
+     * Draw tinted backgrounds for pin slots. Use config colors (ARGB); 0 for no tint.
+     */
     public static void drawSlotsBackground(VirtualMEPinSlot[] slots, Minecraft mc, float z) {
-        mc.getTextureManager().bindTexture(TEXTURE);
+        final int craftingColor = AEConfig.instance.craftingPinSlotColor;
+        final int playerColor = AEConfig.instance.playerPinSlotColor;
         final Tessellator tessellator = Tessellator.instance;
 
+        for (VirtualMEPinSlot slot : slots) {
+            int color = slot.isCraftingSlot() ? craftingColor : playerColor;
+            if (color != 0) {
+                drawRect(
+                        slot.getX() - 1,
+                        slot.getY() - 1,
+                        slot.getX() - 1 + SLOT_SIZE,
+                        slot.getY() - 1 + SLOT_SIZE,
+                        color);
+            }
+        }
+
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+        GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glDisable(GL11.GL_LIGHTING);
-        GL11.glEnable(GL11.GL_TEXTURE_2D);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
+        GL11.glEnable(GL11.GL_TEXTURE_2D);
+        mc.getTextureManager().bindTexture(TEXTURE);
         tessellator.startDrawingQuads();
         tessellator.setColorRGBA_F(1.0f, 1.0f, 1.0f, PIN_ICON_OPACITY);
         for (VirtualMEPinSlot slot : slots) {
