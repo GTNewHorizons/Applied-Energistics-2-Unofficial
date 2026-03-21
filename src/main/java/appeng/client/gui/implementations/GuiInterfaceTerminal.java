@@ -10,6 +10,7 @@
 
 package appeng.client.gui.implementations;
 
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -474,7 +476,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
          */
         while (viewY < this.viewHeight && entryIdx < visibleSections.size()) {
             InterfaceSection section = visibleSections.get(entryIdx);
-            int sectionHeight = section.getHeight();
+            int titleHeight = getWrappedTitleHeight(section.name, VIEW_WIDTH - 4);
+            int sectionHeight = titleHeight + section.getEntriesHeight();
 
             /* Is it viewable/in the viewport at all? */
             if (viewY + sectionHeight < 0) {
@@ -492,6 +495,76 @@ public class GuiInterfaceTerminal extends AEBaseGui
     }
 
     /**
+     * Gets the total height of the title after wrapping, using TITLE_HEIGHT as step
+     */
+    public int getWrappedTitleHeight(String name, int maxWidth) {
+        List<String> lines = breakText(name, maxWidth);
+        return Math.max(InterfaceSection.TITLE_HEIGHT, lines.size() * InterfaceSection.TITLE_HEIGHT);
+    }
+
+    public List<String> breakText(String text, int maxWidth) {
+        List<String> lines = new ArrayList<>();
+        if (text == null || text.isEmpty()) return lines;
+
+        var lang = mc.getLanguageManager().getCurrentLanguage();
+        Locale locale = Locale.forLanguageTag(lang.toString().replace(" (", "-").replace(")", ""));
+        if (locale == null) locale = Locale.forLanguageTag(lang.getLanguageCode());
+        if (locale == null) locale = Locale.ENGLISH;
+
+        var breaker = BreakIterator.getLineInstance(locale);
+        breaker.setText(text);
+
+        var currentLine = new StringBuilder();
+        int start = breaker.first();
+        for (int end = breaker.next(); end != BreakIterator.DONE; start = end, end = breaker.next()) {
+            String word = text.substring(start, end);
+
+            if (fontRendererObj.getStringWidth(word) > maxWidth) {
+                if (currentLine.length() > 0) {
+                    lines.add(currentLine.toString());
+                    currentLine = new StringBuilder(toControlCodes(getControlCodes(currentLine.toString())));
+                }
+
+                for (int i = 0; i < word.length(); i++) {
+                    char c = word.charAt(i);
+                    if (fontRendererObj.getStringWidth(currentLine.toString() + c) > maxWidth) {
+                        lines.add(currentLine.toString());
+                        currentLine = new StringBuilder(toControlCodes(getControlCodes(currentLine.toString())) + c);
+                    } else {
+                        currentLine.append(c);
+                    }
+                }
+                continue;
+            }
+
+            String linePreview = currentLine + word;
+            if (fontRendererObj.getStringWidth(linePreview) > maxWidth && currentLine.length() > 0) {
+                lines.add(currentLine.toString());
+                String codes = toControlCodes(getControlCodes(currentLine.toString()));
+                currentLine = new StringBuilder(codes + word);
+            } else {
+                currentLine.append(word);
+            }
+        }
+
+        if (currentLine.length() > 0) {
+            lines.add(currentLine.toString());
+        }
+
+        return lines;
+    }
+
+    public static String getControlCodes(String s) {
+        String controls = s.replaceAll("(?<!\u00a7)(.)", "");
+        String wiped = controls.replaceAll(".*r", "r");
+        return wiped;
+    }
+
+    public static String toControlCodes(String s) {
+        return s.replaceAll(".", "\u00a7$0");
+    }
+
+    /**
      * Render the section (if it is visible)
      *
      * @param section   the section to render
@@ -501,74 +574,64 @@ public class GuiInterfaceTerminal extends AEBaseGui
      * @return the height of the section rendered in viewport coordinates, max of viewHeight.
      */
     private int drawSection(InterfaceSection section, int viewY, int relMouseX, int relMouseY) {
-        int title;
         int renderY = 0;
-        final int sectionBottom = viewY + section.getHeight() - 1;
         final int fontColor = GuiColors.InterfaceTerminalInventory.getColor();
-        /*
-         * Render title
-         */
-        bindTexture(BACKGROUND);
-        GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z + ITEM_STACK_Z + STEP_Z);
-        if (sectionBottom > 0 && sectionBottom < InterfaceSection.TITLE_HEIGHT) {
-            /* Transition draw */
-            title = sectionBottom;
-        } else if (viewY < 0) {
-            /* Hidden title draw */
-            title = 0;
-        } else {
-            /* Normal title draw */
-            title = 0;
-        }
-        GL11.glTranslatef(0.0f, 0.0f, -(ITEM_STACK_OVERLAY_Z + ITEM_STACK_Z + STEP_Z));
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+        List<String> titleLines = breakText(section.name, VIEW_WIDTH - 4);
 
+        int actualTitleHeight = Math
+                .max(InterfaceSection.TITLE_HEIGHT, titleLines.size() * InterfaceSection.TITLE_HEIGHT);
+
+        /*
+         * Render entries first (to keep titles on top layer if needed)
+         */
         Iterator<InterfaceTerminalEntry> visible = section.getVisible();
         while (visible.hasNext()) {
             InterfaceTerminalEntry entry = visible.next();
-            if (viewY + renderY + entry.rows * 18 + 1 > 0 && viewY + renderY < viewHeight) {
-                renderY += drawEntry(
-                        entry,
-                        viewY + InterfaceSection.TITLE_HEIGHT + renderY,
-                        title,
-                        relMouseX,
-                        relMouseY);
+            int entryTop = viewY + actualTitleHeight + renderY;
+            int entryHeight = entry.rows * 18 + 1;
+
+            if (entryTop + entryHeight > 0 && entryTop < viewHeight) {
+                renderY += drawEntry(entry, entryTop, viewY + actualTitleHeight, relMouseX, relMouseY);
             } else {
                 entry.dispY = -9999;
                 entry.optionsButton.yPosition = -1;
-                renderY += entry.rows * 18 + 1;
+                renderY += entryHeight;
             }
         }
         /*
          * Render title
          */
         bindTexture(BACKGROUND);
+        GL11.glPushMatrix();
         GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z + ITEM_STACK_Z + STEP_Z);
-        if (sectionBottom > 0 && sectionBottom < InterfaceSection.TITLE_HEIGHT) {
-            /* Transition draw */
-            drawTexturedModalRect(
-                    0,
-                    0,
-                    VIEW_LEFT,
-                    HEADER_HEIGHT + InterfaceSection.TITLE_HEIGHT - sectionBottom,
-                    VIEW_WIDTH,
-                    sectionBottom);
-            fontRendererObj.drawString(section.name, 2, sectionBottom - InterfaceSection.TITLE_HEIGHT + 2, fontColor);
-        } else if (viewY < 0) {
-            /* Hidden title draw */
-            GL11.glDisable(GL11.GL_DEPTH_TEST);
-            GL11.glTranslatef(0.0f, 0.0f, 100f);
-            drawTexturedModalRect(0, 0, VIEW_LEFT, HEADER_HEIGHT, VIEW_WIDTH, InterfaceSection.TITLE_HEIGHT);
-            fontRendererObj.drawString(section.name, 2, 2, fontColor);
-            GL11.glEnable(GL11.GL_DEPTH_TEST);
-        } else {
-            /* Normal title draw */
-            drawTexturedModalRect(0, viewY, VIEW_LEFT, HEADER_HEIGHT, VIEW_WIDTH, InterfaceSection.TITLE_HEIGHT);
-            fontRendererObj.drawString(section.name, 2, viewY + 2, fontColor);
-        }
-        GL11.glTranslatef(0.0f, 0.0f, -(ITEM_STACK_OVERLAY_Z + ITEM_STACK_Z + STEP_Z));
 
-        return InterfaceSection.TITLE_HEIGHT + renderY;
+        if (viewY < viewHeight && viewY + actualTitleHeight > 0) {
+            // Draw background: one TITLE_HEIGHT block per line
+            for (int i = 0; i < titleLines.size(); i++) {
+                int lineY = viewY + (i * InterfaceSection.TITLE_HEIGHT);
+                if (lineY + InterfaceSection.TITLE_HEIGHT > 0 && lineY < viewHeight) {
+                    drawTexturedModalRect(
+                            0,
+                            lineY,
+                            VIEW_LEFT,
+                            HEADER_HEIGHT,
+                            VIEW_WIDTH,
+                            InterfaceSection.TITLE_HEIGHT);
+                }
+            }
+
+            for (int i = 0; i < titleLines.size(); i++) {
+                int textY = viewY + 2 + (i * InterfaceSection.TITLE_HEIGHT);
+                if (textY + 9 > 0 && textY < viewHeight) {
+                    fontRendererObj.drawString(titleLines.get(i), 2, textY, fontColor);
+                }
+            }
+        }
+
+        GL11.glPopMatrix();
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        return actualTitleHeight + renderY;
     }
 
     /**
@@ -618,7 +681,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             entry.optionsButton.yPosition = viewY + 5;
             entry.optionsButton.drawButton(mc, relMouseX, relMouseY);
             if (entry.optionsButton.getMouseIn()
-                    && relMouseY >= Math.max(InterfaceSection.TITLE_HEIGHT, entry.optionsButton.yPosition)) {
+                    && relMouseY >= Math.max(titleBottom - viewY + entry.optionsButton.yPosition, entry.optionsButton.yPosition)) {
                 // draw a tooltip
                 GL11.glTranslatef(0f, 0f, TOOLTIP_Z);
                 GL11.glDisable(GL11.GL_SCISSOR_TEST);
@@ -650,7 +713,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 ItemStack stack = inv.getStackInSlot(slotIdx);
 
                 boolean tooltip = relMouseX > colLeft - 1 && relMouseX < colRight - 1
-                        && relMouseY >= Math.max(viewY + rowYTop, InterfaceSection.TITLE_HEIGHT)
+                        && relMouseY >= Math.max(viewY + rowYTop, titleBottom)
                         && relMouseY < Math.min(viewY + rowYBot, viewHeight);
                 if (stack != null) {
                     // just in case non-pattern items show up (like in a GT AE machine), render them normally
@@ -1241,19 +1304,26 @@ public class GuiInterfaceTerminal extends AEBaseGui
             if (isDirty) {
                 update();
             }
-            return height;
+            // Dynamically calculate title height and add entries height
+            return getWrappedTitleHeight(this.name, VIEW_WIDTH - 4) + getEntriesHeight();
+        }
+
+        /**
+         * Gets total height of all visible entries only.
+         */
+        public int getEntriesHeight() {
+            if (isDirty) {
+                update();
+            }
+            int entriesHeight = 0;
+            for (InterfaceTerminalEntry entry : visibleEntries) {
+                entriesHeight += entry.guiHeight;
+            }
+            return entriesHeight;
         }
 
         private void update() {
             refreshVisible();
-            if (visibleEntries.isEmpty()) {
-                height = 0;
-            } else {
-                height = TITLE_HEIGHT;
-                for (InterfaceTerminalEntry entry : visibleEntries) {
-                    height += entry.guiHeight;
-                }
-            }
             isDirty = false;
         }
 
@@ -1432,7 +1502,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
             final int newHasItem = stack != null ? 1 : 0;
 
             inv.setInventorySlotContents(idx, stack);
-            // Update item count
             numItems += newHasItem - oldHasItem;
             assert numItems >= 0;
         }
@@ -1507,8 +1576,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
             if (!section.visible || btn < 0 || btn > 2) {
                 return false;
             }
+
+            // Calculate the actual title height for click validation
+            int actualTitleHeight = getWrappedTitleHeight(section.name, VIEW_WIDTH - 4);
+
+            // Validate options button click
             if (mouseX >= optionsButton.xPosition && mouseX < 2 + optionsButton.width
-                    && mouseY > Math.max(optionsButton.yPosition, InterfaceSection.TITLE_HEIGHT)
+                    && mouseY > Math.max(optionsButton.yPosition, actualTitleHeight)
                     && mouseY <= Math.min(optionsButton.yPosition + optionsButton.height, viewHeight)) {
                 optionsButton.func_146113_a(mc.getSoundHandler());
 
@@ -1538,7 +1612,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             int offsetY = mouseY - dispY - 1;
             int offsetX = mouseX - (VIEW_WIDTH - rowSize * 18) - 1;
             if (offsetX >= 0 && offsetX < (rowSize * 18)
-                    && mouseY > Math.max(dispY, InterfaceSection.TITLE_HEIGHT)
+                    && mouseY > Math.max(dispY, actualTitleHeight)
                     && offsetY < Math.min(viewHeight - dispY, guiHeight - 1)) {
                 final int col = offsetX / 18;
                 final int row = offsetY / 18;
