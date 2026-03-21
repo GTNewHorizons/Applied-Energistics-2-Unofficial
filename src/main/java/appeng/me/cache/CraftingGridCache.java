@@ -562,6 +562,16 @@ public class CraftingGridCache
         return submitJob(job, requestingMachine, target, prioritizePower, src, false);
     }
 
+    public ICraftingLink submitJob(final ICraftingJob job, final ICraftingRequester requestingMachine,
+            final ICraftingCPU target, final boolean prioritizePower, final BaseActionSource src,
+            final boolean followCraft, final boolean allowSimulation) {
+        if (job.isSimulation() && !allowSimulation) {
+            return null;
+        }
+
+        return submitJobInternal(job, requestingMachine, target, prioritizePower, src, followCraft);
+    }
+
     @Override
     public ICraftingLink submitJob(final ICraftingJob job, final ICraftingRequester requestingMachine,
             final ICraftingCPU target, final boolean prioritizePower, final BaseActionSource src,
@@ -570,6 +580,12 @@ public class CraftingGridCache
             return null;
         }
 
+        return submitJobInternal(job, requestingMachine, target, prioritizePower, src, followCraft);
+    }
+
+    private ICraftingLink submitJobInternal(final ICraftingJob job, final ICraftingRequester requestingMachine,
+            final ICraftingCPU target, final boolean prioritizePower, final BaseActionSource src,
+            final boolean followCraft) {
         CraftingCPUCluster cpuCluster = null;
 
         if (target instanceof CraftingCPUCluster) {

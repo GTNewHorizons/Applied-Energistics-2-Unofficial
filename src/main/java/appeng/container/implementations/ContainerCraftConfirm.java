@@ -51,6 +51,7 @@ import appeng.core.sync.packets.PacketCraftingTreeData;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.crafting.MECraftingInventory;
 import appeng.crafting.v2.CraftingJobV2;
+import appeng.me.cache.CraftingGridCache;
 import appeng.tile.misc.TilePatternOptimizationMatrix;
 import appeng.util.Platform;
 import io.netty.buffer.ByteBuf;
@@ -93,6 +94,9 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
 
     @GuiSync(10)
     public String serializedItemToCraft = "";
+
+    @GuiSync(11)
+    public boolean startable = false;
 
     public ContainerCraftConfirm(final InventoryPlayer ip, final ITerminalHost te) {
         super(ip, te);
@@ -137,9 +141,10 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
         if (this.getJob() != null && this.getJob().isDone()) {
             try {
                 this.result = this.getJob().get();
+                this.setSimulation(this.result.isSimulation());
+                this.setStartable(this.result != null);
 
-                if (!this.result.isSimulation()) {
-                    this.setSimulation(false);
+                if (this.canStartCrafting()) {
                     if (this.isAutoStartAndFollow()) {
                         // Call start job with follow enabled
                         this.startJob(true);
@@ -149,8 +154,6 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
                         this.startJob();
                         return;
                     }
-                } else {
-                    this.setSimulation(true);
                 }
 
                 try {
@@ -244,6 +247,7 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
                 AELog.debug(e);
                 this.setValidContainer(false);
                 this.result = null;
+                this.setStartable(false);
             }
 
             this.setJob(null);
@@ -283,16 +287,28 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
     }
 
     public void startJob(final boolean followCraft) {
-        if (this.result != null && !this.isSimulation() && getGrid() != null) {
-            final ICraftingGrid cc = this.getGrid().getCache(ICraftingGrid.class);
+        if (this.result != null && this.canStartCrafting() && getGrid() != null) {
             CraftingCPUStatus selected = this.cpuTable.getSelectedCPU();
-            final ICraftingLink g = cc.submitJob(
-                    this.result,
-                    null,
-                    (selected == null) ? null : selected.getServerCluster(),
-                    true,
-                    this.getActionSrc(),
-                    followCraft);
+            final ICraftingGrid cc = this.getGrid().getCache(ICraftingGrid.class);
+            final ICraftingLink g;
+            if (cc instanceof CraftingGridCache cgc) {
+                g = cgc.submitJob(
+                        this.result,
+                        null,
+                        (selected == null) ? null : selected.getServerCluster(),
+                        true,
+                        this.getActionSrc(),
+                        followCraft,
+                        true);
+            } else {
+                g = cc.submitJob(
+                        this.result,
+                        null,
+                        (selected == null) ? null : selected.getServerCluster(),
+                        true,
+                        this.getActionSrc(),
+                        followCraft);
+            }
             this.setAutoStart(false);
             this.setAutoStartAndFollow(false);
             if (g != null) {
@@ -303,7 +319,7 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
 
     public void optimizePatterns() {
         // only V2 supported
-        if (this.result instanceof CraftingJobV2 && !this.isSimulation()
+        if (this.result instanceof CraftingJobV2 && this.canStartCrafting()
                 && getGrid() != null
                 && !getGrid().getMachines(TilePatternOptimizationMatrix.class).isEmpty()
                 && this.getPlayerInv().player.openContainer instanceof AEBaseContainer baseContainer) {
@@ -419,8 +435,16 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
         return this.simulation;
     }
 
+    public boolean canStartCrafting() {
+        return this.result != null || this.startable;
+    }
+
     private void setSimulation(final boolean simulation) {
         this.simulation = simulation;
+    }
+
+    private void setStartable(final boolean startable) {
+        this.startable = startable;
     }
 
     private Future<ICraftingJob> getJob() {
