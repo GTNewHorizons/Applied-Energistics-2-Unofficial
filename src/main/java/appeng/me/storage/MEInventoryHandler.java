@@ -132,12 +132,12 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
             return out;
         }
 
-        if (out instanceof ItemFilterList) return getAvailableItemsFilter(out, iteration, preFilter);
+        if (out instanceof ItemFilterList) return getAvailableItemsFilter(out, iteration);
 
         if (this.isExtractFilterActive() && !this.myExtractPartitionList.isEmpty()) {
             Predicate<T> extractFilter = this.getExtractFilterCondition();
             Predicate<T> effectiveFilter = preFilter.map(extractFilter::and).orElse(extractFilter);
-            return this.filterAvailableItems(out, iteration, effectiveFilter);
+            return this.internal.getAvailableItems(out, iteration, Optional.of(effectiveFilter));
         } else {
             return !preFilter.isPresent() ? this.internal.getAvailableItems(out, iteration)
                     : this.internal.getAvailableItems(out, iteration, preFilter);
@@ -150,35 +150,14 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         return bool;
     }
 
-    protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
-        final IItemList<T> allAvailableItems = this.internal.getAvailableItems(
-                (IItemList<T>) this.internal.getStackType().createList(),
-                iteration,
-                Optional.of(filterCondition));
-
-        if (allAvailableItems instanceof appeng.util.item.NetworkItemList) {
-            return allAvailableItems;
-        }
-
-        for (T item : allAvailableItems) {
-            if (filterCondition.test(item)) {
-                out.add(item);
-            }
-        }
-        return out;
-    }
-
-    protected IItemList<T> getAvailableItemsFilter(IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {
+    protected IItemList<T> getAvailableItemsFilter(IItemList<T> out, int iteration) {
         if (!getPartitionList().isEmpty() && getWhitelist() == IncludeExclude.WHITELIST) {
             for (T is : myPartitionList.getItems()) {
-                if (preFilter.map(f -> f.test(is)).orElse(true)) {
-                    out.add(is);
-                }
+                out.add(is);
             }
             return out;
         }
-        return !preFilter.isPresent() ? this.getInternal().getAvailableItems(out, iteration)
-                : this.getInternal().getAvailableItems(out, iteration, preFilter);
+        return this.getInternal().getAvailableItems(out, iteration);
     }
 
     @Override

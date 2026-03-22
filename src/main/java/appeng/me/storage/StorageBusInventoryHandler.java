@@ -29,7 +29,7 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
             return out;
         }
 
-        if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration, preFilter);
+        if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
 
         Predicate<T> filterCondition = preFilter.orElse(null);
 
@@ -38,24 +38,19 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
             filterCondition = filterCondition == null ? extractFilter : extractFilter.and(filterCondition);
         }
 
-        return this.getAvailableItemsInternal(out, iteration, filterCondition == null ? e -> true : filterCondition);
-    }
-
-    @SuppressWarnings("unchecked")
-    private IItemList<T> getAvailableItemsInternal(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
         final IItemList<T> availableItems = this.getInternal().getAvailableItems(
                 (IItemList<T>) this.getStackType().createList(),
                 iteration,
                 Optional.of(filterCondition));
+
         if (availableItems instanceof NetworkItemList) {
             // when we cross between networks on a NetworkInventoryHandler dive, we need to break the "out" contract to
-            // avoid modifying
-            // the passed in list which belongs to a different network (and would cause double-counting for
-            // triangle-shaped networks)
+            // avoid modifying the passed in list which belongs to a different network (and would cause double-counting
+            // for triangle-shaped networks)
             return availableItems;
         } else {
-            // for non-cross-network dives, we need to honor the "out" contract and put the results in the passed in
-            // list
+            // for non-cross-network dives, we need to honor the "out" contract
+            // and put the results in the passed in list
             for (T items : availableItems) {
                 out.add(items);
             }
