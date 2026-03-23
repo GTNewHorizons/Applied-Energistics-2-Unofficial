@@ -45,7 +45,7 @@ public class TileCondenser extends AEBaseInvTile implements IFluidHandler, IConf
     private double storedPower = 0;
 
     public TileCondenser() {
-        this.cm.registerSetting(Settings.CONDENSER_OUTPUT, CondenserOutput.TRASH);
+        this.cm.registerSetting(Settings.CONDENSER_OUTPUT, CondenserOutput.SINGULARITY);
     }
 
     @TileEvent(TileEventType.WORLD_NBT_WRITE)

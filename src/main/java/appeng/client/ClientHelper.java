@@ -81,6 +81,7 @@ import appeng.util.Platform;
 import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 public class ClientHelper extends ServerHelper {
@@ -453,22 +454,19 @@ public class ClientHelper extends ServerHelper {
     }
 
     /**
-     * Do not run the vanilla pick block logic if it is double bound with the AE2 pick block keybind, and the player is
-     * not in creative mode. The vanilla pick block event should be canceled and only the AE2 pick block logic should
-     * run. This is to prevent conflicts from the client-side vanilla pick-block and the server-side AE2 pick block.
+     * Runs the pick block handler if the ME Pick Block key and the vanilla Pick Block key are the same, while
+     * respecting the {@link PickBlockEvent}'s other handlers. For all other pick block invocations, see
+     * {@link KeyBindHandler}.
      */
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOW)
     public void onPickBlockEvent(final PickBlockEvent event) {
         var minecraft = Minecraft.getMinecraft();
         if (!minecraft.theWorld.isRemote) {
             return;
         }
 
-        var isCreative = minecraft.thePlayer.capabilities.isCreativeMode;
-        var vanillaKeybind = minecraft.gameSettings.keyBindPickBlock.getKeyCode();
-        var ae2Keybind = CommonHelper.proxy.getKeybind(ActionKey.PICK_BLOCK);
-        if (!isCreative && vanillaKeybind == ae2Keybind) {
-            event.setCanceled(true);
+        if (!minecraft.thePlayer.capabilities.isCreativeMode && KeyBindHandler.arePickBlockBindsEqual()) {
+            event.setCanceled(KeyBindHandler.handlePickBlock());
         }
     }
 
