@@ -276,7 +276,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     private boolean consumePowerAndItemsForTe(TileEntity tileEntity) {
-        return !(tileEntity instanceof IColorableTile);
+        return (tileEntity instanceof IColorableTile);
     }
 
     @Override
