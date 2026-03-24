@@ -216,6 +216,13 @@ public class ToolColorApplicator extends AEBasePoweredItem
             if (this.consumePowerAndItemsForTe(targetTe)) {
                 inv.extractItems(AEItemStack.create(paintSource), Actionable.MODULATE, new BaseActionSource());
                 this.extractAEPower(stack, POWER_PER_USE);
+
+                final IAEItemStack newStack = inv
+                        .extractItems(AEItemStack.create(activeConfig), Actionable.SIMULATE, new BaseActionSource());
+                if (newStack == null) {
+                    this.cycleColors(stack, this.getColor(stack), 1);
+
+                }
             }
 
             return true;
