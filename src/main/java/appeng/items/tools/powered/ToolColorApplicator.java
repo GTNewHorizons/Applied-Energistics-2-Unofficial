@@ -142,10 +142,15 @@ public class ToolColorApplicator extends AEBasePoweredItem
             return false;
         }
 
+        // final int tmpSlot = BackhandUtils.getOffhandSlot(player);
+        // I'm not sure if this will cause any problems, but it's the only way to swing only the correct arm
+        player.inventory.currentItem = 0;
         final boolean result = held.getItem().onItemUse(held, player, world, x, y, z, side, hitX, hitY, hitZ);
         if (result) {
             player.swingItem();
         }
+
+        // player.inventory.currentItem = tmpSlot;
         return result;
     }
 
