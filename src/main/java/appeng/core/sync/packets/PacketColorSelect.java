@@ -7,8 +7,10 @@ import appeng.api.util.AEColor;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.items.tools.powered.ToolColorApplicator;
+import cpw.mods.fml.common.Loader;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import xonin.backhand.api.core.BackhandUtils;
 
 public class PacketColorSelect extends AppEngPacket {
 
@@ -42,6 +44,13 @@ public class PacketColorSelect extends AppEngPacket {
         final ItemStack held = player.getHeldItem();
         if (held != null && held.getItem() instanceof ToolColorApplicator tool) {
             tool.setColor(held, this.color);
+        } else if (Loader.isModLoaded("backhand")) {
+            final ItemStack backhand = BackhandUtils.getOffhandItem(player);
+
+            if (backhand != null && backhand.getItem() != null
+                    && backhand.getItem() instanceof ToolColorApplicator tool) {
+                tool.setColor(backhand, this.color);
+            }
         }
     }
 
