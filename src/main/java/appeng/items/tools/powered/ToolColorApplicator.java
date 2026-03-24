@@ -123,7 +123,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
     private boolean handleOffhand(final ItemStack stack, final EntityPlayer player, final World world, final int x,
             final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ) {
 
-        ItemStack offhand = BackhandUtils.getOffhandItem(player);
+        final ItemStack offhand = BackhandUtils.getOffhandItem(player);
         if (offhand == null) {
             return false;
         }
@@ -132,7 +132,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
             return false;
         }
 
-        ItemStack held = ((IBackhandPlayer) player).getMainhandItem();
+        final ItemStack held = ((IBackhandPlayer) player).getMainhandItem();
         if (held == null) {
             return false;
         }
@@ -142,7 +142,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
             return false;
         }
 
-        // final int tmpSlot = BackhandUtils.getOffhandSlot(player);
+        final int tmpSlot = BackhandUtils.getOffhandSlot(player);
         // I'm not sure if this will cause any problems, but it's the only way to swing only the correct arm
         player.inventory.currentItem = 0;
         final boolean result = held.getItem().onItemUse(held, player, world, x, y, z, side, hitX, hitY, hitZ);
@@ -150,7 +150,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
             player.swingItem();
         }
 
-        // player.inventory.currentItem = tmpSlot;
+        player.inventory.currentItem = tmpSlot;
         return result;
     }
 
@@ -158,6 +158,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
     public boolean onItemUse(final ItemStack stack, final EntityPlayer player, final World world, final int x,
             final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ) {
         int trueX = x, trueY = y, trueZ = z;
+        boolean usingOffhand = false;
 
         if (Loader.isModLoaded("backhand")) {
             if (handleOffhand(stack, player, world, x, y, z, side, hitX, hitY, hitZ)) {
@@ -165,6 +166,8 @@ public class ToolColorApplicator extends AEBasePoweredItem
                 trueX += dir.offsetX;
                 trueY += dir.offsetY;
                 trueZ += dir.offsetZ;
+
+                usingOffhand = true;
             }
         }
 
@@ -225,7 +228,8 @@ public class ToolColorApplicator extends AEBasePoweredItem
                 }
             }
 
-            return true;
+            // Retuning false when using offhand means only the normal hand animation will play
+            return !usingOffhand;
         }
 
         return false;
