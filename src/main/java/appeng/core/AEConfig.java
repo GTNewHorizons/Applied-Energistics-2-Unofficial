@@ -20,6 +20,7 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.common.config.Property.Type;
 
+import appeng.api.config.CPUSortBy;
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingSortOrder;
@@ -169,6 +170,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.settings.registerSetting(Settings.SAVE_SEARCH, YesNo.NO);
         this.settings.registerSetting(Settings.CRAFTING_STATUS, CraftingStatus.TILE);
         this.settings.registerSetting(Settings.CRAFTING_SORT_BY, CraftingSortOrder.NAME);
+        this.settings.registerSetting(Settings.CPU_SORT_BY, CPUSortBy.NAME);
         this.settings.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
         this.settings.registerSetting(Settings.TERMINAL_FONT_SIZE, TerminalFontSize.SMALL);
         this.settings.registerSetting(Settings.INTERFACE_TERMINAL_SECTION_ORDER, StringOrder.NATURAL);
