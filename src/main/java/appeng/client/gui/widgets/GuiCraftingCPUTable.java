@@ -49,7 +49,7 @@ public class GuiCraftingCPUTable {
     public static final int CPU_TABLE_SLOT_YOFF = 0;
     public static final int CPU_TABLE_SLOT_WIDTH = 67;
     public static final int CPU_TABLE_SLOT_HEIGHT = 23;
-    private static final int CPU_SORT_BUTTON_WIDTH = -54;
+    private static final int CPU_SORT_BUTTON_WIDTH = -85;
     private static final int CPU_SORT_BUTTON_HEIGHT = 2;
     private static final int CPU_SORT_DIRECTION_BUTTON_WIDTH = CPU_SORT_BUTTON_WIDTH + 16;
     private static final int CPU_SORT_DIRECTION_BUTTON_HEIGHT = 2;
