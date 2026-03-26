@@ -70,7 +70,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
     private final Enum buttonSetting;
     private String fillVar;
     private Enum currentValue;
-    private int textureInset = 0;
 
     public GuiImgButton(final int x, final int y, final Enum idx, final Enum val) {
         super(0, 0, 16, "");
@@ -971,23 +970,12 @@ public class GuiImgButton extends GuiButton implements ITooltip {
             GL11.glEnable(GL11.GL_BLEND);
             OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            if (this.isHalfSize()) {
-                GL11.glTranslatef(this.xPosition, this.yPosition, 0.0F);
-                GL11.glScalef(0.5f, 0.5f, 0.5f);
-                this.drawTexturedModalRect(0, 0, 256 - 16, 256 - 16, 16, 16);
-                this.drawTexturedModalRect(0, 0, uv_x * 16, uv_y * 16, 16, 16);
-                GL11.glScalef(2f, 2f, 2f);
-                GL11.glTranslatef(-this.xPosition, -this.yPosition, 0.0F);
-            } else {
-                final float insetScale = (16.0f - this.textureInset * 2.0f) / 16.0f;
-                GL11.glPushMatrix();
-                GL11.glTranslatef(this.xPosition + this.textureInset, this.yPosition + this.textureInset, 0.0F);
-                GL11.glScalef(insetScale, insetScale, 1.0f);
-                this.drawTexturedModalRect(0, 0, 256 - 16, 256 - 16, 16, 16);
-                GL11.glPopMatrix();
-
-                this.drawTexturedModalRect(this.xPosition, this.yPosition, uv_x * 16, uv_y * 16, 16, 16);
-            }
+            GL11.glTranslatef(this.xPosition, this.yPosition, 0.0F);
+            if (this.isHalfSize()) GL11.glScalef(0.5f, 0.5f, 0.5f);
+            this.drawTexturedModalRect(0, 0, 256 - 16, 256 - 16, 16, 16);
+            this.drawTexturedModalRect(0, 0, uv_x * 16, uv_y * 16, 16, 16);
+            if (this.isHalfSize()) GL11.glScalef(2f, 2f, 2f);
+            GL11.glTranslatef(-this.xPosition, -this.yPosition, 0.0F);
             this.mouseDragged(mc, mouseX, mouseY);
         }
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1104,10 +1092,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
     public void setFillVar(final String fillVar) {
         this.fillVar = fillVar;
-    }
-
-    public void setTextureInset(int textureInset) {
-        this.textureInset = Math.max(0, Math.min(7, textureInset));
     }
 
     private static final class EnumPair {
