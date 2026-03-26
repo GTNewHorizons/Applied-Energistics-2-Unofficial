@@ -248,7 +248,11 @@ public enum ButtonToolTips implements Localization {
 
     ToggleShowOnlySubstitute,
     ToggleShowOnlySubstituteOnDesc,
-    ToggleShowOnlySubstituteOffDesc;
+    ToggleShowOnlySubstituteOffDesc,
+
+    CPUName,
+    NumberOfStorageMemory,
+    NumberOfCoProcessors;
 
     ButtonToolTips() {}
 

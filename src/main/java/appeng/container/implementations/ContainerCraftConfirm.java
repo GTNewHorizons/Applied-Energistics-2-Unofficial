@@ -104,6 +104,16 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
         this.cpuTable.selectCPU(cpu);
     }
 
+    @Override
+    public void setCpuSortMode(int mode) {
+        this.cpuTable.setCpuSortMode(mode);
+    }
+
+    @Override
+    public void setCpuSortDirection(int mode) {
+        this.cpuTable.setCpuSortDirection(mode);
+    }
+
     public void onCPUUpdate(ICraftingCPU cpu) {
         if (cpu == null) {
             this.setCpuAvailableBytes(0);
