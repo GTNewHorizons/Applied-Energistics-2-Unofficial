@@ -47,8 +47,7 @@ public class PacketColorSelect extends AppEngPacket {
         } else if (Platform.isBackhandLoaded) {
             final ItemStack backhand = BackhandUtils.getOffhandItem(player);
 
-            if (backhand != null && backhand.getItem() != null
-                    && backhand.getItem() instanceof ToolColorApplicator tool) {
+            if (backhand != null && backhand.getItem() instanceof ToolColorApplicator tool) {
                 tool.setColor(backhand, this.color);
             }
         }
