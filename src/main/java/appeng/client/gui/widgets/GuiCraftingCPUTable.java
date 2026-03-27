@@ -11,6 +11,7 @@ import java.util.function.Predicate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
@@ -49,18 +50,16 @@ public class GuiCraftingCPUTable {
     public static final int CPU_TABLE_SLOT_YOFF = 0;
     public static final int CPU_TABLE_SLOT_WIDTH = 67;
     public static final int CPU_TABLE_SLOT_HEIGHT = 23;
-    private static final int CPU_SORT_BUTTON_WIDTH = -85;
-    private static final int CPU_SORT_BUTTON_HEIGHT = 2;
-    private static final int CPU_SORT_DIRECTION_BUTTON_WIDTH = CPU_SORT_BUTTON_WIDTH + 16;
-    private static final int CPU_SORT_DIRECTION_BUTTON_HEIGHT = 2;
+    private static final int CPU_SORT_BUTTON_X = -85;
+    private static final int CPU_SORT_BUTTON_Y = 2;
+    private static final int CPU_SORT_DIRECTION_BUTTON_X = CPU_SORT_BUTTON_X + 16;
+    private static final int CPU_SORT_DIRECTION_BUTTON_Y = 2;
 
     private final GuiScrollbar cpuScrollbar;
     private final GuiImgButton cpuSortButton;
     private final GuiImgButton cpuSortDirectionButton;
     private static final CPUSortBy[] CPU_SORT_ORDER = CPUSortBy.values();
     private static final SortDir[] CPU_SORT_DIRECTION_ORDER = SortDir.values();
-    private boolean sentInitialSortMode = false;
-    private boolean sentInitialSortDirection = false;
     private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR_NAME = Comparator
             .comparing((CraftingCPUStatus e) -> e.getName() == null || e.getName().isEmpty())
             .thenComparing(e -> e.getName() != null ? e.getName() : "").thenComparingInt(CraftingCPUStatus::getSerial);
@@ -104,8 +103,8 @@ public class GuiCraftingCPUTable {
         this.cpuScrollbar = new GuiScrollbar();
         CPUSortBy savedSortMode = (CPUSortBy) AEConfig.instance.settings.getSetting(Settings.CPU_SORT_BY);
         this.cpuSortButton = new GuiImgButton(0, 0, Settings.CPU_SORT_BY, savedSortMode);
-        SortDir savedSortDirection = (SortDir) AEConfig.instance.settings.getSetting(Settings.SORT_DIRECTION);
-        this.cpuSortDirectionButton = new GuiImgButton(0, 0, Settings.SORT_DIRECTION, savedSortDirection);
+        SortDir savedSortDirection = (SortDir) AEConfig.instance.settings.getSetting(Settings.CPU_SORT_DIRECTION);
+        this.cpuSortDirectionButton = new GuiImgButton(0, 0, Settings.CPU_SORT_DIRECTION, savedSortDirection);
         this.cpuScrollbar.setLeft(-16);
         this.cpuScrollbar.setTop(19);
         this.cpuScrollbar.setWidth(12);
@@ -125,6 +124,7 @@ public class GuiCraftingCPUTable {
     }
 
     public void drawScreen() {
+        updateButtonPositions(parent.getGuiLeft(), parent.getGuiTop());
         final List<CraftingCPUStatus> cpus = getSortedCPUs();
         final int selectedCpuSerial = container.selectedCpuSerial;
 
@@ -135,25 +135,9 @@ public class GuiCraftingCPUTable {
                 this.selectedCPUName = cpu.getName();
             }
         }
-        if (!this.sentInitialSortMode) {
-            sendSortMode((CPUSortBy) this.cpuSortButton.getCurrentValue());
-            this.sentInitialSortMode = true;
-        }
-        if (!this.sentInitialSortDirection) {
-            sendSortDirection((SortDir) this.cpuSortDirectionButton.getCurrentValue());
-            this.sentInitialSortDirection = true;
-        }
     }
 
     public void drawFG(int offsetX, int offsetY, int mouseX, int mouseY, int guiLeft, int guiTop) {
-        this.cpuSortDirectionButton.xPosition = CPU_SORT_DIRECTION_BUTTON_WIDTH;
-        this.cpuSortDirectionButton.yPosition = CPU_SORT_DIRECTION_BUTTON_HEIGHT;
-        this.cpuSortDirectionButton.drawButton(Minecraft.getMinecraft(), mouseX - guiLeft, mouseY - guiTop);
-
-        this.cpuSortButton.xPosition = CPU_SORT_BUTTON_WIDTH;
-        this.cpuSortButton.yPosition = CPU_SORT_BUTTON_HEIGHT;
-        this.cpuSortButton.drawButton(Minecraft.getMinecraft(), mouseX - guiLeft, mouseY - guiTop);
-
         if (this.cpuScrollbar != null) {
             this.cpuScrollbar.draw(parent);
         }
@@ -406,12 +390,6 @@ public class GuiCraftingCPUTable {
                 parent.drawTooltip(mouseX - offsetX, mouseY - offsetY, tooltip.toString());
             }
         }
-        if (this.cpuSortButton.getMouseIn()) {
-            parent.drawTooltip(mouseX - offsetX, mouseY - offsetY, this.cpuSortButton.getMessage());
-        }
-        if (this.cpuSortDirectionButton.getMouseIn()) {
-            parent.drawTooltip(mouseX - offsetX, mouseY - offsetY, this.cpuSortDirectionButton.getMessage());
-        }
     }
 
     public void drawBG(int offsetX, int offsetY) {
@@ -449,19 +427,6 @@ public class GuiCraftingCPUTable {
      * Subtract guiLeft, guiTop from x, y before calling
      */
     public void mouseClicked(int xCoord, int yCoord, int btn) {
-        if (xCoord >= CPU_SORT_DIRECTION_BUTTON_WIDTH
-                && xCoord < CPU_SORT_DIRECTION_BUTTON_WIDTH + this.cpuSortDirectionButton.getWidth()
-                && yCoord >= CPU_SORT_DIRECTION_BUTTON_HEIGHT
-                && yCoord < CPU_SORT_DIRECTION_BUTTON_HEIGHT + this.cpuSortDirectionButton.getHeight()) {
-            cycleSortDirection(btn == 1);
-            return;
-        }
-        if (xCoord >= CPU_SORT_BUTTON_WIDTH && xCoord < CPU_SORT_BUTTON_WIDTH + this.cpuSortButton.getWidth()
-                && yCoord >= CPU_SORT_BUTTON_HEIGHT
-                && yCoord < CPU_SORT_BUTTON_HEIGHT + this.cpuSortButton.getHeight()) {
-            cycleSortMode(btn == 1);
-            return;
-        }
         if (cpuScrollbar != null) {
             cpuScrollbar.click(parent, xCoord, yCoord);
         }
@@ -469,6 +434,28 @@ public class GuiCraftingCPUTable {
         if (hit != null) {
             sendCPUSwitch(hit.getSerial());
         }
+    }
+
+    public void addButtons(List<GuiButton> buttonList, int guiLeft, int guiTop) {
+        updateButtonPositions(guiLeft, guiTop);
+        if (!buttonList.contains(this.cpuSortButton)) {
+            buttonList.add(this.cpuSortButton);
+        }
+        if (!buttonList.contains(this.cpuSortDirectionButton)) {
+            buttonList.add(this.cpuSortDirectionButton);
+        }
+    }
+
+    public boolean actionPerformed(GuiButton btn, boolean backwards) {
+        if (btn == this.cpuSortDirectionButton) {
+            cycleSortDirection(backwards);
+            return true;
+        }
+        if (btn == this.cpuSortButton) {
+            cycleSortMode(backwards);
+            return true;
+        }
+        return false;
     }
 
     public void sendCPUSwitch(int serial) {
@@ -497,7 +484,6 @@ public class GuiCraftingCPUTable {
         CPUSortBy next = CPU_SORT_ORDER[nextIndex];
         this.cpuSortButton.set(next);
         AEConfig.instance.settings.putSetting(Settings.CPU_SORT_BY, next);
-        sendSortMode(next);
     }
 
     private void cycleSortDirection(boolean backwards) {
@@ -517,26 +503,7 @@ public class GuiCraftingCPUTable {
         }
         SortDir next = CPU_SORT_DIRECTION_ORDER[nextIndex];
         this.cpuSortDirectionButton.set(next);
-        AEConfig.instance.settings.putSetting(Settings.SORT_DIRECTION, next);
-        sendSortDirection(next);
-    }
-
-    private void sendSortMode(CPUSortBy mode) {
-        try {
-            NetworkHandler.instance
-                    .sendToServer(new PacketValueConfig("CPUTable.SortBy.Set", Integer.toString(mode.ordinal())));
-        } catch (final IOException e) {
-            AELog.warn(e);
-        }
-    }
-
-    private void sendSortDirection(SortDir direction) {
-        try {
-            NetworkHandler.instance.sendToServer(
-                    new PacketValueConfig("CPUTable.SortDirection.Set", Integer.toString(direction.ordinal())));
-        } catch (final IOException e) {
-            AELog.warn(e);
-        }
+        AEConfig.instance.settings.putSetting(Settings.CPU_SORT_DIRECTION, next);
     }
 
     /**
@@ -645,5 +612,12 @@ public class GuiCraftingCPUTable {
             case COPROCESSORS -> CPU_COMPARATOR_COPROCESSORS;
             default -> CPU_COMPARATOR_NAME;
         };
+    }
+
+    private void updateButtonPositions(int guiLeft, int guiTop) {
+        this.cpuSortButton.xPosition = guiLeft + CPU_SORT_BUTTON_X;
+        this.cpuSortButton.yPosition = guiTop + CPU_SORT_BUTTON_Y;
+        this.cpuSortDirectionButton.xPosition = guiLeft + CPU_SORT_DIRECTION_BUTTON_X;
+        this.cpuSortDirectionButton.yPosition = guiTop + CPU_SORT_DIRECTION_BUTTON_Y;
     }
 }

@@ -241,6 +241,18 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     SortDir.DESCENDING,
                     ButtonToolTips.SortOrder,
                     ButtonToolTips.ToggleSortDirection);
+            this.registerApp(
+                    48,
+                    Settings.CPU_SORT_DIRECTION,
+                    SortDir.ASCENDING,
+                    ButtonToolTips.SortOrder,
+                    ButtonToolTips.ToggleSortDirection);
+            this.registerApp(
+                    49,
+                    Settings.CPU_SORT_DIRECTION,
+                    SortDir.DESCENDING,
+                    ButtonToolTips.SortOrder,
+                    ButtonToolTips.ToggleSortDirection);
 
             this.registerApp(
                     16 * 2 + 3,
