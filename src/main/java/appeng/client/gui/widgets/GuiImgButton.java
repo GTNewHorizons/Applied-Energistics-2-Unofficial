@@ -913,6 +913,12 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
             this.registerApp(64, Settings.CPU_SORT_BY, CPUSortBy.NAME, ButtonToolTips.SortBy, ButtonToolTips.CPUName);
             this.registerApp(
+                    19,
+                    Settings.CPU_SORT_BY,
+                    CPUSortBy.CRAFTING,
+                    ButtonToolTips.SortBy,
+                    ButtonToolTips.CPUCrafting);
+            this.registerApp(
                     67,
                     Settings.CPU_SORT_BY,
                     CPUSortBy.STORAGE_MEMORY,

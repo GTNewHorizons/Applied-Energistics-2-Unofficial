@@ -71,6 +71,9 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
         }
         return CPU_COMPARATOR.compare(a, b);
     };
+    private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR_CRAFTING = Comparator
+            .comparing(CraftingCPUStatus::isBusy).reversed()
+            .thenComparingDouble(ContainerCPUTable::remainingProgressRatio).thenComparing(CPU_COMPARATOR);
 
     /**
      * @param parent         Container parent, of which this is a field
@@ -158,6 +161,7 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
 
     private Comparator<CraftingCPUStatus> getComparatorForSortMode() {
         return switch (cpuSortMode) {
+            case CRAFTING -> CPU_COMPARATOR_CRAFTING;
             case STORAGE_MEMORY -> CPU_COMPARATOR_STORAGE;
             case COPROCESSORS -> CPU_COMPARATOR_COPROCESSORS;
             default -> CPU_COMPARATOR;
@@ -166,11 +170,20 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
 
     public static Comparator<CraftingCPUStatus> getComparatorFor(CPUSortBy sortBy, SortDir sortDirection) {
         Comparator<CraftingCPUStatus> comparator = switch (sortBy) {
+            case CRAFTING -> CPU_COMPARATOR_CRAFTING;
             case STORAGE_MEMORY -> CPU_COMPARATOR_STORAGE;
             case COPROCESSORS -> CPU_COMPARATOR_COPROCESSORS;
             default -> CPU_COMPARATOR;
         };
         return sortDirection == SortDir.DESCENDING ? comparator.reversed() : comparator;
+    }
+
+    private static double remainingProgressRatio(CraftingCPUStatus s) {
+        long total = s.getTotalItems();
+        if (!s.isBusy() || total <= 0) {
+            return 1.0d;
+        }
+        return (double) s.getRemainingItems() / (double) total;
     }
 
     private int getOrAssignCpuSerial(ICraftingCPU cpu) {
