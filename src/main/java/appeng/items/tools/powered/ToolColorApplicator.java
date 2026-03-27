@@ -79,7 +79,6 @@ import appeng.util.ItemSorters;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
-import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import xonin.backhand.api.core.BackhandUtils;
@@ -115,7 +114,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
         super.postInit();
         BlockDispenser.dispenseBehaviorRegistry.putObject(this, new DispenserBlockTool());
 
-        if (Loader.isModLoaded("backhand")) {
+        if (Platform.isBackhandLoaded) {
             BackhandUtils.addOffhandPriorityItem(this.getClass());
         }
     }
@@ -160,7 +159,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
         int trueX = x, trueY = y, trueZ = z;
         boolean usingOffhand = false;
 
-        if (Loader.isModLoaded("backhand")) {
+        if (Platform.isBackhandLoaded) {
             if (handleOffhand(stack, player, world, x, y, z, side, hitX, hitY, hitZ)) {
                 ForgeDirection dir = ForgeDirection.getOrientation(side);
                 trueX += dir.offsetX;
