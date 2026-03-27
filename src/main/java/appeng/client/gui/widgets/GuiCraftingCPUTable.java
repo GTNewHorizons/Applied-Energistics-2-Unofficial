@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -60,23 +59,6 @@ public class GuiCraftingCPUTable {
     private final GuiImgButton cpuSortDirectionButton;
     private static final CPUSortBy[] CPU_SORT_ORDER = CPUSortBy.values();
     private static final SortDir[] CPU_SORT_DIRECTION_ORDER = SortDir.values();
-    private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR_NAME = Comparator
-            .comparing((CraftingCPUStatus e) -> e.getName() == null || e.getName().isEmpty())
-            .thenComparing(e -> e.getName() != null ? e.getName() : "").thenComparingInt(CraftingCPUStatus::getSerial);
-    private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR_STORAGE = (a, b) -> {
-        int storage = Long.compare(b.getStorage(), a.getStorage());
-        if (storage != 0) return storage;
-        int copro = Long.compare(b.getCoprocessors(), a.getCoprocessors());
-        if (copro != 0) return copro;
-        return CPU_COMPARATOR_NAME.compare(a, b);
-    };
-    private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR_COPROCESSORS = (a, b) -> {
-        int copro = Long.compare(b.getCoprocessors(), a.getCoprocessors());
-        if (copro != 0) return copro;
-        int storage = Long.compare(b.getStorage(), a.getStorage());
-        if (storage != 0) return storage;
-        return CPU_COMPARATOR_NAME.compare(a, b);
-    };
 
     private String selectedCPUName = "";
     private static final DecimalFormat DF = new DecimalFormat("#.##");
@@ -597,21 +579,11 @@ public class GuiCraftingCPUTable {
 
     private List<CraftingCPUStatus> getSortedCPUs() {
         List<CraftingCPUStatus> cpus = new ArrayList<>(container.getCPUs());
-        Comparator<CraftingCPUStatus> comparator = cpusComparatorForCurrentMode();
-        if (this.cpuSortDirectionButton.getCurrentValue() == SortDir.DESCENDING) {
-            comparator = comparator.reversed();
-        }
-        cpus.sort(comparator);
+        cpus.sort(
+                ContainerCPUTable.getComparatorFor(
+                        (CPUSortBy) this.cpuSortButton.getCurrentValue(),
+                        (SortDir) this.cpuSortDirectionButton.getCurrentValue()));
         return cpus;
-    }
-
-    private Comparator<CraftingCPUStatus> cpusComparatorForCurrentMode() {
-        CPUSortBy mode = (CPUSortBy) this.cpuSortButton.getCurrentValue();
-        return switch (mode) {
-            case STORAGE_MEMORY -> CPU_COMPARATOR_STORAGE;
-            case COPROCESSORS -> CPU_COMPARATOR_COPROCESSORS;
-            default -> CPU_COMPARATOR_NAME;
-        };
     }
 
     private void updateButtonPositions(int guiLeft, int guiTop) {
