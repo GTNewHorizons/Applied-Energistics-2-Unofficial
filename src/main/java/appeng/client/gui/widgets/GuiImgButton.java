@@ -925,7 +925,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.SortBy,
                     ButtonToolTips.NumberOfStorageMemory);
             this.registerApp(
-                    14 * 16 + 7,
+                    14 * 16 + 6,
                     Settings.CPU_SORT_BY,
                     CPUSortBy.COPROCESSORS,
                     ButtonToolTips.SortBy,
