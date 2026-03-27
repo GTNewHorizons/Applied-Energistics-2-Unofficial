@@ -29,12 +29,6 @@ import appeng.util.Platform;
 
 public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
 
-    public enum CPUSortMode {
-        NAME,
-        STORAGE_MEMORY,
-        COPROCESSORS
-    }
-
     private final AEBaseContainer parent;
 
     private ImmutableSet<ICraftingCPU> lastCpuSet = null;
@@ -49,7 +43,7 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
     private final Consumer<ICraftingCPU> onCPUChange;
     private final boolean preferBusyCPUs;
     private final Predicate<CraftingCPUStatus> cpuFilter;
-    private CPUSortMode cpuSortMode = CPUSortMode.NAME;
+    private CPUSortBy cpuSortMode = CPUSortBy.NAME;
     private SortDir cpuSortDirection = SortDir.ASCENDING;
 
     private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR = Comparator
@@ -230,7 +224,7 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
         if (!Platform.isServer()) {
             return;
         }
-        CPUSortMode[] values = CPUSortMode.values();
+        CPUSortBy[] values = CPUSortBy.values();
         if (mode < 0 || mode >= values.length) {
             return;
         }
