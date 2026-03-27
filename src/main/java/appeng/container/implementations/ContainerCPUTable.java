@@ -14,6 +14,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 
 import com.google.common.collect.ImmutableSet;
 
+import appeng.api.config.CPUSortBy;
+import appeng.api.config.SortDir;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.networking.crafting.ICraftingGrid;
@@ -41,10 +43,34 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
     private final Consumer<ICraftingCPU> onCPUChange;
     private final boolean preferBusyCPUs;
     private final Predicate<CraftingCPUStatus> cpuFilter;
+    private CPUSortBy cpuSortMode = CPUSortBy.NAME;
+    private SortDir cpuSortDirection = SortDir.ASCENDING;
 
     private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR = Comparator
             .comparing((CraftingCPUStatus e) -> e.getName() == null || e.getName().isEmpty())
             .thenComparing(e -> e.getName() != null ? e.getName() : "").thenComparingInt(CraftingCPUStatus::getSerial);
+    private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR_STORAGE = (a, b) -> {
+        int storage = Long.compare(b.getStorage(), a.getStorage());
+        if (storage != 0) {
+            return storage;
+        }
+        int coprocessors = Long.compare(b.getCoprocessors(), a.getCoprocessors());
+        if (coprocessors != 0) {
+            return coprocessors;
+        }
+        return CPU_COMPARATOR.compare(a, b);
+    };
+    private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR_COPROCESSORS = (a, b) -> {
+        int coprocessors = Long.compare(b.getCoprocessors(), a.getCoprocessors());
+        if (coprocessors != 0) {
+            return coprocessors;
+        }
+        int storage = Long.compare(b.getStorage(), a.getStorage());
+        if (storage != 0) {
+            return storage;
+        }
+        return CPU_COMPARATOR.compare(a, b);
+    };
 
     /**
      * @param parent         Container parent, of which this is a field
@@ -119,7 +145,32 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
             int serial = getOrAssignCpuSerial(cpu);
             this.cpus.add(new CraftingCPUStatus(cpu, serial));
         }
-        this.cpus.sort(CPU_COMPARATOR);
+        this.sortCPUs();
+    }
+
+    private void sortCPUs() {
+        Comparator<CraftingCPUStatus> comparator = getComparatorForSortMode();
+        if (this.cpuSortDirection == SortDir.DESCENDING) {
+            comparator = comparator.reversed();
+        }
+        this.cpus.sort(comparator);
+    }
+
+    private Comparator<CraftingCPUStatus> getComparatorForSortMode() {
+        return switch (cpuSortMode) {
+            case STORAGE_MEMORY -> CPU_COMPARATOR_STORAGE;
+            case COPROCESSORS -> CPU_COMPARATOR_COPROCESSORS;
+            default -> CPU_COMPARATOR;
+        };
+    }
+
+    public static Comparator<CraftingCPUStatus> getComparatorFor(CPUSortBy sortBy, SortDir sortDirection) {
+        Comparator<CraftingCPUStatus> comparator = switch (sortBy) {
+            case STORAGE_MEMORY -> CPU_COMPARATOR_STORAGE;
+            case COPROCESSORS -> CPU_COMPARATOR_COPROCESSORS;
+            default -> CPU_COMPARATOR;
+        };
+        return sortDirection == SortDir.DESCENDING ? comparator.reversed() : comparator;
     }
 
     private int getOrAssignCpuSerial(ICraftingCPU cpu) {
@@ -166,6 +217,34 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
                 onCPUChange.accept(newSelectedCpu);
             }
         }
+    }
+
+    @Override
+    public void setCpuSortMode(int mode) {
+        if (!Platform.isServer()) {
+            return;
+        }
+        CPUSortBy[] values = CPUSortBy.values();
+        if (mode < 0 || mode >= values.length) {
+            return;
+        }
+        this.cpuSortMode = values[mode];
+        this.sortCPUs();
+        this.lastUpdate = 21;
+    }
+
+    @Override
+    public void setCpuSortDirection(int mode) {
+        if (!Platform.isServer()) {
+            return;
+        }
+        SortDir[] values = SortDir.values();
+        if (mode < 0 || mode >= values.length) {
+            return;
+        }
+        this.cpuSortDirection = values[mode];
+        this.sortCPUs();
+        this.lastUpdate = 21;
     }
 
     public List<CraftingCPUStatus> getCPUs() {
