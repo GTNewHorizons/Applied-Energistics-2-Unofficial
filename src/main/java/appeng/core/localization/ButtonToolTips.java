@@ -252,6 +252,7 @@ public enum ButtonToolTips implements Localization {
 
     CPUName,
     CPUCrafting,
+    Automation,
     NumberOfStorageMemory,
     NumberOfCoProcessors;
 
