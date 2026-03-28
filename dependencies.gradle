@@ -18,6 +18,7 @@ dependencies {
     compileOnly('com.github.GTNewHorizons:waila:1.19.22:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Railcraft:9.17.24:api') {transitive = false}
     compileOnly('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev')  {transitive = false }
+    compileOnly("com.github.GTNewHorizons:Backhand:1.8.4:dev") { transitive = false }
     compileOnly('net.industrial-craft:industrialcraft-2:2.2.828-experimental:api')
     compileOnly('curse.maven:minefactory-reloaded-66672:2366150')
     compileOnly('pneumaticCraft:PneumaticCraft-1.7.10:1.12.7-152:api') {transitive = false}

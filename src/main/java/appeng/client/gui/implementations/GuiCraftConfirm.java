@@ -315,6 +315,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 "↓",
                 ButtonToolTips.SearchGotoNext.getLocal());
         this.buttonList.add(this.findNext);
+        this.cpuTable.addButtons(this.buttonList, this.guiLeft, this.guiTop);
     }
 
     @Override
@@ -956,6 +957,9 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         super.actionPerformed(btn);
 
         final boolean backwards = Mouse.isButtonDown(1);
+        if (cpuTable.actionPerformed(btn, backwards)) {
+            return;
+        }
 
         if (btn == this.selectCPU) {
             cpuTable.cycleCPU(backwards);

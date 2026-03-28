@@ -81,6 +81,8 @@ import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
+import xonin.backhand.api.core.BackhandUtils;
+import xonin.backhand.api.core.IBackhandPlayer;
 
 public class ToolColorApplicator extends AEBasePoweredItem
         implements IStorageCell, IItemGroup, IBlockTool, IMouseWheelItem {
@@ -111,13 +113,64 @@ public class ToolColorApplicator extends AEBasePoweredItem
     public void postInit() {
         super.postInit();
         BlockDispenser.dispenseBehaviorRegistry.putObject(this, new DispenserBlockTool());
+
+        if (Platform.isBackhandLoaded) {
+            BackhandUtils.addOffhandPriorityItem(this.getClass());
+        }
+    }
+
+    private boolean handleOffhand(final ItemStack stack, final EntityPlayer player, final World world, final int x,
+            final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ) {
+
+        final ItemStack offhand = BackhandUtils.getOffhandItem(player);
+        if (offhand == null) {
+            return false;
+        }
+
+        if (!(offhand.getItem() instanceof ToolColorApplicator)) {
+            return false;
+        }
+
+        final ItemStack held = ((IBackhandPlayer) player).getMainhandItem();
+        if (held == null) {
+            return false;
+        }
+
+        // No infinite recursion
+        if (held.getItem() instanceof ToolColorApplicator) {
+            return false;
+        }
+
+        final int tmpSlot = BackhandUtils.getOffhandSlot(player);
+        // I'm not sure if this will cause any problems, but it's the only way to swing only the correct arm
+        player.inventory.currentItem = 0;
+        final boolean result = held.getItem().onItemUse(held, player, world, x, y, z, side, hitX, hitY, hitZ);
+        if (result) {
+            player.swingItem();
+        }
+
+        player.inventory.currentItem = tmpSlot;
+        return result;
     }
 
     @Override
     public boolean onItemUse(final ItemStack stack, final EntityPlayer player, final World world, final int x,
             final int y, final int z, final int side, final float hitX, final float hitY, final float hitZ) {
+        int trueX = x, trueY = y, trueZ = z;
+        boolean usingOffhand = false;
 
-        final DimensionalCoord coord = new DimensionalCoord(world, x, y, z);
+        if (Platform.isBackhandLoaded) {
+            if (handleOffhand(stack, player, world, x, y, z, side, hitX, hitY, hitZ)) {
+                ForgeDirection dir = ForgeDirection.getOrientation(side);
+                trueX += dir.offsetX;
+                trueY += dir.offsetY;
+                trueZ += dir.offsetZ;
+
+                usingOffhand = true;
+            }
+        }
+
+        final DimensionalCoord coord = new DimensionalCoord(world, trueX, trueY, trueZ);
         final ForgeDirection orientation = ForgeDirection.getOrientation(side);
 
         if (!Platform.hasPermissions(coord, player)) {
@@ -135,6 +188,9 @@ public class ToolColorApplicator extends AEBasePoweredItem
         }
 
         ItemStack activeConfig = this.getColor(stack);
+        if (activeConfig == null) {
+            return false;
+        }
         activeConfig.stackSize = 1;
 
         final IAEItemStack extractedSim = inv
@@ -147,24 +203,32 @@ public class ToolColorApplicator extends AEBasePoweredItem
         ItemStack paintSource = extractedSim.getItemStack();
         AEColor paintColor = this.getColorFromItem(paintSource);
 
-        TileEntity targetTe = world.getTileEntity(x, y, z);
-        Block targetBlock = world.getBlock(x, y, z);
+        TileEntity targetTe = world.getTileEntity(trueX, trueY, trueZ);
+        Block targetBlock = world.getBlock(trueX, trueY, trueZ);
 
         boolean success = false;
 
         if (paintColor == AEColor.Transparent) {
-            success = performClean(world, x, y, z, orientation, player, targetTe);
+            success = performClean(world, trueX, trueY, trueZ, orientation, player, targetTe);
         } else if (paintColor != null) {
-            success = performColor(world, x, y, z, orientation, paintColor, player, targetTe, targetBlock);
+            success = performColor(world, trueX, trueY, trueZ, orientation, paintColor, player, targetTe, targetBlock);
         }
 
         if (success) {
             if (this.consumePowerAndItemsForTe(targetTe)) {
                 inv.extractItems(AEItemStack.create(paintSource), Actionable.MODULATE, new BaseActionSource());
                 this.extractAEPower(stack, POWER_PER_USE);
+
+                final IAEItemStack newStack = inv
+                        .extractItems(AEItemStack.create(activeConfig), Actionable.SIMULATE, new BaseActionSource());
+                if (newStack == null) {
+                    this.cycleColors(stack, this.getColor(stack), 1);
+
+                }
             }
 
-            return true;
+            // Retuning false when using offhand means only the normal hand animation will play
+            return !usingOffhand;
         }
 
         return false;
@@ -215,7 +279,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     private boolean consumePowerAndItemsForTe(TileEntity tileEntity) {
-        return !(tileEntity instanceof IColorableTile);
+        return (tileEntity instanceof IColorableTile);
     }
 
     @Override
