@@ -15,6 +15,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.config.CPUSortBy;
+import appeng.api.config.CraftingAllow;
 import appeng.api.config.SortDir;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.crafting.ICraftingCPU;
@@ -71,6 +72,12 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
         }
         return CPU_COMPARATOR.compare(a, b);
     };
+    private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR_CRAFTING = Comparator
+            .comparing(CraftingCPUStatus::isBusy).reversed()
+            .thenComparingDouble(ContainerCPUTable::remainingProgressRatio).thenComparing(CPU_COMPARATOR);
+    private static final Comparator<CraftingCPUStatus> CPU_COMPARATOR_AUTOMATION = Comparator
+            .comparingInt((CraftingCPUStatus status) -> automationSortOrder(status.allowMode()))
+            .thenComparing(CPU_COMPARATOR);
 
     /**
      * @param parent         Container parent, of which this is a field
@@ -158,6 +165,8 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
 
     private Comparator<CraftingCPUStatus> getComparatorForSortMode() {
         return switch (cpuSortMode) {
+            case CRAFTING -> CPU_COMPARATOR_CRAFTING;
+            case AUTOMATION -> CPU_COMPARATOR_AUTOMATION;
             case STORAGE_MEMORY -> CPU_COMPARATOR_STORAGE;
             case COPROCESSORS -> CPU_COMPARATOR_COPROCESSORS;
             default -> CPU_COMPARATOR;
@@ -166,11 +175,29 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
 
     public static Comparator<CraftingCPUStatus> getComparatorFor(CPUSortBy sortBy, SortDir sortDirection) {
         Comparator<CraftingCPUStatus> comparator = switch (sortBy) {
+            case CRAFTING -> CPU_COMPARATOR_CRAFTING;
+            case AUTOMATION -> CPU_COMPARATOR_AUTOMATION;
             case STORAGE_MEMORY -> CPU_COMPARATOR_STORAGE;
             case COPROCESSORS -> CPU_COMPARATOR_COPROCESSORS;
             default -> CPU_COMPARATOR;
         };
         return sortDirection == SortDir.DESCENDING ? comparator.reversed() : comparator;
+    }
+
+    private static double remainingProgressRatio(CraftingCPUStatus s) {
+        long total = s.getTotalItems();
+        if (!s.isBusy() || total <= 0) {
+            return 1.0d;
+        }
+        return (double) s.getRemainingItems() / (double) total;
+    }
+
+    private static int automationSortOrder(CraftingAllow allowMode) {
+        return switch (allowMode) {
+            case ONLY_PLAYER -> 0;
+            case ALLOW_ALL -> 1;
+            case ONLY_NONPLAYER -> 2;
+        };
     }
 
     private int getOrAssignCpuSerial(ICraftingCPU cpu) {
