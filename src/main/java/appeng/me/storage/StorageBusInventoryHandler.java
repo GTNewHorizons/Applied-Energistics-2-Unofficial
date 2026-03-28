@@ -1,5 +1,6 @@
 package appeng.me.storage;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import appeng.api.storage.IMEInventory;
@@ -19,38 +20,39 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
+        return this.getAvailableItems(out, iteration, Optional.empty());
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {
         if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
 
         if (out instanceof ItemFilterList) return this.getAvailableItemsFilter(out, iteration);
 
+        Predicate<T> filterCondition = preFilter.orElse(null);
+
         if (this.isExtractFilterActive() && !this.getExtractPartitionList().isEmpty()) {
-            return this.filterAvailableItems(out, iteration);
-        } else {
-            return this.getAvailableItems(out, iteration, e -> true);
+            Predicate<T> extractFilter = this.getExtractFilterCondition();
+            filterCondition = filterCondition == null ? extractFilter : extractFilter.and(filterCondition);
         }
-    }
 
-    @Override
-    protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
-        Predicate<T> filterCondition = this.getExtractFilterCondition();
-        return getAvailableItems(out, iteration, filterCondition);
-    }
+        final IItemList<T> availableItems = this.getInternal().getAvailableItems(
+                (IItemList<T>) this.getStackType().createList(),
+                iteration,
+                Optional.of(filterCondition));
 
-    @SuppressWarnings("unchecked")
-    private IItemList<T> getAvailableItems(IItemList<T> out, int iteration, Predicate<T> filterCondition) {
-        final IItemList<T> availableItems = this.getInternal()
-                .getAvailableItems((IItemList<T>) this.getStackType().createList(), iteration);
         if (availableItems instanceof NetworkItemList) {
-            NetworkItemList<T> networkItemList = new NetworkItemList<>((NetworkItemList<T>) availableItems);
-            networkItemList.addFilter(filterCondition);
-            return networkItemList;
+            // when we cross between networks on a NetworkInventoryHandler dive, we need to break the "out" contract to
+            // avoid modifying the passed in list which belongs to a different network (and would cause double-counting
+            // for triangle-shaped networks)
+            return availableItems;
         } else {
+            // for non-cross-network dives, we need to honor the "out" contract
+            // and put the results in the passed in list
             for (T items : availableItems) {
-                if (filterCondition.test(items)) {
-                    out.add(items);
-                }
+                out.add(items);
             }
             return out;
         }
