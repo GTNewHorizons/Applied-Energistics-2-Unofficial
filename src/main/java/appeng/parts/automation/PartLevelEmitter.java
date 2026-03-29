@@ -78,6 +78,8 @@ import appeng.util.LevelEmitterTypeFilter;
 import appeng.util.Platform;
 import appeng.util.SettingsFrom;
 import appeng.util.item.AEFluidStackType;
+import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
@@ -764,6 +766,12 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
             this.typeFilters.readFromNBT(data);
         } else if (data.hasKey("TYPE_FILTER")) {
             this.applyLegacyTypeFilter(data.getString("TYPE_FILTER"));
+        } else {
+            // Legacy level emitter (no type filter data): set fluid/item/essentia from part type or placing item
+            final String legacyType = this.detectLegacyEmitterType();
+            this.applyLegacyTypeFilter(legacyType);
+            this.configureWatchers();
+            this.saveChanges();
         }
     }
 
@@ -851,7 +859,45 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
                 filters.put(type, type == ITEM_STACK_TYPE);
             } else if ("FLUIDS".equals(typeName)) {
                 filters.put(type, type == AEFluidStackType.FLUID_STACK_TYPE);
+            } else if ("ESSENTIA".equals(typeName)) {
+                final IAEStackType<?> essentiaType = AEStackTypeRegistry.getType("essentia");
+                filters.put(type, type == essentiaType);
             }
         }
+    }
+
+    /**
+     * Detect legacy level emitter type from the part's item stack (used when loading with no type filter NBT). Ensures
+     * already-placed fluid/essentia/item emitters get the correct toggle state.
+     */
+    private String detectLegacyEmitterType() {
+        final ItemStack is = this.getItemStack();
+        if (is == null || is.getItem() == null) {
+            return "ITEMS";
+        }
+        try {
+            final UniqueIdentifier id = GameRegistry.findUniqueIdentifierFor(is.getItem());
+            if (id != null && id.modId != null && id.name != null) {
+                final String modId = id.modId.toLowerCase();
+                final String name = id.name.toLowerCase();
+                if (name.contains("fluid_level_emitter")) {
+                    return "FLUIDS";
+                }
+                if (modId.contains("thaumicenergistics") && is.getItemDamage() == 1) {
+                    return "ESSENTIA";
+                }
+            }
+        } catch (Exception e) {
+            AELog.debug(e);
+        }
+        return "ITEMS";
+    }
+
+    /**
+     * For subclasses to apply legacy type filter when loading already-placed level emitters that were placed before the
+     * unified fluid/item/essentia toggle (e.g. fluid or essentia level emitter).
+     */
+    protected final void applyLegacyEmitterType(final String typeName) {
+        this.applyLegacyTypeFilter(typeName);
     }
 }
