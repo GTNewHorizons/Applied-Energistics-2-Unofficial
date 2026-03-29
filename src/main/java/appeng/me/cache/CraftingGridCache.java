@@ -322,7 +322,8 @@ public class CraftingGridCache
         for (final Entry<IAEStack<?>, Set<ICraftingPatternDetails>> e : tmpCraft.entrySet()) {
             this.craftableItems.put(e.getKey(), ImmutableList.copyOf(e.getValue()));
 
-            craftableItemsLegacy.put(stackConvert(e.getKey()), ImmutableList.copyOf(e.getValue()));
+            final IAEItemStack ais = stackConvert(e.getKey());
+            if (ais != null) craftableItemsLegacy.put(ais, ImmutableList.copyOf(e.getValue()));
         }
     }
 

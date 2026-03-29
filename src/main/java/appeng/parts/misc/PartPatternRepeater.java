@@ -52,7 +52,6 @@ import appeng.api.networking.storage.IStorageInterceptor;
 import appeng.api.parts.IPartCollisionHelper;
 import appeng.api.parts.IPartRenderHelper;
 import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
@@ -284,10 +283,10 @@ public class PartPatternRepeater extends PartBasicState
 
                 this.targetCraftingGrid = gn.getGrid().getCache(ICraftingGrid.class);
 
-                final ImmutableSet<Entry<IAEItemStack, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
-                        .getCraftingPatterns().entrySet();
+                final ImmutableSet<Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>>> tempPatterns = this.targetCraftingGrid
+                        .getCraftingMultiPatterns().entrySet();
 
-                for (Entry<IAEItemStack, ImmutableList<ICraftingPatternDetails>> entry : tempPatterns) {
+                for (Entry<IAEStack<?>, ImmutableList<ICraftingPatternDetails>> entry : tempPatterns) {
                     this.craftingList.addAll(entry.getValue());
                 }
 
