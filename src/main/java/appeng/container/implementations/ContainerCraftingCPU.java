@@ -11,7 +11,9 @@
 package appeng.container.implementations;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -40,6 +42,7 @@ import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCompressedNBT;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
+import appeng.core.sync.packets.PacketCraftingScheduledReasons;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
@@ -47,6 +50,7 @@ import appeng.me.cluster.IAEMultiBlock;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.Platform;
+import appeng.util.ScheduledReason;
 
 public class ContainerCraftingCPU extends AEBaseContainer
         implements IMEMonitorHandlerReceiver<IAEStack<?>>, ICustomNameObject {
@@ -199,6 +203,24 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
                 final PacketCompressedNBT d = new PacketCompressedNBT(nbttc);
 
+                NBTTagCompound itemReasons = new NBTTagCompound();
+                if (this.getMonitor() instanceof CraftingCPUCluster) {
+                    CraftingCPUCluster cpuc = (CraftingCPUCluster) this.getMonitor();
+                    for (final IAEStack<?> stack : this.list) {
+                        String itemKey = stack.getDisplayName();
+                        ScheduledReason sr = cpuc.getScheduledReason(stack);
+                        if (sr == null) {
+                            sr = ScheduledReason.UNDEFINED;
+                        }
+
+                        AELog.info(
+                                "Crafting scheduled reason mapped: itemKey=[%s], scheduledReason=[%s]",
+                                itemKey,
+                                sr);
+                        itemReasons.setInteger(itemKey, sr.ordinal());
+                    }
+                }
+
                 for (final IAEStack<?> out : this.list) {
                     a.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.STORAGE));
                     b.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.ACTIVE));
@@ -225,6 +247,10 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
                         NetworkHandler.instance.sendTo(
                                 new PacketCraftingRemainingOperations(this.getMonitor().getRemainingOperations()),
+                                epmp);
+
+                        NetworkHandler.instance.sendTo(
+                                PacketCraftingScheduledReasons.create(itemReasons),
                                 epmp);
                     }
                 }

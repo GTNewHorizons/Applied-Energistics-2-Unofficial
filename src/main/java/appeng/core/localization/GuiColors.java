@@ -173,7 +173,12 @@ public enum GuiColors implements Localization {
     ColorSelectBtnOverlayDisabled(0xB0000000),
     ColorSelectBtnOverlayHover(0x80FFFFFF),
 
-    ColorSelectBtnText(0xFFFFFF);
+    ColorSelectBtnText(0xFFFFFF),
+
+    CraftingScheduledSomethingStuck(0xCC66CCFF),
+    CraftingScheduledBlockingMode(0xCCFF6600),
+    CraftingScheduledLockMode(0xCCFF6600),
+    CraftingScheduledNotEnoughIngredients(0xCC84B701);
 
     private final int color;
 
