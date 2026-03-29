@@ -41,7 +41,7 @@ public class StorageBusInventoryHandler<T extends IAEStack<T>> extends MEInvento
         final IItemList<T> availableItems = this.getInternal().getAvailableItems(
                 (IItemList<T>) this.getStackType().createList(),
                 iteration,
-                Optional.of(filterCondition));
+                Optional.ofNullable(filterCondition));
 
         if (availableItems instanceof NetworkItemList) {
             // when we cross between networks on a NetworkInventoryHandler dive, we need to break the "out" contract to
