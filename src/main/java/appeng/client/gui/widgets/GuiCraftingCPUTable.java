@@ -3,12 +3,14 @@ package appeng.client.gui.widgets;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
@@ -19,10 +21,14 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
 import appeng.api.AEApi;
+import appeng.api.config.CPUSortBy;
+import appeng.api.config.Settings;
+import appeng.api.config.SortDir;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.AEBaseGui;
 import appeng.container.implementations.ContainerCPUTable;
 import appeng.container.implementations.CraftingCPUStatus;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
@@ -43,8 +49,16 @@ public class GuiCraftingCPUTable {
     public static final int CPU_TABLE_SLOT_YOFF = 0;
     public static final int CPU_TABLE_SLOT_WIDTH = 67;
     public static final int CPU_TABLE_SLOT_HEIGHT = 23;
+    private static final int CPU_SORT_BUTTON_X = -85;
+    private static final int CPU_SORT_BUTTON_Y = 2;
+    private static final int CPU_SORT_DIRECTION_BUTTON_X = CPU_SORT_BUTTON_X + 16;
+    private static final int CPU_SORT_DIRECTION_BUTTON_Y = 2;
 
     private final GuiScrollbar cpuScrollbar;
+    private final GuiImgButton cpuSortButton;
+    private final GuiImgButton cpuSortDirectionButton;
+    private static final CPUSortBy[] CPU_SORT_ORDER = CPUSortBy.values();
+    private static final SortDir[] CPU_SORT_DIRECTION_ORDER = SortDir.values();
 
     private String selectedCPUName = "";
     private static final DecimalFormat DF = new DecimalFormat("#.##");
@@ -69,6 +83,10 @@ public class GuiCraftingCPUTable {
         this.container = container;
         this.jobMergeable = jobMergeable;
         this.cpuScrollbar = new GuiScrollbar();
+        CPUSortBy savedSortMode = (CPUSortBy) AEConfig.instance.settings.getSetting(Settings.CPU_SORT_BY);
+        this.cpuSortButton = new GuiImgButton(0, 0, Settings.CPU_SORT_BY, savedSortMode);
+        SortDir savedSortDirection = (SortDir) AEConfig.instance.settings.getSetting(Settings.CPU_SORT_DIRECTION);
+        this.cpuSortDirectionButton = new GuiImgButton(0, 0, Settings.CPU_SORT_DIRECTION, savedSortDirection);
         this.cpuScrollbar.setLeft(-16);
         this.cpuScrollbar.setTop(19);
         this.cpuScrollbar.setWidth(12);
@@ -88,7 +106,8 @@ public class GuiCraftingCPUTable {
     }
 
     public void drawScreen() {
-        final List<CraftingCPUStatus> cpus = container.getCPUs();
+        updateButtonPositions(parent.getGuiLeft(), parent.getGuiTop());
+        final List<CraftingCPUStatus> cpus = getSortedCPUs();
         final int selectedCpuSerial = container.selectedCpuSerial;
 
         this.selectedCPUName = null;
@@ -104,7 +123,7 @@ public class GuiCraftingCPUTable {
         if (this.cpuScrollbar != null) {
             this.cpuScrollbar.draw(parent);
         }
-        final List<CraftingCPUStatus> cpus = container.getCPUs();
+        final List<CraftingCPUStatus> cpus = getSortedCPUs();
         final int selectedCpuSerial = container.selectedCpuSerial;
         final int firstCpu = this.cpuScrollbar.getCurrentScroll();
         CraftingCPUStatus hoveredCpu = hitCpu(mouseX - guiLeft, mouseY - guiTop);
@@ -382,7 +401,7 @@ public class GuiCraftingCPUTable {
         }
         int scrollOffset = this.cpuScrollbar != null ? this.cpuScrollbar.getCurrentScroll() : 0;
         int cpuId = scrollOffset + (y - 19) / CPU_TABLE_SLOT_HEIGHT;
-        List<CraftingCPUStatus> cpus = container.getCPUs();
+        List<CraftingCPUStatus> cpus = getSortedCPUs();
         return (cpuId >= 0 && cpuId < cpus.size()) ? cpus.get(cpuId) : null;
     }
 
@@ -399,12 +418,74 @@ public class GuiCraftingCPUTable {
         }
     }
 
+    public void addButtons(List<GuiButton> buttonList, int guiLeft, int guiTop) {
+        updateButtonPositions(guiLeft, guiTop);
+        if (!buttonList.contains(this.cpuSortButton)) {
+            buttonList.add(this.cpuSortButton);
+        }
+        if (!buttonList.contains(this.cpuSortDirectionButton)) {
+            buttonList.add(this.cpuSortDirectionButton);
+        }
+    }
+
+    public boolean actionPerformed(GuiButton btn, boolean backwards) {
+        if (btn == this.cpuSortDirectionButton) {
+            cycleSortDirection(backwards);
+            return true;
+        }
+        if (btn == this.cpuSortButton) {
+            cycleSortMode(backwards);
+            return true;
+        }
+        return false;
+    }
+
     public void sendCPUSwitch(int serial) {
         try {
             NetworkHandler.instance.sendToServer(new PacketValueConfig("CPUTable.Cpu.Set", Integer.toString(serial)));
         } catch (final IOException e) {
             AELog.warn(e);
         }
+    }
+
+    private void cycleSortMode(boolean backwards) {
+        CPUSortBy current = (CPUSortBy) this.cpuSortButton.getCurrentValue();
+        int index = 0;
+        for (int i = 0; i < CPU_SORT_ORDER.length; i++) {
+            if (CPU_SORT_ORDER[i] == current) {
+                index = i;
+                break;
+            }
+        }
+        int nextIndex = backwards ? index - 1 : index + 1;
+        if (nextIndex < 0) {
+            nextIndex = CPU_SORT_ORDER.length - 1;
+        } else if (nextIndex >= CPU_SORT_ORDER.length) {
+            nextIndex = 0;
+        }
+        CPUSortBy next = CPU_SORT_ORDER[nextIndex];
+        this.cpuSortButton.set(next);
+        AEConfig.instance.settings.putSetting(Settings.CPU_SORT_BY, next);
+    }
+
+    private void cycleSortDirection(boolean backwards) {
+        SortDir current = (SortDir) this.cpuSortDirectionButton.getCurrentValue();
+        int index = 0;
+        for (int i = 0; i < CPU_SORT_DIRECTION_ORDER.length; i++) {
+            if (CPU_SORT_DIRECTION_ORDER[i] == current) {
+                index = i;
+                break;
+            }
+        }
+        int nextIndex = backwards ? index - 1 : index + 1;
+        if (nextIndex < 0) {
+            nextIndex = CPU_SORT_DIRECTION_ORDER.length - 1;
+        } else if (nextIndex >= CPU_SORT_DIRECTION_ORDER.length) {
+            nextIndex = 0;
+        }
+        SortDir next = CPU_SORT_DIRECTION_ORDER[nextIndex];
+        this.cpuSortDirectionButton.set(next);
+        AEConfig.instance.settings.putSetting(Settings.CPU_SORT_DIRECTION, next);
     }
 
     /**
@@ -441,7 +522,7 @@ public class GuiCraftingCPUTable {
 
     public void cycleCPU(boolean backwards) {
         int current = container.selectedCpuSerial;
-        List<CraftingCPUStatus> cpus = container.getCPUs();
+        List<CraftingCPUStatus> cpus = getSortedCPUs();
         final int next_increment = backwards ? (cpus.size() - 1) : 1;
         if (cpus.isEmpty()) {
             return;
@@ -494,5 +575,21 @@ public class GuiCraftingCPUTable {
         int g = (int) (start[2] + ratio * (end[2] - start[2]));
         int b = (int) (start[3] + ratio * (end[3] - start[3]));
         return (a << 24) | (r << 16) | (g << 8) | (b);
+    }
+
+    private List<CraftingCPUStatus> getSortedCPUs() {
+        List<CraftingCPUStatus> cpus = new ArrayList<>(container.getCPUs());
+        cpus.sort(
+                ContainerCPUTable.getComparatorFor(
+                        (CPUSortBy) this.cpuSortButton.getCurrentValue(),
+                        (SortDir) this.cpuSortDirectionButton.getCurrentValue()));
+        return cpus;
+    }
+
+    private void updateButtonPositions(int guiLeft, int guiTop) {
+        this.cpuSortButton.xPosition = guiLeft + CPU_SORT_BUTTON_X;
+        this.cpuSortButton.yPosition = guiTop + CPU_SORT_BUTTON_Y;
+        this.cpuSortDirectionButton.xPosition = guiLeft + CPU_SORT_DIRECTION_BUTTON_X;
+        this.cpuSortDirectionButton.yPosition = guiTop + CPU_SORT_DIRECTION_BUTTON_Y;
     }
 }

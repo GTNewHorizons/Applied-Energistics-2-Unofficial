@@ -78,6 +78,10 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
         final boolean leftClick = Mouse.isButtonDown(0);
         final boolean rightClick = Mouse.isButtonDown(1);
 
+        if (cpuTable.actionPerformed(btn, rightClick)) {
+            return;
+        }
+
         if (btn == this.selectCPU) {
             cpuTable.cycleCPU(rightClick);
         } else if (btn == this.follow) {
@@ -134,6 +138,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
                 Settings.TERMINAL_STYLE,
                 tallMode ? TerminalStyle.TALL : TerminalStyle.SMALL);
         this.buttonList.add(switchTallMode);
+        this.cpuTable.addButtons(this.buttonList, this.guiLeft, this.guiTop);
     }
 
     @Override

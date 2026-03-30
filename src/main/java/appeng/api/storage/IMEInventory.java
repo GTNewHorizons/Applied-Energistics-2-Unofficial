@@ -17,6 +17,8 @@ import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.Collection;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
 
@@ -28,6 +30,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.util.IterationCounter;
+import appeng.util.item.NetworkItemList;
 
 /**
  * AE's Equivalent to IInventory, used to reading contents, and manipulating contents of ME Inventories.
@@ -91,6 +94,38 @@ public interface IMEInventory<StackType extends IAEStack> {
     }
 
     /**
+     * Optional filtered variant of {@link #getAvailableItems(IItemList, int)}.
+     *
+     * @param out       the IItemList the results will be written to
+     * @param iteration numeric id for this iteration, use {@link appeng.util.IterationCounter#fetchNewId()} to avoid
+     *                  conflicts
+     * @param filter    optional filter
+     * @return returns same list that was passed in, is passed out. Network-aware implementations may instead return a
+     *         filtered {@link NetworkItemList} to preserve per-network accounting during nested scans.
+     */
+    default IItemList<StackType> getAvailableItems(IItemList<StackType> out, int iteration,
+            Optional<Predicate<StackType>> filter) {
+        if (!filter.isPresent()) {
+            return getAvailableItems(out, iteration);
+        }
+
+        final Predicate<StackType> predicate = filter.get();
+        final IItemList<StackType> allItems = (IItemList<StackType>) getStackType().createPrimitiveList();
+        final IItemList<StackType> availableItems = getAvailableItems(allItems, iteration);
+
+        if (availableItems instanceof NetworkItemList) {
+            return ((NetworkItemList<StackType>) availableItems).createFilteredView(predicate);
+        }
+
+        for (final StackType item : availableItems) {
+            if (predicate.test(item)) {
+                out.add(item);
+            }
+        }
+        return out;
+    }
+
+    /**
      * Request a report of how many of a single item type are available in storage. It falls back to
      * {@link IMEInventory#getAvailableItems} if a more optimized implementation is not present.
      *
@@ -120,7 +155,10 @@ public interface IMEInventory<StackType extends IAEStack> {
     @SuppressWarnings("unchecked") // changing the generic StackType to be correct here is too much of a breaking API
                                    // change
     default StackType getAvailableItem(@Nonnull StackType request, int iteration) {
-        return getAvailableItems((IItemList<StackType>) getStackType().createList(), iteration).findPrecise(request);
+        return getAvailableItems(
+                (IItemList<StackType>) getStackType().createList(),
+                iteration,
+                Optional.of(s -> s.isSameType(request))).findPrecise(request);
     }
 
     /**

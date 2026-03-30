@@ -24,6 +24,7 @@ import org.lwjgl.opengl.GL11;
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
 import appeng.api.config.AdvancedBlockingMode;
+import appeng.api.config.CPUSortBy;
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingAllow;
@@ -237,6 +238,18 @@ public class GuiImgButton extends GuiButton implements ITooltip {
             this.registerApp(
                     49,
                     Settings.SORT_DIRECTION,
+                    SortDir.DESCENDING,
+                    ButtonToolTips.SortOrder,
+                    ButtonToolTips.ToggleSortDirection);
+            this.registerApp(
+                    48,
+                    Settings.CPU_SORT_DIRECTION,
+                    SortDir.ASCENDING,
+                    ButtonToolTips.SortOrder,
+                    ButtonToolTips.ToggleSortDirection);
+            this.registerApp(
+                    49,
+                    Settings.CPU_SORT_DIRECTION,
                     SortDir.DESCENDING,
                     ButtonToolTips.SortOrder,
                     ButtonToolTips.ToggleSortDirection);
@@ -897,6 +910,33 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.TOGGLE_SHOW_ONLY_SUBSTITUTE_OFF,
                     ButtonToolTips.ToggleShowOnlySubstitute,
                     ButtonToolTips.ToggleShowOnlySubstituteOffDesc);
+
+            this.registerApp(64, Settings.CPU_SORT_BY, CPUSortBy.NAME, ButtonToolTips.SortBy, ButtonToolTips.CPUName);
+            this.registerApp(
+                    19,
+                    Settings.CPU_SORT_BY,
+                    CPUSortBy.CRAFTING,
+                    ButtonToolTips.SortBy,
+                    ButtonToolTips.CPUCrafting);
+            this.registerApp(
+                    16 * 14 + 3,
+                    Settings.CPU_SORT_BY,
+                    CPUSortBy.AUTOMATION,
+                    ButtonToolTips.SortBy,
+                    ButtonToolTips.Automation);
+            this.registerApp(
+                    67,
+                    Settings.CPU_SORT_BY,
+                    CPUSortBy.STORAGE_MEMORY,
+                    ButtonToolTips.SortBy,
+                    ButtonToolTips.NumberOfStorageMemory);
+            this.registerApp(
+                    14 * 16 + 6,
+                    Settings.CPU_SORT_BY,
+                    CPUSortBy.COPROCESSORS,
+                    ButtonToolTips.SortBy,
+                    ButtonToolTips.NumberOfCoProcessors);
+
         }
     }
 
