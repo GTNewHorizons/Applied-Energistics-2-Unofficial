@@ -27,7 +27,6 @@ import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
 import appeng.core.sync.packets.PacketCraftingCompleteNotification;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
-import appeng.core.sync.packets.PacketCraftingScheduledReasons;
 import appeng.core.sync.packets.PacketCraftingTreeData;
 import appeng.core.sync.packets.PacketGuiDataSync;
 import appeng.core.sync.packets.PacketHighlightBlockStorage;
@@ -127,7 +126,6 @@ public class AppEngPacketHandlerBase {
         PACKET_PATTERN_MULTI(PacketPatternMultiSet.class),
         PACKET_CRAFTING_REMAINING_OPERATIONS(PacketCraftingRemainingOperations.class),
         PACKET_CRAFTING_ITEM_INTERFACE(PacketCraftingItemInterface.class),
-        PACKET_CRAFTING_SCHEDULED_REASONS(PacketCraftingScheduledReasons.class),
         PACKET_CRAFTING_TREE_DATA(PacketCraftingTreeData.class),
         PACKET_NEI_BOOKMARK(PacketNEIBookmark.class),
         PACKET_INTERFACE_TERMINAL_UPDATE(PacketInterfaceTerminalUpdate.class),

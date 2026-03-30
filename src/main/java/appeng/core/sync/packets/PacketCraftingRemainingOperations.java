@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.crafting.ICraftingCPU;
@@ -17,6 +18,7 @@ import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -25,16 +27,34 @@ import io.netty.buffer.Unpooled;
 public class PacketCraftingRemainingOperations extends AppEngPacket {
 
     private int remainingOperations;
+    private NBTTagCompound itemScheduledReasons;
 
     public PacketCraftingRemainingOperations(final ByteBuf stream) throws IOException {
         this.remainingOperations = stream.readInt();
+        // Check if reasons NBT is included (backwards compatible)
+        if (stream.readableBytes() > 0) {
+            this.itemScheduledReasons = ByteBufUtils.readTag(stream);
+        } else {
+            this.itemScheduledReasons = new NBTTagCompound();
+        }
     }
 
     public PacketCraftingRemainingOperations(int remainingOperations) throws IOException {
         this.remainingOperations = remainingOperations;
+        this.itemScheduledReasons = new NBTTagCompound();
         final ByteBuf data = Unpooled.buffer();
         data.writeInt(this.getPacketID());
         data.writeInt(remainingOperations);
+        this.configureWrite(data);
+    }
+
+    public PacketCraftingRemainingOperations(int remainingOperations, NBTTagCompound reasons) throws IOException {
+        this.remainingOperations = remainingOperations;
+        this.itemScheduledReasons = reasons;
+        final ByteBuf data = Unpooled.buffer();
+        data.writeInt(this.getPacketID());
+        data.writeInt(remainingOperations);
+        ByteBufUtils.writeTag(data, reasons);
         this.configureWrite(data);
     }
 
@@ -76,8 +96,11 @@ public class PacketCraftingRemainingOperations extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
-        if (gs instanceof GuiCraftingCPU) {
-            ((GuiCraftingCPU) gs).postUpdate(this.remainingOperations);
+        if (gs instanceof GuiCraftingCPU guiCraftingCPU) {
+            guiCraftingCPU.postUpdate(this.remainingOperations);
+            if (this.itemScheduledReasons != null && !this.itemScheduledReasons.hasNoTags()) {
+                guiCraftingCPU.postUpdateBatchReasons(this.itemScheduledReasons);
+            }
         }
     }
 }
