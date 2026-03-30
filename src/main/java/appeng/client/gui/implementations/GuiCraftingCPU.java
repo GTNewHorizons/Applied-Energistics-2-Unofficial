@@ -68,7 +68,6 @@ import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.InventoryAction;
-import appeng.util.ColorPickHelper;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import appeng.util.ScheduledReason;
@@ -476,6 +475,23 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         }
     }
 
+    private int getCraftingStateColor(ScheduledReason scheduledReason, boolean active) {
+        if (scheduledReason == null || scheduledReason == ScheduledReason.UNDEFINED) {
+            return active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUInactive.getColor();
+        }
+
+        return switch (scheduledReason) {
+            case UNSUPPORTED_STACK -> GuiColors.CraftingCPUUnsupportedStack.getColor();
+            case SAME_NETWORK -> GuiColors.CraftingCPUSameNetwork.getColor();
+            case SOMETHING_STUCK -> GuiColors.CraftingCPUSomethingStuck.getColor();
+            case NO_TARGET -> GuiColors.CraftingCPUNoTarget.getColor();
+            case NOT_ENOUGH_INGREDIENTS -> GuiColors.CraftingCPUNotEnoughIngredients.getColor();
+            case LOCK_MODE -> GuiColors.CraftingCPULockMode.getColor();
+            case BLOCKING_MODE -> GuiColors.CraftingCPUBlockingMode.getColor();
+            case UNDEFINED -> active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUInactive.getColor();
+        };
+    }
+
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         String title = this.getGuiDisplayName(GuiText.CraftingStatus.getLocal());
@@ -551,27 +567,16 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 }
 
                 if (AEConfig.instance.useColoredCraftingStatus && (active || scheduled)) {
-                    int bgColor = active ? GuiColors.CraftingCPUActive.getColor()
-                            : GuiColors.CraftingCPUInactive.getColor();
-
                     final int startX = (x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET) * 2;
                     final int startY = ((y * offY + ITEMSTACK_TOP_OFFSET) - 3) * 2;
                     final int endX = startX + (SECTION_LENGTH * 2);
                     final int endY = startY + (offY * 2) - 2;
 
-                    GuiColors scheduledColor = null;
                     String itemKey = refStack.getDisplayName();
                     ScheduledReason sr = this.remainingOperations.getScheduledReason(itemKey);
+                        int bgColor = this.getCraftingStateColor(sr, active);
 
-                    if (sr != null && sr != ScheduledReason.UNDEFINED) {
-                        scheduledColor = ColorPickHelper.selectColorFromScheduledReason(sr);
-                    }
-
-                    if (scheduledColor != null) {
-                        drawGradientRect(startX, startY, endX, endY, bgColor, scheduledColor.getColor());
-                    } else {
-                        drawRect(startX, startY, endX, endY, bgColor);
-                    }
+                    drawRect(startX, startY, endX, endY, bgColor);
                 }
 
                 final int negY = ((lines - 1) * 5) / 2;

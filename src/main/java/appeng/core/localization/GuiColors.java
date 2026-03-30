@@ -27,6 +27,13 @@ public enum GuiColors implements Localization {
 
     CraftingCPUActive(0x5A45A021),
     CraftingCPUInactive(0x5AFFF7AA),
+    CraftingCPUUnsupportedStack(0x5AC42B2B),
+    CraftingCPUSameNetwork(0x5AD2462B),
+    CraftingCPUSomethingStuck(0x5ADF612B),
+    CraftingCPUNoTarget(0x5AE0822F),
+    CraftingCPUNotEnoughIngredients(0x5AC9A53A),
+    CraftingCPULockMode(0x5A89B53F),
+    CraftingCPUBlockingMode(0x5A89B53F),
 
     InterfaceTerminalMatch(0x2A00FF00),
 
@@ -173,12 +180,7 @@ public enum GuiColors implements Localization {
     ColorSelectBtnOverlayDisabled(0xB0000000),
     ColorSelectBtnOverlayHover(0x80FFFFFF),
 
-    ColorSelectBtnText(0xFFFFFF),
-
-    CraftingScheduledSomethingStuck(0xCC66CCFF),
-    CraftingScheduledBlockingMode(0xCCFF6600),
-    CraftingScheduledLockMode(0xCCFF6600),
-    CraftingScheduledNotEnoughIngredients(0xCC84B701);
+    ColorSelectBtnText(0xFFFFFF);
 
     private final int color;
 
