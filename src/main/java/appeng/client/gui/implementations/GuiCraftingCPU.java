@@ -68,6 +68,7 @@ import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.InventoryAction;
+import appeng.util.ColorPickHelper;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import appeng.util.ScheduledReason;
@@ -119,6 +120,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         private long lastWorkingTick = 0;
 
         private int remainingOperations = 0;
+        private NBTTagCompound itemScheduledReasons = new NBTTagCompound();
 
         public long getLastWorkingTick() {
             return lastWorkingTick;
@@ -134,6 +136,20 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
         public void setRefreshTick(long refreshTick) {
             this.refreshTick = refreshTick;
+        }
+
+        public void setItemScheduledReasons(NBTTagCompound reasons) {
+            this.itemScheduledReasons = reasons;
+        }
+
+        public ScheduledReason getScheduledReason(String itemKey) {
+            if (this.itemScheduledReasons.hasKey(itemKey)) {
+                int ordinal = this.itemScheduledReasons.getInteger(itemKey);
+                if (ordinal >= 0 && ordinal < ScheduledReason.VALUES.length) {
+                    return ScheduledReason.VALUES[ordinal];
+                }
+            }
+            return null;
         }
 
         @Override
@@ -535,11 +551,27 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 }
 
                 if (AEConfig.instance.useColoredCraftingStatus && (active || scheduled)) {
-                    final int bgColor = active ? GuiColors.CraftingCPUActive.getColor()
+                    int bgColor = active ? GuiColors.CraftingCPUActive.getColor()
                             : GuiColors.CraftingCPUInactive.getColor();
+
                     final int startX = (x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET) * 2;
                     final int startY = ((y * offY + ITEMSTACK_TOP_OFFSET) - 3) * 2;
-                    drawRect(startX, startY, startX + (SECTION_LENGTH * 2), startY + (offY * 2) - 2, bgColor);
+                    final int endX = startX + (SECTION_LENGTH * 2);
+                    final int endY = startY + (offY * 2) - 2;
+
+                    GuiColors scheduledColor = null;
+                    String itemKey = refStack.getDisplayName();
+                    ScheduledReason sr = this.remainingOperations.getScheduledReason(itemKey);
+
+                    if (sr != null && sr != ScheduledReason.UNDEFINED) {
+                        scheduledColor = ColorPickHelper.selectColorFromScheduledReason(sr);
+                    }
+
+                    if (scheduledColor != null) {
+                        drawGradientRect(startX, startY, endX, endY, bgColor, scheduledColor.getColor());
+                    } else {
+                        drawRect(startX, startY, endX, endY, bgColor);
+                    }
                 }
 
                 final int negY = ((lines - 1) * 5) / 2;
@@ -675,8 +707,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             } else {
                 List<NamedDimensionalCoord> blocks = NamedDimensionalCoord.readAsListFromNBTNamed(this.hoveredStackNbt);
 
-                ScheduledReason sr = ScheduledReason.values()[this.hoveredStackNbt.getInteger("ScheduledReason")];
-                if (sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
+                ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack.getDisplayName());
+                if (sr != null && sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
 
                 if (blocks.isEmpty()) return;
                 for (NamedDimensionalCoord blockPos : blocks) {
@@ -719,6 +751,10 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     public void postUpdateTooltip(NBTTagCompound nbt) {
         this.hoveredStackNbt = nbt;
+    }
+
+    public void postUpdateBatchReasons(NBTTagCompound nbt) {
+        this.remainingOperations.setItemScheduledReasons(nbt);
     }
 
     public void postUpdate(int remainingOperations) {

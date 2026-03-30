@@ -17,4 +17,20 @@ public class ColorPickHelper {
         }
         return color;
     }
+
+    public static GuiColors selectColorFromScheduledReason(ScheduledReason reason) {
+        if (reason == null) {
+            return null;
+        }
+        return switch (reason) {
+            case SOMETHING_STUCK -> GuiColors.CraftingScheduledSomethingStuck;
+            case BLOCKING_MODE -> GuiColors.CraftingScheduledBlockingMode;
+            case LOCK_MODE -> GuiColors.CraftingScheduledLockMode;
+            case NO_TARGET -> GuiColors.CraftingScheduledSomethingStuck;
+            case NOT_ENOUGH_INGREDIENTS -> GuiColors.CraftingScheduledNotEnoughIngredients;
+            case SAME_NETWORK -> GuiColors.CraftingScheduledSomethingStuck;
+            case UNSUPPORTED_STACK -> GuiColors.CraftingScheduledSomethingStuck;
+            case UNDEFINED -> null;
+        };
+    }
 }
