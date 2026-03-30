@@ -139,14 +139,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         }
 
         public void setItemScheduledReasons(NBTTagCompound reasons) {
-            for (String itemKey : reasons.func_150296_c()) {
-                int ordinal = reasons.getInteger(itemKey);
-                if (ordinal == ScheduledReason.UNDEFINED.ordinal()) {
-                    this.itemScheduledReasons.removeTag(itemKey);
-                } else {
-                    this.itemScheduledReasons.setInteger(itemKey, ordinal);
-                }
-            }
+            this.itemScheduledReasons = reasons;
         }
 
         public ScheduledReason getScheduledReason(String itemKey) {
