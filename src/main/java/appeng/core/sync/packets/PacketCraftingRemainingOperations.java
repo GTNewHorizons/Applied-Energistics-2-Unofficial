@@ -31,12 +31,7 @@ public class PacketCraftingRemainingOperations extends AppEngPacket {
 
     public PacketCraftingRemainingOperations(final ByteBuf stream) throws IOException {
         this.remainingOperations = stream.readInt();
-        // Check if reasons NBT is included (backwards compatible)
-        if (stream.readableBytes() > 0) {
-            this.itemScheduledReasons = ByteBufUtils.readTag(stream);
-        } else {
-            this.itemScheduledReasons = new NBTTagCompound();
-        }
+        this.itemScheduledReasons = ByteBufUtils.readTag(stream);
     }
 
     public PacketCraftingRemainingOperations(int remainingOperations) throws IOException {
