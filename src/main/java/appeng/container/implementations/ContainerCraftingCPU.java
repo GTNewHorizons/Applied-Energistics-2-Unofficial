@@ -40,7 +40,6 @@ import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCompressedNBT;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
-import appeng.core.sync.packets.PacketCraftingScheduledReasons;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ICustomNameObject;
@@ -230,10 +229,10 @@ public class ContainerCraftingCPU extends AEBaseContainer
                         NetworkHandler.instance.sendTo(d, epmp);
 
                         NetworkHandler.instance.sendTo(
-                                new PacketCraftingRemainingOperations(this.getMonitor().getRemainingOperations()),
+                                new PacketCraftingRemainingOperations(
+                                        this.getMonitor().getRemainingOperations(),
+                                        itemReasons),
                                 epmp);
-
-                        NetworkHandler.instance.sendTo(PacketCraftingScheduledReasons.create(itemReasons), epmp);
                     }
                 }
             } catch (final IOException e) {
