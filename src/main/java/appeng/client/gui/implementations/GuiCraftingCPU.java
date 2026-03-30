@@ -105,6 +105,12 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     private static final int ITEMSTACK_TOP_OFFSET = 22;
     private static final int ITEMS_PER_ROW = 3;
 
+    private static final int ICON_NO_TARGET = 128;
+    private static final int ICON_LOCK_MODE = 9;
+    private static final int ICON_BLOCK_MODE = 21;
+    private static final int ICON_MISSING_INACTIVE = 6; //116;
+    private static final int ICON_ACTIVE = 194;
+
     private final ContainerCraftingCPU craftingCpu;
 
     protected IItemList<IAEStack<?>> storage = AEApi.instance().storage().createAEStackList();
@@ -485,11 +491,47 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             case SAME_NETWORK -> GuiColors.CraftingCPUSameNetwork.getColor();
             case SOMETHING_STUCK -> GuiColors.CraftingCPUSomethingStuck.getColor();
             case NO_TARGET -> GuiColors.CraftingCPUNoTarget.getColor();
-            case NOT_ENOUGH_INGREDIENTS -> GuiColors.CraftingCPUNotEnoughIngredients.getColor();
+            case NOT_ENOUGH_INGREDIENTS -> active ? GuiColors.CraftingCPUActive.getColor()
+                    : GuiColors.CraftingCPUNotEnoughIngredients.getColor();
             case LOCK_MODE -> GuiColors.CraftingCPULockMode.getColor();
             case BLOCKING_MODE -> GuiColors.CraftingCPUBlockingMode.getColor();
             case UNDEFINED -> active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUInactive.getColor();
         };
+    }
+
+    private int getScheduledReasonIconIndex(ScheduledReason scheduledReason, boolean active) {
+        if (scheduledReason == null) {
+            return -1;
+        }
+
+        return switch (scheduledReason) {
+            case NO_TARGET, SOMETHING_STUCK, UNSUPPORTED_STACK, SAME_NETWORK -> ICON_NO_TARGET;
+            case LOCK_MODE -> ICON_LOCK_MODE;
+            case BLOCKING_MODE -> ICON_BLOCK_MODE;
+            case NOT_ENOUGH_INGREDIENTS -> active ? ICON_ACTIVE : ICON_MISSING_INACTIVE;
+            default -> active ? ICON_ACTIVE : -1;
+        };
+    }
+
+    private void drawScheduledReasonIcon(int x, int y, int iconIndex) {
+        if (iconIndex < 0) {
+            return;
+        }
+
+        this.bindTexture("guis/states.png");
+        final int uvY = iconIndex / 16;
+        final int uvX = iconIndex - uvY * 16;
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
+        GL11.glPushMatrix();
+        GL11.glTranslatef(x, y, 0.0f);
+        GL11.glScalef(0.75f, 0.75f, 1.0f);
+        this.drawTexturedModalRect(0, 0, uvX * 16, uvY * 16, 16, 16);
+        GL11.glPopMatrix();
+        GL11.glPopAttrib();
     }
 
     @Override
@@ -628,12 +670,15 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     final String str = GuiText.Scheduled.getLocal() + ": "
                             + converter.toWideReadableForm(pendingStack.getStackSize());
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
+                    final boolean scheduledOnlyLine = (stored == null || stored.getStackSize() <= 0)
+                        && (activeStack == null || activeStack.getStackSize() <= 0);
+                    final int scheduledLineYOffset = scheduledOnlyLine ? 4 : 0;
 
                     this.fontRendererObj.drawString(
                             str,
                             (int) ((x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - (w * 0.5))
                                     * 2),
-                            (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY) * 2,
+                        (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY + scheduledLineYOffset) * 2,
                             GuiColors.CraftingCPUScheduled.getColor());
 
                     if (this.tooltip == z - viewStart) {
@@ -646,6 +691,10 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 GL11.glPopMatrix();
                 final int posX = x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19;
                 final int posY = y * offY + ITEMSTACK_TOP_OFFSET;
+                final int iconX = x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET;
+                final int iconY = y * offY + ITEMSTACK_TOP_OFFSET - 3;
+                final ScheduledReason scheduledReason = this.remainingOperations.getScheduledReason(refStack.getDisplayName());
+                this.drawScheduledReasonIcon(iconX, iconY, this.getScheduledReasonIconIndex(scheduledReason, active));
 
                 final IAEStack<?> is = refStack.copy();
 
