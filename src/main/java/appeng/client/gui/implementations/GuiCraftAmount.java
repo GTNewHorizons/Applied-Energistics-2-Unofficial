@@ -22,8 +22,10 @@ import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.slots.VirtualMESlotSingle;
 import appeng.client.gui.widgets.GuiImgButton;
+import appeng.client.gui.widgets.GuiSimpleImgButton;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.container.interfaces.IVirtualSlotHolder;
+import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
@@ -35,6 +37,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
 
     private GuiImgButton craftingMode;
+    private GuiSimpleImgButton controlButtonValues;
     private final VirtualMESlotSingle slot;
 
     @Reflected
@@ -55,6 +58,13 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
                         this.guiTop + 53,
                         Settings.CRAFTING_MODE,
                         CraftingMode.STANDARD));
+        this.buttonList.add(
+                this.controlButtonValues = new GuiSimpleImgButton(
+                        this.guiLeft - 18,
+                        this.guiTop + 84,
+                        66,
+                        ButtonToolTips.ControlButtonValues.getLocal() + "\n"
+                                + ButtonToolTips.ControlButtonValuesHint.getLocal()));
 
         ((ContainerCraftAmount) this.inventorySlots).setAmountField(this.amountTextField);
         this.registerVirtualSlots(this.slot);

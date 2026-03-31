@@ -234,6 +234,9 @@ public enum ButtonToolTips implements Localization {
     SearchGotoNext,
     SearchGotoPrev,
 
+    ControlButtonValues,
+    ControlButtonValuesHint,
+
     CPUAllowMode,
     CPUAllowAllDesc,
     CPUOnlyAllowPlayerDesc,
