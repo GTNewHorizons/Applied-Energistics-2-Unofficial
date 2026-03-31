@@ -390,6 +390,18 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ActionItems.WRENCH,
                     ButtonToolTips.PartitionStorage,
                     ButtonToolTips.PartitionStorageHint);
+            this.registerApp(
+                    66,
+                    Settings.ACTIONS,
+                    ActionItems.CONTROL_BUTTON_VALUES_OFF,
+                    ButtonToolTips.ControlButtonValues,
+                    ButtonToolTips.ControlButtonValuesHint);
+            this.registerApp(
+                    66,
+                    Settings.ACTIONS,
+                    ActionItems.CONTROL_BUTTON_VALUES_ON,
+                    ButtonToolTips.ControlButtonValues,
+                    ButtonToolTips.ControlButtonValuesHint);
 
             this.registerApp(
                     16 * 6 + 8,

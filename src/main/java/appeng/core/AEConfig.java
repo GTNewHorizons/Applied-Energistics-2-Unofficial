@@ -580,6 +580,29 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         return this.craftByStacks[i];
     }
 
+    public void setCraftItemsByStackAmount(final int index, final int value) {
+        this.setCraftItemsByStackAmount(index, value, true);
+    }
+
+    public void setCraftItemsByStackAmount(final int index, final int value, final boolean saveNow) {
+        if (index < 0 || index >= this.craftByStacks.length) {
+            return;
+        }
+
+        final int buttonCap = (int) (Math.pow(10, index + 1) - 1);
+        final int sanitizedValue = Math.min(Math.abs(value), buttonCap);
+
+        this.craftByStacks[index] = sanitizedValue;
+
+        final Property craftAmountButton = this.get("Client", "craftAmtButton" + (index + 1), sanitizedValue);
+        craftAmountButton.set(sanitizedValue);
+        craftAmountButton.comment = "Controls buttons on Crafting Screen : Capped at " + buttonCap;
+
+        if (saveNow) {
+            this.save();
+        }
+    }
+
     public int priorityByStacksAmounts(final int i) {
         return this.priorityByStacks[i];
     }
