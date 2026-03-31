@@ -26,6 +26,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
@@ -144,14 +145,27 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         }
 
         public void setItemScheduledReasons(NBTTagCompound reasons) {
-            this.itemScheduledReasons = reasons;
+            this.itemScheduledReasons = reasons == null ? new NBTTagCompound() : reasons;
         }
 
-        public ScheduledReason getScheduledReason(String itemKey) {
-            if (this.itemScheduledReasons.hasKey(itemKey)) {
-                int ordinal = this.itemScheduledReasons.getInteger(itemKey);
-                if (ordinal >= 0 && ordinal < ScheduledReason.VALUES.length) {
-                    return ScheduledReason.VALUES[ordinal];
+        public ScheduledReason getScheduledReason(IAEStack<?> stack) {
+            if (stack == null || this.itemScheduledReasons.hasNoTags()) {
+                return null;
+            }
+
+            final IAEStack<?> keyStack = stack.copy();
+            keyStack.setStackSize(1);
+            final String stackType = keyStack.getStackType().getId();
+            final int stackHash = keyStack.hashCode();
+
+            final NBTTagList entries = this.itemScheduledReasons.getTagList("Entries", 10);
+            for (int i = 0; i < entries.tagCount(); i++) {
+                final NBTTagCompound entry = entries.getCompoundTagAt(i);
+                if (stackType.equals(entry.getString("Type")) && stackHash == entry.getInteger("Hash")) {
+                    final int ordinal = entry.getInteger("Reason");
+                    if (ordinal >= 0 && ordinal < ScheduledReason.VALUES.length) {
+                        return ScheduledReason.VALUES[ordinal];
+                    }
                 }
             }
             return null;
@@ -615,8 +629,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     final int endX = startX + (SECTION_LENGTH * 2);
                     final int endY = startY + (offY * 2) - 2;
 
-                    String itemKey = refStack.getDisplayName();
-                    ScheduledReason sr = this.remainingOperations.getScheduledReason(itemKey);
+                    ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
                     int bgColor = this.getCraftingStateColor(sr, active);
 
                     drawRect(startX, startY, endX, endY, bgColor);
@@ -694,8 +707,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 final int posY = y * offY + ITEMSTACK_TOP_OFFSET;
                 final int iconX = x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET;
                 final int iconY = y * offY + ITEMSTACK_TOP_OFFSET - 3;
-                final ScheduledReason scheduledReason = this.remainingOperations
-                        .getScheduledReason(refStack.getDisplayName());
+                final ScheduledReason scheduledReason = this.remainingOperations.getScheduledReason(refStack);
                 this.drawScheduledReasonIcon(iconX, iconY, this.getScheduledReasonIconIndex(scheduledReason, active));
 
                 final IAEStack<?> is = refStack.copy();
@@ -763,7 +775,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             } else {
                 List<NamedDimensionalCoord> blocks = NamedDimensionalCoord.readAsListFromNBTNamed(this.hoveredStackNbt);
 
-                ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack.getDisplayName());
+                ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
                 if (sr != null && sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
 
                 if (blocks.isEmpty()) return;

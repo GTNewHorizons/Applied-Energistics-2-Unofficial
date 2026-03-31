@@ -35,12 +35,7 @@ public class PacketCraftingRemainingOperations extends AppEngPacket {
     }
 
     public PacketCraftingRemainingOperations(int remainingOperations) throws IOException {
-        this.remainingOperations = remainingOperations;
-        this.itemScheduledReasons = new NBTTagCompound();
-        final ByteBuf data = Unpooled.buffer();
-        data.writeInt(this.getPacketID());
-        data.writeInt(remainingOperations);
-        this.configureWrite(data);
+        this(remainingOperations, null);
     }
 
     public PacketCraftingRemainingOperations(int remainingOperations, NBTTagCompound reasons) throws IOException {
@@ -78,8 +73,11 @@ public class PacketCraftingRemainingOperations extends AppEngPacket {
             final ICraftingCPU cpu = selectedCpu.getServerCluster();
             if (cpu instanceof CraftingCPUCluster) {
                 try {
+                    final NBTTagCompound itemReasons = ((CraftingCPUCluster) cpu).getNonUndefinedScheduledReasons();
                     NetworkHandler.instance.sendTo(
-                            new PacketCraftingRemainingOperations(((CraftingCPUCluster) cpu).getRemainingOperations()),
+                            new PacketCraftingRemainingOperations(
+                                    ((CraftingCPUCluster) cpu).getRemainingOperations(),
+                                    itemReasons),
                             (EntityPlayerMP) player);
                 } catch (Exception ignored) {}
             }
