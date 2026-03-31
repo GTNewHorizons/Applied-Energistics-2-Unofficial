@@ -554,12 +554,25 @@ public class GuiInterfaceTerminal extends AEBaseGui
         return lines;
     }
 
+    /**
+     * Extracts the effective Minecraft formatting control codes from a string.
+     *
+     * @param s the source string containing formatting codes (e.g., "§6§lHello§r§cWorld")
+     * @return the sequence of formatting codes that remain active at the end of the string,
+     * accounting for style resets (e.g., "r§c")
+     */
     public static String getControlCodes(String s) {
         String controls = s.replaceAll("(?<!\u00a7)(.)", "");
         String wiped = controls.replaceAll(".*r", "r");
         return wiped;
     }
 
+    /**
+     * Converts a raw character sequence into a string of Minecraft formatting codes.
+     *
+     * @param s the string of raw formatting characters to convert (e.g., "6l")
+     * @return the formatted string with each character prefixed by a section sign (e.g., "§6§l")
+     */
     public static String toControlCodes(String s) {
         return s.replaceAll(".", "\u00a7$0");
     }
