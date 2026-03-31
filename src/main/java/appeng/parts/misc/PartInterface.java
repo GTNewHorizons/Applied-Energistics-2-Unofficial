@@ -28,6 +28,8 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.google.common.collect.ImmutableSet;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
@@ -56,6 +58,7 @@ import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.capabilities.MEItemIO;
 import appeng.client.texture.CableBusTextures;
@@ -252,6 +255,11 @@ public class PartInterface extends PartBasicState
     @Override
     public IMEMonitor<IAEFluidStack> getFluidInventory() {
         return this.duality.getFluidInventory();
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        return this.duality.getMEMonitor(type);
     }
 
     @Override

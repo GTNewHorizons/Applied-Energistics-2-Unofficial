@@ -18,6 +18,9 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.google.common.collect.ImmutableSet;
 
 import appeng.api.AEApi;
@@ -42,6 +45,7 @@ import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.core.sync.GuiBridge;
 import appeng.helpers.DualityInterface;
@@ -386,6 +390,11 @@ public class PartP2PInterface extends PartP2PTunnelStatic<PartP2PInterface>
     @Override
     public IMEMonitor<IAEFluidStack> getFluidInventory() {
         return this.duality.getFluidInventory();
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        return this.duality.getMEMonitor(type);
     }
 
     @Override
