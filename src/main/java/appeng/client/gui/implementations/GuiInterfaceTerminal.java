@@ -1590,12 +1590,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 return false;
             }
 
-            // Calculate the actual title height for click validation
-            int actualTitleHeight = getWrappedTitleHeight(section.name, VIEW_WIDTH - 4);
-
             // Validate options button click
             if (mouseX >= optionsButton.xPosition && mouseX < 2 + optionsButton.width
-                    && mouseY > Math.max(optionsButton.yPosition, actualTitleHeight)
+                    && mouseY > optionsButton.yPosition
                     && mouseY <= Math.min(optionsButton.yPosition + optionsButton.height, viewHeight)) {
                 optionsButton.func_146113_a(mc.getSoundHandler());
 
