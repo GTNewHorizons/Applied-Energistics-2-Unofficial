@@ -558,8 +558,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
      * Extracts the effective Minecraft formatting control codes from a string.
      *
      * @param s the source string containing formatting codes (e.g., "§6§lHello§r§cWorld")
-     * @return the sequence of formatting codes that remain active at the end of the string,
-     * accounting for style resets (e.g., "r§c")
+     * @return the sequence of formatting codes that remain active at the end of the string, accounting for style resets
+     *         (e.g., "r§c")
      */
     public static String getControlCodes(String s) {
         String controls = s.replaceAll("(?<!\u00a7)(.)", "");
