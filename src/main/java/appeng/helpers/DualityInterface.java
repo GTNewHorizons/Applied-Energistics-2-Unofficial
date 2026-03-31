@@ -472,7 +472,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             } else if (((fuzzycards == 1) && (slot) > 5) || ((fuzzycards == 2) && (slot > 2)) || (fuzzycards == 3)) {
                 if ((req.getStackSize() != Stored.stackSize)) {
-                    this.requireWork[slot] = req.copy(); // we won't drift from base for fuzzy match setting
+                    this.requireWork[slot] = AEApi.instance().storage().createItemStack(Stored);
                     this.requireWork[slot].setStackSize(req.getStackSize() - Stored.stackSize);
                     return;
                 }
@@ -641,7 +641,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public IAEItemStack fuzzyPoweredExtraction(final IEnergySource energy, final IMEInventory<IAEItemStack> cell,
-            final IAEItemStack config, final ItemStack currentInStorage, final BaseActionSource src, int iteration) {
+            final IAEItemStack config, final BaseActionSource src, int iteration) {
         Collection<IAEItemStack> fzlist;
         /*
          * This returns a NetworkInventoryHandler object. getSortedFuzzyItems has an Override definition in there.
@@ -656,15 +656,9 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         } else return null;
 
         final Iterator<IAEItemStack> fzIterator = fzlist.iterator();
-        while (fzIterator.hasNext()) {
+        if (fzIterator.hasNext()) {
             final IAEItemStack fuzzyMatch = fzIterator.next();
-            /*
-             * Checks if the fuzzy-matched item can be merged with the ItemStack currently in the storage slot.
-             */
-            if ((fuzzyMatch.isSameType(currentInStorage)) || (currentInStorage == null)) {
-                fuzzyMatch.setStackSize(config.getStackSize());
-            } else continue;
-
+            fuzzyMatch.setStackSize(config.getStackSize());
             return Platform.poweredExtraction(energy, cell, fuzzyMatch, src);
         }
 
@@ -838,16 +832,16 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
                     throw new GridAccessException();
                 }
 
-                if (((fuzzycards == 1) && (x > 5)) || ((fuzzycards == 2) && (x > 2)) || (fuzzycards == 3)) {
+                if (this.storage.getStackInSlot(x) == null && ((fuzzycards == 1) && (x > 5))
+                        || ((fuzzycards == 2) && (x > 2))
+                        || (fuzzycards == 3)) {
                     int iteration = IterationCounter.fetchNewId();
-                    final IAEItemStack fzOut = fuzzyPoweredExtraction(
+                    acquired = fuzzyPoweredExtraction(
                             src,
                             this.destination,
                             itemStack,
-                            this.storage.getStackInSlot(x),
                             this.interfaceRequestSource,
                             iteration);
-                    acquired = fzOut;
                 } else {
                     acquired = Platform
                             .poweredExtraction(src, this.destination, itemStack, this.interfaceRequestSource);
