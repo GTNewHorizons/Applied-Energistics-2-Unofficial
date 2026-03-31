@@ -1625,7 +1625,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             int offsetY = mouseY - dispY - 1;
             int offsetX = mouseX - (VIEW_WIDTH - rowSize * 18) - 1;
             if (offsetX >= 0 && offsetX < (rowSize * 18)
-                    && mouseY > Math.max(dispY, actualTitleHeight)
+                    && mouseY > dispY
                     && offsetY < Math.min(viewHeight - dispY, guiHeight - 1)) {
                 final int col = offsetX / 18;
                 final int row = offsetY / 18;
