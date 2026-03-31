@@ -106,11 +106,11 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     private static final int ITEMSTACK_TOP_OFFSET = 22;
     private static final int ITEMS_PER_ROW = 3;
 
-    private static final int ICON_NO_TARGET = 128;
-    private static final int ICON_LOCK_MODE = 9;
-    private static final int ICON_BLOCK_MODE = 21;
-    private static final int ICON_MISSING_INACTIVE = 6; // 116;
-    private static final int ICON_ACTIVE = 194;
+    private static final int ICON_NO_TARGET = 132;
+    private static final int ICON_LOCK_MODE = 133;
+    private static final int ICON_BLOCK_MODE = 134;
+    private static final int ICON_MISSING_INACTIVE = 135;
+    private static final int ICON_ACTIVE = 136;
 
     private final ContainerCraftingCPU craftingCpu;
 
