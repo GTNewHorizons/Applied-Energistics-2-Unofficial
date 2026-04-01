@@ -403,7 +403,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         this.state = data.readByte() & 0b1111;
         this.type = data.readByte() & 0b11;
         final AEColor oldPaintedColor = this.paintedColor;
-        this.paintedColor = AEColor.values()[data.readByte()];
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
         this.getProxy().setColor(this.paintedColor);
 
         final int item = data.readInt();
@@ -424,7 +424,7 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         this.config.readFromNBT(data);
         this.priority = data.getInteger("priority");
         if (data.hasKey("paintedColor")) {
-            this.paintedColor = AEColor.values()[data.getByte("paintedColor")];
+            this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
             this.getProxy().setColor(this.paintedColor);
         }
         this.typeFilters.readFromNBT(data);

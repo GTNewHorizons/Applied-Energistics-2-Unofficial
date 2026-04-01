@@ -19,6 +19,7 @@ import net.minecraftforge.common.config.Configuration;
 
 import com.google.common.base.Stopwatch;
 
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.client.gui.AEBaseGui;
 import appeng.core.crash.CrashInfo;
 import appeng.core.crash.IntegrationCrashEnhancement;
@@ -175,6 +176,8 @@ public final class AppEng {
     private void init(final FMLInitializationEvent event) {
         final Stopwatch start = Stopwatch.createStarted();
         AELog.info("Initialization ( started )");
+
+        AEStackTypeRegistry.initNetworkIds();
 
         if (this.exportConfig.isExportingItemNamesEnabled()) {
             final ExportProcess process = new ExportProcess(this.recipeDirectory, this.exportConfig);

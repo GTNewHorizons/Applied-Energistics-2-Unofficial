@@ -21,8 +21,8 @@ public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
     private static final float PIN_ICON_OPACITY = 0.4f;
     private static final ResourceLocation TEXTURE = new ResourceLocation(AppEng.MOD_ID, "textures/guis/states.png");
 
-    public VirtualMEPinSlot(int x, int y, IDisplayRepo repo, int slotIndex) {
-        super(x, y, repo, slotIndex);
+    public VirtualMEPinSlot(int x, int y, IDisplayRepo repo, int slotIndex, TypeFilterChecker checker) {
+        super(x, y, repo, slotIndex, checker);
     }
 
     @Override

@@ -10,6 +10,9 @@
 
 package appeng.me.storage;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -17,51 +20,29 @@ import appeng.api.implementations.tiles.ITileStorageMonitorable;
 import appeng.api.networking.security.BaseActionSource;
 import appeng.api.storage.IExternalStorageHandler;
 import appeng.api.storage.IMEInventory;
-import appeng.api.storage.IStorageMonitorable;
-import appeng.api.storage.StorageChannel;
-import appeng.api.storage.data.IAEFluidStack;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.tile.misc.TileCondenser;
 
 public class AEExternalHandler implements IExternalStorageHandler {
 
     @Override
-    public boolean canHandle(final TileEntity te, final ForgeDirection d, final StorageChannel channel,
-            final BaseActionSource mySrc) {
-        if (channel == StorageChannel.ITEMS && te instanceof ITileStorageMonitorable) {
+    public boolean canHandle(TileEntity te, ForgeDirection d, IAEStackType<?> type, BaseActionSource mySrc) {
+        if (te instanceof ITileStorageMonitorable)
             return ((ITileStorageMonitorable) te).getMonitorable(d, mySrc) != null;
-        }
-
-        return te instanceof TileCondenser;
+        else return te instanceof TileCondenser && (type == ITEM_STACK_TYPE || type == FLUID_STACK_TYPE);
     }
 
-    @Override
-    public IMEInventory getInventory(final TileEntity te, final ForgeDirection d, final StorageChannel channel,
-            final BaseActionSource src) {
+    public IMEInventory getInventory(TileEntity te, ForgeDirection d, IAEStackType<?> type, BaseActionSource src) {
         if (te instanceof TileCondenser) {
-            if (channel == StorageChannel.ITEMS) {
+            if (type == ITEM_STACK_TYPE) {
                 return new VoidItemInventory((TileCondenser) te);
-            } else {
+            } else if (type == FLUID_STACK_TYPE) {
                 return new VoidFluidInventory((TileCondenser) te);
             }
         }
 
         if (te instanceof ITileStorageMonitorable iface) {
-            final IStorageMonitorable sm = iface.getMonitorable(d, src);
-
-            if (channel == StorageChannel.ITEMS && sm != null) {
-                final IMEInventory<IAEItemStack> ii = sm.getItemInventory();
-                if (ii != null) {
-                    return ii;
-                }
-            }
-
-            if (channel == StorageChannel.FLUIDS && sm != null) {
-                final IMEInventory<IAEFluidStack> fi = sm.getFluidInventory();
-                if (fi != null) {
-                    return fi;
-                }
-            }
+            return iface.getMonitorable(d, src).getMEMonitor(type);
         }
 
         return null;

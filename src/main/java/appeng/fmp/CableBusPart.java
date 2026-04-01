@@ -74,6 +74,7 @@ import io.netty.buffer.Unpooled;
  */
 public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMaskedRedstonePart, AEMultiTile {
 
+    private static final ForgeDirection[] FORGE_DIRECTIONS = ForgeDirection.values();
     private static final ThreadLocal<Boolean> DISABLE_FACADE_OCCLUSION = new ThreadLocal<>();
     private static final double SHORTER = 6.0 / 16.0;
     private static final double LONGER = 10.0 / 16.0;
@@ -340,7 +341,7 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
                     null,
                     true);
 
-            for (final ForgeDirection whichSide : ForgeDirection.values()) {
+            for (final ForgeDirection whichSide : FORGE_DIRECTIONS) {
                 final IPart fPart = this.getPart(whichSide);
 
                 if (fPart != null) {
@@ -398,7 +399,7 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
     public int getSlotMask() {
         int mask = 0;
 
-        for (final ForgeDirection side : ForgeDirection.values()) {
+        for (final ForgeDirection side : FORGE_DIRECTIONS) {
             if (this.getPart(side) != null) {
                 mask |= 1 << side.ordinal();
             } else if (side != ForgeDirection.UNKNOWN && this.getFacadeContainer().getFacade(side) != null) {

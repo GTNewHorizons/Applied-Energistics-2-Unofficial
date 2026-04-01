@@ -42,7 +42,7 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileCraftingMonitorTile(final ByteBuf data) throws IOException {
         final AEColor oldPaintedColor = this.paintedColor;
-        this.paintedColor = AEColor.values()[data.readByte()];
+        this.paintedColor = AEColor.fromOrdinal(data.readByte());
 
         final boolean hasItem = data.readBoolean();
 
@@ -71,7 +71,7 @@ public class TileCraftingMonitorTile extends TileCraftingTile implements IColora
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileCraftingMonitorTile(final NBTTagCompound data) {
         if (data.hasKey("paintedColor")) {
-            this.paintedColor = AEColor.values()[data.getByte("paintedColor")];
+            this.paintedColor = AEColor.fromOrdinal(data.getByte("paintedColor"));
         }
     }
 

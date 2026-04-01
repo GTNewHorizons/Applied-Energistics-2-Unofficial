@@ -10,6 +10,8 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -105,6 +107,10 @@ public class GuiMEMonitorable extends AEBaseGui
 
     public static int craftingGridOffsetX;
     public static int craftingGridOffsetY;
+
+    // Keybind use can be keyboard or mouse, both redirect to this.handleVirtualSlotClick
+    // if key/mouseButton == this.mc.gameSettings.keyBindPickBlock.getKeyCode()
+    public static final int keyBindPickBlockAction = 1_000_101;
 
     private static String memoryText = "";
     private final IDisplayRepo repo;
@@ -298,6 +304,10 @@ public class GuiMEMonitorable extends AEBaseGui
         MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Post(this, this.buttonList));
     }
 
+    private boolean checkTypeFilter(IAEStackType<?> type) {
+        return this.typeFilters == null || this.typeFilters.getBoolean(type);
+    }
+
     @Override
     public void initGui() {
         Keyboard.enableRepeatEvents(true);
@@ -319,7 +329,8 @@ public class GuiMEMonitorable extends AEBaseGui
                         this.offsetRepoX + x * 18,
                         y * 18 + this.offsetRepoY,
                         this.repo,
-                        y * this.perRow + x);
+                        y * this.perRow + x,
+                        this::checkTypeFilter);
                 this.pinSlots[y * this.perRow + x] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -333,7 +344,8 @@ public class GuiMEMonitorable extends AEBaseGui
                         this.offsetRepoX + x * 18,
                         this.offsetRepoY + y * 18 + pinsRows * 18,
                         this.repo,
-                        y * this.perRow + x);
+                        y * this.perRow + x,
+                        this::checkTypeFilter);
                 this.monitorableSlots[y * this.perRow + x] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -615,18 +627,27 @@ public class GuiMEMonitorable extends AEBaseGui
 
         final boolean isLShiftDown = isShiftKeyDown();
         final boolean isLControlDown = isCtrlKeyDown();
+        final boolean nonItemInteraction = isLControlDown
+                || (this.typeFilters != null && !this.typeFilters.getBoolean(ITEM_STACK_TYPE));
 
         switch (mouseButton) {
             case 0 -> { // left click
                 if (slot instanceof VirtualMEPinSlot && player.inventory.getItemStack() != null) {
-                    this.sendAction(
-                            isLControlDown ? MonitorableAction.SET_CONTAINER_PIN : MonitorableAction.SET_ITEM_PIN,
-                            null,
-                            slot.getSlotIndex());
-                    return true;
+                    IAEStack<?> stackInSlot = slot.getAEStack();
+
+                    // Skip if it can be inserted into the container held in hand
+                    if (!isLControlDown || stackInSlot == null
+                            || !stackInSlot.getStackType().isContainerItemForType(player.inventory.getItemStack())) {
+                        this.sendAction(
+                                nonItemInteraction ? MonitorableAction.SET_CONTAINER_PIN
+                                        : MonitorableAction.SET_ITEM_PIN,
+                                null,
+                                slot.getSlotIndex());
+                        return true;
+                    }
                 }
 
-                if (isLControlDown) {
+                if (nonItemInteraction) {
                     this.sendAction(
                             isLShiftDown ? MonitorableAction.FILL_CONTAINERS : MonitorableAction.FILL_SINGLE_CONTAINER,
                             slot.getAEStack(),
@@ -649,24 +670,30 @@ public class GuiMEMonitorable extends AEBaseGui
             }
             case 1 -> { // right click
                 if (slot instanceof VirtualMEPinSlot) {
-                    if (isLShiftDown) {
+                    if (isLShiftDown && player.inventory.getItemStack() == null) {
                         this.sendAction(MonitorableAction.UNSET_PIN, null, slot.getSlotIndex());
                         return true;
                     }
 
                     if (player.inventory.getItemStack() != null) {
-                        this.sendAction(
-                                isLControlDown ? MonitorableAction.SET_CONTAINER_PIN : MonitorableAction.SET_ITEM_PIN,
-                                null,
-                                slot.getSlotIndex());
-                        return true;
-                    }
+                        IAEStack<?> stackInSlot = slot.getAEStack();
 
-                    this.sendAction(MonitorableAction.SPLIT_OR_PLACE_SINGLE, slotStack, -1);
-                    return true;
+                        // Skip if the stack in slot matches the stack in the container held in hand
+                        if (!isLControlDown || stackInSlot == null
+                                || !stackInSlot.equals(
+                                        stackInSlot.getStackType()
+                                                .getStackFromContainerItem(player.inventory.getItemStack()))) {
+                            this.sendAction(
+                                    nonItemInteraction ? MonitorableAction.SET_CONTAINER_PIN
+                                            : MonitorableAction.SET_ITEM_PIN,
+                                    null,
+                                    slot.getSlotIndex());
+                            return true;
+                        }
+                    }
                 }
 
-                if (isLControlDown) {
+                if (nonItemInteraction) {
                     this.sendAction(
                             isLShiftDown ? MonitorableAction.DRAIN_CONTAINERS
                                     : MonitorableAction.DRAIN_SINGLE_CONTAINER,
@@ -683,7 +710,7 @@ public class GuiMEMonitorable extends AEBaseGui
                 this.sendAction(MonitorableAction.SPLIT_OR_PLACE_SINGLE, slotStack, -1);
                 return true;
             }
-            case 2 -> { // middle click
+            case keyBindPickBlockAction -> {
                 if (slot.getAEStack() != null && slot.getAEStack().isCraftable()) {
                     this.sendAction(MonitorableAction.AUTO_CRAFT, slot.getAEStack(), -1);
                     return true;
@@ -761,7 +788,7 @@ public class GuiMEMonitorable extends AEBaseGui
         this.drawTexturedModalRect(offsetX, offsetY, 0, 0, x_width, 18);
 
         if (this.viewCell || (this instanceof GuiSecurity)) {
-            this.drawTexturedModalRect(offsetX + x_width, offsetY, x_width, 0, 46, 128);
+            this.drawTexturedModalRect(offsetX + x_width, offsetY, x_width, 0, 47, 128);
         }
 
         for (int x = 0; x < this.rows; x++) {
@@ -814,6 +841,12 @@ public class GuiMEMonitorable extends AEBaseGui
 
     @Override
     protected void keyTyped(final char character, final int key) {
+        if (!searchField.isFocused() && (!NEI.searchField.existsSearchField() || !NEI.searchField.focused())
+                && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {
+            searchField.setFocused(true);
+            return;
+        }
+
         if (NEI.searchField.existsSearchField()) {
             if ((NEI.searchField.focused() || searchField.isFocused())
                     && CommonHelper.proxy.isActionKey(ActionKey.TOGGLE_FOCUS, key)) {

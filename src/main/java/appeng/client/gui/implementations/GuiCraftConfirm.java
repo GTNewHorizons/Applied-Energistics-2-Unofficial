@@ -287,9 +287,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
             public void onTextChange(String oldText) {
                 super.onTextChange(oldText);
                 switch (displayMode) {
-                    case LIST -> {
-                        updateFilteredList();
-                    }
+                    case LIST -> updateFilteredList();
                     case TREE -> craftingTree.updateSearchGoToList(this.getText().toLowerCase());
                 }
             }
@@ -314,6 +312,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
                 10,
                 "↓",
                 ButtonToolTips.SearchGotoNext.getLocal());
+        this.cpuTable.addButtons(this.buttonList, this.guiLeft, this.guiTop);
 
         if (displayMode == DisplayMode.TREE) {
             this.buttonList.add(this.findPrev);
@@ -938,6 +937,9 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
         super.actionPerformed(btn);
 
         final boolean backwards = Mouse.isButtonDown(1);
+        if (cpuTable.actionPerformed(btn, backwards)) {
+            return;
+        }
 
         if (btn == this.selectCPU) {
             cpuTable.cycleCPU(backwards);

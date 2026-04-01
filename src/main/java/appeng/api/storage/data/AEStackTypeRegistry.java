@@ -10,9 +10,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jetbrains.annotations.ApiStatus;
+
+import it.unimi.dsi.fastutil.bytes.Byte2ReferenceMap;
+import it.unimi.dsi.fastutil.bytes.Byte2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ByteMap;
+import it.unimi.dsi.fastutil.objects.Reference2ByteOpenHashMap;
+
 public class AEStackTypeRegistry {
 
+    public static final byte NULL_NETWORK_ID = 0;
+    private static final int MINIMUM_NETWORK_ID = 1;
     private static final Map<String, IAEStackType<?>> registry = new HashMap<>();
+    private static final Reference2ByteMap<IAEStackType<?>> typeToNetworkIdMap = new Reference2ByteOpenHashMap<>();
+    private static final Byte2ReferenceMap<IAEStackType<?>> networkIdToTypeMap = new Byte2ReferenceOpenHashMap<>();
 
     static {
         register(ITEM_STACK_TYPE);
@@ -31,8 +42,32 @@ public class AEStackTypeRegistry {
         registry.put(type.getId(), type);
     }
 
+    @ApiStatus.Internal
+    public static void initNetworkIds() {
+        byte id = MINIMUM_NETWORK_ID;
+        for (IAEStackType<?> type : getSortedTypes()) {
+            typeToNetworkIdMap.put(type, id);
+            networkIdToTypeMap.put(id, type);
+            id++;
+        }
+    }
+
+    public static byte getNetworkId(IAEStackType<?> type) {
+        byte id = typeToNetworkIdMap.getByte(type);
+        if (id < MINIMUM_NETWORK_ID) {
+            throw new IllegalStateException(
+                    "Cannot get network id for stack type " + type.getId()
+                            + " because it is not registered or not initialized yet.");
+        }
+        return id;
+    }
+
     public static IAEStackType<?> getType(String id) {
         return registry.get(id);
+    }
+
+    public static IAEStackType<?> getTypeFromNetworkId(byte id) {
+        return networkIdToTypeMap.get(id);
     }
 
     public static Collection<IAEStackType<?>> getAllTypes() {

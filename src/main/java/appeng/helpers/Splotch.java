@@ -54,7 +54,7 @@ public class Splotch {
         final int val = data.readByte();
 
         this.side = ForgeDirection.getOrientation(val & 0x07);
-        this.color = AEColor.values()[(val >> 3) & 0x0F];
+        this.color = AEColor.fromOrdinal((val >> 3) & 0x0F);
         this.lumen = ((val >> 7) & 0x01) > 0;
     }
 

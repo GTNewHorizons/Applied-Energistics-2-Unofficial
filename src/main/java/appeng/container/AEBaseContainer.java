@@ -863,11 +863,12 @@ public abstract class AEBaseContainer extends Container {
     protected void updateHeld(final EntityPlayerMP p) {
         if (Platform.isServer()) {
             try {
+                ItemStack hand = p.inventory.getItemStack();
                 NetworkHandler.instance.sendTo(
                         new PacketInventoryAction(
                                 InventoryAction.UPDATE_HAND,
                                 0,
-                                AEItemStack.create(p.inventory.getItemStack())),
+                                hand != null && hand.stackSize > 0 ? AEItemStack.create(hand) : null),
                         p);
             } catch (final IOException e) {
                 AELog.debug(e);
