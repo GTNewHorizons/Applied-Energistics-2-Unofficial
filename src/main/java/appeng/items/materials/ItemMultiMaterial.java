@@ -64,6 +64,8 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
     public static ItemMultiMaterial instance;
 
     private static final int KILO_SCALAR = 1024;
+    private static final Pattern ESSENTIA_CELL_TIERED_NAME = Pattern
+            .compile("^(?:§.)*\\d+k\\s+ME\\s+Essentia\\s+Storage\\s+Cell$", Pattern.CASE_INSENSITIVE);
 
     private final Map<Integer, MaterialType> dmgToMaterial = new HashMap<>();
     private final NameResolver nameResolver;
@@ -101,12 +103,14 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
                 if (j.getKey().getItem() instanceof IItemGroup ig) {
                     final String str = ig.getUnlocalizedGroupName(u.getSupported().keySet(), j.getKey());
                     if (str != null) {
-                        name = Platform.gui_localize(str) + (limit > 1 ? " (" + limit + ')' : "");
+                        name = this.normalizeUpgradeTooltipName(Platform.gui_localize(str))
+                                + (limit > 1 ? " (" + limit + ')' : "");
                     }
                 }
 
                 if (name == null) {
-                    name = j.getKey().getDisplayName() + (limit > 1 ? " (" + limit + ')' : "");
+                    name = this.normalizeUpgradeTooltipName(j.getKey().getDisplayName())
+                            + (limit > 1 ? " (" + limit + ')' : "");
                 }
 
                 if (!textList.contains(name)) {
@@ -376,6 +380,17 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
             default -> {}
         }
         return false;
+    }
+
+    private String normalizeUpgradeTooltipName(final String name) {
+        if (name != null && ESSENTIA_CELL_TIERED_NAME.matcher(stripMinecraftFormatting(name)).matches()) {
+            return "ME Essentia Storage Cell";
+        }
+        return name;
+    }
+
+    private static String stripMinecraftFormatting(final String text) {
+        return text.replaceAll("(?i)§[0-9A-FK-OR]", "");
     }
 
     private static class SlightlyBetterSort implements Comparator<String> {
