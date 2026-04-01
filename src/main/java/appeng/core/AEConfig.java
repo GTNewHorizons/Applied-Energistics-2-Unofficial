@@ -365,7 +365,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
             final Property pmb = this.get("Client", "priorityAmtButton" + (btnNum + 1), this.priorityByStacks[btnNum]);
             final Property lmb = this.get("Client", "levelAmtButton" + (btnNum + 1), this.levelByStacks[btnNum]);
 
-            final int buttonCap = (int) (Math.pow(10, btnNum + 1) - 1);
+            final int buttonCap = this.getAmountButtonCap(btnNum);
 
             this.craftByStacks[btnNum] = Math.abs(cmb.getInt(this.craftByStacks[btnNum]));
             this.priorityByStacks[btnNum] = Math.abs(pmb.getInt(this.priorityByStacks[btnNum]));
@@ -589,18 +589,22 @@ public final class AEConfig extends Configuration implements IConfigurableObject
             return;
         }
 
-        final int buttonCap = (int) (Math.pow(10, index + 1) - 1);
+        final int buttonCap = this.getAmountButtonCap(index);
         final int sanitizedValue = Math.min(Math.abs(value), buttonCap);
 
         this.craftByStacks[index] = sanitizedValue;
 
-        final Property craftAmountButton = this.get("Client", "craftAmtButton" + (index + 1), sanitizedValue);
+        final Property craftAmountButton = this
+                .get("Client", "craftAmtButton" + (index + 1), this.craftByStacks[index]);
         craftAmountButton.set(sanitizedValue);
-        craftAmountButton.comment = "Controls buttons on Crafting Screen : Capped at " + buttonCap;
 
         if (saveNow) {
             this.save();
         }
+    }
+
+    private int getAmountButtonCap(final int index) {
+        return (int) (Math.pow(10, index + 1) - 1);
     }
 
     public int priorityByStacksAmounts(final int i) {
