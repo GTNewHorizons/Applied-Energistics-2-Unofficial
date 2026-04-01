@@ -395,6 +395,8 @@ gui.appliedenergistics2.NumberOfFluids=Number of fluids
 gui.appliedenergistics2.ItemsPerByte=Items per byte:
 gui.appliedenergistics2.FluidsPerByte=Fluids per byte:
 gui.appliedenergistics2.BytesPerType=Bytes per type:
+gui.appliedenergistics2.ControlButtonValuesDesc1=Set custom amount step values
+gui.appliedenergistics2.ControlButtonValuesDesc2=Negative buttons are mirrored
 gui.appliedenergistics2.SelectColor=Select a Color
 gui.appliedenergistics2.Selected=Selected
 
@@ -628,7 +630,7 @@ gui.tooltips.appliedenergistics2.CellRestrictionHint=Setup Cell Restriction
 gui.tooltips.appliedenergistics2.SearchGotoNext=Find next
 gui.tooltips.appliedenergistics2.SearchGotoPrev=Find prev
 gui.tooltips.appliedenergistics2.ControlButtonValues=Control button values
-gui.tooltips.appliedenergistics2.ControlButtonValuesHint=Configures the value of corresponding buttons.\nClick this button after adjusting to confirm the values.
+gui.tooltips.appliedenergistics2.ControlButtonValuesHint=Configures the value of corresponding buttons.
 
 gui.tooltips.appliedenergistics2.CPUAllowMode=Crafting requests limitation
 gui.tooltips.appliedenergistics2.CPUAllowAllDesc=Allow all crafting requests

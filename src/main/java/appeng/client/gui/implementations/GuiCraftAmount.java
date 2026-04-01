@@ -50,6 +50,7 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
 
     private GuiImgButton craftingMode;
     private GuiImgButton controlButtonValues;
+    private GuiButton applyControlValuesButton;
     private final MEGuiTextField[] controlValueFields = new MEGuiTextField[4];
     private boolean isControlButtonPressed;
     private final VirtualMESlotSingle slot;
@@ -77,22 +78,15 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
                         this.guiLeft - 18,
                         this.guiTop + 84,
                         Settings.ACTIONS,
-                        ActionItems.CONTROL_BUTTON_VALUES_OFF) {
-
-                    @Override
-                    public void drawButton(final net.minecraft.client.Minecraft mc, final int mouseX,
-                            final int mouseY) {
-                        super.drawButton(mc, mouseX, mouseY);
-                        if (this.visible && GuiCraftAmount.this.isControlButtonPressed) {
-                            drawRect(
-                                    this.xPosition,
-                                    this.yPosition,
-                                    this.xPosition + this.getWidth(),
-                                    this.yPosition + this.getHeight(),
-                                    GuiColors.ColorSelectBtnOverlayDisabled.getColor());
-                        }
-                    }
-                });
+                        ActionItems.CONTROL_BUTTON_VALUES_OFF));
+        this.buttonList.add(
+                this.applyControlValuesButton = new GuiButton(
+                        0,
+                        this.guiLeft + 128,
+                        this.guiTop + 77,
+                        38,
+                        20,
+                        GuiText.Set.getLocal()));
         this.initializeControlValueFields();
         this.setControlButtonPressed(false);
 
@@ -104,12 +98,28 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.fontRendererObj
                 .drawString(GuiText.SelectAmount.getLocal(), 8, 6, GuiColors.CraftAmountSelectAmount.getColor());
+        if (this.isControlButtonPressed) {
+            this.fontRendererObj.drawString(
+                    GuiText.ControlButtonValuesDesc1.getLocal(),
+                    8,
+                    47,
+                    GuiColors.CraftAmountSelectAmount.getColor());
+            this.fontRendererObj.drawString(
+                    GuiText.ControlButtonValuesDesc2.getLocal(),
+                    8,
+                    59,
+                    GuiColors.CraftAmountSelectAmount.getColor());
+        }
     }
 
     @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
 
         super.drawBG(offsetX, offsetY, mouseX, mouseY);
+
+        if (this.isControlButtonPressed) {
+            this.drawEditModeBackgroundFill(offsetX, offsetY);
+        }
 
         // Only display the word "Start" if either Ctrl OR Shift is held not both
         if (isShiftKeyDown() && !isCtrlKeyDown()) {
@@ -129,7 +139,9 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
             this.nextBtn.enabled = false;
         }
 
-        this.amountTextField.drawTextBox();
+        if (!this.isControlButtonPressed) {
+            this.amountTextField.drawTextBox();
+        }
         if (this.isControlButtonPressed) {
             this.drawControlValueFieldBackgrounds();
             for (final MEGuiTextField field : this.controlValueFields) {
@@ -142,6 +154,10 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
     protected void actionPerformed(final GuiButton btn) {
         if (btn == this.controlButtonValues) {
             this.toggleControlButtonPressed();
+            return;
+        }
+        if (btn == this.applyControlValuesButton) {
+            this.applyControlValuesAndExitEditMode();
             return;
         }
 
@@ -203,18 +219,26 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
 
     private void toggleControlButtonPressed() {
         if (this.isControlButtonPressed) {
-            this.saveControlValueFields();
-            this.refreshAmountButtons();
-            this.syncControlValueFieldsFromConfig();
+            this.applyControlValuesAndExitEditMode();
+            return;
         }
 
-        this.setControlButtonPressed(!this.isControlButtonPressed);
+        this.setControlButtonPressed(true);
     }
 
     private void setControlButtonPressed(final boolean pressed) {
         this.isControlButtonPressed = pressed;
         this.controlButtonValues
                 .set(pressed ? ActionItems.CONTROL_BUTTON_VALUES_ON : ActionItems.CONTROL_BUTTON_VALUES_OFF);
+        this.controlButtonValues.visible = !pressed;
+        this.controlButtonValues.enabled = !pressed;
+        this.craftingMode.visible = !pressed;
+        this.craftingMode.enabled = !pressed;
+        this.nextBtn.visible = !pressed;
+        this.nextBtn.enabled = !pressed;
+        this.applyControlValuesButton.visible = pressed;
+        this.applyControlValuesButton.enabled = pressed;
+        this.slot.setHidden(pressed);
         if (pressed) {
             this.amountTextField.setFocused(false);
         } else {
@@ -237,17 +261,29 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
         this.plus100.enabled = visible;
         this.plus1000.visible = visible;
         this.plus1000.enabled = visible;
-        this.minus1.visible = true;
-        this.minus1.enabled = true;
-        this.minus10.visible = true;
-        this.minus10.enabled = true;
-        this.minus100.visible = true;
-        this.minus100.enabled = true;
-        this.minus1000.visible = true;
-        this.minus1000.enabled = true;
+        this.minus1.visible = visible;
+        this.minus1.enabled = visible;
+        this.minus10.visible = visible;
+        this.minus10.enabled = visible;
+        this.minus100.visible = visible;
+        this.minus100.enabled = visible;
+        this.minus1000.visible = visible;
+        this.minus1000.enabled = visible;
+    }
+
+    private void applyControlValuesAndExitEditMode() {
+        this.saveControlValueFields();
+        this.refreshAmountButtons();
+        this.syncControlValueFieldsFromConfig();
+        this.setControlButtonPressed(false);
     }
 
     private boolean handleControlValueFieldInput(final char character, final int key) {
+        if (key == Keyboard.KEY_RETURN || key == Keyboard.KEY_NUMPADENTER) {
+            this.applyControlValuesAndExitEditMode();
+            return true;
+        }
+
         if (key == Keyboard.KEY_TAB) {
             this.focusNextControlField();
             return true;
@@ -331,6 +367,15 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
                     CONTROL_BAR_V,
                     1,
                     CONTROL_BAR_H);
+        }
+    }
+
+    private void drawEditModeBackgroundFill(final int offsetX, final int offsetY) {
+        this.bindTexture(getBackground());
+        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        // Extend the 1px line y=51 downward by 19px to hide old widgets in edit mode
+        for (int dy = 0; dy < 19; dy++) {
+            this.drawTexturedModalRect(offsetX + 33, offsetY + 51 + dy, 33, 51, 88, 1);
         }
     }
 
