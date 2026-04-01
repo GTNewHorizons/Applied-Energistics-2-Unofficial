@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -228,9 +229,17 @@ public class ItemRepo implements IDisplayRepo {
         if (!this.searchString.trim().isEmpty()) {
             if (NEI.searchField.existsSearchField()) {
                 final Predicate<ItemStack> neiFilter = NEI.searchField.getFilter(this.searchString);
+                final AtomicReference<Predicate<IAEStack<?>>> altFilter = new AtomicReference<>();
+
                 itemFilter = is -> {
                     ItemStack stack = is.getItemStackForNEI();
-                    return stack != null && neiFilter.test(stack);
+
+                    if (stack == null) {
+                        if (altFilter.get() == null) altFilter.set(getFilter(this.searchString));
+                        return altFilter.get().test(is);
+                    }
+
+                    return neiFilter.test(stack);
                 };
             } else {
                 itemFilter = getFilter(this.searchString);
