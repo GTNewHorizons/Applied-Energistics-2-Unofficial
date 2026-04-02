@@ -105,10 +105,6 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean pinCraftingSectionFirst = false;
     /** Which pin section is shown first (derived from pinCraftingSectionFirst). */
     public PinSectionOrder pinSectionOrder = PinSectionOrder.PLAYER_FIRST;
-    /** Crafting pin slot background color. Default orange tint. */
-    public int craftingPinSlotColor = 0x38E6731A;
-    /** Player pin slot background color. 0 = no tint. */
-    public int playerPinSlotColor = 0x00000000;
 
     public boolean debugLogTiming = false;
     public boolean debugPathFinding = false;
@@ -389,14 +385,6 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.pinCraftingSectionFirst = pOrder.getBoolean(this.pinCraftingSectionFirst);
         this.pinSectionOrder = this.pinCraftingSectionFirst ? PinSectionOrder.CRAFTING_FIRST
                 : PinSectionOrder.PLAYER_FIRST;
-        Property pCraftColor = this.get("Client", "craftingPinSlotColor", "0x38E6731A");
-        pCraftColor.comment = "Crafting pin slot background color. ARGB format (e.g. 0x38E6731A). Alpha in high byte.";
-        this.craftingPinSlotColor = parseColor(pCraftColor.getString(), this.craftingPinSlotColor);
-        pCraftColor.set(String.format("0x%08X", this.craftingPinSlotColor));
-        Property pPlayerColor = this.get("Client", "playerPinSlotColor", "0x00000000");
-        pPlayerColor.comment = "Player pin slot background color. ARGB format. 0 = no tint.";
-        this.playerPinSlotColor = parseColor(pPlayerColor.getString(), this.playerPinSlotColor);
-        pPlayerColor.set(String.format("0x%08X", this.playerPinSlotColor));
 
         // load buttons..
         for (int btnNum = 0; btnNum < 4; btnNum++) {
@@ -456,17 +444,6 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         return comment.toString();
     }
 
-    private static int parseColor(String hex, int defaultColor) {
-        if (hex == null || hex.isEmpty()) return defaultColor;
-        String s = hex.trim().toLowerCase();
-        if (s.startsWith("0x")) s = s.substring(2);
-        try {
-            return (int) Long.parseLong(s, 16);
-        } catch (NumberFormatException e) {
-            return defaultColor;
-        }
-    }
-
     public boolean isFeatureEnabled(final AEFeature f) {
         return this.featureFlags.contains(f);
     }
@@ -520,9 +497,6 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 
         this.get("Client", "PowerUnit", this.selectedPowerUnit.name(), this.getListComment(this.selectedPowerUnit))
                 .set(this.selectedPowerUnit.name());
-        this.get("Client", "craftingPinSlotColor", "0x38E6731A")
-                .set(String.format("0x%08X", this.craftingPinSlotColor));
-        this.get("Client", "playerPinSlotColor", "0x00000000").set(String.format("0x%08X", this.playerPinSlotColor));
 
         if (this.hasChanged()) {
             super.save();

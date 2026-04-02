@@ -198,7 +198,7 @@ public class ItemRepo implements IDisplayRepo {
             for (int i = this.view.size() - 1; i >= 0; i--) {
                 IAEStack<?> entry = this.view.get(i);
                 IAEStack<?> serverEntry = this.list.findPrecise(entry);
-                IAEStack<?> pinsEntry = visiblePins.findPrecise(serverEntry != null ? serverEntry : entry);
+                IAEStack<?> pinsEntry = visiblePins.findPrecise(entry);
                 if (serverEntry == null || pinsEntry != null) {
                     this.view.remove(i);
                 } else {

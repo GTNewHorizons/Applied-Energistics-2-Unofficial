@@ -31,6 +31,7 @@ public enum GuiColors implements Localization {
     InterfaceTerminalMatch(0x2A00FF00),
 
     CraftingPinSlotBackground(0x38E6731A),
+    PlayerPinSlotBackground(0x00000000),
 
     // RGB Colors: Name and default value
     SearchboxText(0xFFFFFF),

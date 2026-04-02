@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
@@ -265,7 +266,7 @@ public class GuiMEMonitorable extends AEBaseGui
         } else if (btn == this.pinsStateButton) {
             try {
                 boolean rmb = Mouse.isButtonDown(1);
-                boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+                boolean ctrl = GuiScreen.isCtrlKeyDown();
                 int maxC = AEConfig.instance.maxCraftingPinRows;
                 int maxP = AEConfig.instance.maxPlayerPinRows;
                 int c = Math.min(craftingPinsRows.ordinal(), maxC);

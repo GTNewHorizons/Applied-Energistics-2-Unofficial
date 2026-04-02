@@ -12,8 +12,8 @@ import org.lwjgl.opengl.GL11;
 
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IDisplayRepo;
-import appeng.core.AEConfig;
 import appeng.core.AppEng;
+import appeng.core.localization.GuiColors;
 
 public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
 
@@ -27,13 +27,15 @@ public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
 
     private final boolean isCraftingSlot;
 
-    public VirtualMEPinSlot(int x, int y, IDisplayRepo repo, int slotIndex, TypeFilterChecker checker, boolean isCraftingSlot) {
-        super(x, y, repo, slotIndex);
+    public VirtualMEPinSlot(int x, int y, IDisplayRepo repo, int slotIndex, TypeFilterChecker checker,
+            boolean isCraftingSlot) {
+        super(x, y, repo, slotIndex, checker);
         this.isCraftingSlot = isCraftingSlot;
     }
 
     public boolean isCraftingSlot() {
         return isCraftingSlot;
+    }
 
     @Override
     public @Nullable IAEStack<?> getAEStack() {
@@ -44,8 +46,8 @@ public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
      * Draw tinted backgrounds for pin slots. Use config colors (ARGB); 0 for no tint.
      */
     public static void drawSlotsBackground(VirtualMEPinSlot[] slots, Minecraft mc, float z) {
-        final int craftingColor = AEConfig.instance.craftingPinSlotColor;
-        final int playerColor = AEConfig.instance.playerPinSlotColor;
+        final int craftingColor = GuiColors.CraftingPinSlotBackground.getColor();
+        final int playerColor = GuiColors.PlayerPinSlotBackground.getColor();
         final Tessellator tessellator = Tessellator.instance;
 
         for (VirtualMEPinSlot slot : slots) {
