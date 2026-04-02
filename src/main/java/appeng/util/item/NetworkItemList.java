@@ -245,7 +245,12 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
 
     @Override
     public Collection<T> findFuzzy(final T input, final FuzzyMode fuzzy) {
-        return buildFinalItemList().findFuzzy(input, fuzzy);
+        final IAEStackType<T> stackType = getStackType();
+        if (stackType == null) {
+            return Collections.emptyList();
+        }
+
+        return buildFinalItemList(stackType.createList()).findFuzzy(input, fuzzy);
     }
 
     @Override
