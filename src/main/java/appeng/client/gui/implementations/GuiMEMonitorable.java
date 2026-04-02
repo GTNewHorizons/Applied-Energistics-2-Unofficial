@@ -10,6 +10,8 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -307,6 +309,7 @@ public class GuiMEMonitorable extends AEBaseGui
                         (rowOffset + y) * 18 + this.offsetRepoY,
                         this.repo,
                         baseIndex + y * pinsPerRow + x,
+                        this::checkTypeFilter,
                         isCrafting);
                 this.pinSlots[slotIdx++] = slot;
                 this.registerVirtualSlots(slot);
@@ -343,6 +346,10 @@ public class GuiMEMonitorable extends AEBaseGui
             this.initGui();
         }
         MinecraftForge.EVENT_BUS.post(new InitGuiEvent.Post(this, this.buttonList));
+    }
+
+    private boolean checkTypeFilter(IAEStackType<?> type) {
+        return this.typeFilters == null || this.typeFilters.getBoolean(type);
     }
 
     @Override
@@ -391,7 +398,8 @@ public class GuiMEMonitorable extends AEBaseGui
                         this.offsetRepoX + x * 18,
                         this.offsetRepoY + y * 18 + pinsRows * 18,
                         this.repo,
-                        y * this.perRow + x);
+                        y * this.perRow + x,
+                        this::checkTypeFilter);
                 this.monitorableSlots[y * this.perRow + x] = slot;
                 this.registerVirtualSlots(slot);
             }
@@ -676,6 +684,8 @@ public class GuiMEMonitorable extends AEBaseGui
 
         final boolean isLShiftDown = isShiftKeyDown();
         final boolean isLControlDown = isCtrlKeyDown();
+        final boolean nonItemInteraction = isLControlDown
+                || (this.typeFilters != null && !this.typeFilters.getBoolean(ITEM_STACK_TYPE));
 
         switch (mouseButton) {
             case 0 -> { // left click
@@ -686,14 +696,15 @@ public class GuiMEMonitorable extends AEBaseGui
                     if (!isLControlDown || stackInSlot == null
                             || !stackInSlot.getStackType().isContainerItemForType(player.inventory.getItemStack())) {
                         this.sendAction(
-                                isLControlDown ? MonitorableAction.SET_CONTAINER_PIN : MonitorableAction.SET_ITEM_PIN,
+                                nonItemInteraction ? MonitorableAction.SET_CONTAINER_PIN
+                                        : MonitorableAction.SET_ITEM_PIN,
                                 null,
                                 slot.getSlotIndex());
                         return true;
                     }
                 }
 
-                if (isLControlDown) {
+                if (nonItemInteraction) {
                     this.sendAction(
                             isLShiftDown ? MonitorableAction.FILL_CONTAINERS : MonitorableAction.FILL_SINGLE_CONTAINER,
                             slot.getAEStack(),
@@ -730,7 +741,7 @@ public class GuiMEMonitorable extends AEBaseGui
                                         stackInSlot.getStackType()
                                                 .getStackFromContainerItem(player.inventory.getItemStack()))) {
                             this.sendAction(
-                                    isLControlDown ? MonitorableAction.SET_CONTAINER_PIN
+                                    nonItemInteraction ? MonitorableAction.SET_CONTAINER_PIN
                                             : MonitorableAction.SET_ITEM_PIN,
                                     null,
                                     slot.getSlotIndex());
@@ -739,7 +750,7 @@ public class GuiMEMonitorable extends AEBaseGui
                     }
                 }
 
-                if (isLControlDown) {
+                if (nonItemInteraction) {
                     this.sendAction(
                             isLShiftDown ? MonitorableAction.DRAIN_CONTAINERS
                                     : MonitorableAction.DRAIN_SINGLE_CONTAINER,

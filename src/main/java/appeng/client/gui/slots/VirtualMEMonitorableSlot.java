@@ -1,6 +1,7 @@
 package appeng.client.gui.slots;
 
 import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.List;
 
@@ -21,11 +22,19 @@ import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 
 public class VirtualMEMonitorableSlot extends VirtualMESlot {
 
-    protected final IDisplayRepo repo;
+    @FunctionalInterface
+    public interface TypeFilterChecker {
 
-    public VirtualMEMonitorableSlot(int x, int y, IDisplayRepo repo, int slotIndex) {
+        boolean check(IAEStackType<?> type);
+    }
+
+    protected final IDisplayRepo repo;
+    protected final TypeFilterChecker typeFilterChecker;
+
+    public VirtualMEMonitorableSlot(int x, int y, IDisplayRepo repo, int slotIndex, TypeFilterChecker checker) {
         super(x, y, slotIndex);
         this.repo = repo;
+        this.typeFilterChecker = checker;
         this.showAmountAlways = true;
         this.showCraftableText = true;
         this.showCraftableIcon = true;
@@ -58,9 +67,13 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
                 ObjectLongPair<ItemStack> result = type.fillContainer(hand.copy(), stackInSlot);
                 if (result.rightLong() > 0) {
                     lines.add(
-                            ButtonToolTips.ExtractFromNetworkToContainer.getLocal(
-                                    Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode()),
-                                    stackInSlot.getDisplayName()));
+                            ButtonToolTips.ExtractFromNetworkToContainer
+                                    .getLocal(
+                                            this.typeFilterChecker.check(ITEM_STACK_TYPE)
+                                                    ? Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode())
+                                                            + " + "
+                                                    : "",
+                                            stackInSlot.getDisplayName()));
                     added = true;
                 }
             }
@@ -71,9 +84,13 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
                 IAEStack<?> stack = type.getStackFromContainerItem(hand);
                 if (stack != null && stack.getStackSize() > 0) {
                     lines.add(
-                            ButtonToolTips.InsertFromContainerToNetwork.getLocal(
-                                    Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode()),
-                                    stack.getDisplayName()));
+                            ButtonToolTips.InsertFromContainerToNetwork
+                                    .getLocal(
+                                            this.typeFilterChecker.check(ITEM_STACK_TYPE)
+                                                    ? Keyboard.getKeyName(CONTAINER_INTERACTION_KEY.getKeyCode())
+                                                            + " + "
+                                                    : "",
+                                            stack.getDisplayName()));
                     added = true;
                 }
 

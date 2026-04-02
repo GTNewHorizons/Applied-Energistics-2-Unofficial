@@ -234,6 +234,9 @@ public enum ButtonToolTips implements Localization {
     SearchGotoNext,
     SearchGotoPrev,
 
+    ControlButtonValues,
+    ControlButtonValuesHint,
+
     CPUAllowMode,
     CPUAllowAllDesc,
     CPUOnlyAllowPlayerDesc,
@@ -248,7 +251,13 @@ public enum ButtonToolTips implements Localization {
 
     ToggleShowOnlySubstitute,
     ToggleShowOnlySubstituteOnDesc,
-    ToggleShowOnlySubstituteOffDesc;
+    ToggleShowOnlySubstituteOffDesc,
+
+    CPUName,
+    CPUCrafting,
+    Automation,
+    NumberOfStorageMemory,
+    NumberOfCoProcessors;
 
     ButtonToolTips() {}
 

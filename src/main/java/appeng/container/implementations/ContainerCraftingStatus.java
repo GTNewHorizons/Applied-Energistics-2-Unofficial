@@ -58,6 +58,16 @@ public class ContainerCraftingStatus extends ContainerCraftingCPU
         cpuTable.selectCPU(serial);
     }
 
+    @Override
+    public void setCpuSortMode(int mode) {
+        cpuTable.setCpuSortMode(mode);
+    }
+
+    @Override
+    public void setCpuSortDirection(int mode) {
+        cpuTable.setCpuSortDirection(mode);
+    }
+
     public List<CraftingCPUStatus> getCPUs() {
         return cpuTable.getCPUs();
     }

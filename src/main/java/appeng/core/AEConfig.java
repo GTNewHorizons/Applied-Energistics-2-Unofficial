@@ -20,6 +20,7 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.common.config.Property.Type;
 
+import appeng.api.config.CPUSortBy;
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingSortOrder;
@@ -183,6 +184,8 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.settings.registerSetting(Settings.SAVE_SEARCH, YesNo.NO);
         this.settings.registerSetting(Settings.CRAFTING_STATUS, CraftingStatus.TILE);
         this.settings.registerSetting(Settings.CRAFTING_SORT_BY, CraftingSortOrder.NAME);
+        this.settings.registerSetting(Settings.CPU_SORT_BY, CPUSortBy.NAME);
+        this.settings.registerSetting(Settings.CPU_SORT_DIRECTION, SortDir.ASCENDING);
         this.settings.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
         this.settings.registerSetting(Settings.TERMINAL_FONT_SIZE, TerminalFontSize.SMALL);
         this.settings.registerSetting(Settings.INTERFACE_TERMINAL_SECTION_ORDER, StringOrder.NATURAL);
@@ -401,7 +404,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
             final Property pmb = this.get("Client", "priorityAmtButton" + (btnNum + 1), this.priorityByStacks[btnNum]);
             final Property lmb = this.get("Client", "levelAmtButton" + (btnNum + 1), this.levelByStacks[btnNum]);
 
-            final int buttonCap = (int) (Math.pow(10, btnNum + 1) - 1);
+            final int buttonCap = this.getAmountButtonCap(btnNum);
 
             this.craftByStacks[btnNum] = Math.abs(cmb.getInt(this.craftByStacks[btnNum]));
             this.priorityByStacks[btnNum] = Math.abs(pmb.getInt(this.priorityByStacks[btnNum]));
@@ -628,6 +631,33 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 
     public int craftItemsByStackAmounts(final int i) {
         return this.craftByStacks[i];
+    }
+
+    public void setCraftItemsByStackAmount(final int index, final int value) {
+        this.setCraftItemsByStackAmount(index, value, true);
+    }
+
+    public void setCraftItemsByStackAmount(final int index, final int value, final boolean saveNow) {
+        if (index < 0 || index >= this.craftByStacks.length) {
+            return;
+        }
+
+        final int buttonCap = this.getAmountButtonCap(index);
+        final int sanitizedValue = Math.min(Math.abs(value), buttonCap);
+
+        this.craftByStacks[index] = sanitizedValue;
+
+        final Property craftAmountButton = this
+                .get("Client", "craftAmtButton" + (index + 1), this.craftByStacks[index]);
+        craftAmountButton.set(sanitizedValue);
+
+        if (saveNow) {
+            this.save();
+        }
+    }
+
+    private int getAmountButtonCap(final int index) {
+        return (int) (Math.pow(10, index + 1) - 1);
     }
 
     public int priorityByStacksAmounts(final int i) {

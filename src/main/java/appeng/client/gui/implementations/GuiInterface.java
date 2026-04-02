@@ -197,13 +197,32 @@ public class GuiInterface extends GuiUpgradeable {
     public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {
         super.drawBG(offsetX, offsetY, mouseX, mouseY);
 
-        final int capacity = (((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled());
+        final int capacity = ((ContainerInterface) this.cvb).getPatternCapacityCardsInstalled();
+        final int fuzzy = ((ContainerInterface) this.cvb).getFuzzyCardsInstalled();
 
         // config slots
         if (capacity == -1) {
             this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 89, 162, 18);
         } else {
             this.drawTexturedModalRect(offsetX + 7, offsetY + 14, 7, 71, 162, 18);
+
+            if (fuzzy > 0) {
+                this.drawTexturedModalRect(offsetX + 152, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 134, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 116, offsetY + 15, 8, 54, 16, 16);
+            }
+
+            if (fuzzy > 1) {
+                this.drawTexturedModalRect(offsetX + 98, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 80, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 62, offsetY + 15, 8, 54, 16, 16);
+            }
+
+            if (fuzzy > 2) {
+                this.drawTexturedModalRect(offsetX + 44, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 26, offsetY + 15, 8, 54, 16, 16);
+                this.drawTexturedModalRect(offsetX + 8, offsetY + 15, 8, 54, 16, 16);
+            }
         }
 
         // pattern slots

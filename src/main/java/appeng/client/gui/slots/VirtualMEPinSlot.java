@@ -27,14 +27,13 @@ public class VirtualMEPinSlot extends VirtualMEMonitorableSlot {
 
     private final boolean isCraftingSlot;
 
-    public VirtualMEPinSlot(int x, int y, IDisplayRepo repo, int slotIndex, boolean isCraftingSlot) {
+    public VirtualMEPinSlot(int x, int y, IDisplayRepo repo, int slotIndex, TypeFilterChecker checker, boolean isCraftingSlot) {
         super(x, y, repo, slotIndex);
         this.isCraftingSlot = isCraftingSlot;
     }
 
     public boolean isCraftingSlot() {
         return isCraftingSlot;
-    }
 
     @Override
     public @Nullable IAEStack<?> getAEStack() {
