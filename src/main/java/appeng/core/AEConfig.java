@@ -480,7 +480,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public Property get(String category, String key, String[] defaultValues) { // compatibility for old configs
         Property prop = super.get(category, key, defaultValues, null, false, -1, null);
         if (prop.getType() != Type.STRING) {
-            ConfigCategory cat = getCategory(category);
+            ConfigCategory cat = getCategory(category.toLowerCase());
             cat.remove(key);
             prop = super.get(category, key, defaultValues, null, false, -1, null);
             save();

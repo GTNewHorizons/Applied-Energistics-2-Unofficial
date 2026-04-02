@@ -642,7 +642,7 @@ gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts a
 
 gui.tooltips.appliedenergistics2.PinsSection=Pins section
 gui.tooltips.appliedenergistics2.PinsSectionActive=§6LMB§8 - §7Add player row\n§6RMB§8 - §7Remove player row\n§6CTRL + LMB§8 - §7Add crafting row\n§6CTRL + RMB§8 - §7Remove crafting row\n§6SHIFT + RMB§8 - §7Unpin§r
-gui.tooltips.appliedenergistics2.PinsSectionHint=Hold §6CTRL§7 for keybinds
+gui.tooltips.appliedenergistics2.PinsSectionHint=Hold §6ALT§7 for keybinds
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode

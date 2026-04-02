@@ -16,10 +16,10 @@ import java.util.regex.Pattern;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.util.StatCollector;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.AccessRestriction;
@@ -1051,7 +1051,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
             String name = StatCollector.translateToLocal(displayName);
             String valueKey = displayValue;
             if (!Platform.isServer() && buttonAppearance != null && buttonAppearance.altDisplayValue != null) {
-                boolean altHeld = GuiContainer.isCtrlKeyDown();
+                boolean altHeld = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
                 if (!altHeld) {
                     valueKey = buttonAppearance.altDisplayValue;
                 }
