@@ -109,6 +109,7 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
 @Optional.Interface(modid = "NotEnoughItems", iface = "codechicken.nei.api.INEIGuiHandler")
 public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandler, INEIGuiHandler {
+
     private static final EnumMap<Upgrades, ItemStack> UPGRADE_CARD_CACHE = new EnumMap<>(Upgrades.class);
     private static boolean UPGRADE_CARD_CACHE_BUILT = false;
 
