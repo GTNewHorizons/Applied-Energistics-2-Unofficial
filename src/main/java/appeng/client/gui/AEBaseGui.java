@@ -20,7 +20,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,9 +53,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 
 import appeng.api.config.TerminalFontSize;
-import appeng.api.config.Upgrades;
 import appeng.api.events.GuiScrollEvent;
-import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
@@ -95,8 +92,6 @@ import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
-import appeng.items.materials.MaterialType;
-import appeng.parts.automation.UpgradeInventory;
 import appeng.util.Platform;
 import codechicken.lib.gui.GuiDraw;
 import codechicken.nei.VisiblityData;
@@ -109,9 +104,6 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
 @Optional.Interface(modid = "NotEnoughItems", iface = "codechicken.nei.api.INEIGuiHandler")
 public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandler, INEIGuiHandler {
-
-    private static final EnumMap<Upgrades, ItemStack> UPGRADE_CARD_CACHE = new EnumMap<>(Upgrades.class);
-    private static boolean UPGRADE_CARD_CACHE_BUILT = false;
 
     private static class AEGuiTooltip {
 
@@ -235,66 +227,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.currentToolTip.draw();
     }
 
-    private void handleUpgradeSlotTooltip(final int mouseX, final int mouseY) {
-        final Slot hoveredSlot = this.getSlot(mouseX, mouseY);
-        if (!(hoveredSlot instanceof SlotRestrictedInput restrictedInput)
-                || restrictedInput.getItemType() != PlacableItemType.UPGRADES
-                || hoveredSlot.getHasStack()
-                || !(restrictedInput.inventory instanceof UpgradeInventory upgradeInventory)) {
-            return;
-        }
-
-        final List<String> tooltip = new ArrayList<>();
-        tooltip.add(GuiText.Accepts.getLocal());
-
-        for (final Upgrades upgrade : Upgrades.values()) {
-            final int max = upgradeInventory.getMaxInstalled(upgrade);
-            if (max <= 0) {
-                continue;
-            }
-
-            final ItemStack cardStack = this.getUpgradeCardStack(upgrade);
-            if (cardStack == null) {
-                continue;
-            }
-
-            final String cardName = cardStack.getDisplayName();
-            tooltip.add("- " + cardName + (max > 1 ? " (" + max + ")" : ""));
-        }
-
-        if (tooltip.size() <= 1) {
-            return;
-        }
-
-        this.drawTooltip(mouseX, mouseY, tooltip.toArray(new String[0]));
-    }
-
-    @Nullable
-    private ItemStack getUpgradeCardStack(final Upgrades upgrade) {
-        ensureUpgradeCardCache();
-        return UPGRADE_CARD_CACHE.get(upgrade);
-    }
-
-    private static void ensureUpgradeCardCache() {
-        if (UPGRADE_CARD_CACHE_BUILT) {
-            return;
-        }
-
-        for (final MaterialType materialType : MaterialType.values()) {
-            if (!materialType.isRegistered() || materialType.getItemInstance() == null) {
-                continue;
-            }
-
-            final ItemStack stack = materialType.stack(1);
-            if (stack.getItem() instanceof IUpgradeModule upgradeModule) {
-                final Upgrades type = upgradeModule.getType(stack);
-                if (type != null) {
-                    UPGRADE_CARD_CACHE.putIfAbsent(type, stack);
-                }
-            }
-        }
-        UPGRADE_CARD_CACHE_BUILT = true;
-    }
+    protected void handleUpgradeSlotTooltip(final int mouseX, final int mouseY) {}
 
     protected void handleTooltip(int mouseX, int mouseY, ITooltip tooltip) {
         final int x = tooltip.xPos();
