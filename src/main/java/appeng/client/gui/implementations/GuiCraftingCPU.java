@@ -109,8 +109,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     private static final int ICON_NO_TARGET = 132;
     private static final int ICON_LOCK_MODE = 133;
     private static final int ICON_BLOCK_MODE = 134;
-    private static final int ICON_MISSING_INACTIVE = 135;
-    private static final int ICON_ACTIVE = 136;
 
     private final ContainerCraftingCPU craftingCpu;
 
@@ -505,12 +503,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             case SAME_NETWORK -> GuiColors.CraftingCPUSameNetwork.getColor();
             case SOMETHING_STUCK -> GuiColors.CraftingCPUSomethingStuck.getColor();
             case NO_TARGET -> GuiColors.CraftingCPUNoTarget.getColor();
-            case NOT_ENOUGH_INGREDIENTS -> active ? GuiColors.CraftingCPUActive.getColor()
-                    : GuiColors.CraftingCPUNotEnoughIngredients.getColor();
-            case LOCK_MODE -> GuiColors.CraftingCPULockMode.getColor();
-            case BLOCKING_MODE -> GuiColors.CraftingCPUBlockingMode.getColor();
-            case UNDEFINED -> active ? GuiColors.CraftingCPUActive.getColor()
-                    : GuiColors.CraftingCPUInactive.getColor();
+            default -> active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUInactive.getColor();
         };
     }
 
@@ -520,11 +513,11 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         }
 
         return switch (scheduledReason) {
-            case NO_TARGET, SOMETHING_STUCK, UNSUPPORTED_STACK, SAME_NETWORK -> ICON_NO_TARGET;
+            case NO_TARGET, UNSUPPORTED_STACK, SAME_NETWORK -> ICON_NO_TARGET;
             case LOCK_MODE -> ICON_LOCK_MODE;
             case BLOCKING_MODE -> ICON_BLOCK_MODE;
-            case NOT_ENOUGH_INGREDIENTS -> active ? ICON_ACTIVE : ICON_MISSING_INACTIVE;
-            default -> active ? ICON_ACTIVE : -1;
+            case NOT_ENOUGH_INGREDIENTS, SOMETHING_STUCK -> -1;
+            default -> -1;
         };
     }
 

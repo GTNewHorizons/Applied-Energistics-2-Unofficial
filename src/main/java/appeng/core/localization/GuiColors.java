@@ -27,13 +27,10 @@ public enum GuiColors implements Localization {
 
     CraftingCPUActive(0x5A45F021),
     CraftingCPUInactive(0x5AFFF7AA),
-    CraftingCPUUnsupportedStack(0x5AFFF7AA),
-    CraftingCPUSameNetwork(0x5AFFF7AA),
+    CraftingCPUUnsupportedStack(0x5AE07070),
+    CraftingCPUSameNetwork(0x5AE07070),
     CraftingCPUSomethingStuck(0x5AC9A53A),
-    CraftingCPUNoTarget(0x5AC9A53A),
-    CraftingCPUNotEnoughIngredients(0x5AC9A53A),
-    CraftingCPULockMode(0x5AFFF7AA),
-    CraftingCPUBlockingMode(0x5AFFF7AA),
+    CraftingCPUNoTarget(0x5AE07070),
 
     InterfaceTerminalMatch(0x2A00FF00),
 
