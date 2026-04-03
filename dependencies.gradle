@@ -1,35 +1,35 @@
 // Add your dependencies here
 
 dependencies {
-    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.75-GTNH:dev')
-    implementation("com.github.GTNewHorizons:GTNHLib:0.9.43:dev")
+    implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.84-GTNH:dev')
+    implementation("com.github.GTNewHorizons:GTNHLib:0.9.47:dev")
     implementation('curse.maven:cofh-core-69162:2388751')
 
-	compileOnlyApi('com.github.GTNewHorizons:Angelica:2.1.4:dev')
-    compileOnlyApi('com.github.GTNewHorizons:EnderCore:0.5.9:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.15:dev') {transitive = false}
+	compileOnlyApi('com.github.GTNewHorizons:Angelica:2.1.15:dev')
+    compileOnlyApi('com.github.GTNewHorizons:EnderCore:0.5.12:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:ThaumicTinkerer:2.12.19:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:BuildCraft:7.1.57:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:ForestryMC:4.11.11:dev') {transitive = false} // required to compile CraftingV2Tests.java now
+    compileOnly('com.github.GTNewHorizons:ForestryMC:4.11.12:dev') {transitive = false} // required to compile CraftingV2Tests.java now
     compileOnly('com.github.GTNewHorizons:ForgeMultipart:1.7.3:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.362:dev') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.398:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:Jabba:1.5.18:dev') {transitive = false}
     compileOnly('com.github.GTNewHorizons:inventory-tweaks:1.7.1:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:OpenComputers:1.12.22-GTNH:api') {transitive = false}
     compileOnly('com.github.GTNewHorizons:waila:1.19.22:dev') {transitive = false}
-    compileOnly('com.github.GTNewHorizons:Railcraft:9.17.24:api') {transitive = false}
+    compileOnly('com.github.GTNewHorizons:Railcraft:9.17.25:api') {transitive = false}
     compileOnly('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev')  {transitive = false }
-    compileOnly("com.github.GTNewHorizons:Backhand:1.8.4:dev") { transitive = false }
+    compileOnly("com.github.GTNewHorizons:Backhand:1.8.6:dev") { transitive = false }
     compileOnly('net.industrial-craft:industrialcraft-2:2.2.828-experimental:api')
     compileOnly('curse.maven:minefactory-reloaded-66672:2366150')
     compileOnly('pneumaticCraft:PneumaticCraft-1.7.10:1.12.7-152:api') {transitive = false}
     compileOnly('curse.maven:better-storage-232919:2731636')
     compileOnly('api:immibis:1')
     compileOnly('curse.maven:computercraft-67504:2269339')
-    compileOnly('com.github.GTNewHorizons:EnderIO:2.10.21:dev') { transitive = false }
+    compileOnly('com.github.GTNewHorizons:EnderIO:2.10.22:dev') { transitive = false }
     compileOnly(rfg.deobf('curse.maven:mekanism-268560:2475797')) // https://www.curseforge.com/minecraft/mc-mods/mekanism/files/2475797
     compileOnly(rfg.deobf('maven.modrinth:immibis-microblocks:59.1.2')) // https://modrinth.com/mod/immibis-microblocks/version/59.1.2
     compileOnly('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.5.68-gtnh:dev') { transitive = false }
-    compileOnly('com.github.GTNewHorizons:ae2stuff:0.10.14-GTNH:dev') {
+    compileOnly('com.github.GTNewHorizons:ae2stuff:0.10.17-GTNH:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
     }
 
@@ -44,7 +44,7 @@ dependencies {
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:waila:1.19.22:dev') {transitive = false}
 
     //Uncomment if you need to test chunkloading and warps/homes
-    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.2.18:dev')
+    //runtimeOnlyNonPublishable('com.github.GTNewHorizons:ServerUtilities:2.2.20:dev')
 
     testImplementation('junit:junit:4.12')
     functionalTestImplementation(platform('org.junit:junit-bom:5.9.2'))
@@ -52,7 +52,7 @@ dependencies {
     functionalTestImplementation('org.junit.platform:junit-platform-engine')
     functionalTestImplementation('org.junit.platform:junit-platform-launcher')
     functionalTestImplementation('org.junit.platform:junit-platform-reporting')
-    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.362:dev') {
+    functionalTestImplementation('com.github.GTNewHorizons:GT5-Unofficial:5.09.52.398:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
         exclude module: "Hodgepodge"
     }
@@ -62,7 +62,7 @@ dependencies {
 	runtimeOnlyNonPublishable('thaumcraft:Thaumcraft:1.7.10-4.2.3.5:dev') {
         exclude module: "Baubles"
     }
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:ThaumicEnergistics:1.7.35-GTNH:dev') { transitive = false }
+    runtimeOnlyNonPublishable('com.github.GTNewHorizons:ThaumicEnergistics:1.7.38-GTNH:dev') { transitive = false }
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:AE2FluidCraft-Rework:1.5.68-gtnh:dev') { transitive = false }
     runtimeOnlyNonPublishable('com.github.GTNewHorizons:NotEnoughEnergistics:1.7.26:dev') {
         exclude module: "Applied-Energistics-2-Unofficial"
