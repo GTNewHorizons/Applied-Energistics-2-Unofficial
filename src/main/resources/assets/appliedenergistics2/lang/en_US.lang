@@ -395,6 +395,8 @@ gui.appliedenergistics2.NumberOfFluids=Number of fluids
 gui.appliedenergistics2.ItemsPerByte=Items per byte:
 gui.appliedenergistics2.FluidsPerByte=Fluids per byte:
 gui.appliedenergistics2.BytesPerType=Bytes per type:
+gui.appliedenergistics2.ControlButtonValuesDesc1=Set custom amount step values
+gui.appliedenergistics2.ControlButtonValuesDesc2=Negative buttons are mirrored
 gui.appliedenergistics2.SelectColor=Select a Color
 gui.appliedenergistics2.Selected=Selected
 
@@ -627,6 +629,8 @@ gui.tooltips.appliedenergistics2.CellRestrictionHint=Setup Cell Restriction
 
 gui.tooltips.appliedenergistics2.SearchGotoNext=Find next
 gui.tooltips.appliedenergistics2.SearchGotoPrev=Find prev
+gui.tooltips.appliedenergistics2.ControlButtonValues=Control button values
+gui.tooltips.appliedenergistics2.ControlButtonValuesHint=Configures the value of corresponding buttons.
 
 gui.tooltips.appliedenergistics2.CPUAllowMode=Crafting requests limitation
 gui.tooltips.appliedenergistics2.CPUAllowAllDesc=Allow all crafting requests
@@ -636,9 +640,9 @@ gui.tooltips.appliedenergistics2.CPUOnlyAllowNonPlayerDesc=Only allow crafting r
 gui.tooltips.appliedenergistics2.Suspend=Click to stop this CPU from sending out crafts
 gui.tooltips.appliedenergistics2.Resume=Click to make this CPU send out crafts again
 
-gui.tooltips.appliedenergistics2.PinsSection=Pins Section
-gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
-gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
+gui.tooltips.appliedenergistics2.PinsSection=Pins section
+gui.tooltips.appliedenergistics2.PinsSectionActive=§6LMB§8 - §7Add player row\n§6RMB§8 - §7Remove player row\n§6CTRL + LMB§8 - §7Add crafting row\n§6CTRL + RMB§8 - §7Remove crafting row\n§6SHIFT + RMB§8 - §7Unpin§r
+gui.tooltips.appliedenergistics2.PinsSectionHint=Hold §6ALT§7 for keybinds
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode
