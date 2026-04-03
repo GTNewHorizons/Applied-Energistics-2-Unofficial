@@ -148,6 +148,7 @@ public enum GuiColors implements Localization {
 
     NEIGrindstoneRecipeChance(0x000000),
     NEIGrindstoneNoSecondOutput(0x000000),
+    NEICellView(0x000000),
 
     MEMonitorableTitle(0x404040),
     MEMonitorableInventory(0x404040),
