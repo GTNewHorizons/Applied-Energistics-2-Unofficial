@@ -353,6 +353,7 @@ gui.appliedenergistics2.Sticky=Sticky
 gui.appliedenergistics2.Contains=Contains Item
 gui.appliedenergistics2.HoldShiftForTooltip=Hold shift for extended tooltip
 gui.appliedenergistics2.HoldShiftClick_HIGHLIGHT_INTERFACE=Hold shift click to highlight interface
+gui.appliedenergistics2.Accepts=Accepts:
 gui.appliedenergistics2.Nothing=Nothing
 gui.appliedenergistics2.VoidCellTooltip=Deletes §4everything§7 stored on it
 gui.appliedenergistics2.CellView=Cell View
