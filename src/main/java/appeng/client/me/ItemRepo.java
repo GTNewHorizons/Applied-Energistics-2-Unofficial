@@ -279,7 +279,7 @@ public class ItemRepo implements IDisplayRepo {
                 continue;
             }
 
-            if (this.myPartitionList != null && !this.myPartitionList.isListed(is)) {
+            if (this.myPartitionList != null && is.isItem() && !this.myPartitionList.isListed(is)) {
                 continue;
             }
 
