@@ -596,6 +596,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     @Nullable
     private <T extends IAEStack<T>> IMEMonitor<T> getMonitorWithFilter(IAEStackType<T> type) {
+        if (this.typeFilters == null) return this.getMonitor(type);
         if (this.typeFilters.getBoolean(type)) {
             return this.getMonitor(type);
         }
