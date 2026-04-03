@@ -260,8 +260,27 @@ public class NetworkItemList<T extends IAEStack> implements IItemList<T> {
 
     @Override
     public @Nullable IAEStackType<T> getStackType() {
-        IItemList<T> list = networkItemLists.values().stream().findAny().orElse(null);
-        return list == null ? null : list.getStackType();
+        return findStackType(new HashSet<>());
+    }
+
+    private @Nullable IAEStackType<T> findStackType(Set<NetworkItemList<T>> visitedLists) {
+        if (!visitedLists.add(this)) {
+            return null;
+        }
+
+        for (IItemList<T> list : networkItemLists.values()) {
+            final IAEStackType<T> stackType;
+            if (list instanceof NetworkItemList) {
+                stackType = ((NetworkItemList<T>) list).findStackType(visitedLists);
+            } else {
+                stackType = list.getStackType();
+            }
+            if (stackType != null) {
+                return stackType;
+            }
+        }
+
+        return null;
     }
 
     static class NetworkItemStack<U extends IAEStack> {
