@@ -226,6 +226,8 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.currentToolTip.draw();
     }
 
+    protected void handleUpgradeSlotTooltip(final int mouseX, final int mouseY) {}
+
     protected void handleTooltip(int mouseX, int mouseY, ITooltip tooltip) {
         final int x = tooltip.xPos();
         final int y = tooltip.yPos();
