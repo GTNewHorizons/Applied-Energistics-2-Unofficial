@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.CraftingAllow;
-import appeng.api.config.PinsState;
+import appeng.api.config.PinsRows;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
@@ -79,6 +79,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
@@ -93,20 +94,19 @@ import appeng.me.helpers.ChannelPowerSrc;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
-import appeng.util.IterationCounter;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
 import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMap.Entry;
 
 public class ContainerMEMonitorable extends AEBaseContainer
         implements IConfigManagerHost, IConfigurableObject, IMEMonitorHandlerReceiver<IAEStack<?>>, IPinsHandler {
 
     private final SlotRestrictedInput[] cellView = new SlotRestrictedInput[5];
 
-    private final IMEMonitor<IAEItemStack> itemMonitor;
     private final Map<IAEStackType<?>, IMEMonitor<?>> monitors = new IdentityHashMap<>();
     private final Map<IAEStackType<?>, Set<IAEStack<?>>> updateQueue = new IdentityHashMap<>();
 
@@ -142,7 +142,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
         this.clientCM.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.clientCM.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.clientCM.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-        this.clientCM.registerSetting(Settings.PINS_STATE, PinsState.DISABLED); // use for GUI
+        this.clientCM.registerSetting(Settings.CRAFTING_PINS_ROWS, PinsRows.DISABLED);
+        this.clientCM.registerSetting(Settings.PLAYER_PINS_ROWS, PinsRows.DISABLED);
 
         if (Platform.isServer()) {
             if (monitorable instanceof ITerminalPins t) {
@@ -159,7 +160,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     this.updateQueue.put(type, new HashSet<>());
                 }
             }
-            this.itemMonitor = this.getMonitor(ITEM_STACK_TYPE);
 
             if (monitorable instanceof IGridHost igh) {
                 this.networkNode = igh.getGridNode(ForgeDirection.UNKNOWN);
@@ -179,15 +179,13 @@ public class ContainerMEMonitorable extends AEBaseContainer
             if (monitorable instanceof ITerminalTypeFilterProvider provider) {
                 this.typeFilters = provider.getTypeFilter(ip.player);
             }
-        } else {
-            this.itemMonitor = null;
         }
 
         this.canAccessViewCells = false;
         if (monitorable instanceof IViewCellStorage vcs) {
             for (int y = 0; y < 5; y++) {
                 this.cellView[y] = new SlotRestrictedInput(
-                        SlotRestrictedInput.PlacableItemType.VIEW_CELL,
+                        PlacableItemType.VIEW_CELL,
                         vcs.getViewCellStorage(),
                         y,
                         206,
@@ -237,8 +235,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
 
             if (pinsHandler != null) {
-                if (clientCM.getSetting(Settings.PINS_STATE) != pinsHandler.getPinsState()) {
-                    this.clientCM.putSetting(Settings.PINS_STATE, pinsHandler.getPinsState());
+                if (clientCM.getSetting(Settings.CRAFTING_PINS_ROWS) != pinsHandler.getCraftingPinsRows()
+                        || clientCM.getSetting(Settings.PLAYER_PINS_ROWS) != pinsHandler.getPlayerPinsRows()) {
+                    this.clientCM.putSetting(Settings.CRAFTING_PINS_ROWS, pinsHandler.getCraftingPinsRows());
+                    this.clientCM.putSetting(Settings.PLAYER_PINS_ROWS, pinsHandler.getPlayerPinsRows());
                     updatePins(true);
                 } else {
                     updatePins(false);
@@ -466,7 +466,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     public void updateTypeFilters(Reference2BooleanMap<IAEStackType<?>> map) {
         if (this.host instanceof ITerminalTypeFilterProvider provider) {
-            for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : map.reference2BooleanEntrySet()) {
+            for (Entry<IAEStackType<?>> entry : map.reference2BooleanEntrySet()) {
                 this.typeFilters.put(entry.getKey(), entry.getBooleanValue());
             }
 
@@ -495,7 +495,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
     }
 
     public IMEMonitor<IAEItemStack> getItemMonitor() {
-        return this.itemMonitor;
+        return getMonitor(ITEM_STACK_TYPE);
     }
 
     private int lastUpdate = 0;
@@ -503,11 +503,11 @@ public class ContainerMEMonitorable extends AEBaseContainer
     public void updatePins(boolean forceUpdate) {
         if (pinsHandler == null || !(host instanceof ITerminalPins itp)) return;
 
-        boolean isActive = pinsHandler.getPinsState() != PinsState.DISABLED;
+        boolean hasCraftingPins = pinsHandler.getCraftingPinsRows() != PinsRows.DISABLED;
         ++lastUpdate;
         if (!forceUpdate && lastUpdate <= 20) return;
         lastUpdate = 0;
-        if (isActive) {
+        if (hasCraftingPins) {
             final ICraftingGrid cc = itp.getGrid().getCache(ICraftingGrid.class);
             final ImmutableList<ICraftingCPU> cpuList = cc.getCpus().asList();
 
@@ -562,15 +562,26 @@ public class ContainerMEMonitorable extends AEBaseContainer
         return pinsHandler.getPin(idx);
     }
 
-    public void setPinsState(PinsState pinsState) {
+    public void setCraftingPinsRows(PinsRows rows) {
         if (pinsHandler == null) return;
-        clientCM.putSetting(Settings.PINS_STATE, pinsState);
-        pinsHandler.setPinsState(pinsState);
+        clientCM.putSetting(Settings.CRAFTING_PINS_ROWS, rows);
+        pinsHandler.setCraftingPinsRows(rows);
         updatePins(true);
     }
 
-    public PinsState getPinsState() {
-        return pinsHandler != null ? pinsHandler.getPinsState() : PinsState.DISABLED;
+    public void setPlayerPinsRows(PinsRows rows) {
+        if (pinsHandler == null) return;
+        clientCM.putSetting(Settings.PLAYER_PINS_ROWS, rows);
+        pinsHandler.setPlayerPinsRows(rows);
+        updatePins(true);
+    }
+
+    public PinsRows getCraftingPinsRows() {
+        return pinsHandler != null ? pinsHandler.getCraftingPinsRows() : PinsRows.DISABLED;
+    }
+
+    public PinsRows getPlayerPinsRows() {
+        return pinsHandler != null ? pinsHandler.getPlayerPinsRows() : PinsRows.DISABLED;
     }
 
     public PinsHandler getPinsHandler() {
@@ -578,15 +589,25 @@ public class ContainerMEMonitorable extends AEBaseContainer
     }
 
     @SuppressWarnings("unchecked")
+    @Nullable
     private <T extends IAEStack<T>> IMEMonitor<T> getMonitor(IAEStackType<T> type) {
         return (IMEMonitor<T>) this.monitors.get(type);
     }
 
+    @Nullable
+    private <T extends IAEStack<T>> IMEMonitor<T> getMonitorWithFilter(IAEStackType<T> type) {
+        if (this.typeFilters.getBoolean(type)) {
+            return this.getMonitor(type);
+        }
+        return null;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void doMonitorableAction(MonitorableAction action, int custom, final EntityPlayerMP player) {
+        IMEMonitor<IAEItemStack> itemMonitor = getMonitorWithFilter(ITEM_STACK_TYPE);
         IAEItemStack slotItem = null;
-        if (this.itemMonitor != null && this.getTargetStack() instanceof IAEItemStack ais) {
-            slotItem = this.itemMonitor.getAvailableItem(ais, fetchNewId());
+        if (itemMonitor != null && this.getTargetStack() instanceof IAEItemStack ais) {
+            slotItem = itemMonitor.getAvailableItem(ais, fetchNewId());
         }
 
         switch (action) {
@@ -621,7 +642,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 this.setPin(null, custom);
             }
             case SHIFT_CLICK -> { // shift left click
-                if (this.getPowerSource() == null || this.itemMonitor == null || slotItem == null) {
+                if (this.getPowerSource() == null || itemMonitor == null || slotItem == null) {
                     return;
                 }
 
@@ -637,13 +658,13 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     ais.setStackSize(ais.getStackSize() - myItem.stackSize);
                 }
 
-                ais = Platform.poweredExtraction(this.getPowerSource(), this.itemMonitor, ais, this.getActionSource());
+                ais = Platform.poweredExtraction(this.getPowerSource(), itemMonitor, ais, this.getActionSource());
                 if (ais != null) {
                     adaptor.addItems(ais.getItemStack());
                 }
             }
             case PICKUP_SINGLE, ROLL_UP -> { // shift right click, roll up
-                if (this.getPowerSource() == null || this.itemMonitor == null || slotItem == null) {
+                if (this.getPowerSource() == null || itemMonitor == null || slotItem == null) {
                     return;
                 }
 
@@ -656,20 +677,20 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
                 IAEItemStack ais = slotItem.copy();
                 ais.setStackSize(1);
-                ais = Platform.poweredExtraction(this.getPowerSource(), this.itemMonitor, ais, this.getActionSource());
+                ais = Platform.poweredExtraction(this.getPowerSource(), itemMonitor, ais, this.getActionSource());
                 if (ais != null) {
                     final InventoryAdaptor ia = new AdaptorPlayerHand(player);
 
                     final ItemStack fail = ia.addItems(ais.getItemStack());
                     if (fail != null) {
-                        this.itemMonitor.injectItems(ais, Actionable.MODULATE, this.getActionSource());
+                        itemMonitor.injectItems(ais, Actionable.MODULATE, this.getActionSource());
                     }
 
                     this.updateHeld(player);
                 }
             }
             case PICKUP_OR_SET_DOWN -> { // left click
-                if (this.getPowerSource() == null || this.itemMonitor == null) {
+                if (this.getPowerSource() == null || itemMonitor == null) {
                     return;
                 }
 
@@ -679,8 +700,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
                     IAEItemStack ais = slotItem.copy();
                     ais.setStackSize(ais.getItemStack().getMaxStackSize());
-                    ais = Platform
-                            .poweredExtraction(this.getPowerSource(), this.itemMonitor, ais, this.getActionSource());
+                    ais = Platform.poweredExtraction(this.getPowerSource(), itemMonitor, ais, this.getActionSource());
                     if (ais != null) {
                         player.inventory.setItemStack(ais.getItemStack());
                     } else {
@@ -689,7 +709,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     this.updateHeld(player);
                 } else {
                     IAEItemStack ais = AEApi.instance().storage().createItemStack(hand);
-                    ais = Platform.poweredInsert(this.getPowerSource(), this.itemMonitor, ais, this.getActionSource());
+                    ais = Platform.poweredInsert(this.getPowerSource(), itemMonitor, ais, this.getActionSource());
                     if (ais != null) {
                         player.inventory.setItemStack(ais.getItemStack());
                     } else {
@@ -699,7 +719,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
             case SPLIT_OR_PLACE_SINGLE -> { // right click
-                if (this.getPowerSource() == null || this.itemMonitor == null) {
+                if (this.getPowerSource() == null || itemMonitor == null) {
                     return;
                 }
 
@@ -710,16 +730,13 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     IAEItemStack ais = slotItem.copy();
                     final long maxSize = ais.getItemStack().getMaxStackSize();
                     ais.setStackSize(maxSize);
-                    ais = this.itemMonitor.extractItems(ais, Actionable.SIMULATE, this.getActionSource());
+                    ais = itemMonitor.extractItems(ais, Actionable.SIMULATE, this.getActionSource());
 
                     if (ais != null) {
                         final long stackSize = Math.min(maxSize, ais.getStackSize());
                         ais.setStackSize((stackSize + 1) >> 1);
-                        ais = Platform.poweredExtraction(
-                                this.getPowerSource(),
-                                this.itemMonitor,
-                                ais,
-                                this.getActionSource());
+                        ais = Platform
+                                .poweredExtraction(this.getPowerSource(), itemMonitor, ais, this.getActionSource());
                     }
 
                     if (ais != null) {
@@ -731,7 +748,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 } else {
                     IAEItemStack ais = AEApi.instance().storage().createItemStack(player.inventory.getItemStack());
                     ais.setStackSize(1);
-                    ais = Platform.poweredInsert(this.getPowerSource(), this.itemMonitor, ais, this.getActionSource());
+                    ais = Platform.poweredInsert(this.getPowerSource(), itemMonitor, ais, this.getActionSource());
                     if (ais == null) {
                         final ItemStack is = player.inventory.getItemStack();
                         is.stackSize--;
@@ -744,14 +761,14 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
             case ROLL_DOWN -> {
                 final ItemStack hand = player.inventory.getItemStack();
-                if (this.getPowerSource() == null || this.itemMonitor == null || hand == null) {
+                if (this.getPowerSource() == null || itemMonitor == null || hand == null) {
                     return;
                 }
 
                 IAEItemStack ais = AEItemStack.create(hand);
                 ais.setStackSize(1);
 
-                ais = Platform.poweredInsert(this.getPowerSource(), this.itemMonitor, ais, this.getActionSource());
+                ais = Platform.poweredInsert(this.getPowerSource(), itemMonitor, ais, this.getActionSource());
                 if (ais == null) {
                     hand.stackSize--;
                     if (hand.stackSize <= 0) {
@@ -761,14 +778,14 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 }
             }
             case MOVE_REGION -> {
-                if (slotItem == null || this.itemMonitor == null) return;
+                if (slotItem == null) return;
 
                 final long maxSize = slotItem.getItemStack().getMaxStackSize();
                 final InventoryAdaptor adaptor = InventoryAdaptor.getAdaptor(player, ForgeDirection.UNKNOWN);
                 while (true) {
                     IAEItemStack ais = slotItem.copy();
                     ais.setStackSize(maxSize);
-                    ais = this.itemMonitor.extractItems(ais, Actionable.SIMULATE, this.getActionSource());
+                    ais = itemMonitor.extractItems(ais, Actionable.SIMULATE, this.getActionSource());
 
                     if (ais == null || ais.getStackSize() <= 0) break;
 
@@ -780,8 +797,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                         ais.setStackSize(ais.getStackSize() - myItem.stackSize);
                     }
 
-                    ais = Platform
-                            .poweredExtraction(this.getPowerSource(), this.itemMonitor, ais, this.getActionSource());
+                    ais = Platform.poweredExtraction(this.getPowerSource(), itemMonitor, ais, this.getActionSource());
                     if (ais == null || ais.getStackSize() <= 0) break;
                     adaptor.addItems(ais.getItemStack());
                 }
@@ -800,7 +816,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 final IAEStackType type = getStackTypeForContainer(hand);
                 if (type == null) return;
 
-                final IMEMonitor monitor = this.getMonitor(type);
+                final IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
                 if (hand.stackSize == 1) {
@@ -837,7 +853,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 final IAEStackType<?> type = getStackTypeForContainer(hand);
                 if (type == null) return;
 
-                final IMEMonitor monitor = this.getMonitor(type);
+                final IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
                 if (hand.stackSize == 1) {
@@ -895,10 +911,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IAEStackType type = stackInSlot.getStackType();
                 if (!type.isContainerItemForType(hand)) return;
 
-                IMEMonitor monitor = this.getMonitor(type);
+                IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
-                stackInSlot = monitor.getAvailableItem(stackInSlot, IterationCounter.fetchNewId());
+                stackInSlot = monitor.getAvailableItem(stackInSlot, fetchNewId());
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 if (hand.stackSize == 1) {
@@ -933,10 +949,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
                 IAEStackType type = stackInSlot.getStackType();
                 if (!type.isContainerItemForType(hand)) return;
 
-                IMEMonitor monitor = this.getMonitor(type);
+                IMEMonitor monitor = this.getMonitorWithFilter(type);
                 if (monitor == null) return;
 
-                stackInSlot = monitor.getAvailableItem(stackInSlot, IterationCounter.fetchNewId());
+                stackInSlot = monitor.getAvailableItem(stackInSlot, fetchNewId());
                 if (stackInSlot == null || stackInSlot.getStackSize() <= 0) return;
 
                 // Set filled item to player hand
@@ -977,10 +993,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
                             if (hand.stackSize - 1 == 0) {
                                 player.inventory.setItemStack(filledContainer);
-                                break;
-                            }
-
-                            if (adaptor.addItems(filledContainer) != null) break;
+                            } else if (adaptor.addItems(filledContainer) != null) break;
 
                             long amountBeforeExtract = aes.getStackSize();
                             monitor.extractItems(
@@ -1071,12 +1084,13 @@ public class ContainerMEMonitorable extends AEBaseContainer
     }
 
     private ItemStack shiftStoreItem(final ItemStack input) {
-        if (this.getPowerSource() == null) {
+        IMEMonitor<IAEItemStack> itemMonitor = this.getMonitorWithFilter(ITEM_STACK_TYPE);
+        if (this.getPowerSource() == null || itemMonitor == null) {
             return input;
         }
         final IAEItemStack ais = Platform.poweredInsert(
                 this.getPowerSource(),
-                this.getMonitor(ITEM_STACK_TYPE),
+                itemMonitor,
                 AEApi.instance().storage().createItemStack(input),
                 this.getActionSource());
         if (ais == null) {

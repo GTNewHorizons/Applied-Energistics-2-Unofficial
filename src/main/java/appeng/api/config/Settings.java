@@ -33,6 +33,8 @@ public enum Settings {
     SORT_DIRECTION(EnumSet.allOf(SortDir.class)),
     SORT_BY(EnumSet.allOf(SortOrder.class)),
     CRAFTING_SORT_BY(EnumSet.allOf(CraftingSortOrder.class)),
+    CPU_SORT_BY(EnumSet.allOf(CPUSortBy.class)),
+    CPU_SORT_DIRECTION(EnumSet.allOf(SortDir.class)),
 
     SEARCH_TOOLTIPS(EnumSet.of(YesNo.YES, YesNo.NO)),
     VIEW_MODE(EnumSet.allOf(ViewItems.class)),
@@ -88,7 +90,8 @@ public enum Settings {
 
     CRAFTING_ALLOW(EnumSet.allOf(CraftingAllow.class)),
 
-    PINS_STATE(EnumSet.allOf(PinsState.class)),
+    CRAFTING_PINS_ROWS(EnumSet.allOf(PinsRows.class)),
+    PLAYER_PINS_ROWS(EnumSet.allOf(PinsRows.class)),
 
     PAUSE_WHEN_HOLDING_SHIFT(EnumSet.of(YesNo.YES, YesNo.NO));
 

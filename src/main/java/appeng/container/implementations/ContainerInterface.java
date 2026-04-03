@@ -295,6 +295,11 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         return myDuality.getInstalledUpgrades(Upgrades.PATTERN_CAPACITY);
     }
 
+    public int getFuzzyCardsInstalled() {
+        if (myDuality == null) return 0;
+        return myDuality.getInstalledUpgrades(Upgrades.FUZZY);
+    }
+
     private int getConfigSlotsEnabled() {
         if (Platform.isClient() && isConfigEmpty) return -1;
         return myDuality.getConfigSize();

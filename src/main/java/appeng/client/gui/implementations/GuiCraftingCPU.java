@@ -189,13 +189,9 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     private final RemainingOperations remainingOperations = new RemainingOperations();
     private IAEStack<?> hoveredStack;
     private NBTTagCompound hoveredStackNbt;
-    private GuiAeButton findNext;
-    private GuiAeButton findPrev;
     private GuiImgButton changeAllow;
     private MEGuiTextField searchField;
-    private final ArrayList<Integer> goToData = new ArrayList<>();
-    private int searchGotoIndex = -1;
-    private IAEStack<?> needHighlight;
+    protected List<IAEStack<?>> filteredVisual = new ArrayList<>();
 
     public GuiCraftingCPU(final InventoryPlayer inventoryPlayer, final Object te) {
         this(new ContainerCraftingCPU(inventoryPlayer, te));
@@ -241,11 +237,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             this.toggleHideStored.set(hideStored ? YesNo.YES : YesNo.NO);
             hideStoredSorting();
             this.setScrollBar();
-            updateSearchGoToList(true);
-        } else if (btn == this.findNext) {
-            searchGoTo(true);
-        } else if (btn == this.findPrev) {
-            searchGoTo(false);
+            updateFilteredList();
         } else if (btn == this.changeAllow) {
             String msg = String.valueOf(((CraftingAllow) this.changeAllow.getCurrentValue()).ordinal());
             try {
@@ -319,36 +311,16 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         this.buttonList.add(this.cancel);
         this.buttonList.add(this.suspend);
 
-        this.searchField = new MEGuiTextField(52, 12, "Search") {
+        this.searchField = new MEGuiTextField(76, 12, "Search") {
 
             @Override
             public void onTextChange(String oldText) {
                 super.onTextChange(oldText);
-                updateSearchGoToList(true);
+                updateFilteredList();
             }
         };
         this.searchField.x = this.guiLeft + this.xSize - 101;
         this.searchField.y = this.guiTop + 5;
-
-        this.findPrev = new GuiAeButton(
-                0,
-                this.guiLeft + this.xSize - 48,
-                this.guiTop + 6,
-                10,
-                10,
-                "↑",
-                ButtonToolTips.SearchGotoPrev.getLocal());
-        this.buttonList.add(this.findPrev);
-
-        this.findNext = new GuiAeButton(
-                0,
-                this.guiLeft + this.xSize - 36,
-                this.guiTop + 6,
-                10,
-                10,
-                "↓",
-                ButtonToolTips.SearchGotoNext.getLocal());
-        this.buttonList.add(this.findNext);
 
         this.changeAllow = new GuiImgButton(
                 this.guiLeft - 20,
@@ -359,12 +331,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     }
 
     private void setScrollBar() {
-        int size;
-        if (this.hideStored) {
-            size = this.visualHiddenStored.size();
-        } else {
-            size = this.visual.size();
-        }
+        int size = filteredVisual.size();
         this.getScrollBar().setTop(SCROLLBAR_TOP).setLeft(SCROLLBAR_LEFT).setHeight(SCROLLBAR_HEIGHT);
         this.getScrollBar().setRange(0, (size + 2) / ITEMS_PER_ROW - rows, 1);
     }
@@ -407,45 +374,20 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         super.drawScreen(mouseX, mouseY, btn);
     }
 
-    private void updateSearchGoToList(boolean dropIndex) {
-        needHighlight = null;
-        goToData.clear();
-        if (this.searchField.getText().isEmpty()) return;
-        String s = this.searchField.getText().toLowerCase();
-        int visCount = 0;
-        for (IAEStack<?> stack : hideStored ? this.visualHiddenStored : this.visual) {
-            if (stack != null && stack.getDisplayName().toLowerCase().contains(s)) {
-                goToData.add(visCount);
+    private void updateFilteredList() {
+        filteredVisual.clear();
+        String searchText = this.searchField.getText().toLowerCase();
+
+        if (searchText.isEmpty()) {
+            filteredVisual.addAll(hideStored ? this.visualHiddenStored : this.visual);
+        } else {
+            List<IAEStack<?>> sourceList = hideStored ? this.visualHiddenStored : this.visual;
+            for (IAEStack<?> stack : sourceList) {
+                if (stack != null && stack.getDisplayName().toLowerCase().contains(searchText)) {
+                    filteredVisual.add(stack);
+                }
             }
-            visCount++;
         }
-        if (dropIndex) {
-            searchGotoIndex = -1;
-            searchGoTo(true);
-        }
-    }
-
-    private void searchGoTo(boolean forward) {
-        String s = this.searchField.getText().toLowerCase();
-        if (s.isEmpty() || goToData.isEmpty()) return;
-        if (forward) {
-            searchGotoIndex++;
-            if (searchGotoIndex >= goToData.size()) searchGotoIndex = 0;
-        } else {
-            if (searchGotoIndex <= 0) searchGotoIndex = goToData.size();
-            searchGotoIndex--;
-        }
-
-        List<IAEStack<?>> visualTemp;
-        if (this.hideStored) {
-            visualTemp = this.visualHiddenStored;
-        } else {
-            visualTemp = this.visual;
-        }
-
-        IAEStack<?> aeis = visualTemp.get(goToData.get(searchGotoIndex));
-        this.getScrollBar().setCurrentScroll(goToData.get(searchGotoIndex) / 3 - this.rows / 2);
-        needHighlight = aeis.copy();
     }
 
     private void updateRemainingOperations() {
@@ -502,12 +444,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         final int offY = 23;
 
         final ReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
-        List<IAEStack<?>> visualTemp;
-        if (this.hideStored) {
-            visualTemp = this.visualHiddenStored;
-        } else {
-            visualTemp = this.visual;
-        }
+        List<IAEStack<?>> visualTemp = filteredVisual;
         for (int z = viewStart; z < Math.min(viewEnd, visualTemp.size()); z++) {
             final IAEStack<?> refStack = visualTemp.get(z); // repo.getReferenceItem( z );
             if (refStack != null) {
@@ -634,18 +571,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 is.drawInGui(this.mc, posX, posY);
                 GL11.glPopAttrib();
 
-                if (!this.searchField.getText().isEmpty() && goToData.contains(z)) {
-                    final int startX = x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET;
-                    final int startY = posY - 4;
-                    final int color = needHighlight != null && needHighlight.isSameType(refStack)
-                            ? GuiColors.SearchGoToHighlight.getColor()
-                            : GuiColors.SearchHighlight.getColor();
-                    drawVerticalLine(startX, startY, startY + offY, color);
-                    drawVerticalLine(startX + SECTION_LENGTH - 1, startY, startY + offY, color);
-                    drawHorizontalLine(startX + 1, startX + SECTION_LENGTH - 2, startY + 1, color);
-                    drawHorizontalLine(startX + 1, startX + SECTION_LENGTH - 2, startY + offY - 1, color);
-                }
-
                 x++;
 
                 if (x > 2) {
@@ -706,7 +631,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     public void drawSearch() {
         this.bindTexture("guis/searchField.png");
-        this.drawTexturedModalRect(this.guiLeft + this.xSize - 101, this.guiTop + 5, 0, 0, 52, 12);
+        this.drawTexturedModalRect(this.guiLeft + this.xSize - 101, this.guiTop + 5, 0, 0, 76, 12);
         this.searchField.drawTextBox();
     }
 
@@ -752,7 +677,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         }
 
         if (this.hideStored) this.hideStoredSorting();
-        updateSearchGoToList(false);
+        updateFilteredList();
         this.setScrollBar();
     }
 

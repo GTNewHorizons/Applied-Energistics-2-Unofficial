@@ -287,6 +287,8 @@ public enum GuiText implements Localization {
     ItemsPerByte,
     FluidsPerByte,
     BytesPerType,
+    ControlButtonValuesDesc1,
+    ControlButtonValuesDesc2,
 
     CellView,
     EncodedPattern,
