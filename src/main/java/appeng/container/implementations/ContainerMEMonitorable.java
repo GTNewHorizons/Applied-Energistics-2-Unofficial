@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableSet;
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.CraftingAllow;
-import appeng.api.config.PinsState;
+import appeng.api.config.PinsRows;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
@@ -142,7 +142,8 @@ public class ContainerMEMonitorable extends AEBaseContainer
         this.clientCM.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.clientCM.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.clientCM.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-        this.clientCM.registerSetting(Settings.PINS_STATE, PinsState.DISABLED); // use for GUI
+        this.clientCM.registerSetting(Settings.CRAFTING_PINS_ROWS, PinsRows.DISABLED);
+        this.clientCM.registerSetting(Settings.PLAYER_PINS_ROWS, PinsRows.DISABLED);
 
         if (Platform.isServer()) {
             if (monitorable instanceof ITerminalPins t) {
@@ -234,8 +235,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
 
             if (pinsHandler != null) {
-                if (clientCM.getSetting(Settings.PINS_STATE) != pinsHandler.getPinsState()) {
-                    this.clientCM.putSetting(Settings.PINS_STATE, pinsHandler.getPinsState());
+                if (clientCM.getSetting(Settings.CRAFTING_PINS_ROWS) != pinsHandler.getCraftingPinsRows()
+                        || clientCM.getSetting(Settings.PLAYER_PINS_ROWS) != pinsHandler.getPlayerPinsRows()) {
+                    this.clientCM.putSetting(Settings.CRAFTING_PINS_ROWS, pinsHandler.getCraftingPinsRows());
+                    this.clientCM.putSetting(Settings.PLAYER_PINS_ROWS, pinsHandler.getPlayerPinsRows());
                     updatePins(true);
                 } else {
                     updatePins(false);
@@ -500,11 +503,11 @@ public class ContainerMEMonitorable extends AEBaseContainer
     public void updatePins(boolean forceUpdate) {
         if (pinsHandler == null || !(host instanceof ITerminalPins itp)) return;
 
-        boolean isActive = pinsHandler.getPinsState() != PinsState.DISABLED;
+        boolean hasCraftingPins = pinsHandler.getCraftingPinsRows() != PinsRows.DISABLED;
         ++lastUpdate;
         if (!forceUpdate && lastUpdate <= 20) return;
         lastUpdate = 0;
-        if (isActive) {
+        if (hasCraftingPins) {
             final ICraftingGrid cc = itp.getGrid().getCache(ICraftingGrid.class);
             final ImmutableList<ICraftingCPU> cpuList = cc.getCpus().asList();
 
@@ -559,15 +562,26 @@ public class ContainerMEMonitorable extends AEBaseContainer
         return pinsHandler.getPin(idx);
     }
 
-    public void setPinsState(PinsState pinsState) {
+    public void setCraftingPinsRows(PinsRows rows) {
         if (pinsHandler == null) return;
-        clientCM.putSetting(Settings.PINS_STATE, pinsState);
-        pinsHandler.setPinsState(pinsState);
+        clientCM.putSetting(Settings.CRAFTING_PINS_ROWS, rows);
+        pinsHandler.setCraftingPinsRows(rows);
         updatePins(true);
     }
 
-    public PinsState getPinsState() {
-        return pinsHandler != null ? pinsHandler.getPinsState() : PinsState.DISABLED;
+    public void setPlayerPinsRows(PinsRows rows) {
+        if (pinsHandler == null) return;
+        clientCM.putSetting(Settings.PLAYER_PINS_ROWS, rows);
+        pinsHandler.setPlayerPinsRows(rows);
+        updatePins(true);
+    }
+
+    public PinsRows getCraftingPinsRows() {
+        return pinsHandler != null ? pinsHandler.getCraftingPinsRows() : PinsRows.DISABLED;
+    }
+
+    public PinsRows getPlayerPinsRows() {
+        return pinsHandler != null ? pinsHandler.getPlayerPinsRows() : PinsRows.DISABLED;
     }
 
     public PinsHandler getPinsHandler() {

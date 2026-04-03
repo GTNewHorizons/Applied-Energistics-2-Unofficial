@@ -16,6 +16,6 @@ public enum PinsState {
     }
 
     public static int getPinsCount() {
-        return (Settings.PINS_STATE.getPossibleValues().size() - 1) * 9;
+        return (values().length - 1) * 9;
     }
 }
