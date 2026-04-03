@@ -19,6 +19,7 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.util.StatCollector;
 
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.AccessRestriction;
@@ -41,7 +42,7 @@ import appeng.api.config.LockCraftingMode;
 import appeng.api.config.OperationMode;
 import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.PatternSlotConfig;
-import appeng.api.config.PinsState;
+import appeng.api.config.PinsRows;
 import appeng.api.config.PowerUnits;
 import appeng.api.config.PriorityCardMode;
 import appeng.api.config.RedstoneMode;
@@ -58,6 +59,7 @@ import appeng.api.config.TerminalStyle;
 import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
 import appeng.client.texture.ExtraBlockTextures;
+import appeng.core.AEConfig;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiText;
 import appeng.util.Platform;
@@ -876,38 +878,43 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
             this.registerApp(
                     16 * 15 + 14,
-                    Settings.PINS_STATE,
-                    PinsState.DISABLED,
+                    Settings.CRAFTING_PINS_ROWS,
+                    PinsRows.DISABLED,
                     ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionDisabled);
+                    ButtonToolTips.PinsSection);
+            int maxCrafting = AEConfig.instance != null ? AEConfig.instance.maxCraftingPinRows
+                    : PinsRows.values().length - 1;
+            for (PinsRows r : PinsRows.values()) {
+                if (r == PinsRows.DISABLED) continue;
+                if (r.ordinal() > maxCrafting) continue;
+                this.registerApp(
+                        16 * 15 + 13,
+                        Settings.CRAFTING_PINS_ROWS,
+                        r,
+                        ButtonToolTips.PinsSection,
+                        ButtonToolTips.PinsSectionActive,
+                        ButtonToolTips.PinsSectionHint);
+            }
 
             this.registerApp(
-                    16 * 15 + 13,
-                    Settings.PINS_STATE,
-                    PinsState.ONE,
+                    16 * 15 + 14,
+                    Settings.PLAYER_PINS_ROWS,
+                    PinsRows.DISABLED,
                     ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionActive);
-
-            this.registerApp(
-                    16 * 15 + 13,
-                    Settings.PINS_STATE,
-                    PinsState.TWO,
-                    ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionActive);
-
-            this.registerApp(
-                    16 * 15 + 13,
-                    Settings.PINS_STATE,
-                    PinsState.THREE,
-                    ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionActive);
-
-            this.registerApp(
-                    16 * 15 + 13,
-                    Settings.PINS_STATE,
-                    PinsState.FOUR,
-                    ButtonToolTips.PinsSection,
-                    ButtonToolTips.PinsSectionActive);
+                    ButtonToolTips.PinsSection);
+            int maxPlayer = AEConfig.instance != null ? AEConfig.instance.maxPlayerPinRows
+                    : PinsRows.values().length - 1;
+            for (PinsRows r : PinsRows.values()) {
+                if (r == PinsRows.DISABLED) continue;
+                if (r.ordinal() > maxPlayer) continue;
+                this.registerApp(
+                        16 * 15 + 13,
+                        Settings.PLAYER_PINS_ROWS,
+                        r,
+                        ButtonToolTips.PinsSection,
+                        ButtonToolTips.PinsSectionActive,
+                        ButtonToolTips.PinsSectionHint);
+            }
 
             this.registerApp(
                     16 * 3 + 7,
@@ -954,9 +961,15 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
     private void registerApp(final int iconIndex, final Settings setting, final Enum val, final ButtonToolTips title,
             final Object hint) {
+        registerApp(iconIndex, setting, val, title, hint, null);
+    }
+
+    private void registerApp(final int iconIndex, final Settings setting, final Enum val, final ButtonToolTips title,
+            final Object hint, final ButtonToolTips altHint) {
         final ButtonAppearance a = new ButtonAppearance();
         a.displayName = title.getUnlocalized();
         a.displayValue = (String) (hint instanceof String ? hint : ((ButtonToolTips) hint).getUnlocalized());
+        a.altDisplayValue = altHint != null ? altHint.getUnlocalized() : null;
         a.index = iconIndex;
         appearances.put(new EnumPair(setting, val), a);
     }
@@ -1022,10 +1035,10 @@ public class GuiImgButton extends GuiButton implements ITooltip {
     public String getMessage() {
         String displayName = null;
         String displayValue = null;
+        ButtonAppearance buttonAppearance = null;
 
         if (this.buttonSetting != null && this.currentValue != null) {
-            final ButtonAppearance buttonAppearance = appearances
-                    .get(new EnumPair(this.buttonSetting, this.currentValue));
+            buttonAppearance = appearances.get(new EnumPair(this.buttonSetting, this.currentValue));
             if (buttonAppearance == null) {
                 return "No Such Message";
             }
@@ -1036,13 +1049,20 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
         if (displayName != null) {
             String name = StatCollector.translateToLocal(displayName);
-            String value = StatCollector.translateToLocal(displayValue);
+            String valueKey = displayValue;
+            if (!Platform.isServer() && buttonAppearance != null && buttonAppearance.altDisplayValue != null) {
+                boolean altHeld = Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU);
+                if (!altHeld) {
+                    valueKey = buttonAppearance.altDisplayValue;
+                }
+            }
+            String value = StatCollector.translateToLocal(valueKey);
 
             if (name == null || name.isEmpty()) {
                 name = displayName;
             }
             if (value == null || value.isEmpty()) {
-                value = displayValue;
+                value = valueKey;
             }
 
             if (this.fillVar != null) {
@@ -1053,7 +1073,7 @@ public class GuiImgButton extends GuiButton implements ITooltip {
 
             if (Platform.isServer()) return name + '\n' + value;
 
-            value = Minecraft.getMinecraft().fontRenderer.wrapFormattedStringToWidth(value, 150);
+            value = Minecraft.getMinecraft().fontRenderer.wrapFormattedStringToWidth(value, 250);
 
             return name + '\n' + value;
         }
@@ -1145,5 +1165,6 @@ public class GuiImgButton extends GuiButton implements ITooltip {
         public int index;
         public String displayName;
         public String displayValue;
+        public String altDisplayValue;
     }
 }

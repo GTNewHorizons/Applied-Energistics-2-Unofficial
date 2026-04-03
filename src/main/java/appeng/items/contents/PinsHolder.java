@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
+import appeng.api.config.PinsRows;
 import appeng.api.config.PinsState;
 import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.data.IAEStack;
@@ -23,7 +24,8 @@ public class PinsHolder implements IAEAppEngInventory {
     private final ItemStack holder;
 
     private final HashMap<UUID, PinList> pinsMap = new HashMap<>();
-    private final HashMap<UUID, PinsState> pinsStateMap = new HashMap<>();
+    private final HashMap<UUID, PinsRows> craftingPinsRowsMap = new HashMap<>();
+    private final HashMap<UUID, PinsRows> playerPinsRowsMap = new HashMap<>();
 
     private boolean initialized = false;
 
@@ -47,8 +49,10 @@ public class PinsHolder implements IAEAppEngInventory {
 
             final NBTTagCompound itemList = new NBTTagCompound();
             itemList.setString("playerId", playerId.toString());
-            int state = pinsStateMap.get(playerId) != null ? pinsStateMap.get(playerId).ordinal() : 0;
-            itemList.setInteger("pinsState", state);
+            PinsRows cr = craftingPinsRowsMap.get(playerId);
+            PinsRows pr = playerPinsRowsMap.get(playerId);
+            itemList.setInteger("craftingPinsRows", cr != null ? cr.ordinal() : 0);
+            itemList.setInteger("playerPinsRows", pr != null ? pr.ordinal() : 0);
             for (int x = 0; x < pins.size(); x++) {
                 // final ItemStack pinStack = pins.getStackInSlot(x);
                 final IAEStack<?> pinStack = pins.getPin(x);
@@ -75,8 +79,35 @@ public class PinsHolder implements IAEAppEngInventory {
 
             final PinList pins = new PinList();
 
+            final boolean hasNewFormat = itemList.hasKey("craftingPinsRows");
+            int craftingOrdinal = hasNewFormat ? itemList.getInteger("craftingPinsRows") : 0;
+            int playerOrdinal;
+            if (hasNewFormat) {
+                playerOrdinal = Math.min(itemList.getInteger("playerPinsRows"), PinsRows.values().length - 1);
+            } else {
+                int oldState = itemList.getInteger("pinsState");
+                int oldOrdinal = Math.min(Math.max(oldState, 0), PinsState.values().length - 1);
+                playerOrdinal = oldOrdinal;
+                for (int x = 0; x < 36; x++) {
+                    if (itemList.hasKey("#" + x)) {
+                        NBTTagCompound tag = itemList.getCompoundTag("#" + x);
+                        int destIdx = PinList.PLAYER_OFFSET + x;
+                        if (tag.hasKey("StackType")) {
+                            pins.setPin(destIdx, Platform.readStackNBT(tag));
+                        } else {
+                            ItemStack pinStack = ItemStack.loadItemStackFromNBT(itemList.getCompoundTag("#" + x));
+                            pins.setPin(destIdx, AEItemStack.create(pinStack));
+                        }
+                    }
+                }
+            }
+
+            if (!hasNewFormat) {
+                craftingOrdinal = Math.min(craftingOrdinal, PinsRows.values().length - 1);
+            }
+
             for (int x = 0; x < pins.size(); x++) {
-                if (itemList.hasKey("#" + x)) {
+                if (hasNewFormat && itemList.hasKey("#" + x)) {
                     NBTTagCompound tag = itemList.getCompoundTag("#" + x);
                     if (tag.hasKey("StackType")) {
                         IAEStack<?> stack = Platform.readStackNBT(tag);
@@ -91,7 +122,10 @@ public class PinsHolder implements IAEAppEngInventory {
             }
 
             this.pinsMap.put(playerId, pins);
-            this.pinsStateMap.put(playerId, PinsState.values()[itemList.getInteger("pinsState")]);
+            this.craftingPinsRowsMap
+                    .put(playerId, PinsRows.fromOrdinal(Math.min(craftingOrdinal, PinsRows.values().length - 1)));
+            this.playerPinsRowsMap
+                    .put(playerId, PinsRows.fromOrdinal(Math.min(playerOrdinal, PinsRows.values().length - 1)));
         }
     }
 
@@ -104,12 +138,21 @@ public class PinsHolder implements IAEAppEngInventory {
         return pinsInv;
     }
 
-    public PinsState getPinsState(EntityPlayer player) {
-        return this.pinsStateMap.computeIfAbsent(player.getPersistentID(), k -> PinsState.DISABLED);
+    public PinsRows getCraftingPinsRows(EntityPlayer player) {
+        return this.craftingPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> PinsRows.DISABLED);
     }
 
-    public void setPinsState(EntityPlayer player, PinsState state) {
-        this.pinsStateMap.put(player.getPersistentID(), state);
+    public void setCraftingPinsRows(EntityPlayer player, PinsRows rows) {
+        this.craftingPinsRowsMap.put(player.getPersistentID(), rows);
+        markDirty();
+    }
+
+    public PinsRows getPlayerPinsRows(EntityPlayer player) {
+        return this.playerPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> PinsRows.DISABLED);
+    }
+
+    public void setPlayerPinsRows(EntityPlayer player, PinsRows rows) {
+        this.playerPinsRowsMap.put(player.getPersistentID(), rows);
         markDirty();
     }
 

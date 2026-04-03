@@ -1,12 +1,13 @@
 package appeng.helpers;
 
-import appeng.api.config.PinsState;
+import appeng.api.config.PinsRows;
 import appeng.api.storage.data.IAEStack;
+import appeng.items.contents.PinList;
 
 public interface IPinsHandler {
 
     default int getPinCount() {
-        return PinsState.getPinsCount();
+        return PinList.TOTAL_SLOTS;
     }
 
     default void setPin(IAEStack<?> is, int idx) {
@@ -25,12 +26,19 @@ public interface IPinsHandler {
         throw new UnsupportedOperationException("getAEPin is not supported by this handler");
     }
 
-    default PinsState getPinsState() {
-        return PinsState.DISABLED;
+    default PinsRows getCraftingPinsRows() {
+        return PinsRows.DISABLED;
     }
 
-    default void setPinsState(PinsState state) {
-        throw new UnsupportedOperationException("setPinsState is not supported by this handler");
+    default void setCraftingPinsRows(PinsRows rows) {
+        throw new UnsupportedOperationException("setCraftingPinsRows is not supported by this handler");
     }
 
+    default PinsRows getPlayerPinsRows() {
+        return PinsRows.DISABLED;
+    }
+
+    default void setPlayerPinsRows(PinsRows rows) {
+        throw new UnsupportedOperationException("setPlayerPinsRows is not supported by this handler");
+    }
 }

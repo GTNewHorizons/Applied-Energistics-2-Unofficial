@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
@@ -38,7 +39,8 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import appeng.api.config.CraftingStatus;
-import appeng.api.config.PinsState;
+import appeng.api.config.PinSectionOrder;
+import appeng.api.config.PinsRows;
 import appeng.api.config.SearchBoxFocusPriority;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
@@ -143,7 +145,8 @@ public class GuiMEMonitorable extends AEBaseGui
     private boolean isAutoFocused = false;
     private int currentMouseX = 0;
     private int currentMouseY = 0;
-    private PinsState pinsState;
+    private PinsRows craftingPinsRows;
+    private PinsRows playerPinsRows;
     public final boolean hasPinHost;
     private boolean enableShiftPause = true;
 
@@ -175,7 +178,8 @@ public class GuiMEMonitorable extends AEBaseGui
 
         this.configSrc = ((IConfigurableObject) this.inventorySlots).getConfigManager();
 
-        pinsState = (PinsState) configSrc.getSetting(Settings.PINS_STATE);
+        craftingPinsRows = (PinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS);
+        playerPinsRows = (PinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS);
 
         (this.monitorableContainer = (ContainerMEMonitorable) this.inventorySlots).setGui(this);
 
@@ -214,9 +218,10 @@ public class GuiMEMonitorable extends AEBaseGui
 
     private void setScrollBar() {
         this.getScrollBar().setTop(this.offsetRepoY).setLeft(166 + this.offsetRepoX).setHeight(this.rows * 18 - 2);
+        int totalPinRows = craftingPinsRows.ordinal() + playerPinsRows.ordinal();
         this.getScrollBar().setRange(
                 0,
-                (this.repo.size() + pinsState.ordinal() * 9 + this.perRow - 1) / this.perRow - this.rows,
+                (this.repo.size() + totalPinRows * 9 + this.perRow - 1) / this.perRow - this.rows,
                 Math.max(1, this.rows / 6));
     }
 
@@ -260,13 +265,27 @@ public class GuiMEMonitorable extends AEBaseGui
             AEConfig.instance.preserveSearchBar = next == YesNo.YES;
         } else if (btn == this.pinsStateButton) {
             try {
-                if (next.ordinal() >= rows) return; // ignore to avoid hiding terminal inventory
-
-                final PacketPinsUpdate p = new PacketPinsUpdate((PinsState) next);
-                NetworkHandler.instance.sendToServer(p);
+                boolean rmb = Mouse.isButtonDown(1);
+                boolean ctrl = GuiScreen.isCtrlKeyDown();
+                int maxC = AEConfig.instance.maxCraftingPinRows;
+                int maxP = AEConfig.instance.maxPlayerPinRows;
+                int c = Math.min(craftingPinsRows.ordinal(), maxC);
+                int p = Math.min(playerPinsRows.ordinal(), maxP);
+                if (ctrl) {
+                    if (rmb) c = Math.max(0, c - 1);
+                    else c = Math.min(maxC, c + 1);
+                } else {
+                    if (rmb) p = Math.max(0, p - 1);
+                    else p = Math.min(maxP, p + 1);
+                }
+                if (c + p >= rows) return;
+                NetworkHandler.instance.sendToServer(new PacketPinsUpdate(
+                        PinsRows.fromOrdinal(c), PinsRows.fromOrdinal(p)));
             } catch (final IOException e) {
                 AELog.debug(e);
             }
+            reinitalize();
+            return;
         } else {
             try {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig(iBtn.getSetting().name(), next.name()));
@@ -282,14 +301,40 @@ public class GuiMEMonitorable extends AEBaseGui
         }
     }
 
+    private int createPinSection(int slotIdx, int sectionRows, int pinsPerRow, int rowOffset, boolean isCrafting) {
+        int baseIndex = isCrafting ? 0 : appeng.items.contents.PinList.PLAYER_OFFSET;
+        for (int y = 0; y < sectionRows; y++) {
+            for (int x = 0; x < pinsPerRow; x++) {
+                VirtualMEPinSlot slot = new VirtualMEPinSlot(
+                        this.offsetRepoX + x * 18,
+                        (rowOffset + y) * 18 + this.offsetRepoY,
+                        this.repo,
+                        baseIndex + y * pinsPerRow + x,
+                        this::checkTypeFilter,
+                        isCrafting);
+                this.pinSlots[slotIdx++] = slot;
+                this.registerVirtualSlots(slot);
+            }
+        }
+        return slotIdx;
+    }
+
     private void adjustPinsSize() {
         final int pinMaxSize = rows - 1;
-        if (pinsState.ordinal() <= pinMaxSize) return;
+        int craft = Math.min(craftingPinsRows.ordinal(), AEConfig.instance.maxCraftingPinRows);
+        int player = Math.min(playerPinsRows.ordinal(), AEConfig.instance.maxPlayerPinRows);
+        int totalPinRows = craft + player;
+        if (totalPinRows <= pinMaxSize) return;
 
         try {
-            PinsState newState = PinsState.fromOrdinal(pinMaxSize);
-            final PacketPinsUpdate p = new PacketPinsUpdate(newState);
-            NetworkHandler.instance.sendToServer(p);
+            if (player > pinMaxSize) {
+                player = pinMaxSize;
+                craft = 0;
+            } else {
+                craft = Math.min(craft, pinMaxSize - player);
+            }
+            NetworkHandler.instance
+                    .sendToServer(new PacketPinsUpdate(PinsRows.fromOrdinal(craft), PinsRows.fromOrdinal(player)));
         } catch (final IOException e) {
             AELog.debug(e);
         }
@@ -321,22 +366,32 @@ public class GuiMEMonitorable extends AEBaseGui
 
         super.initGui();
 
-        int pinsRows = pinsState.ordinal();
-        this.pinSlots = new VirtualMEPinSlot[pinsRows * this.perRow];
-        for (int y = 0; y < pinsRows; y++) {
-            for (int x = 0; x < this.perRow; x++) {
-                VirtualMEPinSlot slot = new VirtualMEPinSlot(
-                        this.offsetRepoX + x * 18,
-                        y * 18 + this.offsetRepoY,
-                        this.repo,
-                        y * this.perRow + x,
-                        this::checkTypeFilter);
-                this.pinSlots[y * this.perRow + x] = slot;
-                this.registerVirtualSlots(slot);
+        int maxCrafting = AEConfig.instance.maxCraftingPinRows;
+        int maxPlayer = AEConfig.instance.maxPlayerPinRows;
+        int craftingRows = Math.min(craftingPinsRows.ordinal(), maxCrafting);
+        int playerRows = Math.min(playerPinsRows.ordinal(), maxPlayer);
+        int pinMaxSize = Math.max(0, this.rows - 1);
+        int totalRequested = craftingRows + playerRows;
+        if (totalRequested > pinMaxSize) {
+            if (playerRows > pinMaxSize) {
+                playerRows = pinMaxSize;
+                craftingRows = 0;
+            } else {
+                craftingRows = Math.min(craftingRows, pinMaxSize - playerRows);
             }
         }
+        int pinsRows = craftingRows + playerRows;
+        final int pinsPerRow = 9;
+        this.pinSlots = new VirtualMEPinSlot[craftingRows * pinsPerRow + playerRows * pinsPerRow];
+        int slotIdx = 0;
+        boolean playerFirst = AEConfig.instance.pinSectionOrder == PinSectionOrder.PLAYER_FIRST;
+        int firstRows = playerFirst ? playerRows : craftingRows;
+        int secondRows = playerFirst ? craftingRows : playerRows;
+        boolean firstIsCrafting = !playerFirst;
+        slotIdx = createPinSection(slotIdx, firstRows, pinsPerRow, 0, firstIsCrafting);
+        slotIdx = createPinSection(slotIdx, secondRows, pinsPerRow, firstRows, !firstIsCrafting);
 
-        int normalSlotRows = this.rows - pinsRows;
+        int normalSlotRows = Math.max(0, this.rows - pinsRows);
         this.monitorableSlots = new VirtualMEMonitorableSlot[normalSlotRows * this.perRow];
         for (int y = 0; y < normalSlotRows; y++) {
             for (int x = 0; x < this.perRow; x++) {
@@ -453,8 +508,11 @@ public class GuiMEMonitorable extends AEBaseGui
                     this.pinsStateButton = new GuiImgButton(
                             getPinButtonX(),
                             getPinButtonY(),
-                            Settings.PINS_STATE,
-                            configSrc.getSetting(Settings.PINS_STATE)));
+                            Settings.CRAFTING_PINS_ROWS,
+                            PinsRows.ONE));
+            this.repo.setVisiblePinRows(
+                    ((PinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS)).ordinal(),
+                    ((PinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS)).ordinal());
         }
 
         // Enum setting = AEConfig.INSTANCE.getSetting( "Terminal", SearchBoxMode.class, SearchBoxMode.AUTOSEARCH );
@@ -954,9 +1012,9 @@ public class GuiMEMonitorable extends AEBaseGui
         }
 
         if (this.pinsStateButton != null) {
-            pinsState = (PinsState) this.configSrc.getSetting(Settings.PINS_STATE);
-            this.pinsStateButton.set(pinsState);
-
+            craftingPinsRows = (PinsRows) this.configSrc.getSetting(Settings.CRAFTING_PINS_ROWS);
+            playerPinsRows = (PinsRows) this.configSrc.getSetting(Settings.PLAYER_PINS_ROWS);
+            this.repo.setVisiblePinRows(craftingPinsRows.ordinal(), playerPinsRows.ordinal());
             reinitalize();
         }
 
@@ -1078,7 +1136,16 @@ public class GuiMEMonitorable extends AEBaseGui
     }
 
     @Override
-    public void setPinsState(PinsState state) {
-        configSrc.putSetting(Settings.PINS_STATE, state);
+    public void setCraftingPinsRows(PinsRows rows) {
+        configSrc.putSetting(Settings.CRAFTING_PINS_ROWS, rows);
+        repo.setVisiblePinRows(rows.ordinal(), ((PinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS)).ordinal());
+    }
+
+    @Override
+    public void setPlayerPinsRows(PinsRows rows) {
+        configSrc.putSetting(Settings.PLAYER_PINS_ROWS, rows);
+        repo.setVisiblePinRows(
+                ((PinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS)).ordinal(),
+                rows.ordinal());
     }
 }
