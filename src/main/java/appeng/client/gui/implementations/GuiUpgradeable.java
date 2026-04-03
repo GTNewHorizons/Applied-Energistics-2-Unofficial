@@ -135,6 +135,12 @@ public abstract class GuiUpgradeable extends AEBaseGui {
     }
 
     @Override
+    public void drawScreen(final int mouseX, final int mouseY, final float btn) {
+        this.handleUpgradeSlotTooltip(mouseX, mouseY);
+        super.drawScreen(mouseX, mouseY, btn);
+    }
+
+    @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.handleButtonVisibility();
 
