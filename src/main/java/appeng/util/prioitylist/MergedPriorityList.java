@@ -31,6 +31,7 @@ public final class MergedPriorityList<T extends IAEStack<T>> implements IPartiti
     @Override
     public boolean isListed(final T input) {
         for (final IPartitionList<T> l : this.negative) {
+            if (l instanceof OreFilteredList && !input.isItem()) continue;
             if (l.isListed(input)) {
                 return false;
             }
@@ -38,6 +39,7 @@ public final class MergedPriorityList<T extends IAEStack<T>> implements IPartiti
 
         if (!this.positive.isEmpty()) {
             for (final IPartitionList<T> l : this.positive) {
+                if (l instanceof OreFilteredList && !input.isItem()) continue;
                 if (l.isListed(input)) {
                     return true;
                 }
