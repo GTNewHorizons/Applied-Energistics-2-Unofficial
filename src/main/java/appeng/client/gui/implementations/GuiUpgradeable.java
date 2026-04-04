@@ -40,7 +40,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.items.materials.MaterialType;
-import appeng.parts.automation.UpgradeInventory;
+import appeng.util.inv.IUpgradeInventory;
 
 public abstract class GuiUpgradeable extends AEBaseGui {
 
@@ -190,7 +190,7 @@ public abstract class GuiUpgradeable extends AEBaseGui {
         if (!(hoveredSlot instanceof SlotRestrictedInput restrictedInput)
                 || restrictedInput.getItemType() != PlacableItemType.UPGRADES
                 || hoveredSlot.getHasStack()
-                || !(restrictedInput.inventory instanceof UpgradeInventory upgradeInventory)) {
+                || !(restrictedInput.inventory instanceof IUpgradeInventory upgradeInventory)) {
             return;
         }
 

@@ -21,8 +21,10 @@ import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
+import appeng.util.inv.IUpgradeInventory;
 
-public abstract class UpgradeInventory extends AppEngInternalInventory implements IAEAppEngInventory {
+public abstract class UpgradeInventory extends AppEngInternalInventory
+        implements IAEAppEngInventory, IUpgradeInventory {
 
     private final IAEAppEngInventory parent;
 
@@ -100,8 +102,6 @@ public abstract class UpgradeInventory extends AppEngInternalInventory implement
             default -> 0;
         };
     }
-
-    public abstract int getMaxInstalled(Upgrades upgrades);
 
     private void updateUpgradeInfo() {
         this.cached = true;
