@@ -681,6 +681,9 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     @SuppressWarnings("unchecked")
     protected void addItemTooltip(IAEStack<?> refStack, List<String> lineList, boolean stackChanged) {
+        ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
+        if (sr != null && sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
+
         if (isShiftKeyDown()) {
             final List<String> l = refStack instanceof IAEItemStack ais
                     ? ais.getItemStack().getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips)
@@ -693,9 +696,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 } catch (Exception ignored) {}
             } else {
                 List<NamedDimensionalCoord> blocks = NamedDimensionalCoord.readAsListFromNBTNamed(this.hoveredStackNbt);
-
-                ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
-                if (sr != null && sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
 
                 if (blocks.isEmpty()) return;
                 for (NamedDimensionalCoord blockPos : blocks) {
