@@ -622,12 +622,13 @@ gui.tooltips.appliedenergistics2.PinsSection=Секція закріплень
 gui.tooltips.appliedenergistics2.PinsSectionActive=Секція закріплень увімкнена\n[Shift + ПКМ] закріплений предмет для видалення з секції
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Секція закріплень вимкнена
 
-gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Щось застрягло в інтерфейсі
-gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Режим блокування
-gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=Режим замку
-gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=Не вдалося знайти ціль для відправки
-gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=Недостатньо інгредієнтів
-gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=Цільовий інтерфейс у тій же мережі
+gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=§eЩось застрягло в інтерфейсі
+gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=§eРежим блокування
+gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=§eРежим замку
+gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=§cНе вдалося знайти ціль для відправки
+gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=§eНедостатньо інгредієнтів
+gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=§cЦільовий інтерфейс у тій же мережі
+gui.tooltips.appliedenergistics2.scheduledreason.UNSUPPORTED_STACK=§cContains a stack which not supported by any target around interface
 
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Перемикає показ інтерфейсів з шаблонами з увімкненими замінами
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Показуються всі інтерфейси

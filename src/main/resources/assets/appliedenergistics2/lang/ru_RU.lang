@@ -630,13 +630,13 @@ gui.tooltips.appliedenergistics2.PinsSection=Секция закрепленны
 gui.tooltips.appliedenergistics2.PinsSectionActive=Секция закрепленных включена
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Секция закрепленных отключена
 
-gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Что-то застряло в интерфейсе
-gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Блокирующий режим
-gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=Режим запирания
-gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=Не могу найти цель для вставки
-gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=Недостаточно ингредиентов
-gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=Целевой интерфейс в той же сети
-gui.tooltips.appliedenergistics2.scheduledreason.UNSUPPORTED_STACK=Contains a stack not supported by this interface
+gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=§eЧто-то застряло в интерфейсе
+gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=§eБлокирующий режим
+gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=§eРежим запирания
+gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=§cНе могу найти цель для вставки
+gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=§eНедостаточно ингредиентов
+gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=§cЦелевой интерфейс в той же сети
+gui.tooltips.appliedenergistics2.scheduledreason.UNSUPPORTED_STACK=§cContains a stack not supported by this interface
 
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Переключает отображение интерфейсов с шаблонами с включённой заменой
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Отображение всех интерфейсов
