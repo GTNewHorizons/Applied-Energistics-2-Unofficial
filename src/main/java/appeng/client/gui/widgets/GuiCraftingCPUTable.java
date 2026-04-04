@@ -376,19 +376,30 @@ public class GuiCraftingCPUTable {
 
     public void drawBG(int offsetX, int offsetY) {
         parent.bindTexture("guis/cpu_selector.png");
+        final int tableLeft = offsetX - CPU_TABLE_WIDTH;
         if (CPU_TABLE_HEIGHT != 164) {
-            parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY, 0, 0, CPU_TABLE_WIDTH, 41);
+            parent.drawTexturedModalRect(tableLeft, offsetY, 0, 0, CPU_TABLE_WIDTH, 41);
             int y = 41;
             int rows = CPU_TABLE_SLOTS;
             for (int row = 1; row < rows - 1; row++) {
-                parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY + y, 0, 41, CPU_TABLE_WIDTH, 23);
+                parent.drawTexturedModalRect(tableLeft, offsetY + y, 0, 41, CPU_TABLE_WIDTH, 23);
                 y += 23;
             }
-            parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY + y, 0, 133, CPU_TABLE_WIDTH, 31);
+            parent.drawTexturedModalRect(tableLeft, offsetY + y, 0, 133, CPU_TABLE_WIDTH, 31);
         } else {
-            parent.drawTexturedModalRect(offsetX - CPU_TABLE_WIDTH, offsetY, 0, 0, CPU_TABLE_WIDTH, CPU_TABLE_HEIGHT);
+            parent.drawTexturedModalRect(tableLeft, offsetY, 0, 0, CPU_TABLE_WIDTH, CPU_TABLE_HEIGHT);
         }
+        drawTopBorderFixPixels(tableLeft, offsetY);
         updateScrollBar();
+    }
+
+    // Draws 3 missing pixels
+    private void drawTopBorderFixPixels(int tableLeft, int tableTop) {
+        // Copy (93,0) -> (94,0) and (95,0)
+        parent.drawTexturedModalRect(tableLeft + 94, tableTop, 93, 0, 1, 1);
+        parent.drawTexturedModalRect(tableLeft + 95, tableTop, 93, 0, 1, 1);
+        // Copy (93,1) -> (94,1)
+        parent.drawTexturedModalRect(tableLeft + 94, tableTop + 1, 93, 1, 1, 1);
     }
 
     /**
