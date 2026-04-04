@@ -213,6 +213,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     }
 
     protected List<IAEStack<?>> visual = new ArrayList<>();
+    private List<IAEStack<?>> filteredVisual = new ArrayList<>();
     private GuiButton cancel;
     private GuiAeButton suspend;
     protected List<IAEStack<?>> visualHiddenStored = new ArrayList<>();
@@ -224,7 +225,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     private NBTTagCompound hoveredStackNbt;
     private GuiImgButton changeAllow;
     private MEGuiTextField searchField;
-    protected List<IAEStack<?>> filteredVisual = new ArrayList<>();
 
     public GuiCraftingCPU(final InventoryPlayer inventoryPlayer, final Object te) {
         this(new ContainerCraftingCPU(inventoryPlayer, te));
@@ -246,6 +246,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         this.active = AEApi.instance().storage().createAEStackList();
         this.pending = AEApi.instance().storage().createAEStackList();
         this.visual = new ArrayList<>();
+        this.filteredVisual = new ArrayList<>();
         this.visualHiddenStored = new ArrayList<>();
     }
 
