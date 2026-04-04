@@ -22,6 +22,7 @@ import appeng.tile.inventory.IAEAppEngInventory;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.inv.IUpgradeInventory;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public abstract class UpgradeInventory extends AppEngInternalInventory
         implements IAEAppEngInventory, IUpgradeInventory {
@@ -29,22 +30,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory
     private final IAEAppEngInventory parent;
 
     private boolean cached = false;
-    private int fuzzyUpgrades = 0;
-    private int speedUpgrades = 0;
-    private int superSpeedUpgrades = 0;
-    private int SuperluminalSpeedUpgrades = 0;
-    private int redstoneUpgrades = 0;
-    private int capacityUpgrades = 0;
-    private int inverterUpgrades = 0;
-    private int craftingUpgrades = 0;
-    private int oreFilterUpgrades = 0;
-    private int patternCapacityUpgrades = 0;
-    private int advancedBlockingUpgrades = 0;
-    private int lockCraftingUpgrades = 0;
-    private int fakeCraftingUpgrades = 0;
-    private int stickyUpgrades = 0;
-    private int voidUpgrades = 0;
-    private int distributionUpgrades = 0;
+    private final Object2IntOpenHashMap<Upgrades> installedCounts = new Object2IntOpenHashMap<>();
 
     public UpgradeInventory(final IAEAppEngInventory parent, final int s) {
         super(null, s);
@@ -82,77 +68,29 @@ public abstract class UpgradeInventory extends AppEngInternalInventory
             this.updateUpgradeInfo();
         }
 
-        return switch (u) {
-            case PATTERN_CAPACITY -> this.patternCapacityUpgrades;
-            case CAPACITY -> this.capacityUpgrades;
-            case FUZZY -> this.fuzzyUpgrades;
-            case REDSTONE -> this.redstoneUpgrades;
-            case SPEED -> this.speedUpgrades;
-            case SUPERSPEED -> this.superSpeedUpgrades;
-            case INVERTER -> this.inverterUpgrades;
-            case CRAFTING -> this.craftingUpgrades;
-            case ORE_FILTER -> this.oreFilterUpgrades;
-            case ADVANCED_BLOCKING -> this.advancedBlockingUpgrades;
-            case LOCK_CRAFTING -> this.lockCraftingUpgrades;
-            case STICKY -> this.stickyUpgrades;
-            case FAKE_CRAFTING -> this.fakeCraftingUpgrades;
-            case SUPERLUMINALSPEED -> this.SuperluminalSpeedUpgrades;
-            case VOID_OVERFLOW -> this.voidUpgrades;
-            case DISTRIBUTION -> this.distributionUpgrades;
-            default -> 0;
-        };
+        return this.installedCounts.getInt(u);
+    }
+
+    private int maxInstalledForClamp(Upgrades u) {
+        return u == Upgrades.SUPERSPEED ? this.getMaxInstalled(Upgrades.SPEED) : this.getMaxInstalled(u);
     }
 
     private void updateUpgradeInfo() {
         this.cached = true;
-        this.patternCapacityUpgrades = this.SuperluminalSpeedUpgrades = this.stickyUpgrades = this.inverterUpgrades = this.capacityUpgrades = this.redstoneUpgrades = this.speedUpgrades = this.superSpeedUpgrades = this.fuzzyUpgrades = this.craftingUpgrades = this.oreFilterUpgrades = this.advancedBlockingUpgrades = this.lockCraftingUpgrades = this.fakeCraftingUpgrades = this.voidUpgrades = this.distributionUpgrades = 0;
+        this.installedCounts.clear();
 
         for (final ItemStack is : this) {
-            if (is == null || is.getItem() == null || !(is.getItem() instanceof IUpgradeModule)) {
+            if (is == null || is.getItem() == null || !(is.getItem() instanceof IUpgradeModule card)) {
                 continue;
             }
 
-            final Upgrades myUpgrade = ((IUpgradeModule) is.getItem()).getType(is);
-            switch (myUpgrade) {
-                case PATTERN_CAPACITY -> this.patternCapacityUpgrades++;
-                case CAPACITY -> this.capacityUpgrades++;
-                case FUZZY -> this.fuzzyUpgrades++;
-                case REDSTONE -> this.redstoneUpgrades++;
-                case SPEED -> this.speedUpgrades++;
-                case SUPERSPEED -> this.superSpeedUpgrades++;
-                case INVERTER -> this.inverterUpgrades++;
-                case CRAFTING -> this.craftingUpgrades++;
-                case ORE_FILTER -> this.oreFilterUpgrades++;
-                case ADVANCED_BLOCKING -> this.advancedBlockingUpgrades++;
-                case LOCK_CRAFTING -> this.lockCraftingUpgrades++;
-                case STICKY -> this.stickyUpgrades++;
-                case FAKE_CRAFTING -> this.fakeCraftingUpgrades++;
-                case SUPERLUMINALSPEED -> this.SuperluminalSpeedUpgrades++;
-                case VOID_OVERFLOW -> this.voidUpgrades++;
-                case DISTRIBUTION -> this.distributionUpgrades++;
-                default -> {}
-            }
+            final Upgrades myUpgrade = card.getType(is);
+            this.installedCounts.addTo(myUpgrade, 1);
         }
 
-        this.capacityUpgrades = Math.min(this.capacityUpgrades, this.getMaxInstalled(Upgrades.CAPACITY));
-        this.fuzzyUpgrades = Math.min(this.fuzzyUpgrades, this.getMaxInstalled(Upgrades.FUZZY));
-        this.redstoneUpgrades = Math.min(this.redstoneUpgrades, this.getMaxInstalled(Upgrades.REDSTONE));
-        this.speedUpgrades = Math.min(this.speedUpgrades, this.getMaxInstalled(Upgrades.SPEED));
-        this.superSpeedUpgrades = Math.min(this.superSpeedUpgrades, this.getMaxInstalled(Upgrades.SPEED));
-        this.inverterUpgrades = Math.min(this.inverterUpgrades, this.getMaxInstalled(Upgrades.INVERTER));
-        this.craftingUpgrades = Math.min(this.craftingUpgrades, this.getMaxInstalled(Upgrades.CRAFTING));
-        this.patternCapacityUpgrades = Math
-                .min(this.patternCapacityUpgrades, this.getMaxInstalled(Upgrades.PATTERN_CAPACITY));
-        this.oreFilterUpgrades = Math.min(this.oreFilterUpgrades, this.getMaxInstalled(Upgrades.ORE_FILTER));
-        this.advancedBlockingUpgrades = Math
-                .min(this.advancedBlockingUpgrades, this.getMaxInstalled(Upgrades.ADVANCED_BLOCKING));
-        this.lockCraftingUpgrades = Math.min(this.lockCraftingUpgrades, this.getMaxInstalled(Upgrades.LOCK_CRAFTING));
-        this.fakeCraftingUpgrades = Math.min(this.fakeCraftingUpgrades, this.getMaxInstalled(Upgrades.FAKE_CRAFTING));
-        this.stickyUpgrades = Math.min(this.stickyUpgrades, this.getMaxInstalled(Upgrades.STICKY));
-        this.SuperluminalSpeedUpgrades = Math
-                .min(this.SuperluminalSpeedUpgrades, this.getMaxInstalled(Upgrades.SUPERLUMINALSPEED));
-        this.voidUpgrades = Math.min(this.voidUpgrades, this.getMaxInstalled(Upgrades.VOID_OVERFLOW));
-        this.distributionUpgrades = Math.min(this.distributionUpgrades, this.getMaxInstalled(Upgrades.DISTRIBUTION));
+        for (final var entry : this.installedCounts.object2IntEntrySet()) {
+            entry.setValue(Math.min(entry.getIntValue(), this.maxInstalledForClamp(entry.getKey())));
+        }
     }
 
     @Override
