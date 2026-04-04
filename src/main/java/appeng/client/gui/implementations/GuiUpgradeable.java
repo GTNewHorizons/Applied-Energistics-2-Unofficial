@@ -10,7 +10,13 @@
 
 package appeng.client.gui.implementations;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
+
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
 
 import org.lwjgl.input.Mouse;
 
@@ -21,17 +27,25 @@ import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
+import appeng.api.implementations.items.IUpgradeModule;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerUpgradeable;
+import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.slot.SlotRestrictedInput.PlacableItemType;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketSwitchGuis;
+import appeng.items.materials.MaterialType;
+import appeng.parts.automation.UpgradeInventory;
 
 public abstract class GuiUpgradeable extends AEBaseGui {
+
+    private static final EnumMap<Upgrades, ItemStack> UPGRADE_CARD_CACHE = new EnumMap<>(Upgrades.class);
+    private static boolean UPGRADE_CARD_CACHE_BUILT = false;
 
     protected final ContainerUpgradeable cvb;
     protected final IUpgradeableHost bc;
@@ -121,6 +135,12 @@ public abstract class GuiUpgradeable extends AEBaseGui {
     }
 
     @Override
+    public void drawScreen(final int mouseX, final int mouseY, final float btn) {
+        this.handleUpgradeSlotTooltip(mouseX, mouseY);
+        super.drawScreen(mouseX, mouseY, btn);
+    }
+
+    @Override
     public void drawBG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         this.handleButtonVisibility();
 
@@ -162,6 +182,67 @@ public abstract class GuiUpgradeable extends AEBaseGui {
         if (this.oreFilter != null) {
             this.oreFilter.setVisibility(this.bc.getInstalledUpgrades(Upgrades.ORE_FILTER) > 0);
         }
+    }
+
+    @Override
+    protected void handleUpgradeSlotTooltip(final int mouseX, final int mouseY) {
+        final Slot hoveredSlot = this.getSlot(mouseX, mouseY);
+        if (!(hoveredSlot instanceof SlotRestrictedInput restrictedInput)
+                || restrictedInput.getItemType() != PlacableItemType.UPGRADES
+                || hoveredSlot.getHasStack()
+                || !(restrictedInput.inventory instanceof UpgradeInventory upgradeInventory)) {
+            return;
+        }
+
+        final List<String> tooltip = new ArrayList<>();
+        tooltip.add(GuiText.Accepts.getLocal());
+
+        for (final Upgrades upgrade : Upgrades.values()) {
+            final int max = upgradeInventory.getMaxInstalled(upgrade);
+            if (max <= 0) {
+                continue;
+            }
+
+            final ItemStack cardStack = this.getUpgradeCardStack(upgrade);
+            if (cardStack == null) {
+                continue;
+            }
+
+            final String cardName = cardStack.getDisplayName();
+            tooltip.add("- " + cardName + (max > 1 ? " (" + max + ")" : ""));
+        }
+
+        if (tooltip.size() <= 1) {
+            return;
+        }
+
+        this.drawTooltip(mouseX, mouseY, tooltip.toArray(new String[0]));
+    }
+
+    private ItemStack getUpgradeCardStack(final Upgrades upgrade) {
+        ensureUpgradeCardCache();
+        return UPGRADE_CARD_CACHE.get(upgrade);
+    }
+
+    private static void ensureUpgradeCardCache() {
+        if (UPGRADE_CARD_CACHE_BUILT) {
+            return;
+        }
+
+        for (final MaterialType materialType : MaterialType.values()) {
+            if (!materialType.isRegistered() || materialType.getItemInstance() == null) {
+                continue;
+            }
+
+            final ItemStack stack = materialType.stack(1);
+            if (stack.getItem() instanceof IUpgradeModule upgradeModule) {
+                final Upgrades type = upgradeModule.getType(stack);
+                if (type != null) {
+                    UPGRADE_CARD_CACHE.putIfAbsent(type, stack);
+                }
+            }
+        }
+        UPGRADE_CARD_CACHE_BUILT = true;
     }
 
     protected abstract String getBackground();
