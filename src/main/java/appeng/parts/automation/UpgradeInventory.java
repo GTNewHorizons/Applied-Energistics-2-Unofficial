@@ -71,10 +71,6 @@ public abstract class UpgradeInventory extends AppEngInternalInventory
         return this.installedCounts.getInt(u);
     }
 
-    private int maxInstalledForClamp(Upgrades u) {
-        return u == Upgrades.SUPERSPEED ? this.getMaxInstalled(Upgrades.SPEED) : this.getMaxInstalled(u);
-    }
-
     private void updateUpgradeInfo() {
         this.cached = true;
         this.installedCounts.clear();
@@ -89,7 +85,7 @@ public abstract class UpgradeInventory extends AppEngInternalInventory
         }
 
         for (final var entry : this.installedCounts.object2IntEntrySet()) {
-            entry.setValue(Math.min(entry.getIntValue(), this.maxInstalledForClamp(entry.getKey())));
+            entry.setValue(Math.min(entry.getIntValue(), this.getMaxInstalled(entry.getKey())));
         }
     }
 
