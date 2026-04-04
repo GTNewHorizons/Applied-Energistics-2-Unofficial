@@ -158,7 +158,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     private GuiAeButton findNext;
     private GuiAeButton findPrev;
     private MEGuiTextField searchField;
-    protected List<IAEStack<?>> filteredVisual = new ArrayList<>();
+    private final List<IAEStack<?>> filteredVisual = new ArrayList<>();
     private int tooltip = -1;
     private ItemStack hoveredStack;
 
