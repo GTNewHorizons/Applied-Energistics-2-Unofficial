@@ -13,6 +13,8 @@ public enum ScheduledReason implements Localization {
     SAME_NETWORK,
     UNSUPPORTED_STACK;
 
+    public static final ScheduledReason[] VALUES = values();
+
     @Override
     public String getUnlocalized() {
         return "gui.tooltips.appliedenergistics2.scheduledreason." + this;

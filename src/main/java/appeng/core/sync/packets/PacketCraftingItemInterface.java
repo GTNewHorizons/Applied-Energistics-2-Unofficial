@@ -86,7 +86,6 @@ public class PacketCraftingItemInterface extends AppEngPacket {
                     if (cpu instanceof CraftingCPUCluster cpuc) {
                         NBTTagCompound data = new NBTTagCompound();
                         NamedDimensionalCoord.writeListToNBTNamed(data, cpuc.getProviders(this.is));
-                        data.setInteger("ScheduledReason", cpuc.getScheduledReason(is).ordinal());
                         try {
                             NetworkHandler.instance
                                     .sendTo(new PacketCraftingItemInterface(data), (EntityPlayerMP) player);

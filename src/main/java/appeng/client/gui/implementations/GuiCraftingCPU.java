@@ -26,6 +26,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
@@ -105,6 +106,10 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     private static final int ITEMSTACK_TOP_OFFSET = 22;
     private static final int ITEMS_PER_ROW = 3;
 
+    private static final int ICON_NO_TARGET = 132;
+    private static final int ICON_LOCK_MODE = 133;
+    private static final int ICON_BLOCK_MODE = 134;
+
     private final ContainerCraftingCPU craftingCpu;
 
     protected IItemList<IAEStack<?>> storage = AEApi.instance().storage().createAEStackList();
@@ -119,6 +124,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         private long lastWorkingTick = 0;
 
         private int remainingOperations = 0;
+        private NBTTagCompound itemScheduledReasons = new NBTTagCompound();
 
         public long getLastWorkingTick() {
             return lastWorkingTick;
@@ -134,6 +140,33 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
         public void setRefreshTick(long refreshTick) {
             this.refreshTick = refreshTick;
+        }
+
+        public void setItemScheduledReasons(NBTTagCompound reasons) {
+            this.itemScheduledReasons = reasons == null ? new NBTTagCompound() : reasons;
+        }
+
+        public ScheduledReason getScheduledReason(IAEStack<?> stack) {
+            if (stack == null || this.itemScheduledReasons.hasNoTags()) {
+                return null;
+            }
+
+            final IAEStack<?> keyStack = stack.copy();
+            keyStack.setStackSize(1);
+            final String stackType = keyStack.getStackType().getId();
+            final int stackHash = keyStack.hashCode();
+
+            final NBTTagList entries = this.itemScheduledReasons.getTagList("Entries", 10);
+            for (int i = 0; i < entries.tagCount(); i++) {
+                final NBTTagCompound entry = entries.getCompoundTagAt(i);
+                if (stackType.equals(entry.getString("Type")) && stackHash == entry.getInteger("Hash")) {
+                    final int ordinal = entry.getInteger("Reason");
+                    if (ordinal >= 0 && ordinal < ScheduledReason.VALUES.length) {
+                        return ScheduledReason.VALUES[ordinal];
+                    }
+                }
+            }
+            return null;
         }
 
         @Override
@@ -402,6 +435,55 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         }
     }
 
+    private int getCraftingStateColor(ScheduledReason scheduledReason, boolean active) {
+        if (scheduledReason == null || scheduledReason == ScheduledReason.UNDEFINED) {
+            return active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUInactive.getColor();
+        }
+
+        return switch (scheduledReason) {
+            case UNSUPPORTED_STACK -> GuiColors.CraftingCPUUnsupportedStack.getColor();
+            case SAME_NETWORK -> GuiColors.CraftingCPUSameNetwork.getColor();
+            case SOMETHING_STUCK -> GuiColors.CraftingCPUSomethingStuck.getColor();
+            case NO_TARGET -> GuiColors.CraftingCPUNoTarget.getColor();
+            default -> active ? GuiColors.CraftingCPUActive.getColor() : GuiColors.CraftingCPUInactive.getColor();
+        };
+    }
+
+    private int getScheduledReasonIconIndex(ScheduledReason scheduledReason, boolean active) {
+        if (scheduledReason == null) {
+            return -1;
+        }
+
+        return switch (scheduledReason) {
+            case NO_TARGET, UNSUPPORTED_STACK, SAME_NETWORK -> ICON_NO_TARGET;
+            case LOCK_MODE -> ICON_LOCK_MODE;
+            case BLOCKING_MODE -> ICON_BLOCK_MODE;
+            case NOT_ENOUGH_INGREDIENTS, SOMETHING_STUCK -> -1;
+            default -> -1;
+        };
+    }
+
+    private void drawScheduledReasonIcon(int x, int y, int iconIndex) {
+        if (iconIndex < 0) {
+            return;
+        }
+
+        this.bindTexture("guis/states.png");
+        final int uvY = iconIndex / 16;
+        final int uvX = iconIndex - uvY * 16;
+
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
+        GL11.glEnable(GL11.GL_BLEND);
+        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 0.9f);
+        GL11.glPushMatrix();
+        GL11.glTranslatef(x, y, 0.0f);
+        GL11.glScalef(0.75f, 0.75f, 1.0f);
+        this.drawTexturedModalRect(0, 0, uvX * 16, uvY * 16, 16, 16);
+        GL11.glPopMatrix();
+        GL11.glPopAttrib();
+    }
+
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         String title = this.getGuiDisplayName(GuiText.CraftingStatus.getLocal());
@@ -472,11 +554,15 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 }
 
                 if (AEConfig.instance.useColoredCraftingStatus && (active || scheduled)) {
-                    final int bgColor = active ? GuiColors.CraftingCPUActive.getColor()
-                            : GuiColors.CraftingCPUInactive.getColor();
                     final int startX = (x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET) * 2;
                     final int startY = ((y * offY + ITEMSTACK_TOP_OFFSET) - 3) * 2;
-                    drawRect(startX, startY, startX + (SECTION_LENGTH * 2), startY + (offY * 2) - 2, bgColor);
+                    final int endX = startX + (SECTION_LENGTH * 2);
+                    final int endY = startY + (offY * 2) - 2;
+
+                    ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
+                    int bgColor = this.getCraftingStateColor(sr, active);
+
+                    drawRect(startX, startY, endX, endY, bgColor);
                 }
 
                 final int negY = ((lines - 1) * 5) / 2;
@@ -528,12 +614,15 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     final String str = GuiText.Scheduled.getLocal() + ": "
                             + converter.toWideReadableForm(pendingStack.getStackSize());
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
+                    final boolean scheduledOnlyLine = (stored == null || stored.getStackSize() <= 0)
+                            && (activeStack == null || activeStack.getStackSize() <= 0);
+                    final int scheduledLineYOffset = scheduledOnlyLine ? 4 : 0;
 
                     this.fontRendererObj.drawString(
                             str,
                             (int) ((x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - (w * 0.5))
                                     * 2),
-                            (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY) * 2,
+                            (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY + scheduledLineYOffset) * 2,
                             GuiColors.CraftingCPUScheduled.getColor());
 
                     if (this.tooltip == z - viewStart) {
@@ -546,6 +635,10 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 GL11.glPopMatrix();
                 final int posX = x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19;
                 final int posY = y * offY + ITEMSTACK_TOP_OFFSET;
+                final int iconX = x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET;
+                final int iconY = y * offY + ITEMSTACK_TOP_OFFSET - 3;
+                final ScheduledReason scheduledReason = this.remainingOperations.getScheduledReason(refStack);
+                this.drawScheduledReasonIcon(iconX, iconY, this.getScheduledReasonIconIndex(scheduledReason, active));
 
                 final IAEStack<?> is = refStack.copy();
 
@@ -600,8 +693,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             } else {
                 List<NamedDimensionalCoord> blocks = NamedDimensionalCoord.readAsListFromNBTNamed(this.hoveredStackNbt);
 
-                ScheduledReason sr = ScheduledReason.values()[this.hoveredStackNbt.getInteger("ScheduledReason")];
-                if (sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
+                ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
+                if (sr != null && sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
 
                 if (blocks.isEmpty()) return;
                 for (NamedDimensionalCoord blockPos : blocks) {
@@ -644,6 +737,10 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     public void postUpdateTooltip(NBTTagCompound nbt) {
         this.hoveredStackNbt = nbt;
+    }
+
+    public void postUpdateBatchReasons(NBTTagCompound nbt) {
+        this.remainingOperations.setItemScheduledReasons(nbt);
     }
 
     public void postUpdate(int remainingOperations) {
