@@ -183,7 +183,12 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         GuiContainerManager.addInputHandler(new NEIInputHandler());
         sendHandler(
                 "appeng.integration.modules.NEIHelpers.NEIPatternViewHandler",
-                "appliedenergistics2:item.ItemEncodedPattern");
+                "appliedenergistics2:item.ItemEncodedPattern",
+                66);
+        sendHandler(
+                "appeng.integration.modules.NEIHelpers.NEICellViewHandler",
+                "appliedenergistics2:item.ItemBasicStorageCell.64k",
+                160);
     }
 
     public void registerRecipeHandler(final Object o)
@@ -312,7 +317,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         return null;
     }
 
-    private static void sendHandler(String name, String itemStack) {
+    private static void sendHandler(String name, String itemStack, int handlerHeight) {
         NBTTagCompound aNBT = new NBTTagCompound();
         aNBT.setString("handler", name);
         aNBT.setString("modName", AppEng.MOD_NAME);
@@ -320,8 +325,11 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
         aNBT.setBoolean("modRequired", true);
         aNBT.setString("itemName", itemStack);
         aNBT.setInteger("yShift", 0);
+        aNBT.setInteger("handlerHeight", handlerHeight);
+        aNBT.setBoolean("multipleWidgetsAllowed", false);
         aNBT.setBoolean("showFavoritesButton", false);
         aNBT.setBoolean("showOverlayButton", false);
+        aNBT.setBoolean("showBadge", false);
         FMLInterModComms.sendMessage("NotEnoughItems", "registerHandlerInfo", aNBT);
     }
 }
