@@ -622,7 +622,7 @@ gui.tooltips.appliedenergistics2.PinsSection=Секція закріплень
 gui.tooltips.appliedenergistics2.PinsSectionActive=Секція закріплень увімкнена\n[Shift + ПКМ] закріплений предмет для видалення з секції
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Секція закріплень вимкнена
 
-gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=§eЩось застрягло в інтерфейсі
+gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=§eTarget is full or can't accept the ingredients
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=§eРежим блокування
 gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=§eРежим замку
 gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=§cНе вдалося знайти ціль для відправки

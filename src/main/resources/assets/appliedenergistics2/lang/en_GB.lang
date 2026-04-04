@@ -627,13 +627,13 @@ gui.tooltips.appliedenergistics2.PinsSection=Pins Section
 gui.tooltips.appliedenergistics2.PinsSectionActive=Pins Section Enabled\n[Shift + Right Click] pinned item to remove it from pins section
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Pins Section Disabled
 
-gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=?eSomething stuck in interface
-gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=?eBlocking Mode
-gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=?eLock Mode
-gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=?cCan't find target to push
-gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=?eNot enough ingredients
-gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=?cTarget interface in same network
-gui.tooltips.appliedenergistics2.scheduledreason.UNSUPPORTED_STACK=?cContains a stack which not supported by any target around interface
+gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=§eTarget is full or can't accept the ingredients
+gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=§eBlocking Mode
+gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=§eLock Mode
+gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=§cCan't find target to push
+gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=§eNot enough ingredients
+gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=§cTarget interface in same network
+gui.tooltips.appliedenergistics2.scheduledreason.UNSUPPORTED_STACK=§cContains a stack which not supported by any target around interface
 
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Toggles showing interfaces with patterns with substitutions enabled
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Showing all interfaces

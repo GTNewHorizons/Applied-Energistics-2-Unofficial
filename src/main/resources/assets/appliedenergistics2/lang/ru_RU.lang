@@ -630,7 +630,7 @@ gui.tooltips.appliedenergistics2.PinsSection=Секция закрепленны
 gui.tooltips.appliedenergistics2.PinsSectionActive=Секция закрепленных включена
 gui.tooltips.appliedenergistics2.PinsSectionDisabled=Секция закрепленных отключена
 
-gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=§eЧто-то застряло в интерфейсе
+gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=§eTarget is full or can't accept the ingredients
 gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=§eБлокирующий режим
 gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=§eРежим запирания
 gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=§cНе могу найти цель для вставки
