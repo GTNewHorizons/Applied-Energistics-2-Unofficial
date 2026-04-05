@@ -142,18 +142,14 @@ public class PinsHolder implements IAEAppEngInventory {
         return this.craftingPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> PinsRows.DISABLED);
     }
 
-    public void setCraftingPinsRows(EntityPlayer player, PinsRows rows) {
-        this.craftingPinsRowsMap.put(player.getPersistentID(), rows);
+    public void setPinsRows(EntityPlayer player, PinsRows craftingRows, PinsRows playerRows) {
+        this.craftingPinsRowsMap.put(player.getPersistentID(), craftingRows);
+        this.playerPinsRowsMap.put(player.getPersistentID(), playerRows);
         markDirty();
     }
 
     public PinsRows getPlayerPinsRows(EntityPlayer player) {
         return this.playerPinsRowsMap.computeIfAbsent(player.getPersistentID(), k -> PinsRows.DISABLED);
-    }
-
-    public void setPlayerPinsRows(EntityPlayer player, PinsRows rows) {
-        this.playerPinsRowsMap.put(player.getPersistentID(), rows);
-        markDirty();
     }
 
     public void markDirty() {
