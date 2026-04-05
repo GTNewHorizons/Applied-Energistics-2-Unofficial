@@ -4,7 +4,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.SchedulingMode;
 import appeng.api.config.Settings;
@@ -95,38 +94,18 @@ public class GuiBusIO extends GuiUpgradeable {
         super.drawBG(offsetX, offsetY, mouseX, mouseY);
 
         final int capacity = this.cvb.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
-        if (capacity < 1) {
-            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.4F);
-            GL11.glEnable(GL11.GL_BLEND);
+        final boolean hasOreFilter = this.cvb.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER) != 0;
+        final boolean hasFirstTier = capacity > 0;
+        final boolean hasSecondTier = capacity > 1;
+
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < 3; x++) {
+                final int slotTextureX = hasOreFilter // true == inactive
+                        || (!hasSecondTier && slotSequence[x + y * 3] > 4)
+                        || (!hasFirstTier && slotSequence[x + y * 3] != 0) ? 79 : 61;
+                this.drawTexturedModalRect(offsetX + 61 + (18 * x), offsetY + 21 + (18 * y), slotTextureX, 21, 18, 18);
+            }
         }
-
-        this.drawTexturedModalRect(offsetX + 61, offsetY + 39, 79, 39, 18, 18);
-        this.drawTexturedModalRect(offsetX + 79, offsetY + 21, 79, 39, 18, 18);
-        this.drawTexturedModalRect(offsetX + 97, offsetY + 39, 79, 39, 18, 18);
-        this.drawTexturedModalRect(offsetX + 79, offsetY + 57, 79, 39, 18, 18);
-
-        if (capacity < 1) {
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-            GL11.glPopAttrib();
-        }
-
-        if (capacity < 2) {
-            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.4F);
-            GL11.glEnable(GL11.GL_BLEND);
-        }
-
-        this.drawTexturedModalRect(offsetX + 61, offsetY + 21, 79, 39, 18, 18);
-        this.drawTexturedModalRect(offsetX + 61, offsetY + 57, 79, 39, 18, 18);
-        this.drawTexturedModalRect(offsetX + 97, offsetY + 21, 79, 39, 18, 18);
-        this.drawTexturedModalRect(offsetX + 97, offsetY + 57, 79, 39, 18, 18);
-
-        if (capacity < 2) {
-            GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-            GL11.glPopAttrib();
-        }
-
     }
 
     @Override
@@ -134,8 +113,11 @@ public class GuiBusIO extends GuiUpgradeable {
         super.handleButtonVisibility();
 
         final int capacity = this.cvb.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
-        final boolean firstTier = capacity > 0;
-        final boolean secondTier = capacity > 1;
+        final boolean hasOreFilter = this.cvb.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER) != 0;
+        final boolean firstTier = capacity > 0 && !hasOreFilter;
+        final boolean secondTier = capacity > 1 && !hasOreFilter;
+
+        this.virtualSlots[0].setHidden(hasOreFilter);
 
         this.virtualSlots[1].setHidden(!firstTier);
         this.virtualSlots[2].setHidden(!firstTier);
