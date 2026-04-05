@@ -480,7 +480,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         GL11.glPushMatrix();
         GL11.glTranslatef(x, y, 0.0f);
         GL11.glScalef(0.75f, 0.75f, 1.0f);
-        this.drawTexturedModalRect(0, 0, uvX * 16, uvY * 16, 16, 16);
+        this.drawTexturedModalRect(0, 0, uvX * 16, uvY * 16, 11, 11);
         GL11.glPopMatrix();
         GL11.glPopAttrib();
     }
@@ -617,15 +617,12 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     final String str = GuiText.Scheduled.getLocal() + ": "
                             + converter.toWideReadableForm(pendingStack.getStackSize());
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
-                    final boolean scheduledOnlyLine = (stored == null || stored.getStackSize() <= 0)
-                            && (activeStack == null || activeStack.getStackSize() <= 0);
-                    final int scheduledLineYOffset = scheduledOnlyLine && scheduledIconIndex >= 0 ? 4 : 0;
 
                     this.fontRendererObj.drawString(
                             str,
                             (int) ((x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - (w * 0.5))
                                     * 2),
-                            (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY + scheduledLineYOffset) * 2,
+                            (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY) * 2,
                             GuiColors.CraftingCPUScheduled.getColor());
 
                     if (this.tooltip == z - viewStart) {
