@@ -26,7 +26,6 @@ import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.CraftingStatus;
 import appeng.api.config.PinSectionOrder;
-import appeng.api.config.PinsRows;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnits;
 import appeng.api.config.SearchBoxFocusPriority;
@@ -185,8 +184,6 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.settings.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
         this.settings.registerSetting(Settings.TERMINAL_FONT_SIZE, TerminalFontSize.SMALL);
         this.settings.registerSetting(Settings.INTERFACE_TERMINAL_SECTION_ORDER, StringOrder.NATURAL);
-        this.settings.registerSetting(Settings.CRAFTING_PINS_ROWS, PinsRows.DISABLED);
-        this.settings.registerSetting(Settings.PLAYER_PINS_ROWS, PinsRows.DISABLED);
         this.settings.registerSetting(Settings.PAUSE_WHEN_HOLDING_SHIFT, YesNo.YES);
 
         this.spawnChargedChance = (float) (1.0

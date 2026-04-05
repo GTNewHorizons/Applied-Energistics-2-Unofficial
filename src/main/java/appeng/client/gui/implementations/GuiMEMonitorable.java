@@ -38,6 +38,7 @@ import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import appeng.api.config.ActionItems;
 import appeng.api.config.CraftingStatus;
 import appeng.api.config.PinSectionOrder;
 import appeng.api.config.PinsRows;
@@ -178,8 +179,8 @@ public class GuiMEMonitorable extends AEBaseGui
 
         this.configSrc = ((IConfigurableObject) this.inventorySlots).getConfigManager();
 
-        craftingPinsRows = (PinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS);
-        playerPinsRows = (PinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS);
+        craftingPinsRows = PinsRows.DISABLED;
+        playerPinsRows = PinsRows.DISABLED;
 
         (this.monitorableContainer = (ContainerMEMonitorable) this.inventorySlots).setGui(this);
 
@@ -251,19 +252,7 @@ public class GuiMEMonitorable extends AEBaseGui
             NetworkHandler.instance.sendToServer(new PacketSwitchGuis(GuiBridge.GUI_CRAFTING_STATUS));
         }
 
-        if (!(btn instanceof GuiImgButton iBtn) || iBtn.getSetting() == Settings.ACTIONS) return;
-
-        final Enum cv = iBtn.getCurrentValue();
-        final boolean backwards = Mouse.isButtonDown(1);
-        final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
-
-        if (btn == this.terminalStyleBox) {
-            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
-        } else if (btn == this.searchBoxSettings) {
-            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
-        } else if (btn == this.searchStringSave) {
-            AEConfig.instance.preserveSearchBar = next == YesNo.YES;
-        } else if (btn == this.pinsStateButton) {
+        if (btn == this.pinsStateButton) {
             try {
                 boolean rmb = Mouse.isButtonDown(1);
                 boolean ctrl = GuiScreen.isCtrlKeyDown();
@@ -286,6 +275,20 @@ public class GuiMEMonitorable extends AEBaseGui
             }
             reinitalize();
             return;
+        }
+
+        if (!(btn instanceof GuiImgButton iBtn) || iBtn.getSetting() == Settings.ACTIONS) return;
+
+        final Enum cv = iBtn.getCurrentValue();
+        final boolean backwards = Mouse.isButtonDown(1);
+        final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
+
+        if (btn == this.terminalStyleBox) {
+            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
+        } else if (btn == this.searchBoxSettings) {
+            AEConfig.instance.settings.putSetting(iBtn.getSetting(), next);
+        } else if (btn == this.searchStringSave) {
+            AEConfig.instance.preserveSearchBar = next == YesNo.YES;
         } else {
             try {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig(iBtn.getSetting().name(), next.name()));
@@ -508,11 +511,9 @@ public class GuiMEMonitorable extends AEBaseGui
                     this.pinsStateButton = new GuiImgButton(
                             getPinButtonX(),
                             getPinButtonY(),
-                            Settings.CRAFTING_PINS_ROWS,
-                            PinsRows.ONE));
-            this.repo.setVisiblePinRows(
-                    ((PinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS)).ordinal(),
-                    ((PinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS)).ordinal());
+                            Settings.ACTIONS,
+                            ActionItems.PINS));
+            this.repo.setVisiblePinRows(this.craftingPinsRows.ordinal(), this.playerPinsRows.ordinal());
         }
 
         // Enum setting = AEConfig.INSTANCE.getSetting( "Terminal", SearchBoxMode.class, SearchBoxMode.AUTOSEARCH );
@@ -1011,13 +1012,6 @@ public class GuiMEMonitorable extends AEBaseGui
             this.ViewBox.set(this.configSrc.getSetting(Settings.VIEW_MODE));
         }
 
-        if (this.pinsStateButton != null) {
-            craftingPinsRows = (PinsRows) this.configSrc.getSetting(Settings.CRAFTING_PINS_ROWS);
-            playerPinsRows = (PinsRows) this.configSrc.getSetting(Settings.PLAYER_PINS_ROWS);
-            this.repo.setVisiblePinRows(craftingPinsRows.ordinal(), playerPinsRows.ordinal());
-            reinitalize();
-        }
-
         this.repo.updateView();
     }
 
@@ -1136,16 +1130,13 @@ public class GuiMEMonitorable extends AEBaseGui
     }
 
     @Override
-    public void setCraftingPinsRows(PinsRows rows) {
-        configSrc.putSetting(Settings.CRAFTING_PINS_ROWS, rows);
-        repo.setVisiblePinRows(rows.ordinal(), ((PinsRows) configSrc.getSetting(Settings.PLAYER_PINS_ROWS)).ordinal());
-    }
-
-    @Override
-    public void setPlayerPinsRows(PinsRows rows) {
-        configSrc.putSetting(Settings.PLAYER_PINS_ROWS, rows);
-        repo.setVisiblePinRows(
-                ((PinsRows) configSrc.getSetting(Settings.CRAFTING_PINS_ROWS)).ordinal(),
-                rows.ordinal());
+    public void setPinsRows(PinsRows craftingRows, PinsRows playerRows) {
+        if (this.pinsStateButton != null) {
+            if (craftingRows != craftingPinsRows || playerRows != playerPinsRows) {
+                craftingPinsRows = craftingRows;
+                playerPinsRows = playerRows;
+                reinitalize();
+            }
+        }
     }
 }
