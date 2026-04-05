@@ -30,15 +30,11 @@ public interface IPinsHandler {
         return PinsRows.DISABLED;
     }
 
-    default void setCraftingPinsRows(PinsRows rows) {
-        throw new UnsupportedOperationException("setCraftingPinsRows is not supported by this handler");
-    }
-
     default PinsRows getPlayerPinsRows() {
         return PinsRows.DISABLED;
     }
 
-    default void setPlayerPinsRows(PinsRows rows) {
+    default void setPinsRows(PinsRows craftingRows, PinsRows playerRows) {
         throw new UnsupportedOperationException("setPlayerPinsRows is not supported by this handler");
     }
 }
