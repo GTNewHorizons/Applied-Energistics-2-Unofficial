@@ -615,15 +615,12 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     final String str = GuiText.Scheduled.getLocal() + ": "
                             + converter.toWideReadableForm(pendingStack.getStackSize());
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
-                    final boolean scheduledOnlyLine = (stored == null || stored.getStackSize() <= 0)
-                            && (activeStack == null || activeStack.getStackSize() <= 0);
-                    final int scheduledLineYOffset = scheduledOnlyLine ? 4 : 0;
 
                     this.fontRendererObj.drawString(
                             str,
                             (int) ((x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - (w * 0.5))
                                     * 2),
-                            (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY + scheduledLineYOffset) * 2,
+                            (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY) * 2,
                             GuiColors.CraftingCPUScheduled.getColor());
 
                     if (this.tooltip == z - viewStart) {
