@@ -645,13 +645,13 @@ gui.tooltips.appliedenergistics2.PinsSection=Pins section
 gui.tooltips.appliedenergistics2.PinsSectionActive=§6LMB§8 - §7Add player row\n§6RMB§8 - §7Remove player row\n§6CTRL + LMB§8 - §7Add crafting row\n§6CTRL + RMB§8 - §7Remove crafting row\n§6SHIFT + RMB§8 - §7Unpin§r
 gui.tooltips.appliedenergistics2.PinsSectionHint=Hold §6ALT§7 for keybinds
 
-gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface
-gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=Blocking Mode
-gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=Lock Mode
-gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=Can't find target to push
-gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=Not enough ingredients
-gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=Target interface in same network
-gui.tooltips.appliedenergistics2.scheduledreason.UNSUPPORTED_STACK=Contains a stack which not supported by any target around interface
+gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=§eTarget is full or can't accept the ingredients
+gui.tooltips.appliedenergistics2.scheduledreason.BLOCKING_MODE=§eBlocking Mode
+gui.tooltips.appliedenergistics2.scheduledreason.LOCK_MODE=§eLock Mode
+gui.tooltips.appliedenergistics2.scheduledreason.NO_TARGET=§cCan't find target to push
+gui.tooltips.appliedenergistics2.scheduledreason.NOT_ENOUGH_INGREDIENTS=§eNot enough ingredients
+gui.tooltips.appliedenergistics2.scheduledreason.SAME_NETWORK=§cTarget interface in same network
+gui.tooltips.appliedenergistics2.scheduledreason.UNSUPPORTED_STACK=§cContains a stack which not supported by any target around interface
 
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstitute=Toggles showing interfaces with patterns with substitutions enabled
 gui.tooltips.appliedenergistics2.ToggleShowOnlySubstituteOnDesc=Showing all interfaces
