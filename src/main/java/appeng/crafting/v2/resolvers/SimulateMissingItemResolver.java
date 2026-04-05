@@ -80,7 +80,7 @@ public class SimulateMissingItemResolver implements CraftingRequestResolver {
         @Override
         public void startOnCpu(CraftingContext context, CraftingCPUCluster cpuCluster,
                 MECraftingInventory craftingInv) {
-            throw new IllegalStateException("Trying to start crafting a schedule with simulated items");
+            cpuCluster.addEmitable(this.request.stack.copy().setStackSize(fulfilled));
         }
 
         @Override
