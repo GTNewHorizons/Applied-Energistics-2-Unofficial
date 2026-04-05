@@ -554,14 +554,16 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     scheduled = true;
                 }
 
+                final ScheduledReason scheduledReason = this.remainingOperations.getScheduledReason(refStack);
+                final int scheduledIconIndex = this.getScheduledReasonIconIndex(scheduledReason, active);
+
                 if (AEConfig.instance.useColoredCraftingStatus && (active || scheduled)) {
                     final int startX = (x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET) * 2;
                     final int startY = ((y * offY + ITEMSTACK_TOP_OFFSET) - 3) * 2;
                     final int endX = startX + (SECTION_LENGTH * 2);
                     final int endY = startY + (offY * 2) - 2;
 
-                    ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
-                    int bgColor = this.getCraftingStateColor(sr, active);
+                    int bgColor = this.getCraftingStateColor(scheduledReason, active);
 
                     drawRect(startX, startY, endX, endY, bgColor);
                 }
@@ -617,7 +619,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
                     final boolean scheduledOnlyLine = (stored == null || stored.getStackSize() <= 0)
                             && (activeStack == null || activeStack.getStackSize() <= 0);
-                    final int scheduledLineYOffset = scheduledOnlyLine ? 4 : 0;
+                    final int scheduledLineYOffset = scheduledOnlyLine && scheduledIconIndex >= 0 ? 4 : 0;
 
                     this.fontRendererObj.drawString(
                             str,
@@ -638,8 +640,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 final int posY = y * offY + ITEMSTACK_TOP_OFFSET;
                 final int iconX = x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET;
                 final int iconY = y * offY + ITEMSTACK_TOP_OFFSET - 3;
-                final ScheduledReason scheduledReason = this.remainingOperations.getScheduledReason(refStack);
-                this.drawScheduledReasonIcon(iconX, iconY, this.getScheduledReasonIconIndex(scheduledReason, active));
+
+                this.drawScheduledReasonIcon(iconX, iconY, scheduledIconIndex);
 
                 final IAEStack<?> is = refStack.copy();
 
