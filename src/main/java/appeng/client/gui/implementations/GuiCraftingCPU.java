@@ -480,7 +480,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         GL11.glPushMatrix();
         GL11.glTranslatef(x, y, 0.0f);
         GL11.glScalef(0.75f, 0.75f, 1.0f);
-        this.drawTexturedModalRect(0, 0, uvX * 16, uvY * 16, 16, 16);
+        this.drawTexturedModalRect(0, 0, uvX * 16, uvY * 16, 11, 11);
         GL11.glPopMatrix();
         GL11.glPopAttrib();
     }
@@ -554,14 +554,16 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     scheduled = true;
                 }
 
+                final ScheduledReason scheduledReason = this.remainingOperations.getScheduledReason(refStack);
+                final int scheduledIconIndex = this.getScheduledReasonIconIndex(scheduledReason, active);
+
                 if (AEConfig.instance.useColoredCraftingStatus && (active || scheduled)) {
                     final int startX = (x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET) * 2;
                     final int startY = ((y * offY + ITEMSTACK_TOP_OFFSET) - 3) * 2;
                     final int endX = startX + (SECTION_LENGTH * 2);
                     final int endY = startY + (offY * 2) - 2;
 
-                    ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
-                    int bgColor = this.getCraftingStateColor(sr, active);
+                    int bgColor = this.getCraftingStateColor(scheduledReason, active);
 
                     drawRect(startX, startY, endX, endY, bgColor);
                 }
@@ -615,15 +617,12 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     final String str = GuiText.Scheduled.getLocal() + ": "
                             + converter.toWideReadableForm(pendingStack.getStackSize());
                     final int w = 4 + this.fontRendererObj.getStringWidth(str);
-                    final boolean scheduledOnlyLine = (stored == null || stored.getStackSize() <= 0)
-                            && (activeStack == null || activeStack.getStackSize() <= 0);
-                    final int scheduledLineYOffset = scheduledOnlyLine ? 4 : 0;
 
                     this.fontRendererObj.drawString(
                             str,
                             (int) ((x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET + SECTION_LENGTH - 19 - (w * 0.5))
                                     * 2),
-                            (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY + scheduledLineYOffset) * 2,
+                            (y * offY + ITEMSTACK_TOP_OFFSET + 6 - negY + downY) * 2,
                             GuiColors.CraftingCPUScheduled.getColor());
 
                     if (this.tooltip == z - viewStart) {
@@ -638,8 +637,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 final int posY = y * offY + ITEMSTACK_TOP_OFFSET;
                 final int iconX = x * (1 + SECTION_LENGTH) + ITEMSTACK_LEFT_OFFSET;
                 final int iconY = y * offY + ITEMSTACK_TOP_OFFSET - 3;
-                final ScheduledReason scheduledReason = this.remainingOperations.getScheduledReason(refStack);
-                this.drawScheduledReasonIcon(iconX, iconY, this.getScheduledReasonIconIndex(scheduledReason, active));
+
+                this.drawScheduledReasonIcon(iconX, iconY, scheduledIconIndex);
 
                 final IAEStack<?> is = refStack.copy();
 
@@ -681,6 +680,9 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     @SuppressWarnings("unchecked")
     protected void addItemTooltip(IAEStack<?> refStack, List<String> lineList, boolean stackChanged) {
+        ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
+        if (sr != null && sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
+
         if (isShiftKeyDown()) {
             final List<String> l = refStack instanceof IAEItemStack ais
                     ? ais.getItemStack().getTooltip(this.mc.thePlayer, this.mc.gameSettings.advancedItemTooltips)
@@ -693,9 +695,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                 } catch (Exception ignored) {}
             } else {
                 List<NamedDimensionalCoord> blocks = NamedDimensionalCoord.readAsListFromNBTNamed(this.hoveredStackNbt);
-
-                ScheduledReason sr = this.remainingOperations.getScheduledReason(refStack);
-                if (sr != null && sr != ScheduledReason.UNDEFINED) lineList.add(sr.getLocal());
 
                 if (blocks.isEmpty()) return;
                 for (NamedDimensionalCoord blockPos : blocks) {
