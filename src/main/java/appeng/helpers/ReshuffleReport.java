@@ -1,38 +1,30 @@
-/*
- * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
- * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version. Applied Energistics 2 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
- * Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
- * Applied Energistics 2. If not, see <http://www.gnu.org/licenses/lgpl>.
- */
-
 package appeng.helpers;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
-
 import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
+import appeng.container.guisync.IGuiPacketWritable;
 import appeng.core.localization.GuiText;
-import appeng.util.item.AEFluidStack;
-import appeng.util.item.AEItemStack;
+import appeng.util.Platform;
+import appeng.util.ReadableNumberConverter;
+import appeng.util.item.IAEStackList;
+import cpw.mods.fml.common.network.ByteBufUtils;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+import io.netty.buffer.ByteBuf;
 
-public class ReshuffleReport {
+public class ReshuffleReport implements IGuiPacketWritable {
 
     private static final int LINE_WIDTH = 36;
 
@@ -65,6 +57,16 @@ public class ReshuffleReport {
                 this.changeType = ChangeType.UNCHANGED;
             }
         }
+
+        public void write(ByteBuf out) {
+            Platform.writeStackByte(this.stack, out);
+            out.writeLong(this.beforeCount);
+            out.writeLong(this.afterCount);
+        }
+
+        public static ItemChange read(ByteBuf in) {
+            return new ItemChange(Platform.readStackByte(in), in.readLong(), in.readLong());
+        }
     }
 
     public enum ChangeType {
@@ -73,29 +75,33 @@ public class ReshuffleReport {
         UNCHANGED
     }
 
-    private final Map<String, Long> beforeSnapshot = new HashMap<>();
-    private final Map<String, IAEStack<?>> stackLookup = new HashMap<>();
+    public final Set<IAEStackType<?>> allowedTypes;
+    public final boolean voidProtection;
+    public final long startTime;
+    public long endTime;
 
-    private int totalItemTypesBefore = 0;
-    private int totalItemTypesAfter = 0;
-    private long totalStacksBefore = 0;
-    private long totalStacksAfter = 0;
-    private int itemsProcessed = 0;
-    private int itemsSkipped = 0;
-    private int itemsGained = 0;
-    private int itemsLost = 0;
-    private int itemsUnchanged = 0;
-    private long totalGained = 0;
-    private long totalLost = 0;
+    public int totalItemTypesBefore = 0;
+    public int totalItemTypesAfter = 0;
 
-    private final List<ItemChange> lostItems = new ArrayList<>();
-    private final List<ItemChange> gainedItems = new ArrayList<>();
-    private final List<IAEStack<?>> skippedItemsList = new ArrayList<>();
+    public long totalStacksBefore = 0;
+    public long totalStacksAfter = 0;
 
-    private final Set<IAEStackType<?>> allowedTypes;
-    private final boolean voidProtection;
-    private final long startTime;
-    private long endTime;
+    public int itemsProcessed = 0;
+    public int itemsSkipped = 0;
+
+    public final IItemList<IAEStack<?>> beforeSnapshot = new IAEStackList(), afterSnapshot = new IAEStackList(),
+            stackLookup = new IAEStackList();
+
+    public final IItemList<IAEStack<?>> skippedItemsList = new IAEStackList();
+
+    public int itemsGained = 0;
+    public int itemsLost = 0;
+    public int itemsUnchanged = 0;
+    public long totalGained = 0;
+    public long totalLost = 0;
+
+    public final List<ItemChange> lostItems = new ArrayList<>();
+    public final List<ItemChange> gainedItems = new ArrayList<>();
 
     public ReshuffleReport(final Set<IAEStackType<?>> allowedTypes, final boolean voidProtection) {
         this.allowedTypes = allowedTypes;
@@ -103,9 +109,77 @@ public class ReshuffleReport {
         this.startTime = System.currentTimeMillis();
     }
 
+    // For IGuiPacketWritable
+    public ReshuffleReport(final ByteBuf buf) {
+        this.allowedTypes = new HashSet<>();
+        final int size = buf.readInt();
+        for (int i = 0; i < size; i++) {
+            final String typeId = ByteBufUtils.readUTF8String(buf);
+            if (buf.readBoolean()) {
+                this.allowedTypes.add(AEStackTypeRegistry.getType(typeId));
+            }
+        }
+
+        this.voidProtection = buf.readBoolean();
+        this.startTime = buf.readLong();
+        this.endTime = buf.readLong();
+
+        this.totalItemTypesBefore = buf.readInt();
+        this.totalItemTypesAfter = buf.readInt();
+
+        this.totalStacksBefore = buf.readLong();
+        this.totalStacksAfter = buf.readLong();
+
+        this.itemsProcessed = buf.readInt();
+        this.itemsSkipped = buf.readInt();
+
+        for (int i = 0; i < buf.readInt(); i++) {
+            this.skippedItemsList.add(Platform.readStackByte(buf));
+        }
+
+        for (int i = 0; i < buf.readInt(); i++) {
+            this.lostItems.add(ItemChange.read(buf));
+        }
+
+        for (int i = 0; i < buf.readInt(); i++) {
+            this.gainedItems.add(ItemChange.read(buf));
+        }
+    }
+
+    @Override
+    public void writeToPacket(final ByteBuf buf) {
+        buf.writeInt(AEStackTypeRegistry.getAllTypes().size());
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            ByteBufUtils.writeUTF8String(buf, type.getId());
+            buf.writeBoolean(this.allowedTypes.contains(type));
+        }
+
+        buf.writeBoolean(this.voidProtection);
+        buf.writeLong(this.startTime);
+        buf.writeLong(this.endTime);
+
+        buf.writeInt(this.totalItemTypesBefore);
+        buf.writeInt(this.totalItemTypesAfter);
+
+        buf.writeLong(this.totalStacksBefore);
+        buf.writeLong(this.totalStacksAfter);
+
+        buf.writeInt(this.itemsProcessed);
+        buf.writeInt(this.itemsSkipped);
+
+        buf.writeInt(this.skippedItemsList.size());
+        this.skippedItemsList.forEach(stack -> Platform.writeStackByte(stack, buf));
+
+        buf.writeInt(this.lostItems.size());
+        this.lostItems.forEach(stack -> stack.write(buf));
+
+        buf.writeInt(this.gainedItems.size());
+        this.gainedItems.forEach(stack -> stack.write(buf));
+    }
+
     public void snapshotBefore(Map<IAEStackType<?>, IMEMonitor<?>> monitors, Set<IAEStackType<?>> allowedTypes) {
-        beforeSnapshot.clear();
-        stackLookup.clear();
+        beforeSnapshot.resetStatus();
+        stackLookup.resetStatus();
         totalStacksBefore = 0;
         totalItemTypesBefore = 0;
 
@@ -113,13 +187,10 @@ public class ReshuffleReport {
             IMEMonitor<?> monitor = monitors.get(type);
             if (monitor == null) continue;
 
-            IItemList<?> storageList = monitor.getStorageList();
-            for (Object obj : storageList) {
-                IAEStack<?> stack = (IAEStack<?>) obj;
+            for (IAEStack<?> stack : monitor.getStorageList()) {
                 if (stack != null && stack.getStackSize() > 0) {
-                    String key = getStackKey(stack);
-                    beforeSnapshot.put(key, stack.getStackSize());
-                    stackLookup.put(key, stack.copy());
+                    beforeSnapshot.add(stack);
+                    stackLookup.add(stack);
                     totalStacksBefore += stack.getStackSize();
                     totalItemTypesBefore++;
                 }
@@ -132,14 +203,13 @@ public class ReshuffleReport {
         this.endTime = System.currentTimeMillis();
         this.itemsProcessed = processed;
         this.itemsSkipped = skipped;
-        this.skippedItemsList.clear();
+        this.skippedItemsList.resetStatus();
         if (skippedStacks != null) {
             for (IAEStack<?> s : skippedStacks) {
                 this.skippedItemsList.add(s.copy());
             }
         }
 
-        Map<String, Long> afterSnapshot = new HashMap<>();
         totalStacksAfter = 0;
         totalItemTypesAfter = 0;
 
@@ -147,30 +217,22 @@ public class ReshuffleReport {
             IMEMonitor<?> monitor = monitors.get(type);
             if (monitor == null) continue;
 
-            IItemList<?> storageList = monitor.getStorageList();
-            for (Object obj : storageList) {
-                IAEStack<?> stack = (IAEStack<?>) obj;
+            final IItemList<?> storageList = monitor.getStorageList();
+            for (IAEStack<?> stack : storageList) {
                 if (stack != null && stack.getStackSize() > 0) {
-                    String key = getStackKey(stack);
-                    afterSnapshot.put(key, stack.getStackSize());
-                    if (!stackLookup.containsKey(key)) stackLookup.put(key, stack.copy());
+                    this.afterSnapshot.add(stack);
+                    if (stackLookup.findPrecise(stack) == null) stackLookup.add(stack);
                     totalStacksAfter += stack.getStackSize();
                     totalItemTypesAfter++;
                 }
             }
         }
 
-        Set<String> allKeys = new HashSet<>();
-        allKeys.addAll(beforeSnapshot.keySet());
-        allKeys.addAll(afterSnapshot.keySet());
+        for (IAEStack<?> lookup : stackLookup) {
+            final IAEStack<?> before = beforeSnapshot.findPrecise(lookup);
+            final IAEStack<?> after = afterSnapshot.findPrecise(lookup);
 
-        for (String key : allKeys) {
-            long before = beforeSnapshot.getOrDefault(key, 0L);
-            long after = afterSnapshot.getOrDefault(key, 0L);
-            IAEStack<?> stack = stackLookup.get(key);
-            if (stack == null) continue;
-
-            ItemChange change = new ItemChange(stack, before, after);
+            ItemChange change = new ItemChange(lookup, before.getStackSize(), after.getStackSize());
 
             switch (change.changeType) {
                 case GAINED:
@@ -202,6 +264,7 @@ public class ReshuffleReport {
         return out;
     }
 
+    @SideOnly(Side.CLIENT)
     public List<String> generateReportLines() {
         List<String> lines = new ArrayList<>();
         long durationMs = endTime - startTime;
@@ -335,13 +398,10 @@ public class ReshuffleReport {
         return sb.toString();
     }
 
+    final static ReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
+
     private static String abbrev(long v) {
-        if (v < 0) return "-" + abbrev(-v);
-        if (v >= 1_000_000_000_000L) return String.format("%.1fT", v / 1_000_000_000_000.0);
-        if (v >= 1_000_000_000L) return String.format("%.1fB", v / 1_000_000_000.0);
-        if (v >= 1_000_000L) return String.format("%.1fM", v / 1_000_000.0);
-        if (v >= 10_000L) return String.format("%.1fK", v / 1_000.0);
-        return NumberFormat.getNumberInstance(Locale.US).format(v);
+        return converter.toWideReadableForm(v);
     }
 
     private static String signedAbbrev(long v) {
@@ -371,23 +431,6 @@ public class ReshuffleReport {
         char[] buf = new char[count];
         Arrays.fill(buf, '=');
         return new String(buf);
-    }
-
-    private String getStackKey(IAEStack<?> stack) {
-        if (stack instanceof AEItemStack itemStack) {
-            final ItemStack is = itemStack.getItemStack();
-            String key = Item.itemRegistry.getNameForObject(is.getItem()) + "@" + is.getItemDamage();
-            if (is.hasTagCompound()) key += "#" + is.getTagCompound().toString();
-            return "item:" + key;
-        } else if (stack instanceof AEFluidStack fluidStack) {
-            final FluidStack fs = fluidStack.getFluidStack();
-            String key = fs.getFluid().getName();
-            if (fs.tag != null) key += "#" + fs.tag.toString();
-            return "fluid:" + key;
-        }
-        String str = stack.toString();
-        if (str.matches("^\\d+x.*")) str = str.replaceFirst("^\\d+x", "");
-        return stack.getStackType().getClass().getSimpleName() + ":" + str;
     }
 
     private String getStackDisplayName(IAEStack<?> stack) {

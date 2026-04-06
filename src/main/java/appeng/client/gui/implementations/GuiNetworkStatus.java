@@ -130,20 +130,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             return;
         }
 
-        if (btn == 0 && this.tReshuffle != null
-                && this.tReshuffle.enabled
-                && xCoord >= this.tReshuffle.xPosition
-                && xCoord < this.tReshuffle.xPosition + this.tReshuffle.width
-                && yCoord >= this.tReshuffle.yPosition
-                && yCoord < this.tReshuffle.yPosition + this.tReshuffle.height) {
-            try {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "OpenReshuffle"));
-            } catch (final IOException e) {
-                AELog.debug(e);
-            }
-            return;
-        }
-
         ItemStack is = null;
         if (tooltip > -1) {
             final IAEStack<?> aeStack = repo.getReferenceStack(tooltip);
@@ -209,6 +195,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             } else {
                 this.isConsume = !this.isConsume;
             }
+        } else if (btn == this.tReshuffle) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "OpenReshuffle"));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
         }
 
         if (oldConsume != this.isConsume) {
@@ -241,7 +233,8 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     this.guiLeft - 18,
                     this.guiTop + 48,
                     Settings.ACTIONS,
-                    ActionItems.OPEN_RESHUFFLE);
+                    ActionItems.OPEN_RESHUFFLE_ON);
+            this.buttonList.add(this.tReshuffle);
         }
     }
 
@@ -276,30 +269,19 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             }
         }
 
-        if (this.tReshuffle != null && mouseX >= this.tReshuffle.xPosition
-                && mouseX < this.tReshuffle.xPosition + this.tReshuffle.width
-                && mouseY >= this.tReshuffle.yPosition
-                && mouseY < this.tReshuffle.yPosition + this.tReshuffle.height) {
-            final String tip = this.tReshuffle.enabled ? this.tReshuffle.getMessage()
-                    : "§c" + GuiText.ReshuffleNotPresent.getLocal();
-            this.drawTooltip(this.guiLeft - 8, this.tReshuffle.yPosition + 16, tip);
+        if (this.tReshuffle != null) {
+            this.tReshuffle.set(
+                    ((ContainerNetworkStatus) this.inventorySlots).reshufflePresent ? ActionItems.OPEN_RESHUFFLE_ON
+                            : ActionItems.OPEN_RESHUFFLE_OFF);
         }
 
         super.drawScreen(mouseX, mouseY, btn);
-
-        if (this.tReshuffle != null) {
-            this.tReshuffle.drawButton(this.mc, mouseX, mouseY);
-        }
 
         menu.draw(mouseX, mouseY);
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        if (this.tReshuffle != null) {
-            final boolean present = ((ContainerNetworkStatus) this.inventorySlots).reshufflePresent;
-            this.tReshuffle.setEnabled(present);
-        }
         if (this.isConsume) drawConsume();
         else {
             switch (AEConfig.instance.selectedCellType()) {

@@ -235,7 +235,6 @@ gui.appliedenergistics2.ReshuffleScanDuplicatePartition=Duplicate partition:
 gui.appliedenergistics2.ReshufflePartitionScanner=Partition Scanner
 gui.appliedenergistics2.ReshuffleOpenFromTool=Storage Reshuffle
 gui.appliedenergistics2.ReshuffleOpenFromToolHint=Open Storage Reshuffle GUI
-gui.appliedenergistics2.ReshuffleNotPresent=No Storage Reshuffle block found on this network
 
 gui.appliedenergistics2.Efficiency=Efficiency
 gui.appliedenergistics2.RequiredPower=Required Power
@@ -709,6 +708,7 @@ gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionOn=Enabled - items will 
 gui.tooltips.appliedenergistics2.ReshuffleVoidProtectionOff=Disabled - items may be voided
 gui.tooltips.appliedenergistics2.OpenReshuffle=Storage Reshuffle
 gui.tooltips.appliedenergistics2.OpenReshuffleDesc=Open Storage Reshuffle Interface
+gui.tooltips.appliedenergistics2.OpenReshuffleOffDesc=No Storage Reshuffle block found on this network
 
 
 gui.tooltips.appliedenergistics2.scheduledreason.SOMETHING_STUCK=Something stuck in interface

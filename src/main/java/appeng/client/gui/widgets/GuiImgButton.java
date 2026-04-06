@@ -937,9 +937,15 @@ public class GuiImgButton extends GuiButton implements ITooltip {
             this.registerApp(
                     16 * 8 + 6,
                     Settings.ACTIONS,
-                    ActionItems.OPEN_RESHUFFLE,
+                    ActionItems.OPEN_RESHUFFLE_ON,
                     ButtonToolTips.OpenReshuffle,
                     ButtonToolTips.OpenReshuffleDesc);
+            this.registerApp(
+                    16 * 8 + 6,
+                    Settings.ACTIONS,
+                    ActionItems.OPEN_RESHUFFLE_OFF,
+                    ButtonToolTips.OpenReshuffle,
+                    ButtonToolTips.OpenReshuffleOffDesc);
         }
     }
 

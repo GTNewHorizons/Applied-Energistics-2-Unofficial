@@ -1,21 +1,11 @@
-/*
- * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
- * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version. Applied Energistics 2 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
- * Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
- * Applied Energistics 2. If not, see <http://www.gnu.org/licenses/lgpl>.
- */
-
 package appeng.container.implementations;
 
 import static net.minecraft.item.Item.itemRegistry;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -31,6 +21,7 @@ import appeng.client.gui.implementations.GuiStorageReshuffle;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.helpers.CellScanTask;
+import appeng.helpers.ReshuffleReport;
 import appeng.tile.misc.TileStorageReshuffle;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
@@ -48,7 +39,7 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     public int reshuffleTotalItems = 0;
 
     @GuiSync(3)
-    public String reportData = "";
+    public ReshuffleReport report = null;
 
     @GuiSync(4)
     public int reshuffleProgress = 0;
@@ -112,9 +103,9 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         this.reshuffleProgress = this.tile.getReshuffleProgress();
         this.reshuffleProcessedItems = this.tile.getReshuffleProcessedItems();
 
-        final String current = this.tile.getReshuffleReport();
-        if (!current.equals(this.reportData)) {
-            this.reportData = current;
+        final ReshuffleReport current = this.tile.getReshuffleReport();
+        if (!Objects.equals(current, this.report)) {
+            this.report = current;
         }
 
         final String currentScan = encodeScanData(this.tile.getScanDuplicates());
@@ -128,7 +119,7 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
         if (Minecraft.getMinecraft().currentScreen instanceof GuiStorageReshuffle gui) {
-            if (field.equals("reportData")) {
+            if (field.equals("report")) {
                 gui.onReportUpdated();
             } else if (field.equals("scanData")) {
                 gui.onScanUpdated();
@@ -175,8 +166,8 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     }
 
     public List<String> getReportLines() {
-        if (this.reportData.isEmpty()) return new ArrayList<>();
-        return Arrays.asList(this.reportData.split("\n", -1));
+        if (this.report == null) return new ArrayList<>();
+        return report.generateReportLines();
     }
 
     public String getScanData() {

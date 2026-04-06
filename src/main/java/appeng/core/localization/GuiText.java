@@ -360,8 +360,7 @@ public enum GuiText implements Localization {
     ReshuffleScanDuplicatePartition,
     ReshufflePartitionScanner,
     ReshuffleOpenFromTool,
-    ReshuffleOpenFromToolHint,
-    ReshuffleNotPresent;
+    ReshuffleOpenFromToolHint;
 
     private final String root;
 
