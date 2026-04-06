@@ -107,8 +107,8 @@ public class GuiStorageReshuffle extends AEBaseGui implements ISortSource {
         this.reshuffleTab = new GuiToggleButton(
                 rightTabX,
                 this.guiTop + 8,
-                8 * 16 + 6,
-                8 * 16 + 6,
+                8 * 16 + 9,
+                8 * 16 + 9,
                 GuiText.ReshuffleTabReshuffle.getUnlocalized(),
                 GuiText.ReshuffleTabReshuffleHint.getUnlocalized());
         this.buttonList.add(this.reshuffleTab);
@@ -116,8 +116,8 @@ public class GuiStorageReshuffle extends AEBaseGui implements ISortSource {
         this.scanModeButton = new GuiToggleButton(
                 rightTabX,
                 this.guiTop + 28,
-                8 * 16 + 5,
-                8 * 16 + 5,
+                8 * 16 + 10,
+                8 * 16 + 10,
                 GuiText.ReshuffleTabScan.getUnlocalized(),
                 GuiText.ReshuffleTabScanHint.getUnlocalized());
         this.buttonList.add(this.scanModeButton);

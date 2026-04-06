@@ -923,25 +923,25 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     ButtonToolTips.NumberOfCoProcessors);
 
             this.registerApp(
-                    16 * 8 + 4,
+                    16 * 8 + 7,
                     Settings.VOID_PROTECTION,
                     YesNo.YES,
                     ButtonToolTips.ReshuffleVoidProtection,
                     ButtonToolTips.ReshuffleVoidProtectionOn);
             this.registerApp(
-                    16 * 8 + 4,
+                    16 * 8 + 7,
                     Settings.VOID_PROTECTION,
                     YesNo.NO,
                     ButtonToolTips.ReshuffleVoidProtection,
                     ButtonToolTips.ReshuffleVoidProtectionOff);
             this.registerApp(
-                    16 * 8 + 6,
+                    16 * 8 + 9,
                     Settings.ACTIONS,
                     ActionItems.OPEN_RESHUFFLE_ON,
                     ButtonToolTips.OpenReshuffle,
                     ButtonToolTips.OpenReshuffleDesc);
             this.registerApp(
-                    16 * 8 + 6,
+                    16 * 8 + 9,
                     Settings.ACTIONS,
                     ActionItems.OPEN_RESHUFFLE_OFF,
                     ButtonToolTips.OpenReshuffle,
