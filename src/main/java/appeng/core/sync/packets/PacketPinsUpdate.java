@@ -85,8 +85,7 @@ public class PacketPinsUpdate extends AppEngPacket {
         if (gs instanceof IPinsHandler iph) {
             int craftOrd = Math.max(0, Math.min(craftingRowsOrdinal, PinsRows.values().length - 1));
             int playerOrd = Math.max(0, Math.min(playerRowsOrdinal, PinsRows.values().length - 1));
-            iph.setCraftingPinsRows(PinsRows.values()[craftOrd]);
-            iph.setPlayerPinsRows(PinsRows.values()[playerOrd]);
+            iph.setPinsRows(PinsRows.values()[craftOrd], PinsRows.values()[playerOrd]);
             if (list != null) iph.setAEPins(list);
         }
     }
@@ -97,8 +96,7 @@ public class PacketPinsUpdate extends AppEngPacket {
         if (sender.openContainer instanceof IPinsHandler container) {
             int craftOrd = Math.max(0, Math.min(craftingRowsOrdinal, PinsRows.values().length - 1));
             int playerOrd = Math.max(0, Math.min(playerRowsOrdinal, PinsRows.values().length - 1));
-            container.setCraftingPinsRows(PinsRows.values()[craftOrd]);
-            container.setPlayerPinsRows(PinsRows.values()[playerOrd]);
+            container.setPinsRows(PinsRows.values()[craftOrd], PinsRows.values()[playerOrd]);
         }
     }
 }

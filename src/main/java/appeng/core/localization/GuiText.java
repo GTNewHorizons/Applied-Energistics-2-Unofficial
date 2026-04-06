@@ -250,6 +250,7 @@ public enum GuiText implements Localization {
 
     HoldShiftForTooltip,
     HoldShiftClick_HIGHLIGHT_INTERFACE,
+    Accepts,
 
     // Used in a ME Interface when no appropriate TileEntity was detected near it
     Nothing,

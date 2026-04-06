@@ -142,8 +142,6 @@ public class ContainerMEMonitorable extends AEBaseContainer
         this.clientCM.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         this.clientCM.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         this.clientCM.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-        this.clientCM.registerSetting(Settings.CRAFTING_PINS_ROWS, PinsRows.DISABLED);
-        this.clientCM.registerSetting(Settings.PLAYER_PINS_ROWS, PinsRows.DISABLED);
 
         if (Platform.isServer()) {
             if (monitorable instanceof ITerminalPins t) {
@@ -235,14 +233,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
             }
 
             if (pinsHandler != null) {
-                if (clientCM.getSetting(Settings.CRAFTING_PINS_ROWS) != pinsHandler.getCraftingPinsRows()
-                        || clientCM.getSetting(Settings.PLAYER_PINS_ROWS) != pinsHandler.getPlayerPinsRows()) {
-                    this.clientCM.putSetting(Settings.CRAFTING_PINS_ROWS, pinsHandler.getCraftingPinsRows());
-                    this.clientCM.putSetting(Settings.PLAYER_PINS_ROWS, pinsHandler.getPlayerPinsRows());
-                    updatePins(true);
-                } else {
-                    updatePins(false);
-                }
+                updatePins(false);
             }
 
             if (this.needListUpdate) {
@@ -498,7 +489,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
         return getMonitor(ITEM_STACK_TYPE);
     }
 
-    private int lastUpdate = 0;
+    private int lastUpdate = 20;
 
     public void updatePins(boolean forceUpdate) {
         if (pinsHandler == null || !(host instanceof ITerminalPins itp)) return;
@@ -562,17 +553,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
         return pinsHandler.getPin(idx);
     }
 
-    public void setCraftingPinsRows(PinsRows rows) {
+    @Override
+    public void setPinsRows(PinsRows craftingRows, PinsRows playerRows) {
         if (pinsHandler == null) return;
-        clientCM.putSetting(Settings.CRAFTING_PINS_ROWS, rows);
-        pinsHandler.setCraftingPinsRows(rows);
-        updatePins(true);
-    }
-
-    public void setPlayerPinsRows(PinsRows rows) {
-        if (pinsHandler == null) return;
-        clientCM.putSetting(Settings.PLAYER_PINS_ROWS, rows);
-        pinsHandler.setPlayerPinsRows(rows);
+        pinsHandler.setPinsRows(craftingRows, playerRows);
         updatePins(true);
     }
 
@@ -596,6 +580,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
     @Nullable
     private <T extends IAEStack<T>> IMEMonitor<T> getMonitorWithFilter(IAEStackType<T> type) {
+        if (this.typeFilters == null) return this.getMonitor(type);
         if (this.typeFilters.getBoolean(type)) {
             return this.getMonitor(type);
         }

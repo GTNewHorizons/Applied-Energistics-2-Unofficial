@@ -27,7 +27,10 @@ public class BlockRendererPreviewEvent {
         if (event.phase != TickEvent.Phase.END) return;
         if (AEConfig.instance.previewBlocks) {
             EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-            if (player == null) return;
+            if (player == null) {
+                ViewHelper.setPlayer(null);
+                return;
+            }
 
             ItemStack heldItem = player.getHeldItem();
             if (heldItem == null) {

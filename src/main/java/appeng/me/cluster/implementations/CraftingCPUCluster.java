@@ -1781,6 +1781,28 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return ScheduledReason.UNDEFINED;
     }
 
+    public NBTTagCompound getNonUndefinedScheduledReasons() {
+        final NBTTagCompound result = new NBTTagCompound();
+        final NBTTagList entries = new NBTTagList();
+        for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
+            final ScheduledReason sr = reasonProvider.getOrDefault(t.getKey(), ScheduledReason.UNDEFINED);
+            if (sr != ScheduledReason.UNDEFINED) {
+                for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
+                    final IAEStack<?> keyStack = ais.copy();
+                    keyStack.setStackSize(1);
+
+                    final NBTTagCompound entry = new NBTTagCompound();
+                    entry.setString("Type", keyStack.getStackType().getId());
+                    entry.setInteger("Hash", keyStack.hashCode());
+                    entry.setInteger("Reason", sr.ordinal());
+                    entries.appendTag(entry);
+                }
+            }
+        }
+        result.setTag("Entries", entries);
+        return result;
+    }
+
     private final IdentityHashMap<Class<?>, Method> getTileMethodCache = new IdentityHashMap<>();
 
     private TileEntity getTile(ICraftingMedium craftingProvider) {

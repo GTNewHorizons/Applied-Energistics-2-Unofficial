@@ -90,18 +90,12 @@ public class PinsHandler {
         holder.markDirty();
     }
 
-    public void setCraftingPinsRows(PinsRows rows) {
-        if (craftingPinsRows == rows) return;
-        craftingPinsRows = rows;
-        holder.setCraftingPinsRows(player, rows);
-        update(false);
-    }
-
-    public void setPlayerPinsRows(PinsRows rows) {
-        if (playerPinsRows == rows) return;
-        playerPinsRows = rows;
-        holder.setPlayerPinsRows(player, rows);
-        update(false);
+    public void setPinsRows(PinsRows craftingRows, PinsRows playerRows) {
+        if (craftingPinsRows == craftingRows && playerPinsRows == playerRows) return;
+        craftingPinsRows = craftingRows;
+        playerPinsRows = playerRows;
+        holder.setPinsRows(player, craftingRows, playerRows);
+        update(true);
     }
 
     public PinsRows getCraftingPinsRows() {

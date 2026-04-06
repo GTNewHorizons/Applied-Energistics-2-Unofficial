@@ -158,7 +158,7 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
     private GuiAeButton findNext;
     private GuiAeButton findPrev;
     private MEGuiTextField searchField;
-    protected List<IAEStack<?>> filteredVisual = new ArrayList<>();
+    private final List<IAEStack<?>> filteredVisual = new ArrayList<>();
     private int tooltip = -1;
     private ItemStack hoveredStack;
 
@@ -651,12 +651,12 @@ public class GuiCraftConfirm extends GuiSub implements ICraftingCPUTableHolder, 
 
                 if (red) {
                     final int startX = x * (1 + sectionLength) + xo;
-                    final int startY = posY - 4;
+                    final int startY = posY - 3;
                     drawRect(
                             startX,
                             startY,
                             startX + sectionLength,
-                            startY + offY,
+                            startY + offY - 1,
                             GuiColors.CraftConfirmMissingItem.getColor());
                 }
 
