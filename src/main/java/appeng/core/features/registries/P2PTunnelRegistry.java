@@ -122,7 +122,7 @@ public final class P2PTunnelRegistry implements IP2PTunnelRegistry {
                 TunnelType.FLUID);
         this.addNewAttunement(this.getModItem("ThermalDynamics", "ThermalDynamics_16", 0), TunnelType.FLUID);
 
-        for (final AEColor c : AEColor.values()) {
+        for (final AEColor c : AEColor.VALUES) {
             this.addNewAttunement(parts.cableGlass().stack(c, 1), TunnelType.ME);
             this.addNewAttunement(parts.cableCovered().stack(c, 1), TunnelType.ME);
             this.addNewAttunement(parts.cableSmart().stack(c, 1), TunnelType.ME);

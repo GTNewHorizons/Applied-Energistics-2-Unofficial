@@ -10,6 +10,7 @@
 
 package appeng.me.storage;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
@@ -122,6 +123,11 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
 
     @Override
     public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration) {
+        return this.getAvailableItems(out, iteration, Optional.empty());
+    }
+
+    @Override
+    public IItemList<T> getAvailableItems(final IItemList<T> out, int iteration, Optional<Predicate<T>> preFilter) {
         if (!this.hasReadAccess && !isVisible()) {
             return out;
         }
@@ -129,9 +135,12 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         if (out instanceof ItemFilterList) return getAvailableItemsFilter(out, iteration);
 
         if (this.isExtractFilterActive() && !this.myExtractPartitionList.isEmpty()) {
-            return this.filterAvailableItems(out, iteration);
+            Predicate<T> extractFilter = this.getExtractFilterCondition();
+            Predicate<T> effectiveFilter = preFilter.map(extractFilter::and).orElse(extractFilter);
+            return this.internal.getAvailableItems(out, iteration, Optional.of(effectiveFilter));
         } else {
-            return this.internal.getAvailableItems(out, iteration);
+            return !preFilter.isPresent() ? this.internal.getAvailableItems(out, iteration)
+                    : this.internal.getAvailableItems(out, iteration, preFilter);
         }
     }
 
@@ -139,18 +148,6 @@ public class MEInventoryHandler<T extends IAEStack<T>> implements IMEInventoryHa
         boolean bool = this.internal instanceof MEMonitorIInventory inv && inv.getMode() == StorageFilter.NONE;
         if (this.internal instanceof MEMonitorPassThrough inv && inv.getMode() == StorageFilter.NONE) bool = true;
         return bool;
-    }
-
-    protected IItemList<T> filterAvailableItems(IItemList<T> out, int iteration) {
-        final IItemList<T> allAvailableItems = this.internal
-                .getAvailableItems((IItemList<T>) this.internal.getStackType().createList(), iteration);
-        Predicate<T> filterCondition = this.getExtractFilterCondition();
-        for (T item : allAvailableItems) {
-            if (filterCondition.test(item)) {
-                out.add(item);
-            }
-        }
-        return out;
     }
 
     protected IItemList<T> getAvailableItemsFilter(IItemList<T> out, int iteration) {

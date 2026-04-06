@@ -27,6 +27,7 @@ import appeng.api.AEApi;
 import appeng.api.config.CopyMode;
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
+import appeng.api.config.Upgrades;
 import appeng.api.implementations.tiles.ICellWorkbench;
 import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.IMEInventory;
@@ -43,6 +44,7 @@ import appeng.tile.inventory.AppEngNullInventory;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.IterationCounter;
 import appeng.util.Platform;
+import appeng.util.inv.IUpgradeInventory;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 public class ContainerCellWorkbench extends ContainerUpgradeable implements IVirtualSlotHolder {
@@ -96,7 +98,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
                         8,
                         this.getInventoryPlayer()));
 
-        final IInventory upgradeInventory = new Upgrades();
+        final IInventory upgradeInventory = new WorkbenchUpgradeInventory();
 
         for (int zz = 0; zz < 3; zz++) {
             for (int z = 0; z < 8; z++) {
@@ -261,7 +263,7 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         return this.workBench.getAEInventoryByName(StorageName.NONE);
     }
 
-    public class Upgrades implements IInventory {
+    public class WorkbenchUpgradeInventory implements IInventory, IUpgradeInventory {
 
         @Override
         public int getSizeInventory() {
@@ -328,6 +330,15 @@ public class ContainerCellWorkbench extends ContainerUpgradeable implements IVir
         @Override
         public boolean isItemValidForSlot(final int i, final ItemStack itemstack) {
             return ContainerCellWorkbench.this.getCellUpgradeInventory().isItemValidForSlot(i, itemstack);
+        }
+
+        @Override
+        public int getMaxInstalled(Upgrades upgrades) {
+            if (ContainerCellWorkbench.this.getCellUpgradeInventory() instanceof IUpgradeInventory upgradeInventory) {
+                return upgradeInventory.getMaxInstalled(upgrades);
+            } else {
+                return 0;
+            }
         }
     }
 }

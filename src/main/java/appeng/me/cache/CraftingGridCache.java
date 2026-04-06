@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -31,6 +32,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.Nonnull;
@@ -320,7 +322,8 @@ public class CraftingGridCache
         for (final Entry<IAEStack<?>, Set<ICraftingPatternDetails>> e : tmpCraft.entrySet()) {
             this.craftableItems.put(e.getKey(), ImmutableList.copyOf(e.getValue()));
 
-            craftableItemsLegacy.put(stackConvert(e.getKey()), ImmutableList.copyOf(e.getValue()));
+            final IAEItemStack ais = stackConvert(e.getKey());
+            if (ais != null) craftableItemsLegacy.put(ais, ImmutableList.copyOf(e.getValue()));
         }
     }
 
@@ -455,18 +458,28 @@ public class CraftingGridCache
 
     @Override
     public IItemList<IAEStack> getAvailableItems(final IItemList<IAEStack> out, int iteration) {
+        return getAvailableItems(out, iteration, Optional.empty());
+    }
+
+    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public IItemList<IAEStack> getAvailableItems(final IItemList<IAEStack> out, int iteration,
+            Optional<Predicate<IAEStack>> filter) {
+        final IAEStackType<?> outType = out.getStackType();
+        final Predicate<IAEStack> predicate = filter.orElse(null);
+
         // add craftable items!
         for (final IAEStack<?> stack : this.craftableItems.keySet()) {
-            IAEStackType<?> type = out.getStackType();
-            if (type == null || type == stack.getStackType()) {
-                out.addCrafting(stack);
+            if ((outType == null || outType == stack.getStackType())
+                    && (predicate == null || predicate.test((IAEStack) stack))) {
+                out.addCrafting((IAEStack) stack);
             }
         }
 
         for (final IAEStack<?> stack : emitableItems) {
-            IAEStackType<?> type = out.getStackType();
-            if (type == null || type == stack.getStackType()) {
-                out.addCrafting(stack);
+            if ((outType == null || outType == stack.getStackType())
+                    && (predicate == null || predicate.test((IAEStack) stack))) {
+                out.addCrafting((IAEStack) stack);
             }
         }
 

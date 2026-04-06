@@ -26,6 +26,10 @@ public enum GuiText implements Localization {
     SpatialIOPort,
     LevelEmitter,
     Terminal,
+    SpatialChamber,
+
+    TeleportInside,
+    TeleportOutside,
 
     Interface,
     Config,
@@ -246,6 +250,7 @@ public enum GuiText implements Localization {
 
     HoldShiftForTooltip,
     HoldShiftClick_HIGHLIGHT_INTERFACE,
+    Accepts,
 
     // Used in a ME Interface when no appropriate TileEntity was detected near it
     Nothing,
@@ -283,6 +288,8 @@ public enum GuiText implements Localization {
     ItemsPerByte,
     FluidsPerByte,
     BytesPerType,
+    ControlButtonValuesDesc1,
+    ControlButtonValuesDesc2,
 
     CellView,
     EncodedPattern,

@@ -9,8 +9,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 
-import appeng.api.config.PinsState;
-import appeng.api.storage.data.IAEItemStack;
+import appeng.api.config.PinsRows;
 import appeng.api.storage.data.IAEStack;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -21,18 +20,15 @@ import io.netty.buffer.Unpooled;
 
 public class PacketPinsUpdate extends AppEngPacket {
 
-    // input.
     @Nullable
     private final IAEStack<?>[] list;
-    @Nullable
-    private final PinsState state;
+    private final int craftingRowsOrdinal;
+    private final int playerRowsOrdinal;
 
     public PacketPinsUpdate(final ByteBuf stream) throws IOException {
         int arrLength = stream.readInt();
-
-        int stateOrdinal = stream.readInt();
-        if (stateOrdinal >= 0) state = PinsState.values()[stateOrdinal];
-        else state = null;
+        craftingRowsOrdinal = stream.readInt();
+        playerRowsOrdinal = stream.readInt();
 
         if (arrLength < 0) {
             list = null;
@@ -47,16 +43,16 @@ public class PacketPinsUpdate extends AppEngPacket {
         }
     }
 
-    public PacketPinsUpdate(IAEStack<?>[] arr, PinsState state) throws IOException {
+    public PacketPinsUpdate(IAEStack<?>[] arr, PinsRows craftingRows, PinsRows playerRows) throws IOException {
         list = arr;
-        this.state = state;
+        this.craftingRowsOrdinal = craftingRows.ordinal();
+        this.playerRowsOrdinal = playerRows.ordinal();
 
         final ByteBuf data = Unpooled.buffer();
-
         data.writeInt(this.getPacketID());
-
         data.writeInt(arr.length);
-        data.writeInt(state.ordinal());
+        data.writeInt(craftingRowsOrdinal);
+        data.writeInt(playerRowsOrdinal);
 
         for (IAEStack<?> aeItemStack : arr) {
             if (aeItemStack != null) {
@@ -66,44 +62,20 @@ public class PacketPinsUpdate extends AppEngPacket {
                 data.writeBoolean(false);
             }
         }
-
         this.configureWrite(data);
     }
 
-    public PacketPinsUpdate(PinsState state) throws IOException {
-        this.state = state;
-        this.list = null;
+    /** State-only update (e.g. button click). */
+    public PacketPinsUpdate(PinsRows craftingRows, PinsRows playerRows) throws IOException {
+        list = null;
+        this.craftingRowsOrdinal = craftingRows.ordinal();
+        this.playerRowsOrdinal = playerRows.ordinal();
 
         final ByteBuf data = Unpooled.buffer();
-
         data.writeInt(this.getPacketID());
-
-        data.writeInt(-1); // No item array provided
-        data.writeInt(state.ordinal());
-
-        this.configureWrite(data);
-    }
-
-    public PacketPinsUpdate(IAEItemStack[] arr) throws IOException {
-        list = arr;
-        this.state = null;
-
-        final ByteBuf data = Unpooled.buffer();
-
-        data.writeInt(this.getPacketID());
-
-        data.writeInt(arr.length);
-        data.writeInt(-1); // No state provided
-
-        for (IAEItemStack aeItemStack : arr) {
-            if (aeItemStack != null) {
-                data.writeBoolean(true);
-                aeItemStack.writeToPacket(data);
-            } else {
-                data.writeBoolean(false);
-            }
-        }
-
+        data.writeInt(-1);
+        data.writeInt(craftingRowsOrdinal);
+        data.writeInt(playerRowsOrdinal);
         this.configureWrite(data);
     }
 
@@ -111,17 +83,20 @@ public class PacketPinsUpdate extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
         if (gs instanceof IPinsHandler iph) {
+            int craftOrd = Math.max(0, Math.min(craftingRowsOrdinal, PinsRows.values().length - 1));
+            int playerOrd = Math.max(0, Math.min(playerRowsOrdinal, PinsRows.values().length - 1));
+            iph.setPinsRows(PinsRows.values()[craftOrd], PinsRows.values()[playerOrd]);
             if (list != null) iph.setAEPins(list);
-
-            if (state != null) iph.setPinsState(state);
         }
     }
 
     @Override
     public void serverPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final EntityPlayerMP sender = (EntityPlayerMP) player;
-        if (sender.openContainer instanceof IPinsHandler container && state != null) {
-            container.setPinsState(state);
+        if (sender.openContainer instanceof IPinsHandler container) {
+            int craftOrd = Math.max(0, Math.min(craftingRowsOrdinal, PinsRows.values().length - 1));
+            int playerOrd = Math.max(0, Math.min(playerRowsOrdinal, PinsRows.values().length - 1));
+            container.setPinsRows(PinsRows.values()[craftOrd], PinsRows.values()[playerOrd]);
         }
     }
 }

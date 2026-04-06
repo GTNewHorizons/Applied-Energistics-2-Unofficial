@@ -27,6 +27,8 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.NotNull;
+
 import com.google.common.collect.ImmutableSet;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemSink;
@@ -53,6 +55,7 @@ import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
@@ -166,13 +169,7 @@ public class TileInterface extends AENetworkInvTile
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileInterface(final NBTTagCompound data) {
         final int val = data.getInteger("pointAt");
-
-        if (val >= 0 && val < ForgeDirection.values().length) {
-            this.pointAt = ForgeDirection.values()[val];
-        } else {
-            this.pointAt = ForgeDirection.UNKNOWN;
-        }
-
+        this.pointAt = ForgeDirection.getOrientation(val);
         this.duality.readFromNBT(data);
     }
 
@@ -199,6 +196,11 @@ public class TileInterface extends AENetworkInvTile
     @Override
     public IMEMonitor<IAEFluidStack> getFluidInventory() {
         return this.duality.getFluidInventory();
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        return this.duality.getMEMonitor(type);
     }
 
     @Override

@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.World;
 
 import org.lwjgl.opengl.GL11;
 
@@ -27,8 +28,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class TESRWrapper extends TileEntitySpecialRenderer {
 
-    private final RenderBlocks renderBlocksInstance = new RenderBlocks();
-
+    private RenderBlocks renderBlocks;
     private final BaseBlockRender blkRender;
     private final double maxDistance;
 
@@ -54,9 +54,7 @@ public class TESRWrapper extends TileEntitySpecialRenderer {
                 try {
                     GL11.glPushMatrix();
 
-                    this.renderBlocksInstance.blockAccess = te.getWorldObj();
-                    this.blkRender
-                            .renderTile((AEBaseBlock) b, (AEBaseTile) te, tess, x, y, z, f, this.renderBlocksInstance);
+                    this.blkRender.renderTile((AEBaseBlock) b, (AEBaseTile) te, tess, x, y, z, f, this.renderBlocks);
 
                     GL11.glPopMatrix();
                 } catch (final Throwable t) {
@@ -67,5 +65,10 @@ public class TESRWrapper extends TileEntitySpecialRenderer {
                 }
             }
         }
+    }
+
+    @Override
+    public void func_147496_a(World world) {
+        this.renderBlocks = new RenderBlocks(world);
     }
 }

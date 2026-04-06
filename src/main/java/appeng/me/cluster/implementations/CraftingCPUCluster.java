@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1136,19 +1137,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         try {
             long missingCount = missingStack.getStackSize();
-            IChatComponent missingItem;
-            if (missingStack instanceof IAEItemStack ais) {
-                missingItem = ais.getItemStack().func_151000_E();
-                missingItem.getChatStyle().setColor(EnumChatFormatting.GOLD);
-            } else {
-                String missingName = missingStack.getUnlocalizedName();
-                if (StatCollector.canTranslate(missingName + ".name") && StatCollector
-                        .translateToLocal(missingName + ".name").equals(missingStack.getDisplayName())) {
-                    missingItem = new ChatComponentTranslation(missingName + ".name");
-                } else {
-                    missingItem = new ChatComponentText(missingStack.getDisplayName());
-                }
-            }
+            IChatComponent missingItem = missingStack.getChatComponent();
+            missingItem.getChatStyle().setColor(EnumChatFormatting.GOLD);
 
             String missingCountText = EnumChatFormatting.RED
                     + NumberFormat.getNumberInstance(Locale.getDefault()).format(missingCount)
@@ -1791,12 +1781,45 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return ScheduledReason.UNDEFINED;
     }
 
+    public NBTTagCompound getNonUndefinedScheduledReasons() {
+        final NBTTagCompound result = new NBTTagCompound();
+        final NBTTagList entries = new NBTTagList();
+        for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
+            final ScheduledReason sr = reasonProvider.getOrDefault(t.getKey(), ScheduledReason.UNDEFINED);
+            if (sr != ScheduledReason.UNDEFINED) {
+                for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
+                    final IAEStack<?> keyStack = ais.copy();
+                    keyStack.setStackSize(1);
+
+                    final NBTTagCompound entry = new NBTTagCompound();
+                    entry.setString("Type", keyStack.getStackType().getId());
+                    entry.setInteger("Hash", keyStack.hashCode());
+                    entry.setInteger("Reason", sr.ordinal());
+                    entries.appendTag(entry);
+                }
+            }
+        }
+        result.setTag("Entries", entries);
+        return result;
+    }
+
+    private final IdentityHashMap<Class<?>, Method> getTileMethodCache = new IdentityHashMap<>();
+
     private TileEntity getTile(ICraftingMedium craftingProvider) {
+        if (craftingProvider == null) return null;
         if (craftingProvider instanceof TileEntity te) return te;
+        final Class<?> clazz = craftingProvider.getClass();
         try {
-            Method method = craftingProvider.getClass().getMethod("getTile");
+            if (!getTileMethodCache.containsKey(clazz)) {
+                getTileMethodCache.put(clazz, clazz.getMethod("getTile"));
+            }
+            Method method = getTileMethodCache.get(clazz);
+            if (method == null) {
+                return null;
+            }
             return (TileEntity) method.invoke(craftingProvider);
         } catch (Exception ignored) {
+            getTileMethodCache.put(clazz, null);
             return null;
         }
 
@@ -1911,10 +1934,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             final String elapsedTimeText = DurationFormatUtils.formatDuration(
                     TimeUnit.MILLISECONDS.convert(this.elapsedTime, TimeUnit.NANOSECONDS),
                     GuiText.ETAFormat.getLocal());
-            return PlayerMessages.FinishCraftingRemind.toChat(
-                    new ChatComponentText(EnumChatFormatting.GREEN + String.valueOf(this.outputsCount)),
-                    this.finalOutput.getDisplayName(),
-                    new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText));
+            IChatComponent countComponent = new ChatComponentText(
+                    EnumChatFormatting.GREEN + String.valueOf(this.outputsCount));
+            final IChatComponent itemComponent = this.finalOutput.getChatComponent();
+            IChatComponent timeComponent = new ChatComponentText(EnumChatFormatting.GREEN + elapsedTimeText);
+            return PlayerMessages.FinishCraftingRemind.toChat(countComponent, itemComponent, timeComponent);
         }
 
         public void readFromNBT(NBTTagCompound tag) {

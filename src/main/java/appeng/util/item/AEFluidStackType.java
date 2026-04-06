@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidContainerRegistry;
@@ -70,6 +71,11 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
     }
 
     @Override
+    public EnumChatFormatting getColorDefinition() {
+        return EnumChatFormatting.GOLD;
+    }
+
+    @Override
     public boolean isContainerItemForType(@Nullable ItemStack container) {
         return FluidUtils.isFluidContainer(container);
     }
@@ -104,10 +110,14 @@ public class AEFluidStackType implements IAEStackType<IAEFluidStack> {
         itemStack.stackSize = 1;
         if (itemStack.getItem() instanceof IFluidContainerItem container) {
             FluidStack fluid = container.getFluid(itemStack);
-            if (fluid == null || !stack.getFluidStack().isFluidEqual(fluid))
+            if (fluid == null || !stack.getFluidStack().isFluidEqual(fluid)) {
                 return new ObjectLongImmutablePair<>(itemStack, 0);
+            }
             FluidStack drained = container
                     .drain(itemStack, (int) Math.min(stack.getStackSize(), Integer.MAX_VALUE), true);
+            if (drained == null) {
+                return new ObjectLongImmutablePair<>(itemStack, 0);
+            }
             return new ObjectLongImmutablePair<>(itemStack, drained.amount);
         } else if (FluidContainerRegistry.isContainer(itemStack)) {
             FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(itemStack);

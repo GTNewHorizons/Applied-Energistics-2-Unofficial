@@ -63,7 +63,7 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.ItemSearchDTO;
 import appeng.container.guisync.DataSynchronization;
-import appeng.container.implementations.ContainerCellWorkbench;
+import appeng.container.implementations.ContainerCellWorkbench.WorkbenchUpgradeInventory;
 import appeng.container.implementations.ContainerUpgradeable;
 import appeng.container.interfaces.IInventorySlotAware;
 import appeng.container.slot.AppEngSlot;
@@ -560,13 +560,13 @@ public abstract class AEBaseContainer extends Container {
                 if (ContainerUpgradeable.class.isAssignableFrom(this.getClass())) {
                     // Check source or target
                     if (clickSlot.inventory instanceof UpgradeInventory
-                            || clickSlot.inventory instanceof ContainerCellWorkbench.Upgrades) {
+                            || clickSlot.inventory instanceof WorkbenchUpgradeInventory) {
                         if (!d.isPlayerSide() && !(clickSlot.inventory instanceof INetworkTool)) {
                             continue;
                         }
                     } else {
                         if (!(d.inventory instanceof UpgradeInventory)
-                                && !(d.inventory instanceof ContainerCellWorkbench.Upgrades)) {
+                                && !(d.inventory instanceof WorkbenchUpgradeInventory)) {
                             continue;
                         }
                     }
