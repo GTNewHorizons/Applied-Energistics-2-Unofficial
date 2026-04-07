@@ -764,6 +764,10 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
             this.typeFilters.readFromNBT(data);
         } else if (data.hasKey("TYPE_FILTER")) {
             this.applyLegacyTypeFilter(data.getString("TYPE_FILTER"));
+        } else {
+            final Reference2BooleanMap<IAEStackType<?>> filters = this.typeFilters.getFilters();
+            final IAEStackType<?> thisType = this.getUltraLegacyType();
+            for (IAEStackType<?> type : filters.keySet()) filters.put(type, type == thisType);
         }
     }
 
@@ -853,5 +857,9 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
                 filters.put(type, type == AEFluidStackType.FLUID_STACK_TYPE);
             }
         }
+    }
+
+    protected IAEStackType<?> getUltraLegacyType() {
+        return ITEM_STACK_TYPE;
     }
 }
