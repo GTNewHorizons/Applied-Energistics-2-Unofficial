@@ -24,6 +24,8 @@ import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.implementations.items.IMemoryCard;
 import appeng.api.implementations.items.INetworkToolItem;
 import appeng.api.implementations.items.MemoryCardMessages;
@@ -93,26 +95,22 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
 
     @Override
     public void setMemoryCardContents(final ItemStack is, final String settingsName, final NBTTagCompound data) {
-        final NBTTagCompound c = Platform.openNbtData(is);
-        c.setString("Config", settingsName);
-        c.setTag("Data", data);
+        ItemStackNBT.of(is).setString("Config", settingsName).setCompoundTag("Data", data);
     }
 
     @Override
     public String getSettingsName(final ItemStack is) {
-        final NBTTagCompound c = Platform.openNbtData(is);
-        final String name = c.getString("Config");
+        final String name = ItemStackNBT.getString(is, "Config");
         return name == null || name.isEmpty() ? GuiText.Blank.getUnlocalized() : name;
     }
 
     @Override
     public NBTTagCompound getData(final ItemStack is) {
-        final NBTTagCompound c = Platform.openNbtData(is);
-        NBTTagCompound o = c.getCompoundTag("Data");
-        if (o == null) {
-            o = new NBTTagCompound();
+        final NBTTagCompound data = ItemStackNBT.getCompoundTag(is, "Data");
+        if (data == null) {
+            return new NBTTagCompound();
         }
-        return (NBTTagCompound) o.copy();
+        return (NBTTagCompound) data.copy();
     }
 
     @Override

@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.event.ForgeEventFactory;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 import com.mojang.authlib.GameProfile;
 
 import appeng.api.config.SecurityPermissions;
@@ -89,58 +90,48 @@ public class ToolBiometricCard extends AEBaseItem implements IBiometricCard {
 
     @Override
     public void setProfile(final ItemStack itemStack, final GameProfile profile) {
-        final NBTTagCompound tag = Platform.openNbtData(itemStack);
-
         if (profile != null) {
-            final NBTTagCompound pNBT = new NBTTagCompound();
-            NBTUtil.func_152460_a(pNBT, profile);
-            tag.setTag("profile", pNBT);
+            final NBTTagCompound nbt = new NBTTagCompound();
+            NBTUtil.func_152460_a(nbt, profile);
+            ItemStackNBT.setCompoundTag(itemStack, "profile", nbt);
         } else {
-            tag.removeTag("profile");
+            ItemStackNBT.removeTag(itemStack, "profile");
         }
     }
 
     @Override
     public GameProfile getProfile(final ItemStack is) {
-        final NBTTagCompound tag = Platform.openNbtData(is);
-        if (tag.hasKey("profile")) {
-            return NBTUtil.func_152459_a(tag.getCompoundTag("profile"));
+        final NBTTagCompound profile = ItemStackNBT.getCompoundTag(is, "profile");
+        if (profile != null) {
+            return NBTUtil.func_152459_a(profile);
         }
         return null;
     }
 
     @Override
     public EnumSet<SecurityPermissions> getPermissions(final ItemStack is) {
-        final NBTTagCompound tag = Platform.openNbtData(is);
         final EnumSet<SecurityPermissions> result = EnumSet.noneOf(SecurityPermissions.class);
-
         for (final SecurityPermissions sp : SecurityPermissions.values()) {
-            if (tag.getBoolean(sp.name())) {
+            if (ItemStackNBT.getBoolean(is, sp.name())) {
                 result.add(sp);
             }
         }
-
         return result;
     }
 
     @Override
     public boolean hasPermission(final ItemStack is, final SecurityPermissions permission) {
-        final NBTTagCompound tag = Platform.openNbtData(is);
-        return tag.getBoolean(permission.name());
+        return ItemStackNBT.getBoolean(is, permission.name());
     }
 
     @Override
     public void removePermission(final ItemStack itemStack, final SecurityPermissions permission) {
-        final NBTTagCompound tag = Platform.openNbtData(itemStack);
-        if (tag.hasKey(permission.name())) {
-            tag.removeTag(permission.name());
-        }
+        ItemStackNBT.removeTag(itemStack, permission.name());
     }
 
     @Override
     public void addPermission(final ItemStack itemStack, final SecurityPermissions permission) {
-        final NBTTagCompound tag = Platform.openNbtData(itemStack);
-        tag.setBoolean(permission.name(), true);
+        ItemStackNBT.setBoolean(itemStack, permission.name(), true);
     }
 
     @Override

@@ -2,7 +2,7 @@
 
 dependencies {
     implementation('com.github.GTNewHorizons:NotEnoughItems:2.8.87-GTNH:dev')
-    implementation("com.github.GTNewHorizons:GTNHLib:0.9.48:dev")
+    implementation("com.github.GTNewHorizons:GTNHLib:0.9.49:dev")
     implementation('curse.maven:cofh-core-69162:2388751')
 
 	compileOnlyApi('com.github.GTNewHorizons:Angelica:2.1.16:dev')

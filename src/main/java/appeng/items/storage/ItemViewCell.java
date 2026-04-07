@@ -18,11 +18,12 @@ import java.util.List;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 
 import org.jetbrains.annotations.Nullable;
+
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
@@ -153,28 +154,29 @@ public class ItemViewCell extends AEBaseItem implements ICellWorkbenchItem {
 
     @Override
     public void setFuzzyMode(final ItemStack is, final FuzzyMode fzMode) {
-        Platform.openNbtData(is).setString("FuzzyMode", fzMode.name());
+        ItemStackNBT.setString(is, "FuzzyMode", fzMode.name());
     }
 
     @Override
     public String getOreFilter(ItemStack is) {
-        return Platform.openNbtData(is).getString("OreFilter");
+        return ItemStackNBT.getString(is, "OreFilter");
     }
 
     @Override
     public void setOreFilter(ItemStack is, String filter) {
-        Platform.openNbtData(is).setString("OreFilter", filter);
+        ItemStackNBT.setString(is, "OreFilter", filter);
     }
 
     public void toggleViewMode(final ItemStack is) {
-        Platform.openNbtData(is).setBoolean("ViewMode", !getViewMode(is));
+        ItemStackNBT.setBoolean(is, "ViewMode", !getViewMode(is));
     }
 
     public boolean getViewMode(final ItemStack is) {
-        NBTTagCompound nbt = Platform.openNbtData(is);
         // If key is not set, then view mode is "enabled," which is opposite of default missing NBT-key
-        if (!nbt.hasKey("ViewMode")) return true;
-        return nbt.getBoolean("ViewMode");
+        if (ItemStackNBT.hasKey(is, "ViewMode")) {
+            return ItemStackNBT.getBoolean(is, "ViewMode");
+        }
+        return true;
     }
 
     @Override
