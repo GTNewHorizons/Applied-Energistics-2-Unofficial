@@ -40,7 +40,7 @@ import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.slot.SlotInaccessible;
 import appeng.container.slot.SlotRestrictedInput;
 import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.util.LevelEmitterTypeFilter;
+import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -63,13 +63,13 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
     public YesNo cmType;
 
     @GuiSync(10)
-    public LevelEmitterTypeFilter typeFilters;
+    public AEStackTypeFilter typeFilters;
     private final IAEStack<?>[] configClientSlot = new IAEStack[1];
 
     public ContainerLevelEmitter(final InventoryPlayer ip, final ILevelEmitter te) {
         super(ip, te);
         this.lvlEmitter = te;
-        this.typeFilters = new LevelEmitterTypeFilter(this.lvlEmitter.getTypeFilters());
+        this.typeFilters = new AEStackTypeFilter(this.lvlEmitter.getTypeFilters());
 
         // sub gui copy paste
         this.primaryGuiButtonIcon = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 0, -9000);
@@ -198,7 +198,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
         this.lvType = lvType;
     }
 
-    public LevelEmitterTypeFilter getTypeFilters() {
+    public AEStackTypeFilter getTypeFilters() {
         return this.typeFilters;
     }
 
@@ -218,7 +218,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
 
         this.lvlEmitter.getTypeFilters().toggle(type);
         // Create a new instance so that GuiSync can detect changes
-        this.typeFilters = new LevelEmitterTypeFilter(this.lvlEmitter.getTypeFilters());
+        this.typeFilters = new AEStackTypeFilter(this.lvlEmitter.getTypeFilters());
         this.lvlEmitter.onChangeTypeFilters();
     }
 

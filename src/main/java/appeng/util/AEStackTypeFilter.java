@@ -17,7 +17,7 @@ import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanOpenHashMap;
 
-public class LevelEmitterTypeFilter implements IGuiPacketWritable {
+public class AEStackTypeFilter implements IGuiPacketWritable {
 
     public static final String NBT_FILTERS = "typeFilters";
     private static final String NBT_TYPE_ID = "typeId";
@@ -26,11 +26,11 @@ public class LevelEmitterTypeFilter implements IGuiPacketWritable {
     @NotNull
     private final Reference2BooleanMap<IAEStackType<?>> filters;
 
-    public LevelEmitterTypeFilter() {
+    public AEStackTypeFilter() {
         this.filters = createDefaultMap();
     }
 
-    public LevelEmitterTypeFilter(@NotNull final LevelEmitterTypeFilter other) {
+    public AEStackTypeFilter(@NotNull final AEStackTypeFilter other) {
         this.filters = new Reference2BooleanOpenHashMap<>();
         for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : other.filters.reference2BooleanEntrySet()) {
             this.filters.put(entry.getKey(), entry.getBooleanValue());
@@ -38,7 +38,7 @@ public class LevelEmitterTypeFilter implements IGuiPacketWritable {
     }
 
     // For IGuiPacketWritable
-    public LevelEmitterTypeFilter(final ByteBuf buf) {
+    public AEStackTypeFilter(final ByteBuf buf) {
         this.filters = createDefaultMap();
 
         final int size = buf.readInt();
@@ -154,7 +154,7 @@ public class LevelEmitterTypeFilter implements IGuiPacketWritable {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof LevelEmitterTypeFilter other)) {
+        if (!(obj instanceof AEStackTypeFilter other)) {
             return false;
         }
         return this.filters.equals(other.filters);

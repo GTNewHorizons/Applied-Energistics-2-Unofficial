@@ -74,7 +74,7 @@ import appeng.core.sync.GuiBridge;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.IAEStackInventory;
-import appeng.util.LevelEmitterTypeFilter;
+import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
 import appeng.util.SettingsFrom;
 import appeng.util.item.AEFluidStackType;
@@ -103,7 +103,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     private int lastWorkingTick = 0;
     private boolean delayedUpdatesQueued = false;
 
-    private final LevelEmitterTypeFilter typeFilters = new LevelEmitterTypeFilter();
+    private final AEStackTypeFilter typeFilters = new AEStackTypeFilter();
 
     @Reflected
     public PartLevelEmitter(final ItemStack is) {
@@ -755,7 +755,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         this.prevState = data.getBoolean("prevState");
         this.config.readFromNBT(data, "config");
 
-        final boolean hasTypeFilters = data.hasKey(LevelEmitterTypeFilter.NBT_FILTERS);
+        final boolean hasTypeFilters = data.hasKey(AEStackTypeFilter.NBT_FILTERS);
         if (hasTypeFilters) {
             this.typeFilters.readFromNBT(data);
         } else if (data.hasKey("TYPE_FILTER")) {
@@ -837,7 +837,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     }
 
     @Override
-    public LevelEmitterTypeFilter getTypeFilters() {
+    public AEStackTypeFilter getTypeFilters() {
         return this.typeFilters;
     }
 
