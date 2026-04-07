@@ -10,13 +10,13 @@ import appeng.api.storage.data.IAEStack;
 public class PatternMultiplierHelper {
 
     public static int getMaxBitMultiplier(ICraftingPatternDetails details) {
-        int maxMulti = 30;
+        int maxMulti = 62;
         for (IAEStack<?> input : details.getAEInputs()) {
             if (input == null) continue;
             long size = input.getStackSize();
             if (size <= 0) continue;
             int highestBit = 63 - Long.numberOfLeadingZeros(size);
-            int max = 30 - highestBit;
+            int max = 62 - highestBit;
             if (max < 0) max = 0;
             if (max < maxMulti) maxMulti = max;
         }
@@ -25,7 +25,7 @@ public class PatternMultiplierHelper {
             long size = out.getStackSize();
             if (size <= 0) continue;
             int highestBit = 63 - Long.numberOfLeadingZeros(size);
-            int max = 30 - highestBit;
+            int max = 62 - highestBit;
             if (max < 0) max = 0;
             if (max < maxMulti) maxMulti = max;
         }
@@ -33,19 +33,19 @@ public class PatternMultiplierHelper {
     }
 
     public static int getMaxBitDivider(ICraftingPatternDetails details) {
-        int maxDiv = 30;
+        int maxDiv = 62;
         for (IAEStack<?> input : details.getAEInputs()) {
             if (input == null) continue;
             long size = input.getStackSize();
             if (size <= 0) continue;
-            int tz = Math.min(Long.numberOfTrailingZeros(size), 30);
+            int tz = Math.min(Long.numberOfTrailingZeros(size), 62);
             if (tz < maxDiv) maxDiv = tz;
         }
         for (IAEStack<?> out : details.getAEOutputs()) {
             if (out == null) continue;
             long size = out.getStackSize();
             if (size <= 0) continue;
-            int tz = Math.min(Long.numberOfTrailingZeros(size), 30);
+            int tz = Math.min(Long.numberOfTrailingZeros(size), 62);
             if (tz < maxDiv) maxDiv = tz;
         }
         return maxDiv;
