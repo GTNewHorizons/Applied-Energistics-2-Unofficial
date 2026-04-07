@@ -10,7 +10,7 @@ import appeng.api.networking.ticking.IGridTickable;
 import appeng.api.storage.IMEMonitorHandlerReceiver;
 import appeng.api.storage.data.IAEStack;
 import appeng.tile.inventory.IIAEStackInventory;
-import appeng.util.LevelEmitterTypeFilter;
+import appeng.util.AEStackTypeFilter;
 
 public interface ILevelEmitter
         extends IEnergyWatcherHost, IStackWatcherHost, ICraftingWatcherHost, IMEMonitorHandlerReceiver<IAEStack<?>>,
@@ -20,8 +20,8 @@ public interface ILevelEmitter
 
     long getReportingValue();
 
-    default LevelEmitterTypeFilter getTypeFilters() {
-        return new LevelEmitterTypeFilter();
+    default AEStackTypeFilter getTypeFilters() {
+        return new AEStackTypeFilter();
     }
 
     void onChangeTypeFilters();
