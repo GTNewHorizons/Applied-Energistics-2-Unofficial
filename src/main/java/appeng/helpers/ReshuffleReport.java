@@ -78,7 +78,7 @@ public class ReshuffleReport implements IGuiPacketWritable {
     public final Set<IAEStackType<?>> allowedTypes;
     public final boolean voidProtection;
     public final long startTime;
-    public long endTime;
+    public long endTime = 0;
 
     public int totalItemTypesBefore = 0;
     public int totalItemTypesAfter = 0;
@@ -112,8 +112,8 @@ public class ReshuffleReport implements IGuiPacketWritable {
     // For IGuiPacketWritable
     public ReshuffleReport(final ByteBuf buf) {
         this.allowedTypes = new HashSet<>();
-        final int size = buf.readInt();
-        for (int i = 0; i < size; i++) {
+        final int sizeTypes = buf.readInt();
+        for (int i = 0; i < sizeTypes; i++) {
             final String typeId = ByteBufUtils.readUTF8String(buf);
             if (buf.readBoolean()) {
                 this.allowedTypes.add(AEStackTypeRegistry.getType(typeId));
@@ -133,15 +133,18 @@ public class ReshuffleReport implements IGuiPacketWritable {
         this.itemsProcessed = buf.readInt();
         this.itemsSkipped = buf.readInt();
 
-        for (int i = 0; i < buf.readInt(); i++) {
+        final int sizeSkippedItemsList = buf.readInt();
+        for (int i = 0; i < sizeSkippedItemsList; i++) {
             this.skippedItemsList.add(Platform.readStackByte(buf));
         }
 
-        for (int i = 0; i < buf.readInt(); i++) {
+        final int sizeLostItems = buf.readInt();
+        for (int i = 0; i < sizeLostItems; i++) {
             this.lostItems.add(ItemChange.read(buf));
         }
 
-        for (int i = 0; i < buf.readInt(); i++) {
+        final int sizeGainedItems = buf.readInt();
+        for (int i = 0; i < sizeGainedItems; i++) {
             this.gainedItems.add(ItemChange.read(buf));
         }
     }
@@ -232,7 +235,10 @@ public class ReshuffleReport implements IGuiPacketWritable {
             final IAEStack<?> before = beforeSnapshot.findPrecise(lookup);
             final IAEStack<?> after = afterSnapshot.findPrecise(lookup);
 
-            ItemChange change = new ItemChange(lookup, before.getStackSize(), after.getStackSize());
+            ItemChange change = new ItemChange(
+                    lookup,
+                    before == null ? 0 : before.getStackSize(),
+                    after == null ? 0 : after.getStackSize());
 
             switch (change.changeType) {
                 case GAINED:

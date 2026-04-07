@@ -278,6 +278,7 @@ public class GuiStorageReshuffle extends AEBaseGui implements ISortSource {
                 }
             } else if (btn == this.scanButton) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.Scan", ""));
+                this.container.report = null;
             }
         } catch (final IOException e) {
             AELog.debug(e);

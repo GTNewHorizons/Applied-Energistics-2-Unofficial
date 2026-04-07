@@ -5,7 +5,6 @@ import static net.minecraft.item.Item.itemRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -104,7 +103,7 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         this.reshuffleProcessedItems = this.tile.getReshuffleProcessedItems();
 
         final ReshuffleReport current = this.tile.getReshuffleReport();
-        if (!Objects.equals(current, this.report)) {
+        if (current != this.report) {
             this.report = current;
         }
 
@@ -128,6 +127,7 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     }
 
     public void startReshuffle(EntityPlayer player, boolean confirmed) {
+        this.report = null;
         this.tile.startReshuffle(player, confirmed);
     }
 
