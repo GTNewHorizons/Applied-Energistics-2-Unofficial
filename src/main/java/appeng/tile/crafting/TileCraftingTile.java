@@ -233,7 +233,7 @@ public class TileCraftingTile extends AENetworkTile implements IAEMultiBlock, IP
 
     @MENetworkEventSubscribe
     public void updateCPUClusters(final MENetworkCraftingPatternChange c) {
-        this.cluster.onPatternChange();
+        if (this.cluster != null) this.cluster.onPatternChange();
     }
 
     public boolean isStatus() {

@@ -199,6 +199,11 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
                 final PacketCompressedNBT d = new PacketCompressedNBT(nbttc);
 
+                NBTTagCompound itemReasons = new NBTTagCompound();
+                if (this.getMonitor() instanceof CraftingCPUCluster) {
+                    itemReasons = ((CraftingCPUCluster) this.getMonitor()).getNonUndefinedScheduledReasons();
+                }
+
                 for (final IAEStack<?> out : this.list) {
                     a.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.STORAGE));
                     b.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.ACTIVE));
@@ -224,7 +229,9 @@ public class ContainerCraftingCPU extends AEBaseContainer
                         NetworkHandler.instance.sendTo(d, epmp);
 
                         NetworkHandler.instance.sendTo(
-                                new PacketCraftingRemainingOperations(this.getMonitor().getRemainingOperations()),
+                                new PacketCraftingRemainingOperations(
+                                        this.getMonitor().getRemainingOperations(),
+                                        itemReasons),
                                 epmp);
                     }
                 }

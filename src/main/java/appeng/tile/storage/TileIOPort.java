@@ -135,7 +135,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         this.cells.readFromNBT(data, "cells");
         this.upgrades.readFromNBT(data, "upgrades");
         if (data.hasKey("lastRedstoneState")) {
-            this.lastRedstoneState = YesNo.values()[data.getInteger("lastRedstoneState")];
+            this.lastRedstoneState = YesNo.fromOrdinal(data.getInteger("lastRedstoneState"));
         }
         if (data.hasKey("moveQueue")) {
             moveQueue = data.getIntArray("moveQueue");

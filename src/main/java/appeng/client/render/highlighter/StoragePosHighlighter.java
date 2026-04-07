@@ -48,22 +48,26 @@ public class StoragePosHighlighter extends BlockPosHighlighter {
                 if (foundMsg == null) {
                     continue;
                 }
+                final String blockName = storage.getDisplayBlockName();
+                final String itemName = storage.getDisplayItemName();
                 player.addChatMessage(
                         new ChatComponentTranslation(
                                 foundMsg,
-                                storage.blockName,
+                                blockName,
                                 storage.itemCount,
-                                storage.itemName,
+                                itemName,
                                 storage.coord.x,
                                 storage.coord.y,
                                 storage.coord.z));
             } else if (wrongDimMsg != null) {
+                final String blockName = storage.getDisplayBlockName();
+                final String itemName = storage.getDisplayItemName();
                 player.addChatMessage(
                         new ChatComponentTranslation(
                                 wrongDimMsg,
-                                storage.blockName,
+                                blockName,
                                 storage.itemCount,
-                                storage.itemName,
+                                itemName,
                                 storage.coord.getDimension()));
             }
         }

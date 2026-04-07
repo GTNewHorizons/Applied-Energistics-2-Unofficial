@@ -16,7 +16,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import org.lwjgl.input.Mouse;
-import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.ActionItems;
@@ -154,18 +153,18 @@ public class GuiStorageBus extends GuiUpgradeable {
     public void drawBG(int offsetX, int offsetY, int mouseX, int mouseY) {
         super.drawBG(offsetX, offsetY, mouseX, mouseY);
 
-        for (int i = 0; i < 5; i++) {
-            if (i >= this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY)) {
-                GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
-                GL11.glColor4f(1.0F, 1.0F, 1.0F, 0.4F);
-                GL11.glEnable(GL11.GL_BLEND);
-            }
+        final boolean isOreDict = this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER)
+                > 0;
+        final int capacity = isOreDict ? 0
+                : this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
 
-            this.drawTexturedModalRect(offsetX + 7, offsetY + 64 + (18 * i), 7, 28, 162, 18);
-
-            if (i >= this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY)) {
-                GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-                GL11.glPopAttrib();
+        for (int i = 0; i < 7; i++) {
+            if (isOreDict || i >= capacity + 2) {
+                // fadeout slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 28 + (18 * i), 7, 46, 162, 18);
+            } else {
+                // normal slots
+                this.drawTexturedModalRect(offsetX + 7, offsetY + 28 + (18 * i), 7, 28, 162, 18);
             }
         }
     }
@@ -224,10 +223,13 @@ public class GuiStorageBus extends GuiUpgradeable {
     }
 
     protected void updateSlotVisibility() {
+        final boolean isOreDict = this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.ORE_FILTER)
+                > 0;
+        final int capacity = isOreDict ? -2
+                : this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY);
+
         for (VirtualMEPhantomSlot slot : this.configSlots) {
-            slot.setHidden(
-                    slot.getSlotIndex() >= (18
-                            + (9 * this.containerStorageBus.getUpgradeable().getInstalledUpgrades(Upgrades.CAPACITY))));
+            slot.setHidden(slot.getSlotIndex() >= (18 + (9 * capacity)));
         }
     }
 

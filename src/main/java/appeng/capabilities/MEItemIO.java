@@ -217,7 +217,8 @@ public class MEItemIO implements ItemIO {
 
             ItemStack stored = duality.getStorage().getStackInSlot(slot);
 
-            IAEItemStack inMESystem = storage.getAvailableItem(config, IterationCounter.fetchNewId());
+            final IAEItemStack blindCheck = config.copy().setStackSize(Integer.MAX_VALUE);
+            IAEItemStack inMESystem = storage.extractItems(blindCheck, Actionable.SIMULATE, duality.getActionSource());
 
             long total = 0;
 

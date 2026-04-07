@@ -61,6 +61,8 @@ public enum AEColor implements Localization {
 
     Transparent("gui.appliedenergistics2.Fluix", 0x1B2344, 0x895CA8, 0xD7BBEC, 0xffffff);
 
+    public static final AEColor[] VALUES = values();
+
     public static final List<AEColor> VALID_COLORS = Arrays.asList(
             White,
             Orange,
@@ -127,5 +129,9 @@ public enum AEColor implements Localization {
     @Override
     public String toString() {
         return StatCollector.translateToLocal(this.unlocalizedName);
+    }
+
+    public static AEColor fromOrdinal(int ordinal) {
+        return AEColor.VALUES[ordinal];
     }
 }

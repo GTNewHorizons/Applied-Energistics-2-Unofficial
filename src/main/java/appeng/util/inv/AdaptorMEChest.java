@@ -6,8 +6,10 @@ import net.minecraft.item.ItemStack;
 import appeng.api.config.Actionable;
 import appeng.api.config.InsertionMode;
 import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.me.storage.CellInventory;
 import appeng.tile.storage.TileChest;
 import appeng.util.item.AEItemStack;
@@ -63,39 +65,25 @@ public class AdaptorMEChest extends AdaptorIInventory {
 
     @Override
     public IAEStack<?> addStack(IAEStack<?> toBeAdded, InsertionMode insertionMode) {
-        IMEMonitor monitor;
-        if (toBeAdded.isItem()) {
-            monitor = meChest.getItemInventory();
-        } else {
-            monitor = meChest.getFluidInventory();
-        }
-
-        return monitor != null
-                ? (IAEStack<?>) monitor.injectItems(toBeAdded, Actionable.MODULATE, meChest.getActionSource())
-                : toBeAdded;
+        return addStackToMonitor(toBeAdded, Actionable.MODULATE);
     }
 
     @Override
     public IAEStack<?> simulateAddStack(IAEStack<?> toBeSimulated, InsertionMode insertionMode) {
-        IMEMonitor monitor;
-        if (toBeSimulated.isItem()) {
-            monitor = meChest.getItemInventory();
-        } else {
-            monitor = meChest.getFluidInventory();
-        }
+        return addStackToMonitor(toBeSimulated, Actionable.SIMULATE);
+    }
 
-        return monitor != null
-                ? (IAEStack<?>) monitor.injectItems(toBeSimulated, Actionable.SIMULATE, meChest.getActionSource())
-                : toBeSimulated;
+    private IAEStack<?> addStackToMonitor(IAEStack<?> aes, Actionable act) {
+        final IMEMonitor monitor = meChest.getMEMonitor(aes.getStackType());
+        if (monitor == null) return aes;
+        return monitor.injectItems(aes, act, meChest.getActionSource());
     }
 
     @Override
     public boolean containsItems() {
-        if (meChest.getItemInventory() != null) {
-            if (!meChest.getItemInventory().getStorageList().isEmpty()) return true;
-        }
-        if (meChest.getFluidInventory() != null) {
-            return !meChest.getFluidInventory().getStorageList().isEmpty();
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            final IMEMonitor<?> monitor = meChest.getMEMonitor(type);
+            if (monitor != null && !monitor.getStorageList().isEmpty()) return true;
         }
         return false;
     }

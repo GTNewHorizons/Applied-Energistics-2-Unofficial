@@ -39,6 +39,26 @@ public abstract class GuiAmount extends GuiSub {
     public void initGui() {
         super.initGui();
 
+        this.refreshAmountButtons();
+
+        this.buttonList.add(
+                this.nextBtn = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.Next.getLocal()));
+
+        this.amountTextField = new MEGuiTextField(61, 12);
+        this.amountTextField.x = this.guiLeft + 60;
+        this.amountTextField.y = this.guiTop + 55;
+        this.amountTextField.setMaxStringLength(16);
+        this.amountTextField.setFocused(true);
+        this.amountTextField.setUnfocusWithEnter(false);
+    }
+
+    protected int getButtonQtyByIndex(int index) {
+        return AEConfig.instance.craftItemsByStackAmounts(index);
+    }
+
+    protected void refreshAmountButtons() {
+        this.removeAmountButtons();
+
         final int a = this.getButtonQtyByIndex(0);
         final int b = this.getButtonQtyByIndex(1);
         final int c = this.getButtonQtyByIndex(2);
@@ -125,20 +145,17 @@ public abstract class GuiAmount extends GuiSub {
                         GuiText.DecreaseAmount,
                         -d,
                         "-%s"));
-
-        this.buttonList.add(
-                this.nextBtn = new GuiButton(0, this.guiLeft + 128, this.guiTop + 51, 38, 20, GuiText.Next.getLocal()));
-
-        this.amountTextField = new MEGuiTextField(61, 12);
-        this.amountTextField.x = this.guiLeft + 60;
-        this.amountTextField.y = this.guiTop + 55;
-        this.amountTextField.setMaxStringLength(16);
-        this.amountTextField.setFocused(true);
-        this.amountTextField.setUnfocusWithEnter(false);
     }
 
-    protected int getButtonQtyByIndex(int index) {
-        return AEConfig.instance.craftItemsByStackAmounts(index);
+    protected void removeAmountButtons() {
+        this.buttonList.remove(this.plus1);
+        this.buttonList.remove(this.plus10);
+        this.buttonList.remove(this.plus100);
+        this.buttonList.remove(this.plus1000);
+        this.buttonList.remove(this.minus1);
+        this.buttonList.remove(this.minus10);
+        this.buttonList.remove(this.minus100);
+        this.buttonList.remove(this.minus1000);
     }
 
     @Override

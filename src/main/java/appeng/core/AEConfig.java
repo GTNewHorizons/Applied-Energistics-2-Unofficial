@@ -20,11 +20,12 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.common.config.Property.Type;
 
+import appeng.api.config.CPUSortBy;
 import appeng.api.config.CellType;
 import appeng.api.config.CondenserOutput;
 import appeng.api.config.CraftingSortOrder;
 import appeng.api.config.CraftingStatus;
-import appeng.api.config.PinsState;
+import appeng.api.config.PinSectionOrder;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.PowerUnits;
 import appeng.api.config.SearchBoxFocusPriority;
@@ -93,6 +94,16 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public boolean showContainerInteractionTooltips = true;
     public int MEMonitorableSmallSize = 6;
     public int InterfaceTerminalSmallSize = 6;
+    public boolean highlightWhenSomethingStuckInInterface = true;
+
+    /** Max rows for crafting pins section (1-16). Caps the cycle button options. */
+    public int maxCraftingPinRows = 16;
+    /** Max rows for player pins section (1-16). Caps the cycle button options. */
+    public int maxPlayerPinRows = 16;
+    /** True = crafting section first, false = player section first. */
+    public boolean pinCraftingSectionFirst = false;
+    /** Which pin section is shown first (derived from pinCraftingSectionFirst). */
+    public PinSectionOrder pinSectionOrder = PinSectionOrder.PLAYER_FIRST;
 
     public boolean debugLogTiming = false;
     public boolean debugPathFinding = false;
@@ -164,14 +175,15 @@ public final class AEConfig extends Configuration implements IConfigurableObject
         this.settings.registerSetting(Settings.SEARCH_TOOLTIPS, YesNo.YES);
         this.settings.registerSetting(Settings.TERMINAL_STYLE, TerminalStyle.TALL);
         this.settings.registerSetting(Settings.HIDE_STORED, YesNo.NO);
-        this.settings.registerSetting(Settings.SEARCH_MODE, SearchBoxMode.AUTOSEARCH);
+        this.settings.registerSetting(Settings.SEARCH_MODE, SearchBoxMode.MANUAL_SEARCH);
         this.settings.registerSetting(Settings.SAVE_SEARCH, YesNo.NO);
         this.settings.registerSetting(Settings.CRAFTING_STATUS, CraftingStatus.TILE);
         this.settings.registerSetting(Settings.CRAFTING_SORT_BY, CraftingSortOrder.NAME);
+        this.settings.registerSetting(Settings.CPU_SORT_BY, CPUSortBy.NAME);
+        this.settings.registerSetting(Settings.CPU_SORT_DIRECTION, SortDir.ASCENDING);
         this.settings.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
         this.settings.registerSetting(Settings.TERMINAL_FONT_SIZE, TerminalFontSize.SMALL);
         this.settings.registerSetting(Settings.INTERFACE_TERMINAL_SECTION_ORDER, StringOrder.NATURAL);
-        this.settings.registerSetting(Settings.PINS_STATE, PinsState.DISABLED);
         this.settings.registerSetting(Settings.PAUSE_WHEN_HOLDING_SHIFT, YesNo.YES);
 
         this.spawnChargedChance = (float) (1.0
@@ -351,15 +363,33 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .get("Client", "showOnlyInterfacesWithFreeSlotsInInterfaceTerminal", false).getBoolean(false);
         this.showContainerInteractionTooltips = this.get("Client", "showContainerInteractionTooltips", true)
                 .getBoolean(true);
+        this.highlightWhenSomethingStuckInInterface = this.get("Client", "highlightWhenSomethingStuckInInterface", true)
+                .getBoolean(true);
         this.MEMonitorableSmallSize = this.get("Client", "MEMonitorableSmallSize", 6).getInt(6);
         this.InterfaceTerminalSmallSize = this.get("Client", "InterfaceTerminalSmallSize", 6).getInt(6);
+
+        // Pin options (under Client category)
+        Property pMaxCraft = this.get("Client", "maxCraftingPinRows", this.maxCraftingPinRows);
+        pMaxCraft.comment = "Max rows for crafting pins section (1-16). Caps the pin button cycle.";
+        this.maxCraftingPinRows = pMaxCraft.getInt(this.maxCraftingPinRows);
+        this.maxCraftingPinRows = Math.max(1, Math.min(this.maxCraftingPinRows, 16));
+        Property pMaxPlayer = this.get("Client", "maxPlayerPinRows", this.maxPlayerPinRows);
+        pMaxPlayer.comment = "Max rows for player pins section (1-16). Caps the pin button cycle.";
+        this.maxPlayerPinRows = pMaxPlayer.getInt(this.maxPlayerPinRows);
+        this.maxPlayerPinRows = Math.max(1, Math.min(this.maxPlayerPinRows, 16));
+        Property pOrder = this.get("Client", "pinCraftingSectionFirst", this.pinCraftingSectionFirst);
+        pOrder.comment = "True = crafting pin section first, False = player pin section first.";
+        this.pinCraftingSectionFirst = pOrder.getBoolean(this.pinCraftingSectionFirst);
+        this.pinSectionOrder = this.pinCraftingSectionFirst ? PinSectionOrder.CRAFTING_FIRST
+                : PinSectionOrder.PLAYER_FIRST;
+
         // load buttons..
         for (int btnNum = 0; btnNum < 4; btnNum++) {
             final Property cmb = this.get("Client", "craftAmtButton" + (btnNum + 1), this.craftByStacks[btnNum]);
             final Property pmb = this.get("Client", "priorityAmtButton" + (btnNum + 1), this.priorityByStacks[btnNum]);
             final Property lmb = this.get("Client", "levelAmtButton" + (btnNum + 1), this.levelByStacks[btnNum]);
 
-            final int buttonCap = (int) (Math.pow(10, btnNum + 1) - 1);
+            final int buttonCap = this.getAmountButtonCap(btnNum);
 
             this.craftByStacks[btnNum] = Math.abs(cmb.getInt(this.craftByStacks[btnNum]));
             this.priorityByStacks[btnNum] = Math.abs(pmb.getInt(this.priorityByStacks[btnNum]));
@@ -572,6 +602,33 @@ public final class AEConfig extends Configuration implements IConfigurableObject
 
     public int craftItemsByStackAmounts(final int i) {
         return this.craftByStacks[i];
+    }
+
+    public void setCraftItemsByStackAmount(final int index, final int value) {
+        this.setCraftItemsByStackAmount(index, value, true);
+    }
+
+    public void setCraftItemsByStackAmount(final int index, final int value, final boolean saveNow) {
+        if (index < 0 || index >= this.craftByStacks.length) {
+            return;
+        }
+
+        final int buttonCap = this.getAmountButtonCap(index);
+        final int sanitizedValue = Math.min(Math.abs(value), buttonCap);
+
+        this.craftByStacks[index] = sanitizedValue;
+
+        final Property craftAmountButton = this
+                .get("Client", "craftAmtButton" + (index + 1), this.craftByStacks[index]);
+        craftAmountButton.set(sanitizedValue);
+
+        if (saveNow) {
+            this.save();
+        }
+    }
+
+    private int getAmountButtonCap(final int index) {
+        return (int) (Math.pow(10, index + 1) - 1);
     }
 
     public int priorityByStacksAmounts(final int i) {

@@ -226,11 +226,14 @@ public abstract class SynchronizedField<T> {
 
         @Override
         protected void writeValue(ByteBuf buf, Object value) {
+            buf.writeBoolean(value != null);
+            if (value == null) return;
             ((IGuiPacketWritable) value).writeToPacket(buf);
         }
 
         @Override
         protected Object readValue(ByteBuf data) {
+            if (!data.readBoolean()) return null;
             var factory = factories.computeIfAbsent(fieldType, CustomField::getFactory);
             return factory.apply(data);
         }

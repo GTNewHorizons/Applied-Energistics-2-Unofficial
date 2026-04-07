@@ -234,6 +234,9 @@ public enum ButtonToolTips implements Localization {
     SearchGotoNext,
     SearchGotoPrev,
 
+    ControlButtonValues,
+    ControlButtonValuesHint,
+
     CPUAllowMode,
     CPUAllowAllDesc,
     CPUOnlyAllowPlayerDesc,
@@ -244,7 +247,7 @@ public enum ButtonToolTips implements Localization {
 
     PinsSection,
     PinsSectionActive,
-    PinsSectionDisabled,
+    PinsSectionHint,
 
     ToggleShowOnlySubstitute,
     ToggleShowOnlySubstituteOnDesc,
@@ -254,7 +257,13 @@ public enum ButtonToolTips implements Localization {
     ReshuffleVoidProtectionOn,
     ReshuffleVoidProtectionOff,
     OpenReshuffle,
-    OpenReshuffleDesc;
+    OpenReshuffleDesc,
+
+    CPUName,
+    CPUCrafting,
+    Automation,
+    NumberOfStorageMemory,
+    NumberOfCoProcessors;
 
     ButtonToolTips() {}
 

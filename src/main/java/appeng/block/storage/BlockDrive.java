@@ -10,6 +10,7 @@
 
 package appeng.block.storage;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -74,8 +75,11 @@ public class BlockDrive extends AEBaseTileBlock {
     }
 
     @Override
-    public void addInformation(ItemStack is, EntityPlayer player, List<String> lines, boolean advancedItemTooltips) {
-        super.addInformation(is, player, lines, advancedItemTooltips);
-        lines.add(StatCollector.translateToLocal("gui.tooltips.appliedenergistics2.BlockDriveWarning"));
+    public void addInformation(ItemStack is, EntityPlayer player, List<String> tooltip, boolean advancedItemTooltips) {
+        super.addInformation(is, player, tooltip, advancedItemTooltips);
+        tooltip.addAll(
+                Arrays.asList(
+                        StatCollector.translateToLocal("gui.tooltips.appliedenergistics2.BlockDriveWarning")
+                                .split("\\\\n")));
     }
 }

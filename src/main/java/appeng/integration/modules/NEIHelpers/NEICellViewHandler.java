@@ -22,6 +22,7 @@ import appeng.api.implementations.items.IStorageCell;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.client.render.StackSizeRenderer;
+import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.me.storage.CellInventoryHandler;
 import appeng.util.Platform;
@@ -72,18 +73,32 @@ public class NEICellViewHandler implements IUsageHandler {
             stacks.clear();
             int count = 0;
             for (IAEStack<?> aes : sortedStacks) {
-                final ItemStack viewStack = aes.copy().setStackSize(0).getItemStackForNEI();
-                if (viewStack == null) continue;
-                PositionedStack positionedStack = new PositionedStack(
-                        viewStack,
+                final ViewItemStack viewStack = createViewItemStack(
+                        aes,
                         OFFSET_X + count % ROW_ITEM_NUM * 18 + 1,
-                        ITEMS_OFFSET_Y + count / ROW_ITEM_NUM * 18 + 1);
-                stacks.add(new ViewItemStack(positionedStack, aes.getStackSize()));
+                        ITEMS_OFFSET_Y + count / ROW_ITEM_NUM * 18 + 1,
+                        aes.getStackSize() < Integer.MAX_VALUE);
+                if (viewStack == null) continue;
+                stacks.add(viewStack);
                 count++;
             }
             return this;
         }
         return null;
+    }
+
+    private ViewItemStack createViewItemStack(IAEStack<?> aeStack, int x, int y, boolean saveStackSize) {
+
+        if (aeStack.isFluid() || saveStackSize) {
+            final ItemStack stack = aeStack.getItemStackForNEI();
+            return stack != null ? new ViewItemStack(new PositionedStack(stack.copy(), x, y, false), 0) : null;
+        } else {
+            final ItemStack stack = aeStack.getItemStackForNEI(1);
+            return stack != null
+                    ? new ViewItemStack(new PositionedStack(stack.copy(), x, y, false), aeStack.getStackSize())
+                    : null;
+        }
+
     }
 
     @Override
@@ -122,7 +137,7 @@ public class NEICellViewHandler implements IUsageHandler {
                 usedBytes + " " + GuiText.Of.getLocal() + ' ' + totalBytes + ' ' + GuiText.BytesUsed.getLocal(),
                 OFFSET_X,
                 INFO_OFFSET_Y,
-                0);
+                GuiColors.NEICellView.getColor());
         fontRenderer.drawString(
                 NumberFormat.getInstance().format(cellHandler.getUsedTypes()) + " "
                         + GuiText.Of.getLocal()
@@ -132,9 +147,10 @@ public class NEICellViewHandler implements IUsageHandler {
                         + GuiText.Types.getLocal(),
                 OFFSET_X,
                 INFO_OFFSET_Y + fontRenderer.FONT_HEIGHT + 2,
-                0);
+                GuiColors.NEICellView.getColor());
 
         for (ViewItemStack viewStack : this.stacks) {
+            if (viewStack.stackSize == 0) continue;
             StackSizeRenderer.drawStackSize(
                     viewStack.stack.relx,
                     viewStack.stack.rely,
@@ -175,11 +191,6 @@ public class NEICellViewHandler implements IUsageHandler {
     @Override
     public IOverlayHandler getOverlayHandler(GuiContainer gui, int recipe) {
         return null;
-    }
-
-    @Override
-    public int recipiesPerPage() {
-        return 1;
     }
 
     @Override

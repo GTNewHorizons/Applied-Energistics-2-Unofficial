@@ -166,7 +166,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                             /* Exchange is impossible, abort */
                             return;
                         }
-                        if (!inv.patterns.isItemValidForSlot(slot, handStack)) {
+                        // if exchanging, make sure the item that we're inserting is valid
+                        if (handStack != null && !inv.patterns.isItemValidForSlot(slot, handStack)) {
                             return;
                         }
                         inv.patterns.setInventorySlotContents(slot, playerHand.removeItems(1, null, null));

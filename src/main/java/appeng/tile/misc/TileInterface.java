@@ -10,12 +10,15 @@
 
 package appeng.tile.misc;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
@@ -23,6 +26,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import org.jetbrains.annotations.NotNull;
 
 import com.google.common.collect.ImmutableSet;
 import com.gtnewhorizon.gtnhlib.capability.item.ItemIO;
@@ -50,10 +55,13 @@ import appeng.api.storage.IStorageMonitorable;
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.AECableType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.capabilities.MEItemIO;
+import appeng.client.render.highlighter.BlockPosHighlighter;
+import appeng.core.AEConfig;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.helpers.IPrimaryGuiIconProvider;
@@ -65,19 +73,24 @@ import appeng.tile.grid.AENetworkInvTile;
 import appeng.tile.inventory.InvOperation;
 import appeng.util.Platform;
 import appeng.util.inv.IInventoryDestination;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
 
 public class TileInterface extends AENetworkInvTile
         implements IGridTickable, ITileStorageMonitorable, IStorageMonitorable, IInventoryDestination, IInterfaceHost,
         IPriorityHost, IPowerChannelState, IPrimaryGuiIconProvider {
 
+    private static final long STUCK_HIGHLIGHT_REFRESH_MS = 2000L;
     private final DualityInterface duality = new DualityInterface(this.getProxy(), this);
     private ForgeDirection pointAt = ForgeDirection.UNKNOWN;
 
     private static final int POWERED_FLAG = 1;
     private static final int CHANNEL_FLAG = 2;
     private static final int BOOTING_FLAG = 4;
+    private static final int STUCK_FLAG = 8;
     private int clientFlags = 0; // sent as byte.
+    private long nextStuckHighlightAt = 0L;
 
     @MENetworkEventSubscribe
     public void stateChange(final MENetworkChannelsChanged c) {
@@ -156,13 +169,7 @@ public class TileInterface extends AENetworkInvTile
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileInterface(final NBTTagCompound data) {
         final int val = data.getInteger("pointAt");
-
-        if (val >= 0 && val < ForgeDirection.values().length) {
-            this.pointAt = ForgeDirection.values()[val];
-        } else {
-            this.pointAt = ForgeDirection.UNKNOWN;
-        }
-
+        this.pointAt = ForgeDirection.getOrientation(val);
         this.duality.readFromNBT(data);
     }
 
@@ -189,6 +196,11 @@ public class TileInterface extends AENetworkInvTile
     @Override
     public IMEMonitor<IAEFluidStack> getFluidInventory() {
         return this.duality.getFluidInventory();
+    }
+
+    @Override
+    public @Nullable IMEMonitor<?> getMEMonitor(@NotNull IAEStackType<?> type) {
+        return this.duality.getMEMonitor(type);
     }
 
     @Override
@@ -297,13 +309,24 @@ public class TileInterface extends AENetworkInvTile
 
     @TileEvent(TileEventType.NETWORK_READ)
     public boolean readFromStream_TileInterface(final ByteBuf data) {
-        int newState = data.readByte();
+        final boolean oldStuck = isStuck();
+        final int newState = data.readByte();
+        boolean changed = false;
         if (newState != clientFlags) {
             clientFlags = newState;
             this.markForUpdate();
-            return true;
+            changed = true;
         }
-        return false;
+
+        if (oldStuck != isStuck()) {
+            if (isStuck()) {
+                this.highlightStuckInterface();
+            } else {
+                this.nextStuckHighlightAt = 0L;
+            }
+        }
+
+        return changed;
     }
 
     @TileEvent(TileEventType.NETWORK_WRITE)
@@ -318,8 +341,33 @@ public class TileInterface extends AENetworkInvTile
         } catch (final GridAccessException e) {
             // meh
         }
-
+        if (duality.somethingStuck) clientFlags |= STUCK_FLAG;
         data.writeByte(clientFlags);
+    }
+
+    @SideOnly(Side.CLIENT)
+    @TileEvent(TileEventType.TICK)
+    public void tickStuckHighlight_TileInterface() {
+        if (this.isStuck()) {
+            final long now = System.currentTimeMillis();
+            if (now >= this.nextStuckHighlightAt) {
+                this.highlightStuckInterface();
+            }
+        }
+    }
+
+    private void highlightStuckInterface() {
+        if (AEConfig.instance.highlightWhenSomethingStuckInInterface && Platform.isClient()) {
+            this.doStuckHighlightOnClient();
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void doStuckHighlightOnClient() {
+        final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        if (player == null) return;
+        BlockPosHighlighter.highlightBlocks(player, Collections.singletonList(new DimensionalCoord(this)), null, null);
+        this.nextStuckHighlightAt = System.currentTimeMillis() + STUCK_HIGHLIGHT_REFRESH_MS;
     }
 
     @Override
@@ -335,6 +383,10 @@ public class TileInterface extends AENetworkInvTile
     @Override
     public boolean isBooting() {
         return (clientFlags & BOOTING_FLAG) == BOOTING_FLAG;
+    }
+
+    private boolean isStuck() {
+        return (clientFlags & STUCK_FLAG) == STUCK_FLAG;
     }
 
     @Override
@@ -360,7 +412,6 @@ public class TileInterface extends AENetworkInvTile
         if (capability == ItemSource.class || capability == ItemSink.class || capability == ItemIO.class) {
             return capability.cast(getItemIO());
         }
-
         return super.getCapability(capability, side);
     }
 }

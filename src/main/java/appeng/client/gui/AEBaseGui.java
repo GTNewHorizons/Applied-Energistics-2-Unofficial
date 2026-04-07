@@ -10,6 +10,7 @@
 
 package appeng.client.gui;
 
+import static appeng.client.gui.implementations.GuiMEMonitorable.keyBindPickBlockAction;
 import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 
 import java.awt.Rectangle;
@@ -225,6 +226,8 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.currentToolTip.draw();
     }
 
+    protected void handleUpgradeSlotTooltip(final int mouseX, final int mouseY) {}
+
     protected void handleTooltip(int mouseX, int mouseY, ITooltip tooltip) {
         final int x = tooltip.xPos();
         final int y = tooltip.yPos();
@@ -397,7 +400,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
 
         final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
-        if (virtualSlot != null && this.handleVirtualSlotClick(virtualSlot, btn)) return;
+        if (virtualSlot != null && this.handleVirtualSlotClick(
+                virtualSlot,
+                btn == this.mc.gameSettings.keyBindPickBlock.getKeyCode() + 100 ? keyBindPickBlockAction : btn))
+            return;
 
         if (btn == 1) {
             for (final GuiButton guibutton : this.buttonList) {
@@ -413,6 +419,16 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
 
         super.mouseClicked(xCoord, yCoord, btn);
+    }
+
+    @Override
+    protected void keyTyped(char typedChar, int keyCode) {
+        if (keyCode == this.mc.gameSettings.keyBindPickBlock.getKeyCode()) {
+            final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
+            if (virtualSlot != null && this.handleVirtualSlotClick(virtualSlot, keyBindPickBlockAction)) return;
+        }
+
+        super.keyTyped(typedChar, keyCode);
     }
 
     @Override

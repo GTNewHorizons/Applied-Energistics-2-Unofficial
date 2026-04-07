@@ -21,7 +21,6 @@ import net.minecraft.util.ResourceLocation;
 import appeng.api.config.TerminalFontSize;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.client.render.StackSizeRenderer;
 import appeng.core.localization.GuiText;
@@ -115,11 +114,6 @@ public class NEIPatternViewHandler implements IUsageHandler {
     public void onUpdate() {}
 
     @Override
-    public int recipiesPerPage() {
-        return 1;
-    }
-
-    @Override
     public List<PositionedStack> getIngredientStacks(int recipe) {
         List<PositionedStack> result = new ArrayList<>();
         inputSlots.forEach(s -> result.add(s.stack));
@@ -183,7 +177,7 @@ public class NEIPatternViewHandler implements IUsageHandler {
 
     public void initializeLayout() {
         boolean isCraftable = patternDetails.isCraftable();
-        List<IAEItemStack> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
+        List<IAEStack<?>> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
         int nonNullOutputs = (int) aeOutputs.stream().filter(Objects::nonNull).count();
 
         if (isCraftable) {
@@ -229,26 +223,27 @@ public class NEIPatternViewHandler implements IUsageHandler {
         outputsOffsetX = inputsOffsetX + inputsCols * 18 + 40;
     }
 
-    public List<IAEItemStack> getFilteredStacks(IAEStack<?>[] stacks) {
+    public List<IAEStack<?>> getFilteredStacks(IAEStack<?>[] stacks) {
         boolean isCraftable = patternDetails.isCraftable();
 
-        return Arrays.stream(stacks).filter(stack -> isCraftable || stack != null)
-                .map(stack -> stack instanceof IAEItemStack ? (IAEItemStack) stack : null)
-                .filter(stack -> isCraftable || stack != null).collect(Collectors.toList());
+        return Arrays.stream(stacks).filter(stack -> isCraftable || stack != null).collect(Collectors.toList());
     }
 
     public void initializeSlots() {
         inputSlots.clear();
         outputSlots.clear();
 
-        List<IAEItemStack> aeInputs = getFilteredStacks(patternDetails.getAEInputs());
-        List<IAEItemStack> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
+        List<IAEStack<?>> aeInputs = getFilteredStacks(patternDetails.getAEInputs());
+        List<IAEStack<?>> aeOutputs = getFilteredStacks(patternDetails.getAEOutputs());
+        boolean saveStackSize = aeInputs.stream().filter(Objects::nonNull)
+                .allMatch(s -> s.getStackSize() < Integer.MAX_VALUE)
+                && aeOutputs.stream().filter(Objects::nonNull).allMatch(s -> s.getStackSize() < Integer.MAX_VALUE);
 
-        populateInputSlots(aeInputs);
-        populateOutputSlots(aeOutputs);
+        populateInputSlots(aeInputs, saveStackSize);
+        populateOutputSlots(aeOutputs, saveStackSize);
     }
 
-    public void populateInputSlots(List<IAEItemStack> inputs) {
+    public void populateInputSlots(List<IAEStack<?>> inputs, boolean saveStackSize) {
         for (int i = 0; i < inputsCols * inputsRows; i++) {
             int row = i / inputsCols;
             int col = i % inputsCols;
@@ -256,18 +251,18 @@ public class NEIPatternViewHandler implements IUsageHandler {
             int y = SLOTS_OFFSET_Y + row * 18 + 1;
 
             if (i < inputs.size()) {
-                IAEItemStack aeInput = inputs.get(i);
+                IAEStack<?> aeInput = inputs.get(i);
                 if (aeInput != null) {
-                    ItemStack inputStack = aeInput.getItemStack().copy();
-                    inputStack.stackSize = 1;
-                    PositionedStack posStack = createPositionedStack(inputStack, x, y);
-                    inputSlots.add(new ViewItemStack(posStack, aeInput.getStackSize()));
+                    final ViewItemStack viewStack = createViewItemStack(aeInput, x, y, saveStackSize);
+                    if (viewStack != null) {
+                        inputSlots.add(viewStack);
+                    }
                 }
             }
         }
     }
 
-    public void populateOutputSlots(List<IAEItemStack> outputs) {
+    public void populateOutputSlots(List<IAEStack<?>> outputs, boolean saveStackSize) {
         for (int i = 0; i < outputsCols * outputsRows; i++) {
             int row = i / outputsCols;
             int col = i % outputsCols;
@@ -275,22 +270,31 @@ public class NEIPatternViewHandler implements IUsageHandler {
             int y = patternDetails.isCraftable() && i == 0 ? craftingOutputY + 1 : SLOTS_OFFSET_Y + row * 18 + 1;
 
             if (i < outputs.size()) {
-                IAEItemStack aeOutput = outputs.get(i);
+                IAEStack<?> aeOutput = outputs.get(i);
                 if (aeOutput != null) {
-                    ItemStack outputStack = aeOutput.getItemStack().copy();
-                    outputStack.stackSize = 1;
-                    PositionedStack posStack = createPositionedStack(outputStack, x, y);
-                    outputSlots.add(new ViewItemStack(posStack, aeOutput.getStackSize()));
+                    final ViewItemStack viewStack = createViewItemStack(aeOutput, x, y, saveStackSize);
+                    if (viewStack != null) {
+                        outputSlots.add(viewStack);
+                    }
                 }
             }
         }
     }
 
+    private ViewItemStack createViewItemStack(IAEStack<?> aeStack, int x, int y, boolean saveStackSize) {
+
+        if (aeStack.isFluid() || saveStackSize) {
+            final ItemStack stack = aeStack.getItemStackForNEI();
+            return stack != null ? new ViewItemStack(createPositionedStack(stack, x, y), 0) : null;
+        } else {
+            final ItemStack stack = aeStack.getItemStackForNEI(1);
+            return stack != null ? new ViewItemStack(createPositionedStack(stack, x, y), aeStack.getStackSize()) : null;
+        }
+
+    }
+
     public PositionedStack createPositionedStack(ItemStack stack, int x, int y) {
-        ItemStack stackCopy = stack.copy();
-        PositionedStack posStack = new PositionedStack(stackCopy, x, y);
-        posStack.items = new ItemStack[] { stackCopy };
-        return posStack;
+        return new PositionedStack(stack.copy(), x, y, false);
     }
 
     public void drawInputSlots(Tessellator tess) {
@@ -364,11 +368,12 @@ public class NEIPatternViewHandler implements IUsageHandler {
     }
 
     public int calculateRecipeHeight() {
-        return INFO_OFFSET_Y + Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + (inputsRows * 18) + 10;
+        return INFO_OFFSET_Y + Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT + (inputsRows * 18) + 11;
     }
 
     public void drawStackSize(List<ViewItemStack> stacks) {
         for (ViewItemStack s : stacks) {
+            if (s.stackSize == 0) continue;
             StackSizeRenderer.drawStackSize(
                     s.stack.relx,
                     s.stack.rely,
