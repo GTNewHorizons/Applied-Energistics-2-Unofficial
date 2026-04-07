@@ -1,5 +1,8 @@
 package appeng.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 
@@ -11,6 +14,7 @@ import appeng.container.guisync.IGuiPacketWritable;
 import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Reference2BooleanMaps;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanOpenHashMap;
 
 public class LevelEmitterTypeFilter implements IGuiPacketWritable {
@@ -28,7 +32,7 @@ public class LevelEmitterTypeFilter implements IGuiPacketWritable {
 
     public LevelEmitterTypeFilter(@NotNull final LevelEmitterTypeFilter other) {
         this.filters = new Reference2BooleanOpenHashMap<>();
-        for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : other.getFilters().reference2BooleanEntrySet()) {
+        for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : other.filters.reference2BooleanEntrySet()) {
             this.filters.put(entry.getKey(), entry.getBooleanValue());
         }
     }
@@ -49,7 +53,7 @@ public class LevelEmitterTypeFilter implements IGuiPacketWritable {
     }
 
     @NotNull
-    public static Reference2BooleanMap<IAEStackType<?>> createDefaultMap() {
+    private static Reference2BooleanMap<IAEStackType<?>> createDefaultMap() {
         final Reference2BooleanMap<IAEStackType<?>> map = new Reference2BooleanOpenHashMap<>();
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
             map.put(type, true);
@@ -94,9 +98,46 @@ public class LevelEmitterTypeFilter implements IGuiPacketWritable {
         tag.setTag(NBT_FILTERS, list);
     }
 
+    public boolean isEnabled(@NotNull final IAEStackType<?> type) {
+        return this.filters.getBoolean(type);
+    }
+
     @NotNull
-    public Reference2BooleanMap<IAEStackType<?>> getFilters() {
-        return this.filters;
+    public Reference2BooleanMap<IAEStackType<?>> getImmutableFilters() {
+        return Reference2BooleanMaps.unmodifiable(new Reference2BooleanOpenHashMap<>(this.filters));
+    }
+
+    public void setEnabled(@NotNull final IAEStackType<?> type, final boolean enabled) {
+        this.filters.put(type, enabled);
+    }
+
+    public boolean toggle(@NotNull final IAEStackType<?> type) {
+        final boolean next = !this.filters.getBoolean(type);
+        this.filters.put(type, next);
+        return next;
+    }
+
+    public void setOnlyEnabled(@NotNull final IAEStackType<?> targetType) {
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            this.filters.put(type, type == targetType);
+        }
+    }
+
+    public void setAllEnabled(final boolean enabled) {
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            this.filters.put(type, enabled);
+        }
+    }
+
+    @NotNull
+    public Iterable<IAEStackType<?>> getEnabledTypes() {
+        final List<IAEStackType<?>> enabledTypes = new ArrayList<>();
+        for (Reference2BooleanMap.Entry<IAEStackType<?>> entry : this.filters.reference2BooleanEntrySet()) {
+            if (entry.getBooleanValue()) {
+                enabledTypes.add(entry.getKey());
+            }
+        }
+        return enabledTypes;
     }
 
     @Override

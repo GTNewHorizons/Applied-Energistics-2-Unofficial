@@ -45,7 +45,6 @@ import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirtualSlotHolder, IContainerSubGui {
 
@@ -217,8 +216,7 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
             return;
         }
 
-        final Reference2BooleanMap<IAEStackType<?>> filterMap = this.lvlEmitter.getTypeFilters().getFilters();
-        filterMap.put(type, !filterMap.getBoolean(type));
+        this.lvlEmitter.getTypeFilters().toggle(type);
         // Create a new instance so that GuiSync can detect changes
         this.typeFilters = new LevelEmitterTypeFilter(this.lvlEmitter.getTypeFilters());
         this.lvlEmitter.onChangeTypeFilters();

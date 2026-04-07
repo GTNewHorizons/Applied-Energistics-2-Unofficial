@@ -80,7 +80,6 @@ import appeng.util.SettingsFrom;
 import appeng.util.item.AEFluidStackType;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
@@ -268,7 +267,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
                     IMEMonitor<?> monitor = this.getProxy().getStorage().getMEMonitor(type);
                     if (monitor == null) continue;
 
-                    if (myStack != null || this.typeFilters.getFilters().getBoolean(type)) {
+                    if (myStack != null || this.typeFilters.isEnabled(type)) {
                         monitor.addListener(this, this.getProxy().getGrid());
                     } else {
                         monitor.removeListener(this);
@@ -304,20 +303,17 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         if (myStack == null || monitor == null) {
             this.lastReportedValue = 0;
             try {
-                final Reference2BooleanMap<IAEStackType<?>> filters = this.typeFilters.getFilters();
                 final var storage = getProxy().getStorage();
 
-                outer: for (var entry : filters.reference2BooleanEntrySet()) {
-                    if (entry.getBooleanValue()) {
-                        IMEMonitor<?> validMonitor = storage.getMEMonitor(entry.getKey());
-                        if (validMonitor == null) continue;
+                outer: for (IAEStackType<?> enabledType : this.typeFilters.getEnabledTypes()) {
+                    IMEMonitor<?> validMonitor = storage.getMEMonitor(enabledType);
+                    if (validMonitor == null) continue;
 
-                        for (IAEStack<?> stack : validMonitor.getStorageList()) {
-                            this.lastReportedValue += stack.getStackSize();
-                            if (this.lastReportedValue < 0) {
-                                this.lastReportedValue = Long.MAX_VALUE;
-                                break outer;
-                            }
+                    for (IAEStack<?> stack : validMonitor.getStorageList()) {
+                        this.lastReportedValue += stack.getStackSize();
+                        if (this.lastReportedValue < 0) {
+                            this.lastReportedValue = Long.MAX_VALUE;
+                            break outer;
                         }
                     }
                 }
@@ -765,9 +761,8 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         } else if (data.hasKey("TYPE_FILTER")) {
             this.applyLegacyTypeFilter(data.getString("TYPE_FILTER"));
         } else {
-            final Reference2BooleanMap<IAEStackType<?>> filters = this.typeFilters.getFilters();
             final IAEStackType<?> thisType = this.getUltraLegacyType();
-            for (IAEStackType<?> type : filters.keySet()) filters.put(type, type == thisType);
+            this.typeFilters.setOnlyEnabled(thisType);
         }
     }
 
@@ -847,15 +842,12 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     }
 
     private void applyLegacyTypeFilter(final String typeName) {
-        final Reference2BooleanMap<IAEStackType<?>> filters = this.typeFilters.getFilters();
-        for (IAEStackType<?> type : filters.keySet()) {
-            if ("ALL".equals(typeName)) {
-                filters.put(type, true);
-            } else if ("ITEMS".equals(typeName)) {
-                filters.put(type, type == ITEM_STACK_TYPE);
-            } else if ("FLUIDS".equals(typeName)) {
-                filters.put(type, type == AEFluidStackType.FLUID_STACK_TYPE);
-            }
+        if ("ALL".equals(typeName)) {
+            this.typeFilters.setAllEnabled(true);
+        } else if ("ITEMS".equals(typeName)) {
+            this.typeFilters.setOnlyEnabled(ITEM_STACK_TYPE);
+        } else if ("FLUIDS".equals(typeName)) {
+            this.typeFilters.setOnlyEnabled(AEFluidStackType.FLUID_STACK_TYPE);
         }
     }
 

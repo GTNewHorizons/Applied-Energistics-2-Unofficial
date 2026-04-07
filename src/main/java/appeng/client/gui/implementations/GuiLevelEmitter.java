@@ -46,7 +46,6 @@ import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.calculators.ArithHelper;
 import appeng.util.calculators.Calculator;
-import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class GuiLevelEmitter extends GuiUpgradeable {
 
@@ -309,14 +308,12 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
         if (btn instanceof final TypeToggleButton tbtn) {
             final IAEStackType<?> type = this.typeToggleButtons.get(tbtn);
-            final Reference2BooleanMap<IAEStackType<?>> filters = this.container.getTypeFilters().getFilters();
             final boolean notCraftingMode = this.bc.getInstalledUpgrades(Upgrades.CRAFTING) == 0;
             if (!notCraftingMode || this.config.getAEStack() != null) {
                 return;
             }
             if (type != null) {
-                final boolean next = !filters.getBoolean(type);
-                filters.put(type, next);
+                final boolean next = this.container.getTypeFilters().toggle(type);
                 tbtn.setEnabled(next);
 
                 try {
@@ -376,7 +373,6 @@ public class GuiLevelEmitter extends GuiUpgradeable {
 
     private void initTypeToggleButtons(final int x, final int yStart) {
         this.typeToggleButtons.clear();
-        final Reference2BooleanMap<IAEStackType<?>> filters = this.container.getTypeFilters().getFilters();
 
         int y = yStart;
         for (final IAEStackType<?> type : AEStackTypeRegistry.getSortedTypes()) {
@@ -385,7 +381,7 @@ public class GuiLevelEmitter extends GuiUpgradeable {
             if (texture == null || icon == null) continue;
 
             final TypeToggleButton btn = new TypeToggleButton(x, y, texture, icon, type.getDisplayName());
-            btn.setEnabled(filters.getBoolean(type));
+            btn.setEnabled(this.container.getTypeFilters().isEnabled(type));
             this.typeToggleButtons.put(btn, type);
             this.buttonList.add(btn);
 
@@ -394,9 +390,8 @@ public class GuiLevelEmitter extends GuiUpgradeable {
     }
 
     public void onUpdateTypeFilters() {
-        final Reference2BooleanMap<IAEStackType<?>> filters = this.container.getTypeFilters().getFilters();
         for (final Map.Entry<TypeToggleButton, IAEStackType<?>> entry : this.typeToggleButtons.entrySet()) {
-            final boolean enabled = filters.getBoolean(entry.getValue());
+            final boolean enabled = this.container.getTypeFilters().isEnabled(entry.getValue());
             entry.getKey().setEnabled(enabled);
         }
     }
