@@ -19,6 +19,7 @@ import appeng.api.config.AccessRestriction;
 import appeng.api.config.Actionable;
 import appeng.api.networking.energy.IEnergyGrid;
 import appeng.api.networking.events.MENetworkPowerStorage;
+import appeng.api.networking.events.MENetworkPowerStorage.PowerEventType;
 import appeng.api.util.AECableType;
 import appeng.me.GridAccessException;
 import appeng.tile.grid.AENetworkPowerTile;
@@ -83,15 +84,12 @@ public class TileEnergyAcceptor extends AENetworkPowerTile {
     }
 
     @Override
-    protected double extractAEPower(double amt, final Actionable mode) {
-        double res = super.extractAEPower(amt, mode);
+    protected void PowerEvent(final PowerEventType event) {
         try {
-            if (getInternalCurrentPower() < getInternalMaxPower()) this.getProxy().getGrid()
-                    .postEvent(new MENetworkPowerStorage(this, MENetworkPowerStorage.PowerEventType.REQUEST_POWER));
-        } catch (final GridAccessException ignored) {
-
+            this.getProxy().getGrid().postEvent(new MENetworkPowerStorage(this, event));
+        } catch (final GridAccessException e) {
+            // ignore
         }
-        return res;
     }
 
     @Override
