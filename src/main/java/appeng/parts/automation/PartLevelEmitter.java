@@ -74,13 +74,12 @@ import appeng.core.sync.GuiBridge;
 import appeng.helpers.Reflected;
 import appeng.me.GridAccessException;
 import appeng.tile.inventory.IAEStackInventory;
-import appeng.util.LevelEmitterTypeFilter;
+import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
 import appeng.util.SettingsFrom;
 import appeng.util.item.AEFluidStackType;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
 
@@ -104,7 +103,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     private int lastWorkingTick = 0;
     private boolean delayedUpdatesQueued = false;
 
-    private final LevelEmitterTypeFilter typeFilters = new LevelEmitterTypeFilter();
+    private final AEStackTypeFilter typeFilters = new AEStackTypeFilter();
 
     @Reflected
     public PartLevelEmitter(final ItemStack is) {
@@ -268,7 +267,7 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
                     IMEMonitor<?> monitor = this.getProxy().getStorage().getMEMonitor(type);
                     if (monitor == null) continue;
 
-                    if (myStack != null || this.typeFilters.getFilters().getBoolean(type)) {
+                    if (myStack != null || this.typeFilters.isEnabled(type)) {
                         monitor.addListener(this, this.getProxy().getGrid());
                     } else {
                         monitor.removeListener(this);
@@ -304,20 +303,17 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         if (myStack == null || monitor == null) {
             this.lastReportedValue = 0;
             try {
-                final Reference2BooleanMap<IAEStackType<?>> filters = this.typeFilters.getFilters();
                 final var storage = getProxy().getStorage();
 
-                outer: for (var entry : filters.reference2BooleanEntrySet()) {
-                    if (entry.getBooleanValue()) {
-                        IMEMonitor<?> validMonitor = storage.getMEMonitor(entry.getKey());
-                        if (validMonitor == null) continue;
+                outer: for (IAEStackType<?> enabledType : this.typeFilters.getEnabledTypes()) {
+                    IMEMonitor<?> validMonitor = storage.getMEMonitor(enabledType);
+                    if (validMonitor == null) continue;
 
-                        for (IAEStack<?> stack : validMonitor.getStorageList()) {
-                            this.lastReportedValue += stack.getStackSize();
-                            if (this.lastReportedValue < 0) {
-                                this.lastReportedValue = Long.MAX_VALUE;
-                                break outer;
-                            }
+                    for (IAEStack<?> stack : validMonitor.getStorageList()) {
+                        this.lastReportedValue += stack.getStackSize();
+                        if (this.lastReportedValue < 0) {
+                            this.lastReportedValue = Long.MAX_VALUE;
+                            break outer;
                         }
                     }
                 }
@@ -759,11 +755,14 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
         this.prevState = data.getBoolean("prevState");
         this.config.readFromNBT(data, "config");
 
-        final boolean hasTypeFilters = data.hasKey(LevelEmitterTypeFilter.NBT_FILTERS);
+        final boolean hasTypeFilters = data.hasKey(AEStackTypeFilter.NBT_FILTERS);
         if (hasTypeFilters) {
             this.typeFilters.readFromNBT(data);
         } else if (data.hasKey("TYPE_FILTER")) {
             this.applyLegacyTypeFilter(data.getString("TYPE_FILTER"));
+        } else {
+            final IAEStackType<?> thisType = this.getUltraLegacyType();
+            this.typeFilters.setOnlyEnabled(thisType);
         }
     }
 
@@ -838,20 +837,21 @@ public class PartLevelEmitter extends PartUpgradeable implements ILevelEmitter {
     }
 
     @Override
-    public LevelEmitterTypeFilter getTypeFilters() {
+    public AEStackTypeFilter getTypeFilters() {
         return this.typeFilters;
     }
 
     private void applyLegacyTypeFilter(final String typeName) {
-        final Reference2BooleanMap<IAEStackType<?>> filters = this.typeFilters.getFilters();
-        for (IAEStackType<?> type : filters.keySet()) {
-            if ("ALL".equals(typeName)) {
-                filters.put(type, true);
-            } else if ("ITEMS".equals(typeName)) {
-                filters.put(type, type == ITEM_STACK_TYPE);
-            } else if ("FLUIDS".equals(typeName)) {
-                filters.put(type, type == AEFluidStackType.FLUID_STACK_TYPE);
-            }
+        if ("ALL".equals(typeName)) {
+            this.typeFilters.setAllEnabled(true);
+        } else if ("ITEMS".equals(typeName)) {
+            this.typeFilters.setOnlyEnabled(ITEM_STACK_TYPE);
+        } else if ("FLUIDS".equals(typeName)) {
+            this.typeFilters.setOnlyEnabled(AEFluidStackType.FLUID_STACK_TYPE);
         }
+    }
+
+    protected IAEStackType<?> getUltraLegacyType() {
+        return ITEM_STACK_TYPE;
     }
 }
