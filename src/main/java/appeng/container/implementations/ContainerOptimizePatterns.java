@@ -30,6 +30,7 @@ import appeng.core.AELog;
 import appeng.core.features.registries.InterfaceTerminalRegistry;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
+import appeng.core.sync.packets.PacketOptimizePatterns;
 import appeng.crafting.v2.CraftingContext;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
@@ -95,10 +96,11 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
                     IAEStack<?> stack = entry.getKey().copy();
                     stack.setCountRequestableCrafts(entry.getValue().requestedCrafts);
                     long perCraft = entry.getValue().getCraftAmountForItem(stack);
-                    int hash = entry.getKey().hashCode();
-                    if (hash < 0) // max multi is 30, that's 5 bits MAX!! + 1 bit to store sign of the hash
-                        stack.setStackSize((long) (-hash) << 6 | 0b100000 | entry.getValue().getMaxBitMultiplier());
-                    else stack.setStackSize((long) hash << 6 | entry.getValue().getMaxBitMultiplier());
+                    long hash = entry.getKey().hashCode();
+                    long multiplier=entry.getValue().getMaxBitMultiplier()&PacketOptimizePatterns.MULTIPLIER_BIT_MASK;
+                     // max multi is 62, that's 6 bits MAX!! + 1 bit to store sign of the hash
+                    long highbits=((hash<<1)|((hash < 0)?1:0)) << PacketOptimizePatterns.MULTIPLIER_BITS;
+                    stack.setStackSize(highbits|multiplier);
                     stack.setCountRequestable(perCraft);
                     patternsUpdate.appendItem(stack);
                 }
