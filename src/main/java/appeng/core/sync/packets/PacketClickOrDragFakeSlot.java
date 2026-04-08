@@ -11,18 +11,21 @@ import cpw.mods.fml.common.network.ByteBufUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class PacketNEIDragClick extends AppEngPacket {
+public class PacketClickOrDragFakeSlot extends AppEngPacket {
 
     private final ItemStack dragItem;
     private final int slotIndex;
+    private final boolean overwrite;
 
-    public PacketNEIDragClick(ItemStack dragItem, int slotIndex) {
+    public PacketClickOrDragFakeSlot(ItemStack dragItem, int slotIndex, boolean overwrite) {
         this.dragItem = dragItem;
         this.slotIndex = slotIndex;
+        this.overwrite = overwrite;
 
         final ByteBuf data = Unpooled.buffer();
 
         data.writeInt(this.getPacketID());
+        data.writeBoolean(overwrite);
 
         if (this.dragItem != null) {
             data.writeBoolean(true);
@@ -35,7 +38,9 @@ public class PacketNEIDragClick extends AppEngPacket {
         this.configureWrite(data);
     }
 
-    public PacketNEIDragClick(final ByteBuf stream) {
+    public PacketClickOrDragFakeSlot(final ByteBuf stream) {
+        this.overwrite = stream.readBoolean();
+
         if (stream.readBoolean()) {
             this.dragItem = ByteBufUtils.readItemStack(stream);
         } else {
@@ -48,6 +53,26 @@ public class PacketNEIDragClick extends AppEngPacket {
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final Container c = player.openContainer;
         Slot slot = c.getSlot(slotIndex);
+
+        ItemStack stackInSlot = slot.getStack();
+        if (!this.overwrite && stackInSlot != null) {
+            if (this.dragItem != null && stackInSlot.isItemEqual(this.dragItem)
+                    && ItemStack.areItemStackTagsEqual(slot.getStack(), this.dragItem)) {
+                stackInSlot.stackSize = Math
+                        .min(this.dragItem.stackSize + stackInSlot.stackSize, stackInSlot.getMaxStackSize());
+                slot.putStack(stackInSlot);
+                return;
+            } else if (this.dragItem == null) {
+                stackInSlot.stackSize -= 1;
+                if (stackInSlot.stackSize <= 0) {
+                    slot.putStack(null);
+                } else {
+                    slot.putStack(stackInSlot);
+                }
+                return;
+            }
+        }
+
         slot.putStack(dragItem);
     }
 }

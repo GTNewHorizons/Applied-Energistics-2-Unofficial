@@ -13,7 +13,6 @@ package appeng.client.gui;
 import static appeng.client.gui.implementations.GuiMEMonitorable.keyBindPickBlockAction;
 import static appeng.server.ServerHelper.CONTAINER_INTERACTION_KEY;
 
-import java.awt.Rectangle;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -28,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -44,6 +42,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
 import net.minecraftforge.common.MinecraftForge;
 
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
@@ -84,8 +83,8 @@ import appeng.core.AppEng;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
+import appeng.core.sync.packets.PacketClickOrDragFakeSlot;
 import appeng.core.sync.packets.PacketInventoryAction;
-import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketSwapSlots;
 import appeng.helpers.ICustomButtonProvider;
 import appeng.helpers.InventoryAction;
@@ -99,8 +98,6 @@ import codechicken.nei.api.INEIGuiHandler;
 import codechicken.nei.api.TaggedInventoryArea;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Optional;
-import it.unimi.dsi.fastutil.objects.ObjectIntImmutablePair;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 
 @Optional.Interface(modid = "NotEnoughItems", iface = "codechicken.nei.api.INEIGuiHandler")
 public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandler, INEIGuiHandler {
@@ -150,7 +147,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
     private static boolean switchingGuis;
     // drag y
-    protected final Set<Slot> drag_click = new HashSet<>();
+    protected final Set<Slot> draggedSlots = new HashSet<>();
     public static final AppEngRenderItem aeRenderItem = new AppEngRenderItem();
     public static final TranslatedRenderItem translatedRenderItem = new TranslatedRenderItem();
     private final AEGuiTooltip currentToolTip = new AEGuiTooltip();
@@ -390,14 +387,9 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
     @Override
     protected void mouseClicked(final int xCoord, final int yCoord, final int btn) {
-        this.drag_click.clear();
+        this.draggedSlots.clear();
         this.draggedVirtualSlots.clear();
         this.holdingNEIItem = null;
-
-        ItemStack holdingStack = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
-        if (holdingStack != null && handleClickFakeSlot(xCoord, yCoord, holdingStack)) {
-            return;
-        }
 
         final VirtualMESlot virtualSlot = getVirtualMESlotUnderMouse();
         if (virtualSlot != null && this.handleVirtualSlotClick(
@@ -433,39 +425,57 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
 
     @Override
     public boolean handleDragNDrop(GuiContainer gui, int mouseX, int mouseY, ItemStack draggedStack, int button) {
-        this.drag_click.clear();
+        this.draggedSlots.clear();
         this.holdingNEIItem = draggedStack;
 
-        return handleClickFakeSlot(mouseX, mouseY, draggedStack);
+        return tryClickOrDragSlot(mouseX, mouseY, draggedStack, button);
     }
 
-    private boolean handleClickFakeSlot(int mouseX, int mouseY, ItemStack itemstack) {
-        List<ObjectIntPair<SlotFake>> slots = new ArrayList<>();
-
-        if (!this.inventorySlots.inventorySlots.isEmpty()) {
-            for (int i = 0; i < this.inventorySlots.inventorySlots.size(); i++) {
-                Object slot = this.inventorySlots.inventorySlots.get(i);
-                if (slot instanceof SlotFake slotFake) {
-                    slots.add(new ObjectIntImmutablePair<>(slotFake, i));
-                }
-            }
-        }
-
-        for (ObjectIntPair<SlotFake> fakeSlotPair : slots) {
-            SlotFake fakeSlot = fakeSlotPair.left();
-            if (fakeSlot.isEnabled() && getSlotArea(fakeSlot).contains(mouseX, mouseY)) {
-                this.drag_click.add(fakeSlot);
-                fakeSlot.putStack(itemstack);
-                NetworkHandler.instance.sendToServer(new PacketNEIDragClick(itemstack, fakeSlotPair.rightInt()));
-                return true;
-            }
+    private boolean tryClickOrDragSlot(int mouseX, int mouseY, @Nullable ItemStack itemstack, int mouseButton) {
+        Slot slot = this.getSlot(mouseX, mouseY);
+        if (slot != null && this.draggedSlots.add(slot)) {
+            return handleClickOrDragSlot(slot, itemstack, mouseButton);
         }
 
         return false;
     }
 
-    private Rectangle getSlotArea(SlotFake slot) {
-        return new Rectangle(guiLeft + slot.getX(), guiTop + slot.getY(), 16, 16);
+    protected boolean handleClickOrDragSlot(@NotNull Slot slot, @Nullable ItemStack stack, int mouseButton) {
+        if (slot instanceof SlotFake slotFake) {
+            handleClickOrDragFakeSlot(slotFake, stack, mouseButton);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void handleClickOrDragFakeSlot(@NotNull SlotFake slot, @Nullable ItemStack stack, int mouseButton) {
+        boolean isSingle = mouseButton == 1;
+        if (isSingle && stack != null) {
+            stack = stack.copy();
+            stack.stackSize = 1;
+
+        }
+
+        NetworkHandler.instance.sendToServer(new PacketClickOrDragFakeSlot(stack, slot.slotNumber, mouseButton != 1));
+
+        ItemStack stackInSlot = slot.getStack();
+        if (isSingle && stackInSlot != null) {
+            if (stack != null && stackInSlot.isItemEqual(stack)
+                    && ItemStack.areItemStackTagsEqual(stackInSlot, stack)) {
+                stack.stackSize = Math.min(stackInSlot.stackSize + stack.stackSize, stack.getMaxStackSize());
+            } else if (stack == null) {
+                stackInSlot.stackSize -= 1;
+                if (stackInSlot.stackSize <= 0) {
+                    slot.putStack(null);
+                } else {
+                    slot.putStack(stackInSlot);
+                }
+                return;
+            }
+        }
+
+        slot.putStack(stack);
     }
 
     private ItemStack getStackFromHand() {
@@ -521,46 +531,33 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
             }
         }
 
-        final Slot slot = this.getSlot(x, y);
-
         if (this.getScrollBar() != null) {
             this.getScrollBar().clickMove(y - this.guiTop);
         }
 
-        if (slot instanceof SlotFake && holding != null) {
-            this.drag_click.add(slot);
-            if (this.drag_click.size() > 1) {
-                for (final Slot dr : this.drag_click) {
-                    final PacketInventoryAction p = new PacketInventoryAction(
-                            c == 0 ? InventoryAction.PICKUP_OR_SET_DOWN : InventoryAction.PLACE_SINGLE,
-                            dr.slotNumber,
-                            0);
-                    NetworkHandler.instance.sendToServer(p);
-                }
+        final Slot slot = this.getSlot(x, y);
+
+        if (slot != null && this.draggedSlots.add(slot)) {
+            if (handleClickOrDragSlot(slot, holding, c)) {
+                return;
             }
-        } else {
-            super.mouseClickMove(x, y, c, d);
         }
+
+        super.mouseClickMove(x, y, c, d);
     }
 
     @Override
-    protected void handleMouseClick(final Slot slot, final int slotIdx, final int ctrlDown, final int mouseButton) {
-        if (slot instanceof SlotFake) {
-            if (!this.drag_click.isEmpty()) {
+    protected void handleMouseClick(final Slot slot, final int slotIdx, final int clickedButton, final int clickType) {
+        if (clickType == 0 && this.draggedSlots.add(slot)) {
+            final ItemStack holding = this.holdingNEIItem != null ? this.holdingNEIItem
+                    : this.mc.thePlayer.inventory.getItemStack();
+            if (this.handleClickOrDragSlot(slot, holding, clickedButton)) {
                 return;
             }
-
-            final InventoryAction action = ctrlDown == 1 ? InventoryAction.SPLIT_OR_PLACE_SINGLE
-                    : InventoryAction.PICKUP_OR_SET_DOWN;
-
-            final PacketInventoryAction p = new PacketInventoryAction(action, slotIdx, 0);
-            NetworkHandler.instance.sendToServer(p);
-
-            return;
         }
 
         if (slot instanceof SlotPatternTerm) {
-            if (mouseButton == 6) {
+            if (clickType == 6) {
                 return; // prevent weird double clicks..
             }
 
@@ -570,7 +567,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                 AELog.debug(e);
             }
         } else if (slot instanceof SlotCraftingTerm) {
-            if (mouseButton == 6) {
+            if (clickType == 6) {
                 return; // prevent weird double clicks..
             }
 
@@ -579,7 +576,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                 action = InventoryAction.CRAFT_SHIFT;
             } else {
                 // Craft stack on right-click, craft single on left-click
-                action = (mouseButton == 1) ? InventoryAction.CRAFT_STACK : InventoryAction.CRAFT_ITEM;
+                action = (clickType == 1) ? InventoryAction.CRAFT_STACK : InventoryAction.CRAFT_ITEM;
             }
 
             final PacketInventoryAction p = new PacketInventoryAction(action, slotIdx, 0);
@@ -625,7 +622,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                             && inventorySlot.getHasStack()
                             && inventorySlot.inventory == slot.inventory
                             && Container.func_94527_a(inventorySlot, this.dbl_whichItem, true)) {
-                        this.handleMouseClick(inventorySlot, inventorySlot.slotNumber, ctrlDown, 1);
+                        this.handleMouseClick(inventorySlot, inventorySlot.slotNumber, clickedButton, 1);
                     }
                 }
             }
@@ -641,8 +638,8 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                             && baseContainer.getValidDestinationFakeSlot(stackInSlot) == null) {
                         for (VirtualMESlot vmeSlot : this.virtualSlots) {
                             if (vmeSlot instanceof VirtualMEPhantomSlot vmepSlot && vmepSlot.getAEStack() == null) {
-                                vmepSlot.handleMouseClicked(stackInSlot, isCtrlKeyDown(), mouseButton);
-                                this.handlePhantomSlotInteraction(vmepSlot, mouseButton);
+                                vmepSlot.handleMouseClicked(stackInSlot, isCtrlKeyDown(), clickType);
+                                this.handlePhantomSlotInteraction(vmepSlot, clickType);
                                 break;
                             }
                         }
@@ -653,7 +650,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
             this.disableShiftClick = false;
         }
 
-        super.handleMouseClick(slot, slotIdx, ctrlDown, mouseButton);
+        super.handleMouseClick(slot, slotIdx, clickedButton, clickType);
     }
 
     @Override
@@ -697,6 +694,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.subGui = true; // in case the gui is reopened later ( i'm looking at you NEI )
     }
 
+    @Nullable
     protected Slot getSlot(final int mouseX, final int mouseY) {
         final List<Slot> slots = this.getInventorySlots();
         for (final Slot slot : slots) {

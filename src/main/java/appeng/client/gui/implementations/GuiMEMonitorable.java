@@ -1080,14 +1080,14 @@ public class GuiMEMonitorable extends AEBaseGui
     }
 
     @Override
-    protected void handleMouseClick(Slot p_146984_1_, int p_146984_2_, int p_146984_3_, int p_146984_4_) {
+    protected void handleMouseClick(Slot slot, int slotIdx, int clickedButton, int clickType) {
 
         // Hack for view cells, because they are outside the container
-        if (p_146984_1_ != null && p_146984_4_ == 4 && p_146984_1_.xDisplayPosition > this.xSize) {
-            p_146984_4_ = 0;
+        if (slot != null && clickType == 4 && slot.xDisplayPosition > this.xSize) {
+            clickType = 0;
         }
 
-        super.handleMouseClick(p_146984_1_, p_146984_2_, p_146984_3_, p_146984_4_);
+        super.handleMouseClick(slot, slotIdx, clickedButton, clickType);
     }
 
     @Override
