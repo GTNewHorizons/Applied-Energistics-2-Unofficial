@@ -14,9 +14,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerDestroyItemEvent;
+
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.container.AEBaseContainer;
@@ -109,12 +110,10 @@ public class ContainerQuartzKnife extends AEBaseContainer implements IAEAppEngIn
         }
 
         if (SlotRestrictedInput.isMetalIngot(input)) {
-            if (this.myName.length() > 0) {
+            if (!this.myName.isEmpty()) {
                 for (final ItemStack namePressStack : AEApi.instance().definitions().materials().namePress()
                         .maybeStack(1).asSet()) {
-                    final NBTTagCompound compound = Platform.openNbtData(namePressStack);
-                    compound.setString("InscribeName", this.myName);
-
+                    ItemStackNBT.setString(namePressStack, "InscribeName", this.myName);
                     return namePressStack;
                 }
             }

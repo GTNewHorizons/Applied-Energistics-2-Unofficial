@@ -3,6 +3,8 @@ package appeng.items.contents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.config.PriorityCardMode;
 import appeng.api.config.Settings;
 import appeng.api.implementations.guiobjects.IGuiItemObject;
@@ -12,7 +14,6 @@ import appeng.container.interfaces.IInventorySlotAware;
 import appeng.helpers.IPriorityHost;
 import appeng.items.tools.ToolPriorityCard;
 import appeng.util.ConfigManager;
-import appeng.util.Platform;
 
 public class PriorityCardObject implements IGuiItemObject, IPriorityHost, IInventorySlotAware, IConfigurableObject {
 
@@ -62,13 +63,11 @@ public class PriorityCardObject implements IGuiItemObject, IPriorityHost, IInven
 
     private IConfigManager createConfigManager() {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
-            final NBTTagCompound data = Platform.openNbtData(this.stack);
+            final NBTTagCompound data = ItemStackNBT.get(this.stack);
             manager.writeToNBT(data);
         });
-
         out.registerSetting(Settings.PRIORITY_CARD_MODE, PriorityCardMode.EDIT);
-
-        out.readFromNBT((NBTTagCompound) Platform.openNbtData(this.stack).copy());
+        out.readFromNBT((NBTTagCompound) ItemStackNBT.get(this.stack).copy());
         return out;
     }
 }

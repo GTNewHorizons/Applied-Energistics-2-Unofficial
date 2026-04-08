@@ -7,7 +7,6 @@ import appeng.api.implementations.guiobjects.INetworkTool;
 import appeng.api.implementations.items.IUpgradeModule;
 import appeng.api.networking.IGridHost;
 import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.util.Platform;
 
 @Deprecated
 public class AdvancedNetworkToolViewer implements INetworkTool {
@@ -22,10 +21,7 @@ public class AdvancedNetworkToolViewer implements INetworkTool {
         this.gh = gHost;
         this.inv = new AppEngInternalInventory(null, 25);
         this.size = 5;
-        if (is.hasTagCompound()) // prevent crash when opening network status screen.
-        {
-            this.inv.readFromNBT(Platform.openNbtData(is), "inv");
-        }
+        this.inv.readFromNBT(is.getTagCompound(), "inv");
     }
 
     @Override
@@ -76,7 +72,7 @@ public class AdvancedNetworkToolViewer implements INetworkTool {
     @Override
     public void markDirty() {
         this.inv.markDirty();
-        this.inv.writeToNBT(Platform.openNbtData(this.is), "inv");
+        this.inv.writeToNBT(this.is, "inv");
     }
 
     @Override

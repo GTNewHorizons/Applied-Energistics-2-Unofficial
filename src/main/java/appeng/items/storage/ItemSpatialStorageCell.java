@@ -20,6 +20,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
 
 import com.google.common.base.Optional;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.implementations.TransitionResult;
 import appeng.api.implementations.items.ISpatialStorageCell;
@@ -162,9 +163,8 @@ public class ItemSpatialStorageCell extends AEBaseItem implements ISpatialStorag
     }
 
     private World createNewWorld(final ItemStack is) {
-        final NBTTagCompound c = Platform.openNbtData(is);
         final int newDim = DimensionManager.getNextFreeDimId();
-        c.setInteger("StorageDim", newDim);
+        ItemStackNBT.setInteger(is, "StorageDim", newDim);
         WorldData.instance().dimensionData().addStorageCell(newDim);
         DimensionManager.initDimension(newDim);
         return DimensionManager.getWorld(newDim);

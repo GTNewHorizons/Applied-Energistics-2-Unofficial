@@ -23,6 +23,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.collect.Lists;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -292,33 +293,22 @@ public class TileInscriber extends AENetworkPowerTile implements IGridTickable, 
 
         if ((isNameA || isNameB) && (isNameA || plateA == null) && (isNameB || plateB == null)) {
             if (renamedItem != null) {
-                String name = "";
+                final StringBuilder name = new StringBuilder();
 
                 if (plateA != null) {
-                    final NBTTagCompound tag = Platform.openNbtData(plateA);
-                    name += tag.getString("InscribeName");
+                    name.append(ItemStackNBT.getString(plateA, "InscribeName"));
                 }
 
                 if (plateB != null) {
-                    final NBTTagCompound tag = Platform.openNbtData(plateB);
-                    if (name.length() > 0) {
-                        name += " ";
+                    if (name.length() != 0) {
+                        name.append(" ");
                     }
-                    name += tag.getString("InscribeName");
+                    name.append(ItemStackNBT.getString(plateB, "InscribeName"));
                 }
 
                 final ItemStack startingItem = renamedItem.copy();
                 renamedItem = renamedItem.copy();
-                final NBTTagCompound tag = Platform.openNbtData(renamedItem);
-
-                final NBTTagCompound display = tag.getCompoundTag("display");
-                tag.setTag("display", display);
-
-                if (name.length() > 0) {
-                    display.setString("Name", name);
-                } else {
-                    display.removeTag("Name");
-                }
+                ItemStackNBT.setDisplayName(renamedItem, name.toString());
 
                 final List<ItemStack> inputs = Lists.newArrayList(startingItem);
                 final InscriberProcessType type = InscriberProcessType.Inscribe;

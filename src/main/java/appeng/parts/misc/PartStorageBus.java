@@ -29,6 +29,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Vec3;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import com.glodblock.github.common.item.ItemFluidPacket;
@@ -263,8 +264,9 @@ public class PartStorageBus extends PartUpgradeable implements IStorageBus {
 
     private void readFilterCache(NBTTagCompound tagCompound) {
         for (int x = 0; x < filterCache.length; x++) {
-            if (tagCompound.hasKey("#" + x)) {
-                NBTTagCompound isTag = tagCompound.getCompoundTag("#" + x);
+            final String key = "#" + x;
+            if (tagCompound.hasKey(key, NBT.TAG_COMPOUND)) {
+                NBTTagCompound isTag = tagCompound.getCompoundTag(key);
                 filterCache[x] = readStackNBT(isTag, true);
             } else {
                 filterCache[x] = null;

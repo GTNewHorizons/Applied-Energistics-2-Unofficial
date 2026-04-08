@@ -42,6 +42,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.jetbrains.annotations.NotNull;
@@ -294,7 +295,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     public void readFromNBT(final NBTTagCompound data) {
         this.waitingToSend = null;
-        final NBTTagList waitingList = data.getTagList("waitingToSend", 10);
+        final NBTTagList waitingList = data.getTagList("waitingToSend", NBT.TAG_COMPOUND);
         if (waitingList != null) {
             for (int x = 0; x < waitingList.tagCount(); x++) {
                 final NBTTagCompound c = waitingList.getCompoundTagAt(x);
@@ -319,7 +320,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         };
         if (this.unlockEvent == UnlockCraftingEvent.RESULT) {
-            NBTTagList stackList = data.getTagList("unlockStacks", 10);
+            NBTTagList stackList = data.getTagList("unlockStacks", NBT.TAG_COMPOUND);
             for (int index = 0; index < stackList.tagCount(); index++) {
                 NBTTagCompound stackTag = stackList.getCompoundTagAt(index);
                 IAEStack<?> unlockStack = Platform.readStackNBT(stackTag, true);

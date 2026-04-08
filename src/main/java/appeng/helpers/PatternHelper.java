@@ -24,6 +24,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.AEApi;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
@@ -60,8 +61,8 @@ public class PatternHelper implements ICraftingPatternDetails, Comparable<Patter
             throw new IllegalArgumentException("No pattern here!");
         }
 
-        final NBTTagList inTag = nbt.getTagList("in", 10);
-        final NBTTagList outTag = nbt.getTagList("out", 10);
+        final NBTTagList inTag = nbt.getTagList("in", NBT.TAG_COMPOUND);
+        final NBTTagList outTag = nbt.getTagList("out", NBT.TAG_COMPOUND);
         this.isCrafting = nbt.getBoolean("crafting");
 
         this.canSubstitute = nbt.getBoolean("substitute");
