@@ -35,6 +35,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.common.MinecraftForge;
 
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
@@ -1088,6 +1089,28 @@ public class GuiMEMonitorable extends AEBaseGui
         }
 
         super.handleMouseClick(slot, slotIdx, clickedButton, clickType);
+    }
+
+    @Override
+    protected boolean handleClickOrDragSlot(@NotNull Slot slot, @org.jetbrains.annotations.Nullable ItemStack stack,
+            int mouseButton) {
+
+        if (isCtrlKeyDown() && mouseButton == 0
+                && stack == null
+                && slot instanceof AppEngSlot appEngSlot
+                && appEngSlot.isPlayerSide()) {
+            ItemStack stackInSlot = appEngSlot.getStack();
+            if (stackInSlot != null) {
+                for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                    if (type.isContainerItemForType(stackInSlot)) {
+                        this.sendAction(MonitorableAction.CONTAINER_QUICK_TRANSFER, null, slot.slotNumber);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return super.handleClickOrDragSlot(slot, stack, mouseButton);
     }
 
     @Override
