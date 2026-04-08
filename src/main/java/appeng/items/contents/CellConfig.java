@@ -13,7 +13,6 @@ package appeng.items.contents;
 import net.minecraft.item.ItemStack;
 
 import appeng.tile.inventory.IAEStackInventory;
-import appeng.util.Platform;
 
 public class CellConfig extends IAEStackInventory {
 
@@ -22,11 +21,11 @@ public class CellConfig extends IAEStackInventory {
     public CellConfig(final ItemStack is) {
         super(null, 63);
         this.is = is;
-        this.readFromNBT(Platform.openNbtData(is), "list");
+        this.readFromNBT(is.getTagCompound(), "list");
     }
 
     @Override
     public void markDirty() {
-        this.writeToNBT(Platform.openNbtData(this.is), "list");
+        this.writeToNBT(this.is, "list");
     }
 }

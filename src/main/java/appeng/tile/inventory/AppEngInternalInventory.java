@@ -18,6 +18,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.Constants.NBT;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.storage.IMEInventory;
 import appeng.core.AELog;
 import appeng.me.storage.MEIInventoryWrapper;
@@ -184,6 +187,16 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
         }
     }
 
+    public void writeToNBT(@NotNull ItemStack stack, String name) {
+        if (!stack.hasTagCompound()) {
+            stack.setTagCompound(new NBTTagCompound());
+        }
+        this.writeToNBT(stack.getTagCompound(), name);
+        if (stack.getTagCompound().hasNoTags()) {
+            stack.setTagCompound(null);
+        }
+    }
+
     public void writeToNBT(final NBTTagCompound data, final String name) {
         final NBTTagCompound c = new NBTTagCompound();
         this.writeToNBT(c);
@@ -204,8 +217,8 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
         }
     }
 
-    public void readFromNBT(final NBTTagCompound data, final String name) {
-        if (data.hasKey(name, NBT.TAG_COMPOUND)) {
+    public void readFromNBT(@Nullable final NBTTagCompound data, final String name) {
+        if (data != null && data.hasKey(name, NBT.TAG_COMPOUND)) {
             final NBTTagCompound c = data.getCompoundTag(name);
             if (c != null) {
                 this.readFromNBT(c);

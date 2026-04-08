@@ -11,6 +11,9 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants.NBT;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import appeng.api.config.PinsRows;
 import appeng.api.config.PinsState;
 import appeng.api.storage.ITerminalPins;
@@ -32,13 +35,23 @@ public class PinsHolder implements IAEAppEngInventory {
 
     public PinsHolder(final ItemStack holder) {
         this.holder = holder;
-        this.readFromNBT(Platform.openNbtData(holder), "pins");
+        this.readFromNBT(holder.getTagCompound(), "pins");
         this.initialized = true;
     }
 
     public PinsHolder(final ITerminalPins terminalPart) {
         holder = null;
         this.initialized = true;
+    }
+
+    public void writeToNBT(@NotNull ItemStack stack, String name) {
+        if (!stack.hasTagCompound()) {
+            stack.setTagCompound(new NBTTagCompound());
+        }
+        this.writeToNBT(stack.getTagCompound(), name);
+        if (stack.getTagCompound().hasNoTags()) {
+            stack.setTagCompound(null);
+        }
     }
 
     public void writeToNBT(final NBTTagCompound data, final String name) {
@@ -70,8 +83,8 @@ public class PinsHolder implements IAEAppEngInventory {
         }
     }
 
-    public void readFromNBT(final NBTTagCompound data, final String name) {
-        if (!data.hasKey(name, NBT.TAG_LIST)) {
+    public void readFromNBT(@Nullable final NBTTagCompound data, final String name) {
+        if (data == null || !data.hasKey(name, NBT.TAG_LIST)) {
             return;
         }
         final NBTTagList list = data.getTagList(name, NBT.TAG_COMPOUND);
@@ -153,7 +166,7 @@ public class PinsHolder implements IAEAppEngInventory {
 
     public void markDirty() {
         if (holder == null || !initialized) return;
-        this.writeToNBT(Platform.openNbtData(holder), "pins");
+        this.writeToNBT(holder, "pins");
     }
 
     @Override

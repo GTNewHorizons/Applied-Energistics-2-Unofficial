@@ -5,11 +5,13 @@ import java.util.Map;
 import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants.NBT;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
@@ -37,10 +39,10 @@ public class MonitorableTypeFilter {
         return map;
     }
 
-    public void readFromNBT(NBTTagCompound tag) {
+    public void readFromNBT(@Nullable NBTTagCompound tag) {
         this.perPlayer.clear();
 
-        if (!tag.hasKey(NBT_FILTERS)) {
+        if (tag == null || !tag.hasKey(NBT_FILTERS, NBT.TAG_LIST)) {
             return;
         }
 
@@ -76,6 +78,16 @@ public class MonitorableTypeFilter {
         }
     }
 
+    public void writeToNBT(@NotNull ItemStack stack) {
+        if (!stack.hasTagCompound()) {
+            stack.setTagCompound(new NBTTagCompound());
+        }
+        this.writeToNBT(stack.getTagCompound());
+        if (stack.getTagCompound().hasNoTags()) {
+            stack.setTagCompound(null);
+        }
+    }
+
     public void writeToNBT(NBTTagCompound tag) {
         final NBTTagList players = new NBTTagList();
 
@@ -107,7 +119,9 @@ public class MonitorableTypeFilter {
             players.appendTag(playerTag);
         }
 
-        tag.setTag(NBT_FILTERS, players);
+        if (players.tagCount() != 0) {
+            tag.setTag(NBT_FILTERS, players);
+        }
     }
 
     @NotNull

@@ -52,7 +52,6 @@ import appeng.items.contents.PinsHolder;
 import appeng.items.contents.WirelessTerminalViewCells;
 import appeng.tile.networking.TileWireless;
 import appeng.util.MonitorableTypeFilter;
-import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
@@ -88,7 +87,7 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
         this.inventorySlot = x;
         this.viewCells = new WirelessTerminalViewCells(is);
         this.pinsInv = new PinsHolder(is);
-        this.typeFilters.readFromNBT(Platform.openNbtData(is));
+        this.typeFilters.readFromNBT(is.getTagCompound());
 
         ILocatable obj = null;
 
@@ -316,6 +315,6 @@ public class WirelessTerminalGuiObject implements IPortableCell, IActionHost, II
 
     @Override
     public void saveTypeFilter() {
-        this.typeFilters.writeToNBT(Platform.openNbtData(this.effectiveItem));
+        this.typeFilters.writeToNBT(this.effectiveItem);
     }
 }
