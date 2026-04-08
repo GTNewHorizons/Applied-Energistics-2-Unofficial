@@ -34,9 +34,7 @@ public class BiggerAppEngInventory extends AppEngInternalInventory {
                 final String key = "#" + x;
                 if (target.hasKey(key, NBT.TAG_COMPOUND)) {
                     final NBTTagCompound c = target.getCompoundTag(key);
-                    if (c != null) {
-                        this.inv[x] = Platform.loadItemStackFromNBT(c);
-                    }
+                    this.inv[x] = Platform.loadItemStackFromNBT(c);
                 }
             } catch (final Exception e) {
                 AELog.debug(e);

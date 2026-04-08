@@ -88,10 +88,7 @@ public class IAEStackInventory {
 
     public void readFromNBT(@Nullable final NBTTagCompound data, final String name) {
         if (data != null && data.hasKey(name, NBT.TAG_COMPOUND)) {
-            final NBTTagCompound c = data.getCompoundTag(name);
-            if (c != null) {
-                this.readFromNBT(c);
-            }
+            this.readFromNBT(data.getCompoundTag(name));
         }
     }
 
@@ -101,11 +98,9 @@ public class IAEStackInventory {
                 final String key = "#" + x;
                 if (target.hasKey(key, NBT.TAG_COMPOUND)) {
                     final NBTTagCompound c = target.getCompoundTag(key);
-                    if (c != null) {
-                        final IAEStack<?> stack = readStackNBT(c, false);
-                        if (stack != null && stack.getStackSize() == 0) stack.setStackSize(c.getInteger("Count"));
-                        this.inv[x] = stack;
-                    }
+                    final IAEStack<?> stack = readStackNBT(c, false);
+                    if (stack != null && stack.getStackSize() == 0) stack.setStackSize(c.getInteger("Count"));
+                    this.inv[x] = stack;
                 }
             } catch (final Exception e) {
                 AELog.debug(e);

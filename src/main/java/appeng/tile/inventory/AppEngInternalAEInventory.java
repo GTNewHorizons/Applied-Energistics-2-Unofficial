@@ -94,10 +94,7 @@ public class AppEngInternalAEInventory implements IInventory, Iterable<ItemStack
 
     public void readFromNBT(@Nullable final NBTTagCompound data, final String name) {
         if (data != null && data.hasKey(name, NBT.TAG_COMPOUND)) {
-            final NBTTagCompound c = data.getCompoundTag(name);
-            if (c != null) {
-                this.readFromNBT(c);
-            }
+            this.readFromNBT(data.getCompoundTag(name));
         }
     }
 
@@ -107,9 +104,7 @@ public class AppEngInternalAEInventory implements IInventory, Iterable<ItemStack
                 final String key = "#" + x;
                 if (target.hasKey(key, NBT.TAG_COMPOUND)) {
                     final NBTTagCompound c = target.getCompoundTag(key);
-                    if (c != null) {
-                        this.inv[x] = AEItemStack.loadItemStackFromNBT(c);
-                    }
+                    this.inv[x] = AEItemStack.loadItemStackFromNBT(c);
                 }
             } catch (final Exception e) {
                 AELog.debug(e);
