@@ -97,11 +97,13 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
                     stack.setCountRequestableCrafts(entry.getValue().requestedCrafts);
                     long perCraft = entry.getValue().getCraftAmountForItem(stack);
                     long hash = entry.getKey().hashCode();
+                    // max multi is 62, that's 6 bits MAX!!
                     long multiplier = entry.getValue().getMaxBitMultiplier()
                             & PacketOptimizePatterns.MULTIPLIER_BIT_MASK;
-                    // max multi is 62, that's 6 bits MAX!! + 1 bit to store sign of the hash
-                    long highbits = ((Math.abs(hash) << 1) | ((hash < 0) ? 1 : 0))
-                            << PacketOptimizePatterns.MULTIPLIER_BITS;
+                    // lowest bit is sign, the rest bits are magnitude
+                    long highbits = (Math.abs(hash) << 1) | ((hash < 0) ? 1 : 0);
+                    // Then shift it left by 6 bits
+                    highbits = highbits << PacketOptimizePatterns.MULTIPLIER_BITS;
                     stack.setStackSize(highbits | multiplier);
                     stack.setCountRequestable(perCraft);
                     patternsUpdate.appendItem(stack);
