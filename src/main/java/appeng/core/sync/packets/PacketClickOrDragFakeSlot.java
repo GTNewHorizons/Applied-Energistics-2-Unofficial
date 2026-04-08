@@ -5,6 +5,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
+import appeng.container.slot.SlotFake;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import cpw.mods.fml.common.network.ByteBufUtils;
@@ -52,7 +53,10 @@ public class PacketClickOrDragFakeSlot extends AppEngPacket {
     @Override
     public void serverPacketData(final INetworkInfo manager, final AppEngPacket packet, final EntityPlayer player) {
         final Container c = player.openContainer;
-        Slot slot = c.getSlot(slotIndex);
+
+        if (slotIndex < 0 || slotIndex >= c.inventorySlots.size()) return;
+        Slot slot = c.inventorySlots.get(slotIndex);
+        if (!(slot instanceof SlotFake)) return;
 
         ItemStack stackInSlot = slot.getStack();
         if (!this.overwrite && stackInSlot != null) {
