@@ -13,11 +13,11 @@ import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
 public class PacketOptimizePatterns extends AppEngPacket {
-	static public final int MULTIPLIER_BITS = 6;// multiplier <= (0b111110), take 6 bits
-	static public final long MULTIPLIER_BIT_MASK=(1L << MULTIPLIER_BITS) - 1;// low 6 bits = 1
-	static public final long HASH_SIGN_BIT_MASK=1L << MULTIPLIER_BITS;// 7th bit = 1
-	
-	
+
+    static public final int MULTIPLIER_BITS = 6;// multiplier <= (0b111110), take 6 bits
+    static public final long MULTIPLIER_BIT_MASK = (1L << MULTIPLIER_BITS) - 1;// low 6 bits = 1
+    static public final long HASH_SIGN_BIT_MASK = 1L << MULTIPLIER_BITS;// 7th bit = 1
+
     HashMap<Integer, Integer> hashCodeToMultiplier = new HashMap<>();
 
     // automatic
@@ -37,7 +37,7 @@ public class PacketOptimizePatterns extends AppEngPacket {
         data.writeInt(multipliersMap.size());
         for (var entry : multipliersMap.object2IntEntrySet()) {
             long encoded = entry.getKey().getStackSize();
-            data.writeInt((int) (encoded >> (MULTIPLIER_BITS+1)) * ((encoded & HASH_SIGN_BIT_MASK) == 0 ? 1 : -1));
+            data.writeInt((int) (encoded >> (MULTIPLIER_BITS + 1)) * ((encoded & HASH_SIGN_BIT_MASK) == 0 ? 1 : -1));
             data.writeInt(entry.getIntValue());
         }
 
