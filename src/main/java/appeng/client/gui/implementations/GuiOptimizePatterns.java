@@ -366,7 +366,7 @@ public class GuiOptimizePatterns extends GuiSub implements IGuiTooltipHandler {
                                 stack.getCountRequestableCrafts(),
                                 stack.getCountRequestable(),
                                 amountToCraftI),
-                        (int) (stack.getStackSize() & 0b11111));
+                        (int) (stack.getStackSize() & PacketOptimizePatterns.MULTIPLIER_BIT_MASK));
                 if (v > 0) multiplierMap.put(stack, v);
             }
         }
