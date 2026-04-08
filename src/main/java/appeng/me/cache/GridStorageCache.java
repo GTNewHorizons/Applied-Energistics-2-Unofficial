@@ -503,6 +503,10 @@ public class GridStorageCache implements IStorageGrid {
         }
     }
 
+    public HashSet<ICellProvider> getActiveCellProviders() {
+        return activeCellProviders;
+    }
+
     private void resetCellInfo() {
         this.itemBytesTotal = 0;
         this.itemBytesUsed = 0;

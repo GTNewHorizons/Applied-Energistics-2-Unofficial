@@ -1,209 +1,124 @@
 package appeng.helpers;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
-import appeng.api.AEApi;
 import appeng.api.networking.IGrid;
-import appeng.api.networking.IGridNode;
-import appeng.api.storage.ICellCacheRegistry;
-import appeng.api.storage.ICellHandler;
-import appeng.api.storage.ICellWorkbenchItem;
+import appeng.api.networking.storage.IStorageGrid;
+import appeng.api.storage.ICellProvider;
+import appeng.api.storage.IMEInventory;
 import appeng.api.storage.IMEInventoryHandler;
-import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.data.AEStackTypeRegistry;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
-import appeng.core.AELog;
-import appeng.tile.storage.TileChest;
-import appeng.tile.storage.TileDrive;
+import appeng.api.util.DimensionalCoord;
+import appeng.me.cache.GridStorageCache;
+import appeng.me.helpers.IGridProxyable;
+import appeng.me.storage.CellInventory;
+import appeng.tile.inventory.IAEStackInventory;
+import appeng.util.Platform;
 
-public final class CellScanTask {
+public class CellScanTask {
 
-    private CellScanTask() {}
+    private final Map<IAEStackType<?>, Map<IAEStack<?>, List<CellRecord>>> partitions = new IdentityHashMap<>();
+    private final IGrid grid;
+
+    public CellScanTask(final IGrid grid) {
+        this.grid = grid;
+        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+            this.partitions.put(type, new HashMap<>());
+        }
+    }
 
     public static final class CellRecord {
 
-        public final String deviceType;
-        public final String deviceId;
         public final int slot;
-        public final String cellItemId;
-        public final int cellMeta;
         public final String cellDisplayName;
-        public final ICellCacheRegistry.TYPE cellType;
-        public final double bytesTotal;
-        public final double bytesUsed;
-        public final double typesTotal;
-        public final double typesUsed;
-        public final boolean isPartitioned;
-        public final List<String> partitionedItems;
-        public final List<ItemStack> partitionedItemStacks;
+        public final int typesUsed;
         public final int x;
         public final int y;
         public final int z;
         public final int dim;
 
-        public CellRecord(String deviceType, String deviceId, int slot, String cellItemId, int cellMeta,
-                String cellDisplayName, ICellCacheRegistry.TYPE cellType, double bytesTotal, double bytesUsed,
-                double typesTotal, double typesUsed, boolean isPartitioned, List<String> partitionedItems,
-                List<ItemStack> partitionedItemStacks, int x, int y, int z, int dim) {
-            this.deviceType = deviceType;
-            this.deviceId = deviceId;
+        public CellRecord(int slot, String cellDisplayName, int typesUsed, DimensionalCoord dc) {
             this.slot = slot;
-            this.cellItemId = cellItemId;
-            this.cellMeta = cellMeta;
             this.cellDisplayName = cellDisplayName;
-            this.cellType = cellType;
-            this.bytesTotal = bytesTotal;
-            this.bytesUsed = bytesUsed;
-            this.typesTotal = typesTotal;
             this.typesUsed = typesUsed;
-            this.isPartitioned = isPartitioned;
-            this.partitionedItems = partitionedItems != null ? partitionedItems : new ArrayList<>();
-            this.partitionedItemStacks = partitionedItemStacks != null ? partitionedItemStacks : new ArrayList<>();
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.dim = dim;
+            this.x = dc.x;
+            this.y = dc.y;
+            this.z = dc.z;
+            this.dim = dc.getDimension();
         }
     }
 
-    public static List<CellRecord> scanGrid(IGrid grid) {
-        List<CellRecord> records = new ArrayList<>();
+    public void scanGrid() {
+        final GridStorageCache gsc = grid.getCache(IStorageGrid.class);
+        for (ICellProvider icp : gsc.getActiveCellProviders()) {
+            if (icp instanceof IGridProxyable igp) {
+                final DimensionalCoord dc = igp.getLocation();
+                for (IAEStackType<?> stackType : AEStackTypeRegistry.getAllTypes()) {
+                    for (IMEInventoryHandler<?> inv : icp.getCellArray(stackType)) {
+                        if (inv.getInternal() instanceof IMEInventoryHandler meih2) {
+                            if (meih2.getInternal() instanceof IMEInventoryHandler meih3) {
+                                final IMEInventory internal = meih3.getInternal();
 
-        try {
-            for (IGridNode obj : grid.getMachines(TileDrive.class)) {
-                try {
-                    TileDrive drive = (obj != null) ? (TileDrive) obj.getMachine() : null;
-                    assert drive != null;
-                    int dimension = drive.getWorldObj() != null ? drive.getWorldObj().provider.dimensionId : 0;
-                    String deviceId = String
-                            .format("Drive@%d,%d,%d (Dim %d)", drive.xCoord, drive.yCoord, drive.zCoord, dimension);
-                    IInventory inv = drive.getInternalInventory();
+                                if (internal instanceof CellInventory<?>ci) {
+                                    final ItemStack cell = ci.getItemStack();
 
-                    for (int slot = 0; slot < 10; slot++) {
-                        ItemStack cellStack = inv.getStackInSlot(slot);
-                        if (cellStack == null) continue;
-                        scanCell(
-                                records,
-                                cellStack,
-                                "DRIVE",
-                                deviceId,
-                                slot,
-                                drive,
-                                drive.xCoord,
-                                drive.yCoord,
-                                drive.zCoord,
-                                dimension);
-                    }
-                } catch (Exception ignored) {}
-            }
-
-            for (IGridNode obj : grid.getMachines(TileChest.class)) {
-                try {
-                    TileChest chest = (obj != null) ? (TileChest) obj.getMachine() : null;
-                    assert chest != null;
-                    int dimension = chest.getWorldObj() != null ? chest.getWorldObj().provider.dimensionId : 0;
-                    String deviceId = String
-                            .format("Chest@%d,%d,%d (Dim %d)", chest.xCoord, chest.yCoord, chest.zCoord, dimension);
-                    ItemStack cellStack = chest.getInternalInventory().getStackInSlot(1);
-                    if (cellStack != null) scanCell(
-                            records,
-                            cellStack,
-                            "CHEST",
-                            deviceId,
-                            1,
-                            chest,
-                            chest.xCoord,
-                            chest.yCoord,
-                            chest.zCoord,
-                            dimension);
-                } catch (Exception ignored) {}
-            }
-        } catch (Exception e) {
-            AELog.error(e, "CellScanTask: Grid scan failed");
-        }
-
-        return records;
-    }
-
-    private static void scanCell(List<CellRecord> records, ItemStack cellStack, String deviceType, String deviceId,
-            int slot, ISaveProvider saveProvider, int x, int y, int z, int dim) {
-        ICellHandler cellHandler = AEApi.instance().registries().cell().getHandler(cellStack);
-        if (cellHandler == null) return;
-
-        for (IAEStackType<?> stackType : AEStackTypeRegistry.getAllTypes()) {
-            IMEInventoryHandler<?> cellInv;
-            try {
-                cellInv = cellHandler.getCellInventory(cellStack, saveProvider, stackType);
-            } catch (ClassCastException | IllegalArgumentException e) {
-                continue;
-            }
-            if (!(cellInv instanceof ICellCacheRegistry reg) || !reg.canGetInv()) continue;
-
-            boolean isPartitioned = false;
-            List<String> partitionedItems = new ArrayList<>();
-            List<ItemStack> partitionedItemStacks = new ArrayList<>();
-            if (cellStack.getItem() instanceof ICellWorkbenchItem cwi) {
-                final appeng.tile.inventory.IAEStackInventory configInv = cwi.getConfigAEInventory(cellStack);
-                if (configInv != null) {
-                    for (int i = 0; i < configInv.getSizeInventory(); i++) {
-                        final appeng.api.storage.data.IAEStack<?> filterStack = configInv.getAEStackInSlot(i);
-                        if (filterStack instanceof appeng.api.storage.data.IAEItemStack ais) {
-                            final ItemStack is = ais.getItemStack();
-                            if (is != null) {
-                                isPartitioned = true;
-                                partitionedItems.add(is.getDisplayName());
-                                partitionedItemStacks.add(is);
+                                    if (igp instanceof IInventory iinv) {
+                                        for (int i = 0; i < iinv.getSizeInventory(); i++) {
+                                            if (iinv.getStackInSlot(i) == cell) {
+                                                scanCell(cell, i, ci, dc);
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
+
                     }
                 }
             }
-
-            records.add(
-                    new CellRecord(
-                            deviceType,
-                            deviceId,
-                            slot,
-                            Item.itemRegistry.getNameForObject(cellStack.getItem()),
-                            cellStack.getItemDamage(),
-                            cellStack.getDisplayName(),
-                            reg.getCellType(),
-                            reg.getTotalBytes(),
-                            reg.getUsedBytes(),
-                            reg.getTotalTypes(),
-                            reg.getUsedTypes(),
-                            isPartitioned,
-                            partitionedItems,
-                            partitionedItemStacks,
-                            x,
-                            y,
-                            z,
-                            dim));
-            break;
         }
     }
 
-    public static Map<String, List<CellRecord>> findDuplicatePartitionedCells(List<CellRecord> cells) {
-        Map<String, List<CellRecord>> duplicates = new HashMap<>();
-        for (CellRecord cell : cells) {
-            if (!cell.isPartitioned || cell.partitionedItems.isEmpty()) continue;
-            List<String> sorted = new ArrayList<>(cell.partitionedItems);
-            Collections.sort(sorted);
-            String signature = String.join("|", sorted) + "|" + cell.cellType.name();
-            duplicates.computeIfAbsent(signature, k -> new ArrayList<>()).add(cell);
+    private void scanCell(ItemStack cellStack, int slot, CellInventory<?> cellInv, DimensionalCoord dc) {
+        final IAEStackInventory configInv = cellInv.getConfigAEInventory();
+        if (configInv != null) {
+            for (int i = 0; i < configInv.getSizeInventory(); i++) {
+                final IAEStack<?> filterStack = configInv.getAEStackInSlot(i);
+                final Map<IAEStack<?>, List<CellRecord>> map = this.partitions.get(filterStack.getStackType());
+                final List<CellRecord> list = map.getOrDefault(filterStack, new ArrayList<>());
+                list.add(
+                        new CellRecord(
+                                slot,
+                                Platform.getItemDisplayName(cellStack),
+                                (int) cellInv.getStoredItemTypes(),
+                                dc));
+                map.put(filterStack, list);
+            }
         }
-        Map<String, List<CellRecord>> result = new HashMap<>();
-        for (Map.Entry<String, List<CellRecord>> entry : duplicates.entrySet()) {
-            if (entry.getValue().size() >= 2) result.put(entry.getKey(), entry.getValue());
+    }
+
+    public void findDuplicatePartitionedCells() {
+        final Iterator<Entry<IAEStackType<?>, Map<IAEStack<?>, List<CellRecord>>>> firstIter = partitions.entrySet()
+                .iterator();
+        while (firstIter.hasNext()) {
+            final Entry<IAEStackType<?>, Map<IAEStack<?>, List<CellRecord>>> firstEntry = firstIter.next();
+            firstEntry.getValue().entrySet().removeIf(secondEntry -> secondEntry.getValue().size() < 2);
+            if (firstEntry.getValue().isEmpty()) firstIter.remove();
         }
-        return result;
+    }
+
+    public Map<IAEStackType<?>, Map<IAEStack<?>, List<CellRecord>>> getPartitions() {
+        return partitions;
     }
 }

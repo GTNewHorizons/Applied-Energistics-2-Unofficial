@@ -184,7 +184,7 @@ public class GuiStorageReshuffle extends AEBaseGui implements ISortSource {
 
     public void onScanUpdated() {
         this.scanRepo.clear();
-        final String data = this.container.getScanData();
+        final String data = ""; // this.container.getScanData();
         if (!data.isEmpty()) {
             for (final String line : data.split("\n", -1)) {
                 final String[] parts = line.split("@");

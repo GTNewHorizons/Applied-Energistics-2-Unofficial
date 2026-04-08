@@ -1,11 +1,10 @@
 package appeng.helpers;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.BaseActionSource;
@@ -14,6 +13,7 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.core.AELog;
+import appeng.util.AEStackTypeFilter;
 
 public class ReshuffleTask {
 
@@ -22,7 +22,7 @@ public class ReshuffleTask {
 
     private final Map<IAEStackType<?>, IMEMonitor<?>> monitors;
     private final BaseActionSource actionSource;
-    private final Set<IAEStackType<?>> allowedTypes;
+    private final AEStackTypeFilter typeFilters;
     private final boolean voidProtection;
 
     private final List<IAEStack<?>> itemsToProcess = new ArrayList<>();
@@ -37,12 +37,12 @@ public class ReshuffleTask {
     private ReshuffleReport report = null;
 
     public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
-            Set<IAEStackType<?>> allowedTypes, boolean voidProtection) {
+            AEStackTypeFilter filters, boolean voidProtection) {
         this.monitors = new IdentityHashMap<>(monitors);
         this.actionSource = actionSource;
-        this.allowedTypes = new HashSet<>(allowedTypes);
+        this.typeFilters = filters;
         this.voidProtection = voidProtection;
-        this.report = new ReshuffleReport(this.allowedTypes, voidProtection);
+        this.report = new ReshuffleReport(this.typeFilters, voidProtection);
     }
 
     public int initialize() {
@@ -53,11 +53,11 @@ public class ReshuffleTask {
         skippedItems = 0;
 
         if (report != null) {
-            report.snapshotBefore(monitors, allowedTypes);
+            report.snapshotBefore(monitors);
         }
 
-        for (IAEStackType<?> type : allowedTypes) {
-            IMEMonitor<?> monitor = monitors.get(type);
+        for (Entry<IAEStackType<?>, IMEMonitor<?>> entry : this.monitors.entrySet()) {
+            IMEMonitor<?> monitor = entry.getValue();
             if (monitor == null) continue;
 
             IItemList<?> storageList = monitor.getStorageList();
@@ -86,7 +86,7 @@ public class ReshuffleTask {
                 IAEStackType type = stack.getStackType();
                 IMEMonitor monitor = monitors.get(type);
 
-                if (monitor != null && allowedTypes.contains(type)) {
+                if (monitor != null) {
                     final IAEStack<?> extracted = monitor.extractItems(stack.copy(), Actionable.MODULATE, actionSource);
                     if (extracted != null && extracted.getStackSize() > 0) {
                         final IAEStack<?> leftover = monitor.injectItems(extracted, Actionable.MODULATE, actionSource);
@@ -118,7 +118,7 @@ public class ReshuffleTask {
     }
 
     private void finalizeReport() {
-        report.generateReport(monitors, allowedTypes, processedItems, skippedItems, skippedItemsList);
+        report.generateReport(monitors, processedItems, skippedItems, skippedItemsList);
     }
 
     public void cancel() {

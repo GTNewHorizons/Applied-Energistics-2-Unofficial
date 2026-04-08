@@ -110,7 +110,7 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.startsWith("Reshuffle.") && c instanceof final ContainerStorageReshuffle qk) {
             switch (this.Name) {
                 case "Reshuffle.TypeFilter" -> qk.toggleTypeFilter(this.Value);
-                case "Reshuffle.Start" -> qk.startReshuffle(player, "confirmed".equals(this.Value));
+                case "Reshuffle.Start" -> qk.startReshuffle("confirmed".equals(this.Value));
                 case "Reshuffle.Cancel" -> qk.cancelReshuffle();
                 case "Reshuffle.Scan" -> qk.performNetworkScan();
                 case "Reshuffle.Mode" -> qk.setScanMode("scan".equals(this.Value));

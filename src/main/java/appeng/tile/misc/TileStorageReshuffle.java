@@ -1,19 +1,16 @@
 package appeng.tile.misc;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 
 import org.jetbrains.annotations.NotNull;
 
 import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
+import appeng.api.implementations.ITypeFilterProvider;
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.events.MENetworkChannelsChanged;
@@ -23,7 +20,6 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.security.ReshuffleActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEMonitor;
-import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
@@ -36,20 +32,19 @@ import appeng.me.cache.NetworkMonitor;
 import appeng.tile.TileEvent;
 import appeng.tile.events.TileEventType;
 import appeng.tile.grid.AENetworkTile;
+import appeng.util.AEStackTypeFilter;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
-import appeng.util.MonitorableTypeFilter;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class TileStorageReshuffle extends AENetworkTile
-        implements ITerminalTypeFilterProvider, IConfigurableObject, IConfigManagerHost {
+        implements IConfigurableObject, IConfigManagerHost, ITypeFilterProvider {
 
     private ReshuffleTask activeTask = null;
     private Map<IAEStackType<?>, IMEMonitor<?>> lockedMonitors = null;
     private boolean isActive = false;
 
-    private final MonitorableTypeFilter typeFilters = new MonitorableTypeFilter();
+    private final AEStackTypeFilter typeFilters = new AEStackTypeFilter();
     private final ConfigManager cm = new ConfigManager(this);
 
     private int reshuffleProgress = 0;
@@ -60,7 +55,7 @@ public class TileStorageReshuffle extends AENetworkTile
     private boolean reshuffleCancelled = false;
     private boolean reshuffleComplete = false;
     private ReshuffleReport reshuffleReport = null;
-    private Map<String, List<CellScanTask.CellRecord>> lastScanDuplicates = new HashMap<>();
+    private CellScanTask lastScanDuplicates = null;
 
     public TileStorageReshuffle() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
@@ -143,34 +138,28 @@ public class TileStorageReshuffle extends AENetworkTile
 
     @Override
     @NotNull
-    public Reference2BooleanMap<IAEStackType<?>> getTypeFilter(final EntityPlayer player) {
-        return this.typeFilters.getFilters(player);
+    public AEStackTypeFilter getTypeFilters() {
+        return this.typeFilters;
     }
 
     @Override
-    public void saveTypeFilter() {
+    public void onChangeTypeFilters() {
         this.saveChanges();
         this.markForUpdate();
     }
 
-    public void startReshuffle(EntityPlayer player, boolean confirmed) {
+    public void startReshuffle(boolean confirmed) {
         if (!this.getProxy().isActive()) return;
         if (this.activeTask != null && this.activeTask.isRunning()) return;
 
         try {
             final IStorageGrid storageGrid = this.getProxy().getStorage();
-
-            final Reference2BooleanMap<IAEStackType<?>> filters = this.typeFilters.getFilters(player);
-            final Set<IAEStackType<?>> allowedTypes = new HashSet<>();
-            for (Reference2BooleanMap.Entry<IAEStackType<?>> e : filters.reference2BooleanEntrySet()) {
-                if (e.getBooleanValue()) allowedTypes.add(e.getKey());
-            }
-
-            Map<IAEStackType<?>, IMEMonitor<?>> monitors = new IdentityHashMap<>();
-            for (IAEStackType<?> type : allowedTypes) {
-                IMEMonitor<?> monitor = storageGrid.getMEMonitor(type);
+            final Map<IAEStackType<?>, IMEMonitor<?>> monitors = new IdentityHashMap<>();
+            for (final Entry<IAEStackType<?>, Boolean> entry : this.getTypeFilters().getImmutableFilters().entrySet()) {
+                if (!entry.getValue()) continue;
+                IMEMonitor<?> monitor = storageGrid.getMEMonitor(entry.getKey());
                 if (monitor != null) {
-                    monitors.put(type, monitor);
+                    monitors.put(entry.getKey(), monitor);
                     if (monitor instanceof NetworkMonitor<?>nm) nm.setLocked(true);
                 }
             }
@@ -178,7 +167,7 @@ public class TileStorageReshuffle extends AENetworkTile
             BaseActionSource actionSource = new ReshuffleActionSource(this);
             final boolean voidProtection = this.cm.getSetting(Settings.VOID_PROTECTION) == YesNo.YES;
             this.lockedMonitors = monitors;
-            this.activeTask = new ReshuffleTask(monitors, actionSource, allowedTypes, voidProtection);
+            this.activeTask = new ReshuffleTask(monitors, actionSource, this.getTypeFilters(), voidProtection);
 
             int totalItems = this.activeTask.initialize();
             if (!confirmed && totalItems >= 3000) {
@@ -223,23 +212,23 @@ public class TileStorageReshuffle extends AENetworkTile
 
     public void scanNetwork() {
         if (!this.getProxy().isActive()) {
-            this.lastScanDuplicates = new HashMap<>();
+            this.lastScanDuplicates = null;
             this.markDirty();
             return;
         }
         try {
             final IGrid grid = this.getProxy().getGrid();
-            final List<CellScanTask.CellRecord> cells = CellScanTask.scanGrid(grid);
-            this.lastScanDuplicates = CellScanTask.findDuplicatePartitionedCells(cells);
+            this.lastScanDuplicates = new CellScanTask(grid);
+            this.lastScanDuplicates.scanGrid();
             this.markDirty();
         } catch (GridAccessException e) {
             AELog.warn(e, "Failed to access grid for scan");
-            this.lastScanDuplicates = new HashMap<>();
+            this.lastScanDuplicates = null;
             this.markDirty();
         }
     }
 
-    public Map<String, List<CellScanTask.CellRecord>> getScanDuplicates() {
+    public CellScanTask getScanDuplicates() {
         return this.lastScanDuplicates;
     }
 

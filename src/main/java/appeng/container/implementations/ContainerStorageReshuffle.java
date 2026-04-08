@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 
@@ -59,7 +58,7 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     public boolean reshuffleComplete = false;
 
     @GuiSync(10)
-    public String scanData = "";
+    public CellScanTask scanData = null;
 
     public ContainerStorageReshuffle(final InventoryPlayer ip, final TileStorageReshuffle te) {
         super(ip, te);
@@ -68,15 +67,15 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     }
 
     public Reference2BooleanMap<IAEStackType<?>> getTypeFilters() {
-        return this.tile.getTypeFilter(this.getPlayerInv().player);
+        return this.tile.getTypeFilters().getImmutableFilters();
     }
 
     public void toggleTypeFilter(final String typeId) {
         final IAEStackType<?> type = AEStackTypeRegistry.getType(typeId);
         if (type == null) return;
-        final Reference2BooleanMap<IAEStackType<?>> map = this.tile.getTypeFilter(this.getPlayerInv().player);
+        final Reference2BooleanMap<IAEStackType<?>> map = this.getTypeFilters();
         map.put(type, !map.getBoolean(type));
-        this.tile.saveTypeFilter();
+        this.tile.onChangeTypeFilters();
     }
 
     public void toggleVoidProtection() {
@@ -107,8 +106,8 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
             this.report = current;
         }
 
-        final String currentScan = encodeScanData(this.tile.getScanDuplicates());
-        if (!currentScan.equals(this.scanData)) {
+        final CellScanTask currentScan = this.tile.getScanDuplicates();
+        if (currentScan != this.scanData) {
             this.scanData = currentScan;
         }
 
@@ -126,9 +125,9 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         }
     }
 
-    public void startReshuffle(EntityPlayer player, boolean confirmed) {
+    public void startReshuffle(boolean confirmed) {
         this.report = null;
-        this.tile.startReshuffle(player, confirmed);
+        this.tile.startReshuffle(confirmed);
     }
 
     public void cancelReshuffle() {
@@ -146,9 +145,9 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         for (final List<CellScanTask.CellRecord> cells : duplicates.values()) {
             if (cells.isEmpty()) continue;
             final CellScanTask.CellRecord first = cells.get(0);
-            if (first.partitionedItemStacks.isEmpty()) continue;
+            // if (first.partitionedItemStacks.isEmpty()) continue;
 
-            final ItemStack repItem = first.partitionedItemStacks.get(0);
+            final ItemStack repItem = null; // first.partitionedItemStacks.get(0);
             final String repId = itemRegistry.getNameForObject(repItem.getItem());
             if (repId == null) continue;
 
@@ -157,8 +156,8 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
 
             for (final CellScanTask.CellRecord cell : cells) {
                 sb.append('@').append(cell.x).append(',').append(cell.y).append(',').append(cell.z).append(',')
-                        .append(cell.dim).append(',').append(cell.slot).append(',').append((int) cell.typesUsed)
-                        .append('|').append(cell.cellDisplayName);
+                        .append(cell.dim).append(',').append(cell.slot).append(',').append(cell.typesUsed).append('|')
+                        .append(cell.cellDisplayName);
             }
             lines.add(sb.toString());
         }
@@ -170,7 +169,7 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         return report.generateReportLines();
     }
 
-    public String getScanData() {
+    public CellScanTask getScanData() {
         return this.scanData;
     }
 }

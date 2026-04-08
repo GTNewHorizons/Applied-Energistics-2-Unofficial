@@ -3,11 +3,10 @@ package appeng.helpers;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.AEStackTypeRegistry;
@@ -16,6 +15,7 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.container.guisync.IGuiPacketWritable;
 import appeng.core.localization.GuiText;
+import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import appeng.util.item.IAEStackList;
@@ -75,7 +75,7 @@ public class ReshuffleReport implements IGuiPacketWritable {
         UNCHANGED
     }
 
-    public final Set<IAEStackType<?>> allowedTypes;
+    public final AEStackTypeFilter types;
     public final boolean voidProtection;
     public final long startTime;
     public long endTime = 0;
@@ -103,20 +103,20 @@ public class ReshuffleReport implements IGuiPacketWritable {
     public final List<ItemChange> lostItems = new ArrayList<>();
     public final List<ItemChange> gainedItems = new ArrayList<>();
 
-    public ReshuffleReport(final Set<IAEStackType<?>> allowedTypes, final boolean voidProtection) {
-        this.allowedTypes = allowedTypes;
+    public ReshuffleReport(final AEStackTypeFilter types, final boolean voidProtection) {
+        this.types = types;
         this.voidProtection = voidProtection;
         this.startTime = System.currentTimeMillis();
     }
 
     // For IGuiPacketWritable
     public ReshuffleReport(final ByteBuf buf) {
-        this.allowedTypes = new HashSet<>();
+        this.types = new AEStackTypeFilter();
         final int sizeTypes = buf.readInt();
         for (int i = 0; i < sizeTypes; i++) {
             final String typeId = ByteBufUtils.readUTF8String(buf);
             if (buf.readBoolean()) {
-                this.allowedTypes.add(AEStackTypeRegistry.getType(typeId));
+                this.types.toggle(AEStackTypeRegistry.getType(typeId));
             }
         }
 
@@ -152,9 +152,9 @@ public class ReshuffleReport implements IGuiPacketWritable {
     @Override
     public void writeToPacket(final ByteBuf buf) {
         buf.writeInt(AEStackTypeRegistry.getAllTypes().size());
-        for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-            ByteBufUtils.writeUTF8String(buf, type.getId());
-            buf.writeBoolean(this.allowedTypes.contains(type));
+        for (Entry<IAEStackType<?>, Boolean> entry : this.types.getImmutableFilters().entrySet()) {
+            ByteBufUtils.writeUTF8String(buf, entry.getKey().getId());
+            buf.writeBoolean(entry.getValue());
         }
 
         buf.writeBoolean(this.voidProtection);
@@ -180,14 +180,15 @@ public class ReshuffleReport implements IGuiPacketWritable {
         this.gainedItems.forEach(stack -> stack.write(buf));
     }
 
-    public void snapshotBefore(Map<IAEStackType<?>, IMEMonitor<?>> monitors, Set<IAEStackType<?>> allowedTypes) {
+    public void snapshotBefore(Map<IAEStackType<?>, IMEMonitor<?>> monitors) {
         beforeSnapshot.resetStatus();
         stackLookup.resetStatus();
         totalStacksBefore = 0;
         totalItemTypesBefore = 0;
 
-        for (IAEStackType<?> type : allowedTypes) {
-            IMEMonitor<?> monitor = monitors.get(type);
+        for (Entry<IAEStackType<?>, Boolean> entry : this.types.getImmutableFilters().entrySet()) {
+            if (!entry.getValue()) continue;
+            IMEMonitor<?> monitor = monitors.get(entry.getValue());
             if (monitor == null) continue;
 
             for (IAEStack<?> stack : monitor.getStorageList()) {
@@ -201,8 +202,8 @@ public class ReshuffleReport implements IGuiPacketWritable {
         }
     }
 
-    public void generateReport(Map<IAEStackType<?>, IMEMonitor<?>> monitors, Set<IAEStackType<?>> allowedTypes,
-            int processed, int skipped, List<IAEStack<?>> skippedStacks) {
+    public void generateReport(Map<IAEStackType<?>, IMEMonitor<?>> monitors, int processed, int skipped,
+            List<IAEStack<?>> skippedStacks) {
         this.endTime = System.currentTimeMillis();
         this.itemsProcessed = processed;
         this.itemsSkipped = skipped;
@@ -216,8 +217,9 @@ public class ReshuffleReport implements IGuiPacketWritable {
         totalStacksAfter = 0;
         totalItemTypesAfter = 0;
 
-        for (IAEStackType<?> type : allowedTypes) {
-            IMEMonitor<?> monitor = monitors.get(type);
+        for (Entry<IAEStackType<?>, Boolean> entry : this.types.getImmutableFilters().entrySet()) {
+            if (!entry.getValue()) continue;
+            IMEMonitor<?> monitor = monitors.get(entry.getValue());
             if (monitor == null) continue;
 
             final IItemList<?> storageList = monitor.getStorageList();
@@ -395,11 +397,12 @@ public class ReshuffleReport implements IGuiPacketWritable {
     }
 
     private String buildModeString() {
-        if (allowedTypes.isEmpty()) return GuiText.ReshuffleReportModeNone.getLocal();
+        if (!this.types.getEnabledTypes().iterator().hasNext()) return GuiText.ReshuffleReportModeNone.getLocal();
         StringBuilder sb = new StringBuilder();
-        for (IAEStackType<?> type : allowedTypes) {
+        for (Entry<IAEStackType<?>, Boolean> entry : this.types.getImmutableFilters().entrySet()) {
+            if (!entry.getValue()) continue;
             if (sb.length() > 0) sb.append('/');
-            sb.append(type.getDisplayName());
+            sb.append(entry.getKey().getDisplayName());
         }
         return sb.toString();
     }
