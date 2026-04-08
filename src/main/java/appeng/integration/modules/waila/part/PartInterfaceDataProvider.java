@@ -7,6 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.config.LockCraftingMode;
 import appeng.api.parts.IPart;
@@ -39,7 +40,7 @@ public final class PartInterfaceDataProvider extends BasePartWailaDataProvider {
                         currentToolTip.add(WailaText.CraftingLockedUntilResult.getLocal());
 
                         if (accessor.getNBTData().hasKey(NBT_LOCK_STACKS)) {
-                            NBTTagList stackList = accessor.getNBTData().getTagList(NBT_LOCK_STACKS, 10);
+                            NBTTagList stackList = accessor.getNBTData().getTagList(NBT_LOCK_STACKS, NBT.TAG_COMPOUND);
                             for (int index = 0; index < stackList.tagCount(); index++) {
                                 NBTTagCompound stackTag = stackList.getCompoundTagAt(index);
                                 IAEStack<?> stack = Platform.readStackNBT(stackTag);

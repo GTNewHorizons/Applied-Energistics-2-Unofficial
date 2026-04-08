@@ -7,6 +7,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.parts.IPart;
 import appeng.api.storage.data.IAEStack;
@@ -30,7 +31,7 @@ public class PartPatternRepeaterDataProvider extends BasePartWailaDataProvider {
 
                 if (accessor.getNBTData().hasKey(NBT_WAITING_STACKS)) {
                     currentToolTip.add(WailaText.Waiting.getLocal());
-                    NBTTagList stackList = accessor.getNBTData().getTagList(NBT_WAITING_STACKS, 10);
+                    NBTTagList stackList = accessor.getNBTData().getTagList(NBT_WAITING_STACKS, NBT.TAG_COMPOUND);
                     for (int index = 0; index < stackList.tagCount(); index++) {
                         NBTTagCompound stackTag = stackList.getCompoundTagAt(index);
                         currentToolTip.add(stackTag.getString("q"));

@@ -7,6 +7,7 @@ import java.util.UUID;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +44,7 @@ public class MonitorableTypeFilter {
             return;
         }
 
-        final NBTTagList players = tag.getTagList(NBT_FILTERS, 10);
+        final NBTTagList players = tag.getTagList(NBT_FILTERS, NBT.TAG_COMPOUND);
         for (int i = 0; i < players.tagCount(); i++) {
             final NBTTagCompound playerTag = players.getCompoundTagAt(i);
             final String uuidString = playerTag.getString(NBT_UUID);
@@ -60,7 +61,7 @@ public class MonitorableTypeFilter {
 
             final Reference2BooleanMap<IAEStackType<?>> map = createDefaultMap();
 
-            final NBTTagList list = playerTag.getTagList(NBT_MAP, 10);
+            final NBTTagList list = playerTag.getTagList(NBT_MAP, NBT.TAG_COMPOUND);
             for (int j = 0; j < list.tagCount(); j++) {
                 final NBTTagCompound entryTag = list.getCompoundTagAt(j);
                 final String typeId = entryTag.getString(NBT_TYPE_ID);

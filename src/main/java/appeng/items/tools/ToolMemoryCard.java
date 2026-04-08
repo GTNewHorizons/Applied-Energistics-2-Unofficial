@@ -22,6 +22,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
@@ -164,7 +165,7 @@ public class ToolMemoryCard extends AEBaseItem implements IMemoryCard {
     }
 
     public static void insertUpgrades(final NBTTagCompound data, EntityPlayer player, UpgradeInventory up) {
-        NBTTagList tagList = data.getTagList("upgradesList", 10);
+        NBTTagList tagList = data.getTagList("upgradesList", NBT.TAG_COMPOUND);
         List<ItemStack> memoryList = new ArrayList<>(Collections.nCopies(tagList.tagCount(), null)); // Preserve order
 
         for (int i = 0; i < tagList.tagCount(); i++) {

@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -69,7 +70,7 @@ public class AEStackTypeFilter implements IGuiPacketWritable {
         this.filters.clear();
         this.filters.putAll(createDefaultMap());
 
-        final NBTTagList list = tag.getTagList(NBT_FILTERS, 10);
+        final NBTTagList list = tag.getTagList(NBT_FILTERS, NBT.TAG_COMPOUND);
         for (int i = 0; i < list.tagCount(); i++) {
             final NBTTagCompound entryTag = list.getCompoundTagAt(i);
             final String typeId = entryTag.getString(NBT_TYPE_ID);

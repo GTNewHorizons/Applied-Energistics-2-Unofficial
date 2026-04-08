@@ -64,6 +64,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
@@ -1985,7 +1986,7 @@ public class Platform {
 
     public static IAEStack<?> readStackNBT(NBTTagCompound tag, boolean convert) {
         if (tag == null) return null;
-        if (tag.hasKey("StackType", 1)) {
+        if (tag.hasKey("StackType", NBT.TAG_BYTE)) {
             // For old experimental compatibility
             final byte stackType = tag.getByte("StackType");
             return switch (stackType) {

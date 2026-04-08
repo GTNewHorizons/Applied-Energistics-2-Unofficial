@@ -9,6 +9,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.config.PinsRows;
 import appeng.api.config.PinsState;
@@ -71,7 +72,7 @@ public class PinsHolder implements IAEAppEngInventory {
         if (!data.hasKey(name)) {
             return;
         }
-        final NBTTagList list = data.getTagList(name, 10);
+        final NBTTagList list = data.getTagList(name, NBT.TAG_COMPOUND);
         for (int i = 0; i < list.tagCount(); i++) {
             final NBTTagCompound itemList = list.getCompoundTagAt(i);
             final String playerIdStr = itemList.getString("playerId");

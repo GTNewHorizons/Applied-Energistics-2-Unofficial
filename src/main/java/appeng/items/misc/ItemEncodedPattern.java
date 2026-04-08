@@ -34,6 +34,7 @@ import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StringUtils;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import appeng.api.AEApi;
@@ -130,9 +131,9 @@ public class ItemEncodedPattern extends AEBaseItem implements ICraftingPatternIt
             unknownItem.setStackDisplayName(GuiText.UnknownItem.getLocal());
 
             inItems = convertToCondensedAEList(
-                    loadIAEStackFromNBT(encodedValue.getTagList("in", 10), false, unknownItem));
+                    loadIAEStackFromNBT(encodedValue.getTagList("in", NBT.TAG_COMPOUND), false, unknownItem));
             outItems = convertToCondensedAEList(
-                    loadIAEStackFromNBT(encodedValue.getTagList("out", 10), false, unknownItem));
+                    loadIAEStackFromNBT(encodedValue.getTagList("out", NBT.TAG_COMPOUND), false, unknownItem));
         } else {
             inItems = details.getCondensedAEInputs();
             outItems = details.getCondensedAEOutputs();
