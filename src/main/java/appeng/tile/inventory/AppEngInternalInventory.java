@@ -16,6 +16,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.storage.IMEInventory;
 import appeng.core.AELog;
@@ -186,28 +187,29 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
     public void writeToNBT(final NBTTagCompound data, final String name) {
         final NBTTagCompound c = new NBTTagCompound();
         this.writeToNBT(c);
-        data.setTag(name, c);
+        if (!c.hasNoTags()) {
+            data.setTag(name, c);
+        }
     }
 
     protected void writeToNBT(final NBTTagCompound target) {
         for (int x = 0; x < this.size; x++) {
             try {
-                final NBTTagCompound c = new NBTTagCompound();
-
                 if (this.inv[x] != null) {
+                    final NBTTagCompound c = new NBTTagCompound();
                     this.inv[x].writeToNBT(c);
+                    target.setTag("#" + x, c);
                 }
-
-                target.setTag("#" + x, c);
             } catch (final Exception ignored) {}
         }
     }
 
     public void readFromNBT(final NBTTagCompound data, final String name) {
-        if (!data.hasKey(name)) return;
-        final NBTTagCompound c = data.getCompoundTag(name);
-        if (c != null) {
-            this.readFromNBT(c);
+        if (data.hasKey(name, NBT.TAG_COMPOUND)) {
+            final NBTTagCompound c = data.getCompoundTag(name);
+            if (c != null) {
+                this.readFromNBT(c);
+            }
         }
     }
 
@@ -215,10 +217,11 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
         for (int x = 0; x < this.size; x++) {
             try {
                 final String key = "#" + x;
-                if (!target.hasKey(key)) continue;
-                final NBTTagCompound c = target.getCompoundTag(key);
-                if (c != null) {
-                    this.inv[x] = ItemStack.loadItemStackFromNBT(c);
+                if (target.hasKey(key, NBT.TAG_COMPOUND)) {
+                    final NBTTagCompound c = target.getCompoundTag(key);
+                    if (c != null) {
+                        this.inv[x] = ItemStack.loadItemStackFromNBT(c);
+                    }
                 }
             } catch (final Exception e) {
                 AELog.debug(e);

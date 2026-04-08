@@ -4,6 +4,7 @@ import static appeng.util.Platform.readStackNBT;
 import static appeng.util.Platform.writeStackNBT;
 
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.storage.StorageName;
 import appeng.api.storage.data.IAEStack;
@@ -52,40 +53,43 @@ public class IAEStackInventory {
     public void writeToNBT(final NBTTagCompound data, final String name) {
         final NBTTagCompound c = new NBTTagCompound();
         this.writeToNBT(c);
-        data.setTag(name, c);
+        if (!c.hasNoTags()) {
+            data.setTag(name, c);
+        }
     }
 
     private void writeToNBT(final NBTTagCompound target) {
         for (int x = 0; x < this.size; x++) {
             try {
-                final NBTTagCompound c = new NBTTagCompound();
-                final IAEStack<?> tmp = this.inv[x];
-
-                if (tmp != null) {
-                    writeStackNBT(tmp, c, true);
+                if (this.inv[x] != null) {
+                    final NBTTagCompound c = new NBTTagCompound();
+                    writeStackNBT(this.inv[x], c, true);
+                    target.setTag("#" + x, c);
                 }
-
-                target.setTag("#" + x, c);
             } catch (final Exception ignored) {}
         }
     }
 
     public void readFromNBT(final NBTTagCompound data, final String name) {
-        final NBTTagCompound c = data.getCompoundTag(name);
-        if (c != null) {
-            this.readFromNBT(c);
+        if (data.hasKey(name, NBT.TAG_COMPOUND)) {
+            final NBTTagCompound c = data.getCompoundTag(name);
+            if (c != null) {
+                this.readFromNBT(c);
+            }
         }
     }
 
     private void readFromNBT(final NBTTagCompound target) {
         for (int x = 0; x < this.size; x++) {
             try {
-                final NBTTagCompound c = target.getCompoundTag("#" + x);
-
-                if (c != null) {
-                    final IAEStack<?> stack = readStackNBT(c, false);
-                    if (stack != null && stack.getStackSize() == 0) stack.setStackSize(c.getInteger("Count"));
-                    this.inv[x] = stack;
+                final String key = "#" + x;
+                if (target.hasKey(key, NBT.TAG_COMPOUND)) {
+                    final NBTTagCompound c = target.getCompoundTag(key);
+                    if (c != null) {
+                        final IAEStack<?> stack = readStackNBT(c, false);
+                        if (stack != null && stack.getStackSize() == 0) stack.setStackSize(c.getInteger("Count"));
+                        this.inv[x] = stack;
+                    }
                 }
             } catch (final Exception e) {
                 AELog.debug(e);
