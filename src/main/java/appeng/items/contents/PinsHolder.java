@@ -78,7 +78,9 @@ public class PinsHolder implements IAEAppEngInventory {
             c.appendTag(itemList);
         }
 
-        if (c.tagCount() != 0) {
+        if (c.tagCount() == 0) {
+            data.removeTag(name);
+        } else {
             data.setTag(name, c);
         }
     }

@@ -200,7 +200,9 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
     public void writeToNBT(final NBTTagCompound data, final String name) {
         final NBTTagCompound c = new NBTTagCompound();
         this.writeToNBT(c);
-        if (!c.hasNoTags()) {
+        if (c.hasNoTags()) {
+            data.removeTag(name);
+        } else {
             data.setTag(name, c);
         }
     }

@@ -119,7 +119,9 @@ public class MonitorableTypeFilter {
             players.appendTag(playerTag);
         }
 
-        if (players.tagCount() != 0) {
+        if (players.tagCount() == 0) {
+            tag.removeTag(NBT_FILTERS);
+        } else {
             tag.setTag(NBT_FILTERS, players);
         }
     }
