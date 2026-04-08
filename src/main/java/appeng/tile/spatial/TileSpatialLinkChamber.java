@@ -5,8 +5,9 @@ import java.util.EnumSet;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.implementations.items.ISpatialStorageCell;
 import appeng.api.networking.GridFlags;
@@ -102,8 +103,7 @@ public class TileSpatialLinkChamber extends AENetworkInvTile {
         if (is == null || !(is.getItem() instanceof ISpatialStorageCell)) {
             return 0;
         }
-        final NBTTagCompound tag = Platform.openNbtData(is);
-        return tag != null ? tag.getInteger("StorageDim") : 0;
+        return ItemStackNBT.getInteger(is, "StorageDim");
     }
 
     private void updateBinding() {

@@ -25,9 +25,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.World;
+
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.definitions.IMaterials;
@@ -39,7 +40,6 @@ import appeng.core.localization.ButtonToolTips;
 import appeng.entity.EntityGrowingCrystal;
 import appeng.entity.EntityIds;
 import appeng.items.AEBaseItem;
-import appeng.util.Platform;
 import cpw.mods.fml.common.registry.EntityRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -98,8 +98,7 @@ public class ItemCrystalSeed extends AEBaseItem implements IGrowableCrystal {
             return is.getTagCompound().getInteger("progress");
         } else {
             final int progress;
-            final NBTTagCompound comp = Platform.openNbtData(is);
-            comp.setInteger("progress", progress = is.getItemDamage());
+            ItemStackNBT.setInteger(is, "progress", progress = is.getItemDamage());
             is.setItemDamage((is.getItemDamage() / SINGLE_OFFSET) * SINGLE_OFFSET);
             return progress;
         }
@@ -136,8 +135,7 @@ public class ItemCrystalSeed extends AEBaseItem implements IGrowableCrystal {
     }
 
     private void setProgress(final ItemStack is, final int newDamage) {
-        final NBTTagCompound comp = Platform.openNbtData(is);
-        comp.setInteger("progress", newDamage);
+        ItemStackNBT.setInteger(is, "progress", newDamage);
         is.setItemDamage(is.getItemDamage() / LEVEL_OFFSET * LEVEL_OFFSET);
     }
 

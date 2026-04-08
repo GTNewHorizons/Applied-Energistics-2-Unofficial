@@ -3,6 +3,7 @@ package appeng.util;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEStack;
@@ -73,8 +74,8 @@ public class PatternMultiplierHelper {
             bitMultiplier = -bitMultiplier;
         }
         NBTTagCompound encodedValue = stack.stackTagCompound;
-        final NBTTagList inTag = encodedValue.getTagList("in", 10);
-        final NBTTagList outTag = encodedValue.getTagList("out", 10);
+        final NBTTagList inTag = encodedValue.getTagList("in", NBT.TAG_COMPOUND);
+        final NBTTagList outTag = encodedValue.getTagList("out", NBT.TAG_COMPOUND);
         for (int x = 0; x < inTag.tagCount(); x++) {
             final NBTTagCompound tag = inTag.getCompoundTagAt(x);
             if (tag.hasNoTags()) continue;
@@ -85,7 +86,7 @@ public class PatternMultiplierHelper {
                                 : tag.getInteger("Count") << bitMultiplier);
             }
             // Support for IAEItemStack (ae2fc patterns)
-            if (tag.hasKey("Cnt", 4)) {
+            if (tag.hasKey("Cnt", NBT.TAG_LONG)) {
                 tag.setLong(
                         "Cnt",
                         isDividing ? tag.getLong("Cnt") >> bitMultiplier : tag.getLong("Cnt") << bitMultiplier);
@@ -102,7 +103,7 @@ public class PatternMultiplierHelper {
                                 : tag.getInteger("Count") << bitMultiplier);
             }
             // Support for IAEItemStack (ae2fc patterns)
-            if (tag.hasKey("Cnt", 4)) {
+            if (tag.hasKey("Cnt", NBT.TAG_LONG)) {
                 tag.setLong(
                         "Cnt",
                         isDividing ? tag.getLong("Cnt") >> bitMultiplier : tag.getLong("Cnt") << bitMultiplier);

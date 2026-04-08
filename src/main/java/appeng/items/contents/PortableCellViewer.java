@@ -19,6 +19,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.PowerMultiplier;
 import appeng.api.config.Settings;
@@ -37,7 +39,6 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.me.storage.CellInventory;
 import appeng.util.ConfigManager;
-import appeng.util.Platform;
 
 public class PortableCellViewer<StackType extends IAEStack<?>> extends MEMonitorHandler<StackType>
         implements IPortableCell {
@@ -99,15 +100,13 @@ public class PortableCellViewer<StackType extends IAEStack<?>> extends MEMonitor
     @Override
     public IConfigManager getConfigManager() {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
-            final NBTTagCompound data = Platform.openNbtData(PortableCellViewer.this.target);
+            final NBTTagCompound data = ItemStackNBT.get(PortableCellViewer.this.target);
             manager.writeToNBT(data);
         });
-
         out.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         out.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         out.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-
-        out.readFromNBT((NBTTagCompound) Platform.openNbtData(this.target).copy());
+        out.readFromNBT((NBTTagCompound) ItemStackNBT.get(this.target).copy());
         return out;
     }
 }

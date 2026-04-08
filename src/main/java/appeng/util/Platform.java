@@ -64,6 +64,7 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
@@ -652,16 +653,18 @@ public class Platform {
         }
     }
 
-    /*
-     * Creates / or loads previous NBT Data on items, used for editing items owned by AE.
+    /**
+     * This method is deprecated because it adds a NBT tag unconditionally to ItemStacks. To manipulate NBT data of
+     * ItemStack do it manually by checking if the tag exists or use the
+     * {@link com.gtnewhorizon.gtnhlib.item.ItemStackNBT} util class.
      */
-    public static NBTTagCompound openNbtData(final ItemStack i) {
+    @Nonnull
+    @Deprecated
+    public static NBTTagCompound openNbtData(@Nonnull final ItemStack i) {
         NBTTagCompound compound = i.getTagCompound();
-
         if (compound == null) {
             i.setTagCompound(compound = new NBTTagCompound());
         }
-
         return compound;
     }
 
@@ -1983,7 +1986,7 @@ public class Platform {
 
     public static IAEStack<?> readStackNBT(NBTTagCompound tag, boolean convert) {
         if (tag == null) return null;
-        if (tag.hasKey("StackType", 1)) {
+        if (tag.hasKey("StackType", NBT.TAG_BYTE)) {
             // For old experimental compatibility
             final byte stackType = tag.getByte("StackType");
             return switch (stackType) {

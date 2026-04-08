@@ -4,6 +4,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.implementations.tiles.IViewCellStorage;
@@ -54,14 +55,15 @@ public interface IPatternTerminal extends IIAEStackInventory, ITerminalHost, ICo
 
                 if (details == null) {
                     if (stack.getItem() instanceof ItemEncodedPattern) {
-                        inItems = PatternHelper.loadIAEItemStackFromNBT(encodedValue.getTagList("in", 10), true, null);
+                        inItems = PatternHelper
+                                .loadIAEItemStackFromNBT(encodedValue.getTagList("in", NBT.TAG_COMPOUND), true, null);
                         outItems = PatternHelper
-                                .loadIAEItemStackFromNBT(encodedValue.getTagList("out", 10), true, null);
+                                .loadIAEItemStackFromNBT(encodedValue.getTagList("out", NBT.TAG_COMPOUND), true, null);
                     } else {
                         inItems = UltimatePatternHelper
-                                .loadIAEStackFromNBT(encodedValue.getTagList("in", 10), true, null);
+                                .loadIAEStackFromNBT(encodedValue.getTagList("in", NBT.TAG_COMPOUND), true, null);
                         outItems = UltimatePatternHelper
-                                .loadIAEStackFromNBT(encodedValue.getTagList("out", 10), true, null);
+                                .loadIAEStackFromNBT(encodedValue.getTagList("out", NBT.TAG_COMPOUND), true, null);
                     }
                 } else {
                     inItems = details.getAEInputs();
