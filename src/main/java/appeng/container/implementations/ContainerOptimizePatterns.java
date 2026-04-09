@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import appeng.api.AEApi;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingJob;
@@ -27,7 +28,6 @@ import appeng.api.util.IInterfaceViewable;
 import appeng.container.ContainerSubGui;
 import appeng.container.PrimaryGui;
 import appeng.core.AELog;
-import appeng.core.features.registries.InterfaceTerminalRegistry;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.core.sync.packets.PacketOptimizePatterns;
@@ -63,7 +63,7 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
             // check blacklisted interfaces
             ItemStackSet blacklistedPatterns = new ItemStackSet();
 
-            var supported = InterfaceTerminalRegistry.instance().getSupportedClasses();
+            var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
 
             for (Class<? extends IInterfaceViewable> c : supported) {
                 for (IGridNode node : context.meGrid.getMachines(c)) {
@@ -140,7 +140,7 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
         // Detect P2P interfaces
         IdentityHashMap<ItemStack, Boolean> alreadyDone = new IdentityHashMap<>();
 
-        var supported = InterfaceTerminalRegistry.instance().getSupportedClasses();
+        var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
 
         CraftingGridCache.pauseRebuilds();
         try {
