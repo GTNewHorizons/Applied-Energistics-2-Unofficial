@@ -60,7 +60,6 @@ import appeng.core.features.AEFeature;
 import appeng.core.features.DefinitionConverter;
 import appeng.core.features.IAEFeature;
 import appeng.core.features.IFeatureHandler;
-import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
 import appeng.core.features.registries.P2PTunnelRegistry;
 import appeng.core.features.registries.entries.CreativeCellHandler;
 import appeng.core.features.registries.entries.VoidCellHandler;
@@ -908,7 +907,7 @@ public final class Registration {
         /**
          * Populate list of items that blocking mode should ignore
          */
-        BlockingModeIgnoreItemRegistry.instance().registerDefault();
+        registries.blockingModeIgnoreItem().registerDefault();
     }
 
     /**

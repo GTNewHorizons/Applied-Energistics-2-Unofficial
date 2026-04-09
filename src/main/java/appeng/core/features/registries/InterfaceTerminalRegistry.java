@@ -15,7 +15,6 @@ import appeng.tile.misc.TileInterface;
 public class InterfaceTerminalRegistry implements IInterfaceTerminalRegistry {
 
     private final Set<Class<? extends IInterfaceViewable>> supportedClasses = new HashSet<>();
-    private static InterfaceTerminalRegistry INSTANCE;
 
     /**
      * Singleton, do not instantiate more than once.
@@ -24,12 +23,9 @@ public class InterfaceTerminalRegistry implements IInterfaceTerminalRegistry {
         supportedClasses.add(TileInterface.class);
         supportedClasses.add(PartInterface.class);
         supportedClasses.add(PartP2PInterface.class);
-        INSTANCE = this;
     }
 
-    /**
-     * Get all supported classes that were registered during startup
-     */
+    @Override
     public Set<Class<? extends IInterfaceViewable>> getSupportedClasses() {
         return supportedClasses;
     }
@@ -37,9 +33,5 @@ public class InterfaceTerminalRegistry implements IInterfaceTerminalRegistry {
     @Override
     public void register(Class<? extends IInterfaceViewable> clazz) {
         supportedClasses.add(clazz);
-    }
-
-    public static InterfaceTerminalRegistry instance() {
-        return INSTANCE;
     }
 }

@@ -41,6 +41,8 @@ public final class LocatableRegistry implements ILocatableRegistry {
             this.set.put(e.target.getLocatableSerial(), e.target);
         } else if (e.change == LocatableEvent.Unregister) {
             this.set.remove(e.target.getLocatableSerial());
+        } else if (e.change == LocatableEvent.RemoveAll) {
+            this.set.clear();
         }
     }
 
