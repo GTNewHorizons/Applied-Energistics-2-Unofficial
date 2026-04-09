@@ -31,13 +31,13 @@ import net.minecraftforge.common.util.ForgeDirection;
 
 import com.google.common.primitives.Ints;
 
+import appeng.api.AEApi;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.parts.IInterfaceTerminal;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IInterfaceViewable;
 import appeng.container.AEBaseContainer;
-import appeng.core.features.registries.InterfaceTerminalRegistry;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.helpers.InventoryAction;
@@ -274,7 +274,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
      */
     private PacketInterfaceTerminalUpdate updateList() {
         PacketInterfaceTerminalUpdate update = null;
-        var supported = InterfaceTerminalRegistry.instance().getSupportedClasses();
+        var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
         Set<IInterfaceViewable> visited = new HashSet<>();
 
         for (Class<? extends IInterfaceViewable> c : supported) {

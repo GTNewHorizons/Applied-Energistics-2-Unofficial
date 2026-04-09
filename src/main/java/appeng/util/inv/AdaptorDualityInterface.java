@@ -3,6 +3,7 @@ package appeng.util.inv;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 
+import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.config.AdvancedBlockingMode;
 import appeng.api.config.InsertionMode;
@@ -13,7 +14,6 @@ import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
-import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.util.item.AEItemStack;
@@ -77,7 +77,8 @@ public class AdaptorDualityInterface extends AdaptorIInventory {
                         if (aes instanceof AEItemStack ais) {
                             if (dual.getConfigManager().getSetting(Settings.ADVANCED_BLOCKING_MODE)
                                     == AdvancedBlockingMode.DEFAULT) {
-                                if (!BlockingModeIgnoreItemRegistry.instance().isIgnored(ais.getItemStack())) {
+                                if (!AEApi.instance().registries().blockingModeIgnoreItem()
+                                        .isIgnored(ais.getItemStack())) {
                                     return true;
                                 }
                             } else return true;

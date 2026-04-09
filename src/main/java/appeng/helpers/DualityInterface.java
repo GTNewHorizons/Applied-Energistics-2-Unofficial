@@ -100,7 +100,6 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
-import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
 import appeng.core.settings.TickRates;
 import appeng.me.GridAccessException;
 import appeng.me.cache.NetworkMonitor;
@@ -1011,7 +1010,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private boolean tileHasOnlyIgnoredItems(InventoryAdaptor ad) {
         for (ItemSlot i : ad) {
             ItemStack is = i.getItemStack();
-            if (is == null || BlockingModeIgnoreItemRegistry.instance().isIgnored(is)) continue;
+            if (is == null || AEApi.instance().registries().blockingModeIgnoreItem().isIgnored(is)) continue;
             return false;
         }
         return true;
@@ -1030,7 +1029,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             if (sink != null) {
                 OptionalInt present = sink.getStoredItemsInSink(
-                        stack -> !BlockingModeIgnoreItemRegistry.instance().isIgnored(stack.toStackFast()));
+                        stack -> !AEApi.instance().registries().blockingModeIgnoreItem()
+                                .isIgnored(stack.toStackFast()));
 
                 return present.orElse(0) == 0;
             }

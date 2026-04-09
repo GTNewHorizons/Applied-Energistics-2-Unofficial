@@ -15,14 +15,10 @@ import cpw.mods.fml.common.registry.GameRegistry;
 
 public class BlockingModeIgnoreItemRegistry implements IBlockingModeIgnoreItemRegistry {
 
-    private static BlockingModeIgnoreItemRegistry INSTANCE;
-
     private final Set<Item> items = new HashSet<>();
     private final ItemStackMap<Boolean> itemStacks = new ItemStackMap<>();
 
-    BlockingModeIgnoreItemRegistry() {
-        INSTANCE = this;
-    }
+    BlockingModeIgnoreItemRegistry() {}
 
     @Override
     public void register(Item item) {
@@ -39,10 +35,7 @@ public class BlockingModeIgnoreItemRegistry implements IBlockingModeIgnoreItemRe
         return this.items.contains(itemStack.getItem()) || itemStacks.containsKey(itemStack);
     }
 
-    public static BlockingModeIgnoreItemRegistry instance() {
-        return INSTANCE;
-    }
-
+    @Override
     public void registerDefault() {
         register(AEApi.instance().definitions().materials().calcProcessorPress().maybeStack(1).orNull());
         register(AEApi.instance().definitions().materials().engProcessorPress().maybeStack(1).orNull());
