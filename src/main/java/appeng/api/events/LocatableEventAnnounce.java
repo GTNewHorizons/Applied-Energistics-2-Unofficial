@@ -33,6 +33,7 @@ public class LocatableEventAnnounce extends Event {
 
     public enum LocatableEvent {
         Register, // Adds the locatable to the registry
-        Unregister // Removes the locatable from the registry
+        Unregister, // Removes the locatable from the registry
+        RemoveAll // Called when the server stops
     }
 }
