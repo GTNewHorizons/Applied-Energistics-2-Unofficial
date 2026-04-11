@@ -16,6 +16,7 @@ import net.minecraft.item.ItemStack;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import appeng.api.AEApi;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.networking.crafting.ICraftingJob;
@@ -27,9 +28,9 @@ import appeng.api.util.IInterfaceViewable;
 import appeng.container.ContainerSubGui;
 import appeng.container.PrimaryGui;
 import appeng.core.AELog;
-import appeng.core.features.registries.InterfaceTerminalRegistry;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
+import appeng.core.sync.packets.PacketOptimizePatterns;
 import appeng.crafting.v2.CraftingContext;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.crafting.v2.resolvers.CraftableItemResolver.CraftFromPatternTask;
@@ -62,7 +63,7 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
             // check blacklisted interfaces
             ItemStackSet blacklistedPatterns = new ItemStackSet();
 
-            var supported = InterfaceTerminalRegistry.instance().getSupportedClasses();
+            var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
 
             for (Class<? extends IInterfaceViewable> c : supported) {
                 for (IGridNode node : context.meGrid.getMachines(c)) {
@@ -95,10 +96,15 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
                     IAEStack<?> stack = entry.getKey().copy();
                     stack.setCountRequestableCrafts(entry.getValue().requestedCrafts);
                     long perCraft = entry.getValue().getCraftAmountForItem(stack);
-                    int hash = entry.getKey().hashCode();
-                    if (hash < 0) // max multi is 30, that's 5 bits MAX!! + 1 bit to store sign of the hash
-                        stack.setStackSize((long) (-hash) << 6 | 0b100000 | entry.getValue().getMaxBitMultiplier());
-                    else stack.setStackSize((long) hash << 6 | entry.getValue().getMaxBitMultiplier());
+                    long hash = entry.getKey().hashCode();
+                    // max multi is 62, that's 6 bits MAX!!
+                    long multiplier = entry.getValue().getMaxBitMultiplier()
+                            & PacketOptimizePatterns.MULTIPLIER_BIT_MASK;
+                    // lowest bit is sign, the rest bits are magnitude
+                    long highbits = (Math.abs(hash) << 1) | ((hash < 0) ? 1 : 0);
+                    // Then shift it left by 6 bits
+                    highbits = highbits << PacketOptimizePatterns.MULTIPLIER_BITS;
+                    stack.setStackSize(highbits | multiplier);
                     stack.setCountRequestable(perCraft);
                     patternsUpdate.appendItem(stack);
                 }
@@ -134,7 +140,7 @@ public class ContainerOptimizePatterns extends ContainerSubGui {
         // Detect P2P interfaces
         IdentityHashMap<ItemStack, Boolean> alreadyDone = new IdentityHashMap<>();
 
-        var supported = InterfaceTerminalRegistry.instance().getSupportedClasses();
+        var supported = AEApi.instance().registries().interfaceTerminal().getSupportedClasses();
 
         CraftingGridCache.pauseRebuilds();
         try {

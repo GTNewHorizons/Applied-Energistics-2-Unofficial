@@ -24,6 +24,7 @@ import net.minecraftforge.event.ForgeEventFactory;
 import org.jetbrains.annotations.NotNull;
 
 import com.google.common.base.Optional;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.config.FuzzyMode;
@@ -292,17 +293,17 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
 
     @Override
     public void setFuzzyMode(final ItemStack is, final FuzzyMode fzMode) {
-        Platform.openNbtData(is).setString("FuzzyMode", fzMode.name());
+        ItemStackNBT.setString(is, "FuzzyMode", fzMode.name());
     }
 
     @Override
     public String getOreFilter(ItemStack is) {
-        return Platform.openNbtData(is).getString("OreFilter");
+        return ItemStackNBT.getString(is, "OreFilter");
     }
 
     @Override
     public void setOreFilter(ItemStack is, String filter) {
-        Platform.openNbtData(is).setString("OreFilter", filter);
+        ItemStackNBT.setString(is, "OreFilter", filter);
     }
 
     @Override
@@ -398,9 +399,9 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
                 + ","
                 + 8
                 + ","
-                + Platform.openNbtData(is).getByte("cellRestrictionTypes")
+                + ItemStackNBT.getByte(is, "cellRestrictionTypes")
                 + ","
-                + Platform.openNbtData(is).getLong("cellRestrictionAmount")
+                + ItemStackNBT.getLong(is, "cellRestrictionAmount")
                 + ","
                 + "item";
     }
@@ -408,8 +409,8 @@ public abstract class AEBaseCell extends AEBaseItem implements IStorageCell, IIt
     @Override
     public void setCellRestriction(ItemStack is, String newData) {
         List<String> data = Arrays.asList(newData.split(",", 2));
-        Platform.openNbtData(is).setByte("cellRestrictionTypes", Byte.parseByte(data.get(0)));
-        Platform.openNbtData(is).setLong("cellRestrictionAmount", Long.parseLong(data.get(1)));
+        ItemStackNBT.setByte(is, "cellRestrictionTypes", Byte.parseByte(data.get(0)));
+        ItemStackNBT.setLong(is, "cellRestrictionAmount", Long.parseLong(data.get(1)));
     }
 
     @Override

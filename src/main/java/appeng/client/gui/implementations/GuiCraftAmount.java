@@ -430,6 +430,11 @@ public class GuiCraftAmount extends GuiAmount implements IVirtualSlotHolder {
     }
 
     @Override
+    protected boolean isAmountTextFieldVisible() {
+        return !this.isControlButtonPressed;
+    }
+
+    @Override
     public void receiveSlotStacks(StorageName _invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
         this.slot.setAEStack(slotStacks.get(0));
     }

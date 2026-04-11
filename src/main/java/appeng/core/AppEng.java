@@ -15,10 +15,13 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 
 import com.google.common.base.Stopwatch;
 
+import appeng.api.events.LocatableEventAnnounce;
+import appeng.api.events.LocatableEventAnnounce.LocatableEvent;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.client.gui.AEBaseGui;
 import appeng.core.crash.CrashInfo;
@@ -233,12 +236,15 @@ public final class AppEng {
 
     @EventHandler
     private void serverStopped(final FMLServerStoppedEvent event) {
-        if (WorldData.instance() != null) WorldData.instance().onServerStoppped();
+        if (WorldData.instance() != null) {
+            WorldData.instance().onServerStoppped();
+        }
         TickHandler.INSTANCE.shutdown();
         CraftingNotificationManager.clear();
         if (event.getSide().isClient()) {
             AEBaseGui.aeRenderItem.parent = null;
         }
+        MinecraftForge.EVENT_BUS.post(new LocatableEventAnnounce(null, LocatableEvent.RemoveAll));
     }
 
     @EventHandler

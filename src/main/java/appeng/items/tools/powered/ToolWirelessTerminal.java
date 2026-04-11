@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.ForgeEventFactory;
 
 import com.google.common.base.Optional;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.config.Settings;
@@ -77,17 +78,12 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
     public void addCheckedInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
             final boolean displayMoreInfo) {
         super.addCheckedInformation(stack, player, lines, displayMoreInfo);
-
         if (stack.hasTagCompound()) {
-            final NBTTagCompound tag = Platform.openNbtData(stack);
-            if (tag != null) {
-                final String encKey = tag.getString("encryptionKey");
-
-                if (encKey == null || encKey.isEmpty()) {
-                    lines.add(EnumChatFormatting.RED + GuiText.Unlinked.getLocal() + EnumChatFormatting.RESET);
-                } else {
-                    lines.add(EnumChatFormatting.GREEN + GuiText.Linked.getLocal() + EnumChatFormatting.RESET);
-                }
+            final String encKey = ItemStackNBT.getString(stack, "encryptionKey");
+            if (encKey == null || encKey.isEmpty()) {
+                lines.add(EnumChatFormatting.RED + GuiText.Unlinked.getLocal() + EnumChatFormatting.RESET);
+            } else {
+                lines.add(EnumChatFormatting.GREEN + GuiText.Linked.getLocal() + EnumChatFormatting.RESET);
             }
         } else {
             lines.add(GuiText.Unlinked.getLocal());
@@ -112,29 +108,24 @@ public class ToolWirelessTerminal extends AEBasePoweredItem implements IWireless
     @Override
     public IConfigManager getConfigManager(final ItemStack target) {
         final ConfigManager out = new ConfigManager((manager, settingName, newValue) -> {
-            final NBTTagCompound data = Platform.openNbtData(target);
+            final NBTTagCompound data = ItemStackNBT.get(target);
             manager.writeToNBT(data);
         });
-
         out.registerSetting(Settings.SORT_BY, SortOrder.NAME);
         out.registerSetting(Settings.VIEW_MODE, ViewItems.ALL);
         out.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
-
-        out.readFromNBT((NBTTagCompound) Platform.openNbtData(target).copy());
+        out.readFromNBT((NBTTagCompound) ItemStackNBT.get(target).copy());
         return out;
     }
 
     @Override
     public String getEncryptionKey(final ItemStack item) {
-        final NBTTagCompound tag = Platform.openNbtData(item);
-        return tag.getString("encryptionKey");
+        return ItemStackNBT.getString(item, "encryptionKey");
     }
 
     @Override
     public void setEncryptionKey(final ItemStack item, final String encKey, final String name) {
-        final NBTTagCompound tag = Platform.openNbtData(item);
-        tag.setString("encryptionKey", encKey);
-        tag.setString("name", name);
+        ItemStackNBT.of(item).setString("encryptionKey", encKey).setString("name", name);
     }
 
     @Override

@@ -3,65 +3,52 @@ package appeng.util;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEStack;
 
 public class PatternMultiplierHelper {
 
-    private static final int FINAL_BIT = 1 << 30; // 1 bit before integer overflow
-
     public static int getMaxBitMultiplier(ICraftingPatternDetails details) {
-        // limit to 2B per item in pattern
-        int maxMulti = 30;
+        int maxMulti = 62;
         for (IAEStack<?> input : details.getAEInputs()) {
             if (input == null) continue;
             long size = input.getStackSize();
-            int max = 0;
-            while ((size & FINAL_BIT) == 0) {
-                size <<= 1;
-                max++;
-            }
+            if (size <= 0) continue;
+            int highestBit = 63 - Long.numberOfLeadingZeros(size);
+            int max = 62 - highestBit;
+            if (max < 0) max = 0;
             if (max < maxMulti) maxMulti = max;
         }
         for (IAEStack<?> out : details.getAEOutputs()) {
             if (out == null) continue;
             long size = out.getStackSize();
-            int max = 0;
-            while ((size & FINAL_BIT) == 0) {
-                size <<= 1;
-                max++;
-            }
+            if (size <= 0) continue;
+            int highestBit = 63 - Long.numberOfLeadingZeros(size);
+            int max = 62 - highestBit;
+            if (max < 0) max = 0;
             if (max < maxMulti) maxMulti = max;
         }
-
         return maxMulti;
     }
 
     public static int getMaxBitDivider(ICraftingPatternDetails details) {
-        // limit to 2B per item in pattern
-        int maxDiv = 30;
+        int maxDiv = 62;
         for (IAEStack<?> input : details.getAEInputs()) {
             if (input == null) continue;
             long size = input.getStackSize();
-            int max = 0;
-            while ((size & 1) == 0) {
-                size >>= 1;
-                max++;
-            }
-            if (max < maxDiv) maxDiv = max;
+            if (size <= 0) continue;
+            int tz = Math.min(Long.numberOfTrailingZeros(size), 62);
+            if (tz < maxDiv) maxDiv = tz;
         }
         for (IAEStack<?> out : details.getAEOutputs()) {
             if (out == null) continue;
             long size = out.getStackSize();
-            int max = 0;
-            while ((size & 1) == 0) {
-                size >>= 1;
-                max++;
-            }
-            if (max < maxDiv) maxDiv = max;
+            if (size <= 0) continue;
+            int tz = Math.min(Long.numberOfTrailingZeros(size), 62);
+            if (tz < maxDiv) maxDiv = tz;
         }
-
         return maxDiv;
     }
 
@@ -73,8 +60,8 @@ public class PatternMultiplierHelper {
             bitMultiplier = -bitMultiplier;
         }
         NBTTagCompound encodedValue = stack.stackTagCompound;
-        final NBTTagList inTag = encodedValue.getTagList("in", 10);
-        final NBTTagList outTag = encodedValue.getTagList("out", 10);
+        final NBTTagList inTag = encodedValue.getTagList("in", NBT.TAG_COMPOUND);
+        final NBTTagList outTag = encodedValue.getTagList("out", NBT.TAG_COMPOUND);
         for (int x = 0; x < inTag.tagCount(); x++) {
             final NBTTagCompound tag = inTag.getCompoundTagAt(x);
             if (tag.hasNoTags()) continue;
@@ -85,7 +72,7 @@ public class PatternMultiplierHelper {
                                 : tag.getInteger("Count") << bitMultiplier);
             }
             // Support for IAEItemStack (ae2fc patterns)
-            if (tag.hasKey("Cnt", 4)) {
+            if (tag.hasKey("Cnt", NBT.TAG_LONG)) {
                 tag.setLong(
                         "Cnt",
                         isDividing ? tag.getLong("Cnt") >> bitMultiplier : tag.getLong("Cnt") << bitMultiplier);
@@ -102,7 +89,7 @@ public class PatternMultiplierHelper {
                                 : tag.getInteger("Count") << bitMultiplier);
             }
             // Support for IAEItemStack (ae2fc patterns)
-            if (tag.hasKey("Cnt", 4)) {
+            if (tag.hasKey("Cnt", NBT.TAG_LONG)) {
                 tag.setLong(
                         "Cnt",
                         isDividing ? tag.getLong("Cnt") >> bitMultiplier : tag.getLong("Cnt") << bitMultiplier);

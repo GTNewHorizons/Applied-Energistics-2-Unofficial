@@ -20,13 +20,14 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
+
 import appeng.api.config.AccessRestriction;
 import appeng.api.config.PowerUnits;
 import appeng.api.definitions.IBlockDefinition;
 import appeng.api.implementations.items.IAEItemPowerStorage;
 import appeng.core.Api;
 import appeng.core.localization.GuiText;
-import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -89,13 +90,11 @@ public class AEBaseItemBlockChargeable extends AEBaseItemBlock implements IAEIte
     }
 
     private double getInternal(final ItemStack is) {
-        final NBTTagCompound nbt = Platform.openNbtData(is);
-        return nbt.getDouble("internalCurrentPower");
+        return ItemStackNBT.getDouble(is, "internalCurrentPower");
     }
 
     private void setInternal(final ItemStack is, final double amt) {
-        final NBTTagCompound nbt = Platform.openNbtData(is);
-        nbt.setDouble("internalCurrentPower", amt);
+        ItemStackNBT.setDouble(is, "internalCurrentPower", amt);
     }
 
     @Override

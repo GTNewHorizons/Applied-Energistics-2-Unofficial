@@ -14,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import appeng.api.AEApi;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
@@ -63,8 +64,8 @@ public class UltimatePatternHelper implements ICraftingPatternDetails, Comparabl
             this.pattern = AEItemStack.create(is);
         }
 
-        final NBTTagList inTag = encodedValue.getTagList("in", 10);
-        final NBTTagList outTag = encodedValue.getTagList("out", 10);
+        final NBTTagList inTag = encodedValue.getTagList("in", NBT.TAG_COMPOUND);
+        final NBTTagList outTag = encodedValue.getTagList("out", NBT.TAG_COMPOUND);
 
         final List<IAEItemStack> inLegacy = new ArrayList<>();
         final List<IAEItemStack> outLegacy = new ArrayList<>();

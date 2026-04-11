@@ -27,6 +27,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
@@ -156,7 +157,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
             final String stackType = keyStack.getStackType().getId();
             final int stackHash = keyStack.hashCode();
 
-            final NBTTagList entries = this.itemScheduledReasons.getTagList("Entries", 10);
+            final NBTTagList entries = this.itemScheduledReasons.getTagList("Entries", NBT.TAG_COMPOUND);
             for (int i = 0; i < entries.tagCount(); i++) {
                 final NBTTagCompound entry = entries.getCompoundTagAt(i);
                 if (stackType.equals(entry.getString("Type")) && stackHash == entry.getInteger("Hash")) {

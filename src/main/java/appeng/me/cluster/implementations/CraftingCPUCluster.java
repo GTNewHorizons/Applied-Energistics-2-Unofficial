@@ -1537,7 +1537,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.submitLink(this.myLastLink);
         }
 
-        NBTTagList list = data.getTagList("tasks", 10);
+        NBTTagList list = data.getTagList("tasks", NBT.TAG_COMPOUND);
         for (int x = 0; x < list.tagCount(); x++) {
             final NBTTagCompound item = list.getCompoundTagAt(x);
             final IAEItemStack pattern = AEItemStack.loadItemStackFromNBT(item);
@@ -2122,7 +2122,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             this.fakeCrafting = tag.getBoolean("fakeCrafting");
             this.originalOutput = Platform.readStackNBT(tag.getCompoundTag("originalOutput"));
 
-            NBTTagList patternOutputs = tag.getTagList("patternOutputs", 10);
+            NBTTagList patternOutputs = tag.getTagList("patternOutputs", NBT.TAG_COMPOUND);
             if (patternOutputs != null) {
                 this.patternOutputs = new IAEStack[patternOutputs.tagCount()];
                 for (int x = 0; x < patternOutputs.tagCount(); x++) {
@@ -2131,7 +2131,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 }
             }
 
-            this.outputs = readAEStackListNBT(tag.getTagList("outputs", 10));
+            this.outputs = readAEStackListNBT(tag.getTagList("outputs", NBT.TAG_COMPOUND));
         }
     }
 }

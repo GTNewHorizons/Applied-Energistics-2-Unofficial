@@ -22,4 +22,9 @@ public interface IBlockingModeIgnoreItemRegistry {
      * Checks if given item should be ignored by blocking mode.
      */
     boolean isIgnored(ItemStack itemStack);
+
+    /**
+     * Populate list of items that blocking mode should ignore
+     */
+    void registerDefault();
 }

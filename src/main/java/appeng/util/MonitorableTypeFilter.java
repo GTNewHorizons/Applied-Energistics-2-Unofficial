@@ -5,10 +5,13 @@ import java.util.Map;
 import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
@@ -36,14 +39,14 @@ public class MonitorableTypeFilter {
         return map;
     }
 
-    public void readFromNBT(NBTTagCompound tag) {
+    public void readFromNBT(@Nullable NBTTagCompound tag) {
         this.perPlayer.clear();
 
-        if (!tag.hasKey(NBT_FILTERS)) {
+        if (tag == null || !tag.hasKey(NBT_FILTERS, NBT.TAG_LIST)) {
             return;
         }
 
-        final NBTTagList players = tag.getTagList(NBT_FILTERS, 10);
+        final NBTTagList players = tag.getTagList(NBT_FILTERS, NBT.TAG_COMPOUND);
         for (int i = 0; i < players.tagCount(); i++) {
             final NBTTagCompound playerTag = players.getCompoundTagAt(i);
             final String uuidString = playerTag.getString(NBT_UUID);
@@ -60,7 +63,7 @@ public class MonitorableTypeFilter {
 
             final Reference2BooleanMap<IAEStackType<?>> map = createDefaultMap();
 
-            final NBTTagList list = playerTag.getTagList(NBT_MAP, 10);
+            final NBTTagList list = playerTag.getTagList(NBT_MAP, NBT.TAG_COMPOUND);
             for (int j = 0; j < list.tagCount(); j++) {
                 final NBTTagCompound entryTag = list.getCompoundTagAt(j);
                 final String typeId = entryTag.getString(NBT_TYPE_ID);
@@ -72,6 +75,16 @@ public class MonitorableTypeFilter {
             }
 
             this.perPlayer.put(id, map);
+        }
+    }
+
+    public void writeToNBT(@NotNull ItemStack stack) {
+        if (!stack.hasTagCompound()) {
+            stack.setTagCompound(new NBTTagCompound());
+        }
+        this.writeToNBT(stack.getTagCompound());
+        if (stack.getTagCompound().hasNoTags()) {
+            stack.setTagCompound(null);
         }
     }
 
@@ -106,7 +119,11 @@ public class MonitorableTypeFilter {
             players.appendTag(playerTag);
         }
 
-        tag.setTag(NBT_FILTERS, players);
+        if (players.tagCount() == 0) {
+            tag.removeTag(NBT_FILTERS);
+        } else {
+            tag.setTag(NBT_FILTERS, players);
+        }
     }
 
     @NotNull

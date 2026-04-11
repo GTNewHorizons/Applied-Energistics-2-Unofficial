@@ -28,7 +28,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
@@ -39,6 +38,7 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.config.Upgrades;
 import appeng.api.implementations.IUpgradeableHost;
@@ -86,8 +86,7 @@ public final class ItemMultiMaterial extends AEBaseItem implements IStorageCompo
         }
 
         if (mt == MaterialType.NamePress) {
-            final NBTTagCompound c = Platform.openNbtData(stack);
-            lines.add(c.getString("InscribeName"));
+            lines.add(ItemStackNBT.getString(stack, "InscribeName"));
         }
 
         final Upgrades u = this.getType(stack);

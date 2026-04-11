@@ -25,6 +25,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -63,7 +64,7 @@ public class PacketNEIRecipe extends AppEngPacket {
         if (comp != null) {
             this.recipe = new ItemStack[9][];
             for (int x = 0; x < this.recipe.length; x++) {
-                final NBTTagList list = comp.getTagList("#" + x, 10);
+                final NBTTagList list = comp.getTagList("#" + x, NBT.TAG_COMPOUND);
                 if (list.tagCount() > 0) {
                     this.recipe[x] = new ItemStack[list.tagCount()];
                     for (int y = 0; y < list.tagCount(); y++) {

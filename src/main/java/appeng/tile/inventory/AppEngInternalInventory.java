@@ -16,6 +16,10 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants.NBT;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.storage.IMEInventory;
 import appeng.core.AELog;
@@ -183,31 +187,41 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
         }
     }
 
+    public void writeToNBT(@NotNull ItemStack stack, String name) {
+        if (!stack.hasTagCompound()) {
+            stack.setTagCompound(new NBTTagCompound());
+        }
+        this.writeToNBT(stack.getTagCompound(), name);
+        if (stack.getTagCompound().hasNoTags()) {
+            stack.setTagCompound(null);
+        }
+    }
+
     public void writeToNBT(final NBTTagCompound data, final String name) {
         final NBTTagCompound c = new NBTTagCompound();
         this.writeToNBT(c);
-        data.setTag(name, c);
+        if (c.hasNoTags()) {
+            data.removeTag(name);
+        } else {
+            data.setTag(name, c);
+        }
     }
 
     protected void writeToNBT(final NBTTagCompound target) {
         for (int x = 0; x < this.size; x++) {
             try {
-                final NBTTagCompound c = new NBTTagCompound();
-
                 if (this.inv[x] != null) {
+                    final NBTTagCompound c = new NBTTagCompound();
                     this.inv[x].writeToNBT(c);
+                    target.setTag("#" + x, c);
                 }
-
-                target.setTag("#" + x, c);
             } catch (final Exception ignored) {}
         }
     }
 
-    public void readFromNBT(final NBTTagCompound data, final String name) {
-        if (!data.hasKey(name)) return;
-        final NBTTagCompound c = data.getCompoundTag(name);
-        if (c != null) {
-            this.readFromNBT(c);
+    public void readFromNBT(@Nullable final NBTTagCompound data, final String name) {
+        if (data != null && data.hasKey(name, NBT.TAG_COMPOUND)) {
+            this.readFromNBT(data.getCompoundTag(name));
         }
     }
 
@@ -215,9 +229,8 @@ public class AppEngInternalInventory implements IInventory, Iterable<ItemStack> 
         for (int x = 0; x < this.size; x++) {
             try {
                 final String key = "#" + x;
-                if (!target.hasKey(key)) continue;
-                final NBTTagCompound c = target.getCompoundTag(key);
-                if (c != null) {
+                if (target.hasKey(key, NBT.TAG_COMPOUND)) {
+                    final NBTTagCompound c = target.getCompoundTag(key);
                     this.inv[x] = ItemStack.loadItemStackFromNBT(c);
                 }
             } catch (final Exception e) {

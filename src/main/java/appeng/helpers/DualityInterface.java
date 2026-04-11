@@ -42,6 +42,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import org.jetbrains.annotations.NotNull;
@@ -99,7 +100,6 @@ import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IConfigManager;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
-import appeng.core.features.registries.BlockingModeIgnoreItemRegistry;
 import appeng.core.settings.TickRates;
 import appeng.me.GridAccessException;
 import appeng.me.cache.NetworkMonitor;
@@ -294,7 +294,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
     public void readFromNBT(final NBTTagCompound data) {
         this.waitingToSend = null;
-        final NBTTagList waitingList = data.getTagList("waitingToSend", 10);
+        final NBTTagList waitingList = data.getTagList("waitingToSend", NBT.TAG_COMPOUND);
         if (waitingList != null) {
             for (int x = 0; x < waitingList.tagCount(); x++) {
                 final NBTTagCompound c = waitingList.getCompoundTagAt(x);
@@ -319,7 +319,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         };
         if (this.unlockEvent == UnlockCraftingEvent.RESULT) {
-            NBTTagList stackList = data.getTagList("unlockStacks", 10);
+            NBTTagList stackList = data.getTagList("unlockStacks", NBT.TAG_COMPOUND);
             for (int index = 0; index < stackList.tagCount(); index++) {
                 NBTTagCompound stackTag = stackList.getCompoundTagAt(index);
                 IAEStack<?> unlockStack = Platform.readStackNBT(stackTag, true);
@@ -1010,7 +1010,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     private boolean tileHasOnlyIgnoredItems(InventoryAdaptor ad) {
         for (ItemSlot i : ad) {
             ItemStack is = i.getItemStack();
-            if (is == null || BlockingModeIgnoreItemRegistry.instance().isIgnored(is)) continue;
+            if (is == null || AEApi.instance().registries().blockingModeIgnoreItem().isIgnored(is)) continue;
             return false;
         }
         return true;
@@ -1029,7 +1029,8 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
 
             if (sink != null) {
                 OptionalInt present = sink.getStoredItemsInSink(
-                        stack -> !BlockingModeIgnoreItemRegistry.instance().isIgnored(stack.toStackFast()));
+                        stack -> !AEApi.instance().registries().blockingModeIgnoreItem()
+                                .isIgnored(stack.toStackFast()));
 
                 return present.orElse(0) == 0;
             }

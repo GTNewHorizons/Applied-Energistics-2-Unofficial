@@ -13,7 +13,6 @@ package appeng.items.contents;
 import net.minecraft.item.ItemStack;
 
 import appeng.tile.inventory.AppEngInternalInventory;
-import appeng.util.Platform;
 
 public class WirelessTerminalViewCells extends AppEngInternalInventory {
 
@@ -22,11 +21,11 @@ public class WirelessTerminalViewCells extends AppEngInternalInventory {
     public WirelessTerminalViewCells(final ItemStack is) {
         super(null, 5);
         this.is = is;
-        this.readFromNBT(Platform.openNbtData(is), "viewCell");
+        this.readFromNBT(is.getTagCompound(), "viewCell");
     }
 
     @Override
     public void markDirty() {
-        this.writeToNBT(Platform.openNbtData(is), "viewCell");
+        this.writeToNBT(is, "viewCell");
     }
 }

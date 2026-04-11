@@ -16,11 +16,12 @@ import java.util.List;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.minecraftforge.oredict.OreDictionary;
+
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.definitions.IMaterials;
@@ -106,8 +107,10 @@ public final class EntitySingularity extends AEBaseEntityItem {
 
                                 for (final ItemStack singularityStack : materials.qESingularity().maybeStack(2)
                                         .asSet()) {
-                                    final NBTTagCompound cmp = Platform.openNbtData(singularityStack);
-                                    cmp.setLong("freq", (new Date()).getTime() * 100 + (randTickSeed) % 100);
+                                    ItemStackNBT.setLong(
+                                            singularityStack,
+                                            "freq",
+                                            (new Date()).getTime() * 100 + (randTickSeed) % 100);
                                     randTickSeed++;
                                     item.stackSize--;
 

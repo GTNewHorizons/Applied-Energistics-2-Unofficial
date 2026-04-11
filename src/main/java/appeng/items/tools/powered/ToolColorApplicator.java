@@ -38,6 +38,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.oredict.OreDictionary;
 
 import com.google.common.base.Optional;
+import com.gtnewhorizon.gtnhlib.item.ItemStackNBT;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -332,7 +333,6 @@ public class ToolColorApplicator extends AEBasePoweredItem
                 return oldColor;
             }
         }
-
         return this.findNextColor(is, null, 0);
     }
 
@@ -401,13 +401,12 @@ public class ToolColorApplicator extends AEBasePoweredItem
     }
 
     private void setColor(final ItemStack is, final ItemStack newColor) {
-        final NBTTagCompound data = Platform.openNbtData(is);
         if (newColor == null) {
-            data.removeTag(NBT_COLOR);
+            ItemStackNBT.removeTag(is, NBT_COLOR);
         } else {
             final NBTTagCompound color = new NBTTagCompound();
             newColor.writeToNBT(color);
-            data.setTag(NBT_COLOR, color);
+            ItemStackNBT.setCompoundTag(is, NBT_COLOR, color);
         }
     }
 
@@ -616,7 +615,7 @@ public class ToolColorApplicator extends AEBasePoweredItem
 
     @Override
     public void setFuzzyMode(final ItemStack is, final FuzzyMode fzMode) {
-        Platform.openNbtData(is).setString("FuzzyMode", fzMode.name());
+        ItemStackNBT.setString(is, "FuzzyMode", fzMode.name());
     }
 
     @Override
@@ -662,11 +661,11 @@ public class ToolColorApplicator extends AEBasePoweredItem
 
     @Override
     public String getOreFilter(ItemStack is) {
-        return Platform.openNbtData(is).getString("OreFilter");
+        return ItemStackNBT.getString(is, "OreFilter");
     }
 
     @Override
     public void setOreFilter(ItemStack is, String filter) {
-        Platform.openNbtData(is).setString("OreFilter", filter);
+        ItemStackNBT.setString(is, "OreFilter", filter);
     }
 }
