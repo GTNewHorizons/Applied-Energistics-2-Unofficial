@@ -131,6 +131,8 @@ import appeng.util.inv.MEInventoryCrafting;
 import appeng.util.inv.WrapperInvSlot;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
+import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
+import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 
 public class DualityInterface implements IGridTickable, IStorageMonitorable, IInventoryDestination, IAEAppEngInventory,
         IConfigManagerHost, ICraftingProvider, IUpgradeableHost, IPriorityHost, IGridProxyable, IStorageInterceptor {
@@ -1617,16 +1619,67 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public String getTermName() {
+        final String baseName;
         if (((ICustomNameObject) this.iHost).hasCustomName()) {
-            return ((ICustomNameObject) this.iHost).getCustomName();
+            baseName = ((ICustomNameObject) this.iHost).getCustomName();
+        } else {
+            final ItemStack item = getCrafterIcon();
+            baseName = item != null ? item.getUnlocalizedName() : "Nothing";
         }
 
-        final ItemStack item = getCrafterIcon();
-        if (item != null) {
-            return item.getUnlocalizedName();
-        } else {
-            return "Nothing";
+        final Integer circuitConfig = getAdjacentCircuitConfig();
+        if (circuitConfig == null) {
+            return baseName;
         }
+        return replaceBracketSuffix(baseName, " [" + circuitConfig + "]");
+    }
+
+    private Integer getAdjacentCircuitConfig() {
+        final TileEntity hostTile = this.iHost.getTileEntity();
+        if (hostTile == null || hostTile.getWorldObj() == null) return null;
+        for (final ForgeDirection direction : this.iHost.getTargets()) {
+            final TileEntity directedTile = hostTile.getWorldObj().getTileEntity(
+                    hostTile.xCoord + direction.offsetX,
+                    hostTile.yCoord + direction.offsetY,
+                    hostTile.zCoord + direction.offsetZ);
+            if (directedTile == null) continue;
+            if (directedTile instanceof IInterfaceHost) {
+                try {
+                    if (((IInterfaceHost) directedTile).getInterfaceDuality().sameGrid(this.gridProxy.getGrid()))
+                        continue;
+                } catch (final GridAccessException e) {
+                    continue;
+                }
+            }
+            final Integer config = getGregTechCircuitConfig(directedTile);
+            if (config != null) return config;
+        }
+        return null;
+    }
+
+    private static Integer getGregTechCircuitConfig(final TileEntity tile) {
+        if (!(tile instanceof IGregTechTileEntity)) return null;
+        final IMetaTileEntity meta = ((IGregTechTileEntity) tile).getMetaTileEntity();
+        if (!(meta instanceof gregtech.api.interfaces.IConfigurationCircuitSupport)) return null;
+        final gregtech.api.interfaces.IConfigurationCircuitSupport ccs = (gregtech.api.interfaces.IConfigurationCircuitSupport) meta;
+        if (!ccs.allowSelectCircuit()) return null;
+        final int config = new gregtech.api.util.item.GhostCircuitItemStackHandler(meta).getCircuitConfig();
+        return config > 0 ? config : null;
+    }
+
+    private static String replaceBracketSuffix(final String name, final String suffix) {
+        final int idx = name.lastIndexOf(" [");
+        if (idx > 0 && name.endsWith("]")) {
+            boolean digitsOnly = true;
+            for (int i = idx + 2; i < name.length() - 1; i++) {
+                if (name.charAt(i) < '0' || name.charAt(i) > '9') {
+                    digitsOnly = false;
+                    break;
+                }
+            }
+            if (digitsOnly) return name.substring(0, idx) + suffix;
+        }
+        return name + suffix;
     }
 
     public BaseActionSource getActionSource() {

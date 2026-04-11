@@ -1872,18 +1872,34 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public static String translateFromNetwork(String name) {
+        final String baseName = stripBracketSuffix(name);
+        final String suffix = name.substring(baseName.length());
+
         final String dispName;
-        if (StatCollector.canTranslate(name)) {
-            dispName = StatCollector.translateToLocal(name);
+        if (StatCollector.canTranslate(baseName)) {
+            dispName = StatCollector.translateToLocal(baseName);
         } else {
-            String fallback = name + ".name"; // its whatever. save some bytes on network but looks ugly
+            String fallback = baseName + ".name";
             if (StatCollector.canTranslate(fallback)) {
                 dispName = StatCollector.translateToLocal(fallback);
             } else {
-                dispName = StatCollector.translateToFallback(name);
+                dispName = StatCollector.translateToFallback(baseName);
             }
         }
-        return dispName;
+        return dispName + suffix;
+    }
+
+    private static String stripBracketSuffix(final String name) {
+        final int idx = name.lastIndexOf(" [");
+        if (idx <= 0 || !name.endsWith("]")) {
+            return name;
+        }
+        for (int i = idx + 2; i < name.length() - 1; i++) {
+            if (name.charAt(i) < '0' || name.charAt(i) > '9') {
+                return name;
+            }
+        }
+        return name.substring(0, idx);
     }
 
     public BaseActionSource getCurrentJobSource() {
