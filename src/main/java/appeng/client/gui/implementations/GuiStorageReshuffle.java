@@ -81,7 +81,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
         super(new ContainerStorageReshuffle(inventoryPlayer, te));
         this.container = (ContainerStorageReshuffle) this.inventorySlots;
         this.xSize = 195;
-        this.ySize = 187;
+        this.ySize = 177;
     }
 
     @Override
