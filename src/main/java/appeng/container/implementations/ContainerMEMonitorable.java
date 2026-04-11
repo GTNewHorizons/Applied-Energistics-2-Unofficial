@@ -994,6 +994,53 @@ public class ContainerMEMonitorable extends AEBaseContainer
                     }
                 }
             }
+            case CONTAINER_QUICK_TRANSFER -> {
+                if (custom < 0 || custom >= this.inventorySlots.size() || this.getPowerSource() == null) return;
+
+                Slot slot = this.inventorySlots.get(custom);
+                if (!(slot instanceof AppEngSlot appEngSlot) || !appEngSlot.isPlayerSide()) return;
+
+                ItemStack stackInSlot = slot.getStack();
+                if (stackInSlot == null) return;
+
+                final int stackSize = stackInSlot.stackSize;
+                stackInSlot = stackInSlot.copy();
+                stackInSlot.stackSize = 1;
+
+                for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                    if (type.isContainerItemForType(stackInSlot)) {
+                        IAEStack<?> stack = type.getStackFromContainerItem(stackInSlot);
+                        if (stack == null) return;
+                        stack.setStackSize(stack.getStackSize() * stackSize);
+
+                        IMEMonitor monitor = this.getMonitorWithFilter(type);
+                        if (monitor == null) return;
+
+                        IAEStack<?> result = Platform.poweredInsert(
+                                this.getPowerSource(),
+                                monitor,
+                                stack,
+                                this.getActionSource(),
+                                Actionable.SIMULATE);
+
+                        if (result == null) {
+                            ItemStack clearedContainer = type.clearFilledContainer(stackInSlot);
+                            if (clearedContainer == null || clearedContainer.getMaxStackSize() < stackSize) return;
+
+                            clearedContainer.stackSize = stackSize;
+
+                            Platform.poweredInsert(
+                                    this.getPowerSource(),
+                                    monitor,
+                                    stack,
+                                    this.getActionSource(),
+                                    Actionable.MODULATE);
+
+                            slot.putStack(clearedContainer);
+                        }
+                    }
+                }
+            }
         }
     }
 
