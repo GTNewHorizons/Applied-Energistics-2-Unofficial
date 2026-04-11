@@ -24,7 +24,7 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
 import appeng.core.AELog;
-import appeng.helpers.CellScanTask;
+import appeng.helpers.PartitionScanTask;
 import appeng.helpers.ReshuffleReport;
 import appeng.helpers.ReshuffleTask;
 import appeng.me.GridAccessException;
@@ -55,7 +55,7 @@ public class TileStorageReshuffle extends AENetworkTile
     private boolean reshuffleCancelled = false;
     private boolean reshuffleComplete = false;
     private ReshuffleReport reshuffleReport = null;
-    private CellScanTask lastScanDuplicates = null;
+    private PartitionScanTask lastScanDuplicates = null;
 
     public TileStorageReshuffle() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
@@ -218,8 +218,8 @@ public class TileStorageReshuffle extends AENetworkTile
         }
         try {
             final IGrid grid = this.getProxy().getGrid();
-            this.lastScanDuplicates = new CellScanTask(grid);
-            this.lastScanDuplicates.scanGrid();
+            this.lastScanDuplicates = new PartitionScanTask();
+            this.lastScanDuplicates.scanGrid(grid);
             this.markDirty();
         } catch (GridAccessException e) {
             AELog.warn(e, "Failed to access grid for scan");
@@ -228,7 +228,7 @@ public class TileStorageReshuffle extends AENetworkTile
         }
     }
 
-    public CellScanTask getScanDuplicates() {
+    public PartitionScanTask getScanDuplicates() {
         return this.lastScanDuplicates;
     }
 

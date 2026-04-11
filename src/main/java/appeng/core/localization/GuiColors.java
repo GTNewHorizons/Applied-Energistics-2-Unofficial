@@ -190,7 +190,13 @@ public enum GuiColors implements Localization {
     ReshuffleStatusFailed(0xCC0000),
     ReshuffleStatusCancelled(0xFF6600),
     ReshuffleReport(0x404040),
-    ReshuffleTotalItems(0x404040);
+    ReshuffleTotalItems(0x404040),
+    ReshufflesStatusBarInactive(0xFF111111),
+    ReshufflesStatusBarBackground(0xFF333333),
+    ReshuffleStatusBarProgressGradientStart(0xFF00FFFF),
+    ReshuffleStatusBarProgressGradientEnd(0xFF00FF00),
+    ReshuffleStatusBarProgressRunner(0xFFFFFFFF),
+    ReshuffleNetworkScanHoverColor(0x80FFFF00);
 
     private final int color;
 

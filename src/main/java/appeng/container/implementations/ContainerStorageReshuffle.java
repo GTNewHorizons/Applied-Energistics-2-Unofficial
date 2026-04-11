@@ -1,14 +1,7 @@
 package appeng.container.implementations;
 
-import static net.minecraft.item.Item.itemRegistry;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemStack;
 
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
@@ -18,10 +11,10 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.implementations.GuiStorageReshuffle;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
-import appeng.helpers.CellScanTask;
+import appeng.helpers.PartitionScanTask;
 import appeng.helpers.ReshuffleReport;
 import appeng.tile.misc.TileStorageReshuffle;
-import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
+import appeng.util.AEStackTypeFilter;
 
 public class ContainerStorageReshuffle extends AEBaseContainer {
 
@@ -58,23 +51,29 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     public boolean reshuffleComplete = false;
 
     @GuiSync(10)
-    public CellScanTask scanData = null;
+    public PartitionScanTask scanData = null;
+
+    @GuiSync(11)
+    public AEStackTypeFilter typeFilters;
 
     public ContainerStorageReshuffle(final InventoryPlayer ip, final TileStorageReshuffle te) {
         super(ip, te);
         this.tile = te;
+        this.typeFilters = new AEStackTypeFilter(this.tile.getTypeFilters());
         this.voidProtection = this.tile.isVoidProtection();
     }
 
-    public Reference2BooleanMap<IAEStackType<?>> getTypeFilters() {
-        return this.tile.getTypeFilters().getImmutableFilters();
+    public AEStackTypeFilter getTypeFilters() {
+        return this.typeFilters;
     }
 
     public void toggleTypeFilter(final String typeId) {
+        if (typeId == null || typeId.isEmpty()) return;
         final IAEStackType<?> type = AEStackTypeRegistry.getType(typeId);
         if (type == null) return;
-        final Reference2BooleanMap<IAEStackType<?>> map = this.getTypeFilters();
-        map.put(type, !map.getBoolean(type));
+
+        this.tile.getTypeFilters().toggle(type);
+        this.typeFilters = new AEStackTypeFilter(this.tile.getTypeFilters());
         this.tile.onChangeTypeFilters();
     }
 
@@ -100,16 +99,8 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         this.reshuffleTotalItems = this.tile.getReshuffleTotalItems();
         this.reshuffleProgress = this.tile.getReshuffleProgress();
         this.reshuffleProcessedItems = this.tile.getReshuffleProcessedItems();
-
-        final ReshuffleReport current = this.tile.getReshuffleReport();
-        if (current != this.report) {
-            this.report = current;
-        }
-
-        final CellScanTask currentScan = this.tile.getScanDuplicates();
-        if (currentScan != this.scanData) {
-            this.scanData = currentScan;
-        }
+        this.report = this.tile.getReshuffleReport();
+        this.scanData = this.tile.getScanDuplicates();
 
         super.detectAndSendChanges();
     }
@@ -117,10 +108,10 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     @Override
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
         if (Minecraft.getMinecraft().currentScreen instanceof GuiStorageReshuffle gui) {
-            if (field.equals("report")) {
-                gui.onReportUpdated();
-            } else if (field.equals("scanData")) {
-                gui.onScanUpdated();
+            switch (field) {
+                case "report" -> gui.onReportUpdated();
+                case "scanData" -> gui.onScanUpdated();
+                case "typeFilters" -> gui.onUpdateTypeFilters();
             }
         }
     }
@@ -140,36 +131,11 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         this.tile.scanNetwork();
     }
 
-    private static String encodeScanData(final Map<String, List<CellScanTask.CellRecord>> duplicates) {
-        final List<String> lines = new ArrayList<>();
-        for (final List<CellScanTask.CellRecord> cells : duplicates.values()) {
-            if (cells.isEmpty()) continue;
-            final CellScanTask.CellRecord first = cells.get(0);
-            // if (first.partitionedItemStacks.isEmpty()) continue;
-
-            final ItemStack repItem = null; // first.partitionedItemStacks.get(0);
-            final String repId = itemRegistry.getNameForObject(repItem.getItem());
-            if (repId == null) continue;
-
-            final StringBuilder sb = new StringBuilder();
-            sb.append(repId).append('@').append(repItem.getItemDamage()).append('@').append(cells.size());
-
-            for (final CellScanTask.CellRecord cell : cells) {
-                sb.append('@').append(cell.x).append(',').append(cell.y).append(',').append(cell.z).append(',')
-                        .append(cell.dim).append(',').append(cell.slot).append(',').append(cell.typesUsed).append('|')
-                        .append(cell.cellDisplayName);
-            }
-            lines.add(sb.toString());
-        }
-        return String.join("\n", lines);
+    public ReshuffleReport getReshuffleReport() {
+        return report;
     }
 
-    public List<String> getReportLines() {
-        if (this.report == null) return new ArrayList<>();
-        return report.generateReportLines();
-    }
-
-    public CellScanTask getScanData() {
+    public PartitionScanTask getScanData() {
         return this.scanData;
     }
 }
