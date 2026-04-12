@@ -185,12 +185,37 @@ public enum GuiColors implements Localization {
 
     ReshuffleTitle(0x404040),
     ReshuffleStatusIdle(0x404040),
-    ReshuffleStatusRunning(0x00AA00),
+    ReshuffleStatusExtracting(0xDDAA00),
+    ReshuffleStatusInjecting(0x00AA00),
     ReshuffleStatusComplete(0x0055FF),
     ReshuffleStatusFailed(0xCC0000),
     ReshuffleStatusCancelled(0xFF6600),
     ReshuffleReport(0x404040),
-    ReshuffleTotalItems(0x404040);
+    ReshuffleTotalItems(0x404040),
+    ReshuffleProgressBorder(0xFF333333),
+    ReshuffleProgressBackground(0xFF111111),
+    ReshuffleProgressFillStart(0xFF00FFFF),
+    ReshuffleProgressFillEnd(0xFF00FF00),
+    ReshuffleProgressMarker(0xFFFFFFFF),
+    ReshuffleScanRowHover(0x80FFFF00),
+
+    CellHealthOk(0xFF00CC44),
+    CellHealthWarn(0xFFFFAA00),
+    CellHealthCrit(0xFFFF2222),
+    CellHealthBarBackground(0xFF222222),
+
+    ReshuffleReportHeading(0x404040),
+    ReshuffleReportText(0x404040),
+    ReshuffleReportPositive(0x00AA00),
+    ReshuffleReportNegative(0xCC0000),
+    ReshuffleReportDimmed(0x555555),
+    ReshuffleReportHighlight(0xDDAA00),
+
+    ReshuffleTooltipPrimary(0xFFFFFF),
+    ReshuffleTooltipSecondary(0xAAAAAA),
+    ReshuffleTooltipDimmed(0x555555),
+
+    ReshuffleToggleDisabledOverlay(0x80000000);
 
     private final int color;
 

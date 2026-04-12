@@ -12,6 +12,7 @@ package appeng.helpers;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,14 +30,28 @@ import appeng.api.storage.ICellWorkbenchItem;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.ISaveProvider;
 import appeng.api.storage.data.AEStackTypeRegistry;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
+import appeng.api.storage.data.IItemList;
 import appeng.core.AELog;
 import appeng.tile.storage.TileChest;
 import appeng.tile.storage.TileDrive;
+import appeng.util.IterationCounter;
 
 public final class CellScanTask {
 
     private CellScanTask() {}
+
+    public static final class StoredItemEntry {
+
+        public final String displayName;
+        public final long count;
+
+        public StoredItemEntry(String displayName, long count) {
+            this.displayName = displayName;
+            this.count = count;
+        }
+    }
 
     public static final class CellRecord {
 
@@ -54,6 +69,8 @@ public final class CellScanTask {
         public final boolean isPartitioned;
         public final List<String> partitionedItems;
         public final List<ItemStack> partitionedItemStacks;
+        public final List<StoredItemEntry> topStoredItems;
+        public final String stackTypeId;
         public final int x;
         public final int y;
         public final int z;
@@ -62,7 +79,8 @@ public final class CellScanTask {
         public CellRecord(String deviceType, String deviceId, int slot, String cellItemId, int cellMeta,
                 String cellDisplayName, ICellCacheRegistry.TYPE cellType, double bytesTotal, double bytesUsed,
                 double typesTotal, double typesUsed, boolean isPartitioned, List<String> partitionedItems,
-                List<ItemStack> partitionedItemStacks, int x, int y, int z, int dim) {
+                List<ItemStack> partitionedItemStacks, List<StoredItemEntry> topStoredItems, String stackTypeId, int x,
+                int y, int z, int dim) {
             this.deviceType = deviceType;
             this.deviceId = deviceId;
             this.slot = slot;
@@ -77,6 +95,8 @@ public final class CellScanTask {
             this.isPartitioned = isPartitioned;
             this.partitionedItems = partitionedItems != null ? partitionedItems : new ArrayList<>();
             this.partitionedItemStacks = partitionedItemStacks != null ? partitionedItemStacks : new ArrayList<>();
+            this.topStoredItems = topStoredItems != null ? topStoredItems : new ArrayList<>();
+            this.stackTypeId = stackTypeId != null ? stackTypeId : "";
             this.x = x;
             this.y = y;
             this.z = z;
@@ -177,6 +197,8 @@ public final class CellScanTask {
                 }
             }
 
+            final List<StoredItemEntry> topItems = collectTopStoredItems(cellInv, stackType, 5);
+
             records.add(
                     new CellRecord(
                             deviceType,
@@ -193,12 +215,44 @@ public final class CellScanTask {
                             isPartitioned,
                             partitionedItems,
                             partitionedItemStacks,
+                            topItems,
+                            stackType.getId(),
                             x,
                             y,
                             z,
                             dim));
             break;
         }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static List<StoredItemEntry> collectTopStoredItems(IMEInventoryHandler<?> cellInv,
+            IAEStackType<?> stackType, int maxItems) {
+        final List<StoredItemEntry> entries = new ArrayList<>();
+        try {
+            final IItemList itemList = stackType.createList();
+            cellInv.getAvailableItems(itemList, IterationCounter.fetchNewId());
+            final List<IAEStack<?>> allStacks = new ArrayList<>();
+            for (final Object obj : itemList) {
+                if (obj instanceof IAEStack<?>stack && stack.getStackSize() > 0) {
+                    allStacks.add(stack);
+                }
+            }
+            allStacks.sort(Comparator.comparingLong(s -> -s.getStackSize()));
+            for (int i = 0; i < Math.min(maxItems, allStacks.size()); i++) {
+                final IAEStack<?> s = allStacks.get(i);
+                String name;
+                try {
+                    name = s.getDisplayName();
+                } catch (final Exception e) {
+                    name = "?";
+                }
+                entries.add(new StoredItemEntry(name != null ? name : "?", s.getStackSize()));
+            }
+        } catch (final Exception e) {
+            AELog.debug(e);
+        }
+        return entries;
     }
 
     public static Map<String, List<CellRecord>> findDuplicatePartitionedCells(List<CellRecord> cells) {

@@ -11,6 +11,7 @@
 package appeng.helpers;
 
 import java.text.NumberFormat;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,6 +23,7 @@ import java.util.Set;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.fluids.FluidStack;
 
 import appeng.api.storage.IMEMonitor;
@@ -36,12 +38,12 @@ public class ReshuffleReport {
 
     private static final int LINE_WIDTH = 36;
 
-    private static final String DARK_AQUA = "§3";
-    private static final String BLACK = "§0";
-    private static final String DARK_GREEN = "§2";
-    private static final String DARK_RED = "§4";
-    private static final String DARK_GRAY = "§8";
-    private static final String GOLD = "§6";
+    private static final String DARK_AQUA = EnumChatFormatting.DARK_AQUA.toString();
+    private static final String BLACK = EnumChatFormatting.BLACK.toString();
+    private static final String DARK_GREEN = EnumChatFormatting.DARK_GREEN.toString();
+    private static final String DARK_RED = EnumChatFormatting.DARK_RED.toString();
+    private static final String DARK_GRAY = EnumChatFormatting.DARK_GRAY.toString();
+    private static final String GOLD = EnumChatFormatting.GOLD.toString();
 
     public static class ItemChange {
 
@@ -80,26 +82,28 @@ public class ReshuffleReport {
     private int totalItemTypesAfter = 0;
     private long totalStacksBefore = 0;
     private long totalStacksAfter = 0;
-    private int itemsProcessed = 0;
+    private int itemsExtracted = 0;
+    private int itemsInjected = 0;
     private int itemsSkipped = 0;
-    private int itemsGained = 0;
-    private int itemsLost = 0;
-    private int itemsUnchanged = 0;
-    private long totalGained = 0;
-    private long totalLost = 0;
 
     private final List<ItemChange> lostItems = new ArrayList<>();
-    private final List<ItemChange> gainedItems = new ArrayList<>();
     private final List<IAEStack<?>> skippedItemsList = new ArrayList<>();
+    private final List<Map.Entry<IAEStack<?>, Long>> singularitySuggestions = new ArrayList<>();
+
+    private static final long SINGULARITY_THRESHOLD = 1_000_000L;
+    private static final int SINGULARITY_MAX_SUGGESTIONS = 10;
 
     private final Set<IAEStackType<?>> allowedTypes;
     private final boolean voidProtection;
+    private final boolean includeSubnets;
     private final long startTime;
     private long endTime;
 
-    public ReshuffleReport(final Set<IAEStackType<?>> allowedTypes, final boolean voidProtection) {
+    public ReshuffleReport(final Set<IAEStackType<?>> allowedTypes, final boolean voidProtection,
+            final boolean includeSubnets) {
         this.allowedTypes = allowedTypes;
         this.voidProtection = voidProtection;
+        this.includeSubnets = includeSubnets;
         this.startTime = System.currentTimeMillis();
     }
 
@@ -127,10 +131,20 @@ public class ReshuffleReport {
         }
     }
 
+    public Set<String> buildKeySet(List<IAEStack<?>> stacks) {
+        Set<String> keys = new HashSet<>();
+        for (IAEStack<?> s : stacks) {
+            keys.add(getStackKey(s));
+        }
+        return keys;
+    }
+
     public void generateReport(Map<IAEStackType<?>, IMEMonitor<?>> monitors, Set<IAEStackType<?>> allowedTypes,
-            int processed, int skipped, List<IAEStack<?>> skippedStacks) {
+            int extracted, int injected, int skipped, List<IAEStack<?>> skippedStacks, Set<String> touchedKeys,
+            Set<String> stickyPrioritizedKeys) {
         this.endTime = System.currentTimeMillis();
-        this.itemsProcessed = processed;
+        this.itemsExtracted = extracted;
+        this.itemsInjected = injected;
         this.itemsSkipped = skipped;
         this.skippedItemsList.clear();
         if (skippedStacks != null) {
@@ -163,6 +177,9 @@ public class ReshuffleReport {
         Set<String> allKeys = new HashSet<>();
         allKeys.addAll(beforeSnapshot.keySet());
         allKeys.addAll(afterSnapshot.keySet());
+        if (touchedKeys != null) {
+            allKeys.retainAll(touchedKeys);
+        }
 
         for (String key : allKeys) {
             long before = beforeSnapshot.getOrDefault(key, 0L);
@@ -171,34 +188,52 @@ public class ReshuffleReport {
             if (stack == null) continue;
 
             ItemChange change = new ItemChange(stack, before, after);
-
-            switch (change.changeType) {
-                case GAINED:
-                    itemsGained++;
-                    totalGained += change.difference;
-                    gainedItems.add(change);
-                    break;
-                case LOST:
-                    itemsLost++;
-                    totalLost += Math.abs(change.difference);
-                    lostItems.add(change);
-                    break;
-                case UNCHANGED:
-                    itemsUnchanged++;
-                    break;
+            if (change.changeType == ChangeType.LOST) {
+                lostItems.add(change);
             }
         }
 
         lostItems.sort((a, b) -> Long.compare(Math.abs(b.difference), Math.abs(a.difference)));
-        gainedItems.sort((a, b) -> Long.compare(Math.abs(b.difference), Math.abs(a.difference)));
+
+        Map<String, Long> fullNetworkSnapshot = new HashMap<>(afterSnapshot);
+        for (Map.Entry<IAEStackType<?>, IMEMonitor<?>> monEntry : monitors.entrySet()) {
+            if (allowedTypes.contains(monEntry.getKey())) continue;
+            IMEMonitor<?> monitor = monEntry.getValue();
+            if (monitor == null) continue;
+            IItemList<?> storageList = monitor.getStorageList();
+            for (Object obj : storageList) {
+                IAEStack<?> stack = (IAEStack<?>) obj;
+                if (stack != null && stack.getStackSize() > 0) {
+                    String key = getStackKey(stack);
+                    fullNetworkSnapshot.merge(key, stack.getStackSize(), Long::sum);
+                    if (!stackLookup.containsKey(key)) stackLookup.put(key, stack.copy());
+                }
+            }
+        }
+
+        singularitySuggestions.clear();
+        List<Map.Entry<IAEStack<?>, Long>> candidates = new ArrayList<>();
+        for (Map.Entry<String, Long> entry : fullNetworkSnapshot.entrySet()) {
+            if (entry.getValue() >= SINGULARITY_THRESHOLD) {
+                if (stickyPrioritizedKeys != null && stickyPrioritizedKeys.contains(entry.getKey())) continue;
+                IAEStack<?> stack = stackLookup.get(entry.getKey());
+                if (stack != null) {
+                    candidates.add(new SimpleImmutableEntry<>(stack, entry.getValue()));
+                }
+            }
+        }
+        candidates.sort((a, b) -> Long.compare(b.getValue(), a.getValue()));
+        for (int i = 0; i < Math.min(SINGULARITY_MAX_SUGGESTIONS, candidates.size()); i++) {
+            singularitySuggestions.add(candidates.get(i));
+        }
     }
 
-    private List<String> buildItemLines(ItemChange c, String accentColor, String sign) {
+    private List<String> buildItemLines(ItemChange c) {
         List<String> out = new ArrayList<>();
         String name = getStackDisplayName(c.stack);
         String delta = abbrev(Math.abs(c.difference));
-        out.add(accentColor + "• " + BLACK + name + " " + accentColor + sign + delta);
-        out.add(DARK_GRAY + "  (" + abbrev(c.beforeCount) + " -> " + abbrev(c.afterCount) + ")");
+        out.add(DARK_RED + "• " + BLACK + name + " " + DARK_RED + "-" + delta);
+        out.add(DARK_GRAY + "  (" + abbrev(c.beforeCount) + " → " + abbrev(c.afterCount) + ")");
         return out;
     }
 
@@ -209,69 +244,82 @@ public class ReshuffleReport {
         lines.add(DARK_AQUA + centerTitle(GuiText.ReshuffleReportTitle.getLocal()));
 
         lines.add(
-                DARK_AQUA + GuiText.ReshuffleReportTime.getLocal()
+                DARK_AQUA + GuiText.ReshuffleReportMode.getLocal()
                         + " "
                         + BLACK
-                        + String.format("%.2fs", durationMs / 1000.0)
-                        + DARK_AQUA
+                        + buildModeString()
                         + "  "
-                        + GuiText.ReshuffleReportMode.getLocal()
+                        + DARK_AQUA
+                        + GuiText.ReshuffleReportTime.getLocal()
                         + " "
                         + BLACK
-                        + buildModeString());
+                        + String.format("%.2fs", durationMs / 1000.0));
 
+        final String voidStr = voidProtection ? DARK_GREEN + GuiText.ReshuffleReportVoidOn.getLocal()
+                : DARK_RED + GuiText.ReshuffleReportVoidOff.getLocal();
+        final String subnetStr = includeSubnets ? DARK_GREEN + GuiText.ReshuffleReportSubnetsOn.getLocal()
+                : DARK_GRAY + GuiText.ReshuffleReportSubnetsOff.getLocal();
         lines.add(
                 DARK_AQUA + GuiText.ReshuffleReportVoidLabel.getLocal()
                         + " "
-                        + (voidProtection ? DARK_GREEN + GuiText.ReshuffleReportVoidOn.getLocal()
-                                : DARK_RED + GuiText.ReshuffleReportVoidOff.getLocal()));
-
-        lines.add("");
-        lines.add(DARK_AQUA + GuiText.ReshuffleReportSectionProcessing.getLocal());
-        lines.add(
-                DARK_AQUA + GuiText.ReshuffleReportDone.getLocal()
-                        + " "
-                        + DARK_GREEN
-                        + fmt(itemsProcessed)
-                        + DARK_AQUA
+                        + voidStr
                         + "  "
-                        + GuiText.ReshuffleReportSkip.getLocal()
+                        + DARK_AQUA
+                        + GuiText.ReshuffleReportSubnetsLabel.getLocal()
                         + " "
-                        + GOLD
-                        + fmt(itemsSkipped));
+                        + subnetStr);
 
         lines.add("");
-        lines.add(DARK_AQUA + GuiText.ReshuffleReportSectionStorageTotals.getLocal());
         lines.add(
-                buildTotalLine(
-                        GuiText.ReshuffleReportLabelTypes.getLocal(),
-                        totalItemTypesBefore,
-                        totalItemTypesAfter));
-        lines.add(buildTotalLine(GuiText.ReshuffleReportLabelStacks.getLocal(), totalStacksBefore, totalStacksAfter));
+                DARK_GREEN + GuiText.ReshuffleReportExtracted.getLocal()
+                        + " "
+                        + BLACK
+                        + fmt(itemsExtracted)
+                        + "  "
+                        + DARK_GREEN
+                        + GuiText.ReshuffleReportInjected.getLocal()
+                        + " "
+                        + BLACK
+                        + fmt(itemsInjected)
+                        + (itemsSkipped > 0
+                                ? "  " + GOLD + GuiText.ReshuffleReportSkip.getLocal() + " " + fmt(itemsSkipped)
+                                : ""));
 
-        lines.add("");
-        lines.add(DARK_AQUA + GuiText.ReshuffleReportSectionItemChanges.getLocal());
-        lines.add(
-                DARK_GREEN + GuiText.ReshuffleReportGainedLabel
-                        .getLocal() + " " + BLACK + fmt(itemsGained) + DARK_GREEN + " (" + abbrev(totalGained) + ")");
-        lines.add(
-                DARK_RED + GuiText.ReshuffleReportLostLabel
-                        .getLocal() + " " + BLACK + fmt(itemsLost) + DARK_RED + " (" + abbrev(totalLost) + ")");
-        lines.add(DARK_GRAY + GuiText.ReshuffleReportUnchangedLabel.getLocal() + " " + BLACK + fmt(itemsUnchanged));
+        long typeDelta = totalItemTypesAfter - totalItemTypesBefore;
+        long stackDelta = totalStacksAfter - totalStacksBefore;
+        if (typeDelta != 0 || stackDelta != 0) {
+            lines.add(
+                    DARK_AQUA + GuiText.ReshuffleReportLabelTypes.getLocal()
+                            + " "
+                            + abbrev(totalItemTypesBefore)
+                            + BLACK
+                            + "→"
+                            + abbrev(totalItemTypesAfter)
+                            + " "
+                            + diffColor(typeDelta)
+                            + "("
+                            + signedAbbrev(typeDelta)
+                            + ")");
+            lines.add(
+                    DARK_AQUA + GuiText.ReshuffleReportLabelStacks.getLocal()
+                            + " "
+                            + abbrev(totalStacksBefore)
+                            + BLACK
+                            + "→"
+                            + abbrev(totalStacksAfter)
+                            + " "
+                            + diffColor(stackDelta)
+                            + "("
+                            + signedAbbrev(stackDelta)
+                            + ")");
+        }
 
-        if (!lostItems.isEmpty()) {
+        long net = totalStacksAfter - totalStacksBefore;
+        if (net != 0 && !lostItems.isEmpty()) {
             lines.add("");
             lines.add(DARK_RED + GuiText.ReshuffleReportSectionTopLost.getLocal());
             for (ItemChange c : lostItems) {
-                lines.addAll(buildItemLines(c, DARK_RED, "-"));
-            }
-        }
-
-        if (!gainedItems.isEmpty() && totalGained > 0) {
-            lines.add("");
-            lines.add(DARK_GREEN + GuiText.ReshuffleReportSectionTopGained.getLocal());
-            for (ItemChange c : gainedItems) {
-                lines.addAll(buildItemLines(c, DARK_GREEN, "+"));
+                lines.addAll(buildItemLines(c));
             }
         }
 
@@ -285,12 +333,12 @@ public class ReshuffleReport {
                                 + getStackDisplayName(stack)
                                 + " "
                                 + DARK_GRAY
+                                + "x"
                                 + abbrev(stack.getStackSize()));
             }
         }
 
         lines.add("");
-        long net = totalStacksAfter - totalStacksBefore;
         if (net != 0) {
             lines.add(
                     GOLD + GuiText.ReshuffleReportNetChanged.getLocal()
@@ -304,25 +352,23 @@ public class ReshuffleReport {
             lines.add(DARK_GREEN + GuiText.ReshuffleReportIntegrityOk.getLocal());
         }
 
+        if (!singularitySuggestions.isEmpty()) {
+            lines.add("");
+            lines.add(DARK_AQUA + GuiText.ReshuffleReportSingularitySuggestions.getLocal());
+            for (Map.Entry<IAEStack<?>, Long> entry : singularitySuggestions) {
+                lines.add(
+                        DARK_AQUA + "• "
+                                + BLACK
+                                + getStackDisplayName(entry.getKey())
+                                + " "
+                                + DARK_GRAY
+                                + "x"
+                                + abbrev(entry.getValue()));
+            }
+        }
+
         lines.add(DARK_AQUA + repeatEquals(LINE_WIDTH));
         return lines;
-    }
-
-    private String buildTotalLine(String label, long before, long after) {
-        long delta = after - before;
-        return DARK_AQUA + label
-                + " "
-                + DARK_GRAY
-                + abbrev(before)
-                + BLACK
-                + " -> "
-                + BLACK
-                + abbrev(after)
-                + " "
-                + diffColor(delta)
-                + "("
-                + signedAbbrev(delta)
-                + ")";
     }
 
     private String buildModeString() {
@@ -373,7 +419,7 @@ public class ReshuffleReport {
         return new String(buf);
     }
 
-    private String getStackKey(IAEStack<?> stack) {
+    String getStackKey(IAEStack<?> stack) {
         if (stack instanceof AEItemStack itemStack) {
             final ItemStack is = itemStack.getItemStack();
             String key = Item.itemRegistry.getNameForObject(is.getItem()) + "@" + is.getItemDamage();
@@ -382,7 +428,7 @@ public class ReshuffleReport {
         } else if (stack instanceof AEFluidStack fluidStack) {
             final FluidStack fs = fluidStack.getFluidStack();
             String key = fs.getFluid().getName();
-            if (fs.tag != null) key += "#" + fs.tag.toString();
+            if (fs.tag != null) key += "#" + fs.tag;
             return "fluid:" + key;
         }
         String str = stack.toString();
