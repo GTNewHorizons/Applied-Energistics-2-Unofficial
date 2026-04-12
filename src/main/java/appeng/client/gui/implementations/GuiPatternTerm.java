@@ -13,6 +13,7 @@ package appeng.client.gui.implementations;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.IOException;
+import java.util.List;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -28,14 +29,18 @@ import appeng.api.config.PatternBeSubstitution;
 import appeng.api.config.Settings;
 import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.StorageName;
+import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.slots.VirtualMEPatternSlot;
 import appeng.client.gui.slots.VirtualMEPhantomSlot;
+import appeng.client.gui.slots.VirtualMESlot;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerPatternTerm;
 import appeng.container.slot.AppEngSlot;
 import appeng.core.AELog;
+import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.sync.GuiBridge;
@@ -354,6 +359,24 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         } else {
             return true;
         }
+    }
+
+    @Override
+    public List<String> handleItemTooltip(ItemStack stack, int mouseX, int mouseY, List<String> lines) {
+        super.handleItemTooltip(stack, mouseX, mouseY, lines);
+
+        VirtualMESlot hoveredSlot = this.getVirtualMESlotUnderMouse();
+        if (hoveredSlot instanceof VirtualMEPatternSlot) {
+            IAEStack<?> stackInSlot = hoveredSlot.getAEStack();
+            if (stackInSlot != null) {
+                lines.add(ButtonToolTips.ChangeAmount.getLocal());
+            }
+            if (stackInSlot instanceof IAEItemStack) {
+                lines.add(ButtonToolTips.RenameItem.getLocal());
+            }
+        }
+
+        return lines;
     }
 
     /**
