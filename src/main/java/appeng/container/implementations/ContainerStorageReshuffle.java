@@ -3,8 +3,10 @@ package appeng.container.implementations;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
 
+import appeng.api.config.HealthSortOrder;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.Settings;
+import appeng.api.config.SortDir;
 import appeng.api.config.YesNo;
 import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStackType;
@@ -26,11 +28,35 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     @GuiSync(1)
     public boolean reshuffleRunning = false;
 
+    @GuiSync(1)
+    private boolean includeSubnets;
+
+    @GuiSync(2)
+    private boolean scanMode = false;
+
+    @GuiSync(3)
+    private boolean healthMode = false;
+
     @GuiSync(2)
     public int reshuffleTotalItems = 0;
 
     @GuiSync(3)
     public ReshuffleReport report = null;
+
+    @GuiSync(4)
+    private int healthSortOrdinal = 0; // HealthSortOrder.FILL_PCT.ordinal()
+
+    @GuiSync(5)
+    private int healthSortDirOrdinal = 0; // SortDir.ASCENDING.ordinal()
+
+    @GuiSync(6)
+    private ReshuffleState reshuffleState = ReshuffleState.IDLE;
+
+    @GuiSync(7)
+    private ScanState scanState = ScanState.EMPTY;
+
+    @GuiSync(8)
+    private HealthState healthState = HealthState.EMPTY;
 
     @GuiSync(4)
     public int reshuffleProgress = 0;
@@ -61,6 +87,74 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         this.tile = te;
         this.typeFilters = new AEStackTypeFilter(this.tile.getTypeFilters());
         this.voidProtection = this.tile.isVoidProtection();
+        this.includeSubnets = this.tile.isIncludeSubnets();
+    }
+
+    public boolean isVoidProtection() {
+        return voidProtection;
+    }
+
+    public boolean isIncludeSubnets() {
+        return includeSubnets;
+    }
+
+    public boolean isScanMode() {
+        return scanMode;
+    }
+
+    public boolean isHealthMode() {
+        return healthMode;
+    }
+
+    public HealthSortOrder getHealthSortOrder() {
+        final HealthSortOrder[] vals = HealthSortOrder.values();
+        return (healthSortOrdinal >= 0 && healthSortOrdinal < vals.length) ? vals[healthSortOrdinal]
+                : HealthSortOrder.FILL_PCT;
+    }
+
+    public SortDir getHealthSortDir() {
+        return healthSortDirOrdinal == 1 ? SortDir.DESCENDING : SortDir.ASCENDING;
+    }
+
+    public void setView(final String viewName) {
+        switch (viewName) {
+            case "reshuffle" -> {
+                this.scanMode = false;
+                this.healthMode = false;
+            }
+            case "scan" -> {
+                this.scanMode = true;
+                this.healthMode = false;
+            }
+            case "health" -> {
+                this.scanMode = false;
+                this.healthMode = true;
+            }
+        }
+    }
+
+    public void setHealthSort(final String value) {
+        try {
+            this.healthSortOrdinal = HealthSortOrder.valueOf(value).ordinal();
+        } catch (IllegalArgumentException ignored) {}
+    }
+
+    public void setHealthSortDir(final String value) {
+        try {
+            this.healthSortDirOrdinal = SortDir.valueOf(value).ordinal();
+        } catch (IllegalArgumentException ignored) {}
+    }
+
+    public ReshuffleState getReshuffleState() {
+        return reshuffleState;
+    }
+
+    public ScanState getScanState() {
+        return scanState;
+    }
+
+    public HealthState getHealthState() {
+        return healthState;
     }
 
     public AEStackTypeFilter getTypeFilters() {
@@ -86,11 +180,32 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         this.scanMode = scan;
     }
 
+
+    public void toggleIncludeSubnets() {
+        this.tile.getConfigManager()
+                .putSetting(Settings.INCLUDE_SUBNETS, this.tile.isIncludeSubnets() ? YesNo.NO : YesNo.YES);
+    }
+
     @Override
     public void detectAndSendChanges() {
         this.verifyPermissions(SecurityPermissions.BUILD, false);
 
         this.voidProtection = this.tile.isVoidProtection();
+        this.includeSubnets = this.tile.isIncludeSubnets();
+
+        this.reshuffleState = new ReshuffleState(
+                this.tile.isReshuffleRunning(),
+                this.tile.isReshuffleFailed(),
+                this.tile.isReshuffleCancelled(),
+                this.tile.isReshuffleComplete(),
+                this.tile.isReshuffleExtracting(),
+                this.tile.getReshuffleTotalItems(),
+                this.tile.getReshuffleProcessedItems(),
+                this.tile.getReshuffleProgress(),
+                this.tile.getReshufflePhaseProcessed(),
+                this.tile.getReshufflePhaseTotal(),
+                this.tile.getReshuffleTypeCount(),
+                this.tile.getReshuffleReport());
 
         this.reshuffleRunning = this.tile.isReshuffleRunning();
         this.reshuffleFailed = this.tile.isReshuffleFailed();
@@ -102,6 +217,9 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         this.report = this.tile.getReshuffleReport();
         this.scanData = this.tile.getScanDuplicates();
 
+        this.scanState = new ScanState(encodeScanData(this.tile.getScanDuplicates()));
+        this.healthState = new HealthState(encodeHealthData(this.tile.getHealthCells()));
+
         super.detectAndSendChanges();
     }
 
@@ -109,9 +227,12 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
     public void onUpdate(final String field, final Object oldValue, final Object newValue) {
         if (Minecraft.getMinecraft().currentScreen instanceof GuiStorageReshuffle gui) {
             switch (field) {
+                case "reshuffleState" -> gui.onReportUpdated();
+                case "scanState" -> gui.onScanUpdated();
+                case "healthState" -> gui.onHealthUpdated();
+                case "typeFilters" -> gui.onUpdateTypeFilters();
                 case "report" -> gui.onReportUpdated();
                 case "scanData" -> gui.onScanUpdated();
-                case "typeFilters" -> gui.onUpdateTypeFilters();
             }
         }
     }
@@ -131,11 +252,69 @@ public class ContainerStorageReshuffle extends AEBaseContainer {
         this.tile.scanNetwork();
     }
 
+    public String getHealthData() {
+        return this.healthState.healthData;
+    }
+
+    public List<String> getReportLines() {
+        return this.reshuffleState.getReportLines();
+    }
+
+    public String getScanData() {
+        return this.scanState.scanData;
+    }
+
     public ReshuffleReport getReshuffleReport() {
         return report;
     }
 
     public PartitionScanTask getScanData() {
         return this.scanData;
+    }
+
+    private static String encodeHealthData(final List<CellScanTask.CellRecord> cells) {
+        if (cells == null || cells.isEmpty()) return "";
+        final List<String> lines = new ArrayList<>();
+        for (final CellScanTask.CellRecord cell : cells) {
+            final String cellItemId = cell.cellItemId != null ? cell.cellItemId : "";
+            lines.add(
+                    cellItemId + '\t'
+                            + cell.cellMeta
+                            + '\t'
+                            + cell.cellDisplayName
+                            + '\t'
+                            + cell.x
+                            + '\t'
+                            + cell.y
+                            + '\t'
+                            + cell.z
+                            + '\t'
+                            + cell.dim
+                            + '\t'
+                            + cell.slot
+                            + '\t'
+                            + (long) cell.bytesUsed
+                            + '\t'
+                            + (long) cell.bytesTotal
+                            + '\t'
+                            + (int) cell.typesUsed
+                            + '\t'
+                            + (int) cell.typesTotal
+                            + '\t'
+                            + encodeTopItems(cell.topStoredItems)
+                            + '\t'
+                            + cell.stackTypeId);
+        }
+        return String.join("\n", lines);
+    }
+
+    private static String encodeTopItems(final List<CellScanTask.StoredItemEntry> topItems) {
+        if (topItems == null || topItems.isEmpty()) return "";
+        final StringBuilder sb = new StringBuilder();
+        for (final CellScanTask.StoredItemEntry entry : topItems) {
+            if (sb.length() > 0) sb.append(';');
+            sb.append(entry.displayName.replace(';', ',')).append(';').append(entry.count);
+        }
+        return sb.toString();
     }
 }

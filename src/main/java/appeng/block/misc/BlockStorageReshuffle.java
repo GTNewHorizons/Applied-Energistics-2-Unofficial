@@ -7,6 +7,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -59,9 +60,9 @@ public class BlockStorageReshuffle extends AEBaseTileBlock {
     @SideOnly(Side.CLIENT)
     public void addInformation(final ItemStack stack, final EntityPlayer player, final List<String> lines,
             final boolean advancedItemTooltips) {
-        lines.add(GuiText.ReshuffleTooltipDesc1.getLocal());
-        lines.add(GuiText.ReshuffleTooltipDesc2.getLocal());
-        lines.add(GuiText.ReshuffleTooltipDesc3.getLocal());
+        lines.add(GuiText.ReshuffleTooltipDesc1.getLocal(EnumChatFormatting.GRAY));
+        lines.add(GuiText.ReshuffleTooltipDesc2.getLocal(EnumChatFormatting.GRAY));
+        lines.add(GuiText.ReshuffleTooltipDesc3.getLocal(EnumChatFormatting.GRAY));
     }
 
     @Override

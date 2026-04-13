@@ -90,6 +90,7 @@ public class ReshuffleReport implements IGuiPacketWritable {
     public ReshuffleReport(final AEStackTypeFilter types, final boolean voidProtection) {
         this.types = types;
         this.voidProtection = voidProtection;
+        this.includeSubnets = includeSubnets;
         this.startTime = System.currentTimeMillis();
     }
 
@@ -189,7 +190,8 @@ public class ReshuffleReport implements IGuiPacketWritable {
     public void generateReport(Map<IAEStackType<?>, IMEMonitor<?>> monitors, int processed, int skipped,
             List<IAEStack<?>> skippedStacks) {
         this.endTime = System.currentTimeMillis();
-        this.itemsProcessed = processed;
+        this.itemsExtracted = extracted;
+        this.itemsInjected = injected;
         this.itemsSkipped = skipped;
         this.skippedItemsList.resetStatus();
         if (skippedStacks != null) {

@@ -262,9 +262,21 @@ public enum ButtonToolTips implements Localization {
     ReshuffleVoidProtection,
     ReshuffleVoidProtectionOn,
     ReshuffleVoidProtectionOff,
+    ReshuffleIncludeSubnets,
+    ReshuffleIncludeSubnetsOn,
+    ReshuffleIncludeSubnetsOff,
     OpenReshuffle,
     OpenReshuffleDesc,
-    OpenReshuffleOffDesc;
+    OpenReshuffleOffDesc,
+    ReshuffleTab,
+    ReshuffleTabHint,
+    ScanTab,
+    ScanTabHint,
+    HealthTab,
+    HealthTabHint,
+    CellHealthSortBy,
+    CellHealthSortByFill,
+    CellHealthSortBySize;
 
     ButtonToolTips() {}
 
