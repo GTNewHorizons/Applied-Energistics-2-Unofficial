@@ -78,7 +78,6 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
     private static final int OUTPUT_SLOT_INDEX_CENTER_RIGHT = 9;
     private static final int OUTPUT_SLOT_INDEX_BOTTOM_LEFT = 10;
     private static final int OUTPUT_SLOT_INDEX_BOTTOM_RIGHT = 11;
-    private static final long FLUID_MULTIPLIER = 1000;
 
     private final ConfigManager manager;
 
@@ -103,6 +102,17 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
     private ItemStack currentCell;
     private IMEInventory<?> cachedInventory;
     private int[] moveQueue = { 0, 0, 0, 0, 0, 0 };
+
+    private static final class TransferResult {
+
+        private final long itemsLeftToMove;
+        private final boolean sourceEmpty;
+
+        private TransferResult(final long itemsLeftToMove, final boolean sourceEmpty) {
+            this.itemsLeftToMove = itemsLeftToMove;
+            this.sourceEmpty = sourceEmpty;
+        }
+    }
 
     @Reflected
     public TileIOPort() {
@@ -334,7 +344,8 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
             case 3 -> amountToMove *= 536_870_912;
         }
 
-        long maxMoved = amountToMove;
+        final FullnessMode fullnessMode = (FullnessMode) this.manager.getSetting(Settings.FULLNESS_MODE);
+        final OperationMode operationMode = (OperationMode) this.manager.getSetting(Settings.OPERATION_MODE);
 
         try {
             final IEnergySource energy = this.getProxy().getEnergy();
@@ -344,7 +355,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                     continue;
                 }
 
-                if (this.manager.getSetting(Settings.FULLNESS_MODE) != FullnessMode.HALF && moveQueue[x] == 1) {
+                if (fullnessMode != FullnessMode.HALF && moveQueue[x] == 1) {
                     moveQueue[x] = !this.moveSlot(x) ? 1 : 0;
                 } else {
                     if (amountToMove <= 0) {
@@ -352,36 +363,39 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                     }
 
                     final IMEInventory<?> inv = this.getInv(is);
+                    IMEMonitor<?> monitor = null;
+                    boolean sourceEmptyAfterTransfer = false;
+                    boolean didWork = false;
                     if (inv != null) {
-                        final IMEMonitor<?> monitor = this.getProxy().getStorage().getMEMonitor(inv.getStackType());
+                        monitor = this.getProxy().getStorage().getMEMonitor(inv.getStackType());
                         if (monitor != null) {
-                            if (this.manager.getSetting(Settings.OPERATION_MODE) == OperationMode.EMPTY) {
-                                amountToMove = this.transferContents(
-                                        energy,
-                                        inv,
-                                        monitor,
-                                        amountToMove * inv.getStackType().getAmountPerUnit());
+                            final long amountPerUnit = inv.getStackType().getAmountPerUnit();
+                            final long transferBudget = amountToMove * amountPerUnit;
+                            final TransferResult transferResult;
+                            if (operationMode == OperationMode.EMPTY) {
+                                transferResult = this.transferContents(energy, inv, monitor, transferBudget);
                             } else {
-                                amountToMove = this.transferContents(
-                                        energy,
-                                        monitor,
-                                        inv,
-                                        amountToMove * inv.getStackType().getAmountPerUnit());
+                                transferResult = this.transferContents(energy, monitor, inv, transferBudget);
                             }
+
+                            amountToMove = Platform.ceilDiv(transferResult.itemsLeftToMove, amountPerUnit);
+                            sourceEmptyAfterTransfer = transferResult.sourceEmpty;
+                            didWork = transferResult.itemsLeftToMove != transferBudget;
                         }
                     }
 
                     // If work is done, check if the cell should be moved and try to move it to the output
                     // If the cell failed to move, queue moving the cell before doing any further work on it
-                    if (amountToMove > 0) {
-                        if (this.shouldMove(inv, amountToMove != maxMoved)) {
+                    if (amountToMove > 0
+                            || (operationMode == OperationMode.FILL && fullnessMode == FullnessMode.EMPTY)) {
+                        if (this.shouldMove(inv, sourceEmptyAfterTransfer, didWork, operationMode, fullnessMode)) {
                             moveQueue[x] = !this.moveSlot(x) ? 1 : 0;
                             if (moveQueue[x] == 1) {
                                 return TickRateModulation.IDLE;
                             }
                         } else {
                             // Try moving something else instead
-                            if (this.manager.getSetting(Settings.FULLNESS_MODE) != FullnessMode.HALF) {
+                            if (fullnessMode != FullnessMode.HALF) {
                                 for (int y = x + 1; y < 6; y++) {
                                     if (moveQueue[y] == 1) {
                                         moveQueue[y] = !this.moveSlot(y) ? 1 : 0;
@@ -429,8 +443,8 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         return this.cachedInventory;
     }
 
-    private long transferContents(final IEnergySource energy, final IMEInventory src, final IMEInventory destination,
-            long itemsToMove) {
+    private TransferResult transferContents(final IEnergySource energy, final IMEInventory src,
+            final IMEInventory destination, long itemsToMove) {
         final Iterator<? extends IAEStack<?>> it;
         if (src instanceof IMEMonitor monitor) {
             it = monitor.getAvailableItemsWithPriority(IterationCounter.fetchNewId()).getItems(true).distinct()
@@ -440,13 +454,15 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
         }
 
         boolean didStuff;
+        boolean sourceHasRemainingItems = false;
 
         do {
             didStuff = false;
 
             while (it.hasNext()) {
                 final IAEStack<?> s = it.next();
-                if (s.getStackSize() > 0) {
+                final long availableBeforeExtract = s.getStackSize();
+                if (availableBeforeExtract > 0) {
                     final IAEStack<?> extractStack = s.copy();
                     extractStack.setStackSize(itemsToMove);
                     final IAEStack<?> stack = destination.injectItems(extractStack, Actionable.SIMULATE, this.mySrc);
@@ -470,26 +486,34 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                             if (failed != null) {
                                 possible -= failed.getStackSize();
                                 src.injectItems(failed, Actionable.MODULATE, this.mySrc);
+                                sourceHasRemainingItems = true;
                             }
 
                             if (possible > 0) {
                                 itemsToMove -= possible;
                                 didStuff = true;
+                                if (availableBeforeExtract > possible) {
+                                    sourceHasRemainingItems = true;
+                                }
                             }
 
                             break;
                         }
+                    } else {
+                        sourceHasRemainingItems = true;
                     }
                 }
             }
         } while (itemsToMove > 0 && didStuff);
 
-        return itemsToMove;
+        return new TransferResult(itemsToMove, !sourceHasRemainingItems && !it.hasNext());
     }
 
-    private boolean shouldMove(final IMEInventory<?> inventory, final boolean didWork) {
-        final FullnessMode fm = (FullnessMode) this.manager.getSetting(Settings.FULLNESS_MODE);
-        final OperationMode om = (OperationMode) this.manager.getSetting(Settings.OPERATION_MODE);
+    private boolean shouldMove(final IMEInventory<?> inventory, final boolean sourceEmptyAfterTransfer,
+            final boolean didWork, final OperationMode om, final FullnessMode fm) {
+        if (fm == FullnessMode.EMPTY && om == OperationMode.FILL) {
+            return sourceEmptyAfterTransfer;
+        }
 
         if (inventory != null) {
             return this.matches(fm, om, inventory, didWork);
@@ -517,13 +541,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
             return true;
         }
 
-        final IItemList<? extends IAEStack> myList;
-
-        if (src instanceof IMEMonitor<?>monitor) {
-            myList = monitor.getStorageList();
-        } else {
-            myList = src.getAvailableItems(src.getStackType().createList(), IterationCounter.fetchNewId());
-        }
+        final IItemList<? extends IAEStack> myList = this.getAvailableStacks(src);
 
         if (fm == FullnessMode.EMPTY) {
             // If filling from network and mode is set to "Move on empty", move when network is empty
@@ -534,7 +552,7 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
             }
         }
 
-        final IAEStack test = myList.getFirstItem();
+        final IAEStack<?> test = myList.getFirstItem();
         if (test != null) {
             test.setStackSize(1);
             return src.injectItems(test, Actionable.SIMULATE, this.mySrc) != null;
@@ -543,6 +561,15 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
             return didWork;
         }
         return false;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private IItemList<? extends IAEStack> getAvailableStacks(final IMEInventory inventory) {
+        if (inventory instanceof IMEMonitor<?>monitor) {
+            return monitor.getStorageList();
+        }
+
+        return inventory.getAvailableItems(inventory.getStackType().createList(), IterationCounter.fetchNewId());
     }
 
     /**
