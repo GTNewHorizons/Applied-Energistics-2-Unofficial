@@ -578,7 +578,9 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                 && player instanceof EntityPlayerMP epmp) {
 
             // middle click (pick block) or left click
-            if (mode == 3 || (mode == 0 && clickedButton == 0 && !slot.getHasStack())) {
+            if (mode == 3 || (mode == 0 && clickedButton == 0
+                    && !slot.getHasStack()
+                    && player.inventory.getItemStack() == null)) {
 
                 IMEMonitor<IAEItemStack> monitor = getItemMonitor();
                 if (monitor == null) return null;
