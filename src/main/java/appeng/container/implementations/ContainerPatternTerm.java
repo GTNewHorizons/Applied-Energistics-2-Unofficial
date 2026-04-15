@@ -572,44 +572,48 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
 
     @Override
     public ItemStack slotClick(int slotId, int clickedButton, int mode, EntityPlayer player) {
-        if (mode == 3 && slotId >= 0
-                && slotId < this.inventorySlots.size()
+        if (slotId >= 0 && slotId < this.inventorySlots.size()
                 && this.inventorySlots.get(slotId) instanceof SlotRestrictedInput slot
                 && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
-                && player instanceof EntityPlayerMP epmp) { // middle click (pick block)
-            IMEMonitor<IAEItemStack> monitor = getItemMonitor();
-            if (monitor == null) return null;
+                && player instanceof EntityPlayerMP epmp) {
 
-            IAEItemStack blank = monitor.getAvailableItem(BLANK_PATTERN, fetchNewId());
-            if (blank != null && blank.isCraftable()) {
-                final PrimaryGui pGui = this.createPrimaryGui();
-                final ContainerOpenContext context = this.getOpenContext();
-                if (context != null) {
-                    final TileEntity te = context.getTile();
+            // middle click (pick block) or left click
+            if (mode == 3 || (mode == 0 && clickedButton == 0 && !slot.getHasStack())) {
 
-                    Platform.openGUI(
-                            player,
-                            te,
-                            context.getSide(),
-                            GuiBridge.GUI_CRAFTING_AMOUNT,
-                            this.getTargetSlotIndex());
+                IMEMonitor<IAEItemStack> monitor = getItemMonitor();
+                if (monitor == null) return null;
 
-                    if (player.openContainer instanceof ContainerCraftAmount cca) {
-                        cca.setPrimaryGui(pGui);
-                        cca.setItemToCraft(blank);
-                        cca.setInitialCraftAmount(1);
+                IAEItemStack blank = monitor.getAvailableItem(BLANK_PATTERN, fetchNewId());
+                if (blank != null && blank.isCraftable()) {
+                    final PrimaryGui pGui = this.createPrimaryGui();
+                    final ContainerOpenContext context = this.getOpenContext();
+                    if (context != null) {
+                        final TileEntity te = context.getTile();
 
-                        cca.detectAndSendChanges();
+                        Platform.openGUI(
+                                player,
+                                te,
+                                context.getSide(),
+                                GuiBridge.GUI_CRAFTING_AMOUNT,
+                                this.getTargetSlotIndex());
+
+                        if (player.openContainer instanceof ContainerCraftAmount cca) {
+                            cca.setPrimaryGui(pGui);
+                            cca.setItemToCraft(blank);
+                            cca.setInitialCraftAmount(1);
+
+                            cca.detectAndSendChanges();
+                        }
                     }
+                } else if (player.capabilities.isCreativeMode && !slot.getHasStack()) {
+                    ItemStack blankStack = BLANK_PATTERN.getItemStack();
+                    blankStack.stackSize = blankStack.getMaxStackSize();
+                    player.inventory.setItemStack(blankStack);
+                    this.updateHeld(epmp);
                 }
-            } else if (player.capabilities.isCreativeMode) {
-                ItemStack blankStack = BLANK_PATTERN.getItemStack();
-                blankStack.stackSize = blankStack.getMaxStackSize();
-                player.inventory.setItemStack(blankStack);
-                this.updateHeld(epmp);
-            }
 
-            return null;
+                return null;
+            }
         }
         return super.slotClick(slotId, clickedButton, mode, player);
     }
