@@ -51,6 +51,7 @@ import appeng.container.PrimaryGui;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.interfaces.IVirtualSlotSource;
+import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.IOptionalSlotHost;
 import appeng.container.slot.SlotPatternTerm;
 import appeng.container.slot.SlotRestrictedInput;
@@ -611,6 +612,36 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             return null;
         }
         return super.slotClick(slotId, clickedButton, mode, player);
+    }
+
+    @Override
+    public ItemStack transferStackInSlot(EntityPlayer p, int idx) {
+        if (Platform.isClient()) {
+            return null;
+        }
+
+        final AppEngSlot clickSlot = (AppEngSlot) this.inventorySlots.get(idx); // require AE SLots!
+
+        if (!this.isValidSrcSlotForTransfer(clickSlot)) {
+            return null;
+        }
+
+        // Attempt to insert into the network before inserting into the blank pattern slot.
+        if (clickSlot.isPlayerSide()
+                && AEApi.instance().definitions().materials().blankPattern().isSameAs(clickSlot.getStack())) {
+            ItemStack stackInSlot = clickSlot.getStack();
+            ItemStack leftover = this.shiftStoreItem(stackInSlot);
+            if (leftover == null || leftover.stackSize < stackInSlot.stackSize) {
+                clickSlot.putStack(leftover);
+                this.detectAndSendChanges();
+            }
+
+            if (leftover == null) {
+                return null;
+            }
+        }
+
+        return super.transferStackInSlot(p, idx);
     }
 
     @Override

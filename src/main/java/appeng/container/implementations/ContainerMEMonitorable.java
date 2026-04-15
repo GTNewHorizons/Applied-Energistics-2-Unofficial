@@ -1115,7 +1115,7 @@ public class ContainerMEMonitorable extends AEBaseContainer
         return null;
     }
 
-    private ItemStack shiftStoreItem(final ItemStack input) {
+    protected ItemStack shiftStoreItem(final ItemStack input) {
         IMEMonitor<IAEItemStack> itemMonitor = this.getMonitorWithFilter(ITEM_STACK_TYPE);
         if (this.getPowerSource() == null || itemMonitor == null) {
             return input;
