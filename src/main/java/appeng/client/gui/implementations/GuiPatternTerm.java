@@ -18,11 +18,14 @@ import java.util.List;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
+import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
 import appeng.api.config.ItemSubstitution;
 import appeng.api.config.PatternBeSubstitution;
@@ -39,6 +42,7 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
 import appeng.container.implementations.ContainerPatternTerm;
 import appeng.container.slot.AppEngSlot;
+import appeng.container.slot.SlotRestrictedInput;
 import appeng.core.AELog;
 import appeng.core.localization.ButtonToolTips;
 import appeng.core.localization.GuiColors;
@@ -72,6 +76,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     protected VirtualMEPatternSlot[] craftingSlots;
     protected VirtualMEPatternSlot[] outputSlots;
     private boolean craftingMode;
+    @NotNull
+    private IAEItemStack blankPatternView = ContainerPatternTerm.BLANK_PATTERN.copy().setStackSize(0);
 
     public GuiPatternTerm(final InventoryPlayer inventoryPlayer, final ITerminalHost te,
             final ContainerPatternTerm containerPatternTerm) {
@@ -377,6 +383,45 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         }
 
         return lines;
+    }
+
+    @Override
+    public void postUpdate(List<IAEStack<?>> list) {
+        super.postUpdate(list);
+        for (IAEStack<?> stack : list) {
+            if (stack instanceof IAEItemStack ais
+                    && AEApi.instance().definitions().materials().blankPattern().isSameAs(ais.getItemStack())) {
+                this.blankPatternView = ais;
+            }
+        }
+    }
+
+    @Override
+    public void func_146977_a(Slot s) {
+        if (s instanceof SlotRestrictedInput slot
+                && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
+                && !slot.getHasStack()) {
+            this.blankPatternView.drawInGui(this.mc, slot.xDisplayPosition, slot.yDisplayPosition);
+            this.blankPatternView
+                    .drawOverlayInGui(this.mc, slot.xDisplayPosition, slot.yDisplayPosition, true, true, true, true);
+        } else {
+            super.func_146977_a(s);
+        }
+    }
+
+    @Override
+    public ItemStack getHoveredStack() {
+        Slot s = getSlot(this.currentMouseX, this.currentMouseY);
+        if (s instanceof SlotRestrictedInput slot
+                && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
+                && !slot.getHasStack()) {
+            if (this.blankPatternView.getStackSize() > 0) {
+                return this.blankPatternView.getItemStackForNEI();
+            } else {
+                return this.blankPatternView.getItemStackForNEI(1);
+            }
+        }
+        return super.getHoveredStack();
     }
 
     /**

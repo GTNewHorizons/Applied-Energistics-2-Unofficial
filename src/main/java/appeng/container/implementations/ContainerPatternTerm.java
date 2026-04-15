@@ -33,6 +33,8 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import org.jetbrains.annotations.NotNull;
+
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.MachineSource;
@@ -71,6 +73,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEAppEngInventory, IOptionalSlotHost,
         IContainerCraftingPacket, IVirtualSlotHolder, IVirtualSlotSource {
+
+    @NotNull
+    public static final IAEItemStack BLANK_PATTERN = AEItemStack
+            .create(AEApi.instance().definitions().materials().blankPattern().maybeStack(1).get());
 
     public static final int MULTIPLE_OF_BUTTON_CLICK = 2;
     public static final int MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT = 8;
@@ -285,12 +291,8 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                 }
             } else if (blank == null) {
                 IMEMonitor<IAEItemStack> itemMonitor = this.getItemMonitor();
-                IAEItemStack extracted = Platform.poweredExtraction(
-                        this.getPowerSource(),
-                        itemMonitor,
-                        AEItemStack
-                                .create(AEApi.instance().definitions().materials().blankPattern().maybeStack(1).get()),
-                        this.getActionSource());
+                IAEItemStack extracted = Platform
+                        .poweredExtraction(this.getPowerSource(), itemMonitor, BLANK_PATTERN, this.getActionSource());
                 if (extracted == null || extracted.getStackSize() <= 0) {
                     return;
                 }
@@ -577,8 +579,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
             IMEMonitor<IAEItemStack> monitor = getItemMonitor();
             if (monitor == null) return null;
 
-            ItemStack blankStack = AEApi.instance().definitions().materials().blankPattern().maybeStack(1).get();
-            IAEItemStack blank = monitor.getAvailableItem(AEItemStack.create(blankStack), fetchNewId());
+            IAEItemStack blank = monitor.getAvailableItem(BLANK_PATTERN, fetchNewId());
             if (blank != null && blank.isCraftable()) {
                 final PrimaryGui pGui = this.createPrimaryGui();
                 final ContainerOpenContext context = this.getOpenContext();
@@ -601,6 +602,7 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                     }
                 }
             } else if (player.capabilities.isCreativeMode) {
+                ItemStack blankStack = BLANK_PATTERN.getItemStack();
                 blankStack.stackSize = blankStack.getMaxStackSize();
                 player.inventory.setItemStack(blankStack);
                 this.updateHeld(epmp);
