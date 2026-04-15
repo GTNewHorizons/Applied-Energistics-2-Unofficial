@@ -146,6 +146,7 @@ public enum ButtonToolTips implements Localization {
     RegisterContainerContent,
     ChangeAmount,
     RenameItem,
+    BlankPatternInNetwork,
 
     SchedulingMode,
     SchedulingModeDefault,

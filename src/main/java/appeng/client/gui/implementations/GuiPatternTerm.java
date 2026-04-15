@@ -13,13 +13,16 @@ package appeng.client.gui.implementations;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumChatFormatting;
 
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
@@ -380,6 +383,17 @@ public class GuiPatternTerm extends GuiMEMonitorable {
             if (stackInSlot instanceof IAEItemStack) {
                 lines.add(ButtonToolTips.RenameItem.getLocal());
             }
+        }
+
+        Slot s = getSlot(mouseX, mouseY);
+        if (s instanceof SlotRestrictedInput slot
+                && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
+                && !slot.getHasStack()) {
+            lines.add(ButtonToolTips.BlankPatternInNetwork.getLocal());
+            lines.add(
+                    EnumChatFormatting.GRAY + String.format(
+                            ButtonToolTips.ItemsStored.getLocal(),
+                            NumberFormat.getNumberInstance(Locale.US).format(this.blankPatternView.getStackSize())));
         }
 
         return lines;
