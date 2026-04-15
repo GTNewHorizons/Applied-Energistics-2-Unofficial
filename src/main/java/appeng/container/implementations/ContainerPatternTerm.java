@@ -577,16 +577,27 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                 && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
                 && player instanceof EntityPlayerMP epmp) {
 
-            // middle click (pick block) or left click
-            if (mode == 3 || (mode == 0 && clickedButton == 0
-                    && !slot.getHasStack()
-                    && player.inventory.getItemStack() == null)) {
+            final boolean leftClick = mode == 0 && clickedButton == 0;
+            final boolean rightClick = mode == 0 && clickedButton == 1;
+            final boolean middleClick = mode == 3; // pick block
+            if (!slot.getHasStack() && player.inventory.getItemStack() == null) {
 
                 IMEMonitor<IAEItemStack> monitor = getItemMonitor();
                 if (monitor == null) return null;
 
                 IAEItemStack blank = monitor.getAvailableItem(BLANK_PATTERN, fetchNewId());
-                if (blank != null && blank.isCraftable()) {
+                if (blank != null && blank.getStackSize() > 0 && (leftClick || rightClick)) {
+                    if (this.getPowerSource() == null) return null;
+
+                    if (leftClick) {
+                        this.pickupStoredItems(BLANK_PATTERN.copy(), epmp, monitor);
+                    } else {
+                        this.splitStoredItems(BLANK_PATTERN.copy(), epmp, monitor);
+                    }
+                    return null;
+                }
+
+                if (middleClick && blank != null && blank.isCraftable()) {
                     final PrimaryGui pGui = this.createPrimaryGui();
                     final ContainerOpenContext context = this.getOpenContext();
                     if (context != null) {
@@ -607,14 +618,14 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                             cca.detectAndSendChanges();
                         }
                     }
-                } else if (player.capabilities.isCreativeMode && !slot.getHasStack()) {
+                    return null;
+                } else if (middleClick && player.capabilities.isCreativeMode && !slot.getHasStack()) {
                     ItemStack blankStack = BLANK_PATTERN.getItemStack();
                     blankStack.stackSize = blankStack.getMaxStackSize();
                     player.inventory.setItemStack(blankStack);
                     this.updateHeld(epmp);
+                    return null;
                 }
-
-                return null;
             }
         }
         return super.slotClick(slotId, clickedButton, mode, player);
