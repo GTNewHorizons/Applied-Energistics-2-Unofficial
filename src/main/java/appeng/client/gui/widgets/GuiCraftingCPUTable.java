@@ -196,8 +196,10 @@ public class GuiCraftingCPUTable {
                     parent.drawTexturedModalRect(0, 0, uv_x * 16, uv_y * 16, 16, 16);
                     GL11.glTranslatef(18.0f, 2.0f, 0.0f);
                     String amount = NumberFormat.getInstance().format(craftingStack.getStackSize());
-                    double craftingPercentage = (double) (cpu.getTotalItems() - Math.max(cpu.getRemainingItems(), 0))
-                            / (double) cpu.getTotalItems();
+                    long doneItems = cpu.getTotalItems() - Math.max(cpu.getRemainingItems(), 0);
+                    double craftingProgress = cpu.getTotalItems() <= 0 ? 0.0
+                            : (double) doneItems / (double) cpu.getTotalItems();
+                    craftingProgress = Math.max(0.0, Math.min(1.0, craftingProgress));
                     if (amount.length() > 9) {
                         amount = ReadableNumberConverter.INSTANCE.toWideReadableForm(craftingStack.getStackSize());
                     }
@@ -220,9 +222,9 @@ public class GuiCraftingCPUTable {
                     AEBaseGui.drawRect(
                             x,
                             y + CPU_TABLE_SLOT_HEIGHT - 3,
-                            x + (int) ((CPU_TABLE_SLOT_WIDTH - 1) * craftingPercentage),
+                            x + (int) ((CPU_TABLE_SLOT_WIDTH - 1) * craftingProgress),
                             y + CPU_TABLE_SLOT_HEIGHT - 2,
-                            this.calculateGradientColor(craftingPercentage));
+                            this.calculateGradientColor(craftingProgress));
                 } else {
                     parent.bindTexture("guis/states.png");
 
@@ -278,9 +280,10 @@ public class GuiCraftingCPUTable {
                         .convert(hoveredCpu.getCraftingElapsedTime(), TimeUnit.NANOSECONDS);
                 final String elapsedTimeText = DurationFormatUtils
                         .formatDuration(elapsedInMilliseconds, GuiText.ETAFormat.getLocal());
-                final double craftingPercentage = 100
-                        - (double) (hoveredCpu.getRemainingItems()) / (double) hoveredCpu.getTotalItems() * 100;
-
+                long doneItems = hoveredCpu.getTotalItems() - Math.max(hoveredCpu.getRemainingItems(), 0);
+                double craftingProgress = hoveredCpu.getTotalItems() <= 0 ? 0.0
+                        : (double) doneItems / (double) hoveredCpu.getTotalItems();
+                craftingProgress = Math.max(0.0, Math.min(1.0, craftingProgress));
                 tooltip.append(green);
                 tooltip.append(GuiText.CraftName.getLocal());
                 tooltip.append(reset);
@@ -305,7 +308,7 @@ public class GuiCraftingCPUTable {
                 tooltip.append(NumberFormat.getInstance().format(hoveredCpu.getTotalItems()));
                 tooltip.append(" (");
                 tooltip.append(gold);
-                tooltip.append(String.format("%02.2f%%", craftingPercentage));
+                tooltip.append(String.format("%02.2f%%", craftingProgress * 100.0));
                 tooltip.append(reset);
                 tooltip.append(") ");
                 tooltip.append('\n');
