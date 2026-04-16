@@ -185,6 +185,8 @@ public enum GuiColors implements Localization {
 
     ReshuffleTitle(0x404040),
     ReshuffleStatusIdle(0x404040),
+    ReshuffleStatusBeforeSnapshot(0xDDAA00),
+    ReshuffleStatusAfterSnapshot(0x00AA00),
     ReshuffleStatusExtracting(0xDDAA00),
     ReshuffleStatusInjecting(0x00AA00),
     ReshuffleStatusComplete(0x0055FF),

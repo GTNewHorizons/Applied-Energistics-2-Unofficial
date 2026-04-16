@@ -107,10 +107,6 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
         return java.util.Collections.unmodifiableList(this.priorityInventory);
     }
 
-    public IGrid getGrid() {
-        return this.security.getGrid();
-    }
-
     @Override
     public T injectItems(T input, final Actionable type, final BaseActionSource src) {
         if (this.diveList(this, type)) {

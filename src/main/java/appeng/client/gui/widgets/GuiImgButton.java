@@ -47,7 +47,6 @@ import appeng.api.config.PowerUnits;
 import appeng.api.config.PriorityCardMode;
 import appeng.api.config.RedstoneMode;
 import appeng.api.config.RelativeDirection;
-import appeng.api.config.ReshuffleView;
 import appeng.api.config.SchedulingMode;
 import appeng.api.config.SearchBoxMode;
 import appeng.api.config.Settings;
@@ -923,87 +922,66 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     CPUSortBy.COPROCESSORS,
                     ButtonToolTips.SortBy,
                     ButtonToolTips.NumberOfCoProcessors);
-
             this.registerApp(
-                    8 * 16 + 5,
+                    8 * 16 + 7,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_MODE_PARTITION,
+                    ButtonToolTips.ReshuffleTabScan,
+                    ButtonToolTips.ReshuffleTabScanHint);
+            this.registerApp(
+                    8 * 16 + 8,
                     Settings.ACTIONS,
                     ActionItems.OPEN_RESHUFFLE_ON,
                     ButtonToolTips.OpenReshuffle,
                     ButtonToolTips.OpenReshuffleDesc);
             this.registerApp(
-                    8 * 16 + 5,
+                    8 * 16 + 8,
                     Settings.ACTIONS,
                     ActionItems.OPEN_RESHUFFLE_OFF,
                     ButtonToolTips.OpenReshuffle,
-                    ButtonToolTips.OpenReshuffleNotPresent);
+                    ButtonToolTips.OpenReshuffleOffDesc);
             this.registerApp(
-                    8 * 16 + 5,
-                    Settings.RESHUFFLE_VIEW,
-                    ReshuffleView.RESHUFFLE,
+                    8 * 16 + 8,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_MODE_RESHUFFLE,
                     ButtonToolTips.ReshuffleTab,
                     ButtonToolTips.ReshuffleTabHint);
             this.registerApp(
-                    8 * 16 + 4,
-                    Settings.RESHUFFLE_VIEW,
-                    ReshuffleView.SCAN,
-                    ButtonToolTips.ScanTab,
-                    ButtonToolTips.ScanTabHint);
+                    8 * 16 + 9,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_MODE_LOCATE,
+                    ButtonToolTips.ReshuffleIncludeSubnets,
+                    ButtonToolTips.ReshuffleLocate);
             this.registerApp(
-                    8 * 16 + 7,
-                    Settings.RESHUFFLE_VIEW,
-                    ReshuffleView.HEALTH,
+                    8 * 16 + 10,
+                    Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_MODE_HEALTH,
                     ButtonToolTips.HealthTab,
                     ButtonToolTips.HealthTabHint);
             this.registerApp(
-                    11 * 16 + 6,
-                    Settings.ACTIONS,
-                    ActionItems.VOID_PROTECTION_ON,
-                    ButtonToolTips.ReshuffleVoidProtection,
-                    ButtonToolTips.ReshuffleVoidProtectionOn);
-            this.registerApp(
-                    12 * 16 + 6,
-                    Settings.ACTIONS,
-                    ActionItems.VOID_PROTECTION_OFF,
-                    ButtonToolTips.ReshuffleVoidProtection,
-                    ButtonToolTips.ReshuffleVoidProtectionOff);
-            this.registerApp(
-                    11 * 16 + 7,
-                    Settings.ACTIONS,
-                    ActionItems.INCLUDE_SUBNETS_ON,
+                    8 * 16 + 11,
+                    Settings.INCLUDE_SUBNETS,
+                    YesNo.YES,
                     ButtonToolTips.ReshuffleIncludeSubnets,
                     ButtonToolTips.ReshuffleIncludeSubnetsOn);
             this.registerApp(
-                    12 * 16 + 7,
-                    Settings.ACTIONS,
-                    ActionItems.INCLUDE_SUBNETS_OFF,
+                    8 * 16 + 11,
+                    Settings.INCLUDE_SUBNETS,
+                    YesNo.NO,
                     ButtonToolTips.ReshuffleIncludeSubnets,
                     ButtonToolTips.ReshuffleIncludeSubnetsOff);
             this.registerApp(
-                    74,
+                    4 * 16 + 13,
                     Settings.CELL_HEALTH_SORT,
                     HealthSortOrder.FILL_PCT,
                     ButtonToolTips.CellHealthSortBy,
                     ButtonToolTips.CellHealthSortByFill);
             this.registerApp(
-                    67,
+                    4 * 16 + 3,
                     Settings.CELL_HEALTH_SORT,
                     HealthSortOrder.BYTES_TOTAL,
                     ButtonToolTips.CellHealthSortBy,
                     ButtonToolTips.CellHealthSortBySize);
-            this.registerApp(
-                    48,
-                    Settings.CELL_HEALTH_SORT_DIR,
-                    SortDir.ASCENDING,
-                    ButtonToolTips.SortOrder,
-                    ButtonToolTips.ToggleSortDirection);
-            this.registerApp(
-                    49,
-                    Settings.CELL_HEALTH_SORT_DIR,
-                    SortDir.DESCENDING,
-                    ButtonToolTips.SortOrder,
-                    ButtonToolTips.ToggleSortDirection);
-        }
-
         }
     }
 

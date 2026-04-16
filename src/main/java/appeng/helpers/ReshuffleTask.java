@@ -1,397 +1,239 @@
 package appeng.helpers;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import appeng.api.config.Actionable;
+import appeng.api.config.ReshufflePhase;
 import appeng.api.networking.security.BaseActionSource;
-import appeng.api.storage.ICellInventoryHandler;
+import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
-import appeng.core.AELog;
+import appeng.me.cache.NetworkMonitor;
+import appeng.me.storage.NetworkInventoryHandler;
 import appeng.util.AEStackTypeFilter;
+import appeng.util.IterationCounter;
+import appeng.util.item.IAEStackList;
 
 public class ReshuffleTask {
 
-    private static final int DEFAULT_BATCH_SIZE = 100;
-    public static final long TICK_BUDGET_NS = 8_000_000L;
+    // slowdown because working too fast, nobody gonna believe that real working
+    public static final long operations_per_tick = 12;
 
-    private final Map<IAEStackType<?>, IMEMonitor<?>> monitors;
-    private final BaseActionSource actionSource;
+    private final BaseActionSource src;
+    private final IStorageGrid sg;
+
     private final AEStackTypeFilter typeFilters;
-    private final boolean voidProtection;
     private final boolean includeSubnets;
 
-    private final List<IAEStack<?>> extractionQueue = new ArrayList<>();
-    private final List<IAEStack<?>> injectionQueue = new ArrayList<>();
-    private final List<IAEStack<?>> skippedItemsList = new ArrayList<>();
+    private ReshufflePhase phase = ReshufflePhase.IDLE;
 
-    private enum Phase {
-        EXTRACT,
-        INJECT,
-        DONE
-    }
+    private int extractedTypes, injectedTypes = 0;
+    private long startTime, endTime;
+    private double extractedItems, injectedItems = 0;
 
-    private Phase phase = Phase.EXTRACT;
+    private final IItemList<IAEStack<?>> extracted = new IAEStackList();
+    private final IItemList<IAEStack<?>> cantExtract = new IAEStackList();
+    private final IItemList<IAEStack<?>> cantInject;
 
-    private int extractionIndex = 0;
-    private int injectionIndex = 0;
-    private int totalItems = 0;
-    private int processedItems = 0;
-    private int skippedItems = 0;
-    private int extractedItems = 0;
-    private int typeCount = 0;
-    private boolean cancelled = false;
-    private boolean completed = false;
-    private boolean phaseJustChanged = false;
-    private boolean voidProtectionTriggered = false;
+    private final IItemList<IAEStack<?>> beforeSnapshot = new IAEStackList();
+    private final IItemList<IAEStack<?>> afterSnapshot = new IAEStackList();
+    private final IItemList<IAEStack<?>> stackLookup = new IAEStackList();
+    private double beforeItems, afterItems = 0;
 
-    private ReshuffleReport report = null;
+    private final HashMap<IAEStackType<?>, Iterator> tempIterator = new HashMap<>();
+    private Iterator<IAEStack<?>> injectIterator = null;
 
-    public ReshuffleTask(Map<IAEStackType<?>, IMEMonitor<?>> monitors, BaseActionSource actionSource,
-            AEStackTypeFilter filters, boolean voidProtection) {
-            EntityPlayer player, Set<IAEStackType<?>> allowedTypes, boolean voidProtection, boolean includeSubnets) {
-        this.monitors = new IdentityHashMap<>(monitors);
-        this.actionSource = actionSource;
-        this.typeFilters = filters;
-        this.voidProtection = voidProtection;
+    public ReshuffleTask(AEStackTypeFilter typeFilters, IStorageGrid sg, IItemList<IAEStack<?>> cantInject,
+            BaseActionSource src, boolean includeSubnets) {
+        this.src = src;
+        this.sg = sg;
+        this.cantInject = cantInject;
+        this.typeFilters = typeFilters;
         this.includeSubnets = includeSubnets;
-        this.report = new ReshuffleReport(this.allowedTypes, voidProtection, includeSubnets);
+    }
+
+    public void initialize() {
+        this.startTime = System.currentTimeMillis();
+        this.phase = ReshufflePhase.BEFORE_SNAPSHOT;
+    }
+
+    private boolean snapshotBefore() {
+        return this.handlerProcessor(this.beforeSnapshot, false, true);
+    }
+
+    private boolean snapshotAfter() {
+        return this.handlerProcessor(this.afterSnapshot, false, false);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private List<IAEStack<?>> collectLocalStacks(IAEStackType<?> type, IMEMonitor<?> monitor) {
-        List<IAEStack<?>> result = new ArrayList<>();
+    private boolean handlerProcessor(final IItemList<IAEStack<?>> target, final boolean extract, final boolean before) {
+        int operations = 0;
+        for (IAEStackType<?> type : this.typeFilters.getEnabledTypes()) {
+            if (!(this.sg.getMEMonitor(type) instanceof NetworkMonitor<?>nm)) continue;
+            if (!(nm.getHandler() instanceof NetworkInventoryHandler<?>nih)) continue;
 
-        if (!includeSubnets && monitor instanceof NetworkMonitor<?>nm
-                && nm.getHandler() instanceof NetworkInventoryHandler<?>nih) {
-            final IItemList consolidatedList = type.createList();
-            for (IMEInventoryHandler<?> cellHandler : nih.getHandlers()) {
-                if (cellHandler.getExternalNetworkInventory() != null) continue;
-                cellHandler.getAvailableItems(consolidatedList, IterationCounter.fetchNewId());
+            if (!this.tempIterator.containsKey(type)) {
+                List<WeakReference<IMEInventoryHandler<?>>> weakList = new ArrayList<>();
+                nih.getHandlers().forEach(h -> weakList.add(new WeakReference<>(h)));
+                this.tempIterator.put(type, weakList.iterator());
             }
-            for (Object obj : consolidatedList) {
-                IAEStack<?> stack = (IAEStack<?>) obj;
-                if (stack != null && stack.getStackSize() > 0) {
-                    result.add(stack.copy());
+
+            final Iterator<WeakReference<IMEInventoryHandler>> i = this.tempIterator.get(type);
+
+            while (i.hasNext()) {
+                final IMEInventoryHandler cellHandler = i.next().get();
+
+                if (cellHandler == null || cellHandler.isAutoCraftingInventory()
+                        || (!this.includeSubnets && cellHandler.getExternalNetworkInventory() != null)) {
+                    i.remove();
+                    continue;
                 }
+
+                cellHandler.getAvailableItems(type.createList(), IterationCounter.fetchNewId()).forEach(o -> {
+                    if (o instanceof IAEStack<?>aes) {
+                        if (extract) {
+                            final IAEStack<?> extracted = cellHandler.extractItems(aes, Actionable.MODULATE, this.src);
+
+                            if (extracted == null) {
+                                this.cantExtract.add(aes);
+                            } else if (extracted.getStackSize() != aes.getStackSize()) {
+                                aes.decStackSize(extracted.getStackSize());
+                                this.cantExtract.add(aes);
+                            } else {
+                                this.extractedItems += extracted.getStackSize();
+                                target.add(extracted);
+                            }
+                        } else {
+                            this.stackLookup.add(aes);
+                            target.add(aes);
+                            if (before) this.beforeItems += aes.getStackSize();
+                            else this.afterItems += aes.getStackSize();
+                        }
+                    }
+                });
+
+                i.remove();
+
+                operations++;
+
+                if (operations == operations_per_tick) return false;
             }
-            return result;
         }
 
-        IItemList<?> storageList = monitor.getStorageList();
-        for (Object obj : storageList) {
-            IAEStack<?> stack = (IAEStack<?>) obj;
-            if (stack != null && stack.getStackSize() > 0) {
-                result.add(stack.copy());
-            }
-        }
-        return result;
+        return true;
     }
 
-    public int initialize() {
-        extractionQueue.clear();
-        injectionQueue.clear();
-        skippedItemsList.clear();
-        extractionIndex = 0;
-        injectionIndex = 0;
-        processedItems = 0;
-        skippedItems = 0;
-        phase = Phase.EXTRACT;
-
-        report.snapshotBefore(monitors, allowedTypes);
-
-        for (Entry<IAEStackType<?>, IMEMonitor<?>> entry : this.monitors.entrySet()) {
-            IMEMonitor<?> monitor = entry.getValue();
-            if (monitor == null) continue;
-            extractionQueue.addAll(collectLocalStacks(type, monitor));
-        }
-
-        extractionQueue.sort(Comparator.comparingLong(s -> -s.getStackSize()));
-
-        totalItems = extractionQueue.size();
-        typeCount = totalItems;
-        return totalItems;
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void processNextBatch() {
-        if (cancelled || completed) return;
-        phaseJustChanged = false;
+        switch (this.phase) {
+            case BEFORE_SNAPSHOT -> {
+                if (this.snapshotBefore()) this.phase = ReshufflePhase.EXTRACTION;
+            }
 
-        int processed = 0;
+            case EXTRACTION -> {
+                if (this.handlerProcessor(this.extracted, true, false)) {
+                    this.tempIterator.clear();
+                    this.extractedTypes = this.extracted.size();
+                    this.phase = ReshufflePhase.INJECTION;
+                }
+            }
 
-        if (phase == Phase.EXTRACT) {
-            while (extractionIndex < extractionQueue.size() && processed < DEFAULT_BATCH_SIZE) {
-                final IAEStack<?> snapshot = extractionQueue.get(extractionIndex);
-                final IAEStackType type = snapshot.getStackType();
-                final IMEMonitor monitor = monitors.get(type);
+            case INJECTION -> {
+                int operations = 0;
+                if (this.injectIterator == null) this.injectIterator = this.extracted.iterator();
 
-                if (monitor != null && allowedTypes.contains(type)) {
-                    try {
-                        final IAEStack<?> toExtract = snapshot.copy();
-                        toExtract.setStackSize(Long.MAX_VALUE);
-                        final IAEStack<?> extracted = monitor
-                                .extractItems(toExtract, Actionable.MODULATE, actionSource);
-                        if (extracted != null && extracted.getStackSize() > 0) {
-                            injectionQueue.add(extracted);
-                        }
-                    } catch (Exception e) {
-                        AELog.warn("Reshuffle [extract]: skipped %s – %s", snapshot, e.getMessage());
-                        skippedItems++;
-                        skippedItemsList.add(snapshot.copy());
+                while (this.injectIterator.hasNext()) {
+                    final IAEStack<?> aes = this.injectIterator.next();
+                    final IMEMonitor monitor = this.sg.getMEMonitor(aes.getStackType());
+
+                    if (monitor == null) {
+                        this.cantInject.add(aes);
+                        this.injectIterator.remove();
                     }
+
+                    final IAEStack<?> res = monitor.injectItems(aes, Actionable.MODULATE, this.src);
+
+                    if (res != null) {
+                        this.cantInject.add(res);
+                        this.injectedItems -= res.getStackSize();
+                        if (res.getStackSize() == aes.getStackSize()) this.injectedTypes -= 1;
+                    }
+
+                    this.injectedTypes += 1;
+                    this.injectedItems += aes.getStackSize();
+                    this.injectIterator.remove();
+
+                    operations++;
+
+                    if (operations == operations_per_tick) return;
                 }
 
-                extractionIndex++;
-                processedItems++;
-                processed++;
+                this.injectIterator = null;
+                this.phase = ReshufflePhase.AFTER_SNAPSHOT;
             }
 
-            if (extractionIndex >= extractionQueue.size()) {
-                sortInjectionQueue();
-                extractedItems = processedItems;
-                totalItems = processedItems + injectionQueue.size();
-                phase = Phase.INJECT;
-                phaseJustChanged = true;
-            }
-            return;
-        }
-
-        if (phase == Phase.INJECT) {
-            while (injectionIndex < injectionQueue.size() && processed < DEFAULT_BATCH_SIZE) {
-                final IAEStack<?> toInject = injectionQueue.get(injectionIndex);
-                final IAEStackType type = toInject.getStackType();
-                final IMEMonitor monitor = monitors.get(type);
-
-                if (monitor != null) {
-                    try {
-                        final IAEStack<?> leftover = monitor.injectItems(toInject, Actionable.MODULATE, actionSource);
-                        if (leftover != null && leftover.getStackSize() > 0) {
-                            // Retry once in case of transient capacity changes
-                            final IAEStack<?> retryLeftover = monitor
-                                    .injectItems(leftover, Actionable.MODULATE, actionSource);
-                            if (retryLeftover != null && retryLeftover.getStackSize() > 0) {
-                                if (voidProtection) {
-                                    // Void protection: cancel and return all remaining items
-                                    AELog.warn(
-                                            "Reshuffle [inject]: void protection triggered – %d of %s could not be reinjected",
-                                            retryLeftover.getStackSize(),
-                                            toInject);
-                                    skippedItemsList.add(retryLeftover.copy());
-                                    injectionIndex++;
-                                    voidProtectionTriggered = true;
-                                    cancelled = true;
-                                    returnPendingItems();
-                                    finalizeReport();
-                                    return;
-                                }
-                                AELog.warn(
-                                        "Reshuffle [inject]: lost %d of %s (could not reinject after retry)",
-                                        retryLeftover.getStackSize(),
-                                        toInject);
-                                skippedItems++;
-                                skippedItemsList.add(retryLeftover.copy());
-                            }
-                        }
-                    } catch (Exception e) {
-                        AELog.warn("Reshuffle [inject]: skipped %s – %s", toInject, e.getMessage());
-                        if (voidProtection) {
-                            // Void protection: try to inject, then cancel
-                            try {
-                                monitor.injectItems(toInject, Actionable.MODULATE, actionSource);
-                            } catch (Exception ignored) {}
-                            injectionIndex++;
-                            voidProtectionTriggered = true;
-                            cancelled = true;
-                            returnPendingItems();
-                            finalizeReport();
-                            return;
-                        }
-                        try {
-                            final IAEStack<?> leftover = monitor
-                                    .injectItems(toInject, Actionable.MODULATE, actionSource);
-                            if (leftover != null && leftover.getStackSize() > 0) {
-                                skippedItems++;
-                                skippedItemsList.add(leftover.copy());
-                            }
-                        } catch (Exception ignored) {
-                            skippedItems++;
-                            skippedItemsList.add(toInject.copy());
-                        }
-                    }
-                }
-
-                injectionIndex++;
-                processedItems++;
-                processed++;
-            }
-
-            if (injectionIndex >= injectionQueue.size()) {
-                completed = true;
-                phase = Phase.DONE;
-                finalizeReport();
+            case AFTER_SNAPSHOT -> {
+                if (this.snapshotAfter()) finalizeReport();
             }
         }
     }
 
     public void cancel() {
-        if (!completed && !cancelled) {
-            cancelled = true;
-            returnPendingItems();
-        }
-    }
-
-    private void sortInjectionQueue() {
-        injectionQueue.sort((a, b) -> {
-            final boolean aPrio = hasPrioritizedHome(a);
-            final boolean bPrio = hasPrioritizedHome(b);
-            if (aPrio != bPrio) return aPrio ? -1 : 1;
-            return Long.compare(b.getStackSize(), a.getStackSize());
-        });
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private boolean hasPrioritizedHome(IAEStack<?> stack) {
-        final IAEStackType type = stack.getStackType();
-        final IMEMonitor monitor = monitors.get(type);
-        if (!(monitor instanceof NetworkMonitor<?>nm)) return false;
-        if (!(nm.getHandler() instanceof NetworkInventoryHandler<?>nih)) return false;
-        final IAEStack probe = stack.copy();
-        probe.setStackSize(1);
-        for (IMEInventoryHandler handler : nih.getHandlers()) {
-            if (!includeSubnets && handler.getExternalNetworkInventory() != null) continue;
-            if (handler.isPrioritized(probe)) return true;
-        }
-        return false;
+        this.phase = ReshufflePhase.CANCEL;
+        returnPendingItems();
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void returnPendingItems() {
-        final List<IAEStack<?>> toReturn = phase == Phase.INJECT
-                ? injectionQueue.subList(injectionIndex, injectionQueue.size())
-                : new ArrayList<>(injectionQueue);
+        final Iterator<IAEStack<?>> i = this.extracted.iterator();
+        while (i.hasNext()) {
+            final IAEStack<?> aes = i.next();
+            final IMEMonitor monitor = this.sg.getMEMonitor(aes.getStackType());
 
-        for (IAEStack<?> stack : toReturn) {
-            final IAEStackType type = stack.getStackType();
-            final IMEMonitor monitor = monitors.get(type);
             if (monitor != null) {
-                try {
-                    monitor.injectItems(stack, Actionable.MODULATE, actionSource);
-                } catch (Exception e) {
-                    AELog.error(e, "Reshuffle [cancel]: failed to return " + stack);
-                }
+                final IAEStack<?> res = monitor.injectItems(aes, Actionable.MODULATE, this.src);
+                if (res != null) this.cantInject.add(res);
+
+                i.remove();
             }
         }
     }
 
     private void finalizeReport() {
-        if (player instanceof EntityPlayerMP) {
-            final int injectedItems = processedItems - extractedItems;
-            final Set<String> stickyPrioritizedKeys = collectStickyPrioritizedKeys();
-            report.generateReport(
-                    monitors,
-                    allowedTypes,
-                    extractedItems,
-                    injectedItems,
-                    skippedItems,
-                    skippedItemsList,
-                    report.buildKeySet(extractionQueue),
-                    stickyPrioritizedKeys);
-        }
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private Set<String> collectStickyPrioritizedKeys() {
-        final Set<String> keys = new HashSet<>();
-        for (IAEStackType<?> type : monitors.keySet()) {
-            IMEMonitor<?> monitor = monitors.get(type);
-            if (!(monitor instanceof NetworkMonitor<?>nm)) continue;
-            if (!(nm.getHandler() instanceof NetworkInventoryHandler<?>nih)) continue;
-
-            final List<IMEInventoryHandler> singularityHandlers = new ArrayList<>();
-            for (IMEInventoryHandler handler : nih.getHandlers()) {
-                if (!includeSubnets && handler.getExternalNetworkInventory() != null) continue;
-                if (handler instanceof ICellInventoryHandler<?>cellHandler) {
-                    try {
-                        if (cellHandler.getCellInv() != null && cellHandler.getCellInv().getTotalItemTypes() == 1) {
-                            singularityHandlers.add(handler);
-                        }
-                    } catch (Exception ignored) {}
-                }
-            }
-
-            if (singularityHandlers.isEmpty()) continue;
-
-            final IItemList<?> storageList = monitor.getStorageList();
-            for (Object obj : storageList) {
-                if (!(obj instanceof IAEStack<?>stack) || stack.getStackSize() <= 0) continue;
-                final IAEStack probe = stack.copy();
-                probe.setStackSize(1);
-                for (IMEInventoryHandler handler : singularityHandlers) {
-                    if (handler.isPrioritized(probe)) {
-                        keys.add(report.getStackKey(stack));
-                        break;
-                    }
-                }
-            }
-        }
-        return keys;
-    }
-
-    public int getProgressPercent() {
-        final int extTotal = extractionQueue.size();
-        if (extTotal == 0) return 0;
-        if (phase == Phase.EXTRACT) return (extractionIndex * 50) / extTotal;
-        if (phase == Phase.DONE) return 100;
-        final int injTotal = injectionQueue.size();
-        if (injTotal == 0) return 100;
-        return 50 + (injectionIndex * 50) / injTotal;
-    }
-
-    public boolean isRunning() {
-        return !completed && !cancelled && totalItems > 0;
-    }
-
-    public boolean isVoidProtectionTriggered() {
-        return voidProtectionTriggered;
-    }
-
-    public boolean hasPhaseJustChanged() {
-        return phaseJustChanged;
-    }
-
-    public boolean isExtracting() {
-        return phase == Phase.EXTRACT;
-    }
-
-    public int getTotalItems() {
-        return totalItems;
-    }
-
-    public int getProcessedItems() {
-        return processedItems;
-    }
-
-    public int getPhaseTotal() {
-        return phase == Phase.EXTRACT ? extractionQueue.size() : phase == Phase.INJECT ? injectionQueue.size() : 0;
-    }
-
-    public int getPhaseProcessed() {
-        return phase == Phase.EXTRACT ? extractionIndex : phase == Phase.INJECT ? injectionIndex : 0;
-    }
-
-    public int getTypeCount() {
-        return typeCount;
+        this.phase = ReshufflePhase.DONE;
+        this.snapshotAfter();
+        this.endTime = System.currentTimeMillis();
     }
 
     public ReshuffleReport getReport() {
-        return this.report;
+        return new ReshuffleReport(
+                this.typeFilters,
+                this.includeSubnets,
+                this.phase,
+                this.extractedTypes,
+                this.injectedTypes,
+                this.startTime,
+                this.endTime,
+                this.extractedItems,
+                this.injectedItems,
+                this.cantExtract,
+                this.cantInject,
+                this.beforeSnapshot,
+                this.afterSnapshot,
+                this.stackLookup,
+                this.beforeItems,
+                this.afterItems);
+    }
+
+    public boolean isRunning() {
+        return this.phase == ReshufflePhase.EXTRACTION || this.phase == ReshufflePhase.INJECTION
+                || this.phase == ReshufflePhase.AFTER_SNAPSHOT
+                || this.phase == ReshufflePhase.BEFORE_SNAPSHOT;
     }
 }

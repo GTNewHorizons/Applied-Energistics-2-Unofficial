@@ -259,9 +259,6 @@ public enum ButtonToolTips implements Localization {
     NumberOfStorageMemory,
     NumberOfCoProcessors,
 
-    ReshuffleVoidProtection,
-    ReshuffleVoidProtectionOn,
-    ReshuffleVoidProtectionOff,
     ReshuffleIncludeSubnets,
     ReshuffleIncludeSubnetsOn,
     ReshuffleIncludeSubnetsOff,
@@ -274,9 +271,13 @@ public enum ButtonToolTips implements Localization {
     ScanTabHint,
     HealthTab,
     HealthTabHint,
+    ReshuffleLocate,
     CellHealthSortBy,
     CellHealthSortByFill,
-    CellHealthSortBySize;
+    CellHealthSortBySize,
+    ReshuffleTabScan,
+    ReshuffleTabReshuffleHint,
+    ReshuffleTabScanHint;
 
     ButtonToolTips() {}
 

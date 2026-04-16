@@ -92,15 +92,9 @@ public enum Settings {
 
     PAUSE_WHEN_HOLDING_SHIFT(EnumSet.of(YesNo.YES, YesNo.NO)),
 
-    VOID_PROTECTION(EnumSet.of(YesNo.YES, YesNo.NO)),
-
-    RESHUFFLE_VIEW(EnumSet.allOf(ReshuffleView.class)),
-
     INCLUDE_SUBNETS(EnumSet.of(YesNo.YES, YesNo.NO)),
 
-    CELL_HEALTH_SORT(EnumSet.allOf(HealthSortOrder.class)),
-
-    CELL_HEALTH_SORT_DIR(EnumSet.allOf(SortDir.class));
+    CELL_HEALTH_SORT(EnumSet.allOf(HealthSortOrder.class));
 
     private final EnumSet<? extends Enum<?>> values;
 

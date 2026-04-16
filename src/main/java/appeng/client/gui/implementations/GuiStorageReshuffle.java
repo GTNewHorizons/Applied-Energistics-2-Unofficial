@@ -1,8 +1,11 @@
 package appeng.client.gui.implementations;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -13,54 +16,46 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.ResourceLocation;
 
-import org.lwjgl.input.Keyboard;
+import org.jetbrains.annotations.NotNull;
+import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import appeng.api.config.ActionItems;
 import appeng.api.config.HealthSortOrder;
-import appeng.api.config.ReshuffleView;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
-import appeng.api.config.SortOrder;
-import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
 import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
+import appeng.api.storage.data.IItemList;
+import appeng.api.util.IConfigManager;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
-import appeng.client.gui.widgets.GuiToggleButton;
-import appeng.client.gui.widgets.ISortSource;
 import appeng.client.gui.widgets.TypeToggleButton;
-import appeng.client.me.ItemRepo;
 import appeng.client.render.highlighter.BlockPosHighlighter;
-import appeng.client.texture.ExtraBlockTextures;
 import appeng.container.implementations.ContainerStorageReshuffle;
-import appeng.container.implementations.ReshuffleState;
 import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
-import appeng.helpers.PartitionScanTask;
-import appeng.helpers.PartitionScanTask.PartitionRecord;
 import appeng.helpers.ReshuffleReport;
 import appeng.helpers.ReshuffleReport.ItemChange;
+import appeng.helpers.ScanTask;
+import appeng.helpers.ScanTask.ScanRecord;
 import appeng.tile.misc.TileStorageReshuffle;
-import appeng.util.ReadableNumberConverter;
+import appeng.util.IConfigManagerHost;
+import appeng.util.Platform;
 
-public class GuiStorageReshuffle extends AEBaseGui {
+public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost {
 
     private static final int BOX_TOP = 38;
     private static final int BOX_HEIGHT = 78;
@@ -70,67 +65,40 @@ public class GuiStorageReshuffle extends AEBaseGui {
     private static final int PROGRESS_Y = 122;
     private static final int BOTTOM_Y = 137;
     private static final float TEXT_SCALE = 0.65f;
-    private static final int LOCATE_ICON_INDEX = 8 * 16 + 6;
+
     private static final int SCAN_XO = 9;
-    private static final int SCAN_YO = 38;
+    private static final int SCAN_YO = 39;
+    private static final int SCAN_ROW_W = 160;
     private static final int SCAN_ROW_H = 22;
     private static final int SCAN_ROWS = 4;
-    private static final int SCAN_ROW_W = 159;
-    private static final int LOCATE_BG_SIZE = 25;
+    private static final int LOCATE_BG_SIZE = 16;
+    private static final int LOCATE_X = SCAN_XO + SCAN_ROW_W - LOCATE_BG_SIZE - 3;
+    private static final int LOCATE_Y_OFF = 3;
+
+    private static final int SCROLL_SIZE = BOX_HEIGHT + 10;
+    private static final int SCROLL_SCAN_SIZE = SCROLL_SIZE + 3;
+    private static final int SCROLL_TOP = BOX_TOP + 1;
 
     private final ContainerStorageReshuffle container;
     private final Map<TypeToggleButton, IAEStackType<?>> typeToggleButtons = new IdentityHashMap<>();
+    private final IConfigManager configSrc;
 
     private final GuiScrollbar reportScrollbar = new GuiScrollbar();
     private final GuiScrollbar scanScrollbar = new GuiScrollbar();
     private final GuiScrollbar healthScrollbar = new GuiScrollbar();
 
-    private static final class HealthEntry {
+    private final List<ScanRecord> scanRecords = new ArrayList<>();
 
-        final String cellItemId;
-        final int cellMeta;
-        final String cellName;
-        final int x, y, z, dim, slot;
-        final long bytesUsed, bytesTotal;
-        final int typesUsed, typesTotal;
-        final List<String[]> topItems; // each entry is [name, count]
-        final String stackTypeId;
-
-        HealthEntry(String id, int meta, String name, int x, int y, int z, int dim, int slot, long bu, long bt, int tu,
-                int tt, List<String[]> topItems, String stackTypeId) {
-            this.cellItemId = id;
-            this.cellMeta = meta;
-            this.cellName = name;
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.dim = dim;
-            this.slot = slot;
-            this.bytesUsed = bu;
-            this.bytesTotal = bt;
-            this.typesUsed = tu;
-            this.typesTotal = tt;
-            this.topItems = topItems;
-            this.stackTypeId = stackTypeId;
-        }
-
-        double fillPct() {
-            return bytesTotal > 0 ? (bytesUsed * 100.0 / bytesTotal) : 0.0;
-        }
-    }
-
-    private List<HealthEntry> healthEntries = new ArrayList<>();
-
-    private GuiImgButton voidProtectionButton;
-    private GuiImgButton includeSubnetsButton;
     private GuiImgButton reshuffleTab;
     private GuiImgButton scanModeButton;
     private GuiImgButton healthModeButton;
+    private GuiImgButton locateButton;
+    private GuiImgButton includeSubnetsButton;
     private GuiImgButton healthSortButton;
     private GuiImgButton healthSortDirButton;
+
     private GuiButton startCancelButton;
     private GuiButton scanButton;
-    private GuiTabButton locateButton;
 
     private List<String> reportLines = new ArrayList<>();
     private int hoveredRow = -1;
@@ -140,8 +108,11 @@ public class GuiStorageReshuffle extends AEBaseGui {
     public GuiStorageReshuffle(final InventoryPlayer inventoryPlayer, final TileStorageReshuffle te) {
         super(new ContainerStorageReshuffle(inventoryPlayer, te));
         this.container = (ContainerStorageReshuffle) this.inventorySlots;
+        this.container.setGui(this);
         this.xSize = 195;
         this.ySize = 177;
+
+        this.configSrc = this.container.getConfigManager();
     }
 
     @Override
@@ -153,47 +124,32 @@ public class GuiStorageReshuffle extends AEBaseGui {
 
         initTypeToggleButtons(leftCol, this.guiTop + 8);
 
-        this.voidProtectionButton = new GuiImgButton(
-                leftCol - 18,
-                this.guiTop + 8,
-                Settings.ACTIONS,
-                ActionItems.VOID_PROTECTION_ON);
-        this.buttonList.add(this.voidProtectionButton);
-
         this.includeSubnetsButton = new GuiImgButton(
                 leftCol - 18,
                 this.guiTop + 28,
-                Settings.ACTIONS,
-                ActionItems.INCLUDE_SUBNETS_ON);
+                Settings.INCLUDE_SUBNETS,
+                YesNo.YES);
         this.buttonList.add(this.includeSubnetsButton);
 
         this.reshuffleTab = new GuiImgButton(
                 rightTabX,
                 this.guiTop + 8,
-                8 * 16 + 9,
-                8 * 16 + 9,
-                GuiText.ReshuffleTabReshuffle.getUnlocalized(),
-                GuiText.ReshuffleTabReshuffleHint.getUnlocalized());
-                Settings.RESHUFFLE_VIEW,
-                ReshuffleView.RESHUFFLE);
+                Settings.ACTIONS,
+                ActionItems.RESHUFFLE_MODE_RESHUFFLE);
         this.buttonList.add(this.reshuffleTab);
 
         this.scanModeButton = new GuiImgButton(
                 rightTabX,
                 this.guiTop + 28,
-                8 * 16 + 8,
-                8 * 16 + 8,
-                GuiText.ReshuffleTabScan.getUnlocalized(),
-                GuiText.ReshuffleTabScanHint.getUnlocalized());
-                Settings.RESHUFFLE_VIEW,
-                ReshuffleView.SCAN);
+                Settings.ACTIONS,
+                ActionItems.RESHUFFLE_MODE_PARTITION);
         this.buttonList.add(this.scanModeButton);
 
         this.healthModeButton = new GuiImgButton(
                 rightTabX,
                 this.guiTop + 48,
-                Settings.RESHUFFLE_VIEW,
-                ReshuffleView.HEALTH);
+                Settings.ACTIONS,
+                ActionItems.RESHUFFLE_MODE_HEALTH);
         this.buttonList.add(this.healthModeButton);
 
         final int sortBtnY = this.guiTop + SCAN_YO - 20;
@@ -207,8 +163,8 @@ public class GuiStorageReshuffle extends AEBaseGui {
         this.healthSortDirButton = new GuiImgButton(
                 this.guiLeft + SCAN_XO + SCAN_ROW_W - 18,
                 sortBtnY,
-                Settings.CELL_HEALTH_SORT_DIR,
-                this.container.getHealthSortDir());
+                Settings.SORT_DIRECTION,
+                SortDir.ASCENDING);
         this.buttonList.add(this.healthSortDirButton);
 
         this.startCancelButton = new GuiButton(
@@ -229,18 +185,15 @@ public class GuiStorageReshuffle extends AEBaseGui {
                 GuiText.ReshuffleScan.getLocal());
         this.buttonList.add(this.scanButton);
 
-        this.reportScrollbar.setLeft(SCROLL_X).setTop(BOX_TOP + 1).setHeight(BOX_HEIGHT - 2);
-        this.scanScrollbar.setLeft(175).setTop(39).setHeight(78);
+        this.reportScrollbar.setLeft(SCROLL_X).setTop(SCROLL_TOP).setHeight(SCROLL_SIZE);
+
+        this.scanScrollbar.setLeft(SCROLL_X).setTop(SCROLL_TOP).setHeight(SCROLL_SCAN_SIZE);
         this.scanScrollbar.setRange(0, 0, 1);
-        this.healthScrollbar.setLeft(SCROLL_X).setTop(39).setHeight(88);
+
+        this.healthScrollbar.setLeft(SCROLL_X).setTop(SCROLL_TOP).setHeight(SCROLL_SCAN_SIZE);
         this.healthScrollbar.setRange(0, 0, 1);
 
-        this.locateButton = new GuiTabButton(
-                0,
-                0,
-                LOCATE_ICON_INDEX,
-                GuiText.ReshuffleLocate.getUnlocalized(),
-                itemRender);
+        this.locateButton = new GuiImgButton(0, 0, Settings.ACTIONS, ActionItems.RESHUFFLE_MODE_LOCATE);
 
         this.setScrollBar(this.reportScrollbar);
     }
@@ -270,7 +223,25 @@ public class GuiStorageReshuffle extends AEBaseGui {
         }
     }
 
+    @Override
+    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
+        if (this.includeSubnetsButton != null) {
+            this.includeSubnetsButton.set(this.configSrc.getSetting(Settings.INCLUDE_SUBNETS));
+        }
+
+        if (this.healthSortDirButton != null) {
+            this.healthSortDirButton.set(this.configSrc.getSetting(Settings.SORT_DIRECTION));
+            this.sortHealthEntries();
+        }
+
+        if (this.healthSortButton != null) {
+            this.healthSortButton.set(this.configSrc.getSetting(Settings.CELL_HEALTH_SORT));
+            this.sortHealthEntries();
+        }
+    }
+
     public void onReportUpdated() {
+        if (this.container.report == null) return;
         this.reportLines = this.generateReportLines();
         this.reportScrollbar.setRange(0, Math.max(0, this.reportLines.size() - visibleReportLines()), 1);
         if (!this.container.isScanMode()) {
@@ -280,59 +251,33 @@ public class GuiStorageReshuffle extends AEBaseGui {
 
     public void onScanUpdated() {
         this.itemList.clear();
+        this.scanRecords.clear();
 
-        final PartitionScanTask scanTask = this.container.scanData;
+        final ScanTask scanTask = this.container.scanData;
         if (scanTask == null) return;
-        scanTask.getPartitions().forEach((s, partitions) -> partitions.forEach((key, value) -> this.itemList.add(key)));
+        scanTask.getScanData().forEach((s, partitions) -> partitions.forEach((key, value) -> {
+            key.setStackSize(value.size());
+            this.itemList.add(key);
+        }));
+
+        this.scanRecords.addAll(scanTask.getScanCellsData());
+        this.sortHealthEntries();
 
         this.scanScrollbar.setRange(0, Math.max(0, this.itemList.size() - SCAN_ROWS), 1);
+        this.healthScrollbar.setRange(0, Math.max(0, this.scanRecords.size() - SCAN_ROWS), 1);
     }
 
-    public void onHealthUpdated() {
-        this.healthEntries = new ArrayList<>();
-        final String data = this.container.getHealthData();
-        if (!data.isEmpty()) {
-            for (final String line : data.split("\n", -1)) {
-                final String[] f = line.split("\t", 15);
-                if (f.length < 14) continue;
-                try {
-                    final List<String[]> topItems = new ArrayList<>();
-                    if (!f[12].isEmpty()) {
-                        final String[] parts = f[12].split(";");
-                        for (int i = 0; i + 1 < parts.length; i += 2) {
-                            topItems.add(new String[] { parts[i], parts[i + 1] });
-                        }
-                    }
-                    this.healthEntries.add(
-                            new HealthEntry(
-                                    f[0],
-                                    Integer.parseInt(f[1]),
-                                    f[2],
-                                    Integer.parseInt(f[3]),
-                                    Integer.parseInt(f[4]),
-                                    Integer.parseInt(f[5]),
-                                    Integer.parseInt(f[6]),
-                                    Integer.parseInt(f[7]),
-                                    Long.parseLong(f[8]),
-                                    Long.parseLong(f[9]),
-                                    Integer.parseInt(f[10]),
-                                    Integer.parseInt(f[11]),
-                                    topItems,
-                                    f[13]));
-                } catch (final NumberFormatException ignored) {}
-            }
-        }
-        sortHealthEntries();
-        this.healthScrollbar.setRange(0, Math.max(0, this.healthEntries.size() - SCAN_ROWS), 1);
+    private double fillPct(ScanRecord cr) {
+        return cr.bytesTotal > 0 ? (cr.bytesUsed * 100.0 / cr.bytesTotal) : 0.0;
     }
 
     private void sortHealthEntries() {
         final HealthSortOrder order = this.container.getHealthSortOrder();
-        final int dir = this.container.getHealthSortDir() == SortDir.ASCENDING ? 1 : -1;
-        this.healthEntries.sort((a, b) -> {
-            final double va = order == HealthSortOrder.FILL_PCT ? a.fillPct() : (double) a.bytesTotal;
-            final double vb = order == HealthSortOrder.FILL_PCT ? b.fillPct() : (double) b.bytesTotal;
-            return dir * Double.compare(vb, va); // higher value first by default (descending natural)
+        final int dir = SortDir.ASCENDING == this.container.getHealthSortDirOrder() ? 1 : -1;
+        this.scanRecords.sort((a, b) -> {
+            final double va = order == HealthSortOrder.FILL_PCT ? this.fillPct(a) : (double) a.bytesTotal;
+            final double vb = order == HealthSortOrder.FILL_PCT ? this.fillPct(b) : (double) b.bytesTotal;
+            return dir * Double.compare(vb, va);
         });
     }
 
@@ -360,9 +305,7 @@ public class GuiStorageReshuffle extends AEBaseGui {
         }
 
         try {
-            if (btn == this.voidProtectionButton) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.ToggleVoidProtection", ""));
-            } else if (btn == this.includeSubnetsButton) {
+            if (btn == this.includeSubnetsButton) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.ToggleIncludeSubnets", ""));
             } else if (btn == this.reshuffleTab) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.View", "reshuffle"));
@@ -370,32 +313,32 @@ public class GuiStorageReshuffle extends AEBaseGui {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.View", "scan"));
             } else if (btn == this.healthModeButton) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.View", "health"));
-            } else if (btn == this.healthSortButton) {
-                final HealthSortOrder next = this.container.getHealthSortOrder() == HealthSortOrder.FILL_PCT
-                        ? HealthSortOrder.BYTES_TOTAL
-                        : HealthSortOrder.FILL_PCT;
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.HealthSort", next.name()));
-                this.healthSortButton.set(next);
-                sortHealthEntries();
-            } else if (btn == this.healthSortDirButton) {
-                final SortDir next = this.container.getHealthSortDir() == SortDir.ASCENDING ? SortDir.DESCENDING
-                        : SortDir.ASCENDING;
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.HealthSortDir", next.name()));
-                this.healthSortDirButton.set(next);
-                sortHealthEntries();
             } else if (btn == this.startCancelButton) {
-                if (this.container.getReshuffleState().running) {
+                if (this.container.reportRunning()) {
                     NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.Cancel", ""));
                 } else {
                     NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.Start", ""));
                 }
             } else if (btn == this.scanButton) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.Scan", ""));
-                this.container.report = null;
             }
         } catch (final IOException e) {
             AELog.debug(e);
         }
+
+        if (!(btn instanceof GuiImgButton iBtn) || iBtn.getSetting() == Settings.ACTIONS) return;
+
+        final Enum cv = iBtn.getCurrentValue();
+        final boolean backwards = Mouse.isButtonDown(1);
+        final Enum next = Platform.rotateEnum(cv, backwards, iBtn.getSetting().getPossibleValues());
+
+        try {
+            NetworkHandler.instance.sendToServer(new PacketValueConfig(iBtn.getSetting().name(), next.name()));
+        } catch (final IOException e) {
+            AELog.debug(e);
+        }
+
+        iBtn.set(next);
     }
 
     @Override
@@ -404,58 +347,50 @@ public class GuiStorageReshuffle extends AEBaseGui {
             final int relX = mouseX - this.guiLeft;
             final int relY = mouseY - this.guiTop;
 
-            if (this.container.isScanMode() && relX >= SCAN_XO
-                    && relX < SCAN_XO + SCAN_ROW_W
-                    && relY >= SCAN_YO
-                    && relY < SCAN_YO + SCAN_ROWS * SCAN_ROW_H) {
-                final int absRow = ((relY - SCAN_YO) / SCAN_ROW_H) + this.scanScrollbar.getCurrentScroll();
-                final int locX = SCAN_XO + SCAN_ROW_W - LOCATE_BG_SIZE + 1;
-
-                if (relX >= locX && absRow < this.itemList.size()) {
-                    final IAEStack<?> aes = this.itemList.get(absRow);
-                    final Map<IAEStackType<?>, Map<IAEStack<?>, List<PartitionRecord>>> partitions = this.container
-                            .getScanData().getPartitions();
-                    final List<PartitionRecord> partitionsList = partitions.get(aes.getStackType()).get(aes);
-
-                    final Map<NamedDimensionalCoord, String[]> ndcm = new HashMap<>();
-                    final String[] highlightParameters = new String[] {
-                            PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
-                            PlayerMessages.MachineInOtherDimNamed.getUnlocalized() };
-                    for (final PartitionRecord partition : partitionsList) {
-                        ndcm.put(
-                                new NamedDimensionalCoord(
-                                        partition.x,
-                                        partition.y,
-                                        partition.z,
-                                        partition.dim,
-                                        partition.displayName),
-                                highlightParameters);
-                    }
-
-                    BlockPosHighlighter.highlightNamedBlocks(this.mc.thePlayer, ndcm, aes.getDisplayName());
-                    this.mc.thePlayer.closeScreen();
-                    return;
-                }
-            }
-
-            if (this.container.isHealthMode() && relX >= SCAN_XO
-                    && relX < SCAN_XO + SCAN_ROW_W
-                    && relY >= SCAN_YO
-                    && relY < SCAN_YO + SCAN_ROWS * SCAN_ROW_H) {
+            if ((this.container.isScanMode() || this.container.isHealthMode()) && this.hoveredRow != -1) {
                 final int row = (relY - SCAN_YO) / SCAN_ROW_H;
-                final int absRow = row + this.healthScrollbar.getCurrentScroll();
-                final int locX = SCAN_XO + SCAN_ROW_W - LOCATE_BG_SIZE;
-                if (relX >= locX && absRow < this.healthEntries.size()) {
-                    final HealthEntry e = this.healthEntries.get(absRow);
-                    final NamedDimensionalCoord coord = new NamedDimensionalCoord(e.x, e.y, e.z, e.dim, e.cellName);
-                    final Map<NamedDimensionalCoord, String[]> ndcm = new HashMap<>(1);
-                    ndcm.put(
-                            coord,
-                            new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
-                                    PlayerMessages.MachineInOtherDimNamed.getUnlocalized() });
-                    BlockPosHighlighter.highlightNamedBlocks(this.mc.thePlayer, ndcm, e.cellName);
-                    this.mc.thePlayer.closeScreen();
-                    return;
+                if (isLocateButton(relX, relY, row)) {
+                    final int currentScroll = this.container.isScanMode() ? this.scanScrollbar.getCurrentScroll()
+                            : this.healthScrollbar.getCurrentScroll();
+                    final int currentListSize = this.container.isScanMode() ? this.itemList.size()
+                            : this.scanRecords.size();
+
+                    final int absRow = ((relY - SCAN_YO) / SCAN_ROW_H) + currentScroll;
+
+                    if (relX >= LOCATE_X && absRow < currentListSize) {
+                        final List<ScanRecord> scanList;
+                        final String highlightGroupName;
+                        if (this.container.isScanMode()) {
+                            final IAEStack<?> aes = this.itemList.get(absRow);
+                            final Map<IAEStackType<?>, Map<IAEStack<?>, List<ScanRecord>>> scanData = this.container
+                                    .getScanData().getScanData();
+                            scanList = scanData.get(aes.getStackType()).get(aes);
+                            highlightGroupName = aes.getDisplayName();
+                        } else {
+                            final ScanRecord e = this.scanRecords.get(absRow);
+                            scanList = Collections.singletonList(e);
+                            highlightGroupName = e.itemStack.getDisplayName();
+                        }
+
+                        final Map<NamedDimensionalCoord, String[]> ndcm = new HashMap<>();
+                        final String[] highlightParameters = new String[] {
+                                PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
+                                PlayerMessages.MachineInOtherDimNamed.getUnlocalized() };
+                        for (final ScanRecord scanRecord : scanList) {
+                            ndcm.put(
+                                    new NamedDimensionalCoord(
+                                            scanRecord.x,
+                                            scanRecord.y,
+                                            scanRecord.z,
+                                            scanRecord.dim,
+                                            scanRecord.itemStack.getDisplayName()),
+                                    highlightParameters);
+                        }
+
+                        BlockPosHighlighter.highlightNamedBlocks(this.mc.thePlayer, ndcm, highlightGroupName);
+                        this.mc.thePlayer.closeScreen();
+                        return;
+                    }
                 }
             }
         }
@@ -471,12 +406,8 @@ public class GuiStorageReshuffle extends AEBaseGui {
         final boolean healthMode = this.container.isHealthMode();
         final boolean reshuffleMode = !scanMode && !healthMode;
 
-        this.voidProtectionButton.visible = reshuffleMode;
         this.includeSubnetsButton.visible = reshuffleMode;
         for (final TypeToggleButton tb : this.typeToggleButtons.keySet()) {
-            tb.setEnabled(
-                    reshuffleMode && this.container.getTypeFilters() != null
-                            && this.container.getTypeFilters().getBoolean(this.typeToggleButtons.get(tb)));
             tb.visible = reshuffleMode;
         }
 
@@ -487,242 +418,130 @@ public class GuiStorageReshuffle extends AEBaseGui {
         this.healthSortDirButton.visible = healthMode;
 
         if (scanMode) {
-            final int bx = this.guiLeft + SCAN_XO;
-            final int by = this.guiTop + SCAN_YO;
-            for (int i = 0; i < SCAN_ROWS; i++) {
-                final int absRow = i + this.scanScrollbar.getCurrentScroll();
-                if (absRow >= this.itemList.size()) break;
-                final int rowY = by + i * SCAN_ROW_H;
-                if (mouseX >= bx && mouseX < bx + SCAN_ROW_W && mouseY >= rowY && mouseY < rowY + SCAN_ROW_H) {
-                    this.hoveredRow = absRow;
-                    break;
-                }
-            }
-        }
-
-        if (healthMode) {
-            final int bx = this.guiLeft + SCAN_XO;
-            final int by = this.guiTop + SCAN_YO;
-            for (int i = 0; i < SCAN_ROWS; i++) {
-                final int absRow = i + this.healthScrollbar.getCurrentScroll();
-                if (absRow >= this.healthEntries.size()) break;
-                final int rowY = by + i * SCAN_ROW_H;
-                if (mouseX >= bx && mouseX < bx + SCAN_ROW_W && mouseY >= rowY && mouseY < rowY + SCAN_ROW_H) {
-                    this.hoveredRow = absRow;
-                    break;
-                }
-            }
+            this.drawMode(mouseX, mouseY, this.scanScrollbar.getCurrentScroll(), this.itemList.size());
+        } else if (healthMode) {
+            this.drawMode(mouseX, mouseY, this.healthScrollbar.getCurrentScroll(), this.scanRecords.size());
         }
 
         super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    private void drawMode(final int mouseX, final int mouseY, final int scrollSize, final int listSize) {
+        for (int i = 0; i < SCAN_ROWS; i++) {
+            final int absRow = i + scrollSize;
+            if (absRow >= listSize) break;
+            if (isScanRow(mouseX, mouseY, i)) {
+                this.hoveredRow = absRow;
+                break;
+            }
+        }
+    }
+
+    private boolean isScanRow(final int mouseX, final int mouseY, final int i) {
+        final int bx = this.guiLeft + SCAN_XO;
+        final int by = this.guiTop + SCAN_YO;
+        final int rowY = by + i * SCAN_ROW_H;
+        return mouseX >= bx && mouseX < bx + SCAN_ROW_W && mouseY >= rowY && mouseY < rowY + SCAN_ROW_H;
     }
 
     @Override
     public void drawFG(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
         final boolean scanMode = this.container.isScanMode();
         final boolean healthMode = this.container.isHealthMode();
-        final boolean reshuffleMode = !scanMode && !healthMode;
 
-        this.voidProtectionButton.set(
-                this.container.isVoidProtection() ? ActionItems.VOID_PROTECTION_ON : ActionItems.VOID_PROTECTION_OFF);
-        this.includeSubnetsButton.set(
-                this.container.isIncludeSubnets() ? ActionItems.INCLUDE_SUBNETS_ON : ActionItems.INCLUDE_SUBNETS_OFF);
-
-        this.healthSortButton.set(this.container.getHealthSortOrder());
-        this.healthSortDirButton.set(this.container.getHealthSortDir());
-
-        if (scanMode) {
-            this.fontRendererObj.drawString(
-                    GuiText.ReshufflePartitionScanner.getLocal(),
-                    8,
-                    6,
-                    GuiColors.ReshuffleTitle.getColor());
-        } else if (healthMode) {
-            this.fontRendererObj
-                    .drawString(GuiText.ReshuffleHealthTitle.getLocal(), 8, 6, GuiColors.ReshuffleTitle.getColor());
-        } else {
-            this.fontRendererObj.drawString(
-                    this.getGuiDisplayName(GuiText.StorageReshuffle.getLocal()),
-                    8,
-                    6,
-                    GuiColors.ReshuffleTitle.getColor());
-            final String statusLabel = GuiText.ReshuffleStatusLabel.getLocal() + " ";
-            final String statusValue;
-            final int statusColor;
-            final ReshuffleState rs = this.container.getReshuffleState();
-            if (rs.running) {
-                if (rs.extracting) {
-                    statusValue = GuiText.ReshuffleStatusExtracting.getLocal();
-                    statusColor = GuiColors.ReshuffleStatusExtracting.getColor();
-                } else {
-                    statusValue = GuiText.ReshuffleStatusInjecting.getLocal();
-                    statusColor = GuiColors.ReshuffleStatusInjecting.getColor();
-                }
-            } else if (rs.complete) {
-                statusValue = GuiText.ReshuffleStatusComplete.getLocal();
-                statusColor = GuiColors.ReshuffleStatusComplete.getColor();
-            } else if (rs.failed) {
-                statusValue = GuiText.ReshuffleStatusFailed.getLocal();
-                statusColor = GuiColors.ReshuffleStatusFailed.getColor();
-            } else if (rs.cancelled) {
-                statusValue = GuiText.ReshuffleStatusCancelled.getLocal();
-                statusColor = GuiColors.ReshuffleStatusCancelled.getColor();
-            } else {
-                statusValue = GuiText.ReshuffleStatusIdle.getLocal();
-                statusColor = GuiColors.ReshuffleStatusIdle.getColor();
-            }
-            final int labelW = this.fontRendererObj.getStringWidth(statusLabel);
-            this.fontRendererObj.drawString(statusLabel, 8, 18, GuiColors.ReshuffleTitle.getColor());
-            this.fontRendererObj.drawString(statusValue, 8 + labelW, 18, statusColor);
-        }
-
-        if (scanMode) {
-            drawScanContent(offsetX, offsetY, mouseX, mouseY);
-        } else if (healthMode) {
-            drawHealthContent(offsetX, offsetY, mouseX, mouseY);
+        if (scanMode || healthMode) {
+            drawScanContent(mouseX, mouseY);
         } else {
             drawReshuffleContent(offsetX, offsetY, mouseX, mouseY);
         }
 
-        if (reshuffleMode && this.startCancelButton != null) {
-            this.startCancelButton.displayString = this.container.getReshuffleState().running
-                    ? GuiText.ReshuffleCancel.getLocal()
-                    : GuiText.ReshuffleStart.getLocal();
-        }
-
-        if (scanMode && this.hoveredRow != -1) {
-            final int relX = mouseX - this.guiLeft;
-            final int relY = mouseY - this.guiTop;
-            final int row = (relY - SCAN_YO) / SCAN_ROW_H;
-            final int locX = SCAN_XO + SCAN_ROW_W - LOCATE_BG_SIZE;
-            final int locY = SCAN_YO + row * SCAN_ROW_H;
-            if (relX >= locX && relX < locX + LOCATE_BG_SIZE && relY >= locY && relY < locY + SCAN_ROW_H) {
-                this.drawTooltip(mouseX - this.guiLeft, mouseY - this.guiTop, GuiText.ReshuffleLocate.getLocal());
-            } else if (relX >= SCAN_XO && relX < locX) {
-                final IAEStack<?> stack = this.itemList.get(this.hoveredRow);
-                final Map<IAEStackType<?>, Map<IAEStack<?>, List<PartitionRecord>>> partitions = this.container
-                        .getScanData().getPartitions();
-                final List<PartitionRecord> partitionsList = partitions.get(stack.getStackType()).get(stack);
-                this.drawTooltip(
-                        mouseX - this.guiLeft,
-                        mouseY - this.guiTop,
-                        String.join("\n", getStackPartitionsLines(stack, partitionsList)));
-            }
-        }
-
-        if (healthMode && this.hoveredRow != -1) {
-            final int relX = mouseX - this.guiLeft;
-            final int relY = mouseY - this.guiTop;
-            if (relY >= SCAN_YO && relY < SCAN_YO + SCAN_ROWS * SCAN_ROW_H) {
-                if (this.hoveredRow >= 0 && this.hoveredRow < this.healthEntries.size()) {
-                    final HealthEntry e = this.healthEntries.get(this.hoveredRow);
-                    final int locX = SCAN_XO + SCAN_ROW_W - LOCATE_BG_SIZE;
-                    if (relX >= locX && relX < locX + LOCATE_BG_SIZE) {
-                        this.drawTooltip(
-                                mouseX - this.guiLeft,
-                                mouseY - this.guiTop,
-                                GuiText.ReshuffleLocate.getLocal());
-                    } else {
-                        final String fillPct = String.format("%.2f%%", e.fillPct());
-                        final List<String> lines = new ArrayList<>();
-                        lines.add(EnumChatFormatting.WHITE + e.cellName);
-                        lines.add(
-                                GuiText.ReshuffleHealthTooltipBytes
-                                        .getLocal(formatBytes(e.bytesUsed), formatBytes(e.bytesTotal), fillPct));
-                        lines.add(GuiText.ReshuffleHealthTooltipTypes.getLocal(e.typesUsed, e.typesTotal));
-                        if (!e.topItems.isEmpty()) {
-                            String typePrefix = "";
-                            if (e.stackTypeId != null && !e.stackTypeId.isEmpty()) {
-                                final IAEStackType<?> stackType = AEStackTypeRegistry.getType(e.stackTypeId);
-                                if (stackType != null) {
-                                    typePrefix = " " + EnumChatFormatting.GRAY + "[" + stackType.getDisplayName() + "]";
-                                }
-                            }
-                            lines.add(GuiText.ReshuffleHealthTopItems.getLocal() + typePrefix);
-                            for (final String[] item : e.topItems) {
-                                lines.add(GuiText.ReshuffleHealthTopItemEntry.getLocal(item[0], formatCount(item[1])));
-                            }
-                        }
-                        lines.add(GuiText.ReshuffleTooltipCoords.getLocal(e.x, e.y, e.z, e.dim, e.slot));
-                        this.drawTooltip(mouseX - this.guiLeft, mouseY - this.guiTop, String.join("\n", lines));
-                    }
-                }
-            }
-        }
-
-        if (reshuffleMode && this.startCancelButton != null && this.startCancelButton.visible) {
-            final int bx = this.startCancelButton.xPosition - offsetX;
-            final int by = this.startCancelButton.yPosition - offsetY;
-            if (mouseX - offsetX >= bx && mouseX - offsetX < bx + this.startCancelButton.width
-                    && mouseY - offsetY >= by
-                    && mouseY - offsetY < by + this.startCancelButton.height) {
-                this.drawTooltip(
-                        mouseX - this.guiLeft,
-                        mouseY - this.guiTop,
-                        this.container.getReshuffleState().running ? GuiText.ReshuffleCancel.getLocal()
-                                : GuiText.ReshuffleStart.getLocal());
-            }
-        }
         if ((scanMode || healthMode) && this.scanButton != null && this.scanButton.visible) {
-            final int bx = this.scanButton.xPosition - offsetX;
-            final int by = this.scanButton.yPosition - offsetY;
-            if (mouseX - offsetX >= bx && mouseX - offsetX < bx + this.scanButton.width
-                    && mouseY - offsetY >= by
-                    && mouseY - offsetY < by + this.scanButton.height) {
+            if (isScanButton(offsetX, offsetY, mouseX, mouseY)) {
                 this.drawTooltip(mouseX - this.guiLeft, mouseY - this.guiTop, GuiText.ReshuffleTabScanHint.getLocal());
             }
         }
     }
 
-    private static @NotNull List<String> getStackPartitionsLines(IAEStack<?> stack,
-                                                                 List<PartitionRecord> partitionsList) {
+    private boolean isScanButton(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
+        final int bx = this.scanButton.xPosition - offsetX;
+        final int by = this.scanButton.yPosition - offsetY;
+        return mouseX - offsetX >= bx && mouseX - offsetX < bx + this.scanButton.width
+                && mouseY - offsetY >= by
+                && mouseY - offsetY < by + this.scanButton.height;
+    }
+
+    private static @NotNull List<String> getStackPartitionsLines(IAEStack<?> stack, List<ScanRecord> partitionsList) {
         final List<String> lines = new ArrayList<>();
         lines.add(GuiText.ReshuffleScanDuplicatePartitionStackNameStyle.getLocal() + stack.getDisplayName());
         for (int i = 0; i < partitionsList.size(); i++) {
-            final PartitionRecord partitionRecord = partitionsList.get(i);
-            final String locColor = GuiText.ReshuffleScanDuplicatePartitionLocColor.getLocal();
-            final String locValueColor = GuiText.ReshuffleScanDuplicatePartitionLocValueColor.getLocal();
+            final ScanRecord scanRecord = partitionsList.get(i);
+            final GuiText locText = scanRecord.slot == -1 ? GuiText.ReshuffleTooltipCoordsNoSlot
+                    : GuiText.ReshuffleTooltipCoords;
 
-            lines.add(locColor + GuiText.ReshuffleScanDuplicatePartition.getLocal() + " " + (i + 1));
-            lines.add(GuiText.ReshuffleScanDuplicatePartitionTargetNameColor.getLocal() + partitionRecord.displayName);
-            lines.add(
-                    locColor + GuiText.ReshuffleScanDuplicatePartitionLoc.getLocal()
-                            + " "
-                            + locValueColor
-                            + partitionRecord.x
-                            + ", "
-                            + partitionRecord.y
-                            + ", "
-                            + partitionRecord.z
-                            + "  "
-                            + locColor
-                            + GuiText.ReshuffleScanDuplicatePartitionLocDim.getLocal()
-                            + " "
-                            + locValueColor
-                            + partitionRecord.dim
-                            + "  "
-                            + locColor
-                            + (partitionRecord.slot != -1
-                            ? GuiText.ReshuffleScanSlot.getLocal() + ": " + locValueColor + partitionRecord.slot
-                            : ""));
+            lines.add(GuiText.ReshuffleScanDuplicatePartition.getLocal() + " " + (i + 1));
+            lines.add(GuiText.ReshuffleScanDuplicatePartitionTargetNameColor + scanRecord.itemStack.getDisplayName());
+            lines.add(locText.getLocal(scanRecord.x, scanRecord.y, scanRecord.z, scanRecord.dim, scanRecord.slot));
         }
         return lines;
     }
 
     private void drawReshuffleContent(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        final ReshuffleState rs = this.container.getReshuffleState();
-        final int displayProcessed;
-        final int displayTotal;
-        if (rs.running && rs.phaseTotal > 0) {
-            displayProcessed = rs.phaseProcessed;
-            displayTotal = rs.phaseTotal;
-        } else if (rs.typeCount > 0) {
-            displayProcessed = rs.typeCount;
-            displayTotal = rs.typeCount;
+        this.fontRendererObj.drawString(
+                this.getGuiDisplayName(GuiText.StorageReshuffle.getLocal()),
+                8,
+                6,
+                GuiColors.ReshuffleTitle.getColor());
+
+        final String statusLabel = GuiText.ReshuffleStatusLabel.getLocal() + " ";
+        final ReshuffleReport report = this.container.getReshuffleReport();
+
+        final String statusValue;
+        final int statusColor;
+
+        if (report == null) {
+            statusValue = GuiText.ReshuffleStatusIdle.getLocal();
+            statusColor = GuiColors.ReshuffleStatusIdle.getColor();
         } else {
-            displayProcessed = rs.processedItems;
-            displayTotal = rs.totalItems;
+            switch (this.container.getReshuffleReport().phase) {
+                case BEFORE_SNAPSHOT -> {
+                    statusValue = GuiText.ReshuffleStatusBeforeSnapshot.getLocal();
+                    statusColor = GuiColors.ReshuffleStatusBeforeSnapshot.getColor();
+                }
+                case AFTER_SNAPSHOT -> {
+                    statusValue = GuiText.ReshuffleStatusAfterSnapshot.getLocal();
+                    statusColor = GuiColors.ReshuffleStatusAfterSnapshot.getColor();
+                }
+                case EXTRACTION -> {
+                    statusValue = GuiText.ReshuffleStatusExtracting.getLocal();
+                    statusColor = GuiColors.ReshuffleStatusExtracting.getColor();
+                }
+                case INJECTION -> {
+                    statusValue = GuiText.ReshuffleStatusInjecting.getLocal();
+                    statusColor = GuiColors.ReshuffleStatusInjecting.getColor();
+                }
+                case DONE -> {
+                    statusValue = GuiText.ReshuffleStatusComplete.getLocal();
+                    statusColor = GuiColors.ReshuffleStatusComplete.getColor();
+                }
+                case CANCEL -> {
+                    statusValue = GuiText.ReshuffleStatusCancelled.getLocal();
+                    statusColor = GuiColors.ReshuffleStatusCancelled.getColor();
+                }
+                default -> {
+                    statusValue = GuiText.ReshuffleStatusFailed.getLocal();
+                    statusColor = GuiColors.ReshuffleStatusFailed.getColor();
+                }
+            }
         }
+
+        final int labelW = this.fontRendererObj.getStringWidth(statusLabel);
+        this.fontRendererObj.drawString(statusLabel, 8, 18, GuiColors.ReshuffleTitle.getColor());
+        this.fontRendererObj.drawString(statusValue, 8 + labelW, 18, statusColor);
+
+        if (report == null) return;
+        final int displayProcessed = report.injectedTypes;
+        final int displayTotal = report.extractedTypes;
+
         this.fontRendererObj.drawString(
                 GuiText.ReshuffleTotalItems.getLocal(displayProcessed, displayTotal),
                 BOX_LEFT,
@@ -764,17 +583,17 @@ public class GuiStorageReshuffle extends AEBaseGui {
             }
             GL11.glPopMatrix();
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
-        }
-
-        {
+        } else {
             final int barX = BOX_LEFT;
             final int barY = PROGRESS_Y;
             final int barW = BOX_WIDTH - 30;
             drawRect(barX - 1, barY - 1, barX + barW + 1, barY + 7, GuiColors.ReshuffleProgressBorder.getColor());
             drawRect(barX, barY, barX + barW, barY + 6, GuiColors.ReshuffleProgressBackground.getColor());
-            if (this.container.getReshuffleState().progressPercent > 0) {
-                final int fill = (int) Math.floor(this.container.getReshuffleState().progressPercent * barW / 100.0);
-                final int alpha = 255 - this.container.getReshuffleState().progressPercent * 255 / 100;
+
+            final int progressPercent = report.getProgressPercent();
+            if (progressPercent > 0) {
+                final int fill = (int) Math.floor(progressPercent * barW / 100.0);
+                final int alpha = 255 - progressPercent * 255 / 100;
                 this.drawGradientRect(
                         barX,
                         barY,
@@ -789,71 +608,210 @@ public class GuiStorageReshuffle extends AEBaseGui {
                         barY + 6,
                         GuiColors.ReshuffleProgressMarker.getColor());
             }
-            this.fontRendererObj.drawString(
-                    this.container.getReshuffleState().progressPercent + "%",
-                    barX + barW + 3,
-                    barY,
-                    GuiColors.ReshuffleTitle.getColor());
+            this.fontRendererObj
+                    .drawString(progressPercent + "%", barX + barW + 3, barY, GuiColors.ReshuffleTitle.getColor());
         }
+
+        if (this.startCancelButton != null) {
+            this.startCancelButton.displayString = this.container.reportRunning() ? GuiText.ReshuffleCancel.getLocal()
+                    : GuiText.ReshuffleStart.getLocal();
+        }
+
+        if (this.startCancelButton != null && this.startCancelButton.visible) {
+            final int bx = this.startCancelButton.xPosition - offsetX;
+            final int by = this.startCancelButton.yPosition - offsetY;
+            if (mouseX - offsetX >= bx && mouseX - offsetX < bx + this.startCancelButton.width
+                    && mouseY - offsetY >= by
+                    && mouseY - offsetY < by + this.startCancelButton.height) {
+                this.drawTooltip(
+                        mouseX - this.guiLeft,
+                        mouseY - this.guiTop,
+                        this.container.reportRunning() ? GuiText.ReshuffleCancel.getLocal()
+                                : GuiText.ReshuffleStart.getLocal());
+            }
+        }
+
     }
 
-    private void drawScanContent() {
-        final int total = this.itemList.size();
-
-        if (total == 0) {
+    private void drawScanContent(final int mouseX, final int mouseY) {
+        final boolean partition = this.container.isScanMode();
+        if (partition) {
+            final int total = this.itemList.size();
             this.fontRendererObj.drawString(
-                    GuiText.ReshuffleScanEmpty.getLocal(),
-                    SCAN_XO + 4,
-                    SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10,
-                    GuiColors.DefaultBlack.getColor());
-            return;
-        }
+                    GuiText.ReshufflePartitionScanner.getLocal(),
+                    8,
+                    6,
+                    GuiColors.ReshuffleTitle.getColor());
 
-        this.fontRendererObj.drawString(
-                GuiText.ReshuffleScanDuplicatesTitle.getLocal() + " " + total,
-                SCAN_XO,
-                SCAN_YO - 12,
-                GuiColors.ReshuffleTitle.getColor());
-
-        for (int i = 0; i < SCAN_ROWS; i++) {
-            if (i >= this.itemList.size()) continue;
-            final int absRow = i + this.scanScrollbar.getCurrentScroll();
-            final boolean isHovered = this.hoveredRow == absRow;
-            final int rowY = SCAN_YO + i * SCAN_ROW_H;
-            final int locBtnX = SCAN_XO + SCAN_ROW_W - LOCATE_BG_SIZE;
-
-            if (isHovered) {
-                drawRect(SCAN_XO, rowY, locBtnX, rowY + SCAN_ROW_H, GuiColors.ReshuffleScanRowHover.getColor());
+            if (total == 0) {
+                this.fontRendererObj.drawString(
+                        GuiText.ReshuffleScanEmpty.getLocal(),
+                        SCAN_XO + 4,
+                        SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10,
+                        GuiColors.DefaultBlack.getColor());
+                return;
             }
 
-            final IAEStack<?> aes = this.itemList.get(absRow);
-            aes.drawInGui(Minecraft.getMinecraft(), SCAN_XO + 1, rowY + 3);
+            this.fontRendererObj.drawString(
+                    GuiText.ReshuffleScanDuplicatesTitle.getLocal() + " " + total,
+                    SCAN_XO,
+                    SCAN_YO - 12,
+                    GuiColors.ReshuffleTitle.getColor());
+        } else {
+            this.fontRendererObj
+                    .drawString(GuiText.ReshuffleHealthTitle.getLocal(), 8, 6, GuiColors.ReshuffleTitle.getColor());
+            if (this.scanRecords.isEmpty()) {
+                this.fontRendererObj.drawString(
+                        GuiText.ReshuffleHealthEmpty.getLocal(),
+                        SCAN_XO + 4,
+                        SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10,
+                        GuiColors.DefaultBlack.getColor());
+                return;
+            }
+        }
 
-            String name = aes.getDisplayName();
+        final int listSize;
+        final int currentScrollSize;
+        if (partition) {
+            listSize = this.itemList.size();
+            currentScrollSize = this.scanScrollbar.getCurrentScroll();
+        } else {
+            listSize = this.scanRecords.size();
+            currentScrollSize = this.healthScrollbar.getCurrentScroll();
+        }
+        for (int i = 0; i < SCAN_ROWS; i++) {
+            final int absRow = i + currentScrollSize;
+            if (i >= listSize) break;
 
-            final int maxNameW = (int) ((locBtnX - SCAN_XO - 22 - 2) / TEXT_SCALE);
-            GL11.glPushMatrix();
-            GL11.glScalef(TEXT_SCALE, TEXT_SCALE, 1.0f);
+            final boolean isHovered = this.hoveredRow == absRow;
+            final int rowY = i + SCAN_YO + i * SCAN_ROW_H;
+
+            if (isHovered) {
+                drawRect(
+                        SCAN_XO,
+                        rowY,
+                        SCAN_XO + SCAN_ROW_W,
+                        rowY + SCAN_ROW_H,
+                        GuiColors.ReshuffleScanRowHover.getColor());
+            }
+
+            final int maxNameW = (int) ((LOCATE_X - SCAN_XO - 22 - 2) / TEXT_SCALE);
             final float inv = 1.0f / TEXT_SCALE;
+
+            String name;
+            final int networkStatusItemCountX;
+            final int networkStatusItemCountY;
+            final String size;
+
+            if (partition) {
+                final IAEStack<?> aes = this.itemList.get(absRow);
+                aes.drawInGui(Minecraft.getMinecraft(), SCAN_XO + 1, rowY + 3);
+                name = aes.getDisplayName();
+                size = aes.getStackSize() + "x";
+                networkStatusItemCountX = (int) ((SCAN_XO + 20) * inv);
+                networkStatusItemCountY = (int) ((rowY + 14) * inv);
+
+                GL11.glPushMatrix();
+                GL11.glScalef(TEXT_SCALE, TEXT_SCALE, 1.0f);
+            } else {
+                final ScanRecord e = this.scanRecords.get(absRow);
+                final int barLeft = SCAN_XO + 20;
+                final int barTop = rowY + 17;
+                final int barW = 60;
+                final double pct = fillPct(e);
+                final int fillW = (int) Math.round(pct * barW / 100.0);
+                final String pctStr = String.format("%.2f%%", pct);
+                final int barColor = pct >= 90.0 ? GuiColors.CellHealthCrit.getColor()
+                        : pct >= 75.0 ? GuiColors.CellHealthWarn.getColor() : GuiColors.CellHealthOk.getColor();
+
+                this.drawItem(SCAN_XO + 1, rowY + 3, e.itemStack);
+
+                drawRect(barLeft, barTop, barLeft + barW, barTop + 3, GuiColors.CellHealthBarBackground.getColor());
+
+                if (fillW > 0) drawRect(barLeft, barTop, barLeft + fillW, barTop + 3, barColor);
+
+                size = e.typesUsed + "/" + e.typesTotal + " " + GuiText.Types.getLocal();
+                name = e.itemStack.getDisplayName();
+                networkStatusItemCountX = (int) ((barLeft + barW + 4) * inv);
+                networkStatusItemCountY = (int) (int) ((rowY + 11) * inv);
+
+                GL11.glPushMatrix();
+                GL11.glScalef(TEXT_SCALE, TEXT_SCALE, 1.0f);
+
+                this.fontRendererObj
+                        .drawString(pctStr, (int) ((SCAN_XO + 20) * inv), (int) ((rowY + 11) * inv), barColor);
+            }
+
             while (!name.isEmpty() && this.fontRendererObj.getStringWidth(name) > maxNameW) {
                 name = name.substring(0, name.length() - 1);
             }
+
             this.fontRendererObj.drawString(
                     name,
                     (int) ((SCAN_XO + 20) * inv),
                     (int) ((rowY + 3) * inv),
                     GuiColors.DefaultBlack.getColor());
+
             this.fontRendererObj.drawString(
-                    aes.getStackSize() + "x",
-                    (int) ((SCAN_XO + 20) * inv),
-                    (int) ((rowY + 11) * inv),
+                    size,
+                    networkStatusItemCountX,
+                    networkStatusItemCountY,
                     GuiColors.NetworkStatusItemCount.getColor());
+
             GL11.glPopMatrix();
 
-            this.locateButton.xPosition = locBtnX + 4;
-            this.locateButton.yPosition = rowY + 1;
+            this.locateButton.xPosition = LOCATE_X;
+            this.locateButton.yPosition = rowY + LOCATE_Y_OFF;
             this.locateButton.drawButton(this.mc, mouseX - this.guiLeft, mouseY - this.guiTop);
         }
+
+        if (this.hoveredRow != -1) {
+            final int relX = mouseX - this.guiLeft;
+            final int relY = mouseY - this.guiTop;
+            final int row = (relY - SCAN_YO) / SCAN_ROW_H;
+
+            if (isLocateButton(relX, relY, row)) {
+                this.drawTooltip(mouseX - this.guiLeft, mouseY - this.guiTop, GuiText.ReshuffleLocate.getLocal());
+            } else {
+                final List<String> lines;
+                if (partition) {
+                    final IAEStack<?> stack = this.itemList.get(this.hoveredRow);
+                    final Map<IAEStackType<?>, Map<IAEStack<?>, List<ScanRecord>>> partitions = this.container
+                            .getScanData().getScanData();
+                    final List<ScanRecord> partitionsList = partitions.get(stack.getStackType()).get(stack);
+                    lines = getStackPartitionsLines(stack, partitionsList);
+                } else {
+                    final ScanRecord e = this.scanRecords.get(this.hoveredRow);
+                    final String fillPct = String.format("%.2f%%", fillPct(e));
+                    lines = new ArrayList<>();
+                    lines.add(EnumChatFormatting.WHITE + e.itemStack.getDisplayName());
+                    lines.add(
+                            GuiText.ReshuffleHealthTooltipBytes
+                                    .getLocal(formatBytes(e.bytesUsed), formatBytes(e.bytesTotal), fillPct));
+                    lines.add(GuiText.ReshuffleHealthTooltipTypes.getLocal(e.typesUsed, e.typesTotal));
+                    if (!e.topStoredItems.isEmpty()) {
+                        String typePrefix = " " + EnumChatFormatting.GRAY
+                                + "["
+                                + e.topStoredItems.get(0).getStackType().getDisplayName()
+                                + "]";
+                        lines.add(GuiText.ReshuffleHealthTopItems.getLocal() + typePrefix);
+                        e.topStoredItems.forEach(
+                                aes -> {
+                                    lines.add(
+                                            GuiText.ReshuffleHealthTopItemEntry
+                                                    .getLocal(aes.getDisplayName(), fmt(aes.getStackSize())));
+                                });
+                    }
+                    lines.add(GuiText.ReshuffleTooltipCoords.getLocal(e.x, e.y, e.z, e.dim, e.slot));
+                }
+                this.drawTooltip(mouseX - this.guiLeft, mouseY - this.guiTop, String.join("\n", lines));
+            }
+        }
+    }
+
+    private boolean isLocateButton(final int relX, final int relY, final int row) {
+        final int locY = row + SCAN_YO + row * SCAN_ROW_H + LOCATE_Y_OFF;
+        return relX >= LOCATE_X && relX < LOCATE_X + LOCATE_BG_SIZE && relY >= locY && relY < locY + LOCATE_BG_SIZE;
     }
 
     private static final DecimalFormat BYTES_FORMAT = new DecimalFormat("#.##");
@@ -868,92 +826,6 @@ public class GuiStorageReshuffle extends AEBaseGui {
             i++;
         }
         return BYTES_FORMAT.format(v) + ' ' + units[i];
-    }
-
-    private static String formatCount(final String countStr) {
-        try {
-            final long v = Long.parseLong(countStr);
-            if (v >= 1_000_000_000_000L) return String.format("%.1fT", v / 1_000_000_000_000.0);
-            if (v >= 1_000_000_000L) return String.format("%.1fB", v / 1_000_000_000.0);
-            if (v >= 1_000_000L) return String.format("%.1fM", v / 1_000_000.0);
-            if (v >= 10_000L) return String.format("%.1fK", v / 1_000.0);
-            return countStr;
-        } catch (final NumberFormatException e) {
-            return countStr;
-        }
-    }
-
-    private void drawHealthContent(final int offsetX, final int offsetY, final int mouseX, final int mouseY) {
-        if (this.healthEntries.isEmpty()) {
-            this.fontRendererObj.drawString(
-                    GuiText.ReshuffleHealthEmpty.getLocal(),
-                    SCAN_XO + 4,
-                    SCAN_YO + SCAN_ROWS * SCAN_ROW_H + 10,
-                    GuiColors.DefaultBlack.getColor());
-            return;
-        }
-
-        final int scroll = this.healthScrollbar.getCurrentScroll();
-
-        for (int i = 0; i < SCAN_ROWS; i++) {
-            final int absRow = i + scroll;
-            if (absRow >= this.healthEntries.size()) break;
-            final HealthEntry e = this.healthEntries.get(absRow);
-
-            final boolean isHovered = this.hoveredRow == absRow;
-            final int rowY = SCAN_YO + i * SCAN_ROW_H;
-            final int locBtnX = SCAN_XO + SCAN_ROW_W - LOCATE_BG_SIZE;
-
-            if (isHovered) {
-                drawRect(SCAN_XO, rowY, locBtnX, rowY + SCAN_ROW_H, GuiColors.ReshuffleScanRowHover.getColor());
-            }
-
-            if (e.cellItemId != null && !e.cellItemId.isEmpty()) {
-                final net.minecraft.item.Item cellItem = (net.minecraft.item.Item) net.minecraft.item.Item.itemRegistry
-                        .getObject(e.cellItemId);
-                if (cellItem != null) {
-                    this.drawItem(SCAN_XO + 1, rowY + 3, new ItemStack(cellItem, 1, e.cellMeta));
-                }
-            }
-
-            final double pct = e.fillPct();
-            final int barColor = pct >= 90.0 ? GuiColors.CellHealthCrit.getColor()
-                    : pct >= 75.0 ? GuiColors.CellHealthWarn.getColor() : GuiColors.CellHealthOk.getColor();
-
-            final int barLeft = SCAN_XO + 20;
-            final int barTop = rowY + 17;
-            final int barW = 60;
-            drawRect(barLeft, barTop, barLeft + barW, barTop + 3, GuiColors.CellHealthBarBackground.getColor());
-            final int fillW = (int) Math.round(pct * barW / 100.0);
-            if (fillW > 0) drawRect(barLeft, barTop, barLeft + fillW, barTop + 3, barColor);
-
-            String cellName = e.cellName;
-            final String typesStr = e.typesUsed + "/" + e.typesTotal + " " + GuiText.Types.getLocal();
-            final String pctStr = String.format("%.2f%%", pct);
-            final int maxNameW = (int) ((locBtnX - SCAN_XO - 22 - 2) / TEXT_SCALE);
-            GL11.glPushMatrix();
-            GL11.glScalef(TEXT_SCALE, TEXT_SCALE, 1.0f);
-            final float inv = 1.0f / TEXT_SCALE;
-            while (!cellName.isEmpty() && this.fontRendererObj.getStringWidth(cellName) > maxNameW) {
-                cellName = cellName.substring(0, cellName.length() - 1);
-            }
-            this.fontRendererObj.drawString(
-                    cellName,
-                    (int) ((SCAN_XO + 20) * inv),
-                    (int) ((rowY + 3) * inv),
-                    GuiColors.DefaultBlack.getColor());
-            this.fontRendererObj.drawString(pctStr, (int) ((SCAN_XO + 20) * inv), (int) ((rowY + 11) * inv), barColor);
-            this.fontRendererObj.drawString(
-                    typesStr,
-                    (int) ((barLeft + barW + 4) * inv),
-                    (int) ((rowY + 11) * inv),
-                    GuiColors.NetworkStatusItemCount.getColor());
-            GL11.glPopMatrix();
-
-            this.locateButton.xPosition = locBtnX + 4;
-            this.locateButton.yPosition = rowY + 1;
-            this.locateButton.drawButton(this.mc, mouseX - this.guiLeft, mouseY - this.guiTop);
-        }
     }
 
     @Override
@@ -982,129 +854,91 @@ public class GuiStorageReshuffle extends AEBaseGui {
     private static final String NEUTRAL = GuiText.ReshuffleReportTextColorNeutral.getLocal();
     private static final String WARNING = GuiText.ReshuffleReportTextColorWarning.getLocal();
 
-    private List<String> buildItemLines(ItemChange c, String accentColor, String sign) {
-        List<String> out = new ArrayList<>();
-        String name = getStackDisplayName(c.stack);
-        String delta = abbrev(Math.abs(c.difference));
-        out.add(accentColor + "• " + VALUES + name + " " + accentColor + sign + delta);
-        out.add(NEUTRAL + "  (" + abbrev(c.beforeCount) + " -> " + abbrev(c.afterCount) + ")");
-        return out;
-    }
-
     public List<String> generateReportLines() {
-        final ReshuffleReport report = this.container.getReshuffleReport();
-        if (report == null) return new ArrayList<>();
+        final ReshuffleReport r = this.container.report;
         List<String> lines = new ArrayList<>();
-        long durationMs = report.endTime - report.startTime;
+        long durationMs = r.endTime - r.startTime;
 
         lines.add(MAIN + centerTitle(GuiText.ReshuffleReportTitle.getLocal()));
-
         lines.add(
-                MAIN + GuiText.ReshuffleReportTime.getLocal()
+                MAIN + GuiText.ReshuffleReportMode.getLocal()
                         + " "
                         + VALUES
-                        + String.format("%.2fs", durationMs / 1000.0)
-                        + MAIN
+                        + buildModeString()
                         + "  "
-                        + GuiText.ReshuffleReportMode.getLocal()
-                        + " "
-                        + VALUES
-                        + buildModeString());
-
-        lines.add(
-                MAIN + GuiText.ReshuffleReportVoidLabel.getLocal()
-                        + " "
-                        + (report.voidProtection ? POSITIVE + GuiText.ReshuffleReportVoidOn.getLocal()
-                                : NEGATIVE + GuiText.ReshuffleReportVoidOff.getLocal()));
-
-        lines.add("");
-        lines.add(MAIN + GuiText.ReshuffleReportSectionProcessing.getLocal());
-        lines.add(
-                MAIN + GuiText.ReshuffleReportDone.getLocal()
-                        + " "
-                        + POSITIVE
-                        + fmt(report.itemsProcessed)
                         + MAIN
+                        + GuiText.ReshuffleReportTime.getLocal()
+                        + " "
+                        + VALUES
+                        + String.format("%.2fs", durationMs / 1000.0));
+
+        final String subnetStr = r.includeSubnets ? POSITIVE + GuiText.ReshuffleReportSubnetsOn.getLocal()
+                : NEUTRAL + GuiText.ReshuffleReportSubnetsOff.getLocal();
+        lines.add(MAIN + GuiText.ReshuffleReportSubnetsLabel.getLocal() + " " + subnetStr);
+        lines.add("");
+        lines.add(
+                POSITIVE + GuiText.ReshuffleReportExtracted.getLocal()
+                        + " "
+                        + VALUES
+                        + fmt(r.extractedItems)
                         + "  "
-                        + GuiText.ReshuffleReportSkip.getLocal()
-                        + " "
-                        + WARNING
-                        + fmt(report.itemsSkipped));
-
-        lines.add("");
-        lines.add(MAIN + GuiText.ReshuffleReportSectionStorageTotals.getLocal());
-        lines.add(
-                buildTotalLine(
-                        GuiText.ReshuffleReportLabelTypes.getLocal(),
-                        report.totalItemTypesBefore,
-                        report.totalItemTypesAfter));
-        lines.add(
-                buildTotalLine(
-                        GuiText.ReshuffleReportLabelStacks.getLocal(),
-                        report.totalStacksBefore,
-                        report.totalStacksAfter));
-
-        lines.add("");
-        lines.add(MAIN + GuiText.ReshuffleReportSectionItemChanges.getLocal());
-        lines.add(
-                POSITIVE + GuiText.ReshuffleReportGainedLabel.getLocal()
-                        + " "
-                        + VALUES
-                        + fmt(report.itemsGained)
                         + POSITIVE
-                        + " ("
-                        + abbrev(report.totalGained)
-                        + ")");
-        lines.add(
-                NEGATIVE + GuiText.ReshuffleReportLostLabel.getLocal()
+                        + GuiText.ReshuffleReportInjected.getLocal()
                         + " "
                         + VALUES
-                        + fmt(report.itemsLost)
-                        + NEGATIVE
-                        + " ("
-                        + abbrev(report.totalLost)
-                        + ")");
-        lines.add(
-                NEUTRAL + GuiText.ReshuffleReportUnchangedLabel.getLocal() + " " + VALUES + fmt(report.itemsUnchanged));
+                        + fmt(r.injectedItems)
+                        + (!r.cantExtract.isEmpty() ? "  " + WARNING
+                                + GuiText.ReshuffleReportSkip.getLocal()
+                                + " "
+                                + fmt(r.cantExtract.size()) : ""));
 
-        if (!report.lostItems.isEmpty()) {
+        long typeDelta = r.afterTypes - r.beforeTypes;
+        double stackDelta = r.afterItems - r.beforeItems;
+        if (typeDelta != 0 || stackDelta != 0) {
+            lines.add(
+                    MAIN + GuiText.ReshuffleReportLabelTypes.getLocal()
+                            + " "
+                            + fmt(r.beforeTypes)
+                            + VALUES
+                            + "→"
+                            + fmt(r.afterTypes)
+                            + " "
+                            + diffColor(typeDelta)
+                            + "("
+                            + fmt(typeDelta)
+                            + ")");
+            lines.add(
+                    MAIN + GuiText.ReshuffleReportLabelStacks.getLocal()
+                            + " "
+                            + fmt(r.beforeItems)
+                            + VALUES
+                            + "→"
+                            + fmt(r.afterItems)
+                            + " "
+                            + diffColor(stackDelta)
+                            + "("
+                            + fmt(stackDelta)
+                            + ")");
+        }
+
+        if (stackDelta != 0 && !r.lostItems.isEmpty()) {
             lines.add("");
             lines.add(NEGATIVE + GuiText.ReshuffleReportSectionTopLost.getLocal());
-            for (ItemChange c : report.lostItems) {
-                lines.addAll(buildItemLines(c, NEGATIVE, "-"));
+            for (ItemChange c : r.lostItems) {
+                lines.addAll(buildItemLines(c));
             }
         }
 
-        if (!report.gainedItems.isEmpty() && report.totalGained > 0) {
-            lines.add("");
-            lines.add(POSITIVE + GuiText.ReshuffleReportSectionTopGained.getLocal());
-            for (ItemChange c : report.gainedItems) {
-                lines.addAll(buildItemLines(c, POSITIVE, "+"));
-            }
-        }
-
-        if (!report.skippedItemsList.isEmpty()) {
-            lines.add("");
-            lines.add(WARNING + GuiText.ReshuffleReportSectionSkipped.getLocal());
-            for (IAEStack<?> stack : report.skippedItemsList) {
-                lines.add(
-                        WARNING + "• "
-                                + VALUES
-                                + getStackDisplayName(stack)
-                                + " "
-                                + NEUTRAL
-                                + abbrev(stack.getStackSize()));
-            }
-        }
+        this.addItemList(r.cantExtract, lines);
+        this.addItemList(r.cantInject, lines);
 
         lines.add("");
-        long net = report.totalStacksAfter - report.totalStacksBefore;
-        if (net != 0) {
+        if (stackDelta != 0) {
             lines.add(
                     WARNING + GuiText.ReshuffleReportNetChanged.getLocal()
                             + " "
-                            + diffColor(net)
-                            + signedAbbrev(net)
+                            + diffColor(stackDelta)
+                            + fmt(stackDelta)
                             + " "
                             + NEUTRAL
                             + GuiText.ReshuffleReportNetChangedReason.getLocal());
@@ -1116,52 +950,58 @@ public class GuiStorageReshuffle extends AEBaseGui {
         return lines;
     }
 
-    private String buildTotalLine(String label, long before, long after) {
-        long delta = after - before;
-        return MAIN + label
-                + " "
-                + NEUTRAL
-                + abbrev(before)
-                + VALUES
-                + " -> "
-                + VALUES
-                + abbrev(after)
-                + " "
-                + diffColor(delta)
-                + "("
-                + signedAbbrev(delta)
-                + ")";
+    private void addItemList(final IItemList<IAEStack<?>> list, final List<String> lines) {
+        if (!list.isEmpty()) {
+            lines.add("");
+            lines.add(WARNING + GuiText.ReshuffleReportSectionCantInject.getLocal());
+            for (IAEStack<?> stack : list) {
+                lines.add(
+                        WARNING + "• "
+                                + VALUES
+                                + stack.getDisplayName()
+                                + " "
+                                + NEUTRAL
+                                + "x"
+                                + fmt(stack.getStackSize()));
+            }
+        }
+    }
+
+    private List<String> buildItemLines(ItemChange c) {
+        List<String> out = new ArrayList<>();
+        String name = c.stack.getDisplayName();
+        String delta = fmt(Math.abs(c.difference));
+        out.add(NEGATIVE + "• " + VALUES + name + " " + NEGATIVE + "-" + delta);
+        out.add(NEUTRAL + "  (" + fmt(c.beforeCount) + " → " + fmt(c.afterCount) + ")");
+        return out;
     }
 
     private String buildModeString() {
-        final ReshuffleReport report = this.container.getReshuffleReport();
-        if (!report.types.getEnabledTypes().iterator().hasNext()) return GuiText.ReshuffleReportModeNone.getLocal();
+        if (!this.container.typeFilters.getEnabledTypes().iterator().hasNext())
+            return GuiText.ReshuffleReportModeNone.getLocal();
         StringBuilder sb = new StringBuilder();
-
-        for (IAEStackType<?> type : report.types.getEnabledTypes()) {
+        for (IAEStackType<?> type : this.container.typeFilters.getEnabledTypes()) {
             if (sb.length() > 0) sb.append('/');
             sb.append(type.getDisplayName());
         }
         return sb.toString();
     }
 
-    final static ReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
-
-    private static String abbrev(long v) {
-        return converter.toWideReadableForm(v);
-    }
-
-    private static String signedAbbrev(long v) {
-        if (v > 0) return "+" + abbrev(v);
-        if (v < 0) return "-" + abbrev(-v);
-        return "0";
-    }
-
     private static String fmt(long v) {
         return NumberFormat.getNumberInstance(Locale.US).format(v);
     }
 
+    private static String fmt(double v) {
+        return NumberFormat.getNumberInstance(Locale.US).format(v);
+    }
+
     private static String diffColor(long delta) {
+        if (delta > 0) return POSITIVE;
+        if (delta < 0) return NEGATIVE;
+        return NEUTRAL;
+    }
+
+    private static String diffColor(double delta) {
         if (delta > 0) return POSITIVE;
         if (delta < 0) return NEGATIVE;
         return NEUTRAL;
@@ -1178,15 +1018,5 @@ public class GuiStorageReshuffle extends AEBaseGui {
         char[] buf = new char[count];
         Arrays.fill(buf, '=');
         return new String(buf);
-    }
-
-    private String getStackDisplayName(IAEStack<?> stack) {
-        if (stack == null) return GuiText.ReshuffleReportUnknown.getLocal();
-        try {
-            String name = stack.getDisplayName();
-            return (name != null && !name.isEmpty()) ? name : GuiText.ReshuffleReportUnknown.getLocal();
-        } catch (Exception e) {
-            return GuiText.ReshuffleReportUnknown.getLocal();
-        }
     }
 }

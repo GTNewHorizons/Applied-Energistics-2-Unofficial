@@ -307,6 +307,8 @@ public enum GuiText implements Localization {
     StorageReshuffle,
     ReshuffleStatusLabel,
     ReshuffleStatusIdle,
+    ReshuffleStatusBeforeSnapshot,
+    ReshuffleStatusAfterSnapshot,
     ReshuffleStatusExtracting,
     ReshuffleStatusInjecting,
     ReshuffleStatusComplete,
@@ -324,9 +326,6 @@ public enum GuiText implements Localization {
     ReshuffleReportTime,
     ReshuffleReportMode,
     ReshuffleReportModeNone,
-    ReshuffleReportVoidLabel,
-    ReshuffleReportVoidOn,
-    ReshuffleReportVoidOff,
     ReshuffleReportSubnetsLabel,
     ReshuffleReportSubnetsOn,
     ReshuffleReportSubnetsOff,
@@ -336,22 +335,19 @@ public enum GuiText implements Localization {
     ReshuffleReportLabelTypes,
     ReshuffleReportLabelStacks,
     ReshuffleReportSectionTopLost,
-    ReshuffleReportSectionSkipped,
+    ReshuffleReportSectionCantExtract,
+    ReshuffleReportSectionCantInject,
     ReshuffleReportNetChanged,
     ReshuffleReportNetChangedReason,
     ReshuffleReportIntegrityOk,
     ReshuffleReportUnknown,
     ReshuffleReportNoMatchingCells,
-    ReshuffleReportSingularitySuggestions,
 
     ReshuffleTooltipDesc1,
     ReshuffleTooltipDesc2,
     ReshuffleTooltipDesc3,
 
     ReshuffleTabReshuffle,
-    ReshuffleTabScan,
-    ReshuffleTabReshuffleHint,
-    ReshuffleTabScanHint,
     ReshuffleLocate,
     ReshuffleScanEmpty,
     ReshuffleScanDuplicatesTitle,
@@ -362,7 +358,6 @@ public enum GuiText implements Localization {
     ReshuffleOpenFromToolHint,
     ReshuffleNotPresent,
 
-    // Cell Health view
     ReshuffleHealthTitle,
     ReshuffleHealthTabHint,
     ReshuffleHealthEmpty,
@@ -370,7 +365,19 @@ public enum GuiText implements Localization {
     ReshuffleHealthTooltipTypes,
     ReshuffleHealthTopItems,
     ReshuffleHealthTopItemEntry,
-    ReshuffleTooltipCoords;
+    ReshuffleTooltipCoords,
+    ReshuffleTooltipCoordsNoSlot,
+    ReshuffleTabScanHint,
+
+    // styles
+    ReshuffleScanDuplicatePartitionStackNameStyle,
+    ReshuffleScanDuplicatePartitionTargetNameColor,
+    ReshuffleReportTextColorMain,
+    ReshuffleReportTextColorValues,
+    ReshuffleReportTextColorPositive,
+    ReshuffleReportTextColorNegative,
+    ReshuffleReportTextColorNeutral,
+    ReshuffleReportTextColorWarning,;
 
     private final String root;
 
