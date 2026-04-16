@@ -27,6 +27,7 @@ import appeng.core.AELog;
 import appeng.me.cache.GridStorageCache;
 import appeng.me.helpers.IGridProxyable;
 import appeng.me.storage.CellInventory;
+import appeng.me.storage.MEInventoryHandler;
 import appeng.parts.misc.PartStorageBus;
 import appeng.tile.inventory.IAEStackInventory;
 import appeng.util.IterationCounter;
@@ -168,9 +169,12 @@ public class ScanTask implements IGuiPacketWritable {
                 final DimensionalCoord dc = igp.getLocation();
 
                 if (igp instanceof PartStorageBus sb) {
+                    final MEInventoryHandler<?> handler = sb.getInternalHandler();
+                    if (handler == null) continue;
                     scan(
                             sb.getPrimaryGuiIcon(),
                             sb.getInternalHandler(),
+                            sb.getStackType(),
                             -1,
                             sb.getAEInventoryByName(StorageName.CONFIG),
                             dc,
@@ -197,6 +201,7 @@ public class ScanTask implements IGuiPacketWritable {
                                         scan(
                                                 cell,
                                                 target,
+                                                ci.getStackType(),
                                                 i,
                                                 ci.getConfigAEInventory(),
                                                 dc,
@@ -217,13 +222,13 @@ public class ScanTask implements IGuiPacketWritable {
         this.trimRecords();
     }
 
-    private void scan(ItemStack is, IMEInventory<?> inv, int slot, IAEStackInventory configInv, DimensionalCoord dc,
-            long typesUsed, long typesTotal, long bytesUsed, long bytesTotal) {
+    private void scan(ItemStack is, IMEInventory<?> inv, IAEStackType<?> type, int slot, IAEStackInventory configInv,
+            DimensionalCoord dc, long typesUsed, long typesTotal, long bytesUsed, long bytesTotal) {
         if (configInv != null) {
             for (int i = 0; i < configInv.getSizeInventory(); i++) {
                 IAEStack<?> filterStack = configInv.getAEStackInSlot(i);
                 if (filterStack == null) continue;
-                final Map<IAEStack<?>, List<ScanRecord>> map = this.scanData.get(inv.getStackType());
+                final Map<IAEStack<?>, List<ScanRecord>> map = this.scanData.get(type);
                 final List<ScanRecord> list = map.getOrDefault(filterStack, new ArrayList<>());
                 list.add(new ScanRecord(slot, is, typesUsed, typesTotal, bytesUsed, bytesTotal, dc, new ArrayList<>()));
                 map.put(filterStack, list);
