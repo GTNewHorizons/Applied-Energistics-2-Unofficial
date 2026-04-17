@@ -86,6 +86,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
     private static final int TITLE_TOP_OFFSET = 7;
     private static final int TITLE_LEFT_OFFSET = 8;
+    private static final int REMAINING_OPERATIONS_RIGHT_OFFSET = 128;
 
     private static final int ITEMSTACK_LEFT_OFFSET = 9;
     private static final int ITEMSTACK_TOP_OFFSET = 22;
@@ -143,7 +144,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
         @Override
         public int xPos() {
-            return guiLeft + TITLE_LEFT_OFFSET + 200 - this.getWidth();
+            return guiLeft + TITLE_LEFT_OFFSET + REMAINING_OPERATIONS_RIGHT_OFFSET - this.getWidth();
         }
 
         @Override
@@ -365,7 +366,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
 
         this.fontRendererObj.drawString(
                 String.valueOf(this.remainingOperations),
-                TITLE_LEFT_OFFSET + 128 - this.remainingOperationsTooltip.getWidth(),
+                TITLE_LEFT_OFFSET + REMAINING_OPERATIONS_RIGHT_OFFSET - this.remainingOperationsTooltip.getWidth(),
                 TITLE_TOP_OFFSET,
                 GuiColors.CraftingCPUTitle.getColor());
         this.fontRendererObj
