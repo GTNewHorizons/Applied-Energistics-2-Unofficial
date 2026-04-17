@@ -36,9 +36,9 @@ final class CraftingCpuServerSyncBuilder {
         final List<CraftingCpuEntry> updates = new ArrayList<>();
         for (final IAEStack<?> stack : changedStacks) {
             final IAEStack<?> normalizedStack = normalizeStack(stack);
-            final long storedAmount = monitor.getItemStackSize(normalizedStack, CraftingItemList.STORAGE);
-            final long activeAmount = monitor.getItemStackSize(normalizedStack, CraftingItemList.ACTIVE);
-            final long pendingAmount = monitor.getItemStackSize(normalizedStack, CraftingItemList.PENDING);
+            final long storedAmount = monitor.getStackAmount(normalizedStack, CraftingItemList.STORAGE);
+            final long activeAmount = monitor.getStackAmount(normalizedStack, CraftingItemList.ACTIVE);
+            final long pendingAmount = monitor.getStackAmount(normalizedStack, CraftingItemList.PENDING);
             updates.add(
                     new CraftingCpuEntry(
                             normalizedStack,

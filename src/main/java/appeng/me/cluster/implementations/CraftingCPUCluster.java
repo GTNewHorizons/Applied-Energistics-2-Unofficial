@@ -1388,33 +1388,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         i.value += crafts;
     }
 
-    public IAEStack<?> getItemStack(final IAEStack what, final CraftingItemList storage2) {
-        IAEStack<?> aes;
-        switch (storage2) {
-            case STORAGE -> aes = this.inventory.findPrecise(what);
-            case ACTIVE -> aes = this.waitingFor.findPrecise(what);
-            case PENDING -> {
-                aes = what.copy();
-                aes.setStackSize(0);
-                for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
-                    for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
-                        if (Objects.equals(ais, aes)) {
-                            aes.setStackSize(aes.getStackSize() + ais.getStackSize() * t.getValue().value);
-                        }
-                    }
-                }
-            }
-            default -> throw new IllegalStateException("Invalid Operation");
-        }
-
-        if (aes != null) {
-            return aes.copy();
-        }
-
-        return what.copy().setStackSize(0);
-    }
-
-    public long getItemStackSize(final IAEStack what, final CraftingItemList storage2) {
+    public long getStackAmount(final IAEStack what, final CraftingItemList storage2) {
         switch (storage2) {
             case STORAGE: {
                 final IAEStack<?> stack = this.inventory.findPrecise(what);
@@ -1809,28 +1783,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             }
         }
         return ScheduledReason.UNDEFINED;
-    }
-
-    public NBTTagCompound getNonUndefinedScheduledReasons() {
-        final NBTTagCompound result = new NBTTagCompound();
-        final NBTTagList entries = new NBTTagList();
-        for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
-            final ScheduledReason sr = reasonProvider.getOrDefault(t.getKey(), ScheduledReason.UNDEFINED);
-            if (sr != ScheduledReason.UNDEFINED) {
-                for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
-                    final IAEStack<?> keyStack = ais.copy();
-                    keyStack.setStackSize(1);
-
-                    final NBTTagCompound entry = new NBTTagCompound();
-                    entry.setString("Type", keyStack.getStackType().getId());
-                    entry.setInteger("Hash", keyStack.hashCode());
-                    entry.setInteger("Reason", sr.ordinal());
-                    entries.appendTag(entry);
-                }
-            }
-        }
-        result.setTag("Entries", entries);
-        return result;
     }
 
     private final IdentityHashMap<Class<?>, Method> getTileMethodCache = new IdentityHashMap<>();
