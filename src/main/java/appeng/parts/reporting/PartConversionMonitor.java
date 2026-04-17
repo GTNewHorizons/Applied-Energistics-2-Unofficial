@@ -238,6 +238,8 @@ public class PartConversionMonitor extends AbstractPartMonitor {
                 if (monitor == null) return;
 
                 IAEStack<?> stored = monitor.getAvailableItem(displayed, IterationCounter.fetchNewId());
+                if (stored == null || stored.getStackSize() <= 0) return;
+
                 long amountToFill = type.fillContainer(hand.copy(), stored).rightLong();
 
                 IAEStack<?> extracted = Platform.poweredExtraction(
