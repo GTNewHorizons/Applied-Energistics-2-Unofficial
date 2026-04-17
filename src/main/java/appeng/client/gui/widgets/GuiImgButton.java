@@ -931,47 +931,47 @@ public class GuiImgButton extends GuiButton implements ITooltip {
             this.registerApp(
                     8 * 16 + 8,
                     Settings.ACTIONS,
+                    ActionItems.RESHUFFLE_MODE_RESHUFFLE,
+                    ButtonToolTips.ReshuffleTab,
+                    ButtonToolTips.ReshuffleTabHint);
+            this.registerApp(
+                    8 * 16 + 8,
+                    Settings.ACTIONS,
                     ActionItems.OPEN_RESHUFFLE_ON,
                     ButtonToolTips.OpenReshuffle,
                     ButtonToolTips.OpenReshuffleDesc);
             this.registerApp(
-                    8 * 16 + 8,
+                    8 * 16 + 9,
                     Settings.ACTIONS,
                     ActionItems.OPEN_RESHUFFLE_OFF,
                     ButtonToolTips.OpenReshuffle,
                     ButtonToolTips.OpenReshuffleOffDesc);
             this.registerApp(
-                    8 * 16 + 8,
-                    Settings.ACTIONS,
-                    ActionItems.RESHUFFLE_MODE_RESHUFFLE,
-                    ButtonToolTips.ReshuffleTab,
-                    ButtonToolTips.ReshuffleTabHint);
-            this.registerApp(
-                    8 * 16 + 9,
+                    8 * 16 + 10,
                     Settings.ACTIONS,
                     ActionItems.RESHUFFLE_MODE_LOCATE,
                     ButtonToolTips.ReshuffleIncludeSubnets,
                     ButtonToolTips.ReshuffleLocate);
             this.registerApp(
-                    8 * 16 + 10,
+                    8 * 16 + 11,
                     Settings.ACTIONS,
                     ActionItems.RESHUFFLE_MODE_HEALTH,
-                    ButtonToolTips.HealthTab,
-                    ButtonToolTips.HealthTabHint);
+                    ButtonToolTips.ReshuffleHealthTab,
+                    ButtonToolTips.ReshuffleHealthTabHint);
             this.registerApp(
-                    8 * 16 + 11,
+                    8 * 16 + 12,
                     Settings.INCLUDE_SUBNETS,
                     YesNo.YES,
                     ButtonToolTips.ReshuffleIncludeSubnets,
                     ButtonToolTips.ReshuffleIncludeSubnetsOn);
             this.registerApp(
-                    8 * 16 + 11,
+                    8 * 16 + 13,
                     Settings.INCLUDE_SUBNETS,
                     YesNo.NO,
                     ButtonToolTips.ReshuffleIncludeSubnets,
                     ButtonToolTips.ReshuffleIncludeSubnetsOff);
             this.registerApp(
-                    4 * 16 + 13,
+                    4 * 16 + 10,
                     Settings.CELL_HEALTH_SORT,
                     HealthSortOrder.FILL_PCT,
                     ButtonToolTips.CellHealthSortBy,

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +29,6 @@ import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
-import appeng.core.AELog;
 import appeng.helpers.ReshuffleReport;
 import appeng.helpers.ReshuffleTask;
 import appeng.helpers.ScanTask;
@@ -40,6 +40,7 @@ import appeng.tile.grid.AENetworkTile;
 import appeng.util.AEStackTypeFilter;
 import appeng.util.ConfigManager;
 import appeng.util.IConfigManagerHost;
+import appeng.util.Platform;
 import appeng.util.item.IAEStackList;
 import io.netty.buffer.ByteBuf;
 
@@ -55,7 +56,7 @@ public class TileStorageReshuffle extends AENetworkTile
     private ReshuffleReport reshuffleReport = null;
     private ScanTask lastScan = null;
 
-    private final IItemList<IAEStack<?>> cantInject = new IAEStackList();
+    private IItemList<IAEStack<?>> cantInject = new IAEStackList();
 
     public TileStorageReshuffle() {
         this.getProxy().setFlags(GridFlags.REQUIRE_CHANNEL);
@@ -105,33 +106,45 @@ public class TileStorageReshuffle extends AENetworkTile
     public void writeToNBT_TileStorageReshuffle(final NBTTagCompound data) {
         this.cm.writeToNBT(data);
         this.typeFilters.writeToNBT(data);
+        if (this.activeTask != null && this.activeTask.isRunning()) this.activeTask.cancelNbt();
+        data.setTag("cantInject", Platform.writeAEStackListNBT(this.cantInject));
     }
 
     @TileEvent(TileEventType.WORLD_NBT_READ)
     public void readFromNBT_TileStorageReshuffle(final NBTTagCompound data) {
         this.cm.readFromNBT(data);
         this.typeFilters.readFromNBT(data);
+        this.cantInject = Platform.readAEStackListNBT(data.getTagList("cantInject", NBT.TAG_COMPOUND));
     }
 
     int count = 0;
 
     @TileEvent(TileEventType.TICK)
     public void Tick_TileStorageReshuffle() {
-        if (this.activeTask != null) {
-            this.reshuffleReport = this.activeTask.getReport();
-            if (this.activeTask.isRunning()) this.activeTask.processNextBatch();
-            else {
-                unlockStorage();
-                this.activeTask = null;
+        try {
+            if (this.activeTask != null) {
+                if (this.activeTask.isRunning()) {
+                    this.activeTask.processNextBatch();
+                    this.reshuffleReport = this.activeTask.getReport();
+                } else {
+                    unlockStorage();
+                    this.reshuffleReport = this.activeTask.getReport();
+                    this.activeTask = null;
+                }
+
+                this.markDirty();
+                this.markForUpdate();
+            } else {
+                if (!this.cantInject.isEmpty() && this.count >= 240) {
+                    this.count = 0;
+                    this.returnPendingItems();
+                } else this.count++;
             }
-
-            this.markDirty();
-            this.markForUpdate();
+        } catch (final Exception ignored) {
+            this.activeTask.error();
+            this.reshuffleReport = this.activeTask.getReport();
+            this.activeTask = null;
         }
-
-        if (!this.cantInject.isEmpty() && count >= 240) {
-            this.returnPendingItems();
-        } else count++;
     }
 
     @Override
@@ -173,14 +186,7 @@ public class TileStorageReshuffle extends AENetworkTile
                     new ReshuffleActionSource(this),
                     includeSubnets);
 
-            try {
-                this.activeTask.initialize();
-            } catch (Exception e) {
-                this.activeTask = null;
-                unlockStorage();
-                this.markDirty();
-            }
-
+            this.activeTask.initialize();
             this.markForUpdate();
 
         } catch (GridAccessException ignored) {}
@@ -190,6 +196,7 @@ public class TileStorageReshuffle extends AENetworkTile
         if (this.activeTask != null) {
             this.activeTask.cancel();
             unlockStorage();
+            this.reshuffleReport = this.activeTask.getReport();
             this.activeTask = null;
             this.markDirty();
             this.markForUpdate();
@@ -208,7 +215,6 @@ public class TileStorageReshuffle extends AENetworkTile
             this.lastScan.scanGrid(grid);
             this.markDirty();
         } catch (GridAccessException e) {
-            AELog.warn(e, "Failed to access grid for scan");
             this.lastScan = null;
             this.markDirty();
         }
@@ -261,7 +267,8 @@ public class TileStorageReshuffle extends AENetworkTile
     }
 
     public boolean isReshuffleRunning() {
-        return this.activeTask != null && this.activeTask.isRunning();
+        if (Platform.isServer()) return this.activeTask != null && this.activeTask.isRunning();
+        return this.wasRunning;
     }
 
     public ReshuffleReport getReshuffleReport() {

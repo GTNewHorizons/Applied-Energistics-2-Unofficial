@@ -21,7 +21,8 @@ public class ReshuffleReport implements IGuiPacketWritable {
 
     public final int extractedTypes, injectedTypes, beforeTypes, afterTypes;
     public final long startTime, endTime;
-    public final double extractedItems, injectedItems, beforeItems, afterItems;
+    public final double extractedItems, injectedItems;
+    public double beforeItems, afterItems = 0;
 
     public final IItemList<IAEStack<?>> cantExtract, cantInject, beforeSnapshot, afterSnapshot, stackLookup;
 
@@ -67,7 +68,7 @@ public class ReshuffleReport implements IGuiPacketWritable {
             final long endTime, final double extractedItems, final double injectedItems,
             final IItemList<IAEStack<?>> cantExtract, final IItemList<IAEStack<?>> cantInject,
             final IItemList<IAEStack<?>> beforeSnapshot, IItemList<IAEStack<?>> afterSnapshot,
-            IItemList<IAEStack<?>> stackLockup, final double beforeItems, final double afterItems) {
+            IItemList<IAEStack<?>> stackLockup) {
         this.typeFilters = typeFilters;
         this.includeSubnets = includeSubnets;
         this.phase = phase;
@@ -82,8 +83,6 @@ public class ReshuffleReport implements IGuiPacketWritable {
         this.beforeSnapshot = beforeSnapshot;
         this.afterSnapshot = afterSnapshot;
         this.stackLookup = stackLockup;
-        this.beforeItems = beforeItems;
-        this.afterItems = afterItems;
         this.beforeTypes = this.afterTypes = 0;
         if (this.phase == ReshufflePhase.DONE) generateReport();
     }
@@ -117,9 +116,10 @@ public class ReshuffleReport implements IGuiPacketWritable {
             this.cantInject.add(Platform.readStackByte(buf));
         }
 
+        this.beforeTypes = buf.readInt();
+        this.afterTypes = buf.readInt();
+
         if (this.phase == ReshufflePhase.DONE) {
-            this.beforeTypes = buf.readInt();
-            this.afterTypes = buf.readInt();
             this.beforeItems = buf.readDouble();
             this.afterItems = buf.readDouble();
 
@@ -132,10 +132,7 @@ public class ReshuffleReport implements IGuiPacketWritable {
             for (int i = 0; i < sizeLostItems; i++) {
                 this.lostItems.add(ItemChange.read(buf));
             }
-        } else {
-            this.beforeTypes = this.afterTypes = 0;
-            this.beforeItems = this.afterItems = 0;
-        }
+        } else this.beforeItems = this.afterItems = 0;
     }
 
     @Override
@@ -159,9 +156,10 @@ public class ReshuffleReport implements IGuiPacketWritable {
         buf.writeInt(this.cantInject.size());
         this.cantInject.forEach(stack -> Platform.writeStackByte(stack, buf));
 
+        buf.writeInt(this.beforeSnapshot.size());
+        buf.writeInt(this.afterSnapshot.size());
+
         if (this.phase == ReshufflePhase.DONE) {
-            buf.writeInt(this.beforeSnapshot.size());
-            buf.writeInt(this.afterSnapshot.size());
             buf.writeDouble(this.beforeItems);
             buf.writeDouble(this.afterItems);
 
@@ -177,10 +175,13 @@ public class ReshuffleReport implements IGuiPacketWritable {
             final IAEStack<?> before = this.beforeSnapshot.findPrecise(lookup);
             final IAEStack<?> after = this.afterSnapshot.findPrecise(lookup);
 
-            ItemChange change = new ItemChange(
-                    lookup,
-                    before == null ? 0 : before.getStackSize(),
-                    after == null ? 0 : after.getStackSize());
+            final long beforeCount = before == null ? 0 : before.getStackSize();
+            final long afterCount = after == null ? 0 : after.getStackSize();
+
+            this.beforeItems += beforeCount;
+            this.afterItems += afterCount;
+
+            ItemChange change = new ItemChange(lookup, beforeCount, afterCount);
 
             switch (change.changeType) {
                 case 1 -> this.gainedItems.add(change);
@@ -194,8 +195,12 @@ public class ReshuffleReport implements IGuiPacketWritable {
 
     public int getProgressPercent() {
         return switch (this.phase) {
-            case EXTRACTION -> 20;
-            case INJECTION -> 20 + (80 * (this.injectedTypes / this.extractedTypes));
+            case BEFORE_SNAPSHOT -> 10;
+            case EXTRACTION -> 10
+                    + (int) (40 * (this.extractedTypes / (double) (this.beforeTypes == 0 ? 1 : this.beforeTypes)));
+            case INJECTION -> 50
+                    + (int) (40 * (this.injectedTypes / (double) (this.extractedTypes == 0 ? 1 : this.extractedTypes)));
+            case AFTER_SNAPSHOT -> 90;
             case DONE -> 100;
             default -> 0;
         };

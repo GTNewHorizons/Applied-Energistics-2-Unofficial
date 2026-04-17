@@ -267,17 +267,16 @@ public enum ButtonToolTips implements Localization {
     OpenReshuffleOffDesc,
     ReshuffleTab,
     ReshuffleTabHint,
-    ScanTab,
-    ScanTabHint,
-    HealthTab,
-    HealthTabHint,
+    ReshuffleTabScan,
+    ReshuffleTabScanHint,
+    ReshuffleHealthTab,
+    ReshuffleHealthTabHint,
     ReshuffleLocate,
     CellHealthSortBy,
     CellHealthSortByFill,
     CellHealthSortBySize,
-    ReshuffleTabScan,
-    ReshuffleTabReshuffleHint,
-    ReshuffleTabScanHint;
+
+    ReshuffleTabReshuffleHint;
 
     ButtonToolTips() {}
 
