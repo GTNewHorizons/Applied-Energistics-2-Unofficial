@@ -1,6 +1,7 @@
 package appeng.container.implementations;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -9,7 +10,11 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import org.jetbrains.annotations.NotNull;
 
 import appeng.api.AEApi;
 import appeng.api.config.CraftingAllow;
@@ -148,10 +153,42 @@ public class ContainerCraftingCPU extends AEBaseContainer
     }
 
     public void sendUpdateFollowPacket(final List<String> playersFollowingCurrentCraft) {
-        final NBTTagCompound followData = CraftingCpuServerSyncBuilder
-                .buildFollowingPlayersNbt(playersFollowingCurrentCraft);
+        final NBTTagCompound followData = buildFollowingPlayersNbt(playersFollowingCurrentCraft);
         this.sendCompressedNbtToCrafters(followData);
         this.pendingFollowSync = false;
+    }
+
+    private static NBTTagCompound buildFollowingPlayersNbt(final List<String> playersFollowingCurrentCraft) {
+        final NBTTagCompound result = new NBTTagCompound();
+        final NBTTagList tagList = new NBTTagList();
+
+        if (playersFollowingCurrentCraft != null) {
+            for (final String name : playersFollowingCurrentCraft) {
+                tagList.appendTag(new NBTTagString(name));
+            }
+        }
+
+        result.setTag("playNameList", tagList);
+        return result;
+    }
+
+    private static List<CraftingCpuEntry> buildVisualEntryUpdates(@NotNull final CraftingCPUCluster monitor,
+            final Iterable<IAEStack<?>> changedStacks) {
+        final List<CraftingCpuEntry> updates = new ArrayList<>();
+        for (final IAEStack<?> stack : changedStacks) {
+            final IAEStack<?> normalizedStack = CraftingCpuEntry.normalizeStack(stack);
+            final long storedAmount = monitor.getStackAmount(normalizedStack, CraftingItemList.STORAGE);
+            final long activeAmount = monitor.getStackAmount(normalizedStack, CraftingItemList.ACTIVE);
+            final long pendingAmount = monitor.getStackAmount(normalizedStack, CraftingItemList.PENDING);
+            updates.add(
+                    new CraftingCpuEntry(
+                            normalizedStack,
+                            storedAmount,
+                            activeAmount,
+                            pendingAmount,
+                            monitor.getScheduledReason(normalizedStack)));
+        }
+        return updates;
     }
 
     private void sendCompressedNbtToCrafters(final NBTTagCompound data) {
@@ -175,7 +212,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
                 if (this.pendingVisualClear || !this.changedStacks.isEmpty()
                         || remainingOperations != this.lastSentRemainingOperations) {
                     final PacketCraftingCpuUpdate visualEntriesPacket = new PacketCraftingCpuUpdate(
-                            CraftingCpuServerSyncBuilder.buildVisualEntryUpdates(this.cpu, this.changedStacks),
+                            buildVisualEntryUpdates(this.cpu, this.changedStacks),
                             this.pendingVisualClear,
                             remainingOperations);
 
@@ -209,8 +246,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
             }
             this.pendingVisualClear = false;
             this.lastSentRemainingOperations = 0;
-            this.sendCompressedNbtToCrafters(
-                    CraftingCpuServerSyncBuilder.buildFollowingPlayersNbt(Collections.emptyList()));
+            this.sendCompressedNbtToCrafters(buildFollowingPlayersNbt(Collections.emptyList()));
             this.pendingFollowSync = false;
         } catch (final IOException ignored) {}
     }
