@@ -27,7 +27,6 @@ import org.lwjgl.input.Mouse;
 import appeng.api.config.Settings;
 import appeng.api.config.TerminalStyle;
 import appeng.api.storage.ITerminalHost;
-import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.IGuiSub;
 import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.GuiCraftingCPUTable;
@@ -43,7 +42,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 
-public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTableHolder, IGuiSub {
+public class GuiCraftingStatus extends GuiCraftingCPURefactored implements ICraftingCPUTableHolder, IGuiSub {
 
     private final ContainerCraftingStatus status;
     private GuiButton selectCPU;
@@ -100,8 +99,6 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
             switchTallMode.set(tallMode ? TerminalStyle.TALL : TerminalStyle.SMALL);
             recalculateScreenSize();
             this.setWorldAndResolution(mc, width, height);
-        } else if (btn == this.toggleHideStored) {
-            this.setScrollBar();
         }
     }
 
@@ -109,7 +106,6 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
     public void initGui() {
         recalculateScreenSize();
         super.initGui();
-        this.setScrollBar();
 
         if (status.getPrimaryGuiIcon() != null) initPrimaryGuiButton();
 
@@ -143,7 +139,7 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
-        this.follow.enabled = !this.visual.isEmpty();
+        this.follow.enabled = this.hasVisualEntries();
         this.cpuTable.drawScreen();
         this.updateCPUButtonText();
         this.updateFollowButtonText();
@@ -259,22 +255,9 @@ public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTab
         GuiCraftingCPUTable.CPU_TABLE_HEIGHT = this.rows * GuiCraftingCPUTable.CPU_TABLE_SLOT_HEIGHT + 27;
     }
 
-    private void setScrollBar() {
-        int size;
-        if (this.hideStored) {
-            size = this.visualHiddenStored.size();
-        } else {
-            size = this.visual.size();
-        }
-
-        this.getScrollBar().setTop(SCROLLBAR_TOP).setLeft(SCROLLBAR_LEFT).setHeight(ySize - 47);
-        this.getScrollBar().setRange(0, (size + 2) / 3 - this.rows, 1);
-    }
-
     @Override
-    public void postUpdate(List<IAEStack<?>> list, byte ref) {
-        super.postUpdate(list, ref);
-        setScrollBar();
+    protected int getScrollBarHeight() {
+        return this.ySize - 47;
     }
 
     public void postUpdate(final NBTTagCompound playerNameListNBT) {

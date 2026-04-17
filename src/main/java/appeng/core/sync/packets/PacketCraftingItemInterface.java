@@ -12,10 +12,9 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.NamedDimensionalCoord;
-import appeng.client.gui.implementations.GuiCraftingCPU;
+import appeng.client.gui.implementations.GuiCraftingCPURefactored;
 import appeng.container.ContainerOpenContext;
-import appeng.container.implementations.ContainerCraftingCPU;
-import appeng.container.implementations.ContainerCraftingStatus;
+import appeng.container.implementations.ContainerCraftingCPURefactored;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.core.sync.network.NetworkHandler;
@@ -71,28 +70,8 @@ public class PacketCraftingItemInterface extends AppEngPacket {
 
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
-        if (player.openContainer instanceof ContainerCraftingCPU ccpu) {
-            final Object target = ccpu.getTarget();
-            if (target instanceof IGridHost) {
-                final ContainerOpenContext context = ccpu.getOpenContext();
-                if (context != null) {
-                    ICraftingCPU cpu;
-                    if (player.openContainer instanceof ContainerCraftingStatus ccs) {
-                        cpu = ccs.getCPUTable().getSelectedCPU().getServerCluster();
-                    } else {
-                        cpu = ccpu.getMonitor();
-                    }
-
-                    if (cpu instanceof CraftingCPUCluster cpuc) {
-                        NBTTagCompound data = new NBTTagCompound();
-                        NamedDimensionalCoord.writeListToNBTNamed(data, cpuc.getProviders(this.is));
-                        try {
-                            NetworkHandler.instance
-                                    .sendTo(new PacketCraftingItemInterface(data), (EntityPlayerMP) player);
-                        } catch (Exception ignored) {}
-                    }
-                }
-            }
+        if (player.openContainer instanceof ContainerCraftingCPURefactored ccpu) {
+            this.sendInterfaceLocations(player, ccpu.getTarget(), ccpu.getOpenContext(), ccpu.getMonitor());
         }
     }
 
@@ -101,8 +80,21 @@ public class PacketCraftingItemInterface extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
-        if (gs instanceof GuiCraftingCPU guiCraftingCPU) {
+        if (gs instanceof GuiCraftingCPURefactored guiCraftingCPU) {
             guiCraftingCPU.postUpdateTooltip(this.nbt);
         }
+    }
+
+    private void sendInterfaceLocations(final EntityPlayer player, final Object target,
+            final ContainerOpenContext context, final ICraftingCPU cpu) {
+        if (!(target instanceof IGridHost) || context == null || !(cpu instanceof CraftingCPUCluster cpuc)) {
+            return;
+        }
+
+        final NBTTagCompound data = new NBTTagCompound();
+        NamedDimensionalCoord.writeListToNBTNamed(data, cpuc.getProviders(this.is));
+        try {
+            NetworkHandler.instance.sendTo(new PacketCraftingItemInterface(data), (EntityPlayerMP) player);
+        } catch (Exception ignored) {}
     }
 }

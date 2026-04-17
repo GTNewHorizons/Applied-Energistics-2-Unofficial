@@ -59,6 +59,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.NotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,7 +105,7 @@ import appeng.api.util.IInterfaceViewable;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.container.ContainerNull;
-import appeng.container.implementations.ContainerCraftingCPU;
+import appeng.container.implementations.ContainerCraftingCPURefactored;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
@@ -1413,6 +1414,33 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         return what.copy().setStackSize(0);
     }
 
+    public long getItemStackSize(final IAEStack what, final CraftingItemList storage2) {
+        switch (storage2) {
+            case STORAGE: {
+                final IAEStack<?> stack = this.inventory.findPrecise(what);
+                return stack == null ? 0 : stack.getStackSize();
+            }
+            case ACTIVE: {
+                final IAEStack<?> stack = this.waitingFor.findPrecise(what);
+                return stack == null ? 0 : stack.getStackSize();
+            }
+            case PENDING: {
+                long amount = 0;
+                final IAEStack<?> keyStack = what.copy().setStackSize(0);
+                for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
+                    for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
+                        if (Objects.equals(ais, keyStack)) {
+                            amount += ais.getStackSize() * t.getValue().value;
+                        }
+                    }
+                }
+                return amount;
+            }
+            default:
+                throw new IllegalStateException("Invalid Operation");
+        }
+    }
+
     private NBTTagCompound persistListeners(int from, List<?> listeners) throws IOException {
         NBTTagCompound tagListeners = new NBTTagCompound();
         for (int i = from; i < listeners.size(); i++) {
@@ -1696,7 +1724,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
         while (i.hasNext()) {
-            if (i.next().getKey() instanceof ContainerCraftingCPU cccpu) {
+            final IMEMonitorHandlerReceiver listener = i.next().getKey();
+            if (listener instanceof ContainerCraftingCPURefactored cccpu) {
                 cccpu.sendUpdateFollowPacket(playersFollowingCurrentCraft);
             }
         }
@@ -1770,7 +1799,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
-    public ScheduledReason getScheduledReason(IAEStack<?> is) {
+    @NotNull
+    public ScheduledReason getScheduledReason(@NotNull IAEStack<?> is) {
         for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
             for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
                 if (Objects.equals(ais, is)) {

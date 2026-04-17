@@ -2,15 +2,12 @@ package appeng.core.sync.packets;
 
 import java.io.IOException;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.crafting.ICraftingCPU;
-import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.ContainerOpenContext;
 import appeng.container.implementations.ContainerCraftingStatus;
 import appeng.container.implementations.CraftingCPUStatus;
@@ -86,14 +83,5 @@ public class PacketCraftingRemainingOperations extends AppEngPacket {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
-        final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-
-        if (gs instanceof GuiCraftingCPU guiCraftingCPU) {
-            guiCraftingCPU.postUpdate(this.remainingOperations);
-            if (this.itemScheduledReasons != null && !this.itemScheduledReasons.hasNoTags()) {
-                guiCraftingCPU.postUpdateBatchReasons(this.itemScheduledReasons);
-            }
-        }
-    }
+    public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {}
 }
