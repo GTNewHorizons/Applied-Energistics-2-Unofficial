@@ -209,8 +209,7 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
                                     Actionable.SIMULATE,
                                     this.getActionSource());
                             long available = (availableStack == null) ? 0 : availableStack.getStackSize();
-                            if (available > 0) toExtract.setUsedPercent(toExtract.getStackSize() / (available / 100f));
-                            else toExtract.setUsedPercent(0f);
+                            toExtract.setUsedPercent(calculateUsedPercent(toExtract.getStackSize(), available));
                         }
 
                         if (toExtract.getStackSize() > 0) {
@@ -259,6 +258,19 @@ public class ContainerCraftConfirm extends ContainerSubGui implements ICraftingC
             this.setJob(null);
         }
         this.verifyPermissions(SecurityPermissions.CRAFT, false);
+    }
+
+    private static float calculateUsedPercent(long used, long available) {
+        if (used <= 0 || available <= 0) {
+            return 0f;
+        }
+        double usedPercent = (double) used * 100.0 / (double) available;
+        usedPercent = Math.max(0.0, Math.min(100.0, usedPercent));
+        double nearestInteger = Math.rint(usedPercent);
+        if (Math.abs(usedPercent - nearestInteger) < 1.0e-6) {
+            usedPercent = nearestInteger;
+        }
+        return (float) usedPercent;
     }
 
     public IGrid getGrid() {
