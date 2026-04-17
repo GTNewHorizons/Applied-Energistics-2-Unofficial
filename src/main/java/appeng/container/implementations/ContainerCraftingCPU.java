@@ -38,8 +38,8 @@ public class ContainerCraftingCPU extends AEBaseContainer
         implements IMEMonitorHandlerReceiver<IAEStack<?>>, ICustomNameObject {
 
     private final IItemList<IAEStack<?>> changedStacks = AEApi.instance().storage().createAEStackList();
-    private IGrid network;
-    private CraftingCPUCluster monitor;
+    private final IGrid network;
+    private CraftingCPUCluster cpu;
     private String cpuName = "";
 
     @GuiSync(0)
@@ -52,6 +52,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
     public boolean cachedSuspend;
 
     private boolean pendingVisualClear = true;
+    private boolean pendingFollowSync = true;
     private int lastSentRemainingOperations = Integer.MIN_VALUE;
 
     public ContainerCraftingCPU(final InventoryPlayer inventoryPlayer, final Object target) {
@@ -93,39 +94,40 @@ public class ContainerCraftingCPU extends AEBaseContainer
     }
 
     protected void setCPU(final ICraftingCPU cpu) {
-        if (cpu == this.monitor) {
+        if (cpu == this.cpu) {
             return;
         }
 
         this.detachMonitor();
         this.pendingVisualClear = true;
+        this.pendingFollowSync = true;
 
         if (cpu instanceof CraftingCPUCluster cluster) {
-            this.monitor = cluster;
+            this.cpu = cluster;
             this.cpuName = cpu.getName();
             this.changedStacks.resetStatus();
-            this.monitor.getModernListOfItem(this.changedStacks, CraftingItemList.ALL);
-            this.monitor.addListener(this, null);
+            this.cpu.getModernListOfItem(this.changedStacks, CraftingItemList.ALL);
+            this.cpu.addListener(this, null);
             this.elapsed = 0;
-            this.allow = this.monitor.getCraftingAllowMode().ordinal();
+            this.allow = this.cpu.getCraftingAllowMode().ordinal();
             return;
         }
 
-        this.monitor = null;
+        this.cpu = null;
         this.cpuName = "";
         this.elapsed = -1;
         this.sendVisualClearPacket();
     }
 
     private void detachMonitor() {
-        if (this.monitor != null) {
-            this.monitor.removeListener(this);
+        if (this.cpu != null) {
+            this.cpu.removeListener(this);
         }
     }
 
     public void cancelCrafting() {
-        if (this.monitor != null) {
-            this.monitor.cancel();
+        if (this.cpu != null) {
+            this.cpu.cancel();
         }
         this.elapsed = -1;
     }
@@ -148,11 +150,15 @@ public class ContainerCraftingCPU extends AEBaseContainer
     public void sendUpdateFollowPacket(final List<String> playersFollowingCurrentCraft) {
         final NBTTagCompound followData = CraftingCpuServerSyncBuilder
                 .buildFollowingPlayersNbt(playersFollowingCurrentCraft);
+        this.sendCompressedNbtToCrafters(followData);
+        this.pendingFollowSync = false;
+    }
 
+    private void sendCompressedNbtToCrafters(final NBTTagCompound data) {
         for (final Object crafter : this.crafters) {
             if (crafter instanceof EntityPlayerMP player) {
                 try {
-                    NetworkHandler.instance.sendTo(new PacketCompressedNBT(followData), player);
+                    NetworkHandler.instance.sendTo(new PacketCompressedNBT(data), player);
                 } catch (final IOException ignored) {}
             }
         }
@@ -160,32 +166,32 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
     @Override
     public void detectAndSendChanges() {
-        if (Platform.isServer() && this.monitor != null) {
+        if (Platform.isServer() && this.cpu != null) {
             try {
-                this.cachedSuspend = this.monitor.isSuspended();
-                this.elapsed = this.monitor.getElapsedTime();
-                final int remainingOperations = this.monitor.getRemainingOperations();
+                this.cachedSuspend = this.cpu.isSuspended();
+                this.elapsed = this.cpu.getElapsedTime();
+                final int remainingOperations = this.cpu.getRemainingOperations();
 
                 if (this.pendingVisualClear || !this.changedStacks.isEmpty()
                         || remainingOperations != this.lastSentRemainingOperations) {
                     final PacketCraftingCpuUpdate visualEntriesPacket = new PacketCraftingCpuUpdate(
-                            CraftingCpuServerSyncBuilder.buildVisualEntryUpdates(this.monitor, this.changedStacks),
+                            CraftingCpuServerSyncBuilder.buildVisualEntryUpdates(this.cpu, this.changedStacks),
                             this.pendingVisualClear,
                             remainingOperations);
-                    final PacketCompressedNBT followPacket = new PacketCompressedNBT(
-                            CraftingCpuServerSyncBuilder
-                                    .buildFollowingPlayersNbt(this.getPlayersFollowingCurrentCraft()));
 
                     for (final Object crafter : this.crafters) {
                         if (crafter instanceof EntityPlayerMP player) {
                             NetworkHandler.instance.sendTo(visualEntriesPacket, player);
-                            NetworkHandler.instance.sendTo(followPacket, player);
                         }
                     }
 
                     this.changedStacks.resetStatus();
                     this.pendingVisualClear = false;
                     this.lastSentRemainingOperations = remainingOperations;
+                }
+
+                if (this.pendingFollowSync) {
+                    this.sendUpdateFollowPacket(this.getPlayersFollowingCurrentCraft());
                 }
             } catch (final IOException ignored) {}
         }
@@ -203,6 +209,9 @@ public class ContainerCraftingCPU extends AEBaseContainer
             }
             this.pendingVisualClear = false;
             this.lastSentRemainingOperations = 0;
+            this.sendCompressedNbtToCrafters(
+                    CraftingCpuServerSyncBuilder.buildFollowingPlayersNbt(Collections.emptyList()));
+            this.pendingFollowSync = false;
         } catch (final IOException ignored) {}
     }
 
@@ -243,8 +252,8 @@ public class ContainerCraftingCPU extends AEBaseContainer
         return this.elapsed;
     }
 
-    public CraftingCPUCluster getMonitor() {
-        return this.monitor;
+    public CraftingCPUCluster getCpu() {
+        return this.cpu;
     }
 
     IGrid getNetwork() {
@@ -252,31 +261,31 @@ public class ContainerCraftingCPU extends AEBaseContainer
     }
 
     public void togglePlayerFollowStatus(final String name) {
-        if (this.monitor != null) {
-            this.monitor.togglePlayerFollowStatus(name);
+        if (this.cpu != null) {
+            this.cpu.togglePlayerFollowStatus(name);
         }
     }
 
     public List<String> getPlayersFollowingCurrentCraft() {
-        return this.monitor == null ? null : this.monitor.getPlayersFollowingCurrentCraft();
+        return this.cpu == null ? null : this.cpu.getPlayersFollowingCurrentCraft();
     }
 
     public void changeAllowMode(final String msg) {
-        if (this.monitor != null) {
+        if (this.cpu != null) {
             final CraftingAllow newAllowMode = CraftingAllow.values()[Integer.parseInt(msg)].next();
-            this.monitor.changeCraftingAllowMode(newAllowMode);
+            this.cpu.changeCraftingAllowMode(newAllowMode);
             this.allow = newAllowMode.ordinal();
         }
     }
 
     public CraftingAllow getAllowMode() {
-        return this.monitor == null ? null : this.monitor.getCraftingAllowMode();
+        return this.cpu == null ? null : this.cpu.getCraftingAllowMode();
     }
 
     public void suspendCrafting() {
-        if (this.monitor != null) {
+        if (this.cpu != null) {
             this.cachedSuspend = !this.cachedSuspend;
-            this.monitor.setSuspended(this.cachedSuspend);
+            this.cpu.setSuspended(this.cachedSuspend);
         }
     }
 }

@@ -71,7 +71,7 @@ public class PacketCraftingItemInterface extends AppEngPacket {
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
         if (player.openContainer instanceof ContainerCraftingCPU ccpu) {
-            this.sendInterfaceLocations(player, ccpu.getTarget(), ccpu.getOpenContext(), ccpu.getMonitor());
+            this.sendInterfaceLocations(player, ccpu.getTarget(), ccpu.getOpenContext(), ccpu.getCpu());
         }
     }
 
