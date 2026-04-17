@@ -2013,16 +2013,19 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         public void init(IAEStack<?> originalOutput) {
             this.reset();
             this.originalOutput = originalOutput;
+            this.addOutputs(originalOutput);
+        }
 
+        private void addOutputs(IAEStack<?> output) {
             ICraftingPatternDetails details = null;
             long finalOutputPatternMultiplier = 0;
 
             out: for (final Entry<ICraftingPatternDetails, TaskProgress> t : tasks.entrySet()) {
                 for (IAEStack<?> aes : t.getKey().getCondensedAEOutputs()) {
-                    if (aes.equals(originalOutput)) {
+                    if (aes.equals(output)) {
                         details = t.getKey();
                         finalOutputPatternMultiplier = (long) Math
-                                .ceil((double) this.originalOutput.getStackSize() / aes.getStackSize());
+                                .ceil((double) output.getStackSize() / aes.getStackSize());
                         break out;
                     }
                 }
@@ -2093,7 +2096,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         public void merge(IAEStack<?> toMerge) {
             this.originalOutput.add(toMerge);
-            this.init(this.originalOutput);
+            this.addOutputs(toMerge);
         }
 
         public void reset() {

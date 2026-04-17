@@ -239,7 +239,8 @@ public class GuiMEMonitorable extends AEBaseGui
                 this.repo.updateView();
 
                 try {
-                    NetworkHandler.instance.sendToServer(new PacketMonitorableTypeFilter(this.typeFilters));
+                    NetworkHandler.instance
+                            .sendToServer(new PacketMonitorableTypeFilter(this.typeFilters, this.inventorySlots.windowId));
                 } catch (final IOException e) {
                     AELog.debug(e);
                 }

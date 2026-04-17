@@ -323,10 +323,13 @@ public class TileQuantumBridge extends AENetworkInvTile implements IAEMultiBlock
         ItemStack sideAStack = getStackInSlot(0);
         if (sideAStack != null) {
             sideAStack.setStackDisplayName(name);
-            if (cluster.getCenter() != null) {
+            if (cluster != null && cluster.getCenter() != null) {
                 final ILocatable myOtherSide = cluster.getOtherSide() == 0 ? null
                         : AEApi.instance().registries().locatable().getLocatableBy(cluster.getOtherSide());
                 if (myOtherSide instanceof QuantumCluster sideBCluster) {
+                    if (sideBCluster.getCenter() == null) {
+                        return;
+                    }
                     ItemStack sideBStack = sideBCluster.getCenter().getStackInSlot(0);
                     if (sideBStack != null) {
                         sideBStack.setStackDisplayName(name);
