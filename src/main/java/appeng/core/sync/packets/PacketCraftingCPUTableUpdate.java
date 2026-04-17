@@ -14,11 +14,11 @@ import appeng.core.sync.network.INetworkInfo;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class PacketCraftingCPUsUpdate extends AppEngPacket {
+public class PacketCraftingCPUTableUpdate extends AppEngPacket {
 
     private final CraftingCPUStatus[] cpus;
 
-    public PacketCraftingCPUsUpdate(final ByteBuf stream) {
+    public PacketCraftingCPUTableUpdate(final ByteBuf stream) {
         int count = stream.readInt();
         cpus = new CraftingCPUStatus[count];
         for (int i = 0; i < count; i++) {
@@ -30,7 +30,7 @@ public class PacketCraftingCPUsUpdate extends AppEngPacket {
         }
     }
 
-    public PacketCraftingCPUsUpdate(final Collection<CraftingCPUStatus> cpus) throws IOException {
+    public PacketCraftingCPUTableUpdate(final Collection<CraftingCPUStatus> cpus) throws IOException {
         this.cpus = cpus.toArray(new CraftingCPUStatus[0]);
 
         final ByteBuf data = Unpooled.buffer();

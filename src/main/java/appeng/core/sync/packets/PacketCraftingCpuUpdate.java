@@ -14,13 +14,13 @@ import appeng.core.sync.network.INetworkInfo;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class PacketCraftingCpuVisualEntries extends AppEngPacket {
+public class PacketCraftingCpuUpdate extends AppEngPacket {
 
     private final boolean clearFirst;
     private final int remainingOperations;
     private final CraftingCpuEntry[] entries;
 
-    public PacketCraftingCpuVisualEntries(final ByteBuf stream) throws IOException {
+    public PacketCraftingCpuUpdate(final ByteBuf stream) throws IOException {
         this.clearFirst = stream.readBoolean();
         this.remainingOperations = stream.readInt();
         final int count = stream.readInt();
@@ -30,7 +30,7 @@ public class PacketCraftingCpuVisualEntries extends AppEngPacket {
         }
     }
 
-    public PacketCraftingCpuVisualEntries(final Collection<CraftingCpuEntry> entries, final boolean clearFirst,
+    public PacketCraftingCpuUpdate(final Collection<CraftingCpuEntry> entries, final boolean clearFirst,
             final int remainingOperations) throws IOException {
         this.clearFirst = clearFirst;
         this.remainingOperations = remainingOperations;

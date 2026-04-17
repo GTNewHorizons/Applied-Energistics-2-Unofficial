@@ -27,7 +27,7 @@ import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCompressedNBT;
-import appeng.core.sync.packets.PacketCraftingCpuVisualEntries;
+import appeng.core.sync.packets.PacketCraftingCpuUpdate;
 import appeng.helpers.ICustomNameObject;
 import appeng.me.cluster.IAEMultiBlock;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
@@ -168,7 +168,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
                 if (this.pendingVisualClear || !this.changedStacks.isEmpty()
                         || remainingOperations != this.lastSentRemainingOperations) {
-                    final PacketCraftingCpuVisualEntries visualEntriesPacket = new PacketCraftingCpuVisualEntries(
+                    final PacketCraftingCpuUpdate visualEntriesPacket = new PacketCraftingCpuUpdate(
                             CraftingCpuServerSyncBuilder.buildVisualEntryUpdates(this.monitor, this.changedStacks),
                             this.pendingVisualClear,
                             remainingOperations);
@@ -195,10 +195,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
     private void sendVisualClearPacket() {
         try {
-            final PacketCraftingCpuVisualEntries clearPacket = new PacketCraftingCpuVisualEntries(
-                    Collections.emptyList(),
-                    true,
-                    0);
+            final PacketCraftingCpuUpdate clearPacket = new PacketCraftingCpuUpdate(Collections.emptyList(), true, 0);
             for (final Object crafter : this.crafters) {
                 if (crafter instanceof EntityPlayerMP player) {
                     NetworkHandler.instance.sendTo(clearPacket, player);
