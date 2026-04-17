@@ -157,6 +157,11 @@ public class TileCondenser extends AEBaseInvTile implements IFluidHandler, IConf
     @Override
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc, final ItemStack removed,
             final ItemStack added) {
+        if (mc == InvOperation.markDirty) {
+            this.saveChanges();
+            return;
+        }
+
         if (slot == 0) {
             final ItemStack is = inv.getStackInSlot(0);
             if (is != null) {

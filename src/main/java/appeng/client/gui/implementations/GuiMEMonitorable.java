@@ -35,6 +35,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.GuiScreenEvent.InitGuiEvent;
 import net.minecraftforge.common.MinecraftForge;
 
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
@@ -238,7 +239,8 @@ public class GuiMEMonitorable extends AEBaseGui
                 this.repo.updateView();
 
                 try {
-                    NetworkHandler.instance.sendToServer(new PacketMonitorableTypeFilter(this.typeFilters));
+                    NetworkHandler.instance
+                            .sendToServer(new PacketMonitorableTypeFilter(this.typeFilters, this.inventorySlots.windowId));
                 } catch (final IOException e) {
                     AELog.debug(e);
                 }
@@ -1080,14 +1082,36 @@ public class GuiMEMonitorable extends AEBaseGui
     }
 
     @Override
-    protected void handleMouseClick(Slot p_146984_1_, int p_146984_2_, int p_146984_3_, int p_146984_4_) {
+    protected void handleMouseClick(Slot slot, int slotIdx, int clickedButton, int clickType) {
 
         // Hack for view cells, because they are outside the container
-        if (p_146984_1_ != null && p_146984_4_ == 4 && p_146984_1_.xDisplayPosition > this.xSize) {
-            p_146984_4_ = 0;
+        if (slot != null && clickType == 4 && slot.xDisplayPosition > this.xSize) {
+            clickType = 0;
         }
 
-        super.handleMouseClick(p_146984_1_, p_146984_2_, p_146984_3_, p_146984_4_);
+        super.handleMouseClick(slot, slotIdx, clickedButton, clickType);
+    }
+
+    @Override
+    protected boolean handleClickOrDragSlot(@NotNull Slot slot, @org.jetbrains.annotations.Nullable ItemStack stack,
+            int mouseButton) {
+
+        if (isCtrlKeyDown() && mouseButton == 0
+                && stack == null
+                && slot instanceof AppEngSlot appEngSlot
+                && appEngSlot.isPlayerSide()) {
+            ItemStack stackInSlot = appEngSlot.getStack();
+            if (stackInSlot != null) {
+                for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                    if (type.isContainerItemForType(stackInSlot)) {
+                        this.sendAction(MonitorableAction.CONTAINER_QUICK_TRANSFER, null, slot.slotNumber);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return super.handleClickOrDragSlot(slot, stack, mouseButton);
     }
 
     @Override

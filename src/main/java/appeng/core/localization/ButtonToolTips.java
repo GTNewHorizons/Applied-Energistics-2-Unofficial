@@ -144,6 +144,8 @@ public enum ButtonToolTips implements Localization {
     InsertFromContainerToNetwork,
     HoldShiftProcessStack,
     RegisterContainerContent,
+    ChangeAmount,
+    RenameItem,
 
     SchedulingMode,
     SchedulingModeDefault,

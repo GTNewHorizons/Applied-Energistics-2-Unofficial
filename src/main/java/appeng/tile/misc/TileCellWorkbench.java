@@ -132,6 +132,11 @@ public class TileCellWorkbench extends AEBaseTile implements ICellWorkbench, IPr
     @Override
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc,
             final ItemStack removedStack, final ItemStack newStack) {
+        if (mc == InvOperation.markDirty) {
+            this.saveChanges();
+            return;
+        }
+
         if (inv == this.cell && !this.locked) {
             this.locked = true;
 

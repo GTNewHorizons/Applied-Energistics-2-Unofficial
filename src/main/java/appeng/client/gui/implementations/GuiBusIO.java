@@ -15,6 +15,7 @@ import appeng.client.gui.widgets.GuiImgButton;
 import appeng.container.implementations.ContainerBusIO;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketConfigButton;
+import appeng.parts.automation.PartBaseExportBus;
 import appeng.parts.automation.PartSharedItemBus;
 import appeng.tile.inventory.IAEStackInventory;
 
@@ -40,12 +41,14 @@ public class GuiBusIO extends GuiUpgradeable {
     protected void addButtons() {
         super.addButtons();
 
-        this.schedulingMode = new GuiImgButton(
-                this.guiLeft - 18,
-                this.guiTop + 68,
-                Settings.SCHEDULING_MODE,
-                SchedulingMode.DEFAULT);
-        this.buttonList.add(this.schedulingMode);
+        if (this.bus instanceof PartBaseExportBus<?>) {
+            this.schedulingMode = new GuiImgButton(
+                    this.guiLeft - 18,
+                    this.guiTop + 68,
+                    Settings.SCHEDULING_MODE,
+                    SchedulingMode.DEFAULT);
+            this.buttonList.add(this.schedulingMode);
+        }
 
         initCustomButtons(this.guiLeft - 18, 88);
     }

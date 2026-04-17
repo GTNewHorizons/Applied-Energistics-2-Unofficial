@@ -63,7 +63,7 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
         IAEStack<?> stackInSlot = this.getAEStack();
         if (stackInSlot != null) {
             IAEStackType type = stackInSlot.getStackType();
-            if (type.isContainerItemForType(hand)) {
+            if (type.isContainerItemForType(hand) && this.typeFilterChecker.check(type)) {
                 ObjectLongPair<ItemStack> result = type.fillContainer(hand.copy(), stackInSlot);
                 if (result.rightLong() > 0) {
                     lines.add(
@@ -80,7 +80,7 @@ public class VirtualMEMonitorableSlot extends VirtualMESlot {
         }
 
         for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
-            if (type.isContainerItemForType(hand)) {
+            if (type.isContainerItemForType(hand) && this.typeFilterChecker.check(type)) {
                 IAEStack<?> stack = type.getStackFromContainerItem(hand);
                 if (stack != null && stack.getStackSize() > 0) {
                     lines.add(

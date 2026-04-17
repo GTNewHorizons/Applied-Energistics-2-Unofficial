@@ -17,6 +17,7 @@ import java.util.Map;
 
 import appeng.core.sync.packets.PacketAssemblerAnimation;
 import appeng.core.sync.packets.PacketClick;
+import appeng.core.sync.packets.PacketClickOrDragFakeSlot;
 import appeng.core.sync.packets.PacketColorSelect;
 import appeng.core.sync.packets.PacketCompassRequest;
 import appeng.core.sync.packets.PacketCompassResponse;
@@ -40,7 +41,6 @@ import appeng.core.sync.packets.PacketMonitorableAction;
 import appeng.core.sync.packets.PacketMonitorableTypeFilter;
 import appeng.core.sync.packets.PacketMultiPart;
 import appeng.core.sync.packets.PacketNEIBookmark;
-import appeng.core.sync.packets.PacketNEIDragClick;
 import appeng.core.sync.packets.PacketNEIRecipe;
 import appeng.core.sync.packets.PacketNetworkStatusSelected;
 import appeng.core.sync.packets.PacketNewStorageDimension;
@@ -120,7 +120,7 @@ public class AppEngPacketHandlerBase {
 
         PACKET_CRAFTING_COMPLETE_NOTIFICATION(PacketCraftingCompleteNotification.class),
 
-        PACKET_NEI_DRAG(PacketNEIDragClick.class),
+        PACKET_CLICK_OR_DRAG_FAKE_SLOT(PacketClickOrDragFakeSlot.class),
 
         PACKET_PATTERN_VALUE(PacketPatternValueSet.class),
         PACKET_PATTERN_MULTI(PacketPatternMultiSet.class),
