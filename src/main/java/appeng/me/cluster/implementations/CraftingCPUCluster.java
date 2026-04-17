@@ -105,7 +105,7 @@ import appeng.api.util.IInterfaceViewable;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.container.ContainerNull;
-import appeng.container.implementations.ContainerCraftingCPURefactored;
+import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
@@ -1725,7 +1725,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
         while (i.hasNext()) {
             final IMEMonitorHandlerReceiver listener = i.next().getKey();
-            if (listener instanceof ContainerCraftingCPURefactored cccpu) {
+            if (listener instanceof ContainerCraftingCPU cccpu) {
                 cccpu.sendUpdateFollowPacket(playersFollowingCurrentCraft);
             }
         }

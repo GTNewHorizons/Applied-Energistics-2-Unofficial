@@ -12,9 +12,9 @@ import appeng.api.networking.IGridHost;
 import appeng.api.networking.crafting.ICraftingCPU;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.util.NamedDimensionalCoord;
-import appeng.client.gui.implementations.GuiCraftingCPURefactored;
+import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.ContainerOpenContext;
-import appeng.container.implementations.ContainerCraftingCPURefactored;
+import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
 import appeng.core.sync.network.NetworkHandler;
@@ -70,7 +70,7 @@ public class PacketCraftingItemInterface extends AppEngPacket {
 
     @Override
     public void serverPacketData(INetworkInfo manager, AppEngPacket packet, EntityPlayer player) {
-        if (player.openContainer instanceof ContainerCraftingCPURefactored ccpu) {
+        if (player.openContainer instanceof ContainerCraftingCPU ccpu) {
             this.sendInterfaceLocations(player, ccpu.getTarget(), ccpu.getOpenContext(), ccpu.getMonitor());
         }
     }
@@ -80,7 +80,7 @@ public class PacketCraftingItemInterface extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
-        if (gs instanceof GuiCraftingCPURefactored guiCraftingCPU) {
+        if (gs instanceof GuiCraftingCPU guiCraftingCPU) {
             guiCraftingCPU.postUpdateTooltip(this.nbt);
         }
     }

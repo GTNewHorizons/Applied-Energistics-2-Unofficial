@@ -1,16 +1,7 @@
-/*
- * This file is part of Applied Energistics 2. Copyright (c) 2013 - 2014, AlgorithmX2, All rights reserved. Applied
- * Energistics 2 is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any
- * later version. Applied Energistics 2 is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
- * Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
- * Applied Energistics 2. If not, see <http://www.gnu.org/licenses/lgpl>.
- */
-
 package appeng.container.implementations;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -18,8 +9,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.AEApi;
@@ -36,12 +25,9 @@ import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
-import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketCompressedNBT;
-import appeng.core.sync.packets.PacketCraftingRemainingOperations;
-import appeng.core.sync.packets.PacketMEInventoryUpdate;
-import appeng.core.sync.packets.PacketValueConfig;
+import appeng.core.sync.packets.PacketCraftingCpuVisualEntries;
 import appeng.helpers.ICustomNameObject;
 import appeng.me.cluster.IAEMultiBlock;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
@@ -51,10 +37,10 @@ import appeng.util.Platform;
 public class ContainerCraftingCPU extends AEBaseContainer
         implements IMEMonitorHandlerReceiver<IAEStack<?>>, ICustomNameObject {
 
-    private final IItemList<IAEStack<?>> list = AEApi.instance().storage().createAEStackList();
+    private final IItemList<IAEStack<?>> changedStacks = AEApi.instance().storage().createAEStackList();
     private IGrid network;
-    private CraftingCPUCluster monitor = null;
-    private String cpuName = null;
+    private CraftingCPUCluster monitor;
+    private String cpuName = "";
 
     @GuiSync(0)
     public long elapsed = -1;
@@ -65,181 +51,162 @@ public class ContainerCraftingCPU extends AEBaseContainer
     @GuiSync(2)
     public boolean cachedSuspend;
 
-    public ContainerCraftingCPU(final InventoryPlayer ip, final Object te) {
-        super(ip, te);
-        final IGridHost host = (IGridHost) (te instanceof IGridHost ? te : null);
+    private boolean pendingVisualClear = true;
+    private int lastSentRemainingOperations = Integer.MIN_VALUE;
 
-        if (host != null) {
-            this.findNode(host, ForgeDirection.UNKNOWN);
-            for (final ForgeDirection d : ForgeDirection.VALID_DIRECTIONS) {
-                this.findNode(host, d);
-            }
+    public ContainerCraftingCPU(final InventoryPlayer inventoryPlayer, final Object target) {
+        super(inventoryPlayer, target);
+
+        this.network = this.resolveNetwork(target);
+        if (target instanceof TileCraftingTile) {
+            this.setCPU((ICraftingCPU) ((IAEMultiBlock) target).getCluster());
         }
 
-        if (te instanceof TileCraftingTile) {
-            this.setCPU((ICraftingCPU) ((IAEMultiBlock) te).getCluster());
-        }
-
-        if (this.getNetwork() == null && Platform.isServer()) {
+        if (this.network == null && Platform.isServer()) {
             this.setValidContainer(false);
         }
     }
 
-    private void findNode(final IGridHost host, final ForgeDirection d) {
-        if (this.getNetwork() == null) {
-            final IGridNode node = host.getGridNode(d);
-            if (node != null) {
-                this.setNetwork(node.getGrid());
+    private IGrid resolveNetwork(final Object target) {
+        if (!(target instanceof IGridHost host)) {
+            return null;
+        }
+
+        final IGrid unknownSideNetwork = this.resolveNetwork(host, ForgeDirection.UNKNOWN);
+        if (unknownSideNetwork != null) {
+            return unknownSideNetwork;
+        }
+
+        for (final ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
+            final IGrid sideNetwork = this.resolveNetwork(host, direction);
+            if (sideNetwork != null) {
+                return sideNetwork;
             }
         }
+
+        return null;
     }
 
-    protected void setCPU(final ICraftingCPU c) {
-        if (c == this.getMonitor()) {
+    private IGrid resolveNetwork(final IGridHost host, final ForgeDirection direction) {
+        final IGridNode node = host.getGridNode(direction);
+        return node == null ? null : node.getGrid();
+    }
+
+    protected void setCPU(final ICraftingCPU cpu) {
+        if (cpu == this.monitor) {
             return;
         }
 
-        if (this.getMonitor() != null) {
-            this.getMonitor().removeListener(this);
+        this.detachMonitor();
+        this.pendingVisualClear = true;
+
+        if (cpu instanceof CraftingCPUCluster cluster) {
+            this.monitor = cluster;
+            this.cpuName = cpu.getName();
+            this.changedStacks.resetStatus();
+            this.monitor.getModernListOfItem(this.changedStacks, CraftingItemList.ALL);
+            this.monitor.addListener(this, null);
+            this.elapsed = 0;
+            this.allow = this.monitor.getCraftingAllowMode().ordinal();
+            return;
         }
 
-        for (final Object g : this.crafters) {
-            if (g instanceof EntityPlayer) {
-                try {
-                    NetworkHandler.instance
-                            .sendTo(new PacketValueConfig("CraftingStatus", "Clear"), (EntityPlayerMP) g);
-                } catch (final IOException e) {
-                    AELog.debug(e);
-                }
-            }
-        }
+        this.monitor = null;
+        this.cpuName = "";
+        this.elapsed = -1;
+        this.sendVisualClearPacket();
+    }
 
-        if (c instanceof CraftingCPUCluster) {
-            this.cpuName = c.getName();
-            this.setMonitor((CraftingCPUCluster) c);
-            this.list.resetStatus();
-            this.getMonitor().getModernListOfItem(this.list, CraftingItemList.ALL);
-            this.getMonitor().addListener(this, null);
-            this.setElapsedTime(0);
-            this.allow = this.getMonitor().getCraftingAllowMode().ordinal();
-        } else {
-            this.setMonitor(null);
-            this.cpuName = "";
-            this.setElapsedTime(-1);
+    private void detachMonitor() {
+        if (this.monitor != null) {
+            this.monitor.removeListener(this);
         }
     }
 
     public void cancelCrafting() {
-        if (this.getMonitor() != null) {
-            this.getMonitor().cancel();
+        if (this.monitor != null) {
+            this.monitor.cancel();
         }
-        this.setElapsedTime(-1);
+        this.elapsed = -1;
     }
 
     @Override
-    public void removeCraftingFromCrafters(final ICrafting c) {
-        super.removeCraftingFromCrafters(c);
+    public void removeCraftingFromCrafters(final ICrafting crafter) {
+        super.removeCraftingFromCrafters(crafter);
 
-        if (this.crafters.isEmpty() && this.getMonitor() != null) {
-            this.getMonitor().removeListener(this);
+        if (this.crafters.isEmpty()) {
+            this.detachMonitor();
         }
     }
 
     @Override
     public void onContainerClosed(final EntityPlayer player) {
         super.onContainerClosed(player);
-        if (this.getMonitor() != null) {
-            this.getMonitor().removeListener(this);
-        }
+        this.detachMonitor();
     }
 
-    public void sendUpdateFollowPacket(List<String> playersFollowingCurrentCraft) {
-        NBTTagCompound nbttc = new NBTTagCompound();
-        NBTTagList tagList = new NBTTagList();
+    public void sendUpdateFollowPacket(final List<String> playersFollowingCurrentCraft) {
+        final NBTTagCompound followData = CraftingCpuServerSyncBuilder
+                .buildFollowingPlayersNbt(playersFollowingCurrentCraft);
 
-        if (playersFollowingCurrentCraft != null) {
-            for (String name : playersFollowingCurrentCraft) {
-                tagList.appendTag(new NBTTagString(name));
-            }
-        }
-        nbttc.setTag("playNameList", tagList);
-
-        for (final Object g : this.crafters) {
-            if (g instanceof EntityPlayerMP epmp) {
+        for (final Object crafter : this.crafters) {
+            if (crafter instanceof EntityPlayerMP player) {
                 try {
-                    NetworkHandler.instance.sendTo(new PacketCompressedNBT(nbttc), epmp);
-                } catch (final IOException e) {
-                    // :P
-                }
+                    NetworkHandler.instance.sendTo(new PacketCompressedNBT(followData), player);
+                } catch (final IOException ignored) {}
             }
         }
     }
 
     @Override
     public void detectAndSendChanges() {
-        if (Platform.isServer() && this.getMonitor() != null && !this.list.isEmpty()) {
+        if (Platform.isServer() && this.monitor != null) {
             try {
                 this.cachedSuspend = this.monitor.isSuspended();
-                this.setElapsedTime(this.getMonitor().getElapsedTime());
+                this.elapsed = this.monitor.getElapsedTime();
+                final int remainingOperations = this.monitor.getRemainingOperations();
 
-                NBTTagCompound nbttc = new NBTTagCompound();
-                NBTTagList tagList = new NBTTagList();
-                List<String> playersFollowingCurrentCraft = this.getPlayersFollowingCurrentCraft();
+                if (this.pendingVisualClear || !this.changedStacks.isEmpty()
+                        || remainingOperations != this.lastSentRemainingOperations) {
+                    final PacketCraftingCpuVisualEntries visualEntriesPacket = new PacketCraftingCpuVisualEntries(
+                            CraftingCpuServerSyncBuilder.buildVisualEntryUpdates(this.monitor, this.changedStacks),
+                            this.pendingVisualClear,
+                            remainingOperations);
+                    final PacketCompressedNBT followPacket = new PacketCompressedNBT(
+                            CraftingCpuServerSyncBuilder
+                                    .buildFollowingPlayersNbt(this.getPlayersFollowingCurrentCraft()));
 
-                if (playersFollowingCurrentCraft != null) {
-                    for (String name : playersFollowingCurrentCraft) {
-                        tagList.appendTag(new NBTTagString(name));
+                    for (final Object crafter : this.crafters) {
+                        if (crafter instanceof EntityPlayerMP player) {
+                            NetworkHandler.instance.sendTo(visualEntriesPacket, player);
+                            NetworkHandler.instance.sendTo(followPacket, player);
+                        }
                     }
+
+                    this.changedStacks.resetStatus();
+                    this.pendingVisualClear = false;
+                    this.lastSentRemainingOperations = remainingOperations;
                 }
-                nbttc.setTag("playNameList", tagList);
-
-                final PacketMEInventoryUpdate a = new PacketMEInventoryUpdate((byte) 0);
-                final PacketMEInventoryUpdate b = new PacketMEInventoryUpdate((byte) 1);
-                final PacketMEInventoryUpdate c = new PacketMEInventoryUpdate((byte) 2);
-
-                final PacketCompressedNBT d = new PacketCompressedNBT(nbttc);
-
-                NBTTagCompound itemReasons = new NBTTagCompound();
-                if (this.getMonitor() instanceof CraftingCPUCluster) {
-                    itemReasons = ((CraftingCPUCluster) this.getMonitor()).getNonUndefinedScheduledReasons();
-                }
-
-                for (final IAEStack<?> out : this.list) {
-                    a.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.STORAGE));
-                    b.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.ACTIVE));
-                    c.appendItem(this.getMonitor().getItemStack(out, CraftingItemList.PENDING));
-                }
-
-                this.list.resetStatus();
-
-                for (final Object g : this.crafters) {
-                    if (g instanceof EntityPlayerMP epmp) {
-                        if (!a.isEmpty()) {
-                            NetworkHandler.instance.sendTo(a, epmp);
-                        }
-
-                        if (!b.isEmpty()) {
-                            NetworkHandler.instance.sendTo(b, epmp);
-                        }
-
-                        if (!c.isEmpty()) {
-                            NetworkHandler.instance.sendTo(c, epmp);
-                        }
-
-                        NetworkHandler.instance.sendTo(d, epmp);
-
-                        NetworkHandler.instance.sendTo(
-                                new PacketCraftingRemainingOperations(
-                                        this.getMonitor().getRemainingOperations(),
-                                        itemReasons),
-                                epmp);
-                    }
-                }
-            } catch (final IOException e) {
-                // :P
-            }
+            } catch (final IOException ignored) {}
         }
+
         super.detectAndSendChanges();
+    }
+
+    private void sendVisualClearPacket() {
+        try {
+            final PacketCraftingCpuVisualEntries clearPacket = new PacketCraftingCpuVisualEntries(
+                    Collections.emptyList(),
+                    true,
+                    0);
+            for (final Object crafter : this.crafters) {
+                if (crafter instanceof EntityPlayerMP player) {
+                    NetworkHandler.instance.sendTo(clearPacket, player);
+                }
+            }
+            this.pendingVisualClear = false;
+            this.lastSentRemainingOperations = 0;
+        } catch (final IOException ignored) {}
     }
 
     @Override
@@ -250,10 +217,10 @@ public class ContainerCraftingCPU extends AEBaseContainer
     @Override
     public void postChange(final IBaseMonitor<IAEStack<?>> monitor, final Iterable<IAEStack<?>> change,
             final BaseActionSource actionSource) {
-        for (IAEStack<?> is : change) {
-            is = is.copy();
-            is.setStackSize(1);
-            this.list.add(is);
+        for (IAEStack<?> stack : change) {
+            stack = stack.copy();
+            stack.setStackSize(1);
+            this.changedStacks.add(stack);
         }
     }
 
@@ -267,68 +234,50 @@ public class ContainerCraftingCPU extends AEBaseContainer
 
     @Override
     public boolean hasCustomName() {
-        return this.cpuName != null && this.cpuName.length() > 0;
+        return this.cpuName != null && !this.cpuName.isEmpty();
     }
 
     @Override
-    public void setCustomName(String name) {
-        this.cpuName = name;
+    public void setCustomName(final String name) {
+        this.cpuName = name == null ? "" : name;
     }
 
     public long getElapsedTime() {
         return this.elapsed;
     }
 
-    private void setElapsedTime(final long elapsed) {
-        this.elapsed = elapsed;
-    }
-
     public CraftingCPUCluster getMonitor() {
         return this.monitor;
-    }
-
-    private void setMonitor(final CraftingCPUCluster monitor) {
-        this.monitor = monitor;
     }
 
     IGrid getNetwork() {
         return this.network;
     }
 
-    private void setNetwork(final IGrid network) {
-        this.network = network;
-    }
-
     public void togglePlayerFollowStatus(final String name) {
-        if (this.getMonitor() != null) {
-            this.getMonitor().togglePlayerFollowStatus(name);
+        if (this.monitor != null) {
+            this.monitor.togglePlayerFollowStatus(name);
         }
     }
 
     public List<String> getPlayersFollowingCurrentCraft() {
-        if (this.getMonitor() != null) {
-            return this.getMonitor().getPlayersFollowingCurrentCraft();
-        }
-        return null;
+        return this.monitor == null ? null : this.monitor.getPlayersFollowingCurrentCraft();
     }
 
-    public void changeAllowMode(String msg) {
-        if (this.getMonitor() != null) {
-            CraftingAllow newAllowMode = CraftingAllow.values()[Integer.valueOf(msg)].next();
-            this.getMonitor().changeCraftingAllowMode(newAllowMode);
+    public void changeAllowMode(final String msg) {
+        if (this.monitor != null) {
+            final CraftingAllow newAllowMode = CraftingAllow.values()[Integer.parseInt(msg)].next();
+            this.monitor.changeCraftingAllowMode(newAllowMode);
             this.allow = newAllowMode.ordinal();
         }
     }
 
     public CraftingAllow getAllowMode() {
-        if (this.getMonitor() != null) {
-            return this.getMonitor().getCraftingAllowMode();
-        }
-        return null;
+        return this.monitor == null ? null : this.monitor.getCraftingAllowMode();
     }
 
     public void suspendCrafting() {
-        if (this.getMonitor() != null) {
+        if (this.monitor != null) {
             this.cachedSuspend = !this.cachedSuspend;
             this.monitor.setSuspended(this.cachedSuspend);
         }

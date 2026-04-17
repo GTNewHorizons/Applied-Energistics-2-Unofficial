@@ -42,7 +42,7 @@ import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketSwitchGuis;
 import appeng.core.sync.packets.PacketValueConfig;
 
-public class GuiCraftingStatus extends GuiCraftingCPURefactored implements ICraftingCPUTableHolder, IGuiSub {
+public class GuiCraftingStatus extends GuiCraftingCPU implements ICraftingCPUTableHolder, IGuiSub {
 
     private final ContainerCraftingStatus status;
     private GuiButton selectCPU;

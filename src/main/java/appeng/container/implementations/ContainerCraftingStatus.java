@@ -28,7 +28,7 @@ import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class ContainerCraftingStatus extends ContainerCraftingCPURefactored
+public class ContainerCraftingStatus extends ContainerCraftingCPU
         implements ICraftingCPUSelectorContainer, IContainerSubGui {
 
     @GuiSync.Recurse(5)

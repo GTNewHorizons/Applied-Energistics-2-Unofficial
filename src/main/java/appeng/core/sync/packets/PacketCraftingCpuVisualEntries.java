@@ -7,7 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 
-import appeng.client.gui.implementations.GuiCraftingCPURefactored;
+import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.implementations.CraftingCpuEntry;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -50,7 +50,7 @@ public class PacketCraftingCpuVisualEntries extends AppEngPacket {
     @Override
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen currentScreen = Minecraft.getMinecraft().currentScreen;
-        if (currentScreen instanceof GuiCraftingCPURefactored guiCraftingCPU) {
+        if (currentScreen instanceof GuiCraftingCPU guiCraftingCPU) {
             guiCraftingCPU.postVisualEntryUpdate(this.entries, this.clearFirst, this.remainingOperations);
         }
     }

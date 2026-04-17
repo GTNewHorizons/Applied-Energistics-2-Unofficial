@@ -63,7 +63,7 @@ import appeng.container.implementations.ContainerChest;
 import appeng.container.implementations.ContainerCondenser;
 import appeng.container.implementations.ContainerCraftAmount;
 import appeng.container.implementations.ContainerCraftConfirm;
-import appeng.container.implementations.ContainerCraftingCPURefactored;
+import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerCraftingStatus;
 import appeng.container.implementations.ContainerCraftingTerm;
 import appeng.container.implementations.ContainerDrive;
@@ -162,8 +162,7 @@ public enum GuiBridge implements IGuiHandler {
 
     GUI_NETWORK_STATUS(ContainerNetworkStatus.class, INetworkTool.class, GuiHostType.ITEM, null),
 
-    GUI_CRAFTING_CPU(ContainerCraftingCPURefactored.class, TileCraftingTile.class, GuiHostType.WORLD,
-            SecurityPermissions.CRAFT),
+    GUI_CRAFTING_CPU(ContainerCraftingCPU.class, TileCraftingTile.class, GuiHostType.WORLD, SecurityPermissions.CRAFT),
 
     GUI_NETWORK_TOOL(ContainerNetworkTool.class, INetworkTool.class, GuiHostType.ITEM, null),
 

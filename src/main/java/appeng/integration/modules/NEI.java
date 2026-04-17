@@ -30,7 +30,7 @@ import org.lwjgl.input.Keyboard;
 
 import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.implementations.GuiCraftConfirm;
-import appeng.client.gui.implementations.GuiCraftingCPURefactored;
+import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiCraftingTerm;
 import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.client.gui.implementations.GuiMEPortableCell;
@@ -291,7 +291,7 @@ public class NEI implements INEI, IContainerTooltipHandler, IIntegrationModule, 
     @Override
     public boolean shouldShowTooltip(GuiContainer gui) {
         if (gui instanceof GuiCraftConfirm) return ((GuiCraftConfirm) gui).getHoveredStack() == null;
-        if (gui instanceof GuiCraftingCPURefactored) return ((GuiCraftingCPURefactored) gui).getHoveredStack() == null;
+        if (gui instanceof GuiCraftingCPU) return ((GuiCraftingCPU) gui).getHoveredStack() == null;
         if (gui instanceof GuiOptimizePatterns) return ((GuiOptimizePatterns) gui).getHoveredStack() == null;
         return true;
     }

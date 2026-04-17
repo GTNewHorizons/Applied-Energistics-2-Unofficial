@@ -16,8 +16,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
@@ -26,13 +24,12 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
-import appeng.client.gui.implementations.GuiCraftingCPURefactored;
 import appeng.container.AEBaseContainer;
 import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
-import appeng.container.implementations.ContainerCraftingCPURefactored;
+import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerInterface;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.container.implementations.ContainerMEMonitorable;
@@ -107,7 +104,7 @@ public class PacketValueConfig extends AppEngPacket {
             qk.toggleViewCell(Integer.parseInt(this.Value));
         } else if(this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk){
             qk.doublePatterns(Integer.parseInt(this.Value));
-        } else if (this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPURefactored qk) {
+        } else if (this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPU qk) {
             switch (this.Name) {
                 case "TileCrafting.Cancel" -> qk.cancelCrafting();
                 case "TileCrafting.Suspend" -> qk.suspendCrafting();
@@ -202,11 +199,6 @@ public class PacketValueConfig extends AppEngPacket {
 
         if (this.Name.equals("CustomName") && c instanceof AEBaseContainer) {
             ((AEBaseContainer) c).setCustomName(this.Value);
-        } else if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
-            final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-            if (gs instanceof GuiCraftingCPURefactored) {
-                ((GuiCraftingCPURefactored) gs).clearItems();
-            }
         } else if (c instanceof IConfigurableObject) {
             final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 
