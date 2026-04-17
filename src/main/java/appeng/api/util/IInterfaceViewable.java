@@ -38,7 +38,28 @@ public interface IInterfaceViewable extends IGridHost {
      */
     IInventory getPatterns();
 
+    /**
+     * Returns the display name. For interfaces this may be a translated name with suffix already appended. Prefer
+     * {@link #getRawName()} + {@link #getNameSuffix()} when sending to client.
+     */
     String getName();
+
+    /**
+     * Returns the raw (untranslated) name. Should be sent to the client separately from {@link #getNameSuffix()} so
+     * that translation happens client-side. Defaults to {@link #getName()} for backwards compatibility with non-AE2
+     * implementations.
+     */
+    default String getRawName() {
+        return getName();
+    }
+
+    /**
+     * Returns the optional suffix to append after the name has been translated on the client. May be null if there is
+     * no suffix.
+     */
+    default String getNameSuffix() {
+        return null;
+    }
 
     TileEntity getTileEntity();
 

@@ -1739,20 +1739,25 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             List<NamedDimensionalCoord> dimensionalCoords = new ArrayList<>();
 
             for (ICraftingMedium craftingProvider : craftingProviders) {
-                final String dispName;
+                final String rawName;
+                final String suffix;
                 final DimensionalCoord cord;
 
                 if (craftingProvider instanceof ICustomNameObject cno && cno.hasCustomName()) {
-                    dispName = cno.getCustomName();
+                    rawName = cno.getCustomName();
+                    suffix = null;
                 } else {
                     if (craftingProvider instanceof DualityInterface di) {
-                        dispName = di.getTermName();
+                        rawName = di.getRawTermName();
+                        suffix = di.getAdjacentNameSuffix();
                     } else if (craftingProvider instanceof IInterfaceViewable iv) {
-                        dispName = iv.getName();
+                        rawName = iv.getName();
+                        suffix = null;
                     } else {
                         final TileEntity tile = this.getTile(craftingProvider);
                         if (tile == null) continue;
-                        dispName = tile.getBlockType().getUnlocalizedName();
+                        rawName = tile.getBlockType().getUnlocalizedName();
+                        suffix = null;
                     }
                 }
 
@@ -1764,7 +1769,11 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     cord = new DimensionalCoord(tile);
                 }
 
-                dimensionalCoords.add(new NamedDimensionalCoord(cord, translateFromNetwork(dispName)));
+                String translatedName = translateFromNetwork(rawName);
+                String displayName = suffix != null ? DualityInterface.replaceBracketSuffix(translatedName, suffix)
+                        : translatedName;
+
+                dimensionalCoords.add(new NamedDimensionalCoord(cord, displayName));
             }
             this.providers.put(aes.copy(), dimensionalCoords);
         }

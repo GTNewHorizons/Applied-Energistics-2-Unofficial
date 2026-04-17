@@ -1618,14 +1618,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
     }
 
     public String getTermName() {
-        final String baseName;
-        if (((ICustomNameObject) this.iHost).hasCustomName()) {
-            baseName = ((ICustomNameObject) this.iHost).getCustomName();
-        } else {
-            final ItemStack item = getCrafterIcon();
-            baseName = item != null ? item.getUnlocalizedName() : "Nothing";
-        }
-
+        final String baseName = getRawTermName();
         final String suffix = getAdjacentNameSuffix();
         if (suffix == null) {
             return baseName;
@@ -1633,7 +1626,22 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return replaceBracketSuffix(baseName, suffix);
     }
 
-    private String getAdjacentNameSuffix() {
+    /**
+     * Returns the untranslated base name (unlocalized name or custom name). Should be sent separately to the client so
+     * translation happens client-side.
+     */
+    public String getRawTermName() {
+        if (((ICustomNameObject) this.iHost).hasCustomName()) {
+            return ((ICustomNameObject) this.iHost).getCustomName();
+        }
+        final ItemStack item = getCrafterIcon();
+        return item != null ? item.getUnlocalizedName() : "Nothing";
+    }
+
+    /**
+     * Returns the suffix to append after translation, or null if none.
+     */
+    public String getAdjacentNameSuffix() {
         final TileEntity hostTile = this.iHost.getTileEntity();
         if (hostTile == null || hostTile.getWorldObj() == null) return null;
         for (final ForgeDirection direction : this.iHost.getTargets()) {
@@ -1658,7 +1666,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return null;
     }
 
-    private static String replaceBracketSuffix(final String name, final String suffix) {
+    public static String replaceBracketSuffix(final String name, final String suffix) {
         final int idx = name.lastIndexOf(" [");
         if (idx > 0 && name.endsWith("]")) {
             boolean digitsOnly = true;

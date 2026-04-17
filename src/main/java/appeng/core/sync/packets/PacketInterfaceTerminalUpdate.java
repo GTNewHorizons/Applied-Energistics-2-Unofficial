@@ -139,13 +139,14 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
 
     /**
      * Adds a new entry. Fill out the rest of the command using the
-     * {@link PacketAdd#setItems(int, int, int, NBTTagList)} and {@link PacketAdd#setLoc(int, int, int, int, int)}.
+     * {@link PacketAdd#setItems(int, int, int, NBTTagList)} and {@link PacketAdd#setLoc(int, int, int, int, int)}. The
+     * {@code name} parameter should be the raw (untranslated) name. Use {@link PacketAdd#setSuffix(String)} to set the
+     * optional suffix. The client will translate the name and append the suffix.
      *
      * @return the packet, which needs to have information filled out.
      */
     public PacketAdd addNewEntry(long id, String name, boolean online) {
         PacketAdd packet = new PacketAdd(id, name, online);
-
         commands.add(packet);
         return packet;
     }
@@ -158,10 +159,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
     }
 
     /**
-     * Rename the entry
+     * Rename the entry. {@code newName} should be the raw (untranslated) name, {@code suffix} is optional (pass null if
+     * not needed). The client will translate the name and append the suffix.
      */
-    public void addRenamedEntry(long id, String newName) {
-        commands.add(new PacketRename(id, newName));
+    public void addRenamedEntry(long id, String newName, String suffix) {
+        commands.add(new PacketRename(id, newName, suffix));
     }
 
     /**
@@ -169,7 +171,6 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
      */
     public PacketOverwrite addOverwriteEntry(long id) {
         PacketOverwrite packet = new PacketOverwrite(id);
-
         commands.add(packet);
         return packet;
     }
@@ -230,10 +231,16 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
 
     /**
      * A command for sending a new entry.
+     * <p>
+     * {@code name} contains the raw (untranslated) name. {@code suffix} is an optional suffix that should be appended
+     * after the name has been translated on the client.
      */
     public static class PacketAdd extends PacketEntry {
 
+        /** Raw (untranslated) name of the interface. Translated on the client. */
         public String name;
+        /** Optional suffix appended after translation on the client. May be null. */
+        public String suffix;
         public int x, y, z, dim, side;
         public int rows, rowSize;
         public int numSlots;
@@ -271,7 +278,6 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.rowSize = rowSize;
             this.numSlots = numSlots;
             this.items = items;
-
             return this;
         }
 
@@ -284,7 +290,14 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public PacketAdd setReps(ItemStack selfRep, ItemStack dispRep) {
             this.selfRep = selfRep;
             this.dispRep = dispRep;
+            return this;
+        }
 
+        /**
+         * Set the optional suffix. The suffix is appended after the name has been translated on the client.
+         */
+        public PacketAdd setSuffix(String suffix) {
+            this.suffix = suffix;
             return this;
         }
 
@@ -292,7 +305,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         protected void write(ByteBuf buf) throws IOException {
             buf.writeByte(PacketType.ADD.ordinal());
             buf.writeLong(entryId);
-            ByteBufUtils.writeUTF8String(buf, this.name);
+            // name is raw/untranslated; suffix is optional (empty string = no suffix)
+            ByteBufUtils.writeUTF8String(buf, this.name != null ? this.name : "");
+            ByteBufUtils.writeUTF8String(buf, this.suffix != null ? this.suffix : "");
             buf.writeInt(x);
             buf.writeInt(y);
             buf.writeInt(z);
@@ -307,9 +322,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             ByteBuf tempBuf = Unpooled.directBuffer(256);
             try {
                 try (ByteBufOutputStream stream = new ByteBufOutputStream(tempBuf)) {
-
                     NBTTagCompound wrapper = new NBTTagCompound();
-
                     if (selfRep != null) {
                         wrapper.setTag("self", selfRep.writeToNBT(new NBTTagCompound()));
                     }
@@ -329,6 +342,10 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         @Override
         protected void read(ByteBuf buf) throws IOException {
             this.name = ByteBufUtils.readUTF8String(buf);
+            // empty string means no suffix
+            String rawSuffix = ByteBufUtils.readUTF8String(buf);
+            this.suffix = rawSuffix.isEmpty() ? null : rawSuffix;
+
             this.x = buf.readInt();
             this.y = buf.readInt();
             this.z = buf.readInt();
@@ -367,11 +384,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                 if (payload.hasKey("self", NBT.TAG_COMPOUND)) {
                     this.selfRep = ItemStack.loadItemStackFromNBT(payload.getCompoundTag("self"));
                 }
-
                 if (payload.hasKey("disp", NBT.TAG_COMPOUND)) {
                     this.dispRep = ItemStack.loadItemStackFromNBT(payload.getCompoundTag("disp"));
                 }
-
                 this.items = payload.getTagList("data", NBT.TAG_COMPOUND);
             }
         }
@@ -380,6 +395,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public String toString() {
             return "PacketAdd{" + "name='"
                     + name
+                    + '\''
+                    + ", suffix='"
+                    + suffix
                     + '\''
                     + ", x="
                     + x
@@ -478,7 +496,6 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.allItemUpdate = validIndices == null || validIndices.length == 0;
             this.validIndices = validIndices;
             this.items = items;
-
             return this;
         }
 
@@ -519,9 +536,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                 ByteBuf tempBuf = Unpooled.directBuffer(256);
                 try {
                     try (ByteBufOutputStream stream = new ByteBufOutputStream(tempBuf)) {
-
                         NBTTagCompound wrapper = new NBTTagCompound();
-
                         wrapper.setTag("data", items);
                         CompressedStreamTools.writeCompressed(wrapper, stream);
                     }
@@ -530,7 +545,6 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                 } finally {
                     tempBuf.release();
                 }
-
             } else {
                 buf.writeByte(flags);
             }
@@ -616,14 +630,21 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
 
     /**
      * Rename the entry.
+     * <p>
+     * {@code newName} contains the raw (untranslated) name. {@code suffix} is an optional suffix that should be
+     * appended after the name has been translated on the client.
      */
     public static class PacketRename extends PacketEntry {
 
+        /** Raw (untranslated) new name of the interface. Translated on the client. */
         public String newName;
+        /** Optional suffix appended after translation on the client. May be null. */
+        public String suffix;
 
-        protected PacketRename(long id, String newName) {
+        protected PacketRename(long id, String newName, String suffix) {
             super(id);
             this.newName = newName;
+            this.suffix = suffix;
         }
 
         protected PacketRename(ByteBuf buf) throws IOException {
@@ -634,17 +655,30 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         protected void write(ByteBuf buf) {
             buf.writeByte(PacketType.RENAME.ordinal());
             buf.writeLong(entryId);
-            ByteBufUtils.writeUTF8String(buf, newName);
+            // newName is raw/untranslated; suffix is optional (empty string = no suffix)
+            ByteBufUtils.writeUTF8String(buf, newName != null ? newName : "");
+            ByteBufUtils.writeUTF8String(buf, suffix != null ? suffix : "");
         }
 
         @Override
         protected void read(ByteBuf buf) {
             newName = ByteBufUtils.readUTF8String(buf);
+            // empty string means no suffix
+            String rawSuffix = ByteBufUtils.readUTF8String(buf);
+            this.suffix = rawSuffix.isEmpty() ? null : rawSuffix;
         }
 
         @Override
         public String toString() {
-            return "PacketRename{" + "newName='" + newName + '\'' + ", entryId=" + entryId + '}';
+            return "PacketRename{" + "newName='"
+                    + newName
+                    + '\''
+                    + ", suffix='"
+                    + suffix
+                    + '\''
+                    + ", entryId="
+                    + entryId
+                    + '}';
         }
     }
 }
