@@ -1623,7 +1623,7 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         if (suffix == null) {
             return baseName;
         }
-        return replaceBracketSuffix(baseName, suffix);
+        return baseName + suffix;
     }
 
     /**
@@ -1664,21 +1664,6 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
             }
         }
         return null;
-    }
-
-    public static String replaceBracketSuffix(final String name, final String suffix) {
-        final int idx = name.lastIndexOf(" [");
-        if (idx > 0 && name.endsWith("]")) {
-            boolean digitsOnly = true;
-            for (int i = idx + 2; i < name.length() - 1; i++) {
-                if (name.charAt(i) < '0' || name.charAt(i) > '9') {
-                    digitsOnly = false;
-                    break;
-                }
-            }
-            if (digitsOnly) return name.substring(0, idx) + suffix;
-        }
-        return name + suffix;
     }
 
     public BaseActionSource getActionSource() {

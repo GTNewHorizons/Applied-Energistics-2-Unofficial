@@ -533,7 +533,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.playersFollowingCurrentCraft.clear();
         this.craftCompleteListeners = initializeDefaultOnCompleteListener();
         this.craftCancelListeners.clear(); // complete listener will clean external state
-                                           // so cancel listener is not called here.
+        // so cancel listener is not called here.
         this.craftUpdateListeners.clear();
     }
 
@@ -581,7 +581,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 if (patternDetails.isCraftable()) {
                     final IAEStack<?>[] inputSlots = patternDetails.getAEInputs();
                     final IAEStack<?> finalIngredient = ingredient; // have to copy because of Java lambda capture
-                                                                    // rules here
+                    // rules here
                     final int matchingSlot = IntStream.range(0, inputSlots.length)
                             .filter(idx -> inputSlots[idx] != null && Objects.equals(inputSlots[idx], finalIngredient))
                             .findFirst().orElse(-1);
@@ -1770,8 +1770,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 }
 
                 String translatedName = translateFromNetwork(rawName);
-                String displayName = suffix != null ? DualityInterface.replaceBracketSuffix(translatedName, suffix)
-                        : translatedName;
+                String displayName = suffix != null ? translatedName + suffix : translatedName;
 
                 dimensionalCoords.add(new NamedDimensionalCoord(cord, displayName));
             }
@@ -1881,34 +1880,18 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
     }
 
     public static String translateFromNetwork(String name) {
-        final String baseName = stripBracketSuffix(name);
-        final String suffix = name.substring(baseName.length());
-
         final String dispName;
-        if (StatCollector.canTranslate(baseName)) {
-            dispName = StatCollector.translateToLocal(baseName);
+        if (StatCollector.canTranslate(name)) {
+            dispName = StatCollector.translateToLocal(name);
         } else {
-            String fallback = baseName + ".name";
+            String fallback = name + ".name";
             if (StatCollector.canTranslate(fallback)) {
                 dispName = StatCollector.translateToLocal(fallback);
             } else {
-                dispName = StatCollector.translateToFallback(baseName);
+                dispName = StatCollector.translateToFallback(name);
             }
         }
-        return dispName + suffix;
-    }
-
-    private static String stripBracketSuffix(final String name) {
-        final int idx = name.lastIndexOf(" [");
-        if (idx <= 0 || !name.endsWith("]")) {
-            return name;
-        }
-        for (int i = idx + 2; i < name.length() - 1; i++) {
-            if (name.charAt(i) < '0' || name.charAt(i) > '9') {
-                return name;
-            }
-        }
-        return name.substring(0, idx);
+        return dispName;
     }
 
     public BaseActionSource getCurrentJobSource() {

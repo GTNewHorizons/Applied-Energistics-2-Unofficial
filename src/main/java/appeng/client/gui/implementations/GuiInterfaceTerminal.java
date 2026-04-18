@@ -991,7 +991,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             }
         }
         if (suffix != null && !suffix.isEmpty()) {
-            return appeng.helpers.DualityInterface.replaceBracketSuffix(translatedName, suffix);
+            return translatedName + suffix;
         }
         return translatedName;
     }
