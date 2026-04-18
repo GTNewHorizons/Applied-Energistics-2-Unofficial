@@ -100,6 +100,7 @@ public class ContainerStorageReshuffle extends AEBaseContainer implements IConfi
     @Override
     public void detectAndSendChanges() {
         if (Platform.isServer()) {
+            this.verifyPermissions(SecurityPermissions.BUILD, true);
             this.report = this.tile.getReshuffleReport();
             this.scanData = this.tile.getScan();
 

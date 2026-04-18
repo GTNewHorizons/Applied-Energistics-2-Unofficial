@@ -145,6 +145,7 @@ public class TileStorageReshuffle extends AENetworkTile
             this.activeTask.error();
             this.reshuffleReport = this.activeTask.getReport();
             this.activeTask = null;
+            this.unlockStorage();
         }
     }
 
@@ -173,7 +174,6 @@ public class TileStorageReshuffle extends AENetworkTile
     @Override
     public void onChangeTypeFilters() {
         this.saveChanges();
-        this.markForUpdate();
     }
 
     public void startReshuffle() {
@@ -282,7 +282,6 @@ public class TileStorageReshuffle extends AENetworkTile
     @Override
     public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
         this.saveChanges();
-        this.markForUpdate();
     }
 
     public boolean isReshuffleRunning() {
