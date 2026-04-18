@@ -13,9 +13,7 @@ package appeng.client.gui.implementations;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.util.List;
-import java.util.Locale;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
@@ -27,6 +25,9 @@ import net.minecraft.util.EnumChatFormatting;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+
+import com.gtnewhorizon.gtnhlib.util.numberformatting.NumberFormatUtil;
+import com.gtnewhorizon.gtnhlib.util.numberformatting.options.FormatOptions;
 
 import appeng.api.AEApi;
 import appeng.api.config.ActionItems;
@@ -63,6 +64,8 @@ public class GuiPatternTerm extends GuiMEMonitorable {
 
     private static final String CRAFTMODE_CRFTING = "1";
     private static final String CRAFTMODE_PROCESSING = "0";
+
+    private static final FormatOptions FORMAT_OPTIONS = new FormatOptions().disableExponentialFormatting();
 
     private final ContainerPatternTerm container;
 
@@ -393,7 +396,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
             lines.add(
                     EnumChatFormatting.GRAY + String.format(
                             ButtonToolTips.ItemsStored.getLocal(),
-                            NumberFormat.getNumberInstance(Locale.US).format(this.blankPatternView.getStackSize())));
+                            NumberFormatUtil.formatNumber(this.blankPatternView.getStackSize(), FORMAT_OPTIONS)));
         }
 
         return lines;
