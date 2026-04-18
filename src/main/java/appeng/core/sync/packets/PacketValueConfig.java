@@ -33,6 +33,7 @@ import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
+import appeng.container.implementations.ContainerCraftingDiagnosticTerminal;
 import appeng.container.implementations.ContainerInterface;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.container.implementations.ContainerMEMonitorable;
@@ -114,6 +115,14 @@ public class PacketValueConfig extends AppEngPacket {
         	case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
         	case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
         	}
+        } else if (this.Name.startsWith("CraftingDiagnostics.")
+                && c instanceof final ContainerCraftingDiagnosticTerminal qk) {
+            switch (this.Name) {
+                case "CraftingDiagnostics.Search" -> qk.setSearchText(this.Value);
+                case "CraftingDiagnostics.Sort" -> qk.setSortMode(Integer.parseInt(this.Value));
+                case "CraftingDiagnostics.Direction" -> qk.setAscending("1".equals(this.Value));
+                case "CraftingDiagnostics.Reset" -> qk.clearDiagnostics();
+            }
         } else if (this.Name.equals("QuartzKnife.Name") && c instanceof final ContainerQuartzKnife qk) {
             qk.setName(this.Value);
         } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof final ContainerRenamer qk) {

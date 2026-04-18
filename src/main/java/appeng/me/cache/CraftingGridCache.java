@@ -32,12 +32,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
 import javax.annotation.Nonnull;
 
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -94,6 +98,7 @@ import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.ItemSorters;
+import appeng.util.Platform;
 import appeng.util.item.OreListMultiMap;
 
 public class CraftingGridCache
@@ -132,6 +137,10 @@ public class CraftingGridCache
 
     private final Set<ICraftingPostPatternChangeListener> postPatternChangeListeners = Collections
             .newSetFromMap(new WeakHashMap<>());
+    private final Map<IAEStack<?>, DiagnosticStats> diagnostics = new HashMap<>();
+    private final Set<Long> loadedDiagnosticStorageIds = new HashSet<>();
+    private long diagnosticsRevision = 0L;
+    private static final String DIAGNOSTICS_KEY = "CraftingDiagnostics";
 
     public CraftingGridCache(final IGrid grid) {
         this.grid = grid;
@@ -215,17 +224,25 @@ public class CraftingGridCache
     }
 
     @Override
-    public void onSplit(final IGridStorage destinationStorage) { // nothing!
+    public void onSplit(final IGridStorage destinationStorage) {
+        destinationStorage.dataObject().removeTag(DIAGNOSTICS_KEY);
     }
 
     @Override
     public void onJoin(final IGridStorage sourceStorage) {
-        // nothing!
+        if (sourceStorage == null || sourceStorage.getID() == 0
+                || !this.loadedDiagnosticStorageIds.add(sourceStorage.getID())) {
+            return;
+        }
+
+        this.readDiagnosticsFromNBT(
+                sourceStorage.dataObject().getTagList(DIAGNOSTICS_KEY, Constants.NBT.TAG_COMPOUND),
+                !this.diagnostics.isEmpty());
     }
 
     @Override
     public void populateGridStorage(final IGridStorage destinationStorage) {
-        // nothing!
+        destinationStorage.dataObject().setTag(DIAGNOSTICS_KEY, this.writeDiagnosticsToNBT());
     }
 
     public static void pauseRebuilds() {
@@ -712,6 +729,183 @@ public class CraftingGridCache
 
     public void removePostPatternChangeListeners(final ICraftingPostPatternChangeListener listener) {
         this.postPatternChangeListeners.remove(listener);
+    }
+
+    public synchronized void recordDiagnosticSample(final IAEStack<?> output, final long producedAmount,
+            final long observedElapsedNanos) {
+        if (output == null || producedAmount <= 0 || observedElapsedNanos <= 0) {
+            return;
+        }
+
+        final IAEStack<?> key = normalizeDiagnosticStack(output);
+        if (key == null) {
+            return;
+        }
+
+        final DiagnosticStats stats = this.diagnostics.computeIfAbsent(key, ignored -> new DiagnosticStats());
+        stats.totalProduced += producedAmount;
+        stats.cumulativeObservedTimeNanos += observedElapsedNanos;
+        stats.sampleCount += 1;
+        stats.lastObservedMillis = System.currentTimeMillis();
+        this.diagnosticsRevision++;
+    }
+
+    public synchronized void clearDiagnosticStats() {
+        if (this.diagnostics.isEmpty()) {
+            return;
+        }
+
+        this.diagnostics.clear();
+        this.diagnosticsRevision++;
+    }
+
+    public synchronized long getDiagnosticsRevision() {
+        return this.diagnosticsRevision;
+    }
+
+    public synchronized NBTTagList createDiagnosticRows(final String search, final DiagnosticSortMode sortMode,
+            final boolean ascending) {
+        final List<Map.Entry<IAEStack<?>, DiagnosticStats>> rows = new ArrayList<>();
+        final String normalizedSearch = search == null ? "" : search.trim().toLowerCase();
+
+        for (final Map.Entry<IAEStack<?>, DiagnosticStats> entry : this.diagnostics.entrySet()) {
+            if (normalizedSearch.isEmpty()
+                    || entry.getKey().getDisplayName().toLowerCase().contains(normalizedSearch)) {
+                rows.add(entry);
+            }
+        }
+
+        rows.sort((left, right) -> {
+            int comparison = compareDiagnosticRows(left, right, sortMode);
+            if (!ascending) {
+                comparison = -comparison;
+            }
+            if (comparison == 0) {
+                comparison = left.getKey().getDisplayName().compareToIgnoreCase(right.getKey().getDisplayName());
+            }
+            if (comparison == 0) {
+                comparison = Integer.compare(left.getKey().hashCode(), right.getKey().hashCode());
+            }
+            return comparison;
+        });
+
+        final NBTTagList result = new NBTTagList();
+        for (final Map.Entry<IAEStack<?>, DiagnosticStats> row : rows) {
+            final NBTTagCompound tag = new NBTTagCompound();
+            tag.setTag("Stack", row.getKey().toNBTGeneric());
+            row.getValue().writeToNBT(tag);
+            result.appendTag(tag);
+        }
+        return result;
+    }
+
+    private static int compareDiagnosticRows(final Map.Entry<IAEStack<?>, DiagnosticStats> left,
+            final Map.Entry<IAEStack<?>, DiagnosticStats> right, final DiagnosticSortMode sortMode) {
+        return switch (sortMode) {
+            case CRAFTED -> Long.compare(left.getValue().totalProduced, right.getValue().totalProduced);
+            case AVG_PER_SECOND -> Double
+                    .compare(left.getValue().getItemsPerSecond(), right.getValue().getItemsPerSecond());
+            case SAMPLES -> Long.compare(left.getValue().sampleCount, right.getValue().sampleCount);
+            case NAME -> left.getKey().getDisplayName().compareToIgnoreCase(right.getKey().getDisplayName());
+            case CUMULATIVE_TIME -> Long
+                    .compare(left.getValue().cumulativeObservedTimeNanos, right.getValue().cumulativeObservedTimeNanos);
+        };
+    }
+
+    private static IAEStack<?> normalizeDiagnosticStack(final IAEStack<?> stack) {
+        if (stack == null) {
+            return null;
+        }
+
+        final IAEStack<?> normalized = stack.copy();
+        normalized.reset();
+        normalized.setStackSize(1);
+        return normalized;
+    }
+
+    private synchronized NBTTagList writeDiagnosticsToNBT() {
+        final NBTTagList list = new NBTTagList();
+        for (final Map.Entry<IAEStack<?>, DiagnosticStats> entry : this.diagnostics.entrySet()) {
+            final NBTTagCompound tag = new NBTTagCompound();
+            tag.setTag("Stack", entry.getKey().toNBTGeneric());
+            entry.getValue().writeToNBT(tag);
+            list.appendTag(tag);
+        }
+        return list;
+    }
+
+    private synchronized void readDiagnosticsFromNBT(final NBTTagList list, final boolean merge) {
+        if (!merge) {
+            this.diagnostics.clear();
+        }
+
+        for (int i = 0; i < list.tagCount(); i++) {
+            final NBTTagCompound tag = list.getCompoundTagAt(i);
+            final IAEStack<?> stack = Platform.readStackNBT(tag.getCompoundTag("Stack"));
+            if (stack == null) {
+                continue;
+            }
+
+            final IAEStack<?> key = normalizeDiagnosticStack(stack);
+            if (key == null) {
+                continue;
+            }
+
+            final DiagnosticStats loaded = DiagnosticStats.fromNBT(tag);
+            final DiagnosticStats existing = this.diagnostics.computeIfAbsent(key, ignored -> new DiagnosticStats());
+            existing.totalProduced += loaded.totalProduced;
+            existing.cumulativeObservedTimeNanos += loaded.cumulativeObservedTimeNanos;
+            existing.sampleCount += loaded.sampleCount;
+            existing.lastObservedMillis = Math.max(existing.lastObservedMillis, loaded.lastObservedMillis);
+        }
+
+        this.diagnosticsRevision++;
+    }
+
+    public enum DiagnosticSortMode {
+
+        CUMULATIVE_TIME,
+        AVG_PER_SECOND,
+        CRAFTED,
+        SAMPLES,
+        NAME;
+
+        public DiagnosticSortMode next() {
+            return values()[(this.ordinal() + 1) % values().length];
+        }
+    }
+
+    private static final class DiagnosticStats {
+
+        private long totalProduced;
+        private long cumulativeObservedTimeNanos;
+        private long sampleCount;
+        private long lastObservedMillis;
+
+        private double getItemsPerSecond() {
+            if (this.cumulativeObservedTimeNanos <= 0) {
+                return 0.0D;
+            }
+
+            return this.totalProduced * (double) TimeUnit.SECONDS.toNanos(1)
+                    / (double) this.cumulativeObservedTimeNanos;
+        }
+
+        private void writeToNBT(final NBTTagCompound tag) {
+            tag.setLong("TotalProduced", this.totalProduced);
+            tag.setLong("ObservedTimeNanos", this.cumulativeObservedTimeNanos);
+            tag.setLong("SampleCount", this.sampleCount);
+            tag.setLong("LastObservedMillis", this.lastObservedMillis);
+        }
+
+        private static DiagnosticStats fromNBT(final NBTTagCompound tag) {
+            final DiagnosticStats stats = new DiagnosticStats();
+            stats.totalProduced = tag.getLong("TotalProduced");
+            stats.cumulativeObservedTimeNanos = tag.getLong("ObservedTimeNanos");
+            stats.sampleCount = tag.getLong("SampleCount");
+            stats.lastObservedMillis = tag.getLong("LastObservedMillis");
+            return stats;
+        }
     }
 
     private static class ActiveCpuIterator implements Iterator<ICraftingCPU> {
