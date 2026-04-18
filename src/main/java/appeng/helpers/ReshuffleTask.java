@@ -227,6 +227,7 @@ public class ReshuffleTask {
                     if (monitor == null) {
                         this.cantInject.add(aes);
                         this.injectIterator.remove();
+                        continue;
                     }
 
                     final IAEStack<?> res = monitor.injectItems(aes, Actionable.MODULATE, this.src);
