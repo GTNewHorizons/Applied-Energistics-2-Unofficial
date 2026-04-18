@@ -346,6 +346,8 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
 
         final FullnessMode fullnessMode = (FullnessMode) this.manager.getSetting(Settings.FULLNESS_MODE);
         final OperationMode operationMode = (OperationMode) this.manager.getSetting(Settings.OPERATION_MODE);
+        final boolean moveOnEmptyWhileFilling = operationMode == OperationMode.FILL
+                && fullnessMode == FullnessMode.EMPTY;
 
         try {
             final IEnergySource energy = this.getProxy().getEnergy();
@@ -386,9 +388,14 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
 
                     // If work is done, check if the cell should be moved and try to move it to the output
                     // If the cell failed to move, queue moving the cell before doing any further work on it
-                    if (amountToMove > 0
-                            || (operationMode == OperationMode.FILL && fullnessMode == FullnessMode.EMPTY)) {
-                        if (this.shouldMove(inv, sourceEmptyAfterTransfer, didWork, operationMode, fullnessMode)) {
+                    if (amountToMove > 0 || moveOnEmptyWhileFilling) {
+                        if (this.shouldMove(
+                                inv,
+                                sourceEmptyAfterTransfer,
+                                didWork,
+                                moveOnEmptyWhileFilling,
+                                operationMode,
+                                fullnessMode)) {
                             moveQueue[x] = !this.moveSlot(x) ? 1 : 0;
                             if (moveQueue[x] == 1) {
                                 return TickRateModulation.IDLE;
@@ -509,8 +516,9 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
     }
 
     private boolean shouldMove(final IMEInventory<?> inventory, final boolean sourceEmptyAfterTransfer,
-            final boolean didWork, final OperationMode om, final FullnessMode fm) {
-        if (fm == FullnessMode.EMPTY && om == OperationMode.FILL) {
+            final boolean didWork, final boolean moveOnEmptyWhileFilling, final OperationMode om,
+            final FullnessMode fm) {
+        if (moveOnEmptyWhileFilling) {
             return sourceEmptyAfterTransfer;
         }
 
