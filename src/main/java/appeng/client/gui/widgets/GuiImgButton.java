@@ -982,6 +982,18 @@ public class GuiImgButton extends GuiButton implements ITooltip {
                     HealthSortOrder.BYTES_TOTAL,
                     ButtonToolTips.CellHealthSortBy,
                     ButtonToolTips.CellHealthSortBySize);
+            this.registerApp(
+                    2 * 16,
+                    Settings.INSERT_ORDER,
+                    YesNo.YES,
+                    ButtonToolTips.ReshuffleInsertOrder,
+                    ButtonToolTips.ReshuffleInsertOrderOn);
+            this.registerApp(
+                    16,
+                    Settings.INSERT_ORDER,
+                    YesNo.NO,
+                    ButtonToolTips.ReshuffleInsertOrder,
+                    ButtonToolTips.ReshuffleInsertOrderOff);
         }
     }
 

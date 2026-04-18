@@ -63,6 +63,7 @@ public class TileStorageReshuffle extends AENetworkTile
         this.getProxy().setIdlePowerUsage(4.0);
 
         this.cm.registerSetting(Settings.INCLUDE_SUBNETS, YesNo.YES);
+        this.cm.registerSetting(Settings.INSERT_ORDER, YesNo.YES);
         this.cm.registerSetting(Settings.CELL_HEALTH_SORT, HealthSortOrder.FILL_PCT);
         this.cm.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
     }
@@ -153,6 +154,22 @@ public class TileStorageReshuffle extends AENetworkTile
         return this.typeFilters;
     }
 
+    public YesNo getIncludeSubnets() {
+        return (YesNo) this.cm.getSetting(Settings.INCLUDE_SUBNETS);
+    }
+
+    public YesNo getInsertOrder() {
+        return (YesNo) this.cm.getSetting(Settings.INSERT_ORDER);
+    }
+
+    public HealthSortOrder getCellHealthSort() {
+        return (HealthSortOrder) this.cm.getSetting(Settings.CELL_HEALTH_SORT);
+    }
+
+    public SortDir getCellHeathSortDir() {
+        return (SortDir) this.cm.getSetting(Settings.SORT_DIRECTION);
+    }
+
     @Override
     public void onChangeTypeFilters() {
         this.saveChanges();
@@ -177,14 +194,16 @@ public class TileStorageReshuffle extends AENetworkTile
             }
 
             final boolean includeSubnets = this.cm.getSetting(Settings.INCLUDE_SUBNETS) == YesNo.YES;
+            final boolean insertOrder = this.cm.getSetting(Settings.INSERT_ORDER) == YesNo.YES;
             this.lockedMonitors = monitors;
 
             this.activeTask = new ReshuffleTask(
-                    this.typeFilters,
+                    new AEStackTypeFilter(this.typeFilters),
                     this.getProxy().getStorage(),
                     this.cantInject,
                     new ReshuffleActionSource(this),
-                    includeSubnets);
+                    includeSubnets,
+                    insertOrder);
 
             this.activeTask.initialize();
             this.markForUpdate();

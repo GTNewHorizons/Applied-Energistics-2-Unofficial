@@ -2,7 +2,6 @@ package appeng.helpers;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,6 +11,7 @@ import appeng.api.networking.security.BaseActionSource;
 import appeng.api.networking.storage.IStorageGrid;
 import appeng.api.storage.IMEInventoryHandler;
 import appeng.api.storage.IMEMonitor;
+import appeng.api.storage.IMENetworkInventory;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
@@ -24,13 +24,14 @@ import appeng.util.item.IAEStackList;
 public class ReshuffleTask {
 
     // slowdown because working too fast, nobody gonna believe that real working
-    public static final long operations_per_tick = 1;
+    public static final long stacks_per_tick = 8;
 
     private final BaseActionSource src;
     private final IStorageGrid sg;
 
     private final AEStackTypeFilter typeFilters;
     private final boolean includeSubnets;
+    private final boolean insertOrder;
 
     private ReshufflePhase phase = ReshufflePhase.IDLE;
 
@@ -47,80 +48,139 @@ public class ReshuffleTask {
     private final IItemList<IAEStack<?>> stackLookup = new IAEStackList();
 
     private final List<IAEStack<?>> injectQueue = new ArrayList<>();
-    private final HashMap<IAEStackType<?>, Iterator> tempIterator = new HashMap<>();
+
+    private Iterator<Iterator<IMEInventoryHandler>> netTypesIterator = null;
+    private Iterator<IMEInventoryHandler> typeInvHandlersIterator = null;
+    private deepDig deepInspector = null;
+
     private Iterator<IAEStack<?>> injectIterator = null;
 
+    private static class deepDig {
+
+        private final Iterator<IMEInventoryHandler> firstLayer;
+        private deepDig nextLayer = null;
+
+        deepDig(Iterator<IMEInventoryHandler> firstLayer) {
+            this.firstLayer = firstLayer;
+        }
+
+        public boolean hasNextLayer() {
+            if (this.nextLayer == null) return false;
+            if (this.nextLayer.nextLayer == null && !this.nextLayer.firstLayer.hasNext()) {
+                this.nextLayer = null;
+            }
+            return this.nextLayer != null;
+        }
+    }
+
     public ReshuffleTask(AEStackTypeFilter typeFilters, IStorageGrid sg, IItemList<IAEStack<?>> cantInject,
-            BaseActionSource src, boolean includeSubnets) {
+            BaseActionSource src, boolean includeSubnets, boolean insertOrder) {
         this.src = src;
         this.sg = sg;
         this.cantInject = cantInject;
         this.typeFilters = typeFilters;
         this.includeSubnets = includeSubnets;
+        this.insertOrder = insertOrder;
     }
 
     public void initialize() {
         this.startTime = System.currentTimeMillis();
+        this.setupIterator();
         this.phase = ReshufflePhase.BEFORE_SNAPSHOT;
     }
 
     private boolean snapshotBefore() {
-        return this.handlerProcessor(this.beforeSnapshot, false, true);
+        return this.handlerProcessor(this.beforeSnapshot, false);
     }
 
     private boolean snapshotAfter() {
-        return this.handlerProcessor(this.afterSnapshot, false, false);
+        return this.handlerProcessor(this.afterSnapshot, false);
+    }
+
+    private void setupIterator() {
+        final List<Iterator<IMEInventoryHandler>> temp = new ArrayList<>();
+        if (this.netTypesIterator == null) {
+            for (IAEStackType<?> type : this.typeFilters.getEnabledTypes()) {
+                if (!(this.sg.getMEMonitor(type) instanceof NetworkMonitor<?>nm)) continue;
+                if (!(nm.getHandler() instanceof NetworkInventoryHandler nih)) continue;
+                if (this.netTypesIterator == null) temp.add(nih.getHandlers().iterator());
+            }
+
+            this.netTypesIterator = temp.iterator();
+        } else {
+            this.resetIterators();
+            this.setupIterator();
+        }
+    }
+
+    private void resetIterators() {
+        this.netTypesIterator = null;
+        this.typeInvHandlersIterator = null;
+        this.deepInspector = null;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private boolean handlerProcessor(final IItemList<IAEStack<?>> target, final boolean extract, final boolean before) {
-        int operations = 0;
-        for (IAEStackType<?> type : this.typeFilters.getEnabledTypes()) {
-            if (!(this.sg.getMEMonitor(type) instanceof NetworkMonitor<?>nm)) continue;
-            if (!(nm.getHandler() instanceof NetworkInventoryHandler<?>nih)) continue;
-            if (!this.tempIterator.containsKey(type)) this.tempIterator.put(type, nih.getHandlers().iterator());
-
-            final Iterator<IMEInventoryHandler> i = this.tempIterator.get(type);
-
-            while (i.hasNext()) {
-                final IMEInventoryHandler cellHandler = i.next();
-
-                if (cellHandler == null || cellHandler.isAutoCraftingInventory()
-                        || (!this.includeSubnets && cellHandler.getExternalNetworkInventory() != null)) {
-                    continue;
-                }
-
-                cellHandler.getAvailableItems(type.createList(), IterationCounter.fetchNewId()).forEach(o -> {
-                    if (o instanceof IAEStack<?>aes) {
-                        aes = aes.copy();
-                        if (extract) {
-                            final IAEStack<?> extracted = cellHandler.extractItems(aes, Actionable.MODULATE, this.src);
-
-                            if (extracted == null) {
-                                this.cantExtract.add(aes);
-                            } else if (extracted.getStackSize() != aes.getStackSize()) {
-                                aes.decStackSize(extracted.getStackSize());
-                                this.cantExtract.add(aes);
-                            } else {
-                                this.extractedItems += extracted.getStackSize();
-                                target.add(extracted);
-                            }
-
-                            this.extractedTypes = this.extracted.size();
-                        } else {
-                            this.stackLookup.add(aes);
-                            target.add(aes);
-                        }
-                    }
-                });
-
-                operations++;
-
-                if (operations == operations_per_tick) return false;
-            }
+    private boolean handlerProcessor(final IItemList<IAEStack<?>> target, final boolean extract) {
+        if (this.typeInvHandlersIterator == null) {
+            if (this.netTypesIterator.hasNext()) {
+                this.typeInvHandlersIterator = this.netTypesIterator.next();
+            } else return true;
         }
 
-        return true;
+        final Iterator<IMEInventoryHandler> i;
+        deepDig currentDeep = this.deepInspector;
+
+        if (currentDeep != null) {
+            while (currentDeep.hasNextLayer()) currentDeep = currentDeep.nextLayer;
+            if (currentDeep.firstLayer.hasNext()) i = currentDeep.firstLayer;
+            else i = this.typeInvHandlersIterator;
+        } else {
+            i = this.typeInvHandlersIterator;
+        }
+
+        while (i.hasNext()) {
+            final IMEInventoryHandler cellHandler = i.next();
+            if (cellHandler == null || cellHandler.isAutoCraftingInventory()) continue;
+            final IAEStackType<?> currentType = cellHandler.getStackType();
+            final IMENetworkInventory<?> subnet = cellHandler.getExternalNetworkInventory();
+            if (subnet instanceof NetworkInventoryHandler nextNetwork) {
+                if (!includeSubnets) continue;
+                if (currentDeep == null) this.deepInspector = new deepDig(nextNetwork.getHandlers().iterator());
+                else currentDeep.nextLayer = new deepDig(nextNetwork.getHandlers().iterator());
+
+                return false;
+            }
+
+            cellHandler.getAvailableItems(currentType.createList(), IterationCounter.fetchNewId()).forEach(o -> {
+                if (o instanceof IAEStack<?>aes) {
+                    aes = aes.copy();
+                    if (extract) {
+                        final IAEStack<?> extracted = cellHandler.extractItems(aes, Actionable.MODULATE, this.src);
+
+                        if (extracted == null) {
+                            this.cantExtract.add(aes);
+                        } else if (extracted.getStackSize() != aes.getStackSize()) {
+                            aes.decStackSize(extracted.getStackSize());
+                            this.cantExtract.add(aes);
+                        } else {
+                            this.extractedItems += extracted.getStackSize();
+                            target.add(extracted);
+                        }
+
+                        this.extractedTypes = this.extracted.size();
+                    } else {
+                        this.stackLookup.add(aes);
+                        target.add(aes);
+                    }
+                }
+            });
+
+            return false;
+        }
+
+        this.typeInvHandlersIterator = null;
+
+        return false;
     }
 
     private void toQueueList() {
@@ -130,22 +190,22 @@ public class ReshuffleTask {
             this.injectQueue.add(item);
             i.remove();
         }
-        // low stacks first
-        this.injectQueue.sort(Comparator.comparingLong(IAEStack::getStackSize));
+        this.injectQueue
+                .sort(Comparator.comparingLong(aes -> this.insertOrder ? -aes.getStackSize() : aes.getStackSize()));
     }
 
     public void processNextBatch() {
         switch (this.phase) {
             case BEFORE_SNAPSHOT -> {
                 if (this.snapshotBefore()) {
-                    this.tempIterator.clear();
+                    this.setupIterator();
                     this.phase = ReshufflePhase.EXTRACTION;
                 }
             }
 
             case EXTRACTION -> {
-                if (this.handlerProcessor(this.extracted, true, false)) {
-                    this.tempIterator.clear();
+                if (this.handlerProcessor(this.extracted, true)) {
+                    this.setupIterator();
                     this.toQueueList();
                     this.phase = ReshufflePhase.INJECTION;
                 }
@@ -178,7 +238,7 @@ public class ReshuffleTask {
 
                     operations++;
 
-                    if (operations == operations_per_tick * 18) return;
+                    if (operations == stacks_per_tick) return;
                 }
 
                 this.injectIterator = null;
@@ -187,7 +247,7 @@ public class ReshuffleTask {
 
             case AFTER_SNAPSHOT -> {
                 if (this.snapshotAfter()) {
-                    this.tempIterator.clear();
+                    this.setupIterator();
                     this.finalizeReport();
                 }
             }

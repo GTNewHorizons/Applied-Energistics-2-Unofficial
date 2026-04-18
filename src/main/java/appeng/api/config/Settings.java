@@ -94,6 +94,8 @@ public enum Settings {
 
     INCLUDE_SUBNETS(EnumSet.of(YesNo.YES, YesNo.NO)),
 
+    INSERT_ORDER(EnumSet.of(YesNo.YES, YesNo.NO)),
+
     CELL_HEALTH_SORT(EnumSet.allOf(HealthSortOrder.class));
 
     private final EnumSet<? extends Enum<?>> values;

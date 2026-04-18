@@ -1,17 +1,11 @@
 package appeng.container.implementations;
 
-import java.io.IOException;
-
-import javax.annotation.Nonnull;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import appeng.api.config.HealthSortOrder;
 import appeng.api.config.ReshufflePhase;
 import appeng.api.config.SecurityPermissions;
-import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.YesNo;
 import appeng.api.storage.data.AEStackTypeRegistry;
@@ -21,71 +15,55 @@ import appeng.api.util.IConfigurableObject;
 import appeng.client.gui.implementations.GuiStorageReshuffle;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
-import appeng.core.AELog;
-import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketValueConfig;
 import appeng.helpers.ReshuffleReport;
 import appeng.helpers.ScanTask;
 import appeng.tile.misc.TileStorageReshuffle;
 import appeng.util.AEStackTypeFilter;
-import appeng.util.ConfigManager;
-import appeng.util.IConfigManagerHost;
 import appeng.util.Platform;
 
-public class ContainerStorageReshuffle extends AEBaseContainer implements IConfigManagerHost, IConfigurableObject {
+public class ContainerStorageReshuffle extends AEBaseContainer implements IConfigurableObject {
 
     private final TileStorageReshuffle tile;
 
     @GuiSync(0)
-    public boolean reshuffleRunning = false;
-
-    @GuiSync(1)
     private boolean scanMode = false;
 
-    @GuiSync(2)
+    @GuiSync(1)
     private boolean healthMode = false;
 
-    @GuiSync(3)
+    @GuiSync(2)
     public ReshuffleReport report = null;
 
-    @GuiSync(4)
+    @GuiSync(3)
     public ScanTask scanData = null;
 
-    @GuiSync(5)
+    @GuiSync(4)
     public AEStackTypeFilter typeFilters;
 
-    private IConfigManager serverCM;
-    private final IConfigManager clientCM;
-    private IConfigManagerHost gui;
+    @GuiSync(5)
+    public YesNo includeSubnets;
+
+    @GuiSync(6)
+    public YesNo insertOrder;
+
+    @GuiSync(7)
+    public HealthSortOrder healthSortOrder;
+
+    @GuiSync(8)
+    public SortDir healthSortDir;
 
     public ContainerStorageReshuffle(final InventoryPlayer ip, final TileStorageReshuffle te) {
         super(ip, te);
         this.tile = te;
         this.typeFilters = new AEStackTypeFilter(this.tile.getTypeFilters());
-
-        if (Platform.isServer()) {
-            this.serverCM = this.tile.getConfigManager();
-        }
-        this.clientCM = new ConfigManager(this);
-        this.clientCM.registerSetting(Settings.INCLUDE_SUBNETS, YesNo.YES);
-        this.clientCM.registerSetting(Settings.CELL_HEALTH_SORT, HealthSortOrder.FILL_PCT);
-        this.clientCM.registerSetting(Settings.SORT_DIRECTION, SortDir.ASCENDING);
     }
 
     public boolean isScanMode() {
-        return scanMode;
+        return this.scanMode;
     }
 
     public boolean isHealthMode() {
-        return healthMode;
-    }
-
-    public HealthSortOrder getHealthSortOrder() {
-        return (HealthSortOrder) this.clientCM.getSetting(Settings.CELL_HEALTH_SORT);
-    }
-
-    public SortDir getHealthSortDirOrder() {
-        return (SortDir) this.clientCM.getSetting(Settings.SORT_DIRECTION);
+        return this.healthMode;
     }
 
     public void setView(final String viewName) {
@@ -122,26 +100,13 @@ public class ContainerStorageReshuffle extends AEBaseContainer implements IConfi
     @Override
     public void detectAndSendChanges() {
         if (Platform.isServer()) {
-            for (final Settings set : this.serverCM.getSettings()) {
-                final Enum<?> sideLocal = this.serverCM.getSetting(set);
-                final Enum<?> sideRemote = this.clientCM.getSetting(set);
-
-                if (sideLocal != sideRemote) {
-                    this.clientCM.putSetting(set, sideLocal);
-                    for (final Object crafter : this.crafters) {
-                        try {
-                            NetworkHandler.instance.sendTo(
-                                    new PacketValueConfig(set.name(), sideLocal.name()),
-                                    (EntityPlayerMP) crafter);
-                        } catch (final IOException e) {
-                            AELog.debug(e);
-                        }
-                    }
-                }
-            }
-
             this.report = this.tile.getReshuffleReport();
             this.scanData = this.tile.getScan();
+
+            this.includeSubnets = this.tile.getIncludeSubnets();
+            this.insertOrder = this.tile.getInsertOrder();
+            this.healthSortOrder = this.tile.getCellHealthSort();
+            this.healthSortDir = this.tile.getCellHeathSortDir();
 
             super.detectAndSendChanges();
         }
@@ -154,8 +119,14 @@ public class ContainerStorageReshuffle extends AEBaseContainer implements IConfi
                 case "typeFilters" -> gui.onUpdateTypeFilters();
                 case "report" -> gui.onReportUpdated();
                 case "scanData" -> gui.onScanUpdated();
+                case "includeSubnets", "insertOrder", "healthSortOrder", "healthSortDir" -> gui.onSettingsUpdated();
             }
         }
+    }
+
+    @Override
+    public IConfigManager getConfigManager() {
+        return this.tile.getConfigManager();
     }
 
     public void startReshuffle() {
@@ -168,7 +139,6 @@ public class ContainerStorageReshuffle extends AEBaseContainer implements IConfi
     }
 
     public void performNetworkScan() {
-        if (this.reshuffleRunning) return;
         if (!this.hasAccess(SecurityPermissions.BUILD, false)) return;
         this.tile.scanNetwork();
     }
@@ -184,21 +154,5 @@ public class ContainerStorageReshuffle extends AEBaseContainer implements IConfi
 
     public ScanTask getScanData() {
         return this.scanData;
-    }
-
-    public void setGui(@Nonnull final IConfigManagerHost gui) {
-        this.gui = gui;
-    }
-
-    @Override
-    @SuppressWarnings({ "rawtypes" })
-    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
-        if (this.gui != null) this.gui.updateSetting(manager, settingName, newValue);
-    }
-
-    @Override
-    public IConfigManager getConfigManager() {
-        if (Platform.isServer()) return this.serverCM;
-        return this.clientCM;
     }
 }

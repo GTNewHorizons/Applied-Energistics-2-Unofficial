@@ -33,7 +33,6 @@ import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.api.storage.data.IItemList;
-import appeng.api.util.IConfigManager;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiImgButton;
@@ -52,10 +51,9 @@ import appeng.helpers.ReshuffleReport.ItemChange;
 import appeng.helpers.ScanTask;
 import appeng.helpers.ScanTask.ScanRecord;
 import appeng.tile.misc.TileStorageReshuffle;
-import appeng.util.IConfigManagerHost;
 import appeng.util.Platform;
 
-public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost {
+public class GuiStorageReshuffle extends AEBaseGui {
 
     private static final int BOX_TOP = 38;
     private static final int BOX_HEIGHT = 78;
@@ -81,7 +79,6 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
 
     private final ContainerStorageReshuffle container;
     private final Map<TypeToggleButton, IAEStackType<?>> typeToggleButtons = new IdentityHashMap<>();
-    private final IConfigManager configSrc;
 
     private final GuiScrollbar reportScrollbar = new GuiScrollbar();
     private final GuiScrollbar scanScrollbar = new GuiScrollbar();
@@ -94,7 +91,8 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
     private GuiImgButton healthModeButton;
     private GuiImgButton locateButton;
     private GuiImgButton includeSubnetsButton;
-    private GuiImgButton healthSortButton;
+    private GuiImgButton insertOrderButton;
+    private GuiImgButton healthSortOrderButton;
     private GuiImgButton healthSortDirButton;
 
     private GuiButton startCancelButton;
@@ -108,11 +106,8 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
     public GuiStorageReshuffle(final InventoryPlayer inventoryPlayer, final TileStorageReshuffle te) {
         super(new ContainerStorageReshuffle(inventoryPlayer, te));
         this.container = (ContainerStorageReshuffle) this.inventorySlots;
-        this.container.setGui(this);
         this.xSize = 195;
         this.ySize = 177;
-
-        this.configSrc = this.container.getConfigManager();
     }
 
     @Override
@@ -130,6 +125,9 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
                 Settings.INCLUDE_SUBNETS,
                 YesNo.YES);
         this.buttonList.add(this.includeSubnetsButton);
+
+        this.insertOrderButton = new GuiImgButton(leftCol - 18, this.guiTop + 48, Settings.INSERT_ORDER, YesNo.YES);
+        this.buttonList.add(this.insertOrderButton);
 
         this.reshuffleTab = new GuiImgButton(
                 rightTabX,
@@ -153,12 +151,12 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
         this.buttonList.add(this.healthModeButton);
 
         final int sortBtnY = this.guiTop + SCAN_YO - 20;
-        this.healthSortButton = new GuiImgButton(
+        this.healthSortOrderButton = new GuiImgButton(
                 this.guiLeft + SCAN_XO + SCAN_ROW_W - 36,
                 sortBtnY,
                 Settings.CELL_HEALTH_SORT,
-                this.container.getHealthSortOrder());
-        this.buttonList.add(this.healthSortButton);
+                this.container.healthSortOrder);
+        this.buttonList.add(this.healthSortOrderButton);
 
         this.healthSortDirButton = new GuiImgButton(
                 this.guiLeft + SCAN_XO + SCAN_ROW_W - 18,
@@ -216,27 +214,30 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
         }
     }
 
+    public void onSettingsUpdated() {
+        if (this.includeSubnetsButton != null) {
+            this.includeSubnetsButton.set(this.container.includeSubnets);
+        }
+
+        if (this.insertOrderButton != null) {
+            this.insertOrderButton.set(this.container.insertOrder);
+        }
+
+        if (this.healthSortOrderButton != null) {
+            this.healthSortOrderButton.set(this.container.healthSortOrder);
+            this.sortHealthEntries();
+        }
+
+        if (this.healthSortDirButton != null) {
+            this.healthSortDirButton.set(this.container.healthSortDir);
+            this.sortHealthEntries();
+        }
+    }
+
     public void onUpdateTypeFilters() {
         for (final Map.Entry<TypeToggleButton, IAEStackType<?>> entry : this.typeToggleButtons.entrySet()) {
             final boolean enabled = this.container.getTypeFilters().isEnabled(entry.getValue());
             entry.getKey().setEnabled(enabled);
-        }
-    }
-
-    @Override
-    public void updateSetting(final IConfigManager manager, final Enum settingName, final Enum newValue) {
-        if (this.includeSubnetsButton != null) {
-            this.includeSubnetsButton.set(this.configSrc.getSetting(Settings.INCLUDE_SUBNETS));
-        }
-
-        if (this.healthSortDirButton != null) {
-            this.healthSortDirButton.set(this.configSrc.getSetting(Settings.SORT_DIRECTION));
-            this.sortHealthEntries();
-        }
-
-        if (this.healthSortButton != null) {
-            this.healthSortButton.set(this.configSrc.getSetting(Settings.CELL_HEALTH_SORT));
-            this.sortHealthEntries();
         }
     }
 
@@ -272,8 +273,8 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
     }
 
     private void sortHealthEntries() {
-        final HealthSortOrder order = this.container.getHealthSortOrder();
-        final int dir = SortDir.ASCENDING == this.container.getHealthSortDirOrder() ? 1 : -1;
+        final HealthSortOrder order = this.container.healthSortOrder;
+        final int dir = SortDir.ASCENDING == this.container.healthSortDir ? 1 : -1;
         this.scanRecords.sort((a, b) -> {
             final double va = order == HealthSortOrder.FILL_PCT ? this.fillPct(a) : (double) a.bytesTotal;
             final double vb = order == HealthSortOrder.FILL_PCT ? this.fillPct(b) : (double) b.bytesTotal;
@@ -305,9 +306,7 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
         }
 
         try {
-            if (btn == this.includeSubnetsButton) {
-                NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.ToggleIncludeSubnets", ""));
-            } else if (btn == this.reshuffleTab) {
+            if (btn == this.reshuffleTab) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.View", "reshuffle"));
             } else if (btn == this.scanModeButton) {
                 NetworkHandler.instance.sendToServer(new PacketValueConfig("Reshuffle.View", "scan"));
@@ -407,6 +406,7 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
         final boolean reshuffleMode = !scanMode && !healthMode;
 
         this.includeSubnetsButton.visible = reshuffleMode;
+        this.insertOrderButton.visible = reshuffleMode;
         for (final TypeToggleButton tb : this.typeToggleButtons.keySet()) {
             tb.visible = reshuffleMode;
         }
@@ -414,7 +414,7 @@ public class GuiStorageReshuffle extends AEBaseGui implements IConfigManagerHost
         if (this.startCancelButton != null) this.startCancelButton.visible = reshuffleMode;
         if (this.scanButton != null) this.scanButton.visible = scanMode || healthMode;
 
-        this.healthSortButton.visible = healthMode;
+        this.healthSortOrderButton.visible = healthMode;
         this.healthSortDirButton.visible = healthMode;
 
         if (scanMode) {
