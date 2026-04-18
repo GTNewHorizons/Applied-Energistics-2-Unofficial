@@ -1,6 +1,7 @@
 package appeng.client.render.blocks;
 
 import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
@@ -32,6 +33,10 @@ public class RendererStorageReshuffle extends BaseBlockRender<BlockStorageReshuf
         for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
             IIcon icon = getIconForSide(tile, side, forward, up);
             if (icon != null) {
+                final int brightness = world
+                        .getLightBrightnessForSkyBlocks(x + side.offsetX, y + side.offsetY, z + side.offsetZ, 0);
+                Tessellator.instance.setBrightness(brightness);
+                Tessellator.instance.setColorOpaque_I(0xFFFFFF);
                 renderer.overrideBlockTexture = icon;
                 this.renderFace(x, y, z, block, icon, renderer, side);
             }
