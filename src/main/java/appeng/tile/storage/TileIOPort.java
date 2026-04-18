@@ -465,13 +465,12 @@ public class TileIOPort extends AENetworkInvTile implements IUpgradeableHost, IC
                 if (availableBeforeExtract > 0) {
                     final IAEStack<?> extractStack = s.copy();
                     extractStack.setStackSize(itemsToMove);
-                    final IAEStack<?> stack = destination.injectItems(extractStack, Actionable.SIMULATE, this.mySrc);
+                    final IAEStack<?> remainder = Platform
+                            .poweredInsert(energy, destination, extractStack, this.mySrc, Actionable.SIMULATE);
 
-                    long possible = 0;
-                    if (stack == null) {
-                        possible = itemsToMove;
-                    } else {
-                        possible = itemsToMove - stack.getStackSize();
+                    long possible = extractStack.getStackSize();
+                    if (remainder != null) {
+                        possible -= remainder.getStackSize();
                     }
 
                     if (possible > 0) {
