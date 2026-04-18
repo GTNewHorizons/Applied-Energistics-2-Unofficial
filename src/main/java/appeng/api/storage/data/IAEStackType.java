@@ -103,4 +103,6 @@ public interface IAEStackType<T extends IAEStack> {
      */
     @SideOnly(Side.CLIENT)
     IIcon getButtonIcon();
+
+    T getTestStack();
 }
