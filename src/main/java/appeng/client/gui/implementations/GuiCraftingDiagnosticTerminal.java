@@ -41,12 +41,12 @@ import appeng.util.Platform;
 
 public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
 
-    private static final boolean DEBUG_LAYOUT = true;
+    private static final boolean DEBUG_LAYOUT = false;
     private static final int GUI_WIDTH = 208;
     private static final int GUI_HEIGHT = 256;
     private static final int SMALL_VISIBLE_ROWS = 5;
     private static final int STRETCH_TOP = GuiInterfaceTerminal.HEADER_HEIGHT;
-    private static final int STRETCH_BOTTOM = 126;
+    private static final int STRETCH_BOTTOM = 124;
     private static final int SMALL_MIDDLE_HEIGHT = STRETCH_BOTTOM - STRETCH_TOP;
     private static final int FIXED_BOTTOM_HEIGHT = GUI_HEIGHT - STRETCH_BOTTOM;
     private static final int EXTRA_BOTTOM_MARGIN = 32;
@@ -240,7 +240,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                 offsetX,
                 offsetY + STRETCH_TOP,
                 offsetX + this.xSize,
-                offsetY + STRETCH_TOP + this.getMiddleHeight(),
+                offsetY + STRETCH_TOP + this.getMiddleHeight() + 1,
                 0.0f,
                 0.0f,
                 STRETCH_TOP / 256.0f,
@@ -268,7 +268,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
     private void drawTableBackground(final int offsetX, final int offsetY) {
         final int left = offsetX + LAYOUT.listLeft;
         final int right = offsetX + LAYOUT.listRight;
-        final int lineColor = 0x668C8C8C;
+        final int lineColor = GuiColors.CraftingDiagnosticTerminalLine.getColor();
         drawRect(left, offsetY + LAYOUT.listTop - 1, right, offsetY + LAYOUT.listTop, lineColor);
         drawRect(
                 offsetX + LAYOUT.itemColumnRight,
@@ -340,7 +340,12 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
 
             if (hovered) {
                 this.hoveredRow = index;
-                drawRect(LAYOUT.listLeft, rowTop, LAYOUT.listRight, rowTop + LAYOUT.rowHeight - 1, 0x33808080);
+                drawRect(
+                        LAYOUT.listLeft,
+                        rowTop,
+                        LAYOUT.listRight,
+                        rowTop + LAYOUT.rowHeight - 1,
+                        GuiColors.CraftingDiagnosticTerminalRowHover.getColor());
             }
 
             final ItemStack displayStack = row.getDisplayStack();
