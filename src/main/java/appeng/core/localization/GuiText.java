@@ -296,6 +296,7 @@ public enum GuiText implements Localization {
 
     Inputs,
     Outputs,
+    BlankPatternInNetwork,
     CPUAllowMode,
     CPUAllowAll,
     CPUOnlyAllowNonPlayer,
