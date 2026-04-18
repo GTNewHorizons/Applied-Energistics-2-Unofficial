@@ -5,6 +5,10 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
+
 import appeng.api.config.Actionable;
 import appeng.api.config.ReshufflePhase;
 import appeng.api.networking.security.BaseActionSource;
@@ -19,6 +23,7 @@ import appeng.me.cache.NetworkMonitor;
 import appeng.me.storage.NetworkInventoryHandler;
 import appeng.util.AEStackTypeFilter;
 import appeng.util.IterationCounter;
+import appeng.util.Platform;
 import appeng.util.item.IAEStackList;
 
 public class ReshuffleTask {
@@ -260,22 +265,25 @@ public class ReshuffleTask {
         this.returnPendingItems(this.injectQueue.iterator());
     }
 
-    public void cancelNbt() {
-        this.phase = ReshufflePhase.CANCEL;
-        this.returnPendingItemsNbt(this.extracted.iterator());
-        this.returnPendingItemsNbt(this.injectQueue.iterator());
+    public void nbt(NBTTagCompound tag) {
+        final NBTTagList tagListExtracted = Platform.writeAEStackListNBT(this.extracted);
+        tag.setTag("extracted", tagListExtracted);
+
+        final NBTTagList tagListInjectQueue = new NBTTagList();
+        this.injectQueue
+                .forEach(aes -> tagListInjectQueue.appendTag(Platform.writeStackNBT(aes, new NBTTagCompound())));
+
+        tag.setTag("injectQueue", tagListInjectQueue);
+    }
+
+    public static void nbtLoad(NBTTagCompound tag, IItemList<IAEStack<?>> list) {
+        Platform.readAEStackListNBT(tag.getTagList("extracted", NBT.TAG_COMPOUND)).forEach(list::add);
+        NBTTagList tagList = tag.getTagList("injectQueue", NBT.TAG_COMPOUND);
+        for (int i = 0; i < tagList.tagCount(); i++) list.add(Platform.readStackNBT(tagList.getCompoundTagAt(i)));
     }
 
     public void error() {
         this.phase = ReshufflePhase.ERROR;
-    }
-
-    private void returnPendingItemsNbt(Iterator<IAEStack<?>> i) {
-        while (i.hasNext()) {
-            final IAEStack<?> aes = i.next();
-            this.cantInject.add(aes);
-            i.remove();
-        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

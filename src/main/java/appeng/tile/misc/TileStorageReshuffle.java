@@ -107,7 +107,7 @@ public class TileStorageReshuffle extends AENetworkTile
     public void writeToNBT_TileStorageReshuffle(final NBTTagCompound data) {
         this.cm.writeToNBT(data);
         this.typeFilters.writeToNBT(data);
-        if (this.activeTask != null && this.activeTask.isRunning()) this.activeTask.cancelNbt();
+        if (this.activeTask != null && this.activeTask.isRunning()) this.activeTask.nbt(data);
         data.setTag("cantInject", Platform.writeAEStackListNBT(this.cantInject));
     }
 
@@ -116,6 +116,7 @@ public class TileStorageReshuffle extends AENetworkTile
         this.cm.readFromNBT(data);
         this.typeFilters.readFromNBT(data);
         this.cantInject = Platform.readAEStackListNBT(data.getTagList("cantInject", NBT.TAG_COMPOUND));
+        ReshuffleTask.nbtLoad(data, this.cantInject);
     }
 
     int count = 0;
