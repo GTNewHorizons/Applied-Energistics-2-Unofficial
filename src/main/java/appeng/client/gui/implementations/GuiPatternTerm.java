@@ -389,7 +389,7 @@ public class GuiPatternTerm extends GuiMEMonitorable {
         if (s instanceof SlotRestrictedInput slot
                 && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
                 && !slot.getHasStack()) {
-            lines.add(ButtonToolTips.BlankPatternInNetwork.getLocal());
+            lines.add(GuiText.BlankPatternInNetwork.getLocal());
             lines.add(
                     EnumChatFormatting.GRAY + String.format(
                             ButtonToolTips.ItemsStored.getLocal(),
