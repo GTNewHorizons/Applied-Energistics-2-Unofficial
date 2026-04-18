@@ -4,7 +4,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.InventoryPlayer;
 
 import appeng.api.config.HealthSortOrder;
-import appeng.api.config.ReshufflePhase;
 import appeng.api.config.SecurityPermissions;
 import appeng.api.config.SortDir;
 import appeng.api.config.YesNo;
@@ -140,6 +139,7 @@ public class ContainerStorageReshuffle extends AEBaseContainer implements IConfi
     }
 
     public void performNetworkScan() {
+        if (this.reportRunning()) return;
         if (!this.hasAccess(SecurityPermissions.BUILD, false)) return;
         this.tile.scanNetwork();
     }
@@ -149,8 +149,7 @@ public class ContainerStorageReshuffle extends AEBaseContainer implements IConfi
     }
 
     public boolean reportRunning() {
-        return this.report != null
-                && (this.report.phase == ReshufflePhase.EXTRACTION || this.report.phase == ReshufflePhase.INJECTION);
+        return this.report != null && this.report.isRunning();
     }
 
     public ScanTask getScanData() {

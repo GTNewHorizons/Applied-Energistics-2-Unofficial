@@ -205,4 +205,10 @@ public class ReshuffleReport implements IGuiPacketWritable {
             default -> 0;
         };
     }
+
+    public boolean isRunning() {
+        return this.phase == ReshufflePhase.EXTRACTION || this.phase == ReshufflePhase.INJECTION
+                || this.phase == ReshufflePhase.AFTER_SNAPSHOT
+                || this.phase == ReshufflePhase.BEFORE_SNAPSHOT;
+    }
 }

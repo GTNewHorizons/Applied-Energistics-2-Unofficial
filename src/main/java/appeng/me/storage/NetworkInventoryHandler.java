@@ -14,6 +14,7 @@ import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -104,7 +105,7 @@ public class NetworkInventoryHandler<T extends IAEStack<T>> implements IMENetwor
     }
 
     public List<IMEInventoryHandler<T>> getHandlers() {
-        return java.util.Collections.unmodifiableList(this.priorityInventory);
+        return Collections.unmodifiableList(this.priorityInventory);
     }
 
     @Override
