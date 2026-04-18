@@ -93,7 +93,11 @@ public class TileSecurity extends AENetworkTile implements ITerminalHost, IAEApp
 
     @Override
     public void onChangeInventory(final IInventory inv, final int slot, final InvOperation mc,
-            final ItemStack removedStack, final ItemStack newStack) {}
+            final ItemStack removedStack, final ItemStack newStack) {
+        if (mc == InvOperation.markDirty) {
+            this.saveChanges();
+        }
+    }
 
     @Override
     public void getDrops(final World w, final int x, final int y, final int z, final List<ItemStack> drops) {
