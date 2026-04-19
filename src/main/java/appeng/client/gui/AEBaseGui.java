@@ -639,7 +639,6 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                         for (VirtualMESlot vmeSlot : this.virtualSlots) {
                             if (vmeSlot instanceof VirtualMEPhantomSlot vmepSlot && vmepSlot.getAEStack() == null) {
                                 vmepSlot.handleMouseClicked(stackInSlot, isCtrlKeyDown(), clickType);
-                                this.handlePhantomSlotInteraction(vmepSlot, clickType);
                                 break;
                             }
                         }
