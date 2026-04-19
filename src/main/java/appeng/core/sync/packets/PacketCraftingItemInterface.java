@@ -81,7 +81,7 @@ public class PacketCraftingItemInterface extends AppEngPacket {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
         if (gs instanceof GuiCraftingCPU guiCraftingCPU) {
-            guiCraftingCPU.postUpdateTooltip(this.nbt);
+            guiCraftingCPU.postInterfaceLocationsUpdate(this.nbt);
         }
     }
 

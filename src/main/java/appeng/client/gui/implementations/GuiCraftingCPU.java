@@ -626,7 +626,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
         }
     }
 
-    public void postUpdateTooltip(final NBTTagCompound nbt) {
+    public void postInterfaceLocationsUpdate(final NBTTagCompound nbt) {
         this.hoveredInterfaceLocations = nbt;
     }
 
@@ -729,7 +729,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                 return ScheduledReason.UNDEFINED;
             }
 
-            final CraftingCpuEntry entry = this.entries.get(CraftingCpuEntry.normalizeStack(stack));
+            final CraftingCpuEntry entry = this.entries.get(stack);
             return entry == null ? ScheduledReason.UNDEFINED : entry.getScheduledReason();
         }
     }

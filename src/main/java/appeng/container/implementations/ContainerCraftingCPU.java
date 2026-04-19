@@ -121,6 +121,8 @@ public class ContainerCraftingCPU extends AEBaseContainer
         this.cpu = null;
         this.cpuName = "";
         this.elapsed = -1;
+        this.allow = CraftingAllow.ALLOW_ALL;
+        this.cachedSuspend = false;
         this.sendVisualClearPacket();
     }
 
