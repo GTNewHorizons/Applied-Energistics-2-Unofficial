@@ -66,7 +66,7 @@ public final class BusRenderHelper implements IPartRenderHelper {
     private int color;
 
     public BusRenderHelper() {
-        this.bbc = new BoundBoxCalculator(this);
+        this.bbc = new BoundBoxCalculator();
         this.noAlphaPass = !AEConfig.instance.isFeatureEnabled(AEFeature.AlphaPass);
         this.bbr = new BaseBlockRender<>();
         this.renderingForPass = 0;
@@ -138,9 +138,8 @@ public final class BusRenderHelper implements IPartRenderHelper {
         this.maxZ = bounds[5];
     }
 
-    private static class BoundBoxCalculator implements IPartCollisionHelper {
+    private class BoundBoxCalculator implements IPartCollisionHelper {
 
-        private final BusRenderHelper helper;
         private boolean started = false;
 
         private float minX;
@@ -150,10 +149,6 @@ public final class BusRenderHelper implements IPartRenderHelper {
         private float maxX;
         private float maxY;
         private float maxZ;
-
-        public BoundBoxCalculator(final BusRenderHelper helper) {
-            this.helper = helper;
-        }
 
         @Override
         public void addBox(final double minX, final double minY, final double minZ, final double maxX,
@@ -178,17 +173,17 @@ public final class BusRenderHelper implements IPartRenderHelper {
 
         @Override
         public ForgeDirection getWorldX() {
-            return this.helper.ax;
+            return BusRenderHelper.this.ax;
         }
 
         @Override
         public ForgeDirection getWorldY() {
-            return this.helper.ay;
+            return BusRenderHelper.this.ay;
         }
 
         @Override
         public ForgeDirection getWorldZ() {
-            return this.helper.az;
+            return BusRenderHelper.this.az;
         }
 
         @Override
