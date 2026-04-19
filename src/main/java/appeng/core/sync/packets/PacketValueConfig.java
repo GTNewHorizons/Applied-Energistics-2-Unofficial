@@ -31,7 +31,6 @@ import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerInterface;
-import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.container.implementations.ContainerMEMonitorable;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
@@ -127,10 +126,6 @@ public class PacketValueConfig extends AppEngPacket {
             pc.setPriority(Integer.parseInt(this.Value), player);
         } else if (this.Name.equals("OreFilter") && c instanceof ContainerOreFilter fc) {
             fc.setFilter(this.Value);
-        } else if (this.Name.equals("LevelEmitter.Value") && c instanceof ContainerLevelEmitter lvc) {
-            lvc.setLevel(Long.parseLong(this.Value), player);
-        } else if (this.Name.equals("LevelEmitter.TypeFilter") && c instanceof ContainerLevelEmitter lvc) {
-            lvc.toggleTypeFilter(this.Value, player);
         } else if (this.Name.startsWith("PatternTerminal.") && c instanceof final ContainerPatternTerm cpt) {
             switch (this.Name) {
                 case "PatternTerminal.CraftMode" -> cpt.getPatternTerminal().setCraftingRecipe(this.Value.equals("1"));
