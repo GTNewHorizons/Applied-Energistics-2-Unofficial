@@ -309,6 +309,20 @@ public class CraftingRequest implements ITreeSerializable {
         }
     }
 
+    /**
+     * Reduces the amount requested by items that were never resolved in the first place.
+     */
+    public void refundUnresolved(final long refundedAmount) {
+        if (refundedAmount < 0) {
+            throw new IllegalArgumentException("Can't refund a negative unresolved amount for request " + this);
+        }
+        if (refundedAmount > this.remainingToProcess) {
+            throw new IllegalArgumentException("Refunded more unresolved items than available for request " + this);
+        }
+        this.stack.setStackSize(this.stack.getStackSize() - refundedAmount);
+        this.remainingToProcess -= refundedAmount;
+    }
+
     public void fullRefund(CraftingContext context) {
         for (UsedResolverEntry resolver : usedResolvers) {
             resolver.task.fullRefund(context);
