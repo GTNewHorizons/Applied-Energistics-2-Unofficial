@@ -102,7 +102,6 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
     private GuiImgButton toggleHideStored;
     private GuiImgButton changeAllow;
     private MEGuiTextField searchField;
-    private boolean hideStored;
     private int remainingOperations;
     private int hoveredVisibleIndex = -1;
     private IAEStack<?> hoveredStack;
@@ -117,7 +116,6 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
         this.container = container;
         this.ySize = GUI_HEIGHT;
         this.xSize = GUI_WIDTH;
-        this.hideStored = AEConfig.instance.getConfigManager().getSetting(Settings.HIDE_STORED) == YesNo.YES;
         this.setScrollBar(new GuiScrollbar());
     }
 
@@ -178,10 +176,12 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
         }
 
         if (this.toggleHideStored == btn) {
-            this.hideStored = !this.hideStored;
-            AEConfig.instance.getConfigManager()
-                    .putSetting(Settings.HIDE_STORED, this.hideStored ? YesNo.YES : YesNo.NO);
-            this.toggleHideStored.set(this.hideStored ? YesNo.YES : YesNo.NO);
+            YesNo next = (YesNo) Platform.rotateEnum(
+                    AEConfig.instance.getConfigManager().getSetting(Settings.HIDE_STORED),
+                    false,
+                    Settings.HIDE_STORED.getPossibleValues());
+            AEConfig.instance.getConfigManager().putSetting(Settings.HIDE_STORED, next);
+            this.toggleHideStored.set(next);
             this.rebuildFilteredEntries();
             return;
         }
@@ -286,7 +286,9 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
 
     private void rebuildFilteredEntries() {
         final String searchText = this.searchField == null ? "" : this.searchField.getText();
-        this.visualState.rebuildFilteredEntries(this.hideStored, searchText);
+        this.visualState.rebuildFilteredEntries(
+                AEConfig.instance.getConfigManager().getSetting(Settings.HIDE_STORED) == YesNo.YES,
+                searchText);
         this.updateScrollBar();
     }
 
