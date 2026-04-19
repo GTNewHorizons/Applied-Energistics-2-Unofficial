@@ -51,7 +51,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
     public long elapsed = -1;
 
     @GuiSync(1)
-    public int allow = 0;
+    public CraftingAllow allow = CraftingAllow.ALLOW_ALL;
 
     @GuiSync(2)
     public boolean cachedSuspend;
@@ -114,7 +114,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
             this.cpu.getModernListOfItem(this.changedStacks, CraftingItemList.ALL);
             this.cpu.addListener(this, null);
             this.elapsed = 0;
-            this.allow = this.cpu.getCraftingAllowMode().ordinal();
+            this.allow = this.cpu.getCraftingAllowMode();
             return;
         }
 
@@ -310,7 +310,7 @@ public class ContainerCraftingCPU extends AEBaseContainer
         if (this.cpu != null) {
             final CraftingAllow newAllowMode = CraftingAllow.values()[Integer.parseInt(msg)].next();
             this.cpu.changeCraftingAllowMode(newAllowMode);
-            this.allow = newAllowMode.ordinal();
+            this.allow = newAllowMode;
         }
     }
 

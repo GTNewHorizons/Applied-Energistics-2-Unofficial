@@ -1400,10 +1400,9 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             }
             case PENDING: {
                 long amount = 0;
-                final IAEStack<?> keyStack = what.copy().setStackSize(0);
                 for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
                     for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
-                        if (Objects.equals(ais, keyStack)) {
+                        if (Objects.equals(ais, what)) {
                             amount += ais.getStackSize() * t.getValue().value;
                         }
                     }
@@ -1698,8 +1697,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
 
         final Iterator<Entry<IMEMonitorHandlerReceiver, Object>> i = this.getListeners();
         while (i.hasNext()) {
-            final IMEMonitorHandlerReceiver listener = i.next().getKey();
-            if (listener instanceof ContainerCraftingCPU cccpu) {
+            if (i.next().getKey() instanceof ContainerCraftingCPU cccpu) {
                 cccpu.sendUpdateFollowPacket(playersFollowingCurrentCraft);
             }
         }

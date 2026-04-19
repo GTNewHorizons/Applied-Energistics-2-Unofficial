@@ -25,9 +25,6 @@ import com.google.common.base.Joiner;
 
 import appeng.api.config.CraftingAllow;
 import appeng.api.config.Settings;
-import appeng.api.config.SortDir;
-import appeng.api.config.SortOrder;
-import appeng.api.config.ViewItems;
 import appeng.api.config.YesNo;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
@@ -37,7 +34,6 @@ import appeng.client.gui.IGuiTooltipHandler;
 import appeng.client.gui.widgets.GuiAeButton;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
-import appeng.client.gui.widgets.ISortSource;
 import appeng.client.gui.widgets.ITooltip;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.client.render.highlighter.BlockPosHighlighter;
@@ -59,7 +55,7 @@ import appeng.util.Platform;
 import appeng.util.ReadableNumberConverter;
 import appeng.util.ScheduledReason;
 
-public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiTooltipHandler {
+public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
 
     protected static final int GUI_HEIGHT = 184;
     protected static final int GUI_WIDTH = 238;
@@ -316,7 +312,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         this.cancel.enabled = this.hasVisualEntries();
         this.suspend.visible = this.hasVisualEntries();
         this.updateSuspendButtonText();
-        this.changeAllow.set(CraftingAllow.values()[this.container.allow]);
+        this.changeAllow.set(this.container.allow);
 
         this.hoveredVisibleIndex = this.resolveHoveredIndex(mouseX, mouseY);
         this.handleTooltip(mouseX, mouseY, this.remainingOperationsTooltip);
@@ -377,7 +373,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         final int viewStart = this.getScrollBar().getCurrentScroll() * ITEMS_PER_ROW;
         final int viewEnd = Math.min(viewStart + ITEMS_PER_ROW * this.rows, this.visualState.filteredSize());
         final List<CraftingCpuEntry> filteredEntries = this.visualState.filteredEntries();
-        final ReadableNumberConverter converter = ReadableNumberConverter.INSTANCE;
         final IAEStack<?> lastHoveredStack = this.hoveredStack;
 
         this.hoveredStack = null;
@@ -386,8 +381,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         int y = 0;
         for (int index = viewStart; index < viewEnd; index++) {
             final CraftingCpuEntry entry = filteredEntries.get(index);
-            final EntryTooltip tooltipData = this
-                    .drawEntry(entry, index - viewStart, x, y, converter, lastHoveredStack);
+            final EntryTooltip tooltipData = this.drawEntry(entry, index - viewStart, x, y, lastHoveredStack);
             if (tooltipData != null) {
                 this.drawTooltip(tooltipData.x, tooltipData.y, tooltipData.message);
             }
@@ -401,7 +395,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     }
 
     private EntryTooltip drawEntry(final CraftingCpuEntry entry, final int visibleIndex, final int x, final int y,
-            final ReadableNumberConverter converter, final IAEStack<?> lastHoveredStack) {
+            final IAEStack<?> lastHoveredStack) {
         final boolean active = entry.hasActiveAmount();
         final boolean scheduled = entry.hasPendingAmount();
         final int lines = (entry.hasStoredAmount() ? 1 : 0) + (active ? 1 : 0) + (scheduled ? 1 : 0);
@@ -432,8 +426,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     downY,
                     GuiColors.CraftingCPUStored.getColor(),
                     visibleIndex,
-                    lineList,
-                    converter);
+                    lineList);
         }
 
         if (entry.hasActiveAmount()) {
@@ -446,8 +439,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     downY,
                     GuiColors.CraftingCPUAmount.getColor(),
                     visibleIndex,
-                    lineList,
-                    converter);
+                    lineList);
         }
 
         if (entry.hasPendingAmount()) {
@@ -460,8 +452,7 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
                     downY,
                     GuiColors.CraftingCPUScheduled.getColor(),
                     visibleIndex,
-                    lineList,
-                    converter);
+                    lineList);
         }
 
         GL11.glPopMatrix();
@@ -496,9 +487,8 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
     }
 
     private int drawAmountLine(final String label, final long amount, final int x, final int y, final int negY,
-            final int downY, final int color, final int visibleIndex, final List<String> tooltipLines,
-            final ReadableNumberConverter converter) {
-        final String compactText = label + ": " + converter.toWideReadableForm(amount);
+            final int downY, final int color, final int visibleIndex, final List<String> tooltipLines) {
+        final String compactText = label + ": " + ReadableNumberConverter.INSTANCE.toWideReadableForm(amount);
         final int width = 4 + this.fontRendererObj.getStringWidth(compactText);
         this.fontRendererObj.drawString(
                 compactText,
@@ -645,24 +635,6 @@ public class GuiCraftingCPU extends AEBaseGui implements ISortSource, IGuiToolti
         this.visualState.applyEntryUpdates(updates, clearFirst);
         this.remainingOperations = remainingOperations;
         this.rebuildFilteredEntries();
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public Enum getSortBy() {
-        return SortOrder.NAME;
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public Enum getSortDir() {
-        return SortDir.ASCENDING;
-    }
-
-    @Override
-    @SuppressWarnings("rawtypes")
-    public Enum getSortDisplay() {
-        return ViewItems.ALL;
     }
 
     @Override
