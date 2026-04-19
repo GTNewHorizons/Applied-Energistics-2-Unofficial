@@ -359,6 +359,7 @@ gui.appliedenergistics2.VoidCellTooltip=Deletes §4everything§7 stored on it
 gui.appliedenergistics2.CellView=Cell View
 gui.appliedenergistics2.Inputs=Inputs
 gui.appliedenergistics2.Outputs=Outputs
+gui.appliedenergistics2.BlankPatternInNetwork=§bUses blank patterns directly from the network
 gui.appliedenergistics2.EncodedPattern=Encoded Pattern
 gui.appliedenergistics2.TunnelPatternInfo1=Use as an input when encoding processing patterns.
 gui.appliedenergistics2.TunnelPatternInfo2=Its inputs are inlined into the encoded pattern.
