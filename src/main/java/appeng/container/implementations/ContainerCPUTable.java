@@ -25,7 +25,7 @@ import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.AELog;
 import appeng.core.sync.network.NetworkHandler;
-import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
+import appeng.core.sync.packets.PacketCraftingCPUTableUpdate;
 import appeng.util.Platform;
 
 public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
@@ -205,11 +205,12 @@ public class ContainerCPUTable implements ICraftingCPUSelectorContainer {
     }
 
     private void sendCPUs(List<?> crafters) {
-        final PacketCraftingCPUsUpdate update;
+        final PacketCraftingCPUTableUpdate update;
         for (final Object player : crafters) {
             if (player instanceof EntityPlayerMP) {
                 try {
-                    NetworkHandler.instance.sendTo(new PacketCraftingCPUsUpdate(this.cpus), (EntityPlayerMP) player);
+                    NetworkHandler.instance
+                            .sendTo(new PacketCraftingCPUTableUpdate(this.cpus), (EntityPlayerMP) player);
                 } catch (IOException e) {
                     AELog.debug(e);
                 }
