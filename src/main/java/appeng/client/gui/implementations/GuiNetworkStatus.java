@@ -40,6 +40,7 @@ import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.widgets.GuiContextMenu;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiScrollbar;
+import appeng.client.gui.widgets.GuiToggleButton;
 import appeng.client.gui.widgets.ISortSource;
 import appeng.client.me.ItemRepo;
 import appeng.client.render.highlighter.BlockPosHighlighter;
@@ -51,6 +52,7 @@ import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
 import appeng.core.sync.packets.PacketNetworkStatusSelected;
+import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
 
 public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
@@ -59,6 +61,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private final int rows = 4;
     private GuiImgButton units;
     private GuiImgButton cell;
+    private GuiToggleButton diagnostics;
     private int tooltip = -1;
     private final DecimalFormat df;
     private final boolean isAdvanced;
@@ -192,6 +195,15 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             } else {
                 this.isConsume = !this.isConsume;
             }
+        } else if (btn == this.diagnostics) {
+            final ContainerNetworkStatus container = (ContainerNetworkStatus) this.inventorySlots;
+            if (container.isDiagnosticsGloballyEnabled()) {
+                try {
+                    NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "ToggleDiagnostics"));
+                } catch (IOException ignored) {
+                    // XD
+                }
+            }
         }
 
         if (oldConsume != this.isConsume) {
@@ -220,10 +232,23 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     AEConfig.instance.selectedCellType());
             this.buttonList.add(this.cell);
         }
+        this.diagnostics = new GuiToggleButton(
+                this.guiLeft - 18,
+                this.guiTop + (this.isAdvanced ? 48 : 28),
+                129,
+                128,
+                GuiText.CraftingDiagnostics.getLocal(),
+                GuiText.CraftingDiagnosticsHint.getLocal());
+        this.buttonList.add(this.diagnostics);
     }
 
     @Override
     public void drawScreen(final int mouseX, final int mouseY, final float btn) {
+        if (this.diagnostics != null) {
+            final ContainerNetworkStatus container = (ContainerNetworkStatus) this.inventorySlots;
+            this.diagnostics.setState(container.isDiagnosticsMode());
+            this.diagnostics.enabled = container.isDiagnosticsGloballyEnabled();
+        }
 
         final int gx = (this.width - this.xSize) / 2;
         final int gy = (this.height - this.ySize) / 2;

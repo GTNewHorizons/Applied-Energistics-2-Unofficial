@@ -33,9 +33,11 @@ import appeng.container.implementations.ContainerCellRestriction;
 import appeng.container.implementations.ContainerCellWorkbench;
 import appeng.container.implementations.ContainerCraftConfirm;
 import appeng.container.implementations.ContainerCraftingCPU;
+import appeng.container.implementations.ContainerCraftingDiagnosticTerminal;
 import appeng.container.implementations.ContainerInterface;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.container.implementations.ContainerMEMonitorable;
+import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.container.implementations.ContainerPatternTerm;
@@ -114,6 +116,14 @@ public class PacketValueConfig extends AppEngPacket {
         	case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
         	case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
         	}
+        } else if (this.Name.startsWith("CraftingDiagnostics.")
+                && c instanceof final ContainerCraftingDiagnosticTerminal qk) {
+            switch (this.Name) {
+                case "CraftingDiagnostics.Search" -> qk.setSearchText(this.Value);
+                case "CraftingDiagnostics.Sort" -> qk.setSortMode(Integer.parseInt(this.Value));
+                case "CraftingDiagnostics.Direction" -> qk.setAscending("1".equals(this.Value));
+                case "CraftingDiagnostics.Reset" -> qk.clearDiagnostics();
+            }
         } else if (this.Name.equals("QuartzKnife.Name") && c instanceof final ContainerQuartzKnife qk) {
             qk.setName(this.Value);
         } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof final ContainerRenamer qk) {
@@ -173,9 +183,15 @@ public class PacketValueConfig extends AppEngPacket {
             }
         } else if (this.Name.equals("cellRestriction") && c instanceof final ContainerCellRestriction ccr) {
             ccr.setCellRestriction(this.Value);
+        } else if (this.Name.equals("NetworkStatus") && c instanceof final ContainerNetworkStatus qk) {
+            if (this.Value.equals("ToggleDiagnostics")) {
+                qk.toggleDiagnosticsMode();
+            }
         } else if (c instanceof ContainerNetworkTool) {
-            if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
-                ((ContainerNetworkTool) c).toggleFacadeMode();
+            if (this.Name.equals("NetworkTool")) {
+                if (this.Value.equals("Toggle")) {
+                    ((ContainerNetworkTool) c).toggleFacadeMode();
+                }
             }
         } else if (c instanceof IConfigurableObject) {
             final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();

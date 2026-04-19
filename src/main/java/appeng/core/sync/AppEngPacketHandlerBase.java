@@ -26,6 +26,7 @@ import appeng.core.sync.packets.PacketConfigButton;
 import appeng.core.sync.packets.PacketCraftRequest;
 import appeng.core.sync.packets.PacketCraftingCPUsUpdate;
 import appeng.core.sync.packets.PacketCraftingCompleteNotification;
+import appeng.core.sync.packets.PacketCraftingDiagnosticsUpdate;
 import appeng.core.sync.packets.PacketCraftingItemInterface;
 import appeng.core.sync.packets.PacketCraftingRemainingOperations;
 import appeng.core.sync.packets.PacketCraftingTreeData;
@@ -117,6 +118,8 @@ public class AppEngPacketHandlerBase {
         PACKET_PAINTED_ENTITY(PacketPaintedEntity.class),
 
         PACKET_CRAFTING_CPUS_UPDATE(PacketCraftingCPUsUpdate.class),
+
+        PACKET_CRAFTING_DIAGNOSTICS_UPDATE(PacketCraftingDiagnosticsUpdate.class),
 
         PACKET_CRAFTING_COMPLETE_NOTIFICATION(PacketCraftingCompleteNotification.class),
 

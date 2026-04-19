@@ -94,6 +94,8 @@ public class Parts {
 
     public AEItemDefinition partCraftingTerminal;
 
+    public AEItemDefinition partCraftingDiagnosticTerminal;
+
     public AEItemDefinition partTerminal;
 
     public AEItemDefinition partStorageMonitor;

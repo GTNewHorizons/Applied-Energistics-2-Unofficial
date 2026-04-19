@@ -38,5 +38,6 @@ public enum ActionItems {
     NEXT_PARTITION,
     CONTROL_BUTTON_VALUES_OFF,
     CONTROL_BUTTON_VALUES_ON,
-    PINS
+    PINS,
+    RESET_STATS
 }

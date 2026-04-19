@@ -51,6 +51,7 @@ import appeng.parts.p2p.PartP2PRedstone;
 import appeng.parts.p2p.PartP2PSound;
 import appeng.parts.p2p.PartP2PTunnelME;
 import appeng.parts.reporting.PartConversionMonitor;
+import appeng.parts.reporting.PartCraftingDiagnosticTerminal;
 import appeng.parts.reporting.PartCraftingTerminal;
 import appeng.parts.reporting.PartDarkPanel;
 import appeng.parts.reporting.PartInterfaceTerminal;
@@ -145,6 +146,9 @@ public enum PartType {
 
     CraftingTerminal(360, EnumSet.of(AEFeature.CraftingTerminal), EnumSet.noneOf(IntegrationType.class),
             PartCraftingTerminal.class),
+
+    CraftingDiagnosticTerminal(370, EnumSet.of(AEFeature.CraftingTerminal), EnumSet.noneOf(IntegrationType.class),
+            PartCraftingDiagnosticTerminal.class),
 
     Terminal(380, EnumSet.of(AEFeature.Core), EnumSet.noneOf(IntegrationType.class), PartTerminal.class),
 

@@ -66,6 +66,7 @@ public enum ButtonToolTips implements Localization {
     SearchMode,
     ItemName,
     NumberOfItems,
+    ResetDiagnostics,
     PartitionStorageHint,
     NextPartitionStorageHint,
 
@@ -258,6 +259,7 @@ public enum ButtonToolTips implements Localization {
     CPUName,
     CPUCrafting,
     Automation,
+    ResetStats,
     NumberOfStorageMemory,
     NumberOfCoProcessors;
 
