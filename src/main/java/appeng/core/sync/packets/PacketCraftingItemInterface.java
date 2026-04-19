@@ -1,12 +1,12 @@
 package appeng.core.sync.packets;
 
 import java.io.IOException;
+import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
 
 import appeng.api.networking.IGridHost;
 import appeng.api.networking.crafting.ICraftingCPU;
@@ -20,7 +20,6 @@ import appeng.core.sync.network.INetworkInfo;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.util.Platform;
-import cpw.mods.fml.common.network.ByteBufUtils;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -29,14 +28,14 @@ import io.netty.buffer.Unpooled;
 public class PacketCraftingItemInterface extends AppEngPacket {
 
     private IAEStack<?> is;
-    NBTTagCompound nbt;
+    private List<NamedDimensionalCoord> interfaceLocations;
 
     public PacketCraftingItemInterface(final ByteBuf stream) throws IOException {
         if (stream.readBoolean()) {
             this.is = Platform.readStackByte(stream);
         }
         if (stream.readBoolean()) {
-            this.nbt = ByteBufUtils.readTag(stream);
+            this.interfaceLocations = NamedDimensionalCoord.readAsListFromPacket(stream);
         }
     }
 
@@ -55,15 +54,15 @@ public class PacketCraftingItemInterface extends AppEngPacket {
     }
 
     // Server -> Client
-    public PacketCraftingItemInterface(NBTTagCompound nbt) throws IOException {
-        this.nbt = nbt;
+    public PacketCraftingItemInterface(final List<NamedDimensionalCoord> interfaceLocations) throws IOException {
+        this.interfaceLocations = interfaceLocations;
 
         final ByteBuf data = Unpooled.buffer();
 
         data.writeInt(this.getPacketID());
         data.writeBoolean(false);
         data.writeBoolean(true);
-        ByteBufUtils.writeTag(data, this.nbt);
+        NamedDimensionalCoord.writeListToPacket(data, this.interfaceLocations);
 
         this.configureWrite(data);
     }
@@ -81,7 +80,7 @@ public class PacketCraftingItemInterface extends AppEngPacket {
         final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
 
         if (gs instanceof GuiCraftingCPU guiCraftingCPU) {
-            guiCraftingCPU.postInterfaceLocationsUpdate(this.nbt);
+            guiCraftingCPU.postInterfaceLocationsUpdate(this.interfaceLocations);
         }
     }
 
@@ -91,10 +90,9 @@ public class PacketCraftingItemInterface extends AppEngPacket {
             return;
         }
 
-        final NBTTagCompound data = new NBTTagCompound();
-        NamedDimensionalCoord.writeListToNBTNamed(data, cpuc.getProviders(this.is));
         try {
-            NetworkHandler.instance.sendTo(new PacketCraftingItemInterface(data), (EntityPlayerMP) player);
+            NetworkHandler.instance
+                    .sendTo(new PacketCraftingItemInterface(cpuc.getProviders(this.is)), (EntityPlayerMP) player);
         } catch (Exception ignored) {}
     }
 }

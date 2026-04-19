@@ -15,7 +15,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.opengl.GL11;
@@ -107,7 +106,7 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
     private int remainingOperations;
     private int hoveredVisibleIndex = -1;
     private IAEStack<?> hoveredStack;
-    private NBTTagCompound hoveredInterfaceLocations;
+    private List<NamedDimensionalCoord> hoveredInterfaceLocations;
 
     public GuiCraftingCPU(final InventoryPlayer inventoryPlayer, final Object target) {
         this(new ContainerCraftingCPU(inventoryPlayer, target));
@@ -219,14 +218,12 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
     }
 
     private void highlightHoveredInterfaces() {
-        final List<NamedDimensionalCoord> blocks = NamedDimensionalCoord
-                .readAsListFromNBTNamed(this.hoveredInterfaceLocations);
-        if (blocks.isEmpty()) {
+        if (this.hoveredInterfaceLocations.isEmpty()) {
             return;
         }
 
         final Map<NamedDimensionalCoord, String[]> messages = new HashMap<>();
-        for (final NamedDimensionalCoord block : blocks) {
+        for (final NamedDimensionalCoord block : this.hoveredInterfaceLocations) {
             messages.put(
                     block,
                     new String[] { PlayerMessages.MachineHighlightedNamed.getUnlocalized(),
@@ -582,13 +579,11 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
                     NetworkHandler.instance.sendToServer(new PacketCraftingItemInterface(refStack.copy()));
                 } catch (final Exception ignored) {}
             } else {
-                final List<NamedDimensionalCoord> blocks = NamedDimensionalCoord
-                        .readAsListFromNBTNamed(this.hoveredInterfaceLocations);
-                if (blocks.isEmpty()) {
+                if (this.hoveredInterfaceLocations.isEmpty()) {
                     return;
                 }
 
-                for (final NamedDimensionalCoord blockPos : blocks) {
+                for (final NamedDimensionalCoord blockPos : this.hoveredInterfaceLocations) {
                     lineList.add(
                             String.format(
                                     "Dim:%s X:%s Y:%s Z:%s \"%s\"",
@@ -626,8 +621,8 @@ public class GuiCraftingCPU extends AEBaseGui implements IGuiTooltipHandler {
         }
     }
 
-    public void postInterfaceLocationsUpdate(final NBTTagCompound nbt) {
-        this.hoveredInterfaceLocations = nbt;
+    public void postInterfaceLocationsUpdate(final List<NamedDimensionalCoord> interfaceLocations) {
+        this.hoveredInterfaceLocations = interfaceLocations;
     }
 
     public void postVisualEntryUpdate(final CraftingCpuEntry[] updates, final boolean clearFirst,
