@@ -28,6 +28,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -45,12 +46,14 @@ import appeng.client.me.ItemRepo;
 import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketClick;
 import appeng.core.sync.packets.PacketNetworkStatusSelected;
+import appeng.core.sync.packets.PacketValueConfig;
 import appeng.util.Platform;
 
 public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
@@ -59,6 +62,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private final int rows = 4;
     private GuiImgButton units;
     private GuiImgButton cell;
+    private GuiImgButton tReshuffle;
     private int tooltip = -1;
     private final DecimalFormat df;
     private final boolean isAdvanced;
@@ -122,7 +126,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     @Override
     protected void mouseClicked(int xCoord, int yCoord, int btn) {
 
-        // Check if the context menu is active and handle it
         if (menu.mouseClick(xCoord, yCoord, btn)) {
             return;
         }
@@ -192,6 +195,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             } else {
                 this.isConsume = !this.isConsume;
             }
+        } else if (btn == this.tReshuffle) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "OpenReshuffle"));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
         }
 
         if (oldConsume != this.isConsume) {
@@ -219,6 +228,13 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     Settings.CELL_TYPE,
                     AEConfig.instance.selectedCellType());
             this.buttonList.add(this.cell);
+
+            this.tReshuffle = new GuiImgButton(
+                    this.guiLeft - 18,
+                    this.guiTop + 48,
+                    Settings.ACTIONS,
+                    ActionItems.OPEN_RESHUFFLE_ON);
+            this.buttonList.add(this.tReshuffle);
         }
     }
 
@@ -253,7 +269,14 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             }
         }
 
+        if (this.tReshuffle != null) {
+            this.tReshuffle.set(
+                    ((ContainerNetworkStatus) this.inventorySlots).reshufflePresent ? ActionItems.OPEN_RESHUFFLE_ON
+                            : ActionItems.OPEN_RESHUFFLE_OFF);
+        }
+
         super.drawScreen(mouseX, mouseY, btn);
+
         menu.draw(mouseX, mouseY);
     }
 
