@@ -56,6 +56,8 @@ public enum GuiText implements Localization {
 
     NetworkTool,
     AdvancedNetworkTool,
+    CraftingDiagnostics,
+    CraftingDiagnosticsHint,
     PowerUsageRate,
     PowerInputRate,
     Installed,

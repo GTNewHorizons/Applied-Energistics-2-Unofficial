@@ -11,9 +11,6 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.lwjgl.input.Mouse;
@@ -37,7 +34,6 @@ import appeng.core.localization.GuiText;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketValueConfig;
 import appeng.me.cache.CraftingGridCache;
-import appeng.util.Platform;
 
 public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
 
@@ -517,11 +513,10 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
     }
 
-    public void postUpdate(final NBTTagCompound tag) {
+    public void postUpdate(final List<CraftingGridCache.DiagnosticRowView> updatedRows) {
         this.rows.clear();
-        final NBTTagList rowsNbt = tag.getTagList("Rows", Constants.NBT.TAG_COMPOUND);
-        for (int i = 0; i < rowsNbt.tagCount(); i++) {
-            this.rows.add(Row.fromNBT(rowsNbt.getCompoundTagAt(i)));
+        for (final CraftingGridCache.DiagnosticRowView row : updatedRows) {
+            this.rows.add(Row.fromPacket(row));
         }
         if (!this.rows.isEmpty()) {
             this.suppressDebugRows = false;
@@ -540,12 +535,12 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         private long observedTimeNanos;
         private long sampleCount;
 
-        private static Row fromNBT(final NBTTagCompound tag) {
+        private static Row fromPacket(final CraftingGridCache.DiagnosticRowView packetRow) {
             final Row row = new Row();
-            row.stack = Platform.readStackNBT(tag.getCompoundTag("Stack"));
-            row.totalProduced = tag.getLong("TotalProduced");
-            row.observedTimeNanos = tag.getLong("ObservedTimeNanos");
-            row.sampleCount = tag.getLong("SampleCount");
+            row.stack = packetRow.stack;
+            row.totalProduced = packetRow.totalProduced;
+            row.observedTimeNanos = packetRow.observedTimeNanos;
+            row.sampleCount = packetRow.sampleCount;
             return row;
         }
 

@@ -105,6 +105,7 @@ import appeng.api.util.NamedDimensionalCoord;
 import appeng.api.util.WorldCoord;
 import appeng.container.ContainerNull;
 import appeng.container.implementations.ContainerCraftingCPU;
+import appeng.core.AEConfig;
 import appeng.core.AELog;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
@@ -1669,7 +1670,8 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.remainingItemCount = this.getRemainingItemCount() - is.getStackSize();
         if (observedElapsed > 0 && this.getGrid() != null) {
             final ICraftingGrid craftingGrid = this.getGrid().getCache(ICraftingGrid.class);
-            if (craftingGrid instanceof CraftingGridCache cache) {
+            if (craftingGrid instanceof CraftingGridCache cache && AEConfig.instance.enableCraftingDiagnostics
+                    && cache.isDiagnosticsEnabled()) {
                 cache.recordDiagnosticSample(is, is.getStackSize(), observedElapsed);
             }
         }

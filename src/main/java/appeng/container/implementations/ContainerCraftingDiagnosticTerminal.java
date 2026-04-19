@@ -1,11 +1,10 @@
 package appeng.container.implementations;
 
-import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.ForgeDirection;
 
 import appeng.api.networking.IGrid;
@@ -94,19 +93,14 @@ public class ContainerCraftingDiagnosticTerminal extends AEBaseContainer {
     }
 
     private void sendRows(final CraftingGridCache cache, final long revision) {
-        final NBTTagCompound payload = new NBTTagCompound();
-        payload.setTag(
-                "Rows",
-                cache.createDiagnosticRows(
-                        this.searchText,
-                        CraftingGridCache.DiagnosticSortMode.values()[this.sortMode],
-                        this.ascending));
+        final List<CraftingGridCache.DiagnosticRowView> rows = cache.createDiagnosticRows(
+                this.searchText,
+                CraftingGridCache.DiagnosticSortMode.values()[this.sortMode],
+                this.ascending);
 
         for (final Object crafter : this.crafters) {
             if (crafter instanceof EntityPlayerMP player) {
-                try {
-                    NetworkHandler.instance.sendTo(new PacketCraftingDiagnosticsUpdate(payload), player);
-                } catch (final IOException ignored) {}
+                NetworkHandler.instance.sendTo(new PacketCraftingDiagnosticsUpdate(rows), player);
             }
         }
 

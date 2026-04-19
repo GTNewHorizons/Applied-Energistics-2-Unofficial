@@ -134,6 +134,7 @@ public final class AEConfig extends Configuration implements IConfigurableObject
     public int maxCraftingSteps = 2_000_000;
     public int maxCraftingTreeVisualizationSize = 32 * 1024 * 1024; // 32 MiB
     public boolean limitCraftingCPUSpill = true;
+    public boolean enableCraftingDiagnostics = true;
     public SearchBoxFocusPriority searchBoxFocusPriority = SearchBoxFocusPriority.NEVER;
 
     public int maxRecursiveDepth = 100;
@@ -278,6 +279,9 @@ public final class AEConfig extends Configuration implements IConfigurableObject
                 .max(4096, Math.min(this.maxCraftingTreeVisualizationSize, 1024 * 1024 * 1024));
         this.limitCraftingCPUSpill = this.get("misc", "LimitCraftingCPUSpill", this.limitCraftingCPUSpill)
                 .getBoolean(this.limitCraftingCPUSpill);
+        final Property enableCraftingDiagnostics = this
+                .get("Features.CraftingDiagnostic", "EnableCraftingDiagnostics", this.enableCraftingDiagnostics);
+        this.enableCraftingDiagnostics = enableCraftingDiagnostics.getBoolean(this.enableCraftingDiagnostics);
 
         this.maxRecursiveDepth = this.get("networksearch", "maxRecursiveDepth", this.maxRecursiveDepth)
                 .getInt(this.maxRecursiveDepth);

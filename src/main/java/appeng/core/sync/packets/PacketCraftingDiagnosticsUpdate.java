@@ -1,22 +1,18 @@
 package appeng.core.sync.packets;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
 
+import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.implementations.GuiCraftingDiagnosticTerminal;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
+import appeng.me.cache.CraftingGridCache;
+import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import io.netty.buffer.ByteBuf;
@@ -24,45 +20,34 @@ import io.netty.buffer.Unpooled;
 
 public class PacketCraftingDiagnosticsUpdate extends AppEngPacket {
 
-    private final NBTTagCompound tag;
-    private final ByteBuf data;
+    private final List<CraftingGridCache.DiagnosticRowView> rows;
 
-    public PacketCraftingDiagnosticsUpdate(final ByteBuf stream) throws IOException {
-        this.data = null;
-
-        final GZIPInputStream gzReader = new GZIPInputStream(new InputStream() {
-
-            @Override
-            public int read() throws IOException {
-                if (stream.readableBytes() <= 0) {
-                    return -1;
-                }
-
-                return stream.readByte() & 0xff;
-            }
-        });
-
-        final DataInputStream inStream = new DataInputStream(gzReader);
-        this.tag = CompressedStreamTools.read(inStream);
-        inStream.close();
+    public PacketCraftingDiagnosticsUpdate(final ByteBuf stream) {
+        final int rowCount = stream.readInt();
+        this.rows = new ArrayList<>(rowCount);
+        for (int i = 0; i < rowCount; i++) {
+            final IAEStack<?> stack = Platform.readStackByte(stream);
+            final long totalProduced = stream.readLong();
+            final long observedTimeNanos = stream.readLong();
+            final long sampleCount = stream.readLong();
+            this.rows
+                    .add(new CraftingGridCache.DiagnosticRowView(stack, totalProduced, observedTimeNanos, sampleCount));
+        }
     }
 
-    public PacketCraftingDiagnosticsUpdate(final NBTTagCompound tag) throws IOException {
-        this.tag = tag;
-        this.data = Unpooled.buffer(2048);
-        this.data.writeInt(this.getPacketID());
+    public PacketCraftingDiagnosticsUpdate(final List<CraftingGridCache.DiagnosticRowView> rows) {
+        this.rows = rows;
 
-        final GZIPOutputStream compressFrame = new GZIPOutputStream(new OutputStream() {
-
-            @Override
-            public void write(final int value) throws IOException {
-                PacketCraftingDiagnosticsUpdate.this.data.writeByte(value);
-            }
-        });
-
-        CompressedStreamTools.write(tag, new DataOutputStream(compressFrame));
-        compressFrame.close();
-        this.configureWrite(this.data);
+        final ByteBuf data = Unpooled.buffer();
+        data.writeInt(this.getPacketID());
+        data.writeInt(rows.size());
+        for (final CraftingGridCache.DiagnosticRowView row : rows) {
+            Platform.writeStackByte(row.stack, data);
+            data.writeLong(row.totalProduced);
+            data.writeLong(row.observedTimeNanos);
+            data.writeLong(row.sampleCount);
+        }
+        this.configureWrite(data);
     }
 
     @Override
@@ -70,7 +55,7 @@ public class PacketCraftingDiagnosticsUpdate extends AppEngPacket {
     public void clientPacketData(final INetworkInfo network, final AppEngPacket packet, final EntityPlayer player) {
         final GuiScreen screen = Minecraft.getMinecraft().currentScreen;
         if (screen instanceof GuiCraftingDiagnosticTerminal gui) {
-            gui.postUpdate(this.tag);
+            gui.postUpdate(this.rows);
         }
     }
 }

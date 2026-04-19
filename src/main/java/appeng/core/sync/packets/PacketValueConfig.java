@@ -37,6 +37,7 @@ import appeng.container.implementations.ContainerCraftingDiagnosticTerminal;
 import appeng.container.implementations.ContainerInterface;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.container.implementations.ContainerMEMonitorable;
+import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.container.implementations.ContainerPatternTerm;
@@ -182,9 +183,15 @@ public class PacketValueConfig extends AppEngPacket {
             }
         } else if (this.Name.equals("cellRestriction") && c instanceof final ContainerCellRestriction ccr) {
             ccr.setCellRestriction(this.Value);
+        } else if (this.Name.equals("NetworkStatus") && c instanceof final ContainerNetworkStatus qk) {
+            if (this.Value.equals("ToggleDiagnostics")) {
+                qk.toggleDiagnosticsMode();
+            }
         } else if (c instanceof ContainerNetworkTool) {
-            if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
-                ((ContainerNetworkTool) c).toggleFacadeMode();
+            if (this.Name.equals("NetworkTool")) {
+                if (this.Value.equals("Toggle")) {
+                    ((ContainerNetworkTool) c).toggleFacadeMode();
+                }
             }
         } else if (c instanceof IConfigurableObject) {
             final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();

@@ -139,8 +139,10 @@ public class CraftingGridCache
             .newSetFromMap(new WeakHashMap<>());
     private final Map<IAEStack<?>, DiagnosticStats> diagnostics = new HashMap<>();
     private final Set<Long> loadedDiagnosticStorageIds = new HashSet<>();
+    private boolean diagnosticsEnabled = false;
     private long diagnosticsRevision = 0L;
     private static final String DIAGNOSTICS_KEY = "CraftingDiagnostics";
+    private static final String DIAGNOSTICS_ENABLED_KEY = "CraftingDiagnosticsEnabled";
 
     public CraftingGridCache(final IGrid grid) {
         this.grid = grid;
@@ -226,6 +228,7 @@ public class CraftingGridCache
     @Override
     public void onSplit(final IGridStorage destinationStorage) {
         destinationStorage.dataObject().removeTag(DIAGNOSTICS_KEY);
+        destinationStorage.dataObject().removeTag(DIAGNOSTICS_ENABLED_KEY);
     }
 
     @Override
@@ -235,13 +238,19 @@ public class CraftingGridCache
             return;
         }
 
+        final NBTTagCompound data = sourceStorage.dataObject();
+        if (data.hasKey(DIAGNOSTICS_ENABLED_KEY)) {
+            this.diagnosticsEnabled = this.diagnosticsEnabled && data.getBoolean(DIAGNOSTICS_ENABLED_KEY);
+        }
+
         this.readDiagnosticsFromNBT(
-                sourceStorage.dataObject().getTagList(DIAGNOSTICS_KEY, Constants.NBT.TAG_COMPOUND),
+                data.getTagList(DIAGNOSTICS_KEY, Constants.NBT.TAG_COMPOUND),
                 !this.diagnostics.isEmpty());
     }
 
     @Override
     public void populateGridStorage(final IGridStorage destinationStorage) {
+        destinationStorage.dataObject().setBoolean(DIAGNOSTICS_ENABLED_KEY, this.diagnosticsEnabled);
         destinationStorage.dataObject().setTag(DIAGNOSTICS_KEY, this.writeDiagnosticsToNBT());
     }
 
@@ -759,12 +768,25 @@ public class CraftingGridCache
         this.diagnosticsRevision++;
     }
 
+    public synchronized boolean isDiagnosticsEnabled() {
+        return this.diagnosticsEnabled;
+    }
+
+    public synchronized void setDiagnosticsEnabled(final boolean enabled) {
+        if (this.diagnosticsEnabled == enabled) {
+            return;
+        }
+
+        this.diagnosticsEnabled = enabled;
+        this.diagnosticsRevision++;
+    }
+
     public synchronized long getDiagnosticsRevision() {
         return this.diagnosticsRevision;
     }
 
-    public synchronized NBTTagList createDiagnosticRows(final String search, final DiagnosticSortMode sortMode,
-            final boolean ascending) {
+    public synchronized List<DiagnosticRowView> createDiagnosticRows(final String search,
+            final DiagnosticSortMode sortMode, final boolean ascending) {
         final List<Map.Entry<IAEStack<?>, DiagnosticStats>> rows = new ArrayList<>();
         final String normalizedSearch = search == null ? "" : search.trim().toLowerCase();
 
@@ -789,12 +811,14 @@ public class CraftingGridCache
             return comparison;
         });
 
-        final NBTTagList result = new NBTTagList();
+        final List<DiagnosticRowView> result = new ArrayList<>(rows.size());
         for (final Map.Entry<IAEStack<?>, DiagnosticStats> row : rows) {
-            final NBTTagCompound tag = new NBTTagCompound();
-            tag.setTag("Stack", row.getKey().toNBTGeneric());
-            row.getValue().writeToNBT(tag);
-            result.appendTag(tag);
+            result.add(
+                    new DiagnosticRowView(
+                            row.getKey().copy(),
+                            row.getValue().totalProduced,
+                            row.getValue().cumulativeObservedTimeNanos,
+                            row.getValue().sampleCount));
         }
         return result;
     }
@@ -872,6 +896,22 @@ public class CraftingGridCache
 
         public DiagnosticSortMode next() {
             return values()[(this.ordinal() + 1) % values().length];
+        }
+    }
+
+    public static final class DiagnosticRowView {
+
+        public final IAEStack<?> stack;
+        public final long totalProduced;
+        public final long observedTimeNanos;
+        public final long sampleCount;
+
+        public DiagnosticRowView(final IAEStack<?> stack, final long totalProduced, final long observedTimeNanos,
+                final long sampleCount) {
+            this.stack = stack;
+            this.totalProduced = totalProduced;
+            this.observedTimeNanos = observedTimeNanos;
+            this.sampleCount = sampleCount;
         }
     }
 
