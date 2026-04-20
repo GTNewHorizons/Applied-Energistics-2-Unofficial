@@ -104,6 +104,7 @@ import appeng.items.storage.ItemViewCell;
 import appeng.util.IConfigManagerHost;
 import appeng.util.MonitorableTypeFilter;
 import appeng.util.Platform;
+import appeng.util.item.AEItemStack;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
 
 public class GuiMEMonitorable extends AEBaseGui
@@ -693,17 +694,8 @@ public class GuiMEMonitorable extends AEBaseGui
 
         switch (mouseButton) {
             case 0 -> { // left click
-                if (slot instanceof VirtualMEPinSlot && player.inventory.getItemStack() != null) {
-                    IAEStack<?> stackInSlot = slot.getAEStack();
-
-                    // Skip if it can be inserted into the container held in hand
-                    if (!isLControlDown || stackInSlot == null
-                            || !stackInSlot.getStackType().isContainerItemForType(player.inventory.getItemStack())) {
-                        this.sendAction(
-                                nonItemInteraction ? MonitorableAction.SET_CONTAINER_PIN
-                                        : MonitorableAction.SET_ITEM_PIN,
-                                null,
-                                slot.getSlotIndex());
+                if (slot instanceof VirtualMEPinSlot pinSlot) {
+                    if (this.handleSetPinAction(pinSlot)) {
                         return true;
                     }
                 }
@@ -730,27 +722,14 @@ public class GuiMEMonitorable extends AEBaseGui
                 return true;
             }
             case 1 -> { // right click
-                if (slot instanceof VirtualMEPinSlot) {
+                if (slot instanceof VirtualMEPinSlot pinSlot) {
                     if (isLShiftDown && player.inventory.getItemStack() == null) {
                         this.sendAction(MonitorableAction.UNSET_PIN, null, slot.getSlotIndex());
                         return true;
                     }
 
-                    if (player.inventory.getItemStack() != null) {
-                        IAEStack<?> stackInSlot = slot.getAEStack();
-
-                        // Skip if the stack in slot matches the stack in the container held in hand
-                        if (!isLControlDown || stackInSlot == null
-                                || !stackInSlot.equals(
-                                        stackInSlot.getStackType()
-                                                .getStackFromContainerItem(player.inventory.getItemStack()))) {
-                            this.sendAction(
-                                    nonItemInteraction ? MonitorableAction.SET_CONTAINER_PIN
-                                            : MonitorableAction.SET_ITEM_PIN,
-                                    null,
-                                    slot.getSlotIndex());
-                            return true;
-                        }
+                    if (this.handleSetPinAction(pinSlot)) {
+                        return true;
                     }
                 }
 
@@ -1161,6 +1140,53 @@ public class GuiMEMonitorable extends AEBaseGui
                 playerPinsRows = playerRows;
                 reinitalize();
             }
+        }
+    }
+
+    /**
+     * @return true if this click was handled as a pin-setting action, false if normal slot handling should continue
+     */
+    private boolean handleSetPinAction(VirtualMEPinSlot pinSlot) {
+        boolean isRealItem = true;
+        ItemStack itemStack = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
+        if (itemStack == null) {
+            itemStack = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
+                    ? NEI.instance.getDraggingPhantomItem()
+                    : null;
+            isRealItem = false;
+        }
+
+        if (itemStack == null) return false;
+
+        final boolean nonItemInteraction = isCtrlKeyDown()
+                || (this.typeFilters != null && !this.typeFilters.getBoolean(ITEM_STACK_TYPE));
+
+        if (nonItemInteraction) {
+            for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
+                if (type.isContainerItemForType(itemStack)) {
+                    IAEStack<?> stackInContainer = type.getStackFromContainerItem(itemStack);
+                    IAEStack<?> stackInSlot = pinSlot.getAEStack();
+
+                    if (isRealItem && stackInSlot != null
+                            && stackInSlot.getStackType() == type
+                            && (stackInContainer == null || stackInSlot.equals(stackInContainer))) {
+                        return false;
+                    }
+
+                    if (stackInContainer == null) return true;
+
+                    this.sendAction(MonitorableAction.SET_PIN, stackInContainer, pinSlot.getSlotIndex());
+                    return true;
+                }
+            }
+            return true;
+        } else {
+            IAEStack<?> stackInSlot = pinSlot.getAEStack();
+            if (isRealItem && stackInSlot instanceof IAEItemStack ais && ais.getItemStack().isItemEqual(itemStack)) {
+                return false;
+            }
+            this.sendAction(MonitorableAction.SET_PIN, AEItemStack.create(itemStack), pinSlot.getSlotIndex());
+            return true;
         }
     }
 }
