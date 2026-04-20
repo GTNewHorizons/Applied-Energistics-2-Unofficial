@@ -70,8 +70,8 @@ public interface IInterfaceViewable extends IGridHost {
         return true;
     }
 
-    default boolean isFluidInterface() {
-        return false;
+    default IAEStackType<?>[] getSupportedStackTypes() {
+        return new IAEStackType<?>[]{ITEM_STACK_TYPE};
     }
 
     /**
