@@ -27,6 +27,7 @@ import appeng.block.crafting.BlockCraftingUnit;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.render.BusRenderHelper;
 import appeng.client.render.BusRenderer;
+import appeng.client.render.RenderBlocksWorkaround;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.tile.crafting.TileCraftingMonitorTile;
 import appeng.tile.crafting.TileCraftingTile;
@@ -66,11 +67,11 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
         }
 
         if (formed && renderer.overrideBlockTexture == null) {
-            renderer = BusRenderer.INSTANCE.getRenderer();
+            final RenderBlocksWorkaround rbw = BusRenderer.INSTANCE.getRenderer();
             final BusRenderHelper i = BusRenderHelper.instances.get();
-            BusRenderer.INSTANCE.getRenderer().setFacade(true);
+            rbw.setFacade(true);
 
-            renderer.blockAccess = w;
+            rbw.blockAccess = w;
             i.setPass(0);
             i.setOrientation(ForgeDirection.EAST, ForgeDirection.UP, ForgeDirection.SOUTH);
 
@@ -89,14 +90,14 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
             final float highZ = this.isConnected(w, x, y, z, ForgeDirection.SOUTH) ? 16 : 13.01f;
             final float lowZ = this.isConnected(w, x, y, z, ForgeDirection.NORTH) ? 0 : 2.99f;
 
-            this.renderCorner(i, renderer, w, x, y, z, ForgeDirection.UP, ForgeDirection.EAST, ForgeDirection.NORTH);
-            this.renderCorner(i, renderer, w, x, y, z, ForgeDirection.UP, ForgeDirection.EAST, ForgeDirection.SOUTH);
-            this.renderCorner(i, renderer, w, x, y, z, ForgeDirection.UP, ForgeDirection.WEST, ForgeDirection.NORTH);
-            this.renderCorner(i, renderer, w, x, y, z, ForgeDirection.UP, ForgeDirection.WEST, ForgeDirection.SOUTH);
-            this.renderCorner(i, renderer, w, x, y, z, ForgeDirection.DOWN, ForgeDirection.EAST, ForgeDirection.NORTH);
-            this.renderCorner(i, renderer, w, x, y, z, ForgeDirection.DOWN, ForgeDirection.EAST, ForgeDirection.SOUTH);
-            this.renderCorner(i, renderer, w, x, y, z, ForgeDirection.DOWN, ForgeDirection.WEST, ForgeDirection.NORTH);
-            this.renderCorner(i, renderer, w, x, y, z, ForgeDirection.DOWN, ForgeDirection.WEST, ForgeDirection.SOUTH);
+            this.renderCorner(i, rbw, w, x, y, z, ForgeDirection.UP, ForgeDirection.EAST, ForgeDirection.NORTH);
+            this.renderCorner(i, rbw, w, x, y, z, ForgeDirection.UP, ForgeDirection.EAST, ForgeDirection.SOUTH);
+            this.renderCorner(i, rbw, w, x, y, z, ForgeDirection.UP, ForgeDirection.WEST, ForgeDirection.NORTH);
+            this.renderCorner(i, rbw, w, x, y, z, ForgeDirection.UP, ForgeDirection.WEST, ForgeDirection.SOUTH);
+            this.renderCorner(i, rbw, w, x, y, z, ForgeDirection.DOWN, ForgeDirection.EAST, ForgeDirection.NORTH);
+            this.renderCorner(i, rbw, w, x, y, z, ForgeDirection.DOWN, ForgeDirection.EAST, ForgeDirection.SOUTH);
+            this.renderCorner(i, rbw, w, x, y, z, ForgeDirection.DOWN, ForgeDirection.WEST, ForgeDirection.NORTH);
+            this.renderCorner(i, rbw, w, x, y, z, ForgeDirection.DOWN, ForgeDirection.WEST, ForgeDirection.SOUTH);
 
             for (final ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
                 i.setBounds(
@@ -106,7 +107,7 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
                         this.fso(side, highX, ForgeDirection.EAST),
                         this.fso(side, highY, ForgeDirection.UP),
                         this.fso(side, highZ, ForgeDirection.SOUTH));
-                i.prepareBounds(renderer);
+                i.prepareBounds(rbw);
 
                 boolean localEmit = emitsLight;
 
@@ -121,7 +122,7 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
                         y,
                         z,
                         i,
-                        renderer,
+                        rbw,
                         craftingTile.getForward() == side ? theIcon : nonForward,
                         localEmit,
                         isMonitor,
@@ -129,10 +130,10 @@ public class RenderBlockCraftingCPU<B extends BlockCraftingUnit, T extends TileC
                         w);
             }
 
-            BusRenderer.INSTANCE.getRenderer().setFacade(false);
+            rbw.setFacade(false);
             i.setFacesToRender(EnumSet.allOf(ForgeDirection.class));
             i.normalRendering();
-
+            rbw.blockAccess = null;
             return true;
         } else {
             final double a = 0.0 / 16.0;
