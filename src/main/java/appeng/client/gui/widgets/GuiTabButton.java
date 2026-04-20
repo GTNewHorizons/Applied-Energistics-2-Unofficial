@@ -30,6 +30,10 @@ public class GuiTabButton extends GuiButton implements ITooltip {
     private int myIcon = -1;
     private ItemStack myItem;
 
+    public GuiTabButton(final int x, final int y, final int ico, final String message) {
+        this(x, y, ico, message, null);
+    }
+
     public GuiTabButton(final int x, final int y, final int ico, final String message, final RenderItem ir) {
         super(0, 0, 16, "");
 

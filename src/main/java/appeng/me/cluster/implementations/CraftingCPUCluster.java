@@ -534,7 +534,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.playersFollowingCurrentCraft.clear();
         this.craftCompleteListeners = initializeDefaultOnCompleteListener();
         this.craftCancelListeners.clear(); // complete listener will clean external state
-                                           // so cancel listener is not called here.
+        // so cancel listener is not called here.
         this.craftUpdateListeners.clear();
     }
 
@@ -582,7 +582,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 if (patternDetails.isCraftable()) {
                     final IAEStack<?>[] inputSlots = patternDetails.getAEInputs();
                     final IAEStack<?> finalIngredient = ingredient; // have to copy because of Java lambda capture
-                                                                    // rules here
+                    // rules here
                     final int matchingSlot = IntStream.range(0, inputSlots.length)
                             .filter(idx -> inputSlots[idx] != null && Objects.equals(inputSlots[idx], finalIngredient))
                             .findFirst().orElse(-1);
@@ -1740,20 +1740,25 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             List<NamedDimensionalCoord> dimensionalCoords = new ArrayList<>();
 
             for (ICraftingMedium craftingProvider : craftingProviders) {
-                final String dispName;
+                final String rawName;
+                final String suffix;
                 final DimensionalCoord cord;
 
                 if (craftingProvider instanceof ICustomNameObject cno && cno.hasCustomName()) {
-                    dispName = cno.getCustomName();
+                    rawName = cno.getCustomName();
+                    suffix = null;
                 } else {
                     if (craftingProvider instanceof DualityInterface di) {
-                        dispName = di.getTermName();
+                        rawName = di.getRawTermName();
+                        suffix = di.getAdjacentNameSuffix();
                     } else if (craftingProvider instanceof IInterfaceViewable iv) {
-                        dispName = iv.getName();
+                        rawName = iv.getName();
+                        suffix = null;
                     } else {
                         final TileEntity tile = this.getTile(craftingProvider);
                         if (tile == null) continue;
-                        dispName = tile.getBlockType().getUnlocalizedName();
+                        rawName = tile.getBlockType().getUnlocalizedName();
+                        suffix = null;
                     }
                 }
 
@@ -1765,7 +1770,10 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     cord = new DimensionalCoord(tile);
                 }
 
-                dimensionalCoords.add(new NamedDimensionalCoord(cord, translateFromNetwork(dispName)));
+                String translatedName = translateFromNetwork(rawName);
+                String displayName = suffix != null ? translatedName + suffix : translatedName;
+
+                dimensionalCoords.add(new NamedDimensionalCoord(cord, displayName));
             }
             this.providers.put(aes.copy(), dimensionalCoords);
         }
@@ -1856,7 +1864,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (StatCollector.canTranslate(name)) {
             dispName = StatCollector.translateToLocal(name);
         } else {
-            String fallback = name + ".name"; // its whatever. save some bytes on network but looks ugly
+            String fallback = name + ".name";
             if (StatCollector.canTranslate(fallback)) {
                 dispName = StatCollector.translateToLocal(fallback);
             } else {

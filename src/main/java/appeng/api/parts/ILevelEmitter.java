@@ -1,6 +1,7 @@
 package appeng.api.parts;
 
 import appeng.api.features.ILevelViewable;
+import appeng.api.implementations.ITypeFilterProvider;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingWatcherHost;
@@ -14,7 +15,7 @@ import appeng.util.AEStackTypeFilter;
 
 public interface ILevelEmitter
         extends IEnergyWatcherHost, IStackWatcherHost, ICraftingWatcherHost, IMEMonitorHandlerReceiver<IAEStack<?>>,
-        ICraftingProvider, IGridTickable, IUpgradeableHost, IIAEStackInventory, ILevelViewable {
+        ICraftingProvider, IGridTickable, IUpgradeableHost, IIAEStackInventory, ILevelViewable, ITypeFilterProvider {
 
     void setReportingValue(final long v);
 
@@ -23,6 +24,4 @@ public interface ILevelEmitter
     default AEStackTypeFilter getTypeFilters() {
         return new AEStackTypeFilter();
     }
-
-    void onChangeTypeFilters();
 }

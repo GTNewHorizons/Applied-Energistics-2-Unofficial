@@ -36,6 +36,7 @@ tile.appliedenergistics2.BlockWireless.desc=Right click with terminal in hand to
 tile.appliedenergistics2.OreQuartz.name=Certus Quartz Ore
 tile.appliedenergistics2.OreQuartzCharged.name=Charged Certus Quartz Ore
 tile.appliedenergistics2.BlockSecurity.name=ME Security Terminal
+tile.appliedenergistics2.BlockStorageReshuffle.name=ME Storage Reshuffle
 tile.appliedenergistics2.BlockQuartzGrowthAccelerator.name=Crystal Growth Accelerator
 tile.appliedenergistics2.BlockSkyStone.name=Sky Stone
 tile.appliedenergistics2.BlockSkyStone.Block.name=Sky Stone Block
@@ -177,6 +178,68 @@ gui.appliedenergistics2.security.inject.tip=User is allowed to store new items i
 gui.appliedenergistics2.security.craft.tip=User can initiate new crafting jobs.
 gui.appliedenergistics2.security.build.tip=User can modify the physical structure of the network, and make configuration changes.
 gui.appliedenergistics2.security.security.tip=User can access and modify the security terminal of the network.
+
+gui.appliedenergistics2.ReshuffleTooltipDesc1=§7Reorganizes ME storage based on priority
+gui.appliedenergistics2.ReshuffleTooltipDesc2=§7Extracts and re-inserts items to optimize cell usage
+gui.appliedenergistics2.ReshuffleTooltipDesc3=§7and reduce fragmentation
+
+gui.appliedenergistics2.ReshuffleStatusLabel=Status:
+gui.appliedenergistics2.ReshuffleStatusIdle=Idle
+gui.appliedenergistics2.ReshuffleStatusBeforeSnapshot=Snapshot before
+gui.appliedenergistics2.ReshuffleStatusAfterSnapshot=Snapshot after
+gui.appliedenergistics2.ReshuffleStatusExtracting=Extracting
+gui.appliedenergistics2.ReshuffleStatusInjecting=Injecting
+gui.appliedenergistics2.ReshuffleStatusComplete=Complete
+gui.appliedenergistics2.ReshuffleStatusFailed=Failed
+gui.appliedenergistics2.ReshuffleStatusCancelled=Cancelled
+
+gui.appliedenergistics2.StorageReshuffle=Storage Reshuffle
+gui.appliedenergistics2.ReshuffleReport=Report:
+gui.appliedenergistics2.ReshuffleStart=START
+gui.appliedenergistics2.ReshuffleCancel=CANCEL
+
+gui.appliedenergistics2.ReshuffleReportTitle== Reshuffle Report =
+gui.appliedenergistics2.ReshuffleReportTime=Time:
+gui.appliedenergistics2.ReshuffleReportMode=Mode:
+gui.appliedenergistics2.ReshuffleReportModeNone=None
+gui.appliedenergistics2.ReshuffleReportSubnetsLabel=Subnets:
+gui.appliedenergistics2.ReshuffleReportSubnetsOn=Included
+gui.appliedenergistics2.ReshuffleReportSubnetsOff=Excluded
+gui.appliedenergistics2.ReshuffleTotalTypes=%d / %d types
+gui.appliedenergistics2.ReshuffleReportExtracted=Extracted:
+gui.appliedenergistics2.ReshuffleReportInjected=Injected:
+gui.appliedenergistics2.ReshuffleReportLabelTypes=Types:
+gui.appliedenergistics2.ReshuffleReportLabelStacks=Items:
+gui.appliedenergistics2.ReshuffleReportSectionCantExtract=-- Cant extract --
+gui.appliedenergistics2.ReshuffleReportSectionCantInject=-- Cant inject --
+gui.appliedenergistics2.ReshuffleReportNetChanged=! Net change:
+gui.appliedenergistics2.ReshuffleReportIntegrityOk=No net change — storage intact
+
+gui.appliedenergistics2.ReshuffleScan=Scan
+gui.appliedenergistics2.ReshuffleLocate=Locate
+gui.appliedenergistics2.ReshuffleTooltipCoords=§7Loc: §e%d, %d, %d  §7Dim: §e%d  §7Slot: §e%d
+gui.appliedenergistics2.ReshuffleTooltipCoordsNoSlot=§7Loc: §e%d, %d, %d  §7Dim: §e%d
+
+gui.appliedenergistics2.ReshufflePartitionScanner=Partition Scanner
+gui.appliedenergistics2.ReshuffleScanDuplicatesTitle=Duplicate Partitions:
+gui.appliedenergistics2.ReshuffleScanEmpty=No duplicate partitions found
+gui.appliedenergistics2.ReshuffleScanDuplicatePartition=§8Duplicate partition:
+
+gui.appliedenergistics2.ReshuffleHealthTitle=Cell Health
+gui.appliedenergistics2.ReshuffleHealthTooltipBytes=Bytes: %s / %s  (%s)
+gui.appliedenergistics2.ReshuffleHealthTooltipTypes=Types: %d / %d
+gui.appliedenergistics2.ReshuffleHealthTopItems=§7Top Stored:
+gui.appliedenergistics2.ReshuffleHealthTopItemEntry=§8 • §f%s §7x%s
+gui.appliedenergistics2.ReshuffleReportNoMatchingCells=§8No cells found!
+
+gui.appliedenergistics2.ReshuffleScanDuplicatePartitionTargetNameColor=§7
+gui.appliedenergistics2.ReshuffleScanDuplicatePartitionStackNameStyle=§f§l
+gui.appliedenergistics2.ReshuffleReportTextColorMain=§3
+gui.appliedenergistics2.ReshuffleReportTextColorValues=§0
+gui.appliedenergistics2.ReshuffleReportTextColorPositive=§2
+gui.appliedenergistics2.ReshuffleReportTextColorNegative=§4
+gui.appliedenergistics2.ReshuffleReportTextColorNeutral=§8
+gui.appliedenergistics2.ReshuffleReportTextColorWarning=§6
 
 gui.appliedenergistics2.Efficiency=Efficiency
 gui.appliedenergistics2.RequiredPower=Required Power
@@ -570,6 +633,27 @@ gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterface=Toggles showing 
 gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOnDesc=Showing all interfaces
 gui.tooltips.appliedenergistics2.ToggleShowOnlyInvalidInterfaceOffDesc=Showing only interfaces with invalid patterns
 gui.tooltips.appliedenergistics2.HighlightInterface=Highlight interface
+
+gui.tooltips.appliedenergistics2.ReshuffleIncludeSubnets=Include Subnets
+gui.tooltips.appliedenergistics2.ReshuffleIncludeSubnetsOn=Enabled - sub-network storage is included in the reshuffle
+gui.tooltips.appliedenergistics2.ReshuffleIncludeSubnetsOff=Disabled - only the main network storage is reshuffled
+gui.tooltips.appliedenergistics2.ReshuffleInsertOrder=Insert order
+gui.tooltips.appliedenergistics2.ReshuffleInsertOrderOn=Insert big stacks first
+gui.tooltips.appliedenergistics2.ReshuffleInsertOrderOff=Insert small stacks first
+gui.tooltips.appliedenergistics2.OpenReshuffle=Open Reshuffle
+gui.tooltips.appliedenergistics2.OpenReshuffleDesc=Open the Storage Reshuffle GUI
+gui.tooltips.appliedenergistics2.OpenReshuffleOffDesc=No Storage Reshuffle block found on this network
+gui.tooltips.appliedenergistics2.ReshuffleTabScan=Scan
+gui.tooltips.appliedenergistics2.ReshuffleTabScanHint=Scan network for duplicate partitions
+gui.tooltips.appliedenergistics2.ReshuffleTab=Reshuffle
+gui.tooltips.appliedenergistics2.ReshuffleTabHint=Switch to Reshuffle mode
+gui.tooltips.appliedenergistics2.ReshuffleHealthTab=Cell Health
+gui.tooltips.appliedenergistics2.ReshuffleHealthTabHint=Switch to Cell Health view — see fill level of every cell
+gui.tooltips.appliedenergistics2.ReshuffleLocate=Locate
+gui.tooltips.appliedenergistics2.CellHealthSortBy=Sort By
+gui.tooltips.appliedenergistics2.CellHealthSortByFill=Sort by fill percentage (highest first)
+gui.tooltips.appliedenergistics2.CellHealthSortBySize=Sort by total cell size in bytes (largest first)
+
 gui.tooltips.appliedenergistics2.SearchFieldInputs=Recipe Inputs
 gui.tooltips.appliedenergistics2.SearchFieldOutputs=Recipe Outputs
 gui.tooltips.appliedenergistics2.SearchFieldNames=Interface Names

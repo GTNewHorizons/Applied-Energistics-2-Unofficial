@@ -259,7 +259,29 @@ public enum ButtonToolTips implements Localization {
     CPUCrafting,
     Automation,
     NumberOfStorageMemory,
-    NumberOfCoProcessors;
+    NumberOfCoProcessors,
+
+    ReshuffleIncludeSubnets,
+    ReshuffleIncludeSubnetsOn,
+    ReshuffleIncludeSubnetsOff,
+    ReshuffleInsertOrder,
+    ReshuffleInsertOrderOn,
+    ReshuffleInsertOrderOff,
+    OpenReshuffle,
+    OpenReshuffleDesc,
+    OpenReshuffleOffDesc,
+    ReshuffleTab,
+    ReshuffleTabHint,
+    ReshuffleTabScan,
+    ReshuffleTabScanHint,
+    ReshuffleHealthTab,
+    ReshuffleHealthTabHint,
+    ReshuffleLocate,
+    CellHealthSortBy,
+    CellHealthSortByFill,
+    CellHealthSortBySize,
+
+    ReshuffleTabReshuffleHint;
 
     ButtonToolTips() {}
 
