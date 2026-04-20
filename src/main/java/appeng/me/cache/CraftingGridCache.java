@@ -240,7 +240,7 @@ public class CraftingGridCache
 
         final NBTTagCompound data = sourceStorage.dataObject();
         if (data.hasKey(DIAGNOSTICS_ENABLED_KEY)) {
-            this.diagnosticsEnabled = this.diagnosticsEnabled && data.getBoolean(DIAGNOSTICS_ENABLED_KEY);
+            this.diagnosticsEnabled = this.diagnosticsEnabled || data.getBoolean(DIAGNOSTICS_ENABLED_KEY);
         }
 
         this.readDiagnosticsFromNBT(
@@ -740,9 +740,13 @@ public class CraftingGridCache
         this.postPatternChangeListeners.remove(listener);
     }
 
-    public synchronized void recordDiagnosticSample(final IAEStack<?> output, final long producedAmount,
-            final long observedElapsedNanos) {
-        if (output == null || producedAmount <= 0 || observedElapsedNanos <= 0) {
+    public synchronized void recordDiagnosticSample(final IAEStack<?> output, final String sessionId,
+            final long producedAmount, final long observedStartNanos, final long observedEndNanos) {
+        if (output == null || producedAmount <= 0
+                || sessionId == null
+                || sessionId.isEmpty()
+                || observedStartNanos <= 0
+                || observedEndNanos <= observedStartNanos) {
             return;
         }
 
@@ -752,11 +756,22 @@ public class CraftingGridCache
         }
 
         final DiagnosticStats stats = this.diagnostics.computeIfAbsent(key, ignored -> new DiagnosticStats());
-        stats.totalProduced += producedAmount;
-        stats.cumulativeObservedTimeNanos += observedElapsedNanos;
-        stats.sampleCount += 1;
-        stats.lastObservedMillis = System.currentTimeMillis();
+        stats.recordSample(sessionId, producedAmount, observedStartNanos, observedEndNanos);
         this.diagnosticsRevision++;
+    }
+
+    public synchronized void completeDiagnosticSession(final String sessionId) {
+        if (sessionId == null || sessionId.isEmpty()) {
+            return;
+        }
+
+        boolean changed = false;
+        for (DiagnosticStats stats : this.diagnostics.values()) {
+            changed |= stats.compactSession(sessionId);
+        }
+        if (changed) {
+            this.diagnosticsRevision++;
+        }
     }
 
     public synchronized void clearDiagnosticStats() {
@@ -816,9 +831,9 @@ public class CraftingGridCache
             result.add(
                     new DiagnosticRowView(
                             row.getKey().copy(),
-                            row.getValue().totalProduced,
-                            row.getValue().cumulativeObservedTimeNanos,
-                            row.getValue().sampleCount));
+                            row.getValue().getTotalProduced(),
+                            row.getValue().getElapsedObservedTimeNanos(),
+                            row.getValue().getSampleCount()));
         }
         return result;
     }
@@ -826,13 +841,14 @@ public class CraftingGridCache
     private static int compareDiagnosticRows(final Map.Entry<IAEStack<?>, DiagnosticStats> left,
             final Map.Entry<IAEStack<?>, DiagnosticStats> right, final DiagnosticSortMode sortMode) {
         return switch (sortMode) {
-            case CRAFTED -> Long.compare(left.getValue().totalProduced, right.getValue().totalProduced);
+            case CRAFTED -> Long.compare(left.getValue().getTotalProduced(), right.getValue().getTotalProduced());
             case AVG_PER_SECOND -> Double
                     .compare(left.getValue().getItemsPerSecond(), right.getValue().getItemsPerSecond());
-            case SAMPLES -> Long.compare(left.getValue().sampleCount, right.getValue().sampleCount);
+            case SAMPLES -> Long.compare(left.getValue().getSampleCount(), right.getValue().getSampleCount());
             case NAME -> left.getKey().getDisplayName().compareToIgnoreCase(right.getKey().getDisplayName());
-            case CUMULATIVE_TIME -> Long
-                    .compare(left.getValue().cumulativeObservedTimeNanos, right.getValue().cumulativeObservedTimeNanos);
+            case CUMULATIVE_TIME -> Long.compare(
+                    left.getValue().getElapsedObservedTimeNanos(),
+                    right.getValue().getElapsedObservedTimeNanos());
         };
     }
 
@@ -877,10 +893,7 @@ public class CraftingGridCache
 
             final DiagnosticStats loaded = DiagnosticStats.fromNBT(tag);
             final DiagnosticStats existing = this.diagnostics.computeIfAbsent(key, ignored -> new DiagnosticStats());
-            existing.totalProduced += loaded.totalProduced;
-            existing.cumulativeObservedTimeNanos += loaded.cumulativeObservedTimeNanos;
-            existing.sampleCount += loaded.sampleCount;
-            existing.lastObservedMillis = Math.max(existing.lastObservedMillis, loaded.lastObservedMillis);
+            existing.mergeFrom(loaded);
         }
 
         this.diagnosticsRevision++;
@@ -903,47 +916,179 @@ public class CraftingGridCache
 
         public final IAEStack<?> stack;
         public final long totalProduced;
-        public final long observedTimeNanos;
+        public final long elapsedTimeNanos;
         public final long sampleCount;
 
-        public DiagnosticRowView(final IAEStack<?> stack, final long totalProduced, final long observedTimeNanos,
+        public DiagnosticRowView(final IAEStack<?> stack, final long totalProduced, final long elapsedTimeNanos,
                 final long sampleCount) {
             this.stack = stack;
             this.totalProduced = totalProduced;
-            this.observedTimeNanos = observedTimeNanos;
+            this.elapsedTimeNanos = elapsedTimeNanos;
             this.sampleCount = sampleCount;
         }
     }
 
     private static final class DiagnosticStats {
 
-        private long totalProduced;
-        private long cumulativeObservedTimeNanos;
-        private long sampleCount;
+        private long completedTotalProduced;
+        private long completedElapsedTimeNanos;
+        private long completedSampleCount;
+        private final Map<String, DiagnosticSessionStats> sessions = new HashMap<>();
         private long lastObservedMillis;
 
+        private void recordSample(final String sessionId, final long producedAmount, final long observedStartNanos,
+                final long observedEndNanos) {
+            this.sessions.computeIfAbsent(sessionId, ignored -> new DiagnosticSessionStats())
+                    .recordSample(producedAmount, observedStartNanos, observedEndNanos);
+            this.lastObservedMillis = System.currentTimeMillis();
+        }
+
+        private long getTotalProduced() {
+            long totalProduced = this.completedTotalProduced;
+            for (DiagnosticSessionStats session : this.sessions.values()) {
+                totalProduced += session.totalProduced;
+            }
+            return totalProduced;
+        }
+
+        private long getElapsedObservedTimeNanos() {
+            long elapsedObservedTimeNanos = this.completedElapsedTimeNanos;
+            for (DiagnosticSessionStats session : this.sessions.values()) {
+                elapsedObservedTimeNanos += session.getElapsedObservedTimeNanos();
+            }
+            return elapsedObservedTimeNanos;
+        }
+
+        private long getSampleCount() {
+            long sampleCount = this.completedSampleCount;
+            for (DiagnosticSessionStats session : this.sessions.values()) {
+                sampleCount += session.sampleCount;
+            }
+            return sampleCount;
+        }
+
+        private boolean compactSession(final String sessionId) {
+            final DiagnosticSessionStats session = this.sessions.remove(sessionId);
+            if (session == null) {
+                return false;
+            }
+
+            this.completedTotalProduced += session.totalProduced;
+            this.completedElapsedTimeNanos += session.getElapsedObservedTimeNanos();
+            this.completedSampleCount += session.sampleCount;
+            return true;
+        }
+
+        private void mergeFrom(final DiagnosticStats loaded) {
+            this.completedTotalProduced += loaded.completedTotalProduced;
+            this.completedElapsedTimeNanos += loaded.completedElapsedTimeNanos;
+            this.completedSampleCount += loaded.completedSampleCount;
+            for (Entry<String, DiagnosticSessionStats> entry : loaded.sessions.entrySet()) {
+                this.sessions.computeIfAbsent(entry.getKey(), ignored -> new DiagnosticSessionStats())
+                        .mergeFrom(entry.getValue());
+            }
+            this.lastObservedMillis = Math.max(this.lastObservedMillis, loaded.lastObservedMillis);
+        }
+
         private double getItemsPerSecond() {
-            if (this.cumulativeObservedTimeNanos <= 0) {
+            final long elapsedObservedTimeNanos = this.getElapsedObservedTimeNanos();
+            if (elapsedObservedTimeNanos <= 0L) {
                 return 0.0D;
             }
 
-            return this.totalProduced * (double) TimeUnit.SECONDS.toNanos(1)
-                    / (double) this.cumulativeObservedTimeNanos;
+            return this.getTotalProduced() * (double) TimeUnit.SECONDS.toNanos(1) / (double) elapsedObservedTimeNanos;
         }
 
         private void writeToNBT(final NBTTagCompound tag) {
-            tag.setLong("TotalProduced", this.totalProduced);
-            tag.setLong("ObservedTimeNanos", this.cumulativeObservedTimeNanos);
-            tag.setLong("SampleCount", this.sampleCount);
+            tag.setLong("TotalProduced", this.getTotalProduced());
+            tag.setLong("CompletedTotalProduced", this.completedTotalProduced);
+            tag.setLong("CompletedElapsedTimeNanos", this.completedElapsedTimeNanos);
+            tag.setLong("CompletedSampleCount", this.completedSampleCount);
+            final NBTTagList sessionsTag = new NBTTagList();
+            for (Entry<String, DiagnosticSessionStats> entry : this.sessions.entrySet()) {
+                final NBTTagCompound sessionTag = new NBTTagCompound();
+                sessionTag.setString("SessionId", entry.getKey());
+                entry.getValue().writeToNBT(sessionTag);
+                sessionsTag.appendTag(sessionTag);
+            }
+            tag.setTag("Sessions", sessionsTag);
+            tag.setLong("SampleCount", this.getSampleCount());
             tag.setLong("LastObservedMillis", this.lastObservedMillis);
         }
 
         private static DiagnosticStats fromNBT(final NBTTagCompound tag) {
             final DiagnosticStats stats = new DiagnosticStats();
-            stats.totalProduced = tag.getLong("TotalProduced");
-            stats.cumulativeObservedTimeNanos = tag.getLong("ObservedTimeNanos");
-            stats.sampleCount = tag.getLong("SampleCount");
+            stats.completedTotalProduced = tag.getLong("CompletedTotalProduced");
+            stats.completedElapsedTimeNanos = tag.getLong("CompletedElapsedTimeNanos");
+            stats.completedSampleCount = tag.getLong("CompletedSampleCount");
+            if (tag.hasKey("Sessions", Constants.NBT.TAG_LIST)) {
+                final NBTTagList sessionsTag = tag.getTagList("Sessions", Constants.NBT.TAG_COMPOUND);
+                for (int i = 0; i < sessionsTag.tagCount(); i++) {
+                    final NBTTagCompound sessionTag = sessionsTag.getCompoundTagAt(i);
+                    final String sessionId = sessionTag.getString("SessionId");
+                    if (sessionId == null || sessionId.isEmpty()) {
+                        continue;
+                    }
+                    stats.sessions.put(sessionId, DiagnosticSessionStats.fromNBT(sessionTag));
+                }
+            } else {
+                final long legacyObservedTimeNanos = tag.getLong("ObservedTimeNanos");
+                if (legacyObservedTimeNanos > 0L || tag.getLong("TotalProduced") > 0L) {
+                    stats.completedTotalProduced = tag.getLong("TotalProduced");
+                    stats.completedElapsedTimeNanos = legacyObservedTimeNanos;
+                    stats.completedSampleCount = tag.getLong("SampleCount");
+                }
+            }
             stats.lastObservedMillis = tag.getLong("LastObservedMillis");
+            return stats;
+        }
+    }
+
+    private static final class DiagnosticSessionStats {
+
+        private long totalProduced;
+        private long firstObservedNanos;
+        private long lastObservedNanos;
+        private long sampleCount;
+
+        private void recordSample(final long producedAmount, final long observedStartNanos,
+                final long observedEndNanos) {
+            this.totalProduced += producedAmount;
+            this.firstObservedNanos = this.firstObservedNanos == 0L ? observedStartNanos
+                    : Math.min(this.firstObservedNanos, observedStartNanos);
+            this.lastObservedNanos = Math.max(this.lastObservedNanos, observedEndNanos);
+            this.sampleCount += 1;
+        }
+
+        private long getElapsedObservedTimeNanos() {
+            if (this.firstObservedNanos <= 0L || this.lastObservedNanos <= this.firstObservedNanos) {
+                return 0L;
+            }
+
+            return this.lastObservedNanos - this.firstObservedNanos;
+        }
+
+        private void mergeFrom(final DiagnosticSessionStats loaded) {
+            this.totalProduced += loaded.totalProduced;
+            this.firstObservedNanos = this.firstObservedNanos == 0L ? loaded.firstObservedNanos
+                    : Math.min(this.firstObservedNanos, loaded.firstObservedNanos);
+            this.lastObservedNanos = Math.max(this.lastObservedNanos, loaded.lastObservedNanos);
+            this.sampleCount += loaded.sampleCount;
+        }
+
+        private void writeToNBT(final NBTTagCompound tag) {
+            tag.setLong("TotalProduced", this.totalProduced);
+            tag.setLong("FirstObservedNanos", this.firstObservedNanos);
+            tag.setLong("LastObservedNanos", this.lastObservedNanos);
+            tag.setLong("SampleCount", this.sampleCount);
+        }
+
+        private static DiagnosticSessionStats fromNBT(final NBTTagCompound tag) {
+            final DiagnosticSessionStats stats = new DiagnosticSessionStats();
+            stats.totalProduced = tag.getLong("TotalProduced");
+            stats.firstObservedNanos = tag.getLong("FirstObservedNanos");
+            stats.lastObservedNanos = tag.getLong("LastObservedNanos");
+            stats.sampleCount = tag.getLong("SampleCount");
             return stats;
         }
     }
