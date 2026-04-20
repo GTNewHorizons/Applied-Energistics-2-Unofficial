@@ -52,6 +52,12 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
         return this.inventory.getAEStackInSlot(this.getSlotIndex());
     }
 
+    protected void setAEStack(@Nullable final IAEStack<?> stack) {
+        this.inventory.putAEStackInSlot(this.getSlotIndex(), stack);
+
+        NetworkHandler.instance.sendToServer(new PacketVirtualSlot(this.getStorageName(), this.getSlotIndex(), stack));
+    }
+
     public StorageName getStorageName() {
         return this.inventory.getStorageName();
     }
@@ -150,10 +156,7 @@ public class VirtualMEPhantomSlot extends VirtualMESlot {
         }
 
         // Set on the client to avoid lag on slow networks
-        inventory.putAEStackInSlot(this.getSlotIndex(), currentStack);
-
-        NetworkHandler.instance
-                .sendToServer(new PacketVirtualSlot(this.getStorageName(), this.getSlotIndex(), currentStack));
+        this.setAEStack(currentStack);
     }
 
     @Override

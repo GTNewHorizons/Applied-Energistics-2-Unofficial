@@ -10,14 +10,14 @@
 
 package appeng.container.implementations;
 
-import static appeng.util.Platform.isServer;
-
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.config.FuzzyMode;
 import appeng.api.config.LevelType;
@@ -27,49 +27,90 @@ import appeng.api.config.Settings;
 import appeng.api.config.YesNo;
 import appeng.api.parts.ILevelEmitter;
 import appeng.api.storage.StorageName;
-import appeng.api.storage.data.AEStackTypeRegistry;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.IGuiSub;
 import appeng.client.gui.implementations.GuiLevelEmitter;
 import appeng.client.gui.widgets.MEGuiTextField;
 import appeng.container.PrimaryGui;
-import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.IContainerSubGui;
-import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.slot.SlotInaccessible;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.container.sync.SyncCodecs;
+import appeng.container.sync.SyncRegistrar;
+import appeng.container.sync.TypeFilterDelta;
+import appeng.container.sync.codecs.AEStackTypeFilterSyncCodec;
+import appeng.container.sync.handlers.ConfigEnumSyncHandler;
+import appeng.container.sync.handlers.DeltaObjectSyncHandler;
+import appeng.container.sync.handlers.LongSyncHandler;
+import appeng.container.sync.handlers.ObjectSyncHandler;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.AEStackTypeFilter;
 import appeng.util.Platform;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
-public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirtualSlotHolder, IContainerSubGui {
+public class ContainerLevelEmitter extends ContainerUpgradeable implements IContainerSubGui {
 
     private final ILevelEmitter lvlEmitter;
 
     @SideOnly(Side.CLIENT)
     private MEGuiTextField textField;
 
-    @GuiSync(2)
-    public LevelType lvType;
-
-    @GuiSync(3)
-    public long EmitterValue = -1;
-
-    @GuiSync(4)
-    public YesNo cmType;
-
-    @GuiSync(10)
-    public AEStackTypeFilter typeFilters;
-    private final IAEStack<?>[] configClientSlot = new IAEStack[1];
+    private final LongSyncHandler emitterValueSync;
+    private final DeltaObjectSyncHandler<@NotNull AEStackTypeFilter, TypeFilterDelta> typeFiltersSync;
+    private final ConfigEnumSyncHandler<@NotNull LevelType> levelModeSync;
+    private final ConfigEnumSyncHandler<@NotNull YesNo> craftingModeSync;
+    private final ObjectSyncHandler<@Nullable IAEStack<?>> configStackSync;
 
     public ContainerLevelEmitter(final InventoryPlayer ip, final ILevelEmitter te) {
         super(ip, te);
         this.lvlEmitter = te;
-        this.typeFilters = new AEStackTypeFilter(this.lvlEmitter.getTypeFilters());
+
+        final SyncRegistrar sync = this.syncRegistrar();
+        this.emitterValueSync = sync.longSync("emitterValue").onClientChange((oldValue, newValue) -> {
+            if (this.textField != null) {
+                this.textField.setText(String.valueOf(newValue));
+                this.textField.setCursorPositionEnd();
+            }
+        }).onServerChange((oldValue, newValue) -> this.lvlEmitter.setReportingValue(newValue));
+
+        this.typeFiltersSync = sync
+                .object("typeFilters", AEStackTypeFilterSyncCodec.INSTANCE, this.lvlEmitter.getTypeFilters())
+                .onClientChange((oldValue, newValue) -> {
+                    if (Minecraft.getMinecraft().currentScreen instanceof GuiLevelEmitter guiLevelEmitter) {
+                        guiLevelEmitter.onUpdateTypeFilters();
+                    }
+                }).onServerChange((oldValue, newValue) -> {
+                    if (newValue == null) {
+                        return;
+                    }
+
+                    this.lvlEmitter.getTypeFilters().copyFrom(newValue);
+                    this.lvlEmitter.onChangeTypeFilters();
+                });
+
+        this.levelModeSync = sync.configEnum(
+                "levelMode",
+                Settings.LEVEL_TYPE,
+                LevelType.class,
+                this.getUpgradeable().getConfigManager(),
+                (LevelType) lvlEmitter.getConfigManager().getSetting(Settings.LEVEL_TYPE));
+        this.craftingModeSync = sync.configEnum(
+                "craftingMode",
+                Settings.CRAFT_VIA_REDSTONE,
+                YesNo.class,
+                this.getUpgradeable().getConfigManager(),
+                (YesNo) lvlEmitter.getConfigManager().getSetting(Settings.CRAFT_VIA_REDSTONE));
+        this.configStackSync = sync
+                .object(
+                        "configStack",
+                        SyncCodecs.aeStack(),
+                        this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG).getAEStackInSlot(0))
+                .onServerChange((oldValue, newValue) -> {
+                    final IAEStack<?> stack = newValue == null ? null : newValue.copy();
+                    this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG).putAEStackInSlot(0, stack);
+                });
 
         // sub gui copy paste
         this.primaryGuiButtonIcon = new SlotInaccessible(new AppEngInternalInventory(null, 1), 0, 0, -9000);
@@ -79,11 +120,6 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
     @SideOnly(Side.CLIENT)
     public void setTextField(final MEGuiTextField level) {
         this.textField = level;
-    }
-
-    public void setLevel(final long l, final EntityPlayer player) {
-        this.lvlEmitter.setReportingValue(l);
-        this.EmitterValue = l;
     }
 
     @Override
@@ -138,7 +174,6 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
 
     @Override
     public int availableUpgrades() {
-
         return 1;
     }
 
@@ -147,94 +182,68 @@ public class ContainerLevelEmitter extends ContainerUpgradeable implements IVirt
         this.verifyPermissions(SecurityPermissions.BUILD, false);
 
         if (Platform.isServer()) {
-            this.EmitterValue = this.lvlEmitter.getReportingValue();
-            this.setCraftingMode(
-                    (YesNo) this.getUpgradeable().getConfigManager().getSetting(Settings.CRAFT_VIA_REDSTONE));
-            this.setLevelMode((LevelType) this.getUpgradeable().getConfigManager().getSetting(Settings.LEVEL_TYPE));
+            this.emitterValueSync.set(this.lvlEmitter.getReportingValue());
+            this.typeFiltersSync.set(this.lvlEmitter.getTypeFilters());
+            this.craftingModeSync.syncFromConfig();
+            this.levelModeSync.syncFromConfig();
             this.setFuzzyMode((FuzzyMode) this.getUpgradeable().getConfigManager().getSetting(Settings.FUZZY_MODE));
             this.setRedStoneMode(
                     (RedstoneMode) this.getUpgradeable().getConfigManager().getSetting(Settings.REDSTONE_EMITTER));
-            this.updateVirtualSlots(
-                    StorageName.CONFIG,
-                    this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG),
-                    this.configClientSlot);
+            this.configStackSync.set(this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG).getAEStackInSlot(0));
         }
 
         this.standardDetectAndSendChanges();
     }
 
-    @Override
-    public void onUpdate(final String field, final Object oldValue, final Object newValue) {
-        if (field.equals("EmitterValue")) {
-            if (this.textField != null) {
-                this.textField.setText(String.valueOf(this.EmitterValue));
+    public long getEmitterValue() {
+        return this.emitterValueSync.get();
+    }
 
-                if (String.valueOf(oldValue).equals("-1")) {
-                    this.textField.setCursorPositionEnd();
-                }
-            }
-        } else if (field.equals("typeFilters")) {
-            if (Minecraft.getMinecraft().currentScreen instanceof GuiLevelEmitter guiLevelEmitter) {
-                guiLevelEmitter.onUpdateTypeFilters();
-            }
-        }
+    public void setLevel(final long l) {
+        this.emitterValueSync.set(l);
     }
 
     @Override
     public YesNo getCraftingMode() {
-        return this.cmType;
+        return this.craftingModeSync.get();
     }
 
     @Override
     public void setCraftingMode(final YesNo cmType) {
-        this.cmType = cmType;
+        this.craftingModeSync.set(cmType);
+    }
+
+    public void rotateCraftingMode(final boolean backwards) {
+        this.craftingModeSync.rotate(backwards);
     }
 
     public LevelType getLevelMode() {
-        return this.lvType;
+        return this.levelModeSync.get();
     }
 
-    private void setLevelMode(final LevelType lvType) {
-        this.lvType = lvType;
+    public void rotateLevelMode(final boolean backwards) {
+        this.levelModeSync.rotate(backwards);
     }
 
+    @NotNull
     public AEStackTypeFilter getTypeFilters() {
-        return this.typeFilters;
+        return this.typeFiltersSync.get();
+    }
+
+    public void toggleTypeFilter(@NotNull final IAEStackType<?> type) {
+        this.typeFiltersSync.applyAndQueueDelta(TypeFilterDelta.toggle(type));
     }
 
     public ILevelEmitter getLvlEmitter() {
         return this.lvlEmitter;
     }
 
-    public void toggleTypeFilter(String typeId, EntityPlayer player) {
-        if (typeId == null || typeId.isEmpty()) {
-            return;
-        }
-
-        final IAEStackType<?> type = AEStackTypeRegistry.getType(typeId);
-        if (type == null) {
-            return;
-        }
-
-        this.lvlEmitter.getTypeFilters().toggle(type);
-        // Create a new instance so that GuiSync can detect changes
-        this.typeFilters = new AEStackTypeFilter(this.lvlEmitter.getTypeFilters());
-        this.lvlEmitter.onChangeTypeFilters();
+    public @Nullable IAEStack<?> getConfigStack() {
+        return this.configStackSync.get();
     }
 
-    @Override
-    public void receiveSlotStacks(StorageName invName, Int2ObjectMap<IAEStack<?>> slotStacks) {
-        for (var entry : slotStacks.int2ObjectEntrySet()) {
-            this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG)
-                    .putAEStackInSlot(entry.getIntKey(), entry.getValue());
-        }
-
-        if (isServer()) {
-            this.updateVirtualSlots(
-                    StorageName.CONFIG,
-                    this.lvlEmitter.getAEInventoryByName(StorageName.CONFIG),
-                    this.configClientSlot);
-        }
+    public void setConfigStack(@Nullable final IAEStack<?> stack) {
+        this.configStackSync.set(stack);
     }
 
     // for level terminal

@@ -693,6 +693,14 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         this.subGui = true; // in case the gui is reopened later ( i'm looking at you NEI )
     }
 
+    @Override
+    public void updateScreen() {
+        super.updateScreen();
+        if (this.inventorySlots instanceof AEBaseContainer container) {
+            container.tickClientSync();
+        }
+    }
+
     @Nullable
     protected Slot getSlot(final int mouseX, final int mouseY) {
         final List<Slot> slots = this.getInventorySlots();
