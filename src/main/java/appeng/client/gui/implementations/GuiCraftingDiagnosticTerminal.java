@@ -442,7 +442,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
             case CRAFTED -> Comparator.comparingLong(row -> row.totalProduced);
             case SAMPLES -> Comparator.comparingLong(row -> row.sampleCount);
             case AVG_PER_SECOND -> Comparator.comparingDouble(Row::getItemsPerSecond);
-            case CUMULATIVE_TIME -> Comparator.comparingLong(row -> row.observedTimeNanos);
+            case CUMULATIVE_TIME -> Comparator.comparingLong(row -> row.elapsedTimeNanos);
         };
 
         if (!this.container.ascending) {
@@ -507,7 +507,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
             row.stack = null;
             row.debugDisplayName = "Debug Item " + (i + 1);
             row.totalProduced = producedValues[i];
-            row.observedTimeNanos = TimeUnit.MILLISECONDS.toNanos(millisValues[i]);
+            row.elapsedTimeNanos = TimeUnit.MILLISECONDS.toNanos(millisValues[i]);
             row.sampleCount = 50L + i * 13L;
             this.rows.add(row);
         }
@@ -532,14 +532,14 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         private IAEStack<?> stack;
         private String debugDisplayName;
         private long totalProduced;
-        private long observedTimeNanos;
+        private long elapsedTimeNanos;
         private long sampleCount;
 
         private static Row fromPacket(final CraftingGridCache.DiagnosticRowView packetRow) {
             final Row row = new Row();
             row.stack = packetRow.stack;
             row.totalProduced = packetRow.totalProduced;
-            row.observedTimeNanos = packetRow.observedTimeNanos;
+            row.elapsedTimeNanos = packetRow.elapsedTimeNanos;
             row.sampleCount = packetRow.sampleCount;
             return row;
         }
@@ -558,7 +558,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
 
         private String getFormattedTime() {
             return DurationFormatUtils.formatDuration(
-                    TimeUnit.MILLISECONDS.convert(this.observedTimeNanos, TimeUnit.NANOSECONDS),
+                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS),
                     GuiText.ETAFormat.getLocal());
         }
 
@@ -568,10 +568,10 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
 
         private String getCompactFormattedTime() {
             final double[] values = {
-                    TimeUnit.MILLISECONDS.convert(this.observedTimeNanos, TimeUnit.NANOSECONDS) / 1000.0D,
-                    TimeUnit.MILLISECONDS.convert(this.observedTimeNanos, TimeUnit.NANOSECONDS) / 60000.0D,
-                    TimeUnit.MILLISECONDS.convert(this.observedTimeNanos, TimeUnit.NANOSECONDS) / 3_600_000.0D,
-                    TimeUnit.MILLISECONDS.convert(this.observedTimeNanos, TimeUnit.NANOSECONDS) / 86_400_000.0D };
+                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS) / 1000.0D,
+                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS) / 60000.0D,
+                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS) / 3_600_000.0D,
+                    TimeUnit.MILLISECONDS.convert(this.elapsedTimeNanos, TimeUnit.NANOSECONDS) / 86_400_000.0D };
             final char[] units = { 's', 'm', 'h', 'd' };
 
             for (int i = 0; i < values.length; i++) {
@@ -584,25 +584,25 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
         }
 
         private String getFormattedItemsPerSecond(final DecimalFormat format) {
-            if (this.observedTimeNanos <= 0) {
+            if (this.elapsedTimeNanos <= 0) {
                 return "-";
             }
 
             final double itemsPerSecond = this.totalProduced * (double) TimeUnit.SECONDS.toNanos(1)
-                    / (double) this.observedTimeNanos;
+                    / (double) this.elapsedTimeNanos;
             return format.format(itemsPerSecond);
         }
 
         private double getItemsPerSecond() {
-            if (this.observedTimeNanos <= 0) {
+            if (this.elapsedTimeNanos <= 0) {
                 return 0.0D;
             }
 
-            return this.totalProduced * (double) TimeUnit.SECONDS.toNanos(1) / (double) this.observedTimeNanos;
+            return this.totalProduced * (double) TimeUnit.SECONDS.toNanos(1) / (double) this.elapsedTimeNanos;
         }
 
         private String getCompactFormattedItemsPerSecond(final DecimalFormat format) {
-            if (this.observedTimeNanos <= 0) {
+            if (this.elapsedTimeNanos <= 0) {
                 return "-";
             }
 
@@ -611,7 +611,7 @@ public class GuiCraftingDiagnosticTerminal extends AEBaseGui {
                 return formatScientificIfNeeded(Math.round(itemsPerSecond));
             }
 
-            return formatCompactDecimal(Double.parseDouble(format.format(itemsPerSecond)));
+            return formatCompactDecimal(itemsPerSecond);
         }
 
         private static String formatScientificIfNeeded(final long value) {
