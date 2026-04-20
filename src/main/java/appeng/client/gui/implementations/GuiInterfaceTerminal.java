@@ -842,7 +842,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                             drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayUnpowered.getColor());
                         } else if (!entry.isFluidInterface && patternContainsFluids(stack)) {
                             GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
-                            drawRect(0, 0, 16, 16, 0x66FF0000);
+                            drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
                         }
                     } else {
                         tooltipStack = stack;
@@ -1252,7 +1252,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     private static boolean tagListHasFluids(final NBTTagList tagList) {
         for (int i = 0; i < tagList.tagCount(); i++) {
-            if (tagList.getCompoundTagAt(i).hasKey("FluidName")) return true;
+            final NBTTagCompound entry = tagList.getCompoundTagAt(i);
+            if (entry.hasKey("FluidName")) return true;
+            // StackType byte: 2 = fluid (older patterns may lack this key)
+            if (entry.hasKey("StackType") && entry.getByte("StackType") == 2) return true;
         }
         return false;
     }

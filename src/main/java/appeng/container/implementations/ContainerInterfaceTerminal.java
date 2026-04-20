@@ -11,6 +11,8 @@
 
 package appeng.container.implementations;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +37,7 @@ import appeng.api.AEApi;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.parts.IInterfaceTerminal;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IInterfaceViewable;
 import appeng.container.AEBaseContainer;
@@ -418,7 +421,14 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             this.dim = location.getDimension();
             this.side = machine instanceof AEBasePart hasSide ? hasSide.getSide() : ForgeDirection.UNKNOWN;
             this.online = online;
-            this.isFluidInterface = machine.isFluidInterface();
+            boolean isFluid = false;
+            for (IAEStackType<?> t : machine.getSupportedStackTypes()) {
+                if (t == FLUID_STACK_TYPE) {
+                    isFluid = true;
+                    break;
+                }
+            }
+            this.isFluidInterface = isFluid;
             this.priority = machine.getPriority();
             this.invNbt = new NBTTagList();
             updateNBT();

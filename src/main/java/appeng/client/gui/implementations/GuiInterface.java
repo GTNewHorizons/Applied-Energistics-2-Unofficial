@@ -247,7 +247,7 @@ public class GuiInterface extends GuiUpgradeable {
                 if (obj instanceof Slot slot && patternContainsFluids(slot.getStack())) {
                     final int sx = offsetX + slot.xDisplayPosition;
                     final int sy = offsetY + slot.yDisplayPosition;
-                    drawRect(sx, sy, sx + 16, sy + 16, 0x66FF0000);
+                    drawRect(sx, sy, sx + 16, sy + 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
                 }
             }
         }
@@ -263,7 +263,10 @@ public class GuiInterface extends GuiUpgradeable {
 
     private static boolean tagListHasFluids(final NBTTagList tagList) {
         for (int i = 0; i < tagList.tagCount(); i++) {
-            if (tagList.getCompoundTagAt(i).hasKey("FluidName")) return true;
+            final NBTTagCompound entry = tagList.getCompoundTagAt(i);
+            if (entry.hasKey("FluidName")) return true;
+            // StackType byte: 2 = fluid (older patterns may lack this key)
+            if (entry.hasKey("StackType") && entry.getByte("StackType") == 2) return true;
         }
         return false;
     }
