@@ -159,7 +159,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         super(cont);
 
         this.setScrollBar(new GuiScrollbar());
-        this.xSize = 208;
+        this.xSize = 209;
         this.ySize = 255;
         this.neiPresent = Loader.isModLoaded("NotEnoughItems");
 

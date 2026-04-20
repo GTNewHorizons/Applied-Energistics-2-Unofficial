@@ -42,9 +42,7 @@ public class CableRenderHelper {
             busRenderHelper.setPass(0);
         }
 
-        if (renderer.blockAccess == null) {
-            renderer.blockAccess = Minecraft.getMinecraft().theWorld;
-        }
+        renderer.blockAccess = Minecraft.getMinecraft().theWorld;
 
         for (final ForgeDirection s : FORGE_DIRECTIONS) {
             final IPart part = cableBusContainer.getPart(s);
@@ -73,12 +71,11 @@ public class CableRenderHelper {
                 final IPart part = cableBusContainer.getPart(s);
                 if (part != null) {
                     this.setSide(s);
-                    final BusRenderHelper brh = busRenderHelper;
                     final BusCollisionHelper bch = new BusCollisionHelper(
                             boxes,
-                            brh.getWorldX(),
-                            brh.getWorldY(),
-                            brh.getWorldZ(),
+                            busRenderHelper.getWorldX(),
+                            busRenderHelper.getWorldY(),
+                            busRenderHelper.getWorldZ(),
                             null,
                             true);
                     part.getBoxes(bch);
@@ -147,6 +144,7 @@ public class CableRenderHelper {
             renderer.setTexture(null);
             renderer.setCalculations(true);
         }
+        renderer.blockAccess = null;
     }
 
     private void setSide(final ForgeDirection s) {

@@ -79,7 +79,6 @@ public class RenderBlockCrank extends BaseBlockRender<BlockCrank, TileCrank> {
         tess.setTranslation(-tile.xCoord, -tile.yCoord, -tile.zCoord);
         tess.startDrawingQuads();
         renderBlocks.renderAllFaces = true;
-        renderBlocks.blockAccess = tile.getWorldObj();
 
         renderBlocks.setRenderBounds(0.5D - 0.05, 0.5D - 0.5, 0.5D - 0.05, 0.5D + 0.05, 0.5D + 0.1, 0.5D + 0.05);
 
