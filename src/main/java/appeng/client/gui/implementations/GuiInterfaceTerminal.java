@@ -82,7 +82,6 @@ import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
 import appeng.integration.modules.NEI;
 import appeng.items.misc.ItemEncodedPattern;
-import appeng.me.cluster.implementations.CraftingCPUCluster;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
@@ -978,12 +977,32 @@ public class GuiInterfaceTerminal extends AEBaseGui
         this.masterList.markDirty();
     }
 
+    private static String translateRawName(String rawName, String suffix) {
+        if (rawName == null || rawName.isEmpty()) return "";
+        String translatedName;
+        if (StatCollector.canTranslate(rawName)) {
+            translatedName = StatCollector.translateToLocal(rawName);
+        } else {
+            String fallback = rawName + ".name";
+            if (StatCollector.canTranslate(fallback)) {
+                translatedName = StatCollector.translateToLocal(fallback);
+            } else {
+                translatedName = StatCollector.translateToFallback(rawName);
+            }
+        }
+        if (suffix != null && !suffix.isEmpty()) {
+            return translatedName + suffix;
+        }
+        return translatedName;
+    }
+
     private void parsePacketCmd(PacketInterfaceTerminalUpdate.PacketEntry cmd) {
         long id = cmd.entryId;
         if (cmd instanceof PacketInterfaceTerminalUpdate.PacketAdd addCmd) {
             InterfaceTerminalEntry entry = new InterfaceTerminalEntry(
                     id,
                     addCmd.name,
+                    addCmd.suffix,
                     addCmd.rows,
                     addCmd.rowSize,
                     addCmd.numSlots,
@@ -1023,11 +1042,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             InterfaceTerminalEntry entry = masterList.list.get(id);
 
             if (entry != null) {
-                if (StatCollector.canTranslate(renameCmd.newName)) {
-                    entry.dispName = StatCollector.translateToLocal(renameCmd.newName);
-                } else {
-                    entry.dispName = StatCollector.translateToFallback(renameCmd.newName);
-                }
+                entry.dispName = translateRawName(renameCmd.newName, renameCmd.suffix);
             }
             masterList.isDirty = true;
         }
@@ -1447,10 +1462,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
         Boolean[] useSubstitute;
         private int hoveredSlotIdx = -1;
 
-        InterfaceTerminalEntry(long id, String name, int rows, int rowSize, int numSlots, boolean online,
+        InterfaceTerminalEntry(long id, String name, String suffix, int rows, int rowSize, int numSlots, boolean online,
                 boolean p2pOutput) {
             this.id = id;
-            this.dispName = CraftingCPUCluster.translateFromNetwork(name);
+            this.dispName = translateRawName(name, suffix);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
             this.rows = rows;
             this.rowSize = rowSize;

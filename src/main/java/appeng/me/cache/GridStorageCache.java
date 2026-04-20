@@ -13,12 +13,14 @@ package appeng.me.cache;
 import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.minecraft.item.ItemStack;
 
@@ -501,6 +503,10 @@ public class GridStorageCache implements IStorageGrid {
         if (map.computeIfPresent(newStack, (currentStack, stackCount) -> stackCount + 1) == null) {
             map.put(newStack, 1);
         }
+    }
+
+    public Set<ICellProvider> getActiveCellProviders() {
+        return Collections.unmodifiableSet(this.activeCellProviders);
     }
 
     private void resetCellInfo() {
