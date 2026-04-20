@@ -246,6 +246,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public int numSlots;
         public boolean online;
         public boolean p2pOutput;
+        public boolean isFluidInterface;
+        public int priority;
         public ItemStack selfRep, dispRep;
         public NBTTagList items;
 
@@ -264,6 +266,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             return this;
         }
 
+        public PacketAdd setFluidInterface(boolean isFluidInterface) {
+            this.isFluidInterface = isFluidInterface;
+            return this;
+        }
+
         public PacketAdd setLoc(int x, int y, int z, int dim, int side) {
             this.x = x;
             this.y = y;
@@ -278,6 +285,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.rowSize = rowSize;
             this.numSlots = numSlots;
             this.items = items;
+            return this;
+        }
+
+        public PacketAdd setPriority(int priority) {
+            this.priority = priority;
             return this;
         }
 
@@ -318,6 +330,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             buf.writeInt(numSlots);
             buf.writeBoolean(online);
             buf.writeBoolean(p2pOutput);
+            buf.writeBoolean(isFluidInterface);
 
             ByteBuf tempBuf = Unpooled.directBuffer(256);
             try {
@@ -329,6 +342,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     if (dispRep != null) {
                         wrapper.setTag("disp", dispRep.writeToNBT(new NBTTagCompound()));
                     }
+                    wrapper.setInteger("priority", priority);
                     wrapper.setTag("data", items);
                     CompressedStreamTools.writeCompressed(wrapper, stream);
                 }
@@ -356,6 +370,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.numSlots = buf.readInt();
             this.online = buf.readBoolean();
             this.p2pOutput = buf.readBoolean();
+            this.isFluidInterface = buf.readBoolean();
 
             int payloadSize = buf.readInt();
             try (ByteBufInputStream stream = new ByteBufInputStream(buf, payloadSize)) {
@@ -387,6 +402,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                 if (payload.hasKey("disp", NBT.TAG_COMPOUND)) {
                     this.dispRep = ItemStack.loadItemStackFromNBT(payload.getCompoundTag("disp"));
                 }
+                this.priority = payload.getInteger("priority");
                 this.items = payload.getTagList("data", NBT.TAG_COMPOUND);
             }
         }

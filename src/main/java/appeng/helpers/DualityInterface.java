@@ -556,6 +556,10 @@ public class DualityInterface implements IGridTickable, IStorageMonitorable, IIn
         return this.patterns;
     }
 
+    public boolean isFluidInterface() {
+        return this.isFluidInterface;
+    }
+
     public AppEngInternalInventory getUpgrades() {
         return this.upgrades;
     }

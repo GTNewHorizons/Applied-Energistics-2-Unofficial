@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 
 import appeng.api.networking.IGridHost;
+import appeng.helpers.IPriorityHost;
 
 /**
  * Replacement for {@code IInterfaceTerminalSupport} in API.
@@ -67,6 +68,26 @@ public interface IInterfaceViewable extends IGridHost {
 
     default boolean allowsPatternOptimization() {
         return true;
+    }
+
+    default boolean isFluidInterface() {
+        return false;
+    }
+
+    /**
+     * Returns the priority of this interface. Used for display in the Interface Terminal.
+     */
+    default int getPriority() {
+        if (this instanceof IPriorityHost ph) {
+            return ph.getPriority();
+        }
+
+        TileEntity te = getTileEntity();
+        if (te instanceof IPriorityHost ph) {
+            return ph.getPriority();
+        }
+
+        return 0;
     }
 
     /**

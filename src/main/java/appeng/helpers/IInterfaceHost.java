@@ -51,6 +51,11 @@ public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICr
     }
 
     @Override
+    default boolean isFluidInterface() {
+        return getInterfaceDuality().isFluidInterface();
+    }
+
+    @Override
     default String getName() {
         return getInterfaceDuality().getTermName();
     }

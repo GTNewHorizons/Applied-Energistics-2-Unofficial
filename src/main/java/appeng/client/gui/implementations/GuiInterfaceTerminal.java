@@ -35,6 +35,7 @@ import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -132,6 +133,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private int viewHeight;
     private final List<String> extraOptionsText;
     private ItemStack tooltipStack;
+    private List<String> pendingSectionTooltip;
+    private int pendingSectionTooltipX;
+    private int pendingSectionTooltipY;
     private final boolean neiPresent;
     protected static String searchFieldInputsText = "";
     protected static String searchFieldOutputsText = "";
@@ -340,6 +344,18 @@ public class GuiInterfaceTerminal extends AEBaseGui
         handleTooltip(mouseX, mouseY, searchFieldNames);
 
         super.drawScreen(mouseX, mouseY, btn);
+
+        if (pendingSectionTooltip != null) {
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+            drawHoveringText(pendingSectionTooltip, pendingSectionTooltipX, pendingSectionTooltipY, fontRendererObj);
+
+            GL11.glPopAttrib();
+            pendingSectionTooltip = null;
+        }
     }
 
     @Override
@@ -470,6 +486,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 (int) (this.viewHeight * guiScaleY));
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
+        pendingSectionTooltip = null;
+
         /*
          * Render each section
          */
@@ -576,6 +594,30 @@ public class GuiInterfaceTerminal extends AEBaseGui
         return s.replaceAll(".", "\u00a7$0");
     }
 
+    private void drawSectionIcon(ItemStack icon, int x, float y) {
+        AEItemStack aeIcon = AEItemStack.create(icon);
+        if (aeIcon == null) {
+            return;
+        }
+
+        GL11.glPushMatrix();
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+        GL11.glTranslatef(x, y, ITEM_STACK_OVERLAY_Z + ITEM_STACK_Z + STEP_Z);
+        GL11.glScalef(0.625f, 0.625f, 1.0f);
+
+        RenderHelper.enableGUIStandardItemLighting();
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+
+        aeIcon.drawInGui(mc, 0, 0);
+
+        GL11.glPopAttrib();
+        GL11.glPopMatrix();
+
+        bindTexture(BACKGROUND);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
     /**
      * Render the section (if it is visible)
      *
@@ -588,6 +630,16 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private int drawSection(InterfaceSection section, int viewY, int relMouseX, int relMouseY) {
         int renderY = 0;
         final int fontColor = GuiColors.InterfaceTerminalInventory.getColor();
+
+        ItemStack sectionIcon = null;
+        for (InterfaceTerminalEntry e : section.entries) {
+            if (e.selfRep != null) {
+                sectionIcon = e.selfRep;
+                break;
+            }
+        }
+
+        final int textXFirst = sectionIcon != null ? 14 : 2;
         List<String> titleLines = breakText(section.name, VIEW_WIDTH - 4);
 
         int actualTitleHeight = Math
@@ -610,6 +662,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 renderY += entryHeight;
             }
         }
+
         /*
          * Render title
          */
@@ -618,7 +671,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
         GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z + ITEM_STACK_Z + STEP_Z);
 
         if (viewY < viewHeight && viewY + actualTitleHeight > 0) {
-            // Draw background: one TITLE_HEIGHT block per line
             for (int i = 0; i < titleLines.size(); i++) {
                 int lineY = viewY + (i * InterfaceSection.TITLE_HEIGHT);
                 if (lineY + InterfaceSection.TITLE_HEIGHT > 0 && lineY < viewHeight) {
@@ -635,13 +687,41 @@ public class GuiInterfaceTerminal extends AEBaseGui
             for (int i = 0; i < titleLines.size(); i++) {
                 int textY = viewY + 2 + (i * InterfaceSection.TITLE_HEIGHT);
                 if (textY + 9 > 0 && textY < viewHeight) {
-                    fontRendererObj.drawString(titleLines.get(i), 2, textY, fontColor);
+                    fontRendererObj.drawString(titleLines.get(i), i == 0 ? textXFirst : 2, textY, fontColor);
                 }
             }
         }
 
         GL11.glPopMatrix();
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        if (sectionIcon != null && viewY + InterfaceSection.TITLE_HEIGHT > 0 && viewY < viewHeight) {
+            int iconX = 1;
+            float iconY = viewY + 0.5f;
+            drawSectionIcon(sectionIcon, iconX, iconY);
+
+            if (relMouseX >= iconX && relMouseX < iconX + 10 && relMouseY >= iconY && relMouseY < iconY + 10) {
+                List<String> tooltip = new ArrayList<>();
+                tooltip.add(sectionIcon.getDisplayName());
+
+                int priority = section.entries.get(0).priority;
+                tooltip.add(
+                        EnumChatFormatting.GRAY + StatCollector.translateToLocal("gui.appliedenergistics2.Priority")
+                                + ": "
+                                + priority);
+
+                if (section.entries.size() > 1) {
+                    tooltip.add(
+                            EnumChatFormatting.GRAY + StatCollector.translateToLocal("gui.appliedenergistics2.Group")
+                                    + ": "
+                                    + section.entries.size());
+                }
+
+                pendingSectionTooltip = tooltip;
+                pendingSectionTooltipX = relMouseX + guiLeft + VIEW_LEFT;
+                pendingSectionTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+            }
+        }
 
         return actualTitleHeight + renderY;
     }
@@ -760,6 +840,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         } else if (entry.filteredRecipes[slotIdx]) {
                             GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayUnpowered.getColor());
+                        } else if (!entry.isFluidInterface && patternContainsFluids(stack)) {
+                            GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
+                            drawRect(0, 0, 16, 16, 0x66FF0000);
                         }
                     } else {
                         tooltipStack = stack;
@@ -1007,7 +1090,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.rowSize,
                     addCmd.numSlots,
                     addCmd.online,
-                    addCmd.p2pOutput).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
+                    addCmd.p2pOutput,
+                    addCmd.isFluidInterface,
+                    addCmd.priority).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1155,6 +1240,21 @@ public class GuiInterfaceTerminal extends AEBaseGui
         } else if (searchFieldNames.isMouseIn(mousex, mousey)) {
             searchFieldNames.setText(displayName);
         }
+    }
+
+    private static boolean patternContainsFluids(final ItemStack stack) {
+        if (stack == null || stack.getTagCompound() == null) return false;
+        final NBTTagCompound nbt = stack.getTagCompound();
+        if (nbt.getBoolean("InvalidPattern")) return false;
+        return tagListHasFluids(nbt.getTagList("in", NBT.TAG_COMPOUND))
+                || tagListHasFluids(nbt.getTagList("out", NBT.TAG_COMPOUND));
+    }
+
+    private static boolean tagListHasFluids(final NBTTagList tagList) {
+        for (int i = 0; i < tagList.tagCount(); i++) {
+            if (tagList.getCompoundTagAt(i).hasKey("FluidName")) return true;
+        }
+        return false;
     }
 
     /**
@@ -1453,8 +1553,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int numSlots;
         int guiHeight;
         int dispY = -9999;
+        int priority;
         boolean online;
         boolean p2pOutput;
+        boolean isFluidInterface;
         private Boolean[] brokenRecipes;
         int numItems = 0;
         /** Should recipe be filtered out/grayed out? */
@@ -1463,7 +1565,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         private int hoveredSlotIdx = -1;
 
         InterfaceTerminalEntry(long id, String name, String suffix, int rows, int rowSize, int numSlots, boolean online,
-                boolean p2pOutput) {
+                boolean p2pOutput, boolean isFluidInterface, int priority) {
             this.id = id;
             this.dispName = translateRawName(name, suffix);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
@@ -1472,6 +1574,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.numSlots = numSlots;
             this.online = online;
             this.p2pOutput = p2pOutput;
+            this.isFluidInterface = isFluidInterface;
+            this.priority = priority;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
             this.guiHeight = 18 * rows + 1;

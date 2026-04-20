@@ -12,6 +12,11 @@ package appeng.client.gui.implementations;
 
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.common.util.Constants.NBT;
 
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -235,6 +240,32 @@ public class GuiInterface extends GuiUpgradeable {
                 this.drawTexturedModalRect(offsetX + 7, offsetY + 125 - (18 * i), 7, 107, 162, 18);
             }
         }
+
+        // highlight pattern slots containing fluid patterns in a non-fluid interface
+        if (!((ContainerInterface) this.cvb).isFluidInterface()) {
+            for (final Object obj : this.cvb.inventorySlots) {
+                if (obj instanceof Slot slot && patternContainsFluids(slot.getStack())) {
+                    final int sx = offsetX + slot.xDisplayPosition;
+                    final int sy = offsetY + slot.yDisplayPosition;
+                    drawRect(sx, sy, sx + 16, sy + 16, 0x66FF0000);
+                }
+            }
+        }
+    }
+
+    private static boolean patternContainsFluids(final ItemStack stack) {
+        if (stack == null || stack.getTagCompound() == null) return false;
+        final NBTTagCompound nbt = stack.getTagCompound();
+        if (nbt.getBoolean("InvalidPattern")) return false;
+        return tagListHasFluids(nbt.getTagList("in", NBT.TAG_COMPOUND))
+                || tagListHasFluids(nbt.getTagList("out", NBT.TAG_COMPOUND));
+    }
+
+    private static boolean tagListHasFluids(final NBTTagList tagList) {
+        for (int i = 0; i < tagList.tagCount(); i++) {
+            if (tagList.getCompoundTagAt(i).hasKey("FluidName")) return true;
+        }
+        return false;
     }
 
     @Override

@@ -83,6 +83,9 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     @GuiSync(18)
     public boolean isConfigEmpty;
 
+    @GuiSync(19)
+    public boolean isFluidInterface = false;
+
     public ContainerInterface(final InventoryPlayer ip, final IInterfaceHost te) {
         super(ip, te.getInterfaceDuality().getHost());
 
@@ -147,6 +150,8 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 
         if (configSlots != getConfigSlotsEnabled()) configSlots = getConfigSlotsEnabled();
         isConfigEmpty = configSlots == -1;
+
+        this.isFluidInterface = myDuality.isFluidInterface();
 
         final ArrayList<ItemStack> drops = getRemovedPatterns();
         if (!drops.isEmpty()) {
@@ -287,6 +292,10 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 
     public void setFuzzyMode(FuzzyMode mode) {
         this.fuzzyMode = mode;
+    }
+
+    public boolean isFluidInterface() {
+        return this.isFluidInterface;
     }
 
     public int getPatternCapacityCardsInstalled() {

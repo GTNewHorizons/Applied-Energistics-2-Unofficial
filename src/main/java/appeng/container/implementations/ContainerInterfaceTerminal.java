@@ -343,7 +343,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                             .setLoc(entry.x, entry.y, entry.z, entry.dim, entry.side.ordinal())
                             .setItems(entry.rows, entry.rowSize, entry.numSlots, entry.invNbt)
                             .setReps(machine.getSelfRep(), machine.getDisplayRep())
-                            .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput());
+                            .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput())
+                            .setFluidInterface(entry.isFluidInterface).setPriority(entry.priority);
                     tracked.put(machine, entry);
                     trackedById.put(entry.id, entry);
                     visited.add(machine);
@@ -394,8 +395,10 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         private final int y;
         private final int z;
         private final int dim;
+        private final int priority;
         private final ForgeDirection side;
         private boolean online;
+        private final boolean isFluidInterface;
         private NBTTagList invNbt;
 
         InvTracker(long id, IInterfaceViewable machine, boolean online) {
@@ -415,6 +418,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             this.dim = location.getDimension();
             this.side = machine instanceof AEBasePart hasSide ? hasSide.getSide() : ForgeDirection.UNKNOWN;
             this.online = online;
+            this.isFluidInterface = machine.isFluidInterface();
+            this.priority = machine.getPriority();
             this.invNbt = new NBTTagList();
             updateNBT();
         }
