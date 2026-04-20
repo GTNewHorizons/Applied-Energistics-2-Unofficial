@@ -13,10 +13,7 @@ public interface IInterfaceNameProvider {
      * Returns a suffix string to append to the ME Interface's display name, or {@code null} if no suffix should be
      * shown.
      *
-     * <p>
-     * The returned string will be appended as-is (e.g. {@code " [24]"}). The ME Interface is responsible for
-     * deduplication/replacement of an existing bracket suffix.
-     * </p>
+     * The returned string will be appended as-is (e.g. {@code " [24]"}).
      *
      * @return suffix string or {@code null}
      */
