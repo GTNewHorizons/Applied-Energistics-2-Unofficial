@@ -102,7 +102,6 @@ public class CraftingGridCache
     private static final ExecutorService CRAFTING_POOL;
     private static final Comparator<ICraftingPatternDetails> COMPARATOR = (firstDetail,
             nextDetail) -> nextDetail.getPriority() - firstDetail.getPriority();
-
     static {
         final ThreadFactory factory = ar -> new Thread(ar, "AE Crafting Calculator");
 
@@ -155,8 +154,17 @@ public class CraftingGridCache
         this.craftingLinks.values().removeIf(craftingLinkNexus -> craftingLinkNexus.isDead(this.grid, this));
 
         for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
-            cpu.tryExtractItems();
-            cpu.updateCraftingLogic(this.grid, this.energyGrid, this);
+            if (!cpu.isMissingMode()) {
+                cpu.tryExtractItems();
+                cpu.updateCraftingLogic(this.grid, this.energyGrid, this);
+            }
+        }
+
+        for (final CraftingCPUCluster cpu : this.craftingCPUClusters) {
+            if (cpu.isMissingMode()) {
+                cpu.tryExtractItems();
+                cpu.updateCraftingLogic(this.grid, this.energyGrid, this);
+            }
         }
     }
 
@@ -575,6 +583,16 @@ public class CraftingGridCache
         return submitJob(job, requestingMachine, target, prioritizePower, src, false);
     }
 
+    public ICraftingLink submitJob(final ICraftingJob job, final ICraftingRequester requestingMachine,
+            final ICraftingCPU target, final boolean prioritizePower, final BaseActionSource src,
+            final boolean followCraft, final boolean allowSimulation) {
+        if (job.isSimulation() && !allowSimulation) {
+            return null;
+        }
+
+        return submitJobInternal(job, requestingMachine, target, prioritizePower, src, followCraft);
+    }
+
     @Override
     public ICraftingLink submitJob(final ICraftingJob job, final ICraftingRequester requestingMachine,
             final ICraftingCPU target, final boolean prioritizePower, final BaseActionSource src,
@@ -583,6 +601,12 @@ public class CraftingGridCache
             return null;
         }
 
+        return submitJobInternal(job, requestingMachine, target, prioritizePower, src, followCraft);
+    }
+
+    private ICraftingLink submitJobInternal(final ICraftingJob job, final ICraftingRequester requestingMachine,
+            final ICraftingCPU target, final boolean prioritizePower, final BaseActionSource src,
+            final boolean followCraft) {
         CraftingCPUCluster cpuCluster = null;
 
         if (target instanceof CraftingCPUCluster) {

@@ -984,6 +984,24 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         }
     }
 
+    private void mirrorMissingIntoWaitingFor(final IItemList<IAEStack<?>> previousMissing) {
+        for (final IAEStack<?> missing : this.waitingForMissing) {
+            long previousAmount = 0;
+            if (previousMissing != null) {
+                final IAEStack<?> previous = previousMissing.findPrecise(missing);
+                if (previous != null) {
+                    previousAmount = previous.getStackSize();
+                }
+            }
+
+            if (missing.getStackSize() > previousAmount) {
+                final IAEStack<?> delta = missing.copy();
+                delta.setStackSize(missing.getStackSize() - previousAmount);
+                this.waitingFor.add(delta);
+            }
+        }
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void storeItems() {
         final IGrid g = this.getGrid();
@@ -1045,7 +1063,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.providers.clear();
         final IStorageGrid sg = g.getCache(IStorageGrid.class);
         final MECraftingInventory ci = new MECraftingInventory(sg, true, false, false);
-        this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
+        this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING || job.isSimulation();
         ci.setMissingMode(this.isMissingMode);
         ci.setCpuInventory(this.inventory);
 
@@ -1075,9 +1093,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     for (IAEStack<?> fte : ci.getExtractFailedList()) {
                         this.waitingForMissing.add(fte);
                     }
-                    for (IAEStack<?> wfm : this.waitingForMissing) {
-                        this.waitingFor.add(wfm);
-                    }
+                    this.mirrorMissingIntoWaitingFor(null);
                     this.markDirty();
 
                     this.updateCPU();
@@ -1176,11 +1192,15 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             if (ci.commit(src)) {
                 this.finalOutput.merge(job.getOutput());
                 this.usedStorage += job.getByteTotal();
-                this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING;
+                this.isMissingMode = job.getCraftingMode() == CraftingMode.IGNORE_MISSING || job.isSimulation();
                 this.currentJobSource = src;
                 if (src.isPlayer() && src instanceof PlayerSource ps) {
                     this.sourcePlayer = ps.player.getCommandSenderName();
                 }
+                for (IAEStack<?> fte : ci.getExtractFailedList()) {
+                    this.waitingForMissing.add(fte);
+                }
+                this.mirrorMissingIntoWaitingFor(backupWaitingForMissing);
 
                 this.prepareStepCount();
                 this.markDirty();
