@@ -105,7 +105,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
     public static final int HEADER_HEIGHT = 52;
     public static final int INV_HEIGHT = 98;
-    public static final int VIEW_WIDTH = 174;
+    public static final int VIEW_WIDTH = 176;
     public static final int VIEW_LEFT = 10;
     protected static final ResourceLocation BACKGROUND = new ResourceLocation(
             AppEng.MOD_ID,
@@ -159,7 +159,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         super(cont);
 
         this.setScrollBar(new GuiScrollbar());
-        this.xSize = 208;
+        this.xSize = 209;
         this.ySize = 255;
         this.neiPresent = Loader.isModLoaded("NotEnoughItems");
 
