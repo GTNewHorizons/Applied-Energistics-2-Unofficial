@@ -169,7 +169,6 @@ public class CableBusPart extends JCuboidPart implements JNormalOcclusion, IMask
             final RenderBlocksWorkaround rb = BusRenderer.INSTANCE.getRenderer();
             helper.setPass(pass);
             rb.renderAllFaces = true;
-            rb.blockAccess = this.world();
             rb.overrideBlockTexture = null;
             this.getCableBus().renderStatic(pos.x, pos.y, pos.z);
             return helper.getItemsRendered() > 0;

@@ -31,6 +31,7 @@ import appeng.block.crafting.BlockMolecularAssembler;
 import appeng.client.render.BaseBlockRender;
 import appeng.client.render.BusRenderHelper;
 import appeng.client.render.BusRenderer;
+import appeng.client.render.RenderBlocksWorkaround;
 import appeng.client.texture.ExtraBlockTextures;
 import appeng.client.texture.TaughtIcon;
 import appeng.parts.networking.PartCable;
@@ -126,75 +127,77 @@ public class RenderBlockAssembler extends BaseBlockRender<BlockMolecularAssemble
             return false;
         }
 
-        BusRenderer.INSTANCE.getRenderer().blockAccess = renderer.blockAccess;
-        renderer = BusRenderer.INSTANCE.getRenderer();
+        final RenderBlocksWorkaround rbw = BusRenderer.INSTANCE.getRenderer();
+        rbw.blockAccess = renderer.blockAccess;
 
-        this.preRenderInWorld(maBlock, world, x, y, z, renderer);
+        this.preRenderInWorld(maBlock, world, x, y, z, rbw);
 
         tma.setLightCache(BusRenderHelper.instances.get().useSimplifiedRendering(x, y, z, this, tma.getLightCache()));
 
-        BusRenderer.INSTANCE.getRenderer().setFacade(true);
+        rbw.setFacade(true);
         final IOrientable te = this.getOrientable(maBlock, world, x, y, z);
 
         final ForgeDirection fdy = te.getUp();
         final ForgeDirection fdz = te.getForward();
         final ForgeDirection fdx = Platform.crossProduct(fdz, fdy).getOpposite();
 
-        renderer.renderAllFaces = true;
+        rbw.renderAllFaces = true;
 
-        this.renderCableAt(0.11D, world, x, y, z, maBlock, renderer, 0.141D, false);
-        this.renderCableAt(0.188D, world, x, y, z, maBlock, renderer, 0.1875D, true);
+        this.renderCableAt(0.11D, world, x, y, z, maBlock, rbw, 0.141D, false);
+        this.renderCableAt(0.188D, world, x, y, z, maBlock, rbw, 0.1875D, true);
 
         maBlock.getRendererInstance().setTemporaryRenderIcon(maBlock.getIcon(0, 0));
 
-        this.renderBlockBounds(renderer, 2, 14, 0, 14, 16, 2, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 2, 14, 0, 14, 16, 2, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 0, 14, 2, 2, 16, 14, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 0, 14, 2, 2, 16, 14, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 2, 0, 14, 14, 2, 16, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 2, 0, 14, 14, 2, 16, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 14, 0, 2, 16, 2, 14, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 14, 0, 2, 16, 2, 14, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
         // sides...
-        this.renderBlockBounds(renderer, 0, 0, 0, 16, 2, 2, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 0, 0, 0, 16, 2, 2, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 0, 2, 0, 2, 16, 2, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 0, 2, 0, 2, 16, 2, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 0, 0, 2, 2, 2, 16, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 0, 0, 2, 2, 2, 16, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 0, 14, 14, 16, 16, 16, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 0, 14, 14, 16, 16, 16, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 14, 0, 14, 16, 14, 16, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 14, 0, 14, 16, 14, 16, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 14, 14, 0, 16, 16, 14, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 14, 14, 0, 16, 16, 14, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 14, 2, 0, 16, 14, 2, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 14, 2, 0, 16, 14, 2, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 0, 2, 14, 2, 14, 16, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 0, 2, 14, 2, 14, 16, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
-        this.renderBlockBounds(renderer, 1, 1, 1, 15, 15, 15, fdx, fdy, fdz);
-        renderer.renderStandardBlock(maBlock, x, y, z);
+        this.renderBlockBounds(rbw, 1, 1, 1, 15, 15, 15, fdx, fdy, fdz);
+        rbw.renderStandardBlock(maBlock, x, y, z);
 
         BusRenderHelper.instances.get().normalRendering();
 
         maBlock.getRendererInstance().setTemporaryRenderIcon(null);
 
-        renderer.renderAllFaces = false;
-        BusRenderer.INSTANCE.getRenderer().setFacade(false);
+        rbw.renderAllFaces = false;
+        rbw.setFacade(false);
 
-        this.postRenderInWorld(renderer);
+        this.postRenderInWorld(rbw);
+
+        rbw.blockAccess = null;
 
         return true;
     }
