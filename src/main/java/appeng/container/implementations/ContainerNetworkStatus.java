@@ -40,10 +40,12 @@ import appeng.api.util.NamedDimensionalCoord;
 import appeng.container.AEBaseContainer;
 import appeng.container.guisync.GuiSync;
 import appeng.core.AEConfig;
+import appeng.core.sync.GuiBridge;
 import appeng.core.sync.network.NetworkHandler;
 import appeng.core.sync.packets.PacketMEInventoryUpdate;
 import appeng.helpers.ICustomNameObject;
 import appeng.me.cache.GridStorageCache;
+import appeng.tile.misc.TileStorageReshuffle;
 import appeng.util.Platform;
 import appeng.util.item.AEItemStack;
 
@@ -144,6 +146,9 @@ public class ContainerNetworkStatus extends AEBaseContainer {
 
     @GuiSync(31)
     public boolean powerInfinite;
+
+    @GuiSync(32)
+    public boolean reshufflePresent;
 
     private IGrid network;
     private int delay = 40;
@@ -293,8 +298,21 @@ public class ContainerNetworkStatus extends AEBaseContainer {
                 this.essentiaTypesUsed = sg.getEssentiaTypesUsed();
                 this.essentiaTypesTotal = sg.getEssentiaTypesTotal();
             }
+
+            this.reshufflePresent = this.network.getMachines(TileStorageReshuffle.class).iterator().hasNext();
         }
         super.detectAndSendChanges();
+    }
+
+    public void openReshuffle(final EntityPlayer player) {
+        if (this.network == null) return;
+        for (final IGridNode node : this.network.getMachines(TileStorageReshuffle.class)) {
+            final TileStorageReshuffle tile = (TileStorageReshuffle) node.getMachine();
+            if (tile.getProxy().isActive()) {
+                Platform.openGUI(player, tile, ForgeDirection.UNKNOWN, GuiBridge.GUI_STORAGE_RESHUFFLE);
+                return;
+            }
+        }
     }
 
     public void setConsume(boolean isConsume) {

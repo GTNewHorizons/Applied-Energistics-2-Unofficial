@@ -16,8 +16,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
@@ -26,7 +24,6 @@ import appeng.api.config.FuzzyMode;
 import appeng.api.config.Settings;
 import appeng.api.util.IConfigManager;
 import appeng.api.util.IConfigurableObject;
-import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.container.AEBaseContainer;
 import appeng.container.PrimaryGui;
 import appeng.container.implementations.ContainerCellRestriction;
@@ -36,6 +33,7 @@ import appeng.container.implementations.ContainerCraftingCPU;
 import appeng.container.implementations.ContainerInterface;
 import appeng.container.implementations.ContainerLevelEmitter;
 import appeng.container.implementations.ContainerMEMonitorable;
+import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.container.implementations.ContainerNetworkTool;
 import appeng.container.implementations.ContainerOreFilter;
 import appeng.container.implementations.ContainerPatternTerm;
@@ -45,6 +43,7 @@ import appeng.container.implementations.ContainerQuartzKnife;
 import appeng.container.implementations.ContainerRenamer;
 import appeng.container.implementations.ContainerSecurity;
 import appeng.container.implementations.ContainerStorageBus;
+import appeng.container.implementations.ContainerStorageReshuffle;
 import appeng.container.interfaces.ICraftingCPUSelectorContainer;
 import appeng.core.sync.AppEngPacket;
 import appeng.core.sync.network.INetworkInfo;
@@ -98,22 +97,30 @@ public class PacketValueConfig extends AppEngPacket {
         } else if (this.Name.equals("CPUTable.Cpu.Set") && c instanceof final ICraftingCPUSelectorContainer qk) {
             qk.selectCPU(Integer.parseInt(this.Value));
         } else if (this.Name.equals("Terminal.StartWithFollow") && c instanceof final ContainerCraftConfirm qk) {
-        	qk.startJob(true);
+            qk.startJob(true);
         } else if (this.Name.equals("Terminal.Start") && c instanceof final ContainerCraftConfirm qk) {
-        	qk.startJob();
-        } else if(this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk) {
+            qk.startJob();
+        } else if (this.Name.equals("Terminal.OptimizePatterns") && c instanceof final ContainerCraftConfirm qk) {
             qk.optimizePatterns();
         } else if (this.Name.equals("Terminal.UpdateViewCell") && c instanceof final ContainerMEMonitorable qk) {
             qk.toggleViewCell(Integer.parseInt(this.Value));
-        } else if(this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk){
+        } else if (this.Name.startsWith("Reshuffle.") && c instanceof final ContainerStorageReshuffle qk) {
+            switch (this.Name) {
+                case "Reshuffle.TypeFilter" -> qk.toggleTypeFilter(this.Value);
+                case "Reshuffle.Start" -> qk.startReshuffle();
+                case "Reshuffle.Cancel" -> qk.cancelReshuffle();
+                case "Reshuffle.Scan" -> qk.performNetworkScan();
+                case "Reshuffle.View" -> qk.setView(this.Value);
+            }
+        } else if (this.Name.equals("Interface.DoublePatterns") && c instanceof final ContainerInterface qk) {
             qk.doublePatterns(Integer.parseInt(this.Value));
-        } else if(this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPU qk) {
-        	switch(this.Name) {
-        	case "TileCrafting.Cancel" -> qk.cancelCrafting();
-            case "TileCrafting.Suspend" -> qk.suspendCrafting();
-        	case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
-        	case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
-        	}
+        } else if (this.Name.startsWith("TileCrafting.") && c instanceof final ContainerCraftingCPU qk) {
+            switch (this.Name) {
+                case "TileCrafting.Cancel" -> qk.cancelCrafting();
+                case "TileCrafting.Suspend" -> qk.suspendCrafting();
+                case "TileCrafting.Follow" -> qk.togglePlayerFollowStatus(this.Value);
+                case "TileCrafting.Allow" -> qk.changeAllowMode(this.Value);
+            }
         } else if (this.Name.equals("QuartzKnife.Name") && c instanceof final ContainerQuartzKnife qk) {
             qk.setName(this.Value);
         } else if (this.Name.equals("QuartzKnife.ReName") && c instanceof final ContainerRenamer qk) {
@@ -177,6 +184,9 @@ public class PacketValueConfig extends AppEngPacket {
             if (this.Name.equals("NetworkTool") && this.Value.equals("Toggle")) {
                 ((ContainerNetworkTool) c).toggleFacadeMode();
             }
+        } else if (this.Name.equals("NetworkStatus") && this.Value.equals("OpenReshuffle")
+                && c instanceof ContainerNetworkStatus cns) {
+            cns.openReshuffle(player);
         } else if (c instanceof IConfigurableObject) {
             final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 
@@ -202,11 +212,6 @@ public class PacketValueConfig extends AppEngPacket {
 
         if (this.Name.equals("CustomName") && c instanceof AEBaseContainer) {
             ((AEBaseContainer) c).setCustomName(this.Value);
-        } else if (this.Name.equals("CraftingStatus") && this.Value.equals("Clear")) {
-            final GuiScreen gs = Minecraft.getMinecraft().currentScreen;
-            if (gs instanceof GuiCraftingCPU) {
-                ((GuiCraftingCPU) gs).clearItems();
-            }
         } else if (c instanceof IConfigurableObject) {
             final IConfigManager cm = ((IConfigurableObject) c).getConfigManager();
 
@@ -225,4 +230,5 @@ public class PacketValueConfig extends AppEngPacket {
             }
         }
     }
+
 }
