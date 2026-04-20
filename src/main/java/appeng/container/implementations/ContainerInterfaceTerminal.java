@@ -286,12 +286,14 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     InvTracker known = tracked.get(machine);
 
                     /* Name changed? */
-                    String name = machine.getName();
+                    String rawName = machine.getRawName();
+                    String suffix = machine.getNameSuffix();
 
-                    if (!Objects.equals(known.name, name)) {
+                    if (!Objects.equals(known.name, rawName) || !Objects.equals(known.suffix, suffix)) {
                         if (update == null) update = new PacketInterfaceTerminalUpdate();
-                        update.addRenamedEntry(known.id, name);
-                        known.name = name;
+                        update.addRenamedEntry(known.id, rawName, suffix);
+                        known.name = rawName;
+                        known.suffix = suffix;
                     }
 
                     /* Status changed? */
@@ -337,7 +339,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                     /* Add a new entry */
                     if (update == null) update = new PacketInterfaceTerminalUpdate();
                     InvTracker entry = new InvTracker(nextId++, machine, node.isActive());
-                    update.addNewEntry(entry.id, entry.name, entry.online)
+                    update.addNewEntry(entry.id, entry.name, entry.online).setSuffix(entry.suffix)
                             .setLoc(entry.x, entry.y, entry.z, entry.dim, entry.side.ordinal())
                             .setItems(entry.rows, entry.rowSize, entry.numSlots, entry.invNbt)
                             .setReps(machine.getSelfRep(), machine.getDisplayRep())
@@ -383,6 +385,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         private final long id;
         private boolean shouldDisplay;
         private String name;
+        private String suffix;
         private final IInventory patterns;
         private int rows;
         private int rowSize;
@@ -400,7 +403,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
 
             this.id = id;
             this.shouldDisplay = machine.shouldDisplay();
-            this.name = machine.getName();
+            this.name = machine.getRawName();
+            this.suffix = machine.getNameSuffix();
             this.patterns = machine.getPatterns();
             this.rowSize = machine.rowSize();
             this.rows = machine.rows();

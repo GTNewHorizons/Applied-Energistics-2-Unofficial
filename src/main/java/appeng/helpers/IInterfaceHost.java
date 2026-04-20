@@ -55,6 +55,22 @@ public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICr
         return getInterfaceDuality().getTermName();
     }
 
+    /**
+     * Raw (untranslated) name for sending to client.
+     */
+    @Override
+    default String getRawName() {
+        return getInterfaceDuality().getRawTermName();
+    }
+
+    /**
+     * Optional suffix to append after translation on client.
+     */
+    @Override
+    default String getNameSuffix() {
+        return getInterfaceDuality().getAdjacentNameSuffix();
+    }
+
     @Override
     default int rows() {
         return getInterfaceDuality().getInstalledUpgrades(Upgrades.PATTERN_CAPACITY) + 1;
