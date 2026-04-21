@@ -157,8 +157,6 @@ public class GuiMEMonitorable extends AEBaseGui
     @Nullable
     protected Reference2BooleanMap<IAEStackType<?>> typeFilters;
 
-    private final ITerminalHost host;
-
     public GuiMEMonitorable(final InventoryPlayer inventoryPlayer, final ITerminalHost te) {
         this(inventoryPlayer, te, new ContainerMEMonitorable(inventoryPlayer, te));
     }
@@ -171,7 +169,6 @@ public class GuiMEMonitorable extends AEBaseGui
         final GuiScrollbar scrollbar = new GuiScrollbar();
         this.setScrollBar(scrollbar);
         this.repo = new ItemRepo(scrollbar, this);
-        this.host = te;
 
         this.xSize = 195;
         this.ySize = 204;
@@ -204,7 +201,7 @@ public class GuiMEMonitorable extends AEBaseGui
 
         NEI.searchField.putFormatter(this.searchField);
 
-        if (this.host instanceof ITerminalTypeFilterProvider) {
+        if (te instanceof ITerminalTypeFilterProvider) {
             this.typeFilters = MonitorableTypeFilter.createDefaultMap();
         }
     }
