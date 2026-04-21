@@ -28,6 +28,7 @@ import appeng.api.config.LockCraftingMode;
 import appeng.api.config.Settings;
 import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.widgets.GuiImgButton;
 import appeng.client.gui.widgets.GuiSimpleImgButton;
 import appeng.client.gui.widgets.GuiTabButton;
@@ -241,32 +242,39 @@ public class GuiInterface extends GuiUpgradeable {
             }
         }
 
-        // highlight pattern slots containing fluid patterns in a non-fluid interface
-        if (!((ContainerInterface) this.cvb).isFluidInterface()) {
-            for (final Object obj : this.cvb.inventorySlots) {
-                if (obj instanceof Slot slot && patternContainsFluids(slot.getStack())) {
-                    final int sx = offsetX + slot.xDisplayPosition;
-                    final int sy = offsetY + slot.yDisplayPosition;
-                    drawRect(sx, sy, sx + 16, sy + 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
-                }
+        // highlight pattern slots with unsupported stack types
+        for (final Object obj : this.cvb.inventorySlots) {
+            if (obj instanceof Slot slot && hasInvalidTypeStack(slot.getStack())) {
+                final int sx = offsetX + slot.xDisplayPosition;
+                final int sy = offsetY + slot.yDisplayPosition;
+                drawRect(sx, sy, sx + 16, sy + 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
             }
         }
     }
 
-    private static boolean patternContainsFluids(final ItemStack stack) {
+    private boolean hasInvalidTypeStack(final ItemStack stack) {
         if (stack == null || stack.getTagCompound() == null) return false;
         final NBTTagCompound nbt = stack.getTagCompound();
         if (nbt.getBoolean("InvalidPattern")) return false;
-        return tagListHasFluids(nbt.getTagList("in", NBT.TAG_COMPOUND))
-                || tagListHasFluids(nbt.getTagList("out", NBT.TAG_COMPOUND));
+        IAEStackType<?>[] supportedTypes = ((ContainerInterface) this.cvb).getSupportedStackTypes();
+        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes)
+                || hasInvalidTypeInTagList(nbt.getTagList("out", NBT.TAG_COMPOUND), supportedTypes);
     }
 
-    private static boolean tagListHasFluids(final NBTTagList tagList) {
-        for (int i = 0; i < tagList.tagCount(); i++) {
+    private static boolean hasInvalidTypeInTagList(final NBTTagList tagList, IAEStackType<?>[] supportedTypes) {
+        outer: for (int i = 0; i < tagList.tagCount(); i++) {
             final NBTTagCompound entry = tagList.getCompoundTagAt(i);
+            // Legacy fluid check: patterns created before native liquid support lack StackType
             if (entry.hasKey("FluidName")) return true;
-            // StackType byte: 2 = fluid (older patterns may lack this key)
-            if (entry.hasKey("StackType") && entry.getByte("StackType") == 2) return true;
+
+            if (entry.hasKey("StackType")) {
+                for (IAEStackType<?> type : supportedTypes) {
+                    if (entry.getString("StackType").equals(type.getId())) {
+                        continue outer;
+                    }
+                }
+                return true;
+            }
         }
         return false;
     }

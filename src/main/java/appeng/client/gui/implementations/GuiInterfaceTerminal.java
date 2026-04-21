@@ -1253,9 +1253,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private static boolean tagListHasFluids(final NBTTagList tagList) {
         for (int i = 0; i < tagList.tagCount(); i++) {
             final NBTTagCompound entry = tagList.getCompoundTagAt(i);
+            // Legacy fluid check: patterns created before native liquid support lack StackType
             if (entry.hasKey("FluidName")) return true;
-            // StackType byte: 2 = fluid (older patterns may lack this key)
-            if (entry.hasKey("StackType") && entry.getByte("StackType") == 2) return true;
+            // StackType is a string id; "fluid" means a fluid stack
+            if (entry.hasKey("StackType") && "fluid".equals(entry.getString("StackType"))) return true;
         }
         return false;
     }

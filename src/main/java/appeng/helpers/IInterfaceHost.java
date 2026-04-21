@@ -56,7 +56,7 @@ public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICr
 
     @Override
     default IAEStackType<?>[] getSupportedStackTypes() {
-        return getInterfaceDuality().isFluidInterface() ? new IAEStackType<?>[] { FLUID_STACK_TYPE }
+        return getInterfaceDuality().isFluidInterface() ? new IAEStackType<?>[] { ITEM_STACK_TYPE, FLUID_STACK_TYPE }
                 : new IAEStackType<?>[] { ITEM_STACK_TYPE };
     }
 

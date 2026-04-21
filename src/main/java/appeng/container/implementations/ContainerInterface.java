@@ -34,10 +34,13 @@ import appeng.container.slot.OptionalSlotFake;
 import appeng.container.slot.OptionalSlotRestrictedInput;
 import appeng.container.slot.SlotNormal;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.api.storage.data.IAEStackType;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.me.cache.CraftingGridCache;
 import appeng.util.PatternMultiplierHelper;
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import appeng.util.Platform;
 
 public class ContainerInterface extends ContainerUpgradeable implements IOptionalSlotHost {
@@ -296,6 +299,12 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 
     public boolean isFluidInterface() {
         return this.isFluidInterface;
+    }
+
+    public IAEStackType<?>[] getSupportedStackTypes() {
+        return this.isFluidInterface
+                ? new IAEStackType<?>[] { ITEM_STACK_TYPE, FLUID_STACK_TYPE }
+                : new IAEStackType<?>[] { ITEM_STACK_TYPE };
     }
 
     public int getPatternCapacityCardsInstalled() {
