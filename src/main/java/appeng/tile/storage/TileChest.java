@@ -834,6 +834,11 @@ public class TileChest extends AENetworkPowerTile implements IMEChest, IFluidHan
         }
 
         @Override
+        public IMEInventory<T> getInternal() {
+            return this.getInternalHandler();
+        }
+
+        @Override
         public T injectItems(final T input, final Actionable mode, final BaseActionSource src) {
             if (src.isPlayer() && !this.securityCheck(((PlayerSource) src).player, SecurityPermissions.INJECT)) {
                 return input;

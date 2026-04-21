@@ -389,13 +389,17 @@ public class CraftableItemResolver implements CraftingRequestResolver {
                         final CraftingRequest inputChild = inputChildPair.request;
                         final long actuallyNeeded = Math
                                 .multiplyExact(inputChild.stack.getStackSize() / toCraft, maxCraftable);
-                        final long produced = inputChild.stack.getStackSize()
-                                - Math.max(inputChild.remainingToProcess, 0);
-                        if (produced > actuallyNeeded) {
+                        long overRequested = inputChild.stack.getStackSize() - actuallyNeeded;
+                        final long unresolvedOverRequested = Math.min(overRequested, inputChild.remainingToProcess);
+                        if (unresolvedOverRequested > 0) {
+                            inputChild.refundUnresolved(unresolvedOverRequested);
+                            overRequested -= unresolvedOverRequested;
+                        }
+                        if (overRequested > 0) {
                             if (maxCraftable == 0) {
                                 inputChild.fullRefund(context);
                             } else {
-                                inputChild.partialRefund(context, produced - actuallyNeeded);
+                                inputChild.partialRefund(context, overRequested);
                             }
                         }
                     }

@@ -2,6 +2,7 @@ package appeng.util.item;
 
 import java.io.IOException;
 
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumChatFormatting;
@@ -167,5 +168,14 @@ public class AEItemStackType implements IAEStackType<IAEItemStack> {
                 return "ItemIcon";
             }
         };
+    }
+
+    @NotNull
+    private final IAEItemStack testStack = AEItemStack.create(new ItemStack(Blocks.fire));
+
+    @Override
+    @NotNull
+    public IAEItemStack getTestStack() {
+        return this.testStack.copy();
     }
 }

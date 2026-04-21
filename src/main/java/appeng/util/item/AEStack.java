@@ -226,9 +226,9 @@ public abstract class AEStack<StackType extends IAEStack<StackType>> implements 
                             PATTERN,
                             (int) ((x + 10) * 2.5),
                             (int) (y * 2.5));
+                    GL11.glDisable(GL11.GL_LIGHTING);
                     GL11.glScalef(2.5f, 2.5f, 2.5f);
                     GL11.glPopMatrix();
-
                 }
             }
         }

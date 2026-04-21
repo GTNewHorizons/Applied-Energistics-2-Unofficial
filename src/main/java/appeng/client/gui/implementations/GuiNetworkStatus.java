@@ -28,6 +28,7 @@ import net.minecraftforge.common.util.ForgeDirection;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
+import appeng.api.config.ActionItems;
 import appeng.api.config.Settings;
 import appeng.api.config.SortDir;
 import appeng.api.config.SortOrder;
@@ -46,6 +47,7 @@ import appeng.client.me.ItemRepo;
 import appeng.client.render.highlighter.BlockPosHighlighter;
 import appeng.container.implementations.ContainerNetworkStatus;
 import appeng.core.AEConfig;
+import appeng.core.AELog;
 import appeng.core.localization.GuiColors;
 import appeng.core.localization.GuiText;
 import appeng.core.localization.PlayerMessages;
@@ -61,6 +63,7 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     private final int rows = 4;
     private GuiImgButton units;
     private GuiImgButton cell;
+    private GuiImgButton tReshuffle;
     private GuiToggleButton diagnostics;
     private int tooltip = -1;
     private final DecimalFormat df;
@@ -125,7 +128,6 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
     @Override
     protected void mouseClicked(int xCoord, int yCoord, int btn) {
 
-        // Check if the context menu is active and handle it
         if (menu.mouseClick(xCoord, yCoord, btn)) {
             return;
         }
@@ -195,6 +197,12 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             } else {
                 this.isConsume = !this.isConsume;
             }
+        } else if (btn == this.tReshuffle) {
+            try {
+                NetworkHandler.instance.sendToServer(new PacketValueConfig("NetworkStatus", "OpenReshuffle"));
+            } catch (final IOException e) {
+                AELog.debug(e);
+            }
         } else if (btn == this.diagnostics) {
             final ContainerNetworkStatus container = (ContainerNetworkStatus) this.inventorySlots;
             if (container.isDiagnosticsGloballyEnabled()) {
@@ -231,10 +239,17 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
                     Settings.CELL_TYPE,
                     AEConfig.instance.selectedCellType());
             this.buttonList.add(this.cell);
+
+            this.tReshuffle = new GuiImgButton(
+                    this.guiLeft - 18,
+                    this.guiTop + 48,
+                    Settings.ACTIONS,
+                    ActionItems.OPEN_RESHUFFLE_ON);
+            this.buttonList.add(this.tReshuffle);
         }
         this.diagnostics = new GuiToggleButton(
                 this.guiLeft - 18,
-                this.guiTop + (this.isAdvanced ? 48 : 28),
+                this.guiTop + (this.isAdvanced ? 68 : 28),
                 129,
                 128,
                 GuiText.CraftingDiagnostics.getLocal(),
@@ -278,7 +293,14 @@ public class GuiNetworkStatus extends AEBaseGui implements ISortSource {
             }
         }
 
+        if (this.tReshuffle != null) {
+            this.tReshuffle.set(
+                    ((ContainerNetworkStatus) this.inventorySlots).reshufflePresent ? ActionItems.OPEN_RESHUFFLE_ON
+                            : ActionItems.OPEN_RESHUFFLE_OFF);
+        }
+
         super.drawScreen(mouseX, mouseY, btn);
+
         menu.draw(mouseX, mouseY);
     }
 

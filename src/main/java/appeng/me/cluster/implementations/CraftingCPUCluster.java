@@ -61,6 +61,7 @@ import net.minecraftforge.common.util.Constants.NBT;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.NotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -544,7 +545,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         this.playersFollowingCurrentCraft.clear();
         this.craftCompleteListeners = initializeDefaultOnCompleteListener();
         this.craftCancelListeners.clear(); // complete listener will clean external state
-                                           // so cancel listener is not called here.
+        // so cancel listener is not called here.
         this.craftUpdateListeners.clear();
     }
 
@@ -592,7 +593,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                 if (patternDetails.isCraftable()) {
                     final IAEStack<?>[] inputSlots = patternDetails.getAEInputs();
                     final IAEStack<?> finalIngredient = ingredient; // have to copy because of Java lambda capture
-                                                                    // rules here
+                    // rules here
                     final int matchingSlot = IntStream.range(0, inputSlots.length)
                             .filter(idx -> inputSlots[idx] != null && Objects.equals(inputSlots[idx], finalIngredient))
                             .findFirst().orElse(-1);
@@ -1412,30 +1413,30 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         i.addCraftsToSession(this.currentPlanningDiagnosticSessionId, crafts);
     }
 
-    public IAEStack<?> getItemStack(final IAEStack what, final CraftingItemList storage2) {
-        IAEStack<?> aes;
+    public long getStackAmount(final IAEStack what, final CraftingItemList storage2) {
         switch (storage2) {
-            case STORAGE -> aes = this.inventory.findPrecise(what);
-            case ACTIVE -> aes = this.waitingFor.findPrecise(what);
-            case PENDING -> {
-                aes = what.copy();
-                aes.setStackSize(0);
+            case STORAGE: {
+                final IAEStack<?> stack = this.inventory.findPrecise(what);
+                return stack == null ? 0 : stack.getStackSize();
+            }
+            case ACTIVE: {
+                final IAEStack<?> stack = this.waitingFor.findPrecise(what);
+                return stack == null ? 0 : stack.getStackSize();
+            }
+            case PENDING: {
+                long amount = 0;
                 for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
                     for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
-                        if (Objects.equals(ais, aes)) {
-                            aes.setStackSize(aes.getStackSize() + ais.getStackSize() * t.getValue().value);
+                        if (Objects.equals(ais, what)) {
+                            amount += ais.getStackSize() * t.getValue().value;
                         }
                     }
                 }
+                return amount;
             }
-            default -> throw new IllegalStateException("Invalid Operation");
+            default:
+                throw new IllegalStateException("Invalid Operation");
         }
-
-        if (aes != null) {
-            return aes.copy();
-        }
-
-        return what.copy().setStackSize(0);
     }
 
     private NBTTagCompound persistListeners(int from, List<?> listeners) throws IOException {
@@ -2067,20 +2068,25 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             List<NamedDimensionalCoord> dimensionalCoords = new ArrayList<>();
 
             for (ICraftingMedium craftingProvider : craftingProviders) {
-                final String dispName;
+                final String rawName;
+                final String suffix;
                 final DimensionalCoord cord;
 
                 if (craftingProvider instanceof ICustomNameObject cno && cno.hasCustomName()) {
-                    dispName = cno.getCustomName();
+                    rawName = cno.getCustomName();
+                    suffix = null;
                 } else {
                     if (craftingProvider instanceof DualityInterface di) {
-                        dispName = di.getTermName();
+                        rawName = di.getRawTermName();
+                        suffix = di.getAdjacentNameSuffix();
                     } else if (craftingProvider instanceof IInterfaceViewable iv) {
-                        dispName = iv.getName();
+                        rawName = iv.getName();
+                        suffix = null;
                     } else {
                         final TileEntity tile = this.getTile(craftingProvider);
                         if (tile == null) continue;
-                        dispName = tile.getBlockType().getUnlocalizedName();
+                        rawName = tile.getBlockType().getUnlocalizedName();
+                        suffix = null;
                     }
                 }
 
@@ -2092,13 +2098,17 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
                     cord = new DimensionalCoord(tile);
                 }
 
-                dimensionalCoords.add(new NamedDimensionalCoord(cord, translateFromNetwork(dispName)));
+                String translatedName = translateFromNetwork(rawName);
+                String displayName = suffix != null ? translatedName + suffix : translatedName;
+
+                dimensionalCoords.add(new NamedDimensionalCoord(cord, displayName));
             }
             this.providers.put(aes.copy(), dimensionalCoords);
         }
     }
 
-    public ScheduledReason getScheduledReason(IAEStack<?> is) {
+    @NotNull
+    public ScheduledReason getScheduledReason(@NotNull IAEStack<?> is) {
         for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
             for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
                 if (Objects.equals(ais, is)) {
@@ -2107,28 +2117,6 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
             }
         }
         return ScheduledReason.UNDEFINED;
-    }
-
-    public NBTTagCompound getNonUndefinedScheduledReasons() {
-        final NBTTagCompound result = new NBTTagCompound();
-        final NBTTagList entries = new NBTTagList();
-        for (final Entry<ICraftingPatternDetails, TaskProgress> t : this.tasks.entrySet()) {
-            final ScheduledReason sr = reasonProvider.getOrDefault(t.getKey(), ScheduledReason.UNDEFINED);
-            if (sr != ScheduledReason.UNDEFINED) {
-                for (final IAEStack<?> ais : t.getKey().getCondensedAEOutputs()) {
-                    final IAEStack<?> keyStack = ais.copy();
-                    keyStack.setStackSize(1);
-
-                    final NBTTagCompound entry = new NBTTagCompound();
-                    entry.setString("Type", keyStack.getStackType().getId());
-                    entry.setInteger("Hash", keyStack.hashCode());
-                    entry.setInteger("Reason", sr.ordinal());
-                    entries.appendTag(entry);
-                }
-            }
-        }
-        result.setTag("Entries", entries);
-        return result;
     }
 
     private final IdentityHashMap<Class<?>, Method> getTileMethodCache = new IdentityHashMap<>();
@@ -2204,7 +2192,7 @@ public final class CraftingCPUCluster implements IAECluster, ICraftingCPU {
         if (StatCollector.canTranslate(name)) {
             dispName = StatCollector.translateToLocal(name);
         } else {
-            String fallback = name + ".name"; // its whatever. save some bytes on network but looks ugly
+            String fallback = name + ".name";
             if (StatCollector.canTranslate(fallback)) {
                 dispName = StatCollector.translateToLocal(fallback);
             } else {

@@ -11,6 +11,7 @@
 package appeng.container.implementations;
 
 import static appeng.parts.reporting.PartPatternTerminal.*;
+import static appeng.util.IterationCounter.fetchNewId;
 import static appeng.util.Platform.isServer;
 
 import java.util.ArrayList;
@@ -29,7 +30,10 @@ import net.minecraft.item.crafting.CraftingManager;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.ForgeDirection;
+
+import org.jetbrains.annotations.NotNull;
 
 import appeng.api.AEApi;
 import appeng.api.config.Actionable;
@@ -42,12 +46,16 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
 import appeng.container.ContainerNull;
+import appeng.container.ContainerOpenContext;
+import appeng.container.PrimaryGui;
 import appeng.container.guisync.GuiSync;
 import appeng.container.interfaces.IVirtualSlotHolder;
 import appeng.container.interfaces.IVirtualSlotSource;
+import appeng.container.slot.AppEngSlot;
 import appeng.container.slot.IOptionalSlotHost;
 import appeng.container.slot.SlotPatternTerm;
 import appeng.container.slot.SlotRestrictedInput;
+import appeng.core.sync.GuiBridge;
 import appeng.core.sync.packets.PacketPatternSlot;
 import appeng.helpers.IContainerCraftingPacket;
 import appeng.items.contents.WirelessPatternTerminalGuiObject;
@@ -66,6 +74,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 
 public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEAppEngInventory, IOptionalSlotHost,
         IContainerCraftingPacket, IVirtualSlotHolder, IVirtualSlotSource {
+
+    @NotNull
+    public static final IAEItemStack BLANK_PATTERN = AEItemStack
+            .create(AEApi.instance().definitions().materials().blankPattern().maybeStack(1).get());
 
     public static final int MULTIPLE_OF_BUTTON_CLICK = 2;
     public static final int MULTIPLE_OF_BUTTON_CLICK_ON_SHIFT = 8;
@@ -161,7 +173,6 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         this.patternSlotOUT.setStackLimit(1);
 
         this.updateOrderOfOutputSlots();
-        refillBlankPatterns(patternSlotIN);
 
         // need because InventoryBogoSorter looking for specific slot number for bind buttons
         // bindPlayerInventory in MEMonitorable break it
@@ -244,7 +255,6 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
                 getPlayerInv().player.entityDropItem(output, 0);
             }
             this.patternSlotOUT.putStack(null);
-            refillBlankPatterns(patternSlotIN);
         }
     }
 
@@ -274,17 +284,22 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         } // if nothing is there we should snag a new pattern.
         else {
             ItemStack blank = this.patternSlotIN.getStack();
-            if (!this.isBlankPattern(blank)) {
+
+            if (this.isBlankPattern(blank)) {
+                blank.stackSize--;
+                if (blank.stackSize == 0) {
+                    this.patternSlotIN.putStack(null);
+                }
+            } else if (blank == null) {
+                IMEMonitor<IAEItemStack> itemMonitor = this.getItemMonitor();
+                IAEItemStack extracted = Platform
+                        .poweredExtraction(this.getPowerSource(), itemMonitor, BLANK_PATTERN, this.getActionSource());
+                if (extracted == null || extracted.getStackSize() <= 0) {
+                    return;
+                }
+            } else {
                 return;
             }
-
-            // remove one, and clear the input slot.
-            blank.stackSize--;
-            if (blank.stackSize == 0) {
-                this.patternSlotIN.putStack(null);
-            }
-
-            refillBlankPatterns(patternSlotIN);
         }
 
         // add a new encoded pattern.
@@ -555,24 +570,95 @@ public class ContainerPatternTerm extends ContainerMEMonitorable implements IAEA
         this.updateVirtualSlots(StorageName.CRAFTING_OUTPUT, this.outputs, outputSlotsClient);
     }
 
-    protected void refillBlankPatterns(Slot slot) {
-        if (Platform.isServer()) {
-            ItemStack blanks = slot.getStack();
-            int blanksToRefill = 64;
-            if (blanks != null) blanksToRefill -= blanks.stackSize;
-            if (blanksToRefill <= 0) return;
-            final AEItemStack request = AEItemStack
-                    .create(AEApi.instance().definitions().materials().blankPattern().maybeStack(blanksToRefill).get());
-            final IAEItemStack extracted = Platform
-                    .poweredExtraction(this.getPowerSource(), this.getItemMonitor(), request, this.getActionSource());
-            if (extracted != null) {
-                if (blanks != null) blanks.stackSize += (int) extracted.getStackSize();
-                else {
-                    blanks = extracted.getItemStack();
+    @Override
+    public ItemStack slotClick(int slotId, int clickedButton, int mode, EntityPlayer player) {
+        if (slotId >= 0 && slotId < this.inventorySlots.size()
+                && this.inventorySlots.get(slotId) instanceof SlotRestrictedInput slot
+                && slot.getItemType() == SlotRestrictedInput.PlacableItemType.BLANK_PATTERN
+                && player instanceof EntityPlayerMP epmp) {
+
+            final boolean leftClick = mode == 0 && clickedButton == 0;
+            final boolean rightClick = mode == 0 && clickedButton == 1;
+            final boolean middleClick = mode == 3; // pick block
+            if (!slot.getHasStack() && player.inventory.getItemStack() == null) {
+
+                IMEMonitor<IAEItemStack> monitor = getItemMonitor();
+                if (monitor == null) return null;
+
+                IAEItemStack blank = monitor.getAvailableItem(BLANK_PATTERN, fetchNewId());
+                if (blank != null && blank.getStackSize() > 0 && (leftClick || rightClick)) {
+                    if (this.getPowerSource() == null) return null;
+
+                    if (leftClick) {
+                        this.pickupStoredItems(BLANK_PATTERN.copy(), epmp, monitor);
+                    } else {
+                        this.splitStoredItems(BLANK_PATTERN.copy(), epmp, monitor);
+                    }
+                    return null;
                 }
-                slot.putStack(blanks);
+
+                if (middleClick && blank != null && blank.isCraftable()) {
+                    final PrimaryGui pGui = this.createPrimaryGui();
+                    final ContainerOpenContext context = this.getOpenContext();
+                    if (context != null) {
+                        final TileEntity te = context.getTile();
+
+                        Platform.openGUI(
+                                player,
+                                te,
+                                context.getSide(),
+                                GuiBridge.GUI_CRAFTING_AMOUNT,
+                                this.getTargetSlotIndex());
+
+                        if (player.openContainer instanceof ContainerCraftAmount cca) {
+                            cca.setPrimaryGui(pGui);
+                            cca.setItemToCraft(blank);
+                            cca.setInitialCraftAmount(1);
+
+                            cca.detectAndSendChanges();
+                        }
+                    }
+                    return null;
+                } else if (middleClick && player.capabilities.isCreativeMode && !slot.getHasStack()) {
+                    ItemStack blankStack = BLANK_PATTERN.getItemStack();
+                    blankStack.stackSize = blankStack.getMaxStackSize();
+                    player.inventory.setItemStack(blankStack);
+                    this.updateHeld(epmp);
+                    return null;
+                }
             }
         }
+        return super.slotClick(slotId, clickedButton, mode, player);
+    }
+
+    @Override
+    public ItemStack transferStackInSlot(EntityPlayer p, int idx) {
+        if (Platform.isClient()) {
+            return null;
+        }
+
+        final AppEngSlot clickSlot = (AppEngSlot) this.inventorySlots.get(idx); // require AE SLots!
+
+        if (!this.isValidSrcSlotForTransfer(clickSlot)) {
+            return null;
+        }
+
+        // Attempt to insert into the network before inserting into the blank pattern slot.
+        if (clickSlot.isPlayerSide()
+                && AEApi.instance().definitions().materials().blankPattern().isSameAs(clickSlot.getStack())) {
+            ItemStack stackInSlot = clickSlot.getStack();
+            ItemStack leftover = this.shiftStoreItem(stackInSlot);
+            if (leftover == null || leftover.stackSize < stackInSlot.stackSize) {
+                clickSlot.putStack(leftover);
+                this.detectAndSendChanges();
+            }
+
+            if (leftover == null) {
+                return null;
+            }
+        }
+
+        return super.transferStackInSlot(p, idx);
     }
 
     @Override

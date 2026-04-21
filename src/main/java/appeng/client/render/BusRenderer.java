@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -27,7 +28,6 @@ import appeng.api.parts.IAlphaPassItem;
 import appeng.api.parts.IFacadePart;
 import appeng.api.parts.IPart;
 import appeng.api.parts.IPartItem;
-import appeng.client.ClientHelper;
 import appeng.core.AEConfig;
 import appeng.core.features.AEFeature;
 import appeng.facade.IFacadeItem;
@@ -58,9 +58,9 @@ public class BusRenderer implements IItemRenderer {
         if (item == null) {
             return;
         }
-        Tessellator tessellator = Tessellator.instance;
-        BusRenderHelper busRenderer = BusRenderHelper.instances.get();
-        RenderBlocksWorkaround renderer = this.getRenderer();
+        final Tessellator tessellator = Tessellator.instance;
+        final BusRenderHelper busRenderer = BusRenderHelper.instances.get();
+        final RenderBlocksWorkaround renderer = this.getRenderer();
         GL11.glPushMatrix();
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -103,12 +103,11 @@ public class BusRenderer implements IItemRenderer {
         busRenderer.setBounds(0, 0, 0, 1, 1, 1);
         busRenderer.setTexture(null);
         busRenderer.setInvColor(0xffffff);
-        renderer.blockAccess = ClientHelper.proxy.getWorld();
+        renderer.blockAccess = Minecraft.getMinecraft().theWorld;
 
         busRenderer.setOrientation(ForgeDirection.EAST, ForgeDirection.UP, ForgeDirection.SOUTH);
 
-        renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = this
-                .getRenderer().uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
+        renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
         renderer.useInventoryTint = false;
         renderer.overrideBlockTexture = null;
 
@@ -136,9 +135,9 @@ public class BusRenderer implements IItemRenderer {
             }
         }
 
-        renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = this
-                .getRenderer().uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
+        renderer.uvRotateBottom = renderer.uvRotateEast = renderer.uvRotateNorth = renderer.uvRotateSouth = renderer.uvRotateTop = renderer.uvRotateWest = 0;
 
+        renderer.blockAccess = null;
         GL11.glPopAttrib();
         GL11.glPopMatrix();
     }

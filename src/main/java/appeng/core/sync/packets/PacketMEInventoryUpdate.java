@@ -30,7 +30,6 @@ import net.minecraft.entity.player.EntityPlayer;
 
 import appeng.api.storage.data.IAEStack;
 import appeng.client.gui.implementations.GuiCraftConfirm;
-import appeng.client.gui.implementations.GuiCraftingCPU;
 import appeng.client.gui.implementations.GuiMEMonitorable;
 import appeng.client.gui.implementations.GuiNetworkStatus;
 import appeng.client.gui.implementations.GuiOptimizePatterns;
@@ -133,10 +132,6 @@ public class PacketMEInventoryUpdate extends AppEngPacket {
 
         if (gs instanceof GuiCraftConfirm) {
             ((GuiCraftConfirm) gs).postUpdate(this.list, this.ref);
-        }
-
-        if (gs instanceof GuiCraftingCPU) {
-            ((GuiCraftingCPU) gs).postUpdate(this.list, this.ref);
         }
 
         if (gs instanceof GuiMEMonitorable) {
