@@ -10,6 +10,9 @@
 
 package appeng.container.implementations;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
+
 import java.util.ArrayList;
 
 import net.minecraft.entity.player.InventoryPlayer;
@@ -27,6 +30,7 @@ import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.IOptionalSlotHost;
@@ -34,13 +38,10 @@ import appeng.container.slot.OptionalSlotFake;
 import appeng.container.slot.OptionalSlotRestrictedInput;
 import appeng.container.slot.SlotNormal;
 import appeng.container.slot.SlotRestrictedInput;
-import appeng.api.storage.data.IAEStackType;
 import appeng.helpers.DualityInterface;
 import appeng.helpers.IInterfaceHost;
 import appeng.me.cache.CraftingGridCache;
 import appeng.util.PatternMultiplierHelper;
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 import appeng.util.Platform;
 
 public class ContainerInterface extends ContainerUpgradeable implements IOptionalSlotHost {
@@ -302,8 +303,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     }
 
     public IAEStackType<?>[] getSupportedStackTypes() {
-        return this.isFluidInterface
-                ? new IAEStackType<?>[] { ITEM_STACK_TYPE, FLUID_STACK_TYPE }
+        return this.isFluidInterface ? new IAEStackType<?>[] { ITEM_STACK_TYPE, FLUID_STACK_TYPE }
                 : new IAEStackType<?>[] { ITEM_STACK_TYPE };
     }
 
