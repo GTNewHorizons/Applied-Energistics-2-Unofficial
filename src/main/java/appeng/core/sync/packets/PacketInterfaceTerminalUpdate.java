@@ -246,7 +246,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public int numSlots;
         public boolean online;
         public boolean p2pOutput;
-        public boolean isFluidInterface;
+        public String[] supportedStackTypeIds;
         public int priority;
         public ItemStack selfRep, dispRep;
         public NBTTagList items;
@@ -266,8 +266,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             return this;
         }
 
-        public PacketAdd setFluidInterface(boolean isFluidInterface) {
-            this.isFluidInterface = isFluidInterface;
+        public PacketAdd setSupportedStackTypes(String[] supportedStackTypeIds) {
+            this.supportedStackTypeIds = supportedStackTypeIds;
             return this;
         }
 
@@ -330,7 +330,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             buf.writeInt(numSlots);
             buf.writeBoolean(online);
             buf.writeBoolean(p2pOutput);
-            buf.writeBoolean(isFluidInterface);
+            String[] ids = supportedStackTypeIds != null ? supportedStackTypeIds : new String[0];
+            buf.writeByte(ids.length);
+            for (String id : ids) {
+                ByteBufUtils.writeUTF8String(buf, id);
+            }
 
             ByteBuf tempBuf = Unpooled.directBuffer(256);
             try {
@@ -370,7 +374,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.numSlots = buf.readInt();
             this.online = buf.readBoolean();
             this.p2pOutput = buf.readBoolean();
-            this.isFluidInterface = buf.readBoolean();
+            int numTypes = buf.readByte() & 0xFF;
+            this.supportedStackTypeIds = new String[numTypes];
+            for (int i = 0; i < numTypes; i++) {
+                this.supportedStackTypeIds[i] = ByteBufUtils.readUTF8String(buf);
+            }
 
             int payloadSize = buf.readInt();
             try (ByteBufInputStream stream = new ByteBufInputStream(buf, payloadSize)) {
@@ -435,6 +443,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     + online
                     + ", p2pOutput="
                     + p2pOutput
+                    + ", supportedStackTypeIds="
+                    + Arrays.toString(supportedStackTypeIds)
                     + ", selfRep="
                     + selfRep
                     + ", dispRep="

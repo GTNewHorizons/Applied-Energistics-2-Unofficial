@@ -85,6 +85,7 @@ import appeng.integration.modules.NEI;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
+import appeng.util.item.AEFluidStackType;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
 
@@ -840,7 +841,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         } else if (entry.filteredRecipes[slotIdx]) {
                             GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayUnpowered.getColor());
-                        } else if (!entry.isFluidInterface && patternContainsFluids(stack)) {
+                        } else if (!supportsFluid(entry.supportedStackTypeIds) && patternContainsFluids(stack)) {
                             GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
                         }
@@ -1091,7 +1092,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.numSlots,
                     addCmd.online,
                     addCmd.p2pOutput,
-                    addCmd.isFluidInterface,
+                    addCmd.supportedStackTypeIds,
                     addCmd.priority).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             masterList.addEntry(entry);
@@ -1240,6 +1241,13 @@ public class GuiInterfaceTerminal extends AEBaseGui
         } else if (searchFieldNames.isMouseIn(mousex, mousey)) {
             searchFieldNames.setText(displayName);
         }
+    }
+
+    private static boolean supportsFluid(String[] supportedStackTypeIds) {
+        for (String id : supportedStackTypeIds) {
+            if (AEFluidStackType.FLUID_STACK_ID.equals(id)) return true;
+        }
+        return false;
     }
 
     private static boolean patternContainsFluids(final ItemStack stack) {
@@ -1560,7 +1568,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int priority;
         boolean online;
         boolean p2pOutput;
-        boolean isFluidInterface;
+        String[] supportedStackTypeIds;
         private Boolean[] brokenRecipes;
         int numItems = 0;
         /** Should recipe be filtered out/grayed out? */
@@ -1569,7 +1577,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         private int hoveredSlotIdx = -1;
 
         InterfaceTerminalEntry(long id, String name, String suffix, int rows, int rowSize, int numSlots, boolean online,
-                boolean p2pOutput, boolean isFluidInterface, int priority) {
+                boolean p2pOutput, String[] supportedStackTypeIds, int priority) {
             this.id = id;
             this.dispName = translateRawName(name, suffix);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
@@ -1578,7 +1586,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.numSlots = numSlots;
             this.online = online;
             this.p2pOutput = p2pOutput;
-            this.isFluidInterface = isFluidInterface;
+            this.supportedStackTypeIds = supportedStackTypeIds;
             this.priority = priority;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
