@@ -265,7 +265,7 @@ public class GuiInterface extends GuiUpgradeable {
         outer: for (int i = 0; i < tagList.tagCount(); i++) {
             final NBTTagCompound entry = tagList.getCompoundTagAt(i);
             // Legacy fluid check: patterns created before native liquid support lack StackType
-            if (entry.hasKey("FluidName")) return true;
+            if (entry.hasKey("FluidName") && !supportedTypes.contains(FLUID_STACK_TYPE)) return true;
 
             if (entry.hasKey("StackType")) {
                 for (IAEStackType<?> type : supportedTypes) {
