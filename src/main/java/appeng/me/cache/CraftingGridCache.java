@@ -32,7 +32,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.StreamSupport;
 
@@ -94,11 +93,12 @@ import appeng.crafting.CraftingLinkNexus;
 import appeng.crafting.CraftingWatcher;
 import appeng.crafting.v2.CraftingJobV2;
 import appeng.me.cluster.implementations.CraftingCPUCluster;
+import appeng.me.diagnostics.CraftingDiagnosticSessionId;
+import appeng.me.diagnostics.CraftingNetworkDiagnostics;
 import appeng.me.helpers.GenericInterestManager;
 import appeng.tile.crafting.TileCraftingStorageTile;
 import appeng.tile.crafting.TileCraftingTile;
 import appeng.util.ItemSorters;
-import appeng.util.Platform;
 import appeng.util.item.OreListMultiMap;
 
 public class CraftingGridCache
@@ -137,7 +137,7 @@ public class CraftingGridCache
 
     private final Set<ICraftingPostPatternChangeListener> postPatternChangeListeners = Collections
             .newSetFromMap(new WeakHashMap<>());
-    private final Map<IAEStack<?>, DiagnosticStats> diagnostics = new HashMap<>();
+    private final CraftingNetworkDiagnostics diagnostics = new CraftingNetworkDiagnostics();
     private final Set<Long> loadedDiagnosticStorageIds = new HashSet<>();
     private boolean diagnosticsEnabled = false;
     private long diagnosticsRevision = 0L;
@@ -740,47 +740,21 @@ public class CraftingGridCache
         this.postPatternChangeListeners.remove(listener);
     }
 
-    public synchronized void recordDiagnosticSample(final IAEStack<?> output, final String sessionId,
-            final long producedAmount, final long observedStartNanos, final long observedEndNanos) {
-        if (output == null || producedAmount <= 0
-                || sessionId == null
-                || sessionId.isEmpty()
-                || observedStartNanos <= 0
-                || observedEndNanos <= observedStartNanos) {
-            return;
-        }
-
-        final IAEStack<?> key = normalizeDiagnosticStack(output);
-        if (key == null) {
-            return;
-        }
-
-        final DiagnosticStats stats = this.diagnostics.computeIfAbsent(key, ignored -> new DiagnosticStats());
-        stats.recordSample(sessionId, producedAmount, observedStartNanos, observedEndNanos);
-        this.diagnosticsRevision++;
+    public synchronized void recordDiagnosticSample(final IAEStack<?> output,
+            final CraftingDiagnosticSessionId sessionId, final long producedAmount, final long observedStartNanos,
+            final long observedEndNanos) {
+        this.diagnostics.recordSample(output, sessionId, producedAmount, observedStartNanos, observedEndNanos);
+        this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
-    public synchronized void completeDiagnosticSession(final String sessionId) {
-        if (sessionId == null || sessionId.isEmpty()) {
-            return;
-        }
-
-        boolean changed = false;
-        for (DiagnosticStats stats : this.diagnostics.values()) {
-            changed |= stats.compactSession(sessionId);
-        }
-        if (changed) {
-            this.diagnosticsRevision++;
-        }
+    public synchronized void completeDiagnosticSession(final CraftingDiagnosticSessionId sessionId) {
+        this.diagnostics.completeSession(sessionId);
+        this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
     public synchronized void clearDiagnosticStats() {
-        if (this.diagnostics.isEmpty()) {
-            return;
-        }
-
         this.diagnostics.clear();
-        this.diagnosticsRevision++;
+        this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
     public synchronized boolean isDiagnosticsEnabled() {
@@ -797,106 +771,21 @@ public class CraftingGridCache
     }
 
     public synchronized long getDiagnosticsRevision() {
-        return this.diagnosticsRevision;
+        return this.diagnostics.getRevision();
     }
 
     public synchronized List<DiagnosticRowView> createDiagnosticRows(final String search,
             final DiagnosticSortMode sortMode, final boolean ascending) {
-        final List<Map.Entry<IAEStack<?>, DiagnosticStats>> rows = new ArrayList<>();
-        final String normalizedSearch = search == null ? "" : search.trim().toLowerCase();
-
-        for (final Map.Entry<IAEStack<?>, DiagnosticStats> entry : this.diagnostics.entrySet()) {
-            if (normalizedSearch.isEmpty()
-                    || entry.getKey().getDisplayName().toLowerCase().contains(normalizedSearch)) {
-                rows.add(entry);
-            }
-        }
-
-        rows.sort((left, right) -> {
-            int comparison = compareDiagnosticRows(left, right, sortMode);
-            if (!ascending) {
-                comparison = -comparison;
-            }
-            if (comparison == 0) {
-                comparison = left.getKey().getDisplayName().compareToIgnoreCase(right.getKey().getDisplayName());
-            }
-            if (comparison == 0) {
-                comparison = Integer.compare(left.getKey().hashCode(), right.getKey().hashCode());
-            }
-            return comparison;
-        });
-
-        final List<DiagnosticRowView> result = new ArrayList<>(rows.size());
-        for (final Map.Entry<IAEStack<?>, DiagnosticStats> row : rows) {
-            result.add(
-                    new DiagnosticRowView(
-                            row.getKey().copy(),
-                            row.getValue().getTotalProduced(),
-                            row.getValue().getElapsedObservedTimeNanos(),
-                            row.getValue().getSampleCount()));
-        }
-        return result;
-    }
-
-    private static int compareDiagnosticRows(final Map.Entry<IAEStack<?>, DiagnosticStats> left,
-            final Map.Entry<IAEStack<?>, DiagnosticStats> right, final DiagnosticSortMode sortMode) {
-        return switch (sortMode) {
-            case CRAFTED -> Long.compare(left.getValue().getTotalProduced(), right.getValue().getTotalProduced());
-            case AVG_PER_SECOND -> Double
-                    .compare(left.getValue().getItemsPerSecond(), right.getValue().getItemsPerSecond());
-            case SAMPLES -> Long.compare(left.getValue().getSampleCount(), right.getValue().getSampleCount());
-            case NAME -> left.getKey().getDisplayName().compareToIgnoreCase(right.getKey().getDisplayName());
-            case CUMULATIVE_TIME -> Long.compare(
-                    left.getValue().getElapsedObservedTimeNanos(),
-                    right.getValue().getElapsedObservedTimeNanos());
-        };
-    }
-
-    private static IAEStack<?> normalizeDiagnosticStack(final IAEStack<?> stack) {
-        if (stack == null) {
-            return null;
-        }
-
-        final IAEStack<?> normalized = stack.copy();
-        normalized.reset();
-        normalized.setStackSize(1);
-        return normalized;
+        return this.diagnostics.createRows(search, sortMode, ascending);
     }
 
     private synchronized NBTTagList writeDiagnosticsToNBT() {
-        final NBTTagList list = new NBTTagList();
-        for (final Map.Entry<IAEStack<?>, DiagnosticStats> entry : this.diagnostics.entrySet()) {
-            final NBTTagCompound tag = new NBTTagCompound();
-            tag.setTag("Stack", entry.getKey().toNBTGeneric());
-            entry.getValue().writeToNBT(tag);
-            list.appendTag(tag);
-        }
-        return list;
+        return this.diagnostics.writeToNBT();
     }
 
     private synchronized void readDiagnosticsFromNBT(final NBTTagList list, final boolean merge) {
-        if (!merge) {
-            this.diagnostics.clear();
-        }
-
-        for (int i = 0; i < list.tagCount(); i++) {
-            final NBTTagCompound tag = list.getCompoundTagAt(i);
-            final IAEStack<?> stack = Platform.readStackNBT(tag.getCompoundTag("Stack"));
-            if (stack == null) {
-                continue;
-            }
-
-            final IAEStack<?> key = normalizeDiagnosticStack(stack);
-            if (key == null) {
-                continue;
-            }
-
-            final DiagnosticStats loaded = DiagnosticStats.fromNBT(tag);
-            final DiagnosticStats existing = this.diagnostics.computeIfAbsent(key, ignored -> new DiagnosticStats());
-            existing.mergeFrom(loaded);
-        }
-
-        this.diagnosticsRevision++;
+        this.diagnostics.readFromNBT(list, merge);
+        this.diagnosticsRevision = this.diagnostics.getRevision();
     }
 
     public enum DiagnosticSortMode {
@@ -925,171 +814,6 @@ public class CraftingGridCache
             this.totalProduced = totalProduced;
             this.elapsedTimeNanos = elapsedTimeNanos;
             this.sampleCount = sampleCount;
-        }
-    }
-
-    private static final class DiagnosticStats {
-
-        private long completedTotalProduced;
-        private long completedElapsedTimeNanos;
-        private long completedSampleCount;
-        private final Map<String, DiagnosticSessionStats> sessions = new HashMap<>();
-        private long lastObservedMillis;
-
-        private void recordSample(final String sessionId, final long producedAmount, final long observedStartNanos,
-                final long observedEndNanos) {
-            this.sessions.computeIfAbsent(sessionId, ignored -> new DiagnosticSessionStats())
-                    .recordSample(producedAmount, observedStartNanos, observedEndNanos);
-            this.lastObservedMillis = System.currentTimeMillis();
-        }
-
-        private long getTotalProduced() {
-            long totalProduced = this.completedTotalProduced;
-            for (DiagnosticSessionStats session : this.sessions.values()) {
-                totalProduced += session.totalProduced;
-            }
-            return totalProduced;
-        }
-
-        private long getElapsedObservedTimeNanos() {
-            long elapsedObservedTimeNanos = this.completedElapsedTimeNanos;
-            for (DiagnosticSessionStats session : this.sessions.values()) {
-                elapsedObservedTimeNanos += session.getElapsedObservedTimeNanos();
-            }
-            return elapsedObservedTimeNanos;
-        }
-
-        private long getSampleCount() {
-            long sampleCount = this.completedSampleCount;
-            for (DiagnosticSessionStats session : this.sessions.values()) {
-                sampleCount += session.sampleCount;
-            }
-            return sampleCount;
-        }
-
-        private boolean compactSession(final String sessionId) {
-            final DiagnosticSessionStats session = this.sessions.remove(sessionId);
-            if (session == null) {
-                return false;
-            }
-
-            this.completedTotalProduced += session.totalProduced;
-            this.completedElapsedTimeNanos += session.getElapsedObservedTimeNanos();
-            this.completedSampleCount += session.sampleCount;
-            return true;
-        }
-
-        private void mergeFrom(final DiagnosticStats loaded) {
-            this.completedTotalProduced += loaded.completedTotalProduced;
-            this.completedElapsedTimeNanos += loaded.completedElapsedTimeNanos;
-            this.completedSampleCount += loaded.completedSampleCount;
-            for (Entry<String, DiagnosticSessionStats> entry : loaded.sessions.entrySet()) {
-                this.sessions.computeIfAbsent(entry.getKey(), ignored -> new DiagnosticSessionStats())
-                        .mergeFrom(entry.getValue());
-            }
-            this.lastObservedMillis = Math.max(this.lastObservedMillis, loaded.lastObservedMillis);
-        }
-
-        private double getItemsPerSecond() {
-            final long elapsedObservedTimeNanos = this.getElapsedObservedTimeNanos();
-            if (elapsedObservedTimeNanos <= 0L) {
-                return 0.0D;
-            }
-
-            return this.getTotalProduced() * (double) TimeUnit.SECONDS.toNanos(1) / (double) elapsedObservedTimeNanos;
-        }
-
-        private void writeToNBT(final NBTTagCompound tag) {
-            tag.setLong("TotalProduced", this.getTotalProduced());
-            tag.setLong("CompletedTotalProduced", this.completedTotalProduced);
-            tag.setLong("CompletedElapsedTimeNanos", this.completedElapsedTimeNanos);
-            tag.setLong("CompletedSampleCount", this.completedSampleCount);
-            final NBTTagList sessionsTag = new NBTTagList();
-            for (Entry<String, DiagnosticSessionStats> entry : this.sessions.entrySet()) {
-                final NBTTagCompound sessionTag = new NBTTagCompound();
-                sessionTag.setString("SessionId", entry.getKey());
-                entry.getValue().writeToNBT(sessionTag);
-                sessionsTag.appendTag(sessionTag);
-            }
-            tag.setTag("Sessions", sessionsTag);
-            tag.setLong("SampleCount", this.getSampleCount());
-            tag.setLong("LastObservedMillis", this.lastObservedMillis);
-        }
-
-        private static DiagnosticStats fromNBT(final NBTTagCompound tag) {
-            final DiagnosticStats stats = new DiagnosticStats();
-            stats.completedTotalProduced = tag.getLong("CompletedTotalProduced");
-            stats.completedElapsedTimeNanos = tag.getLong("CompletedElapsedTimeNanos");
-            stats.completedSampleCount = tag.getLong("CompletedSampleCount");
-            if (tag.hasKey("Sessions", Constants.NBT.TAG_LIST)) {
-                final NBTTagList sessionsTag = tag.getTagList("Sessions", Constants.NBT.TAG_COMPOUND);
-                for (int i = 0; i < sessionsTag.tagCount(); i++) {
-                    final NBTTagCompound sessionTag = sessionsTag.getCompoundTagAt(i);
-                    final String sessionId = sessionTag.getString("SessionId");
-                    if (sessionId == null || sessionId.isEmpty()) {
-                        continue;
-                    }
-                    stats.sessions.put(sessionId, DiagnosticSessionStats.fromNBT(sessionTag));
-                }
-            } else {
-                final long legacyObservedTimeNanos = tag.getLong("ObservedTimeNanos");
-                if (legacyObservedTimeNanos > 0L || tag.getLong("TotalProduced") > 0L) {
-                    stats.completedTotalProduced = tag.getLong("TotalProduced");
-                    stats.completedElapsedTimeNanos = legacyObservedTimeNanos;
-                    stats.completedSampleCount = tag.getLong("SampleCount");
-                }
-            }
-            stats.lastObservedMillis = tag.getLong("LastObservedMillis");
-            return stats;
-        }
-    }
-
-    private static final class DiagnosticSessionStats {
-
-        private long totalProduced;
-        private long firstObservedNanos;
-        private long lastObservedNanos;
-        private long sampleCount;
-
-        private void recordSample(final long producedAmount, final long observedStartNanos,
-                final long observedEndNanos) {
-            this.totalProduced += producedAmount;
-            this.firstObservedNanos = this.firstObservedNanos == 0L ? observedStartNanos
-                    : Math.min(this.firstObservedNanos, observedStartNanos);
-            this.lastObservedNanos = Math.max(this.lastObservedNanos, observedEndNanos);
-            this.sampleCount += 1;
-        }
-
-        private long getElapsedObservedTimeNanos() {
-            if (this.firstObservedNanos <= 0L || this.lastObservedNanos <= this.firstObservedNanos) {
-                return 0L;
-            }
-
-            return this.lastObservedNanos - this.firstObservedNanos;
-        }
-
-        private void mergeFrom(final DiagnosticSessionStats loaded) {
-            this.totalProduced += loaded.totalProduced;
-            this.firstObservedNanos = this.firstObservedNanos == 0L ? loaded.firstObservedNanos
-                    : Math.min(this.firstObservedNanos, loaded.firstObservedNanos);
-            this.lastObservedNanos = Math.max(this.lastObservedNanos, loaded.lastObservedNanos);
-            this.sampleCount += loaded.sampleCount;
-        }
-
-        private void writeToNBT(final NBTTagCompound tag) {
-            tag.setLong("TotalProduced", this.totalProduced);
-            tag.setLong("FirstObservedNanos", this.firstObservedNanos);
-            tag.setLong("LastObservedNanos", this.lastObservedNanos);
-            tag.setLong("SampleCount", this.sampleCount);
-        }
-
-        private static DiagnosticSessionStats fromNBT(final NBTTagCompound tag) {
-            final DiagnosticSessionStats stats = new DiagnosticSessionStats();
-            stats.totalProduced = tag.getLong("TotalProduced");
-            stats.firstObservedNanos = tag.getLong("FirstObservedNanos");
-            stats.lastObservedNanos = tag.getLong("LastObservedNanos");
-            stats.sampleCount = tag.getLong("SampleCount");
-            return stats;
         }
     }
 
