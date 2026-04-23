@@ -23,6 +23,7 @@ import appeng.api.config.YesNo;
 import appeng.api.implementations.IUpgradeableHost;
 import appeng.api.networking.crafting.ICraftingProvider;
 import appeng.api.networking.crafting.ICraftingRequester;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IInterfaceViewable;
 
 public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICraftingRequester, IInterfaceViewable {
@@ -48,6 +49,11 @@ public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICr
     @Override
     default boolean allowsPatternOptimization() {
         return getInterfaceDuality().getConfigManager().getSetting(Settings.PATTERN_OPTIMIZATION) == YesNo.YES;
+    }
+
+    @Override
+    default IAEStackType<?>[] getSupportedStackTypes() {
+        return getInterfaceDuality().getSupportedStackTypes();
     }
 
     @Override

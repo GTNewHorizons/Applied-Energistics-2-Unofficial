@@ -22,6 +22,7 @@ public enum GuiColors implements Localization {
 
     ItemSlotOverlayUnpowered(0x66111111),
     ItemSlotOverlayInvalid(0x66ff6666),
+    ItemSlotOverlayFluidMismatch(0x66FF0000),
 
     CraftConfirmMissingItem(0x1AFF0000),
 

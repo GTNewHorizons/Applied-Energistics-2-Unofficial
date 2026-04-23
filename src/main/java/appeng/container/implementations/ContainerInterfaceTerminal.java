@@ -35,6 +35,7 @@ import appeng.api.AEApi;
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridNode;
 import appeng.api.parts.IInterfaceTerminal;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.DimensionalCoord;
 import appeng.api.util.IInterfaceViewable;
 import appeng.container.AEBaseContainer;
@@ -333,6 +334,13 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                                 .setSize(known.rows, known.rowSize, known.numSlots);
                     }
 
+                    int priority = machine.getPriority();
+                    if (known.priority != priority) {
+                        known.priority = priority;
+                        if (update == null) update = new PacketInterfaceTerminalUpdate();
+                        update.addOverwriteEntry(known.id).setPriority(priority);
+                    }
+
                     visited.add(machine);
                 } else {
                     if (!machine.shouldDisplay()) continue;
@@ -343,7 +351,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                             .setLoc(entry.x, entry.y, entry.z, entry.dim, entry.side.ordinal())
                             .setItems(entry.rows, entry.rowSize, entry.numSlots, entry.invNbt)
                             .setReps(machine.getSelfRep(), machine.getDisplayRep())
-                            .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput());
+                            .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput())
+                            .setSupportedStackTypes(entry.supportedStackTypes).setPriority(entry.priority);
                     tracked.put(machine, entry);
                     trackedById.put(entry.id, entry);
                     visited.add(machine);
@@ -394,8 +403,10 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         private final int y;
         private final int z;
         private final int dim;
+        private int priority;
         private final ForgeDirection side;
         private boolean online;
+        private final IAEStackType<?>[] supportedStackTypes;
         private NBTTagList invNbt;
 
         InvTracker(long id, IInterfaceViewable machine, boolean online) {
@@ -415,6 +426,8 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             this.dim = location.getDimension();
             this.side = machine instanceof AEBasePart hasSide ? hasSide.getSide() : ForgeDirection.UNKNOWN;
             this.online = online;
+            this.supportedStackTypes = machine.getSupportedStackTypes();
+            this.priority = machine.getPriority();
             this.invNbt = new NBTTagList();
             updateNBT();
         }
