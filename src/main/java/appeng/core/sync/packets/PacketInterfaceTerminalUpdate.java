@@ -494,6 +494,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public static final int ITEMS_VALID = 1 << 2;
         public static final int ALL_ITEM_UPDATE_BIT = 1 << 3;
         public static final int SIZE_UPDATE_BIT = 1 << 4;
+        public static final int PRIORITY_VALID = 1 << 5;
         public boolean onlineValid;
         public boolean online;
         public boolean itemsValid;
@@ -504,6 +505,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public int rows;
         public int rowSize;
         public int numSlots;
+        public boolean priorityValid;
+        public int priority;
 
         protected PacketOverwrite(long id) {
             super(id);
@@ -535,6 +538,12 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             return this;
         }
 
+        public PacketOverwrite setPriority(int priority) {
+            this.priorityValid = true;
+            this.priority = priority;
+            return this;
+        }
+
         @Override
         protected void write(ByteBuf buf) throws IOException {
             buf.writeByte(PacketType.OVERWRITE.ordinal());
@@ -548,6 +557,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             }
             if (sizeValid) {
                 flags |= SIZE_UPDATE_BIT;
+            }
+            if (priorityValid) {
+                flags |= PRIORITY_VALID;
             }
             if (itemsValid) {
                 flags |= ITEMS_VALID;
@@ -581,6 +593,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                 buf.writeInt(rows);
                 buf.writeInt(rowSize);
                 buf.writeInt(numSlots);
+            }
+            if (priorityValid) {
+                buf.writeInt(priority);
             }
         }
 
@@ -626,6 +641,10 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                 this.rowSize = buf.readInt();
                 this.numSlots = buf.readInt();
             }
+            if ((flags & PRIORITY_VALID) == PRIORITY_VALID) {
+                this.priorityValid = true;
+                this.priority = buf.readInt();
+            }
         }
 
         @Override
@@ -650,6 +669,10 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     + rowSize
                     + ", numSlots"
                     + numSlots
+                    + ", priorityValid="
+                    + priorityValid
+                    + ", priority="
+                    + priority
                     + ", entryId="
                     + entryId
                     + '}';

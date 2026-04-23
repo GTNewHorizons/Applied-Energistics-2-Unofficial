@@ -1125,12 +1125,18 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 entry.numSlots = owCmd.numSlots;
             }
 
+            if (owCmd.priorityValid && entry.priority != owCmd.priority) {
+                entry.priority = owCmd.priority;
+                masterList.moveEntry(entry);
+            }
+
             masterList.isDirty = true;
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRename renameCmd) {
             InterfaceTerminalEntry entry = masterList.list.get(id);
 
             if (entry != null) {
                 entry.dispName = translateRawName(renameCmd.newName, renameCmd.suffix);
+                masterList.moveEntry(entry);
             }
             masterList.isDirty = true;
         }
@@ -1367,14 +1373,30 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
 
         public void addEntry(InterfaceTerminalEntry entry) {
-            InterfaceSection section = sections.get(entry.dispName);
+            addEntryToSection(entry);
+            list.put(entry.id, entry);
+            isDirty = true;
+        }
+
+        private void addEntryToSection(InterfaceTerminalEntry entry) {
+            String sectionKey = getSectionKey(entry);
+            InterfaceSection section = sections.get(sectionKey);
 
             if (section == null) {
-                section = new InterfaceSection(entry.dispName);
-                sections.put(entry.dispName, section);
+                section = new InterfaceSection(sectionKey, entry.dispName);
+                sections.put(sectionKey, section);
             }
             section.addEntry(entry);
-            list.put(entry.id, entry);
+        }
+
+        private String getSectionKey(InterfaceTerminalEntry entry) {
+            // Use a non-printable separator to avoid collisions between display names and priority values.
+            return entry.dispName + "\u0000" + entry.priority;
+        }
+
+        public void moveEntry(InterfaceTerminalEntry entry) {
+            removeEntryFromSection(entry);
+            addEntryToSection(entry);
             isDirty = true;
         }
 
@@ -1382,8 +1404,21 @@ public class GuiInterfaceTerminal extends AEBaseGui
             InterfaceTerminalEntry entry = list.remove(id);
 
             if (entry != null) {
-                entry.section.removeEntry(entry);
+                removeEntryFromSection(entry);
             }
+        }
+
+        private void removeEntryFromSection(InterfaceTerminalEntry entry) {
+            InterfaceSection section = entry.section;
+            if (section == null) {
+                return;
+            }
+
+            section.removeEntry(entry);
+            if (section.entries.isEmpty()) {
+                sections.remove(section.key);
+            }
+            isDirty = true;
         }
 
         public List<InterfaceSection> getVisibleSections() {
@@ -1420,6 +1455,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         public static final int TITLE_HEIGHT = 12;
 
+        String key;
         String name;
         List<InterfaceTerminalEntry> entries = new ArrayList<>();
         Set<InterfaceTerminalEntry> visibleEntries = new TreeSet<>(Comparator.comparing(e -> {
@@ -1433,7 +1469,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
         private boolean isDirty = true;
         boolean visible = false;
 
-        InterfaceSection(String name) {
+        InterfaceSection(String key, String name) {
+            this.key = key;
             this.name = name;
         }
 

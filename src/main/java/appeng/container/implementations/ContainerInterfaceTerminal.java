@@ -334,6 +334,13 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                                 .setSize(known.rows, known.rowSize, known.numSlots);
                     }
 
+                    int priority = machine.getPriority();
+                    if (known.priority != priority) {
+                        known.priority = priority;
+                        if (update == null) update = new PacketInterfaceTerminalUpdate();
+                        update.addOverwriteEntry(known.id).setPriority(priority);
+                    }
+
                     visited.add(machine);
                 } else {
                     if (!machine.shouldDisplay()) continue;
@@ -396,7 +403,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         private final int y;
         private final int z;
         private final int dim;
-        private final int priority;
+        private int priority;
         private final ForgeDirection side;
         private boolean online;
         private final IAEStackType<?>[] supportedStackTypes;
