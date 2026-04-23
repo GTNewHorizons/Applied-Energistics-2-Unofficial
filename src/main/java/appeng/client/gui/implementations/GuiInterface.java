@@ -10,6 +10,10 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+
+import java.util.Arrays;
+
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
@@ -265,7 +269,7 @@ public class GuiInterface extends GuiUpgradeable {
         outer: for (int i = 0; i < tagList.tagCount(); i++) {
             final NBTTagCompound entry = tagList.getCompoundTagAt(i);
             // Legacy fluid check: patterns created before native liquid support lack StackType
-            if (entry.hasKey("FluidName") && !supportedTypes.contains(FLUID_STACK_TYPE)) return true;
+            if (entry.hasKey("FluidName") && !Arrays.asList(supportedTypes).contains(FLUID_STACK_TYPE)) return true;
 
             if (entry.hasKey("StackType")) {
                 for (IAEStackType<?> type : supportedTypes) {
