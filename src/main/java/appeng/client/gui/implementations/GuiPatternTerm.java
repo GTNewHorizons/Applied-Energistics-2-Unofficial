@@ -107,6 +107,11 @@ public class GuiPatternTerm extends GuiMEMonitorable {
     }
 
     @Override
+    protected boolean shouldShiftClickFillVirtualPhantomSlot(final Slot slot) {
+        return false;
+    }
+
+    @Override
     protected void actionPerformed(final GuiButton btn) {
         super.actionPerformed(btn);
 
