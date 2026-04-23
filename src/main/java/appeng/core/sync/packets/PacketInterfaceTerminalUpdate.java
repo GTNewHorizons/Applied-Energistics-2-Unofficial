@@ -16,6 +16,8 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.storage.data.AEStackTypeRegistry;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.IInterfaceTerminalPostUpdate;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
@@ -246,7 +248,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public int numSlots;
         public boolean online;
         public boolean p2pOutput;
-        public String[] supportedStackTypeIds;
+        public IAEStackType<?>[] supportedStackTypes;
         public int priority;
         public ItemStack selfRep, dispRep;
         public NBTTagList items;
@@ -266,8 +268,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             return this;
         }
 
-        public PacketAdd setSupportedStackTypes(String[] supportedStackTypeIds) {
-            this.supportedStackTypeIds = supportedStackTypeIds;
+        public PacketAdd setSupportedStackTypes(IAEStackType<?>[] supportedStackTypes) {
+            this.supportedStackTypes = supportedStackTypes;
             return this;
         }
 
@@ -330,10 +332,10 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             buf.writeInt(numSlots);
             buf.writeBoolean(online);
             buf.writeBoolean(p2pOutput);
-            String[] ids = supportedStackTypeIds != null ? supportedStackTypeIds : new String[0];
-            buf.writeByte(ids.length);
-            for (String id : ids) {
-                ByteBufUtils.writeUTF8String(buf, id);
+            IAEStackType<?>[] types = supportedStackTypes != null ? supportedStackTypes : new IAEStackType<?>[0];
+            buf.writeByte(types.length);
+            for (IAEStackType<?> type : types) {
+                buf.writeByte(AEStackTypeRegistry.getNetworkId(type));
             }
 
             ByteBuf tempBuf = Unpooled.directBuffer(256);
@@ -375,9 +377,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.online = buf.readBoolean();
             this.p2pOutput = buf.readBoolean();
             int numTypes = buf.readByte() & 0xFF;
-            this.supportedStackTypeIds = new String[numTypes];
+            this.supportedStackTypes = new IAEStackType<?>[numTypes];
             for (int i = 0; i < numTypes; i++) {
-                this.supportedStackTypeIds[i] = ByteBufUtils.readUTF8String(buf);
+                this.supportedStackTypes[i] = AEStackTypeRegistry.getTypeFromNetworkId(buf.readByte());
             }
 
             int payloadSize = buf.readInt();
@@ -443,8 +445,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     + online
                     + ", p2pOutput="
                     + p2pOutput
-                    + ", supportedStackTypeIds="
-                    + Arrays.toString(supportedStackTypeIds)
+                    + ", supportedStackTypes="
+                    + Arrays.toString(supportedStackTypes)
                     + ", selfRep="
                     + selfRep
                     + ", dispRep="

@@ -10,9 +10,6 @@
 
 package appeng.helpers;
 
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
-
 import java.util.EnumSet;
 
 import net.minecraft.inventory.IInventory;
@@ -56,8 +53,7 @@ public interface IInterfaceHost extends ICraftingProvider, IUpgradeableHost, ICr
 
     @Override
     default IAEStackType<?>[] getSupportedStackTypes() {
-        return getInterfaceDuality().isFluidInterface() ? new IAEStackType<?>[] { ITEM_STACK_TYPE, FLUID_STACK_TYPE }
-                : new IAEStackType<?>[] { ITEM_STACK_TYPE };
+        return getInterfaceDuality().getSupportedStackTypes();
     }
 
     @Override

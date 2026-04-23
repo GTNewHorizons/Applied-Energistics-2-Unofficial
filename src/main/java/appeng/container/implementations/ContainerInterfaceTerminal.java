@@ -345,7 +345,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
                             .setItems(entry.rows, entry.rowSize, entry.numSlots, entry.invNbt)
                             .setReps(machine.getSelfRep(), machine.getDisplayRep())
                             .setP2POutput(machine instanceof PartP2PTunnel<?>p2pTunnel && p2pTunnel.isOutput())
-                            .setSupportedStackTypes(entry.supportedStackTypeIds).setPriority(entry.priority);
+                            .setSupportedStackTypes(entry.supportedStackTypes).setPriority(entry.priority);
                     tracked.put(machine, entry);
                     trackedById.put(entry.id, entry);
                     visited.add(machine);
@@ -399,7 +399,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
         private final int priority;
         private final ForgeDirection side;
         private boolean online;
-        private final String[] supportedStackTypeIds;
+        private final IAEStackType<?>[] supportedStackTypes;
         private NBTTagList invNbt;
 
         InvTracker(long id, IInterfaceViewable machine, boolean online) {
@@ -419,11 +419,7 @@ public final class ContainerInterfaceTerminal extends AEBaseContainer {
             this.dim = location.getDimension();
             this.side = machine instanceof AEBasePart hasSide ? hasSide.getSide() : ForgeDirection.UNKNOWN;
             this.online = online;
-            IAEStackType<?>[] types = machine.getSupportedStackTypes();
-            this.supportedStackTypeIds = new String[types.length];
-            for (int i = 0; i < types.length; i++) {
-                this.supportedStackTypeIds[i] = types[i].getId();
-            }
+            this.supportedStackTypes = machine.getSupportedStackTypes();
             this.priority = machine.getPriority();
             this.invNbt = new NBTTagList();
             updateNBT();

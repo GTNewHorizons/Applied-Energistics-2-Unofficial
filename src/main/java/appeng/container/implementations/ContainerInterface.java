@@ -10,9 +10,6 @@
 
 package appeng.container.implementations;
 
-import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
-import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
-
 import java.util.ArrayList;
 
 import net.minecraft.entity.player.InventoryPlayer;
@@ -47,6 +44,7 @@ import appeng.util.Platform;
 public class ContainerInterface extends ContainerUpgradeable implements IOptionalSlotHost {
 
     private final DualityInterface myDuality;
+    private final IAEStackType<?>[] supportedStackTypes;
 
     @GuiSync(3)
     public YesNo bMode = YesNo.NO;
@@ -91,6 +89,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         super(ip, te.getInterfaceDuality().getHost());
 
         this.myDuality = te.getInterfaceDuality();
+        this.supportedStackTypes = te.getSupportedStackTypes();
         patternRows = getPatternCapacityCardsInstalled();
         configSlots = getConfigSlotsEnabled();
 
@@ -294,8 +293,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
     }
 
     public IAEStackType<?>[] getSupportedStackTypes() {
-        return myDuality.isFluidInterface() ? new IAEStackType<?>[] { ITEM_STACK_TYPE, FLUID_STACK_TYPE }
-                : new IAEStackType<?>[] { ITEM_STACK_TYPE };
+        return supportedStackTypes;
     }
 
     public int getPatternCapacityCardsInstalled() {

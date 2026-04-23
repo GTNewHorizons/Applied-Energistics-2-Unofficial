@@ -10,6 +10,8 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +32,7 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
@@ -55,6 +58,7 @@ import appeng.api.config.YesNo;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.parts.IInterfaceTerminal;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
@@ -85,7 +89,6 @@ import appeng.integration.modules.NEI;
 import appeng.items.misc.ItemEncodedPattern;
 import appeng.tile.inventory.AppEngInternalInventory;
 import appeng.util.Platform;
-import appeng.util.item.AEFluidStackType;
 import appeng.util.item.AEItemStack;
 import cpw.mods.fml.common.Loader;
 
@@ -596,8 +599,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
     }
 
     private void drawSectionIcon(ItemStack icon, int x, float y) {
-        AEItemStack aeIcon = AEItemStack.create(icon);
-        if (aeIcon == null) {
+        if (icon == null) {
             return;
         }
 
@@ -610,7 +612,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         GL11.glEnable(GL12.GL_RESCALE_NORMAL);
         GL11.glEnable(GL11.GL_DEPTH_TEST);
 
-        aeIcon.drawInGui(mc, 0, 0);
+        RenderItem.getInstance().renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, icon, 0, 0);
 
         GL11.glPopAttrib();
         GL11.glPopMatrix();
@@ -841,7 +843,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         } else if (entry.filteredRecipes[slotIdx]) {
                             GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayUnpowered.getColor());
-                        } else if (!supportsFluid(entry.supportedStackTypeIds) && patternContainsFluids(stack)) {
+                        } else if (hasInvalidTypeStack(stack, entry.supportedStackTypes)) {
                             GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
                         }
@@ -1092,7 +1094,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.numSlots,
                     addCmd.online,
                     addCmd.p2pOutput,
-                    addCmd.supportedStackTypeIds,
+                    addCmd.supportedStackTypes,
                     addCmd.priority).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             masterList.addEntry(entry);
@@ -1243,28 +1245,26 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
     }
 
-    private static boolean supportsFluid(String[] supportedStackTypeIds) {
-        for (String id : supportedStackTypeIds) {
-            if (AEFluidStackType.FLUID_STACK_ID.equals(id)) return true;
-        }
-        return false;
-    }
-
-    private static boolean patternContainsFluids(final ItemStack stack) {
+    private static boolean hasInvalidTypeStack(final ItemStack stack, final IAEStackType<?>[] supportedTypes) {
         if (stack == null || stack.getTagCompound() == null) return false;
         final NBTTagCompound nbt = stack.getTagCompound();
         if (nbt.getBoolean("InvalidPattern")) return false;
-        return tagListHasFluids(nbt.getTagList("in", NBT.TAG_COMPOUND))
-                || tagListHasFluids(nbt.getTagList("out", NBT.TAG_COMPOUND));
+        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes)
+                || hasInvalidTypeInTagList(nbt.getTagList("out", NBT.TAG_COMPOUND), supportedTypes);
     }
 
-    private static boolean tagListHasFluids(final NBTTagList tagList) {
-        for (int i = 0; i < tagList.tagCount(); i++) {
+    private static boolean hasInvalidTypeInTagList(final NBTTagList tagList, final IAEStackType<?>[] supportedTypes) {
+        outer: for (int i = 0; i < tagList.tagCount(); i++) {
             final NBTTagCompound entry = tagList.getCompoundTagAt(i);
-            // Legacy fluid check: patterns created before native liquid support lack StackType
-            if (entry.hasKey("FluidName")) return true;
-            // StackType is a string id; "fluid" means a fluid stack
-            if (entry.hasKey("StackType") && "fluid".equals(entry.getString("StackType"))) return true;
+            if (entry.hasKey("FluidName") && !Arrays.asList(supportedTypes).contains(FLUID_STACK_TYPE)) return true;
+            if (entry.hasKey("StackType")) {
+                for (IAEStackType<?> type : supportedTypes) {
+                    if (entry.getString("StackType").equals(type.getId())) {
+                        continue outer;
+                    }
+                }
+                return true;
+            }
         }
         return false;
     }
@@ -1568,7 +1568,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int priority;
         boolean online;
         boolean p2pOutput;
-        String[] supportedStackTypeIds;
+        IAEStackType<?>[] supportedStackTypes;
         private Boolean[] brokenRecipes;
         int numItems = 0;
         /** Should recipe be filtered out/grayed out? */
@@ -1577,7 +1577,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         private int hoveredSlotIdx = -1;
 
         InterfaceTerminalEntry(long id, String name, String suffix, int rows, int rowSize, int numSlots, boolean online,
-                boolean p2pOutput, String[] supportedStackTypeIds, int priority) {
+                boolean p2pOutput, IAEStackType<?>[] supportedStackTypes, int priority) {
             this.id = id;
             this.dispName = translateRawName(name, suffix);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
@@ -1586,7 +1586,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.numSlots = numSlots;
             this.online = online;
             this.p2pOutput = p2pOutput;
-            this.supportedStackTypeIds = supportedStackTypeIds;
+            this.supportedStackTypes = supportedStackTypes;
             this.priority = priority;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
