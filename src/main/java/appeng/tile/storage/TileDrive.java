@@ -322,7 +322,7 @@ public class TileDrive extends AENetworkInvTile
                             if (cell != null) {
                                 power += this.handlersBySlot[x].cellIdleDrain(is, cell);
 
-                                final MEInventoryHandler<IAEItemStack> ih = new MEInventoryHandler<IAEItemStack>(
+                                final MEInventoryHandler<IAEItemStack> ih = new DriveWatcher<IAEItemStack>(
                                         cell,
                                         cell.getStackType());
                                 ih.setPriority(this.priority);
@@ -339,6 +339,13 @@ public class TileDrive extends AENetworkInvTile
             this.getProxy().setIdlePowerUsage(power);
 
             this.isCached = true;
+        }
+    }
+
+    private static class DriveWatcher<T extends IAEStack<T>> extends MEInventoryHandler<T> {
+
+        public DriveWatcher(final IMEInventory<T> i, final IAEStackType<T> type) {
+            super(i, type);
         }
     }
 
