@@ -635,6 +635,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
                             .getValidDestinationSlots(appEngSlot.isPlayerSide(), stackInSlot);
 
                     if (selectedSlots.isEmpty() && appEngSlot.isPlayerSide()
+                            && this.shouldShiftClickFillVirtualPhantomSlot(slot)
                             && baseContainer.getValidDestinationFakeSlot(stackInSlot) == null) {
                         for (VirtualMESlot vmeSlot : this.virtualSlots) {
                             if (vmeSlot instanceof VirtualMEPhantomSlot vmepSlot && vmepSlot.getAEStack() == null) {
@@ -650,6 +651,10 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         }
 
         super.handleMouseClick(slot, slotIdx, clickedButton, clickType);
+    }
+
+    protected boolean shouldShiftClickFillVirtualPhantomSlot(final Slot slot) {
+        return true;
     }
 
     @Override
