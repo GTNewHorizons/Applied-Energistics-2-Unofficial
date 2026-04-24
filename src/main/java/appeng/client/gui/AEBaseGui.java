@@ -478,7 +478,7 @@ public abstract class AEBaseGui extends GuiContainer implements IGuiTooltipHandl
         slot.putStack(stack);
     }
 
-    private ItemStack getStackFromHand() {
+    protected ItemStack getStackFromHand() {
         final ItemStack phantom = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
                 ? NEI.instance.getDraggingPhantomItem()
                 : null;

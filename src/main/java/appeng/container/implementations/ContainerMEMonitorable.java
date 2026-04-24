@@ -10,8 +10,6 @@
 
 package appeng.container.implementations;
 
-import static appeng.util.FluidUtils.getFluidFromContainer;
-import static appeng.util.FluidUtils.isFilledFluidContainer;
 import static appeng.util.IterationCounter.fetchNewId;
 import static appeng.util.item.AEItemStackType.ITEM_STACK_TYPE;
 
@@ -33,7 +31,6 @@ import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.util.ForgeDirection;
-import net.minecraftforge.fluids.FluidStack;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -68,7 +65,6 @@ import appeng.api.storage.ITerminalHost;
 import appeng.api.storage.ITerminalPins;
 import appeng.api.storage.ITerminalTypeFilterProvider;
 import appeng.api.storage.data.AEStackTypeRegistry;
-import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IAEStackType;
@@ -96,7 +92,6 @@ import appeng.util.IConfigManagerHost;
 import appeng.util.InventoryAdaptor;
 import appeng.util.Platform;
 import appeng.util.inv.AdaptorPlayerHand;
-import appeng.util.item.AEFluidStack;
 import appeng.util.item.AEItemStack;
 import it.unimi.dsi.fastutil.objects.ObjectLongPair;
 import it.unimi.dsi.fastutil.objects.Reference2BooleanMap;
@@ -597,31 +592,10 @@ public class ContainerMEMonitorable extends AEBaseContainer
 
         switch (action) {
             case AUTO_CRAFT -> {} // handled in PacketMonitorableAction
-            case SET_ITEM_PIN -> {
-                ItemStack hand = player.inventory.getItemStack();
-                if (hand == null) return;
-
-                if (this.getPin(custom) != null && this.getPin(custom) instanceof IAEItemStack pinStack
-                        && hand.isItemEqual(pinStack.getItemStack())) {
-                    // put item in the terminal
-                    doMonitorableAction(MonitorableAction.PICKUP_OR_SET_DOWN, this.inventorySlots.size(), player);
-                } else {
-                    this.setPin(AEItemStack.create(hand), custom);
-                }
-            }
-            case SET_CONTAINER_PIN -> {
-                ItemStack hand = player.inventory.getItemStack();
-                if (!isFilledFluidContainer(hand)) return;
-                FluidStack fluid = getFluidFromContainer(hand);
-                if (fluid == null) return;
-
-                if (this.getPin(custom) != null && this.getPin(custom) instanceof IAEFluidStack pinStack
-                        && fluid.isFluidEqual(pinStack.getFluidStack())) {
-                    // put item in the terminal
-                    doMonitorableAction(MonitorableAction.FILL_SINGLE_CONTAINER, this.inventorySlots.size(), player);
-                } else {
-                    this.setPin(AEFluidStack.create(fluid), custom);
-                }
+            case SET_PIN -> {
+                IAEStack<?> targetStack = getTargetStack();
+                if (targetStack == null) return;
+                this.setPin(targetStack, custom);
             }
             case UNSET_PIN -> {
                 this.setPin(null, custom);
