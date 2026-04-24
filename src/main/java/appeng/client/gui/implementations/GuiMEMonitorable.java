@@ -1144,12 +1144,11 @@ public class GuiMEMonitorable extends AEBaseGui
 
         if (itemStack == null) return false;
 
+        final boolean isRealItem = this.mc.thePlayer.inventory.getItemStack() != null;
         final boolean nonItemInteraction = isCtrlKeyDown()
                 || (this.typeFilters != null && !this.typeFilters.getBoolean(ITEM_STACK_TYPE));
 
         if (nonItemInteraction) {
-            boolean isRealItem = this.mc.thePlayer.inventory.getItemStack() != null;
-
             for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
                 if (type.isContainerItemForType(itemStack)) {
                     IAEStack<?> stackInContainer = type.getStackFromContainerItem(itemStack);
