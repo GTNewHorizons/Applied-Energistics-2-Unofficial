@@ -27,6 +27,7 @@ import appeng.api.config.Upgrades;
 import appeng.api.config.YesNo;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.networking.crafting.ICraftingPatternDetails;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.IConfigManager;
 import appeng.container.guisync.GuiSync;
 import appeng.container.slot.IOptionalSlotHost;
@@ -43,6 +44,7 @@ import appeng.util.Platform;
 public class ContainerInterface extends ContainerUpgradeable implements IOptionalSlotHost {
 
     private final DualityInterface myDuality;
+    private final IAEStackType<?>[] supportedStackTypes;
 
     @GuiSync(3)
     public YesNo bMode = YesNo.NO;
@@ -87,6 +89,7 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
         super(ip, te.getInterfaceDuality().getHost());
 
         this.myDuality = te.getInterfaceDuality();
+        this.supportedStackTypes = te.getSupportedStackTypes();
         patternRows = getPatternCapacityCardsInstalled();
         configSlots = getConfigSlotsEnabled();
 
@@ -287,6 +290,10 @@ public class ContainerInterface extends ContainerUpgradeable implements IOptiona
 
     public void setFuzzyMode(FuzzyMode mode) {
         this.fuzzyMode = mode;
+    }
+
+    public IAEStackType<?>[] getSupportedStackTypes() {
+        return supportedStackTypes;
     }
 
     public int getPatternCapacityCardsInstalled() {

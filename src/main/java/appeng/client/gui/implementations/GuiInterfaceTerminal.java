@@ -10,6 +10,8 @@
 
 package appeng.client.gui.implementations;
 
+import static appeng.util.item.AEFluidStackType.FLUID_STACK_TYPE;
+
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,11 +32,13 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
@@ -54,6 +58,7 @@ import appeng.api.config.YesNo;
 import appeng.api.implementations.ICraftingPatternItem;
 import appeng.api.parts.IInterfaceTerminal;
 import appeng.api.storage.data.IAEStack;
+import appeng.api.storage.data.IAEStackType;
 import appeng.api.util.NamedDimensionalCoord;
 import appeng.client.gui.AEBaseGui;
 import appeng.client.gui.IGuiTooltipHandler;
@@ -132,6 +137,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private int viewHeight;
     private final List<String> extraOptionsText;
     private ItemStack tooltipStack;
+    private List<String> pendingSectionTooltip;
+    private int pendingSectionTooltipX;
+    private int pendingSectionTooltipY;
     private final boolean neiPresent;
     protected static String searchFieldInputsText = "";
     protected static String searchFieldOutputsText = "";
@@ -340,6 +348,18 @@ public class GuiInterfaceTerminal extends AEBaseGui
         handleTooltip(mouseX, mouseY, searchFieldNames);
 
         super.drawScreen(mouseX, mouseY, btn);
+
+        if (pendingSectionTooltip != null) {
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+            drawHoveringText(pendingSectionTooltip, pendingSectionTooltipX, pendingSectionTooltipY, fontRendererObj);
+
+            GL11.glPopAttrib();
+            pendingSectionTooltip = null;
+        }
     }
 
     @Override
@@ -470,6 +490,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 (int) (this.viewHeight * guiScaleY));
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
+        pendingSectionTooltip = null;
+
         /*
          * Render each section
          */
@@ -576,6 +598,29 @@ public class GuiInterfaceTerminal extends AEBaseGui
         return s.replaceAll(".", "\u00a7$0");
     }
 
+    private void drawSectionIcon(ItemStack icon, int x, float y) {
+        if (icon == null) {
+            return;
+        }
+
+        GL11.glPushMatrix();
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT | GL11.GL_COLOR_BUFFER_BIT | GL11.GL_LIGHTING_BIT);
+        GL11.glTranslatef(x, y, ITEM_STACK_OVERLAY_Z + ITEM_STACK_Z + STEP_Z);
+        GL11.glScalef(0.625f, 0.625f, 1.0f);
+
+        RenderHelper.enableGUIStandardItemLighting();
+        GL11.glEnable(GL12.GL_RESCALE_NORMAL);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+
+        RenderItem.getInstance().renderItemAndEffectIntoGUI(mc.fontRenderer, mc.renderEngine, icon, 0, 0);
+
+        GL11.glPopAttrib();
+        GL11.glPopMatrix();
+
+        bindTexture(BACKGROUND);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
     /**
      * Render the section (if it is visible)
      *
@@ -588,6 +633,16 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private int drawSection(InterfaceSection section, int viewY, int relMouseX, int relMouseY) {
         int renderY = 0;
         final int fontColor = GuiColors.InterfaceTerminalInventory.getColor();
+
+        ItemStack sectionIcon = null;
+        for (InterfaceTerminalEntry e : section.entries) {
+            if (e.selfRep != null) {
+                sectionIcon = e.selfRep;
+                break;
+            }
+        }
+
+        final int textXFirst = sectionIcon != null ? 14 : 2;
         List<String> titleLines = breakText(section.name, VIEW_WIDTH - 4);
 
         int actualTitleHeight = Math
@@ -610,6 +665,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 renderY += entryHeight;
             }
         }
+
         /*
          * Render title
          */
@@ -618,7 +674,6 @@ public class GuiInterfaceTerminal extends AEBaseGui
         GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z + ITEM_STACK_Z + STEP_Z);
 
         if (viewY < viewHeight && viewY + actualTitleHeight > 0) {
-            // Draw background: one TITLE_HEIGHT block per line
             for (int i = 0; i < titleLines.size(); i++) {
                 int lineY = viewY + (i * InterfaceSection.TITLE_HEIGHT);
                 if (lineY + InterfaceSection.TITLE_HEIGHT > 0 && lineY < viewHeight) {
@@ -635,13 +690,41 @@ public class GuiInterfaceTerminal extends AEBaseGui
             for (int i = 0; i < titleLines.size(); i++) {
                 int textY = viewY + 2 + (i * InterfaceSection.TITLE_HEIGHT);
                 if (textY + 9 > 0 && textY < viewHeight) {
-                    fontRendererObj.drawString(titleLines.get(i), 2, textY, fontColor);
+                    fontRendererObj.drawString(titleLines.get(i), i == 0 ? textXFirst : 2, textY, fontColor);
                 }
             }
         }
 
         GL11.glPopMatrix();
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        if (sectionIcon != null && viewY + InterfaceSection.TITLE_HEIGHT > 0 && viewY < viewHeight) {
+            int iconX = 1;
+            float iconY = viewY + 0.5f;
+            drawSectionIcon(sectionIcon, iconX, iconY);
+
+            if (relMouseX >= iconX && relMouseX < iconX + 10 && relMouseY >= iconY && relMouseY < iconY + 10) {
+                List<String> tooltip = new ArrayList<>();
+                tooltip.add(sectionIcon.getDisplayName());
+
+                int priority = section.entries.get(0).priority;
+                tooltip.add(
+                        EnumChatFormatting.GRAY + StatCollector.translateToLocal("gui.appliedenergistics2.Priority")
+                                + ": "
+                                + priority);
+
+                if (section.entries.size() > 1) {
+                    tooltip.add(
+                            EnumChatFormatting.GRAY + StatCollector.translateToLocal("gui.appliedenergistics2.Group")
+                                    + ": "
+                                    + section.entries.size());
+                }
+
+                pendingSectionTooltip = tooltip;
+                pendingSectionTooltipX = relMouseX + guiLeft + VIEW_LEFT;
+                pendingSectionTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+            }
+        }
 
         return actualTitleHeight + renderY;
     }
@@ -760,6 +843,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
                         } else if (entry.filteredRecipes[slotIdx]) {
                             GL11.glTranslatef(0.0f, 0.0f, ITEM_STACK_OVERLAY_Z);
                             drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayUnpowered.getColor());
+                        } else if (hasInvalidTypeStack(stack, entry.supportedStackTypes)) {
+                            GL11.glTranslatef(0.0f, 0.0f, SLOT_Z - ITEM_STACK_OVERLAY_Z);
+                            drawRect(0, 0, 16, 16, GuiColors.ItemSlotOverlayFluidMismatch.getColor());
                         }
                     } else {
                         tooltipStack = stack;
@@ -1007,7 +1093,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.rowSize,
                     addCmd.numSlots,
                     addCmd.online,
-                    addCmd.p2pOutput).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
+                    addCmd.p2pOutput,
+                    addCmd.supportedStackTypes,
+                    addCmd.priority).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
@@ -1037,12 +1125,18 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 entry.numSlots = owCmd.numSlots;
             }
 
+            if (owCmd.priorityValid && entry.priority != owCmd.priority) {
+                entry.priority = owCmd.priority;
+                masterList.moveEntry(entry);
+            }
+
             masterList.isDirty = true;
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRename renameCmd) {
             InterfaceTerminalEntry entry = masterList.list.get(id);
 
             if (entry != null) {
                 entry.dispName = translateRawName(renameCmd.newName, renameCmd.suffix);
+                masterList.moveEntry(entry);
             }
             masterList.isDirty = true;
         }
@@ -1157,6 +1251,30 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
     }
 
+    private static boolean hasInvalidTypeStack(final ItemStack stack, final IAEStackType<?>[] supportedTypes) {
+        if (stack == null || stack.getTagCompound() == null) return false;
+        final NBTTagCompound nbt = stack.getTagCompound();
+        if (nbt.getBoolean("InvalidPattern")) return false;
+        return hasInvalidTypeInTagList(nbt.getTagList("in", NBT.TAG_COMPOUND), supportedTypes)
+                || hasInvalidTypeInTagList(nbt.getTagList("out", NBT.TAG_COMPOUND), supportedTypes);
+    }
+
+    private static boolean hasInvalidTypeInTagList(final NBTTagList tagList, final IAEStackType<?>[] supportedTypes) {
+        outer: for (int i = 0; i < tagList.tagCount(); i++) {
+            final NBTTagCompound entry = tagList.getCompoundTagAt(i);
+            if (entry.hasKey("FluidName") && !Arrays.asList(supportedTypes).contains(FLUID_STACK_TYPE)) return true;
+            if (entry.hasKey("StackType")) {
+                for (IAEStackType<?> type : supportedTypes) {
+                    if (entry.getString("StackType").equals(type.getId())) {
+                        continue outer;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Tracks the list of entries.
      */
@@ -1255,14 +1373,30 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
 
         public void addEntry(InterfaceTerminalEntry entry) {
-            InterfaceSection section = sections.get(entry.dispName);
+            addEntryToSection(entry);
+            list.put(entry.id, entry);
+            isDirty = true;
+        }
+
+        private void addEntryToSection(InterfaceTerminalEntry entry) {
+            String sectionKey = getSectionKey(entry);
+            InterfaceSection section = sections.get(sectionKey);
 
             if (section == null) {
-                section = new InterfaceSection(entry.dispName);
-                sections.put(entry.dispName, section);
+                section = new InterfaceSection(sectionKey, entry.dispName);
+                sections.put(sectionKey, section);
             }
             section.addEntry(entry);
-            list.put(entry.id, entry);
+        }
+
+        private String getSectionKey(InterfaceTerminalEntry entry) {
+            // Use a non-printable separator to avoid collisions between display names and priority values.
+            return entry.dispName + "\u0000" + entry.priority;
+        }
+
+        public void moveEntry(InterfaceTerminalEntry entry) {
+            removeEntryFromSection(entry);
+            addEntryToSection(entry);
             isDirty = true;
         }
 
@@ -1270,8 +1404,21 @@ public class GuiInterfaceTerminal extends AEBaseGui
             InterfaceTerminalEntry entry = list.remove(id);
 
             if (entry != null) {
-                entry.section.removeEntry(entry);
+                removeEntryFromSection(entry);
             }
+        }
+
+        private void removeEntryFromSection(InterfaceTerminalEntry entry) {
+            InterfaceSection section = entry.section;
+            if (section == null) {
+                return;
+            }
+
+            section.removeEntry(entry);
+            if (section.entries.isEmpty()) {
+                sections.remove(section.key);
+            }
+            isDirty = true;
         }
 
         public List<InterfaceSection> getVisibleSections() {
@@ -1308,6 +1455,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         public static final int TITLE_HEIGHT = 12;
 
+        String key;
         String name;
         List<InterfaceTerminalEntry> entries = new ArrayList<>();
         Set<InterfaceTerminalEntry> visibleEntries = new TreeSet<>(Comparator.comparing(e -> {
@@ -1321,7 +1469,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
         private boolean isDirty = true;
         boolean visible = false;
 
-        InterfaceSection(String name) {
+        InterfaceSection(String key, String name) {
+            this.key = key;
             this.name = name;
         }
 
@@ -1453,8 +1602,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int numSlots;
         int guiHeight;
         int dispY = -9999;
+        int priority;
         boolean online;
         boolean p2pOutput;
+        IAEStackType<?>[] supportedStackTypes;
         private Boolean[] brokenRecipes;
         int numItems = 0;
         /** Should recipe be filtered out/grayed out? */
@@ -1463,7 +1614,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         private int hoveredSlotIdx = -1;
 
         InterfaceTerminalEntry(long id, String name, String suffix, int rows, int rowSize, int numSlots, boolean online,
-                boolean p2pOutput) {
+                boolean p2pOutput, IAEStackType<?>[] supportedStackTypes, int priority) {
             this.id = id;
             this.dispName = translateRawName(name, suffix);
             this.inv = new AppEngInternalInventory(null, rows * rowSize, 1);
@@ -1472,6 +1623,8 @@ public class GuiInterfaceTerminal extends AEBaseGui
             this.numSlots = numSlots;
             this.online = online;
             this.p2pOutput = p2pOutput;
+            this.supportedStackTypes = supportedStackTypes;
+            this.priority = priority;
             this.optionsButton = new GuiImgButton(2, 0, Settings.ACTIONS, ActionItems.HIGHLIGHT_INTERFACE);
             this.optionsButton.setHalfSize(true);
             this.guiHeight = 18 * rows + 1;

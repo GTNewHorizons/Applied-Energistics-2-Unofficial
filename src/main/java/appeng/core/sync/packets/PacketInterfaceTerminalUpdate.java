@@ -16,6 +16,8 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import appeng.api.storage.data.AEStackTypeRegistry;
+import appeng.api.storage.data.IAEStackType;
 import appeng.client.gui.IInterfaceTerminalPostUpdate;
 import appeng.core.AEConfig;
 import appeng.core.AELog;
@@ -246,6 +248,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public int numSlots;
         public boolean online;
         public boolean p2pOutput;
+        public IAEStackType<?>[] supportedStackTypes;
+        public int priority;
         public ItemStack selfRep, dispRep;
         public NBTTagList items;
 
@@ -264,6 +268,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             return this;
         }
 
+        public PacketAdd setSupportedStackTypes(IAEStackType<?>[] supportedStackTypes) {
+            this.supportedStackTypes = supportedStackTypes;
+            return this;
+        }
+
         public PacketAdd setLoc(int x, int y, int z, int dim, int side) {
             this.x = x;
             this.y = y;
@@ -278,6 +287,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.rowSize = rowSize;
             this.numSlots = numSlots;
             this.items = items;
+            return this;
+        }
+
+        public PacketAdd setPriority(int priority) {
+            this.priority = priority;
             return this;
         }
 
@@ -318,6 +332,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             buf.writeInt(numSlots);
             buf.writeBoolean(online);
             buf.writeBoolean(p2pOutput);
+            IAEStackType<?>[] types = supportedStackTypes != null ? supportedStackTypes : new IAEStackType<?>[0];
+            buf.writeByte(types.length);
+            for (IAEStackType<?> type : types) {
+                buf.writeByte(AEStackTypeRegistry.getNetworkId(type));
+            }
 
             ByteBuf tempBuf = Unpooled.directBuffer(256);
             try {
@@ -329,6 +348,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     if (dispRep != null) {
                         wrapper.setTag("disp", dispRep.writeToNBT(new NBTTagCompound()));
                     }
+                    wrapper.setInteger("priority", priority);
                     wrapper.setTag("data", items);
                     CompressedStreamTools.writeCompressed(wrapper, stream);
                 }
@@ -356,6 +376,11 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             this.numSlots = buf.readInt();
             this.online = buf.readBoolean();
             this.p2pOutput = buf.readBoolean();
+            int numTypes = buf.readByte() & 0xFF;
+            this.supportedStackTypes = new IAEStackType<?>[numTypes];
+            for (int i = 0; i < numTypes; i++) {
+                this.supportedStackTypes[i] = AEStackTypeRegistry.getTypeFromNetworkId(buf.readByte());
+            }
 
             int payloadSize = buf.readInt();
             try (ByteBufInputStream stream = new ByteBufInputStream(buf, payloadSize)) {
@@ -387,6 +412,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                 if (payload.hasKey("disp", NBT.TAG_COMPOUND)) {
                     this.dispRep = ItemStack.loadItemStackFromNBT(payload.getCompoundTag("disp"));
                 }
+                this.priority = payload.getInteger("priority");
                 this.items = payload.getTagList("data", NBT.TAG_COMPOUND);
             }
         }
@@ -419,6 +445,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     + online
                     + ", p2pOutput="
                     + p2pOutput
+                    + ", supportedStackTypes="
+                    + Arrays.toString(supportedStackTypes)
                     + ", selfRep="
                     + selfRep
                     + ", dispRep="
@@ -466,6 +494,7 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public static final int ITEMS_VALID = 1 << 2;
         public static final int ALL_ITEM_UPDATE_BIT = 1 << 3;
         public static final int SIZE_UPDATE_BIT = 1 << 4;
+        public static final int PRIORITY_VALID = 1 << 5;
         public boolean onlineValid;
         public boolean online;
         public boolean itemsValid;
@@ -476,6 +505,8 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
         public int rows;
         public int rowSize;
         public int numSlots;
+        public boolean priorityValid;
+        public int priority;
 
         protected PacketOverwrite(long id) {
             super(id);
@@ -507,6 +538,12 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             return this;
         }
 
+        public PacketOverwrite setPriority(int priority) {
+            this.priorityValid = true;
+            this.priority = priority;
+            return this;
+        }
+
         @Override
         protected void write(ByteBuf buf) throws IOException {
             buf.writeByte(PacketType.OVERWRITE.ordinal());
@@ -520,6 +557,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
             }
             if (sizeValid) {
                 flags |= SIZE_UPDATE_BIT;
+            }
+            if (priorityValid) {
+                flags |= PRIORITY_VALID;
             }
             if (itemsValid) {
                 flags |= ITEMS_VALID;
@@ -553,6 +593,9 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                 buf.writeInt(rows);
                 buf.writeInt(rowSize);
                 buf.writeInt(numSlots);
+            }
+            if (priorityValid) {
+                buf.writeInt(priority);
             }
         }
 
@@ -598,6 +641,10 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                 this.rowSize = buf.readInt();
                 this.numSlots = buf.readInt();
             }
+            if ((flags & PRIORITY_VALID) == PRIORITY_VALID) {
+                this.priorityValid = true;
+                this.priority = buf.readInt();
+            }
         }
 
         @Override
@@ -622,6 +669,10 @@ public class PacketInterfaceTerminalUpdate extends AppEngPacket {
                     + rowSize
                     + ", numSlots"
                     + numSlots
+                    + ", priorityValid="
+                    + priorityValid
+                    + ", priority="
+                    + priority
                     + ", entryId="
                     + entryId
                     + '}';
