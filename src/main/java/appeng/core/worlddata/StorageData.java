@@ -103,7 +103,12 @@ final class StorageData implements IWorldGridStorageData, IOnWorldStartable, IOn
 
         if (result == null || result.get() == null) {
             final String id = String.valueOf(storageID);
-            final double energy = this.config.get(GRID_STORAGE_CATEGORY, id, 0.0D).getDouble();
+            final double energy;
+            if (this.config.getCategory(GRID_STORAGE_CATEGORY).containsKey(id)) {
+                energy = this.config.get(GRID_STORAGE_CATEGORY, id, 0.0D).getDouble();
+            } else {
+                energy = 0.0D;
+            }
             final GridStorage thisStorage = new GridStorage(energy, storageID);
             gss.setGridStorage(new WeakReference<>(thisStorage));
             this.loadedStorage.put(gss, new WeakReference<>(gss));
