@@ -90,8 +90,8 @@ public class GuiInterface extends GuiUpgradeable {
         this.interfaceMode = new GuiToggleButton(
                 this.guiLeft - 18,
                 this.guiTop + offset,
-                84,
-                85,
+                90,
+                91,
                 GuiText.InterfaceTerminal.getLocal(),
                 GuiText.InterfaceTerminalHint.getLocal());
         this.buttonList.add(this.interfaceMode);

@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -82,6 +83,7 @@ import appeng.core.sync.packets.PacketInterfaceTerminalUpdate;
 import appeng.core.sync.packets.PacketInterfaceTerminalUpdate.PacketEntry;
 import appeng.core.sync.packets.PacketInventoryAction;
 import appeng.core.sync.packets.PacketRemoteRename;
+import appeng.core.sync.packets.PacketToggleInterfaceVisibility;
 import appeng.helpers.InventoryAction;
 import appeng.integration.IntegrationRegistry;
 import appeng.integration.IntegrationType;
@@ -124,6 +126,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private final MEGuiTextField searchFieldNames;
     private final GuiImgButton guiButtonHideFull;
     private final GuiImgButton guiButtonAssemblersOnly;
+    private final GuiImgButton guiButtonShowHidden;
     private final GuiImgButton guiButtonBrokenRecipes;
     private final GuiImgButton guiButtonUseSubstitute;
     protected final GuiImgButton terminalStyleBox;
@@ -132,6 +135,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private boolean onlyMolecularAssemblers = false;
     private boolean onlyBrokenRecipes = false;
     private boolean onlySubstitute = false;
+    private boolean showHidden = false;
     private boolean online;
     /** The height of the viewport. */
     private int viewHeight;
@@ -140,6 +144,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
     private List<String> pendingSectionTooltip;
     private int pendingSectionTooltipX;
     private int pendingSectionTooltipY;
+    private boolean pendingHideButtonTooltip;
+    private int pendingHideButtonTooltipX;
+    private int pendingHideButtonTooltipY;
+    private List<String> pendingHideButtonTooltipLines;
     private final boolean neiPresent;
     protected static String searchFieldInputsText = "";
     protected static String searchFieldOutputsText = "";
@@ -202,6 +210,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 AEConfig.instance.preserveSearchBar ? YesNo.YES : YesNo.NO);
         guiButtonAssemblersOnly = new GuiImgButton(0, 0, Settings.ACTIONS, null);
         guiButtonHideFull = new GuiImgButton(0, 0, Settings.ACTIONS, null);
+        guiButtonShowHidden = new GuiImgButton(0, 0, Settings.ACTIONS, null);
         guiButtonBrokenRecipes = new GuiImgButton(0, 0, Settings.ACTIONS, null);
         guiButtonUseSubstitute = new GuiImgButton(0, 0, Settings.ACTIONS, null);
         guiButtonSectionOrder = new GuiImgButton(0, 0, Settings.INTERFACE_TERMINAL_SECTION_ORDER, StringOrder.NATURAL);
@@ -213,6 +222,30 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         NEI.searchField.putFormatter(this.searchFieldInputs);
         NEI.searchField.putFormatter(this.searchFieldOutputs);
+    }
+
+    private static String ensureGray(final String text) {
+        if (text == null) {
+            return null;
+        }
+
+        // Some tooltips are auto-grayed by AEBaseGui; this one is drawn manually via drawHoveringText.
+        // If the localization already contains formatting, keep it to avoid double formatting.
+        return text.indexOf('\u00a7') >= 0 ? text : EnumChatFormatting.GRAY + text;
+    }
+
+    private static List<String> buildInterfaceTerminalVisibilityTooltip(final GuiImgButton button) {
+        final List<String> tooltip = new ArrayList<>(2);
+        tooltip.add(ButtonToolTips.InterfaceTerminalVisibility.getLocal());
+
+        final Enum current = button.getCurrentValue();
+        final boolean visible = current == YesNo.YES;
+        tooltip.add(
+                ensureGray(
+                        (visible ? ButtonToolTips.InterfaceTerminalVisibilityVisible
+                                : ButtonToolTips.InterfaceTerminalVisibilityHidden).getLocal()));
+
+        return tooltip;
     }
 
     private void setScrollBar() {
@@ -270,6 +303,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
         guiButtonAssemblersOnly.yPosition = offset;
         offset += 18;
 
+        guiButtonShowHidden.xPosition = guiLeft - 18;
+        guiButtonShowHidden.yPosition = offset;
+        offset += 18;
+
         guiButtonUseSubstitute.xPosition = guiLeft - 18;
         guiButtonUseSubstitute.yPosition = offset;
         offset += 18;
@@ -281,6 +318,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
         buttonList.add(guiButtonAssemblersOnly);
         buttonList.add(guiButtonHideFull);
+        buttonList.add(guiButtonShowHidden);
         buttonList.add(guiButtonBrokenRecipes);
         buttonList.add(guiButtonSectionOrder);
         buttonList.add(searchStringSave);
@@ -340,6 +378,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
                 onlySubstitute ? ActionItems.TOGGLE_SHOW_ONLY_SUBSTITUTE_OFF
                         : ActionItems.TOGGLE_SHOW_ONLY_SUBSTITUTE_ON);
         guiButtonSectionOrder.set(AEConfig.instance.settings.getSetting(Settings.INTERFACE_TERMINAL_SECTION_ORDER));
+        guiButtonShowHidden.set(
+                showHidden ? ActionItems.TOGGLE_SHOW_HIDDEN_INTERFACES_ON
+                        : ActionItems.TOGGLE_SHOW_HIDDEN_INTERFACES_OFF);
 
         terminalStyleBox.set(AEConfig.instance.settings.getSetting(Settings.TERMINAL_STYLE));
 
@@ -359,6 +400,23 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
             GL11.glPopAttrib();
             pendingSectionTooltip = null;
+        }
+
+        if (pendingHideButtonTooltip) {
+            GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+            GL11.glDisable(GL11.GL_LIGHTING);
+            GL11.glDisable(GL11.GL_DEPTH_TEST);
+            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+            drawHoveringText(
+                    pendingHideButtonTooltipLines == null ? Collections.emptyList() : pendingHideButtonTooltipLines,
+                    pendingHideButtonTooltipX,
+                    pendingHideButtonTooltipY,
+                    fontRendererObj);
+
+            GL11.glPopAttrib();
+            pendingHideButtonTooltip = false;
+            pendingHideButtonTooltipLines = null;
         }
     }
 
@@ -388,6 +446,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
             masterList.markDirty();
         } else if (btn == guiButtonUseSubstitute) {
             onlySubstitute = !onlySubstitute;
+            masterList.markDirty();
+        } else if (btn == guiButtonShowHidden) {
+            showHidden = !showHidden;
             masterList.markDirty();
         } else if (btn instanceof GuiImgButton iBtn) {
             if (iBtn.getSetting() != Settings.ACTIONS) {
@@ -491,6 +552,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         GL11.glEnable(GL11.GL_SCISSOR_TEST);
 
         pendingSectionTooltip = null;
+        pendingHideButtonTooltip = false;
 
         /*
          * Render each section
@@ -693,10 +755,27 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     fontRendererObj.drawString(titleLines.get(i), i == 0 ? textXFirst : 2, textY, fontColor);
                 }
             }
+
+            /* Draw hide button at right end of title bar (must be inside Z-push to render above title bg) */
+            section.titleY = viewY;
+            section.hideButton.xPosition = VIEW_WIDTH - section.hideButton.width - 2;
+            section.hideButton.yPosition = viewY + 2;
+            section.hideButton.drawButton(mc, relMouseX, relMouseY);
+            if (section.hideButton.getMouseIn()) {
+                pendingHideButtonTooltip = true;
+                pendingHideButtonTooltipX = relMouseX + guiLeft + VIEW_LEFT;
+                pendingHideButtonTooltipY = relMouseY + guiTop + HEADER_HEIGHT + 1;
+                pendingHideButtonTooltipLines = buildInterfaceTerminalVisibilityTooltip(section.hideButton);
+            }
         }
 
         GL11.glPopMatrix();
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        if (viewY + InterfaceSection.TITLE_HEIGHT <= 0 || viewY >= viewHeight) {
+            section.titleY = -9999;
+            section.hideButton.yPosition = -1;
+        }
 
         if (sectionIcon != null && viewY + InterfaceSection.TITLE_HEIGHT > 0 && viewY < viewHeight) {
             int iconX = 1;
@@ -771,7 +850,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
             }
         }
         tessellator.draw();
-        /* Draw button */
+        /* Draw buttons */
         if (viewY + entry.optionsButton.height > 0 && viewY < viewHeight) {
             entry.optionsButton.yPosition = viewY + 5;
             entry.optionsButton.drawButton(mc, relMouseX, relMouseY);
@@ -1097,6 +1176,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
                     addCmd.supportedStackTypes,
                     addCmd.priority).setLocation(addCmd.x, addCmd.y, addCmd.z, addCmd.dim, addCmd.side)
                             .setIcons(addCmd.selfRep, addCmd.dispRep).setItems(addCmd.items);
+            entry.terminalVisible = addCmd.terminalVisible;
             masterList.addEntry(entry);
         } else if (cmd instanceof PacketInterfaceTerminalUpdate.PacketRemove) {
             masterList.removeEntry(id);
@@ -1128,6 +1208,10 @@ public class GuiInterfaceTerminal extends AEBaseGui
             if (owCmd.priorityValid && entry.priority != owCmd.priority) {
                 entry.priority = owCmd.priority;
                 masterList.moveEntry(entry);
+            }
+            if (owCmd.terminalVisibleValid) {
+                entry.terminalVisible = owCmd.terminalVisible;
+                entry.section.hideButton.set(entry.terminalVisible ? YesNo.YES : YesNo.NO);
             }
 
             masterList.isDirty = true;
@@ -1468,10 +1552,14 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int height;
         private boolean isDirty = true;
         boolean visible = false;
+        int titleY = -9999;
+        final GuiImgButton hideButton;
 
         InterfaceSection(String key, String name) {
             this.key = key;
             this.name = name;
+            this.hideButton = new GuiImgButton(0, 0, Settings.INTERFACE_TERMINAL, YesNo.YES);
+            this.hideButton.setHalfSize(true);
         }
 
         /**
@@ -1511,6 +1599,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
 
             for (InterfaceTerminalEntry entry : entries) {
                 if (!entry.online || entry.p2pOutput) continue;
+                if (!entry.terminalVisible && !showHidden) continue;
 
                 var moleAss = AEApi.instance().definitions().blocks().molecularAssembler().maybeStack(1);
                 entry.dispY = -9999;
@@ -1555,6 +1644,9 @@ public class GuiInterfaceTerminal extends AEBaseGui
         public void addEntry(InterfaceTerminalEntry entry) {
             this.entries.add(entry);
             entry.section = this;
+            if (this.entries.size() == 1) {
+                this.hideButton.set(entry.terminalVisible ? YesNo.YES : YesNo.NO);
+            }
             this.isDirty = true;
         }
 
@@ -1572,6 +1664,31 @@ public class GuiInterfaceTerminal extends AEBaseGui
         }
 
         public boolean mouseClicked(int relMouseX, int relMouseY, int btn) {
+            // Check hide button in title bar
+            if (hideButton.yPosition >= 0 && relMouseX >= hideButton.xPosition
+                    && relMouseX < hideButton.xPosition + hideButton.width
+                    && relMouseY >= hideButton.yPosition
+                    && relMouseY < hideButton.yPosition + hideButton.height) {
+                hideButton.func_146113_a(mc.getSoundHandler());
+                // De-dupe by physical location to avoid double-toggling when multiple entries
+                // refer to the same underlying interface host.
+                Set<Long> visited = new HashSet<>();
+                for (InterfaceTerminalEntry entry : entries) {
+                    long key = 1469598103934665603L;
+                    key = (key ^ entry.x) * 1099511628211L;
+                    key = (key ^ entry.y) * 1099511628211L;
+                    key = (key ^ entry.z) * 1099511628211L;
+                    key = (key ^ entry.dim) * 1099511628211L;
+                    key = (key ^ entry.side) * 1099511628211L;
+                    if (!visited.add(key)) {
+                        continue;
+                    }
+                    NetworkHandler.instance.sendToServer(
+                            new PacketToggleInterfaceVisibility(entry.x, entry.y, entry.z, entry.dim, entry.side));
+                }
+                return true;
+            }
+
             Iterator<InterfaceTerminalEntry> it = getVisible();
             boolean ret = false;
 
@@ -1605,6 +1722,7 @@ public class GuiInterfaceTerminal extends AEBaseGui
         int priority;
         boolean online;
         boolean p2pOutput;
+        boolean terminalVisible = true;
         IAEStackType<?>[] supportedStackTypes;
         private Boolean[] brokenRecipes;
         int numItems = 0;
