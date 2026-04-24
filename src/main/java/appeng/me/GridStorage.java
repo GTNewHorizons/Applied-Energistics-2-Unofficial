@@ -28,21 +28,16 @@ public class GridStorage implements IGridStorage {
 
     private final long myID;
     private final NBTTagCompound data;
-    private final GridStorageSearch mySearchEntry; // keep myself in the list until I'm
     private final WeakHashMap<GridStorage, Boolean> divided = new WeakHashMap<>();
     private WeakReference<IGrid> internalGrid = null;
-
-    // lost...
 
     /**
      * for use with world settings
      *
-     * @param id  ID of grid storage
-     * @param gss grid storage search
+     * @param id ID of grid storage
      */
-    public GridStorage(final long id, final GridStorageSearch gss) {
+    public GridStorage(final long id) {
         this.myID = id;
-        this.mySearchEntry = gss;
         this.data = new NBTTagCompound();
     }
 
@@ -51,12 +46,10 @@ public class GridStorage implements IGridStorage {
      *
      * @param input array of bytes string
      * @param id    ID of grid storage
-     * @param gss   grid storage search
      */
-    public GridStorage(final String input, final long id, final GridStorageSearch gss) {
+    public GridStorage(final String input, final long id) {
         this.myID = id;
-        this.mySearchEntry = gss;
-        NBTTagCompound myTag = null;
+        NBTTagCompound myTag;
 
         try {
             final byte[] byteData = javax.xml.bind.DatatypeConverter.parseBase64Binary(input);
@@ -73,7 +66,6 @@ public class GridStorage implements IGridStorage {
      */
     public GridStorage() {
         this.myID = 0;
-        this.mySearchEntry = null;
         this.data = new NBTTagCompound();
     }
 
