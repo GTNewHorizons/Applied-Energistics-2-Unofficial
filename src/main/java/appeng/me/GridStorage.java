@@ -18,6 +18,9 @@ import java.util.WeakHashMap;
 
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.common.util.Constants.NBT;
+
+import org.jetbrains.annotations.Nullable;
 
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridStorage;
@@ -28,11 +31,9 @@ public class GridStorage implements IGridStorage {
 
     private final long myID;
     private final NBTTagCompound data;
-    private final GridStorageSearch mySearchEntry; // keep myself in the list until I'm
+    private final GridStorageSearch mySearchEntry; // keep myself in the list until I'm lost...
     private final WeakHashMap<GridStorage, Boolean> divided = new WeakHashMap<>();
     private WeakReference<IGrid> internalGrid = null;
-
-    // lost...
 
     /**
      * for use with world settings
@@ -53,19 +54,20 @@ public class GridStorage implements IGridStorage {
      * @param id    ID of grid storage
      * @param gss   grid storage search
      */
-    public GridStorage(final String input, final long id, final GridStorageSearch gss) {
+    public GridStorage(@Nullable final String input, final long id, final GridStorageSearch gss) {
         this.myID = id;
         this.mySearchEntry = gss;
+        if (input == null || input.isEmpty()) {
+            this.data = new NBTTagCompound();
+            return;
+        }
         NBTTagCompound myTag = null;
-
         try {
             final byte[] byteData = javax.xml.bind.DatatypeConverter.parseBase64Binary(input);
             myTag = CompressedStreamTools.readCompressed(new ByteArrayInputStream(byteData));
-        } catch (final Throwable t) {
-            myTag = new NBTTagCompound();
-        }
+        } catch (final Throwable ignored) {}
 
-        this.data = myTag;
+        this.data = myTag != null ? myTag : new NBTTagCompound();
     }
 
     /**
@@ -77,10 +79,24 @@ public class GridStorage implements IGridStorage {
         this.data = new NBTTagCompound();
     }
 
+    @Nullable
     public String getValue() {
         final Grid currentGrid = (Grid) this.getGrid();
         if (currentGrid != null) {
             currentGrid.saveState();
+        }
+
+        if (this.data.hasNoTags()) {
+            return null;
+        }
+
+        if (this.data.hasKey("extraEnergy", NBT.TAG_DOUBLE)) {
+            if (this.data.getDouble("extraEnergy") == 0.0D) {
+                this.data.removeTag("extraEnergy");
+                if (this.data.hasNoTags()) {
+                    return null;
+                }
+            }
         }
 
         try {
@@ -91,7 +107,7 @@ public class GridStorage implements IGridStorage {
             AELog.debug(e);
         }
 
-        return "";
+        return null;
     }
 
     public IGrid getGrid() {
