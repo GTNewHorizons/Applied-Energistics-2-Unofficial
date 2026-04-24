@@ -342,6 +342,8 @@ public class TileDrive extends AENetworkInvTile
         }
     }
 
+    /// For compatibility with EquivalentEnergistics
+    /// https://github.com/GTNewHorizons/Applied-Energistics-2-Unofficial/issues/1225
     private static class DriveWatcher<T extends IAEStack<T>> extends MEInventoryHandler<T> {
 
         public DriveWatcher(final IMEInventory<T> i, final IAEStackType<T> type) {
