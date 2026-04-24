@@ -1147,14 +1147,7 @@ public class GuiMEMonitorable extends AEBaseGui
      * @return true if this click was handled as a pin-setting action, false if normal slot handling should continue
      */
     private boolean handleSetPinAction(VirtualMEPinSlot pinSlot) {
-        boolean isRealItem = true;
-        ItemStack itemStack = Minecraft.getMinecraft().thePlayer.inventory.getItemStack();
-        if (itemStack == null) {
-            itemStack = IntegrationRegistry.INSTANCE.isEnabled(IntegrationType.NEI)
-                    ? NEI.instance.getDraggingPhantomItem()
-                    : null;
-            isRealItem = false;
-        }
+        ItemStack itemStack = this.getStackFromHand();
 
         if (itemStack == null) return false;
 
@@ -1162,6 +1155,8 @@ public class GuiMEMonitorable extends AEBaseGui
                 || (this.typeFilters != null && !this.typeFilters.getBoolean(ITEM_STACK_TYPE));
 
         if (nonItemInteraction) {
+            boolean isRealItem = this.mc.thePlayer.inventory.getItemStack() != null;
+
             for (IAEStackType<?> type : AEStackTypeRegistry.getAllTypes()) {
                 if (type.isContainerItemForType(itemStack)) {
                     IAEStack<?> stackInContainer = type.getStackFromContainerItem(itemStack);
