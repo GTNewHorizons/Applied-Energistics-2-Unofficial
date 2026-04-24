@@ -10,18 +10,11 @@
 
 package appeng.me;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.WeakHashMap;
 
-import net.minecraft.nbt.CompressedStreamTools;
-import net.minecraft.nbt.NBTTagCompound;
-
 import appeng.api.networking.IGrid;
 import appeng.api.networking.IGridStorage;
-import appeng.core.AELog;
 import appeng.core.worlddata.WorldData;
 
 public class GridStorage implements IGridStorage {
@@ -43,21 +36,12 @@ public class GridStorage implements IGridStorage {
     /**
      * for use with world settings
      *
-     * @param input array of bytes string
-     * @param id    ID of grid storage
+     * @param extraEnergy energy in the storage grid
+     * @param id          ID of grid storage
      */
-    public GridStorage(final String input, final long id) {
+    public GridStorage(final double extraEnergy, final long id) {
+        this.extraEnergy = extraEnergy;
         this.myID = id;
-        NBTTagCompound myTag = null;
-
-        try { // TODO stop converting string -> NBT -> double
-            final byte[] byteData = javax.xml.bind.DatatypeConverter.parseBase64Binary(input);
-            myTag = CompressedStreamTools.readCompressed(new ByteArrayInputStream(byteData));
-        } catch (final Throwable t) {}
-
-        if (myTag != null) {
-            this.extraEnergy = myTag.getDouble("extraEnergy");
-        }
     }
 
     /**
@@ -67,22 +51,12 @@ public class GridStorage implements IGridStorage {
         this.myID = 0;
     }
 
-    public String getValue() {
+    public double getValue() {
         final Grid currentGrid = (Grid) this.getGrid();
         if (currentGrid != null) {
             currentGrid.saveState();
         }
-        final NBTTagCompound nbt = new NBTTagCompound();
-        nbt.setDouble("extraEnergy", this.extraEnergy);
-        try { // TODO stop converting string -> NBT -> double
-            final ByteArrayOutputStream out = new ByteArrayOutputStream();
-            CompressedStreamTools.writeCompressed(nbt, out);
-            return javax.xml.bind.DatatypeConverter.printBase64Binary(out.toByteArray());
-        } catch (final IOException e) {
-            AELog.debug(e);
-        }
-
-        return "";
+        return this.extraEnergy;
     }
 
     public IGrid getGrid() {
