@@ -27,7 +27,7 @@ import appeng.core.worlddata.WorldData;
 public class GridStorage implements IGridStorage {
 
     private final long myID;
-    private final NBTTagCompound data;
+    private double extraEnergy;
     private final WeakHashMap<GridStorage, Boolean> divided = new WeakHashMap<>();
     private WeakReference<IGrid> internalGrid = null;
 
@@ -38,7 +38,6 @@ public class GridStorage implements IGridStorage {
      */
     public GridStorage(final long id) {
         this.myID = id;
-        this.data = new NBTTagCompound();
     }
 
     /**
@@ -49,16 +48,16 @@ public class GridStorage implements IGridStorage {
      */
     public GridStorage(final String input, final long id) {
         this.myID = id;
-        NBTTagCompound myTag;
+        NBTTagCompound myTag = null;
 
-        try {
+        try { // TODO stop converting string -> NBT -> double
             final byte[] byteData = javax.xml.bind.DatatypeConverter.parseBase64Binary(input);
             myTag = CompressedStreamTools.readCompressed(new ByteArrayInputStream(byteData));
-        } catch (final Throwable t) {
-            myTag = new NBTTagCompound();
-        }
+        } catch (final Throwable t) {}
 
-        this.data = myTag;
+        if (myTag != null) {
+            this.extraEnergy = myTag.getDouble("extraEnergy");
+        }
     }
 
     /**
@@ -66,7 +65,6 @@ public class GridStorage implements IGridStorage {
      */
     public GridStorage() {
         this.myID = 0;
-        this.data = new NBTTagCompound();
     }
 
     public String getValue() {
@@ -74,10 +72,11 @@ public class GridStorage implements IGridStorage {
         if (currentGrid != null) {
             currentGrid.saveState();
         }
-
-        try {
+        final NBTTagCompound nbt = new NBTTagCompound();
+        nbt.setDouble("extraEnergy", this.extraEnergy);
+        try { // TODO stop converting string -> NBT -> double
             final ByteArrayOutputStream out = new ByteArrayOutputStream();
-            CompressedStreamTools.writeCompressed(this.data, out);
+            CompressedStreamTools.writeCompressed(nbt, out);
             return javax.xml.bind.DatatypeConverter.printBase64Binary(out.toByteArray());
         } catch (final IOException e) {
             AELog.debug(e);
@@ -95,8 +94,13 @@ public class GridStorage implements IGridStorage {
     }
 
     @Override
-    public NBTTagCompound dataObject() {
-        return this.data;
+    public double getExtraEnergy() {
+        return this.extraEnergy;
+    }
+
+    @Override
+    public void setExtraEnergy(double e) {
+        this.extraEnergy = e;
     }
 
     @Override
